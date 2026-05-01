@@ -1,0 +1,216 @@
+'use client'
+
+import { useState } from 'react'
+
+const ROLE_LABELS: Record<string, { label: string; color: string; desc: string }> = {
+  owner:  { label: 'Sahip',   color: 'bg-purple-100 text-purple-700', desc: 'Tam yetki' },
+  admin:  { label: 'Admin',   color: 'bg-blue-100 text-blue-700',     desc: 'Sağlık & vet yönetimi' },
+  editor: { label: 'Editör',  color: 'bg-green-100 text-green-700',   desc: 'Görev tamamlama & log' },
+  viewer: { label: 'Görüntüleyici', color: 'bg-gray-100 text-gray-600', desc: 'Salt okunur' },
+}
+
+const PLAN_LIMITS: Record<string, number> = { free: 2, pro: 5, ai_plus: 999 }
+
+export default function FamilyTab({ petId, petName, plan }: { petId: string; petName: string; plan: string }) {
+  const [members, setMembers] = useState<any[]>([])
+  const [invites, setInvites] = useState<any[]>([])
+  const [activity, setActivity] = useState<any[]>([])
+  const [loaded, setLoaded] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  const [email, setEmail] = useState('')
+  const [role, setRole] = useState('editor')
+  const [inviting, setInviting] = useState(false)
+  const [inviteMsg, setInviteMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
+  const [copiedLink, setCopiedLink] = useState(false)
+
+  async function load() {
+    if (loaded) return
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/pets/family?pet_id=${petId}`)
+      const data = await res.json()
+      setMembers(data.members ?? [])
+      setInvites(data.invites ?? [])
+      setActivity(data.activity ?? [])
+      setLoaded(true)
+    } finally { setLoading(false) }
+  }
+
+  // Load on first render of this tab
+  if (!loaded && !loading) { load() }
+
+  async function sendInvite(e: React.FormEvent) {
+    e.preventDefault()
+    setInviting(true)
+    setInviteMsg(null)
+    try {
+      const res = await fetch('/api/pets/family', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pet_id: petId, email, role }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setInviteMsg({ type: 'err', text: data.error }); return }
+      setInviteMsg({ type: 'ok', text: data.message })
+      setEmail('')
+      // Re-fetch
+      setLoaded(false)
+    } finally { setInviting(false) }
+  }
+
+  async function removeMember(memberId: string) {
+    if (!confirm('Bu üyeyi kaldırmak istediğinize emin misiniz?')) return
+    await fetch('/api/pets/family', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ member_id: memberId, pet_id: petId }),
+    })
+    setMembers(prev => prev.filter(m => m.id !== memberId))
+  }
+
+  const limit = PLAN_LIMITS[plan] ?? 2
+
+  return (
+    <div className="flex flex-col gap-5">
+
+      {/* Plan limit banner */}
+      <div className="flex items-center justify-between p-4 rounded-xl bg-bg-main border border-border-main">
+        <div>
+          <p className="text-[13px] font-bold text-text-primary">
+            {members.length} / {limit === 999 ? '∞' : limit} Üye Slotu
+          </p>
+          <p className="text-[11px] text-text-secondary mt-0.5">
+            {plan === 'free' ? 'Pro\'ya geçerek 5 üyeye kadar davet et' : plan === 'pro' ? 'AI+ ile sınırsız üye' : 'Sınırsız üye (AI+)'}
+          </p>
+        </div>
+        {plan === 'free' && (
+          <a href="/owner/profile/subscription" className="btn-primary text-[12px] py-2 px-3 shrink-0">Yükselt</a>
+        )}
+      </div>
+
+      {/* Members List */}
+      <div className="card-base overflow-hidden">
+        <div className="px-5 py-3 bg-bg-main border-b border-border-main">
+          <h3 className="text-[12px] font-black text-text-secondary uppercase tracking-widest">Bakım Ekibi</h3>
+        </div>
+        {loading ? (
+          <div className="p-6 text-center text-text-secondary text-[14px]">Yükleniyor...</div>
+        ) : members.length === 0 ? (
+          <div className="p-6 text-center text-text-secondary text-[14px]">Henüz üye yok</div>
+        ) : (
+          <div className="divide-y divide-border-main">
+            {members.map((m: any) => {
+              const roleInfo = ROLE_LABELS[m.role] ?? ROLE_LABELS.viewer
+              const initials = `${m.profiles?.first_name?.[0] ?? ''}${m.profiles?.last_name?.[0] ?? ''}` || '?'
+              return (
+                <div key={m.id} className="flex items-center gap-4 p-4 hover:bg-bg-main/50 transition-colors">
+                  <div className="w-10 h-10 rounded-full bg-primary-soft flex items-center justify-center text-primary font-black text-[14px] shrink-0">
+                    {initials}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-bold text-text-primary text-[14px]">
+                      {m.profiles?.first_name} {m.profiles?.last_name}
+                    </p>
+                    <p className="text-[11px] text-text-secondary">{roleInfo.desc}</p>
+                  </div>
+                  <span className={`text-[11px] font-black px-2.5 py-1 rounded-full ${roleInfo.color}`}>{roleInfo.label}</span>
+                  {m.role !== 'owner' && (
+                    <button onClick={() => removeMember(m.id)} className="text-text-secondary hover:text-error transition-colors ml-1" title="Kaldır">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Pending Invites */}
+      {invites.length > 0 && (
+        <div className="card-base overflow-hidden">
+          <div className="px-5 py-3 bg-bg-main border-b border-border-main">
+            <h3 className="text-[12px] font-black text-text-secondary uppercase tracking-widest">Bekleyen Davetler</h3>
+          </div>
+          <div className="divide-y divide-border-main">
+            {invites.map((inv: any) => (
+              <div key={inv.id} className="flex items-center gap-4 p-4">
+                <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 text-[18px] shrink-0">✉️</div>
+                <div className="flex-1">
+                  <p className="font-bold text-text-primary text-[14px]">{inv.email}</p>
+                  <p className="text-[11px] text-text-secondary">
+                    {new Date(inv.expires_at).toLocaleDateString('tr-TR')} tarihine kadar geçerli
+                  </p>
+                </div>
+                <span className="text-[11px] font-black px-2.5 py-1 rounded-full bg-amber-100 text-amber-700">Bekliyor</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Invite Form */}
+      <div className="card-base p-5">
+        <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest mb-4">Üye Davet Et</h3>
+        {inviteMsg && (
+          <div className={`p-3 rounded-lg text-[13px] font-medium mb-4 ${inviteMsg.type === 'ok' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+            {inviteMsg.text}
+          </div>
+        )}
+        <form onSubmit={sendInvite} className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[12px] font-bold text-text-secondary">E-posta Adresi</label>
+            <input
+              type="email" required value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="ornek@email.com"
+              className="input-base"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[12px] font-bold text-text-secondary">Rol</label>
+            <select value={role} onChange={e => setRole(e.target.value)} className="input-base">
+              <option value="admin">Admin — Sağlık & Vet yönetimi</option>
+              <option value="editor">Editör — Günlük bakım görevleri</option>
+              <option value="viewer">Görüntüleyici — Salt okunur</option>
+            </select>
+          </div>
+          <button type="submit" disabled={inviting} className="btn-primary py-3 text-[14px] mt-1">
+            {inviting ? 'Gönderiliyor...' : `${petName}'nin ekibine davet et →`}
+          </button>
+        </form>
+      </div>
+
+      {/* Activity Feed */}
+      {activity.length > 0 && (
+        <div className="card-base overflow-hidden">
+          <div className="px-5 py-3 bg-bg-main border-b border-border-main">
+            <h3 className="text-[12px] font-black text-text-secondary uppercase tracking-widest">Ekip Aktivitesi</h3>
+          </div>
+          <div className="divide-y divide-border-main">
+            {activity.map((a: any) => (
+              <div key={a.id} className="flex items-start gap-3 p-4">
+                <div className="w-8 h-8 rounded-full bg-primary-soft flex items-center justify-center text-primary font-bold text-[12px] shrink-0 mt-0.5">
+                  {a.profiles?.first_name?.[0] ?? '?'}
+                </div>
+                <div className="flex-1">
+                  <p className="text-[13px] text-text-primary">{a.description}</p>
+                  <p className="text-[11px] text-text-secondary mt-0.5">{new Date(a.created_at).toLocaleString('tr-TR')}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Referral Growth Hook */}
+      <div className="p-4 rounded-xl bg-gradient-to-br from-primary/10 to-transparent border border-primary/20 text-center">
+        <p className="text-[14px] font-bold text-text-primary mb-1">🎁 Davet Ödülü</p>
+        <p className="text-[12px] text-text-secondary">
+          Davet ettiğin kişi kabul edince <strong className="text-primary">+50 Care Point</strong> kazanırsın!
+        </p>
+      </div>
+    </div>
+  )
+}
