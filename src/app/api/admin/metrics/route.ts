@@ -58,7 +58,7 @@ export async function GET() {
     .from('subscriptions').select('id', { count: 'exact', head: true })
     .in('plan', ['pro', 'ai_plus'])
 
-  // --- Nutrition OS ---
+  // --- Nutrition + Vaccine OS events ---
   const { data: events } = await supabase
     .from('event_stream')
     .select('profile_id, event, ts, payload')
@@ -67,8 +67,25 @@ export async function GET() {
       'refill_cta_clicked', 'refill_planner_opened', 'refill_reminder_requested',
       'refill_reminder_snoozed', 'refill_reminder_dismissed', 'refill_reminder_escalated',
       'marketplace_beta_eligible', 'marketplace_beta_clicked', 'marketplace_waitlist_joined',
-      'affiliate_partner_clicked'
+      'affiliate_partner_clicked',
+      // Vaccine OS events
+      'vaccine_setup_mode_selected', 'vaccine_schedule_generated',
+      'vaccine_quick_marked', 'vaccine_detailed_logged', 'vaccine_task_completed',
+      'vaccine_overdue_detected', 'vaccine_plan_reset', 'vaccine_chain_completed',
     ])
+
+  // --- Vaccine OS DB metrics ---
+  const { count: vaccineSetupCount } = await supabase
+    .from('vaccine_setup_profiles').select('id', { count: 'exact', head: true })
+
+  const { data: vaccineRecordsRaw } = await supabase
+    .from('vaccine_records_v2')
+    .select('pet_id, status, vaccine_code, dose_number')
+
+  const vaccineSetupCompletedSet = new Set<string>()
+  const vaccineFirstLoggedSet = new Set<string>()
+  const vaccineQuickMarkSet = new Set<string>()
+  const vaccineChainCompletedSet = new Set<string>()
 
   const nutritionProfiles = new Set<string>()
   const firstFeeders = new Set<string>()
@@ -115,6 +132,13 @@ export async function GET() {
       if (e.event === 'refill_reminder_dismissed') reminderDismissers.add(e.profile_id)
       if (e.event === 'refill_reminder_escalated') reminderEscalators.add(e.profile_id)
       
+      if (e.event === 'vaccine_setup_mode_selected') vaccineSetupCompletedSet.add(e.profile_id)
+      if (e.event === 'vaccine_task_completed' || e.event === 'vaccine_quick_marked' || e.event === 'vaccine_detailed_logged') {
+        vaccineFirstLoggedSet.add(e.profile_id)
+      }
+      if (e.event === 'vaccine_quick_marked') vaccineQuickMarkSet.add(e.profile_id)
+      if (e.event === 'vaccine_chain_completed') vaccineChainCompletedSet.add(e.profile_id)
+
       if (e.event === 'marketplace_beta_eligible') {
         betaEligibleSet.add(e.profile_id)
         if (payload.foodBrand) {
@@ -194,6 +218,30 @@ export async function GET() {
     ? Math.round((totalFeedings7d / feeding7dCounts.size) * 10) / 10 
     : 0
 
+  // --- Vaccine OS KPI computation ---
+  const petsWithVaccineRecords = new Set<string>()
+  const petsWithOverdue = new Set<string>()
+  const petsWithCompletedChain = new Set<string>() // pet has at least 3 completed vaccines
+  const petCompletedCounts = new Map<string, number>()
+
+  for (const r of vaccineRecordsRaw ?? []) {
+    petsWithVaccineRecords.add(r.pet_id)
+    if (r.status === 'overdue') petsWithOverdue.add(r.pet_id)
+    if (r.status === 'completed') {
+      petCompletedCounts.set(r.pet_id, (petCompletedCounts.get(r.pet_id) || 0) + 1)
+    }
+  }
+  for (const [petId, count] of petCompletedCounts.entries()) {
+    if (count >= 3) petsWithCompletedChain.add(petId)
+  }
+
+  const overdueRatePct = petsWithVaccineRecords.size > 0
+    ? Math.round((petsWithOverdue.size / petsWithVaccineRecords.size) * 100) : 0
+  const chainCompletionPct = petsWithVaccineRecords.size > 0
+    ? Math.round((petsWithCompletedChain.size / petsWithVaccineRecords.size) * 100) : 0
+  const quickMarkRatePct = vaccineFirstLoggedSet.size > 0
+    ? Math.round((vaccineQuickMarkSet.size / vaccineFirstLoggedSet.size) * 100) : 0
+
   return NextResponse.json({
     acquisition: {
       signups: totalSignups ?? 0,
@@ -254,6 +302,15 @@ export async function GET() {
         affiliate: m.affiliate,
         conversion: m.clicks > 0 ? Math.round((m.waitlist / m.clicks) * 100) : 0
       }))
+    },
+    vaccine: {
+      setupCompletedPct: safe(vaccineSetupCount, totalSignups),
+      firstVaccinePct: safe(vaccineFirstLoggedSet.size, vaccineSetupCount),
+      overdueRatePct,
+      chainCompletionPct,
+      quickMarkRatePct,
+      totalPetsWithRecords: petsWithVaccineRecords.size,
+      totalPetsOverdue: petsWithOverdue.size,
     }
   })
 }

@@ -40,6 +40,15 @@ type Metrics = {
     partners: { id: string; clicks: number; uniqueUsers: number; ctr: number }[]
     brands: { name: string; eligible: number; clicks: number; waitlist: number; affiliate: number; conversion: number }[]
   }
+  vaccine: {
+    setupCompletedPct: number;
+    firstVaccinePct: number;
+    overdueRatePct: number;
+    chainCompletionPct: number;
+    quickMarkRatePct: number;
+    totalPetsWithRecords: number;
+    totalPetsOverdue: number;
+  }
 }
 
 // Threshold definitions (matches product KPIs)
@@ -67,6 +76,12 @@ const THRESHOLDS = {
   waitlistClickConversion: { ok: 35, warn: 15 },
   waitlistEligibleConversion: { ok: 10, warn: 5 },
   affiliateCTR: { ok: 20, warn: 5 },
+  // Vaccine OS
+  vaccineSetupPct: { ok: 60, warn: 30 },
+  vaccineFirstPct: { ok: 50, warn: 25 },
+  vaccineOverduePct: { ok: 20, warn: 40 }, // invert: lower is better
+  vaccineChainPct: { ok: 50, warn: 25 },
+  vaccineQuickMarkPct: { ok: 70, warn: 40 },
 }
 
 function statusColor(value: number, key: keyof typeof THRESHOLDS, invert = false) {
@@ -276,7 +291,66 @@ export default function FounderIntelligencePage() {
               ]} />
             </section>
 
-            {/* Refill Commerce Funnel */}
+            {/* Vaccine OS Intelligence */}
+            <section className="card-base p-5 mb-6">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-8 h-8 bg-primary/10 rounded-xl flex items-center justify-center text-[18px]">💉</div>
+                <h2 className="text-[13px] font-black text-text-secondary uppercase tracking-widest">Vaccine OS Intelligence</h2>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+                <KpiCard label="Setup Tamamlama %" value={m.vaccine.setupCompletedPct} threshold="vaccineSetupPct" note="Hedef: >60%" />
+                <KpiCard label="İlk Kayıt %" value={m.vaccine.firstVaccinePct} threshold="vaccineFirstPct" note="Setup → İlk aşı" />
+                <KpiCard label="Gecikme Oranı %" value={m.vaccine.overdueRatePct} threshold="vaccineOverduePct" invert={true} note="Hedef: <20%" />
+                <KpiCard label="Zincir Tamamlama %" value={m.vaccine.chainCompletionPct} threshold="vaccineChainPct" note="≥3 aşı tamamlandı" />
+                <KpiCard label="Hızlı Kayıt %" value={m.vaccine.quickMarkRatePct} threshold="vaccineQuickMarkPct" note="Quick Mark oranı" />
+              </div>
+
+              <h3 className="text-[11px] font-black text-text-secondary uppercase tracking-widest mb-4">Vaccine OS Funnel</h3>
+              <FunnelBar steps={[
+                { label: 'Signup',         pct: 100,                             threshold: 'vaccineSetupPct' },
+                { label: 'Setup Seçildi',  pct: m.vaccine.setupCompletedPct,    threshold: 'vaccineSetupPct' },
+                { label: 'İlk Kayıt',      pct: m.vaccine.firstVaccinePct,      threshold: 'vaccineFirstPct' },
+                { label: 'Zincir (3+)',    pct: m.vaccine.chainCompletionPct,   threshold: 'vaccineChainPct' },
+              ]} />
+
+              <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                <div className="p-3 rounded-xl bg-bg-main border border-border-main text-center">
+                  <p className="text-[22px] font-black text-text-primary">{m.vaccine.totalPetsWithRecords}</p>
+                  <p className="text-[10px] font-black text-text-secondary uppercase tracking-widest mt-1">Aktif Plan</p>
+                </div>
+                <div className="p-3 rounded-xl bg-bg-main border border-border-main text-center">
+                  <p className={`text-[22px] font-black ${m.vaccine.totalPetsOverdue > 0 ? 'text-error' : 'text-success'}`}>{m.vaccine.totalPetsOverdue}</p>
+                  <p className="text-[10px] font-black text-text-secondary uppercase tracking-widest mt-1">Gecikmiş Pet</p>
+                </div>
+              </div>
+
+              {/* Vaccine Insight Rules */}
+              <div className="p-4 rounded-xl bg-violet-50 border border-violet-100 flex flex-col gap-3">
+                <h3 className="text-[12px] font-black text-violet-900 uppercase tracking-widest">🧠 Vaccine OS Insight Rules</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-[13px] font-medium">
+                  <div className={`p-3 rounded-lg border ${
+                    m.vaccine.overdueRatePct > 40 ? 'bg-red-100 text-red-900 border-red-200' : 'bg-white/50 text-violet-800 border-violet-200/50'
+                  }`}>
+                    <p className="font-bold mb-1">If Overdue Rate &gt; 40%</p>
+                    <p className="text-[12px]">🔴 Users are missing vaccine deadlines. Consider push reminders or simpler UX.</p>
+                  </div>
+                  <div className={`p-3 rounded-lg border ${
+                    m.vaccine.quickMarkRatePct > 70 ? 'bg-green-100 text-green-900 border-green-200' : 'bg-white/50 text-violet-800 border-violet-200/50'
+                  }`}>
+                    <p className="font-bold mb-1">If Quick Mark &gt; 70%</p>
+                    <p className="text-[12px]">🟢 Low-friction logging validated. Users prefer one-tap completion.</p>
+                  </div>
+                  <div className={`p-3 rounded-lg border ${
+                    m.vaccine.chainCompletionPct > 50 ? 'bg-green-100 text-green-900 border-green-200' : 'bg-white/50 text-violet-800 border-violet-200/50'
+                  }`}>
+                    <p className="font-bold mb-1">If Chain Completion &gt; 50%</p>
+                    <p className="text-[12px]">🟢 Vaccination workflow is sticky. Users are following through the protocol.</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
             <section className="card-base p-5 mb-6">
               <h2 className="text-[13px] font-black text-text-secondary uppercase tracking-widest mb-5">
                 Refill Commerce Funnel

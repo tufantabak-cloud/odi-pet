@@ -175,6 +175,18 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords, tem
   const [quickMarkRecord, setQuickMarkRecord] = useState<VRecord | null>(null)
   const [isPending, startTransition] = useTransition()
 
+  // Fire analytics for overdue detection and chain completion
+  useState(() => {
+    if (!setupDone) return
+    if (overdueCount > 0) {
+      trackEvent('vaccine_overdue_detected', { pet_id: pet.id, overdue_count: overdueCount })
+    }
+    const allCompleted = vaccineRecords.length > 0 && vaccineRecords.every(r => r.status === 'completed')
+    if (allCompleted) {
+      trackEvent('vaccine_chain_completed', { pet_id: pet.id, total: vaccineRecords.length })
+    }
+  })
+
   function refreshData() {
     router.refresh()
     setQuickMarkRecord(null)
