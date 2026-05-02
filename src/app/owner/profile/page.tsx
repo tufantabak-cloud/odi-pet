@@ -243,6 +243,17 @@ export default async function ProfileMenuPage() {
         </div>
       </section>
 
+      {/* App Settings */}
+      <section className="flex flex-col gap-3">
+        <h2 className="text-[12px] font-black text-text-secondary uppercase tracking-widest px-2">Uygulama Ayarları</h2>
+        <div className="card-base divide-y divide-border-main text-[14px] font-semibold text-text-primary">
+          <Link href="/owner/profile/custom-vaccines" className="block p-4 hover:bg-bg-main transition-colors flex justify-between items-center">
+            Özel Aşı & Parazit Şablonları
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-secondary"><polyline points="9 18 15 12 9 6"/></svg>
+          </Link>
+        </div>
+      </section>
+
       {/* 5. Data & Privacy Hub & 8. Support Center */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <section className="flex flex-col gap-3">

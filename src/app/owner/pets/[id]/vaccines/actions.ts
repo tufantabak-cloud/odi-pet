@@ -79,7 +79,7 @@ export async function generateSchedule(petId: string, mode: 'smart_start' | 'his
 }
 
 // ── Mark Done ──────────────────────────────────────────────────
-export async function markVaccineDone(recordId: string, administeredAt: string, source: string) {
+export async function markVaccineDone(recordId: string, administeredAt: string, source: string, notes?: string) {
   const supabase = await createServerSupabaseClient()
 
   const { data: record } = await supabase.from('vaccine_records_v2').select('pet_id').eq('id', recordId).single()
@@ -89,7 +89,8 @@ export async function markVaccineDone(recordId: string, administeredAt: string, 
     status: 'completed',
     administered_at: administeredAt,
     source: source as any,
-    confidence_level: 'user_reported',
+    confidence_level: source === 'user_detailed' ? 'verified' : 'user_reported',
+    notes: notes ?? null,
   }).eq('id', recordId)
 
   // Check if next dose in same code series exists; if so, mark it as 'due'
@@ -107,6 +108,14 @@ export async function markVaccineDone(recordId: string, administeredAt: string, 
     if (nextDose) {
       await supabase.from('vaccine_records_v2').update({ status: 'due' }).eq('id', nextDose.id)
     }
+
+    // Auto-skip any previous doses in the same series that are not completed
+    await supabase.from('vaccine_records_v2')
+      .update({ status: 'skipped', notes: 'Sonraki doz onaylandığı için sistem tarafından otomatik atlandı.' })
+      .eq('pet_id', updated.pet_id)
+      .eq('vaccine_code', updated.vaccine_code)
+      .lt('dose_number', updated.dose_number)
+      .neq('status', 'completed')
   }
 
   // Care Score Bonus
@@ -124,4 +133,102 @@ export async function skipVaccine(recordId: string) {
 
   await supabase.from('vaccine_records_v2').update({ status: 'skipped' }).eq('id', recordId)
   revalidatePath(`/owner/pets/${record.pet_id}/vaccines`)
+}
+
+// ── Postpone Vaccine ───────────────────────────────────────────
+export async function postponeVaccine(recordId: string, days: number) {
+  const supabase = await createServerSupabaseClient()
+  const { data: record } = await supabase.from('vaccine_records_v2').select('*').eq('id', recordId).single()
+  if (!record) return
+
+  const newDate = new Date(record.due_at || new Date())
+  newDate.setDate(newDate.getDate() + days)
+
+  await supabase.from('vaccine_records_v2').update({
+    due_at: newDate.toISOString(),
+    status: 'scheduled',
+    notes: record.notes ? `${record.notes} | Ertelendi: +${days} gün` : `Ertelendi: +${days} gün`,
+  }).eq('id', recordId)
+
+  // Care Score penalty
+  await supabase.rpc('adjust_care_score', { p_pet_id: record.pet_id, p_delta: -5 }).catch(() => {})
+
+  revalidatePath(`/owner/pets/${record.pet_id}/vaccines`)
+  revalidatePath(`/owner/pets/${record.pet_id}`)
+}
+
+// ── Delete Vaccine Record ──────────────────────────────────────
+export async function deleteVaccineRecord(recordId: string) {
+  const supabase = await createServerSupabaseClient()
+  const { data: record } = await supabase.from('vaccine_records_v2').select('pet_id').eq('id', recordId).single()
+  if (!record) return
+
+  await supabase.from('vaccine_records_v2').delete().eq('id', recordId)
+  revalidatePath(`/owner/pets/${record.pet_id}/vaccines`)
+}
+
+// ── Add Manual Vaccine (custom, outside templates) ─────────────
+export async function addManualVaccine(petId: string, data: {
+  vaccine_name: string
+  due_at: string
+  administered_at?: string
+  vet_name?: string
+  clinic?: string
+  brand?: string
+  batch_no?: string
+  notes?: string
+  amount?: number
+}) {
+  const supabase = await createServerSupabaseClient()
+  const isCompleted = !!data.administered_at
+
+  const notesParts = [
+    data.clinic ? `Klinik: ${data.clinic}` : '',
+    data.vet_name ? `Veteriner: ${data.vet_name}` : '',
+    data.brand ? `Marka: ${data.brand}` : '',
+    data.batch_no ? `Seri No: ${data.batch_no}` : '',
+    data.notes || '',
+  ].filter(Boolean).join(' | ')
+
+  await supabase.from('vaccine_records_v2').insert({
+    pet_id: petId,
+    vaccine_code: 'MANUAL',
+    vaccine_name: data.vaccine_name,
+    status: isCompleted ? 'completed' : 'scheduled',
+    due_at: data.due_at,
+    administered_at: data.administered_at || null,
+    source: isCompleted ? 'user_detailed' : 'system_generated',
+    confidence_level: isCompleted ? 'verified' : 'estimated',
+    notes: notesParts || null,
+  })
+
+  // Log payment if amount provided
+  if (data.amount && data.amount > 0) {
+    await supabase.from('payments').insert({
+      pet_id: petId,
+      amount: data.amount,
+      payment_type: data.vaccine_name,
+      payment_date: data.administered_at?.split('T')[0] || data.due_at.split('T')[0],
+      notes: data.clinic || null,
+    }).catch(() => {})
+  }
+
+  if (isCompleted) {
+    await supabase.rpc('adjust_care_score', { p_pet_id: petId, p_delta: 10 }).catch(() => {})
+  }
+
+  revalidatePath(`/owner/pets/${petId}/vaccines`)
+  revalidatePath(`/owner/pets/${petId}`)
+}
+
+// ── Record Payment ─────────────────────────────────────────────
+export async function recordVaccinePayment(petId: string, amount: number, label: string, date: string) {
+  const supabase = await createServerSupabaseClient()
+  await supabase.from('payments').insert({
+    pet_id: petId,
+    amount,
+    payment_type: label,
+    payment_date: date,
+  }).catch(() => {})
+  revalidatePath(`/owner/pets/${petId}/vaccines`)
 }

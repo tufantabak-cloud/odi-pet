@@ -39,7 +39,7 @@ export default function LoginPage() {
             Odi
           </div>
           <h1 className="text-[28px] font-bold text-text-primary tracking-tight">Odi Pet</h1>
-          <p className="text-[15px] text-text-secondary mt-1">Pati dostlarınıza premium takip</p>
+          <p className="text-[15px] font-medium text-text-primary/70 mt-1">Pati dostlarınıza premium takip</p>
         </div>
 
         <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
@@ -65,9 +65,14 @@ export default function LoginPage() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-[14px] font-semibold text-text-primary" htmlFor="password">
-              Şifre
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-[14px] font-semibold text-text-primary" htmlFor="password">
+                Şifre
+              </label>
+              <a href="#" className="text-[13px] font-medium text-primary hover:text-primary-hover transition-colors">
+                Şifremi Unuttum
+              </a>
+            </div>
             <input
               id="password"
               name="password"
@@ -82,7 +87,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="btn-primary w-full mt-4 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="btn-primary w-full mt-4 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
@@ -94,6 +99,15 @@ export default function LoginPage() {
               </span>
             ) : 'Sisteme Giriş Yap'}
           </button>
+
+          <div className="text-center mt-4">
+            <p className="text-[14px] text-text-secondary">
+              Hesabınız yok mu?{' '}
+              <a href="#" className="font-semibold text-primary hover:text-primary-hover transition-colors">
+                Kayıt Olun
+              </a>
+            </p>
+          </div>
         </form>
       </div>
     </div>

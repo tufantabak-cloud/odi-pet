@@ -54,7 +54,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
   const colors = species === 'Kedi' ? CAT_COLORS : DOG_COLORS
   const emoji = species === 'Kedi' ? '🐱' : '🐶'
   const currentYear = new Date().getFullYear()
-  const TOTAL_STEPS = 6
+  const TOTAL_STEPS = 7
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -103,6 +103,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
     4: { title: 'Veteriner Bilgisi', desc: 'Kayıtlı veterinerinizin iletişim bilgileri' },
     5: { title: 'Fotoğraf',          desc: `${emoji} ${species}inizin sevimli fotoğrafını ekleyin` },
     6: { title: 'Sahipler',          desc: 'Bu patiye kimler bakıyor? Ortak sahip ekleyin.' },
+    7: { title: 'Gelişmiş Ayarlar',  desc: 'Tehlikeli alan ve sistem ayarları' },
   }
 
   return (
@@ -319,9 +320,51 @@ export default function EditPetForm({ pet }: { pet: any }) {
             </div>
 
             <div className="flex justify-end gap-3 mt-5">
+              <button type="button" onClick={() => setStep(7)} className="btn-primary min-w-[140px]">Devam Et →</button>
+            </div>
+          </div>
+        )}
+
+        {/* ─── STEP 7: Gelişmiş Ayarlar ─── */}
+        {step === 7 && (
+          <div className="card-base p-6 sm:p-8 flex flex-col gap-6 animate-fadeIn">
+            <p className="text-[13px] text-text-secondary">{stepTitles[7].desc}</p>
+            
+            <div className="flex justify-end gap-3 mt-5 mb-8 border-b border-border-main pb-8">
               <button type="submit" disabled={loading} className="btn-primary min-w-[160px]">
                 {loading ? 'Kaydediliyor...' : 'Kaydı Güncelle'}
               </button>
+            </div>
+
+            {/* Danger Zone */}
+            <div>
+              <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest mb-4">Tehlikeli Alan</h3>
+              <div className="p-5 border-2 border-error/20 bg-error/5 rounded-2xl flex flex-col items-center text-center gap-3">
+                <span className="text-[32px]">🗑️</span>
+                <p className="font-bold text-text-primary text-[15px]">Evcil Hayvanı Sil</p>
+                <p className="text-[13px] text-text-secondary">Bu işlem geri alınamaz. {pet.name} profili, aşı kayıtları, fotoğrafları ve tüm sağlık geçmişi kalıcı olarak silinecektir.</p>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (confirm(`DİKKAT: ${pet.name} profilini kalıcı olarak silmek istediğinizden emin misiniz?`)) {
+                      setLoading(true)
+                      try {
+                        const res = await fetch(`/api/pets/${pet.id}`, { method: 'DELETE' })
+                        if (!res.ok) throw new Error('Silinemedi')
+                        router.push('/owner/pets')
+                        router.refresh()
+                      } catch(e) {
+                        alert('Silme işlemi başarısız oldu. Sadece asıl sahip silebilir.')
+                        setLoading(false)
+                      }
+                    }
+                  }}
+                  disabled={loading}
+                  className="mt-2 w-full max-w-[200px] py-3 rounded-xl border-2 border-error/40 text-error font-bold text-[13px] hover:bg-error/10 hover:-translate-y-0.5 transition-all shadow-sm"
+                >
+                  Kalıcı Olarak Sil
+                </button>
+              </div>
             </div>
           </div>
         )}

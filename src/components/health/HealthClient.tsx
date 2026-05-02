@@ -8,7 +8,7 @@ export default function HealthClient({ petId }: { petId: string }) {
   const supabase = createBrowserSupabaseClient()
   const router = useRouter()
   
-  const [activeTab, setActiveTab] = useState<'vaccines' | 'diseases' | 'allergies' | 'medications' | 'payments'>('vaccines')
+  const [activeTab, setActiveTab] = useState<'vaccines' | 'diseases' | 'allergies' | 'medications' | 'payments'>('diseases')
   const [data, setData] = useState<any>({ health_schedules: [], vaccine_records: [], diseases: [], allergies: [], medications: [], payments: [] })
   const [loading, setLoading] = useState(true)
 
@@ -656,13 +656,19 @@ export default function HealthClient({ petId }: { petId: string }) {
       <div className="flex items-center justify-between">
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
           {[
-            { id: 'vaccines', label: 'Aşı Takvimi & Kayıtlar' },
+            { id: 'vaccines', label: '💉 Aşı OS' },
             { id: 'diseases', label: 'Hastalıklar' },
             { id: 'allergies', label: 'Alerjiler' },
             { id: 'medications', label: 'İlaçlar' },
             { id: 'payments', label: 'Maliyet ve Ödeme' },
           ].map(t => (
-            <button key={t.id} onClick={() => setActiveTab(t.id as any)}
+            <button key={t.id} onClick={() => {
+              if (t.id === 'vaccines') {
+                router.push(`/owner/pets/${petId}/vaccines`)
+              } else {
+                setActiveTab(t.id as any)
+              }
+            }}
               className={`px-4 py-2 rounded-full text-[13px] font-bold shrink-0 transition-all ${activeTab === t.id ? 'bg-primary text-white shadow-md' : 'bg-surface border border-border-main text-text-secondary hover:border-primary/40'}`}>
               {t.label}
             </button>
@@ -677,7 +683,7 @@ export default function HealthClient({ petId }: { petId: string }) {
         <div className="py-20 flex justify-center"><div className="w-8 h-8 rounded-full border-4 border-primary/20 border-t-primary animate-spin"/></div>
       ) : (
         <div className="flex flex-col gap-4">
-          {activeTab === 'vaccines' && renderVaccines()}
+
 
           {activeTab === 'diseases' && (
             <>

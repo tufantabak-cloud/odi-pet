@@ -27,9 +27,9 @@ export default function AIVetPage() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const sendMessage = async () => {
-    if (!input.trim() || loading) return
-    const userText = input.trim()
+  const sendMessage = async (overrideText?: string) => {
+    const userText = (typeof overrideText === 'string' ? overrideText : input).trim()
+    if (!userText || loading) return
     setInput('')
     setMessages(prev => [...prev, { role: 'user', text: userText }])
     setLoading(true)
@@ -108,6 +108,23 @@ export default function AIVetPage() {
 
       {/* Input */}
       <div className="pt-4 border-t border-border-main mt-4 shrink-0">
+        {messages.length === 1 && (
+          <div className="flex flex-wrap gap-2 mb-3">
+            {[
+              "💉 Aşıları gecikti, sorun olur mu?",
+              "🤢 Bugün halsiz ve iştahsız",
+              "🐾 Sürekli kaşınıyor",
+            ].map((prompt, idx) => (
+              <button
+                key={idx}
+                onClick={() => sendMessage(prompt)}
+                className="text-[12px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-full transition-colors"
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="flex gap-3">
           <input
             type="text"

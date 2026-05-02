@@ -607,54 +607,42 @@ function PetForm({ species, onBack }: { species: Species; onBack: () => void }) 
           </div>
         </div>
 
-        {/* ─── STEP 6: Öneri Ekranı (Plan Onayı) ─── */}
         {step === 6 && (
           <div className="card-base p-8 flex flex-col items-center gap-6 animate-fadeInUp">
             <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center text-[32px] text-success">
               ✓
             </div>
             <div className="text-center">
-              <h2 className="text-[24px] font-extrabold text-text-primary mb-2">Profil Oluşturuldu!</h2>
-              <p className="text-[14px] text-text-secondary">Sizin için önerilen ilk aşı ve parazit planı hazırlandı.</p>
+              <h2 className="text-[24px] font-extrabold text-text-primary mb-2">Profil Oluşturuldu! 🎉</h2>
+              <p className="text-[14px] text-text-secondary">Şimdi aşı takip sistemini kurarak {species.toLowerCase()}inizin sağlık planını başlatın.</p>
             </div>
-            
-            <div className="w-full bg-surface border border-border-main rounded-xl p-5 flex flex-col gap-3">
-              <p className="text-[12px] font-black text-text-secondary uppercase tracking-wider">İlk Doz Önerileri</p>
-              <div className="flex justify-between items-center bg-bg-main p-3 rounded-lg">
-                <span className="font-bold text-[14px] text-text-primary">Karma Aşı (1. Doz)</span>
-                <span className="text-[12px] bg-primary/10 text-primary px-2 py-1 rounded font-bold">Önerilen</span>
-              </div>
-              <div className="flex justify-between items-center bg-bg-main p-3 rounded-lg">
-                <span className="font-bold text-[14px] text-text-primary">Kuduz Aşısı</span>
-                <span className="text-[12px] bg-primary/10 text-primary px-2 py-1 rounded font-bold">Önerilen</span>
-              </div>
-              <div className="flex justify-between items-center bg-bg-main p-3 rounded-lg">
-                <span className="font-bold text-[14px] text-text-primary">İç / Dış Parazit</span>
-                <span className="text-[12px] bg-primary/10 text-primary px-2 py-1 rounded font-bold">Önerilen</span>
+
+            <div className="w-full bg-primary/5 border border-primary/20 rounded-2xl p-5 flex items-start gap-4">
+              <span className="text-[32px]">💉</span>
+              <div>
+                <p className="font-extrabold text-primary text-[15px]">Aşı OS Kurulumu</p>
+                <p className="text-[13px] text-text-secondary mt-1">Doğum tarihine göre otomatik aşı takvimi oluştur veya geçmiş kayıtlarını gir.</p>
               </div>
             </div>
 
-            <div className="flex flex-col w-full gap-3 mt-4">
-              <button 
-                type="button" 
-                onClick={async () => {
-                   // Burada daha sonra trigger kaldırıldığında manuel insert yapılacak.
-                   // Şimdilik sadece yönlendiriyoruz.
-                   window.location.href = `/owner/health?petId=${createdPetId}`;
-                }} 
+            <div className="flex flex-col w-full gap-3 mt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  window.location.href = `/owner/pets/${createdPetId}/vaccines`
+                }}
                 className="btn-primary w-full py-4 text-[15px] font-extrabold"
               >
-                Planı Uygula
+                💉 Aşı Takibini Başlat →
               </button>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => {
-                   // Sadece yönlendir, planlama dashboardundan kendi ayarlasın
-                   window.location.href = `/owner/health?petId=${createdPetId}`;
-                }} 
-                className="btn-secondary w-full py-3"
+                  window.location.href = `/owner/pets/${createdPetId}`
+                }}
+                className="btn-secondary w-full py-3 text-[14px]"
               >
-                Planı Düzenle
+                Şimdi Değil, Profile Git
               </button>
             </div>
           </div>

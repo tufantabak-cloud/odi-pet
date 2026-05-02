@@ -109,3 +109,32 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   return NextResponse.json({ success: true })
 }
+
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getSessionUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { id } = await params
+  const supabase = await createServerSupabaseClient()
+
+  // Verify ownership
+  const { data: ownerRecord } = await supabase
+    .from('pet_owners')
+    .select('role')
+    .eq('pet_id', id)
+    .eq('profile_id', user.id)
+    .single()
+
+  if (!ownerRecord || ownerRecord.role !== 'owner') {
+    return NextResponse.json({ error: 'Sadece asıl sahip evcil hayvanı silebilir.' }, { status: 403 })
+  }
+
+  const { error } = await supabase.from('pets').delete().eq('id', id)
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  revalidatePath('/owner/dashboard')
+  revalidatePath('/owner/pets')
+
+  return NextResponse.json({ success: true })
+}

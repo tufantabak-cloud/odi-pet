@@ -55,7 +55,11 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
             <div className="flex flex-wrap items-center gap-3 mb-1">
               <h1 className="text-[28px] font-extrabold text-text-primary">{pet.name}</h1>
               <span className={`text-[11px] font-black px-3 py-1 rounded-full ${riskColor}`}>Risk: {riskLevel}</span>
-              {overdue > 0 && <span className="text-[11px] font-black px-3 py-1 rounded-full bg-red-100 text-red-700">⚠ {overdue} Gecikmiş</span>}
+              {overdue > 0 && (
+                <Link href={`/owner/pets/${pet.id}/vaccines`} className="text-[11px] font-black px-3 py-1 rounded-full bg-red-100 text-red-700 hover:bg-red-200 hover:-translate-y-0.5 transition-all shadow-sm">
+                  ⚠ {overdue} Gecikmiş
+                </Link>
+              )}
             </div>
             <p className="text-text-secondary font-medium text-[14px]">{pet.species}{pet.breed ? ` • ${pet.breed}` : ''}{pet.gender ? ` • ${genderLabel[pet.gender] ?? ''}` : ''}</p>
             <div className="flex flex-wrap gap-2 mt-2">
@@ -104,7 +108,7 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
               )
             })}
           </div>
-          <Link href={`/owner/health?pet=${pet.id}`} className="block text-center text-primary text-[13px] font-bold mt-4 hover:underline">Tümünü Görüntüle →</Link>
+          <Link href={`/owner/pets/${pet.id}/vaccines`} className="block text-center text-primary text-[13px] font-bold mt-4 hover:underline">Tümünü Görüntüle →</Link>
         </div>
       )}
 
@@ -267,18 +271,25 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
           <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest mb-5">Belge Kasası</h3>
           <div className="grid grid-cols-2 gap-3 mb-6">
             {['Pasaport', 'Aşı Kartı', 'Lab Sonuçları', 'Reçeteler'].map(doc => (
-              <div key={doc} className="border-2 border-dashed border-border-main rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer hover:border-primary/40 hover:bg-bg-main transition-all group">
-                <span className="text-[28px]">📄</span>
+              <label key={doc} className="border-2 border-dashed border-border-main rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer hover:border-primary hover:bg-primary/5 transition-all group">
+                <input type="file" className="hidden" accept="image/*,.pdf" onChange={(e) => {
+                  if (e.target.files?.length) {
+                    alert(`${doc} belgesi seçildi: ${e.target.files[0].name}\n(Sistem notu: Supabase Storage modülü bağlandığında dosyalar buluta aktarılacaktır.)`)
+                  }
+                }} />
+                <span className="text-[28px] group-hover:scale-110 transition-transform">📄</span>
                 <p className="text-[13px] font-bold text-text-secondary group-hover:text-primary text-center">{doc}</p>
-                <span className="text-[11px] text-text-secondary">Yükle</span>
-              </div>
+                <span className="text-[11px] font-bold bg-bg-main px-2 py-1 rounded-md text-text-secondary group-hover:bg-primary group-hover:text-white transition-colors">
+                  + Dosya Seç
+                </span>
+              </label>
             ))}
           </div>
-          <button className="btn-primary w-full py-3 text-[14px] flex items-center justify-center gap-2">
+          <button onClick={() => window.print()} className="btn-primary w-full py-3 text-[14px] flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-transform shadow-sm hover:shadow-primary/30">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3"/></svg>
-            PDF Sağlık Raporu İndir
+            PDF Sağlık Raporu Çıkar
           </button>
-          <p className="text-center text-[11px] text-text-secondary mt-2">Tüm sağlık geçmişini tek PDF'te dışa aktar</p>
+          <p className="text-center text-[11px] text-text-secondary mt-2">Tüm sağlık geçmişini cihazınıza PDF olarak kaydetmek için tıklayın.</p>
         </div>
       )}
 
@@ -318,7 +329,6 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
       <div className="grid grid-cols-2 gap-3">
         {[
           { href: `/owner/pets/${pet.id}/vaccines`, label: 'Aşı OS', icon: '💉' },
-          { href: `/owner/health?pet=${pet.id}`, label: 'Sağlık & Aşı', icon: '🏥' },
           { href: `/owner/care?pet=${pet.id}`, label: 'Bakım Rutini', icon: '❤️' },
           { href: `/owner/pets/${pet.id}/nutrition`, label: 'Beslenme', icon: '🍽️' },
           { href: `/owner/ai-vet`, label: 'AI Vet', icon: '🤖' },
