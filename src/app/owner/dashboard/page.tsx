@@ -153,6 +153,27 @@ export default async function OwnerDashboard() {
     .sort((a,b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
     .slice(0, 5);
 
+  // Vaccine OS Summary
+  let vaccineOSSummary = { nextVaccine: null as string | null, nextDate: null as string | null, overdueCount: 0 }
+  if (primaryPet) {
+    const { data: vRecords } = await supabase
+      .from('vaccine_records_v2')
+      .select('vaccine_name, status, due_at')
+      .eq('pet_id', primaryPet.id)
+      .in('status', ['due', 'scheduled', 'overdue'])
+      .order('due_at', { ascending: true })
+      .limit(10)
+    if (vRecords) {
+      const overdue = vRecords.filter(r => r.status === 'overdue')
+      const next = vRecords.find(r => r.status === 'due' || r.status === 'scheduled')
+      vaccineOSSummary = {
+        nextVaccine: next?.vaccine_name ?? null,
+        nextDate: next?.due_at ? new Date(next.due_at).toLocaleDateString('tr-TR') : null,
+        overdueCount: overdue.length,
+      }
+    }
+  }
+
   return (
     <DashboardOnboardingWrapper>
     <div className="flex flex-col gap-8 pb-4">
@@ -348,6 +369,29 @@ export default async function OwnerDashboard() {
               )
             })}
           </div>
+        </div>
+      )}
+
+      {/* Vaccine OS Summary Card */}
+      {primaryPet && (vaccineOSSummary.nextVaccine || vaccineOSSummary.overdueCount > 0) && (
+        <div className={`card-base p-5 flex items-center justify-between gap-4 border-l-4 ${vaccineOSSummary.overdueCount > 0 ? 'border-l-error' : 'border-l-primary'}`}>
+          <div className="flex items-center gap-4">
+            <div className={`w-11 h-11 rounded-2xl flex items-center justify-center text-[22px] ${vaccineOSSummary.overdueCount > 0 ? 'bg-error/10' : 'bg-primary/10'}`}>💉</div>
+            <div>
+              {vaccineOSSummary.overdueCount > 0 && (
+                <p className="text-[11px] font-black text-error uppercase tracking-widest">{vaccineOSSummary.overdueCount} aşı gecikmiş</p>
+              )}
+              {vaccineOSSummary.nextVaccine ? (
+                <>
+                  <p className="font-extrabold text-text-primary text-[14px]">{vaccineOSSummary.nextVaccine}</p>
+                  {vaccineOSSummary.nextDate && <p className="text-[12px] text-text-secondary">{vaccineOSSummary.nextDate}</p>}
+                </>
+              ) : (
+                <p className="font-extrabold text-text-primary text-[14px]">Aşı Takvimi</p>
+              )}
+            </div>
+          </div>
+          <Link href={`/owner/pets/${primaryPet.id}/vaccines`} className="btn-primary text-[12px] py-2 px-4 shrink-0">Görüntüle →</Link>
         </div>
       )}
 

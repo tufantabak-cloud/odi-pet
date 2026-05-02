@@ -1092,7 +1092,192 @@ BEGIN
       AND hs.vaccine_id = vr.vaccine_id
       AND hs.status != 'done';
 
-    -- RENAME: Corona Virüs (CCV) to (C)
-    UPDATE public.vaccines SET name = REPLACE(name, '(CCV)', '(C)') WHERE name LIKE '%Corona Virüs (CCV)%';
-    UPDATE public.health_schedules SET title = REPLACE(title, '(CCV)', '(C)') WHERE title LIKE '%Corona Virüs (CCV)%';
+    -- 1. Update Vaccine names carefully to avoid duplicate key conflicts
+    UPDATE public.vaccines v
+    SET name = REPLACE(v.name, '(CCV)', '(C)')
+    WHERE v.name LIKE '%(CCV)%'
+      AND NOT EXISTS (
+        SELECT 1 FROM public.vaccines v2 
+        WHERE v2.name = REPLACE(v.name, '(CCV)', '(C)') 
+          AND v2.species = v.species
+      );
+
+    -- 2. Update health schedules titles
+    UPDATE public.health_schedules SET title = REPLACE(title, '(CCV)', '(C)') WHERE title LIKE '%(CCV)%';
 END $$;
+
+
+
+
+-- =============================================
+-- VETERINARY DIRECTORY & CLINIC ECOSYSTEM
+-- =============================================
+
+-- 1. Extend Clinics Table
+ALTER TABLE public.clinics 
+  ADD COLUMN IF NOT EXISTS city TEXT,
+  ADD COLUMN IF NOT EXISTS district TEXT,
+  ADD COLUMN IF NOT EXISTS website TEXT,
+  ADD COLUMN IF NOT EXISTS google_place_id TEXT,
+  ADD COLUMN IF NOT EXISTS latitude NUMERIC(10, 8),
+  ADD COLUMN IF NOT EXISTS longitude NUMERIC(11, 8),
+  ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT true,
+  ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS operating_hours JSONB, -- {"mon": "09:00-18:00", ...}
+  ADD COLUMN IF NOT EXISTS tags TEXT[]; -- ['7/24', 'Acil', 'Cerrahi', 'Pet Shop']
+
+-- 2. Indexing for search performance
+CREATE INDEX IF NOT EXISTS idx_clinics_city_district ON public.clinics(city, district);
+CREATE INDEX IF NOT EXISTS idx_clinics_verified ON public.clinics(is_verified);
+
+-- 3. Update RLS Policies
+DROP POLICY IF EXISTS "Anyone can view clinics" ON public.clinics;
+CREATE POLICY "Anyone can view public clinics" ON public.clinics
+  FOR SELECT USING (is_public = true OR auth.role() = 'authenticated');
+
+
+-- =============================================
+-- GEOLOCATION SEARCH FUNCTION
+-- =============================================
+
+CREATE OR REPLACE FUNCTION public.get_nearby_clinics(
+  user_lat NUMERIC, 
+  user_long NUMERIC, 
+  max_dist_km NUMERIC DEFAULT 50
+)
+RETURNS TABLE (
+  id UUID,
+  name TEXT,
+  address TEXT,
+  city TEXT,
+  district TEXT,
+  latitude NUMERIC,
+  longitude NUMERIC,
+  dist_km NUMERIC,
+  tags TEXT[],
+  is_verified BOOLEAN
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    c.id, c.name, c.address, c.city, c.district, c.latitude, c.longitude,
+    (
+      6371 * acos(
+        LEAST(1.0, GREATEST(-1.0, 
+          cos(radians(user_lat)) * cos(radians(c.latitude)) * 
+          cos(radians(c.longitude) - radians(user_long)) + 
+          sin(radians(user_lat)) * sin(radians(c.latitude))
+        ))
+      )
+    )::NUMERIC AS dist_km,
+    c.tags, c.is_verified
+  FROM public.clinics c
+  WHERE c.is_public = true
+    AND c.latitude IS NOT NULL 
+    AND c.longitude IS NOT NULL
+    AND (
+      6371 * acos(
+        LEAST(1.0, GREATEST(-1.0, 
+          cos(radians(user_lat)) * cos(radians(c.latitude)) * 
+          cos(radians(c.longitude) - radians(user_long)) + 
+          sin(radians(user_lat)) * sin(radians(c.latitude))
+        ))
+      )
+    ) <= max_dist_km
+  ORDER BY dist_km ASC;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+
+-- =============================================
+-- SAMPLE CLINIC DATA (FOR TESTING PROXIMITY)
+-- =============================================
+
+INSERT INTO public.clinics (name, address, city, district, latitude, longitude, tags, is_verified)
+VALUES 
+  ('Beşiktaş Hayvan Hastanesi', 'Gayrettepe, Yıldız Posta Cd. No:12', 'İstanbul', 'Beşiktaş', 41.0583, 29.0044, ARRAY['7/24', 'Hastane', 'Cerrahi'], true),
+  ('Akademi Veteriner Kliniği', 'Bostancı, Bağdat Cd. No:480', 'İstanbul', 'Kadıköy', 40.9526, 29.0945, ARRAY['Acil', 'Dahiliye'], true),
+  ('Nişantaşı Veteriner Kliniği', 'Vali Konağı Cd. No:102', 'İstanbul', 'Şişli', 41.0528, 28.9912, ARRAY['7/24', 'Bakım'], false),
+  ('Pet World Veteriner', 'Etiler, Nispetiye Cd. No:65', 'İstanbul', 'Beşiktaş', 41.0772, 29.0284, ARRAY['Dermatoloji'], true),
+  ('Moda Veteriner', 'Moda Cd. No:154', 'İstanbul', 'Kadıköy', 40.9844, 29.0267, ARRAY['7/24', 'Check-up'], true)
+ON CONFLICT DO NOTHING;
+
+
+-- =============================================
+-- SAMPLE CLINIC DATA (IZMIR FOCUS)
+-- =============================================
+
+INSERT INTO public.clinics (name, address, city, district, latitude, longitude, tags, is_verified)
+VALUES 
+  ('İzmir Veteriner Hastanesi', 'Kazımdirik, Bornova Cd. No:42', 'İzmir', 'Bornova', 38.4621, 27.2164, ARRAY['7/24', 'Hastane', 'Cerrahi'], true),
+  ('Mavişehir Veteriner Kliniği', 'Mavişehir, 2044. Sk. No:5', 'İzmir', 'Karşıyaka', 38.4842, 27.0853, ARRAY['Acil', 'Dahiliye'], true),
+  ('Alsancak Pet Clinic', 'Alsancak, Kıbrıs Şehitleri Cd. No:88', 'İzmir', 'Konak', 38.4385, 27.1432, ARRAY['7/24', 'Bakım'], true),
+  ('Bornova Veteriner', 'Küçükpark, 161. Sk. No:12', 'İzmir', 'Bornova', 38.4682, 27.2215, ARRAY['Dermatoloji'], false),
+  ('Göztepe Veteriner', 'Güzelyalı, Mithatpaşa Cd. No:840', 'İzmir', 'Konak', 38.3995, 27.0874, ARRAY['Check-up', 'Aşı'], true)
+ON CONFLICT DO NOTHING;
+
+
+
+
+
+
+-- =============================================
+-- VACCINE OS v2 - FOUNDATION SCHEMA
+-- =============================================
+
+CREATE TABLE IF NOT EXISTS public.vaccine_templates (
+  id                UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  species           TEXT NOT NULL CHECK (species IN ('dog', 'cat')),
+  vaccine_code      TEXT NOT NULL,
+  vaccine_name      TEXT NOT NULL,
+  mandatory_level   TEXT NOT NULL DEFAULT 'core' CHECK (mandatory_level IN ('legal_required', 'core', 'optional')),
+  protects_against  TEXT[] DEFAULT '{}',
+  dose_number       INTEGER NOT NULL DEFAULT 1,
+  min_age_weeks     INTEGER NOT NULL DEFAULT 6,
+  interval_days     INTEGER NULL,
+  recurrence_type   TEXT NOT NULL DEFAULT 'none' CHECK (recurrence_type IN ('none', 'annual', 'every_3_years', 'custom')),
+  is_active         BOOLEAN DEFAULT true,
+  created_at        TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_vaccine_templates_code_dose_species ON public.vaccine_templates(vaccine_code, dose_number, species);
+
+CREATE TABLE IF NOT EXISTS public.vaccine_records_v2 (
+  id                UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  pet_id            UUID NOT NULL REFERENCES public.pets(id) ON DELETE CASCADE,
+  template_id       UUID REFERENCES public.vaccine_templates(id) ON DELETE SET NULL,
+  vaccine_code      TEXT NOT NULL,
+  vaccine_name      TEXT NOT NULL,
+  dose_number       INTEGER NULL,
+  status            TEXT NOT NULL DEFAULT 'scheduled' CHECK (status IN ('scheduled','due','completed','overdue','invalid','skipped','needs_review')),
+  administered_at   TIMESTAMPTZ NULL,
+  due_at            TIMESTAMPTZ NULL,
+  source            TEXT NOT NULL DEFAULT 'system_generated' CHECK (source IN ('system_generated','user_quick_marked','user_detailed','imported_history','fresh_start_plan')),
+  confidence_level  TEXT NOT NULL DEFAULT 'user_reported' CHECK (confidence_level IN ('verified','user_reported','estimated')),
+  notes             TEXT NULL,
+  created_at        TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_vaccine_records_v2_pet_id ON public.vaccine_records_v2(pet_id);
+CREATE INDEX IF NOT EXISTS idx_vaccine_records_v2_status  ON public.vaccine_records_v2(status);
+CREATE INDEX IF NOT EXISTS idx_vaccine_records_v2_due_at  ON public.vaccine_records_v2(due_at);
+
+CREATE TABLE IF NOT EXISTS public.vaccine_setup_profiles (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  pet_id      UUID NOT NULL UNIQUE REFERENCES public.pets(id) ON DELETE CASCADE,
+  setup_mode  TEXT NOT NULL CHECK (setup_mode IN ('smart_start', 'historical_import', 'fresh_start')),
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.vaccine_templates     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.vaccine_records_v2    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.vaccine_setup_profiles ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can read vaccine templates" ON public.vaccine_templates;
+CREATE POLICY "Anyone can read vaccine templates" ON public.vaccine_templates FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Owners manage vaccine_records_v2" ON public.vaccine_records_v2;
+CREATE POLICY "Owners manage vaccine_records_v2" ON public.vaccine_records_v2 FOR ALL USING (EXISTS (SELECT 1 FROM public.pet_owners WHERE pet_owners.pet_id = vaccine_records_v2.pet_id AND pet_owners.profile_id = auth.uid()));
+
+DROP POLICY IF EXISTS "Owners manage vaccine_setup_profiles" ON public.vaccine_setup_profiles;
+CREATE POLICY "Owners manage vaccine_setup_profiles" ON public.vaccine_setup_profiles FOR ALL USING (EXISTS (SELECT 1 FROM public.pet_owners WHERE pet_owners.pet_id = vaccine_setup_profiles.pet_id AND pet_owners.profile_id = auth.uid()));

@@ -317,7 +317,8 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
       {/* ── Quick Links ── */}
       <div className="grid grid-cols-2 gap-3">
         {[
-          { href: `/owner/health?pet=${pet.id}`, label: 'Sağlık & Aşı', icon: '💉' },
+          { href: `/owner/pets/${pet.id}/vaccines`, label: 'Aşı OS', icon: '💉' },
+          { href: `/owner/health?pet=${pet.id}`, label: 'Sağlık & Aşı', icon: '🏥' },
           { href: `/owner/care?pet=${pet.id}`, label: 'Bakım Rutini', icon: '❤️' },
           { href: `/owner/pets/${pet.id}/nutrition`, label: 'Beslenme', icon: '🍽️' },
           { href: `/owner/ai-vet`, label: 'AI Vet', icon: '🤖' },
