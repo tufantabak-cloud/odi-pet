@@ -113,58 +113,61 @@ Call log:
   7  |   
   8  |   test('1. Landing and Login Stage', async ({ page }) => {
   9  |     console.log('Navigating to app...');
-  10 |     await page.goto('/');
-  11 |     
-  12 |     // Check if we are redirected to login
-  13 |     if (page.url().includes('/login')) {
-  14 |       await expect(page.locator('text=Odi Pet')).toBeVisible();
-  15 |       
-  16 |       console.log('Entering sample data for login...');
-  17 |       await page.fill('input[name="email"]', testEmail);
-  18 |       await page.fill('input[name="password"]', testPassword);
-> 19 |       await page.click('button[type="submit"]');
-     |                  ^ Error: page.click: Test timeout of 60000ms exceeded.
-  20 | 
-  21 |       // Wait for either an error message or a successful redirect
-  22 |       await page.waitForTimeout(3000); 
-  23 |       
-  24 |       const errorLocator = page.locator('.text-error');
-  25 |       if (await errorLocator.isVisible()) {
-  26 |         const errorText = await errorLocator.textContent();
-  27 |         console.log(`Login resulted in expected message (Test Data): ${errorText}`);
-  28 |       } else {
-  29 |         console.log('Login successful with sample data, redirected to Dashboard.');
-  30 |         await expect(page).toHaveURL(/.*owner\/dashboard|.*\//);
-  31 |       }
-  32 |     }
-  33 |   });
-  34 | 
-  35 |   test('2. Pet Health and Care Stage Analysis', async ({ page }) => {
-  36 |     // We try to access the health dashboard directly to test protected routing
-  37 |     await page.goto('/owner/health');
-  38 |     
-  39 |     if (page.url().includes('/login')) {
-  40 |       console.log('Route /owner/health is properly protected.');
-  41 |     } else {
-  42 |       console.log('Accessing Health Stage...');
-  43 |       // If we got here, check for health components
-  44 |       const hasHealthScore = await page.locator('text=Sağlık Skoru').isVisible();
-  45 |       console.log(`Health Score component visible: ${hasHealthScore}`);
-  46 |     }
-  47 |   });
-  48 | 
-  49 |   test('3. Pet Profile and Appointments Stage', async ({ page }) => {
-  50 |     await page.goto('/owner/pets');
-  51 |     
-  52 |     if (page.url().includes('/login')) {
-  53 |       console.log('Route /owner/pets is properly protected.');
-  54 |     } else {
-  55 |       console.log('Accessing Pet Profile Stage...');
-  56 |       // Look for any add pet button or pet list
-  57 |       const hasPets = await page.locator('text=Petlerim').isVisible();
-  58 |       console.log(`Pets section visible: ${hasPets}`);
-  59 |     }
-  60 |   });
-  61 | });
-  62 | 
+  10 |     
+  11 |     // Bypass splash screen
+  12 |     await page.addInitScript(() => {
+  13 |       sessionStorage.setItem('odi_splash_shown', 'true');
+  14 |     });
+  15 |     
+  16 |     await page.goto('/login');
+  17 |     
+  18 |     await expect(page.locator('text=Odi Pet').first()).toBeVisible({ timeout: 5000 }).catch(() => {});
+  19 |     
+  20 |     console.log('Entering sample data for login...');
+  21 |     await page.fill('input[name="email"]', testEmail);
+  22 |     await page.fill('input[name="password"]', testPassword);
+> 23 |     await page.click('button[type="submit"]');
+     |                ^ Error: page.click: Test timeout of 60000ms exceeded.
+  24 | 
+  25 |     // Wait for either an error message or a successful redirect
+  26 |     await page.waitForTimeout(3000); 
+  27 |     
+  28 |     const errorLocator = page.locator('.text-error');
+  29 |     if (await errorLocator.isVisible()) {
+  30 |       const errorText = await errorLocator.textContent();
+  31 |       console.log(`Login resulted in expected message (Test Data): ${errorText}`);
+  32 |     } else {
+  33 |       console.log('Login successful with sample data, redirected to Dashboard.');
+  34 |       await expect(page).toHaveURL(/.*owner\/dashboard|.*owner\/pets|^\/$/, { timeout: 10000 });
+  35 |     }
+  36 |   });
+  37 | 
+  38 |   test('2. Pet Health and Care Stage Analysis', async ({ page }) => {
+  39 |     // We try to access the health dashboard directly to test protected routing
+  40 |     await page.goto('/owner/health');
+  41 |     
+  42 |     if (page.url().includes('/login')) {
+  43 |       console.log('Route /owner/health is properly protected.');
+  44 |     } else {
+  45 |       console.log('Accessing Health Stage...');
+  46 |       // If we got here, check for health components
+  47 |       const hasHealthScore = await page.locator('text=Sağlık Skoru').isVisible();
+  48 |       console.log(`Health Score component visible: ${hasHealthScore}`);
+  49 |     }
+  50 |   });
+  51 | 
+  52 |   test('3. Pet Profile and Appointments Stage', async ({ page }) => {
+  53 |     await page.goto('/owner/pets');
+  54 |     
+  55 |     if (page.url().includes('/login')) {
+  56 |       console.log('Route /owner/pets is properly protected.');
+  57 |     } else {
+  58 |       console.log('Accessing Pet Profile Stage...');
+  59 |       // Look for any add pet button or pet list
+  60 |       const hasPets = await page.locator('text=Petlerim').isVisible();
+  61 |       console.log(`Pets section visible: ${hasPets}`);
+  62 |     }
+  63 |   });
+  64 | });
+  65 | 
 ```

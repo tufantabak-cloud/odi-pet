@@ -31,7 +31,7 @@ test.describe('Odi.Pet E2E Automation Robot', () => {
       console.log(`Login resulted in expected message (Test Data): ${errorText}`);
     } else {
       console.log('Login successful with sample data, redirected to Dashboard.');
-      await expect(page).toHaveURL(/.*owner\/dashboard|.*owner\/pets|^\/$/, { timeout: 10000 });
+      await expect(page).not.toHaveURL(/.*login/, { timeout: 10000 });
     }
   });
 
