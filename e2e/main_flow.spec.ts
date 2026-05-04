@@ -8,11 +8,6 @@ test.describe('Odi.Pet E2E Automation Robot', () => {
   test('1. Landing and Login Stage', async ({ page }) => {
     console.log('Navigating to app...');
     
-    // Bypass splash screen
-    await page.addInitScript(() => {
-      sessionStorage.setItem('odi_splash_shown', 'true');
-    });
-    
     await page.goto('/login');
     
     await expect(page.locator('text=Odi Pet').first()).toBeVisible({ timeout: 5000 }).catch(() => {});

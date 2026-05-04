@@ -19,11 +19,6 @@ test.describe('Odi.Pet Authenticated E2E Flow (Genişletilmiş Aşama)', () => {
     // Perform Login before each test
     console.log('Logging in with valid credentials...');
     
-    // Bypass splash screen entirely on all navigations in this context
-    await page.addInitScript(() => {
-      sessionStorage.setItem('odi_splash_shown', 'true');
-    });
-    
     await page.goto('/login');
 
     await page.fill('input[name="email"]', TEST_EMAIL);
