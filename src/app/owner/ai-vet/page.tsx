@@ -136,7 +136,7 @@ export default function AIVetPage() {
             disabled={loading}
           />
           <button
-            onClick={sendMessage}
+            onClick={() => sendMessage()}
             disabled={loading || !input.trim()}
             aria-label="Gönder"
             title="Gönder"
