@@ -13,7 +13,7 @@ export default async function HealthPage({ searchParams }: { searchParams: Promi
   const activePetId = petId ?? pets?.[0]?.id
 
   return (
-    <div className="flex flex-col gap-8 pb-10 w-full max-w-3xl mx-auto">
+    <div className="flex flex-col gap-8 pb-10 w-full mx-auto">
       <div className="border-b border-border-main pb-4">
         <h1 className="text-[32px] font-extrabold text-text-primary tracking-tight">Sağlık Merkezi</h1>
         <p className="text-text-secondary mt-1 text-[16px] font-medium">Aşı, hastalık, alerji ve ilaç takip modülü</p>

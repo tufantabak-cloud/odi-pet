@@ -6,6 +6,7 @@
 -- 1. vaccine_templates: Protocol master data
 CREATE TABLE IF NOT EXISTS public.vaccine_templates (
   id                UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  profile_id        UUID REFERENCES public.profiles(id) ON DELETE CASCADE, -- NULL = System Default
   species           TEXT NOT NULL CHECK (species IN ('dog', 'cat')),
   vaccine_code      TEXT NOT NULL,
   vaccine_name      TEXT NOT NULL,
@@ -21,8 +22,8 @@ CREATE TABLE IF NOT EXISTS public.vaccine_templates (
   created_at        TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_vaccine_templates_code_dose_species
-  ON public.vaccine_templates(vaccine_code, dose_number, species);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_vaccine_templates_code_dose_species_profile
+  ON public.vaccine_templates(vaccine_code, dose_number, species, COALESCE(profile_id, '00000000-0000-0000-0000-000000000000'));
 
 -- 2. vaccine_records_v2: Actual administered/planned vaccines
 CREATE TABLE IF NOT EXISTS public.vaccine_records_v2 (
@@ -65,8 +66,11 @@ ALTER TABLE public.vaccine_records_v2     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.vaccine_setup_profiles ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Anyone can read vaccine templates" ON public.vaccine_templates;
-CREATE POLICY "Anyone can read vaccine templates" ON public.vaccine_templates
-  FOR SELECT USING (true);
+CREATE POLICY "Users can read system or own templates" ON public.vaccine_templates
+  FOR SELECT USING (profile_id IS NULL OR profile_id = auth.uid());
+
+CREATE POLICY "Users can manage own templates" ON public.vaccine_templates
+  FOR ALL USING (profile_id = auth.uid());
 
 DROP POLICY IF EXISTS "Owners manage vaccine_records_v2" ON public.vaccine_records_v2;
 CREATE POLICY "Owners manage vaccine_records_v2" ON public.vaccine_records_v2

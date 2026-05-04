@@ -8,12 +8,24 @@ export default async function CustomVaccinesPage() {
   if (!profile) redirect('/login')
 
   const supabase = await createServerSupabaseClient()
-  
-  const { data: templates } = await supabase
+
+  // Fetch all system templates + user overrides
+  const { data: allTemplates } = await supabase
     .from('vaccine_templates')
     .select('*')
-    .eq('profile_id', profile.id)
-    .order('created_at', { ascending: false })
+    .or(`profile_id.eq.${profile.id},profile_id.is.null`)
+    .order('vaccine_name', { ascending: true })
 
-  return <CustomVaccinesClient templates={templates || []} />
+  const templates = allTemplates || []
+
+  // Deduplicate: user overrides take priority over system defaults
+  const overriddenCodes = new Set(
+    templates.filter(t => t.profile_id !== null).map(t => `${t.species}_${t.vaccine_code}`)
+  )
+  const deduplicated = templates.filter(t => {
+    if (t.profile_id !== null) return true
+    return !overriddenCodes.has(`${t.species}_${t.vaccine_code}`)
+  })
+
+  return <CustomVaccinesClient templates={deduplicated} />
 }

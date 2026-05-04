@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
-import { estimateRefillDate } from '@/lib/nutrition/refill-engine'
+import { estimateNextRefillDate } from '@/lib/nutrition/refill-engine'
 import { revalidatePath } from 'next/cache'
 
 type Params = { params: Promise<{ id: string }> }

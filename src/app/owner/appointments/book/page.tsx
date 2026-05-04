@@ -29,7 +29,7 @@ export default async function BookAppointmentPage({
     .slice(0, 16)
 
   return (
-    <div className="flex flex-col w-full max-w-xl mx-auto pb-10">
+    <div className="flex flex-col w-full mx-auto pb-10">
       <div className="flex flex-col gap-2 mb-8 border-b border-border-main pb-4">
         <h1 className="text-[28px] font-extrabold text-text-primary tracking-tight">Randevu Al</h1>
         <p className="text-text-secondary">Pati dostunuz için klinik randevusu oluşturun.</p>

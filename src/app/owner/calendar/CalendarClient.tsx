@@ -113,7 +113,7 @@ export default function CalendarClient() {
   }
 
   return (
-    <div className="flex flex-col gap-6 pb-20 w-full max-w-5xl mx-auto">
+    <div className="flex flex-col gap-6 pb-20 w-full mx-auto">
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">

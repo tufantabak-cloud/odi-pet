@@ -107,7 +107,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
   }
 
   return (
-    <div className="flex flex-col w-full max-w-2xl mx-auto pb-10">
+    <div className="flex flex-col w-full mx-auto pb-10">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6 border-b border-border-main pb-4">
         <button type="button" onClick={() => step === 1 ? router.back() : setStep(s => s - 1)}

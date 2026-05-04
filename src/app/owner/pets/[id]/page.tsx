@@ -23,9 +23,11 @@ export default async function PetDetailPage({ params }: { params: Promise<{ id: 
   const { data: pet } = await supabase.from('pets').select('*').eq('id', id).eq('owner_id', user?.id).single()
   if (!pet) redirect('/owner/pets')
 
+  const speciesCode = (pet.species || '').toLowerCase() === 'köpek' || (pet.species || '').toLowerCase() === 'dog' ? 'dog' : 'cat'
+  
   const [
     { data: schedules },
-    { data: vaccineRecords },
+    { data: vaccineRecordsV2 },
     { data: diseases },
     { data: allergies },
     { data: medications },
@@ -33,9 +35,11 @@ export default async function PetDetailPage({ params }: { params: Promise<{ id: 
     { data: appointments },
     { data: nutritionLogs },
     { data: payments },
+    { data: setupProfile },
+    { data: allTemplates },
   ] = await Promise.all([
     supabase.from('health_schedules').select('*, vaccines(name)').eq('pet_id', id).order('due_date').limit(20),
-    supabase.from('vaccine_records').select('*, vaccines(name)').eq('pet_id', id).order('applied_date', { ascending: false }).limit(10),
+    supabase.from('vaccine_records_v2').select('*').eq('pet_id', id).order('due_at', { ascending: true }),
     supabase.from('health_diseases').select('*').eq('pet_id', id).order('diagnosis_date', { ascending: false }).limit(5),
     supabase.from('health_allergies').select('*').eq('pet_id', id).limit(5),
     supabase.from('health_medications').select('*').eq('pet_id', id).limit(5),
@@ -43,12 +47,29 @@ export default async function PetDetailPage({ params }: { params: Promise<{ id: 
     supabase.from('appointments').select('*, clinics(name)').eq('pet_id', id).order('scheduled_at', { ascending: false }).limit(5),
     supabase.from('nutrition_logs').select('*').eq('pet_id', id).order('date', { ascending: false }).limit(7),
     supabase.from('payments').select('*').eq('pet_id', id).order('payment_date', { ascending: false }).limit(5),
+    supabase.from('vaccine_setup_profiles').select('*').eq('pet_id', id).single(),
+    supabase.from('vaccine_templates').select('*')
+      .eq('species', speciesCode)
+      .or(`profile_id.eq.${user?.id},profile_id.is.null`)
+      .order('first_dose_week', { ascending: true }),
   ])
 
+  // Deduplicate templates: user overrides take priority
+  const overriddenKeys = new Set(
+    (allTemplates ?? []).filter(t => t.profile_id !== null).map(t => `${t.species}_${t.vaccine_code}`)
+  )
+  const templates = (allTemplates ?? []).filter(t => {
+    if (t.profile_id !== null) return true
+    return !overriddenKeys.has(`${t.species}_${t.vaccine_code}`)
+  })
+
   const age = calcAge(pet.birth_date)
-  const score = pet.health_score ?? 100
-  const overdue = (schedules ?? []).filter((s: any) => s.status !== 'done' && new Date(s.due_date) < new Date()).length
-  const upcoming = (schedules ?? []).filter((s: any) => s.status !== 'done' && new Date(s.due_date) >= new Date()).slice(0, 3)
+  const overdue = (vaccineRecordsV2 ?? []).filter((r: any) => r.status === 'overdue').length
+  let score = pet.health_score ?? 100
+  if (overdue > 0) {
+    score = Math.max(0, score - (overdue * 25))
+  }
+  const upcoming = (vaccineRecordsV2 ?? []).filter((r: any) => r.status !== 'completed' && new Date(r.due_at) >= new Date()).slice(0, 3)
 
   const [{ data: sub }] = await Promise.all([
     supabase.from('user_subscriptions').select('plan').eq('profile_id', user?.id ?? '').single(),
@@ -62,7 +83,7 @@ export default async function PetDetailPage({ params }: { params: Promise<{ id: 
       overdue={overdue}
       upcoming={upcoming}
       schedules={schedules ?? []}
-      vaccineRecords={vaccineRecords ?? []}
+      vaccineRecords={vaccineRecordsV2 ?? []}
       diseases={diseases ?? []}
       allergies={allergies ?? []}
       medications={medications ?? []}
@@ -71,6 +92,8 @@ export default async function PetDetailPage({ params }: { params: Promise<{ id: 
       nutritionLogs={nutritionLogs ?? []}
       payments={payments ?? []}
       subscription={sub}
+      setupProfile={setupProfile}
+      templates={templates}
     />
   )
 }

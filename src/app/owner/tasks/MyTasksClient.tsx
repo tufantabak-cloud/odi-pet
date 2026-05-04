@@ -70,7 +70,7 @@ export default function MyTasksClient({ tasks, notifications }: { tasks: any[]; 
   }).length
 
   return (
-    <div className="flex flex-col gap-6 pb-20 w-full max-w-2xl mx-auto">
+    <div className="flex flex-col gap-8 pb-10 w-full">
       <div className="flex items-center justify-between">
         <h1 className="text-[26px] font-extrabold text-text-primary tracking-tight">Görevlerim</h1>
         <div className="flex items-center gap-2 text-[13px] font-semibold text-text-secondary">

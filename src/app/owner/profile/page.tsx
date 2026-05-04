@@ -2,6 +2,7 @@ import { getCurrentProfile, getSessionUser } from '@/lib/auth/get-current-profil
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { logout } from '@/features/auth/actions'
+import PetCardActions from './PetCardActions'
 
 export default async function ProfileMenuPage() {
   const profile = await getCurrentProfile()
@@ -32,7 +33,7 @@ export default async function ProfileMenuPage() {
   const streakDays = 14
 
   return (
-    <div className="flex flex-col gap-8 pb-20 w-full max-w-2xl mx-auto font-sans">
+    <div className="flex flex-col gap-8 pb-20 w-full mx-auto font-sans">
 
       {/* 1. Header / Identity Layer */}
       <section className="card-base overflow-hidden relative shadow-lg shadow-primary/5">
@@ -147,9 +148,7 @@ export default async function ProfileMenuPage() {
                 <div className="bg-green-50 text-green-600 px-2 py-1 rounded text-[11px] font-bold border border-green-100">
                   Sağlık: %{pet.health_score || 100}
                 </div>
-                <div className="flex gap-2">
-                  <Link href={`/owner/pets/${pet.id}/edit`} className="text-[12px] text-text-secondary hover:text-primary font-semibold">Düzenle</Link>
-                </div>
+                <PetCardActions pet={pet} />
               </div>
             </div>
           ))}
@@ -248,7 +247,7 @@ export default async function ProfileMenuPage() {
         <h2 className="text-[12px] font-black text-text-secondary uppercase tracking-widest px-2">Uygulama Ayarları</h2>
         <div className="card-base divide-y divide-border-main text-[14px] font-semibold text-text-primary">
           <Link href="/owner/profile/custom-vaccines" className="block p-4 hover:bg-bg-main transition-colors flex justify-between items-center">
-            Özel Aşı & Parazit Şablonları
+            Aşı & Parazit Şablonları
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-secondary"><polyline points="9 18 15 12 9 6"/></svg>
           </Link>
         </div>

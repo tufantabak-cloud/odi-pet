@@ -33,7 +33,7 @@ export default function SocialComposePage() {
   }
 
   return (
-    <div className="flex flex-col w-full max-w-xl mx-auto pb-10">
+    <div className="flex flex-col w-full mx-auto pb-10">
       <div className="flex items-center justify-between mb-8 border-b border-border-main pb-4">
         <h1 className="text-[28px] font-extrabold text-text-primary tracking-tight">Yeni Paylaşım</h1>
         <button onClick={() => router.back()} className="text-[14px] font-bold text-text-secondary hover:text-text-primary transition-colors">

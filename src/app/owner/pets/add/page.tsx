@@ -27,7 +27,7 @@ type Species = 'Kedi' | 'Köpek'
 // ── Adım 1: Tür Seçimi ──────────────────────────────────────────
 function SpeciesSelector({ onSelect }: { onSelect: (s: Species) => void }) {
   return (
-    <div className="flex flex-col items-center w-full max-w-xl mx-auto pt-6 pb-10 gap-10">
+    <div className="flex flex-col items-center w-full mx-auto pt-6 pb-10 gap-10">
       <div className="text-center">
         <h1 className="text-[32px] font-extrabold text-text-primary tracking-tight">Patin Kim?</h1>
         <p className="text-text-secondary mt-2 text-[16px]">Devam etmek için önce tür seçin</p>
@@ -170,7 +170,7 @@ function PetForm({ species, onBack }: { species: Species; onBack: () => void }) 
   }
 
   return (
-    <div className="flex flex-col w-full max-w-2xl mx-auto pb-10">
+    <div className="flex flex-col w-full mx-auto pb-10">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6 border-b border-border-main pb-4">
         <button onClick={step === 1 ? onBack : () => setStep(s => s - 1)}

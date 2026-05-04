@@ -81,7 +81,7 @@ export default async function SubscriptionPage() {
     : null
 
   return (
-    <div className="flex flex-col gap-8 pb-20 w-full max-w-2xl mx-auto">
+    <div className="flex flex-col gap-8 pb-20 w-full mx-auto">
 
       {/* Back nav */}
       <Link href="/owner/profile" className="flex items-center gap-2 text-text-secondary hover:text-primary transition-colors text-[14px] font-semibold group -mb-4">

@@ -30,6 +30,13 @@ const ALLOWED_EVENTS = new Set([
   'marketplace_waitlist_joined',
   'marketplace_waitlist_duplicate',
   'affiliate_partner_clicked',
+  // Vaccine OS
+  'vaccine_setup_mode_selected',
+  'vaccine_schedule_generated',
+  'vaccine_quick_marked',
+  'vaccine_detailed_logged',
+  'vaccine_overdue_detected',
+  'vaccine_chain_completed',
 ])
 
 export async function POST(req: NextRequest) {

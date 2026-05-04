@@ -37,12 +37,15 @@ export default function SplashScreen() {
       onClick={dismissSplash}
       className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#4F2DBA] transition-opacity duration-500 cursor-pointer
       ${isFading ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+      style={{ height: '100dvh' }}
     >
-      <img 
-        src="/splash.png" 
-        alt="Odi Pet" 
-        className="w-full h-full object-cover pointer-events-none select-none"
-      />
+      <div className="relative w-full h-full flex items-center justify-center p-6 md:p-12">
+        <img 
+          src="/splash.png" 
+          alt="Odi Pet" 
+          className="max-w-full max-h-full object-contain pointer-events-none select-none animate-in fade-in zoom-in duration-700"
+        />
+      </div>
     </div>
   )
 }

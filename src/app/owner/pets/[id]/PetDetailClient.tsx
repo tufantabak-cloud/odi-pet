@@ -4,6 +4,7 @@ import Link from 'next/link'
 import FamilyTab from './FamilyTab'
 import ReportsTab from './ReportsTab'
 import InsuranceWidget from '@/components/insurance/InsuranceWidget'
+import VaccineOSClient from './vaccines/VaccineOSClient'
 import { useState } from 'react'
 
 const genderLabel: Record<string, string> = { male: 'Erkek', female: 'Dişi', unknown: 'Bilinmiyor' }
@@ -11,24 +12,44 @@ const genderLabel: Record<string, string> = { male: 'Erkek', female: 'Dişi', un
 const TABS = ['Özet', 'Sağlık Geçmişi', 'Beslenme', 'Veteriner', 'Belgeler', 'Aile', 'Raporlar'] as const
 type Tab = typeof TABS[number]
 
-export default function PetDetailClient({ pet, age, score, overdue, upcoming, schedules, vaccineRecords, diseases, allergies, medications, growthRecords, appointments, nutritionLogs, payments, subscription }: any) {
+export default function PetDetailClient({ pet, age, score, overdue, upcoming, schedules, vaccineRecords, diseases, allergies, medications, growthRecords, appointments, nutritionLogs, payments, subscription, setupProfile, templates }: any) {
   const [activeTab, setActiveTab] = useState<Tab>('Özet')
-  const [timelineFilter, setTimelineFilter] = useState('Tümü')
+  const [timelineFilter, setTimelineFilter] = useState('Aşılar')
+
+  const switchToVaccines = () => {
+    setActiveTab('Sağlık Geçmişi')
+    setTimelineFilter('Aşılar')
+    // Find the tabs element and scroll to it
+    const tabsElement = document.getElementById('pet-tabs')
+    if (tabsElement) {
+      tabsElement.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
 
   const riskLevel = score >= 80 ? 'Düşük' : score >= 50 ? 'Orta' : 'Yüksek'
   const riskColor = score >= 80 ? 'text-green-600 bg-green-50' : score >= 50 ? 'text-amber-600 bg-amber-50' : 'text-red-600 bg-red-50'
 
   // Build unified timeline
   const timeline: any[] = [
-    ...(vaccineRecords ?? []).map((r: any) => ({ type: 'vaccine', date: r.applied_date, label: r.vaccines?.name || 'Aşı', sub: r.vet_name, icon: '💉' })),
+    ...(vaccineRecords ?? []).filter(r => r.status === 'completed').map((r: any) => {
+      const tmpl = templates.find((t: any) => t.vaccine_code === r.vaccine_code)
+      const isParasite = tmpl?.category === 'parasite'
+      return { 
+        type: isParasite ? 'parasite' : 'vaccine', 
+        date: r.administered_at || r.due_at, 
+        label: r.vaccine_name, 
+        sub: r.vet_name || (isParasite ? 'Parazit Koruması' : 'Aşı Uygulaması'), 
+        icon: isParasite ? '🦠' : '💉' 
+      }
+    }),
     ...(diseases ?? []).map((r: any) => ({ type: 'disease', date: r.diagnosis_date, label: r.disease_name, sub: r.status, icon: '🩺' })),
     ...(medications ?? []).map((r: any) => ({ type: 'medication', date: r.start_date, label: r.medication_name, sub: r.dosage, icon: '💊' })),
     ...(appointments ?? []).map((r: any) => ({ type: 'vet', date: r.scheduled_at?.split('T')[0], label: r.clinics?.name || 'Randevu', sub: r.status, icon: '🏥' })),
   ].sort((a, b) => (b.date || '').localeCompare(a.date || ''))
 
   const filterMap: Record<string, string[]> = {
-    'Tümü': ['vaccine', 'disease', 'medication', 'vet'],
     'Aşılar': ['vaccine'],
+    'Parazit': ['parasite'],
     'Tedaviler': ['disease', 'medication'],
     'Veteriner': ['vet'],
   }
@@ -36,7 +57,7 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
   const filteredTimeline = timeline.filter(e => filterMap[timelineFilter]?.includes(e.type))
 
   return (
-    <div className="flex flex-col gap-6 pb-20 w-full max-w-3xl mx-auto">
+    <div className="flex flex-col gap-6 pb-20 w-full mx-auto">
 
       {/* Back */}
       <Link href="/owner/pets" className="flex items-center gap-2 text-[14px] font-bold text-text-secondary hover:text-primary transition-colors group -mb-2">
@@ -56,9 +77,9 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
               <h1 className="text-[28px] font-extrabold text-text-primary">{pet.name}</h1>
               <span className={`text-[11px] font-black px-3 py-1 rounded-full ${riskColor}`}>Risk: {riskLevel}</span>
               {overdue > 0 && (
-                <Link href={`/owner/pets/${pet.id}/vaccines`} className="text-[11px] font-black px-3 py-1 rounded-full bg-red-100 text-red-700 hover:bg-red-200 hover:-translate-y-0.5 transition-all shadow-sm">
+                <button onClick={switchToVaccines} className="text-[11px] font-black px-3 py-1 rounded-full bg-red-100 text-red-700 hover:bg-red-200 hover:-translate-y-0.5 transition-all shadow-sm">
                   ⚠ {overdue} Gecikmiş
-                </Link>
+                </button>
               )}
             </div>
             <p className="text-text-secondary font-medium text-[14px]">{pet.species}{pet.breed ? ` • ${pet.breed}` : ''}{pet.gender ? ` • ${genderLabel[pet.gender] ?? ''}` : ''}</p>
@@ -108,12 +129,12 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
               )
             })}
           </div>
-          <Link href={`/owner/pets/${pet.id}/vaccines`} className="block text-center text-primary text-[13px] font-bold mt-4 hover:underline">Tümünü Görüntüle →</Link>
+          <button onClick={switchToVaccines} className="block w-full text-center text-primary text-[13px] font-bold mt-4 hover:underline">Tümünü Görüntüle →</button>
         </div>
       )}
 
       {/* ── Tabs ── */}
-      <div className="flex gap-1 bg-bg-main p-1 rounded-2xl border border-border-main overflow-x-auto">
+      <div id="pet-tabs" className="flex gap-1 bg-bg-main p-1 rounded-2xl border border-border-main overflow-x-auto">
         {TABS.map(t => (
           <button key={t} onClick={() => setActiveTab(t)}
             className={`flex-1 min-w-max px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all whitespace-nowrap ${activeTab === t ? 'bg-white text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary'}`}>
@@ -175,7 +196,17 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
               </button>
             ))}
           </div>
-          {filteredTimeline.length === 0 ? (
+
+          {(timelineFilter === 'Aşılar' || timelineFilter === 'Parazit') ? (
+            <VaccineOSClient 
+              pet={pet} 
+              setupProfile={setupProfile} 
+              vaccineRecords={vaccineRecords} 
+              templates={templates} 
+              isTab={true}
+              categoryFilter={timelineFilter === 'Parazit' ? 'parasite' : 'vaccine'}
+            />
+          ) : filteredTimeline.length === 0 ? (
             <div className="card-base p-8 text-center text-text-secondary">Bu kategoride kayıt bulunamadı.</div>
           ) : (
             <div className="card-base divide-y divide-border-main overflow-hidden">
@@ -327,17 +358,22 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
 
       {/* ── Quick Links ── */}
       <div className="grid grid-cols-2 gap-3">
-        {[
-          { href: `/owner/pets/${pet.id}/vaccines`, label: 'Aşı OS', icon: '💉' },
-          { href: `/owner/care?pet=${pet.id}`, label: 'Bakım Rutini', icon: '❤️' },
-          { href: `/owner/pets/${pet.id}/nutrition`, label: 'Beslenme', icon: '🍽️' },
-          { href: `/owner/ai-vet`, label: 'AI Vet', icon: '🤖' },
-        ].map(m => (
-          <Link key={m.href} href={m.href} className="card-base p-4 flex items-center gap-3 hover:bg-bg-main transition-colors group">
-            <span className="text-[24px]">{m.icon}</span>
-            <span className="font-bold text-text-primary text-[14px] group-hover:text-primary transition-colors">{m.label}</span>
-          </Link>
-        ))}
+        <button onClick={switchToVaccines} className="card-base p-4 flex items-center gap-3 hover:bg-bg-main transition-colors group text-left">
+          <span className="text-[24px]">💉</span>
+          <span className="font-bold text-text-primary text-[14px] group-hover:text-primary transition-colors">Aşı OS</span>
+        </button>
+        <Link href={`/owner/care?pet=${pet.id}`} className="card-base p-4 flex items-center gap-3 hover:bg-bg-main transition-colors group">
+          <span className="text-[24px]">❤️</span>
+          <span className="font-bold text-text-primary text-[14px] group-hover:text-primary transition-colors">Bakım Rutini</span>
+        </Link>
+        <Link href={`/owner/pets/${pet.id}/nutrition`} className="card-base p-4 flex items-center gap-3 hover:bg-bg-main transition-colors group">
+          <span className="text-[24px]">🍽️</span>
+          <span className="font-bold text-text-primary text-[14px] group-hover:text-primary transition-colors">Beslenme</span>
+        </Link>
+        <Link href={`/owner/ai-vet`} className="card-base p-4 flex items-center gap-3 hover:bg-bg-main transition-colors group">
+          <span className="text-[24px]">🤖</span>
+          <span className="font-bold text-text-primary text-[14px] group-hover:text-primary transition-colors">AI Vet</span>
+        </Link>
       </div>
 
     </div>

@@ -60,7 +60,7 @@ export default function AIVetPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-10rem)] max-h-[700px] w-full max-w-2xl mx-auto">
+    <div className="flex flex-col h-[calc(100vh-10rem)] max-h-[700px] w-full mx-auto">
       {/* Header */}
       <div className="border-b border-border-main pb-4 mb-4 shrink-0">
         <h1 className="text-[28px] font-extrabold text-text-primary tracking-tight flex items-center gap-3">

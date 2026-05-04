@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
+import { useState, useEffect, useTransition, useMemo, Fragment, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { COMMON_ALIASES, getDisplayName } from '@/lib/vaccines/utils'
 import Link from 'next/link'
 import { trackEvent } from '@/lib/analytics/track'
 import {
@@ -12,13 +13,61 @@ import {
   postponeVaccine,
   deleteVaccineRecord,
   addManualVaccine,
+  generateFutureScheduleFromPastRecords,
 } from './actions'
+import { analyzeVaccineLabel } from './ai-actions'
+
+function ScannerDropdown({ onSingleScan, onBatchScan }: { onSingleScan: (file: File) => void, onBatchScan: () => void }) {
+  const [open, setOpen] = useState(false);
+  const singleRef = useRef<HTMLInputElement>(null);
+  
+  return (
+    <div className="relative">
+      <button 
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 transition-all rounded-xl border border-primary/20 font-bold text-[12px] shadow-sm"
+      >
+        <span className="text-[16px]">📸</span> Etiketten Oku (Defter Tarama)
+      </button>
+      
+      <input type="file" accept="image/*" capture="environment" className="hidden" ref={singleRef} onChange={(e) => {
+        if(e.target.files?.[0]) {
+           onSingleScan(e.target.files[0]);
+           setOpen(false);
+        }
+        e.target.value = ''; // Reset input
+      }} />
+      
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-border-main rounded-xl shadow-xl z-50 p-2 flex flex-col gap-1">
+            <button onClick={() => { setOpen(false); singleRef.current?.click() }} className="text-left text-[12px] font-bold text-text-primary hover:bg-bg-main px-3 py-2.5 rounded-lg flex items-center gap-2">
+              <span className="text-[16px]">📷</span> Tekli Etiket Oku
+            </button>
+            <button onClick={() => { setOpen(false); onBatchScan() }} className="text-left text-[12px] font-bold text-text-primary hover:bg-bg-main px-3 py-2.5 rounded-lg flex items-center gap-2">
+              <span className="text-[16px]">📸</span> Defterden Tara (Çoklu)
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
 
 // ── Types ──────────────────────────────────────────────────────
 type Pet = { id: string; name: string; species: string; birth_date: string | null; avatar_url?: string }
-type Template = { id: string; vaccine_code: string; vaccine_name: string; mandatory_level: string; dose_number: number; min_age_weeks: number; interval_days: number | null; recurrence_type: string; protects_against: string[] }
+type Template = { id: string; vaccine_code: string; vaccine_name: string; category: string; mandatory_level: string; dose_count: number; first_dose_week: number; dose_interval_days: number[] | number | null; has_annual_booster: boolean; recurrence_days: number | null; protects_against: string[]; profile_id: string | null; is_active: boolean }
 type VRecord = { id: string; pet_id: string; vaccine_code: string; vaccine_name: string; dose_number: number | null; status: string; administered_at: string | null; due_at: string | null; source: string; confidence_level: string; notes: string | null }
 type SetupProfile = { id: string; pet_id: string; setup_mode: string } | null
+
+
+function formatDate(dateStr: string | null) {
+  if (!dateStr) return '-'
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: '2-digit' })
+}
+
 
 const STATUS_ICON: Record<string, string> = {
   completed: '✅', due: '⏳', scheduled: '🔜', overdue: '🔴', skipped: '⏭️', invalid: '❌', needs_review: '🔍',
@@ -36,7 +85,7 @@ const LEVEL_LABEL: Record<string, string> = {
 }
 
 // ── Setup Flow ─────────────────────────────────────────────────
-function SetupFlow({ pet, templates, onComplete }: { pet: Pet; templates: Template[]; onComplete: () => void }) {
+function SetupFlow({ pet, templates, onComplete, onHistoricalImport }: { pet: Pet; templates: Template[]; onComplete: () => void; onHistoricalImport: () => void }) {
   const router = useRouter()
   const [step, setStep] = useState<'mode' | 'warning' | 'processing'>('mode')
   const [selectedMode, setSelectedMode] = useState<string | null>(null)
@@ -45,7 +94,7 @@ function SetupFlow({ pet, templates, onComplete }: { pet: Pet; templates: Templa
 
   const modes = [
     { id: 'smart_start', icon: '🧬', title: 'Akıllı Başlangıç', desc: 'Doğum tarihine göre standart takvim oluştur.' },
-    { id: 'historical_import', icon: '📋', title: 'Geçmiş Kayıtlarım Var', desc: 'Eski aşı kayıtlarını manuel eklemek istiyorum.' },
+    { id: 'historical_import', icon: '📸', title: 'Geçmiş Kayıtlarım Var', desc: 'Karnedeki etiketleri yapay zekaya okutarak otomatik ekle.' },
     { id: 'fresh_start', icon: '🌱', title: 'Bugünden Başla', desc: 'Geçmişi dikkate alma, bundan sonrası için plan oluştur.' },
   ]
 
@@ -57,6 +106,17 @@ function SetupFlow({ pet, templates, onComplete }: { pet: Pet; templates: Templa
 
   function handleConfirm() {
     if (!selectedMode) return
+
+    if (selectedMode === 'historical_import') {
+      setStep('processing')
+      startTransition(async () => {
+        await saveSetupMode(pet.id, selectedMode as any)
+        trackEvent('vaccine_setup_mode_selected', { pet_id: pet.id, mode: selectedMode })
+        onHistoricalImport()
+      })
+      return
+    }
+
     setStep('processing')
     startTransition(async () => {
       await saveSetupMode(pet.id, selectedMode as any)
@@ -78,7 +138,7 @@ function SetupFlow({ pet, templates, onComplete }: { pet: Pet; templates: Templa
   }
 
   return (
-    <div className="flex flex-col gap-6 max-w-lg mx-auto pt-4">
+    <div className="flex flex-col gap-6 w-full mx-auto pt-4">
       <div className="text-center">
         <div className="w-16 h-16 bg-primary/10 rounded-[20px] flex items-center justify-center text-[36px] mx-auto mb-4">💉</div>
         <h2 className="text-[22px] font-extrabold text-text-primary">Aşı Planını Başlat</h2>
@@ -127,42 +187,110 @@ function SetupFlow({ pet, templates, onComplete }: { pet: Pet; templates: Templa
 }
 
 // ── Vaccine Action Modal (2 yol) ───────────────────────────────
-function VaccineActionModal({ record, allRecords, onClose, onDone }: { record: VRecord; allRecords: VRecord[]; onClose: () => void; onDone: () => void }) {
-  const [path, setPath] = useState<'choose' | 'quick' | 'detailed'>('choose')
-  const [dateMode, setDateMode] = useState<'today' | 'custom'>('today')
-  const [customDate, setCustomDate] = useState(new Date().toISOString().split('T')[0])
+// Helper to standardize text casing (Title Case)
+const toTitleCase = (str: string) => {
+  if (!str) return '';
+  return str.toLocaleLowerCase('tr-TR').split(' ').map(word => {
+    if (!word) return '';
+    return word.charAt(0).toLocaleUpperCase('tr-TR') + word.slice(1);
+  }).join(' ');
+}
+
+function VaccineActionModal({ record, allRecords, suggestions, onClose, onDone }: { 
+  record: VRecord & { _startInDetailed?: boolean }; 
+  allRecords: VRecord[]; 
+  suggestions: { clinics: string[], vets: string[], brands: string[] };
+  onClose: () => void; 
+  onDone: () => void 
+}) {
+  const isEditing = record.status === 'completed'
+  const [path, setPath] = useState<'choose' | 'quick' | 'detailed'>(isEditing ? 'detailed' : record._startInDetailed ? 'detailed' : 'choose')
+  const [dateMode, setDateMode] = useState<'today' | 'custom'>(isEditing ? 'custom' : 'today')
+  const [customDate, setCustomDate] = useState(isEditing && record.administered_at ? new Date(record.administered_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0])
   const [isPending, startTransition] = useTransition()
 
+  // Parse notes for pre-filling
+  const parsedNotes = useMemo(() => {
+    if (!record.notes) return { clinic: '', vet: '', brand: '', batch: '', text: '' }
+    const parts = record.notes.split(' | ')
+    const find = (prefix: string) => parts.find(p => p.startsWith(prefix))?.split(': ')[1] || ''
+    const text = parts.find(p => !p.includes(': ')) || ''
+    return {
+      clinic: find('Klinik'),
+      vet: find('Veteriner'),
+      brand: find('Marka'),
+      batch: find('Seri No'),
+      text
+    }
+  }, [record.notes])
+
   // Detailed form fields
-  const [detailDate, setDetailDate] = useState(new Date().toISOString().split('T')[0])
-  const [clinicName, setClinicName] = useState('')
-  const [vetName, setVetName] = useState('')
-  const [brand, setBrand] = useState('')
-  const [batchNo, setBatchNo] = useState('')
-  const [notes, setNotes] = useState('')
+  const [detailDate, setDetailDate] = useState(isEditing && record.administered_at ? new Date(record.administered_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0])
+  const [clinicName, setClinicName] = useState(parsedNotes.clinic)
+  const [vetName, setVetName] = useState(parsedNotes.vet)
+  const [brand, setBrand] = useState(parsedNotes.brand)
+  const [batchNo, setBatchNo] = useState(parsedNotes.batch)
+  const [notes, setNotes] = useState(parsedNotes.text)
+
+  // Detect if selected date year differs from planned year
+  const plannedYear = record.due_at ? new Date(record.due_at).getFullYear() : null
+  const selectedYear = new Date(path === 'detailed' ? detailDate : (dateMode === 'today' ? new Date() : customDate)).getFullYear()
+  const isOverdueEntry = plannedYear && selectedYear > plannedYear && !isEditing
 
   function handleQuickConfirm() {
     const date = dateMode === 'today' ? new Date().toISOString() : new Date(customDate).toISOString()
+    const metadata = isOverdueEntry ? ` [INTENDED_YEAR:${plannedYear}]` : ''
     startTransition(async () => {
-      await markVaccineDone(record.id, date, 'user_quick_marked')
+      if ((record as any)._isVirtual) {
+        await addManualVaccine(record.pet_id, {
+          vaccine_name: record.vaccine_name,
+          vaccine_code: record.vaccine_code,
+          due_at: record.due_at || new Date().toISOString(),
+          administered_at: date,
+          notes: metadata || undefined
+        })
+      } else {
+        await markVaccineDone(record.id, date, 'user_quick_marked', metadata)
+      }
       trackEvent('vaccine_quick_marked', { record_id: record.id, vaccine_code: record.vaccine_code })
       onDone()
     })
   }
 
   function handleDetailedConfirm() {
-    if (!detailDate) return
-    const notesFull = [
-      clinicName ? `Klinik: ${clinicName}` : '',
-      vetName ? `Veteriner: ${vetName}` : '',
-      brand ? `Marka: ${brand}` : '',
-      batchNo ? `Seri No: ${batchNo}` : '',
+    const sClinic = toTitleCase(clinicName);
+    const sVet = toTitleCase(vetName);
+    const sBrand = toTitleCase(brand);
+
+    let notesFull = [
+      sClinic ? `Klinik: ${sClinic}` : '',
+      sVet ? `Veteriner: ${sVet}` : '',
+      sBrand ? `Marka: ${sBrand}` : '',
+      batchNo ? `Seri No: ${batchNo.toUpperCase()}` : '',
       notes ? notes : '',
     ].filter(Boolean).join(' | ')
 
+    if (isOverdueEntry) {
+      notesFull += ` [INTENDED_YEAR:${plannedYear}]`
+    }
+
     startTransition(async () => {
-      await markVaccineDone(record.id, new Date(detailDate).toISOString(), 'user_detailed', notesFull)
-      trackEvent('vaccine_detailed_logged', { record_id: record.id, vaccine_code: record.vaccine_code, has_clinic: !!clinicName, has_batch: !!batchNo })
+      if ((record as any)._isVirtual) {
+        await addManualVaccine(record.pet_id, {
+          vaccine_name: record.vaccine_name,
+          vaccine_code: record.vaccine_code,
+          due_at: record.due_at || new Date(detailDate).toISOString(),
+          administered_at: new Date(detailDate).toISOString(),
+          vet_name: sVet || undefined,
+          clinic: sClinic || undefined,
+          brand: sBrand || undefined,
+          batch_no: batchNo ? batchNo.toUpperCase() : undefined,
+          notes: notesFull || undefined
+        })
+      } else {
+        await markVaccineDone(record.id, new Date(detailDate).toISOString(), 'user_detailed', notesFull)
+      }
+      trackEvent('vaccine_detailed_logged', { record_id: record.id, vaccine_code: record.vaccine_code, has_clinic: !!sClinic, has_batch: !!batchNo })
       onDone()
     })
   }
@@ -173,8 +301,15 @@ function VaccineActionModal({ record, allRecords, onClose, onDone }: { record: V
 
         {/* Header */}
         <div className="px-6 pt-6 pb-4 border-b border-border-main">
-          <p className="text-[12px] font-black text-text-secondary uppercase tracking-widest mb-0.5">Aşı Kaydı</p>
-          <h3 className="text-[17px] font-extrabold text-text-primary leading-snug">{record.vaccine_name}</h3>
+          <p className="text-[12px] font-black text-text-secondary uppercase tracking-widest mb-0.5">
+            {isEditing ? 'Record Edit' : 'Aşı Kaydı'}
+          </p>
+          <h3 className="text-[17px] font-extrabold text-text-primary leading-snug">{getDisplayName(record.vaccine_name, record.vaccine_code)}</h3>
+          {COMMON_ALIASES[record.vaccine_code] && (
+            <p className="text-[11px] text-primary font-bold mt-1 italic">
+              Etikette: {COMMON_ALIASES[record.vaccine_code].join(', ')}
+            </p>
+          )}
         </div>
 
         {/* ── CHOOSE PATH ── */}
@@ -235,12 +370,22 @@ function VaccineActionModal({ record, allRecords, onClose, onDone }: { record: V
                 return (
                   <div className="pt-2 border-t border-primary/10 mt-1">
                     <p className="text-[12px] text-primary font-medium">
-                      Bir sonraki doz (<span className="font-bold">{nextDose.vaccine_name}</span>) otomatik olarak <span className="font-bold">{new Date(nextDose.due_at || '').toLocaleDateString('tr-TR')}</span> tarihine planlanacaktır.
+                      Bir sonraki doz (<span className="font-bold">{getDisplayName(nextDose.vaccine_name, nextDose.vaccine_code)}</span>) otomatik olarak <span className="font-bold">{new Date(nextDose.due_at || '').toLocaleDateString('tr-TR')}</span> tarihine planlanacaktır.
                     </p>
                   </div>
                 )
               })()}
             </div>
+
+            {isOverdueEntry && (
+              <div className="p-3 rounded-xl border border-primary/20 bg-primary/5 flex items-start gap-3">
+                <span className="text-[18px]">💡</span>
+                <div>
+                  <p className="text-[12px] font-bold text-primary">Otomatik Senkronizasyon</p>
+                  <p className="text-[11px] text-primary/80">Bu aşı {plannedYear} yılına ait olduğu için Matris'te o yılın sütununa yerleştirilecektir.</p>
+                </div>
+              </div>
+            )}
 
             <div className="flex gap-3 pt-2">
               <button onClick={onClose} className="flex-1 py-3 rounded-xl border border-border-main text-text-secondary font-bold text-[14px]">İptal</button>
@@ -255,30 +400,63 @@ function VaccineActionModal({ record, allRecords, onClose, onDone }: { record: V
         {/* ── DETAILED PATH ── */}
         {path === 'detailed' && (
           <div className="p-6 flex flex-col gap-4 max-h-[80vh] overflow-y-auto">
-            <button onClick={() => setPath('choose')} className="flex items-center gap-1.5 text-[12px] text-text-secondary hover:text-primary font-bold -mb-1">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-              Geri
-            </button>
+            <div className="flex items-center justify-between -mb-1">
+              <button onClick={() => setPath('choose')} className="flex items-center gap-1.5 text-[12px] text-text-secondary hover:text-primary font-bold">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                Geri
+              </button>
+            </div>
 
-            <div className="flex flex-col gap-1">
+
+            <div className="flex flex-col gap-1 -mt-1">
               <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider">Tarih *</label>
               <input type="date" className="input-base" value={detailDate} onChange={e => setDetailDate(e.target.value)} max={new Date().toISOString().split('T')[0]} />
             </div>
 
             <div className="flex flex-col gap-1">
               <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider">Klinik / Hastane</label>
-              <input type="text" className="input-base" placeholder="Örn: Beşiktaş Veteriner Kliniği" value={clinicName} onChange={e => setClinicName(e.target.value)} />
+              <input 
+                type="text" 
+                className="input-base" 
+                placeholder="Örn: Beşiktaş Veteriner Kliniği" 
+                list="clinics-list"
+                value={clinicName} 
+                onChange={e => setClinicName(e.target.value)} 
+              />
+              <datalist id="clinics-list">
+                {suggestions.clinics.map(c => <option key={c} value={c} />)}
+              </datalist>
             </div>
 
             <div className="flex flex-col gap-1">
               <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider">Veteriner Adı</label>
-              <input type="text" className="input-base" placeholder="Örn: Dr. Ayşe Kaya" value={vetName} onChange={e => setVetName(e.target.value)} />
+              <input 
+                type="text" 
+                className="input-base" 
+                placeholder="Örn: Dr. Ayşe Kaya" 
+                list="vets-list"
+                value={vetName} 
+                onChange={e => setVetName(e.target.value)} 
+              />
+              <datalist id="vets-list">
+                {suggestions.vets.map(v => <option key={v} value={v} />)}
+              </datalist>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1">
                 <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider">Marka / Üretici</label>
-                <input type="text" className="input-base" placeholder="Örn: Nobivac" value={brand} onChange={e => setBrand(e.target.value)} />
+                <input 
+                  type="text" 
+                  className="input-base" 
+                  placeholder="Örn: Nobivac" 
+                  list="brands-list"
+                  value={brand} 
+                  onChange={e => setBrand(e.target.value)} 
+                />
+                <datalist id="brands-list">
+                  {suggestions.brands.map(b => <option key={b} value={b} />)}
+                </datalist>
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider">Seri / Lot No</label>
@@ -290,6 +468,16 @@ function VaccineActionModal({ record, allRecords, onClose, onDone }: { record: V
               <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider">Notlar</label>
               <textarea className="input-base resize-none" rows={3} placeholder="Yan etki, reaksiyon, ek bilgi..." value={notes} onChange={e => setNotes(e.target.value)} />
             </div>
+
+            {isOverdueEntry && (
+              <div className="p-3 rounded-xl border border-primary/20 bg-primary/5 flex items-start gap-3">
+                <span className="text-[18px]">💡</span>
+                <div>
+                  <p className="text-[12px] font-bold text-primary">Otomatik Senkronizasyon</p>
+                  <p className="text-[11px] text-primary/80">Bu aşı {plannedYear} yılına ait olduğu için Matris'te o yılın sütununa yerleştirilecektir.</p>
+                </div>
+              </div>
+            )}
 
             <div className="flex gap-3 pt-1">
               <button onClick={onClose} className="flex-1 py-3 rounded-xl border border-border-main text-text-secondary font-bold text-[14px]">İptal</button>
@@ -342,33 +530,75 @@ function PostponeModal({ record, onClose, onDone }: { record: VRecord; onClose: 
 }
 
 // ── Manual Vaccine Modal ────────────────────────────────────────
-function ManualVaccineModal({ petId, onClose, onDone }: { petId: string; onClose: () => void; onDone: () => void }) {
-  const [mode, setMode] = useState<'plan' | 'record'>('record')
-  const [name, setName] = useState('')
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
-  const [clinic, setClinic] = useState('')
+function ManualVaccineModal({ 
+  petId, 
+  templates, 
+  suggestions,
+  onClose, 
+  onDone, 
+  initialMode = 'record', 
+  fixedMode = false,
+  initialData
+}: { 
+  petId: string; 
+  templates: Template[]; 
+  suggestions: { clinics: string[], vets: string[], brands: string[] };
+  onClose: () => void; 
+  onDone: () => void; 
+  initialMode?: 'plan' | 'record'; 
+  fixedMode?: boolean;
+  initialData?: { name: string; code: string; date: string; brand?: string; batch_no?: string; clinic?: string } | null
+}) {
+  const [mode, setMode] = useState<'plan' | 'record'>(initialMode)
+  const [name, setName] = useState(initialData?.name || '')
+  const [selectedCode, setSelectedCode] = useState<string | null>(initialData?.code || null)
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [date, setDate] = useState(initialData?.date ? new Date(initialData.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0])
+  const [clinic, setClinic] = useState(initialData?.clinic || '')
   const [vet, setVet] = useState('')
-  const [brand, setBrand] = useState('')
-  const [batchNo, setBatchNo] = useState('')
+  const [brand, setBrand] = useState(initialData?.brand || '')
+  const [batchNo, setBatchNo] = useState(initialData?.batch_no || '')
   const [amount, setAmount] = useState('')
   const [notes, setNotes] = useState('')
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState('')
+  const [isOverdue, setIsOverdue] = useState(false)
+  const [intendedYear, setIntendedYear] = useState<string>('')
+
+  // Years for overdue selection (last 5 years)
+  const currentYear = new Date().getFullYear()
+  const overdueYears = Array.from({ length: 6 }, (_, i) => (currentYear - i).toString())
+
+  const vaccineSuggestions = name.length >= 1 ? Array.from(new Map(templates.filter(t => {
+    const search = name.toLowerCase()
+    const matchName = t.vaccine_name.toLowerCase().includes(search)
+    const matchCode = t.vaccine_code.toLowerCase().includes(search)
+    const aliases = COMMON_ALIASES[t.vaccine_code] || []
+    const matchAlias = aliases.some(a => a.toLowerCase().includes(search))
+    const matchDisease = (t.protects_against || []).some(d => d.toLowerCase().includes(search))
+    return matchName || matchCode || matchAlias || matchDisease
+  }).map(t => [t.vaccine_code, t])).values()).slice(0, 8) : []
 
   function handleSave() {
     if (!name.trim()) { setError('Aşı adı zorunludur.'); return }
     if (!date) { setError('Tarih zorunludur.'); return }
     setError('')
     startTransition(async () => {
+      let finalNotes = notes || '';
+      if (isOverdue && intendedYear) {
+        finalNotes = finalNotes ? `${finalNotes} [INTENDED_YEAR:${intendedYear}]` : `[INTENDED_YEAR:${intendedYear}]`;
+      }
+
       await addManualVaccine(petId, {
         vaccine_name: name,
+        vaccine_code: selectedCode || undefined,
         due_at: new Date(date).toISOString(),
         administered_at: mode === 'record' ? new Date(date).toISOString() : undefined,
-        vet_name: vet || undefined,
-        clinic: clinic || undefined,
-        brand: brand || undefined,
-        batch_no: batchNo || undefined,
-        notes: notes || undefined,
+        vet_name: toTitleCase(vet) || undefined,
+        clinic: toTitleCase(clinic) || undefined,
+        brand: toTitleCase(brand) || undefined,
+        batch_no: batchNo ? batchNo.toUpperCase() : undefined,
+        notes: finalNotes || undefined,
         amount: amount ? parseFloat(amount) : undefined,
       })
       onDone()
@@ -379,23 +609,61 @@ function ManualVaccineModal({ petId, onClose, onDone }: { petId: string; onClose
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" onClick={onClose}>
       <div className="bg-surface w-full max-w-sm rounded-[28px] shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
         <div className="px-6 pt-6 pb-4 border-b border-border-main">
-          <p className="text-[11px] font-black text-primary uppercase tracking-widest">➕ Manuel Aşı Ekle</p>
-          <p className="text-[12px] text-text-secondary mt-1">Protokol dışı aşı veya plan oluştur.</p>
+          <p className="text-[11px] font-black text-primary uppercase tracking-widest">
+            {mode === 'record' ? '➕ Yapıldı Kaydı Ekle' : '📅 Yeni Aşı Planla'}
+          </p>
+          <p className="text-[12px] text-text-secondary mt-1">
+            {mode === 'record' ? 'Gerçekleşen bir aşı kaydını sisteme işle.' : 'Gelecek için yeni bir aşı takvimi oluştur.'}
+          </p>
         </div>
         <div className="p-6 flex flex-col gap-4 max-h-[75vh] overflow-y-auto">
-          {/* Mode */}
-          <div className="grid grid-cols-2 gap-2">
-            {[{ id:'record', label:'✅ Yapıldı Kaydı' }, { id:'plan', label:'📅 Planlama' }].map(m => (
-              <button key={m.id} onClick={() => setMode(m.id as any)}
-                className={`py-2.5 rounded-xl border-2 font-bold text-[13px] transition-all ${mode === m.id ? 'border-primary bg-primary/5 text-primary' : 'border-border-main text-text-secondary'}`}>
-                {m.label}
-              </button>
-            ))}
-          </div>
+          {/* Mode - Only show if not fixed */}
+          {!fixedMode && (
+            <div className="grid grid-cols-2 gap-2">
+              {[{ id:'record', label:'✅ Yapıldı Kaydı' }, { id:'plan', label:'📅 Planlama' }].map(m => (
+                <button key={m.id} onClick={() => setMode(m.id as any)}
+                  className={`py-2.5 rounded-xl border-2 font-bold text-[13px] transition-all ${mode === m.id ? 'border-primary bg-primary/5 text-primary' : 'border-border-main text-text-secondary'}`}>
+                  {m.label}
+                </button>
+              ))}
+            </div>
+          )}
+          
+
           {error && <p className="text-[12px] text-error font-bold">{error}</p>}
-          <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Aşı Adı *</label>
-            <input className="input-base" placeholder="Örn: Parazit, Karma Aşı..." value={name} onChange={e => setName(e.target.value)} />
+          <div className="flex flex-col gap-1 relative -mt-2">
+            <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Aşı Adı / Etiket Kodu *</label>
+            <input 
+              className="input-base" 
+              placeholder="Örn: Bb/Pi2, DHPPi, Karma..." 
+              value={name} 
+              onChange={e => { setName(e.target.value); setShowSuggestions(true) }}
+              onFocus={() => setShowSuggestions(true)}
+            />
+            {showSuggestions && vaccineSuggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border-main rounded-xl shadow-xl z-[60] overflow-hidden animate-in fade-in slide-in-from-top-1">
+                {vaccineSuggestions.map(t => (
+                  <button key={t.id} onClick={() => { 
+                    const primaryAlias = COMMON_ALIASES[t.vaccine_code]?.[0] || '';
+                    setName(`${t.vaccine_name}${primaryAlias ? ' ' + primaryAlias : ''}`); 
+                    setSelectedCode(t.vaccine_code);
+                    setShowSuggestions(false) 
+                  }}
+                    className="w-full text-left p-3 hover:bg-bg-main transition-colors border-b border-border-main last:border-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-bold text-[13px] text-text-primary">{getDisplayName(t.vaccine_name, t.vaccine_code)}</p>
+                      <span className="text-[10px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded uppercase">{t.vaccine_code}</span>
+                    </div>
+                    {t.protects_against && t.protects_against.length > 0 && (
+                      <p className="text-[10px] text-text-secondary mt-0.5">
+                        <span className="font-bold">Hastalıklar:</span> {t.protects_against.join(', ')}
+                      </p>
+                    )}
+                    <p className="text-[10px] text-text-secondary italic mt-0.5">Etikette: {COMMON_ALIASES[t.vaccine_code]?.join(', ') || '-'}</p>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider">{mode === 'record' ? 'Yapıldığı Tarih *' : 'Planlanan Tarih *'}</label>
@@ -406,17 +674,44 @@ function ManualVaccineModal({ petId, onClose, onDone }: { petId: string; onClose
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
                   <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Klinik</label>
-                  <input className="input-base" placeholder="Klinik adı" value={clinic} onChange={e => setClinic(e.target.value)} />
+                  <input 
+                    className="input-base" 
+                    placeholder="Klinik adı" 
+                    list="m-clinics"
+                    value={clinic} 
+                    onChange={e => setClinic(e.target.value)} 
+                  />
+                  <datalist id="m-clinics">
+                    {suggestions.clinics.map(c => <option key={c} value={c} />)}
+                  </datalist>
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Veteriner</label>
-                  <input className="input-base" placeholder="Dr. ..." value={vet} onChange={e => setVet(e.target.value)} />
+                  <input 
+                    className="input-base" 
+                    placeholder="Dr. ..." 
+                    list="m-vets"
+                    value={vet} 
+                    onChange={e => setVet(e.target.value)} 
+                  />
+                  <datalist id="m-vets">
+                    {suggestions.vets.map(v => <option key={v} value={v} />)}
+                  </datalist>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
                   <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Marka</label>
-                  <input className="input-base" placeholder="Nobivac..." value={brand} onChange={e => setBrand(e.target.value)} />
+                  <input 
+                    className="input-base" 
+                    placeholder="Nobivac..." 
+                    list="m-brands"
+                    value={brand} 
+                    onChange={e => setBrand(e.target.value)} 
+                  />
+                  <datalist id="m-brands">
+                    {suggestions.brands.map(b => <option key={b} value={b} />)}
+                  </datalist>
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Seri No</label>
@@ -433,6 +728,33 @@ function ManualVaccineModal({ petId, onClose, onDone }: { petId: string; onClose
             <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Notlar</label>
             <textarea className="input-base resize-none" rows={2} value={notes} onChange={e => setNotes(e.target.value)} />
           </div>
+
+          {mode === 'record' && (
+            <div className={`p-3 rounded-xl border-2 flex flex-col gap-2 transition-all ${isOverdue ? 'border-warning bg-warning/5' : 'border-border-main'}`}>
+              <button 
+                type="button"
+                onClick={() => setIsOverdue(!isOverdue)}
+                className="flex items-center gap-2 text-left"
+              >
+                <span className="text-[18px]">{isOverdue ? '✅' : '⬜'}</span>
+                <span className="text-[13px] font-bold text-text-primary">Bu geçmiş dönemin gecikmiş aşısı mı?</span>
+              </button>
+              
+              {isOverdue && (
+                <div className="flex items-center gap-2 mt-1 pl-7">
+                  <span className="text-[12px] text-text-secondary whitespace-nowrap">Hangi yılın aşısı?</span>
+                  <select 
+                    className="flex-1 bg-white border border-border-main rounded-lg px-2 py-1 text-[13px] font-bold"
+                    value={intendedYear}
+                    onChange={e => setIntendedYear(e.target.value)}
+                  >
+                    <option value="">Seçiniz...</option>
+                    {overdueYears.map(y => <option key={y} value={y}>{y}</option>)}
+                  </select>
+                </div>
+              )}
+            </div>
+          )}
           <div className="flex gap-3">
             <button onClick={onClose} className="flex-1 py-3 rounded-xl border border-border-main text-text-secondary font-bold">İptal</button>
             <button onClick={handleSave} disabled={isPending}
@@ -446,32 +768,245 @@ function ManualVaccineModal({ petId, onClose, onDone }: { petId: string; onClose
   )
 }
 
-// ── Protocol Table Component ───────────────────────────────────
-function ProtocolTable({ pet, templates, records, onCellClick }: { pet: Pet; templates: Template[]; records: VRecord[]; onCellClick?: (record: VRecord) => void }) {
-  const isDog = pet.species.toLowerCase() === 'köpek' || pet.species.toLowerCase() === 'dog'
+// ── Batch Scan Modal ──────────────────────────────────────────
+function BatchScanModal({ 
+  petId, 
+  templates, 
+  allRecords,
+  isSetupPhase = false,
+  onClose, 
+  onDone 
+}: { 
+  petId: string; 
+  templates: Template[]; 
+  allRecords: VRecord[];
+  isSetupPhase?: boolean;
+  onClose: () => void; 
+  onDone: () => void; 
+}) {
+  const [scanning, setScanning] = useState(false)
+  const [results, setResults] = useState<any[] | null>(null)
+  const [isPending, startTransition] = useTransition()
+  const [selections, setSelections] = useState<Record<number, boolean>>({})
+  const [showSuccessPrompt, setShowSuccessPrompt] = useState(false)
 
-  const baseProtocols = isDog ? [
-    { code: 'PUPPY_DP', annualCode: null },
-    { code: 'DHPPI', annualCode: 'DHPPI_Y' },
-    { code: 'LEPTO', annualCode: 'LEPTO_Y' },
-    { code: 'RABIES', annualCode: 'RABIES' },
-    { code: 'BORDET', annualCode: 'BORDET_Y' },
-    { code: 'CCV', annualCode: 'CCV_Y' }
-  ] : [
-    { code: 'FVRCP', annualCode: 'FVRCP_Y' },
-    { code: 'FELV', annualCode: 'FELV_Y' },
-    { code: 'RABIES_CAT', annualCode: 'RABIES_CAT' }
-  ];
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setScanning(true)
+    try {
+      const reader = new FileReader()
+      reader.onload = async (event) => {
+        const base64 = (event.target?.result as string).split(',')[1]
+        const res = await analyzeVaccineLabel(base64, file.type)
+        if (res.success && Array.isArray(res.data)) {
+          // Eğer AI hiç etiket bulamazsa
+          if (res.data.length === 0) {
+            alert('Bu görselde herhangi bir aşı etiketi tespit edilemedi.');
+            setScanning(false);
+            return;
+          }
 
-  // Kullanıcının oluşturduğu özel şablonları matrise dahil et
-  templates.filter(t => t.vaccine_code.startsWith('CUSTOM_')).forEach(ct => {
-    if (!baseProtocols.find(bp => bp.code === ct.vaccine_code)) {
-      baseProtocols.push({ 
-        code: ct.vaccine_code, 
-        annualCode: ct.recurrence_type === 'annual' ? ct.vaccine_code : null 
-      });
+          const enriched = res.data.map(item => {
+            let isDuplicate = false
+            if (item.vaccineName || item.date) {
+               isDuplicate = allRecords.some(r => 
+                 r.status === 'completed' &&
+                 ((r.vaccine_name && item.vaccineName && r.vaccine_name.toLowerCase().includes(item.vaccineName.toLowerCase())) || 
+                  (r.vaccine_code && item.vaccineName && (COMMON_ALIASES[r.vaccine_code] || []).some(a => a.toLowerCase().includes(item.vaccineName.toLowerCase())))) &&
+                 (item.date ? r.administered_at?.startsWith(item.date) : true)
+               )
+            }
+            return { ...item, isDuplicate }
+          })
+          setResults(enriched)
+          
+          const initialSel: Record<number, boolean> = {}
+          enriched.forEach((r, i) => { initialSel[i] = !r.isDuplicate && !!r.vaccineName })
+          setSelections(initialSel)
+        } else {
+          alert('Etiketler okunamadı: ' + res.error)
+          onClose()
+        }
+        setScanning(false)
+      }
+      reader.readAsDataURL(file)
+    } catch (e) {
+      console.error(e)
+      setScanning(false)
     }
-  });
+  }
+
+  function updateResult(index: number, field: string, value: string) {
+    if (!results) return
+    const newResults = [...results]
+    newResults[index] = { ...newResults[index], [field]: value }
+    setResults(newResults)
+  }
+
+  function handleSave() {
+    if (!results) return
+    startTransition(async () => {
+      const selectedItems = results.filter((_, i) => selections[i]);
+      for (const item of selectedItems) {
+        const search = (item.vaccineName || '').toLowerCase()
+        const matchedTmpl = templates.find(t => 
+           t.vaccine_name.toLowerCase().includes(search) || 
+           t.vaccine_code.toLowerCase().includes(search) ||
+           (COMMON_ALIASES[t.vaccine_code] || []).some(a => a.toLowerCase().includes(search))
+        )
+        
+        await addManualVaccine(petId, {
+          vaccine_name: toTitleCase(item.vaccineName || 'Bilinmeyen Aşı'),
+          vaccine_code: matchedTmpl ? matchedTmpl.vaccine_code : undefined,
+          due_at: new Date(item.date || new Date()).toISOString(),
+          administered_at: item.date ? new Date(item.date).toISOString() : new Date().toISOString(),
+          clinic: toTitleCase(item.clinicName) || undefined,
+          brand: toTitleCase(item.brand) || undefined,
+          batch_no: item.batchNo ? item.batchNo.toUpperCase() : undefined,
+          notes: '[TOPLU_TARAMA_AI]'
+        })
+      }
+      onDone()
+      setResults(null)
+      setShowSuccessPrompt(true)
+    })
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-surface w-full max-w-sm rounded-[28px] shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="px-6 pt-6 pb-4 border-b border-border-main">
+          <p className="text-[11px] font-black text-primary uppercase tracking-widest">📷 Toplu Tarama</p>
+          <h3 className="text-[17px] font-extrabold text-text-primary">Karneden Sayfa Tara</h3>
+          <p className="text-[12px] text-text-secondary mt-1">
+            Aşı defterinin bir sayfasını çekerek çoklu etiketlerin otomatik tanınmasını ve kaydedilmesini sağlayın.
+          </p>
+        </div>
+        
+        <div className="p-6 flex flex-col gap-4 max-h-[75vh] overflow-y-auto">
+          {showSuccessPrompt && (
+            <div className="flex flex-col items-center justify-center py-6 gap-5 text-center animate-fade-in">
+               <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center text-[32px]">✓</div>
+               <div>
+                 <h4 className="font-extrabold text-[18px] text-text-primary">Kayıtlar Eklendi</h4>
+                 <p className="text-[13px] text-text-secondary mt-1">Karnede taratılmamış başka aşı sayfası kaldı mı?</p>
+               </div>
+               <div className="flex flex-col gap-3 w-full mt-2">
+                 <button onClick={() => setShowSuccessPrompt(false)} className="w-full py-3.5 rounded-xl border-2 border-border-main text-text-primary font-bold hover:bg-bg-main transition-colors flex items-center justify-center gap-2">
+                   <span>📸</span> Evet, Başka Sayfa Tara
+                 </button>
+                 <button onClick={onClose} className="w-full py-3.5 rounded-xl btn-primary font-bold flex items-center justify-center gap-2">
+                   {isSetupPhase ? 'Taramayı Bitir ve Takvimi Oluştur' : 'Taramayı Bitir ve Kapat'}
+                 </button>
+               </div>
+            </div>
+          )}
+
+          {!scanning && !results && !showSuccessPrompt && (
+             <div className="relative w-full animate-fade-in">
+                <input type="file" accept="image/*" capture="environment" onChange={handleFile} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                <div className="flex flex-col items-center justify-center gap-2 py-10 bg-primary/5 hover:bg-primary/10 transition-colors border-2 border-dashed border-primary/30 rounded-2xl">
+                   <span className="text-[40px]">📸</span>
+                   <p className="font-bold text-primary text-[14px]">Sayfayı Çek / Yükle</p>
+                </div>
+             </div>
+          )}
+
+          {scanning && (
+            <div className="flex flex-col items-center justify-center py-12 gap-4">
+              <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+              <p className="text-text-secondary font-bold text-[14px]">Yapay Zeka Okuyor...</p>
+            </div>
+          )}
+
+          {results && (
+            <div className="flex flex-col gap-3">
+              <p className="text-[13px] font-bold text-text-secondary mb-1">Bulunan Kayıtlar ({results.length})</p>
+              {results.map((r, i) => (
+                <div key={i} className={`p-4 rounded-xl border-2 flex items-start gap-3 transition-colors ${selections[i] ? 'border-primary bg-primary/5 shadow-sm' : r.isDuplicate ? 'border-warning/30 bg-warning/5 opacity-70' : 'border-border-main opacity-50'}`}>
+                  <input type="checkbox" checked={!!selections[i]} disabled={r.isDuplicate} onChange={e => setSelections({...selections, [i]: e.target.checked})} className="mt-1.5 w-5 h-5 accent-primary rounded cursor-pointer" />
+                  <div className="flex-1 min-w-0 flex flex-col gap-2">
+                    {r.isDuplicate && <p className="text-[11px] text-warning font-black uppercase tracking-wide">⚠️ Zaten kayıtlı. Yoksayıldı.</p>}
+                    
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] font-black text-text-secondary uppercase">Aşı Adı / Türü</label>
+                      <input 
+                        className="bg-white border border-border-main rounded-lg px-2.5 py-1.5 text-[13px] font-bold focus:border-primary focus:outline-none transition-colors disabled:bg-bg-main" 
+                        value={r.vaccineName || ''} onChange={e => updateResult(i, 'vaccineName', e.target.value)} disabled={r.isDuplicate} placeholder="Örn: Karma, Kuduz" 
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-black text-text-secondary uppercase">Tarih</label>
+                        <input type="date" className="bg-white border border-border-main rounded-lg px-2.5 py-1.5 text-[13px] font-bold focus:border-primary focus:outline-none transition-colors disabled:bg-bg-main" 
+                          value={r.date || ''} onChange={e => updateResult(i, 'date', e.target.value)} disabled={r.isDuplicate} />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-black text-text-secondary uppercase">Marka</label>
+                        <input className="bg-white border border-border-main rounded-lg px-2.5 py-1.5 text-[13px] font-bold focus:border-primary focus:outline-none transition-colors disabled:bg-bg-main" 
+                          value={r.brand || ''} onChange={e => updateResult(i, 'brand', e.target.value)} disabled={r.isDuplicate} placeholder="Marka" />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-black text-text-secondary uppercase">Seri No</label>
+                        <input className="bg-white border border-border-main rounded-lg px-2.5 py-1.5 text-[13px] font-bold focus:border-primary focus:outline-none transition-colors disabled:bg-bg-main" 
+                          value={r.batchNo || ''} onChange={e => updateResult(i, 'batchNo', e.target.value)} disabled={r.isDuplicate} placeholder="Lot/Seri" />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-black text-text-secondary uppercase">Klinik / Veteriner</label>
+                        <input className="bg-white border border-border-main rounded-lg px-2.5 py-1.5 text-[13px] font-bold focus:border-primary focus:outline-none transition-colors disabled:bg-bg-main" 
+                          value={r.clinicName || ''} onChange={e => updateResult(i, 'clinicName', e.target.value)} disabled={r.isDuplicate} placeholder="Kaşe bilgisi" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              <div className="flex gap-3 mt-2">
+                <button onClick={() => setResults(null)} className="flex-1 py-3 rounded-xl border border-border-main text-text-secondary font-bold">Tekrar Çek</button>
+                <button onClick={handleSave} disabled={isPending || !Object.values(selections).some(v => v)}
+                  className="flex-1 btn-primary py-3 disabled:opacity-40">
+                  {isPending ? '...' : 'Seçilenleri Ekle'}
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {!results && !scanning && !showSuccessPrompt && (
+            <button onClick={onClose} className={`w-full py-3 mt-2 rounded-xl font-bold border transition-colors ${isSetupPhase ? 'btn-primary border-transparent' : 'text-text-secondary border-border-main hover:bg-bg-main'}`}>
+               {isSetupPhase ? 'Taramayı Bitir ve Takvimi Oluştur' : 'İptal'}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Protocol Table Component ───────────────────────────────────
+function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onSingleScan, onBatchScan }: { 
+  pet: Pet; 
+  templates: Template[]; 
+  records: VRecord[]; 
+  onCellClick?: (record: VRecord) => void;
+  onNewRecord?: (name: string, code: string, date: string) => void;
+  onSingleScan?: (file: File) => void;
+  onBatchScan?: () => void;
+}) {
+
+  // Use templates directly as rows (new schema: 1 template = 1 protocol)
+  const vaccineTemplates = templates.filter(t => t.category === 'vaccine' || !t.category);
+
+  const currentYear = new Date().getFullYear();
+  const birthYear = pet.birth_date ? new Date(pet.birth_date).getFullYear() : currentYear;
+  const petAge = currentYear - birthYear;
+  const maxYearsToShow = Math.max(petAge + 1, 2);
+
+  const years = Array.from({ length: maxYearsToShow + 1 }, (_, i) => i);
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '';
@@ -479,200 +1014,811 @@ function ProtocolTable({ pet, templates, records, onCellClick }: { pet: Pet; tem
     return `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear().toString().slice(-2)}`;
   }
 
-  const getRecord = (code: string, dose: number) => {
-    return records.find(r => r.vaccine_code === code && r.dose_number === dose);
+  const getRecordByCodeAndDose = (code: string, doseNum: number, projectedDate: string | null) => {
+    const aliases = (COMMON_ALIASES[code] || []).map(a => a.toLowerCase());
+
+    // Priority 1a: Exact dose match
+    const exactCompleted = records.find(r => r.status === 'completed' && r.vaccine_code === code && r.dose_number === doseNum);
+    if (exactCompleted) return exactCompleted;
+
+    // Priority 1b: Sequential assignment for manual records in the birth year
+    const manualCompletedMatches = records.filter(r => {
+      if (r.status !== 'completed') return false;
+      if (r.dose_number) return false; // Already has a strict dose slot
+      if (r.vaccine_code && r.vaccine_code !== code && r.vaccine_code !== 'MANUAL') return false;
+      
+      const rName = r.vaccine_name.toLowerCase();
+      const checkMatch = (term: string) => {
+        const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return new RegExp(`(\\b|_)${escaped}(\\b|_)`, 'i').test(rName);
+      };
+      const matchesIdentity = r.vaccine_code === code || checkMatch(code) || aliases.some(a => checkMatch(a));
+      if (!matchesIdentity) return false;
+
+      const rYear = new Date(r.administered_at || r.due_at || '').getFullYear();
+      if (rYear !== birthYear) return false;
+
+      return true;
+    }).sort((a,b) => new Date(a.administered_at || '').getTime() - new Date(b.administered_at || '').getTime());
+
+    if (manualCompletedMatches[doseNum - 1]) return manualCompletedMatches[doseNum - 1];
+
+    // 2. Secondary: Find any exact match by dose number and code (scheduled/overdue)
+    const exact = records.find(r => r.vaccine_code === code && r.dose_number === doseNum);
+    if (exact) return exact;
+
+    // 3. Tertiary: Find any manual match (scheduled/overdue)
+    if (projectedDate) {
+      const pDate = new Date(projectedDate);
+      return records.find(r => {
+        if (r.vaccine_code && r.vaccine_code !== code && r.vaccine_code !== 'MANUAL') return false;
+        if (r.dose_number) return false; 
+
+        const rName = r.vaccine_name.toLowerCase();
+        const checkMatch = (term: string) => {
+          const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          return new RegExp(`(\\b|_)${escaped}(\\b|_)`, 'i').test(rName);
+        };
+        const matchesIdentity = r.vaccine_code === code || checkMatch(code) || aliases.some(a => checkMatch(a));
+        if (!matchesIdentity) return false;
+        
+        const rDate = new Date(r.administered_at || r.due_at || '');
+        const diffDays = Math.abs((rDate.getTime() - pDate.getTime()) / (1000 * 60 * 60 * 24));
+        return diffDays < 45; 
+      });
+    }
+    return null;
   }
 
-  const rows = baseProtocols.map(bp => {
-    const tBase1 = templates.find(t => t.vaccine_code === bp.code && t.dose_number === 1);
-    const tBase2 = templates.find(t => t.vaccine_code === bp.code && t.dose_number === 2);
-    
-    if (!tBase1) return null;
+  const getRecordByYear = (code: string, year: number, minDose: number, projectedDate: string | null) => {
+    const targetYear = birthYear + year;
+    const aliases = (COMMON_ALIASES[code] || []).map(a => a.toLowerCase());
 
-    const rBase1 = getRecord(bp.code, 1);
-    const rBase2 = getRecord(bp.code, 2);
-    const rAnnual1 = bp.annualCode ? getRecord(bp.annualCode, 1) : null;
-    
-    let base1Date = rBase1?.administered_at || rBase1?.due_at;
-    let base2Date = rBase2?.administered_at || rBase2?.due_at;
-    let annual1Date = rAnnual1?.administered_at || rAnnual1?.due_at;
+    // 1. Priority: Find COMPLETED records for this year
+    const completedMatch = records.find(r => {
+      if (r.status !== 'completed') return false;
+      const rDateStr = r.administered_at || r.due_at;
+      if (!rDateStr) return false;
 
-    if (!base1Date && pet.birth_date) {
-      const d = new Date(pet.birth_date);
-      d.setDate(d.getDate() + (tBase1.min_age_weeks * 7));
-      base1Date = d.toISOString();
-    } else if (!base1Date) {
-      base1Date = new Date().toISOString();
+      // Logic for Intended Year (metadata check)
+      const intendedMatch = r.notes?.match(/\[INTENDED_YEAR:(\d{4})\]/);
+      const rYear = intendedMatch ? parseInt(intendedMatch[1]) : new Date(rDateStr).getFullYear();
+
+      if (rYear !== targetYear) return false;
+
+      if (r.vaccine_code && r.vaccine_code !== code && r.vaccine_code !== 'MANUAL') return false;
+
+      const rName = r.vaccine_name.toLowerCase();
+      const checkMatch = (term: string) => {
+        const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return new RegExp(`(\\b|_)${escaped}(\\b|_)`, 'i').test(rName);
+      };
+      return r.vaccine_code === code || checkMatch(code) || aliases.some(a => checkMatch(a));
+    });
+    if (completedMatch) return completedMatch;
+
+    // 2. Secondary: Exact match by year and dose number (scheduled/overdue)
+    const exact = records.find(r => {
+      const rDateStr = r.administered_at || r.due_at;
+      if (!rDateStr) return false;
+      const rYear = new Date(rDateStr).getFullYear();
+      return r.vaccine_code === code && rYear === targetYear && (r.dose_number || 0) >= minDose;
+    });
+    if (exact) return exact;
+
+    // 3. Tertiary: Any alias match by year
+    return records.find(r => {
+      const rDateStr = r.administered_at || r.due_at;
+      if (!rDateStr) return false;
+      const rYear = new Date(rDateStr).getFullYear();
+      if (rYear !== targetYear) return false;
+
+      if (r.vaccine_code && r.vaccine_code !== code && r.vaccine_code !== 'MANUAL') return false;
+
+      const rName = r.vaccine_name.toLowerCase();
+      const checkMatch = (term: string) => {
+        const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return new RegExp(`(\\b|_)${escaped}(\\b|_)`, 'i').test(rName);
+      };
+      return checkMatch(code) || aliases.some(a => checkMatch(a));
+    });
+  }
+
+  const getCellState = (record: VRecord | undefined | null, projectedDate: string | null) => {
+    if (record) {
+      if (record.status === 'completed') return { date: record.administered_at || projectedDate, bg: 'bg-[#4CAF50] text-black border-slate-300 cursor-default', record, title: `Yapıldı: ${new Date(record.administered_at || '').toLocaleDateString('tr-TR')}` };
+      if (record.status === 'skipped' || record.status === 'overdue') return { date: record.due_at || projectedDate, bg: 'bg-[#F44336] text-white border-slate-300 hover:opacity-80 cursor-pointer transition-all', record, title: `Gecikti/Atlandı.` };
+      return { date: record.due_at || projectedDate, bg: 'bg-white text-text-primary border-slate-300 hover:bg-primary/10 cursor-pointer transition-all', record, title: `Planlandı: ${new Date(record.due_at || projectedDate || '').toLocaleDateString('tr-TR')}` };
     }
+    return { date: projectedDate, bg: 'bg-white text-text-primary border-slate-300 opacity-60', record: null, title: `Tahmini: ${projectedDate ? new Date(projectedDate).toLocaleDateString('tr-TR') : ''}` };
+  }
 
-    if (!base2Date && tBase2 && base1Date) {
-      const d = new Date(base1Date);
-      d.setDate(d.getDate() + (tBase2.interval_days || 21));
-      base2Date = d.toISOString();
-    }
-
-    if (!annual1Date && bp.annualCode) {
-      const refDate = base2Date || base1Date;
-      if (refDate) {
-        const d = new Date(refDate);
-        d.setFullYear(d.getFullYear() + 1);
-        annual1Date = d.toISOString();
+  const rows = vaccineTemplates.map(tmpl => {
+    const isMultiDose = (tmpl.dose_count || 1) > 1;
+    const getInterval = (doseIdx: number) => {
+      if (Array.isArray(tmpl.dose_interval_days)) {
+        return tmpl.dose_interval_days[doseIdx] || 21;
       }
-    }
-    
-    let annual2Date = null;
-    if (annual1Date) {
-      const d = new Date(annual1Date);
-      d.setFullYear(d.getFullYear() + 1);
-      annual2Date = d.toISOString();
-    }
+      return (tmpl.dose_interval_days as unknown as number) || 21;
+    };
+    const aliases = (COMMON_ALIASES[tmpl.vaccine_code] || []).map(a => a.toLowerCase());
 
-    const getCellState = (record: VRecord | undefined | null, projectedDate: string | null) => {
-      if (record) {
-        if (record.status === 'completed') return { date: record.administered_at || projectedDate, bg: 'bg-[#4CAF50] text-black border-slate-300 cursor-default', record, title: `Yapıldı: ${new Date(record.administered_at || '').toLocaleDateString('tr-TR')}` };
-        if (record.status === 'skipped' || record.status === 'overdue') return { date: record.due_at || projectedDate, bg: 'bg-[#F44336] text-white border-slate-300 hover:opacity-80 cursor-pointer transition-all', record, title: `Gecikti/Atlandı. Hedef: ${new Date(record.due_at || '').toLocaleDateString('tr-TR')}\nTıklayarak tamamlandı olarak işaretle.` };
-        return { date: record.due_at || projectedDate, bg: 'bg-white text-text-primary border-slate-300 hover:bg-primary/10 cursor-pointer transition-all shadow-[inset_0_0_0_1px_rgba(0,0,0,0.1)]', record, title: `Planlandı: ${new Date(record.due_at || projectedDate || '').toLocaleDateString('tr-TR')}\nTıklayarak tamamlandı olarak işaretle.` };
+    // 1. Gather all potentially matching records for this row
+    const rowRecords = records.filter(r => {
+      if (r.vaccine_code === tmpl.vaccine_code) return true;
+      if (r.vaccine_code === 'MANUAL' || !r.vaccine_code) {
+        const rName = r.vaccine_name.toLowerCase();
+        const checkMatch = (term: string) => {
+          const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          return new RegExp(`(\\b|_)${escaped}(\\b|_)`, 'i').test(rName);
+        };
+        return checkMatch(tmpl.vaccine_code) || aliases.some(a => checkMatch(a));
       }
-      return { date: projectedDate, bg: 'bg-white text-text-primary border-slate-300 opacity-60', record: null, title: `Tahmini Planlanan: ${projectedDate ? new Date(projectedDate).toLocaleDateString('tr-TR') : ''}\nHenüz sistemde aktif kayıt oluşturulmadı.` };
+      return false;
+    });
+
+    const completedRowRecords = rowRecords
+      .filter(r => r.status === 'completed')
+      .sort((a, b) => new Date(a.administered_at || '').getTime() - new Date(b.administered_at || '').getTime());
+
+    const otherRowRecords = rowRecords.filter(r => r.status !== 'completed');
+
+    // 2. Build Puppy Series (Year 0)
+    const doseCells: any[] = [];
+    const doseDates: (string | null)[] = [];
+    
+    for (let d = 1; d <= (tmpl.dose_count || 1); d++) {
+      let projectedDate: string | null = null;
+      if (d === 1) {
+        if (pet.birth_date) {
+          const bd = new Date(pet.birth_date);
+          bd.setDate(bd.getDate() + (tmpl.first_dose_week || 6) * 7);
+          projectedDate = bd.toISOString();
+        } else {
+          projectedDate = new Date().toISOString();
+        }
+      } else {
+        const prevDate = doseDates[d - 2];
+        if (prevDate) {
+          const bd = new Date(prevDate);
+          bd.setDate(bd.getDate() + getInterval(d - 2));
+          projectedDate = bd.toISOString();
+        }
+      }
+
+      const activeRecord = getRecordByCodeAndDose(tmpl.vaccine_code, d, projectedDate);
+      const displayDate = activeRecord?.administered_at || activeRecord?.due_at || projectedDate;
+      
+      doseCells.push(getCellState(activeRecord, displayDate));
+      doseDates.push(displayDate);
     }
 
-    const cellBase1 = getCellState(rBase1, base1Date);
-    const cellBase2 = tBase2 ? getCellState(rBase2, base2Date) : null;
-    const cellAnnual1 = bp.annualCode ? getCellState(rAnnual1, annual1Date) : null;
-    const cellAnnual2 = bp.annualCode ? { date: annual2Date, bg: 'bg-white text-text-primary border-slate-300 opacity-60', title: 'Tahmini Planlanan', record: null } : null;
+    const lastDoseDate = doseDates[doseDates.length - 1];
 
-    let name = tBase1.vaccine_name
-      .replace(/\s*1\.\s*Doz/gi, '')
-      .replace(/\s*Yıllık Tekrar/gi, '')
-      .trim();
+    // 3. Build Annual Boosters (Years 1..N)
+    const yearCells: any[] = [];
+    yearCells.push({ doses: doseCells }); // Year 0 slot
+
+    const seriesCount = tmpl.dose_count || 1;
+
+    for (let year = 1; year <= maxYearsToShow; year++) {
+      if (!tmpl.has_annual_booster) {
+        yearCells.push(null);
+        continue;
+      }
+      const targetYear = birthYear + year;
+
+      // Calculate projected date — base it on previous ACTUAL administered date if available
+      let prevRef: string | null = null;
+      if (year === 1) {
+        const lastActual = getRecordByCodeAndDose(tmpl.vaccine_code, seriesCount, lastDoseDate);
+        prevRef = lastActual?.administered_at || lastDoseDate;
+      } else {
+        const prevCell = yearCells[year - 1];
+        prevRef = prevCell?.record?.administered_at || prevCell?.date || null;
+      }
+
+      let projectedAnnualDate: string | null = null;
+      if (prevRef) {
+        const d = new Date(prevRef);
+        if (tmpl.recurrence_days) {
+          d.setDate(d.getDate() + tmpl.recurrence_days);
+        } else {
+          d.setFullYear(d.getFullYear() + 1);
+        }
+        projectedAnnualDate = d.toISOString();
+      }
+
+      const activeRecord = getRecordByYear(tmpl.vaccine_code, year, seriesCount + year, projectedAnnualDate);
+      const annualDate = activeRecord?.administered_at || activeRecord?.due_at || projectedAnnualDate;
+      
+      yearCells.push(getCellState(activeRecord, annualDate));
+    }
+
 
     return {
-      name,
-      code: tBase1.vaccine_code,
-      mandatory: tBase1.mandatory_level,
-      diseases: tBase1.protects_against.join(', '),
-      base1: cellBase1,
-      base2: cellBase2,
-      annual1: cellAnnual1,
-      annual2: cellAnnual2
+      name: tmpl.vaccine_name,
+      code: tmpl.vaccine_code,
+      mandatory: tmpl.mandatory_level,
+      diseases: (tmpl.protects_against || []).join(', '),
+      isMultiDose,
+      doseCount: tmpl.dose_count || 1,
+      hasAnnual: tmpl.has_annual_booster,
+      is_active: tmpl.is_active,
+      yearCells
     };
-  }).filter(Boolean);
+  });
 
   return (
     <div className="mb-8">
-      <h3 className="text-[16px] font-extrabold text-text-primary mb-3">Aşı Takvimi Matrisi</h3>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
+        <div className="flex items-center gap-3">
+          <h3 className="text-[16px] font-extrabold text-text-primary">Aşı Takvimi Matrisi</h3>
+          {onSingleScan && onBatchScan && (
+            <ScannerDropdown onSingleScan={onSingleScan} onBatchScan={onBatchScan} />
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {onNewRecord && (
+            <>
+              <button 
+                onClick={() => onNewRecord('', '', new Date().toISOString())}
+                className="flex items-center gap-2 px-3 py-2 bg-success/5 text-success hover:bg-success/10 transition-all rounded-xl border border-success/20 group shadow-sm"
+              >
+                <span className="text-[16px] group-hover:scale-110 transition-transform">✅</span>
+                <span className="text-[11px] font-black uppercase tracking-wider">Yapıldı Kaydı Ekle</span>
+              </button>
+              <button 
+                onClick={() => onNewRecord('', '', new Date().toISOString())}
+                className="flex items-center gap-2 px-3 py-2 bg-primary/5 text-primary hover:bg-primary/10 transition-all rounded-xl border border-primary/20 group shadow-sm"
+              >
+                <span className="text-[16px] group-hover:scale-110 transition-transform">📅</span>
+                <span className="text-[11px] font-black uppercase tracking-wider">Yeni Plan Ekle</span>
+              </button>
+            </>
+          )}
+        </div>
+      </div>
       <div className="overflow-x-auto border border-slate-300 rounded-lg shadow-sm">
-        <table className="w-full text-[12px] text-left border-collapse min-w-[700px]">
+        <table className="w-full text-[12px] text-left border-collapse min-w-[800px]">
           <thead>
             <tr className="bg-slate-500 text-white">
               <th colSpan={4} className="p-2 border-r border-slate-600"></th>
-              <th colSpan={2} className="p-2 border-r border-slate-600 text-center font-bold">İlk Yıl</th>
-              <th colSpan={2} className="p-2 border-r border-slate-600 text-center font-bold">1.Yaş</th>
-              <th colSpan={2} className="p-2 border-slate-600 text-center font-bold">2.Yaş</th>
+              {years.map(year => (
+                <th key={year} colSpan={year === 0 ? 2 : 1} className="p-2 border-r border-slate-600 text-center font-bold">
+                  <div>{year === 0 ? 'İlk Yıl' : `${year}. Yaş`}</div>
+                  <div className="text-[10px] font-normal opacity-80 mt-0.5">{birthYear + year}</div>
+                </th>
+              ))}
             </tr>
             <tr className="bg-slate-400 text-white">
               <th className="p-2 border border-slate-500 font-bold whitespace-nowrap">Aşı Adı</th>
               <th className="p-2 border border-slate-500 font-bold">Kod</th>
               <th className="p-2 border border-slate-500 font-bold">Zorunluluk</th>
               <th className="p-2 border border-slate-500 font-bold">Koruduğu Hastalıklar</th>
-              <th className="p-2 border border-slate-500 font-bold text-center">1.Doz</th>
-              <th className="p-2 border border-slate-500 font-bold text-center">2.Doz</th>
-              <th className="p-2 border border-slate-500 font-bold text-center">1.Doz</th>
-              <th className="p-2 border border-slate-500 font-bold text-center">2.Doz</th>
-              <th className="p-2 border border-slate-500 font-bold text-center">1.Doz</th>
-              <th className="p-2 border border-slate-500 font-bold text-center">2.Doz</th>
+              {years.map(year => (
+                <Fragment key={year}>
+                  {year === 0 ? (
+                    <>
+                      <th className="p-2 border border-slate-500 font-bold text-center">1.Doz</th>
+                      <th className="p-2 border border-slate-500 font-bold text-center">2.Doz</th>
+                    </>
+                  ) : (
+                    <th className="p-2 border border-slate-500 font-bold text-center">Tekrar</th>
+                  )}
+                </Fragment>
+              ))}
             </tr>
           </thead>
           <tbody>
             {rows.map((row: any, i: number) => (
               <tr key={i} className="hover:bg-slate-50">
-                <td className="p-2 border border-slate-300 font-bold whitespace-nowrap bg-white text-text-primary">{row.name}</td>
+                <td className={`p-2 border border-slate-300 font-bold whitespace-nowrap bg-white ${!row.is_active ? 'text-text-secondary opacity-60' : 'text-text-primary'}`}>
+                  <div className="flex items-center gap-2">
+                    <span className={!row.is_active ? 'line-through' : ''}>{getDisplayName(row.name, row.code)}</span>
+                    {!row.is_active && (
+                      <span className="text-[10px] font-black bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded uppercase">Pasif</span>
+                    )}
+                  </div>
+                </td>
                 <td className="p-2 border border-slate-300 bg-white text-text-primary">{row.code}</td>
                 <td className={`p-2 border border-slate-300 whitespace-nowrap bg-white text-text-primary ${row.mandatory === 'legal_required' ? 'font-bold' : ''}`}>
-                  {row.mandatory === 'core' ? 'Temel (Core)' : row.mandatory === 'optional' ? 'Seçmeli' : 'Yasal Zorunlu'}
+                  {row.mandatory === 'core' ? 'Temel' : row.mandatory === 'optional' ? 'Seçmeli' : 'Yasal Zorunlu'}
                 </td>
                 <td className="p-2 border border-slate-300 text-[11px] bg-white text-text-primary leading-tight">{row.diseases}</td>
-                
-                {row.base2 ? (
-                  <>
-                    <td 
-                      className={`p-2 border text-center font-medium ${row.base1.bg}`}
-                      title={row.base1.title}
-                      onClick={() => row.base1.record && row.base1.record.status !== 'completed' && onCellClick?.(row.base1.record)}
-                    >
-                      {formatDate(row.base1.date)}
-                    </td>
-                    <td 
-                      className={`p-2 border text-center font-medium ${row.base2.bg}`}
-                      title={row.base2.title}
-                      onClick={() => row.base2.record && row.base2.record.status !== 'completed' && onCellClick?.(row.base2.record)}
-                    >
-                      {formatDate(row.base2.date)}
-                    </td>
-                  </>
-                ) : (
-                  <td 
-                    colSpan={2} 
-                    className={`p-2 border text-center font-medium ${row.base1.bg}`}
-                    title={row.base1.title}
-                    onClick={() => row.base1.record && row.base1.record.status !== 'completed' && onCellClick?.(row.base1.record)}
-                  >
-                    {formatDate(row.base1.date)}
-                  </td>
-                )}
 
-                {/* 1.Yaş - Tek Doza Düşer */}
-                <td 
-                  colSpan={2}
-                  className={`p-2 border text-center font-medium ${row.annual1 ? row.annual1.bg : 'bg-white border-slate-300 opacity-60'}`}
-                  title={row.annual1?.title}
-                  onClick={() => row.annual1?.record && row.annual1.record.status !== 'completed' && onCellClick?.(row.annual1.record)}
-                >
-                  {row.annual1 ? formatDate(row.annual1.date) : ''}
-                </td>
-
-                {/* 2.Yaş - Tek Doza Düşer */}
-                <td 
-                  colSpan={2}
-                  className={`p-2 border text-center font-medium ${row.annual2 ? row.annual2.bg : 'bg-white border-slate-300 opacity-60'}`}
-                  title={row.annual2?.title}
-                  onClick={() => row.annual2?.record && row.annual2.record.status !== 'completed' && onCellClick?.(row.annual2.record)}
-                >
-                  {row.annual2 ? formatDate(row.annual2.date) : ''}
-                </td>
+                {row.yearCells.map((cell: any, idx: number) => {
+                  if (idx === 0) {
+                    // First year: render each dose
+                    const dose1 = row.yearCells[0].doses?.[0];
+                    const dose2 = row.yearCells[0].doses?.[1];
+                    return (
+                      <Fragment key={idx}>
+                        <td
+                          className={`p-2 border text-center font-medium transition-all ${
+                            !row.is_active 
+                              ? 'bg-slate-100/50 border-slate-200 text-slate-300 cursor-not-allowed'
+                              : (dose1?.bg || 'bg-white border-slate-300 opacity-60')
+                          }`}
+                          style={!row.is_active ? { 
+                            backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.03) 5px, rgba(0,0,0,0.03) 10px)' 
+                          } : {}}
+                          title={!row.is_active ? 'Bu aşı pasif durumdadır.' : (dose1?.title || '')}
+                          onClick={() => {
+                            if (!row.is_active) return;
+                            if (dose1?.record) {
+                              if (dose1.record.status !== 'completed') onCellClick?.(dose1.record);
+                            } else if (dose1?.date) {
+                              onNewRecord?.(row.name, row.code, dose1.date);
+                            }
+                          }}
+                        >
+                          {!row.is_active ? <span className="font-bold text-[10px] tracking-wider uppercase text-slate-400">Pasif</span> : (dose1?.record ? formatDate(dose1.date) : '')}
+                        </td>
+                        {dose2 ? (
+                          <td
+                            className={`p-2 border text-center font-medium transition-all ${
+                              !row.is_active 
+                                ? 'bg-slate-100/50 border-slate-200 text-slate-300 cursor-not-allowed'
+                                : (dose2.bg)
+                            }`}
+                            style={!row.is_active ? { 
+                              backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.03) 5px, rgba(0,0,0,0.03) 10px)' 
+                            } : {}}
+                            title={!row.is_active ? 'Bu aşı pasif durumdadır.' : (dose2.title || '')}
+                            onClick={() => {
+                              if (!row.is_active) return;
+                              if (dose2.record && !(dose2.record as any)._isVirtual) {
+                                if (dose2.record.status !== 'completed') onCellClick?.(dose2.record);
+                              } else if (dose2.date) {
+                                onNewRecord?.(row.name, row.code, dose2.date);
+                              }
+                            }}
+                          >
+                            {!row.is_active ? <span className="font-bold text-[10px] tracking-wider uppercase text-slate-400">Pasif</span> : (dose2.record ? formatDate(dose2.date) : '')}
+                          </td>
+                        ) : (
+                          <td className="p-2 border border-slate-300 bg-slate-100 opacity-30"></td>
+                        )}
+                      </Fragment>
+                    );
+                  }
+                  // Subsequent years: annual booster or grayed out
+                  return (
+                    <Fragment key={idx}>
+                      <td
+                        className={`p-2 border text-center font-medium transition-all ${
+                          (!row.is_active || !cell) 
+                            ? 'bg-slate-100/50 border-slate-200 text-slate-300 cursor-not-allowed'
+                            : (cell.bg)
+                        }`}
+                        style={(!row.is_active || !cell) ? { 
+                          backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.03) 5px, rgba(0,0,0,0.03) 10px)' 
+                        } : {}}
+                        title={!row.is_active ? 'Bu aşı pasif durumdadır.' : (!cell ? 'Bu protokol yıllık tekrar gerektirmez.' : (cell.title || ''))}
+                        onClick={() => {
+                          if (!row.is_active || !cell) return;
+                          if (cell.record) {
+                            if (cell.record.status !== 'completed') onCellClick?.(cell.record);
+                          } else if (cell.date) {
+                            onNewRecord?.(row.name, row.code, cell.date);
+                          }
+                        }}
+                      >
+                        {!row.is_active ? <span className="font-bold text-[10px] tracking-wider uppercase text-slate-400">Pasif</span> : (cell?.record ? formatDate(cell.date) : '')}
+                      </td>
+                    </Fragment>
+                  );
+                })}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      
+
       <div className="mt-4 flex gap-4 text-[12px] font-bold">
-        <div className="flex items-center gap-2">
-          <div className="w-5 h-5 bg-[#4CAF50] border border-slate-300 rounded"></div>
-          <span className="text-text-primary">Yapıldı</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-5 h-5 bg-[#F44336] border border-slate-300 rounded"></div>
-          <span className="text-text-primary">Atlandı / Gecikti</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-5 h-5 bg-white border border-slate-300 rounded"></div>
-          <span className="text-text-primary">Planlandı</span>
-        </div>
+        <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#4CAF50] border border-slate-300 rounded"></div><span className="text-text-primary">Yapıldı</span></div>
+        <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#F44336] border border-slate-300 rounded"></div><span className="text-text-primary">Atlandı / Gecikti</span></div>
+        <div className="flex items-center gap-2"><div className="w-5 h-5 bg-white border border-slate-300 rounded"></div><span className="text-text-primary">Planlandı</span></div>
       </div>
     </div>
   )
 }
 
-export default function VaccineOSClient({ pet, setupProfile, vaccineRecords, templates }: {
-  pet: Pet; setupProfile: SetupProfile; vaccineRecords: VRecord[]; templates: Template[]
+// ── Parasite Protocol Table Component ───────────────────────────────────
+function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord }: { 
+  pet: Pet; 
+  templates: Template[]; 
+  records: VRecord[]; 
+  onCellClick?: (record: VRecord) => void;
+  onNewRecord?: (name: string, code: string, date: string) => void;
+}) {
+  const parasiteTemplates = templates.filter(t => t.category === 'parasite');
+
+  if (parasiteTemplates.length === 0) return null;
+
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear().toString().slice(-2)}`;
+  }
+
+  const getCellState = (record: VRecord | undefined | null, projectedDate: string | null) => {
+    if (record) {
+      if (record.status === 'completed') return { date: record.administered_at || projectedDate, bg: 'bg-[#4CAF50] text-black border-slate-300 cursor-default', record, title: `Yapıldı: ${new Date(record.administered_at || '').toLocaleDateString('tr-TR')}` };
+      if (record.status === 'skipped' || record.status === 'overdue') return { date: record.due_at || projectedDate, bg: 'bg-[#F44336] text-white border-slate-300 hover:opacity-80 cursor-pointer transition-all', record, title: `Gecikti/Atlandı.` };
+      return { date: record.due_at || projectedDate, bg: 'bg-white text-text-primary border-slate-300 hover:bg-primary/10 cursor-pointer transition-all', record, title: `Planlandı: ${new Date(record.due_at || projectedDate || '').toLocaleDateString('tr-TR')}` };
+    }
+    return { date: projectedDate, bg: 'bg-white text-text-primary border-slate-300 opacity-60', record: null, title: `Tahmini: ${projectedDate ? new Date(projectedDate).toLocaleDateString('tr-TR') : ''}` };
+  }
+
+  const columns = ['Son Uygulama', 'Sıradaki Bekleyen', 'Gelecek Plan 1', 'Gelecek Plan 2', 'Gelecek Plan 3', 'Gelecek Plan 4'];
+
+  const rows = parasiteTemplates.map(tmpl => {
+    const sortedRecords = records
+      .filter(r => r.vaccine_code === tmpl.vaccine_code)
+      .sort((a, b) => new Date(a.due_at || '').getTime() - new Date(b.due_at || '').getTime());
+
+    const completedRecords = sortedRecords.filter(r => r.status === 'completed').sort((a, b) => new Date(b.administered_at || b.due_at || '').getTime() - new Date(a.administered_at || a.due_at || '').getTime());
+    const pendingRecords = sortedRecords.filter(r => r.status !== 'completed');
+
+    const lastCompleted = completedRecords.length > 0 ? completedRecords[0] : null;
+    const nextPending = pendingRecords.length > 0 ? pendingRecords[0] : null;
+
+    const cells: any[] = [];
+    
+    // 1. Son Uygulama (Last)
+    cells.push(getCellState(lastCompleted, lastCompleted?.administered_at || null));
+
+    // 2. Sıradaki (Next Due)
+    let nextDateStr = nextPending?.due_at || null;
+    if (!nextDateStr && lastCompleted && tmpl.recurrence_days) {
+      const d = new Date(lastCompleted.administered_at || lastCompleted.due_at || new Date().toISOString());
+      d.setDate(d.getDate() + tmpl.recurrence_days);
+      nextDateStr = d.toISOString();
+    }
+    if (!nextDateStr && !lastCompleted && !nextPending) {
+      const bd = pet.birth_date ? new Date(pet.birth_date) : new Date();
+      bd.setDate(bd.getDate() + (tmpl.first_dose_week || 6) * 7);
+      nextDateStr = bd.toISOString();
+    }
+    cells.push(getCellState(nextPending, nextDateStr));
+
+    // 3, 4, 5, 6. Gelecek (Future Projections)
+    let refDate = nextDateStr || new Date().toISOString();
+    for (let i = 0; i < 4; i++) {
+      if (tmpl.recurrence_days) {
+        const d = new Date(refDate);
+        d.setDate(d.getDate() + tmpl.recurrence_days);
+        refDate = d.toISOString();
+        
+        const targetYear = d.getFullYear();
+        const targetMonth = d.getMonth();
+        const futureRec = pendingRecords.find(r => r !== nextPending && new Date(r.due_at || '').getFullYear() === targetYear && new Date(r.due_at || '').getMonth() === targetMonth);
+        cells.push(getCellState(futureRec, refDate));
+      } else {
+        cells.push(null);
+      }
+    }
+
+    return {
+      name: tmpl.vaccine_name,
+      code: tmpl.vaccine_code,
+      frequency: tmpl.recurrence_days ? `${tmpl.recurrence_days} günde bir` : 'Tek Seferlik',
+      is_active: tmpl.is_active,
+      cells
+    };
+  });
+
+  return (
+    <div className="mb-8 mt-8">
+      <h3 className="text-[16px] font-extrabold text-text-primary mb-3">Parazit Takvimi Matrisi</h3>
+      <div className="overflow-x-auto border border-slate-300 rounded-lg shadow-sm">
+        <table className="w-full text-[12px] text-left border-collapse min-w-[800px]">
+          <thead>
+            <tr className="bg-slate-500 text-white">
+              <th colSpan={3} className="p-2 border-r border-slate-600"></th>
+              <th colSpan={6} className="p-2 border-slate-600 text-center font-bold">Uygulama Zaman Çizelgesi</th>
+            </tr>
+            <tr className="bg-slate-400 text-white">
+              <th className="p-2 border border-slate-500 font-bold whitespace-nowrap">Parazit Koruması</th>
+              <th className="p-2 border border-slate-500 font-bold">Kod</th>
+              <th className="p-2 border border-slate-500 font-bold">Sıklık</th>
+              {columns.map(col => (
+                <th key={col} className="p-2 border border-slate-500 font-bold text-center whitespace-nowrap">{col}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row: any, i: number) => (
+              <tr key={i} className="hover:bg-slate-50 transition-colors">
+                <td className={`p-2 border border-slate-300 font-bold whitespace-nowrap bg-white ${!row.is_active ? 'text-text-secondary opacity-60' : 'text-text-primary'}`}>
+                  <div className="flex items-center gap-2">
+                    <span className={!row.is_active ? 'line-through' : ''}>{getDisplayName(row.name, row.code)}</span>
+                    {!row.is_active && (
+                      <span className="text-[10px] font-black bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded uppercase">Pasif</span>
+                    )}
+                  </div>
+                </td>
+                <td className="p-2 border border-slate-300 bg-white text-text-primary">
+                  <span className="px-1.5 py-0.5 rounded bg-slate-100 text-text-secondary text-[10px] font-bold">{row.code}</span>
+                </td>
+                <td className={`p-2 border border-slate-300 text-[11px] bg-white text-text-primary leading-tight font-medium whitespace-nowrap ${!row.is_active ? 'opacity-50' : ''}`}>
+                  {row.frequency}
+                </td>
+
+                {row.cells.map((cell: any, idx: number) => (
+                  <td
+                    key={idx}
+                    className={`p-2 border text-center font-medium transition-all ${
+                      !row.is_active 
+                        ? 'bg-slate-100/50 border-slate-200 text-slate-300 cursor-not-allowed'
+                        : (cell ? cell.bg : 'bg-slate-200 opacity-40')
+                    }`}
+                    style={!row.is_active ? { 
+                      backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.03) 5px, rgba(0,0,0,0.03) 10px)' 
+                    } : {}}
+                    title={!row.is_active ? 'Bu protokol pasif durumdadır.' : (cell?.title || '')}
+                    onClick={() => {
+                      if (!row.is_active) return;
+                      if (cell?.record && !(cell.record as any)._isVirtual) {
+                        if (cell.record.status !== 'completed') onCellClick?.(cell.record);
+                      } else if (cell?.date) {
+                        onNewRecord?.(row.name, row.code, cell.date);
+                      }
+                    }}
+                  >
+                    {!row.is_active ? <span className="font-bold text-[10px] tracking-wider uppercase text-slate-400">Pasif</span> : (cell && cell.date ? formatDate(cell.date) : (idx === 0 ? '-' : ''))}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: allRecords, templates: allTemplates, isTab = false, categoryFilter }: {
+  pet: Pet; setupProfile: SetupProfile; vaccineRecords: VRecord[]; templates: Template[]; isTab?: boolean; categoryFilter?: 'vaccine' | 'parasite'
 }) {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'records' | 'settings'>('overview')
+  // Optimization: Simplified tabs for embedded mode
+  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'records'>(isTab ? 'schedule' : 'overview')
+
+  // Filter templates and records based on categoryFilter and is_active status
+  const templates = (categoryFilter 
+    ? allTemplates.filter(t => categoryFilter === 'parasite' ? t.category === 'parasite' : t.category !== 'parasite')
+    : allTemplates);
+
+  const baseRecords = categoryFilter
+    ? allRecords.filter(r => {
+        const tmpl = allTemplates.find(t => t.vaccine_code === r.vaccine_code);
+        if (!tmpl) return categoryFilter === 'vaccine';
+        return categoryFilter === 'parasite' ? tmpl.category === 'parasite' : tmpl.category !== 'parasite';
+      })
+    : allRecords;
+
+  // Synchronize dynamic Matrix projections with actual lists (overdue/due)
+  const vaccineRecords = useMemo(() => {
+    const augmented = [...baseRecords];
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+
+    templates.forEach(tmpl => {
+      if (!tmpl.is_active) return;
+      
+      const aliases = (COMMON_ALIASES[tmpl.vaccine_code] || []).map(a => a.toLowerCase());
+      const tmplRecords = baseRecords.filter(r => {
+         if (r.vaccine_code === tmpl.vaccine_code) return true;
+         if (r.vaccine_code === 'MANUAL' || !r.vaccine_code) {
+             const rName = r.vaccine_name.toLowerCase();
+             const checkMatch = (term: string) => {
+               const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+               return new RegExp(`(\\b|_)${escaped}(\\b|_)`, 'i').test(rName);
+             };
+             return checkMatch(tmpl.vaccine_code) || aliases.some(a => checkMatch(a));
+         }
+         return false;
+      });
+
+      const completedDoses = tmplRecords.filter(r => r.status === 'completed').length;
+      
+      // 1. Missing first dose
+      if (tmplRecords.length === 0) {
+        let projectedDate = new Date();
+        if (pet.birth_date) {
+           projectedDate = new Date(pet.birth_date);
+           projectedDate.setDate(projectedDate.getDate() + (tmpl.first_dose_week || 6) * 7);
+        }
+        const pDateStr = projectedDate.toISOString();
+        const isOverdue = projectedDate < now && pDateStr.split('T')[0] !== todayStr;
+        
+        augmented.push({
+           id: `virtual_${tmpl.vaccine_code}_1`,
+           pet_id: pet.id,
+           vaccine_code: tmpl.vaccine_code,
+           vaccine_name: tmpl.vaccine_name,
+           dose_number: 1,
+           status: isOverdue ? 'overdue' : 'due',
+           due_at: pDateStr,
+           confidence_level: 'estimated',
+           created_at: pDateStr,
+           updated_at: pDateStr,
+           _isVirtual: true
+        } as any);
+      } 
+      // 2. Missing subsequent series doses
+      else if (tmplRecords.length > 0 && tmpl.dose_count > 1 && completedDoses < tmpl.dose_count) {
+         const completedList = tmplRecords.filter(r => r.status === 'completed').sort((a,b) => (a.dose_number || 0) - (b.dose_number || 0));
+         const lastCompleted = completedList[completedList.length - 1];
+         
+         if (lastCompleted && lastCompleted.dose_number && lastCompleted.dose_number < tmpl.dose_count) {
+             const nextDoseNum = lastCompleted.dose_number + 1;
+             const hasNext = tmplRecords.some(r => r.dose_number === nextDoseNum || r.status !== 'completed');
+             if (!hasNext && lastCompleted.administered_at) {
+                 const bd = new Date(lastCompleted.administered_at);
+                 const interval = Array.isArray(tmpl.dose_interval_days) 
+                   ? (tmpl.dose_interval_days[lastCompleted.dose_number - 1] || 21)
+                   : (tmpl.dose_interval_days as any || 21);
+                 bd.setDate(bd.getDate() + interval);
+                 const pDateStr = bd.toISOString();
+                 const isOverdue = bd < now && pDateStr.split('T')[0] !== todayStr;
+                 
+                 augmented.push({
+                   id: `virtual_${tmpl.vaccine_code}_${nextDoseNum}`,
+                   pet_id: pet.id,
+                   vaccine_code: tmpl.vaccine_code,
+                   vaccine_name: tmpl.vaccine_name,
+                   dose_number: nextDoseNum,
+                   status: isOverdue ? 'overdue' : 'due',
+                   due_at: pDateStr,
+                   confidence_level: 'estimated',
+                   created_at: pDateStr,
+                   updated_at: pDateStr,
+                   _isVirtual: true
+                 } as any)
+             }
+         }
+      }
+      // 3. Missing Annual Boosters / Recurrence
+      else if ((tmpl.has_annual_booster || tmpl.recurrence_days) && completedDoses >= tmpl.dose_count) {
+         const lastRecord = tmplRecords.filter(r => r.status === 'completed').sort((a,b) => new Date(a.administered_at || '').getTime() - new Date(b.administered_at || '').getTime()).pop();
+         if (lastRecord && lastRecord.administered_at) {
+             const bd = new Date(lastRecord.administered_at);
+             if (tmpl.recurrence_days) {
+                 bd.setDate(bd.getDate() + tmpl.recurrence_days);
+             } else {
+                 bd.setFullYear(bd.getFullYear() + 1);
+             }
+             const pDateStr = bd.toISOString();
+             
+             const hasFutureOrRecent = tmplRecords.some(r => r.status !== 'completed' || (r.status === 'completed' && new Date(r.administered_at!) > new Date(bd.getTime() - 60*24*60*60*1000)));
+             
+             if (!hasFutureOrRecent) {
+                 const isOverdue = bd < now && pDateStr.split('T')[0] !== todayStr;
+                 augmented.push({
+                   id: `virtual_${tmpl.vaccine_code}_booster`,
+                   pet_id: pet.id,
+                   vaccine_code: tmpl.vaccine_code,
+                   vaccine_name: tmpl.vaccine_name,
+                   status: isOverdue ? 'overdue' : 'due',
+                   due_at: pDateStr,
+                   confidence_level: 'estimated',
+                   created_at: pDateStr,
+                   updated_at: pDateStr,
+                   _isVirtual: true
+                 } as any)
+             }
+         }
+      }
+    });
+
+    // ── Deduplication Pass ─────────────────────────────────────────
+    // If a code has ANY completed record for its primary dose series,
+    // remove orphaned overdue/due/scheduled records for the same code.
+    // This prevents Matrix ✅ vs List ❌ desync.
+    const completedCodes = new Map<string, Date>(); // code → latest administered_at
+    templates.forEach(tmpl => {
+      const aliases = (COMMON_ALIASES[tmpl.vaccine_code] || []).map(a => a.toLowerCase());
+      const checkMatch = (term: string, name: string) => {
+        const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return new RegExp(`(\\b|_)${escaped}(\\b|_)`, 'i').test(name);
+      };
+      
+      const latest = augmented
+        .filter(r => r.status === 'completed')
+        .filter(r => {
+          if (r.vaccine_code === tmpl.vaccine_code) return true;
+          if (r.vaccine_code === 'MANUAL' || !r.vaccine_code) {
+            const rName = r.vaccine_name.toLowerCase();
+            return checkMatch(tmpl.vaccine_code, rName) || aliases.some(a => checkMatch(a, rName));
+          }
+          return false;
+        })
+        .map(r => new Date(r.administered_at || r.due_at || ''))
+        .sort((a,b) => b.getTime() - a.getTime())[0];
+        
+      if (latest) completedCodes.set(tmpl.vaccine_code, latest);
+    });
+
+    const deduped = augmented.filter(r => {
+      // Always keep completed, manual, virtual-less records
+      if (r.status === 'completed') return true;
+      if (!r.vaccine_code || r.vaccine_code === 'MANUAL') return true;
+
+      const lastCompleted = completedCodes.get(r.vaccine_code);
+      if (!lastCompleted) return true; // no completed for this code → keep
+
+      const template = templates.find(t => t.vaccine_code === r.vaccine_code);
+      if (!template) return true;
+
+      // For single-dose vaccines: if completed, hide all pending
+      if ((template.dose_count || 1) === 1 && !template.has_annual_booster && !template.recurrence_days) {
+        return false; // completed single-dose → remove overdue/due
+      }
+
+      // For series vaccines: remove only if the overdue record is BEFORE (or same day as) the last completed
+      const recordDate = new Date(r.due_at || r.administered_at || '');
+      return recordDate > lastCompleted; // only keep future-dated pending records
+    });
+
+    // Filter out identical pending/overdue records (likely DB duplicates)
+    const uniquePending = new Set();
+    const finalDeduped = deduped.filter(r => {
+      if (r.status === 'completed' || !r.vaccine_code || r.vaccine_code === 'MANUAL') return true;
+      const key = `${r.vaccine_code}_${r.status}_${r.due_at ? r.due_at.split('T')[0] : 'nodate'}_${r.dose_number || '0'}`;
+      if (uniquePending.has(key)) return false;
+      uniquePending.add(key);
+      return true;
+    });
+
+    return finalDeduped.sort((a, b) => new Date(a.due_at || '').getTime() - new Date(b.due_at || '').getTime());
+  }, [baseRecords, templates, pet]);
   const [setupDone, setSetupDone] = useState(!!setupProfile)
   const [quickMarkRecord, setQuickMarkRecord] = useState<VRecord | null>(null)
   const [postponeRecord, setPostponeRecord] = useState<VRecord | null>(null)
-  const [showManual, setShowManual] = useState(false)
+  const [manualConfig, setManualConfig] = useState<{ show: boolean, mode: 'record' | 'plan', fixed: boolean, initialData?: { name: string, code: string, date: string, brand?: string, batch_no?: string, clinic?: string } | null }>({ show: false, mode: 'record', fixed: false })
+  const [isSingleScanning, setIsSingleScanning] = useState(false)
+
+  async function handleSingleScan(file: File) {
+    setIsSingleScanning(true)
+    try {
+      const reader = new FileReader()
+      reader.onload = async (event) => {
+        const base64 = (event.target?.result as string).split(',')[1]
+        const res = await analyzeVaccineLabel(base64, file.type)
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+          const data = res.data[0]
+          setManualConfig({ 
+            show: true, mode: 'record', fixed: false, 
+            initialData: { 
+              name: data.vaccineName ? toTitleCase(data.vaccineName) : '', 
+              code: '', 
+              date: data.date ? new Date(data.date).toISOString() : new Date().toISOString(),
+              brand: data.brand ? toTitleCase(data.brand) : '',
+              batch_no: data.batchNo ? data.batchNo.toUpperCase() : '',
+              clinic: data.clinicName ? toTitleCase(data.clinicName) : ''
+            }
+          })
+        } else if (res.success) {
+          alert('Etiket okunamadı: Lütfen daha net bir fotoğraf çekin.')
+        } else {
+          alert('Etiket okunamadı: ' + res.error)
+        }
+        setIsSingleScanning(false)
+      }
+      reader.readAsDataURL(file)
+    } catch (e) {
+      console.error(e)
+      setIsSingleScanning(false)
+    }
+  }
+  const [showSettings, setShowSettings] = useState(false)
+  const [showOverdueList, setShowOverdueList] = useState(false)
+  const [showBatchScan, setShowBatchScan] = useState(false)
+  const [isHistoricalImporting, setIsHistoricalImporting] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   // Computed stats
@@ -681,6 +1827,42 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords, tem
   const dueRecords = vaccineRecords.filter(r => r.status === 'due' || r.status === 'scheduled')
     .sort((a, b) => new Date(a.due_at || '').getTime() - new Date(b.due_at || '').getTime())
   const nextDue = dueRecords[0]
+
+  const [filterYear, setFilterYear] = useState<string>('all')
+  const [filterVaccine, setFilterVaccine] = useState<string>('all')
+
+  const availableYears = useMemo(() => {
+    const years = new Set<string>()
+    vaccineRecords.forEach(r => {
+      const d = r.administered_at || r.due_at
+      if (d) years.add(new Date(d).getFullYear().toString())
+    })
+    return Array.from(years).sort().reverse()
+  }, [vaccineRecords])
+
+  const availableVaccines = useMemo(() => {
+    const codes = new Set<string>()
+    vaccineRecords.forEach(r => {
+      if (r.vaccine_code && r.vaccine_code !== 'MANUAL') {
+        codes.add(r.vaccine_code)
+      }
+    })
+    return Array.from(codes).map(code => {
+      const tmpl = templates.find(t => t.vaccine_code === code)
+      return { code, name: tmpl ? tmpl.vaccine_name : code }
+    }).sort((a, b) => a.name.localeCompare(b.name))
+  }, [vaccineRecords, templates])
+
+  const filteredRecords = useMemo(() => {
+    return vaccineRecords.filter(r => {
+      if (filterVaccine !== 'all' && r.vaccine_code !== filterVaccine) return false;
+      if (filterYear !== 'all') {
+        const d = r.administered_at || r.due_at;
+        if (!d || new Date(d).getFullYear().toString() !== filterYear) return false;
+      }
+      return true;
+    });
+  }, [vaccineRecords, filterVaccine, filterYear]);
 
   // Fire analytics for overdue detection and chain completion
   useEffect(() => {
@@ -697,94 +1879,214 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords, tem
   function refreshData() {
     router.refresh()
     setQuickMarkRecord(null)
+    setManualConfig({ ...manualConfig, show: false, initialData: null })
+    setShowBatchScan(false)
   }
 
-  const TABS = [
+  const TABS = isTab ? [
+    { id: 'schedule', label: 'Yaklaşan Plan', icon: '📅' },
+    { id: 'records', label: 'Tüm Kayıtlar & Matris', icon: '📊' },
+  ] : [
     { id: 'overview', label: 'Genel Bakış', icon: '🏠' },
     { id: 'schedule', label: 'Takvim', icon: '📅' },
     { id: 'records', label: 'Kayıtlar', icon: '📋' },
-    { id: 'settings', label: 'Ayarlar', icon: '⚙️' },
   ] as const
+
+  // Extract unique historical values for suggestions
+  const historicalSuggestions = useMemo(() => {
+    const clinics = new Set<string>();
+    const vets = new Set<string>();
+    const brands = new Set<string>();
+
+    allRecords.forEach(r => {
+      if (!r.notes) return;
+      const parts = r.notes.split(' | ');
+      parts.forEach(p => {
+        if (p.startsWith('Klinik: ')) clinics.add(toTitleCase(p.replace('Klinik: ', '').trim()));
+        if (p.startsWith('Veteriner: ')) vets.add(toTitleCase(p.replace('Veteriner: ', '').trim()));
+        if (p.startsWith('Marka: ')) brands.add(toTitleCase(p.replace('Marka: ', '').trim()));
+      });
+    });
+
+    return {
+      clinics: Array.from(clinics).filter(Boolean).sort(),
+      vets: Array.from(vets).filter(Boolean).sort(),
+      brands: Array.from(brands).filter(Boolean).sort()
+    };
+  }, [allRecords]);
 
   // ── Render: NOT SETUP ──
   if (!setupDone) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-6">
-        <Link href={`/owner/pets/${pet.id}`} className="flex items-center gap-2 text-[14px] font-bold text-text-secondary hover:text-primary mb-6">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-          {pet.name}
-        </Link>
-        <SetupFlow pet={pet} templates={templates} onComplete={() => setSetupDone(true)} />
+      <div className={isTab ? "w-full" : "w-full mx-auto px-4 py-6"}>
+        {!isTab && (
+          <Link href={`/owner/pets/${pet.id}`} className="flex items-center gap-2 text-[14px] font-bold text-text-secondary hover:text-primary mb-6">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+            {pet.name}
+          </Link>
+        )}
+        <SetupFlow 
+          pet={pet} 
+          templates={templates} 
+          onComplete={() => setSetupDone(true)} 
+          onHistoricalImport={() => {
+             setSetupDone(true)
+             setIsHistoricalImporting(true)
+             setShowBatchScan(true)
+          }}
+        />
       </div>
     )
   }
 
   // ── Render: MAIN UI ──
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 pb-20 flex flex-col gap-5">
+    <div className={isTab ? "w-full flex flex-col gap-5" : "w-full mx-auto px-4 py-6 pb-20 flex flex-col gap-5"}>
       {quickMarkRecord && (
-        <VaccineActionModal record={quickMarkRecord} allRecords={vaccineRecords} onClose={() => setQuickMarkRecord(null)} onDone={refreshData} />
+        <VaccineActionModal 
+          key={quickMarkRecord.id} 
+          record={quickMarkRecord} 
+          allRecords={vaccineRecords} 
+          suggestions={historicalSuggestions}
+          onClose={() => setQuickMarkRecord(null)} 
+          onDone={refreshData} 
+        />
       )}
       {postponeRecord && (
         <PostponeModal record={postponeRecord} onClose={() => setPostponeRecord(null)} onDone={() => { setPostponeRecord(null); refreshData() }} />
       )}
-      {showManual && (
-        <ManualVaccineModal petId={pet.id} onClose={() => setShowManual(false)} onDone={() => { setShowManual(false); refreshData() }} />
+      {manualConfig.show && (
+        <ManualVaccineModal 
+          petId={pet.id} 
+          templates={templates} 
+          suggestions={historicalSuggestions}
+          initialMode={manualConfig.mode}
+          fixedMode={manualConfig.fixed}
+          initialData={manualConfig.initialData}
+          onClose={() => setManualConfig({ ...manualConfig, show: false, initialData: null })} 
+          onDone={refreshData} 
+        />
       )}
-
-      {/* Back */}
-      <Link href={`/owner/pets/${pet.id}`} className="flex items-center gap-2 text-[14px] font-bold text-text-secondary hover:text-primary -mb-1">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-        {pet.name}
-      </Link>
-
-      {/* Header */}
-      <div className="card-base overflow-hidden">
-        <div className="h-1.5 bg-gradient-to-r from-primary to-violet-500" />
-        <div className="p-5 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-[24px]">💉</div>
-            <div>
-              <h1 className="text-[20px] font-extrabold text-text-primary">Aşı Takvimi</h1>
-              <p className="text-[13px] text-text-secondary">{pet.name} • {setupProfile?.setup_mode === 'smart_start' ? 'Akıllı Başlangıç' : setupProfile?.setup_mode === 'fresh_start' ? 'Bugünden Başla' : 'Geçmiş İçe Aktarma'}</p>
+      {isSingleScanning && (
+        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-surface rounded-3xl p-8 flex flex-col items-center gap-4 shadow-2xl min-w-[240px]">
+            <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+            <div className="text-center">
+              <p className="font-extrabold text-[15px] text-text-primary">Etiket Okunuyor...</p>
+              <p className="text-[12px] font-medium text-text-secondary mt-1">Yapay zeka analiz ediyor</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setShowManual(true)}
-              className="text-[12px] font-bold text-primary bg-primary/10 px-3 py-1.5 rounded-xl hover:bg-primary/20 transition-colors">
-              + Manuel Ekle
-            </button>
-            {overdueCount > 0 && (
-              <span className="bg-error/10 text-error text-[12px] font-black px-3 py-1.5 rounded-full border border-error/20">
-                ⚠ {overdueCount} Gecikmiş
-              </span>
-            )}
+        </div>
+      )}
+
+      {showBatchScan && (
+        <BatchScanModal
+          petId={pet.id}
+          templates={templates}
+          allRecords={vaccineRecords}
+          isSetupPhase={isHistoricalImporting}
+          onClose={async () => {
+            setShowBatchScan(false)
+            if (isHistoricalImporting) {
+              await generateFutureScheduleFromPastRecords(pet.id)
+              setIsHistoricalImporting(false)
+              refreshData()
+            }
+          }}
+          onDone={refreshData}
+        />
+      )}
+      {showOverdueList && overdueCount > 0 && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" onClick={() => setShowOverdueList(false)}>
+          <div className="bg-surface w-full max-w-sm rounded-[28px] shadow-2xl p-6 flex flex-col gap-4 max-h-[80vh]" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center pb-2 border-b border-border-main">
+              <h3 className="text-[16px] font-extrabold text-text-primary">Gecikmiş İşlemler</h3>
+              <button onClick={() => setShowOverdueList(false)} className="text-text-secondary hover:text-text-primary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <div className="flex flex-col gap-2 overflow-y-auto pr-1">
+              {vaccineRecords.filter(r => r.status === 'overdue').map(r => (
+                <button 
+                  key={r.id}
+                  onClick={() => {
+                    setShowOverdueList(false);
+                    setQuickMarkRecord({ ...r, _startInDetailed: true } as any);
+                  }}
+                  className="flex items-center justify-between p-3 border border-error/20 bg-error/5 hover:bg-error/10 rounded-xl transition-all text-left"
+                >
+                  <div>
+                    <p className="font-bold text-[14px] text-error">{getDisplayName(r.vaccine_name, r.vaccine_code)}</p>
+                    {r.due_at && <p className="text-[11px] text-error/80 mt-0.5">Planlanan: {new Date(r.due_at).toLocaleDateString('tr-TR')}</p>}
+                  </div>
+                  <span className="text-[18px]">👉</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
+ 
+      {/* Back */}
+      {!isTab && (
+        <Link href={`/owner/pets/${pet.id}`} className="flex items-center gap-2 text-[14px] font-bold text-text-secondary hover:text-primary -mb-1">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          {pet.name}
+        </Link>
+      )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
-        {[
-          { label: 'Tamamlandı', value: completedCount, color: 'text-success' },
-          { label: 'Bekleyen', value: dueRecords.length, color: 'text-warning' },
-          { label: 'Gecikmiş', value: overdueCount, color: 'text-error' },
-        ].map(s => (
-          <div key={s.label} className="card-base p-4 text-center">
-            <p className={`text-[26px] font-black ${s.color}`}>{s.value}</p>
-            <p className="text-[11px] font-bold text-text-secondary uppercase tracking-wide mt-1">{s.label}</p>
+      {/* Header - Hidden in Tab mode */}
+      {!isTab && (
+        <div className="card-base overflow-hidden">
+          <div className="h-1.5 bg-gradient-to-r from-primary to-violet-500" />
+          <div className="p-5 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-[24px]">💉</div>
+              <div>
+                <h1 className="text-[20px] font-extrabold text-text-primary">Aşı Takvimi</h1>
+                <p className="text-[13px] text-text-secondary">{pet.name} • {setupProfile?.setup_mode === 'smart_start' ? 'Akıllı Başlangıç' : setupProfile?.setup_mode === 'fresh_start' ? 'Bugünden Başla' : 'Geçmiş İçe Aktarma'}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+
+              <button onClick={() => setManualConfig({ show: true, mode: 'record', fixed: false })}
+                className="text-[12px] font-bold text-primary bg-primary/10 px-3 py-1.5 rounded-xl hover:bg-primary/20 transition-colors">
+                + Manuel İşlem
+              </button>
+              {overdueCount > 0 && (
+                <span className="bg-error/10 text-error text-[12px] font-black px-3 py-1.5 rounded-full border border-error/20">
+                  ⚠ {overdueCount} Gecikmiş
+                </span>
+              )}
+            </div>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      {/* Next due banner */}
-      {nextDue && (
+      {/* Stats - Hidden in Tab mode */}
+      {!isTab && (
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { label: 'Tamamlandı', value: completedCount, color: 'text-success' },
+            { label: 'Bekleyen', value: dueRecords.length, color: 'text-warning' },
+            { label: 'Gecikmiş', value: overdueCount, color: 'text-error' },
+          ].map(s => (
+            <div key={s.label} className="card-base p-4 text-center">
+              <p className={`text-[26px] font-black ${s.color}`}>{s.value}</p>
+              <p className="text-[11px] font-bold text-text-secondary uppercase tracking-wide mt-1">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Next due banner - Hidden in Tab mode */}
+      {!isTab && nextDue && (
         <div className="card-base p-4 flex items-center justify-between gap-3 border-l-4 border-l-primary">
           <div className="flex items-center gap-3">
             <span className="text-[22px]">💉</span>
             <div>
-              <p className="text-[13px] font-black text-text-secondary uppercase tracking-wider">Sonraki Aşı</p>
-              <p className="font-extrabold text-text-primary text-[15px]">{nextDue.vaccine_name}</p>
+              <p className="text-[13px] font-black text-text-secondary uppercase tracking-wider">Sonraki {categoryFilter === 'parasite' ? 'Uygulama' : 'Aşı'}</p>
+              <p className="font-extrabold text-text-primary text-[15px]">{getDisplayName(nextDue.vaccine_name, nextDue.vaccine_code)}</p>
               {nextDue.due_at && (
                 <p className="text-[12px] text-text-secondary">{new Date(nextDue.due_at).toLocaleDateString('tr-TR')}</p>
               )}
@@ -796,25 +2098,77 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords, tem
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="flex bg-bg-main border border-border-main rounded-2xl p-1 gap-1">
-        {TABS.map(t => (
-          <button key={t.id} onClick={() => setActiveTab(t.id)}
-            className={`flex-1 py-2.5 rounded-xl text-[12px] font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${activeTab === t.id ? 'bg-white shadow-sm text-primary' : 'text-text-secondary hover:text-text-primary'}`}>
-            <span>{t.icon}</span><span className="hidden sm:block">{t.label}</span>
+      {/* Tabs & Quick Settings */}
+      {!isTab && (
+        <div className="flex items-center gap-2">
+        <div className="flex-1 flex bg-bg-main border border-border-main rounded-2xl p-1 gap-1">
+          {TABS.map(t => (
+            <button key={t.id} onClick={() => setActiveTab(t.id)}
+              className={`flex-1 py-2.5 rounded-xl text-[12px] font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${activeTab === t.id ? 'bg-white shadow-sm text-primary' : 'text-text-secondary hover:text-text-primary'}`}>
+              <span>{t.icon}</span><span className="hidden sm:block">{t.label}</span>
+            </button>
+          ))}
+        </div>
+        
+        <div className="relative">
+          <button 
+            onClick={() => setShowSettings(!showSettings)}
+            className={`p-3 rounded-2xl border border-border-main transition-all ${showSettings ? 'bg-primary text-white border-primary' : 'bg-bg-main text-text-secondary hover:text-primary hover:border-primary/50'}`}
+          >
+            ⚙️
           </button>
-        ))}
-      </div>
+          
+          {showSettings && (
+            <div className="absolute right-0 mt-2 w-64 bg-white border border-border-main rounded-2xl shadow-xl z-50 p-4 animate-in fade-in zoom-in duration-200 origin-top-right">
+              <h4 className="text-[12px] font-black text-text-secondary uppercase tracking-widest mb-3">Plan Ayarları</h4>
+              
+              <div className="flex items-center justify-between p-3 bg-bg-main rounded-xl border border-border-main mb-4">
+                <div>
+                  <p className="font-bold text-text-primary text-[12px]">Mevcut Mod</p>
+                  <p className="text-[11px] text-text-secondary">
+                    {setupProfile?.setup_mode === 'smart_start' ? 'Akıllı Başlangıç' : setupProfile?.setup_mode === 'fresh_start' ? 'Bugünden Başla' : 'İçe Aktarma'}
+                  </p>
+                </div>
+                <span className="text-[18px]">{setupProfile?.setup_mode === 'smart_start' ? '🧬' : setupProfile?.setup_mode === 'fresh_start' ? '🌱' : '📋'}</span>
+              </div>
 
-      {/* ── TAB: OVERVIEW ── */}
-      {activeTab === 'overview' && (
-        <div className="flex flex-col gap-4">
+              <button
+                onClick={() => {
+                  if (confirm('Aşı ve parazit planını sıfırlamak istediğinizden emin misiniz? Tamamlanan kayıtlar korunur.')) {
+                    startTransition(async () => {
+                      await saveSetupMode(pet.id, 'smart_start')
+                      setSetupDone(false)
+                      setShowSettings(false)
+                      router.refresh()
+                    })
+                  }
+                }}
+                disabled={isPending}
+                className="w-full py-2.5 rounded-xl border border-error/30 text-error text-[12px] font-bold hover:bg-error/5 transition-colors disabled:opacity-40"
+              >
+                Planı Sıfırla
+              </button>
+              
+              <div className="mt-3 pt-3 border-t border-border-main">
+                <button onClick={() => setManualConfig({ show: true, mode: 'record', fixed: false })} className="w-full text-center text-[12px] font-bold text-primary hover:underline">
+                  + Manuel Kayıt Ekle
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      )}
+
+      {/* ── TAB: OVERVIEW (Only for non-tab mode) ── */}
+      {activeTab === 'overview' && !isTab && (
+        <div className="flex flex-col gap-4 animate-fadeIn">
           {overdueCount > 0 && (
             <div className="p-4 bg-error/5 border border-error/20 rounded-2xl flex items-start gap-3">
               <span className="text-[22px]">🔴</span>
               <div>
-                <p className="font-bold text-error text-[14px]">{overdueCount} aşı gecikmiş durumda</p>
-                <p className="text-[12px] text-text-secondary mt-0.5">Bu aşıları en kısa sürede yaptırmanız önerilir.</p>
+                <p className="font-bold text-error text-[14px]">{overdueCount} {categoryFilter === 'parasite' ? 'parazit uygulaması' : 'aşı'} gecikmiş durumda</p>
+                <p className="text-[12px] text-text-secondary mt-0.5">Bu işlemleri en kısa sürede yaptırmanız önerilir.</p>
               </div>
             </div>
           )}
@@ -823,7 +2177,7 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords, tem
               <div className="flex items-center gap-3">
                 <span className="text-[20px]">{STATUS_ICON[r.status] ?? '📌'}</span>
                 <div>
-                  <p className="font-bold text-text-primary text-[14px]">{r.vaccine_name}</p>
+                  <p className="font-bold text-text-primary text-[14px]">{getDisplayName(r.vaccine_name, r.vaccine_code)}</p>
                   {r.due_at && <p className="text-[12px] text-text-secondary">{new Date(r.due_at).toLocaleDateString('tr-TR')}</p>}
                 </div>
               </div>
@@ -833,59 +2187,130 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords, tem
           {dueRecords.length === 0 && completedCount > 0 && (
             <div className="card-base p-8 text-center">
               <p className="text-[32px] mb-2">🎉</p>
-              <p className="font-extrabold text-text-primary text-[16px]">Tüm aşılar güncel!</p>
-              <p className="text-[13px] text-text-secondary mt-1">Bekleyen aşı işlemi bulunmuyor.</p>
+              <p className="font-extrabold text-text-primary text-[16px]">Tüm {categoryFilter === 'parasite' ? 'parazit uygulamaları' : 'aşılar'} güncel!</p>
+              <p className="text-[13px] text-text-secondary mt-1">Bekleyen bir işlem bulunmuyor.</p>
             </div>
           )}
         </div>
       )}
 
-      {/* ── TAB: SCHEDULE ── */}
-      {activeTab === 'schedule' && (
+      {/* ── TAB: RECORDS (Matrix + History) ── */}
+      {(activeTab === 'records' || isTab) && (
         <div className="flex flex-col gap-3">
-          {vaccineRecords.length === 0 ? (
-            <div className="card-base p-10 flex flex-col items-center justify-center text-center">
-              <div className="w-16 h-16 bg-warning/10 rounded-full flex items-center justify-center text-[32px] mb-4">📅</div>
-              <p className="font-extrabold text-text-primary text-[16px]">Takvim Boş</p>
-              <p className="text-[13px] text-text-secondary mt-1 mb-5">Planlanmış herhangi bir aşı bulunmuyor. Manuel olarak yeni bir aşı planlayabilirsiniz.</p>
-              <button onClick={() => setShowManual(true)} className="btn-primary py-2 px-6 text-[13px]">
-                + Aşı Planla
+          {(!categoryFilter || categoryFilter === 'vaccine') && (
+            <ProtocolTable 
+              pet={pet} 
+              templates={templates} 
+              records={vaccineRecords} 
+              onCellClick={(record) => {
+                setQuickMarkRecord(record)
+              }} 
+              onNewRecord={(name, code, date) => {
+                setManualConfig({ show: true, mode: 'record', fixed: true, initialData: { name, code, date } })
+              }}
+              onSingleScan={handleSingleScan}
+              onBatchScan={() => setShowBatchScan(true)}
+            />
+          )}
+          {(!categoryFilter || categoryFilter === 'parasite') && (
+            <ParasiteTable 
+              pet={pet} 
+              templates={templates} 
+              records={vaccineRecords} 
+              onCellClick={(record) => {
+                setQuickMarkRecord(record)
+              }} 
+              onNewRecord={(name, code, date) => {
+                setManualConfig({ show: true, mode: 'record', fixed: true, initialData: { name, code, date } })
+              }}
+            />
+          )}
+        </div>
+      )}
+
+      {/* ── FILTER UI (Common for Schedule & Records lists) ── */}
+      {(activeTab === 'records' || activeTab === 'schedule' || isTab) && vaccineRecords.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 animate-fadeIn">
+          <select 
+            value={filterYear}
+            onChange={(e) => setFilterYear(e.target.value)}
+            className="bg-white border border-border-main text-text-primary text-[12px] font-bold rounded-xl px-3 py-2 outline-none focus:border-primary shrink-0"
+          >
+            <option value="all">Tüm Yıllar</option>
+            {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+          <select 
+            value={filterVaccine}
+            onChange={(e) => setFilterVaccine(e.target.value)}
+            className="bg-white border border-border-main text-text-primary text-[12px] font-bold rounded-xl px-3 py-2 outline-none focus:border-primary shrink-0 max-w-[200px]"
+          >
+            <option value="all">Tüm İşlemler</option>
+            {availableVaccines.map(v => <option key={v.code} value={v.code}>{v.name}</option>)}
+          </select>
+        </div>
+      )}
+
+      {/* ── TAB: SCHEDULE (Yaklaşan Plan) ── */}
+      {(activeTab === 'schedule' || isTab) && (
+        <div className="flex flex-col gap-2 animate-fadeIn mt-2">
+          {isTab && <h3 className="text-[16px] font-extrabold text-text-primary mb-1 mt-2">Yaklaşan Planlar</h3>}
+          {/* If embedded, show the warning here too */}
+          {isTab && overdueCount > 0 && (
+            <div className="p-3 bg-error/5 border border-error/20 rounded-2xl flex items-center justify-between gap-3 mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[18px]">🔴</span>
+                <p className="font-bold text-error text-[13px]">{overdueCount} {categoryFilter === 'parasite' ? 'gecikmiş uygulama' : 'gecikmiş aşı'} tespit edildi</p>
+              </div>
+              <button onClick={() => setShowOverdueList(true)} 
+                className="text-[11px] font-bold bg-error text-white px-2.5 py-1.5 rounded-lg hover:bg-error/90 transition-colors whitespace-nowrap shrink-0 shadow-sm"
+              >
+                İncele
               </button>
             </div>
-          ) : vaccineRecords.map((r, i) => {
-            const isLocked = r.status === 'scheduled' && i > 0 && vaccineRecords[i - 1]?.status !== 'completed'
+          )}
+          {filteredRecords.filter(r => r.status !== 'completed').length === 0 ? (
+            <div className="card-base p-8 flex flex-col items-center justify-center text-center mt-2">
+              <div className="w-14 h-14 bg-warning/10 rounded-full flex items-center justify-center text-[28px] mb-3">📅</div>
+              <p className="font-extrabold text-text-primary text-[15px]">Bekleyen İşlem Yok</p>
+              <p className="text-[12px] text-text-secondary mt-1 mb-4 leading-relaxed">Filtrelere uygun planlanmış herhangi bir işlem bulunmuyor.</p>
+              <button onClick={() => setManualConfig({ show: true, mode: 'plan', fixed: true })} className="btn-primary py-2 px-5 text-[12px]">
+                + {categoryFilter === 'parasite' ? 'Uygulama' : 'Aşı'} Planla
+              </button>
+            </div>
+          ) : filteredRecords.filter(r => r.status !== 'completed').map((r, i, arr) => {
+            // Find index in original array to calculate locks accurately
+            const origIndex = vaccineRecords.findIndex(vr => vr.id === r.id);
+            const isLocked = r.status === 'scheduled' && origIndex > 0 && vaccineRecords[origIndex - 1]?.status !== 'completed';
             return (
-              <div key={r.id} className={`card-base p-4 flex items-center gap-4 ${isLocked ? 'opacity-50' : ''}`}>
-                <div className="flex flex-col items-center gap-1 shrink-0">
-                  <span className="text-[22px]">{isLocked ? '🔒' : STATUS_ICON[r.status] ?? '📌'}</span>
-                  {i < vaccineRecords.length - 1 && <div className="w-0.5 h-6 bg-border-main" />}
+              <div key={r.id} className={`card-base p-2.5 flex items-center gap-3 ${isLocked ? 'opacity-50' : ''}`}>
+                <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${r.status === 'overdue' ? 'bg-error/10 text-error' : 'bg-warning/10 text-warning'}`}>
+                  <span className="text-[16px]">{isLocked ? '🔒' : STATUS_ICON[r.status] ?? '📌'}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`font-bold text-[14px] truncate ${r.status === 'completed' ? 'text-success' : 'text-text-primary'}`}>{r.vaccine_name}</p>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${r.status === 'completed' ? 'bg-success/10 text-success border-success/20' : r.status === 'overdue' ? 'bg-error/10 text-error border-error/20' : 'bg-warning/10 text-warning border-warning/20'}`}>
+                  <p className={`font-bold text-[13px] truncate text-text-primary`}>{getDisplayName(r.vaccine_name, r.vaccine_code)}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className={`text-[9px] font-extrabold uppercase tracking-wide px-1.5 py-0.5 rounded border ${r.status === 'overdue' ? 'bg-error/10 text-error border-error/20' : 'bg-warning/10 text-warning border-warning/20'}`}>
                       {STATUS_LABEL[r.status] ?? r.status}
                     </span>
-                    {r.due_at && <span className="text-[11px] text-text-secondary">{new Date(r.due_at).toLocaleDateString('tr-TR')}</span>}
-                    {r.administered_at && <span className="text-[11px] text-success">Yapıldı: {new Date(r.administered_at).toLocaleDateString('tr-TR')}</span>}
+                    {r.due_at && <span className="text-[11px] text-text-secondary font-medium">{new Date(r.due_at).toLocaleDateString('tr-TR')}</span>}
                   </div>
                 </div>
-                {!isLocked && r.status !== 'completed' && (
-                  <div className="flex flex-col gap-1 shrink-0 items-end">
+                {!isLocked && (
+                  <div className="flex gap-1.5 shrink-0 items-center">
                     <button onClick={() => setQuickMarkRecord(r)}
-                      className="text-[11px] font-bold bg-success/10 text-success px-2.5 py-1 rounded-lg hover:bg-success/20 transition-colors whitespace-nowrap">
-                      ✓ Yapıldı
+                      className="w-8 h-8 flex items-center justify-center bg-success/10 text-success rounded-xl hover:bg-success/20 transition-colors" title="Yapıldı İşaretle">
+                      <span className="text-[14px]">✓</span>
                     </button>
                     <button onClick={() => setPostponeRecord(r)}
-                      className="text-[11px] font-bold bg-warning/10 text-warning px-2.5 py-1 rounded-lg hover:bg-warning/20 transition-colors whitespace-nowrap">
-                      ⏩ Ertele
+                      className="w-8 h-8 flex items-center justify-center bg-warning/10 text-warning rounded-xl hover:bg-warning/20 transition-colors" title="Ertele">
+                      <span className="text-[12px]">⏩</span>
                     </button>
                     <button onClick={() => {
-                      if (confirm('Bu aşı kaydını silmek istiyor musunuz?')) {
+                      if (confirm('Bu planlanmış işlemi silmek istiyor musunuz?')) {
                         startTransition(async () => { await deleteVaccineRecord(r.id); refreshData() })
                       }
-                    }} className="text-[11px] font-bold text-error/60 hover:text-error px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap">
-                      🗑 Sil
+                    }} className="w-8 h-8 flex items-center justify-center bg-error/5 text-error/60 rounded-xl hover:bg-error/10 hover:text-error transition-colors" title="Sil">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                     </button>
                   </div>
                 )}
@@ -895,79 +2320,59 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords, tem
         </div>
       )}
 
-      {/* ── TAB: RECORDS ── */}
-      {activeTab === 'records' && (
-        <div className="flex flex-col gap-3">
-          <ProtocolTable 
-            pet={pet} 
-            templates={templates} 
-            records={vaccineRecords} 
-            onCellClick={(record) => {
-              setQuickMarkRecord(record)
-            }} 
-          />
-          
+      {/* ── KAYIT GEÇMİŞİ (Completed Records) ── */}
+      {(activeTab === 'records' || activeTab === 'schedule' || isTab) && (
+        <div className="flex flex-col gap-2 mt-4">
           <h3 className="text-[16px] font-extrabold text-text-primary mb-1">Kayıt Geçmişi</h3>
-          {vaccineRecords.filter(r => r.status === 'completed').length === 0 ? (
-            <div className="card-base p-10 flex flex-col items-center justify-center text-center">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center text-[32px] mb-4">💉</div>
-              <p className="font-extrabold text-text-primary text-[16px]">Kayıt Bulunamadı</p>
-              <p className="text-[13px] text-text-secondary mt-1 mb-5">Henüz tamamlanan aşı kaydı yok. Geçmişte yapılan bir aşıyı manuel olarak ekleyebilirsiniz.</p>
-              <button onClick={() => setShowManual(true)} className="btn-primary py-2 px-6 text-[13px]">
-                + İlk Aşınızı Ekleyin
+          {filteredRecords.filter(r => r.status === 'completed').length === 0 ? (
+            <div className="card-base p-8 flex flex-col items-center justify-center text-center mt-2">
+              <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center text-[28px] mb-3">{categoryFilter === 'parasite' ? '🦠' : '💉'}</div>
+              <p className="font-extrabold text-text-primary text-[15px]">Kayıt Bulunamadı</p>
+              <p className="text-[12px] text-text-secondary mt-1 mb-4 leading-relaxed">Filtrelere uygun tamamlanan bir işlem yok.</p>
+              <button onClick={() => setManualConfig({ show: true, mode: 'record', fixed: true })} className="btn-primary py-2 px-5 text-[12px]">
+                + Geçmiş Kayıt Ekle
               </button>
             </div>
-          ) : vaccineRecords.filter(r => r.status === 'completed').map(r => (
-            <div key={r.id} className="card-base p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-bold text-text-primary text-[14px]">{r.vaccine_name}</p>
-                  {r.administered_at && <p className="text-[12px] text-success mt-0.5">✓ {new Date(r.administered_at).toLocaleDateString('tr-TR')}</p>}
-                  <p className="text-[11px] text-text-secondary mt-1 capitalize">{r.confidence_level === 'verified' ? 'Onaylı kayıt' : r.confidence_level === 'user_reported' ? 'Kullanıcı beyanı' : 'Tahmini'}</p>
+          ) : filteredRecords.filter(r => r.status === 'completed')
+            .sort((a, b) => new Date(b.administered_at || '').getTime() - new Date(a.administered_at || '').getTime())
+            .map(r => (
+            <div key={r.id} className="card-base p-2.5">
+              <div className="flex items-center justify-between gap-3">
+                <div className="w-9 h-9 rounded-full bg-success/10 text-success flex items-center justify-center shrink-0">
+                  <span className="text-[16px]">✓</span>
                 </div>
-                <span className="text-[11px] bg-success/10 text-success border border-success/20 px-2 py-1 rounded-full font-bold">Tamamlandı</span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-text-primary text-[13px] truncate">{getDisplayName(r.vaccine_name, r.vaccine_code)}</p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    {r.administered_at && <span className="text-[11px] font-medium text-success">{new Date(r.administered_at).toLocaleDateString('tr-TR')}</span>}
+                    <span className="text-[10px] text-text-secondary opacity-40">•</span>
+                    <span className="text-[10px] text-text-secondary">{r.confidence_level === 'verified' ? 'Onaylı' : 'Kullanıcı'}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button onClick={() => setQuickMarkRecord(r)}
+                    className="w-8 h-8 flex items-center justify-center text-text-secondary hover:text-primary hover:bg-primary/5 rounded-xl transition-colors" title="Düzenle">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button onClick={() => {
+                    if (confirm('Bu kaydı silmek istiyor musunuz?')) {
+                      startTransition(async () => { await deleteVaccineRecord(r.id); refreshData() })
+                    }
+                  }} className="w-8 h-8 flex items-center justify-center text-text-secondary hover:text-error hover:bg-error/5 rounded-xl transition-colors" title="Sil">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                  </button>
+                </div>
               </div>
-              {r.notes && <p className="text-[12px] text-text-secondary mt-2 p-2 bg-bg-main rounded-lg">{r.notes}</p>}
+              {r.notes && (
+                <p className="text-[11px] text-text-secondary mt-2 p-2 bg-bg-main/50 rounded-lg italic border border-border-main/20 line-clamp-2">
+                  {r.notes}
+                </p>
+              )}
             </div>
           ))}
         </div>
       )}
 
-      {/* ── TAB: SETTINGS ── */}
-      {activeTab === 'settings' && (
-        <div className="flex flex-col gap-4">
-          <div className="card-base p-5">
-            <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest mb-4">Plan Bilgisi</h3>
-            <div className="flex items-center justify-between p-3 bg-bg-main rounded-xl border border-border-main">
-              <div>
-                <p className="font-bold text-text-primary text-[14px]">Başlangıç Modu</p>
-                <p className="text-[12px] text-text-secondary">{setupProfile?.setup_mode === 'smart_start' ? 'Akıllı Başlangıç' : setupProfile?.setup_mode === 'fresh_start' ? 'Bugünden Başla' : 'Geçmiş İçe Aktarma'}</p>
-              </div>
-              <span className="text-[22px]">{setupProfile?.setup_mode === 'smart_start' ? '🧬' : setupProfile?.setup_mode === 'fresh_start' ? '🌱' : '📋'}</span>
-            </div>
-          </div>
-          <div className="card-base p-5">
-            <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest mb-4">Tehlikeli Alan</h3>
-            <p className="text-[13px] text-text-secondary mb-4">Aşı planını sıfırlarsanız tüm planlanmış kayıtlar silinir. Tamamlanan kayıtlar korunur.</p>
-            <button
-              onClick={() => {
-                if (confirm('Aşı planını sıfırlamak istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
-                  startTransition(async () => {
-                    // Reset setup profile to force re-setup
-                    await saveSetupMode(pet.id, 'smart_start')
-                    setSetupDone(false)
-                    router.refresh()
-                  })
-                }
-              }}
-              disabled={isPending}
-              className="w-full py-3 rounded-xl border-2 border-error/40 text-error font-bold text-[14px] hover:bg-error/5 transition-colors disabled:opacity-40"
-            >
-              Planı Sıfırla
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

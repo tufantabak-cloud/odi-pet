@@ -37,7 +37,7 @@ export default async function NotificationsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 pb-10 w-full max-w-xl mx-auto">
+    <div className="flex flex-col gap-6 pb-10 w-full mx-auto">
       <div className="flex items-center justify-between border-b border-border-main pb-4">
         <div>
           <h1 className="text-[28px] font-extrabold text-text-primary tracking-tight">Bildirimler</h1>
