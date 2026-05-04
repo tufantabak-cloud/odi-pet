@@ -53,7 +53,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   const currentStock = Number(body.current_stock_grams ?? 0)
   const dailyUsage = Number(body.estimated_daily_usage ?? 0)
-  const nextRefill = estimateNextRefillDate(currentStock, dailyUsage)
+  const nextRefill = estimateNextRefillDate({ stockGrams: currentStock, dailyUsage })
 
   const payload = {
     pet_id: id,
