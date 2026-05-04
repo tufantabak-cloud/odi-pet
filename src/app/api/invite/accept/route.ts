@@ -76,15 +76,21 @@ export async function POST(req: NextRequest) {
 
   if (!existingReward || existingReward.length === 0) {
     // Inviter: +50 Care Points
-    await supabase.rpc('increment_care_points', { p_profile_id: invite.invited_by, p_amount: 50 }).catch(() => {
+    try {
+      const { error: rpcErr1 } = await supabase.rpc('increment_care_points', { p_profile_id: invite.invited_by, p_amount: 50 })
+      if (rpcErr1) throw rpcErr1
+    } catch {
       // Fallback if RPC doesn't exist yet
-      supabase.from('profiles').update({ care_points: 50 }).eq('id', invite.invited_by)
-    })
+      await supabase.from('profiles').update({ care_points: 50 } as any).eq('id', invite.invited_by)
+    }
 
     // Invited: +25 Care Points
-    await supabase.rpc('increment_care_points', { p_profile_id: user.id, p_amount: 25 }).catch(() => {
-      supabase.from('profiles').update({ care_points: 25 }).eq('id', user.id)
-    })
+    try {
+      const { error: rpcErr2 } = await supabase.rpc('increment_care_points', { p_profile_id: user.id, p_amount: 25 })
+      if (rpcErr2) throw rpcErr2
+    } catch {
+      await supabase.from('profiles').update({ care_points: 25 } as any).eq('id', user.id)
+    }
 
     // Log rewards
     await supabase.from('referral_rewards').insert([
