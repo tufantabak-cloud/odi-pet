@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, use } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -19,10 +19,10 @@ const ROLE_LABELS: Record<string, { label: string; desc: string; color: string }
   viewer: { label: 'Görüntüleyici', desc: 'Salt okunur erişim',              color: 'bg-gray-100 text-gray-600' },
 }
 
-export default function InviteAcceptPage({ params }: { params: { token: string } }) {
+export default function InviteAcceptPage({ params }: { params: Promise<{ token: string }> }) {
   const [state, setState] = useState<InviteState>({ phase: 'loading' })
   const router = useRouter()
-  const { token } = params
+  const { token } = use(params)
 
   useEffect(() => {
     async function validateToken() {

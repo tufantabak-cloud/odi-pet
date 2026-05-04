@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const supabase = await createServerSupabaseClient()
-  const { id } = params
+  const { id } = await params
   
   // MOCK: Vet ID would come from session
   const vetId = (await req.json()).vetId || '00000000-0000-0000-0000-000000000001'

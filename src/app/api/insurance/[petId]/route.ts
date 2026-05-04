@@ -3,12 +3,12 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { computeInsuranceEligibility } from '@/lib/insurance/eligibility-engine'
 
-export async function GET(req: NextRequest, { params }: { params: { petId: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ petId: string }> }) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const supabase = await createServerSupabaseClient()
-  const { petId } = params
+  const { petId } = await params
   const force = req.nextUrl.searchParams.get('force') === 'true'
 
   // Plan gate — free gets teaser only

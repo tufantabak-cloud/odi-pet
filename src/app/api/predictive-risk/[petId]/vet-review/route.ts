@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 
-export async function POST(req: NextRequest, { params }: { params: { petId: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ petId: string }> }) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -10,7 +10,7 @@ export async function POST(req: NextRequest, { params }: { params: { petId: stri
   if (!riskId) return NextResponse.json({ error: 'Missing riskId' }, { status: 400 })
 
   const supabase = await createServerSupabaseClient()
-  const { petId } = params
+  const { petId } = await params
 
   // Security: Ensure user is AI+
   const { data: subData } = await supabase.from('user_subscriptions').select('plan').eq('profile_id', user.id).single()

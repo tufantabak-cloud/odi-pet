@@ -112,12 +112,12 @@ const generateReason = (metrics: {
   }
 }
 
-export async function GET(req: NextRequest, { params }: { params: { petId: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ petId: string }> }) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const supabase = await createServerSupabaseClient()
-  const { petId } = params
+  const { petId } = await params
   const { searchParams } = new URL(req.url)
   const force = searchParams.get('force') === 'true'
 

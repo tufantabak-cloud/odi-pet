@@ -2,13 +2,14 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import PrintReportClient from '../../[petId]/print/PrintReportClient'
 
-export default async function SharedReportPage({ params }: { params: { token: string } }) {
+export default async function SharedReportPage({ params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params
   const supabase = await createServerSupabaseClient()
 
   const { data: report } = await supabase
     .from('pet_reports')
     .select('*')
-    .eq('share_token', params.token)
+    .eq('share_token', token)
     .single()
 
   if (!report || new Date(report.share_expires_at) < new Date()) notFound()

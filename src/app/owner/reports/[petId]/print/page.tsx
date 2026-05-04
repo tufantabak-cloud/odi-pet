@@ -7,16 +7,17 @@ export default async function PrintReportPage({
   params,
   searchParams,
 }: {
-  params: { petId: string }
-  searchParams: { type?: string; range?: string; token?: string }
+  params: Promise<{ petId: string }>
+  searchParams: Promise<{ type?: string; range?: string; token?: string }>
 }) {
+  const { petId } = await params
+  const sParams = await searchParams
   const user = await getSessionUser()
   if (!user) redirect('/login')
 
   const supabase = await createServerSupabaseClient()
-  const { petId } = params
-  const reportType = searchParams.type ?? 'summary'
-  const dateRange  = searchParams.range ?? 'last_12_months'
+  const reportType = sParams.type ?? 'summary'
+  const dateRange  = sParams.range ?? 'last_12_months'
 
   // Date range
   const rangeMap: Record<string, number> = {
@@ -51,9 +52,9 @@ export default async function PrintReportPage({
 
   // Report token lookup for verification hash
   let verificationHash = 'N/A'
-  if (searchParams.token) {
+  if (sParams.token) {
     const { data: rpt } = await supabase
-      .from('pet_reports').select('verification_hash').eq('share_token', searchParams.token).single()
+      .from('pet_reports').select('verification_hash').eq('share_token', sParams.token).single()
     if (rpt) verificationHash = rpt.verification_hash
   }
 
