@@ -20,7 +20,7 @@ export default defineConfig({
   workers: 1, // To avoid DB concurrency issues if any
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://127.0.0.1:3000',
     trace: 'on-first-retry',
     video: 'retain-on-failure',
   },
@@ -33,7 +33,7 @@ export default defineConfig({
   /* Run your local dev server before starting the tests */
   webServer: {
     command: 'npm run start',
-    url: 'http://localhost:3000',
+    url: 'http://127.0.0.1:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 180 * 1000,
   },
