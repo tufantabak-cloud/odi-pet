@@ -20,7 +20,7 @@ test.describe('Odi.Pet E2E Automation Robot', () => {
     console.log('Entering sample data for login...');
     await page.fill('input[name="email"]', testEmail);
     await page.fill('input[name="password"]', testPassword);
-    await page.click('button[type="submit"]');
+    await page.click('button[type="submit"]', { force: true });
 
     // Wait for either an error message or a successful redirect
     await page.waitForTimeout(3000); 

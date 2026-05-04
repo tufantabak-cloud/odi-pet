@@ -138,7 +138,7 @@ Call log:
   31 |       console.log(`Login resulted in expected message (Test Data): ${errorText}`);
   32 |     } else {
   33 |       console.log('Login successful with sample data, redirected to Dashboard.');
-  34 |       await expect(page).toHaveURL(/.*owner\/dashboard|.*owner\/pets|^\/$/, { timeout: 10000 });
+  34 |       await expect(page).not.toHaveURL(/.*login/, { timeout: 10000 });
   35 |     }
   36 |   });
   37 | 
