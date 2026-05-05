@@ -18,7 +18,15 @@ test.describe('Odi.Pet E2E Automation Robot', () => {
     await page.click('button[type="submit"]', { force: true });
 
     // Wait for either an error message or a successful redirect
-    await page.waitForTimeout(3000); 
+    try {
+      await Promise.race([
+        page.waitForURL(/.*\/owner.*/, { timeout: 15000 }),
+        page.waitForURL(/.*\/clinic.*/, { timeout: 15000 }),
+        page.locator('.text-error').waitFor({ state: 'visible', timeout: 15000 })
+      ]);
+    } catch (e) {
+      console.log('Timeout waiting for login response.');
+    }
     
     const errorLocator = page.locator('.text-error');
     if (await errorLocator.isVisible()) {
@@ -26,7 +34,7 @@ test.describe('Odi.Pet E2E Automation Robot', () => {
       console.log(`Login resulted in expected message (Test Data): ${errorText}`);
     } else {
       console.log('Login successful with sample data, redirected to Dashboard.');
-      await expect(page).not.toHaveURL(/.*login/, { timeout: 10000 });
+      await expect(page).not.toHaveURL(/.*login/, { timeout: 5000 });
     }
   });
 
