@@ -31,7 +31,7 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
 
   // Build unified timeline
   const timeline: any[] = [
-    ...(vaccineRecords ?? []).filter(r => r.status === 'completed').map((r: any) => {
+    ...(vaccineRecords ?? []).filter((r: any) => r.status === 'completed').map((r: any) => {
       const tmpl = templates.find((t: any) => t.vaccine_code === r.vaccine_code)
       const isParasite = tmpl?.category === 'parasite'
       return { 

@@ -89,9 +89,11 @@ export function computeInsuranceEligibility(input: InsuranceInput): InsuranceRes
   // AUTO HIGH_RISK
   if (input.incidentCountLast6Months >= 3 || input.chronicConditionCount >= 3) {
     hardFlags.push(
-      input.incidentCountLast6Months >= 3 ? 'Son 6 ayda 3+ olay' : '',
-      input.chronicConditionCount >= 3    ? '3+ kronik hastalık' : '',
-    ).filter(Boolean)
+      ...[
+        input.incidentCountLast6Months >= 3 ? 'Son 6 ayda 3+ olay' : '',
+        input.chronicConditionCount >= 3    ? '3+ kronik hastalık' : '',
+      ].filter(Boolean)
+    )
     segment = 'HIGH_RISK'
     score = Math.min(score, 40)
 

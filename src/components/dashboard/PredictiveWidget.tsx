@@ -110,11 +110,11 @@ export function PredictiveWidget({ petId, fallbackSuggestion }: PredictiveWidget
   // Household Reliability Panel
   const householdScore = insight?.householdScore
   const householdLevel = insight?.householdLevel
-  const householdConfig = {
+  const householdConfig = (({
     healthy: { color: 'text-green-600', bg: 'bg-green-50 border-green-100', label: 'Sağlıklı' },
     warning: { color: 'text-amber-600', bg: 'bg-amber-50 border-amber-100', label: 'Dikkat' },
     critical: { color: 'text-red-600',  bg: 'bg-red-50 border-red-100',   label: 'Kritik' },
-  }[householdLevel ?? 'healthy'] ?? { color: 'text-green-600', bg: 'bg-green-50 border-green-100', label: 'Sağlıklı' }
+  } as any)[householdLevel ?? 'healthy']) ?? { color: 'text-green-600', bg: 'bg-green-50 border-green-100', label: 'Sağlıklı' }
 
 
   // SLA Sınıflandırması

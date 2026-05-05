@@ -364,8 +364,8 @@ function VaccineActionModal({ record, allRecords, suggestions, onClose, onDone }
               </p>
               {(() => {
                 const nextDose = allRecords
-                  .filter(r => r.vaccine_code === record.vaccine_code && r.dose_number > record.dose_number)
-                  .sort((a, b) => a.dose_number - b.dose_number)[0]
+                  .filter(r => r.vaccine_code === record.vaccine_code && (r.dose_number ?? 0) > (record.dose_number ?? 0))
+                  .sort((a, b) => (a.dose_number ?? 0) - (b.dose_number ?? 0))[0]
                 if (!nextDose) return null
                 return (
                   <div className="pt-2 border-t border-primary/10 mt-1">
@@ -2103,7 +2103,7 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
         <div className="flex items-center gap-2">
         <div className="flex-1 flex bg-bg-main border border-border-main rounded-2xl p-1 gap-1">
           {TABS.map(t => (
-            <button key={t.id} onClick={() => setActiveTab(t.id)}
+            <button key={t.id} onClick={() => setActiveTab(t.id as any)}
               className={`flex-1 py-2.5 rounded-xl text-[12px] font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${activeTab === t.id ? 'bg-white shadow-sm text-primary' : 'text-text-secondary hover:text-text-primary'}`}>
               <span>{t.icon}</span><span className="hidden sm:block">{t.label}</span>
             </button>

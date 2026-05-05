@@ -18,11 +18,11 @@ export default function NutritionClient({
   feedingLogs,
   weightLogs,
 }: {
-  pet: { id: string; name: string; avatar_url: string | null }
-  profile: Record<string, unknown> | null
-  inventory: Record<string, unknown> | null
-  feedingLogs: Record<string, unknown>[]
-  weightLogs: Record<string, unknown>[]
+  pet: any
+  profile: any
+  inventory: any
+  feedingLogs: any[]
+  weightLogs: any[]
 }) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('Genel Bakış')
@@ -87,7 +87,7 @@ export default function NutritionClient({
     return { avgAppetite7d: avg7, avgAppetite14d: avg14 }
   }, [feedingLogs, now])
 
-  const weightTrend = computeWeightTrend(weightLogs)
+  const weightTrend = computeWeightTrend(weightLogs as any)
   
   const insights = generateInsights({
     avgAppetite7d: isNaN(avgAppetite7d) ? null : avgAppetite7d,
