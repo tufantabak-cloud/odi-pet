@@ -39,9 +39,9 @@ function buildEvent(opts: {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ token: string }> }
+  context: { params: Promise<{ token: string }> }
 ) {
-  const { token } = await params
+  const { token } = await context.params
   // No auth header — token IS the credential
   const supabase = await createServerSupabaseClient()
 
