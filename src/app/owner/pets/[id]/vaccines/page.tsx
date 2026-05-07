@@ -3,8 +3,12 @@ import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { redirect, notFound } from 'next/navigation'
 import VaccineOSClient from './VaccineOSClient'
 
-export default async function VaccineOSPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
+type PageProps = {
+  params: Promise<{ id: string }>;
+};
+
+export default async function VaccineOSPage(props: PageProps) {
+  const { id } = await props.params
   const user = await getSessionUser()
   if (!user) redirect('/login')
 

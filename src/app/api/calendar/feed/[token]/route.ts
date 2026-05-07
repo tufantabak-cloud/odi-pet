@@ -37,11 +37,17 @@ function buildEvent(opts: {
   return lines.join('\r\n')
 }
 
+type RouteContext = {
+  params: Promise<{
+    token: string;
+  }>;
+};
+
 export async function GET(
-  req: NextRequest,
-  context: { params: Promise<{ token: string }> }
+  request: NextRequest,
+  context: RouteContext
 ) {
-  const { token } = await context.params
+  const { token } = await context.params;
   // No auth header — token IS the credential
   const supabase = await createServerSupabaseClient()
 

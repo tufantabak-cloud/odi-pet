@@ -15,9 +15,13 @@ function calcAge(birthDate: string | null) {
   return { text, label }
 }
 
-export default async function PetDetailPage({ params }: { params: Promise<{ id: string }> }) {
+type PageProps = {
+  params: Promise<{ id: string }>;
+};
+
+export default async function PetDetailPage(props: PageProps) {
   const user = await getSessionUser()
-  const { id } = await params
+  const { id } = await props.params
   const supabase = await createServerSupabaseClient()
 
   const { data: pet } = await supabase.from('pets').select('*').eq('id', id).eq('owner_id', user?.id).single()

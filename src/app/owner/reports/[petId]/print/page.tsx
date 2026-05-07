@@ -3,15 +3,14 @@ import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { redirect } from 'next/navigation'
 import PrintReportClient from './PrintReportClient'
 
-export default async function PrintReportPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ petId: string }>
-  searchParams: Promise<{ type?: string; range?: string; token?: string }>
-}) {
-  const { petId } = await params
-  const sParams = await searchParams
+type PageProps = {
+  params: Promise<{ petId: string }>;
+  searchParams: Promise<{ type?: string; range?: string; token?: string }>;
+};
+
+export default async function PrintReportPage(props: PageProps) {
+  const { petId } = await props.params
+  const sParams = await props.searchParams
   const user = await getSessionUser()
   if (!user) redirect('/login')
 

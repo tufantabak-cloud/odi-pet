@@ -9,11 +9,15 @@ function str(fd: FormData, key: string): string | null {
   return v?.trim() || null
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+type RouteContext = {
+  params: Promise<{ id: string }>
+}
+
+export async function PATCH(req: NextRequest, context: RouteContext) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { id } = await params
+  const { id } = await context.params
   const fd = await req.formData()
   const supabase = await createServerSupabaseClient()
 
@@ -110,11 +114,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   return NextResponse.json({ success: true })
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: NextRequest, context: RouteContext) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { id } = await params
+  const { id } = await context.params
   const supabase = await createServerSupabaseClient()
 
   // Verify ownership

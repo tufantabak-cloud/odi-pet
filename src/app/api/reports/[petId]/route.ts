@@ -9,11 +9,15 @@ const PLAN_GATES: Record<string, string[]> = {
   ai_plus: ['summary', 'medical_timeline', 'travel_pack'],
 }
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ petId: string }> }) {
+type RouteContext = {
+  params: Promise<{ petId: string }>
+}
+
+export async function POST(req: NextRequest, context: RouteContext) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { petId } = await params
+  const { petId } = await context.params
   const { report_type = 'summary', date_range = 'last_12_months' } = await req.json()
 
   const supabase = await createServerSupabaseClient()
@@ -127,11 +131,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pet
 }
 
 // GET: list reports for pet
-export async function GET(req: NextRequest, { params }: { params: Promise<{ petId: string }> }) {
+export async function GET(req: NextRequest, context: RouteContext) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { petId } = await params
+  const { petId } = await context.params
   const supabase = await createServerSupabaseClient()
   const { data } = await supabase.from('pet_reports')
     .select('*').eq('pet_id', petId).eq('profile_id', user.id)
