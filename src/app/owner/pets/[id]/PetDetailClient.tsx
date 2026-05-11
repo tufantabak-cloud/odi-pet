@@ -97,7 +97,7 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
         if (!pet.avatar_url) tasks.push({ label: 'Fotoğraf Ekle', link: `/owner/pets/${pet.id}/edit` })
         
         // Faz 2: Sağlık & Veteriner
-        if (!pet.vet_name) tasks.push({ label: 'Veteriner Seç', link: `/owner/pets/${pet.id}/edit` })
+        if (!pet.vet_name) tasks.push({ label: 'Veteriner Bilgisi Gir', link: `/owner/pets/${pet.id}/edit` })
         if (!vaccineRecords || vaccineRecords.length === 0) tasks.push({ label: 'İlk Aşısını Gir', onClick: switchToVaccines })
         
         // Faz 3: Resmi Kayıtlar (Çip & Pasaport)

@@ -197,14 +197,15 @@ const toTitleCase = (str: string) => {
   }).join(' ');
 }
 
-function VaccineActionModal({ record, allRecords, suggestions, templates, components, onClose, onDone }: { 
+function VaccineActionModal({ record, allRecords, suggestions, templates, components, onClose, onDone, defaultVetName }: { 
   record: VRecord & { _startInDetailed?: boolean }; 
   allRecords: VRecord[]; 
   suggestions: { clinics: string[], vets: string[], brands: string[] };
   templates: Template[];
   components: VComponent[];
   onClose: () => void; 
-  onDone: () => void 
+  onDone: () => void;
+  defaultVetName?: string;
 }) {
   const isEditing = record.status === 'completed'
   const [detailDate, setDetailDate] = useState(isEditing && record.administered_at ? new Date(record.administered_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0])
@@ -228,7 +229,7 @@ function VaccineActionModal({ record, allRecords, suggestions, templates, compon
 
   // Detailed form fields
   const [clinicName, setClinicName] = useState(parsedNotes.clinic)
-  const [vetName, setVetName] = useState(parsedNotes.vet)
+  const [vetName, setVetName] = useState(parsedNotes.vet || defaultVetName || '')
   const [brand, setBrand] = useState(parsedNotes.brand)
   const [batchNo, setBatchNo] = useState(parsedNotes.batch)
   const [notes, setNotes] = useState(parsedNotes.text)
@@ -439,7 +440,8 @@ function ManualVaccineModal({
   onDone, 
   initialMode = 'record', 
   fixedMode = false,
-  initialData
+  initialData,
+  defaultVetName
 }: { 
   petId: string; 
   templates: Template[]; 
@@ -448,7 +450,8 @@ function ManualVaccineModal({
   onDone: () => void; 
   initialMode?: 'plan' | 'record'; 
   fixedMode?: boolean;
-  initialData?: { name: string; code: string; date: string; brand?: string; batch_no?: string; clinic?: string } | null
+  initialData?: { name: string; code: string; date: string; brand?: string; batch_no?: string; clinic?: string } | null;
+  defaultVetName?: string;
 }) {
   const [mode, setMode] = useState<'plan' | 'record'>(initialMode)
   const [name, setName] = useState(initialData?.name || '')
@@ -456,7 +459,7 @@ function ManualVaccineModal({
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [date, setDate] = useState(initialData?.date ? new Date(initialData.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0])
   const [clinic, setClinic] = useState(initialData?.clinic || '')
-  const [vet, setVet] = useState('')
+  const [vet, setVet] = useState(defaultVetName || '')
   const [brand, setBrand] = useState(initialData?.brand || '')
   const [batchNo, setBatchNo] = useState(initialData?.batch_no || '')
   const [notes, setNotes] = useState('')
@@ -698,7 +701,8 @@ function BatchScanModal({
   allRecords: VRecord[];
   isSetupPhase?: boolean;
   onClose: () => void; 
-  onDone: () => void; 
+  onDone: () => void;
+  defaultVetName?: string;
 }) {
   const [scanning, setScanning] = useState(false)
   const [results, setResults] = useState<any[] | null>(null)
@@ -778,6 +782,7 @@ function BatchScanModal({
           due_at: new Date(item.date || new Date()).toISOString(),
           administered_at: item.date ? new Date(item.date).toISOString() : new Date().toISOString(),
           clinic: toTitleCase(item.clinicName) || undefined,
+          vet_name: defaultVetName || undefined,
           brand: toTitleCase(item.brand) || undefined,
           batch_no: item.batchNo ? item.batchNo.toUpperCase() : undefined,
           notes: '[TOPLU_TARAMA_AI]'
@@ -1922,6 +1927,7 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
             }
           }}
           onDone={refreshData}
+          defaultVetName={pet.vet_name}
         />
       )}
 
