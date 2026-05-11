@@ -25,7 +25,7 @@ export default async function PetDetailPage(props: PageProps) {
   const supabase = await createServerSupabaseClient()
 
   const { data: pet } = await supabase.from('pets').select('*').eq('id', id).eq('owner_id', user?.id).single()
-  if (!pet) redirect('/owner/pets')
+  if (!pet) redirect('/owner/dashboard')
 
   const speciesCode = (pet.species || '').toLowerCase() === 'köpek' || (pet.species || '').toLowerCase() === 'dog' ? 'dog' : 'cat'
   

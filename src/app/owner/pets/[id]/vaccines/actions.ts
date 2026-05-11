@@ -183,7 +183,7 @@ export async function generateSchedule(petId: string, mode: 'smart_start' | 'his
 }
 
 // ── Mark Done ──────────────────────────────────────────────────
-export async function markVaccineDone(recordId: string, administeredAt: string, source: string, notes?: string) {
+export async function markVaccineDone(recordId: string, administeredAt: string, source: string, notes?: string, customRecurrenceDays?: number, amount?: number) {
   const supabase = await createServerSupabaseClient()
 
   const { data: record } = await supabase
@@ -241,11 +241,13 @@ export async function markVaccineDone(recordId: string, administeredAt: string, 
     if (nextDose) {
       await supabase.from('vaccine_records_v2').update({ status: 'due' }).eq('id', nextDose.id)
     }
-  } else if (tmpl?.has_annual_booster || tmpl?.recurrence_days) {
+  } else if (customRecurrenceDays || tmpl?.has_annual_booster || tmpl?.recurrence_days) {
     // Series complete — recalculate next booster FROM actual administered date
     // This ensures 10.7.23 → 10.7.24, NOT the old theoretically-projected date.
     const nextDue = new Date(administeredAt)
-    if (tmpl.recurrence_days) {
+    if (customRecurrenceDays) {
+      nextDue.setDate(nextDue.getDate() + customRecurrenceDays)
+    } else if (tmpl?.recurrence_days) {
       nextDue.setDate(nextDue.getDate() + tmpl.recurrence_days)
     } else {
       nextDue.setFullYear(nextDue.getFullYear() + 1)
@@ -292,6 +294,17 @@ export async function markVaccineDone(recordId: string, administeredAt: string, 
         confidence_level: 'estimated',
       })
     }
+  }
+
+  // Log payment if amount provided
+  if (amount && amount > 0) {
+    await supabase.from('payments').insert({
+      pet_id: record.pet_id,
+      amount: amount,
+      payment_type: record.vaccine_name,
+      payment_date: administeredAt.split('T')[0],
+      notes: notes || null,
+    })
   }
 
   // Care Score Bonus (silent fail ok)
@@ -355,6 +368,7 @@ export async function addManualVaccine(petId: string, data: {
   batch_no?: string
   notes?: string
   amount?: number
+  recurrence_days?: number
 }) {
   const supabase = await createServerSupabaseClient()
   const isCompleted = !!data.administered_at
@@ -386,8 +400,7 @@ export async function addManualVaccine(petId: string, data: {
       .in('status', ['overdue', 'due', 'scheduled'])
       .lte('due_at', data.administered_at!) // only past-due stale records
   }
-
-  await supabase.from('vaccine_records_v2').insert({
+  const { data: insertedRecord } = await supabase.from('vaccine_records_v2').insert({
     pet_id: petId,
     vaccine_code: extractedCode || 'MANUAL',
     vaccine_name: data.vaccine_name,
@@ -397,7 +410,22 @@ export async function addManualVaccine(petId: string, data: {
     source: isCompleted ? 'user_detailed' : 'system_generated',
     confidence_level: isCompleted ? 'verified' : 'estimated',
     notes: notesParts || null,
-  })
+  }).select('id').single()
+
+  if (isCompleted && data.recurrence_days) {
+    const nextDue = new Date(data.administered_at!)
+    nextDue.setDate(nextDue.getDate() + data.recurrence_days)
+    await supabase.from('vaccine_records_v2').insert({
+      pet_id: petId,
+      vaccine_code: extractedCode || 'MANUAL',
+      vaccine_name: data.vaccine_name,
+      status: 'scheduled',
+      due_at: nextDue.toISOString(),
+      source: 'system_generated',
+      confidence_level: 'estimated',
+      notes: 'Önceki kaydın etki süresine göre otomatik planlandı.'
+    })
+  }
 
   // Log payment if amount provided
   if (data.amount && data.amount > 0) {

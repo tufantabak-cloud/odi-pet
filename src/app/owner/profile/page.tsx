@@ -23,14 +23,7 @@ export default async function ProfileMenuPage() {
   const planName = subscription?.plan === 'pro' ? 'Odi Pro' : subscription?.plan === 'ai_plus' ? 'Odi AI+' : 'Odi Free'
   const isPremium = subscription?.plan === 'pro' || subscription?.plan === 'ai_plus'
   
-  // Calculate average health score
-  const avgHealthScore = pets && pets.length > 0 
-    ? Math.round(pets.reduce((acc, pet) => acc + (pet.health_score || 100), 0) / pets.length) 
-    : 100
 
-  // Mocked Loyalty/Rewards points
-  const carePoints = 120
-  const streakDays = 14
 
   return (
     <div className="flex flex-col gap-8 pb-20 w-full mx-auto font-sans">
@@ -145,9 +138,7 @@ export default async function ProfileMenuPage() {
                 <p className="text-[13px] text-text-secondary font-medium">{pet.species} • {pet.breed || 'Bilinmiyor'}</p>
               </div>
               <div className="flex flex-col items-end gap-2">
-                <div className="bg-green-50 text-green-600 px-2 py-1 rounded text-[11px] font-bold border border-green-100">
-                  Sağlık: %{pet.health_score || 100}
-                </div>
+
                 <PetCardActions pet={pet} />
               </div>
             </div>
@@ -160,30 +151,7 @@ export default async function ProfileMenuPage() {
         </div>
       </section>
 
-      {/* 7. Rewards / Loyalty Layer */}
-      <section className="flex flex-col gap-3">
-        <h2 className="text-[12px] font-black text-text-secondary uppercase tracking-widest px-2">Odi Sadakat Puanları</h2>
-        <div className="card-base p-0 overflow-hidden flex flex-col sm:flex-row">
-          <div className="bg-primary/5 p-6 flex-1 flex flex-col justify-center items-center sm:items-start border-b sm:border-b-0 sm:border-r border-border-main">
-            <p className="text-[12px] font-bold text-primary uppercase tracking-wide mb-1">Mevcut Seri</p>
-            <p className="text-[32px] font-black text-text-primary flex items-center gap-2">
-              🔥 {streakDays} <span className="text-[14px] text-text-secondary font-medium -mt-2">Gün</span>
-            </p>
-          </div>
-          <div className="p-6 flex-1 flex flex-col justify-center items-center sm:items-start">
-            <p className="text-[12px] font-bold text-amber-500 uppercase tracking-wide mb-1">Odi Care Puanı</p>
-            <p className="text-[32px] font-black text-text-primary flex items-center gap-2">
-              ⭐️ {carePoints} <span className="text-[14px] text-text-secondary font-medium -mt-2">CP</span>
-            </p>
-          </div>
-          <div className="p-6 flex-1 bg-bg-main/50 flex flex-col justify-center items-center sm:items-start">
-            <p className="text-[13px] font-bold text-text-primary mb-2">Açılabilir Ödüller</p>
-            <button className="text-[11px] font-bold bg-white border border-border-main px-3 py-1.5 rounded-lg shadow-sm hover:border-primary/50 transition-colors w-full">
-              🎁 %10 İndirim Kuponu (150 CP)
-            </button>
-          </div>
-        </div>
-      </section>
+
 
       {/* 4. Notification Intelligence Center */}
       <section className="flex flex-col gap-3">
@@ -299,16 +267,7 @@ export default async function ProfileMenuPage() {
         </section>
       </div>
 
-      {/* 10. Founder Intelligence Block */}
-      <div className="mt-4 p-5 rounded-2xl bg-gradient-to-br from-primary/10 to-transparent border border-primary/20 flex flex-col items-center text-center">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-primary mb-3">
-          <path d="M12 2a10 10 0 1 0 10 10H12V2z"/>
-        </svg>
-        <p className="text-[14px] font-bold text-text-primary mb-1">Odi ile Birlikte Gelecek</p>
-        <p className="text-[13px] text-text-secondary max-w-sm">
-          Katıldığınız günden beri Odi, 3 olası sağlık problemini önceden tahmin etmenize yardımcı oldu. Pati dostunuz için en iyisini yapmaya devam edin.
-        </p>
-      </div>
+
 
       {/* Logout & 9. Legal */}
       <div className="flex flex-col items-center gap-6 mt-4">

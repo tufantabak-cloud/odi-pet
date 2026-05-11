@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 const ROLE_LABELS: Record<string, { label: string; color: string; desc: string }> = {
   owner:  { label: 'Sahip',   color: 'bg-purple-100 text-purple-700', desc: 'Tam yetki' },
@@ -11,7 +12,8 @@ const ROLE_LABELS: Record<string, { label: string; color: string; desc: string }
 
 const PLAN_LIMITS: Record<string, number> = { free: 2, pro: 5, ai_plus: 999 }
 
-export default function FamilyTab({ petId, petName, plan }: { petId: string; petName: string; plan: string }) {
+export default function FamilyTab({ petId, petName, plan, initialSos }: { petId: string; petName: string; plan: string; initialSos?: any[] }) {
+  const router = useRouter()
   const [members, setMembers] = useState<any[]>([])
   const [invites, setInvites] = useState<any[]>([])
   const [activity, setActivity] = useState<any[]>([])
@@ -22,7 +24,13 @@ export default function FamilyTab({ petId, petName, plan }: { petId: string; pet
   const [role, setRole] = useState('editor')
   const [inviting, setInviting] = useState(false)
   const [inviteMsg, setInviteMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
-  const [copiedLink, setCopiedLink] = useState(false)
+
+  // SOS State
+  const [sosContacts, setSosContacts] = useState<any[]>(initialSos && initialSos.length > 0 ? initialSos : [
+    { name: '', phone: '', role: 'primary' },
+    { name: '', phone: '', role: 'secondary' }
+  ])
+  const [savingSos, setSavingSos] = useState(false)
 
   async function load() {
     if (loaded) return
@@ -37,7 +45,6 @@ export default function FamilyTab({ petId, petName, plan }: { petId: string; pet
     } finally { setLoading(false) }
   }
 
-  // Load on first render of this tab
   if (!loaded && !loading) { load() }
 
   async function sendInvite(e: React.FormEvent) {
@@ -54,7 +61,6 @@ export default function FamilyTab({ petId, petName, plan }: { petId: string; pet
       if (!res.ok) { setInviteMsg({ type: 'err', text: data.error }); return }
       setInviteMsg({ type: 'ok', text: data.message })
       setEmail('')
-      // Re-fetch
       setLoaded(false)
     } finally { setInviting(false) }
   }
@@ -69,12 +75,125 @@ export default function FamilyTab({ petId, petName, plan }: { petId: string; pet
     setMembers(prev => prev.filter(m => m.id !== memberId))
   }
 
+  async function saveSos(e: React.FormEvent) {
+    e.preventDefault()
+    setSavingSos(true)
+    try {
+      const res = await fetch(`/api/pets/${petId}/sos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sos_contacts: sosContacts }),
+      })
+      const data = await res.json()
+      if (!res.ok) { alert(data.error || 'SOS güncellenirken hata oluştu'); return }
+      alert('Acil durum ağı başarıyla güncellendi!')
+      router.refresh()
+    } catch (err) {
+      alert('Bir hata oluştu.')
+    } finally { setSavingSos(false) }
+  }
+
   const limit = PLAN_LIMITS[plan] ?? 2
 
   return (
     <div className="flex flex-col gap-5">
+      
+      {/* ── SOS & Aile Smart Card ── */}
+      <div className="p-5 bg-gradient-to-br from-error/10 to-error/5 border-2 border-error/20 rounded-[24px] flex flex-col gap-4 relative overflow-hidden group shadow-sm animate-fade-in">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-error/5 rounded-full blur-3xl" />
+        <div className="flex items-start gap-4 relative z-10 pr-2">
+          <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center text-[24px] shrink-0 border border-error/10">🚨</div>
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className={`w-2 h-2 rounded-full ${sosContacts.every(c => c.phone) ? 'bg-green-500' : 'bg-error animate-pulse'}`} />
+              <p className={`text-[11px] font-black uppercase tracking-widest ${sosContacts.every(c => c.phone) ? 'text-green-600' : 'text-error'}`}>
+                {sosContacts.every(c => c.phone) ? 'SOS Modu Hazır' : 'SOS Modu Yapılandırılmadı'}
+              </p>
+            </div>
+            <p className="text-[15px] font-extrabold text-text-primary leading-snug">{petName} İçin Acil Durum Ağı</p>
+            <p className="text-[13px] font-medium text-text-secondary mt-1.5 leading-relaxed">
+              Kayıp veya kaza gibi acil durumlarda size ulaşılamazsa güvenebileceğimiz kişileri (Ad-Soyad ve Telefon) belirleyin.
+            </p>
+          </div>
+        </div>
 
-      {/* Plan limit banner */}
+        <form className="flex flex-col gap-4 mt-1 relative z-10 p-4 bg-white/50 rounded-xl border border-error/10" onSubmit={saveSos}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Contact 1 */}
+            <div className="flex flex-col gap-3 p-3 bg-white/40 rounded-xl border border-error/5">
+              <p className="text-[10px] font-black text-error uppercase tracking-widest">Kişi 1 (Birincil)</p>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-bold text-text-secondary">Ad Soyad</label>
+                <input 
+                  type="text" 
+                  className="input-base text-[13px] py-2" 
+                  placeholder="Ad Soyad" 
+                  value={sosContacts[0]?.name || ''}
+                  onChange={e => {
+                    const newContacts = [...sosContacts];
+                    newContacts[0] = { ...newContacts[0], name: e.target.value };
+                    setSosContacts(newContacts);
+                  }}
+                  required 
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-bold text-text-secondary">Telefon</label>
+                <input 
+                  type="tel" 
+                  className="input-base text-[13px] py-2" 
+                  placeholder="05XX XXX XX XX" 
+                  value={sosContacts[0]?.phone || ''}
+                  onChange={e => {
+                    const newContacts = [...sosContacts];
+                    newContacts[0] = { ...newContacts[0], phone: e.target.value };
+                    setSosContacts(newContacts);
+                  }}
+                  required 
+                />
+              </div>
+            </div>
+
+            {/* Contact 2 */}
+            <div className="flex flex-col gap-3 p-3 bg-white/40 rounded-xl border border-error/5">
+              <p className="text-[10px] font-black text-error uppercase tracking-widest">Kişi 2 (İsteğe Bağlı)</p>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-bold text-text-secondary">Ad Soyad</label>
+                <input 
+                  type="text" 
+                  className="input-base text-[13px] py-2" 
+                  placeholder="Ad Soyad" 
+                  value={sosContacts[1]?.name || ''}
+                  onChange={e => {
+                    const newContacts = [...sosContacts];
+                    newContacts[1] = { ...newContacts[1], name: e.target.value };
+                    setSosContacts(newContacts);
+                  }}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-bold text-text-secondary">Telefon</label>
+                <input 
+                  type="tel" 
+                  className="input-base text-[13px] py-2" 
+                  placeholder="05XX XXX XX XX" 
+                  value={sosContacts[1]?.phone || ''}
+                  onChange={e => {
+                    const newContacts = [...sosContacts];
+                    newContacts[1] = { ...newContacts[1], phone: e.target.value };
+                    setSosContacts(newContacts);
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" disabled={savingSos} className="btn-primary bg-error hover:bg-error/90 border-none py-3 text-[14px] mt-1 shadow-sm w-full sm:w-auto self-start px-8">
+            {savingSos ? 'Kaydediliyor...' : 'Acil Durum Ağını Güncelle'}
+          </button>
+        </form>
+      </div>
+
       <div className="flex items-center justify-between p-4 rounded-xl bg-bg-main border border-border-main">
         <div>
           <p className="text-[13px] font-bold text-text-primary">

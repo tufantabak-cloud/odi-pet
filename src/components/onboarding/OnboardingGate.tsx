@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import OnboardingWizard from "./OnboardingWizard"
-import ActivationChecklist from "./ActivationChecklist"
 
 export default function OnboardingGate({ children }: { children: React.ReactNode }) {
   const [progress, setProgress] = useState<any>(null)
@@ -37,11 +36,5 @@ export default function OnboardingGate({ children }: { children: React.ReactNode
     return <OnboardingWizard onComplete={finishWizard} />
   }
 
-  return (
-    <>
-      {/* Activation checklist appears only after wizard start */}
-      {progress?.wizard_completed && <ActivationChecklist />}
-      {children}
-    </>
-  )
+  return <>{children}</>
 }

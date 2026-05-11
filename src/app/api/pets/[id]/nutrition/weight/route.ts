@@ -53,6 +53,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     .insert({
       pet_id: id,
       weight_kg: Number(body.weight_kg),
+      height_cm: body.height_cm ? Number(body.height_cm) : null,
       body_condition_score: body.body_condition_score ? Number(body.body_condition_score) : null,
       measured_at: body.measured_at ?? new Date().toISOString(),
       notes: body.notes ?? null,

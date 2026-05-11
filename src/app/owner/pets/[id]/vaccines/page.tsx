@@ -35,13 +35,14 @@ export default async function VaccineOSPage(props: PageProps) {
 
   const speciesCode = (pet.species || '').toLowerCase() === 'köpek' || (pet.species || '').toLowerCase() === 'dog' ? 'dog' : 'cat'
 
-  const [setupProfileRes, vaccineRecordsRes, allTemplatesRes] = await Promise.all([
+  const [setupProfileRes, vaccineRecordsRes, allTemplatesRes, componentsRes] = await Promise.all([
     supabase.from('vaccine_setup_profiles').select('*').eq('pet_id', id).single(),
     supabase.from('vaccine_records_v2').select('*').eq('pet_id', id).order('due_at', { ascending: true }),
     supabase.from('vaccine_templates').select('*')
       .eq('species', speciesCode)
       .or(`profile_id.eq.${user.id},profile_id.is.null`)
       .order('first_dose_week', { ascending: true }),
+    supabase.from('vaccine_components').select('*').then(res => res).catch(() => ({ data: [] }))
   ])
 
   const allTemplates = allTemplatesRes.data || []
@@ -61,6 +62,7 @@ export default async function VaccineOSPage(props: PageProps) {
       setupProfile={setupProfileRes.data ?? null}
       vaccineRecords={vaccineRecordsRes.data ?? []}
       templates={templates}
+      components={componentsRes?.data ?? []}
     />
   )
 }

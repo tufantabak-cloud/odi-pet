@@ -18,7 +18,7 @@ export default async function PetNutritionPage({ params }: { params: Promise<{ i
     .eq('profile_id', user.id)
     .single()
 
-  if (!isOwner) redirect('/owner/pets')
+  if (!isOwner) redirect('/owner/dashboard')
 
   const [
     { data: pet },
@@ -34,7 +34,7 @@ export default async function PetNutritionPage({ params }: { params: Promise<{ i
     supabase.from('weight_logs').select('*').eq('pet_id', id).order('measured_at', { ascending: true }).limit(20)
   ])
 
-  if (!pet) redirect('/owner/pets')
+  if (!pet) redirect('/owner/dashboard')
 
   return (
     <NutritionClient

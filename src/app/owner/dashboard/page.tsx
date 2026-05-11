@@ -3,8 +3,6 @@ import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { HabitBanner } from '@/components/dashboard/HabitBanner'
-import { PredictiveWidget } from '@/components/dashboard/PredictiveWidget'
 import DashboardOnboardingWrapper from './DashboardOnboardingWrapper'
 
 function calcAge(birthDate: string | null): string {
@@ -36,96 +34,7 @@ export default async function OwnerDashboard() {
   const primaryPet = pets && pets.length > 0 ? pets[0] : null;
 
   // Next Best Action logic & KPI stats
-  let heroCta = null;
-  let lastFeedingDate = 'Veri Yok';
-  let foodStock = 'Hesaplanmadı';
-  let lastWeightDate = 'Veri Yok';
-  let dailyStreak = 3; // mock base
-  let isMarketplaceEligible = false;
-
-  if (primaryPet) {
-    // Check missing feeding today
-    const { data: feeding } = await supabase
-      .from('feeding_logs')
-      .select('created_at')
-      .eq('pet_id', primaryPet.id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single()
-    
-    let fedToday = false;
-    if (feeding) {
-      const feedingDate = new Date(feeding.created_at);
-      const today = new Date();
-      fedToday = feedingDate.toDateString() === today.toDateString();
-      
-      const diffHrs = Math.floor((today.getTime() - feedingDate.getTime()) / (1000 * 60 * 60));
-      if (diffHrs < 24) lastFeedingDate = `${diffHrs} saat önce`;
-      else lastFeedingDate = `${Math.floor(diffHrs/24)} gün önce`;
-
-      if (fedToday) dailyStreak++;
-    }
-
-    // Refill warning
-    let refillRisk = null;
-    const { data: nutrition } = await supabase
-      .from('nutrition_profiles')
-      .select('daily_grams, total_grams_remaining')
-      .eq('pet_id', primaryPet.id)
-      .single()
-
-    if (nutrition && nutrition.daily_grams > 0 && nutrition.total_grams_remaining !== null) {
-      const daysLeft = Math.floor(nutrition.total_grams_remaining / nutrition.daily_grams);
-      foodStock = `${daysLeft} gün kaldı`;
-      if (daysLeft <= 3) refillRisk = 'CRITICAL';
-      else if (daysLeft <= 7) refillRisk = 'WARNING';
-    }
-
-    // Recent weight log
-    const { data: weight } = await supabase
-      .from('weight_logs')
-      .select('created_at')
-      .eq('pet_id', primaryPet.id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single()
-
-    let weightMissing = true;
-    if (weight) {
-      const wDate = new Date(weight.created_at);
-      const diffDays = Math.floor((new Date().getTime() - wDate.getTime()) / (1000 * 60 * 60 * 24));
-      lastWeightDate = `${diffDays} gün önce`;
-      weightMissing = diffDays > 30;
-    }
-
-    // Check waitlist to set marketplace eligibility badge
-    const { data: waitlist } = await supabase
-      .from('marketplace_waitlist')
-      .select('id')
-      .eq('pet_id', primaryPet.id)
-      .single()
-    if (waitlist) isMarketplaceEligible = true;
-
-    // Calculate daily progress
-    let tasksTotal = 4;
-    let tasksCompleted = 0;
-    if (fedToday) tasksCompleted++;
-    if (!weightMissing) tasksCompleted++;
-    if (!refillRisk) tasksCompleted++;
-    tasksCompleted++; // mock water completed
-
-    const progressStr = `Bugünkü bakım: ${tasksCompleted}/${tasksTotal} tamamlandı`;
-
-    if (!fedToday) {
-      heroCta = { title: 'Bugünkü bakım tamamlanmadı', action: 'Besleme Kaydı Ekle', icon: '🐾', href: `/owner/pets/${primaryPet.id}/nutrition`, progressStr }
-    } else if (refillRisk) {
-      heroCta = { title: 'Mama stokun azalıyor', action: 'Refill Durumunu Gör', icon: '📦', href: `/owner/pets/${primaryPet.id}/nutrition`, progressStr }
-    } else if (weightMissing) {
-      heroCta = { title: 'Kilo ölçümü zamanı geldi', action: 'Son Kiloyu Gir', icon: '⚖️', href: `/owner/pets/${primaryPet.id}/nutrition`, progressStr }
-    } else {
-      heroCta = { title: 'Bugün her şey yolunda', action: 'Genel Duruma Bak', icon: '✨', href: `/owner/pets/${primaryPet.id}`, progressStr }
-    }
-  }
+  // (Removed heroCta logic since it's redundant with pet cards and modules)
 
   // Get Health Schedules
   let upcomingSchedules: any[] = []
@@ -139,14 +48,7 @@ export default async function OwnerDashboard() {
   }
 
   const now = new Date();
-  const scoredTasks = upcomingSchedules.map(task => {
-    const diffDays = Math.ceil((new Date(task.due_date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    let score = diffDays < 0 ? 100 : diffDays <= 3 ? 70 : 10;
-    if (task.postpone_count > 0) score += 50;
-    return { ...task, aiScore: score, diffDays };
-  });
 
-  const topTask = scoredTasks.sort((a,b) => b.aiScore - a.aiScore)[0];
   const in30 = new Date(); in30.setDate(in30.getDate() + 30);
   const timelineSchedules = upcomingSchedules
     .filter(s => new Date(s.due_date) <= in30)
@@ -174,51 +76,46 @@ export default async function OwnerDashboard() {
     }
   }
 
+  const petsWithStats = await Promise.all((pets || []).map(async (pet) => {
+    let lastFeedingDate = 'Veri Yok';
+    let weightVal = 'Veri Yok';
+    let heightVal = '';
+    
+    // Check feeding
+    const { data: feeding } = await supabase
+      .from('feeding_logs')
+      .select('created_at')
+      .eq('pet_id', pet.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+      
+    if (feeding) {
+      const diffHrs = Math.floor((new Date().getTime() - new Date(feeding.created_at).getTime()) / (1000 * 60 * 60));
+      if (diffHrs < 24) lastFeedingDate = `${diffHrs} s. önce`;
+      else lastFeedingDate = `${Math.floor(diffHrs/24)} g. önce`;
+    }
+
+    // Check weight
+    const { data: weight } = await supabase
+      .from('weight_logs')
+      .select('created_at, weight_kg, height_cm')
+      .eq('pet_id', pet.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+      
+    if (weight) {
+      if (weight.weight_kg) weightVal = `${weight.weight_kg} kg`;
+      if (weight.height_cm) heightVal = `${weight.height_cm} cm`;
+    }
+
+    return { ...pet, lastFeedingDate, weightVal, heightVal };
+  }));
+
   return (
     <DashboardOnboardingWrapper>
     <div className="flex flex-col gap-8 pb-4">
-      {/* Predictive Engine */}
-      {primaryPet ? (
-        <PredictiveWidget 
-          petId={primaryPet.id} 
-          fallbackSuggestion={
-            <div className="card-base bg-gradient-to-r from-primary-soft/40 to-surface border-primary/20 p-6 flex flex-col gap-4">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-[20px]">🧠</span>
-                <h2 className="text-[14px] font-black text-text-primary uppercase tracking-widest opacity-80">Akıllı Öneri</h2>
-              </div>
-              {topTask ? (
-                <div className="flex flex-col gap-2">
-                  <p className="text-[16px] font-bold text-text-primary leading-snug">
-                    Bugün yapılması gereken en önemli şey:
-                  </p>
-                  <div className="bg-white border-l-4 border-l-primary rounded-lg p-4 shadow-sm flex items-center justify-between group cursor-pointer hover:border-l-primary-hover transition-all">
-                    <div className="flex flex-col">
-                      <span className="font-extrabold text-[16px] text-text-primary">
-                        {topTask.title || topTask.vaccines?.name || 'Sağlık İşlemi'}
-                      </span>
-                      <span className="text-[13px] text-text-secondary mt-1">
-                        {topTask.diffDays < 0 
-                          ? `⚠️ ${Math.abs(topTask.diffDays)} gün gecikti. Gecikme sağlık riski oluşturabilir.` 
-                          : `Zamanında yapılması dostunun sağlığını korur.`}
-                      </span>
-                    </div>
-                    <Link href={`/owner/health?petId=${topTask.pet_id}`} className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all shrink-0">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                    </Link>
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-white border-l-4 border-l-success rounded-lg p-4 shadow-sm">
-                  <p className="font-extrabold text-[16px] text-text-primary">Bugün her şey yolunda ✨</p>
-                  <p className="text-[13px] text-text-secondary mt-1">Dostunuz için acil bir işlem bulunmuyor.</p>
-                </div>
-              )}
-            </div>
-          }
-        />
-      ) : null}
-
       {/* Greeting */}
       <div>
         <h1 className="text-[28px] sm:text-[32px] font-extrabold text-text-primary tracking-tight">
@@ -227,94 +124,40 @@ export default async function OwnerDashboard() {
         <p className="text-text-secondary font-medium mt-1">Pati dostlarının günlük özeti aşağıda.</p>
       </div>
 
-      {/* Top Hero CTA */}
-      {heroCta && (
-        <div className="card-base p-6 bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200 relative overflow-hidden">
-          {isMarketplaceEligible && (
-            <div className="absolute top-4 right-4 bg-white/80 backdrop-blur px-3 py-1.5 rounded-full border border-indigo-200 flex items-center gap-2 shadow-sm">
-              <span className="text-[14px]">🛒</span>
-              <span className="text-[11px] font-black text-indigo-800 uppercase tracking-widest">Beta Marketplace Aktif</span>
-            </div>
-          )}
-          <div className="absolute top-4 left-6 hidden sm:block">
-            <span className="text-[11px] font-black text-text-secondary uppercase tracking-widest">{heroCta.progressStr}</span>
-          </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6 sm:mt-8">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-indigo-100 rounded-2xl flex items-center justify-center text-[28px] shrink-0">
-                {heroCta.icon}
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[12px] font-black text-indigo-400 uppercase tracking-widest mb-0.5 sm:hidden">{heroCta.progressStr}</span>
-                <span className="text-[18px] font-extrabold text-indigo-900 leading-snug">{heroCta.title}</span>
-              </div>
-            </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-              <Link href={heroCta.href} className="btn-primary px-6 py-3 whitespace-nowrap shadow-md shadow-primary/20 text-center">
-                {heroCta.action}
-              </Link>
-              {isMarketplaceEligible && (
-                <Link href="/marketplace-beta" className="btn-outline px-4 py-3 whitespace-nowrap text-center text-[13px] border-indigo-200 text-indigo-700 hover:bg-indigo-100">
-                  Partner Fırsatlarını Gör
-                </Link>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Behavior KPI Strip */}
-      {primaryPet && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="card-base p-4 flex flex-col justify-between border-l-4 border-l-blue-400">
-            <div className="flex items-center gap-2 text-text-secondary mb-2">
-              <span className="text-[16px]">🍽</span>
-              <span className="text-[11px] font-black uppercase tracking-widest">Son Besleme</span>
-            </div>
-            <p className="text-[20px] font-black text-text-primary">{lastFeedingDate}</p>
-          </div>
-          <div className="card-base p-4 flex flex-col justify-between border-l-4 border-l-warning">
-            <div className="flex items-center gap-2 text-text-secondary mb-2">
-              <span className="text-[16px]">📦</span>
-              <span className="text-[11px] font-black uppercase tracking-widest">Mama Stoğu</span>
-            </div>
-            <p className="text-[20px] font-black text-text-primary">{foodStock}</p>
-          </div>
-          <div className="card-base p-4 flex flex-col justify-between border-l-4 border-l-purple-400">
-            <div className="flex items-center gap-2 text-text-secondary mb-2">
-              <span className="text-[16px]">⚖️</span>
-              <span className="text-[11px] font-black uppercase tracking-widest">Son Kilo Ölçümü</span>
-            </div>
-            <p className="text-[20px] font-black text-text-primary">{lastWeightDate}</p>
-          </div>
-          <div className="card-base p-4 flex flex-col justify-between border-l-4 border-l-error">
-            <div className="flex items-center gap-2 text-text-secondary mb-2">
-              <span className="text-[16px]">🔥</span>
-              <span className="text-[11px] font-black uppercase tracking-widest">Günlük Streak</span>
-            </div>
-            <p className="text-[20px] font-black text-text-primary">{dailyStreak} gün</p>
-          </div>
-        </div>
-      )}
-
       {/* Pet Slider */}
-      {pets && pets.length > 0 ? (
+      {petsWithStats && petsWithStats.length > 0 ? (
         <div>
           <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
-            {pets.map(pet => (
+            {petsWithStats.map(pet => (
               <Link key={pet.id} href={`/owner/pets/${pet.id}`}
-                className="card-base snap-start shrink-0 w-[200px] sm:w-[220px] p-5 flex flex-col gap-3 group cursor-pointer">
-                <div className="w-14 h-14 rounded-[16px] bg-gradient-to-tr from-primary-soft to-white flex items-center justify-center text-primary text-[24px] font-black shadow-sm group-hover:bg-primary group-hover:text-white transition-all duration-300">
-                  {pet.avatar_url
-                    ? <img src={pet.avatar_url} alt={pet.name} className="w-full h-full rounded-[14px] object-cover" />
-                    : (pet.name || '?').charAt(0)
-                  }
+                className="card-base snap-start shrink-0 w-[240px] sm:w-[260px] p-5 flex flex-col gap-3 group cursor-pointer">
+                <div className="flex items-start justify-between">
+                  <div className="w-14 h-14 rounded-[16px] bg-gradient-to-tr from-primary-soft to-white flex items-center justify-center text-primary text-[24px] font-black shadow-sm group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                    {pet.avatar_url
+                      ? <img src={pet.avatar_url} alt={pet.name} className="w-full h-full rounded-[14px] object-cover" />
+                      : (pet.name || '?').charAt(0)
+                    }
+                  </div>
+                  <span className="badge-success text-[11px]">Sağlıklı</span>
                 </div>
                 <div>
                   <p className="font-extrabold text-text-primary text-[16px]">{pet.name}</p>
                   <p className="text-[13px] text-text-secondary">{pet.species} • {calcAge(pet.birth_date)}</p>
                 </div>
-                <span className="badge-success self-start text-[11px]">Sağlıklı</span>
+                
+                <div className="flex gap-2 mt-2 pt-3 border-t border-border-main">
+                   <div className="flex-1 flex flex-col">
+                      <span className="text-[10px] font-black text-text-secondary uppercase tracking-widest flex items-center gap-1">🍽 Besleme</span>
+                      <span className="text-[13px] font-bold text-text-primary mt-0.5">{pet.lastFeedingDate}</span>
+                   </div>
+                   <div className="flex-1 flex flex-col border-l border-border-main pl-3">
+                      <span className="text-[10px] font-black text-text-secondary uppercase tracking-widest flex items-center gap-1">⚖️ Büyüme</span>
+                      <span className="text-[13px] font-bold text-text-primary mt-0.5">
+                        {pet.weightVal} {pet.heightVal ? ` • ${pet.heightVal}` : ''}
+                      </span>
+                   </div>
+                </div>
+
               </Link>
             ))}
             <Link href="/owner/pets/add"
@@ -335,6 +178,30 @@ export default async function OwnerDashboard() {
           <Link href="/owner/pets/add" className="btn-primary mt-5 px-8">İlk Patiyi Ekle</Link>
         </div>
       )}
+
+      {/* Quick Services */}
+      <div className="flex flex-col gap-4">
+        <Link href="/owner/vets" 
+          className="group relative overflow-hidden bg-[#5f38e0] hover:bg-[#522fc2] transition-colors rounded-[16px] p-5 flex items-center justify-between shadow-md">
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="w-14 h-14 rounded-[12px] bg-white/20 flex items-center justify-center text-white shrink-0">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+            </div>
+            <div className="flex flex-col">
+              <h3 className="font-extrabold text-[18px] text-white">Veteriner Bul</h3>
+              <p className="text-white/80 text-[13px] font-medium mt-0.5">Çevrendeki en yakın kliniklere anında ulaş.</p>
+            </div>
+          </div>
+          <div className="relative z-10 hidden sm:block">
+            <span className="bg-white text-[#5f38e0] font-black text-[13px] px-6 py-3 rounded-[10px] tracking-wider uppercase group-hover:bg-gray-50 transition-colors shadow-sm">
+              KEŞFET
+            </span>
+          </div>
+        </Link>
+      </div>
 
       {/* Upcoming Timeline */}
       {timelineSchedules.length > 0 && (

@@ -97,11 +97,11 @@ export default function VetsPage() {
     <div className="max-w-4xl mx-auto px-6 py-12 min-h-screen">
       {/* Navigation */}
       <div className="mb-8 animate-fadeInUp">
-        <Link href="/owner/health" className="inline-flex items-center gap-2 text-text-secondary hover:text-primary font-bold text-sm transition-colors group">
+        <Link href="/owner/dashboard" className="inline-flex items-center gap-2 text-text-secondary hover:text-primary font-bold text-sm transition-colors group">
           <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
           </svg>
-          Sağlık Merkezi'ne Dön
+          Ana Sayfa'ya Dön
         </Link>
       </div>
 

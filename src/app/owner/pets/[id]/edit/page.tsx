@@ -18,7 +18,7 @@ export default async function EditPetPage({ params }: { params: Promise<{ id: st
     .eq('owner_id', user.id)
     .single()
 
-  if (!pet) redirect('/owner/pets')
+  if (!pet) redirect('/owner/dashboard')
 
   // Fetch pet_owners separately (non-blocking — table may not exist yet)
   const { data: petOwners } = await supabase

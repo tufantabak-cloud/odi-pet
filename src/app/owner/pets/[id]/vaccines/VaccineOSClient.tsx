@@ -57,7 +57,8 @@ function ScannerDropdown({ onSingleScan, onBatchScan }: { onSingleScan: (file: F
 
 // ── Types ──────────────────────────────────────────────────────
 type Pet = { id: string; name: string; species: string; birth_date: string | null; avatar_url?: string }
-type Template = { id: string; vaccine_code: string; vaccine_name: string; category: string; mandatory_level: string; dose_count: number; first_dose_week: number; dose_interval_days: number[] | number | null; has_annual_booster: boolean; recurrence_days: number | null; protects_against: string[]; profile_id: string | null; is_active: boolean }
+type Template = { id: string; vaccine_code: string; vaccine_name: string; category: string; mandatory_level: string; dose_count: number; first_dose_week: number; dose_interval_days: number[] | number | null; has_annual_booster: boolean; recurrence_days: number | null; protects_against: string[]; profile_id: string | null; is_active: boolean; components?: string[] }
+type VComponent = { code: string; name: string; description: string; is_zoonotic: boolean; risk_level: string; annual_required: boolean }
 type VRecord = { id: string; pet_id: string; vaccine_code: string; vaccine_name: string; dose_number: number | null; status: string; administered_at: string | null; due_at: string | null; source: string; confidence_level: string; notes: string | null }
 type SetupProfile = { id: string; pet_id: string; setup_mode: string } | null
 
@@ -196,17 +197,18 @@ const toTitleCase = (str: string) => {
   }).join(' ');
 }
 
-function VaccineActionModal({ record, allRecords, suggestions, onClose, onDone }: { 
+function VaccineActionModal({ record, allRecords, suggestions, templates, components, onClose, onDone }: { 
   record: VRecord & { _startInDetailed?: boolean }; 
   allRecords: VRecord[]; 
   suggestions: { clinics: string[], vets: string[], brands: string[] };
+  templates: Template[];
+  components: VComponent[];
   onClose: () => void; 
   onDone: () => void 
 }) {
   const isEditing = record.status === 'completed'
-  const [path, setPath] = useState<'choose' | 'quick' | 'detailed'>(isEditing ? 'detailed' : record._startInDetailed ? 'detailed' : 'choose')
-  const [dateMode, setDateMode] = useState<'today' | 'custom'>(isEditing ? 'custom' : 'today')
-  const [customDate, setCustomDate] = useState(isEditing && record.administered_at ? new Date(record.administered_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0])
+  const [detailDate, setDetailDate] = useState(isEditing && record.administered_at ? new Date(record.administered_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0])
+  const [showDetails, setShowDetails] = useState(isEditing || !!record._startInDetailed)
   const [isPending, startTransition] = useTransition()
 
   // Parse notes for pre-filling
@@ -225,39 +227,16 @@ function VaccineActionModal({ record, allRecords, suggestions, onClose, onDone }
   }, [record.notes])
 
   // Detailed form fields
-  const [detailDate, setDetailDate] = useState(isEditing && record.administered_at ? new Date(record.administered_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0])
   const [clinicName, setClinicName] = useState(parsedNotes.clinic)
   const [vetName, setVetName] = useState(parsedNotes.vet)
   const [brand, setBrand] = useState(parsedNotes.brand)
   const [batchNo, setBatchNo] = useState(parsedNotes.batch)
   const [notes, setNotes] = useState(parsedNotes.text)
+  const tmplForRecurrence = templates.find(t => t.vaccine_code === record.vaccine_code)
+  const [recurrenceDays, setRecurrenceDays] = useState<number | ''>(tmplForRecurrence?.recurrence_days || '')
+  const [amount, setAmount] = useState<number | ''>('')
 
-  // Detect if selected date year differs from planned year
-  const plannedYear = record.due_at ? new Date(record.due_at).getFullYear() : null
-  const selectedYear = new Date(path === 'detailed' ? detailDate : (dateMode === 'today' ? new Date() : customDate)).getFullYear()
-  const isOverdueEntry = plannedYear && selectedYear > plannedYear && !isEditing
-
-  function handleQuickConfirm() {
-    const date = dateMode === 'today' ? new Date().toISOString() : new Date(customDate).toISOString()
-    const metadata = isOverdueEntry ? ` [INTENDED_YEAR:${plannedYear}]` : ''
-    startTransition(async () => {
-      if ((record as any)._isVirtual) {
-        await addManualVaccine(record.pet_id, {
-          vaccine_name: record.vaccine_name,
-          vaccine_code: record.vaccine_code,
-          due_at: record.due_at || new Date().toISOString(),
-          administered_at: date,
-          notes: metadata || undefined
-        })
-      } else {
-        await markVaccineDone(record.id, date, 'user_quick_marked', metadata)
-      }
-      trackEvent('vaccine_quick_marked', { record_id: record.id, vaccine_code: record.vaccine_code })
-      onDone()
-    })
-  }
-
-  function handleDetailedConfirm() {
+  function handleConfirm() {
     const sClinic = toTitleCase(clinicName);
     const sVet = toTitleCase(vetName);
     const sBrand = toTitleCase(brand);
@@ -270,10 +249,6 @@ function VaccineActionModal({ record, allRecords, suggestions, onClose, onDone }
       notes ? notes : '',
     ].filter(Boolean).join(' | ')
 
-    if (isOverdueEntry) {
-      notesFull += ` [INTENDED_YEAR:${plannedYear}]`
-    }
-
     startTransition(async () => {
       if ((record as any)._isVirtual) {
         await addManualVaccine(record.pet_id, {
@@ -285,12 +260,14 @@ function VaccineActionModal({ record, allRecords, suggestions, onClose, onDone }
           clinic: sClinic || undefined,
           brand: sBrand || undefined,
           batch_no: batchNo ? batchNo.toUpperCase() : undefined,
-          notes: notesFull || undefined
+          notes: notesFull || undefined,
+          recurrence_days: recurrenceDays ? Number(recurrenceDays) : undefined,
+          amount: amount ? Number(amount) : undefined
         })
       } else {
-        await markVaccineDone(record.id, new Date(detailDate).toISOString(), 'user_detailed', notesFull)
+        await markVaccineDone(record.id, new Date(detailDate).toISOString(), 'user_action', notesFull || undefined, recurrenceDays ? Number(recurrenceDays) : undefined, amount ? Number(amount) : undefined)
       }
-      trackEvent('vaccine_detailed_logged', { record_id: record.id, vaccine_code: record.vaccine_code, has_clinic: !!sClinic, has_batch: !!batchNo })
+      trackEvent('vaccine_logged', { record_id: record.id, vaccine_code: record.vaccine_code })
       onDone()
     })
   }
@@ -302,192 +279,117 @@ function VaccineActionModal({ record, allRecords, suggestions, onClose, onDone }
         {/* Header */}
         <div className="px-6 pt-6 pb-4 border-b border-border-main">
           <p className="text-[12px] font-black text-text-secondary uppercase tracking-widest mb-0.5">
-            {isEditing ? 'Record Edit' : 'Aşı Kaydı'}
+            {isEditing ? 'Kayıt Düzenle' : 'Aşı Kaydı'}
           </p>
           <h3 className="text-[17px] font-extrabold text-text-primary leading-snug">{getDisplayName(record.vaccine_name, record.vaccine_code)}</h3>
-          {COMMON_ALIASES[record.vaccine_code] && (
-            <p className="text-[11px] text-primary font-bold mt-1 italic">
-              Etikette: {COMMON_ALIASES[record.vaccine_code].join(', ')}
-            </p>
-          )}
+          {(() => {
+            const tmpl = templates.find(t => t.vaccine_code === record.vaccine_code);
+            if (tmpl && tmpl.components && tmpl.components.length > 0) {
+              const matchedComponents = components.filter(c => tmpl.components!.includes(c.code));
+              return (
+                <div className="mt-3 p-3 bg-primary/5 rounded-xl border border-primary/10">
+                  <p className="text-[11px] font-black text-primary uppercase tracking-wider mb-2">🛡️ Koruma İçeriği</p>
+                  <div className="flex flex-col gap-1.5">
+                    {matchedComponents.map(c => (
+                      <div key={c.code} className="flex items-start gap-2">
+                        <span className="text-primary text-[14px]">✓</span>
+                        <div>
+                          <p className="text-[12px] font-bold text-text-primary">{c.name}</p>
+                          {c.is_zoonotic && <p className="text-[10px] text-error font-medium">⚠️ İnsana bulaşabilir (Zoonotik)</p>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            } else if (COMMON_ALIASES[record.vaccine_code]) {
+              return (
+                <p className="text-[11px] text-primary font-bold mt-1 italic">
+                  Etikette: {COMMON_ALIASES[record.vaccine_code].join(', ')}
+                </p>
+              );
+            }
+            return null;
+          })()}
         </div>
 
-        {/* ── CHOOSE PATH ── */}
-        {path === 'choose' && (
-          <div className="p-6 flex flex-col gap-3">
-            <p className="text-[13px] text-text-secondary mb-1">Nasıl kaydetmek istersiniz?</p>
-            <button onClick={() => setPath('quick')}
-              className="flex items-start gap-4 p-4 rounded-2xl border-2 border-border-main hover:border-primary/50 hover:bg-primary/5 text-left transition-all group">
-              <div className="w-10 h-10 bg-success/10 rounded-xl flex items-center justify-center text-[20px] shrink-0">⚡</div>
-              <div>
-                <p className="font-extrabold text-text-primary text-[14px] group-hover:text-primary">Hızlı Onay</p>
-                <p className="text-[12px] text-text-secondary mt-0.5">Tarih seç, hemen kaydet. Detay gerekmez.</p>
-              </div>
-            </button>
-            <button onClick={() => setPath('detailed')}
-              className="flex items-start gap-4 p-4 rounded-2xl border-2 border-border-main hover:border-primary/50 hover:bg-primary/5 text-left transition-all group">
-              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-[20px] shrink-0">📋</div>
-              <div>
-                <p className="font-extrabold text-text-primary text-[14px] group-hover:text-primary">Detaylı Kayıt</p>
-                <p className="text-[12px] text-text-secondary mt-0.5">Klinik, veteriner, marka, seri no, notlar.</p>
-              </div>
-            </button>
-            <button onClick={onClose} className="mt-1 text-center text-[13px] text-text-secondary font-medium hover:text-text-primary py-2">
-              İptal
-            </button>
+        <div className="p-6 flex flex-col gap-4 max-h-[80vh] overflow-y-auto">
+          <div className="flex flex-col gap-1 -mt-1">
+            <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider">Uygulama Tarihi *</label>
+            <input type="date" className="input-base text-[14px] py-3" value={detailDate} onChange={e => setDetailDate(e.target.value)} max={new Date().toISOString().split('T')[0]} />
           </div>
-        )}
 
-        {/* ── QUICK PATH ── */}
-        {path === 'quick' && (
-          <div className="p-6 flex flex-col gap-4">
-            <button onClick={() => setPath('choose')} className="flex items-center gap-1.5 text-[12px] text-text-secondary hover:text-primary font-bold -mb-1">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-              Geri
-            </button>
-            <p className="text-[13px] font-bold text-text-secondary">Aşı ne zaman yapıldı?</p>
-            <div className="flex flex-col gap-2">
-              {[{ id: 'today', label: '✓ Bugün yapıldı' }, { id: 'custom', label: '📅 Farklı tarih seç' }].map(opt => (
-                <button key={opt.id} onClick={() => setDateMode(opt.id as any)}
-                  className={`py-3 px-4 rounded-xl border-2 text-left font-bold text-[14px] transition-all ${dateMode === opt.id ? 'border-primary bg-primary/5 text-primary' : 'border-border-main text-text-secondary'}`}>
-                  {opt.label}
-                </button>
-              ))}
-              {dateMode === 'custom' && (
-                <input type="date" className="input-base" value={customDate} onChange={e => setCustomDate(e.target.value)} max={new Date().toISOString().split('T')[0]} />
-              )}
-            </div>
-
-            <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl mt-1 flex flex-col gap-2">
-              <p className="text-[12px] text-primary font-medium leading-relaxed">
-                💡 <span className="font-bold">Bilgi:</span> Bu onayı verdiğinizde serinin varsa önceki dozları tamamlanmış sayılır.
-              </p>
-              {(() => {
-                const nextDose = allRecords
-                  .filter(r => r.vaccine_code === record.vaccine_code && (r.dose_number ?? 0) > (record.dose_number ?? 0))
-                  .sort((a, b) => (a.dose_number ?? 0) - (b.dose_number ?? 0))[0]
-                if (!nextDose) return null
-                return (
-                  <div className="pt-2 border-t border-primary/10 mt-1">
-                    <p className="text-[12px] text-primary font-medium">
-                      Bir sonraki doz (<span className="font-bold">{getDisplayName(nextDose.vaccine_name, nextDose.vaccine_code)}</span>) otomatik olarak <span className="font-bold">{new Date(nextDose.due_at || '').toLocaleDateString('tr-TR')}</span> tarihine planlanacaktır.
-                    </p>
-                  </div>
-                )
-              })()}
-            </div>
-
-            {isOverdueEntry && (
-              <div className="p-3 rounded-xl border border-primary/20 bg-primary/5 flex items-start gap-3">
-                <span className="text-[18px]">💡</span>
-                <div>
-                  <p className="text-[12px] font-bold text-primary">Otomatik Senkronizasyon</p>
-                  <p className="text-[11px] text-primary/80">Bu aşı {plannedYear} yılına ait olduğu için Matris'te o yılın sütununa yerleştirilecektir.</p>
-                </div>
-              </div>
-            )}
-
-            <div className="flex gap-3 pt-2">
-              <button onClick={onClose} className="flex-1 py-3 rounded-xl border border-border-main text-text-secondary font-bold text-[14px]">İptal</button>
-              <button onClick={handleQuickConfirm} disabled={isPending}
-                className="flex-1 btn-primary py-3 disabled:opacity-40 text-[14px]">
-                {isPending ? '...' : 'Kaydet ✓'}
-              </button>
-            </div>
+          <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl mt-1 flex flex-col gap-2">
+            <p className="text-[12px] text-primary font-medium leading-relaxed">
+              💡 <span className="font-bold">Bilgi:</span> Kaydettiğinizde sistem sonraki dozu veya yıllık tekrarı varsa otomatik takvime işler.
+            </p>
           </div>
-        )}
 
-        {/* ── DETAILED PATH ── */}
-        {path === 'detailed' && (
-          <div className="p-6 flex flex-col gap-4 max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-between -mb-1">
-              <button onClick={() => setPath('choose')} className="flex items-center gap-1.5 text-[12px] text-text-secondary hover:text-primary font-bold">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-                Geri
-              </button>
-            </div>
-
-
-            <div className="flex flex-col gap-1 -mt-1">
-              <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider">Tarih *</label>
-              <input type="date" className="input-base" value={detailDate} onChange={e => setDetailDate(e.target.value)} max={new Date().toISOString().split('T')[0]} />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider">Klinik / Hastane</label>
-              <input 
-                type="text" 
-                className="input-base" 
-                placeholder="Örn: Beşiktaş Veteriner Kliniği" 
-                list="clinics-list"
-                value={clinicName} 
-                onChange={e => setClinicName(e.target.value)} 
-              />
-              <datalist id="clinics-list">
-                {suggestions.clinics.map(c => <option key={c} value={c} />)}
-              </datalist>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider">Veteriner Adı</label>
-              <input 
-                type="text" 
-                className="input-base" 
-                placeholder="Örn: Dr. Ayşe Kaya" 
-                list="vets-list"
-                value={vetName} 
-                onChange={e => setVetName(e.target.value)} 
-              />
-              <datalist id="vets-list">
-                {suggestions.vets.map(v => <option key={v} value={v} />)}
-              </datalist>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
+          {!showDetails ? (
+            <button 
+              onClick={() => setShowDetails(true)} 
+              className="text-center py-2 text-[13px] font-bold text-text-secondary hover:text-primary transition-colors border-2 border-dashed border-border-main rounded-xl hover:border-primary/30 hover:bg-primary/5"
+            >
+              + İsteğe Bağlı Detay Ekle (Klinik, Marka vb.)
+            </button>
+          ) : (
+            <div className="flex flex-col gap-3 animate-fade-in pt-2 border-t border-border-main mt-1">
+              <div className="flex items-center justify-between">
+                <p className="text-[12px] font-black text-text-primary uppercase tracking-wider">Detaylar</p>
+                <button onClick={() => setShowDetails(false)} className="text-[11px] font-bold text-text-secondary hover:text-text-primary">Gizle</button>
+              </div>
               <div className="flex flex-col gap-1">
-                <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider">Marka / Üretici</label>
-                <input 
-                  type="text" 
-                  className="input-base" 
-                  placeholder="Örn: Nobivac" 
-                  list="brands-list"
-                  value={brand} 
-                  onChange={e => setBrand(e.target.value)} 
-                />
-                <datalist id="brands-list">
-                  {suggestions.brands.map(b => <option key={b} value={b} />)}
+                <label className="text-[11px] font-bold text-text-secondary">Klinik / Hastane</label>
+                <input type="text" className="input-base text-[13px] py-2" placeholder="Örn: Beşiktaş Veteriner Kliniği" list="clinics-list" value={clinicName} onChange={e => setClinicName(e.target.value)} />
+                <datalist id="clinics-list">
+                  {suggestions.clinics.map(c => <option key={c} value={c} />)}
                 </datalist>
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider">Seri / Lot No</label>
-                <input type="text" className="input-base" placeholder="Örn: A2024B" value={batchNo} onChange={e => setBatchNo(e.target.value)} />
+                <label className="text-[11px] font-bold text-text-secondary">Veteriner Adı</label>
+                <input type="text" className="input-base text-[13px] py-2" placeholder="Örn: Dr. Ayşe Kaya" list="vets-list" value={vetName} onChange={e => setVetName(e.target.value)} />
+                <datalist id="vets-list">
+                  {suggestions.vets.map(v => <option key={v} value={v} />)}
+                </datalist>
               </div>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider">Notlar</label>
-              <textarea className="input-base resize-none" rows={3} placeholder="Yan etki, reaksiyon, ek bilgi..." value={notes} onChange={e => setNotes(e.target.value)} />
-            </div>
-
-            {isOverdueEntry && (
-              <div className="p-3 rounded-xl border border-primary/20 bg-primary/5 flex items-start gap-3">
-                <span className="text-[18px]">💡</span>
-                <div>
-                  <p className="text-[12px] font-bold text-primary">Otomatik Senkronizasyon</p>
-                  <p className="text-[11px] text-primary/80">Bu aşı {plannedYear} yılına ait olduğu için Matris'te o yılın sütununa yerleştirilecektir.</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[11px] font-bold text-text-secondary">Marka</label>
+                  <input type="text" className="input-base text-[13px] py-2" placeholder="Örn: Nobivac" list="brands-list" value={brand} onChange={e => setBrand(e.target.value)} />
+                  <datalist id="brands-list">
+                    {suggestions.brands.map(b => <option key={b} value={b} />)}
+                  </datalist>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[11px] font-bold text-text-secondary">Seri No</label>
+                  <input type="text" className="input-base text-[13px] py-2" placeholder="Örn: A2024B" value={batchNo} onChange={e => setBatchNo(e.target.value)} />
                 </div>
               </div>
-            )}
-
-            <div className="flex gap-3 pt-1">
-              <button onClick={onClose} className="flex-1 py-3 rounded-xl border border-border-main text-text-secondary font-bold text-[14px]">İptal</button>
-              <button onClick={handleDetailedConfirm} disabled={isPending || !detailDate}
-                className="flex-1 btn-primary py-3 disabled:opacity-40 text-[14px]">
-                {isPending ? '...' : 'Kaydet ✓'}
-              </button>
+              <div className="flex flex-col gap-1">
+                <label className="text-[11px] font-bold text-text-secondary">Notlar</label>
+                <textarea className="input-base resize-none text-[13px] py-2" rows={2} placeholder="Yan etki, reaksiyon..." value={notes} onChange={e => setNotes(e.target.value)} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[11px] font-bold text-text-secondary">Tavsiye Edilen Tekrar</label>
+                  <input type="number" className="input-base text-[13px] py-2" placeholder="Örn: 90 Gün" value={recurrenceDays} onChange={e => setRecurrenceDays(e.target.value ? Number(e.target.value) : '')} />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[11px] font-bold text-text-secondary">Ücret (₺)</label>
+                  <input type="number" className="input-base text-[13px] py-2" placeholder="Örn: 450" value={amount} onChange={e => setAmount(e.target.value ? Number(e.target.value) : '')} />
+                </div>
+              </div>
             </div>
+          )}
+
+          <div className="flex gap-3 pt-3">
+            <button onClick={onClose} className="flex-1 py-3.5 rounded-xl border-2 border-border-main text-text-secondary font-bold text-[14px]">İptal</button>
+            <button onClick={handleConfirm} disabled={isPending || !detailDate}
+              className="flex-[2] btn-primary py-3.5 disabled:opacity-40 text-[14px] shadow-sm">
+              {isPending ? 'Kaydediliyor...' : 'Kaydet ✓'}
+            </button>
           </div>
-        )}
+        </div>
       </div>
     </div>
   )
@@ -503,7 +405,6 @@ function PostponeModal({ record, onClose, onDone }: { record: VRecord; onClose: 
         <div className="px-6 pt-6 pb-4 border-b border-border-main">
           <p className="text-[11px] font-black text-warning uppercase tracking-widest">⚠️ Ertele</p>
           <h3 className="text-[17px] font-extrabold text-text-primary">{record.vaccine_name}</h3>
-          <p className="text-[12px] text-text-secondary mt-1">Care Score -5 puan uygulanacak.</p>
         </div>
         <div className="p-6 flex flex-col gap-4">
           <p className="text-[13px] font-bold text-text-secondary">Kaç gün ertelensin?</p>
@@ -558,16 +459,12 @@ function ManualVaccineModal({
   const [vet, setVet] = useState('')
   const [brand, setBrand] = useState(initialData?.brand || '')
   const [batchNo, setBatchNo] = useState(initialData?.batch_no || '')
-  const [amount, setAmount] = useState('')
   const [notes, setNotes] = useState('')
+  const [recurrenceDays, setRecurrenceDays] = useState<number | ''>('')
+  const [amount, setAmount] = useState<number | ''>('')
+  const [isScanning, setIsScanning] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState('')
-  const [isOverdue, setIsOverdue] = useState(false)
-  const [intendedYear, setIntendedYear] = useState<string>('')
-
-  // Years for overdue selection (last 5 years)
-  const currentYear = new Date().getFullYear()
-  const overdueYears = Array.from({ length: 6 }, (_, i) => (currentYear - i).toString())
 
   const vaccineSuggestions = name.length >= 1 ? Array.from(new Map(templates.filter(t => {
     const search = name.toLowerCase()
@@ -579,16 +476,41 @@ function ManualVaccineModal({
     return matchName || matchCode || matchAlias || matchDisease
   }).map(t => [t.vaccine_code, t])).values()).slice(0, 8) : []
 
+  async function handleScan(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setIsScanning(true)
+    try {
+      const reader = new FileReader()
+      reader.onload = async (event) => {
+        const base64 = (event.target?.result as string).split(',')[1]
+        const res = await analyzeVaccineLabel(base64, file.type)
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+          const data = res.data[0]
+          if (data.vaccineName) setName(toTitleCase(data.vaccineName))
+          if (data.date) setDate(new Date(data.date).toISOString().split('T')[0])
+          if (data.brand) setBrand(toTitleCase(data.brand))
+          if (data.batchNo) setBatchNo(data.batchNo.toUpperCase())
+          if (data.clinicName) setClinic(toTitleCase(data.clinicName))
+        } else if (res.success) {
+          alert('Etiket okunamadı: Lütfen daha net bir fotoğraf çekin.')
+        } else {
+          alert('Etiket okunamadı: ' + res.error)
+        }
+        setIsScanning(false)
+      }
+      reader.readAsDataURL(file)
+    } catch (e) {
+      console.error(e)
+      setIsScanning(false)
+    }
+  }
+
   function handleSave() {
     if (!name.trim()) { setError('Aşı adı zorunludur.'); return }
     if (!date) { setError('Tarih zorunludur.'); return }
     setError('')
     startTransition(async () => {
-      let finalNotes = notes || '';
-      if (isOverdue && intendedYear) {
-        finalNotes = finalNotes ? `${finalNotes} [INTENDED_YEAR:${intendedYear}]` : `[INTENDED_YEAR:${intendedYear}]`;
-      }
-
       await addManualVaccine(petId, {
         vaccine_name: name,
         vaccine_code: selectedCode || undefined,
@@ -598,8 +520,9 @@ function ManualVaccineModal({
         clinic: toTitleCase(clinic) || undefined,
         brand: toTitleCase(brand) || undefined,
         batch_no: batchNo ? batchNo.toUpperCase() : undefined,
-        notes: finalNotes || undefined,
-        amount: amount ? parseFloat(amount) : undefined,
+        notes: notes || undefined,
+        recurrence_days: recurrenceDays ? Number(recurrenceDays) : undefined,
+        amount: amount ? Number(amount) : undefined
       })
       onDone()
     })
@@ -608,13 +531,25 @@ function ManualVaccineModal({
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" onClick={onClose}>
       <div className="bg-surface w-full max-w-sm rounded-[28px] shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-        <div className="px-6 pt-6 pb-4 border-b border-border-main">
-          <p className="text-[11px] font-black text-primary uppercase tracking-widest">
-            {mode === 'record' ? '➕ Yapıldı Kaydı Ekle' : '📅 Yeni Aşı Planla'}
-          </p>
-          <p className="text-[12px] text-text-secondary mt-1">
-            {mode === 'record' ? 'Gerçekleşen bir aşı kaydını sisteme işle.' : 'Gelecek için yeni bir aşı takvimi oluştur.'}
-          </p>
+        <div className="px-6 pt-6 pb-4 border-b border-border-main flex justify-between items-start">
+          <div>
+            <p className="text-[11px] font-black text-primary uppercase tracking-widest">
+              {mode === 'record' ? '➕ Yapıldı Kaydı Ekle' : '📅 Yeni Aşı Planla'}
+            </p>
+            <p className="text-[12px] text-text-secondary mt-1">
+              {mode === 'record' ? 'Gerçekleşen bir aşı kaydını sisteme işle.' : 'Gelecek için yeni bir aşı takvimi oluştur.'}
+            </p>
+          </div>
+          {mode === 'record' && (
+            <label className={`relative flex items-center justify-center p-2 rounded-xl border border-primary/30 text-primary cursor-pointer hover:bg-primary/5 transition-colors ${isScanning ? 'opacity-50 pointer-events-none' : ''}`} title="Fotoğraftan Otomatik Doldur">
+              <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleScan} />
+              {isScanning ? (
+                 <div className="w-5 h-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+              ) : (
+                 <span className="text-[20px]">📸</span>
+              )}
+            </label>
+          )}
         </div>
         <div className="p-6 flex flex-col gap-4 max-h-[75vh] overflow-y-auto">
           {/* Mode - Only show if not fixed */}
@@ -647,6 +582,7 @@ function ManualVaccineModal({
                     const primaryAlias = COMMON_ALIASES[t.vaccine_code]?.[0] || '';
                     setName(`${t.vaccine_name}${primaryAlias ? ' ' + primaryAlias : ''}`); 
                     setSelectedCode(t.vaccine_code);
+                    if (t.recurrence_days) setRecurrenceDays(t.recurrence_days);
                     setShowSuggestions(false) 
                   }}
                     className="w-full text-left p-3 hover:bg-bg-main transition-colors border-b border-border-main last:border-0">
@@ -718,9 +654,15 @@ function ManualVaccineModal({
                   <input className="input-base" placeholder="Lot..." value={batchNo} onChange={e => setBatchNo(e.target.value)} />
                 </div>
               </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Ücret (₺)</label>
-                <input type="number" className="input-base" placeholder="0.00" value={amount} onChange={e => setAmount(e.target.value)} />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Tavsiye Edilen Tekrar</label>
+                  <input type="number" className="input-base" placeholder="Örn: 90 Gün" value={recurrenceDays} onChange={e => setRecurrenceDays(e.target.value ? Number(e.target.value) : '')} />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Ücret (₺)</label>
+                  <input type="number" className="input-base" placeholder="Örn: 450" value={amount} onChange={e => setAmount(e.target.value ? Number(e.target.value) : '')} />
+                </div>
               </div>
             </>
           )}
@@ -729,36 +671,10 @@ function ManualVaccineModal({
             <textarea className="input-base resize-none" rows={2} value={notes} onChange={e => setNotes(e.target.value)} />
           </div>
 
-          {mode === 'record' && (
-            <div className={`p-3 rounded-xl border-2 flex flex-col gap-2 transition-all ${isOverdue ? 'border-warning bg-warning/5' : 'border-border-main'}`}>
-              <button 
-                type="button"
-                onClick={() => setIsOverdue(!isOverdue)}
-                className="flex items-center gap-2 text-left"
-              >
-                <span className="text-[18px]">{isOverdue ? '✅' : '⬜'}</span>
-                <span className="text-[13px] font-bold text-text-primary">Bu geçmiş dönemin gecikmiş aşısı mı?</span>
-              </button>
-              
-              {isOverdue && (
-                <div className="flex items-center gap-2 mt-1 pl-7">
-                  <span className="text-[12px] text-text-secondary whitespace-nowrap">Hangi yılın aşısı?</span>
-                  <select 
-                    className="flex-1 bg-white border border-border-main rounded-lg px-2 py-1 text-[13px] font-bold"
-                    value={intendedYear}
-                    onChange={e => setIntendedYear(e.target.value)}
-                  >
-                    <option value="">Seçiniz...</option>
-                    {overdueYears.map(y => <option key={y} value={y}>{y}</option>)}
-                  </select>
-                </div>
-              )}
-            </div>
-          )}
           <div className="flex gap-3">
             <button onClick={onClose} className="flex-1 py-3 rounded-xl border border-border-main text-text-secondary font-bold">İptal</button>
             <button onClick={handleSave} disabled={isPending}
-              className="flex-1 btn-primary py-3 disabled:opacity-40">
+              className="flex-[2] btn-primary py-3 disabled:opacity-40">
               {isPending ? '...' : 'Kaydet ✓'}
             </button>
           </div>
@@ -1512,7 +1428,20 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord }: {
 
   return (
     <div className="mb-8 mt-8">
-      <h3 className="text-[16px] font-extrabold text-text-primary mb-3">Parazit Takvimi Matrisi</h3>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+        <h3 className="text-[16px] font-extrabold text-text-primary">Parazit Takvimi Matrisi</h3>
+        <div className="flex flex-wrap items-center gap-2">
+          {onNewRecord && (
+            <button 
+              onClick={() => onNewRecord('', '', new Date().toISOString())}
+              className="flex items-center gap-2 px-3 py-2 bg-success/5 text-success hover:bg-success/10 transition-all rounded-xl border border-success/20 group shadow-sm"
+            >
+              <span className="text-[16px] group-hover:scale-110 transition-transform">✅</span>
+              <span className="text-[11px] font-black uppercase tracking-wider">Yapıldı Kaydı Ekle</span>
+            </button>
+          )}
+        </div>
+      </div>
       <div className="overflow-x-auto border border-slate-300 rounded-lg shadow-sm">
         <table className="w-full text-[12px] text-left border-collapse min-w-[800px]">
           <thead>
@@ -1580,12 +1509,11 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord }: {
   )
 }
 
-export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: allRecords, templates: allTemplates, isTab = false, categoryFilter }: {
-  pet: Pet; setupProfile: SetupProfile; vaccineRecords: VRecord[]; templates: Template[]; isTab?: boolean; categoryFilter?: 'vaccine' | 'parasite'
+export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: allRecords, templates: allTemplates, components = [], isTab = false, categoryFilter }: {
+  pet: Pet; setupProfile: SetupProfile; vaccineRecords: VRecord[]; templates: Template[]; components?: VComponent[]; isTab?: boolean; categoryFilter?: 'vaccine' | 'parasite'
 }) {
   const router = useRouter()
-  // Optimization: Simplified tabs for embedded mode
-  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'records'>(isTab ? 'schedule' : 'overview')
+
 
   // Filter templates and records based on categoryFilter and is_active status
   const templates = (categoryFilter 
@@ -1820,6 +1748,7 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
   const [showBatchScan, setShowBatchScan] = useState(false)
   const [isHistoricalImporting, setIsHistoricalImporting] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const [dismissedRabiesPrompt, setDismissedRabiesPrompt] = useState(false)
 
   // Computed stats
   const overdueCount = vaccineRecords.filter(r => r.status === 'overdue').length
@@ -1827,6 +1756,12 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
   const dueRecords = vaccineRecords.filter(r => r.status === 'due' || r.status === 'scheduled')
     .sort((a, b) => new Date(a.due_at || '').getTime() - new Date(b.due_at || '').getTime())
   const nextDue = dueRecords[0]
+  
+  // Progressive Profiling: Check if Rabies is completed to show Phase 3 prompt
+  const hasCompletedRabies = vaccineRecords.some(r => 
+    r.status === 'completed' && 
+    (r.vaccine_code?.toLowerCase() === 'rabies' || r.vaccine_name.toLowerCase().includes('kuduz'))
+  )
 
   const [filterYear, setFilterYear] = useState<string>('all')
   const [filterVaccine, setFilterVaccine] = useState<string>('all')
@@ -1882,15 +1817,6 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
     setManualConfig({ ...manualConfig, show: false, initialData: null })
     setShowBatchScan(false)
   }
-
-  const TABS = isTab ? [
-    { id: 'schedule', label: 'Yaklaşan Plan', icon: '📅' },
-    { id: 'records', label: 'Tüm Kayıtlar & Matris', icon: '📊' },
-  ] : [
-    { id: 'overview', label: 'Genel Bakış', icon: '🏠' },
-    { id: 'schedule', label: 'Takvim', icon: '📅' },
-    { id: 'records', label: 'Kayıtlar', icon: '📋' },
-  ] as const
 
   // Extract unique historical values for suggestions
   const historicalSuggestions = useMemo(() => {
@@ -1948,6 +1874,8 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
           record={quickMarkRecord} 
           allRecords={vaccineRecords} 
           suggestions={historicalSuggestions}
+          templates={templates}
+          components={components}
           onClose={() => setQuickMarkRecord(null)} 
           onDone={refreshData} 
         />
@@ -1995,6 +1923,28 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
           }}
           onDone={refreshData}
         />
+      )}
+
+      {/* ── Progressive Profiling: Phase 3 (Resmi Kayıtlar) Smart Card ── */}
+      {hasCompletedRabies && !dismissedRabiesPrompt && (
+        <div className="p-5 bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/20 rounded-[24px] flex flex-col gap-3 relative overflow-hidden group shadow-sm animate-fade-in mt-2">
+          <button onClick={() => setDismissedRabiesPrompt(true)} className="absolute top-4 right-4 text-primary/40 hover:text-primary transition-colors">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+          <div className="flex items-start gap-4 relative z-10 pr-6">
+            <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center text-[24px] shrink-0 border border-primary/10">🛂</div>
+            <div>
+              <p className="text-[11px] font-black text-primary uppercase tracking-widest mb-1">Resmi Kayıtlar Eksik</p>
+              <p className="text-[15px] font-extrabold text-text-primary leading-snug">{pet.name} için Kuduz aşısı kaydedildi!</p>
+              <p className="text-[13px] font-medium text-text-secondary mt-1.5 leading-relaxed">
+                Seyahatlerde veya veteriner değişikliklerinde pasaport taşıma derdine son. Çip ve pasaport numaranızı dijital kimliğe işleyelim mi?
+              </p>
+            </div>
+          </div>
+          <button onClick={() => alert('Gelecek Sprint: Dijital Kimlik/Mikroçip kayıt modalı açılacak.')} className="btn-primary py-3 text-[14px] mt-1 relative z-10 shadow-sm self-start px-6">
+            Kimlik Bilgilerini Ekle →
+          </button>
+        </div>
       )}
       {showOverdueList && overdueCount > 0 && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" onClick={() => setShowOverdueList(false)}>
@@ -2098,18 +2048,9 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
         </div>
       )}
 
-      {/* Tabs & Quick Settings */}
+      {/* Quick Settings */}
       {!isTab && (
-        <div className="flex items-center gap-2">
-        <div className="flex-1 flex bg-bg-main border border-border-main rounded-2xl p-1 gap-1">
-          {TABS.map(t => (
-            <button key={t.id} onClick={() => setActiveTab(t.id as any)}
-              className={`flex-1 py-2.5 rounded-xl text-[12px] font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${activeTab === t.id ? 'bg-white shadow-sm text-primary' : 'text-text-secondary hover:text-text-primary'}`}>
-              <span>{t.icon}</span><span className="hidden sm:block">{t.label}</span>
-            </button>
-          ))}
-        </div>
-        
+        <div className="flex items-center justify-end">
         <div className="relative">
           <button 
             onClick={() => setShowSettings(!showSettings)}
@@ -2160,43 +2101,8 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
       </div>
       )}
 
-      {/* ── TAB: OVERVIEW (Only for non-tab mode) ── */}
-      {activeTab === 'overview' && !isTab && (
-        <div className="flex flex-col gap-4 animate-fadeIn">
-          {overdueCount > 0 && (
-            <div className="p-4 bg-error/5 border border-error/20 rounded-2xl flex items-start gap-3">
-              <span className="text-[22px]">🔴</span>
-              <div>
-                <p className="font-bold text-error text-[14px]">{overdueCount} {categoryFilter === 'parasite' ? 'parazit uygulaması' : 'aşı'} gecikmiş durumda</p>
-                <p className="text-[12px] text-text-secondary mt-0.5">Bu işlemleri en kısa sürede yaptırmanız önerilir.</p>
-              </div>
-            </div>
-          )}
-          {dueRecords.slice(0, 3).map(r => (
-            <div key={r.id} className="card-base p-4 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <span className="text-[20px]">{STATUS_ICON[r.status] ?? '📌'}</span>
-                <div>
-                  <p className="font-bold text-text-primary text-[14px]">{getDisplayName(r.vaccine_name, r.vaccine_code)}</p>
-                  {r.due_at && <p className="text-[12px] text-text-secondary">{new Date(r.due_at).toLocaleDateString('tr-TR')}</p>}
-                </div>
-              </div>
-              <button onClick={() => setQuickMarkRecord(r)} className="text-[12px] font-bold text-primary hover:underline shrink-0">Yapıldı</button>
-            </div>
-          ))}
-          {dueRecords.length === 0 && completedCount > 0 && (
-            <div className="card-base p-8 text-center">
-              <p className="text-[32px] mb-2">🎉</p>
-              <p className="font-extrabold text-text-primary text-[16px]">Tüm {categoryFilter === 'parasite' ? 'parazit uygulamaları' : 'aşılar'} güncel!</p>
-              <p className="text-[13px] text-text-secondary mt-1">Bekleyen bir işlem bulunmuyor.</p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── TAB: RECORDS (Matrix + History) ── */}
-      {(activeTab === 'records' || isTab) && (
-        <div className="flex flex-col gap-3">
+      {/* ── RECORDS (Matrix) ── */}
+      <div className="flex flex-col gap-3">
           {(!categoryFilter || categoryFilter === 'vaccine') && (
             <ProtocolTable 
               pet={pet} 
@@ -2225,11 +2131,10 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
               }}
             />
           )}
-        </div>
-      )}
+      </div>
 
       {/* ── FILTER UI (Common for Schedule & Records lists) ── */}
-      {(activeTab === 'records' || activeTab === 'schedule' || isTab) && vaccineRecords.length > 0 && (
+      {vaccineRecords.length > 0 && (
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 animate-fadeIn">
           <select 
             value={filterYear}
@@ -2250,12 +2155,11 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
         </div>
       )}
 
-      {/* ── TAB: SCHEDULE (Yaklaşan Plan) ── */}
-      {(activeTab === 'schedule' || isTab) && (
-        <div className="flex flex-col gap-2 animate-fadeIn mt-2">
-          {isTab && <h3 className="text-[16px] font-extrabold text-text-primary mb-1 mt-2">Yaklaşan Planlar</h3>}
-          {/* If embedded, show the warning here too */}
-          {isTab && overdueCount > 0 && (
+      {/* ── SCHEDULE (Yaklaşan Plan) ── */}
+      <div className="flex flex-col gap-2 animate-fadeIn mt-2">
+        <h3 className="text-[16px] font-extrabold text-text-primary mb-1 mt-2">Yaklaşan Planlar</h3>
+        {/* If embedded, show the warning here too */}
+        {overdueCount > 0 && (
             <div className="p-3 bg-error/5 border border-error/20 rounded-2xl flex items-center justify-between gap-3 mb-2">
               <div className="flex items-center gap-2">
                 <span className="text-[18px]">🔴</span>
@@ -2317,12 +2221,10 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
               </div>
             )
           })}
-        </div>
-      )}
+      </div>
 
       {/* ── KAYIT GEÇMİŞİ (Completed Records) ── */}
-      {(activeTab === 'records' || activeTab === 'schedule' || isTab) && (
-        <div className="flex flex-col gap-2 mt-4">
+      <div className="flex flex-col gap-2 mt-4">
           <h3 className="text-[16px] font-extrabold text-text-primary mb-1">Kayıt Geçmişi</h3>
           {filteredRecords.filter(r => r.status === 'completed').length === 0 ? (
             <div className="card-base p-8 flex flex-col items-center justify-center text-center mt-2">
@@ -2370,8 +2272,7 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
               )}
             </div>
           ))}
-        </div>
-      )}
+      </div>
 
     </div>
   )

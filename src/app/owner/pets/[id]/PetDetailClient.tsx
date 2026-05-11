@@ -9,16 +9,16 @@ import { useState } from 'react'
 
 const genderLabel: Record<string, string> = { male: 'Erkek', female: 'Dişi', unknown: 'Bilinmiyor' }
 
-const TABS = ['Özet', 'Sağlık Geçmişi', 'Beslenme', 'Veteriner', 'Belgeler', 'Aile', 'Raporlar'] as const
+const TABS = ['Özet', 'Sağlık Geçmişi', 'Beslenme', 'Bakım', 'Veteriner', 'Belgeler', 'Aile', 'Raporlar'] as const
 type Tab = typeof TABS[number]
 
 export default function PetDetailClient({ pet, age, score, overdue, upcoming, schedules, vaccineRecords, diseases, allergies, medications, growthRecords, appointments, nutritionLogs, payments, subscription, setupProfile, templates }: any) {
   const [activeTab, setActiveTab] = useState<Tab>('Özet')
-  const [timelineFilter, setTimelineFilter] = useState('Aşılar')
+  const [timelineFilter, setTimelineFilter] = useState('Aşı & Parazit')
 
   const switchToVaccines = () => {
     setActiveTab('Sağlık Geçmişi')
-    setTimelineFilter('Aşılar')
+    setTimelineFilter('Aşı & Parazit')
     // Find the tabs element and scroll to it
     const tabsElement = document.getElementById('pet-tabs')
     if (tabsElement) {
@@ -26,8 +26,6 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
     }
   }
 
-  const riskLevel = score >= 80 ? 'Düşük' : score >= 50 ? 'Orta' : 'Yüksek'
-  const riskColor = score >= 80 ? 'text-green-600 bg-green-50' : score >= 50 ? 'text-amber-600 bg-amber-50' : 'text-red-600 bg-red-50'
 
   // Build unified timeline
   const timeline: any[] = [
@@ -48,8 +46,7 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
   ].sort((a, b) => (b.date || '').localeCompare(a.date || ''))
 
   const filterMap: Record<string, string[]> = {
-    'Aşılar': ['vaccine'],
-    'Parazit': ['parasite'],
+    'Aşı & Parazit': ['vaccine', 'parasite'],
     'Tedaviler': ['disease', 'medication'],
     'Veteriner': ['vet'],
   }
@@ -60,9 +57,9 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
     <div className="flex flex-col gap-6 pb-20 w-full mx-auto">
 
       {/* Back */}
-      <Link href="/owner/pets" className="flex items-center gap-2 text-[14px] font-bold text-text-secondary hover:text-primary transition-colors group -mb-2">
+      <Link href="/owner/dashboard" className="flex items-center gap-2 text-[14px] font-bold text-text-secondary hover:text-primary transition-colors group -mb-2">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:-translate-x-0.5 transition-transform"><polyline points="15 18 9 12 15 6"/></svg>
-        Listeye Dön
+        Ana Sayfa'ya Dön
       </Link>
 
       {/* ── Hero Card ── */}
@@ -75,7 +72,6 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-3 mb-1">
               <h1 className="text-[28px] font-extrabold text-text-primary">{pet.name}</h1>
-              <span className={`text-[11px] font-black px-3 py-1 rounded-full ${riskColor}`}>Risk: {riskLevel}</span>
               {overdue > 0 && (
                 <button onClick={switchToVaccines} className="text-[11px] font-black px-3 py-1 rounded-full bg-red-100 text-red-700 hover:bg-red-200 hover:-translate-y-0.5 transition-all shadow-sm">
                   ⚠ {overdue} Gecikmiş
@@ -86,52 +82,76 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
             <div className="flex flex-wrap gap-2 mt-2">
               {pet.birth_date && <span className="text-[12px] bg-bg-main border border-border-main px-3 py-1 rounded-lg font-semibold text-text-secondary">🎂 {age.text} ({age.label})</span>}
               {pet.microchip_no && <span className="text-[12px] bg-bg-main border border-border-main px-3 py-1 rounded-lg font-semibold text-text-secondary">📡 {pet.microchip_no}</span>}
+              {growthRecords && growthRecords.length > 0 && growthRecords[0].weight_kg && <span className="text-[12px] bg-bg-main border border-border-main px-3 py-1 rounded-lg font-semibold text-text-secondary">⚖️ {growthRecords[0].weight_kg} kg</span>}
+              {growthRecords && growthRecords.length > 0 && growthRecords[0].height_cm && <span className="text-[12px] bg-bg-main border border-border-main px-3 py-1 rounded-lg font-semibold text-text-secondary">📏 {growthRecords[0].height_cm} cm</span>}
             </div>
           </div>
           <Link href={`/owner/pets/${pet.id}/edit`} className="btn-secondary text-[13px] shrink-0">Düzenle</Link>
         </div>
       </div>
 
-      {/* ── Care Score Dashboard ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: 'Care Score', value: `${score}`, sub: score >= 80 ? 'Mükemmel' : score >= 50 ? 'İyi' : 'Dikkat', color: score >= 80 ? 'text-green-600' : score >= 50 ? 'text-amber-500' : 'text-red-500' },
-          { label: 'Gecikmiş Görev', value: `${overdue}`, sub: overdue === 0 ? 'Harika!' : 'İşlem gerekli', color: overdue === 0 ? 'text-green-600' : 'text-red-500' },
-          { label: 'Aşı Kaydı', value: `${vaccineRecords?.length ?? 0}`, sub: 'Toplam kayıt', color: 'text-primary' },
-          { label: 'Sağlık Olayı', value: `${diseases?.length ?? 0}`, sub: 'Kayıtlı', color: 'text-text-primary' },
-        ].map(w => (
-          <div key={w.label} className="card-base p-4 flex flex-col items-center text-center">
-            <p className={`text-[28px] font-black ${w.color}`}>{w.value}</p>
-            <p className="text-[11px] font-black text-text-secondary uppercase tracking-wide mt-0.5">{w.label}</p>
-            <p className="text-[11px] text-text-secondary mt-1">{w.sub}</p>
-          </div>
-        ))}
-      </div>
+      {/* ── Progressive Profiling / Profili Zenginleştir Widget ── */}
+      {(() => {
+        const tasks = []
+        // Faz 1: Onboarding
+        if (!pet.avatar_url) tasks.push({ label: 'Fotoğraf Ekle', link: `/owner/pets/${pet.id}/edit` })
+        
+        // Faz 2: Sağlık & Veteriner
+        if (!pet.vet_name) tasks.push({ label: 'Veteriner Seç', link: `/owner/pets/${pet.id}/edit` })
+        if (!vaccineRecords || vaccineRecords.length === 0) tasks.push({ label: 'İlk Aşısını Gir', onClick: switchToVaccines })
+        
+        // Faz 3: Resmi Kayıtlar (Çip & Pasaport)
+        if (!pet.microchip_no) tasks.push({ label: 'Kimlik & Çip Bilgisi', link: `/owner/pets/${pet.id}/edit` })
+        
+        // Faz 4: Beslenme (Kilo, Mama)
+        const hasWeight = growthRecords && growthRecords.length > 0 && growthRecords[0].weight_kg;
+        const hasNutrition = nutritionLogs && nutritionLogs.length > 0;
+        if (!hasWeight || !hasNutrition) tasks.push({ label: 'Kilo & Mama Bilgisi', onClick: () => { setActiveTab('Beslenme'); window.scrollTo(0, 0); } })
+        
+        // Faz 6: SOS & Güvenlik
+        const hasSos = pet.sos_contacts && pet.sos_contacts.length > 0 && pet.sos_contacts[0].phone;
+        if (!hasSos) {
+          tasks.push({ label: 'SOS Ağı Kur', onClick: () => { setActiveTab('Aile'); window.scrollTo(0, 0); } })
+        }
 
-      {/* ── Upcoming Actions ── */}
-      {upcoming.length > 0 && (
-        <div className="card-base p-5">
-          <h2 className="text-[13px] font-black text-text-secondary uppercase tracking-widest mb-3">Yaklaşan Görevler</h2>
-          <div className="flex flex-col gap-2">
-            {upcoming.map((s: any) => {
-              const daysLeft = Math.ceil((new Date(s.due_date).getTime() - Date.now()) / 86400000)
-              const cls = daysLeft <= 3 ? 'bg-red-50 border-red-200 text-red-700' : daysLeft <= 7 ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-green-50 border-green-200 text-green-700'
-              return (
-                <div key={s.id} className="flex items-center justify-between p-3 rounded-xl border border-border-main bg-bg-main/50">
-                  <div>
-                    <p className="font-bold text-text-primary text-[14px]">{s.title || s.vaccines?.name || 'Bakım'}</p>
-                    <p className="text-[12px] text-text-secondary">{new Date(s.due_date).toLocaleDateString('tr-TR')}</p>
-                  </div>
-                  <span className={`text-[11px] font-black px-2.5 py-1 rounded-full border ${cls}`}>
-                    {daysLeft === 0 ? 'Bugün' : `${daysLeft} gün`}
-                  </span>
-                </div>
-              )
-            })}
+        if (tasks.length === 0) return null
+
+        // Matris toplam görev sayısı (Örnek olarak 6 kabul edelim)
+        const totalTasks = 6
+        const completedTasks = totalTasks - tasks.length
+        const progress = Math.max(15, Math.round((completedTasks / totalTasks) * 100))
+
+        return (
+          <div className="card-base p-5 border-l-4 border-l-primary shadow-sm bg-gradient-to-br from-white to-primary/5">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-[14px] font-extrabold text-text-primary flex items-center gap-2">
+                🌟 Profili Zenginleştir 
+                <span className="text-[11px] font-bold text-primary bg-primary-soft px-2 py-0.5 rounded-full">% {progress}</span>
+              </h2>
+            </div>
+            <div className="w-full bg-border-main rounded-full h-1.5 mb-3 overflow-hidden">
+              <div className="bg-primary h-1.5 rounded-full transition-all duration-1000" style={{ width: `${progress}%` }}></div>
+            </div>
+            <p className="text-[11px] text-text-secondary mb-4 leading-relaxed">
+              Odi.Pet'in akıllı özelliklerinden tam faydalanmak için aşağıdaki eksik bilgileri tamamlayın.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {tasks.map((t, i) => (
+                t.onClick ? (
+                  <button key={i} onClick={t.onClick} className="text-[12px] font-bold px-3 py-2 rounded-xl border border-border-main bg-white text-text-secondary hover:text-primary hover:border-primary hover:bg-primary/5 transition-all flex items-center gap-1.5 shadow-sm">
+                    <span className="text-[14px] text-primary">+</span> {t.label}
+                  </button>
+                ) : (
+                  <Link key={i} href={t.link} className="text-[12px] font-bold px-3 py-2 rounded-xl border border-border-main bg-white text-text-secondary hover:text-primary hover:border-primary hover:bg-primary/5 transition-all flex items-center gap-1.5 shadow-sm">
+                    <span className="text-[14px] text-primary">+</span> {t.label}
+                  </Link>
+                )
+              ))}
+            </div>
           </div>
-          <button onClick={switchToVaccines} className="block w-full text-center text-primary text-[13px] font-bold mt-4 hover:underline">Tümünü Görüntüle →</button>
-        </div>
-      )}
+        )
+      })()}
+
 
       {/* ── Tabs ── */}
       <div id="pet-tabs" className="flex gap-1 bg-bg-main p-1 rounded-2xl border border-border-main overflow-x-auto">
@@ -146,6 +166,48 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
       {/* ── Tab: Özet ── */}
       {activeTab === 'Özet' && (
         <div className="flex flex-col gap-4">
+          
+          {/* ── Pet Stats Dashboard (Moved from Top) ── */}
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { label: 'Gecikmiş Görev', value: `${overdue}`, sub: overdue === 0 ? 'Harika!' : 'İşlem gerekli', color: overdue === 0 ? 'text-green-600' : 'text-red-500' },
+              { label: 'Aşı Kaydı', value: `${vaccineRecords?.length ?? 0}`, sub: 'Toplam kayıt', color: 'text-primary' },
+              { label: 'Sağlık Olayı', value: `${diseases?.length ?? 0}`, sub: 'Kayıtlı', color: 'text-text-primary' },
+            ].map(w => (
+              <div key={w.label} className="card-base p-4 flex flex-col items-center text-center">
+                <p className={`text-[28px] font-black ${w.color}`}>{w.value}</p>
+                <p className="text-[11px] font-black text-text-secondary uppercase tracking-wide mt-0.5">{w.label}</p>
+                <p className="text-[11px] text-text-secondary mt-1">{w.sub}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* ── Upcoming Actions (Moved from Top) ── */}
+          {upcoming.length > 0 && (
+            <div className="card-base p-5">
+              <h2 className="text-[13px] font-black text-text-secondary uppercase tracking-widest mb-3">Yaklaşan Görevler</h2>
+              <div className="flex flex-col gap-2">
+                {upcoming.map((s: any) => {
+                  const dueDate = s.due_at || s.due_date;
+                  const daysLeft = Math.ceil((new Date(dueDate).getTime() - Date.now()) / 86400000)
+                  const isInvalid = isNaN(daysLeft);
+                  const cls = daysLeft <= 3 ? 'bg-red-50 border-red-200 text-red-700' : daysLeft <= 7 ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-green-50 border-green-200 text-green-700'
+                  return (
+                    <div key={s.id} className="flex items-center justify-between p-3 rounded-xl border border-border-main bg-bg-main/50">
+                      <div>
+                        <p className="font-bold text-text-primary text-[14px]">{s.title || s.vaccine_name || s.vaccines?.name || 'Bakım'}</p>
+                        <p className="text-[12px] text-text-secondary">{!isInvalid ? new Date(dueDate).toLocaleDateString('tr-TR') : 'Tarih Belirtilmedi'}</p>
+                      </div>
+                      <span className={`text-[11px] font-black px-2.5 py-1 rounded-full border ${isInvalid ? 'bg-gray-50 border-gray-200 text-gray-500' : cls}`}>
+                        {isInvalid ? '—' : daysLeft === 0 ? 'Bugün' : `${daysLeft} gün`}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+              <button onClick={switchToVaccines} className="block w-full text-center text-primary text-[13px] font-bold mt-4 hover:underline">Tümünü Görüntüle →</button>
+            </div>
+          )}
           {/* Allergies */}
           {allergies && allergies.length > 0 && (
             <div className="card-base p-5">
@@ -197,29 +259,37 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
             ))}
           </div>
 
-          {(timelineFilter === 'Aşılar' || timelineFilter === 'Parazit') ? (
+          {timelineFilter === 'Aşı & Parazit' ? (
             <VaccineOSClient 
               pet={pet} 
               setupProfile={setupProfile} 
               vaccineRecords={vaccineRecords} 
               templates={templates} 
               isTab={true}
-              categoryFilter={timelineFilter === 'Parazit' ? 'parasite' : 'vaccine'}
             />
-          ) : filteredTimeline.length === 0 ? (
-            <div className="card-base p-8 text-center text-text-secondary">Bu kategoride kayıt bulunamadı.</div>
           ) : (
-            <div className="card-base divide-y divide-border-main overflow-hidden">
-              {filteredTimeline.map((e, i) => (
-                <div key={i} className="flex items-start gap-4 p-4 hover:bg-bg-main/50 transition-colors">
-                  <span className="text-[24px] shrink-0 mt-0.5">{e.icon}</span>
-                  <div className="flex-1">
-                    <p className="font-bold text-text-primary text-[14px]">{e.label}</p>
-                    {e.sub && <p className="text-[12px] text-text-secondary capitalize">{e.sub}</p>}
-                  </div>
-                  <p className="text-[12px] text-text-secondary font-medium shrink-0">{e.date ? new Date(e.date).toLocaleDateString('tr-TR') : '—'}</p>
+            <div className="flex flex-col gap-3">
+              {timelineFilter === 'Tedaviler' && (
+                <Link href={`/owner/pets/${pet.id}/treatments`} className="card-base p-4 text-center text-primary font-bold text-[14px] hover:bg-bg-main transition-colors block border border-primary/20 bg-primary/5">
+                  🏥 Kapsamlı Tedavi Takip Modülü'nü Aç →
+                </Link>
+              )}
+              {filteredTimeline.length === 0 ? (
+                <div className="card-base p-8 text-center text-text-secondary">Bu kategoride kayıt bulunamadı.</div>
+              ) : (
+                <div className="card-base divide-y divide-border-main overflow-hidden">
+                  {filteredTimeline.map((e, i) => (
+                    <div key={i} className="flex items-start gap-4 p-4 hover:bg-bg-main/50 transition-colors">
+                      <span className="text-[24px] shrink-0 mt-0.5">{e.icon}</span>
+                      <div className="flex-1">
+                        <p className="font-bold text-text-primary text-[14px]">{e.label}</p>
+                        {e.sub && <p className="text-[12px] text-text-secondary capitalize">{e.sub}</p>}
+                      </div>
+                      <p className="text-[12px] text-text-secondary font-medium shrink-0">{e.date ? new Date(e.date).toLocaleDateString('tr-TR') : '—'}</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           )}
         </div>
@@ -250,6 +320,19 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
           <Link href={`/owner/pets/${pet.id}/nutrition`} className="card-base p-4 text-center text-primary font-bold text-[14px] hover:bg-bg-main transition-colors">
             Tam Beslenme Modülü →
           </Link>
+        </div>
+      )}
+
+      {/* ── Tab: Bakım ── */}
+      {activeTab === 'Bakım' && (
+        <div className="flex flex-col gap-4">
+          <div className="card-base p-5">
+            <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest mb-4">Günlük Bakım Rutini</h3>
+            <p className="text-[14px] text-text-secondary mb-4">Tüy tarama, tırnak kesimi ve banyo gibi rutin görevleri takip edin.</p>
+            <Link href={`/owner/pets/${pet.id}/care`} className="card-base p-4 text-center text-primary font-bold text-[14px] hover:bg-bg-main transition-colors block">
+              Tam Bakım Modülü →
+            </Link>
+          </div>
         </div>
       )}
 
@@ -330,6 +413,7 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
           petId={pet.id}
           petName={pet.name}
           plan={subscription?.plan ?? 'free'}
+          initialSos={pet.sos_contacts}
         />
       )}
 
@@ -355,26 +439,6 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
           </div>
         </div>
       )}
-
-      {/* ── Quick Links ── */}
-      <div className="grid grid-cols-2 gap-3">
-        <button onClick={switchToVaccines} className="card-base p-4 flex items-center gap-3 hover:bg-bg-main transition-colors group text-left">
-          <span className="text-[24px]">💉</span>
-          <span className="font-bold text-text-primary text-[14px] group-hover:text-primary transition-colors">Aşı OS</span>
-        </button>
-        <Link href={`/owner/care?pet=${pet.id}`} className="card-base p-4 flex items-center gap-3 hover:bg-bg-main transition-colors group">
-          <span className="text-[24px]">❤️</span>
-          <span className="font-bold text-text-primary text-[14px] group-hover:text-primary transition-colors">Bakım Rutini</span>
-        </Link>
-        <Link href={`/owner/pets/${pet.id}/nutrition`} className="card-base p-4 flex items-center gap-3 hover:bg-bg-main transition-colors group">
-          <span className="text-[24px]">🍽️</span>
-          <span className="font-bold text-text-primary text-[14px] group-hover:text-primary transition-colors">Beslenme</span>
-        </Link>
-        <Link href={`/owner/ai-vet`} className="card-base p-4 flex items-center gap-3 hover:bg-bg-main transition-colors group">
-          <span className="text-[24px]">🤖</span>
-          <span className="font-bold text-text-primary text-[14px] group-hover:text-primary transition-colors">AI Vet</span>
-        </Link>
-      </div>
 
     </div>
   )

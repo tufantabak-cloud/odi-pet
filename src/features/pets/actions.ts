@@ -37,5 +37,5 @@ export async function addPet(formData: FormData) {
 
   revalidatePath('/owner/dashboard')
   revalidatePath('/owner/pets')
-  redirect('/owner/pets')
+  redirect('/owner/dashboard')
 }
