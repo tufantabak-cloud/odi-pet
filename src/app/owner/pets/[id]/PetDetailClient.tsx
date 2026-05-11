@@ -102,6 +102,7 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
 
   const filterMap: Record<string, string[]> = {
     'Aşı & Parazit': ['vaccine', 'parasite'],
+    'Kilo & Boy': ['growth'],
     'Tedaviler': ['disease', 'medication'],
     'Veteriner': ['vet'],
   }
@@ -283,23 +284,6 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
               </div>
             </div>
           )}
-          {/* Growth */}
-          {growthRecords && growthRecords.length > 0 && (
-            <div className="card-base p-5">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest">Son Büyüme Kaydı</h3>
-                <div className="flex gap-2">
-                  <button onClick={() => { setActiveTab('Raporlar'); window.scrollTo(0,0); }} className="text-[11px] font-bold text-text-secondary bg-border-main/50 px-2.5 py-1 rounded-full hover:bg-border-main transition-colors shadow-sm">Grafiği Gör</button>
-                  <button onClick={() => setQuickUpdateConfig({ title: 'Yeni Gelişim Kaydı', desc: 'Güncel kilo ve boy oranlarını girin.', endpoint: `/api/pets/${pet.id}/growth`, method: 'POST', fields: [{ name: 'weight_kg', type: 'number', label: 'Kilo (kg)', placeholder: 'Örn: 4.5', required: true }, { name: 'height_cm', type: 'number', label: 'Boy (cm)', placeholder: 'Örn: 35.5', required: false }] })} className="text-[11px] font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full hover:bg-primary/20 transition-colors shadow-sm">+ Yeni Gir</button>
-                </div>
-              </div>
-              <div className="flex gap-6">
-                {growthRecords[0].weight_kg && <div className="text-center"><p className="text-[28px] font-black text-primary">{growthRecords[0].weight_kg}</p><p className="text-[11px] text-text-secondary font-bold uppercase">kg</p></div>}
-                {growthRecords[0].height_cm && <div className="text-center"><p className="text-[28px] font-black text-primary">{growthRecords[0].height_cm}</p><p className="text-[11px] text-text-secondary font-bold uppercase">cm</p></div>}
-              </div>
-              <p className="text-[12px] text-text-secondary mt-2">{new Date(growthRecords[0].recorded_at).toLocaleDateString('tr-TR')}</p>
-            </div>
-          )}
           {/* Vet quick info */}
           {(pet.vet_name || pet.vet_phone) && (
             <div className="card-base p-5">
@@ -339,6 +323,48 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
               templates={templates} 
               isTab={true}
             />
+          ) : timelineFilter === 'Kilo & Boy' ? (
+            <div className="card-base p-5">
+              <div className="flex justify-between items-center mb-5">
+                <h3 className="text-[14px] font-black text-text-secondary uppercase tracking-widest">Kilo & Boy Gelişimi</h3>
+                <div className="flex gap-2">
+                  <button onClick={() => { setActiveTab('Raporlar'); window.scrollTo(0,0); }} className="text-[12px] font-bold text-text-secondary bg-border-main/50 px-3 py-1.5 rounded-full hover:bg-border-main transition-colors shadow-sm">Grafiği Gör</button>
+                  <button onClick={() => setQuickUpdateConfig({ title: 'Yeni Gelişim Kaydı', desc: 'Güncel kilo ve boy oranlarını girin.', endpoint: `/api/pets/${pet.id}/growth`, method: 'POST', fields: [{ name: 'weight_kg', type: 'number', label: 'Kilo (kg)', placeholder: 'Örn: 4.5', required: true }, { name: 'height_cm', type: 'number', label: 'Boy (cm)', placeholder: 'Örn: 35.5', required: false }] })} className="text-[12px] font-bold text-primary bg-primary/10 px-3 py-1.5 rounded-full hover:bg-primary/20 transition-colors shadow-sm">+ Yeni Gir</button>
+                </div>
+              </div>
+
+              {growthRecords && growthRecords.length > 0 ? (
+                <div className="flex flex-col gap-4">
+                  <div className="flex gap-6 p-4 rounded-xl border border-border-main bg-bg-main/50">
+                    {growthRecords[0].weight_kg && <div className="text-center"><p className="text-[32px] font-black text-primary">{growthRecords[0].weight_kg}</p><p className="text-[11px] text-text-secondary font-bold uppercase">kg</p></div>}
+                    {growthRecords[0].height_cm && <div className="text-center border-l border-border-main pl-6"><p className="text-[32px] font-black text-primary">{growthRecords[0].height_cm}</p><p className="text-[11px] text-text-secondary font-bold uppercase">cm</p></div>}
+                    <div className="ml-auto text-right self-end">
+                      <p className="text-[12px] text-text-secondary font-medium">Son Güncelleme</p>
+                      <p className="text-[13px] font-bold text-text-primary">{new Date(growthRecords[0].recorded_at).toLocaleDateString('tr-TR')}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <h4 className="text-[12px] font-black text-text-secondary uppercase mb-3 px-1">Geçmiş Kayıtlar</h4>
+                    <div className="flex flex-col gap-2">
+                      {growthRecords.map((g: any, i: number) => (
+                        <div key={i} className="flex justify-between items-center p-3 rounded-xl border border-border-main hover:bg-bg-main/50 transition-colors">
+                           <div className="flex items-center gap-4">
+                              <span className="text-[20px]">⚖️</span>
+                              <div>
+                                <p className="font-bold text-[14px] text-text-primary">{g.weight_kg ? `${g.weight_kg} kg` : ''} {g.height_cm ? `/ ${g.height_cm} cm` : ''}</p>
+                                <p className="text-[12px] text-text-secondary">{new Date(g.recorded_at).toLocaleDateString('tr-TR')}</p>
+                              </div>
+                           </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-text-secondary text-[13px]">Henüz gelişim kaydı bulunmuyor.</div>
+              )}
+            </div>
           ) : (
             <div className="flex flex-col gap-3">
               {timelineFilter === 'Tedaviler' && (
