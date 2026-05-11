@@ -19,8 +19,13 @@ function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
     setError('')
     const fd = new FormData(e.target)
     try {
-      const res = await fetch(`/api/pets/${petId}`, { method: 'PATCH', body: fd })
-      if (!res.ok) throw new Error('Hata oluştu')
+      const endpoint = config.endpoint || `/api/pets/${petId}`
+      const method = config.method || 'PATCH'
+      const res = await fetch(endpoint, { method, body: fd })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Hata oluştu')
+      }
       router.refresh()
       onDone()
     } catch(err: any) {
@@ -41,7 +46,7 @@ function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
                {f.type === 'file' ? (
                  <input name={f.name} type="file" accept="image/*" className="input-base py-2.5 text-[13px]" required={f.required} />
                ) : (
-                 <input name={f.name} type={f.type} placeholder={f.placeholder} className="input-base py-3 text-[14px]" required={f.required} />
+                 <input name={f.name} type={f.type} step={f.type === 'number' ? 'any' : undefined} placeholder={f.placeholder} className="input-base py-3 text-[14px]" required={f.required} />
                )}
              </div>
           ))}
@@ -156,7 +161,7 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
         // Faz 4: Beslenme (Kilo, Mama)
         const hasWeight = growthRecords && growthRecords.length > 0 && growthRecords[0].weight_kg;
         const hasNutrition = nutritionLogs && nutritionLogs.length > 0;
-        if (!hasWeight) tasks.push({ label: 'Kilo Bilgisi Gir', onClick: () => { setActiveTab('Beslenme'); window.scrollTo(0, 0); } })
+        if (!hasWeight) tasks.push({ label: 'Kilo & Boy Bilgisi Gir', onClick: () => setQuickUpdateConfig({ title: 'Gelişim Bilgisi', desc: 'Gelişimi takip edebilmek için güncel kilo ve boyunu girin.', endpoint: `/api/pets/${pet.id}/growth`, method: 'POST', fields: [{ name: 'weight_kg', type: 'number', label: 'Kilo (kg)', placeholder: 'Örn: 4.5', required: true }, { name: 'height_cm', type: 'number', label: 'Boy (cm)', placeholder: 'Örn: 35.5', required: true }] }) })
         if (!hasNutrition) tasks.push({ label: 'Kullandığı Mamayı Ekle', onClick: () => { setActiveTab('Beslenme'); window.scrollTo(0, 0); } })
         
         // Faz 6: SOS & Güvenlik
@@ -281,7 +286,10 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
           {/* Growth */}
           {growthRecords && growthRecords.length > 0 && (
             <div className="card-base p-5">
-              <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest mb-3">Son Büyüme Kaydı</h3>
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest">Son Büyüme Kaydı</h3>
+                <button onClick={() => setQuickUpdateConfig({ title: 'Yeni Gelişim Kaydı', desc: 'Güncel kilo ve boy oranlarını girin.', endpoint: `/api/pets/${pet.id}/growth`, method: 'POST', fields: [{ name: 'weight_kg', type: 'number', label: 'Kilo (kg)', placeholder: 'Örn: 4.5', required: true }, { name: 'height_cm', type: 'number', label: 'Boy (cm)', placeholder: 'Örn: 35.5', required: true }] })} className="text-[11px] font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full hover:bg-primary/20 transition-colors shadow-sm">+ Yeni Gir</button>
+              </div>
               <div className="flex gap-6">
                 {growthRecords[0].weight_kg && <div className="text-center"><p className="text-[28px] font-black text-primary">{growthRecords[0].weight_kg}</p><p className="text-[11px] text-text-secondary font-bold uppercase">kg</p></div>}
                 {growthRecords[0].height_cm && <div className="text-center"><p className="text-[28px] font-black text-primary">{growthRecords[0].height_cm}</p><p className="text-[11px] text-text-secondary font-bold uppercase">cm</p></div>}
