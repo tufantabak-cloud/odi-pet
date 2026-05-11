@@ -6,6 +6,55 @@ import ReportsTab from './ReportsTab'
 import InsuranceWidget from '@/components/insurance/InsuranceWidget'
 import VaccineOSClient from './vaccines/VaccineOSClient'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+
+function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const router = useRouter()
+  
+  async function handleSubmit(e: any) {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    const fd = new FormData(e.target)
+    try {
+      const res = await fetch(`/api/pets/${petId}`, { method: 'PATCH', body: fd })
+      if (!res.ok) throw new Error('Hata oluştu')
+      router.refresh()
+      onDone()
+    } catch(err: any) {
+      setError(err.message)
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-surface w-full max-w-sm rounded-[28px] p-6 shadow-2xl overflow-hidden animate-fade-in" onClick={e => e.stopPropagation()}>
+        <h3 className="text-[17px] font-extrabold text-text-primary mb-1">{config.title}</h3>
+        <p className="text-[13px] text-text-secondary mb-5 leading-relaxed">{config.desc}</p>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {config.fields.map((f: any) => (
+             <div key={f.name} className="flex flex-col gap-1.5">
+               <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider">{f.label}</label>
+               {f.type === 'file' ? (
+                 <input name={f.name} type="file" accept="image/*" className="input-base py-2.5 text-[13px]" required={f.required} />
+               ) : (
+                 <input name={f.name} type={f.type} placeholder={f.placeholder} className="input-base py-3 text-[14px]" required={f.required} />
+               )}
+             </div>
+          ))}
+          {error && <p className="text-[12px] text-error font-bold p-2 bg-error/10 rounded-lg text-center mt-1">{error}</p>}
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose} className="flex-1 py-3.5 rounded-xl border-2 border-border-main text-text-secondary font-bold text-[14px]">İptal</button>
+            <button type="submit" disabled={loading} className="flex-[2] btn-primary py-3.5 disabled:opacity-50 shadow-sm text-[14px]">{loading ? 'Kaydediliyor...' : 'Kaydet ✓'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
 
 const genderLabel: Record<string, string> = { male: 'Erkek', female: 'Dişi', unknown: 'Bilinmiyor' }
 
@@ -14,6 +63,7 @@ type Tab = typeof TABS[number]
 
 export default function PetDetailClient({ pet, age, score, overdue, upcoming, schedules, vaccineRecords, diseases, allergies, medications, growthRecords, appointments, nutritionLogs, payments, subscription, setupProfile, templates }: any) {
   const [activeTab, setActiveTab] = useState<Tab>('Özet')
+  const [quickUpdateConfig, setQuickUpdateConfig] = useState<any>(null)
   const [timelineFilter, setTimelineFilter] = useState('Aşı & Parazit')
 
   const switchToVaccines = () => {
@@ -94,14 +144,14 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
       {(() => {
         const tasks = []
         // Faz 1: Onboarding
-        if (!pet.avatar_url) tasks.push({ label: 'Fotoğraf Ekle', link: `/owner/pets/${pet.id}/edit` })
+        if (!pet.avatar_url) tasks.push({ label: 'Fotoğraf Ekle', onClick: () => setQuickUpdateConfig({ title: 'Fotoğraf Ekle', desc: 'Petinizin profilini tamamlamak için bir fotoğraf yükleyin.', fields: [{ name: 'avatar', type: 'file', label: 'Fotoğraf Seç', required: true }] }) })
         
         // Faz 2: Sağlık & Veteriner
-        if (!pet.vet_name) tasks.push({ label: 'Veteriner Bilgisi Gir', link: `/owner/pets/${pet.id}/edit` })
+        if (!pet.vet_name) tasks.push({ label: 'Veteriner Bilgisi Gir', onClick: () => setQuickUpdateConfig({ title: 'Veteriner Bilgisi', desc: 'Sağlık kayıtlarının eşleşebilmesi için veteriner bilgisini girin.', fields: [{ name: 'vet_name', type: 'text', label: 'Veteriner Adı', placeholder: 'Örn: Dr. Ali Yılmaz', required: true }, { name: 'vet_phone', type: 'tel', label: 'Telefon (Opsiyonel)', placeholder: '05xx xxx xx xx' }] }) })
         if (!vaccineRecords || vaccineRecords.length === 0) tasks.push({ label: 'İlk Aşısını Gir', onClick: switchToVaccines })
         
         // Faz 3: Resmi Kayıtlar (Çip & Pasaport)
-        if (!pet.microchip_no) tasks.push({ label: 'Kimlik & Çip Bilgisi', link: `/owner/pets/${pet.id}/edit` })
+        if (!pet.microchip_no) tasks.push({ label: 'Kimlik & Çip Bilgisi', onClick: () => setQuickUpdateConfig({ title: 'Kimlik & Çip', desc: 'Petinizin yasal kayıt numaralarını sisteme işleyin.', fields: [{ name: 'microchip_no', type: 'text', label: 'Mikroçip Numarası', placeholder: '15 Haneli No', required: true }, { name: 'passport_no', type: 'text', label: 'Pasaport Numarası (Opsiyonel)' }] }) })
         
         // Faz 4: Beslenme (Kilo, Mama)
         const hasWeight = growthRecords && growthRecords.length > 0 && growthRecords[0].weight_kg;
@@ -152,6 +202,16 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
         )
       })()}
 
+
+      {/* Quick Update Modal */}
+      {quickUpdateConfig && (
+        <QuickUpdateModal 
+          petId={pet.id} 
+          config={quickUpdateConfig} 
+          onClose={() => setQuickUpdateConfig(null)} 
+          onDone={() => setQuickUpdateConfig(null)} 
+        />
+      )}
 
       {/* ── Tabs ── */}
       <div id="pet-tabs" className="flex gap-1 bg-bg-main p-1 rounded-2xl border border-border-main overflow-x-auto">

@@ -56,26 +56,24 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     }
   }
 
-  const payload: any = {
-    name: str(fd, 'name'),
-    breed: str(fd, 'breed'),
-    avatar_url: avatarUrl,
-    birth_date: str(fd, 'birth_date'),
-    gender: str(fd, 'gender'),
-    color: str(fd, 'color'),
-    microchip_no: str(fd, 'microchip_no'),
-    passport_no: str(fd, 'passport_no'),
-    tattoo_no: str(fd, 'tattoo_no'),
-    pedigree_sire: str(fd, 'pedigree_sire'),
-    pedigree_dam: str(fd, 'pedigree_dam'),
-    vet_name: str(fd, 'vet_name'),
-    vet_phone: str(fd, 'vet_phone'),
-    city: str(fd, 'city'),
-    district: str(fd, 'district'),
-  }
-
-  // Remove nulls to avoid overwriting with null if not provided (optional, depending on requirements)
-  // For now, we assume all fields in the form are submitted.
+  const payload: any = {}
+  if (fd.has('name')) payload.name = str(fd, 'name')
+  if (fd.has('breed')) payload.breed = str(fd, 'breed')
+  if (avatarUrl !== pet.avatar_url) payload.avatar_url = avatarUrl
+  if (fd.has('birth_date')) payload.birth_date = str(fd, 'birth_date')
+  if (fd.has('gender')) payload.gender = str(fd, 'gender')
+  if (fd.has('color')) payload.color = str(fd, 'color')
+  if (fd.has('microchip_no')) payload.microchip_no = str(fd, 'microchip_no')
+  if (fd.has('passport_no')) payload.passport_no = str(fd, 'passport_no')
+  if (fd.has('tattoo_no')) payload.tattoo_no = str(fd, 'tattoo_no')
+  if (fd.has('pedigree_sire')) payload.pedigree_sire = str(fd, 'pedigree_sire')
+  if (fd.has('pedigree_dam')) payload.pedigree_dam = str(fd, 'pedigree_dam')
+  if (fd.has('vet_name')) payload.vet_name = str(fd, 'vet_name')
+  if (fd.has('vet_phone')) payload.vet_phone = str(fd, 'vet_phone')
+  if (fd.has('city')) payload.city = str(fd, 'city')
+  if (fd.has('district')) payload.district = str(fd, 'district')
+  if (fd.has('lifestyle')) payload.lifestyle = str(fd, 'lifestyle')
+  if (fd.has('size')) payload.size = str(fd, 'size')
 
   const { error: updateError } = await supabase
     .from('pets')
