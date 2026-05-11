@@ -156,7 +156,8 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
         // Faz 4: Beslenme (Kilo, Mama)
         const hasWeight = growthRecords && growthRecords.length > 0 && growthRecords[0].weight_kg;
         const hasNutrition = nutritionLogs && nutritionLogs.length > 0;
-        if (!hasWeight || !hasNutrition) tasks.push({ label: 'Kilo & Mama Bilgisi', onClick: () => { setActiveTab('Beslenme'); window.scrollTo(0, 0); } })
+        if (!hasWeight) tasks.push({ label: 'Kilo Bilgisi Gir', onClick: () => { setActiveTab('Beslenme'); window.scrollTo(0, 0); } })
+        if (!hasNutrition) tasks.push({ label: 'Kullandığı Mamayı Ekle', onClick: () => { setActiveTab('Beslenme'); window.scrollTo(0, 0); } })
         
         // Faz 6: SOS & Güvenlik
         const hasSos = pet.sos_contacts && pet.sos_contacts.length > 0 && pet.sos_contacts[0].phone;
