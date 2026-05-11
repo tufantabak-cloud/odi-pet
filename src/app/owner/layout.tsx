@@ -1,4 +1,5 @@
 import { ReactNode } from 'react'
+import Image from 'next/image'
 import { requireRole } from '@/lib/auth/get-current-profile'
 import { redirect } from 'next/navigation'
 import BottomNav from '@/components/BottomNav'
@@ -16,13 +17,17 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
 
       {/* Minimal Header */}
       <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border-main bg-surface/80 backdrop-blur-lg px-5 lg:px-10">
-        <Link href="/owner/dashboard" className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-hover shadow-md shadow-primary/25">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2a10 10 0 1 0 10 10H12V2z"/>
-            </svg>
+        <Link href="/owner/dashboard" className="flex items-center gap-2.5 hover:scale-[1.02] transition-transform">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl overflow-hidden shadow-sm shadow-primary/20 border border-border-main bg-white p-0.5">
+            <Image 
+              src="/logo.jpg" 
+              alt="Odi Logo" 
+              width={40} 
+              height={40}
+              className="w-full h-full object-cover rounded-lg"
+            />
           </div>
-          <span className="text-[20px] font-extrabold text-text-primary tracking-tight hidden sm:block">Odi</span>
+          <span className="text-[18px] font-black text-text-primary tracking-tighter hidden sm:block">Odi.Pet</span>
         </Link>
 
         <div className="flex items-center gap-3">
