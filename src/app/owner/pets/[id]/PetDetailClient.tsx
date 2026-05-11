@@ -161,7 +161,7 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
         // Faz 4: Beslenme (Kilo, Mama)
         const hasWeight = growthRecords && growthRecords.length > 0 && growthRecords[0].weight_kg;
         const hasNutrition = nutritionLogs && nutritionLogs.length > 0;
-        if (!hasWeight) tasks.push({ label: 'Kilo & Boy Bilgisi Gir', onClick: () => setQuickUpdateConfig({ title: 'Gelişim Bilgisi', desc: 'Gelişimi takip edebilmek için güncel kilo ve boyunu girin.', endpoint: `/api/pets/${pet.id}/growth`, method: 'POST', fields: [{ name: 'weight_kg', type: 'number', label: 'Kilo (kg)', placeholder: 'Örn: 4.5', required: true }, { name: 'height_cm', type: 'number', label: 'Boy (cm)', placeholder: 'Örn: 35.5', required: true }] }) })
+        if (!hasWeight) tasks.push({ label: 'Kilo & Boy Bilgisi Gir', onClick: () => setQuickUpdateConfig({ title: 'Gelişim Bilgisi', desc: 'Gelişimi takip edebilmek için güncel kilo ve boyunu girin.', endpoint: `/api/pets/${pet.id}/growth`, method: 'POST', fields: [{ name: 'weight_kg', type: 'number', label: 'Kilo (kg)', placeholder: 'Örn: 4.5', required: true }, { name: 'height_cm', type: 'number', label: 'Boy (cm)', placeholder: 'Örn: 35.5', required: false }] }) })
         if (!hasNutrition) tasks.push({ label: 'Kullandığı Mamayı Ekle', onClick: () => { setActiveTab('Beslenme'); window.scrollTo(0, 0); } })
         
         // Faz 6: SOS & Güvenlik
@@ -288,7 +288,10 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
             <div className="card-base p-5">
               <div className="flex justify-between items-center mb-3">
                 <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest">Son Büyüme Kaydı</h3>
-                <button onClick={() => setQuickUpdateConfig({ title: 'Yeni Gelişim Kaydı', desc: 'Güncel kilo ve boy oranlarını girin.', endpoint: `/api/pets/${pet.id}/growth`, method: 'POST', fields: [{ name: 'weight_kg', type: 'number', label: 'Kilo (kg)', placeholder: 'Örn: 4.5', required: true }, { name: 'height_cm', type: 'number', label: 'Boy (cm)', placeholder: 'Örn: 35.5', required: true }] })} className="text-[11px] font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full hover:bg-primary/20 transition-colors shadow-sm">+ Yeni Gir</button>
+                <div className="flex gap-2">
+                  <button onClick={() => { setActiveTab('Raporlar'); window.scrollTo(0,0); }} className="text-[11px] font-bold text-text-secondary bg-border-main/50 px-2.5 py-1 rounded-full hover:bg-border-main transition-colors shadow-sm">Grafiği Gör</button>
+                  <button onClick={() => setQuickUpdateConfig({ title: 'Yeni Gelişim Kaydı', desc: 'Güncel kilo ve boy oranlarını girin.', endpoint: `/api/pets/${pet.id}/growth`, method: 'POST', fields: [{ name: 'weight_kg', type: 'number', label: 'Kilo (kg)', placeholder: 'Örn: 4.5', required: true }, { name: 'height_cm', type: 'number', label: 'Boy (cm)', placeholder: 'Örn: 35.5', required: false }] })} className="text-[11px] font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full hover:bg-primary/20 transition-colors shadow-sm">+ Yeni Gir</button>
+                </div>
               </div>
               <div className="flex gap-6">
                 {growthRecords[0].weight_kg && <div className="text-center"><p className="text-[28px] font-black text-primary">{growthRecords[0].weight_kg}</p><p className="text-[11px] text-text-secondary font-bold uppercase">kg</p></div>}

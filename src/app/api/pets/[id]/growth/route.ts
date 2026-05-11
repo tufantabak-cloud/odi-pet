@@ -27,8 +27,8 @@ export async function POST(req: NextRequest, context: RouteContext) {
   const weight_kg = fd.get('weight_kg')?.toString().replace(',', '.')
   const height_cm = fd.get('height_cm')?.toString().replace(',', '.')
   
-  if (!weight_kg || !height_cm) {
-    return NextResponse.json({ error: 'Kilo ve Boy bilgisi zorunludur.' }, { status: 400 })
+  if (!weight_kg) {
+    return NextResponse.json({ error: 'Kilo bilgisi zorunludur.' }, { status: 400 })
   }
 
   const { error } = await supabase
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     .insert({
       pet_id: id,
       weight_kg: Number(weight_kg),
-      height_cm: Number(height_cm)
+      height_cm: height_cm ? Number(height_cm) : null
     })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
