@@ -2,7 +2,12 @@ import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { redirect } from 'next/navigation'
 import { getCurrentProfile } from '@/lib/auth/get-current-profile'
 
-export default async function IndexPage() {
+export default async function IndexPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+  const params = await searchParams
+  if (params.code) {
+    redirect(`/api/auth/callback?code=${params.code}`)
+  }
+
   const user = await getSessionUser()
 
   if (!user) {
