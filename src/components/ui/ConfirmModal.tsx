@@ -53,11 +53,11 @@ export default function ConfirmModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
+      className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain"
       onClick={onCancel}
     >
       <div
-        className="bg-surface w-full max-w-sm rounded-[28px] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200"
+        className="bg-surface w-full max-w-sm rounded-[28px] shadow-2xl overflow-y-auto max-h-[90dvh] animate-in fade-in zoom-in-95 duration-200"
         onClick={e => e.stopPropagation()}
       >
         {/* Icon + Header */}
