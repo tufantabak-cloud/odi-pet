@@ -202,7 +202,7 @@ export default function AdminUsersClient() {
                       <td className="p-4"><div className="h-4 bg-bg-main rounded w-12 ml-auto" /></td>
                     </tr>
                   ))
-                : data?.users.map((user) => (
+                : data?.users?.map((user) => (
                     <tr
                       key={user.id}
                       className="hover:bg-bg-main/50 transition-colors cursor-pointer group"
@@ -237,7 +237,7 @@ export default function AdminUsersClient() {
                     </tr>
                   ))}
 
-              {!loading && data?.users.length === 0 && (
+              {!loading && (!data?.users || data.users.length === 0) && (
                 <tr>
                   <td colSpan={5} className="p-12 text-center">
                     <div className="text-4xl mb-3">👥</div>
