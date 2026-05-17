@@ -157,20 +157,22 @@ export default async function SubscriptionPage() {
       <section className="flex flex-col gap-3">
         <h2 className="text-[12px] font-black text-text-secondary uppercase tracking-widest px-1">Plan Karşılaştırması</h2>
         <div className="card-base overflow-hidden">
-          <div className="grid grid-cols-4 bg-bg-main px-5 py-3 border-b border-border-main text-[12px] font-black text-text-secondary uppercase tracking-wider">
-            <div className="col-span-1">Özellik</div>
-            <div className="text-center">Free</div>
-            <div className="text-center text-primary">Pro</div>
-            <div className="text-center text-amber-500">AI+</div>
-          </div>
-          {PLAN_FEATURES.free.features.map((feat, i) => (
-            <div key={feat.label} className={`grid grid-cols-4 px-5 py-3.5 items-center text-[13px] ${i % 2 === 0 ? '' : 'bg-bg-main/30'} ${currentPlan !== 'free' && !feat.included ? 'opacity-40' : ''}`}>
-              <div className="col-span-1 font-semibold text-text-primary">{feat.label}</div>
-              <div className="text-center">{PLAN_FEATURES.free.features[i].included ? <span className="text-green-500 font-bold">✓</span> : <span className="text-gray-300">—</span>}</div>
-              <div className="text-center">{PLAN_FEATURES.pro.features[i].included ? <span className="text-primary font-bold">✓</span> : <span className="text-gray-300">—</span>}</div>
-              <div className="text-center">{PLAN_FEATURES.ai_plus.features[i].included ? <span className="text-amber-500 font-bold">✓</span> : <span className="text-gray-300">—</span>}</div>
+          <div className="overflow-x-auto">
+            <div className="grid grid-cols-4 min-w-[500px] bg-bg-main px-5 py-3 border-b border-border-main text-[12px] font-black text-text-secondary uppercase tracking-wider">
+              <div className="col-span-1">Özellik</div>
+              <div className="text-center">Free</div>
+              <div className="text-center text-primary">Pro</div>
+              <div className="text-center text-amber-500">AI+</div>
             </div>
-          ))}
+            {PLAN_FEATURES.free.features.map((feat, i) => (
+              <div key={feat.label} className={`grid grid-cols-4 min-w-[500px] px-5 py-3.5 items-center text-[13px] ${i % 2 === 0 ? '' : 'bg-bg-main/30'} ${currentPlan !== 'free' && !feat.included ? 'opacity-40' : ''}`}>
+                <div className="col-span-1 font-semibold text-text-primary">{feat.label}</div>
+                <div className="text-center">{PLAN_FEATURES.free.features[i].included ? <span className="text-green-500 font-bold">✓</span> : <span className="text-gray-300">—</span>}</div>
+                <div className="text-center">{PLAN_FEATURES.pro.features[i].included ? <span className="text-primary font-bold">✓</span> : <span className="text-gray-300">—</span>}</div>
+                <div className="text-center">{PLAN_FEATURES.ai_plus.features[i].included ? <span className="text-amber-500 font-bold">✓</span> : <span className="text-gray-300">—</span>}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -202,7 +204,8 @@ export default async function SubscriptionPage() {
         <h2 className="text-[12px] font-black text-text-secondary uppercase tracking-widest px-1">Fatura Geçmişi</h2>
         {isPaid ? (
           <div className="card-base overflow-hidden">
-            <table className="w-full text-left">
+            <div className="overflow-x-auto">
+            <table className="w-full text-left min-w-[500px]">
               <thead className="bg-bg-main text-text-secondary font-black text-[11px] uppercase tracking-wider border-b border-border-main">
                 <tr>
                   <th className="px-5 py-3">Fatura No</th>
@@ -231,6 +234,7 @@ export default async function SubscriptionPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         ) : (
           <div className="card-base p-5 text-center text-text-secondary text-[14px]">
