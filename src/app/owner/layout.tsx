@@ -6,10 +6,27 @@ import BottomNav from '@/components/BottomNav'
 import SideNav from '@/components/SideNav'
 import FloatingSOS from '@/components/FloatingSOS'
 import Link from 'next/link'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 export default async function OwnerLayout({ children }: { children: ReactNode }) {
   const profile = await requireRole(['owner'])
   if (!profile) redirect('/login')
+
+  const supabase = await createServerSupabaseClient()
+
+  const [{ count: petCount }, { data: onboardingData }] = await Promise.all([
+    supabase
+      .from('pets')
+      .select('id', { count: 'exact', head: true })
+      .eq('owner_id', profile.id),
+    supabase
+      .from('onboarding_progress')
+      .select('wizard_completed')
+      .eq('profile_id', profile.id)
+      .maybeSingle(),
+  ])
+
+  const showNav = (petCount ?? 0) > 0 && onboardingData?.wizard_completed === true
 
   const initial = profile.first_name?.charAt(0)?.toUpperCase() ?? 'U'
 
@@ -52,7 +69,7 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
       <div className="flex flex-1 w-full max-w-[1440px] mx-auto">
 
         {/* Desktop Sidebar Nav */}
-        <SideNav />
+        {showNav && <SideNav />}
 
         {/* Main Content */}
         <main className="flex-1 p-4 sm:p-6 lg:p-10 pb-32 md:pb-10 min-w-0">
@@ -61,7 +78,7 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
       </div>
 
       {/* Mobile Glass Bottom Nav */}
-      <BottomNav />
+      {showNav && <BottomNav />}
     </div>
   )
 }
