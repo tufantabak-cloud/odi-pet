@@ -33,26 +33,19 @@ export default async function ProfileMenuPage() {
   }
 
   // Calculate Profile Completion Tasks
-  const tasks = []
-  
-  if (!user?.phone && !(profile as any)?.phone) {
-    tasks.push({ label: 'Telefon Ekle', action: '+ Telefon Ekle', link: '/owner/profile/edit' })
-  }
-  
-  if (!isPremium) {
-    tasks.push({ label: 'Ödeme Yöntemi Ekle', action: '+ Ödeme Yöntemi Ekle', link: '/owner/profile/subscription' })
-  }
-  
-  if (!pets || pets.length === 0) {
-    tasks.push({ label: 'İlk Patiyi Ekle', action: '+ Pati Ekle', link: '/owner/pets/add' })
-  } else if (!hasVaccineRecords) {
-    tasks.push({ label: 'Aşı Kaydı Gir', action: '+ Aşı Ekle', link: `/owner/pets/${pets[0].id}/vaccines` })
-  }
+  // Her check bir "slot" temsil eder; totalTasks = olası maksimum slot sayısı
+  const completionChecks = [
+    { done: !!(user?.phone || (profile as any)?.phone), label: 'Telefon Ekle', action: '+ Telefon Ekle', link: '/owner/profile/edit' },
+    { done: isPremium, label: 'Ödeme Yöntemi Ekle', action: '+ Ödeme Yöntemi Ekle', link: '/owner/profile/subscription' },
+    { done: !!(pets && pets.length > 0), label: 'İlk Patiyi Ekle', action: '+ Pati Ekle', link: '/owner/pets/add' },
+    { done: hasVaccineRecords, label: 'Aşı Kaydı Gir', action: '+ Aşı Ekle', link: pets && pets.length > 0 ? `/owner/pets/${pets[0].id}/vaccines` : '/owner/pets/add' },
+  ]
 
-  const totalTasks = 4
-  const completedTasks = totalTasks - tasks.length
-  // Ensure minimum 15% to encourage users, except if everything is done then it's 100%
-  let progress = completedTasks === totalTasks ? 100 : Math.max(15, Math.round((completedTasks / totalTasks) * 100))
+  const tasks = completionChecks.filter(c => !c.done)
+  const totalTasks = completionChecks.length
+  const completedTasks = completionChecks.filter(c => c.done).length
+  // %100 tamamlandıysa tam göster; aksi hâlde minimum %15 (kullanıcıyı cesaretlendirmek için)
+  const progress = completedTasks === totalTasks ? 100 : Math.max(15, Math.round((completedTasks / totalTasks) * 100))
 
   return (
     <div className="flex flex-col gap-8 pb-20 w-full mx-auto font-sans">
@@ -120,7 +113,7 @@ export default async function ProfileMenuPage() {
                   </svg>
                 )}
               </h3>
-              <p className="text-[14px] text-text-secondary mt-1">Aktif Avantajlar (3/4 Kullanımda)</p>
+              <p className="text-[14px] text-text-secondary mt-1">{isPremium ? 'Tüm Pro avantajları aktif' : 'Ücretsiz plana devam ediyorsunuz'}</p>
             </div>
             {isPremium ? (
               <span className="px-3 py-1 bg-green-100 text-green-700 text-[11px] font-bold rounded-full">Otomatik Yenileme Açık</span>

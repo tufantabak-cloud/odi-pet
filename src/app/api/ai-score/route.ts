@@ -1,29 +1,69 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
-export async function POST(req: NextRequest) {
-  const { symptoms } = await req.json()
+const SYSTEM_PROMPT = `Sen bir veteriner triaj asistanısın. Kullanıcının tarif ettiği evcil hayvan belirtilerini değerlendirip aşağıdaki JSON formatında yanıt ver. SADECE JSON döndür, başka hiçbir şey yazma.
 
-  const symptomStr = (symptoms ?? '').toLowerCase()
+Format:
+{
+  "score": <0-100 arası risk puanı, tam sayı>,
+  "severity": <"low" | "medium" | "critical">,
+  "recommended_action": <Türkçe kısa tavsiye>,
+  "reasoning": <Türkçe 1-2 cümle kısa açıklama>
+}
 
-  let score = 10
-  let severity = 'low'
+Kurallar:
+- score 0-30 → severity: "low"
+- score 31-69 → severity: "medium"  
+- score 70-100 → severity: "critical"
+- Yalnızca evcil hayvan sağlığıyla ilgili girdilere yanıt ver.
+- Eğer girdi veterinerlik ile alakasızsa: score:0, severity:"low", recommended_action:"Lütfen evcil hayvanınızın belirtilerini tarif edin."
+`
 
+function heuristicFallback(symptomStr: string) {
   const critical = ['kan', 'kriz', 'nöbet', 'bayıl', 'soluk alma', 'nefes', 'bilinç', 'titreme']
   const medium   = ['kusma', 'ateş', 'ishal', 'iştahsız', 'halsiz', 'şişlik', 'yara', 'akıntı']
 
   if (critical.some(w => symptomStr.includes(w))) {
-    score = 90; severity = 'critical'
-  } else if (medium.some(w => symptomStr.includes(w))) {
-    score = 50; severity = 'medium'
+    return { score: 90, severity: 'critical', recommended_action: 'Acil veteriner müdahalesi gerekli!', reasoning: null }
+  }
+  if (medium.some(w => symptomStr.includes(w))) {
+    return { score: 50, severity: 'medium', recommended_action: 'Veteriner muayenesi önerilir', reasoning: null }
+  }
+  return { score: 10, severity: 'low', recommended_action: 'Gözlem altında tutun, gerekirse veterinere başvurun', reasoning: null }
+}
+
+export async function POST(req: NextRequest) {
+  const { symptoms } = await req.json()
+  const symptomStr = (symptoms ?? '').toLowerCase()
+
+  const apiKey = process.env.GEMINI_API_KEY
+  if (apiKey) {
+    try {
+      const genAI = new GoogleGenerativeAI(apiKey)
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+
+      const result = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: `${SYSTEM_PROMPT}\n\nBelirtiler: ${symptoms}` }] }],
+        generationConfig: { responseMimeType: 'application/json', maxOutputTokens: 256 },
+      })
+
+      const raw = result.response.text().trim()
+      const parsed = JSON.parse(raw)
+
+      return NextResponse.json({
+        score: Number(parsed.score) || 10,
+        severity: ['low', 'medium', 'critical'].includes(parsed.severity) ? parsed.severity : 'low',
+        recommended_action: parsed.recommended_action ?? '',
+        reasoning: parsed.reasoning ?? null,
+        powered_by: 'gemini',
+      })
+    } catch (err) {
+      console.error('[ai-score] Gemini API error, falling back to heuristic:', err)
+    }
   }
 
-  return NextResponse.json({
-    score,
-    severity,
-    recommended_action: severity === 'critical'
-      ? 'Acil veteriner müdahalesi gerekli!'
-      : severity === 'medium'
-      ? 'Veteriner muayenesi önerilir'
-      : 'Gözlem altında tutun, gerekirse veterinere başvurun',
-  })
+  // Fallback: heuristic
+  const fallback = heuristicFallback(symptomStr)
+  return NextResponse.json({ ...fallback, powered_by: 'heuristic' })
 }
+

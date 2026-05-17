@@ -173,10 +173,10 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
 
         if (tasks.length === 0) return null
 
-        // Matris toplam görev sayısı (Örnek olarak 6 kabul edelim)
-        const totalTasks = 6
+        // totalTasks = yukarıda tanımlanan tüm olası kontrol sayısı (7 check)
+        const totalTasks = 7
         const completedTasks = totalTasks - tasks.length
-        const progress = Math.max(15, Math.round((completedTasks / totalTasks) * 100))
+        const progress = completedTasks === totalTasks ? 100 : Math.max(15, Math.round((completedTasks / totalTasks) * 100))
 
         return (
           <div className="card-base p-5 border-l-4 border-l-primary shadow-sm bg-gradient-to-br from-white to-primary/5">

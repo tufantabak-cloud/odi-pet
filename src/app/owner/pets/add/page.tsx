@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 // ── Irk Listeleri ──────────────────────────────────────────────
 const CAT_BREEDS = [
@@ -71,17 +72,16 @@ function SpeciesSelector({ onSelect }: { onSelect: (s: Species) => void }) {
 
 // ── Adım 2: Hızlı Kayıt Formu ──────────────────────────────────
 function PetForm({ species, onBack }: { species: Species; onBack: () => void }) {
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [isSuccess, setIsSuccess] = useState(false)
-  const [createdPetId, setCreatedPetId] = useState<string | null>(null)
-  
+
   const [petName, setPetName] = useState('')
   const [selectedBreed, setSelectedBreed] = useState('')
   const [gender, setGender] = useState<'male' | 'female' | ''>('')
-  
+
   const [yearOnly, setYearOnly] = useState(false)
   const [birthDate, setBirthDate] = useState('')
-  
+
   const currentYear = new Date().getFullYear()
   const breeds = species === 'Kedi' ? CAT_BREEDS : DOG_BREEDS
   const emoji = species === 'Kedi' ? '🐱' : '🐶'
@@ -114,61 +114,17 @@ function PetForm({ species, onBack }: { species: Species; onBack: () => void }) 
         return
       }
 
-      setCreatedPetId(data.pet.id)
-      setIsSuccess(true)
+      // ✅ Başarı: inline state yerine ayrı bir route'a replace ile yönlendir
+      // replace() kullanılıyor — böylece geri tuşu formu değil, önceki sayfayı açar
+      const id   = data.pet.id
+      const name = encodeURIComponent(petName.trim())
+      const sp   = encodeURIComponent(species)
+      router.replace(`/owner/pets/add/success?id=${id}&name=${name}&species=${sp}`)
     } catch (err: any) {
       setSubmitError('Sunucu bağlantı hatası: ' + err.message)
     } finally {
       setLoading(false)
     }
-  }
-
-  // Başarı ekranı (Forks)
-  if (isSuccess && createdPetId) {
-    return (
-      <div className="card-base p-8 flex flex-col items-center gap-6 animate-fadeInUp mt-10">
-        <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center text-[32px] text-success shadow-inner">
-          ✓
-        </div>
-        <div className="text-center">
-          <h2 className="text-[26px] font-extrabold text-text-primary mb-2">Aramıza Hoş Geldin, {petName}! 🎉</h2>
-          <p className="text-[14px] text-text-secondary">{species.toLowerCase()}inizin temel profili başarıyla oluşturuldu.</p>
-        </div>
-
-        <p className="text-[13px] font-bold text-text-secondary uppercase tracking-widest mt-4">İlk Kurulum Adımı</p>
-
-        <div className="flex flex-col w-full gap-3">
-          <button
-            onClick={() => window.location.href = `/owner/pets/${createdPetId}/vaccines`}
-            className="flex items-center gap-4 p-4 rounded-xl border-2 border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors text-left group"
-          >
-            <span className="text-[28px] group-hover:scale-110 transition-transform">💉</span>
-            <div>
-              <p className="font-extrabold text-primary text-[15px]">Aşı OS Kurulumu</p>
-              <p className="text-[12px] text-text-secondary mt-0.5">Geçmiş aşıları aktarın veya takvim oluşturun.</p>
-            </div>
-          </button>
-
-          <button
-            onClick={() => window.location.href = `/owner/pets/${createdPetId}/nutrition`}
-            className="flex items-center gap-4 p-4 rounded-xl border-2 border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10 transition-colors text-left group"
-          >
-            <span className="text-[28px] group-hover:scale-110 transition-transform">🍗</span>
-            <div>
-              <p className="font-extrabold text-blue-600 text-[15px]">Beslenme Planı</p>
-              <p className="text-[12px] text-text-secondary mt-0.5">Öğün ve mama takibi için günlük plan oluşturun.</p>
-            </div>
-          </button>
-
-          <button
-            onClick={() => window.location.href = `/owner/pets/${createdPetId}`}
-            className="btn-secondary w-full py-4 text-[14px] mt-2 font-bold"
-          >
-            Şimdi Değil, Profile Git →
-          </button>
-        </div>
-      </div>
-    )
   }
 
   return (
