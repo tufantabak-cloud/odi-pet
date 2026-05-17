@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import citiesData from '@/lib/cities.json'
+import ConfirmModal from '@/components/ui/ConfirmModal'
 
 const CAT_BREEDS = [
   'British Shorthair', 'Scottish Fold', 'Scottish Straight',
@@ -99,18 +100,20 @@ export default function EditPetForm({ pet }: { pet: any }) {
     }
   }
 
+  const [deleteError, setDeleteError] = useState('')
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
+
   const handleDelete = async () => {
-    if (confirm(`DİKKAT: ${pet.name} profilini kalıcı olarak silmek istediğinizden emin misiniz?`)) {
-      setLoading(true)
-      try {
-        const res = await fetch(`/api/pets/${pet.id}`, { method: 'DELETE' })
-        if (!res.ok) throw new Error('Silinemedi')
-        router.push('/owner/dashboard')
-        router.refresh()
-      } catch(e) {
-        alert('Silme işlemi başarısız oldu. Sadece asıl sahip silebilir.')
-        setLoading(false)
-      }
+    setLoading(true)
+    setDeleteError('')
+    try {
+      const res = await fetch(`/api/pets/${pet.id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Silinemedi')
+      router.push('/owner/dashboard')
+      router.refresh()
+    } catch(e) {
+      setDeleteError('Silme işlemi başarısız oldu. Sadece asıl sahip silebilir.')
+      setLoading(false)
     }
   }
 
@@ -288,12 +291,26 @@ export default function EditPetForm({ pet }: { pet: any }) {
           <span className="text-[32px]">🗑️</span>
           <p className="font-bold text-text-primary text-[15px]">Profili Kalıcı Olarak Sil</p>
           <p className="text-[13px] text-text-secondary max-w-sm">Bu işlem geri alınamaz. {pet.name} profili, aşı kayıtları ve sağlık geçmişi silinecektir.</p>
-          <button type="button" onClick={handleDelete} disabled={loading} className="mt-2 w-full max-w-[200px] py-3 rounded-xl border-2 border-error/40 text-error font-bold text-[13px] hover:bg-error/10 hover:-translate-y-0.5 transition-all shadow-sm">
+          {deleteError && (
+            <p className="text-[12px] text-error font-semibold bg-error/10 border border-error/20 px-3 py-2 rounded-xl w-full max-w-sm">{deleteError}</p>
+          )}
+          <button type="button" onClick={() => setConfirmDeleteOpen(true)} disabled={loading} className="mt-2 w-full max-w-[200px] py-3 rounded-xl border-2 border-error/40 text-error font-bold text-[13px] hover:bg-error/10 hover:-translate-y-0.5 transition-all shadow-sm">
             Kalıcı Olarak Sil
           </button>
         </section>
 
       </form>
+
+      <ConfirmModal
+        open={confirmDeleteOpen}
+        title={`${pet.name} Profilini Sil`}
+        message="Bu işlem geri alınamaz. Tüm aşı kayıtları ve sağlık geçmişi kalıcı olarak silinecektir."
+        confirmLabel="Evet, Sil"
+        cancelLabel="İptal"
+        variant="danger"
+        onConfirm={() => { setConfirmDeleteOpen(false); handleDelete() }}
+        onCancel={() => setConfirmDeleteOpen(false)}
+      />
     </div>
   )
 }

@@ -6,6 +6,7 @@ import { COMMON_ALIASES, getDisplayName } from '@/lib/vaccines/utils'
 import { toTitleCase } from '@/lib/utils'
 import Link from 'next/link'
 import { trackEvent } from '@/lib/analytics/track'
+import ConfirmModal from '@/components/ui/ConfirmModal'
 import {
   saveSetupMode,
   generateSchedule,
@@ -89,16 +90,26 @@ const LEVEL_LABEL: Record<string, string> = {
 // ── Setup Flow ─────────────────────────────────────────────────
 function SetupFlow({ pet, templates, onComplete, onHistoricalImport }: { pet: Pet; templates: Template[]; onComplete: () => void; onHistoricalImport: () => void }) {
   const router = useRouter()
-  const [step, setStep] = useState<'mode' | 'warning' | 'processing'>('mode')
+  const [step, setStep] = useState<'mode' | 'processing' | 'success'>('mode')
   const [selectedMode, setSelectedMode] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const [showWarning, setShowWarning] = useState(false)
+  const [scheduleStats, setScheduleStats] = useState<{ total: number; overdue: number } | null>(null)
 
   const modes = [
     { id: 'smart_start', icon: '🧬', title: 'Akıllı Başlangıç', desc: 'Doğum tarihine göre standart takvim oluştur.' },
     { id: 'historical_import', icon: '📸', title: 'Geçmiş Kayıtlarım Var', desc: 'Karnedeki etiketleri yapay zekaya okutarak otomatik ekle.' },
     { id: 'fresh_start', icon: '🌱', title: 'Bugünden Başla', desc: 'Geçmişi dikkate alma, bundan sonrası için plan oluştur.' },
   ]
+
+  // Auto-transition from success to main UI after 3 seconds
+  useEffect(() => {
+    if (step !== 'success') return
+    const timer = setTimeout(() => {
+      onComplete()
+    }, 3000)
+    return () => clearTimeout(timer)
+  }, [step, onComplete])
 
   function handleSelect(mode: string) {
     setSelectedMode(mode)
@@ -122,11 +133,12 @@ function SetupFlow({ pet, templates, onComplete, onHistoricalImport }: { pet: Pe
     setStep('processing')
     startTransition(async () => {
       await saveSetupMode(pet.id, selectedMode as any)
-      await generateSchedule(pet.id, selectedMode as any)
+      const result = await generateSchedule(pet.id, selectedMode as any)
       trackEvent('vaccine_setup_mode_selected', { pet_id: pet.id, mode: selectedMode })
       trackEvent('vaccine_schedule_generated', { pet_id: pet.id, mode: selectedMode })
       router.refresh()
-      onComplete()
+      setScheduleStats(result ?? { total: 0, overdue: 0 })
+      setStep('success')
     })
   }
 
@@ -135,6 +147,88 @@ function SetupFlow({ pet, templates, onComplete, onHistoricalImport }: { pet: Pe
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
         <p className="text-[14px] text-text-secondary font-medium">Aşı takvimi oluşturuluyor...</p>
+      </div>
+    )
+  }
+
+  if (step === 'success') {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 gap-6 animate-fade-in">
+        {/* Big success checkmark */}
+        <div className="relative">
+          <div className="w-20 h-20 rounded-full bg-success/10 flex items-center justify-center">
+            <svg className="w-10 h-10 text-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <div className="absolute -top-1 -right-1 w-6 h-6 bg-success rounded-full flex items-center justify-center shadow-sm">
+            <span className="text-white text-[11px] font-black">✓</span>
+          </div>
+        </div>
+
+        <div className="text-center">
+          <h2 className="text-[22px] font-extrabold text-text-primary">Takvim Oluşturuldu!</h2>
+          <p className="text-[14px] text-text-secondary mt-1">{pet.name} için aşı takip sistemi hazır</p>
+        </div>
+
+        {/* Stats summary */}
+        {scheduleStats && scheduleStats.total > 0 && (
+          <div className="w-full flex flex-col gap-3">
+            <div className="flex items-center gap-3 p-4 bg-success/8 border border-success/20 rounded-2xl">
+              <span className="text-[24px]">💉</span>
+              <div>
+                <p className="text-[15px] font-extrabold text-success">
+                  {scheduleStats.total} aşı protokolü oluşturuldu
+                </p>
+                <p className="text-[12px] text-text-secondary mt-0.5">
+                  {pet.name} artık tam koruma altında
+                </p>
+              </div>
+            </div>
+
+            {scheduleStats.overdue > 0 && (
+              <div className="flex items-center gap-3 p-4 bg-warning/8 border border-warning/20 rounded-2xl">
+                <span className="text-[24px]">⚠️</span>
+                <div>
+                  <p className="text-[15px] font-extrabold text-warning">
+                    {scheduleStats.overdue} gecikmiş aşın var
+                  </p>
+                  <p className="text-[12px] text-text-secondary mt-0.5">
+                    Veterinerinize en kısa sürede danışmanızı öneririz
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {scheduleStats.overdue === 0 && (
+              <div className="flex items-center gap-3 p-4 bg-primary/5 border border-primary/15 rounded-2xl">
+                <span className="text-[24px]">🎉</span>
+                <div>
+                  <p className="text-[15px] font-extrabold text-primary">
+                    Tüm aşılar güncel!
+                  </p>
+                  <p className="text-[12px] text-text-secondary mt-0.5">
+                    Harika, gecikmiş aşı yok
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Auto-redirect hint */}
+        <div className="flex items-center gap-2 text-[12px] text-text-secondary">
+          <div className="w-3 h-3 rounded-full border-2 border-text-secondary/40 border-t-text-secondary animate-spin" />
+          <span>Takvime yönlendiriliyorsunuz...</span>
+        </div>
+
+        {/* Manual skip button */}
+        <button
+          onClick={onComplete}
+          className="text-[13px] font-bold text-primary hover:underline"
+        >
+          Hemen Geç →
+        </button>
       </div>
     )
   }
@@ -463,6 +557,7 @@ function ManualVaccineModal({
   const [isScanning, setIsScanning] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState('')
+  const [scanError, setScanError] = useState('')
 
   const vaccineSuggestions = name.length >= 1 ? Array.from(new Map(templates.filter(t => {
     const search = name.toLowerCase()
@@ -478,6 +573,7 @@ function ManualVaccineModal({
     const file = e.target.files?.[0]
     if (!file) return
     setIsScanning(true)
+    setScanError('')
     try {
       const reader = new FileReader()
       reader.onload = async (event) => {
@@ -491,9 +587,9 @@ function ManualVaccineModal({
           if (data.batchNo) setBatchNo(data.batchNo.toUpperCase())
           if (data.clinicName) setClinic(toTitleCase(data.clinicName))
         } else if (res.success) {
-          alert('Etiket okunamadı: Lütfen daha net bir fotoğraf çekin.')
+          setScanError('Etiket okunamadı. Lütfen daha net ve iyi aydınlatılmış bir fotoğraf çekin.')
         } else {
-          alert('Etiket okunamadı: ' + res.error)
+          setScanError('Etiket okunamadı: ' + (res.error || 'Bilinmeyen hata.'))
         }
         setIsScanning(false)
       }
@@ -563,6 +659,15 @@ function ManualVaccineModal({
           )}
           
 
+          {scanError && (
+            <div className="flex items-start gap-2.5 p-3 bg-warning/10 border border-warning/30 rounded-xl">
+              <span className="text-[16px] flex-shrink-0">📸</span>
+              <div className="flex-1">
+                <p className="text-[12px] font-bold text-warning leading-relaxed">{scanError}</p>
+                <button onClick={() => setScanError('')} className="text-[11px] text-text-secondary hover:text-text-primary mt-1 font-medium">Kapat ×</button>
+              </div>
+            </div>
+          )}
           {error && <p className="text-[12px] text-error font-bold">{error}</p>}
           <div className="flex flex-col gap-1 relative -mt-2">
             <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Aşı Adı / Etiket Kodu *</label>
@@ -704,11 +809,13 @@ function BatchScanModal({
   const [isPending, startTransition] = useTransition()
   const [selections, setSelections] = useState<Record<number, boolean>>({})
   const [showSuccessPrompt, setShowSuccessPrompt] = useState(false)
+  const [scanError, setScanError] = useState('')
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
     setScanning(true)
+    setScanError('')
     try {
       const reader = new FileReader()
       reader.onload = async (event) => {
@@ -717,7 +824,7 @@ function BatchScanModal({
         if (res.success && Array.isArray(res.data)) {
           // Eğer AI hiç etiket bulamazsa
           if (res.data.length === 0) {
-            alert('Bu görselde herhangi bir aşı etiketi tespit edilemedi.');
+            setScanError('Bu görselde herhangi bir aşı etiketi tespit edilemedi. Lütfen karneyi daha net ve yakından çekin.')
             setScanning(false);
             return;
           }
@@ -740,8 +847,7 @@ function BatchScanModal({
           enriched.forEach((r, i) => { initialSel[i] = !r.isDuplicate && !!r.vaccineName })
           setSelections(initialSel)
         } else {
-          alert('Etiketler okunamadı: ' + res.error)
-          onClose()
+          setScanError('Etiketler okunamadı: ' + (res.error || 'Bilinmeyen hata. Lütfen tekrar deneyin.'))
         }
         setScanning(false)
       }
@@ -801,6 +907,15 @@ function BatchScanModal({
         </div>
         
         <div className="p-6 flex flex-col gap-4 max-h-[75vh] overflow-y-auto">
+          {scanError && (
+            <div className="flex items-start gap-2.5 p-3 bg-warning/10 border border-warning/30 rounded-xl animate-fade-in">
+              <span className="text-[18px] flex-shrink-0">📷</span>
+              <div className="flex-1">
+                <p className="text-[12px] font-bold text-warning leading-relaxed">{scanError}</p>
+                <button onClick={() => setScanError('')} className="text-[11px] text-text-secondary hover:text-text-primary mt-1 font-medium">Tekrar Dene</button>
+              </div>
+            </div>
+          )}
           {showSuccessPrompt && (
             <div className="flex flex-col items-center justify-center py-6 gap-5 text-center animate-fade-in">
                <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center text-[32px]">✓</div>
@@ -904,12 +1019,13 @@ function BatchScanModal({
 }
 
 // ── Protocol Table Component ───────────────────────────────────
-function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onSingleScan, onBatchScan }: { 
+function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onNewPlan, onSingleScan, onBatchScan }: { 
   pet: Pet; 
   templates: Template[]; 
   records: VRecord[]; 
   onCellClick?: (record: VRecord) => void;
   onNewRecord?: (name: string, code: string, date: string) => void;
+  onNewPlan?: (name: string, code: string, date: string) => void;
   onSingleScan?: (file: File) => void;
   onBatchScan?: () => void;
 }) {
@@ -1042,11 +1158,11 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onSi
 
   const getCellState = (record: VRecord | undefined | null, projectedDate: string | null) => {
     if (record) {
-      if (record.status === 'completed') return { date: record.administered_at || projectedDate, bg: 'bg-[#4CAF50] text-black border-slate-300 cursor-default', record, title: `Yapıldı: ${new Date(record.administered_at || '').toLocaleDateString('tr-TR')}` };
-      if (record.status === 'skipped' || record.status === 'overdue') return { date: record.due_at || projectedDate, bg: 'bg-[#F44336] text-white border-slate-300 hover:opacity-80 cursor-pointer transition-all', record, title: `Gecikti/Atlandı.` };
-      return { date: record.due_at || projectedDate, bg: 'bg-white text-text-primary border-slate-300 hover:bg-primary/10 cursor-pointer transition-all', record, title: `Planlandı: ${new Date(record.due_at || projectedDate || '').toLocaleDateString('tr-TR')}` };
+      if (record.status === 'completed') return { date: record.administered_at || projectedDate, bg: 'bg-[#4CAF50] text-black border-slate-300 hover:opacity-80 cursor-pointer transition-all', emoji: '✅', record, title: `Yapıldı: ${new Date(record.administered_at || '').toLocaleDateString('tr-TR')}` };
+      if (record.status === 'skipped' || record.status === 'overdue') return { date: record.due_at || projectedDate, bg: 'bg-[#F44336] text-white border-slate-300 hover:opacity-80 cursor-pointer transition-all', emoji: '⚠️', record, title: `Gecikti/Atlandı.` };
+      return { date: record.due_at || projectedDate, bg: 'bg-white text-text-primary border-slate-300 hover:bg-primary/10 cursor-pointer transition-all', emoji: '🔜', record, title: `Planlandı: ${new Date(record.due_at || projectedDate || '').toLocaleDateString('tr-TR')}` };
     }
-    return { date: projectedDate, bg: 'bg-white text-text-primary border-slate-300 opacity-60', record: null, title: `Tahmini: ${projectedDate ? new Date(projectedDate).toLocaleDateString('tr-TR') : ''}` };
+    return { date: projectedDate, bg: 'bg-white text-text-primary border-slate-300 opacity-60', emoji: '', record: null, title: `Tahmini: ${projectedDate ? new Date(projectedDate).toLocaleDateString('tr-TR') : ''}` };
   }
 
   const rows = vaccineTemplates.map(tmpl => {
@@ -1167,7 +1283,7 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onSi
 
   return (
     <div className="mb-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-3">
         <div className="flex items-center gap-3">
           <h3 className="text-[16px] font-extrabold text-text-primary">Aşı Takvimi Matrisi</h3>
           {onSingleScan && onBatchScan && (
@@ -1176,26 +1292,93 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onSi
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {onNewRecord && (
-            <>
-              <button 
-                onClick={() => onNewRecord('', '', new Date().toISOString())}
-                className="flex items-center gap-2 px-3 py-2 bg-success/5 text-success hover:bg-success/10 transition-all rounded-xl border border-success/20 group shadow-sm"
-              >
-                <span className="text-[16px] group-hover:scale-110 transition-transform">✅</span>
-                <span className="text-[11px] font-black uppercase tracking-wider">Yapıldı Kaydı Ekle</span>
-              </button>
-              <button 
-                onClick={() => onNewRecord('', '', new Date().toISOString())}
-                className="flex items-center gap-2 px-3 py-2 bg-primary/5 text-primary hover:bg-primary/10 transition-all rounded-xl border border-primary/20 group shadow-sm"
-              >
-                <span className="text-[16px] group-hover:scale-110 transition-transform">📅</span>
-                <span className="text-[11px] font-black uppercase tracking-wider">Yeni Plan Ekle</span>
-              </button>
-            </>
+            <button 
+              onClick={() => onNewRecord('', '', new Date().toISOString())}
+              className="flex items-center gap-2 px-3 py-2 bg-success/5 text-success hover:bg-success/10 transition-all rounded-xl border border-success/20 group shadow-sm"
+            >
+              <span className="text-[16px] group-hover:scale-110 transition-transform">✅</span>
+              <span className="text-[11px] font-black uppercase tracking-wider">Yapıldı Kaydı Ekle</span>
+            </button>
+          )}
+          {onNewPlan && (
+            <button 
+              onClick={() => onNewPlan('', '', new Date().toISOString())}
+              className="flex items-center gap-2 px-3 py-2 bg-primary/5 text-primary hover:bg-primary/10 transition-all rounded-xl border border-primary/20 group shadow-sm"
+            >
+              <span className="text-[16px] group-hover:scale-110 transition-transform">📅</span>
+              <span className="text-[11px] font-black uppercase tracking-wider">Yeni Plan Ekle</span>
+            </button>
           )}
         </div>
       </div>
-      <div className="overflow-x-auto border border-slate-300 rounded-lg shadow-sm">
+
+      {/* Legend — tablonun üstünde, her zaman görünür */}
+      <div className="mb-3 flex flex-wrap gap-3 text-[12px] font-bold p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+        <div className="flex items-center gap-1.5"><span className="text-[14px]">✅</span><div className="w-4 h-4 bg-[#4CAF50] border border-slate-300 rounded"></div><span className="text-text-primary">Yapıldı — tıkla, düzenle</span></div>
+        <div className="flex items-center gap-1.5"><span className="text-[14px]">⚠️</span><div className="w-4 h-4 bg-[#F44336] border border-slate-300 rounded"></div><span className="text-text-primary">Gecikti / Atlandı</span></div>
+        <div className="flex items-center gap-1.5"><span className="text-[14px]">🔜</span><div className="w-4 h-4 bg-white border border-slate-300 rounded"></div><span className="text-text-primary">Planlandı</span></div>
+      </div>
+
+      <div className="md:hidden flex flex-col gap-3">
+        {rows.map((row: any, i: number) => {
+          const dose1 = row.yearCells[0]?.doses?.[0];
+          const dose2 = row.yearCells[0]?.doses?.[1];
+          const mandatoryLabel = row.mandatory === 'core' ? 'Temel' : row.mandatory === 'optional' ? 'Seçmeli' : 'Yasal Zorunlu';
+          const mandatoryColor = row.mandatory === 'legal_required' ? 'bg-red-100 text-red-700' : row.mandatory === 'core' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600';
+          return (
+            <div key={i} className={`border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm ${!row.is_active ? 'opacity-60' : ''}`}>
+              <div className="flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-200">
+                <div className="flex flex-col gap-0.5">
+                  <span className={`font-extrabold text-[13px] ${!row.is_active ? 'line-through text-text-secondary' : 'text-text-primary'}`}>
+                    {getDisplayName(row.name, row.code)}
+                  </span>
+                  {row.diseases && <span className="text-[10px] text-text-secondary leading-tight">{row.diseases}</span>}
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${mandatoryColor}`}>{mandatoryLabel}</span>
+                  <span className="text-[10px] font-bold bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded">{row.code}</span>
+                  {!row.is_active && <span className="text-[10px] font-black bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded uppercase">Pasif</span>}
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2 p-3">
+                {dose1 && (
+                  <button
+                    className={`flex flex-col items-center px-3 py-2 rounded-xl border text-[11px] font-bold min-w-[70px] transition-all ${!row.is_active ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' : dose1.bg}`}
+                    onClick={() => { if (!row.is_active) return; if (dose1.record) { if (dose1.record.status !== 'completed') onCellClick?.(dose1.record); } else if (dose1.date) { onNewRecord?.(row.name, row.code, dose1.date); } }}
+                  >
+                    <span className="text-[9px] uppercase tracking-wide opacity-70 mb-0.5">1. Doz</span>
+                    <span>{!row.is_active ? 'Pasif' : (dose1.record ? formatDate(dose1.date) : '—')}</span>
+                  </button>
+                )}
+                {dose2 && (
+                  <button
+                    className={`flex flex-col items-center px-3 py-2 rounded-xl border text-[11px] font-bold min-w-[70px] transition-all ${!row.is_active ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' : dose2.bg}`}
+                    onClick={() => { if (!row.is_active) return; if (dose2.record && !(dose2.record as any)._isVirtual) { if (dose2.record.status !== 'completed') onCellClick?.(dose2.record); } else if (dose2.date) { onNewRecord?.(row.name, row.code, dose2.date); } }}
+                  >
+                    <span className="text-[9px] uppercase tracking-wide opacity-70 mb-0.5">2. Doz</span>
+                    <span>{!row.is_active ? 'Pasif' : (dose2.record ? formatDate(dose2.date) : '—')}</span>
+                  </button>
+                )}
+                {row.yearCells.slice(1).map((cell: any, idx: number) => {
+                  if (!row.hasAnnual) return null;
+                  const yearNum = idx + 1;
+                  return (
+                    <button
+                      key={idx}
+                      className={`flex flex-col items-center px-3 py-2 rounded-xl border text-[11px] font-bold min-w-[70px] transition-all ${(!row.is_active || !cell) ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' : cell.bg}`}
+                      onClick={() => { if (!row.is_active || !cell) return; if (cell.record) { if (cell.record.status !== 'completed') onCellClick?.(cell.record); } else if (cell.date) { onNewRecord?.(row.name, row.code, cell.date); } }}
+                    >
+                      <span className="text-[9px] uppercase tracking-wide opacity-70 mb-0.5">{yearNum}. Yaş</span>
+                      <span>{!row.is_active ? 'Pasif' : (cell?.record ? formatDate(cell.date) : '—')}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="hidden md:block overflow-x-auto border border-slate-300 rounded-lg shadow-sm">
         <table className="w-full text-[12px] text-left border-collapse min-w-[800px]">
           <thead>
             <tr className="bg-slate-500 text-white">
@@ -1208,7 +1391,7 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onSi
               ))}
             </tr>
             <tr className="bg-slate-400 text-white">
-              <th className="p-2 border border-slate-500 font-bold whitespace-nowrap">Aşı Adı</th>
+              <th className="p-2 border border-slate-500 font-bold whitespace-nowrap sticky left-0 z-10 bg-slate-400">Aşı Adı</th>
               <th className="p-2 border border-slate-500 font-bold">Kod</th>
               <th className="p-2 border border-slate-500 font-bold">Zorunluluk</th>
               <th className="p-2 border border-slate-500 font-bold">Koruduğu Hastalıklar</th>
@@ -1229,7 +1412,7 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onSi
           <tbody>
             {rows.map((row: any, i: number) => (
               <tr key={i} className="hover:bg-slate-50">
-                <td className={`p-2 border border-slate-300 font-bold whitespace-nowrap bg-white ${!row.is_active ? 'text-text-secondary opacity-60' : 'text-text-primary'}`}>
+                <td className={`p-2 border border-slate-300 font-bold whitespace-nowrap sticky left-0 z-10 bg-white ${!row.is_active ? 'text-text-secondary opacity-60' : 'text-text-primary'}`}>
                   <div className="flex items-center gap-2">
                     <span className={!row.is_active ? 'line-through' : ''}>{getDisplayName(row.name, row.code)}</span>
                     {!row.is_active && (
@@ -1263,13 +1446,13 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onSi
                           onClick={() => {
                             if (!row.is_active) return;
                             if (dose1?.record) {
-                              if (dose1.record.status !== 'completed') onCellClick?.(dose1.record);
+                              onCellClick?.(dose1.record);
                             } else if (dose1?.date) {
                               onNewRecord?.(row.name, row.code, dose1.date);
                             }
                           }}
                         >
-                          {!row.is_active ? <span className="font-bold text-[10px] tracking-wider uppercase text-slate-400">Pasif</span> : (dose1?.record ? formatDate(dose1.date) : '')}
+                          {!row.is_active ? <span className="font-bold text-[10px] tracking-wider uppercase text-slate-400">Pasif</span> : dose1?.record ? <span className="flex flex-col items-center gap-0"><span className="text-[11px]">{dose1.emoji}</span><span>{formatDate(dose1.date)}</span></span> : ''}
                         </td>
                         {dose2 ? (
                           <td
@@ -1285,13 +1468,13 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onSi
                             onClick={() => {
                               if (!row.is_active) return;
                               if (dose2.record && !(dose2.record as any)._isVirtual) {
-                                if (dose2.record.status !== 'completed') onCellClick?.(dose2.record);
+                                onCellClick?.(dose2.record);
                               } else if (dose2.date) {
                                 onNewRecord?.(row.name, row.code, dose2.date);
                               }
                             }}
                           >
-                            {!row.is_active ? <span className="font-bold text-[10px] tracking-wider uppercase text-slate-400">Pasif</span> : (dose2.record ? formatDate(dose2.date) : '')}
+                            {!row.is_active ? <span className="font-bold text-[10px] tracking-wider uppercase text-slate-400">Pasif</span> : dose2.record ? <span className="flex flex-col items-center gap-0"><span className="text-[11px]">{dose2.emoji}</span><span>{formatDate(dose2.date)}</span></span> : ''}
                           </td>
                         ) : (
                           <td className="p-2 border border-slate-300 bg-slate-100 opacity-30"></td>
@@ -1315,13 +1498,13 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onSi
                         onClick={() => {
                           if (!row.is_active || !cell) return;
                           if (cell.record) {
-                            if (cell.record.status !== 'completed') onCellClick?.(cell.record);
+                            onCellClick?.(cell.record);
                           } else if (cell.date) {
                             onNewRecord?.(row.name, row.code, cell.date);
                           }
                         }}
                       >
-                        {!row.is_active ? <span className="font-bold text-[10px] tracking-wider uppercase text-slate-400">Pasif</span> : (cell?.record ? formatDate(cell.date) : '')}
+                        {!row.is_active ? <span className="font-bold text-[10px] tracking-wider uppercase text-slate-400">Pasif</span> : cell?.record ? <span className="flex flex-col items-center gap-0"><span className="text-[11px]">{cell.emoji}</span><span>{formatDate(cell.date)}</span></span> : ''}
                       </td>
                     </Fragment>
                   );
@@ -1332,22 +1515,18 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onSi
         </table>
       </div>
 
-      <div className="mt-4 flex gap-4 text-[12px] font-bold">
-        <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#4CAF50] border border-slate-300 rounded"></div><span className="text-text-primary">Yapıldı</span></div>
-        <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#F44336] border border-slate-300 rounded"></div><span className="text-text-primary">Atlandı / Gecikti</span></div>
-        <div className="flex items-center gap-2"><div className="w-5 h-5 bg-white border border-slate-300 rounded"></div><span className="text-text-primary">Planlandı</span></div>
-      </div>
     </div>
   )
 }
 
 // ── Parasite Protocol Table Component ───────────────────────────────────
-function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord }: { 
+function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNewPlan }: { 
   pet: Pet; 
   templates: Template[]; 
   records: VRecord[]; 
   onCellClick?: (record: VRecord) => void;
   onNewRecord?: (name: string, code: string, date: string) => void;
+  onNewPlan?: (name: string, code: string, date: string) => void;
 }) {
   const parasiteTemplates = templates.filter(t => t.category === 'parasite');
 
@@ -1361,11 +1540,11 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord }: {
 
   const getCellState = (record: VRecord | undefined | null, projectedDate: string | null) => {
     if (record) {
-      if (record.status === 'completed') return { date: record.administered_at || projectedDate, bg: 'bg-[#4CAF50] text-black border-slate-300 cursor-default', record, title: `Yapıldı: ${new Date(record.administered_at || '').toLocaleDateString('tr-TR')}` };
-      if (record.status === 'skipped' || record.status === 'overdue') return { date: record.due_at || projectedDate, bg: 'bg-[#F44336] text-white border-slate-300 hover:opacity-80 cursor-pointer transition-all', record, title: `Gecikti/Atlandı.` };
-      return { date: record.due_at || projectedDate, bg: 'bg-white text-text-primary border-slate-300 hover:bg-primary/10 cursor-pointer transition-all', record, title: `Planlandı: ${new Date(record.due_at || projectedDate || '').toLocaleDateString('tr-TR')}` };
+      if (record.status === 'completed') return { date: record.administered_at || projectedDate, bg: 'bg-[#4CAF50] text-black border-slate-300 hover:opacity-80 cursor-pointer transition-all', emoji: '✅', record, title: `Yapıldı: ${new Date(record.administered_at || '').toLocaleDateString('tr-TR')}` };
+      if (record.status === 'skipped' || record.status === 'overdue') return { date: record.due_at || projectedDate, bg: 'bg-[#F44336] text-white border-slate-300 hover:opacity-80 cursor-pointer transition-all', emoji: '⚠️', record, title: `Gecikti/Atlandı.` };
+      return { date: record.due_at || projectedDate, bg: 'bg-white text-text-primary border-slate-300 hover:bg-primary/10 cursor-pointer transition-all', emoji: '🔜', record, title: `Planlandı: ${new Date(record.due_at || projectedDate || '').toLocaleDateString('tr-TR')}` };
     }
-    return { date: projectedDate, bg: 'bg-white text-text-primary border-slate-300 opacity-60', record: null, title: `Tahmini: ${projectedDate ? new Date(projectedDate).toLocaleDateString('tr-TR') : ''}` };
+    return { date: projectedDate, bg: 'bg-white text-text-primary border-slate-300 opacity-60', emoji: '', record: null, title: `Tahmini: ${projectedDate ? new Date(projectedDate).toLocaleDateString('tr-TR') : ''}` };
   }
 
   const columns = ['Son Uygulama', 'Sıradaki Bekleyen', 'Gelecek Plan 1', 'Gelecek Plan 2', 'Gelecek Plan 3', 'Gelecek Plan 4'];
@@ -1428,7 +1607,7 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord }: {
 
   return (
     <div className="mb-8 mt-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
         <h3 className="text-[16px] font-extrabold text-text-primary">Parazit Takvimi Matrisi</h3>
         <div className="flex flex-wrap items-center gap-2">
           {onNewRecord && (
@@ -1440,9 +1619,56 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord }: {
               <span className="text-[11px] font-black uppercase tracking-wider">Yapıldı Kaydı Ekle</span>
             </button>
           )}
+          {onNewPlan && (
+            <button 
+              onClick={() => onNewPlan('', '', new Date().toISOString())}
+              className="flex items-center gap-2 px-3 py-2 bg-primary/5 text-primary hover:bg-primary/10 transition-all rounded-xl border border-primary/20 group shadow-sm"
+            >
+              <span className="text-[16px] group-hover:scale-110 transition-transform">📅</span>
+              <span className="text-[11px] font-black uppercase tracking-wider">Yeni Plan Ekle</span>
+            </button>
+          )}
         </div>
       </div>
-      <div className="overflow-x-auto border border-slate-300 rounded-lg shadow-sm">
+
+      {/* Legend — tablonun üstünde, her zaman görünür */}
+      <div className="mb-3 flex flex-wrap gap-3 text-[12px] font-bold p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+        <div className="flex items-center gap-1.5"><span className="text-[14px]">✅</span><div className="w-4 h-4 bg-[#4CAF50] border border-slate-300 rounded"></div><span className="text-text-primary">Yapıldı — tıkla, düzenle</span></div>
+        <div className="flex items-center gap-1.5"><span className="text-[14px]">⚠️</span><div className="w-4 h-4 bg-[#F44336] border border-slate-300 rounded"></div><span className="text-text-primary">Gecikti / Atlandı</span></div>
+        <div className="flex items-center gap-1.5"><span className="text-[14px]">🔜</span><div className="w-4 h-4 bg-white border border-slate-300 rounded"></div><span className="text-text-primary">Planlandı</span></div>
+      </div>
+
+      <div className="md:hidden flex flex-col gap-3">
+        {rows.map((row: any, i: number) => (
+          <div key={i} className={`border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm ${!row.is_active ? 'opacity-60' : ''}`}>
+            <div className="flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-200">
+              <div className="flex flex-col gap-0.5">
+                <span className={`font-extrabold text-[13px] ${!row.is_active ? 'line-through text-text-secondary' : 'text-text-primary'}`}>
+                  {getDisplayName(row.name, row.code)}
+                </span>
+                <span className="text-[10px] text-text-secondary">{row.frequency}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-bold bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded">{row.code}</span>
+                {!row.is_active && <span className="text-[10px] font-black bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded uppercase">Pasif</span>}
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2 p-3">
+              {row.cells.map((cell: any, idx: number) => (
+                <button
+                  key={idx}
+                  className={`flex flex-col items-center px-3 py-2 rounded-xl border text-[11px] font-bold min-w-[80px] transition-all ${!row.is_active ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' : (cell ? cell.bg : 'bg-slate-100 border-slate-200 text-slate-400')}`}
+                  onClick={() => { if (!row.is_active) return; if (cell?.record && !(cell.record as any)._isVirtual) { onCellClick?.(cell.record); } else if (cell?.date) { onNewRecord?.(row.name, row.code, cell.date); } }}
+                >
+                  <span className="text-[9px] uppercase tracking-wide opacity-70 mb-0.5">{columns[idx]}</span>
+                  {!row.is_active ? <span>Pasif</span> : cell?.record ? <><span className="text-[12px]">{cell.emoji}</span><span>{formatDate(cell.date)}</span></> : <span>{idx === 0 ? '—' : ''}</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="hidden md:block overflow-x-auto border border-slate-300 rounded-lg shadow-sm">
         <table className="w-full text-[12px] text-left border-collapse min-w-[800px]">
           <thead>
             <tr className="bg-slate-500 text-white">
@@ -1450,7 +1676,7 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord }: {
               <th colSpan={6} className="p-2 border-slate-600 text-center font-bold">Uygulama Zaman Çizelgesi</th>
             </tr>
             <tr className="bg-slate-400 text-white">
-              <th className="p-2 border border-slate-500 font-bold whitespace-nowrap">Parazit Koruması</th>
+              <th className="p-2 border border-slate-500 font-bold whitespace-nowrap sticky left-0 z-10 bg-slate-400">Parazit Koruması</th>
               <th className="p-2 border border-slate-500 font-bold">Kod</th>
               <th className="p-2 border border-slate-500 font-bold">Sıklık</th>
               {columns.map(col => (
@@ -1461,7 +1687,7 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord }: {
           <tbody>
             {rows.map((row: any, i: number) => (
               <tr key={i} className="hover:bg-slate-50 transition-colors">
-                <td className={`p-2 border border-slate-300 font-bold whitespace-nowrap bg-white ${!row.is_active ? 'text-text-secondary opacity-60' : 'text-text-primary'}`}>
+                <td className={`p-2 border border-slate-300 font-bold whitespace-nowrap sticky left-0 z-10 bg-white ${!row.is_active ? 'text-text-secondary opacity-60' : 'text-text-primary'}`}>
                   <div className="flex items-center gap-2">
                     <span className={!row.is_active ? 'line-through' : ''}>{getDisplayName(row.name, row.code)}</span>
                     {!row.is_active && (
@@ -1491,13 +1717,13 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord }: {
                     onClick={() => {
                       if (!row.is_active) return;
                       if (cell?.record && !(cell.record as any)._isVirtual) {
-                        if (cell.record.status !== 'completed') onCellClick?.(cell.record);
+                        onCellClick?.(cell.record);
                       } else if (cell?.date) {
                         onNewRecord?.(row.name, row.code, cell.date);
                       }
                     }}
                   >
-                    {!row.is_active ? <span className="font-bold text-[10px] tracking-wider uppercase text-slate-400">Pasif</span> : (cell && cell.date ? formatDate(cell.date) : (idx === 0 ? '-' : ''))}
+                    {!row.is_active ? <span className="font-bold text-[10px] tracking-wider uppercase text-slate-400">Pasif</span> : cell?.record ? <span className="flex flex-col items-center gap-0"><span className="text-[11px]">{cell.emoji}</span><span>{formatDate(cell.date)}</span></span> : <span>{idx === 0 ? '-' : ''}</span>}
                   </td>
                 ))}
               </tr>
@@ -1709,9 +1935,11 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
   const [postponeRecord, setPostponeRecord] = useState<VRecord | null>(null)
   const [manualConfig, setManualConfig] = useState<{ show: boolean, mode: 'record' | 'plan', fixed: boolean, initialData?: { name: string, code: string, date: string, brand?: string, batch_no?: string, clinic?: string } | null }>({ show: false, mode: 'record', fixed: false })
   const [isSingleScanning, setIsSingleScanning] = useState(false)
+  const [singleScanError, setSingleScanError] = useState('')
 
   async function handleSingleScan(file: File) {
     setIsSingleScanning(true)
+    setSingleScanError('')
     try {
       const reader = new FileReader()
       reader.onload = async (event) => {
@@ -1731,9 +1959,9 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
             }
           })
         } else if (res.success) {
-          alert('Etiket okunamadı: Lütfen daha net bir fotoğraf çekin.')
+          setSingleScanError('Etiket okunamadı. Lütfen daha net ve iyi aydınlatılmış bir fotoğraf çekin.')
         } else {
-          alert('Etiket okunamadı: ' + res.error)
+          setSingleScanError('Etiket okunamadı: ' + (res.error || 'Bilinmeyen hata.'))
         }
         setIsSingleScanning(false)
       }
@@ -1743,12 +1971,25 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
       setIsSingleScanning(false)
     }
   }
-  const [showSettings, setShowSettings] = useState(false)
+
   const [showOverdueList, setShowOverdueList] = useState(false)
   const [showBatchScan, setShowBatchScan] = useState(false)
   const [isHistoricalImporting, setIsHistoricalImporting] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [dismissedRabiesPrompt, setDismissedRabiesPrompt] = useState(false)
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean
+    title: string
+    message?: string
+    onConfirm: () => void
+  }>({ open: false, title: '', onConfirm: () => {} })
+
+  function openConfirm(title: string, message: string | undefined, onConfirm: () => void) {
+    setConfirmModal({ open: true, title, message, onConfirm })
+  }
+  function closeConfirm() {
+    setConfirmModal(prev => ({ ...prev, open: false }))
+  }
 
   // Computed stats
   const overdueCount = vaccineRecords.filter(r => r.status === 'overdue').length
@@ -1907,6 +2148,21 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
         </div>
       )}
 
+      {singleScanError && (
+        <div className="flex items-start gap-3 p-4 bg-warning/10 border border-warning/30 rounded-2xl animate-fade-in">
+          <span className="text-[20px] flex-shrink-0">📸</span>
+          <div className="flex-1">
+            <p className="text-[13px] font-bold text-warning leading-relaxed">{singleScanError}</p>
+            <button
+              onClick={() => setSingleScanError('')}
+              className="text-[12px] font-bold text-text-secondary hover:text-text-primary mt-2 transition-colors"
+            >
+              Kapat ×
+            </button>
+          </div>
+        </div>
+      )}
+
       {showBatchScan && (
         <BatchScanModal
           petId={pet.id}
@@ -2049,58 +2305,7 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
         </div>
       )}
 
-      {/* Quick Settings */}
-      {!isTab && (
-        <div className="flex items-center justify-end">
-        <div className="relative">
-          <button 
-            onClick={() => setShowSettings(!showSettings)}
-            className={`p-3 rounded-2xl border border-border-main transition-all ${showSettings ? 'bg-primary text-white border-primary' : 'bg-bg-main text-text-secondary hover:text-primary hover:border-primary/50'}`}
-          >
-            ⚙️
-          </button>
-          
-          {showSettings && (
-            <div className="absolute right-0 mt-2 w-64 bg-white border border-border-main rounded-2xl shadow-xl z-50 p-4 animate-in fade-in zoom-in duration-200 origin-top-right">
-              <h4 className="text-[12px] font-black text-text-secondary uppercase tracking-widest mb-3">Plan Ayarları</h4>
-              
-              <div className="flex items-center justify-between p-3 bg-bg-main rounded-xl border border-border-main mb-4">
-                <div>
-                  <p className="font-bold text-text-primary text-[12px]">Mevcut Mod</p>
-                  <p className="text-[11px] text-text-secondary">
-                    {setupProfile?.setup_mode === 'smart_start' ? 'Akıllı Başlangıç' : setupProfile?.setup_mode === 'fresh_start' ? 'Bugünden Başla' : 'İçe Aktarma'}
-                  </p>
-                </div>
-                <span className="text-[18px]">{setupProfile?.setup_mode === 'smart_start' ? '🧬' : setupProfile?.setup_mode === 'fresh_start' ? '🌱' : '📋'}</span>
-              </div>
 
-              <button
-                onClick={() => {
-                  if (confirm('Aşı ve parazit planını sıfırlamak istediğinizden emin misiniz? Tamamlanan kayıtlar korunur.')) {
-                    startTransition(async () => {
-                      await saveSetupMode(pet.id, 'smart_start')
-                      setSetupDone(false)
-                      setShowSettings(false)
-                      router.refresh()
-                    })
-                  }
-                }}
-                disabled={isPending}
-                className="w-full py-2.5 rounded-xl border border-error/30 text-error text-[12px] font-bold hover:bg-error/5 transition-colors disabled:opacity-40"
-              >
-                Planı Sıfırla
-              </button>
-              
-              <div className="mt-3 pt-3 border-t border-border-main">
-                <button onClick={() => setManualConfig({ show: true, mode: 'record', fixed: false })} className="w-full text-center text-[12px] font-bold text-primary hover:underline">
-                  + Manuel Kayıt Ekle
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-      )}
 
       {/* ── RECORDS (Matrix) ── */}
       <div className="flex flex-col gap-3">
@@ -2114,6 +2319,9 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
               }} 
               onNewRecord={(name, code, date) => {
                 setManualConfig({ show: true, mode: 'record', fixed: true, initialData: { name, code, date } })
+              }}
+              onNewPlan={(name, code, date) => {
+                setManualConfig({ show: true, mode: 'plan', fixed: true, initialData: { name, code, date } })
               }}
               onSingleScan={handleSingleScan}
               onBatchScan={() => setShowBatchScan(true)}
@@ -2129,6 +2337,9 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
               }} 
               onNewRecord={(name, code, date) => {
                 setManualConfig({ show: true, mode: 'record', fixed: true, initialData: { name, code, date } })
+              }}
+              onNewPlan={(name, code, date) => {
+                setManualConfig({ show: true, mode: 'plan', fixed: true, initialData: { name, code, date } })
               }}
             />
           )}
@@ -2211,9 +2422,11 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
                       <span className="text-[12px]">⏩</span>
                     </button>
                     <button onClick={() => {
-                      if (confirm('Bu planlanmış işlemi silmek istiyor musunuz?')) {
-                        startTransition(async () => { await deleteVaccineRecord(r.id); refreshData() })
-                      }
+                      openConfirm(
+                        'Planı Sil',
+                        'Bu planlanmış işlemi silmek istiyor musunuz?',
+                        () => startTransition(async () => { await deleteVaccineRecord(r.id); refreshData() })
+                      )
                     }} className="w-8 h-8 flex items-center justify-center bg-error/5 text-error/60 rounded-xl hover:bg-error/10 hover:text-error transition-colors" title="Sil">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                     </button>
@@ -2258,9 +2471,11 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </button>
                   <button onClick={() => {
-                    if (confirm('Bu kaydı silmek istiyor musunuz?')) {
-                      startTransition(async () => { await deleteVaccineRecord(r.id); refreshData() })
-                    }
+                    openConfirm(
+                      'Kaydı Sil',
+                      'Bu kaydı silmek istiyor musunuz?',
+                      () => startTransition(async () => { await deleteVaccineRecord(r.id); refreshData() })
+                    )
                   }} className="w-8 h-8 flex items-center justify-center text-text-secondary hover:text-error hover:bg-error/5 rounded-xl transition-colors" title="Sil">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                   </button>
@@ -2275,6 +2490,52 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
           ))}
       </div>
 
+      {/* ── Plan Yönetimi (Danger Zone) ── */}
+      {!isTab && (
+        <div className="mt-4 border border-error/20 rounded-[20px] overflow-hidden">
+          <div className="flex items-center gap-3 px-5 py-3 bg-error/5 border-b border-error/15">
+            <span className="text-[16px]">⚠️</span>
+            <p className="text-[12px] font-black text-error uppercase tracking-widest">Plan Yönetimi</p>
+          </div>
+          <div className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <p className="font-bold text-text-primary text-[14px]">Planı Sıfırla</p>
+              <p className="text-[12px] text-text-secondary mt-0.5 leading-relaxed">
+                Aşı planını baştan yapılandır. Tamamlanan kayıtlar silinmez.
+              </p>
+            </div>
+            <button
+              onClick={() =>
+                openConfirm(
+                  'Planı Sıfırla',
+                  'Aşı ve parazit planını sıfırlamak istediğinizden emin misiniz? Tamamlanan kayıtlar korunur.',
+                  () => startTransition(async () => {
+                    await saveSetupMode(pet.id, 'smart_start')
+                    setSetupDone(false)
+                    router.refresh()
+                  })
+                )
+              }
+              disabled={isPending}
+              className="shrink-0 px-5 py-2.5 rounded-xl border border-error/40 text-error text-[13px] font-bold hover:bg-error/8 hover:border-error/60 active:scale-95 transition-all disabled:opacity-40"
+            >
+              Planı Sıfırla
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Confirm Modal ── */}
+      <ConfirmModal
+        open={confirmModal.open}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmLabel="Evet, Sil"
+        cancelLabel="İptal"
+        variant="danger"
+        onConfirm={() => { closeConfirm(); confirmModal.onConfirm() }}
+        onCancel={closeConfirm}
+      />
     </div>
   )
 }

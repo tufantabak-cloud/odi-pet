@@ -180,6 +180,9 @@ export async function generateSchedule(petId: string, mode: 'smart_start' | 'his
     await supabase.from('vaccine_records_v2').insert(records)
   }
   revalidatePath(`/owner/pets/${petId}/vaccines`)
+
+  const overdueCount = records.filter(r => r.status === 'overdue').length
+  return { total: records.length, overdue: overdueCount }
 }
 
 // ── Mark Done ──────────────────────────────────────────────────

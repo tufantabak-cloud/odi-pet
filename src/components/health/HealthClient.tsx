@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import ConfirmModal from '@/components/ui/ConfirmModal'
 
 export default function HealthClient({ petId }: { petId: string }) {
   const supabase = createBrowserSupabaseClient()
@@ -26,6 +27,12 @@ export default function HealthClient({ petId }: { petId: string }) {
   const [showAllSchedules, setShowAllSchedules] = useState(false)
   const [selectedSchedule, setSelectedSchedule] = useState<any>(null)
   const [preselectedVaccineId, setPreselectedVaccineId] = useState<string | null>(null)
+  // Confirm modal state for quick-mark and schedule cancellation
+  const [quickMarkConfirm, setQuickMarkConfirm] = useState<any | null>(null)
+  const [cancelModal, setCancelModal] = useState<{
+    step: 'choose' | 'confirmAll'
+    schedule: any
+  } | null>(null)
   
   // Form States for Auto-calculation
   const [formAppliedDate, setFormAppliedDate] = useState<string>(new Date().toISOString().split('T')[0])
@@ -267,29 +274,32 @@ export default function HealthClient({ petId }: { petId: string }) {
   }
 
   const quickMarkDone = async (schedule: any) => {
-    if (window.confirm(`'${schedule.title || schedule.vaccines?.name}' için takvimdeki planlanan tarih olan ${new Date(schedule.due_date).toLocaleDateString('tr-TR')} baz alınarak hızlı kayıt oluşturulacaktır.\n\nOnaylıyor musunuz?`)) {
-      setIsSubmitting(true);
-      try {
-        if (schedule.plan_type === 'vaccine') {
-          await supabase.from('vaccine_records').insert({
-            pet_id: petId,
-            vaccine_id: schedule.vaccine_id,
-            schedule_id: schedule.id,
-            applied_date: schedule.due_date
-          });
-          await supabase.rpc('adjust_care_score', { p_pet_id: petId, p_delta: 10 });
-        } else {
-          await supabase.from('health_schedules').update({ status: 'done' }).eq('id', schedule.id);
-          await supabase.rpc('adjust_care_score', { p_pet_id: petId, p_delta: 5 });
-        }
-        
-        // Trigger predictive risk recalculation in background
-        fetch(`/api/predictive-risk/${petId}?force=true`).catch(console.error);
+    setQuickMarkConfirm(schedule)
+  }
 
-        fetchData();
-      } finally {
-        setIsSubmitting(false);
+  const doQuickMarkDone = async (schedule: any) => {
+    setQuickMarkConfirm(null)
+    setIsSubmitting(true);
+    try {
+      if (schedule.plan_type === 'vaccine') {
+        await supabase.from('vaccine_records').insert({
+          pet_id: petId,
+          vaccine_id: schedule.vaccine_id,
+          schedule_id: schedule.id,
+          applied_date: schedule.due_date
+        });
+        await supabase.rpc('adjust_care_score', { p_pet_id: petId, p_delta: 10 });
+      } else {
+        await supabase.from('health_schedules').update({ status: 'done' }).eq('id', schedule.id);
+        await supabase.rpc('adjust_care_score', { p_pet_id: petId, p_delta: 5 });
       }
+      
+      // Trigger predictive risk recalculation in background
+      fetch(`/api/predictive-risk/${petId}?force=true`).catch(console.error);
+
+      fetchData();
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -326,24 +336,30 @@ export default function HealthClient({ petId }: { petId: string }) {
 
   const cancelSchedule = async (schedule: any) => {
     if (schedule.plan_id) {
-       const choice = window.confirm('Bu görev tekrarlayan bir planın parçası.\nSADECE BU görevi silmek için TAMAM (OK) tıklayın.\nTÜM GELECEK görevleri silmek için İPTAL (CANCEL) tıklayın.');
-       if (choice) {
-           await supabase.from('health_schedules').delete().eq('id', schedule.id);
-       } else {
-           if (window.confirm('Emin misiniz? Tüm gelecek kayıtlar silinecek.')) {
-               await supabase.from('health_schedules').delete().eq('plan_id', schedule.plan_id).gte('due_date', schedule.due_date);
-           } else {
-               return; // İptal edildi
-           }
-       }
+      // Show step 1: choose single or all
+      setCancelModal({ step: 'choose', schedule })
     } else {
-       if (!window.confirm('Bu hatırlatmayı iptal etmek (silmek) istediğinize emin misiniz?')) return;
-       await supabase.from('health_schedules').delete().eq('id', schedule.id);
+      // Simple single delete
+      setCancelModal({ step: 'confirmAll', schedule }) // reuse confirmAll for simple delete
     }
-    
+  }
+
+  const doDeleteSingle = async (schedule: any) => {
+    setCancelModal(null)
     setIsSubmitting(true);
     setIsModalOpen(false);
     setSelectedSchedule(null);
+    await supabase.from('health_schedules').delete().eq('id', schedule.id);
+    fetchData();
+    setIsSubmitting(false);
+  }
+
+  const doDeleteAll = async (schedule: any) => {
+    setCancelModal(null)
+    setIsSubmitting(true);
+    setIsModalOpen(false);
+    setSelectedSchedule(null);
+    await supabase.from('health_schedules').delete().eq('plan_id', schedule.plan_id).gte('due_date', schedule.due_date);
     fetchData();
     setIsSubmitting(false);
   }
@@ -1090,6 +1106,58 @@ export default function HealthClient({ petId }: { petId: string }) {
           </div>
         </div>
       )}
+
+      {/* Quick Mark Confirm */}
+      <ConfirmModal
+        open={!!quickMarkConfirm}
+        title="Hızlı Onay"
+        message={quickMarkConfirm ? `'${quickMarkConfirm.title || quickMarkConfirm.vaccines?.name}' için ${new Date(quickMarkConfirm.due_date).toLocaleDateString('tr-TR')} tarihli hızlı kayıt oluşturulacaktır. Onaylıyor musunuz?` : ''}
+        confirmLabel="Evet, Kaydet"
+        cancelLabel="İptal"
+        variant="default"
+        onConfirm={() => quickMarkConfirm && doQuickMarkDone(quickMarkConfirm)}
+        onCancel={() => setQuickMarkConfirm(null)}
+      />
+
+      {/* Cancel Schedule - Choose Step (for recurring tasks) */}
+      {cancelModal?.step === 'choose' && (
+        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" onClick={() => setCancelModal(null)}>
+          <div className="bg-surface w-full max-w-sm rounded-[28px] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200" onClick={e => e.stopPropagation()}>
+            <div className="px-6 pt-7 pb-4 flex flex-col items-center text-center gap-3">
+              <div className="w-14 h-14 rounded-full bg-error/10 flex items-center justify-center text-[28px]">🗑️</div>
+              <h3 className="text-[17px] font-extrabold text-text-primary">Tekrarlayan Görev</h3>
+              <p className="text-[13px] text-text-secondary leading-relaxed">Bu görev tekrarlayan bir planın parçası. Ne yapmak istersiniz?</p>
+            </div>
+            <div className="px-6 pb-7 flex flex-col gap-2">
+              <button
+                onClick={() => doDeleteSingle(cancelModal.schedule)}
+                className="w-full py-3.5 rounded-xl bg-warning/10 text-warning border-2 border-warning/30 font-bold text-[14px] hover:bg-warning/20 transition-colors"
+              >
+                Sadece Bu Görevi Sil
+              </button>
+              <button
+                onClick={() => setCancelModal({ step: 'confirmAll', schedule: cancelModal.schedule })}
+                className="w-full py-3.5 rounded-xl bg-error/10 text-error border-2 border-error/20 font-bold text-[14px] hover:bg-error/20 transition-colors"
+              >
+                Tüm Gelecek Görevleri Sil
+              </button>
+              <button onClick={() => setCancelModal(null)} className="w-full py-3 text-text-secondary font-bold text-[13px] hover:text-text-primary">İptal</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Schedule - Confirm All Delete */}
+      <ConfirmModal
+        open={cancelModal?.step === 'confirmAll'}
+        title={cancelModal?.schedule?.plan_id ? 'Tüm Gelecek Görevleri Sil' : 'Görevi İptal Et'}
+        message={cancelModal?.schedule?.plan_id ? 'Emin misiniz? Tüm gelecek kayıtlar kalıcı olarak silinecek.' : 'Bu hatırlatmayı iptal etmek (silmek) istediğinize emin misiniz?'}
+        confirmLabel="Evet, Sil"
+        cancelLabel="İptal"
+        variant="danger"
+        onConfirm={() => cancelModal && (cancelModal.schedule.plan_id ? doDeleteAll(cancelModal.schedule) : doDeleteSingle(cancelModal.schedule))}
+        onCancel={() => setCancelModal(null)}
+      />
     </div>
   )
 }

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import ConfirmModal from '@/components/ui/ConfirmModal'
 
 const ROLE_LABELS: Record<string, { label: string; color: string; desc: string }> = {
   owner:  { label: 'Sahip',   color: 'bg-purple-100 text-purple-700', desc: 'Tam yetki' },
@@ -19,6 +20,8 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
   const [activity, setActivity] = useState<any[]>([])
   const [loaded, setLoaded] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [memberToRemove, setMemberToRemove] = useState<string | null>(null)
+  const [sosStatus, setSosStatus] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
   const [email, setEmail] = useState('')
   const [role, setRole] = useState('editor')
@@ -66,18 +69,19 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
   }
 
   async function removeMember(memberId: string) {
-    if (!confirm('Bu üyeyi kaldırmak istediğinize emin misiniz?')) return
     await fetch('/api/pets/family', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ member_id: memberId, pet_id: petId }),
     })
     setMembers(prev => prev.filter(m => m.id !== memberId))
+    setMemberToRemove(null)
   }
 
   async function saveSos(e: React.FormEvent) {
     e.preventDefault()
     setSavingSos(true)
+    setSosStatus(null)
     try {
       const res = await fetch(`/api/pets/${petId}/sos`, {
         method: 'POST',
@@ -85,11 +89,11 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
         body: JSON.stringify({ sos_contacts: sosContacts }),
       })
       const data = await res.json()
-      if (!res.ok) { alert(data.error || 'SOS güncellenirken hata oluştu'); return }
-      alert('Acil durum ağı başarıyla güncellendi!')
+      if (!res.ok) { setSosStatus({ type: 'err', text: data.error || 'SOS güncellenirken hata oluştu' }); return }
+      setSosStatus({ type: 'ok', text: 'Acil durum ağı başarıyla güncellendi!' })
       router.refresh()
     } catch (err) {
-      alert('Bir hata oluştu.')
+      setSosStatus({ type: 'err', text: 'Bir hata oluştu.' })
     } finally { setSavingSos(false) }
   }
 
@@ -191,6 +195,16 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
           <button type="submit" disabled={savingSos} className="btn-primary bg-error hover:bg-error/90 border-none py-3 text-[14px] mt-1 shadow-sm w-full sm:w-auto self-start px-8">
             {savingSos ? 'Kaydediliyor...' : 'Acil Durum Ağını Güncelle'}
           </button>
+          {sosStatus && (
+            <div className={`mt-2 px-3 py-2 rounded-xl text-[12px] font-semibold border ${
+              sosStatus.type === 'ok'
+                ? 'bg-success/10 text-success border-success/20'
+                : 'bg-error/10 text-error border-error/20'
+            }`}>
+              {sosStatus.text}
+              <button onClick={() => setSosStatus(null)} className="ml-2 font-bold opacity-60 hover:opacity-100">×</button>
+            </div>
+          )}
         </form>
       </div>
 
@@ -235,7 +249,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
                   </div>
                   <span className={`text-[11px] font-black px-2.5 py-1 rounded-full ${roleInfo.color}`}>{roleInfo.label}</span>
                   {m.role !== 'owner' && (
-                    <button onClick={() => removeMember(m.id)} className="text-text-secondary hover:text-error transition-colors ml-1" title="Kaldır">
+                    <button onClick={() => setMemberToRemove(m.id)} className="text-text-secondary hover:text-error transition-colors ml-1" title="Kaldır">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
                   )}
@@ -330,6 +344,17 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
           Davet ettiğin kişi kabul edince <strong className="text-primary">+50 Care Point</strong> kazanırsın!
         </p>
       </div>
+
+      <ConfirmModal
+        open={!!memberToRemove}
+        title="Üyeyi Kaldır"
+        message="Bu üyeyi ekipten kaldırmak istediğinize emin misiniz?"
+        confirmLabel="Evet, Kaldır"
+        cancelLabel="İptal"
+        variant="danger"
+        onConfirm={() => memberToRemove && removeMember(memberToRemove)}
+        onCancel={() => setMemberToRemove(null)}
+      />
     </div>
   )
 }

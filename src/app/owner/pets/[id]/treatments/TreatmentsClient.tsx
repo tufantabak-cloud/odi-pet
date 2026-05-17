@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import ConfirmModal from '@/components/ui/ConfirmModal'
 
 const COMMON_DISEASES = [
   "Rutin Check-up",
@@ -31,6 +32,7 @@ export default function TreatmentsClient({ pet, initialTreatments }: { pet: any,
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [editingTreatment, setEditingTreatment] = useState<any>(null)
   const [notification, setNotification] = useState<{type: 'success' | 'error', message: string} | null>(null)
+  const [treatmentToDelete, setTreatmentToDelete] = useState<string | null>(null)
 
   // Form states
   const [diseaseSelect, setDiseaseSelect] = useState('')
@@ -251,13 +253,13 @@ export default function TreatmentsClient({ pet, initialTreatments }: { pet: any,
   }
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Bu tedaviyi silmek istediğinize emin misiniz?")) return
     setIsSubmitting(true)
     try {
       await supabase.from('health_treatments').delete().eq('id', id)
       setTreatments(treatments.filter(t => t.id !== id))
       setNotification({ type: 'success', message: 'Tedavi kaydı silindi.' })
       setIsModalOpen(false)
+      setTreatmentToDelete(null)
     } catch (err) {
       setNotification({ type: 'error', message: 'Silme işlemi sırasında hata oluştu.' })
     } finally {
@@ -532,7 +534,7 @@ export default function TreatmentsClient({ pet, initialTreatments }: { pet: any,
 
               <div className="flex flex-wrap items-center justify-between gap-4 mt-4 pb-10 sm:pb-0">
                 {editingTreatment ? (
-                  <button type="button" onClick={() => handleDelete(editingTreatment.id)} className="btn-secondary !text-error !bg-error/5 hover:!bg-error/10 border-error/20 py-3 px-8 text-[13px] font-black tracking-tight shrink-0 rounded-2xl">
+                  <button type="button" onClick={() => setTreatmentToDelete(editingTreatment.id)} className="btn-secondary !text-error !bg-error/5 hover:!bg-error/10 border-error/20 py-3 px-8 text-[13px] font-black tracking-tight shrink-0 rounded-2xl">
                     Kaydı Sil
                   </button>
                 ) : <div/>}
@@ -549,6 +551,17 @@ export default function TreatmentsClient({ pet, initialTreatments }: { pet: any,
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={!!treatmentToDelete}
+        title="Tedavi Kaydını Sil"
+        message="Bu tedavi kaydını kalıcı olarak silmek istediğinize emin misiniz?"
+        confirmLabel="Evet, Sil"
+        cancelLabel="İptal"
+        variant="danger"
+        onConfirm={() => treatmentToDelete && handleDelete(treatmentToDelete)}
+        onCancel={() => setTreatmentToDelete(null)}
+      />
     </div>
   )
 }

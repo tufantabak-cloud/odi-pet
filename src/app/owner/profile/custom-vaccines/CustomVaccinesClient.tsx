@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { addCustomTemplate, deleteCustomTemplate } from './actions'
 import { getDisplayName, COMMON_ALIASES } from '@/lib/vaccines/utils'
+import ConfirmModal from '@/components/ui/ConfirmModal'
 
 type VaccineProtocol = {
   id: string
@@ -40,6 +41,7 @@ export default function CustomVaccinesClient({ templates }: { templates: Vaccine
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const [templateToDelete, setTemplateToDelete] = useState<string | null>(null)
 
   const defaultForm: FormState = {
     species: 'dog',
@@ -332,11 +334,7 @@ export default function CustomVaccinesClient({ templates }: { templates: Vaccine
           </button>
           {isCustomized && (
             <button
-              onClick={() => {
-                if (confirm('Bu özel şablonu sil ve sistem varsayılanına dön?')) {
-                  startTransition(() => deleteCustomTemplate(protocol.id))
-                }
-              }}
+              onClick={() => setTemplateToDelete(protocol.id)}
               className="text-[12px] font-bold text-error/70 hover:text-error hover:bg-error/10 px-3 py-1.5 rounded-lg transition-colors"
             >
               Sıfırla
@@ -412,9 +410,23 @@ export default function CustomVaccinesClient({ templates }: { templates: Vaccine
       {/* Protocol Lists */}
       <div className="flex flex-col gap-6">
         <Section list={vaccineList} title="Aşı Protokolleri" icon="💉" />
-        <Section list={parasiteList} title="Parazit Protokolleri" icon="🦠" />
+        <Section list={parasiteList} title="Parazit Protokolleri" icon="🧫" />
         <Section list={otherList} title="Diğer Bakım" icon="📋" />
       </div>
+
+      <ConfirmModal
+        open={!!templateToDelete}
+        title="Şablonu Sıfırla"
+        message="Bu özel şablonu silip sistem varsayılanına dönmek istediğinizden emin misiniz?"
+        confirmLabel="Evet, Sıfırla"
+        cancelLabel="İptal"
+        variant="danger"
+        onConfirm={() => {
+          if (templateToDelete) startTransition(() => deleteCustomTemplate(templateToDelete))
+          setTemplateToDelete(null)
+        }}
+        onCancel={() => setTemplateToDelete(null)}
+      />
     </div>
   )
 }
