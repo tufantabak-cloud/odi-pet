@@ -403,7 +403,7 @@ export async function addManualVaccine(petId: string, data: {
       .in('status', ['overdue', 'due', 'scheduled'])
       .lte('due_at', data.administered_at!) // only past-due stale records
   }
-  const { data: insertedRecord } = await supabase.from('vaccine_records_v2').insert({
+  const { data: insertedRecord, error: insertError } = await supabase.from('vaccine_records_v2').insert({
     pet_id: petId,
     vaccine_code: extractedCode || 'MANUAL',
     vaccine_name: data.vaccine_name,
@@ -414,6 +414,11 @@ export async function addManualVaccine(petId: string, data: {
     confidence_level: isCompleted ? 'verified' : 'estimated',
     notes: notesParts || null,
   }).select('id').single()
+
+  if (insertError) {
+    console.error('[addManualVaccine] insert error:', insertError.message)
+    return { error: insertError.message }
+  }
 
   if (isCompleted && data.recurrence_days) {
     const nextDue = new Date(data.administered_at!)

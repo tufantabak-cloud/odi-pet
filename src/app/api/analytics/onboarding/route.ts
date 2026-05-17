@@ -79,8 +79,8 @@ export async function POST(req: NextRequest) {
   })
 
   if (dbErr) {
-    console.error('[analytics] insert failed:', dbErr.message)
-    return NextResponse.json({ error: 'DB error' }, { status: 500 })
+    console.warn('[analytics] insert failed (non-critical):', dbErr.message)
+    return NextResponse.json({ success: false, warning: 'DB error (non-critical)' })
   }
 
   return NextResponse.json({ success: true })

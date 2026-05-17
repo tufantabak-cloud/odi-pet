@@ -626,7 +626,7 @@ function ManualVaccineModal({
     if (!date) { setError('Tarih zorunludur.'); return }
     setError('')
     startTransition(async () => {
-      await addManualVaccine(petId, {
+      const result = await addManualVaccine(petId, {
         vaccine_name: name,
         vaccine_code: selectedCode || undefined,
         due_at: new Date(date).toISOString(),
@@ -639,6 +639,10 @@ function ManualVaccineModal({
         recurrence_days: recurrenceDays ? Number(recurrenceDays) : undefined,
         amount: amount ? Number(amount) : undefined
       })
+      if ((result as any)?.error) {
+        setError('Kaydetme hatası: ' + (result as any).error)
+        return
+      }
       onDone()
     })
   }
