@@ -130,7 +130,7 @@ export default function VetsPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-12 min-h-screen">
+    <div className="max-w-4xl mx-auto px-6 py-12 min-h-screen pb-28">
       {/* Navigation */}
       <div className="mb-8 animate-fadeInUp">
         <Link href="/owner/dashboard" className="inline-flex items-center gap-2 text-text-secondary hover:text-primary font-bold text-sm transition-colors group">

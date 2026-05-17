@@ -19,7 +19,7 @@ export function PaywallModal({ isOpen, onClose, title, description, feature }: P
       <div className="bg-surface rounded-2xl p-6 sm:p-8 w-full max-w-md shadow-2xl relative animate-slideUp">
         <button 
           onClick={onClose}
-          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-bg-main hover:bg-black/5 transition-colors"
+          className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-bg-main hover:bg-black/5 transition-colors"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>

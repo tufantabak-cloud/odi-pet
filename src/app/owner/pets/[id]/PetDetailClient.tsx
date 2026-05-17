@@ -221,7 +221,7 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
       )}
 
       {/* ── Tabs ── */}
-      <div id="pet-tabs" className="flex gap-1 bg-bg-main p-1 rounded-2xl border border-border-main overflow-x-auto">
+      <div id="pet-tabs" className="flex gap-1 bg-bg-main p-1 rounded-2xl border border-border-main overflow-x-auto sticky top-16 z-30">
         {TABS.map(t => (
           <button key={t} onClick={() => setActiveTab(t)}
             className={`flex-1 min-w-max px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all whitespace-nowrap ${activeTab === t ? 'bg-white text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary'}`}>

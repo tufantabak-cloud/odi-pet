@@ -68,7 +68,7 @@ export default function FloatingSOS() {
       {/* SOS Compact Button */}
       <button
         onClick={() => setOpen(true)}
-        className="relative w-9 h-9 rounded-full bg-error flex items-center justify-center shadow-md focus:outline-none hover:bg-error/90 transition-colors"
+        className="relative w-12 h-12 rounded-full bg-error flex items-center justify-center shadow-md focus:outline-none hover:bg-error/90 transition-colors"
         aria-label="Acil SOS"
       >
         {/* Pulse ring */}

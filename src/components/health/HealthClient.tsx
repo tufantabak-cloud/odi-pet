@@ -787,7 +787,7 @@ export default function HealthClient({ petId }: { petId: string }) {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => !isSubmitting && setIsModalOpen(false)}>
-          <div className="bg-surface w-full max-w-md rounded-[28px] shadow-2xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+          <div className="bg-surface w-full max-w-md rounded-[28px] shadow-2xl p-6 sm:p-8 max-h-[90dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-[20px] font-extrabold text-text-primary">
                 {selectedSchedule ? 'Hatırlatmayı Tamamla' : 'Sağlık Merkezi İşlemleri'}

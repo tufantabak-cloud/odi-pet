@@ -64,7 +64,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden animate-fadeInUp">
+      <div className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl overflow-y-auto max-h-[90dvh] animate-fadeInUp">
         
         <div className="px-8 pt-10 pb-8">
           

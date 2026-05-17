@@ -117,8 +117,8 @@ export default function ReportsTab({ petId, petName, plan }: { petId: string; pe
                 <div className="flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-bold text-text-primary text-[15px]">{rt.label}</p>
-                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${rt.badgeColor}`}>{rt.badge}</span>
-                    {locked && <span className="text-[10px] text-text-secondary">🔒 Kilidi Aç</span>}
+                    <span className={`text-[11px] font-black px-2 py-0.5 rounded-full ${rt.badgeColor}`}>{rt.badge}</span>
+                    {locked && <span className="text-[11px] text-text-secondary">🔒 Kilidi Aç</span>}
                   </div>
                   <p className="text-[12px] text-text-secondary mt-0.5">{rt.desc}</p>
                 </div>
@@ -197,7 +197,7 @@ export default function ReportsTab({ petId, petName, plan }: { petId: string; pe
               ].map(s => (
                 <div key={s.label} className="p-3 bg-bg-main rounded-xl text-center border border-border-main">
                   <p className="text-[22px] font-black text-text-primary">{s.value}</p>
-                  <p className="text-[10px] font-bold text-text-secondary uppercase">{s.label}</p>
+                  <p className="text-[11px] font-bold text-text-secondary uppercase">{s.label}</p>
                 </div>
               ))}
             </div>
@@ -217,7 +217,7 @@ export default function ReportsTab({ petId, petName, plan }: { petId: string; pe
               </button>
             </div>
 
-            <p className="text-[10px] text-text-secondary text-center mt-3">
+            <p className="text-[11px] text-text-secondary text-center mt-3">
               Doğrulama Hash: <span className="font-mono">{report.verificationHash}</span> • ODI Pet OS tarafından oluşturuldu
             </p>
           </div>

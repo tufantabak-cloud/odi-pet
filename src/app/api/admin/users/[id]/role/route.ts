@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createAdminSupabaseClient } from '@/lib/supabase/server'
 import { getCurrentProfile, canAssignRole } from '@/lib/auth/get-current-profile'
 
 /**
@@ -57,12 +57,12 @@ export async function PATCH(
     )
   }
 
-  const supabase = await createServerSupabaseClient()
+  const supabase = createAdminSupabaseClient()
   const { data, error } = await supabase
     .from('profiles')
     .update({ role: targetRole })
     .eq('id', targetId)
-    .select('id, role, first_name, email')
+    .select('id, role, first_name')
     .single()
 
   if (error) {
