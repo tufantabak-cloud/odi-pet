@@ -9,10 +9,19 @@ import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 function LoginForm() {
   const searchParams = useSearchParams()
   const urlMessage = searchParams.get('message') ?? ''
+  const reason = searchParams.get('reason') ?? ''
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError]     = useState('')
   const [showPassword, setShowPassword] = useState(false)
+
+  const reasonBanner: Record<string, { icon: string; text: string }> = {
+    admin_required: {
+      icon: '🔒',
+      text: 'Bu alana erişmek için yönetici veya kurucu yetkisi gereklidir. Lütfen yetkili hesabınızla giriş yapın.',
+    },
+  }
+  const banner = reasonBanner[reason] ?? null
 
   const handleGoogleLogin = async () => {
     setGoogleLoading(true)
@@ -75,6 +84,13 @@ function LoginForm() {
         </div>
 
         <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
+          {banner && (
+            <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-[13px] font-semibold text-center animate-in fade-in duration-300">
+              <span className="text-[16px]">{banner.icon}</span>
+              <p className="mt-1">{banner.text}</p>
+            </div>
+          )}
+
           {(error || urlMessage) && (
             <div className="p-4 rounded-2xl bg-error/10 border border-error/20 text-error text-[13px] font-bold text-center animate-in shake-in duration-300">
               ⚠️ {error || urlMessage}

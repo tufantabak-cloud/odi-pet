@@ -1,0 +1,295 @@
+import { notFound } from 'next/navigation'
+import Link from 'next/link'
+import { requireRole } from '@/lib/auth/get-current-profile'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+import RoleChangeForm from './RoleChangeForm'
+
+export const dynamic = 'force-dynamic'
+
+interface PageProps {
+  params: Promise<{ id: string }>
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function ageFromBirthDate(birthDate: string | null): string {
+  if (!birthDate) return '—'
+  const diff = Date.now() - new Date(birthDate).getTime()
+  const years = Math.floor(diff / (365.25 * 24 * 3600 * 1000))
+  if (years < 1) {
+    const months = Math.floor(diff / (30 * 24 * 3600 * 1000))
+    return `${months} ay`
+  }
+  return `${years} yaş`
+}
+
+function ageGroup(species: string | null, birthDate: string | null): string {
+  if (!birthDate) return ''
+  const years = (Date.now() - new Date(birthDate).getTime()) / (365.25 * 24 * 3600 * 1000)
+  if (years < 1) return 'Yavru'
+  if (years < 7) return 'Yetişkin'
+  if (years < 12) return 'Yaşlı'
+  return 'Yaşlı (12+)'
+}
+
+function RoleBadge({ role }: { role: string | null }) {
+  const r = role ?? 'owner'
+  const styleMap: Record<string, string> = {
+    founder: 'bg-rose-100 text-rose-700 border-rose-200',
+    admin:   'bg-amber-100 text-amber-700 border-amber-200',
+    vet:     'bg-emerald-100 text-emerald-700 border-emerald-200',
+    owner:   'bg-violet-100 text-violet-700 border-violet-200',
+  }
+  const style = styleMap[r] ?? 'bg-bg-main text-text-secondary border-border-main'
+  const emojiMap: Record<string, string> = { founder: '👑', admin: '🔑', vet: '🩺', owner: '🐾' }
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border text-[12px] font-bold ${style}`}>
+      {emojiMap[r] ?? '👤'} {r.charAt(0).toUpperCase() + r.slice(1)}
+    </span>
+  )
+}
+
+function SubBadge({ plan, status }: { plan: string | null; status: string | null }) {
+  if (!plan || plan === 'free') {
+    return <span className="text-[12px] text-text-secondary font-semibold">Ücretsiz</span>
+  }
+  const isActive = status === 'active'
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border text-[12px] font-bold ${
+      isActive ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'
+    }`}>
+      {isActive ? '⭐' : '⏸'} {plan.toUpperCase()} {isActive ? '' : `(${status})`}
+    </span>
+  )
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+export default async function AdminUserDetailPage({ params }: PageProps) {
+  const { id } = await params
+  const actor = await requireRole(['admin', 'founder'])
+  if (!actor) return notFound()
+
+  const supabase = await createServerSupabaseClient()
+
+  // Load all data in parallel
+  const [
+    { data: profile },
+    { data: pets },
+    { data: subscription },
+    { data: events },
+  ] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('id, first_name, last_name, email, role, phone, created_at')
+      .eq('id', id)
+      .single(),
+    supabase
+      .from('pets')
+      .select('id, name, species, breed, birth_date, created_at')
+      .eq('owner_id', id)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('subscriptions')
+      .select('id, plan, status, created_at, ends_at')
+      .eq('profile_id', id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('event_stream')
+      .select('id, event, ts, payload')
+      .eq('profile_id', id)
+      .order('ts', { ascending: false })
+      .limit(20),
+  ])
+
+  if (!profile) return notFound()
+
+  const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || 'İsimsiz Kullanıcı'
+  const joined = new Date(profile.created_at).toLocaleDateString('tr-TR', {
+    day: '2-digit', month: 'long', year: 'numeric',
+  })
+
+  return (
+    <div className="space-y-8">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 text-[13px] text-text-secondary">
+        <Link href="/admin" className="hover:text-primary transition-colors">Admin</Link>
+        <span>›</span>
+        <Link href="/admin/users" className="hover:text-primary transition-colors">Kullanıcılar</Link>
+        <span>›</span>
+        <span className="text-text-primary font-semibold">{fullName}</span>
+      </div>
+
+      {/* Header card */}
+      <div className="card-base p-6 flex flex-col sm:flex-row sm:items-center gap-5">
+        {/* Avatar */}
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-border-main flex items-center justify-center text-2xl font-black text-primary flex-shrink-0">
+          {(profile.first_name?.[0] ?? profile.email?.[0] ?? '?').toUpperCase()}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-xl font-black text-text-primary">{fullName}</h1>
+            <RoleBadge role={profile.role} />
+          </div>
+          <p className="text-[13px] text-text-secondary mt-1">{profile.email ?? '—'}</p>
+          <div className="flex items-center gap-4 mt-2 flex-wrap text-[12px] text-text-secondary">
+            <span>📅 Katıldı: {joined}</span>
+            {profile.phone && <span>📞 {profile.phone}</span>}
+            <span className="font-mono text-[10px] opacity-60">{profile.id}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* LEFT COLUMN */}
+        <div className="lg:col-span-2 space-y-6">
+
+          {/* Pets */}
+          <div className="card-base overflow-hidden">
+            <div className="px-6 py-4 border-b border-border-main">
+              <h2 className="font-black text-[15px] text-text-primary flex items-center gap-2">
+                🐾 Evcil Hayvanlar
+                <span className="text-[12px] font-semibold text-text-secondary ml-1">
+                  ({(pets ?? []).length})
+                </span>
+              </h2>
+            </div>
+            {(pets ?? []).length === 0 ? (
+              <div className="p-8 text-center text-text-secondary text-[13px]">
+                Kayıtlı evcil hayvan yok.
+              </div>
+            ) : (
+              <div className="divide-y divide-border-main">
+                {(pets ?? []).map((pet) => (
+                  <div key={pet.id} className="px-6 py-4 flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-bg-main border border-border-main flex items-center justify-center text-lg flex-shrink-0">
+                      {pet.species === 'cat' ? '🐱' : '🐶'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-text-primary text-[14px]">{pet.name}</div>
+                      <div className="text-[12px] text-text-secondary mt-0.5">
+                        {pet.breed ?? pet.species ?? '—'} · {ageFromBirthDate(pet.birth_date)}
+                        {pet.birth_date && (
+                          <span className="ml-2 px-1.5 py-0.5 rounded bg-bg-main text-text-secondary text-[10px] font-semibold">
+                            {ageGroup(pet.species, pet.birth_date)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <Link
+                      href={`/owner/pets/${pet.id}`}
+                      className="text-[12px] text-primary font-semibold hover:underline flex-shrink-0"
+                    >
+                      Görüntüle →
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Event Stream */}
+          <div className="card-base overflow-hidden">
+            <div className="px-6 py-4 border-b border-border-main">
+              <h2 className="font-black text-[15px] text-text-primary flex items-center gap-2">
+                📡 Son Etkinlikler
+                <span className="text-[12px] font-semibold text-text-secondary ml-1">(son 20)</span>
+              </h2>
+            </div>
+            {(events ?? []).length === 0 ? (
+              <div className="p-8 text-center text-text-secondary text-[13px]">
+                Kayıtlı etkinlik akışı yok.
+              </div>
+            ) : (
+              <div className="divide-y divide-border-main max-h-[480px] overflow-y-auto">
+                {(events ?? []).map((ev) => {
+                  const ts = new Date(ev.ts)
+                  const payload = ev.payload as Record<string, unknown> | null
+                  return (
+                    <div key={ev.id} className="px-6 py-3.5 flex items-start gap-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <code className="text-[12px] font-mono text-text-primary font-semibold">
+                            {ev.event}
+                          </code>
+                          <span className="text-[11px] text-text-secondary flex-shrink-0">
+                            {ts.toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' })}{' '}
+                            {ts.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                        {payload && Object.keys(payload).length > 0 && (
+                          <div className="mt-1 text-[11px] text-text-secondary font-mono truncate">
+                            {JSON.stringify(payload).slice(0, 80)}…
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN */}
+        <div className="space-y-6">
+
+          {/* Subscription */}
+          <div className="card-base p-5">
+            <h2 className="font-black text-[14px] text-text-primary mb-4 flex items-center gap-2">
+              ⭐ Abonelik
+            </h2>
+            {subscription ? (
+              <div className="space-y-3">
+                <SubBadge plan={subscription.plan} status={subscription.status} />
+                <div className="text-[12px] text-text-secondary space-y-1">
+                  <div>Başlangıç: {new Date(subscription.created_at).toLocaleDateString('tr-TR')}</div>
+                  {subscription.ends_at && (
+                    <div>Bitiş: {new Date(subscription.ends_at).toLocaleDateString('tr-TR')}</div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="text-[13px] text-text-secondary">
+                Aktif abonelik yok — Ücretsiz plan
+              </div>
+            )}
+          </div>
+
+          {/* Role Change */}
+          <div className="card-base p-5">
+            <h2 className="font-black text-[14px] text-text-primary mb-1 flex items-center gap-2">
+              🔑 Rol Değiştir
+            </h2>
+            <p className="text-[12px] text-text-secondary mb-4">
+              Mevcut rol: <RoleBadge role={profile.role} />
+            </p>
+            <RoleChangeForm
+              userId={profile.id}
+              currentRole={profile.role ?? 'owner'}
+              actorRole={actor.role ?? 'admin'}
+            />
+          </div>
+
+          {/* Quick stats */}
+          <div className="card-base p-5 space-y-3">
+            <h2 className="font-black text-[14px] text-text-primary mb-1">📊 Özet</h2>
+            <div className="flex items-center justify-between text-[13px]">
+              <span className="text-text-secondary">Toplam Pet</span>
+              <span className="font-bold text-text-primary">{(pets ?? []).length}</span>
+            </div>
+            <div className="flex items-center justify-between text-[13px]">
+              <span className="text-text-secondary">Toplam Etkinlik</span>
+              <span className="font-bold text-text-primary">{(events ?? []).length}</span>
+            </div>
+            <div className="flex items-center justify-between text-[13px]">
+              <span className="text-text-secondary">Plan</span>
+              <span className="font-bold text-text-primary">{subscription?.plan?.toUpperCase() ?? 'FREE'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

@@ -29,3 +29,27 @@ export async function requireRole(allowedRoles: string[]) {
   if (!allowedRoles.includes(profile.role)) return null
   return profile
 }
+
+/**
+ * Returns true when the acting user is allowed to assign `targetRole`.
+ * Rule: only a founder may grant the founder role to anyone else.
+ */
+export function canAssignRole(
+  actorRole: string,
+  targetRole: string
+): boolean {
+  if (targetRole === 'founder') return actorRole === 'founder'
+  // admin / founder can assign non-founder roles
+  return actorRole === 'admin' || actorRole === 'founder'
+}
+
+/**
+ * Server-side guard: resolves the current profile and throws a 403-shaped
+ * error string when the caller is not a founder.
+ * Usage: const profile = await assertFounder()
+ */
+export async function assertFounder() {
+  const profile = await getCurrentProfile()
+  if (!profile || profile.role !== 'founder') return null
+  return profile
+}

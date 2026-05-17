@@ -1,16 +1,16 @@
 import { Suspense } from 'react'
-import AdminUsersClient from './AdminUsersClient'
+import AdminClinicsClient from './AdminClinicsClient'
 
 export const dynamic = 'force-dynamic'
 
 export const metadata = {
-  title: 'Kullanıcı Yönetimi — Odi Admin',
+  title: 'Klinik Yönetimi — Odi Admin',
 }
 
-export default function AdminUsersPage() {
+export default function AdminClinicsPage() {
   return (
     <Suspense fallback={<div className="p-8 text-text-secondary">Yükleniyor…</div>}>
-      <AdminUsersClient />
+      <AdminClinicsClient />
     </Suspense>
   )
 }

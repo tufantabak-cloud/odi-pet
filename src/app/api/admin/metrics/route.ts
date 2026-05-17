@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { getSessionUser } from '@/lib/auth/get-current-profile'
+import { requireRole } from '@/lib/auth/get-current-profile'
 
-// Only service_role or admin users should call this
+// Only admin / founder users should call this
 export async function GET() {
-  const user = await getSessionUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const actor = await requireRole(['admin', 'founder'])
+  if (!actor) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const supabase = await createServerSupabaseClient()
 
