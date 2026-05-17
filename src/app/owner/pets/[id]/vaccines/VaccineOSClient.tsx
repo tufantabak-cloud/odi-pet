@@ -1582,8 +1582,22 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNe
   const columns = ['Son Uygulama', 'Sıradaki Bekleyen', 'Gelecek Plan 1', 'Gelecek Plan 2', 'Gelecek Plan 3', 'Gelecek Plan 4'];
 
   const rows = parasiteTemplates.map(tmpl => {
+    const tmplNameLower = tmpl.vaccine_name.toLowerCase()
+    const tmplCodeLower = tmpl.vaccine_code.toLowerCase()
+
     const sortedRecords = records
-      .filter(r => r.vaccine_code === tmpl.vaccine_code)
+      .filter(r => {
+        if (r.vaccine_code === tmpl.vaccine_code) return true
+        // MANUAL or missing code — match by name similarity
+        if (!r.vaccine_code || r.vaccine_code === 'MANUAL') {
+          const rName = r.vaccine_name.toLowerCase()
+          return rName.includes(tmplNameLower) ||
+                 rName.includes(tmplCodeLower) ||
+                 tmplNameLower.split(' ').some((part: string) => part.length > 3 && rName.includes(part)) ||
+                 tmplCodeLower.split('_').some((part: string) => part.length > 2 && rName.includes(part))
+        }
+        return false
+      })
       .sort((a, b) => new Date(a.due_at || '').getTime() - new Date(b.due_at || '').getTime());
 
     const completedRecords = sortedRecords.filter(r => r.status === 'completed').sort((a, b) => new Date(b.administered_at || b.due_at || '').getTime() - new Date(a.administered_at || a.due_at || '').getTime());
