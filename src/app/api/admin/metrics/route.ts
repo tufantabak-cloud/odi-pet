@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createAdminSupabaseClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth/get-current-profile'
 
 // Only admin / founder users should call this
@@ -7,7 +7,7 @@ export async function GET() {
   const actor = await requireRole(['admin', 'founder'])
   if (!actor) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  const supabase = await createServerSupabaseClient()
+  const supabase = createAdminSupabaseClient()
 
   // --- Acquisition ---
   const { count: totalSignups } = await supabase
@@ -55,7 +55,7 @@ export async function GET() {
 
   // --- Revenue: free→pro conversion ---
   const { count: proCount } = await supabase
-    .from('subscriptions').select('id', { count: 'exact', head: true })
+    .from('user_subscriptions').select('id', { count: 'exact', head: true })
     .in('plan', ['pro', 'ai_plus'])
 
   // --- Nutrition + Vaccine OS events ---

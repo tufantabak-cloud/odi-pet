@@ -125,7 +125,7 @@ export default function AIVetPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-9rem)] max-h-[780px] w-full mx-auto">
+    <div className="flex flex-col h-[calc(100dvh-6rem)] max-h-[860px] w-full mx-auto">
       {/* Header */}
       <div className="border-b border-border-main pb-4 mb-4 shrink-0 flex items-start justify-between gap-3">
         <div>
@@ -218,7 +218,7 @@ export default function AIVetPage() {
       </div>
 
       {/* Input area */}
-      <div className="pt-4 border-t border-border-main mt-4 shrink-0 flex flex-col gap-3">
+      <div className="pt-4 border-t border-border-main mt-4 shrink-0 flex flex-col gap-3" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         {/* Quick prompts (initial state) */}
         {showQuickPrompts && (
           <div className="flex flex-wrap gap-2">

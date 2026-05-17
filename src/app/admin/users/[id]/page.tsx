@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { requireRole } from '@/lib/auth/get-current-profile'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createAdminSupabaseClient } from '@/lib/supabase/server'
 import RoleChangeForm from './RoleChangeForm'
 
 export const dynamic = 'force-dynamic'
@@ -68,13 +68,13 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
   const actor = await requireRole(['admin', 'founder'])
   if (!actor) return notFound()
 
-  const supabase = await createServerSupabaseClient()
+  const supabase = createAdminSupabaseClient()
 
   // Load all data in parallel
   const [
     { data: profile },
     { data: pets },
-    { data: subscription },
+    { data: subscriptionRaw },
     { data: events },
   ] = await Promise.all([
     supabase
@@ -88,8 +88,8 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
       .eq('owner_id', id)
       .order('created_at', { ascending: false }),
     supabase
-      .from('subscriptions')
-      .select('id, plan, status, created_at, ends_at')
+      .from('user_subscriptions')
+      .select('id, plan, status, created_at, current_period_end')
       .eq('profile_id', id)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -101,6 +101,11 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
       .order('ts', { ascending: false })
       .limit(20),
   ])
+
+  const subscription = subscriptionRaw ? {
+    ...subscriptionRaw,
+    ends_at: subscriptionRaw.current_period_end
+  } : null
 
   if (!profile) return notFound()
 

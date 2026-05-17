@@ -354,7 +354,7 @@ export default function TreatmentsClient({ pet, initialTreatments }: { pet: any,
       {/* MODAL */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[110] bg-black/60 backdrop-blur-md flex items-center justify-center p-0 sm:p-4 overflow-y-auto">
-          <div className="bg-surface w-full max-w-xl min-h-screen sm:min-h-0 sm:max-h-[90vh] sm:rounded-[32px] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="bg-surface w-full max-w-xl max-h-[85dvh] sm:rounded-[32px] shadow-2xl flex flex-col overflow-y-auto animate-in zoom-in-95 duration-200">
             {/* Modal Header */}
             <div className="flex justify-between items-center p-5 sm:px-8 shrink-0 border-b border-border-main/50 bg-surface/50 backdrop-blur-sm sticky top-0 z-10">
               <div>
@@ -371,18 +371,18 @@ export default function TreatmentsClient({ pet, initialTreatments }: { pet: any,
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-black text-text-secondary uppercase tracking-widest">Hastalık / Tanı Adı</label>
-                  <select required value={diseaseSelect} onChange={e => setDiseaseSelect(e.target.value)} className="input-base text-[14px] font-bold bg-bg-main border-none">
+                  <select required value={diseaseSelect} onChange={e => setDiseaseSelect(e.target.value)} className="input-base text-[16px] font-bold bg-bg-main border-none">
                     <option value="" disabled>Lütfen seçin...</option>
                     {COMMON_DISEASES.map(d => <option key={d} value={d}>{d}</option>)}
                     <option value="Diğer">Diğer (Lütfen Yazınız)</option>
                   </select>
                   {diseaseSelect === 'Diğer' && (
-                    <input type="text" required value={customDisease} onChange={e => setCustomDisease(e.target.value)} className="input-base text-[14px] mt-2 border-primary/30" placeholder="Hastalık adını girin" autoFocus />
+                    <input type="text" required value={customDisease} onChange={e => setCustomDisease(e.target.value)} className="input-base text-[16px] mt-2 border-primary/30" placeholder="Hastalık adını girin" autoFocus />
                   )}
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-black text-text-secondary uppercase tracking-widest">Kategori</label>
-                  <select value={category} onChange={e => setCategory(e.target.value)} className="input-base text-[14px] font-bold bg-bg-main border-none">
+                  <select value={category} onChange={e => setCategory(e.target.value)} className="input-base text-[16px] font-bold bg-bg-main border-none">
                     <option>Rutin Kontrol</option>
                     <option>Acil</option>
                     <option>Kronik Hastalık</option>
@@ -394,18 +394,18 @@ export default function TreatmentsClient({ pet, initialTreatments }: { pet: any,
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-black text-text-secondary uppercase tracking-widest">Başlangıç Tarihi</label>
-                  <input type="date" required value={startDate} onChange={e => setStartDate(e.target.value)} className="input-base text-[14px] font-bold bg-bg-main border-none" />
+                  <input type="date" required value={startDate} onChange={e => setStartDate(e.target.value)} className="input-base text-[16px] font-bold bg-bg-main border-none" />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-black text-text-secondary uppercase tracking-widest">Bitiş Tarihi (Opsiyonel)</label>
-                  <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="input-base text-[14px] font-bold bg-bg-main border-none" />
+                  <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="input-base text-[16px] font-bold bg-bg-main border-none" />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-black text-text-secondary uppercase tracking-widest">Durum</label>
-                  <select value={status} onChange={e => setStatus(e.target.value)} className="input-base text-[14px] font-black bg-bg-main border-none">
+                  <select value={status} onChange={e => setStatus(e.target.value)} className="input-base text-[16px] font-black bg-bg-main border-none">
                     <option value="Devam Ediyor">⏳ Devam Ediyor</option>
                     <option value="Tamamlandı">✅ Tamamlandı</option>
                     <option value="İptal Edildi">❌ İptal Edildi</option>
@@ -413,13 +413,13 @@ export default function TreatmentsClient({ pet, initialTreatments }: { pet: any,
                 </div>
                 <div className="flex flex-col gap-1.5">
                    <label className="text-[11px] font-black text-text-secondary uppercase tracking-widest">Hizmet Noktası (Klinik)</label>
-                   <input type="text" value={clinicName} onChange={e => setClinicName(e.target.value)} className="input-base text-[14px] font-bold bg-bg-main border-none" placeholder="Klinik veya hekim adı" />
+                   <input type="text" value={clinicName} onChange={e => setClinicName(e.target.value)} className="input-base text-[16px] font-bold bg-bg-main border-none" placeholder="Klinik veya hekim adı" />
                 </div>
               </div>
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-[11px] font-black text-text-secondary uppercase tracking-widest">Uygulanan Yöntemler / Notlar</label>
-                <textarea rows={3} value={methods} onChange={e => setMethods(e.target.value)} className="input-base text-[14px] font-medium bg-bg-main border-none resize-none" placeholder="İlaç kullanımı, pansuman vb. kısa notlar" />
+                <textarea rows={3} value={methods} onChange={e => setMethods(e.target.value)} className="input-base text-[16px] font-medium bg-bg-main border-none resize-none" placeholder="İlaç kullanımı, pansuman vb. kısa notlar" />
               </div>
 
               {/* İlaç Takip & Hatırlatma */}
@@ -443,7 +443,7 @@ export default function TreatmentsClient({ pet, initialTreatments }: { pet: any,
                             {m.dose} • Günde {m.frequency} Kez • {m.days} Gün {m.trackEnd ? '• Takip Açık' : ''}
                           </span>
                         </div>
-                        <button type="button" onClick={() => removeMedication(idx)} className="w-8 h-8 rounded-full flex items-center justify-center text-error hover:bg-error/10 transition-colors font-bold">✕</button>
+                        <button type="button" onClick={() => removeMedication(idx)} className="w-10 h-10 rounded-full flex items-center justify-center text-error hover:bg-error/10 transition-colors font-bold">✕</button>
                       </div>
                     ))}
                   </div>
@@ -454,17 +454,17 @@ export default function TreatmentsClient({ pet, initialTreatments }: { pet: any,
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="flex flex-col gap-1">
                         <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest">İlaç Adı</label>
-                        <input type="text" value={medName} onChange={e => setMedName(e.target.value)} className="input-base text-[13px] font-bold py-2 bg-bg-main border-none" placeholder="Örn: Augmentin" />
+                        <input type="text" value={medName} onChange={e => setMedName(e.target.value)} className="input-base text-[16px] font-bold py-2 bg-bg-main border-none" placeholder="Örn: Augmentin" />
                       </div>
                       <div className="flex flex-col gap-1">
                         <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest">Miktar / Doz</label>
-                        <input type="text" value={medDose} onChange={e => setMedDose(e.target.value)} className="input-base text-[13px] font-bold py-2 bg-bg-main border-none" placeholder="Örn: 1 Tablet" />
+                        <input type="text" value={medDose} onChange={e => setMedDose(e.target.value)} className="input-base text-[16px] font-bold py-2 bg-bg-main border-none" placeholder="Örn: 1 Tablet" />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4 mt-4">
                       <div className="flex flex-col gap-1">
                         <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest">Sıklık</label>
-                        <select value={medFrequency} onChange={e => setMedFrequency(e.target.value)} className="input-base text-[13px] font-bold py-2 bg-bg-main border-none">
+                        <select value={medFrequency} onChange={e => setMedFrequency(e.target.value)} className="input-base text-[16px] font-bold py-2 bg-bg-main border-none">
                           <option value="1">Günde 1 kez</option>
                           <option value="2">Günde 2 kez</option>
                           <option value="3">Günde 3 kez</option>
@@ -472,7 +472,7 @@ export default function TreatmentsClient({ pet, initialTreatments }: { pet: any,
                       </div>
                       <div className="flex flex-col gap-1">
                         <label className="text-[10px] font-black text-text-secondary uppercase tracking-widest">Süre (Gün)</label>
-                        <input type="number" min="1" value={medDays} onChange={e => setMedDays(e.target.value)} className="input-base text-[13px] font-bold py-2 bg-bg-main border-none" />
+                        <input type="number" min="1" value={medDays} onChange={e => setMedDays(e.target.value)} className="input-base text-[16px] font-bold py-2 bg-bg-main border-none" />
                       </div>
                     </div>
                     <div className="mt-5 flex items-center justify-between gap-4">
@@ -498,11 +498,11 @@ export default function TreatmentsClient({ pet, initialTreatments }: { pet: any,
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[11px] font-black text-text-secondary uppercase tracking-widest">Hatırlatma Tarihi</label>
-                    <input type="date" value={reminderDate} onChange={e => setReminderDate(e.target.value)} className="input-base text-[14px] font-bold bg-bg-main border-none" />
+                    <input type="date" value={reminderDate} onChange={e => setReminderDate(e.target.value)} className="input-base text-[16px] font-bold bg-bg-main border-none" />
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[11px] font-black text-text-secondary uppercase tracking-widest">Not / Hatırlatma</label>
-                    <input type="text" value={reminderNote} onChange={e => setReminderNote(e.target.value)} className="input-base text-[14px] font-bold bg-bg-main border-none" placeholder="Örn: Kontrol randevusu" />
+                    <input type="text" value={reminderNote} onChange={e => setReminderNote(e.target.value)} className="input-base text-[16px] font-bold bg-bg-main border-none" placeholder="Örn: Kontrol randevusu" />
                   </div>
                 </div>
               </div>

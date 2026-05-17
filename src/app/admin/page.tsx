@@ -1,11 +1,11 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createAdminSupabaseClient } from '@/lib/supabase/server'
 import DashboardClient from './DashboardClient'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AdminDashboardPage() {
   // SSR: initial data fetch so the page is never blank on first load
-  const supabase = await createServerSupabaseClient()
+  const supabase = createAdminSupabaseClient()
 
   function startOf(unit: 'day' | 'week' | 'month') {
     const now = new Date()
@@ -46,8 +46,8 @@ export default async function AdminDashboardPage() {
     supabase.from('pets').select('id', { count: 'exact', head: true }).gte('created_at', todayISO),
     supabase.from('pets').select('id', { count: 'exact', head: true }).gte('created_at', weekISO),
     supabase.from('pets').select('id', { count: 'exact', head: true }).gte('created_at', monthISO),
-    supabase.from('subscriptions').select('id', { count: 'exact', head: true }).in('plan', ['pro', 'ai_plus']),
-    supabase.from('subscriptions').select('id', { count: 'exact', head: true }).in('plan', ['pro', 'ai_plus']).gte('created_at', monthISO),
+    supabase.from('user_subscriptions').select('id', { count: 'exact', head: true }).in('plan', ['pro', 'ai_plus']),
+    supabase.from('user_subscriptions').select('id', { count: 'exact', head: true }).in('plan', ['pro', 'ai_plus']).gte('created_at', monthISO),
     supabase.from('profiles').select('id', { count: 'exact', head: true }),
     supabase.from('vaccine_records_v2').select('id', { count: 'exact', head: true }).eq('status', 'overdue').lte('due_at', now),
     supabase.from('clinics').select('id', { count: 'exact', head: true }).eq('is_public', false),

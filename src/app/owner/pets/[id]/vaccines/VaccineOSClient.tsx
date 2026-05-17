@@ -1395,7 +1395,7 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onNe
                     className={`flex flex-col items-center px-3 py-2 rounded-xl border text-[11px] font-bold min-w-[70px] transition-all ${!row.is_active ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' : dose1.bg}`}
                     onClick={() => { if (!row.is_active) return; if (dose1.record) { if (dose1.record.status !== 'completed') onCellClick?.(dose1.record); } else if (dose1.date) { onNewRecord?.(row.name, row.code, dose1.date); } }}
                   >
-                    <span className="text-[9px] uppercase tracking-wide opacity-70 mb-0.5">1. Doz</span>
+                    <span className="text-[11px] uppercase tracking-wide opacity-70 mb-0.5">1. Doz</span>
                     <span>{!row.is_active ? 'Pasif' : (dose1.record ? formatDate(dose1.date) : '—')}</span>
                   </button>
                 )}
@@ -1404,7 +1404,7 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onNe
                     className={`flex flex-col items-center px-3 py-2 rounded-xl border text-[11px] font-bold min-w-[70px] transition-all ${!row.is_active ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' : dose2.bg}`}
                     onClick={() => { if (!row.is_active) return; if (dose2.record && !(dose2.record as any)._isVirtual) { if (dose2.record.status !== 'completed') onCellClick?.(dose2.record); } else if (dose2.date) { onNewRecord?.(row.name, row.code, dose2.date); } }}
                   >
-                    <span className="text-[9px] uppercase tracking-wide opacity-70 mb-0.5">2. Doz</span>
+                    <span className="text-[11px] uppercase tracking-wide opacity-70 mb-0.5">2. Doz</span>
                     <span>{!row.is_active ? 'Pasif' : (dose2.record ? formatDate(dose2.date) : '—')}</span>
                   </button>
                 )}
@@ -1417,7 +1417,7 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onNe
                       className={`flex flex-col items-center px-3 py-2 rounded-xl border text-[11px] font-bold min-w-[70px] transition-all ${(!row.is_active || !cell) ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' : cell.bg}`}
                       onClick={() => { if (!row.is_active || !cell) return; if (cell.record) { if (cell.record.status !== 'completed') onCellClick?.(cell.record); } else if (cell.date) { onNewRecord?.(row.name, row.code, cell.date); } }}
                     >
-                      <span className="text-[9px] uppercase tracking-wide opacity-70 mb-0.5">{yearNum}. Yaş</span>
+                      <span className="text-[11px] uppercase tracking-wide opacity-70 mb-0.5">{yearNum}. Yaş</span>
                       <span>{!row.is_active ? 'Pasif' : (cell?.record ? formatDate(cell.date) : '—')}</span>
                     </button>
                   );
@@ -1723,7 +1723,7 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNe
                   className={`flex flex-col items-center px-3 py-2 rounded-xl border text-[11px] font-bold min-w-[80px] transition-all ${!row.is_active ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' : (cell ? cell.bg : 'bg-slate-100 border-slate-200 text-slate-400')}`}
                   onClick={() => { if (!row.is_active) return; if (cell?.record && !(cell.record as any)._isVirtual) { onCellClick?.(cell.record); } else if (cell?.date) { onNewRecord?.(row.name, row.code, cell.date); } }}
                 >
-                  <span className="text-[9px] uppercase tracking-wide opacity-70 mb-0.5">{columns[idx]}</span>
+                  <span className="text-[11px] uppercase tracking-wide opacity-70 mb-0.5">{columns[idx]}</span>
                   {!row.is_active ? <span>Pasif</span> : cell?.record ? <><span className="text-[12px]">{cell.emoji}</span><span>{formatDate(cell.date)}</span></> : cell?.date ? <><span className="text-[12px] opacity-40">🔜</span><span className="opacity-60">{formatDate(cell.date)}</span></> : <span>{idx === 0 ? '—' : ''}</span>}
                 </button>
               ))}
@@ -2468,7 +2468,7 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
                 <div className="flex-1 min-w-0">
                   <p className={`font-bold text-[13px] truncate text-text-primary`}>{getDisplayName(r.vaccine_name, r.vaccine_code)}</p>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className={`text-[9px] font-extrabold uppercase tracking-wide px-1.5 py-0.5 rounded border ${r.status === 'overdue' ? 'bg-error/10 text-error border-error/20' : 'bg-warning/10 text-warning border-warning/20'}`}>
+                    <span className={`text-[11px] font-extrabold uppercase tracking-wide px-1.5 py-0.5 rounded border ${r.status === 'overdue' ? 'bg-error/10 text-error border-error/20' : 'bg-warning/10 text-warning border-warning/20'}`}>
                       {STATUS_LABEL[r.status] ?? r.status}
                     </span>
                     {r.due_at && <span className="text-[11px] text-text-secondary font-medium">{new Date(r.due_at).toLocaleDateString('tr-TR')}</span>}
@@ -2477,11 +2477,11 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
                 {!isLocked && (
                   <div className="flex gap-1.5 shrink-0 items-center">
                     <button onClick={() => setQuickMarkRecord(r)}
-                      className="w-8 h-8 flex items-center justify-center bg-success/10 text-success rounded-xl hover:bg-success/20 transition-colors" title="Yapıldı İşaretle">
+                      className="w-10 h-10 flex items-center justify-center bg-success/10 text-success rounded-xl hover:bg-success/20 transition-colors" title="Yapıldı İşaretle">
                       <span className="text-[14px]">✓</span>
                     </button>
                     <button onClick={() => setPostponeRecord(r)}
-                      className="w-8 h-8 flex items-center justify-center bg-warning/10 text-warning rounded-xl hover:bg-warning/20 transition-colors" title="Ertele">
+                      className="w-10 h-10 flex items-center justify-center bg-warning/10 text-warning rounded-xl hover:bg-warning/20 transition-colors" title="Ertele">
                       <span className="text-[12px]">⏩</span>
                     </button>
                     <button onClick={() => {
@@ -2490,7 +2490,7 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
                         'Bu planlanmış işlemi silmek istiyor musunuz?',
                         () => startTransition(async () => { await deleteVaccineRecord(r.id); refreshData() })
                       )
-                    }} className="w-8 h-8 flex items-center justify-center bg-error/5 text-error/60 rounded-xl hover:bg-error/10 hover:text-error transition-colors" title="Sil">
+                    }} className="w-10 h-10 flex items-center justify-center bg-error/5 text-error/60 rounded-xl hover:bg-error/10 hover:text-error transition-colors" title="Sil">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                     </button>
                   </div>
@@ -2530,7 +2530,7 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                   <button onClick={() => setQuickMarkRecord(r)}
-                    className="w-8 h-8 flex items-center justify-center text-text-secondary hover:text-primary hover:bg-primary/5 rounded-xl transition-colors" title="Düzenle">
+                    className="w-10 h-10 flex items-center justify-center text-text-secondary hover:text-primary hover:bg-primary/5 rounded-xl transition-colors" title="Düzenle">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </button>
                   <button onClick={() => {
@@ -2539,7 +2539,7 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
                       'Bu kaydı silmek istiyor musunuz?',
                       () => startTransition(async () => { await deleteVaccineRecord(r.id); refreshData() })
                     )
-                  }} className="w-8 h-8 flex items-center justify-center text-text-secondary hover:text-error hover:bg-error/5 rounded-xl transition-colors" title="Sil">
+                  }} className="w-10 h-10 flex items-center justify-center text-text-secondary hover:text-error hover:bg-error/5 rounded-xl transition-colors" title="Sil">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                   </button>
                 </div>

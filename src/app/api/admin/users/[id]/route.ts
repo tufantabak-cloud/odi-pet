@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createAdminSupabaseClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth/get-current-profile'
 
 export const dynamic = 'force-dynamic'
@@ -11,7 +11,7 @@ export async function GET(
   const actor = await requireRole(['admin', 'founder'])
   if (!actor) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  const supabase = await createServerSupabaseClient()
+  const supabase = createAdminSupabaseClient()
   const { id } = await params
 
   // Fetch profile
@@ -33,13 +33,18 @@ export async function GET(
     .order('created_at', { ascending: false })
 
   // Fetch subscription
-  const { data: subscription } = await supabase
-    .from('subscriptions')
-    .select('id, plan, status, created_at, ends_at')
+  const { data: subscriptionRaw } = await supabase
+    .from('user_subscriptions')
+    .select('id, plan, status, created_at, current_period_end')
     .eq('profile_id', id)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
+
+  const subscription = subscriptionRaw ? {
+    ...subscriptionRaw,
+    ends_at: subscriptionRaw.current_period_end
+  } : null
 
   // Fetch recent event stream (last 20 events)
   const { data: events } = await supabase

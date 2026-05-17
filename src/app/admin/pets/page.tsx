@@ -1,26 +1,14 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createAdminSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AdminPetsPage() {
-  const cookieStore = await cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  )
+  const supabase = createAdminSupabaseClient()
 
   const { data: pets, error } = await supabase
     .from('pets')
-    .select('*, users(email, full_name)')
+    .select('*, profiles(email, first_name, last_name)')
     .order('created_at', { ascending: false })
     .limit(100)
 
@@ -59,15 +47,17 @@ export default async function AdminPetsPage() {
                 <tr key={pet.id} className="hover:bg-bg-main/50 transition-colors">
                   <td className="p-4">
                     <div className="font-semibold text-text-primary flex items-center gap-2">
-                      {pet.type === 'cat' ? '🐱' : '🐶'} {pet.name || 'Unnamed'}
+                      {pet.species?.toLowerCase() === 'cat' ? '🐱' : '🐶'} {pet.name || 'Unnamed'}
                     </div>
                     <div className="text-[11px] text-text-secondary font-mono mt-0.5">{pet.id}</div>
                   </td>
                   <td className="p-4">
                     {/* @ts-ignore */}
-                    <div className="font-medium text-text-primary">{pet.users?.full_name || '—'}</div>
+                    <div className="font-medium text-text-primary">
+                      {pet.profiles ? [pet.profiles.first_name, pet.profiles.last_name].filter(Boolean).join(' ') : '—'}
+                    </div>
                     {/* @ts-ignore */}
-                    <div className="text-[11px] text-text-secondary">{pet.users?.email}</div>
+                    <div className="text-[11px] text-text-secondary">{pet.profiles?.email}</div>
                   </td>
                   <td className="p-4">
                     <div className="text-text-primary">{pet.breed || '—'}</div>

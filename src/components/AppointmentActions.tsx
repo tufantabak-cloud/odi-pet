@@ -47,7 +47,7 @@ export default function AppointmentActions({ appointmentId, currentStatus }: Pro
       <button
         onClick={() => handleUpdate('cancelled')}
         disabled={isPending}
-        className="w-8 h-8 rounded-full border border-error/30 text-error hover:bg-error/5 flex items-center justify-center transition-colors shrink-0 disabled:opacity-50"
+        className="w-10 h-10 rounded-full border border-error/30 text-error hover:bg-error/5 flex items-center justify-center transition-colors shrink-0 disabled:opacity-50"
         title="İptal Et"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

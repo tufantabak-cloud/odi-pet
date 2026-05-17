@@ -122,7 +122,7 @@ export default async function ProfileMenuPage() {
             )}
           </div>
           
-          <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
             <div className="flex items-center gap-2 text-[13px] font-semibold text-text-primary">
               <div className="w-5 h-5 rounded-full bg-primary-soft text-primary flex items-center justify-center">✓</div> Vet Chat
             </div>

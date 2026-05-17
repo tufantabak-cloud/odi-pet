@@ -798,7 +798,7 @@ export default function HealthClient({ petId }: { petId: string }) {
                 setPreselectedVaccineId(null); 
                 setFormVaccineId('');
                 setFormNextDueDate('');
-              }} className="w-8 h-8 rounded-full bg-bg-main flex items-center justify-center text-text-secondary hover:text-error transition-colors">✕</button>
+              }} className="w-10 h-10 rounded-full bg-bg-main flex items-center justify-center text-text-secondary hover:text-error transition-colors">✕</button>
             </div>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">

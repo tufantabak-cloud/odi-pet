@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createAdminSupabaseClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth/get-current-profile'
 
 export const dynamic = 'force-dynamic'
@@ -23,7 +23,7 @@ export async function GET() {
   const actor = await requireRole(['admin', 'founder'])
   if (!actor) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  const supabase = await createServerSupabaseClient()
+  const supabase = createAdminSupabaseClient()
 
   const todayISO = startOf('day')
   const weekISO = startOf('week')
@@ -57,8 +57,8 @@ export async function GET() {
     { count: proMonth },
     { count: totalProfiles },
   ] = await Promise.all([
-    supabase.from('subscriptions').select('id', { count: 'exact', head: true }).in('plan', ['pro', 'ai_plus']),
-    supabase.from('subscriptions').select('id', { count: 'exact', head: true }).in('plan', ['pro', 'ai_plus']).gte('created_at', monthISO),
+    supabase.from('user_subscriptions').select('id', { count: 'exact', head: true }).in('plan', ['pro', 'ai_plus']),
+    supabase.from('user_subscriptions').select('id', { count: 'exact', head: true }).in('plan', ['pro', 'ai_plus']).gte('created_at', monthISO),
     supabase.from('profiles').select('id', { count: 'exact', head: true }),
   ])
 
