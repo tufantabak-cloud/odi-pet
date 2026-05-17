@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
 
   const siteUrl =
     process.env.NEXT_PUBLIC_SITE_URL ||
-    `${req.headers.get('x-forwarded-proto') ?? 'http'}://${req.headers.get('host')}`
+    `https://${req.headers.get('host')}`
 
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email,

@@ -13,6 +13,8 @@ CREATE TABLE public.profiles (
   role user_role DEFAULT 'owner'::user_role NOT NULL,
   first_name TEXT,
   last_name TEXT,
+  email TEXT,
+  phone TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -134,13 +136,37 @@ CREATE POLICY "Users view own notifications" ON public.notifications FOR SELECT 
 -- DATABASE TRIGGERS
 -- =====================================
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER AS $
+DECLARE
+  extracted_first_name TEXT;
 BEGIN
-  INSERT INTO public.profiles (id, first_name)
-  VALUES (new.id, new.raw_user_meta_data->>'first_name');
+  -- Try to get first_name directly (from email signup)
+  extracted_first_name := new.raw_user_meta_data->>'first_name';
+
+  -- If null, try to get from Google's full_name or name
+  IF extracted_first_name IS NULL THEN
+    extracted_first_name := new.raw_user_meta_data->>'full_name';
+  END IF;
+
+  IF extracted_first_name IS NULL THEN
+    extracted_first_name := new.raw_user_meta_data->>'name';
+  END IF;
+
+  -- Default to something if still null
+  IF extracted_first_name IS NULL THEN
+    extracted_first_name := 'Kullanıcı';
+  END IF;
+
+  -- Insert profile and populate email, resolving potential duplicate key errors (e.g. from retries, invite flow, or Google OAuth)
+  INSERT INTO public.profiles (id, first_name, email)
+  VALUES (new.id, extracted_first_name, new.email)
+  ON CONFLICT (id) DO UPDATE SET
+    first_name = COALESCE(public.profiles.first_name, EXCLUDED.first_name),
+    email = COALESCE(public.profiles.email, EXCLUDED.email);
+
   RETURN new;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
@@ -1416,6 +1442,3 @@ SELECT
   DATE(created_at) as day
 FROM public.event_stream
 GROUP BY profile_id, DATE(created_at);
-
-
-

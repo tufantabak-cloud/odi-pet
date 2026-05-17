@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   // local'de request origin'inden türet (localhost:3000)
   const siteUrl =
     process.env.NEXT_PUBLIC_SITE_URL ||
-    `${req.headers.get('x-forwarded-proto') ?? 'http'}://${req.headers.get('host')}`
+    `https://${req.headers.get('host')}`
 
   const { error } = await supabase.auth.signUp({
     email,
