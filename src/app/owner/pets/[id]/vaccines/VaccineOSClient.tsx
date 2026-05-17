@@ -58,7 +58,7 @@ function ScannerDropdown({ onSingleScan, onBatchScan }: { onSingleScan: (file: F
 }
 
 // ── Types ──────────────────────────────────────────────────────
-type Pet = { id: string; name: string; species: string; birth_date: string | null; avatar_url?: string }
+type Pet = { id: string; name: string; species: string; birth_date: string | null; avatar_url?: string; vet_name?: string | null }
 type Template = { id: string; vaccine_code: string; vaccine_name: string; category: string; mandatory_level: string; dose_count: number; first_dose_week: number; dose_interval_days: number[] | number | null; has_annual_booster: boolean; recurrence_days: number | null; protects_against: string[]; profile_id: string | null; is_active: boolean; components?: string[] }
 type VComponent = { code: string; name: string; description: string; is_zoonotic: boolean; risk_level: string; annual_required: boolean }
 type VRecord = { id: string; pet_id: string; vaccine_code: string; vaccine_name: string; dose_number: number | null; status: string; administered_at: string | null; due_at: string | null; source: string; confidence_level: string; notes: string | null }
@@ -574,6 +574,22 @@ function ManualVaccineModal({
   const [recurrenceVal, setRecurrenceVal] = useState('')
   const [recurrenceUnit, setRecurrenceUnit] = useState<'gun' | 'ay' | 'yil'>('gun')
   const recurrenceDays = recurrenceVal ? Number(recurrenceVal) * (recurrenceUnit === 'yil' ? 365 : recurrenceUnit === 'ay' ? 30 : 1) : ''
+  const setRecurrenceDays = (days: number) => {
+    if (!days) {
+      setRecurrenceVal('')
+      return
+    }
+    if (days % 365 === 0 && days >= 365) {
+      setRecurrenceVal(String(days / 365))
+      setRecurrenceUnit('yil')
+    } else if (days % 30 === 0 && days >= 30) {
+      setRecurrenceVal(String(days / 30))
+      setRecurrenceUnit('ay')
+    } else {
+      setRecurrenceVal(String(days))
+      setRecurrenceUnit('gun')
+    }
+  }
   const [amount, setAmount] = useState<number | ''>('')
   const [isScanning, setIsScanning] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -826,7 +842,8 @@ function BatchScanModal({
   allRecords,
   isSetupPhase = false,
   onClose, 
-  onDone 
+  onDone,
+  defaultVetName
 }: { 
   petId: string; 
   templates: Template[]; 
@@ -1601,7 +1618,7 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNe
       .sort((a, b) => new Date(a.due_at || '').getTime() - new Date(b.due_at || '').getTime());
 
     const completedRecords = sortedRecords.filter(r => r.status === 'completed').sort((a, b) => new Date(b.administered_at || b.due_at || '').getTime() - new Date(a.administered_at || a.due_at || '').getTime());
-    const pendingRecords = sortedRecords.filter(r => r.status !== 'completed');
+    const pendingRecords = sortedRecords.filter(r => r.status !== 'completed' && r.status !== 'skipped' && r.status !== 'invalid');
 
     const lastCompleted = completedRecords.length > 0 ? completedRecords[0] : null;
     const nextPending = pendingRecords.length > 0 ? pendingRecords[0] : null;
@@ -1707,7 +1724,7 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNe
                   onClick={() => { if (!row.is_active) return; if (cell?.record && !(cell.record as any)._isVirtual) { onCellClick?.(cell.record); } else if (cell?.date) { onNewRecord?.(row.name, row.code, cell.date); } }}
                 >
                   <span className="text-[9px] uppercase tracking-wide opacity-70 mb-0.5">{columns[idx]}</span>
-                  {!row.is_active ? <span>Pasif</span> : cell?.record ? <><span className="text-[12px]">{cell.emoji}</span><span>{formatDate(cell.date)}</span></> : <span>{idx === 0 ? '—' : ''}</span>}
+                  {!row.is_active ? <span>Pasif</span> : cell?.record ? <><span className="text-[12px]">{cell.emoji}</span><span>{formatDate(cell.date)}</span></> : cell?.date ? <><span className="text-[12px] opacity-40">🔜</span><span className="opacity-60">{formatDate(cell.date)}</span></> : <span>{idx === 0 ? '—' : ''}</span>}
                 </button>
               ))}
             </div>
@@ -1769,7 +1786,7 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNe
                       }
                     }}
                   >
-                    {!row.is_active ? <span className="font-bold text-[10px] tracking-wider uppercase text-slate-400">Pasif</span> : cell?.record ? <span className="flex flex-col items-center gap-0"><span className="text-[11px]">{cell.emoji}</span><span>{formatDate(cell.date)}</span></span> : <span>{idx === 0 ? '-' : ''}</span>}
+                    {!row.is_active ? <span className="font-bold text-[10px] tracking-wider uppercase text-slate-400">Pasif</span> : cell?.record ? <span className="flex flex-col items-center gap-0"><span className="text-[11px]">{cell.emoji}</span><span>{formatDate(cell.date)}</span></span> : cell?.date ? <span className="flex flex-col items-center gap-0"><span className="text-[11px] opacity-40">🔜</span><span className="opacity-60">{formatDate(cell.date)}</span></span> : <span>{idx === 0 ? '-' : ''}</span>}
                   </td>
                 ))}
               </tr>
@@ -2224,7 +2241,7 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
             }
           }}
           onDone={refreshData}
-          defaultVetName={pet.vet_name}
+          defaultVetName={pet.vet_name || undefined}
         />
       )}
 

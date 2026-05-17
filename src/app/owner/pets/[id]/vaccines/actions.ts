@@ -2,6 +2,7 @@
 
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { COMMON_ALIASES } from '@/lib/vaccines/utils'
 
 // ── Setup Mode ─────────────────────────────────────────────────
 export async function saveSetupMode(petId: string, mode: 'smart_start' | 'historical_import' | 'fresh_start') {
@@ -387,9 +388,50 @@ export async function addManualVaccine(petId: string, data: {
   // Auto-close correlation logic:
   // Use explicit code or extract from brackets
   const codeMatch = (data as any).vaccine_name?.match(/\[(.*?)\]/)
-  const extractedCode = data.vaccine_code || (codeMatch ? codeMatch[1] : null)
+  let resolvedCode = data.vaccine_code || (codeMatch ? codeMatch[1] : null)
+  let resolvedTemplateId = null
+  let templateRecurrenceDays: number | null = null
 
-  if (extractedCode && extractedCode !== 'MANUAL' && isCompleted) {
+  // Fetch pet species to look up template
+  const { data: pet } = await supabase.from('pets').select('species').eq('id', petId).single()
+  const species = pet?.species ? ((pet.species.toLowerCase() === 'köpek' || pet.species.toLowerCase() === 'dog') ? 'dog' : 'cat') : null
+
+  if (species) {
+    const { data: templates } = await supabase
+      .from('vaccine_templates')
+      .select('id, vaccine_code, vaccine_name, recurrence_days')
+      .eq('species', species)
+      .eq('is_active', true)
+
+    if (templates) {
+      let matched = null
+      if (resolvedCode && resolvedCode !== 'MANUAL') {
+        matched = templates.find(t => t.vaccine_code === resolvedCode)
+      } else {
+        const search = data.vaccine_name.toLowerCase()
+        matched = templates.find(t => {
+          const tName = t.vaccine_name.toLowerCase()
+          const tCode = t.vaccine_code.toLowerCase()
+          const aliases = COMMON_ALIASES[t.vaccine_code] || []
+          return tName.includes(search) ||
+                 search.includes(tName) ||
+                 tCode.includes(search) ||
+                 search.includes(tCode) ||
+                 aliases.some(a => a.toLowerCase().includes(search) || search.includes(a.toLowerCase()))
+        })
+      }
+
+      if (matched) {
+        resolvedCode = matched.vaccine_code
+        resolvedTemplateId = matched.id
+        templateRecurrenceDays = matched.recurrence_days
+      }
+    }
+  }
+
+  const finalRecurrenceDays = data.recurrence_days || templateRecurrenceDays
+
+  if (resolvedCode && resolvedCode !== 'MANUAL' && isCompleted) {
     // Purge ALL stale (non-completed) records for this code that are on or before the administered date
     // This is the primary guard against Matrix/List desync
     await supabase
@@ -399,13 +441,15 @@ export async function addManualVaccine(petId: string, data: {
         notes: 'Manuel kayıt ile otomatik kapatıldı.',
       })
       .eq('pet_id', petId)
-      .eq('vaccine_code', extractedCode)
+      .eq('vaccine_code', resolvedCode)
       .in('status', ['overdue', 'due', 'scheduled'])
       .lte('due_at', data.administered_at!) // only past-due stale records
   }
+
   const { data: insertedRecord, error: insertError } = await supabase.from('vaccine_records_v2').insert({
     pet_id: petId,
-    vaccine_code: extractedCode || 'MANUAL',
+    vaccine_code: resolvedCode || 'MANUAL',
+    template_id: resolvedTemplateId || null,
     vaccine_name: data.vaccine_name,
     status: isCompleted ? 'completed' : 'scheduled',
     due_at: data.due_at,
@@ -420,12 +464,13 @@ export async function addManualVaccine(petId: string, data: {
     return { error: insertError.message }
   }
 
-  if (isCompleted && data.recurrence_days) {
+  if (isCompleted && finalRecurrenceDays) {
     const nextDue = new Date(data.administered_at!)
-    nextDue.setDate(nextDue.getDate() + data.recurrence_days)
+    nextDue.setDate(nextDue.getDate() + finalRecurrenceDays)
     await supabase.from('vaccine_records_v2').insert({
       pet_id: petId,
-      vaccine_code: extractedCode || 'MANUAL',
+      template_id: resolvedTemplateId || null,
+      vaccine_code: resolvedCode || 'MANUAL',
       vaccine_name: data.vaccine_name,
       status: 'scheduled',
       due_at: nextDue.toISOString(),

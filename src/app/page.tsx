@@ -20,8 +20,8 @@ export default async function IndexPage({ searchParams }: { searchParams: Promis
     redirect('/owner/dashboard')
   } else if (profile?.role === 'clinic_staff' || profile?.role === 'clinic_admin') {
     redirect('/clinic/dashboard')
-  } else if (profile?.role === 'super_admin') {
-    redirect('/admin/dashboard')
+  } else if (profile?.role === 'super_admin' || profile?.role === 'founder' || profile?.role === 'admin') {
+    redirect('/admin')
   }
 
   // Fallback (profil rolü db'de hatalı veya beklenen rollerden değilse)

@@ -7,12 +7,12 @@ export const dynamic = 'force-dynamic'
 // Suspend = set is_public: false on an already-approved clinic
 export async function POST(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const actor = await requireRole(['admin', 'founder'])
   if (!actor) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  const clinicId = params.id
+  const { id: clinicId } = await params
 
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!serviceKey) {

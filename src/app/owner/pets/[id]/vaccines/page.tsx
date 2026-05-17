@@ -27,7 +27,7 @@ export default async function VaccineOSPage(props: PageProps) {
   // Fetch pet
   const { data: pet } = await supabase
     .from('pets')
-    .select('id, name, species, birth_date, avatar_url')
+    .select('id, name, species, birth_date, avatar_url, vet_name')
     .eq('id', id)
     .single()
 
@@ -42,16 +42,16 @@ export default async function VaccineOSPage(props: PageProps) {
       .eq('species', speciesCode)
       .or(`profile_id.eq.${user.id},profile_id.is.null`)
       .order('first_dose_week', { ascending: true }),
-    supabase.from('vaccine_components').select('*').then(res => res).catch(() => ({ data: [] }))
+    supabase.from('vaccine_components').select('*')
   ])
 
   const allTemplates = allTemplatesRes.data || []
 
   // Deduplicate: user overrides take priority over system defaults per vaccine_code+species
   const overriddenKeys = new Set(
-    allTemplates.filter(t => t.profile_id !== null).map(t => `${t.species}_${t.vaccine_code}`)
+    allTemplates.filter((t: any) => t.profile_id !== null).map((t: any) => `${t.species}_${t.vaccine_code}`)
   )
-  const templates = allTemplates.filter(t => {
+  const templates = allTemplates.filter((t: any) => {
     if (t.profile_id !== null) return true
     return !overriddenKeys.has(`${t.species}_${t.vaccine_code}`)
   })
