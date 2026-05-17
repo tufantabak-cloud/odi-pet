@@ -323,7 +323,18 @@ function VaccineActionModal({ record, allRecords, suggestions, templates, compon
   const [batchNo, setBatchNo] = useState(parsedNotes.batch)
   const [notes, setNotes] = useState(parsedNotes.text)
   const tmplForRecurrence = templates.find(t => t.vaccine_code === record.vaccine_code)
-  const [recurrenceDays, setRecurrenceDays] = useState<number | ''>(tmplForRecurrence?.recurrence_days || '')
+  // Recurrence — stored in days, displayed as value+unit
+  const parseRecurrenceInit = (days: number | '') => {
+    if (!days) return { val: '', unit: 'gun' as 'gun' | 'ay' | 'yil' }
+    const d = Number(days)
+    if (d % 365 === 0 && d >= 365) return { val: String(d / 365), unit: 'yil' as const }
+    if (d % 30 === 0 && d >= 30) return { val: String(d / 30), unit: 'ay' as const }
+    return { val: String(d), unit: 'gun' as const }
+  }
+  const initRec = parseRecurrenceInit(tmplForRecurrence?.recurrence_days || '')
+  const [recurrenceVal, setRecurrenceVal] = useState(initRec.val)
+  const [recurrenceUnit, setRecurrenceUnit] = useState<'gun' | 'ay' | 'yil'>(initRec.unit)
+  const recurrenceDays = recurrenceVal ? Number(recurrenceVal) * (recurrenceUnit === 'yil' ? 365 : recurrenceUnit === 'ay' ? 30 : 1) : ''
   const [amount, setAmount] = useState<number | ''>('')
 
   function handleConfirm() {
@@ -363,8 +374,8 @@ function VaccineActionModal({ record, allRecords, suggestions, templates, compon
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-surface w-full max-w-sm rounded-[28px] shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain" onClick={onClose}>
+      <div className="bg-surface w-full max-w-sm rounded-[28px] shadow-2xl overflow-y-auto max-h-[90dvh]" onClick={e => e.stopPropagation()}>
 
         {/* Header */}
         <div className="px-6 pt-6 pb-4 border-b border-border-main">
@@ -403,7 +414,7 @@ function VaccineActionModal({ record, allRecords, suggestions, templates, compon
           })()}
         </div>
 
-        <div className="p-6 flex flex-col gap-4 max-h-[80vh] overflow-y-auto">
+        <div className="p-6 flex flex-col gap-4">
           <div className="flex flex-col gap-1 -mt-1">
             <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider">Uygulama Tarihi *</label>
             <input type="date" className="input-base text-[14px] py-3" value={detailDate} onChange={e => setDetailDate(e.target.value)} max={new Date().toISOString().split('T')[0]} />
@@ -462,7 +473,14 @@ function VaccineActionModal({ record, allRecords, suggestions, templates, compon
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
                   <label className="text-[11px] font-bold text-text-secondary">Tavsiye Edilen Tekrar</label>
-                  <input type="number" className="input-base text-[13px] py-2" placeholder="Örn: 90 Gün" value={recurrenceDays} onChange={e => setRecurrenceDays(e.target.value ? Number(e.target.value) : '')} />
+                  <div className="flex gap-1">
+                    <input type="number" min="1" className="input-base text-[13px] py-2 flex-1 min-w-0" placeholder="Örn: 3" value={recurrenceVal} onChange={e => setRecurrenceVal(e.target.value)} />
+                    <select className="input-base text-[13px] py-2 pr-1 flex-shrink-0" value={recurrenceUnit} onChange={e => setRecurrenceUnit(e.target.value as any)}>
+                      <option value="gun">Gün</option>
+                      <option value="ay">Ay</option>
+                      <option value="yil">Yıl</option>
+                    </select>
+                  </div>
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-[11px] font-bold text-text-secondary">Ücret (₺)</label>
@@ -490,8 +508,8 @@ function PostponeModal({ record, onClose, onDone }: { record: VRecord; onClose: 
   const [days, setDays] = useState(7)
   const [isPending, startTransition] = useTransition()
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-surface w-full max-w-sm rounded-[28px] shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain" onClick={onClose}>
+      <div className="bg-surface w-full max-w-sm rounded-[28px] shadow-2xl overflow-y-auto max-h-[90dvh]" onClick={e => e.stopPropagation()}>
         <div className="px-6 pt-6 pb-4 border-b border-border-main">
           <p className="text-[11px] font-black text-warning uppercase tracking-widest">⚠️ Ertele</p>
           <h3 className="text-[17px] font-extrabold text-text-primary">{record.vaccine_name}</h3>
@@ -552,7 +570,10 @@ function ManualVaccineModal({
   const [brand, setBrand] = useState(initialData?.brand || '')
   const [batchNo, setBatchNo] = useState(initialData?.batch_no || '')
   const [notes, setNotes] = useState('')
-  const [recurrenceDays, setRecurrenceDays] = useState<number | ''>('')
+  // Recurrence — value+unit → days
+  const [recurrenceVal, setRecurrenceVal] = useState('')
+  const [recurrenceUnit, setRecurrenceUnit] = useState<'gun' | 'ay' | 'yil'>('gun')
+  const recurrenceDays = recurrenceVal ? Number(recurrenceVal) * (recurrenceUnit === 'yil' ? 365 : recurrenceUnit === 'ay' ? 30 : 1) : ''
   const [amount, setAmount] = useState<number | ''>('')
   const [isScanning, setIsScanning] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -623,8 +644,8 @@ function ManualVaccineModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-surface w-full max-w-sm rounded-[28px] shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain" onClick={onClose}>
+      <div className="bg-surface w-full max-w-sm rounded-[28px] shadow-2xl overflow-y-auto max-h-[90dvh]" onClick={e => e.stopPropagation()}>
         <div className="px-6 pt-6 pb-4 border-b border-border-main flex justify-between items-start">
           <div>
             <p className="text-[11px] font-black text-primary uppercase tracking-widest">
@@ -645,7 +666,7 @@ function ManualVaccineModal({
             </label>
           )}
         </div>
-        <div className="p-6 flex flex-col gap-4 max-h-[75vh] overflow-y-auto">
+        <div className="p-6 flex flex-col gap-4">
           {/* Mode - Only show if not fixed */}
           {!fixedMode && (
             <div className="grid grid-cols-2 gap-2">
@@ -760,7 +781,14 @@ function ManualVaccineModal({
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
                   <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Tavsiye Edilen Tekrar</label>
-                  <input type="number" className="input-base" placeholder="Örn: 90 Gün" value={recurrenceDays} onChange={e => setRecurrenceDays(e.target.value ? Number(e.target.value) : '')} />
+                  <div className="flex gap-1">
+                    <input type="number" min="1" className="input-base flex-1 min-w-0" placeholder="Örn: 3" value={recurrenceVal} onChange={e => setRecurrenceVal(e.target.value)} />
+                    <select className="input-base pr-1 flex-shrink-0" value={recurrenceUnit} onChange={e => setRecurrenceUnit(e.target.value as any)}>
+                      <option value="gun">Gün</option>
+                      <option value="ay">Ay</option>
+                      <option value="yil">Yıl</option>
+                    </select>
+                  </div>
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Ücret (₺)</label>
