@@ -119,24 +119,50 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
   const { id } = await context.params
   const supabase = await createServerSupabaseClient()
 
-  // Verify ownership
-  const { data: ownerRecord } = await supabase
+  console.log('[API/Pets/DELETE] User:', user.id, 'Pet:', id)
+
+  // Verify ownership via pet_owners table
+  const { data: ownerRecord, error: ownerError } = await supabase
     .from('pet_owners')
     .select('role')
     .eq('pet_id', id)
     .eq('profile_id', user.id)
     .single()
 
+  console.log('[API/Pets/DELETE] Owner record:', ownerRecord, 'Error:', ownerError)
+
   if (!ownerRecord || ownerRecord.role !== 'owner') {
     return NextResponse.json({ error: 'Sadece asıl sahip evcil hayvanı silebilir.' }, { status: 403 })
   }
 
-  const { error } = await supabase.from('pets').delete().eq('id', id)
+  // First delete from pet_owners to avoid RLS issues on the pets table
+  await supabase.from('pet_owners').delete().eq('pet_id', id)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  // Delete the pet itself (RLS: auth.uid() = owner_id)
+  const { error, count } = await supabase
+    .from('pets')
+    .delete({ count: 'exact' })
+    .eq('id', id)
+    .eq('owner_id', user.id)
+
+  console.log('[API/Pets/DELETE] Delete result — error:', error, 'count:', count)
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  // Check if any rows were actually deleted (RLS can silently block)
+  if (count === 0) {
+    console.error('[API/Pets/DELETE] RLS blocked delete or pet not found. Pet:', id, 'User:', user.id)
+    return NextResponse.json(
+      { error: 'Bu evcil hayvan silinemedi. Lütfen tekrar deneyin.' },
+      { status: 500 }
+    )
+  }
 
   revalidatePath('/owner/dashboard')
   revalidatePath('/owner/pets')
+  revalidatePath('/owner/profile')
 
   return NextResponse.json({ success: true })
 }

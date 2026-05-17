@@ -35,6 +35,7 @@ const ALLOWED_EVENTS = new Set([
   'vaccine_schedule_generated',
   'vaccine_quick_marked',
   'vaccine_detailed_logged',
+  'vaccine_logged',
   'vaccine_overdue_detected',
   'vaccine_chain_completed',
 ])

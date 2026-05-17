@@ -1,44 +1,95 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
-test.describe('Vaccine OS Module Logic & UI Tests', () => {
-  // Use a predictable test pet id. In a real CI, this should be seeded data.
-  // For local tests, assuming ID 1 or a seeded pet ID exists. We navigate directly or through dashboard.
-  
+const EMAIL = process.env.TEST_EMAIL;
+const PASSWORD = process.env.TEST_PASSWORD;
+const PET_ID = process.env.TEST_PET_ID; // set this to a real pet UUID in .env.local
+
+async function login(page: Page) {
+  if (!EMAIL || !PASSWORD) {
+    test.skip(true, 'TEST_EMAIL / TEST_PASSWORD not set.');
+    return;
+  }
+  await page.goto('/login');
+  await page.fill('input[name="email"]', EMAIL);
+  await page.fill('input[name="password"]', PASSWORD);
+  await page.click('button[type="submit"]');
+  await expect(page).toHaveURL(/\/owner\//, { timeout: 15_000 });
+}
+
+// ---------------------------------------------------------------------------
+// Vaccine OS (authenticated – requires TEST_PET_ID)
+// ---------------------------------------------------------------------------
+
+test.describe('Vaccine OS Module', () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate to the app (assuming user session is seeded or bypassing auth for local test)
-    // For this boilerplate, we'll try to reach a generic path or the root dashboard.
-    await page.goto('/owner/dashboard');
+    await login(page);
   });
 
-  test('should load the dashboard and navigate to health history', async ({ page }) => {
-    // Wait for dashboard to load
-    await expect(page.locator('text=Genel Bakış').first()).toBeVisible({ timeout: 15000 });
-    
-    // In a real automated setup, we would click on a pet and navigate to its vaccines tab.
-    // For structural testing, we're ensuring the routing hasn't broken.
+  test('Vaccine page renders the main tabs', async ({ page }) => {
+    if (!PET_ID) {
+      test.skip(true, 'TEST_PET_ID not set.');
+      return;
+    }
+    await page.goto(`/owner/pets/${PET_ID}/vaccines`);
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.locator('text=Takvim').first()).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('text=Kayıtlar').first()).toBeVisible();
   });
 
-  test('should display vaccine matrix and filter options when on vaccine page', async ({ page }) => {
-    // Go directly to a test pet's vaccine page. (Assuming pet ID 1 exists for local testing)
-    const testPetId = 1; 
-    const response = await page.goto(`/owner/pets/${testPetId}/vaccines`);
-    
-    // If we receive a 404, it might mean the test DB isn't seeded with pet ID 1, 
-    // but the test will verify the page structure if it loads.
-    if (response?.status() === 200) {
-      // Check for main tabs
-      await expect(page.locator('text=Takvim')).toBeVisible();
-      await expect(page.locator('text=Kayıtlar')).toBeVisible();
-      
-      // Check for manual action button
-      const addManualBtn = page.locator('text=+ Manuel İşlem');
-      await expect(addManualBtn).toBeVisible();
-      
-      // Open modal
-      await addManualBtn.click();
-      await expect(page.locator('text=Kayıt Düzenle').or(page.locator('text=Aşı Kaydı'))).toBeVisible();
+  test('Manuel İşlem modal opens and closes', async ({ page }) => {
+    if (!PET_ID) {
+      test.skip(true, 'TEST_PET_ID not set.');
+      return;
+    }
+    await page.goto(`/owner/pets/${PET_ID}/vaccines`);
+    await page.waitForLoadState('networkidle');
+
+    const manualBtn = page.locator('button:has-text("Manuel İşlem"), button:has-text("Manuel")').first();
+    if (await manualBtn.isVisible()) {
+      await manualBtn.click();
+      // Modal should open
+      await expect(
+        page.locator('[role="dialog"], .modal-content, text=Kayıt Düzenle, text=Aşı Kaydı').first()
+      ).toBeVisible({ timeout: 6_000 });
+
+      // Close with Escape or ✕ button
+      await page.keyboard.press('Escape');
+      // Modal should close (element count goes back to 0)
+      await expect(
+        page.locator('[role="dialog"]').first()
+      ).not.toBeVisible({ timeout: 5_000 });
     }
   });
 
-  // Additional automated logic assertions can be added here once the test DB seeding strategy is standardized.
+  test('Vaccine plan items are listed (Takvim tab)', async ({ page }) => {
+    if (!PET_ID) {
+      test.skip(true, 'TEST_PET_ID not set.');
+      return;
+    }
+    await page.goto(`/owner/pets/${PET_ID}/vaccines`);
+    await page.waitForLoadState('networkidle');
+
+    // Navigate to calendar tab if not default
+    const takvimTab = page.locator('button:has-text("Takvim"), a:has-text("Takvim")').first();
+    if (await takvimTab.isVisible()) await takvimTab.click();
+
+    // Either vaccine plan items or an empty-state message must be present
+    const planItems = await page.locator('[data-testid="vaccine-plan-item"]').count();
+    const emptyMsg = await page.locator('text=Plan Bulunamadı, text=Henüz plan').count();
+    expect(planItems + emptyMsg).toBeGreaterThan(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Vaccine OS – unauthenticated guard
+// ---------------------------------------------------------------------------
+
+test.describe('Vaccine OS – Route Guard', () => {
+  test('Unauthenticated user is redirected to /login', async ({ page }) => {
+    // Go directly without logging in
+    const petId = PET_ID ?? 'nonexistent-id';
+    await page.goto(`/owner/pets/${petId}/vaccines`);
+    await expect(page).toHaveURL(/\/login/, { timeout: 10_000 });
+  });
 });

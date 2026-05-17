@@ -29,11 +29,12 @@ export default function PetCardActions({ pet }: { pet: any }) {
       startTransition(async () => {
         try {
           const res = await fetch(`/api/pets/${pet.id}`, { method: 'DELETE' })
+          const data = await res.json()
           if (!res.ok) {
-            const data = await res.json()
             throw new Error(data.error || 'Profil silinemedi')
           }
-          router.refresh()
+          alert(`${pet.name} başarıyla silindi.`)
+          window.location.reload()
         } catch (e: any) {
           alert('Hata: ' + e.message)
         }

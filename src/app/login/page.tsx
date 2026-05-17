@@ -1,11 +1,14 @@
 'use client'
 
-import { useState, FormEvent } from 'react'
+import { useState, FormEvent, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 
-export default function LoginPage() {
+function LoginForm() {
+  const searchParams = useSearchParams()
+  const urlMessage = searchParams.get('message') ?? ''
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError]     = useState('')
@@ -72,9 +75,9 @@ export default function LoginPage() {
         </div>
 
         <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
-          {error && (
+          {(error || urlMessage) && (
             <div className="p-4 rounded-2xl bg-error/10 border border-error/20 text-error text-[13px] font-bold text-center animate-in shake-in duration-300">
-              ⚠️ {error}
+              ⚠️ {error || urlMessage}
             </div>
           )}
 
@@ -172,5 +175,13 @@ export default function LoginPage() {
         </form>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   )
 }

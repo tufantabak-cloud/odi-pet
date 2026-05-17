@@ -1,67 +1,93 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
-test.describe('Odi.Pet E2E Automation Robot', () => {
-  // Test Settings & Sample Data
-  const testEmail = process.env.TEST_EMAIL || 's.piskin@oxivo.eu';
-  const testPassword = process.env.TEST_PASSWORD || 'password123';
-  
-  test('1. Landing and Login Stage', async ({ page }) => {
-    console.log('Navigating to app...');
-    
+// ---------------------------------------------------------------------------
+// Shared helpers
+// ---------------------------------------------------------------------------
+
+const EMAIL = process.env.TEST_EMAIL;
+const PASSWORD = process.env.TEST_PASSWORD;
+
+/**
+ * Login helper – reusable across all test files.
+ * Skips if credentials are not set.
+ */
+async function login(page: Page) {
+  if (!EMAIL || !PASSWORD) {
+    test.skip(true, 'TEST_EMAIL / TEST_PASSWORD not set.');
+    return;
+  }
+  await page.goto('/login');
+  await page.fill('input[name="email"]', EMAIL);
+  await page.fill('input[name="password"]', PASSWORD);
+  await page.click('button[type="submit"]');
+  await expect(page).toHaveURL(/\/owner\//, { timeout: 15_000 });
+}
+
+// ---------------------------------------------------------------------------
+// Auth flow
+// ---------------------------------------------------------------------------
+
+test.describe('Auth Flow', () => {
+  test('Login page renders correctly', async ({ page }) => {
     await page.goto('/login');
-    
-    await expect(page.locator('text=Odi Pet').first()).toBeVisible({ timeout: 5000 }).catch(() => {});
-    
-    console.log('Entering sample data for login...');
-    await page.fill('input[name="email"]', testEmail);
-    await page.fill('input[name="password"]', testPassword);
-    await page.click('button[type="submit"]', { force: true });
-
-    // Wait for either an error message or a successful redirect
-    try {
-      await Promise.race([
-        page.waitForURL(/.*\/owner.*/, { timeout: 15000 }),
-        page.waitForURL(/.*\/clinic.*/, { timeout: 15000 }),
-        page.locator('.text-error').waitFor({ state: 'visible', timeout: 15000 })
-      ]);
-    } catch (e) {
-      console.log('Timeout waiting for login response.');
-    }
-    
-    const errorLocator = page.locator('.text-error');
-    if (await errorLocator.isVisible()) {
-      const errorText = await errorLocator.textContent();
-      console.log(`Login resulted in expected message (Test Data): ${errorText}`);
-    } else {
-      console.log('Login successful with sample data, redirected to Dashboard.');
-      await expect(page).not.toHaveURL(/.*login/, { timeout: 5000 });
-    }
+    await expect(page.locator('input[name="email"]')).toBeVisible();
+    await expect(page.locator('input[name="password"]')).toBeVisible();
+    await expect(page.locator('button[type="submit"]')).toBeVisible();
   });
 
-  test('2. Pet Health and Care Stage Analysis', async ({ page }) => {
-    // We try to access the health dashboard directly to test protected routing
-    await page.goto('/owner/health');
-    
-    if (page.url().includes('/login')) {
-      console.log('Route /owner/health is properly protected.');
-    } else {
-      console.log('Accessing Health Stage...');
-      // If we got here, check for health components
-      const hasHealthScore = await page.locator('text=Sağlık Skoru').isVisible();
-      console.log(`Health Score component visible: ${hasHealthScore}`);
-    }
+  test('Shows error for wrong credentials', async ({ page }) => {
+    await page.goto('/login');
+    await page.fill('input[name="email"]', 'wrong@example.com');
+    await page.fill('input[name="password"]', 'badpassword');
+    await page.click('button[type="submit"]');
+    // Expect an error message to appear (could be a toast/alert or inline)
+    await expect(
+      page.locator('[role="alert"], .error, [data-testid="login-error"]').first()
+    ).toBeVisible({ timeout: 8_000 });
   });
 
-  test('3. Pet Profile and Appointments Stage', async ({ page }) => {
+  test('Authenticated user is redirected away from /login', async ({ page }) => {
+    await login(page);
+    await page.goto('/login');
+    // Should redirect back to dashboard
+    await expect(page).toHaveURL(/\/owner\//, { timeout: 10_000 });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Dashboard
+// ---------------------------------------------------------------------------
+
+test.describe('Dashboard', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+  });
+
+  test('Dashboard loads and shows pet cards or empty state', async ({ page }) => {
+    await page.goto('/owner/dashboard');
+    await page.waitForLoadState('networkidle');
+    // Either pet cards or the "add first pet" CTA should be visible
+    const hasPets = await page.locator('[data-testid="pet-card"]').count();
+    const hasEmptyState = await page.locator('text=İlk Peti Ekle, text=Hayvan Ekle').count();
+    expect(hasPets + hasEmptyState).toBeGreaterThan(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Pets
+// ---------------------------------------------------------------------------
+
+test.describe('Pets Module', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+  });
+
+  test('Pet list page is accessible', async ({ page }) => {
     await page.goto('/owner/pets');
-    
-    if (page.url().includes('/login')) {
-      console.log('Route /owner/pets is properly protected.');
-    } else {
-      console.log('Accessing Pet Profile Stage...');
-      // Look for any add pet button or pet list
-      const hasPets = await page.locator('text=Petlerim').isVisible();
-      console.log(`Pets section visible: ${hasPets}`);
-    }
+    await page.waitForLoadState('networkidle');
+    // Either see a pet list or the empty-state CTA
+    await expect(
+      page.locator('h1, h2').filter({ hasText: /Pet|Hayvan/i }).first()
+    ).toBeVisible({ timeout: 10_000 });
   });
 });

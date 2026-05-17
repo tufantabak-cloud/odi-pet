@@ -23,7 +23,36 @@ export default async function ProfileMenuPage() {
   const planName = subscription?.plan === 'pro' ? 'Odi Pro' : subscription?.plan === 'ai_plus' ? 'Odi AI+' : 'Odi Free'
   const isPremium = subscription?.plan === 'pro' || subscription?.plan === 'ai_plus'
   
+  let hasVaccineRecords = false
+  if (pets && pets.length > 0) {
+    const { count } = await supabase
+      .from('vaccine_records_v2')
+      .select('*', { count: 'exact', head: true })
+      .in('pet_id', pets.map(p => p.id))
+    hasVaccineRecords = (count ?? 0) > 0
+  }
 
+  // Calculate Profile Completion Tasks
+  const tasks = []
+  
+  if (!user?.phone && !(profile as any)?.phone) {
+    tasks.push({ label: 'Telefon Ekle', action: '+ Telefon Ekle', link: '/owner/profile/edit' })
+  }
+  
+  if (!isPremium) {
+    tasks.push({ label: 'Ödeme Yöntemi Ekle', action: '+ Ödeme Yöntemi Ekle', link: '/owner/profile/subscription' })
+  }
+  
+  if (!pets || pets.length === 0) {
+    tasks.push({ label: 'İlk Patiyi Ekle', action: '+ Pati Ekle', link: '/owner/pets/add' })
+  } else if (!hasVaccineRecords) {
+    tasks.push({ label: 'Aşı Kaydı Gir', action: '+ Aşı Ekle', link: `/owner/pets/${pets[0].id}/vaccines` })
+  }
+
+  const totalTasks = 4
+  const completedTasks = totalTasks - tasks.length
+  // Ensure minimum 15% to encourage users, except if everything is done then it's 100%
+  let progress = completedTasks === totalTasks ? 100 : Math.max(15, Math.round((completedTasks / totalTasks) * 100))
 
   return (
     <div className="flex flex-col gap-8 pb-20 w-full mx-auto font-sans">
@@ -54,19 +83,26 @@ export default async function ProfileMenuPage() {
           </div>
           
           {/* Profile Completion Bar */}
-          <div className="w-full max-w-sm mt-6">
-            <div className="flex justify-between text-[12px] font-bold mb-2">
-              <span className="text-text-secondary">%78 Profil Tamamlandı</span>
-              <span className="text-primary cursor-pointer hover:underline">Tamamla</span>
+          {progress < 100 && (
+            <div className="w-full max-w-sm mt-6">
+              <div className="flex justify-between text-[12px] font-bold mb-2">
+                <span className="text-text-secondary">%{progress} Profil Tamamlandı</span>
+                {tasks.length > 0 && <span className="text-primary cursor-pointer hover:underline">Tamamla</span>}
+              </div>
+              <div className="h-2.5 w-full bg-bg-main rounded-full overflow-hidden">
+                <div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: `${progress}%` }} />
+              </div>
+              {tasks.length > 0 && (
+                <div className="flex gap-2 mt-3 overflow-x-auto pb-1 hide-scrollbar">
+                  {tasks.map((task, i) => (
+                    <Link key={i} href={task.link} className="px-3 py-1.5 rounded-lg bg-bg-main text-[11px] font-semibold text-text-secondary border border-border-main shrink-0 cursor-pointer hover:bg-border-main hover:text-text-primary transition-colors">
+                      {task.action}
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
-            <div className="h-2.5 w-full bg-bg-main rounded-full overflow-hidden">
-              <div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: '78%' }} />
-            </div>
-            <div className="flex gap-2 mt-3 overflow-x-auto pb-1 hide-scrollbar">
-              <span className="px-3 py-1.5 rounded-lg bg-bg-main text-[11px] font-semibold text-text-secondary border border-border-main shrink-0 cursor-pointer hover:bg-border-main transition-colors">+ Telefon Ekle</span>
-              <span className="px-3 py-1.5 rounded-lg bg-bg-main text-[11px] font-semibold text-text-secondary border border-border-main shrink-0 cursor-pointer hover:bg-border-main transition-colors">+ Ödeme Yöntemi Ekle</span>
-            </div>
-          </div>
+          )}
         </div>
       </section>
 

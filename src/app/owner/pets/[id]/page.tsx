@@ -2,18 +2,8 @@ import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { calcAge } from '@/lib/pets/utils'
 import PetDetailClient from './PetDetailClient'
-
-function calcAge(birthDate: string | null) {
-  if (!birthDate) return { text: '—', label: '—' }
-  const born = new Date(birthDate)
-  const today = new Date()
-  const totalMonths = (today.getFullYear() - born.getFullYear()) * 12 + (today.getMonth() - born.getMonth())
-  const ageYears = Math.floor(totalMonths / 12)
-  const label = ageYears < 1 ? 'Yavru' : ageYears < 7 ? 'Yetişkin' : ageYears < 12 ? 'Yaşlı' : 'Yaşlı (12+)'
-  const text = ageYears < 1 ? `${totalMonths} ay` : `${ageYears} yıl`
-  return { text, label }
-}
 
 type PageProps = {
   params: Promise<{ id: string }>;

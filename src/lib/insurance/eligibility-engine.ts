@@ -43,10 +43,11 @@ export function computeInsuranceEligibility(input: InsuranceInput): InsuranceRes
   const nextActions: string[] = []
 
   // ── Step 1: Base score ──────────────────────────────
+  // Weights sum to 1.0: high-compliance pets can genuinely reach HIGH_ELIGIBILITY (score >= 80)
   let score =
-    (input.preventiveComplianceScore * 0.35) +
-    (input.careConsistencyScore       * 0.20) +
-    (input.householdReliabilityScore  * 0.10)
+    (input.preventiveComplianceScore * 0.45) +
+    (input.careConsistencyScore       * 0.30) +
+    (input.householdReliabilityScore  * 0.25)
 
   // Deductions
   score -= input.incidentCount         * 8

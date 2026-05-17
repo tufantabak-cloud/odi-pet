@@ -3,6 +3,7 @@
 import { useState, useEffect, useTransition, useMemo, Fragment, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { COMMON_ALIASES, getDisplayName } from '@/lib/vaccines/utils'
+import { toTitleCase } from '@/lib/utils'
 import Link from 'next/link'
 import { trackEvent } from '@/lib/analytics/track'
 import {
@@ -189,13 +190,7 @@ function SetupFlow({ pet, templates, onComplete, onHistoricalImport }: { pet: Pe
 
 // ── Vaccine Action Modal (2 yol) ───────────────────────────────
 // Helper to standardize text casing (Title Case)
-const toTitleCase = (str: string) => {
-  if (!str) return '';
-  return str.toLocaleLowerCase('tr-TR').split(' ').map(word => {
-    if (!word) return '';
-    return word.charAt(0).toLocaleUpperCase('tr-TR') + word.slice(1);
-  }).join(' ');
-}
+// Removed local definition, using @/lib/utils/toTitleCase
 
 function VaccineActionModal({ record, allRecords, suggestions, templates, components, onClose, onDone, defaultVetName }: { 
   record: VRecord & { _startInDetailed?: boolean }; 

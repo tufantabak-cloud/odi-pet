@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import citiesData from '@/lib/cities.json';
 
@@ -16,6 +15,28 @@ interface Clinic {
   dist_km: number;
   tags: string[];
   is_verified: boolean;
+  rating?: number;
+  user_ratings_total?: number;
+  open_now?: boolean;
+  photo_reference?: string;
+}
+
+// Haversine formula for distance calculation
+function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371; // Radius of the earth in km
+  const dLat = deg2rad(lat2 - lat1);
+  const dLon = deg2rad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const d = R * c; // Distance in km
+  return d;
+}
+
+function deg2rad(deg: number) {
+  return deg * (Math.PI / 180);
 }
 
 export default function VetsPage() {
@@ -26,48 +47,63 @@ export default function VetsPage() {
   
   const [selectedCity, setSelectedCity] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
-  
-  const supabase = createBrowserSupabaseClient();
-
 
   const districts = citiesData.find(c => c.name === selectedCity)?.districts || [];
 
-  const getNearbyClinics = async (lat: number, lng: number) => {
-    setLoading(true);
-    const { data, error } = await supabase.rpc('get_nearby_clinics', {
-      user_lat: lat,
-      user_long: lng,
-      max_dist_km: 50
-    });
-
-    if (error) {
-      console.error('Error fetching clinics:', error);
-      setError('Klinikler yüklenirken bir hata oluştu.');
-    } else {
-      setClinics(data || []);
-    }
-    setLoading(false);
-  };
-
-  const handleManualSearch = async () => {
-    if (!selectedCity) return;
-    
+  const searchClinics = async (lat?: number, lng?: number) => {
     setLoading(true);
     setError(null);
-    setUserLocation(null);
+    try {
+      let url = '/api/vets/search?';
+      if (lat && lng) {
+        url += `lat=${lat}&lng=${lng}`;
+      } else if (selectedCity) {
+        url += `city=${encodeURIComponent(selectedCity)}`;
+        if (selectedDistrict) {
+          url += `&district=${encodeURIComponent(selectedDistrict)}`;
+        }
+      } else {
+        setLoading(false);
+        return;
+      }
 
-    let query = supabase.from('clinics').select('*').eq('is_public', true).eq('city', selectedCity);
-    if (selectedDistrict) query = query.eq('district', selectedDistrict);
-    
-    const { data, error } = await query.order('is_verified', { ascending: false });
+      const response = await fetch(url);
+      const data = await response.json();
 
-    if (error) {
-      console.error('Manual search error:', error);
-      setError('Arama yapılırken bir hata oluştu.');
-    } else {
-      setClinics(data?.map(c => ({ ...c, dist_km: 0 })) || []);
+      if (!response.ok) {
+        throw new Error(data.error || 'Arama sırasında bir hata oluştu.');
+      }
+
+      let fetchedClinics: Clinic[] = data.clinics || [];
+
+      // Calculate distance if user location is available
+      if (lat && lng) {
+        fetchedClinics = fetchedClinics.map(clinic => ({
+          ...clinic,
+          dist_km: clinic.latitude && clinic.longitude 
+            ? getDistanceFromLatLonInKm(lat, lng, clinic.latitude, clinic.longitude) 
+            : 0
+        })).sort((a, b) => a.dist_km - b.dist_km);
+      } else if (userLocation) {
+         fetchedClinics = fetchedClinics.map(clinic => ({
+          ...clinic,
+          dist_km: clinic.latitude && clinic.longitude 
+            ? getDistanceFromLatLonInKm(userLocation.lat, userLocation.lng, clinic.latitude, clinic.longitude) 
+            : 0
+        })).sort((a, b) => a.dist_km - b.dist_km);
+      }
+
+      setClinics(fetchedClinics);
+    } catch (err: any) {
+      console.error('Search error:', err);
+      setError(err.message || 'Klinikler yüklenirken bir hata oluştu.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
+  };
+
+  const handleManualSearch = () => {
+    searchClinics();
   };
 
   const requestLocation = () => {
@@ -82,7 +118,7 @@ export default function VetsPage() {
       (position) => {
         const { latitude, longitude } = position.coords;
         setUserLocation({ lat: latitude, lng: longitude });
-        getNearbyClinics(latitude, longitude);
+        searchClinics(latitude, longitude);
       },
       (err) => {
         console.error('Geolocation error:', err);
@@ -111,7 +147,7 @@ export default function VetsPage() {
           Odi <span className="text-primary">Yanında</span>
         </h1>
         <p className="text-text-secondary text-lg max-w-xl mx-auto">
-          En yakın dostuna en yakın veteriner kliniğini bul.
+          En yakın dostuna en yakın ve en iyi değerlendirilen veteriner kliniğini bul.
         </p>
       </div>
 
@@ -170,26 +206,39 @@ export default function VetsPage() {
           <div className="grid gap-6 stagger-children">
             {clinics.map((clinic) => (
               <div key={clinic.id} className="card-base p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 group hover:-translate-y-1">
+                {/* Sol Taraf - Fotoğraf ve Bilgiler (Eğer fotoğraf API entegre edilirse eklenebilir) */}
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
                     <h4 className="text-xl font-bold group-hover:text-primary transition-colors">{clinic.name}</h4>
-                    {clinic.is_verified && <span className="badge-success scale-90">Doğrulanmış</span>}
+                    {clinic.rating && (
+                      <div className="flex items-center gap-1 bg-amber-50 text-amber-600 px-2 py-0.5 rounded text-xs font-bold border border-amber-200">
+                        <svg className="w-3 h-3 fill-current" viewBox="0 0 20 20">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        {clinic.rating} ({clinic.user_ratings_total})
+                      </div>
+                    )}
+                    {clinic.open_now === true && <span className="badge-success scale-90">Açık</span>}
+                    {clinic.open_now === false && <span className="bg-error/10 text-error px-2 py-0.5 rounded text-xs font-bold border border-error/20 scale-90">Kapalı</span>}
                   </div>
+                  
                   <p className="text-text-secondary text-sm mb-3">
-                    {clinic.district}, {clinic.city} • {clinic.address}
+                    {clinic.address}
                   </p>
+                  
                   <div className="flex flex-wrap gap-2">
                     {clinic.dist_km > 0 && <span className="badge-primary">{clinic.dist_km.toFixed(1)} km</span>}
                     {clinic.tags?.map((tag) => (
                       <span key={tag} className="bg-primary/5 text-primary/70 px-2 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider">
-                        {tag}
+                        {tag.replace(/_/g, ' ')}
                       </span>
                     ))}
                   </div>
                 </div>
                 
+                {/* Sağ Taraf - Aksiyonlar */}
                 <div className="flex gap-3">
-                  {clinic.latitude && (
+                  {clinic.latitude && clinic.longitude && (
                     <Link 
                       href={`https://www.google.com/maps/dir/?api=1&destination=${clinic.latitude},${clinic.longitude}`}
                       target="_blank"

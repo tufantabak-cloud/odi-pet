@@ -10,6 +10,7 @@ export default function EditProfileForm({ profile }: { profile: any }) {
   
   const [firstName, setFirstName] = useState(profile.first_name || '')
   const [lastName, setLastName] = useState(profile.last_name || '')
+  const [phone, setPhone] = useState(profile.phone || '')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -24,6 +25,7 @@ export default function EditProfileForm({ profile }: { profile: any }) {
         .update({
           first_name: firstName,
           last_name: lastName,
+          phone: phone || null,
           updated_at: new Date().toISOString()
         })
         .eq('id', profile.id)
@@ -69,6 +71,17 @@ export default function EditProfileForm({ profile }: { profile: any }) {
           required 
           className="input-base"
           placeholder="Soyadınız"
+        />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[13px] font-bold text-text-secondary ml-1">Telefon Numarası</label>
+        <input 
+          type="tel" 
+          value={phone}
+          onChange={e => setPhone(e.target.value)}
+          className="input-base"
+          placeholder="0555 555 5555"
         />
       </div>
 

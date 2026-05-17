@@ -148,7 +148,7 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
 
       {/* ── Progressive Profiling / Profili Zenginleştir Widget ── */}
       {(() => {
-        const tasks = []
+        const tasks: { label: string; onClick?: () => void; link?: string }[] = []
         // Faz 1: Onboarding
         if (!pet.avatar_url) tasks.push({ label: 'Fotoğraf Ekle', onClick: () => setQuickUpdateConfig({ title: 'Fotoğraf Ekle', desc: 'Petinizin profilini tamamlamak için bir fotoğraf yükleyin.', fields: [{ name: 'avatar', type: 'file', label: 'Fotoğraf Seç', required: true }] }) })
         
@@ -199,7 +199,7 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
                     <span className="text-[14px] text-primary">+</span> {t.label}
                   </button>
                 ) : (
-                  <Link key={i} href={t.link} className="text-[12px] font-bold px-3 py-2 rounded-xl border border-border-main bg-white text-text-secondary hover:text-primary hover:border-primary hover:bg-primary/5 transition-all flex items-center gap-1.5 shadow-sm">
+                  <Link key={i} href={t.link || '#'} className="text-[12px] font-bold px-3 py-2 rounded-xl border border-border-main bg-white text-text-secondary hover:text-primary hover:border-primary hover:bg-primary/5 transition-all flex items-center gap-1.5 shadow-sm">
                     <span className="text-[14px] text-primary">+</span> {t.label}
                   </Link>
                 )
