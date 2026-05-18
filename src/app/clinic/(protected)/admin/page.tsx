@@ -3,7 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
 export default async function ClinicAdminPage() {
-  const profile = await requireRole(['clinic_admin'])
+  const profile = await requireRole(['admin'])
   if (!profile) redirect('/clinic/dashboard')
 
   const supabase = await createServerSupabaseClient()

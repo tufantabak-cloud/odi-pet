@@ -5,27 +5,9 @@ import { useRouter } from 'next/navigation'
 import { trackEvent } from '@/lib/analytics/track'
 
 const WIZARD_STEPS = [
-  {
-    id: 1,
-    title: 'Ne yapıyor?',
-    heading: 'Her Şey Tek Yerde',
-    description: 'Aşılar, kilo takibi, beslenme düzeni ve daha fazlası. Odi.Pet ile can dostunun tüm ihtiyaçları her an elinin altında.',
-    icon: '✨'
-  },
-  {
-    id: 2,
-    title: 'Pet ekle',
-    heading: 'Saniyeler İçinde Başla',
-    description: 'Evcil hayvanının profilini oluşturmak çok kolay. Temel bilgileri girerek kişisel asistanını hemen kullanmaya başlayabilirsin.',
-    icon: '🐾'
-  },
-  {
-    id: 3,
-    title: 'İlk kurulum',
-    heading: 'Kurulumu Tamamla',
-    description: 'İlk evcil hayvanını ekleyerek Odi.Pet dünyasına adım at. Her şey hazır, hazırsan başlayalım!',
-    icon: '🚀'
-  }
+  { id: 1, title: 'Ne yapıyor?' },
+  { id: 2, title: 'Pet ekle' },
+  { id: 3, title: 'İlk kurulum' }
 ]
 
 export default function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
@@ -60,7 +42,6 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
     router.refresh()
   }
 
-  const currentStep = WIZARD_STEPS[step - 1]
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -105,19 +86,117 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
           </div>
 
           {/* Content */}
-          <div className="text-center min-h-[220px] flex flex-col items-center justify-center">
-            <div className="relative w-24 h-24 mb-6 flex items-center justify-center transition-all duration-500 transform hover:scale-105">
-              <div className="absolute inset-0 bg-primary/10 rounded-full animate-pulse" />
-              <div className="relative w-20 h-20 bg-white rounded-full flex items-center justify-center text-4xl shadow-sm border border-primary/10 z-10">
-                {currentStep.icon}
+          <div className="min-h-[280px] flex flex-col justify-center">
+            {step === 1 && (
+              <div className="flex flex-col animate-fadeIn">
+                <h2 className="text-[24px] font-black text-text-primary tracking-tight mb-6 text-center">
+                  Patin için akıllı asistan
+                </h2>
+                <div className="flex flex-col gap-3 mb-2">
+                  <div className="bg-primary/5 border border-primary/10 rounded-2xl p-4 flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-2xl shadow-sm shrink-0">💉</div>
+                    <div className="text-left">
+                      <h3 className="font-bold text-text-primary text-[15px]">Aşı & Parazit</h3>
+                      <p className="text-text-secondary text-[13px] leading-tight mt-0.5">Takvim otomatik oluşturulur</p>
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-2xl shadow-sm shrink-0">🤖</div>
+                    <div className="text-left">
+                      <h3 className="font-bold text-text-primary text-[15px]">AI Vet</h3>
+                      <p className="text-text-secondary text-[13px] leading-tight mt-0.5">7/24 soru sor anında yanıt al</p>
+                    </div>
+                  </div>
+                  <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4 flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-2xl shadow-sm shrink-0">🥩</div>
+                    <div className="text-left">
+                      <h3 className="font-bold text-text-primary text-[15px]">Beslenme</h3>
+                      <p className="text-text-secondary text-[13px] leading-tight mt-0.5">Maması bitmeden seni biz hatırlatalım</p>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-            <h2 className="text-[26px] font-black text-text-primary tracking-tight mb-3">
-              {currentStep.heading}
-            </h2>
-            <p className="text-text-secondary leading-relaxed text-[15px] px-2">
-              {currentStep.description}
-            </p>
+            )}
+
+            {step === 2 && (
+              <div className="flex flex-col animate-fadeIn">
+                <h2 className="text-[24px] font-black text-text-primary tracking-tight mb-6 text-center">
+                  30 saniyede kurulum
+                </h2>
+                
+                <div className="flex flex-col gap-4 relative py-2">
+                  {/* Mockup 1 */}
+                  <div className="bg-white border border-gray-100 shadow-sm rounded-xl p-4 transform -rotate-2 relative z-10 mx-2 transition-transform hover:rotate-0">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-lg">💉</span>
+                      <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Sonraki Aşı</span>
+                    </div>
+                    <div className="flex justify-between items-end mb-2">
+                      <span className="font-bold text-text-primary">Kuduz</span>
+                      <span className="text-sm font-semibold text-primary">3 gün sonra</span>
+                    </div>
+                    <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-primary w-[80%] rounded-full"></div>
+                    </div>
+                  </div>
+
+                  {/* Mockup 2 */}
+                  <div className="bg-white border border-gray-100 shadow-sm rounded-xl p-4 transform rotate-1 relative z-20 mx-2 -mt-4 transition-transform hover:rotate-0">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-lg">🤖</span>
+                      <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">AI Vet</span>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <div className="bg-gray-50 rounded-lg p-2.5 rounded-tl-sm text-sm text-text-secondary w-3/4">
+                        "3 gündür yemiyor"
+                      </div>
+                      <div className="bg-blue-50/50 border border-blue-100/50 rounded-lg p-2.5 rounded-tr-sm text-sm text-text-primary font-medium w-[85%] self-end ml-auto">
+                        Yanıt: Olası neden…
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Decoration line */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-gradient-to-b from-transparent via-primary/5 to-transparent -z-10 rounded-full blur-2xl"></div>
+                </div>
+
+                <p className="text-center text-text-secondary text-[14px] mt-6 font-medium px-4">
+                  Aşı tarihlerini artık aklında tutmak zorunda değilsin ✨
+                </p>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="flex flex-col items-center animate-fadeIn text-center">
+                <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center text-4xl mb-6 shadow-inner">
+                  🎉
+                </div>
+                <h2 className="text-[24px] font-black text-text-primary tracking-tight mb-8">
+                  Hazır — şimdi patin kim?
+                </h2>
+                
+                <div className="flex flex-col gap-4 w-full px-4 text-left">
+                  <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <div className="w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center shrink-0">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                    </div>
+                    <span className="font-semibold text-[15px] text-text-primary">Aşı takvimi otomatik kurulacak</span>
+                  </div>
+                  <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <div className="w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center shrink-0">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                    </div>
+                    <span className="font-semibold text-[15px] text-text-primary">AI Vet'e bağlanacaksın</span>
+                  </div>
+                  <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <div className="w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center shrink-0">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                    </div>
+                    <span className="font-semibold text-[15px] text-text-primary">Hatırlatmalar aktif olacak</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Actions */}
@@ -153,7 +232,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                 disabled={saving}
                 className="btn-secondary py-3 text-[14px] font-semibold text-text-secondary disabled:opacity-50 w-full hover:bg-gray-50 transition-colors"
               >
-                🐾 Demo ile Keşfet
+                🐾 Üye Olmadan İçeriyi Gör
               </button>
             )}
             {step > 1 && step < 3 && (

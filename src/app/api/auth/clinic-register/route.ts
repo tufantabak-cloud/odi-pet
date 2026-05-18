@@ -72,10 +72,10 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    // Update the profile role to 'clinic_admin'
+    // Update the profile role to 'admin'
     const { error: profileError } = await adminClient
       .from('profiles')
-      .update({ role: 'clinic_admin' })
+      .update({ role: 'admin' })
       .eq('id', user.id)
 
     if (profileError) {

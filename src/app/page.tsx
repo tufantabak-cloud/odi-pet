@@ -1,6 +1,7 @@
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { redirect } from 'next/navigation'
 import { getCurrentProfile } from '@/lib/auth/get-current-profile'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 export default async function IndexPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const params = await searchParams
@@ -18,9 +19,23 @@ export default async function IndexPage({ searchParams }: { searchParams: Promis
 
   if (profile?.role === 'owner') {
     redirect('/owner/dashboard')
-  } else if (profile?.role === 'clinic_staff' || profile?.role === 'clinic_admin') {
+  } else if (profile?.role === 'vet') {
     redirect('/clinic/dashboard')
-  } else if (profile?.role === 'super_admin' || profile?.role === 'founder' || profile?.role === 'admin') {
+  } else if (profile?.role === 'admin') {
+    const supabase = await createServerSupabaseClient()
+    const { data: membership } = await supabase
+      .from('clinic_memberships')
+      .select('clinic_id')
+      .eq('profile_id', profile.id)
+      .limit(1)
+      .maybeSingle()
+
+    if (membership) {
+      redirect('/clinic/dashboard')
+    } else {
+      redirect('/admin')
+    }
+  } else if (profile?.role === 'founder') {
     redirect('/admin')
   }
 
@@ -34,3 +49,4 @@ export default async function IndexPage({ searchParams }: { searchParams: Promis
     </div>
   )
 }
+

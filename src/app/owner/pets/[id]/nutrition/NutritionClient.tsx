@@ -139,7 +139,7 @@ export default function NutritionClient({
       )}
 
       {/* Tabs */}
-      <div className="relative sticky top-16 z-30">
+      <div className="relative sticky top-16 z-30 after:content-[''] after:absolute after:right-0 after:top-0 after:h-full after:w-8 after:bg-gradient-to-l after:from-bg-main after:to-transparent after:pointer-events-none after:z-10">
         <div className="flex gap-1 bg-bg-main p-1 rounded-2xl border border-border-main overflow-x-auto hide-scrollbar">
           {TABS.map(t => (
             <button key={t} onClick={() => setActiveTab(t)}
@@ -148,8 +148,6 @@ export default function NutritionClient({
             </button>
           ))}
         </div>
-        {/* Right fade — hints there are more tabs to scroll */}
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-10 rounded-r-2xl bg-gradient-to-l from-bg-main to-transparent" />
       </div>
 
       {/* ── Tab: Mama & Stok ── */}

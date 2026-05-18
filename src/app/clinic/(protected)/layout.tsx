@@ -11,10 +11,10 @@ const NAV_ITEMS = [
 ]
 
 export default async function ClinicLayout({ children }: { children: ReactNode }) {
-  const profile = await requireRole(['clinic_staff', 'clinic_admin'])
+  const profile = await requireRole(['vet', 'admin'])
   if (!profile) redirect('/login')
 
-  const isAdmin = profile.role === 'clinic_admin'
+  const isAdmin = profile.role === 'admin'
   const initial = profile.first_name?.charAt(0)?.toUpperCase() ?? 'D'
 
   return (

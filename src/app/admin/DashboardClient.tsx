@@ -154,7 +154,13 @@ export default function DashboardClient({ initialData }: { initialData: Dashboar
   const [data, setData] = useState<DashboardData | null>(initialData)
   const [period, setPeriod] = useState<Period>('today')
   const [loading, setLoading] = useState(false)
-  const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    setLastRefresh(new Date())
+  }, [])
 
   const refresh = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
@@ -192,7 +198,7 @@ export default function DashboardClient({ initialData }: { initialData: Dashboar
             </span>
           </h1>
           <p className="text-[12px] text-text-secondary mt-1">
-            Son güncelleme: {lastRefresh.toLocaleTimeString('tr-TR')} &nbsp;·&nbsp;
+            Son güncelleme: {mounted && lastRefresh ? lastRefresh.toLocaleTimeString('tr-TR') : '—'} &nbsp;·&nbsp;
             <button
               onClick={() => refresh(false)}
               className="text-primary font-semibold hover:underline"
@@ -311,7 +317,7 @@ export default function DashboardClient({ initialData }: { initialData: Dashboar
                     <div className="flex flex-col items-end gap-1 shrink-0">
                       {roleChip(u.role)}
                       <span className="text-[10px] text-text-secondary">
-                        {timeAgo(u.created_at)}
+                        {mounted ? timeAgo(u.created_at) : '—'}
                       </span>
                     </div>
                   </Link>

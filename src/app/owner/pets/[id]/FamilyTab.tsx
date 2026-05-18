@@ -324,7 +324,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
           <div className="divide-y divide-border-main">
             {activity.map((a: any) => (
               <div key={a.id} className="flex items-start gap-3 p-4">
-                <div className="w-8 h-8 rounded-full bg-primary-soft flex items-center justify-center text-primary font-bold text-[12px] shrink-0 mt-0.5">
+                <div className="w-9 h-9 rounded-full bg-primary-soft flex items-center justify-center text-primary font-bold text-[13px] shrink-0 mt-0.5">
                   {a.profiles?.first_name?.[0] ?? '?'}
                 </div>
                 <div className="flex-1">
