@@ -84,14 +84,14 @@ export default async function OwnerDashboard() {
     let weightVal = 'Veri Yok';
     let heightVal = '';
     
-    // Check feeding
-    const { data: feeding } = await supabase
+    // Check feeding - use limit(1) array check to avoid single row errors
+    const { data: feedingList } = await supabase
       .from('feeding_logs')
       .select('created_at')
       .eq('pet_id', pet.id)
       .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+      .limit(1);
+    const feeding = feedingList && feedingList.length > 0 ? feedingList[0] : null;
       
     if (feeding) {
       const diffHrs = Math.floor((new Date().getTime() - new Date(feeding.created_at).getTime()) / (1000 * 60 * 60));
@@ -99,30 +99,31 @@ export default async function OwnerDashboard() {
       else lastFeedingDate = `${Math.floor(diffHrs/24)} g. önce`;
     }
 
-    // Check weight
-    const { data: weight } = await supabase
+    // Check weight - query measured_at and order by measured_at
+    const { data: weightList } = await supabase
       .from('weight_logs')
-      .select('created_at, weight_kg, height_cm')
+      .select('measured_at, weight_kg, height_cm')
       .eq('pet_id', pet.id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+      .order('measured_at', { ascending: false })
+      .limit(1);
+    const weight = weightList && weightList.length > 0 ? weightList[0] : null;
       
     if (weight) {
       if (weight.weight_kg) weightVal = `${weight.weight_kg} kg`;
       if (weight.height_cm) heightVal = `${weight.height_cm} cm`;
     }
 
-    // Check overdue vaccines
+    // Check overdue vaccines (include 'due' status to capture actual past-due records)
     const nowISO = new Date().toISOString();
     const { data: overdueRecords } = await supabase
       .from('vaccine_records_v2')
       .select('id, status, due_at')
       .eq('pet_id', pet.id)
-      .in('status', ['overdue', 'scheduled']);
+      .in('status', ['due', 'overdue', 'scheduled']);
     
     const overdueCountV2 = overdueRecords?.filter(r => 
-      r.status === 'overdue' || (r.status === 'scheduled' && r.due_at && r.due_at < nowISO)
+      r.status === 'overdue' || 
+      ((r.status === 'due' || r.status === 'scheduled') && r.due_at && r.due_at < nowISO)
     ).length || 0;
 
     const overdueSchedulesCount = upcomingSchedules.filter(s => s.pet_id === pet.id && new Date(s.due_date) < new Date()).length;
