@@ -130,9 +130,9 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
             <div className="flex flex-wrap items-center gap-3 mb-1">
               <h1 className="text-[28px] font-extrabold text-text-primary">{pet.name}</h1>
               {overdue > 0 && (
-                <button onClick={switchToVaccines} className="text-[11px] font-black px-3 py-1 rounded-full bg-red-100 text-red-700 hover:bg-red-200 hover:-translate-y-0.5 transition-all shadow-sm">
+                <Link href={`/owner/pets/${pet.id}/vaccines`} className="text-[11px] font-black px-3 py-1 rounded-full bg-red-100 text-red-700 hover:bg-red-200 hover:-translate-y-0.5 transition-all shadow-sm">
                   ⚠ {overdue} Gecikmiş
-                </button>
+                </Link>
               )}
             </div>
             <p className="text-text-secondary font-medium text-[14px]">{pet.species}{pet.breed ? ` • ${pet.breed}` : ''}{pet.gender ? ` • ${genderLabel[pet.gender] ?? ''}` : ''}</p>
@@ -155,7 +155,7 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
         
         // Faz 2: Sağlık & Veteriner
         if (!pet.vet_name) tasks.push({ label: 'Veteriner Bilgisi Gir', onClick: () => setQuickUpdateConfig({ title: 'Veteriner Bilgisi', desc: 'Sağlık kayıtlarının eşleşebilmesi için veteriner bilgisini girin.', fields: [{ name: 'vet_name', type: 'text', label: 'Veteriner Adı', placeholder: 'Örn: Dr. Ali Yılmaz', required: true }, { name: 'vet_phone', type: 'tel', label: 'Telefon (Opsiyonel)', placeholder: '05xx xxx xx xx' }] }) })
-        if (!vaccineRecords || vaccineRecords.length === 0) tasks.push({ label: 'İlk Aşısını Gir', onClick: switchToVaccines })
+        if (!vaccineRecords || vaccineRecords.length === 0) tasks.push({ label: 'İlk Aşısını Gir', link: `/owner/pets/${pet.id}/vaccines` })
         
         // Faz 3: Resmi Kayıtlar (Çip & Pasaport)
         if (!pet.microchip_no) tasks.push({ label: 'Kimlik & Çip Bilgisi', onClick: () => setQuickUpdateConfig({ title: 'Kimlik & Çip', desc: 'Petinizin yasal kayıt numaralarını sisteme işleyin.', fields: [{ name: 'microchip_no', type: 'text', label: 'Mikroçip Numarası', placeholder: '15 Haneli No', required: true }, { name: 'passport_no', type: 'text', label: 'Pasaport Numarası (Opsiyonel)' }] }) })
@@ -296,7 +296,7 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
                   )
                 })}
               </div>
-              <button onClick={switchToVaccines} className="block w-full text-center text-primary text-[13px] font-bold mt-4 hover:underline">Tümünü Görüntüle →</button>
+              <Link href={`/owner/pets/${pet.id}/vaccines`} className="block w-full text-center text-primary text-[13px] font-bold mt-4 hover:underline">Tümünü Görüntüle →</Link>
             </div>
           )}
           {/* Allergies */}
@@ -340,13 +340,58 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
           </div>
 
           {timelineFilter === 'Aşı & Parazit' ? (
-            <VaccineOSClient 
-              pet={pet} 
-              setupProfile={setupProfile} 
-              vaccineRecords={vaccineRecords} 
-              templates={templates} 
-              isTab={true}
-            />
+            <div className="flex flex-col gap-4">
+              <div className="card-base p-6 flex flex-col gap-5">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-[28px] shrink-0">💉</div>
+                  <div>
+                    <h4 className="font-extrabold text-[16px] text-text-primary">Aşı Takvimi & Planlayıcı (VaccineOS)</h4>
+                    <p className="text-[13px] text-text-secondary mt-0.5 leading-relaxed">
+                      {pet.name} için kişiselleştirilmiş aşı takvimi, parazit periyotları ve akıllı hatırlatma asistanı.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3 bg-bg-main/50 p-4 rounded-[20px] border border-border-main/20 text-center">
+                  <div>
+                    <p className="text-[24px] font-black text-success">
+                      {vaccineRecords?.filter((r: any) => r.status === 'completed').length ?? 0}
+                    </p>
+                    <p className="text-[10px] font-black text-text-secondary uppercase tracking-wider mt-0.5">Tamamlandı</p>
+                  </div>
+                  <div className="border-x border-border-main/50">
+                    <p className="text-[24px] font-black text-warning">
+                      {vaccineRecords?.filter((r: any) => r.status === 'scheduled' || r.status === 'due').length ?? 0}
+                    </p>
+                    <p className="text-[10px] font-black text-text-secondary uppercase tracking-wider mt-0.5">Bekleyen</p>
+                  </div>
+                  <div>
+                    <p className="text-[24px] font-black text-error">
+                      {overdue ?? 0}
+                    </p>
+                    <p className="text-[10px] font-black text-text-secondary uppercase tracking-wider mt-0.5">Gecikmiş</p>
+                  </div>
+                </div>
+
+                {upcoming && upcoming.length > 0 && (
+                  <div className="p-3.5 bg-primary-soft/50 rounded-xl border border-primary/10 flex items-center justify-between gap-3 text-left">
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-black text-primary uppercase tracking-wide">Sıradaki Uygulama</p>
+                      <p className="font-bold text-[14px] text-text-primary truncate mt-0.5">{upcoming[0].title || upcoming[0].vaccine_name || upcoming[0].vaccines?.name || 'Aşı'}</p>
+                    </div>
+                    {upcoming[0].due_at && (
+                      <span className="text-[12px] font-bold text-text-secondary shrink-0">
+                        {new Date(upcoming[0].due_at).toLocaleDateString('tr-TR')}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                <Link href={`/owner/pets/${pet.id}/vaccines`} className="btn-primary text-[14px] py-3.5 flex items-center justify-center gap-2 shadow-sm">
+                  <span>💉</span> Aşı Takvimini & VaccineOS™ Sistemini Aç
+                </Link>
+              </div>
+            </div>
           ) : timelineFilter === 'Kilo & Boy' ? (
             <div className="card-base p-5">
               <div className="flex justify-between items-center mb-5">
