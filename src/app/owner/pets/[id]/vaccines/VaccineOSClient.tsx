@@ -432,14 +432,14 @@ function VaccineActionModal({ record, allRecords, suggestions, templates, compon
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-[11px] font-bold text-text-secondary">Klinik / Hastane</label>
-                <input type="text" className="input-base text-[13px] py-2" placeholder="Örn: Beşiktaş Veteriner Kliniği" list="clinics-list" value={clinicName} onChange={e => setClinicName(e.target.value)} />
+                <input type="text" className="input-base text-[15px] py-2.5 h-11" placeholder="Örn: Beşiktaş Veteriner Kliniği" list="clinics-list" value={clinicName} onChange={e => setClinicName(e.target.value)} />
                 <datalist id="clinics-list">
                   {suggestions.clinics.map(c => <option key={c} value={c} />)}
                 </datalist>
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-[11px] font-bold text-text-secondary">Veteriner Adı</label>
-                <input type="text" className="input-base text-[13px] py-2" placeholder="Örn: Dr. Ayşe Kaya" list="vets-list" value={vetName} onChange={e => setVetName(e.target.value)} />
+                <input type="text" className="input-base text-[15px] py-2.5 h-11" placeholder="Örn: Dr. Ayşe Kaya" list="vets-list" value={vetName} onChange={e => setVetName(e.target.value)} />
                 <datalist id="vets-list">
                   {suggestions.vets.map(v => <option key={v} value={v} />)}
                 </datalist>
@@ -447,26 +447,26 @@ function VaccineActionModal({ record, allRecords, suggestions, templates, compon
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
                   <label className="text-[11px] font-bold text-text-secondary">Marka</label>
-                  <input type="text" className="input-base text-[13px] py-2" placeholder="Örn: Nobivac" list="brands-list" value={brand} onChange={e => setBrand(e.target.value)} />
+                  <input type="text" className="input-base text-[15px] py-2.5 h-11" placeholder="Örn: Nobivac" list="brands-list" value={brand} onChange={e => setBrand(e.target.value)} />
                   <datalist id="brands-list">
                     {suggestions.brands.map(b => <option key={b} value={b} />)}
                   </datalist>
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-[11px] font-bold text-text-secondary">Seri No</label>
-                  <input type="text" className="input-base text-[13px] py-2" placeholder="Örn: A2024B" value={batchNo} onChange={e => setBatchNo(e.target.value)} />
+                  <input type="text" className="input-base text-[15px] py-2.5 h-11" placeholder="Örn: A2024B" value={batchNo} onChange={e => setBatchNo(e.target.value)} />
                 </div>
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-[11px] font-bold text-text-secondary">Notlar</label>
-                <textarea className="input-base resize-none text-[13px] py-2" rows={2} placeholder="Yan etki, reaksiyon..." value={notes} onChange={e => setNotes(e.target.value)} />
+                <textarea className="input-base resize-none text-[15px] py-2.5" rows={2} placeholder="Yan etki, reaksiyon..." value={notes} onChange={e => setNotes(e.target.value)} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
                   <label className="text-[11px] font-bold text-text-secondary">Tavsiye Edilen Tekrar</label>
                   <div className="flex gap-1">
-                    <input type="number" min="1" className="input-base text-[13px] py-2 flex-1 min-w-0" placeholder="Örn: 3" value={recurrenceVal} onChange={e => setRecurrenceVal(e.target.value)} />
-                    <select className="input-base text-[13px] py-2 pr-1 flex-shrink-0" value={recurrenceUnit} onChange={e => setRecurrenceUnit(e.target.value as any)}>
+                    <input type="number" min="1" className="input-base text-[15px] py-2.5 h-11 flex-1 min-w-0" placeholder="Örn: 3" value={recurrenceVal} onChange={e => setRecurrenceVal(e.target.value)} />
+                    <select className="input-base text-[15px] py-2.5 h-11 pr-1 flex-shrink-0" value={recurrenceUnit} onChange={e => setRecurrenceUnit(e.target.value as any)}>
                       <option value="gun">Gün</option>
                       <option value="ay">Ay</option>
                       <option value="yil">Yıl</option>
@@ -475,7 +475,7 @@ function VaccineActionModal({ record, allRecords, suggestions, templates, compon
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-[11px] font-bold text-text-secondary">Ücret (₺)</label>
-                  <input type="number" className="input-base text-[13px] py-2" placeholder="Örn: 450" value={amount} onChange={e => setAmount(e.target.value ? Number(e.target.value) : '')} />
+                  <input type="number" className="input-base text-[15px] py-2.5 h-11" placeholder="Örn: 450" value={amount} onChange={e => setAmount(e.target.value ? Number(e.target.value) : '')} />
                 </div>
               </div>
             </div>
@@ -736,7 +736,7 @@ function ManualVaccineModal({
           <div className="flex flex-col gap-1 relative -mt-2">
             <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Aşı Adı / Etiket Kodu *</label>
             <input 
-              className="input-base" 
+              className="input-base text-[15px] py-3 h-12" 
               placeholder="Aşı adını yazmaya başlayın (Karma, Kuduz, İç Parazit...)" 
               value={name} 
               onChange={e => { setName(e.target.value); setShowSuggestions(true) }}
@@ -810,8 +810,26 @@ function ManualVaccineModal({
           
           <div className="flex flex-col gap-1 -mt-1">
             <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider">{mode === 'record' ? 'Yapıldığı Tarih *' : 'Planlanan Tarih *'}</label>
-            <input type="date" className="input-base text-[14px] py-3" value={date} onChange={e => setDate(e.target.value)} />
+            <input type="date" className="input-base text-[15px] py-3 h-12" value={date} onChange={e => setDate(e.target.value)} />
           </div>
+
+          {mode === 'plan' && (
+            <div className="flex flex-col gap-1 mt-1 animate-fade-in">
+              <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider">Tekrarlama Sıklığı (Periyot)</label>
+              <div className="flex gap-2">
+                <input type="number" min="1" className="input-base text-[15px] py-2.5 h-12 flex-1 min-w-0" placeholder="Örn: 3" value={recurrenceVal} onChange={e => setRecurrenceVal(e.target.value)} />
+                <select className="input-base text-[15px] py-2.5 h-12 pr-1 flex-shrink-0" value={recurrenceUnit} onChange={e => setRecurrenceUnit(e.target.value as any)}>
+                  <option value="gun">Gün</option>
+                  <option value="ay">Ay</option>
+                  <option value="yil">Yıl</option>
+                </select>
+              </div>
+              <p className="text-[11px] text-text-secondary mt-0.5 leading-normal">
+                Bu planın ne kadar sürede bir yenileneceğini belirtir (örn. 3 Ayda bir). Hatırlatıcılar bu periyoda göre kurulur.
+              </p>
+            </div>
+          )}
+
           {!showDetails ? (
             <button 
               onClick={() => setShowDetails(true)} 
@@ -830,14 +848,14 @@ function ManualVaccineModal({
                 <div className="flex flex-col gap-3">
                   <div className="flex flex-col gap-1">
                     <label className="text-[11px] font-bold text-text-secondary">Klinik / Hastane</label>
-                    <input type="text" className="input-base text-[13px] py-2" placeholder="Örn: Beşiktaş Veteriner Kliniği" list="m-clinics-list" value={clinic} onChange={e => setClinic(e.target.value)} />
+                    <input type="text" className="input-base text-[15px] py-2.5 h-11" placeholder="Örn: Beşiktaş Veteriner Kliniği" list="m-clinics-list" value={clinic} onChange={e => setClinic(e.target.value)} />
                     <datalist id="m-clinics-list">
                       {suggestions.clinics.map(c => <option key={c} value={c} />)}
                     </datalist>
                   </div>
                   <div className="flex flex-col gap-1">
                     <label className="text-[11px] font-bold text-text-secondary">Veteriner Adı</label>
-                    <input type="text" className="input-base text-[13px] py-2" placeholder="Örn: Dr. Ayşe Kaya" list="m-vets-list" value={vet} onChange={e => setVet(e.target.value)} />
+                    <input type="text" className="input-base text-[15px] py-2.5 h-11" placeholder="Örn: Dr. Ayşe Kaya" list="m-vets-list" value={vet} onChange={e => setVet(e.target.value)} />
                     <datalist id="m-vets-list">
                       {suggestions.vets.map(v => <option key={v} value={v} />)}
                     </datalist>
@@ -845,14 +863,14 @@ function ManualVaccineModal({
                   <div className="grid grid-cols-2 gap-3">
                     <div className="flex flex-col gap-1">
                       <label className="text-[11px] font-bold text-text-secondary">Marka</label>
-                      <input type="text" className="input-base text-[13px] py-2" placeholder="Örn: Nobivac" list="m-brands-list" value={brand} onChange={e => setBrand(e.target.value)} />
+                      <input type="text" className="input-base text-[15px] py-2.5 h-11" placeholder="Örn: Nobivac" list="m-brands-list" value={brand} onChange={e => setBrand(e.target.value)} />
                       <datalist id="m-brands-list">
                         {suggestions.brands.map(b => <option key={b} value={b} />)}
                       </datalist>
                     </div>
                     <div className="flex flex-col gap-1">
                       <label className="text-[11px] font-bold text-text-secondary">Seri No</label>
-                      <input type="text" className="input-base text-[13px] py-2" placeholder="Örn: A2024B" value={batchNo} onChange={e => setBatchNo(e.target.value)} />
+                      <input type="text" className="input-base text-[15px] py-2.5 h-11" placeholder="Örn: A2024B" value={batchNo} onChange={e => setBatchNo(e.target.value)} />
                     </div>
                   </div>
                 </div>
@@ -860,26 +878,28 @@ function ManualVaccineModal({
 
               <div className="flex flex-col gap-1">
                 <label className="text-[11px] font-bold text-text-secondary">Notlar</label>
-                <textarea className="input-base resize-none text-[13px] py-2" rows={2} placeholder="Yan etki, reaksiyon..." value={notes} onChange={e => setNotes(e.target.value)} />
+                <textarea className="input-base resize-none text-[15px] py-2.5" rows={2} placeholder="Yan etki, reaksiyon..." value={notes} onChange={e => setNotes(e.target.value)} />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-bold text-text-secondary">Tavsiye Edilen Tekrar</label>
-                  <div className="flex gap-1">
-                    <input type="number" min="1" className="input-base text-[13px] py-2 flex-1 min-w-0" placeholder="Örn: 3" value={recurrenceVal} onChange={e => setRecurrenceVal(e.target.value)} />
-                    <select className="input-base text-[13px] py-2 pr-1 flex-shrink-0" value={recurrenceUnit} onChange={e => setRecurrenceUnit(e.target.value as any)}>
-                      <option value="gun">Gün</option>
-                      <option value="ay">Ay</option>
-                      <option value="yil">Yıl</option>
-                    </select>
-                  </div>
-                </div>
                 {mode === 'record' && (
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[11px] font-bold text-text-secondary">Ücret (₺)</label>
-                    <input type="number" className="input-base text-[13px] py-2" placeholder="Örn: 450" value={amount} onChange={e => setAmount(e.target.value ? Number(e.target.value) : '')} />
-                  </div>
+                  <>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[11px] font-bold text-text-secondary">Tavsiye Edilen Tekrar</label>
+                      <div className="flex gap-1">
+                        <input type="number" min="1" className="input-base text-[15px] py-2.5 h-11 flex-1 min-w-0" placeholder="Örn: 3" value={recurrenceVal} onChange={e => setRecurrenceVal(e.target.value)} />
+                        <select className="input-base text-[15px] py-2.5 h-11 pr-1 flex-shrink-0" value={recurrenceUnit} onChange={e => setRecurrenceUnit(e.target.value as any)}>
+                          <option value="gun">Gün</option>
+                          <option value="ay">Ay</option>
+                          <option value="yil">Yıl</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[11px] font-bold text-text-secondary">Ücret (₺)</label>
+                      <input type="number" className="input-base text-[15px] py-2.5 h-11" placeholder="Örn: 450" value={amount} onChange={e => setAmount(e.target.value ? Number(e.target.value) : '')} />
+                    </div>
+                  </>
                 )}
               </div>
             </div>
@@ -2188,7 +2208,7 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
 
   // ── Render: MAIN UI ──
   return (
-    <div className={isTab ? "w-full flex flex-col gap-5" : "w-full mx-auto px-4 py-6 pb-20 flex flex-col gap-5"}>
+    <div className={isTab ? "w-full flex flex-col gap-5" : "w-full mx-auto px-4 py-6 pb-32 flex flex-col gap-5"}>
       {quickMarkRecord && (
         <VaccineActionModal 
           key={quickMarkRecord.id} 
@@ -2302,24 +2322,24 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
       {!isTab && (
         <div className="card-base overflow-hidden">
           <div className="h-1.5 bg-gradient-to-r from-primary to-violet-500" />
-          <div className="p-5 flex items-center justify-between gap-4">
+          <div className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-[24px]">💉</div>
+              <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-[24px] shrink-0">💉</div>
               <div>
                 <h1 className="text-[20px] font-extrabold text-text-primary">Aşı Takvimi</h1>
                 <p className="text-[13px] text-text-secondary">{pet.name} • {setupProfile?.setup_mode === 'smart_start' ? 'Akıllı Başlangıç' : setupProfile?.setup_mode === 'fresh_start' ? 'Bugünden Başla' : 'Geçmiş İçe Aktarma'}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-
+            <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 flex-wrap">
               <button onClick={() => setManualConfig({ show: true, mode: 'record', fixed: false })}
-                className="text-[12px] font-bold text-primary bg-primary/10 px-3 py-1.5 rounded-xl hover:bg-primary/20 transition-colors">
+                className="text-[12px] font-bold text-primary bg-primary/10 px-3 py-1.5 rounded-xl hover:bg-primary/20 transition-colors shrink-0">
                 + Manuel İşlem
               </button>
               {overdueCount > 0 && (
-                <span className="bg-error/10 text-error text-[12px] font-black px-3 py-1.5 rounded-full border border-error/20">
+                <button onClick={() => setShowOverdueList(true)}
+                  className="bg-error/10 text-error text-[12px] font-black px-3 py-1.5 rounded-full border border-error/20 hover:bg-error/20 transition-all shrink-0">
                   ⚠ {overdueCount} Gecikmiş
-                </span>
+                </button>
               )}
             </div>
           </div>
