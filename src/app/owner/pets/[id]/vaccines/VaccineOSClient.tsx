@@ -19,41 +19,14 @@ import {
 } from './actions'
 import { analyzeVaccineLabel } from './ai-actions'
 
-function ScannerDropdown({ onSingleScan, onBatchScan }: { onSingleScan: (file: File) => void, onBatchScan: () => void }) {
-  const [open, setOpen] = useState(false);
-  const singleRef = useRef<HTMLInputElement>(null);
-  
+function ScanButton({ onBatchScan }: { onBatchScan: () => void }) {
   return (
-    <div className="relative">
-      <button 
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 transition-all rounded-xl border border-primary/20 font-bold text-[12px] shadow-sm"
-      >
-        <span className="text-[16px]">📸</span> Etiketten Oku (Defter Tarama)
-      </button>
-      
-      <input type="file" accept="image/*" capture="environment" className="hidden" ref={singleRef} onChange={(e) => {
-        if(e.target.files?.[0]) {
-           onSingleScan(e.target.files[0]);
-           setOpen(false);
-        }
-        e.target.value = ''; // Reset input
-      }} />
-      
-      {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-border-main rounded-xl shadow-xl z-50 p-2 flex flex-col gap-1">
-            <button onClick={() => { setOpen(false); singleRef.current?.click() }} className="text-left text-[12px] font-bold text-text-primary hover:bg-bg-main px-3 py-2.5 rounded-lg flex items-center gap-2">
-              <span className="text-[16px]">📷</span> Tekli Etiket Oku
-            </button>
-            <button onClick={() => { setOpen(false); onBatchScan() }} className="text-left text-[12px] font-bold text-text-primary hover:bg-bg-main px-3 py-2.5 rounded-lg flex items-center gap-2">
-              <span className="text-[16px]">📸</span> Defterden Tara (Çoklu)
-            </button>
-          </div>
-        </>
-      )}
-    </div>
+    <button 
+      onClick={onBatchScan}
+      className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 transition-all rounded-xl border border-primary/20 font-bold text-[12px] shadow-sm"
+    >
+      <span className="text-[16px]">📸</span> Etiketi / Karneyi Tara
+    </button>
   )
 }
 
@@ -86,6 +59,23 @@ const LEVEL_BADGE: Record<string, string> = {
 const LEVEL_LABEL: Record<string, string> = {
   legal_required: 'Yasal Zorunlu', core: 'Temel', optional: 'Opsiyonel',
 }
+
+const handleMatrixClick = (cellOrDose: any, row: any, petId: string, onCellClick?: (record: any) => void) => {
+  if (!row.is_active || !cellOrDose) return;
+  if (cellOrDose.record) {
+    onCellClick?.(cellOrDose.record);
+  } else if (cellOrDose.date) {
+    onCellClick?.({
+      id: `virtual_${row.code}_new`,
+      pet_id: petId,
+      vaccine_code: row.code,
+      vaccine_name: row.name,
+      status: 'due',
+      due_at: cellOrDose.date,
+      _isVirtual: true
+    });
+  }
+};
 
 // ── Setup Flow ─────────────────────────────────────────────────
 function SetupFlow({ pet, templates, onComplete, onHistoricalImport }: { pet: Pet; templates: Template[]; onComplete: () => void; onHistoricalImport: () => void }) {
@@ -542,6 +532,7 @@ function PostponeModal({ record, onClose, onDone }: { record: VRecord; onClose: 
 function ManualVaccineModal({ 
   petId, 
   templates, 
+  components,
   suggestions,
   onClose, 
   onDone, 
@@ -552,6 +543,7 @@ function ManualVaccineModal({
 }: { 
   petId: string; 
   templates: Template[]; 
+  components: VComponent[];
   suggestions: { clinics: string[], vets: string[], brands: string[] };
   onClose: () => void; 
   onDone: () => void; 
@@ -591,10 +583,12 @@ function ManualVaccineModal({
     }
   }
   const [amount, setAmount] = useState<number | ''>('')
+  const [showDetails, setShowDetails] = useState(false)
   const [isScanning, setIsScanning] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState('')
   const [scanError, setScanError] = useState('')
+  const [showSuccess, setShowSuccess] = useState(false)
 
   const vaccineSuggestions = name.length >= 1 ? Array.from(new Map(templates.filter(t => {
     const search = name.toLowerCase()
@@ -659,14 +653,42 @@ function ManualVaccineModal({
         setError('Kaydetme hatası: ' + (result as any).error)
         return
       }
-      onDone()
+      if (mode === 'plan') {
+        setShowSuccess(true)
+      } else {
+        onDone()
+      }
     })
   }
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain" onClick={onClose}>
+      {isScanning && (
+        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-surface rounded-3xl p-8 flex flex-col items-center gap-4 shadow-2xl min-w-[240px]">
+            <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+            <div className="text-center">
+              <p className="font-extrabold text-[15px] text-text-primary">📸 Etiket Okunuyor...</p>
+              <p className="text-[12px] font-medium text-text-secondary mt-1">Yapay zeka analiz ediyor</p>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="bg-surface w-full max-w-sm rounded-[28px] shadow-2xl overflow-y-auto max-h-[90dvh]" onClick={e => e.stopPropagation()}>
-        <div className="px-6 pt-6 pb-4 border-b border-border-main flex justify-between items-start">
+        {showSuccess ? (
+          <div className="flex flex-col items-center justify-center py-10 px-6 gap-4 text-center animate-fade-in">
+            <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center text-[32px] mb-2 shadow-sm">📅</div>
+            <h4 className="font-extrabold text-[20px] text-text-primary">Plan Oluşturuldu!</h4>
+            <p className="text-[14px] text-text-secondary leading-relaxed">
+              <span className="font-bold text-text-primary">{name}</span> aşısı takvimine eklendi. Zamanı geldiğinde seni bilgilendireceğiz.
+            </p>
+            <button onClick={onDone} className="w-full mt-4 py-3.5 rounded-xl btn-primary font-bold shadow-sm">
+              Tamam
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="px-6 pt-6 pb-4 border-b border-border-main flex justify-between items-start">
           <div>
             <p className="text-[11px] font-black text-primary uppercase tracking-widest">
               {mode === 'record' ? '➕ Yapıldı Kaydı Ekle' : '📅 Yeni Aşı Planla'}
@@ -714,7 +736,7 @@ function ManualVaccineModal({
             <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Aşı Adı / Etiket Kodu *</label>
             <input 
               className="input-base" 
-              placeholder="Örn: Bb/Pi2, DHPPi, Karma..." 
+              placeholder="Aşı adını yazmaya başlayın (Karma, Kuduz, İç Parazit...)" 
               value={name} 
               onChange={e => { setName(e.target.value); setShowSuggestions(true) }}
               onFocus={() => setShowSuggestions(true)}
@@ -745,91 +767,133 @@ function ManualVaccineModal({
               </div>
             )}
           </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider">{mode === 'record' ? 'Yapıldığı Tarih *' : 'Planlanan Tarih *'}</label>
-            <input type="date" className="input-base" value={date} onChange={e => setDate(e.target.value)} />
+          
+          {selectedCode && (() => {
+            const tmpl = templates.find(t => t.vaccine_code === selectedCode);
+            if (tmpl && tmpl.components && tmpl.components.length > 0) {
+              const matchedComponents = components.filter(c => tmpl.components!.includes(c.code));
+              return (
+                <div className="p-3 bg-primary/5 rounded-xl border border-primary/10 -mt-1 animate-fade-in">
+                  <p className="text-[11px] font-black text-primary uppercase tracking-wider mb-2">🛡️ Koruma İçeriği</p>
+                  <div className="flex flex-col gap-1.5">
+                    {matchedComponents.map(c => (
+                      <div key={c.code} className="flex items-start gap-2">
+                        <span className="text-primary text-[14px]">✓</span>
+                        <div>
+                          <p className="text-[12px] font-bold text-text-primary">{c.name}</p>
+                          {c.is_zoonotic && <p className="text-[10px] text-error font-medium">⚠️ İnsana bulaşabilir (Zoonotik)</p>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            } else if (COMMON_ALIASES[selectedCode]) {
+              return (
+                <p className="text-[11px] text-primary font-bold mt-1 italic -mt-1">
+                  Etikette: {COMMON_ALIASES[selectedCode].join(', ')}
+                </p>
+              );
+            }
+            return null;
+          })()}
+
+          {selectedCode && recurrenceDays && (
+            <div className="p-3 bg-primary/5 border border-primary/20 rounded-xl flex items-start gap-2 animate-fade-in -mt-1">
+              <span className="text-[14px]">💡</span>
+              <p className="text-[11px] text-primary font-medium leading-relaxed">
+                <span className="font-bold">Bilgi:</span> Bu aşı genellikle {recurrenceVal} {recurrenceUnit === 'yil' ? 'yılda' : recurrenceUnit === 'ay' ? 'ayda' : 'günde'} bir tekrarlanır. Sistem otomatik hatırlatıcı kuracaktır.
+              </p>
+            </div>
+          )}
+          
+          <div className="flex flex-col gap-1 -mt-1">
+            <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider">{mode === 'record' ? 'Yapıldığı Tarih *' : 'Planlanan Tarih *'}</label>
+            <input type="date" className="input-base text-[14px] py-3" value={date} onChange={e => setDate(e.target.value)} />
           </div>
-          {mode === 'record' && (
-            <>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Klinik</label>
-                  <input 
-                    className="input-base" 
-                    placeholder="Klinik adı" 
-                    list="m-clinics"
-                    value={clinic} 
-                    onChange={e => setClinic(e.target.value)} 
-                  />
-                  <datalist id="m-clinics">
-                    {suggestions.clinics.map(c => <option key={c} value={c} />)}
-                  </datalist>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Veteriner</label>
-                  <input 
-                    className="input-base" 
-                    placeholder="Dr. ..." 
-                    list="m-vets"
-                    value={vet} 
-                    onChange={e => setVet(e.target.value)} 
-                  />
-                  <datalist id="m-vets">
-                    {suggestions.vets.map(v => <option key={v} value={v} />)}
-                  </datalist>
-                </div>
+          {!showDetails ? (
+            <button 
+              onClick={() => setShowDetails(true)} 
+              className="text-center py-2 text-[13px] font-bold text-text-secondary hover:text-primary transition-colors border-2 border-dashed border-border-main rounded-xl hover:border-primary/30 hover:bg-primary/5 mt-1"
+            >
+              + İsteğe Bağlı Detay Ekle (Notlar{mode === 'record' ? ', Klinik, Marka vb.' : ''})
+            </button>
+          ) : (
+            <div className="flex flex-col gap-3 animate-fade-in pt-2 border-t border-border-main mt-1">
+              <div className="flex items-center justify-between">
+                <p className="text-[12px] font-black text-text-primary uppercase tracking-wider">Detaylar</p>
+                <button onClick={() => setShowDetails(false)} className="text-[11px] font-bold text-text-secondary hover:text-text-primary">Gizle</button>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Marka</label>
-                  <input 
-                    className="input-base" 
-                    placeholder="Nobivac..." 
-                    list="m-brands"
-                    value={brand} 
-                    onChange={e => setBrand(e.target.value)} 
-                  />
-                  <datalist id="m-brands">
-                    {suggestions.brands.map(b => <option key={b} value={b} />)}
-                  </datalist>
+              
+              {mode === 'record' && (
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[11px] font-bold text-text-secondary">Klinik / Hastane</label>
+                    <input type="text" className="input-base text-[13px] py-2" placeholder="Örn: Beşiktaş Veteriner Kliniği" list="m-clinics-list" value={clinic} onChange={e => setClinic(e.target.value)} />
+                    <datalist id="m-clinics-list">
+                      {suggestions.clinics.map(c => <option key={c} value={c} />)}
+                    </datalist>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[11px] font-bold text-text-secondary">Veteriner Adı</label>
+                    <input type="text" className="input-base text-[13px] py-2" placeholder="Örn: Dr. Ayşe Kaya" list="m-vets-list" value={vet} onChange={e => setVet(e.target.value)} />
+                    <datalist id="m-vets-list">
+                      {suggestions.vets.map(v => <option key={v} value={v} />)}
+                    </datalist>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[11px] font-bold text-text-secondary">Marka</label>
+                      <input type="text" className="input-base text-[13px] py-2" placeholder="Örn: Nobivac" list="m-brands-list" value={brand} onChange={e => setBrand(e.target.value)} />
+                      <datalist id="m-brands-list">
+                        {suggestions.brands.map(b => <option key={b} value={b} />)}
+                      </datalist>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[11px] font-bold text-text-secondary">Seri No</label>
+                      <input type="text" className="input-base text-[13px] py-2" placeholder="Örn: A2024B" value={batchNo} onChange={e => setBatchNo(e.target.value)} />
+                    </div>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Seri No</label>
-                  <input className="input-base" placeholder="Lot..." value={batchNo} onChange={e => setBatchNo(e.target.value)} />
-                </div>
+              )}
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[11px] font-bold text-text-secondary">Notlar</label>
+                <textarea className="input-base resize-none text-[13px] py-2" rows={2} placeholder="Yan etki, reaksiyon..." value={notes} onChange={e => setNotes(e.target.value)} />
               </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Tavsiye Edilen Tekrar</label>
+                  <label className="text-[11px] font-bold text-text-secondary">Tavsiye Edilen Tekrar</label>
                   <div className="flex gap-1">
-                    <input type="number" min="1" className="input-base flex-1 min-w-0" placeholder="Örn: 3" value={recurrenceVal} onChange={e => setRecurrenceVal(e.target.value)} />
-                    <select className="input-base pr-1 flex-shrink-0" value={recurrenceUnit} onChange={e => setRecurrenceUnit(e.target.value as any)}>
+                    <input type="number" min="1" className="input-base text-[13px] py-2 flex-1 min-w-0" placeholder="Örn: 3" value={recurrenceVal} onChange={e => setRecurrenceVal(e.target.value)} />
+                    <select className="input-base text-[13px] py-2 pr-1 flex-shrink-0" value={recurrenceUnit} onChange={e => setRecurrenceUnit(e.target.value as any)}>
                       <option value="gun">Gün</option>
                       <option value="ay">Ay</option>
                       <option value="yil">Yıl</option>
                     </select>
                   </div>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Ücret (₺)</label>
-                  <input type="number" className="input-base" placeholder="Örn: 450" value={amount} onChange={e => setAmount(e.target.value ? Number(e.target.value) : '')} />
-                </div>
+                {mode === 'record' && (
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[11px] font-bold text-text-secondary">Ücret (₺)</label>
+                    <input type="number" className="input-base text-[13px] py-2" placeholder="Örn: 450" value={amount} onChange={e => setAmount(e.target.value ? Number(e.target.value) : '')} />
+                  </div>
+                )}
               </div>
-            </>
+            </div>
           )}
-          <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Notlar</label>
-            <textarea className="input-base resize-none" rows={2} value={notes} onChange={e => setNotes(e.target.value)} />
-          </div>
 
-          <div className="flex gap-3">
-            <button onClick={onClose} className="flex-1 py-3 rounded-xl border border-border-main text-text-secondary font-bold">İptal</button>
+          <div className="flex gap-3 pt-3">
+            <button onClick={onClose} className="flex-1 py-3.5 rounded-xl border-2 border-border-main text-text-secondary font-bold text-[14px]">İptal</button>
             <button onClick={handleSave} disabled={isPending}
-              className="flex-[2] btn-primary py-3 disabled:opacity-40">
-              {isPending ? '...' : 'Kaydet ✓'}
+              className="flex-[2] btn-primary py-3.5 disabled:opacity-40 text-[14px] shadow-sm">
+              {isPending ? 'Kaydediliyor...' : 'Kaydet ✓'}
             </button>
           </div>
         </div>
+        </>
+        )}
       </div>
     </div>
   )
@@ -1068,14 +1132,13 @@ function BatchScanModal({
 }
 
 // ── Protocol Table Component ───────────────────────────────────
-function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onNewPlan, onSingleScan, onBatchScan }: { 
+function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onNewPlan, onBatchScan }: { 
   pet: Pet; 
   templates: Template[]; 
   records: VRecord[]; 
   onCellClick?: (record: VRecord) => void;
   onNewRecord?: (name: string, code: string, date: string) => void;
   onNewPlan?: (name: string, code: string, date: string) => void;
-  onSingleScan?: (file: File) => void;
   onBatchScan?: () => void;
 }) {
 
@@ -1335,8 +1398,8 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onNe
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-3">
         <div className="flex items-center gap-3">
           <h3 className="text-[16px] font-extrabold text-text-primary">Aşı Takvimi Matrisi</h3>
-          {onSingleScan && onBatchScan && (
-            <ScannerDropdown onSingleScan={onSingleScan} onBatchScan={onBatchScan} />
+          {onBatchScan && (
+            <ScanButton onBatchScan={onBatchScan} />
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -1393,7 +1456,7 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onNe
                 {dose1 && (
                   <button
                     className={`flex flex-col items-center px-3 py-2 rounded-xl border text-[11px] font-bold min-w-[70px] transition-all ${!row.is_active ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' : dose1.bg}`}
-                    onClick={() => { if (!row.is_active) return; if (dose1.record) { if (dose1.record.status !== 'completed') onCellClick?.(dose1.record); } else if (dose1.date) { onNewRecord?.(row.name, row.code, dose1.date); } }}
+                    onClick={() => handleMatrixClick(dose1, row, pet.id, onCellClick)}
                   >
                     <span className="text-[11px] uppercase tracking-wide opacity-70 mb-0.5">1. Doz</span>
                     <span>{!row.is_active ? 'Pasif' : (dose1.record ? formatDate(dose1.date) : '—')}</span>
@@ -1402,7 +1465,7 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onNe
                 {dose2 && (
                   <button
                     className={`flex flex-col items-center px-3 py-2 rounded-xl border text-[11px] font-bold min-w-[70px] transition-all ${!row.is_active ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' : dose2.bg}`}
-                    onClick={() => { if (!row.is_active) return; if (dose2.record && !(dose2.record as any)._isVirtual) { if (dose2.record.status !== 'completed') onCellClick?.(dose2.record); } else if (dose2.date) { onNewRecord?.(row.name, row.code, dose2.date); } }}
+                    onClick={() => handleMatrixClick(dose2, row, pet.id, onCellClick)}
                   >
                     <span className="text-[11px] uppercase tracking-wide opacity-70 mb-0.5">2. Doz</span>
                     <span>{!row.is_active ? 'Pasif' : (dose2.record ? formatDate(dose2.date) : '—')}</span>
@@ -1415,7 +1478,7 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onNe
                     <button
                       key={idx}
                       className={`flex flex-col items-center px-3 py-2 rounded-xl border text-[11px] font-bold min-w-[70px] transition-all ${(!row.is_active || !cell) ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' : cell.bg}`}
-                      onClick={() => { if (!row.is_active || !cell) return; if (cell.record) { if (cell.record.status !== 'completed') onCellClick?.(cell.record); } else if (cell.date) { onNewRecord?.(row.name, row.code, cell.date); } }}
+                      onClick={() => handleMatrixClick(cell, row, pet.id, onCellClick)}
                     >
                       <span className="text-[11px] uppercase tracking-wide opacity-70 mb-0.5">{yearNum}. Yaş</span>
                       <span>{!row.is_active ? 'Pasif' : (cell?.record ? formatDate(cell.date) : '—')}</span>
@@ -1492,14 +1555,7 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onNe
                             backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.03) 5px, rgba(0,0,0,0.03) 10px)' 
                           } : {}}
                           title={!row.is_active ? 'Bu aşı pasif durumdadır.' : (dose1?.title || '')}
-                          onClick={() => {
-                            if (!row.is_active) return;
-                            if (dose1?.record) {
-                              onCellClick?.(dose1.record);
-                            } else if (dose1?.date) {
-                              onNewRecord?.(row.name, row.code, dose1.date);
-                            }
-                          }}
+                          onClick={() => handleMatrixClick(dose1, row, pet.id, onCellClick)}
                         >
                           {!row.is_active ? <span className="font-bold text-[10px] tracking-wider uppercase text-slate-400">Pasif</span> : dose1?.record ? <span className="flex flex-col items-center gap-0"><span className="text-[11px]">{dose1.emoji}</span><span>{formatDate(dose1.date)}</span></span> : ''}
                         </td>
@@ -1514,14 +1570,7 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onNe
                               backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.03) 5px, rgba(0,0,0,0.03) 10px)' 
                             } : {}}
                             title={!row.is_active ? 'Bu aşı pasif durumdadır.' : (dose2.title || '')}
-                            onClick={() => {
-                              if (!row.is_active) return;
-                              if (dose2.record && !(dose2.record as any)._isVirtual) {
-                                onCellClick?.(dose2.record);
-                              } else if (dose2.date) {
-                                onNewRecord?.(row.name, row.code, dose2.date);
-                              }
-                            }}
+                            onClick={() => handleMatrixClick(dose2, row, pet.id, onCellClick)}
                           >
                             {!row.is_active ? <span className="font-bold text-[10px] tracking-wider uppercase text-slate-400">Pasif</span> : dose2.record ? <span className="flex flex-col items-center gap-0"><span className="text-[11px]">{dose2.emoji}</span><span>{formatDate(dose2.date)}</span></span> : ''}
                           </td>
@@ -1544,14 +1593,7 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onNe
                           backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.03) 5px, rgba(0,0,0,0.03) 10px)' 
                         } : {}}
                         title={!row.is_active ? 'Bu aşı pasif durumdadır.' : (!cell ? 'Bu protokol yıllık tekrar gerektirmez.' : (cell.title || ''))}
-                        onClick={() => {
-                          if (!row.is_active || !cell) return;
-                          if (cell.record) {
-                            onCellClick?.(cell.record);
-                          } else if (cell.date) {
-                            onNewRecord?.(row.name, row.code, cell.date);
-                          }
-                        }}
+                        onClick={() => handleMatrixClick(cell, row, pet.id, onCellClick)}
                       >
                         {!row.is_active ? <span className="font-bold text-[10px] tracking-wider uppercase text-slate-400">Pasif</span> : cell?.record ? <span className="flex flex-col items-center gap-0"><span className="text-[11px]">{cell.emoji}</span><span>{formatDate(cell.date)}</span></span> : ''}
                       </td>
@@ -1569,13 +1611,14 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onNe
 }
 
 // ── Parasite Protocol Table Component ───────────────────────────────────
-function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNewPlan }: { 
+function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNewPlan, onBatchScan }: { 
   pet: Pet; 
   templates: Template[]; 
   records: VRecord[]; 
   onCellClick?: (record: VRecord) => void;
   onNewRecord?: (name: string, code: string, date: string) => void;
   onNewPlan?: (name: string, code: string, date: string) => void;
+  onBatchScan?: () => void;
 }) {
   const parasiteTemplates = templates.filter(t => t.category === 'parasite');
 
@@ -1671,7 +1714,12 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNe
   return (
     <div className="mb-8 mt-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
-        <h3 className="text-[16px] font-extrabold text-text-primary">Parazit Takvimi Matrisi</h3>
+        <div className="flex items-center gap-3">
+          <h3 className="text-[16px] font-extrabold text-text-primary">Parazit Takvimi Matrisi</h3>
+          {onBatchScan && (
+            <ScanButton onBatchScan={onBatchScan} />
+          )}
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           {onNewRecord && (
             <button 
@@ -1721,7 +1769,7 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNe
                 <button
                   key={idx}
                   className={`flex flex-col items-center px-3 py-2 rounded-xl border text-[11px] font-bold min-w-[80px] transition-all ${!row.is_active ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' : (cell ? cell.bg : 'bg-slate-100 border-slate-200 text-slate-400')}`}
-                  onClick={() => { if (!row.is_active) return; if (cell?.record && !(cell.record as any)._isVirtual) { onCellClick?.(cell.record); } else if (cell?.date) { onNewRecord?.(row.name, row.code, cell.date); } }}
+                  onClick={() => handleMatrixClick(cell, row, pet.id, onCellClick)}
                 >
                   <span className="text-[11px] uppercase tracking-wide opacity-70 mb-0.5">{columns[idx]}</span>
                   {!row.is_active ? <span>Pasif</span> : cell?.record ? <><span className="text-[12px]">{cell.emoji}</span><span>{formatDate(cell.date)}</span></> : cell?.date ? <><span className="text-[12px] opacity-40">🔜</span><span className="opacity-60">{formatDate(cell.date)}</span></> : <span>{idx === 0 ? '—' : ''}</span>}
@@ -1777,14 +1825,7 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNe
                       backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.03) 5px, rgba(0,0,0,0.03) 10px)' 
                     } : {}}
                     title={!row.is_active ? 'Bu protokol pasif durumdadır.' : (cell?.title || '')}
-                    onClick={() => {
-                      if (!row.is_active) return;
-                      if (cell?.record && !(cell.record as any)._isVirtual) {
-                        onCellClick?.(cell.record);
-                      } else if (cell?.date) {
-                        onNewRecord?.(row.name, row.code, cell.date);
-                      }
-                    }}
+                    onClick={() => handleMatrixClick(cell, row, pet.id, onCellClick)}
                   >
                     {!row.is_active ? <span className="font-bold text-[10px] tracking-wider uppercase text-slate-400">Pasif</span> : cell?.record ? <span className="flex flex-col items-center gap-0"><span className="text-[11px]">{cell.emoji}</span><span>{formatDate(cell.date)}</span></span> : cell?.date ? <span className="flex flex-col items-center gap-0"><span className="text-[11px] opacity-40">🔜</span><span className="opacity-60">{formatDate(cell.date)}</span></span> : <span>{idx === 0 ? '-' : ''}</span>}
                   </td>
@@ -1997,43 +2038,6 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
   const [quickMarkRecord, setQuickMarkRecord] = useState<VRecord | null>(null)
   const [postponeRecord, setPostponeRecord] = useState<VRecord | null>(null)
   const [manualConfig, setManualConfig] = useState<{ show: boolean, mode: 'record' | 'plan', fixed: boolean, initialData?: { name: string, code: string, date: string, brand?: string, batch_no?: string, clinic?: string } | null }>({ show: false, mode: 'record', fixed: false })
-  const [isSingleScanning, setIsSingleScanning] = useState(false)
-  const [singleScanError, setSingleScanError] = useState('')
-
-  async function handleSingleScan(file: File) {
-    setIsSingleScanning(true)
-    setSingleScanError('')
-    try {
-      const reader = new FileReader()
-      reader.onload = async (event) => {
-        const base64 = (event.target?.result as string).split(',')[1]
-        const res = await analyzeVaccineLabel(base64, file.type)
-        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
-          const data = res.data[0]
-          setManualConfig({ 
-            show: true, mode: 'record', fixed: false, 
-            initialData: { 
-              name: data.vaccineName ? toTitleCase(data.vaccineName) : '', 
-              code: '', 
-              date: data.date ? new Date(data.date).toISOString() : new Date().toISOString(),
-              brand: data.brand ? toTitleCase(data.brand) : '',
-              batch_no: data.batchNo ? data.batchNo.toUpperCase() : '',
-              clinic: data.clinicName ? toTitleCase(data.clinicName) : ''
-            }
-          })
-        } else if (res.success) {
-          setSingleScanError('Etiket okunamadı. Lütfen daha net ve iyi aydınlatılmış bir fotoğraf çekin.')
-        } else {
-          setSingleScanError('Etiket okunamadı: ' + (res.error || 'Bilinmeyen hata.'))
-        }
-        setIsSingleScanning(false)
-      }
-      reader.readAsDataURL(file)
-    } catch (e) {
-      console.error(e)
-      setIsSingleScanning(false)
-    }
-  }
 
   const [showOverdueList, setShowOverdueList] = useState(false)
   const [scheduleOpen, setScheduleOpen] = useState(false)
@@ -2193,6 +2197,7 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
         <ManualVaccineModal 
           petId={pet.id} 
           templates={templates} 
+          components={components}
           suggestions={historicalSuggestions}
           initialMode={manualConfig.mode}
           fixedMode={manualConfig.fixed}
@@ -2201,32 +2206,7 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
           onDone={refreshData} 
         />
       )}
-      {isSingleScanning && (
-        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-surface rounded-3xl p-8 flex flex-col items-center gap-4 shadow-2xl min-w-[240px]">
-            <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-            <div className="text-center">
-              <p className="font-extrabold text-[15px] text-text-primary">Etiket Okunuyor...</p>
-              <p className="text-[12px] font-medium text-text-secondary mt-1">Yapay zeka analiz ediyor</p>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {singleScanError && (
-        <div className="flex items-start gap-3 p-4 bg-warning/10 border border-warning/30 rounded-2xl animate-fade-in">
-          <span className="text-[20px] flex-shrink-0">📸</span>
-          <div className="flex-1">
-            <p className="text-[13px] font-bold text-warning leading-relaxed">{singleScanError}</p>
-            <button
-              onClick={() => setSingleScanError('')}
-              className="text-[12px] font-bold text-text-secondary hover:text-text-primary mt-2 transition-colors"
-            >
-              Kapat ×
-            </button>
-          </div>
-        </div>
-      )}
 
       {showBatchScan && (
         <BatchScanModal
@@ -2388,7 +2368,6 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
               onNewPlan={(name, code, date) => {
                 setManualConfig({ show: true, mode: 'plan', fixed: true, initialData: { name, code, date } })
               }}
-              onSingleScan={handleSingleScan}
               onBatchScan={() => setShowBatchScan(true)}
             />
           )}
@@ -2406,6 +2385,7 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
               onNewPlan={(name, code, date) => {
                 setManualConfig({ show: true, mode: 'plan', fixed: true, initialData: { name, code, date } })
               }}
+              onBatchScan={() => setShowBatchScan(true)}
             />
           )}
       </div>
