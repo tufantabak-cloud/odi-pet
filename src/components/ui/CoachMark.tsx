@@ -98,13 +98,13 @@ export default function CoachMark({
 
   if (isDismissed) {
     return (
-      <div className="relative inline-block z-10">
+      <div className="absolute -top-2.5 -right-1.5 z-20">
         <button
           onClick={() => setIsTooltipOpen(!isTooltipOpen)}
-          className="text-gray-400 hover:text-accent-orange transition-colors flex items-center justify-center p-1 rounded-full bg-white/50 backdrop-blur-sm shadow-sm"
+          className="text-gray-400 hover:text-accent-orange transition-colors flex items-center justify-center p-0.5 rounded-full bg-white/90 backdrop-blur-sm shadow-sm border border-gray-100"
           aria-label="İpucu"
         >
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
         </button>
         {isTooltipOpen && (
           <div className={`absolute w-48 p-3 bg-white border border-gray-100 rounded-xl shadow-lg z-50 animate-fade-in text-sm text-gray-600 ${positionClasses[position]}`}>

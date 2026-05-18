@@ -1421,7 +1421,18 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onNe
         <div className="flex items-center gap-3">
           <h3 className="text-[16px] font-extrabold text-text-primary">Aşı Takvimi Matrisi</h3>
           {onBatchScan && (
-            <ScanButton onBatchScan={onBatchScan} />
+            <div className="relative">
+              <CoachMark
+                hintKey="vaccine_scan_hint"
+                title="Karneyi / Etiketi Tara"
+                message="Dostunun aşı defterinin veya ilacın üzerindeki etiketin fotoğrafını çekerek aşıyı saniyeler içinde otomatik olarak takvime işleyebilirsin."
+                icon="📸"
+                position="bottom"
+                condition={records.filter((r: any) => r.status === 'completed').length === 0 && wizardDismissed}
+                delay={3000}
+              />
+              <ScanButton onBatchScan={onBatchScan} />
+            </div>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -1761,7 +1772,18 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNe
         <div className="flex items-center gap-3">
           <h3 className="text-[16px] font-extrabold text-text-primary">Parazit Takvimi Matrisi</h3>
           {onBatchScan && (
-            <ScanButton onBatchScan={onBatchScan} />
+            <div className="relative">
+              <CoachMark
+                hintKey="parasite_scan_hint"
+                title="Parazit Etiketini Tara"
+                message="Uyguladığın dış/iç parazit damla veya hap kutusunun üzerindeki etiketi fotoğraflayarak koruma kaydını anında sisteme ekleyebilirsin."
+                icon="📸"
+                position="bottom"
+                condition={records.filter((r: any) => r.status === 'completed').length === 0 && wizardDismissed}
+                delay={3000}
+              />
+              <ScanButton onBatchScan={onBatchScan} />
+            </div>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -2535,14 +2557,6 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
       <div className="flex flex-col gap-3">
           {(!categoryFilter || categoryFilter === 'vaccine') && (
             <div className="relative">
-              <CoachMark
-                hintKey="vaccine_first_visit"
-                title="Karneyi tarayarak başla"
-                message="Evcil hayvanının aşı defterini fotoğrafla — sistem etiketleri otomatik tanır ve takvime işler. Veteriner kodlarını bilmene gerek yok!"
-                icon="📸"
-                position="top"
-                condition={completedCount === 0 && wizardDismissed}
-              />
               <ProtocolTable 
                 pet={pet} 
                 templates={templates} 
