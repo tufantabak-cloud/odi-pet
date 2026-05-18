@@ -1005,11 +1005,22 @@ function BatchScanModal({
       const selectedItems = results.filter((_, i) => selections[i]);
       for (const item of selectedItems) {
         const search = (item.vaccineName || '').toLowerCase()
-        const matchedTmpl = templates.find(t => 
-           t.vaccine_name.toLowerCase().includes(search) || 
-           t.vaccine_code.toLowerCase().includes(search) ||
-           (COMMON_ALIASES[t.vaccine_code] || []).some(a => a.toLowerCase().includes(search))
-        )
+        // Bidirectional matching: check if AI name contains template aliases OR template name contains AI name
+        const matchedTmpl = templates.find(t => {
+          const tName = t.vaccine_name.toLowerCase()
+          const tCode = t.vaccine_code.toLowerCase()
+          const aliases = (COMMON_ALIASES[t.vaccine_code] || []).map((a: string) => a.toLowerCase())
+          return (
+            // Direction 1: template name/code is in AI result
+            search.includes(tName) ||
+            search.includes(tCode) ||
+            aliases.some(a => search.includes(a)) ||
+            // Direction 2: AI result is in template name/code
+            tName.includes(search) ||
+            tCode.includes(search) ||
+            aliases.some(a => a.includes(search))
+          )
+        })
         
         await addManualVaccine(petId, {
           vaccine_name: toTitleCase(item.vaccineName || 'Bilinmeyen Aşı'),
@@ -1187,7 +1198,8 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onNe
     const exactCompleted = records.find(r => r.status === 'completed' && r.vaccine_code === code && r.dose_number === doseNum);
     if (exactCompleted) return exactCompleted;
 
-    // Priority 1b: Sequential assignment for manual records in the birth year
+    // Priority 1b: Sequential assignment for manual/scanned records
+    // Note: NOT restricted to birthYear — scanned historical records may span any year
     const manualCompletedMatches = records.filter(r => {
       if (r.status !== 'completed') return false;
       if (r.dose_number) return false; // Already has a strict dose slot
@@ -1198,11 +1210,18 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onNe
         const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         return new RegExp(`(\\b|_)${escaped}(\\b|_)`, 'i').test(rName);
       };
-      const matchesIdentity = r.vaccine_code === code || checkMatch(code) || aliases.some(a => checkMatch(a));
+      // Also do bidirectional alias matching for scanned records
+      const rNameInAlias = aliases.some(a => rName.includes(a) || a.includes(rName));
+      const matchesIdentity = r.vaccine_code === code || checkMatch(code) || aliases.some(a => checkMatch(a)) || rNameInAlias;
       if (!matchesIdentity) return false;
 
-      const rYear = new Date(r.administered_at || r.due_at || '').getFullYear();
-      if (rYear !== birthYear) return false;
+      // Only check records from birth year for puppy series (year-0 doses)
+      // For older pets without birth_date, allow any year
+      if (birthYear && doseNum <= (1)) {
+        // For dose 1: accept both birth year AND adjacent years (scan date might differ)
+        const rYear = new Date(r.administered_at || r.due_at || '').getFullYear();
+        if (rYear > birthYear + 1) return false; // More than 1 year after birth = not a puppy dose
+      }
 
       return true;
     }).sort((a,b) => new Date(a.administered_at || '').getTime() - new Date(b.administered_at || '').getTime());
@@ -1259,7 +1278,9 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onNe
         const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         return new RegExp(`(\\b|_)${escaped}(\\b|_)`, 'i').test(rName);
       };
-      return r.vaccine_code === code || checkMatch(code) || aliases.some(a => checkMatch(a));
+      // Bidirectional: alias in rName OR rName in alias
+      const rNameInAlias = aliases.some(a => rName.includes(a) || a.includes(rName));
+      return r.vaccine_code === code || checkMatch(code) || aliases.some(a => checkMatch(a)) || rNameInAlias;
     });
     if (completedMatch) return completedMatch;
 
@@ -1286,7 +1307,9 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onNe
         const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         return new RegExp(`(\\b|_)${escaped}(\\b|_)`, 'i').test(rName);
       };
-      return checkMatch(code) || aliases.some(a => checkMatch(a));
+      // Bidirectional: alias in rName OR rName in alias
+      const rNameInAlias = aliases.some(a => rName.includes(a) || a.includes(rName));
+      return checkMatch(code) || aliases.some(a => checkMatch(a)) || rNameInAlias;
     });
   }
 
