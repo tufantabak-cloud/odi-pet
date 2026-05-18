@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import CoachMark from '@/components/ui/CoachMark'
 
 const ALL_ROUTINES = [
   { key: 'grooming', label: 'Tüy Tarama', icon: '🐾', defaultFreq: 'Günlük' },
@@ -173,8 +174,14 @@ export default function CareClient({ pet, recentEvents }: { pet: any, recentEven
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:-translate-x-0.5 transition-transform"><polyline points="15 18 9 12 15 6"/></svg>
         Profile Dön
       </Link>
-
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 relative">
+        <CoachMark
+          hintKey="care_routine_intro"
+          title="Bakım Rutini"
+          message="Tırnak kesimi, banyo, tarama gibi işlemleri burada planla, zamanı gelince hatırlatalım."
+          icon="🛁"
+          position="bottom"
+        />
         <div className="w-16 h-16 rounded-[20px] bg-gradient-to-br from-primary-soft to-white border-2 border-primary/20 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
           {pet.avatar_url ? <img src={pet.avatar_url} className="w-full h-full object-cover" alt="" /> : <span className="text-[28px]">🛁</span>}
         </div>

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import citiesData from '@/lib/cities.json';
+import CoachMark from '@/components/ui/CoachMark';
 
 interface Clinic {
   id: string;
@@ -142,10 +143,19 @@ export default function VetsPage() {
       </div>
 
       {/* Header */}
-      <div className="text-center mb-12 animate-fadeInUp">
-        <h1 className="text-4xl font-extrabold text-text-primary mb-4 tracking-tight">
-          Odi <span className="text-primary">Yanında</span>
-        </h1>
+      <div className="text-center mb-12 animate-fadeInUp relative">
+        <div className="inline-block relative">
+          <CoachMark
+            hintKey="vets_gps_intro"
+            title="Yakınındaki Klinikleri Bul"
+            message="Acil bir durumda konumunu kullanarak en yakın, açık ve yüksek puanlı veteriner kliniklerini anında bulabilirsin."
+            icon="📍"
+            position="bottom"
+          />
+          <h1 className="text-4xl font-extrabold text-text-primary mb-4 tracking-tight">
+            Odi <span className="text-primary">Yanında</span>
+          </h1>
+        </div>
         <p className="text-text-secondary text-lg max-w-xl mx-auto">
           En yakın dostuna en yakın ve en iyi değerlendirilen veteriner kliniğini bul.
         </p>

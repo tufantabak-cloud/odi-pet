@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import ConfirmModal from '@/components/ui/ConfirmModal'
+import CoachMark from '@/components/ui/CoachMark'
 
 const ROLE_LABELS: Record<string, { label: string; color: string; desc: string }> = {
   owner:  { label: 'Sahip',   color: 'bg-purple-100 text-purple-700', desc: 'Tam yetki' },
@@ -104,6 +105,13 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
       
       {/* ── SOS & Aile Smart Card ── */}
       <div className="p-5 bg-gradient-to-br from-error/10 to-error/5 border-2 border-error/20 rounded-[24px] flex flex-col gap-4 relative overflow-hidden group shadow-sm animate-fade-in">
+        <CoachMark
+          hintKey="family_sos_intro"
+          title="Acil Durum Ağı (SOS)"
+          message="Kayıp veya kaza durumunda sana ulaşılamazsa aranacak güvenilir kişileri ekle. Hayati önem taşır."
+          icon="🚨"
+          position="bottom"
+        />
         <div className="absolute top-0 right-0 w-32 h-32 bg-error/5 rounded-full blur-3xl" />
         <div className="flex items-start gap-4 relative z-10 pr-2">
           <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center text-[24px] shrink-0 border border-error/10">🚨</div>

@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
+import CoachMark from '@/components/ui/CoachMark'
 
 function SuccessContent() {
   const router = useRouter()
@@ -32,7 +33,14 @@ function SuccessContent() {
         </p>
       </div>
 
-      <div className="flex flex-col w-full gap-3 mt-4">
+      <div className="flex flex-col w-full gap-3 mt-4 relative">
+        <CoachMark
+          hintKey="pet_add_success_next_step"
+          title="İlk adım: Aşı takvimi"
+          message="Evcil hayvanının sağlıklı gelişimi için ilk yapman gereken şey aşı takvimini oluşturmaktır. Başlayalım mı?"
+          icon="✨"
+          position="top"
+        />
         {/* Tek bir ana CTA: Aşı Takvimi */}
         <button
           id="btn-setup-vaccines"

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { logout } from '@/features/auth/actions'
 import PetCardActions from './PetCardActions'
 import NotificationSettings from './NotificationSettings'
+import CoachMark from '@/components/ui/CoachMark'
 export default async function ProfileMenuPage() {
   const profile = await getCurrentProfile()
   const user = await getSessionUser()
@@ -77,7 +78,14 @@ export default async function ProfileMenuPage() {
           
           {/* Profile Completion Bar */}
           {progress < 100 && (
-            <div className="w-full max-w-sm mt-6">
+            <div className="w-full max-w-sm mt-6 relative">
+              <CoachMark
+                hintKey="profile_completion"
+                title="Profilini tamamla"
+                message="Daha fazla özellik açmak ve kişiselleştirilmiş deneyim için profil adımlarını bitir."
+                icon="🚀"
+                position="top"
+              />
               <div className="flex justify-between text-[12px] font-bold mb-2">
                 <span className="text-text-secondary">%{progress} Profil Tamamlandı</span>
                 {tasks.length > 0 && <span className="text-primary cursor-pointer hover:underline">Tamamla</span>}

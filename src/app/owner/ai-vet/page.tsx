@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+import CoachMark from '@/components/ui/CoachMark'
 
 interface Message {
   role: 'user' | 'ai'
@@ -168,7 +169,14 @@ export default function AIVetPage() {
   return (
     <div className="flex flex-col h-[calc(100dvh-6rem)] max-h-[860px] w-full mx-auto">
       {/* Header */}
-      <div className="border-b border-border-main pb-4 mb-4 shrink-0 flex items-start justify-between gap-3">
+      <div className="border-b border-border-main pb-4 mb-4 shrink-0 flex items-start justify-between gap-3 relative">
+        <CoachMark
+          hintKey="ai_vet_intro"
+          title="Pet'ini seç, semptomları anlat"
+          message="Üst kısımdan evcil hayvanını seç ve şikayetini yaz. AI, cinsine ve yaşına göre kişisel değerlendirme yapacak."
+          icon="🤖"
+          position="bottom"
+        />
         <div>
           <h1 className="text-[24px] font-extrabold text-text-primary tracking-tight flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary-soft text-primary flex items-center justify-center shrink-0">

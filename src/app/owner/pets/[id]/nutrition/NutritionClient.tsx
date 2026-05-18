@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { calculateRefillRisk } from '@/lib/nutrition/refill-engine'
+import CoachMark from '@/components/ui/CoachMark'
 
 // Tabs
 const TABS = ['Mama & Stok', 'Öğünler & Hatırlatıcı', 'Kilo Takibi'] as const
@@ -116,7 +117,14 @@ export default function NutritionClient({
         Profile Dön
       </Link>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 relative">
+        <CoachMark
+          hintKey="nutrition_intro"
+          title="Mama bilgisini gir"
+          message="Mama markası ve günlük miktarı gir — sistem kalori ve porsiyon takibini otomatik hesaplasın."
+          icon="🍗"
+          position="bottom"
+        />
         <div className="w-16 h-16 rounded-[20px] bg-gradient-to-br from-primary-soft to-white border-2 border-primary/20 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
           {pet.avatar_url ? <img src={pet.avatar_url} className="w-full h-full object-cover" alt="" /> : <span className="text-[28px]">🍗</span>}
         </div>

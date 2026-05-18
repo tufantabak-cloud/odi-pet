@@ -5,6 +5,7 @@ import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ConfirmModal from '@/components/ui/ConfirmModal'
+import CoachMark from '@/components/ui/CoachMark'
 
 const COMMON_DISEASES = [
   "Rutin Check-up",
@@ -287,7 +288,14 @@ export default function TreatmentsClient({ pet, initialTreatments }: { pet: any,
         Sağlık Geçmişi'ne Dön
       </Link>
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative">
+        <CoachMark
+          hintKey="treatments_intro"
+          title="Tedavi Sürecini Yönet"
+          message="Hastalık süreçlerini, ilaç alım saatlerini ve veteriner faturalarını buradan tek seferde takip et."
+          icon="🩺"
+          position="bottom"
+        />
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-soft to-primary/20 flex items-center justify-center text-[24px]">🩺</div>
           <div>

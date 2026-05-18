@@ -7,6 +7,7 @@ import { toTitleCase } from '@/lib/utils'
 import Link from 'next/link'
 import { trackEvent } from '@/lib/analytics/track'
 import ConfirmModal from '@/components/ui/ConfirmModal'
+import CoachMark from '@/components/ui/CoachMark'
 import {
   saveSetupMode,
   generateSchedule,
@@ -2365,38 +2366,58 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
       {/* ── RECORDS (Matrix) ── */}
       <div className="flex flex-col gap-3">
           {(!categoryFilter || categoryFilter === 'vaccine') && (
-            <ProtocolTable 
-              pet={pet} 
-              templates={templates} 
-              records={vaccineRecords} 
-              onCellClick={(record) => {
-                setQuickMarkRecord(record)
-              }} 
-              onNewRecord={(name, code, date) => {
-                setManualConfig({ show: true, mode: 'record', fixed: true, initialData: { name, code, date } })
-              }}
-              onNewPlan={(name, code, date) => {
-                setManualConfig({ show: true, mode: 'plan', fixed: true, initialData: { name, code, date } })
-              }}
-              onBatchScan={() => setShowBatchScan(true)}
-            />
+            <div className="relative">
+              <CoachMark
+                hintKey="vaccine_first_visit"
+                title="Karneyi tarayarak başla"
+                message="Evcil hayvanının aşı defterini fotoğrafla — sistem etiketleri otomatik tanır ve takvime işler. Veteriner kodlarını bilmene gerek yok!"
+                icon="📸"
+                position="top"
+                condition={vaccineRecords.length === 0}
+              />
+              <ProtocolTable 
+                pet={pet} 
+                templates={templates} 
+                records={vaccineRecords} 
+                onCellClick={(record) => {
+                  setQuickMarkRecord(record)
+                }} 
+                onNewRecord={(name, code, date) => {
+                  setManualConfig({ show: true, mode: 'record', fixed: true, initialData: { name, code, date } })
+                }}
+                onNewPlan={(name, code, date) => {
+                  setManualConfig({ show: true, mode: 'plan', fixed: true, initialData: { name, code, date } })
+                }}
+                onBatchScan={() => setShowBatchScan(true)}
+              />
+            </div>
           )}
           {(!categoryFilter || categoryFilter === 'parasite') && (
-            <ParasiteTable 
-              pet={pet} 
-              templates={templates} 
-              records={vaccineRecords} 
-              onCellClick={(record) => {
-                setQuickMarkRecord(record)
-              }} 
-              onNewRecord={(name, code, date) => {
-                setManualConfig({ show: true, mode: 'record', fixed: true, initialData: { name, code, date } })
-              }}
-              onNewPlan={(name, code, date) => {
-                setManualConfig({ show: true, mode: 'plan', fixed: true, initialData: { name, code, date } })
-              }}
-              onBatchScan={() => setShowBatchScan(true)}
-            />
+            <div className="relative">
+              <CoachMark
+                hintKey="parasite_intro"
+                title="Parazit Koruması"
+                message="Aşıdan farklı olarak parazit korumaları düzenli tekrarlanır. Damla veya hap uyguladığında buradan ekleyip takip edebilirsin."
+                icon="🦠"
+                position="top"
+                condition={categoryFilter === 'parasite'}
+              />
+              <ParasiteTable 
+                pet={pet} 
+                templates={templates} 
+                records={vaccineRecords} 
+                onCellClick={(record) => {
+                  setQuickMarkRecord(record)
+                }} 
+                onNewRecord={(name, code, date) => {
+                  setManualConfig({ show: true, mode: 'record', fixed: true, initialData: { name, code, date } })
+                }}
+                onNewPlan={(name, code, date) => {
+                  setManualConfig({ show: true, mode: 'plan', fixed: true, initialData: { name, code, date } })
+                }}
+                onBatchScan={() => setShowBatchScan(true)}
+              />
+            </div>
           )}
       </div>
 

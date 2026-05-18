@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import DashboardOnboardingWrapper from './DashboardOnboardingWrapper'
+import CoachMark from '@/components/ui/CoachMark'
 
 function calcAge(birthDate: string | null): string {
   if (!birthDate) return '—'
@@ -350,16 +351,25 @@ export default async function OwnerDashboard() {
 
       {/* Vaccine OS Summary Card */}
       {primaryPet && !vaccineOSSummary.hasAnyRecord && (
-        <Link href={`/owner/pets/${primaryPet.id}/vaccines`} className="card-base p-5 flex items-center justify-between gap-4 border-l-4 border-l-primary hover:border-l-primary-hover group transition-all bg-gradient-to-r from-primary-soft/50 to-transparent">
-          <div className="flex items-center gap-4">
-            <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-[22px] bg-primary/10">🎯</div>
-            <div>
-              <p className="font-extrabold text-text-primary text-[14px]">Sonraki adım: Aşı takvimini kur</p>
-              <p className="text-[12px] text-text-secondary mt-0.5">Akıllı hatırlatıcılar için işlemleri ekle</p>
+        <div className="relative w-full">
+          <CoachMark
+            hintKey="dashboard_no_vaccine"
+            title="İlk adım: Aşı takvimini kur"
+            message="Pet profiline gir ve 'Sağlık Geçmişi' sekmesinden aşı takibini başlat. Sistem sana adım adım rehberlik edecek."
+            icon="💉"
+            position="top"
+          />
+          <Link href={`/owner/pets/${primaryPet.id}/vaccines`} className="card-base p-5 flex items-center justify-between gap-4 border-l-4 border-l-primary hover:border-l-primary-hover group transition-all bg-gradient-to-r from-primary-soft/50 to-transparent block w-full">
+            <div className="flex items-center gap-4">
+              <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-[22px] bg-primary/10">🎯</div>
+              <div>
+                <p className="font-extrabold text-text-primary text-[14px]">Sonraki adım: Aşı takvimini kur</p>
+                <p className="text-[12px] text-text-secondary mt-0.5">Akıllı hatırlatıcılar için işlemleri ekle</p>
+              </div>
             </div>
-          </div>
-          <span className="text-primary font-bold text-[18px] group-hover:translate-x-1 transition-transform">→</span>
-        </Link>
+            <span className="text-primary font-bold text-[18px] group-hover:translate-x-1 transition-transform">→</span>
+          </Link>
+        </div>
       )}
 
       {primaryPet && vaccineOSSummary.hasAnyRecord && (vaccineOSSummary.nextVaccine || vaccineOSSummary.overdueCount > 0) && (
