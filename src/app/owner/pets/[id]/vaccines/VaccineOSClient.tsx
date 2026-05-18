@@ -1153,7 +1153,7 @@ function BatchScanModal({
 }
 
 // ── Protocol Table Component ───────────────────────────────────
-function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onNewPlan, onBatchScan }: { 
+function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onNewPlan, onBatchScan, wizardDismissed = true }: { 
   pet: Pet; 
   templates: Template[]; 
   records: VRecord[]; 
@@ -1161,6 +1161,7 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onNe
   onNewRecord?: (name: string, code: string, date: string) => void;
   onNewPlan?: (name: string, code: string, date: string) => void;
   onBatchScan?: () => void;
+  wizardDismissed?: boolean;
 }) {
 
   // Use templates directly as rows (new schema: 1 template = 1 protocol)
@@ -1432,7 +1433,7 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onNe
                 message="Dostunun geçmişte yapılmış bir aşısını doğrudan elle kaydetmek istersen bu butona dokunarak bilgileri girebilirsin."
                 icon="✅"
                 position="bottom"
-                condition={records.filter((r: any) => r.status === 'completed').length === 0}
+                condition={records.filter((r: any) => r.status === 'completed').length === 0 && wizardDismissed}
                 delay={2500}
               />
               <button 
@@ -1643,7 +1644,7 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onNe
 }
 
 // ── Parasite Protocol Table Component ───────────────────────────────────
-function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNewPlan, onBatchScan }: { 
+function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNewPlan, onBatchScan, wizardDismissed = true }: { 
   pet: Pet; 
   templates: Template[]; 
   records: VRecord[]; 
@@ -1651,6 +1652,7 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNe
   onNewRecord?: (name: string, code: string, date: string) => void;
   onNewPlan?: (name: string, code: string, date: string) => void;
   onBatchScan?: () => void;
+  wizardDismissed?: boolean;
 }) {
   const parasiteTemplates = templates.filter(t => t.category === 'parasite');
 
@@ -1771,7 +1773,7 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNe
                 message="Geçmişte uyguladığın parazit tedavilerini (hap/damla) doğrudan elle kaydetmek için bu butonu kullanabilirsin."
                 icon="✅"
                 position="bottom"
-                condition={records.filter((r: any) => r.status === 'completed').length === 0}
+                condition={records.filter((r: any) => r.status === 'completed').length === 0 && wizardDismissed}
                 delay={2500}
               />
               <button 
@@ -2099,6 +2101,8 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
   const [isHistoricalImporting, setIsHistoricalImporting] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [dismissedRabiesPrompt, setDismissedRabiesPrompt] = useState(false)
+  const [wizardDismissed, setWizardDismissed] = useState(true)
+
   const [confirmModal, setConfirmModal] = useState<{
     open: boolean
     title: string
@@ -2119,6 +2123,54 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
   const dueRecords = vaccineRecords.filter(r => r.status === 'due' || r.status === 'scheduled')
     .sort((a, b) => new Date(a.due_at || '').getTime() - new Date(b.due_at || '').getTime())
   const nextDue = dueRecords[0]
+
+  useEffect(() => {
+    const checkWizardStatus = async () => {
+      const localDismissed = JSON.parse(localStorage.getItem('odi_hints_dismissed') || '[]');
+      if (localDismissed.includes('vaccine_os_onboard_guide')) {
+        setWizardDismissed(true);
+        return;
+      }
+      try {
+        const res = await fetch('/api/hints');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.dismissed?.includes('vaccine_os_onboard_guide')) {
+            setWizardDismissed(true);
+            if (!localDismissed.includes('vaccine_os_onboard_guide')) {
+              localStorage.setItem('odi_hints_dismissed', JSON.stringify([...localDismissed, 'vaccine_os_onboard_guide']));
+            }
+          } else {
+            setWizardDismissed(false);
+          }
+        } else {
+          setWizardDismissed(false);
+        }
+      } catch (err) {
+        setWizardDismissed(false);
+      }
+    };
+    if (completedCount === 0) {
+      checkWizardStatus();
+    }
+  }, [completedCount]);
+
+  const handleDismissWizard = async () => {
+    setWizardDismissed(true);
+    const localDismissed = JSON.parse(localStorage.getItem('odi_hints_dismissed') || '[]');
+    if (!localDismissed.includes('vaccine_os_onboard_guide')) {
+      localStorage.setItem('odi_hints_dismissed', JSON.stringify([...localDismissed, 'vaccine_os_onboard_guide']));
+    }
+    try {
+      await fetch('/api/hints', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hint_key: 'vaccine_os_onboard_guide' }),
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
   
   // Progressive Profiling: Check if Rabies is completed to show Phase 3 prompt
   const hasCompletedRabies = vaccineRecords.some(r => 
@@ -2368,6 +2420,72 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
         </div>
       )}
 
+      {/* ── Premium VaccineOS Onboarding Wizard Card ── */}
+      {!isTab && completedCount === 0 && !wizardDismissed && (
+        <div className="card-base p-6 bg-gradient-to-br from-violet-50 via-white to-primary-soft/10 border-l-4 border-l-primary relative overflow-hidden animate-fade-in shadow-md">
+          {/* Decorative subtle background circle */}
+          <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-primary/5 rounded-full blur-xl pointer-events-none" />
+          
+          <div className="flex justify-between items-start gap-4 mb-4">
+            <div className="flex items-center gap-3">
+              <span className="text-[26px]">💡</span>
+              <div>
+                <h3 className="text-[16px] font-extrabold text-text-primary">Odi.Pet Aşı Takvimi Sihirbazı</h3>
+                <p className="text-[12px] text-text-secondary mt-0.5">{pet.name} için aşı kaydı oluşturmanın 3 pratik yolu:</p>
+              </div>
+            </div>
+            <button 
+              onClick={handleDismissWizard} 
+              className="text-text-secondary hover:text-text-primary p-1.5 hover:bg-bg-main rounded-lg transition-all"
+              aria-label="Kapat"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+            <div className="bg-white/80 backdrop-blur-sm p-4 rounded-2xl border border-border-main/50 flex gap-3 shadow-sm hover:-translate-y-0.5 transition-transform">
+              <span className="text-[20px] shrink-0">📸</span>
+              <div>
+                <h4 className="font-bold text-[13px] text-text-primary">1. Karneden Otomatik Tara</h4>
+                <p className="text-[11px] text-text-secondary leading-relaxed mt-0.5">
+                  Aşı karnesini veya etiketlerini fotoğraflayın, yapay zeka aşıları ve tarihleri otomatik tanısın.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white/80 backdrop-blur-sm p-4 rounded-2xl border border-border-main/50 flex gap-3 shadow-sm hover:-translate-y-0.5 transition-transform">
+              <span className="text-[20px] shrink-0">✅</span>
+              <div>
+                <h4 className="font-bold text-[13px] text-text-primary">2. Hızlı Yapıldı Ekle</h4>
+                <p className="text-[11px] text-text-secondary leading-relaxed mt-0.5">
+                  Sıradaki aşı kartından veya aşağıdaki matris hücrelerine tıklayarak geçmiş aşıları elle işleyin.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white/80 backdrop-blur-sm p-4 rounded-2xl border border-border-main/50 flex gap-3 shadow-sm hover:-translate-y-0.5 transition-transform">
+              <span className="text-[20px] shrink-0">📅</span>
+              <div>
+                <h4 className="font-bold text-[13px] text-text-primary">3. Yeni Aşı Planla</h4>
+                <p className="text-[11px] text-text-secondary leading-relaxed mt-0.5">
+                  Özel bir aşı veya periyodik uygulama tarihini planlayarak bildirimleri otomatik kurun.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <button 
+              onClick={handleDismissWizard}
+              className="btn-primary text-[12px] font-bold py-2 px-5 rounded-full shadow-sm hover:scale-102 transition-transform"
+            >
+              Anladım, Başlayalım 👍
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Stats - Hidden in Tab mode */}
       {!isTab && (
         <div className="grid grid-cols-3 gap-3">
@@ -2393,7 +2511,7 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
             message="Dostunun aşısı yapıldığında, buradaki 'Yapıldı ✓' butonuna tıklayarak veya aşağıdaki takvim matrisinden aşı hücresine tıklayarak aşıyı kolayca kaydedebilirsin."
             icon="💡"
             position="bottom"
-            condition={completedCount === 0}
+            condition={completedCount === 0 && wizardDismissed}
           />
           <div className="flex items-center gap-3">
             <span className="text-[22px]">💉</span>
@@ -2423,12 +2541,13 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
                 message="Evcil hayvanının aşı defterini fotoğrafla — sistem etiketleri otomatik tanır ve takvime işler. Veteriner kodlarını bilmene gerek yok!"
                 icon="📸"
                 position="top"
-                condition={completedCount === 0}
+                condition={completedCount === 0 && wizardDismissed}
               />
               <ProtocolTable 
                 pet={pet} 
                 templates={templates} 
                 records={vaccineRecords} 
+                wizardDismissed={wizardDismissed}
                 onCellClick={(record) => {
                   setQuickMarkRecord(record)
                 }} 
@@ -2456,6 +2575,7 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
                 pet={pet} 
                 templates={templates} 
                 records={vaccineRecords} 
+                wizardDismissed={wizardDismissed}
                 onCellClick={(record) => {
                   setQuickMarkRecord(record)
                 }} 
