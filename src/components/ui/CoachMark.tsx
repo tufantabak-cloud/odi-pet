@@ -35,20 +35,32 @@ export default function CoachMark({
     if (!condition) return;
 
     const checkStatus = async () => {
+      // 1. LocalStorage fallback check
+      const localDismissed = JSON.parse(localStorage.getItem('odi_hints_dismissed') || '[]');
+      if (localDismissed.includes(hintKey)) {
+        setIsDismissed(true);
+        return;
+      }
+
       try {
         const res = await fetch('/api/hints');
         if (res.ok) {
           const data = await res.json();
           if (data.dismissed?.includes(hintKey)) {
             setIsDismissed(true);
+            if (!localDismissed.includes(hintKey)) {
+              localStorage.setItem('odi_hints_dismissed', JSON.stringify([...localDismissed, hintKey]));
+            }
           } else {
-            setTimeout(() => {
-              setIsVisible(true);
-            }, delay);
+            setTimeout(() => { setIsVisible(true); }, delay);
           }
+        } else {
+          // Fallback if API fails (e.g. table not created)
+          setTimeout(() => { setIsVisible(true); }, delay);
         }
       } catch (err) {
         console.error('Failed to fetch hints', err);
+        setTimeout(() => { setIsVisible(true); }, delay);
       }
     };
 
@@ -58,6 +70,12 @@ export default function CoachMark({
   const handleDismiss = async () => {
     setIsVisible(false);
     setIsDismissed(true);
+
+    const localDismissed = JSON.parse(localStorage.getItem('odi_hints_dismissed') || '[]');
+    if (!localDismissed.includes(hintKey)) {
+      localStorage.setItem('odi_hints_dismissed', JSON.stringify([...localDismissed, hintKey]));
+    }
+
     try {
       await fetch('/api/hints', {
         method: 'POST',
