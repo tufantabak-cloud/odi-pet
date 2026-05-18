@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 const ALL_ROUTINES = [
   { key: 'grooming', label: 'Tüy Tarama', icon: '🐾', defaultFreq: 'Günlük' },
@@ -16,16 +17,44 @@ export default function CareClient({ pet, recentEvents }: { pet: any, recentEven
   const [activeTab, setActiveTab] = useState<'Günlük Görevler' | 'Planı Düzenle'>('Günlük Görevler')
   const [loading, setLoading] = useState(false)
   
-  // Local storage for MVP: storing the user's selected care plan
   const [selectedPlan, setSelectedPlan] = useState<Record<string, string>>({})
   const [isPlanSet, setIsPlanSet] = useState(false)
+  const [loadingPlan, setLoadingPlan] = useState(true)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
-    const saved = localStorage.getItem(`odi_care_plan_${pet.id}`)
-    if (saved) {
-      setSelectedPlan(JSON.parse(saved))
-      setIsPlanSet(true)
+    async function loadPlan() {
+      try {
+        const res = await fetch(`/api/pets/${pet.id}/care-plan`)
+        if (res.ok) {
+          const data = await res.json()
+          if (data.plan_data && Object.keys(data.plan_data).length > 0) {
+            setSelectedPlan(data.plan_data)
+            setIsPlanSet(true)
+          } else {
+            // Fallback & Migration: Check local storage
+            const saved = localStorage.getItem(`odi_care_plan_${pet.id}`)
+            if (saved) {
+              const parsed = JSON.parse(saved)
+              setSelectedPlan(parsed)
+              setIsPlanSet(true)
+              // Migrate quietly to DB
+              fetch(`/api/pets/${pet.id}/care-plan`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ plan_data: parsed })
+              }).catch(console.error)
+            }
+          }
+        }
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoadingPlan(false)
+      }
     }
+    loadPlan()
   }, [pet.id])
 
   const lastDoneMap: Record<string, string> = {}
@@ -33,14 +62,31 @@ export default function CareClient({ pet, recentEvents }: { pet: any, recentEven
     if (!lastDoneMap[ev.event_type]) lastDoneMap[ev.event_type] = ev.performed_at
   })
 
-  const handleSavePlan = () => {
+  const handleSavePlan = async () => {
+    setErrorMsg(null)
     if (Object.keys(selectedPlan).length === 0) {
-      alert('Lütfen en az bir bakım rutini seçin.')
+      setErrorMsg('Lütfen en az bir bakım rutini seçin.')
       return
     }
-    localStorage.setItem(`odi_care_plan_${pet.id}`, JSON.stringify(selectedPlan))
-    setIsPlanSet(true)
-    setActiveTab('Günlük Görevler')
+    setLoadingPlan(true)
+    try {
+      await fetch(`/api/pets/${pet.id}/care-plan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan_data: selectedPlan })
+      })
+      localStorage.setItem(`odi_care_plan_${pet.id}`, JSON.stringify(selectedPlan)) // Backup
+      setIsPlanSet(true)
+      setActiveTab('Günlük Görevler')
+    } catch (err) {
+      setErrorMsg('Kaydedilirken hata oluştu.')
+    } finally {
+      setLoadingPlan(false)
+    }
+  }
+
+  if (loadingPlan) {
+    return <div className="p-10 text-center text-text-secondary text-[14px]">Bakım planı yükleniyor...</div>
   }
 
   const handleCompleteTask = async (taskKey: string) => {
@@ -51,8 +97,7 @@ export default function CareClient({ pet, recentEvents }: { pet: any, recentEven
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ event_type: taskKey }),
       })
-      // Optimizasyon: state üzerinden simüle edilebilir ama sayfa yenilemek temizdir
-      window.location.reload()
+      router.refresh()
     } finally {
       setLoading(false)
     }
@@ -109,7 +154,9 @@ export default function CareClient({ pet, recentEvents }: { pet: any, recentEven
             })}
           </div>
 
-          <button onClick={handleSavePlan} className="btn-primary w-full mt-6 py-4 shadow-lg shadow-primary/20">
+          {errorMsg && <p className="text-error text-[13px] font-bold mt-4 text-center">{errorMsg}</p>}
+
+          <button onClick={handleSavePlan} className="btn-primary w-full mt-4 py-4 shadow-lg shadow-primary/20">
             Planı Oluştur ve Başla
           </button>
         </div>
@@ -232,7 +279,8 @@ export default function CareClient({ pet, recentEvents }: { pet: any, recentEven
               )
             })}
           </div>
-          <button onClick={handleSavePlan} className="btn-primary w-full mt-6 py-3">
+          {errorMsg && <p className="text-error text-[13px] font-bold mt-4 text-center">{errorMsg}</p>}
+          <button onClick={handleSavePlan} className="btn-primary w-full mt-4 py-3">
             Değişiklikleri Kaydet
           </button>
         </div>

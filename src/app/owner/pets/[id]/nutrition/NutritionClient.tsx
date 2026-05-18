@@ -25,12 +25,6 @@ export default function NutritionClient({
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('Mama & Stok')
   const [loading, setLoading] = useState(false)
-  
-  // Reminders state (Mocked for MVP UI)
-  const [reminders, setReminders] = useState<{time: string, enabled: boolean}[]>([
-    { time: '08:00', enabled: true },
-    { time: '19:00', enabled: true }
-  ])
 
   // Engine Calcs
   const dailyUsage = (inventory?.estimated_daily_usage as number) ?? (profile?.daily_grams as number) ?? 0;
@@ -213,30 +207,37 @@ export default function NutritionClient({
       {activeTab === 'Öğünler & Hatırlatıcı' && (
         <div className="flex flex-col gap-4 animate-fadeIn">
           
-          {/* Hatırlatıcı UI (MVP Mock) */}
-          <div className="card-base p-6 border border-primary/20 bg-primary/5">
-            <h3 className="font-extrabold text-[15px] text-primary mb-1">⏰ Öğün Hatırlatıcıları</h3>
-            <p className="text-[12px] text-text-secondary mb-4">Bildirim alarak öğün saatlerini kaçırmayın.</p>
-            
-            <div className="flex flex-col gap-3">
-              {reminders.map((r, i) => (
-                <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white border border-border-main">
-                  <div className="flex items-center gap-3">
-                    <span className="text-[20px]">🕒</span>
-                    <span className="font-bold text-[16px] text-text-primary">{r.time}</span>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" checked={r.enabled} onChange={() => {
-                      const newReminders = [...reminders];
-                      newReminders[i].enabled = !newReminders[i].enabled;
-                      setReminders(newReminders);
-                    }}/>
-                    <div className="w-11 h-6 bg-border-main rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                  </label>
-                </div>
-              ))}
+          {/* Hatırlatıcı UI (Coming Soon) */}
+          <div className="card-base p-6 border border-primary/20 bg-primary/5 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-white/50 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center transition-all">
+              <span className="text-[28px] mb-2 group-hover:scale-110 transition-transform">🚀</span>
+              <span className="bg-primary text-white text-[12px] font-bold px-4 py-1.5 rounded-full shadow-md">Bildirimler Çok Yakında</span>
             </div>
-            <button className="text-[12px] font-bold text-primary mt-4 hover:underline">+ Yeni Saat Ekle</button>
+            
+            <h3 className="font-extrabold text-[15px] text-primary mb-1">⏰ Öğün Hatırlatıcıları</h3>
+            <p className="text-[12px] text-text-secondary mb-4">Push bildirimleriyle öğün saatlerini kaçırmayın.</p>
+            
+            <div className="flex flex-col gap-3 opacity-40 select-none pointer-events-none">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-white border border-border-main">
+                <div className="flex items-center gap-3">
+                  <span className="text-[20px]">🕒</span>
+                  <span className="font-bold text-[16px] text-text-primary">08:00</span>
+                </div>
+                <div className="w-11 h-6 bg-primary/50 rounded-full relative">
+                  <div className="absolute top-[2px] right-[2px] bg-white rounded-full h-5 w-5"></div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-white border border-border-main">
+                <div className="flex items-center gap-3">
+                  <span className="text-[20px]">🕒</span>
+                  <span className="font-bold text-[16px] text-text-primary">19:00</span>
+                </div>
+                <div className="w-11 h-6 bg-border-main rounded-full relative">
+                  <div className="absolute top-[2px] left-[2px] bg-white rounded-full h-5 w-5 border border-gray-300"></div>
+                </div>
+              </div>
+            </div>
+            <button disabled className="text-[12px] font-bold text-primary mt-4 opacity-40 cursor-not-allowed">+ Yeni Saat Ekle</button>
           </div>
 
           {/* Günlük Giriş */}

@@ -424,11 +424,14 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
       {/* ── Tab: Bakım ── */}
       {activeTab === 'Bakım' && (
         <div className="flex flex-col gap-4">
-          <div className="card-base p-5">
-            <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest mb-4">Günlük Bakım Rutini</h3>
-            <p className="text-[14px] text-text-secondary mb-4">Tüy tarama, tırnak kesimi ve banyo gibi rutin görevleri takip edin.</p>
-            <Link href={`/owner/pets/${pet.id}/care`} className="card-base p-4 text-center text-primary font-bold text-[14px] hover:bg-bg-main transition-colors block">
-              Tam Bakım Modülü →
+          <div className="card-base p-8 flex flex-col items-center text-center">
+            <div className="w-16 h-16 bg-gradient-to-tr from-amber-100 to-orange-50 rounded-[20px] flex items-center justify-center text-[32px] mb-4 shadow-sm">🛁</div>
+            <h3 className="font-extrabold text-text-primary text-[18px] mb-2">Pırıl Pırıl Bir Bakım Rutini</h3>
+            <p className="text-[14px] text-text-secondary mb-6 leading-relaxed max-w-[280px]">
+              Tırnak kesimi, tüy tarama, diş fırçalama ve banyo... Dostunuzun tüm kişisel bakım görevlerini planlayın ve oyunlaştırılmış puanlar kazanın.
+            </p>
+            <Link href={`/owner/pets/${pet.id}/care`} className="btn-primary text-[14px] px-8 py-3 w-full sm:w-auto">
+              Bakım Modülüne Git →
             </Link>
           </div>
         </div>
@@ -449,9 +452,13 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
                 <a href={`tel:${pet.vet_phone}`} className="btn-primary text-[13px] py-2 px-4 shrink-0">Ara</a>
               </div>
             ) : (
-              <div className="p-4 text-center border border-dashed border-border-main rounded-xl mb-4">
-                <p className="text-text-secondary text-[14px]">Veteriner bilgisi eklenmemiş</p>
-                <Link href={`/owner/pets/${pet.id}/edit`} className="text-primary font-bold text-[13px] mt-2 block hover:underline">Ekle →</Link>
+              <div className="flex flex-col items-center text-center p-6 bg-primary-soft/30 rounded-[20px] border border-primary/20 mb-4">
+                <div className="w-16 h-16 bg-white rounded-[20px] flex items-center justify-center text-[32px] mb-4 shadow-sm">🩺</div>
+                <h4 className="font-extrabold text-text-primary text-[16px] mb-1">Veterineriniz Kayıtlı Değil</h4>
+                <p className="text-[13px] text-text-secondary mb-5 leading-relaxed max-w-[250px]">
+                  Klinik bilgilerinizi ekleyerek aşı hatırlatmalarını tek tuşla kliniğinizle paylaşabilir ve randevularınızı takip edebilirsiniz.
+                </p>
+                <Link href={`/owner/pets/${pet.id}/edit`} className="btn-primary text-[13px] px-8 py-2.5">Kliniğimi Ekle</Link>
               </div>
             )}
             {appointments && appointments.length > 0 && (
@@ -479,29 +486,32 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
 
       {/* ── Tab: Belgeler ── */}
       {activeTab === 'Belgeler' && (
-        <div className="card-base p-6">
-          <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest mb-5">Belge Kasası</h3>
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            {['Pasaport', 'Aşı Kartı', 'Lab Sonuçları', 'Reçeteler'].map(doc => (
-              <label key={doc} className="border-2 border-dashed border-border-main rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer hover:border-primary hover:bg-primary/5 transition-all group">
-                <input type="file" className="hidden" accept="image/*,.pdf" onChange={(e) => {
-                  if (e.target.files?.length) {
-                    alert(`${doc} belgesi seçildi: ${e.target.files[0].name}\n(Sistem notu: Supabase Storage modülü bağlandığında dosyalar buluta aktarılacaktır.)`)
-                  }
-                }} />
-                <span className="text-[28px] group-hover:scale-110 transition-transform">📄</span>
-                <p className="text-[13px] font-bold text-text-secondary group-hover:text-primary text-center">{doc}</p>
-                <span className="text-[11px] font-bold bg-bg-main px-2 py-1 rounded-md text-text-secondary group-hover:bg-primary group-hover:text-white transition-colors">
-                  + Dosya Seç
-                </span>
-              </label>
-            ))}
+        <div className="flex flex-col gap-4">
+          <div className="card-base p-8 flex flex-col items-center text-center">
+            <div className="w-16 h-16 bg-gradient-to-tr from-blue-100 to-cyan-50 rounded-[20px] flex items-center justify-center text-[32px] mb-4 shadow-sm">📁</div>
+            <h3 className="font-extrabold text-text-primary text-[18px] mb-2">Dijital Belge Kasası</h3>
+            <p className="text-[14px] text-text-secondary mb-6 leading-relaxed max-w-[280px]">
+              Pasaport, aşı karnesi, lab sonuçları ve faturaları güvenle buluta yükleyin. Acil bir durumda dünyanın her yerinden anında erişin.
+            </p>
+            <div className="grid grid-cols-2 gap-3 w-full max-w-[400px] mb-4">
+              {['Pasaport', 'Aşı Kartı', 'Lab Sonuçları', 'Reçeteler'].map(doc => (
+                <label key={doc} className="border border-border-main bg-bg-main rounded-xl p-3 flex flex-col items-center gap-1 cursor-pointer hover:border-primary hover:bg-primary-soft transition-all">
+                  <input type="file" className="hidden" accept="image/*,.pdf" onChange={(e) => {
+                    if (e.target.files?.length) {
+                      alert(`${doc} belgesi seçildi: ${e.target.files[0].name}\n(Sistem notu: Supabase Storage modülü bağlandığında dosyalar buluta aktarılacaktır.)`)
+                    }
+                  }} />
+                  <span className="text-[20px] mb-1">📄</span>
+                  <p className="text-[11px] font-bold text-text-primary text-center">{doc}</p>
+                </label>
+              ))}
+            </div>
+            
+            <button onClick={() => window.print()} className="btn-secondary w-full max-w-[400px] py-2.5 text-[13px] flex items-center justify-center gap-2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3"/></svg>
+              PDF Sağlık Raporu Çıkar
+            </button>
           </div>
-          <button onClick={() => window.print()} className="btn-primary w-full py-3 text-[14px] flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-transform shadow-sm hover:shadow-primary/30">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3"/></svg>
-            PDF Sağlık Raporu Çıkar
-          </button>
-          <p className="text-center text-[11px] text-text-secondary mt-2">Tüm sağlık geçmişini cihazınıza PDF olarak kaydetmek için tıklayın.</p>
         </div>
       )}
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 
 interface Message {
   role: 'user' | 'ai'
@@ -61,6 +62,46 @@ export default function AIVetPage() {
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  const [pets, setPets] = useState<any[]>([])
+  const [selectedPet, setSelectedPet] = useState<any>(null)
+
+  useEffect(() => {
+    async function fetchPets() {
+      try {
+        const supabase = createBrowserSupabaseClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
+        const { data: petData } = await supabase
+          .from('pets')
+          .select(`
+            id, name, species, breed, gender, birth_date,
+            vaccine_records_v2(vaccine_name, status),
+            health_diseases(disease_name, status)
+          `)
+          .eq('owner_id', user.id)
+
+        if (petData && petData.length > 0) {
+          const formatted = petData.map(p => ({
+            id: p.id,
+            name: p.name,
+            species: p.species,
+            breed: p.breed,
+            gender: p.gender,
+            birth_date: p.birth_date,
+            vaccines: p.vaccine_records_v2?.filter((v:any) => v.status === 'done' || v.status === 'completed').map((v:any) => v.vaccine_name) || [],
+            diseases: p.health_diseases?.filter((d:any) => d.status === 'active' || d.status === 'chronic').map((d:any) => d.disease_name) || []
+          }))
+          setPets(formatted)
+          setSelectedPet(formatted[0])
+        }
+      } catch (err) {
+        console.error('Pets fetch error:', err)
+      }
+    }
+    fetchPets()
+  }, [])
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading])
@@ -85,7 +126,7 @@ export default function AIVetPage() {
       const res = await fetch('/api/ai-vet', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ history }),
+        body: JSON.stringify({ history, petContext: selectedPet }),
       })
       const data = await res.json()
 
@@ -138,6 +179,24 @@ export default function AIVetPage() {
             AI Vet
           </h1>
           <p className="text-text-secondary text-[13px] mt-0.5">Belirtileri yazın — detaylı ön değerlendirme alın.</p>
+
+          {pets.length > 0 && (
+            <div className="mt-4 flex items-center gap-2">
+              <span className="text-[12px] font-bold text-text-secondary uppercase tracking-wider">🐾 HASTA SEÇİMİ:</span>
+              <select 
+                className="input-base py-1.5 px-3 text-[13px] font-bold min-w-[140px] bg-primary/5 border-primary/20 text-primary cursor-pointer hover:bg-primary/10 transition-colors"
+                value={selectedPet?.id || ''}
+                onChange={(e) => {
+                  const p = pets.find(x => x.id === e.target.value)
+                  if(p) setSelectedPet(p)
+                }}
+              >
+                {pets.map(p => (
+                  <option key={p.id} value={p.id}>{p.name} ({p.species})</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
         <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary/70 bg-primary/10 px-2.5 py-1 rounded-full mt-1 shrink-0">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
@@ -190,9 +249,21 @@ export default function AIVetPage() {
                       />
                     </div>
                     {msg.poweredBy === 'heuristic' && (
-                      <p className="text-[10px] text-text-secondary/60 mt-2 italic">
-                        ⚡ Hızlı analiz (çevrimdışı mod) — AI bağlantısı kurulamadı
-                      </p>
+                      <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl flex flex-col gap-2">
+                        <p className="text-[11px] font-medium text-amber-800 leading-snug">
+                          <span className="font-bold">⚠️ Sistem Yoğunluğu:</span> Şu an AI sunucularımızda aşırı yoğunluk yaşanıyor. Güvenliğiniz için standart tıbbi triaj kurallarına göre genel analiz sunulmuştur.
+                        </p>
+                        <button 
+                          onClick={() => {
+                            const prevUserMsg = messages[i - 1]?.text;
+                            if (prevUserMsg) send(prevUserMsg);
+                          }}
+                          className="text-[11px] font-bold text-amber-700 bg-amber-100/50 hover:bg-amber-200 py-1.5 px-3 rounded-lg transition-colors self-start flex items-center gap-1.5"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                          Yapay Zeka ile Tekrar Dene
+                        </button>
+                      </div>
                     )}
                   </div>
                 )}

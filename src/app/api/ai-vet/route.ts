@@ -63,6 +63,23 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   // history: array of { role: 'user'|'model', text: string }
   const history: { role: 'user' | 'model'; text: string }[] = body.history ?? []
+  const petContext = body.petContext ?? null
+
+  let systemInstruction = SYSTEM_INSTRUCTION
+  if (petContext) {
+    systemInstruction += `\n\nBAĞLAM (Şu An İlgilenilen Evcil Hayvan):\n`
+    systemInstruction += `- İsim: ${petContext.name}\n`
+    systemInstruction += `- Tür/Irk: ${petContext.species} / ${petContext.breed || 'Bilinmiyor'}\n`
+    if (petContext.gender) systemInstruction += `- Cinsiyet: ${petContext.gender}\n`
+    if (petContext.birth_date) systemInstruction += `- Doğum Tarihi: ${petContext.birth_date}\n`
+    if (petContext.vaccines && petContext.vaccines.length > 0) {
+      systemInstruction += `- Son Aşılar: ${petContext.vaccines.join(', ')}\n`
+    }
+    if (petContext.diseases && petContext.diseases.length > 0) {
+      systemInstruction += `- Bilinen Hastalıklar: ${petContext.diseases.join(', ')}\n`
+    }
+    systemInstruction += `\nLütfen tavsiyelerini bu bilgilere (tür, yaş, ırk, hastalık geçmişi) göre uyarla ve kişiselleştir.`
+  }
 
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
@@ -76,7 +93,7 @@ export async function POST(req: NextRequest) {
     const genAI = new GoogleGenerativeAI(apiKey)
     const model = genAI.getGenerativeModel({
       model: 'gemini-2.0-flash',
-      systemInstruction: SYSTEM_INSTRUCTION,
+      systemInstruction: systemInstruction,
     })
 
     // Build Gemini chat history (all but last user message)

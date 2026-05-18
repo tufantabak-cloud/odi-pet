@@ -56,8 +56,9 @@ export default async function OwnerDashboard() {
     .slice(0, 5);
 
   // Vaccine OS Summary
-  let vaccineOSSummary = { nextVaccine: null as string | null, nextDate: null as string | null, overdueCount: 0 }
+  let vaccineOSSummary = { nextVaccine: null as string | null, nextDate: null as string | null, overdueCount: 0, hasAnyRecord: false }
   if (primaryPet) {
+    const { data: anyV } = await supabase.from('vaccine_records_v2').select('id').eq('pet_id', primaryPet.id).limit(1);
     const { data: vRecords } = await supabase
       .from('vaccine_records_v2')
       .select('vaccine_name, status, due_at')
@@ -72,6 +73,7 @@ export default async function OwnerDashboard() {
         nextVaccine: next?.vaccine_name ?? null,
         nextDate: next?.due_at ? new Date(next.due_at).toLocaleDateString('tr-TR') : null,
         overdueCount: overdue.length,
+        hasAnyRecord: !!(anyV && anyV.length > 0)
       }
     }
   }
@@ -110,7 +112,23 @@ export default async function OwnerDashboard() {
       if (weight.height_cm) heightVal = `${weight.height_cm} cm`;
     }
 
-    return { ...pet, lastFeedingDate, weightVal, heightVal };
+    // Check overdue vaccines
+    const { data: overdueRecords } = await supabase
+      .from('vaccine_records_v2')
+      .select('id')
+      .eq('pet_id', pet.id)
+      .eq('status', 'overdue');
+    const overdueCount = overdueRecords?.length || 0;
+
+    // Check if has any health data
+    const { data: anyVaccine } = await supabase
+      .from('vaccine_records_v2')
+      .select('id')
+      .eq('pet_id', pet.id)
+      .limit(1);
+    const hasData = (anyVaccine && anyVaccine.length > 0) || !!feeding || !!weight;
+
+    return { ...pet, lastFeedingDate, weightVal, heightVal, overdueCount, hasData };
   }));
 
   return (
@@ -129,36 +147,49 @@ export default async function OwnerDashboard() {
         <div>
           <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
             {petsWithStats.map(pet => (
-              <Link key={pet.id} href={`/owner/pets/${pet.id}`}
-                className="card-base snap-start shrink-0 w-[240px] sm:w-[260px] p-5 flex flex-col gap-3 group cursor-pointer">
-                <div className="flex items-start justify-between">
+              <div key={pet.id} className="card-base snap-start shrink-0 w-[240px] sm:w-[260px] p-5 flex flex-col gap-3 group relative cursor-pointer hover:shadow-md transition-shadow">
+                <Link href={`/owner/pets/${pet.id}`} className="absolute inset-0 z-10 rounded-[24px]" aria-label="Profile Git" />
+                
+                <div className="flex items-start justify-between relative z-0">
                   <div className="w-14 h-14 rounded-[16px] bg-gradient-to-tr from-primary-soft to-white flex items-center justify-center text-primary text-[24px] font-black shadow-sm group-hover:bg-primary group-hover:text-white transition-all duration-300">
                     {pet.avatar_url
                       ? <img src={pet.avatar_url} alt={pet.name} className="w-full h-full rounded-[14px] object-cover" />
                       : (pet.name || '?').charAt(0)
                     }
                   </div>
-                  <span className="badge-success text-[11px]">Sağlıklı</span>
+                  {pet.overdueCount > 0 ? (
+                    <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold text-[11px]">⚠️ Dikkat</span>
+                  ) : pet.hasData ? (
+                    <span className="badge-success text-[11px]">Sağlıklı</span>
+                  ) : null}
                 </div>
-                <div>
+                <div className="relative z-0">
                   <p className="font-extrabold text-text-primary text-[16px]">{pet.name}</p>
                   <p className="text-[13px] text-text-secondary">{pet.species} • {calcAge(pet.birth_date)}</p>
                 </div>
                 
-                <div className="flex gap-2 mt-2 pt-3 border-t border-border-main">
+                <div className="flex gap-2 mt-2 pt-3 border-t border-border-main relative z-20">
                    <div className="flex-1 flex flex-col">
                       <span className="text-[10px] font-black text-text-secondary uppercase tracking-widest flex items-center gap-1">🍽 Besleme</span>
-                      <span className="text-[13px] font-bold text-text-primary mt-0.5">{pet.lastFeedingDate}</span>
+                      {pet.lastFeedingDate === 'Veri Yok' ? (
+                        <Link href={`/owner/pets/${pet.id}/nutrition`} className="text-[12px] font-bold text-primary mt-0.5 hover:underline w-fit py-1">Ekle +</Link>
+                      ) : (
+                        <span className="text-[13px] font-bold text-text-primary mt-0.5">{pet.lastFeedingDate}</span>
+                      )}
                    </div>
                    <div className="flex-1 flex flex-col border-l border-border-main pl-3">
                       <span className="text-[10px] font-black text-text-secondary uppercase tracking-widest flex items-center gap-1">⚖️ Büyüme</span>
-                      <span className="text-[13px] font-bold text-text-primary mt-0.5">
-                        {pet.weightVal} {pet.heightVal ? ` • ${pet.heightVal}` : ''}
-                      </span>
+                      {pet.weightVal === 'Veri Yok' ? (
+                        <Link href={`/owner/pets/${pet.id}`} className="text-[12px] font-bold text-primary mt-0.5 hover:underline w-fit py-1">Ekle +</Link>
+                      ) : (
+                        <span className="text-[13px] font-bold text-text-primary mt-0.5">
+                          {pet.weightVal} {pet.heightVal ? ` • ${pet.heightVal}` : ''}
+                        </span>
+                      )}
                    </div>
                 </div>
 
-              </Link>
+              </div>
             ))}
             <Link href="/owner/pets/add"
               className="snap-start shrink-0 w-[200px] sm:w-[220px] p-5 flex flex-col items-center justify-center gap-3 rounded-[20px] border-2 border-dashed border-border-main hover:border-primary/40 hover:bg-primary-soft/30 transition-all cursor-pointer group">
@@ -240,7 +271,20 @@ export default async function OwnerDashboard() {
       )}
 
       {/* Vaccine OS Summary Card */}
-      {primaryPet && (vaccineOSSummary.nextVaccine || vaccineOSSummary.overdueCount > 0) && (
+      {primaryPet && !vaccineOSSummary.hasAnyRecord && (
+        <Link href={`/owner/pets/${primaryPet.id}/vaccines`} className="card-base p-5 flex items-center justify-between gap-4 border-l-4 border-l-primary hover:border-l-primary-hover group transition-all bg-gradient-to-r from-primary-soft/50 to-transparent">
+          <div className="flex items-center gap-4">
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-[22px] bg-primary/10">🎯</div>
+            <div>
+              <p className="font-extrabold text-text-primary text-[14px]">Sonraki adım: Aşı takvimini kur</p>
+              <p className="text-[12px] text-text-secondary mt-0.5">Akıllı hatırlatıcılar için işlemleri ekle</p>
+            </div>
+          </div>
+          <span className="text-primary font-bold text-[18px] group-hover:translate-x-1 transition-transform">→</span>
+        </Link>
+      )}
+
+      {primaryPet && vaccineOSSummary.hasAnyRecord && (vaccineOSSummary.nextVaccine || vaccineOSSummary.overdueCount > 0) && (
         <div className={`card-base p-5 flex items-center justify-between gap-4 border-l-4 ${vaccineOSSummary.overdueCount > 0 ? 'border-l-error' : 'border-l-primary'}`}>
           <div className="flex items-center gap-4">
             <div className={`w-11 h-11 rounded-2xl flex items-center justify-center text-[22px] ${vaccineOSSummary.overdueCount > 0 ? 'bg-error/10' : 'bg-primary/10'}`}>💉</div>

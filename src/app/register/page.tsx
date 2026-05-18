@@ -184,7 +184,7 @@ export default function RegisterPage() {
           <div className="flex items-start gap-3 mt-1 px-1">
             <input type="checkbox" required id="terms" className="mt-1 w-4 h-4 rounded border-border-main text-primary focus:ring-primary" />
             <label htmlFor="terms" className="text-[12px] text-text-secondary leading-snug">
-              <Link href="#" className="font-bold text-primary hover:underline">Kullanım Koşullarını</Link> ve <Link href="#" className="font-bold text-primary hover:underline">Gizlilik Politikası</Link>'nı okudum, onaylıyorum.
+              <Link href="/legal/terms" target="_blank" className="font-bold text-primary hover:underline">Kullanım Koşullarını</Link> ve <Link href="/legal/kvkk" target="_blank" className="font-bold text-primary hover:underline">Gizlilik Politikası</Link>'nı okudum, onaylıyorum.
             </label>
           </div>
 

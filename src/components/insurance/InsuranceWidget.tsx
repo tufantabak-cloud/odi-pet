@@ -45,6 +45,7 @@ export default function InsuranceWidget({ petId, plan }: { petId: string; plan: 
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [expanded, setExpanded] = useState(false)
+  const [showToast, setShowToast] = useState(false)
 
   async function load(force = false) {
     force ? setRefreshing(true) : setLoading(true)
@@ -187,12 +188,24 @@ export default function InsuranceWidget({ petId, plan }: { petId: string; plan: 
         )}
 
         {/* CTA */}
-        <button
-          className={`w-full py-3 rounded-xl font-bold text-[14px] transition-colors ${seg.ctaStyle}`}
-          onClick={() => trackEvent('insurance_cta_clicked', { petId, segment: data.segment })}
-        >
-          🛡️ {seg.cta}
-        </button>
+        <div className="relative">
+          <button
+            className={`w-full py-3 rounded-xl font-bold text-[14px] transition-colors ${seg.ctaStyle}`}
+            onClick={() => {
+              trackEvent('insurance_cta_clicked', { petId, segment: data.segment })
+              setShowToast(true)
+              setTimeout(() => setShowToast(false), 3000)
+            }}
+          >
+            🛡️ {seg.cta}
+          </button>
+          
+          {showToast && (
+            <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-[90%] bg-text-primary text-white text-[12px] font-bold py-2.5 px-3 rounded-lg text-center animate-in fade-in zoom-in duration-300 shadow-xl z-10 whitespace-nowrap">
+              Sizi bilgilendireceğiz! 🚀 Yakında...
+            </div>
+          )}
+        </div>
 
         {/* Meta */}
         <div className="flex items-center justify-between text-[10px] text-text-secondary">

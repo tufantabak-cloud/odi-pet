@@ -140,7 +140,7 @@ function LoginForm() {
               <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider" htmlFor="password">
                 Şifre
               </label>
-              <Link href="#" className="text-[12px] font-bold text-primary hover:text-primary-hover transition-colors">
+              <Link href="/reset-password" className="text-[12px] font-bold text-primary hover:text-primary-hover transition-colors">
                 Şifremi Unuttum
               </Link>
             </div>
