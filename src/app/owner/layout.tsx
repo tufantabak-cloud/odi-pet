@@ -15,11 +15,12 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
 
   const supabase = await createServerSupabaseClient()
 
-  const [{ count: petCount }, { data: onboardingData }, { count: unreadCount }] = await Promise.all([
+  const [{ data: pets }, { data: onboardingData }, { count: unreadCount }] = await Promise.all([
     supabase
       .from('pets')
-      .select('id', { count: 'exact', head: true })
-      .eq('owner_id', profile.id),
+      .select('id, name, vet_phone, vet_name, sos_contacts')
+      .eq('owner_id', profile.id)
+      .order('created_at', { ascending: false }),
     supabase
       .from('onboarding_progress')
       .select('wizard_completed')
@@ -32,7 +33,10 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
       .eq('is_read', false),
   ])
 
-  const showNav = (petCount ?? 0) > 0 && onboardingData?.wizard_completed === true
+  const petCount = pets?.length ?? 0
+  const primaryPet = pets && pets.length > 0 ? pets[0] : null
+
+  const showNav = petCount > 0 && onboardingData?.wizard_completed === true
 
   const initial = profile.first_name?.charAt(0)?.toUpperCase() ?? 'U'
 
@@ -56,7 +60,12 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
 
         <div className="flex items-center gap-3">
           {/* SOS Button */}
-          <FloatingSOS />
+          <FloatingSOS 
+            petId={primaryPet?.id}
+            vetPhone={primaryPet?.vet_phone}
+            vetName={primaryPet?.vet_name}
+            sosContacts={primaryPet?.sos_contacts}
+          />
           
           {/* Notifications */}
           <NotificationBell initialCount={unreadCount ?? 0} />
