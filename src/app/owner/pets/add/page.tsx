@@ -79,7 +79,7 @@ function PetForm({ species, onBack }: { species: Species; onBack: () => void }) 
   const [selectedBreed, setSelectedBreed] = useState('')
   const [gender, setGender] = useState<'male' | 'female' | ''>('')
 
-  const [yearOnly, setYearOnly] = useState(false)
+  const [yearOnly, setYearOnly] = useState(true)
   const [birthDate, setBirthDate] = useState('')
 
   const currentYear = new Date().getFullYear()
@@ -170,7 +170,7 @@ function PetForm({ species, onBack }: { species: Species; onBack: () => void }) 
             <label htmlFor="breed" className="text-[13px] font-bold text-text-primary">Irk *</label>
             <div className="relative">
               <select id="breed" value={selectedBreed} onChange={e => setSelectedBreed(e.target.value)} className="input-base w-full appearance-none cursor-pointer" required>
-                <option value="" disabled>Irk seçin</option>
+                <option value="" disabled>Yazmaya başlayın veya seçin</option>
                 {breeds.map(b => <option key={b} value={b}>{b}</option>)}
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-text-secondary">
@@ -205,10 +205,10 @@ function PetForm({ species, onBack }: { species: Species; onBack: () => void }) 
                   setBirthDate('')
                 }}
                 className={`text-[11px] font-bold px-3 py-1 rounded-full border transition-all ${
-                  yearOnly ? 'bg-primary text-white border-primary' : 'bg-surface border-border-main text-text-secondary hover:border-primary/40'
+                  !yearOnly ? 'bg-primary text-white border-primary' : 'bg-surface border-border-main text-text-secondary hover:border-primary/40'
                 }`}
               >
-                {yearOnly ? '✓ Sadece Yıl' : 'Sadece Yıl Gir'}
+                {!yearOnly ? 'Sadece Yıl Gir' : 'Tam Tarih Gir'}
               </button>
             </div>
 

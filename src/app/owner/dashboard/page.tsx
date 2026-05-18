@@ -67,8 +67,9 @@ export default async function OwnerDashboard() {
       .order('due_at', { ascending: true })
       .limit(10)
     if (vRecords) {
-      const overdue = vRecords.filter(r => r.status === 'overdue')
-      const next = vRecords.find(r => r.status === 'due' || r.status === 'scheduled')
+      const nowISO = new Date().toISOString();
+      const overdue = vRecords.filter(r => r.status === 'overdue' || (r.status === 'scheduled' && r.due_at && r.due_at < nowISO))
+      const next = vRecords.find(r => (r.status === 'due' || r.status === 'scheduled') && !(r.status === 'scheduled' && r.due_at && r.due_at < nowISO))
       vaccineOSSummary = {
         nextVaccine: next?.vaccine_name ?? null,
         nextDate: next?.due_at ? new Date(next.due_at).toLocaleDateString('tr-TR') : null,
@@ -113,20 +114,29 @@ export default async function OwnerDashboard() {
     }
 
     // Check overdue vaccines
+    const nowISO = new Date().toISOString();
     const { data: overdueRecords } = await supabase
       .from('vaccine_records_v2')
-      .select('id')
+      .select('id, status, due_at')
       .eq('pet_id', pet.id)
-      .eq('status', 'overdue');
-    const overdueCount = overdueRecords?.length || 0;
+      .in('status', ['overdue', 'scheduled']);
+    
+    const overdueCountV2 = overdueRecords?.filter(r => 
+      r.status === 'overdue' || (r.status === 'scheduled' && r.due_at && r.due_at < nowISO)
+    ).length || 0;
 
-    // Check if has any health data
-    const { data: anyVaccine } = await supabase
+    const overdueSchedulesCount = upcomingSchedules.filter(s => s.pet_id === pet.id && new Date(s.due_date) < new Date()).length;
+    
+    const overdueCount = overdueCountV2 + overdueSchedulesCount;
+
+    // Check if has any health data (explicit user input: completed vaccines, or weight/feeding logs)
+    const { data: anyCompletedVaccine } = await supabase
       .from('vaccine_records_v2')
       .select('id')
       .eq('pet_id', pet.id)
+      .eq('status', 'completed')
       .limit(1);
-    const hasData = (anyVaccine && anyVaccine.length > 0) || !!feeding || !!weight;
+    const hasData = (anyCompletedVaccine && anyCompletedVaccine.length > 0) || !!feeding || !!weight;
 
     return { ...pet, lastFeedingDate, weightVal, heightVal, overdueCount, hasData };
   }));

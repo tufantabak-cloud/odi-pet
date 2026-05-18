@@ -2261,8 +2261,8 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
               </p>
             </div>
           </div>
-          <button onClick={() => alert('Gelecek Sprint: Dijital Kimlik/Mikroçip kayıt modalı açılacak.')} className="btn-primary py-3 text-[14px] mt-1 relative z-10 shadow-sm self-start px-6">
-            Kimlik Bilgilerini Ekle →
+          <button disabled className="btn-primary py-3 text-[14px] mt-1 relative z-10 shadow-sm self-start px-6 opacity-70 cursor-not-allowed">
+            Bu özellik çok yakında aktif olacak ✨
           </button>
         </div>
       )}

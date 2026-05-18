@@ -3,7 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { logout } from '@/features/auth/actions'
 import PetCardActions from './PetCardActions'
-
+import NotificationSettings from './NotificationSettings'
 export default async function ProfileMenuPage() {
   const profile = await getCurrentProfile()
   const user = await getSessionUser()
@@ -183,30 +183,7 @@ export default async function ProfileMenuPage() {
 
 
       {/* 4. Notification Intelligence Center */}
-      <section className="flex flex-col gap-3">
-        <h2 className="text-[12px] font-black text-text-secondary uppercase tracking-widest px-2">Akıllı Bildirimler</h2>
-        <div className="card-base divide-y divide-border-main">
-          {[
-            { id: 'vaccine', label: 'Aşı ve Parazit Hatırlatmaları', desc: 'Gecikmeden hemen önce haber ver', active: true },
-            { id: 'nutrition', label: 'Beslenme Uyarıları', desc: 'Mama stoğu azaldığında uyar', active: true },
-            { id: 'payment', label: 'Ödeme ve Abonelik', desc: 'Fatura ve yenileme dönemi', active: false },
-          ].map(setting => (
-            <div key={setting.id} className="p-5 flex justify-between items-center group hover:bg-bg-main/30 transition-colors">
-              <div>
-                <p className="text-[15px] font-bold text-text-primary">{setting.label}</p>
-                <p className="text-[13px] text-text-secondary">{setting.desc}</p>
-              </div>
-              <div className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors ${setting.active ? 'bg-primary' : 'bg-gray-300'}`}>
-                <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${setting.active ? 'translate-x-6' : 'translate-x-0'}`}/>
-              </div>
-            </div>
-          ))}
-          <div className="p-4 bg-bg-main/50 flex justify-between items-center text-[13px] font-semibold">
-            <span className="text-text-secondary">Bildirim Sıklığı: <span className="text-primary cursor-pointer">Anlık (Instant)</span></span>
-            <span className="text-text-secondary">Kanal: <span className="text-primary cursor-pointer">Push & Email</span></span>
-          </div>
-        </div>
-      </section>
+      <NotificationSettings />
 
       {/* 6. Billing History */}
       <section className="flex flex-col gap-3">
@@ -307,11 +284,11 @@ export default async function ProfileMenuPage() {
         </form>
         
         <div className="flex items-center gap-4 text-[11px] font-bold text-text-secondary uppercase tracking-widest">
-          <Link href="#" className="hover:text-primary transition-colors">Kullanım Koşulları</Link>
+          <Link href="/legal/terms" className="hover:text-primary transition-colors">Kullanım Koşulları</Link>
           <span>•</span>
-          <Link href="#" className="hover:text-primary transition-colors">Gizlilik (KVKK)</Link>
+          <Link href="/legal/kvkk" className="hover:text-primary transition-colors">Gizlilik (KVKK)</Link>
           <span>•</span>
-          <Link href="#" className="hover:text-primary transition-colors">Lisanslar</Link>
+          <Link href="/legal/kvkk" className="hover:text-primary transition-colors">Lisanslar</Link>
         </div>
       </div>
 

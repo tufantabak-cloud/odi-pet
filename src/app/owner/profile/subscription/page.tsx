@@ -1,7 +1,7 @@
 import { getCurrentProfile } from '@/lib/auth/get-current-profile'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-
+import UpgradeButton from './UpgradeButton'
 const PLAN_FEATURES = {
   free: {
     name: 'Odi Free',
@@ -120,15 +120,11 @@ export default async function SubscriptionPage() {
 
             <div className="flex flex-col gap-2">
               {currentPlan === 'free' && (
-                <button className="btn-primary text-[14px] py-3 px-6 whitespace-nowrap">
-                  Pro'ya Yükselt →
-                </button>
+                <UpgradeButton plan="pro" className="btn-primary text-[14px] py-3 px-6 whitespace-nowrap" />
               )}
               {currentPlan === 'pro' && (
                 <>
-                  <button className="btn-primary text-[14px] py-3 px-6 whitespace-nowrap bg-amber-500 hover:bg-amber-600 border-amber-500 hover:border-amber-600">
-                    AI+'ya Yükselt →
-                  </button>
+                  <UpgradeButton plan="ai_plus" className="btn-primary text-[14px] py-3 px-6 whitespace-nowrap bg-amber-500 hover:bg-amber-600 border-amber-500 hover:border-amber-600" />
                   <button className="btn-secondary text-[13px] py-2 px-6">Planı Değiştir</button>
                 </>
               )}
@@ -279,9 +275,7 @@ export default async function SubscriptionPage() {
                   </li>
                 ))}
               </ul>
-              <button className="btn-primary w-full py-3.5 text-[15px] font-bold">
-                Hemen Başla — ₺149/ay
-              </button>
+              <UpgradeButton plan="pro" label="Çok Yakında — Bildirim Al" className="btn-primary w-full py-3.5 text-[15px] font-bold" />
               <p className="text-center text-[11px] text-text-secondary mt-3">İstediğin zaman iptal edebilirsin • Gizli ücret yok</p>
             </div>
           </div>

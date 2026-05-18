@@ -18,6 +18,7 @@ export default function HealthClient({ petId }: { petId: string }) {
   const [modalMode, setModalMode] = useState<'record' | 'plan'>('record')
   const [formType, setFormType] = useState('vaccine')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
   const [repeatMode, setRepeatMode] = useState<'custom' | 'infinite'>('custom')
   const [customRepeatCount, setCustomRepeatCount] = useState<number>(2)
   
@@ -113,6 +114,7 @@ export default function HealthClient({ petId }: { petId: string }) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
+    setFormError(null)
     const fd = new FormData(e.currentTarget)
     
     try {
@@ -260,14 +262,12 @@ export default function HealthClient({ petId }: { petId: string }) {
       setPreselectedVaccineId(null)
       setFormVaccineId('')
       setFormNextDueDate('')
+      setFormError(null)
       await fetchData()
       router.refresh()
     } catch (err: any) {
       console.error('Kayıt Hatası Detayı:', err)
-      const msg = err.message || JSON.stringify(err)
-      const code = err.code || 'NO_CODE'
-      const details = err.details || 'NO_DETAILS'
-      alert(`Kayıt sırasında bir hata oluştu:\nMesaj: ${msg}\nKod: ${code}\nDetay: ${details}`)
+      setFormError('Kayıt sırasında bir sorun oluştu. Lütfen tekrar deneyin.')
     } finally {
       setIsSubmitting(false)
     }
@@ -802,6 +802,12 @@ export default function HealthClient({ petId }: { petId: string }) {
             </div>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              {formError && (
+                <div className="bg-error/10 border border-error/20 rounded-xl p-3 flex items-start gap-2">
+                  <span className="text-[16px] text-error">🚨</span>
+                  <p className="text-[13px] font-bold text-error mt-0.5">{formError}</p>
+                </div>
+              )}
               {/* MODE SWITCHER */}
               {!selectedSchedule && (
                 <div className="flex bg-bg-main p-1 rounded-xl mb-2">

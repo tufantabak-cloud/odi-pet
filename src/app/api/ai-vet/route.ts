@@ -37,25 +37,10 @@ function parseScoreLine(text: string): { score: number; severity: string; cleanT
   return { score, severity, cleanText }
 }
 
-function heuristicFallback(symptomStr: string) {
-  const critical = ['kan', 'kriz', 'nöbet', 'bayıl', 'soluk alma', 'nefes', 'bilinç', 'titreme', 'felç']
-  const medium = ['kusma', 'ateş', 'ishal', 'iştahsız', 'halsiz', 'şişlik', 'yara', 'akıntı', 'limp', 'topall']
-
-  if (critical.some(w => symptomStr.includes(w))) {
-    return {
-      score: 90, severity: 'critical',
-      text: '🚨 Tarif ettiğiniz belirtiler ciddi bir acil duruma işaret edebilir. Lütfen vakit kaybetmeden bir acil veteriner kliniğine başvurun. Bu belirtiler (özellikle bilinç kaybı, nöbet veya nefes güçlüğü), hayatı tehdit eden durumların işareti olabilir.',
-    }
-  }
-  if (medium.some(w => symptomStr.includes(w))) {
-    return {
-      score: 50, severity: 'medium',
-      text: '⚠️ Belirttiğiniz semptomlar dikkat gerektiriyor. Kusma, ateş veya iştahsızlık gibi belirtiler çeşitli nedenlere bağlı olabilir — enfeksiyon, sindirim sorunu veya stres bunların başında gelir. 24 saat içinde bir veterinere götürmenizi öneririm.',
-    }
-  }
+function heuristicFallback(_symptomStr?: string) {
   return {
-    score: 10, severity: 'low',
-    text: '✅ Şu an aktardığınız belirtiler düşük riskli görünüyor. Yine de evcil dostunuzu yakından gözlemlemeye devam edin. Belirtiler kötüleşirse veya 48 saat içinde geçmezse bir veterinere başvurmanız önerilir.',
+    score: 50, severity: 'medium',
+    text: 'Sistemlerimizde şu an geçici bir yoğunluk yaşanıyor, lütfen birazdan tekrar deneyin. Eğer evcil dostunuzun durumu acilse, vakit kaybetmeden en yakın veteriner kliniğine başvurmanızı önemle tavsiye ederiz.',
   }
 }
 
@@ -71,14 +56,17 @@ export async function POST(req: NextRequest) {
     systemInstruction += `- İsim: ${petContext.name}\n`
     systemInstruction += `- Tür/Irk: ${petContext.species} / ${petContext.breed || 'Bilinmiyor'}\n`
     if (petContext.gender) systemInstruction += `- Cinsiyet: ${petContext.gender}\n`
-    if (petContext.birth_date) systemInstruction += `- Doğum Tarihi: ${petContext.birth_date}\n`
+    if (petContext.birth_date) {
+      const ageYears = Math.floor((new Date().getTime() - new Date(petContext.birth_date).getTime()) / (1000 * 60 * 60 * 24 * 365.25))
+      systemInstruction += `- Doğum Tarihi: ${petContext.birth_date} (Yaklaşık ${ageYears} yaşında)\n`
+    }
     if (petContext.vaccines && petContext.vaccines.length > 0) {
       systemInstruction += `- Son Aşılar: ${petContext.vaccines.join(', ')}\n`
     }
     if (petContext.diseases && petContext.diseases.length > 0) {
       systemInstruction += `- Bilinen Hastalıklar: ${petContext.diseases.join(', ')}\n`
     }
-    systemInstruction += `\nLütfen tavsiyelerini bu bilgilere (tür, yaş, ırk, hastalık geçmişi) göre uyarla ve kişiselleştir.`
+    systemInstruction += `\nÖNEMLİ: Lütfen tavsiyelerini bu bilgilere göre uyarla. Kullanıcıya güven vermek için yanıtının hemen başında ${petContext.name}'in profiline (ırkı, yaşı, aşıları vb.) hakim olduğunu açıkça hissettiren sıcak bir giriş yap.`
   }
 
   const apiKey = process.env.GEMINI_API_KEY

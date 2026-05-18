@@ -62,10 +62,17 @@ export default function ReportsTab({ petId, petName, plan }: { petId: string; pe
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ report_type: selectedType, date_range: dateRange }),
       })
-      const data = await res.json()
+      
+      let data;
+      try {
+        data = await res.json()
+      } catch (e) {
+        throw new Error('Sunucudan geçersiz bir yanıt alındı. Lütfen tekrar deneyin.')
+      }
+      
       if (!res.ok) {
-        setError(data.error)
-        if (data.requiresUpgrade) setError(data.error + ' → ' + (plan === 'free' ? 'Pro' : 'AI+') + ' gerekli')
+        setError(data?.error || 'Rapor oluşturulamadı.')
+        if (data?.requiresUpgrade) setError((data?.error || 'Yükseltme gerekli') + ' → ' + (plan === 'free' ? 'Pro' : 'AI+') + ' gerekli')
         return
       }
       setReport(data)
@@ -78,6 +85,8 @@ export default function ReportsTab({ petId, petName, plan }: { petId: string; pe
           body: JSON.stringify({ has_generated_report: true, first_report_at: new Date().toISOString() }),
         }),
       ])
+    } catch (err: any) {
+      setError(err.message || 'Beklenmeyen bir hata oluştu.')
     } finally { setGenerating(false) }
   }
 

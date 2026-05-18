@@ -251,7 +251,7 @@ export default function AIVetPage() {
                     {msg.poweredBy === 'heuristic' && (
                       <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl flex flex-col gap-2">
                         <p className="text-[11px] font-medium text-amber-800 leading-snug">
-                          <span className="font-bold">⚠️ Sistem Yoğunluğu:</span> Şu an AI sunucularımızda aşırı yoğunluk yaşanıyor. Güvenliğiniz için standart tıbbi triaj kurallarına göre genel analiz sunulmuştur.
+                          <span className="font-bold">⚠️ Sistem Yoğunluğu:</span> Şu an AI sunucularımızda aşırı yoğunluk yaşanıyor. Bu yüzden size yapay zeka ile kişiselleştirilmiş bir yanıt veremedik. Lütfen sorunuzu birazdan tekrar gönderin.
                         </p>
                         <button 
                           onClick={() => {

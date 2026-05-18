@@ -12,65 +12,43 @@ function SuccessContent() {
   const species = params.get('species') ?? ''
 
   if (!petId) {
-    // Geçersiz erişim → forma dön
     router.replace('/owner/pets/add')
     return null
   }
 
   return (
-    <div className="card-base p-8 flex flex-col items-center gap-6 animate-fadeInUp mt-10">
+    <div className="card-base p-8 sm:p-10 flex flex-col items-center gap-6 animate-fadeInUp mt-10 max-w-md mx-auto border border-primary/10">
       {/* Başarı ikonu */}
-      <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center text-[32px] text-success shadow-inner">
-        ✓
+      <div className="w-20 h-20 rounded-full bg-primary-soft text-primary flex items-center justify-center text-[40px] shadow-inner animate-bounce">
+        🎉
       </div>
 
       <div className="text-center">
-        <h1 className="text-[26px] font-extrabold text-text-primary mb-2">
-          Aramıza Hoş Geldin, {petName}! 🎉
+        <h1 className="text-[26px] font-black text-text-primary mb-2 leading-tight">
+          Aramıza Hoş Geldin, {petName}!
         </h1>
-        <p className="text-[14px] text-text-secondary">
-          {species ? `${species.toLowerCase()}inizin` : 'Dostunuzun'} temel profili başarıyla oluşturuldu.
+        <p className="text-[14px] text-text-secondary leading-relaxed px-2">
+          {species ? `${species.toLowerCase()}inizin` : 'Dostunuzun'} temel profili başarıyla oluşturuldu. Şimdi onu güvende tutmak için ilk önemli adımı atalım!
         </p>
       </div>
 
-      <p className="text-[13px] font-bold text-text-secondary uppercase tracking-widest mt-4">
-        İlk Kurulum Adımı
-      </p>
-
-      <div className="flex flex-col w-full gap-3">
-        {/* Fork 1: Aşı */}
+      <div className="flex flex-col w-full gap-3 mt-4">
+        {/* Tek bir ana CTA: Aşı Takvimi */}
         <button
           id="btn-setup-vaccines"
           onClick={() => router.push(`/owner/pets/${petId}/vaccines`)}
-          className="flex items-center gap-4 p-4 rounded-xl border-2 border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors text-left group"
+          className="btn-primary w-full py-4 text-[15px] font-black shadow-xl shadow-primary/20 flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-transform"
         >
-          <span className="text-[28px] group-hover:scale-110 transition-transform">💉</span>
-          <div>
-            <p className="font-extrabold text-primary text-[15px]">Aşı OS Kurulumu</p>
-            <p className="text-[12px] text-text-secondary mt-0.5">Geçmiş aşıları aktarın veya takvim oluşturun.</p>
-          </div>
+          💉 Aşı Takvimini Kur (Önerilen) →
         </button>
 
-        {/* Fork 2: Beslenme */}
-        <button
-          id="btn-setup-nutrition"
-          onClick={() => router.push(`/owner/pets/${petId}/nutrition`)}
-          className="flex items-center gap-4 p-4 rounded-xl border-2 border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10 transition-colors text-left group"
-        >
-          <span className="text-[28px] group-hover:scale-110 transition-transform">🍗</span>
-          <div>
-            <p className="font-extrabold text-blue-600 text-[15px]">Beslenme Planı</p>
-            <p className="text-[12px] text-text-secondary mt-0.5">Öğün ve mama takibi için günlük plan oluşturun.</p>
-          </div>
-        </button>
-
-        {/* Şimdi değil */}
+        {/* Daha Sonra butonu */}
         <button
           id="btn-goto-profile"
           onClick={() => router.push(`/owner/pets/${petId}`)}
-          className="btn-secondary w-full py-4 text-[14px] mt-2 font-bold"
+          className="btn-secondary w-full py-3.5 text-[14px] font-bold text-text-secondary hover:text-text-primary transition-all rounded-[14px]"
         >
-          Şimdi Değil, Profile Git →
+          Şimdi Değil, Profile Git
         </button>
       </div>
     </div>
@@ -79,7 +57,7 @@ function SuccessContent() {
 
 export default function PetAddSuccessPage() {
   return (
-    <Suspense>
+    <Suspense fallback={null}>
       <SuccessContent />
     </Suspense>
   )

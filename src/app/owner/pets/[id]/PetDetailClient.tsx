@@ -488,29 +488,11 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
       {activeTab === 'Belgeler' && (
         <div className="flex flex-col gap-4">
           <div className="card-base p-8 flex flex-col items-center text-center">
-            <div className="w-16 h-16 bg-gradient-to-tr from-blue-100 to-cyan-50 rounded-[20px] flex items-center justify-center text-[32px] mb-4 shadow-sm">📁</div>
-            <h3 className="font-extrabold text-text-primary text-[18px] mb-2">Dijital Belge Kasası</h3>
-            <p className="text-[14px] text-text-secondary mb-6 leading-relaxed max-w-[280px]">
-              Pasaport, aşı karnesi, lab sonuçları ve faturaları güvenle buluta yükleyin. Acil bir durumda dünyanın her yerinden anında erişin.
+            <div className="w-16 h-16 bg-gradient-to-tr from-blue-100 to-cyan-50 rounded-[20px] flex items-center justify-center text-[32px] mb-4 shadow-sm">🚧</div>
+            <h3 className="font-extrabold text-text-primary text-[18px] mb-2">Çok Yakında</h3>
+            <p className="text-[14px] text-text-secondary leading-relaxed max-w-[280px]">
+              Dijital belge kasası modülümüz (Pasaport, aşı karnesi, lab sonuçları yükleme) çok yakında aktif olacak.
             </p>
-            <div className="grid grid-cols-2 gap-3 w-full max-w-[400px] mb-4">
-              {['Pasaport', 'Aşı Kartı', 'Lab Sonuçları', 'Reçeteler'].map(doc => (
-                <label key={doc} className="border border-border-main bg-bg-main rounded-xl p-3 flex flex-col items-center gap-1 cursor-pointer hover:border-primary hover:bg-primary-soft transition-all">
-                  <input type="file" className="hidden" accept="image/*,.pdf" onChange={(e) => {
-                    if (e.target.files?.length) {
-                      alert(`${doc} belgesi seçildi: ${e.target.files[0].name}\n(Sistem notu: Supabase Storage modülü bağlandığında dosyalar buluta aktarılacaktır.)`)
-                    }
-                  }} />
-                  <span className="text-[20px] mb-1">📄</span>
-                  <p className="text-[11px] font-bold text-text-primary text-center">{doc}</p>
-                </label>
-              ))}
-            </div>
-            
-            <button onClick={() => window.print()} className="btn-secondary w-full max-w-[400px] py-2.5 text-[13px] flex items-center justify-center gap-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3"/></svg>
-              PDF Sağlık Raporu Çıkar
-            </button>
           </div>
         </div>
       )}
