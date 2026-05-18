@@ -2344,7 +2344,15 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
 
       {/* Next due banner - Hidden in Tab mode */}
       {!isTab && nextDue && (
-        <div className="card-base p-4 flex items-center justify-between gap-3 border-l-4 border-l-primary">
+        <div className="card-base p-4 flex items-center justify-between gap-3 border-l-4 border-l-primary relative">
+          <CoachMark
+            hintKey="vaccine_next_due_onboard"
+            title="Aşı Kaydı Nasıl Yapılır?"
+            message="Dostunun aşısı yapıldığında, buradaki 'Yapıldı ✓' butonuna tıklayarak veya aşağıdaki takvim matrisinden aşı hücresine tıklayarak aşıyı kolayca kaydedebilirsin."
+            icon="💡"
+            position="bottom"
+            condition={completedCount === 0}
+          />
           <div className="flex items-center gap-3">
             <span className="text-[22px]">💉</span>
             <div>
@@ -2373,7 +2381,7 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
                 message="Evcil hayvanının aşı defterini fotoğrafla — sistem etiketleri otomatik tanır ve takvime işler. Veteriner kodlarını bilmene gerek yok!"
                 icon="📸"
                 position="top"
-                condition={vaccineRecords.length === 0}
+                condition={completedCount === 0}
               />
               <ProtocolTable 
                 pet={pet} 
