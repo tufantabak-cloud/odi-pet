@@ -113,6 +113,23 @@ export async function generateSchedule(petId: string, mode: 'smart_start' | 'his
     }
 
     // 2. DEFAULT LOGIC (Smart Start / Historical Import)
+    
+    // Smart Start modunda parazitler için özel koşul ekle
+    if (mode === 'smart_start' && t.category === 'parasite') {
+      records.push({
+        pet_id: petId,
+        template_id: t.id,
+        vaccine_code: t.vaccine_code,
+        vaccine_name: t.vaccine_name,
+        dose_number: 1,
+        status: 'scheduled',
+        due_at: now.toISOString(),
+        source: 'system_generated',
+        confidence_level: 'estimated'
+      })
+      continue // birth_date bazlı hesaplama yapma
+    }
+
     // Calculate first dose date
     let firstDoseDate: Date
     if (birthDate) {
@@ -443,7 +460,6 @@ export async function addManualVaccine(petId: string, data: {
       .eq('pet_id', petId)
       .eq('vaccine_code', resolvedCode)
       .in('status', ['overdue', 'due', 'scheduled'])
-      .lte('due_at', data.administered_at!) // only past-due stale records
   }
 
   const { data: insertedRecord, error: insertError } = await supabase.from('vaccine_records_v2').insert({

@@ -1650,7 +1650,19 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNe
         if (r.vaccine_code === tmpl.vaccine_code) return true
         // MANUAL or missing code — match by name similarity
         if (!r.vaccine_code || r.vaccine_code === 'MANUAL') {
-          const rName = r.vaccine_name.toLowerCase()
+          const rName = r.vaccine_name.toLocaleLowerCase('tr-TR')
+          const tName = tmpl.vaccine_name.toLocaleLowerCase('tr-TR')
+          const aliases = (COMMON_ALIASES[tmpl.vaccine_code] || []).map(a => a.toLocaleLowerCase('tr-TR'));
+          
+          if (rName.includes(tName) || tName.includes(rName)) return true;
+          if (aliases.some(a => rName.includes(a) || a.includes(rName))) return true;
+
+          // Parazit spesifik kelime eşleşmesi
+          if (rName.includes('parazit') && tName.includes('parazit')) {
+             if (rName.includes('iç') && tName.includes('iç')) return true;
+             if (rName.includes('dış') && tName.includes('dış')) return true;
+          }
+
           return rName.includes(tmplNameLower) ||
                  rName.includes(tmplCodeLower) ||
                  tmplNameLower.split(' ').some((part: string) => part.length > 3 && rName.includes(part)) ||
@@ -1679,9 +1691,7 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNe
       nextDateStr = d.toISOString();
     }
     if (!nextDateStr && !lastCompleted && !nextPending) {
-      const bd = pet.birth_date ? new Date(pet.birth_date) : new Date();
-      bd.setDate(bd.getDate() + (tmpl.first_dose_week || 6) * 7);
-      nextDateStr = bd.toISOString();
+      nextDateStr = new Date().toISOString();
     }
     cells.push(getCellState(nextPending, nextDateStr));
 
