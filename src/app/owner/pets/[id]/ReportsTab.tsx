@@ -44,7 +44,7 @@ const DATE_RANGES = [
   { value: 'all_time', label: 'Tüm Geçmiş' },
 ]
 
-export default function ReportsTab({ petId, petName, plan }: { petId: string; petName: string; plan: string }) {
+export default function ReportsTab({ petId, petName, plan, payments }: { petId: string; petName: string; plan: string; payments: any[] }) {
   const [selectedType, setSelectedType] = useState('summary')
   const [dateRange, setDateRange] = useState('last_12_months')
   const [generating, setGenerating] = useState(false)
@@ -108,6 +108,41 @@ export default function ReportsTab({ petId, petName, plan }: { petId: string; pe
 
   return (
     <div className="flex flex-col gap-5">
+
+      {/* ── Harcama Özeti ── */}
+      <div className="card-base p-5">
+        <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest mb-4">💰 Harcama Özeti</h3>
+        {payments && payments.length > 0 ? (
+          <div className="flex flex-col gap-3">
+            {/* Toplam */}
+            <div className="flex items-center justify-between p-4 bg-primary-soft rounded-xl border border-primary/20">
+              <span className="text-[13px] font-black text-text-primary uppercase tracking-wide">Toplam Harcama</span>
+              <span className="text-[22px] font-black text-primary">
+                ₺{payments.reduce((sum: number, p: any) => sum + (parseFloat(p.amount) || 0), 0).toFixed(2)}
+              </span>
+            </div>
+            {/* Kalemler */}
+            <div className="flex flex-col divide-y divide-border-main">
+              {payments.map((p: any) => (
+                <div key={p.id} className="flex justify-between items-center py-2.5">
+                  <div>
+                    <p className="text-[13px] font-semibold text-text-primary">{p.description || 'Ödeme'}</p>
+                    {p.paid_at && (
+                      <p className="text-[11px] text-text-secondary">{new Date(p.paid_at).toLocaleDateString('tr-TR')}</p>
+                    )}
+                  </div>
+                  <span className="text-[14px] font-bold text-text-primary">₺{parseFloat(p.amount || 0).toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-6 text-text-secondary text-[13px]">
+            <p className="text-[32px] mb-2">📭</p>
+            <p>Henüz kayıtlı harcama bulunmuyor.</p>
+          </div>
+        )}
+      </div>
 
       {/* Report type selector */}
       <div className="flex flex-col gap-3">

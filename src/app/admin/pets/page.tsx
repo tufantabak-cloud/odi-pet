@@ -47,7 +47,7 @@ export default async function AdminPetsPage() {
                 <tr key={pet.id} className="hover:bg-bg-main/50 transition-colors">
                   <td className="p-4">
                     <div className="font-semibold text-text-primary flex items-center gap-2">
-                      {pet.species?.toLowerCase() === 'cat' ? '🐱' : '🐶'} {pet.name || 'Unnamed'}
+                      {pet.species?.toLowerCase() === 'cat' || pet.species?.toLowerCase() === 'kedi' ? '🐱' : '🐶'} {pet.name || 'Unnamed'}
                     </div>
                     <div className="text-[11px] text-text-secondary font-mono mt-0.5">{pet.id}</div>
                   </td>
@@ -69,9 +69,22 @@ export default async function AdminPetsPage() {
                     {new Date(pet.created_at).toLocaleDateString()}
                   </td>
                   <td className="p-4 text-right">
-                    <button className="text-primary font-semibold hover:underline">
-                      View
-                    </button>
+                    <div className="flex items-center justify-end gap-2">
+                      {pet.owner_id && (
+                        <Link 
+                          href={`/admin/users/${pet.owner_id}`}
+                          className="text-[12px] font-bold text-primary bg-primary-soft hover:bg-primary-soft/80 px-2.5 py-1.5 rounded-xl transition-all"
+                        >
+                          Owner Profile
+                        </Link>
+                      )}
+                      <Link 
+                        href={`/owner/pets/${pet.id}`}
+                        className="text-[12px] font-bold text-text-primary bg-bg-main hover:bg-border-main/50 px-2.5 py-1.5 rounded-xl border border-border-main transition-all"
+                      >
+                        Pet Details
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))}

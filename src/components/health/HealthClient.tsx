@@ -19,6 +19,7 @@ export default function HealthClient({ petId }: { petId: string }) {
   const [formType, setFormType] = useState('vaccine')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [globalError, setGlobalError] = useState<string | null>(null)
   const [repeatMode, setRepeatMode] = useState<'custom' | 'infinite'>('custom')
   const [customRepeatCount, setCustomRepeatCount] = useState<number>(2)
   
@@ -46,34 +47,48 @@ export default function HealthClient({ petId }: { petId: string }) {
 
   const fetchData = async () => {
     setLoading(true)
-    const [hsRes, vrRes, dRes, aRes, mRes, pRes, vListRes, petRes] = await Promise.all([
-      supabase.from('health_schedules').select('*, vaccines(name)').eq('pet_id', petId).order('due_date', { ascending: true }),
-      supabase.from('vaccine_records').select('*, vaccines(name)').eq('pet_id', petId).order('applied_date', { ascending: false }),
-      supabase.from('health_diseases').select('*').eq('pet_id', petId).order('diagnosis_date', { ascending: true }),
-      supabase.from('health_allergies').select('*').eq('pet_id', petId),
-      supabase.from('health_medications').select('*').eq('pet_id', petId),
-      supabase.from('payments').select('*').eq('pet_id', petId).order('payment_date', { ascending: false }),
-      supabase.from('vaccines').select('*'),
-      supabase.from('pets').select('species, vet_name, birth_date').eq('id', petId).single()
-    ])
-    
-    setData({
-      health_schedules: hsRes.data || [],
-      vaccine_records: vrRes.data || [],
-      diseases: dRes.data || [],
-      allergies: aRes.data || [],
-      medications: mRes.data || [],
-      payments: pRes.data || []
-    })
-    
-    // Sadece bu evcil hayvanın türüne ait aşıları listele
-    const pData = petRes.data;
-    console.log('Pet Data Fetch Result:', pData); // Hata ayıklama için
-    setPetData(pData);
-    const filteredVaccines = (vListRes.data || []).filter(v => v.species === pData?.species);
-    setVaccinesList(filteredVaccines)
-    
-    setLoading(false)
+    try {
+      const [hsRes, vrRes, dRes, aRes, mRes, pRes, vListRes, petRes] = await Promise.all([
+        supabase.from('health_schedules').select('*, vaccines(name)').eq('pet_id', petId).order('due_date', { ascending: true }),
+        supabase.from('vaccine_records').select('*, vaccines(name)').eq('pet_id', petId).order('applied_date', { ascending: false }),
+        supabase.from('health_diseases').select('*').eq('pet_id', petId).order('diagnosis_date', { ascending: true }),
+        supabase.from('health_allergies').select('*').eq('pet_id', petId),
+        supabase.from('health_medications').select('*').eq('pet_id', petId),
+        supabase.from('payments').select('*').eq('pet_id', petId).order('payment_date', { ascending: false }),
+        supabase.from('vaccines').select('*'),
+        supabase.from('pets').select('species, vet_name, birth_date').eq('id', petId).single()
+      ])
+      
+      if (hsRes.error) throw hsRes.error
+      if (vrRes.error) throw vrRes.error
+      if (dRes.error) throw dRes.error
+      if (aRes.error) throw aRes.error
+      if (mRes.error) throw mRes.error
+      if (pRes.error) throw pRes.error
+      if (vListRes.error) throw vListRes.error
+      if (petRes.error) throw petRes.error
+
+      setData({
+        health_schedules: hsRes.data || [],
+        vaccine_records: vrRes.data || [],
+        diseases: dRes.data || [],
+        allergies: aRes.data || [],
+        medications: mRes.data || [],
+        payments: pRes.data || []
+      })
+      
+      // Sadece bu evcil hayvanın türüne ait aşıları listele
+      const pData = petRes.data;
+      console.log('Pet Data Fetch Result:', pData); // Hata ayıklama için
+      setPetData(pData);
+      const filteredVaccines = (vListRes.data || []).filter(v => v.species === pData?.species);
+      setVaccinesList(filteredVaccines)
+    } catch (err: any) {
+      console.error('Veri yükleme hatası:', err)
+      setGlobalError('Bilgileriniz yüklenirken bir sorun oluştu. Lütfen sayfayı yenileyin.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -147,6 +162,7 @@ export default function HealthClient({ petId }: { petId: string }) {
           dose_count: finalRepeatCount
         }).select('id').single();
         
+        if (planRes.error) throw planRes.error;
         const planId = planRes.data?.id;
 
         const inserts = [];
@@ -163,99 +179,109 @@ export default function HealthClient({ petId }: { petId: string }) {
             source: 'manual'
           });
         }
-        await supabase.from('health_schedules').insert(inserts)
+        const { error: insertSchedulesError } = await supabase.from('health_schedules').insert(inserts)
+        if (insertSchedulesError) throw insertSchedulesError;
 
       } else {
         if (formType === 'vaccine') {
-        const scheduleId = fd.get('schedule_id') as string | null;
-        const nextDueDate = fd.get('next_due_date') as string | null;
-        
-        const { error: vaccineInsertError } = await supabase.from('vaccine_records').insert({
-          pet_id: petId,
-          vaccine_id: fd.get('vaccine_id') || null,
-          schedule_id: scheduleId ? scheduleId : null,
-          applied_date: fd.get('applied_date'),
-          next_due_date: nextDueDate || null,
-          vet_name: fd.get('vet_name'),
-          location: fd.get('location'),
-          lot_number: fd.get('lot_number'),
-          brand_name: fd.get('brand_name'),
-          notes: fd.get('notes')
-        })
-        if (vaccineInsertError) throw vaccineInsertError;
+          const scheduleId = fd.get('schedule_id') as string | null;
+          const nextDueDate = fd.get('next_due_date') as string | null;
+          
+          const { error: vaccineInsertError } = await supabase.from('vaccine_records').insert({
+            pet_id: petId,
+            vaccine_id: fd.get('vaccine_id') || null,
+            schedule_id: scheduleId ? scheduleId : null,
+            applied_date: fd.get('applied_date'),
+            next_due_date: nextDueDate || null,
+            vet_name: fd.get('vet_name'),
+            location: fd.get('location'),
+            lot_number: fd.get('lot_number'),
+            brand_name: fd.get('brand_name'),
+            notes: fd.get('notes')
+          })
+          if (vaccineInsertError) throw vaccineInsertError;
 
-        // Update existing schedule as done
-        if (scheduleId) {
-           await supabase.from('health_schedules').update({ status: 'done' }).eq('id', scheduleId);
-        } else {
-           // Otomatik senkronizasyon: Eğer bağımsız kayıt girildiyse, 
-           // bu aşıya ait bekleyen tüm takvim planlarını "yapıldı" olarak işaretle
-           const vId = fd.get('vaccine_id');
-           if (vId) {
-              await supabase.from('health_schedules')
-                .update({ status: 'done' })
-                .eq('pet_id', petId)
-                .eq('vaccine_id', vId)
-                .neq('status', 'done');
-           }
-        }
-        
-        // Care Score Bonus (+10 for vaccine completion)
-        await supabase.rpc('adjust_care_score', { p_pet_id: petId, p_delta: 10 });
+          // Update existing schedule as done
+          if (scheduleId) {
+             const { error: updateScheduleError } = await supabase.from('health_schedules').update({ status: 'done' }).eq('id', scheduleId);
+             if (updateScheduleError) throw updateScheduleError;
+          } else {
+             // Otomatik senkronizasyon: Eğer bağımsız kayıt girildiyse, 
+             // bu aşıya ait bekleyen tüm takvim planlarını "yapıldı" olarak işaretle
+             const vId = fd.get('vaccine_id');
+             if (vId) {
+                const { error: updateSyncError } = await supabase.from('health_schedules')
+                  .update({ status: 'done' })
+                  .eq('pet_id', petId)
+                  .eq('vaccine_id', vId)
+                  .neq('status', 'done');
+                if (updateSyncError) throw updateSyncError;
+             }
+          }
+          
+          // Care Score Bonus (+10 for vaccine completion)
+          const { error: careScoreError } = await supabase.rpc('adjust_care_score', { p_pet_id: petId, p_delta: 10 });
+          if (careScoreError) throw careScoreError;
 
-        // If nextDueDate is explicitly set, create a new branch/schedule
-        if (nextDueDate) {
-           await supabase.from('health_schedules').insert({
-             pet_id: petId,
-             plan_type: 'vaccine',
-             vaccine_id: fd.get('vaccine_id') || null,
-             title: selectedSchedule?.title || vaccinesList.find(v => v.id === fd.get('vaccine_id'))?.name || 'Aşı',
-             due_date: nextDueDate,
-             status: 'upcoming',
-             source: 'manual_branch'
-           });
+          // If nextDueDate is explicitly set, create a new branch/schedule
+          if (nextDueDate) {
+             const { error: branchInsertError } = await supabase.from('health_schedules').insert({
+               pet_id: petId,
+               plan_type: 'vaccine',
+               vaccine_id: fd.get('vaccine_id') || null,
+               title: selectedSchedule?.title || vaccinesList.find(v => v.id === fd.get('vaccine_id'))?.name || 'Aşı',
+               due_date: nextDueDate,
+               status: 'upcoming',
+               source: 'manual_branch'
+             });
+             if (branchInsertError) throw branchInsertError;
+          }
+          
+          // Eğer tutar girildiyse ödeme kaydı da oluştur
+          const amountStr = fd.get('amount') as string;
+          if (amountStr && parseFloat(amountStr) > 0) {
+             const { error: paymentInsertError } = await supabase.from('payments').insert({
+                pet_id: petId,
+                amount: parseFloat(amountStr),
+                payment_type: (selectedSchedule?.vaccines?.name || selectedSchedule?.title || 'Aşı / Parazit İşlemi'),
+                payment_date: fd.get('applied_date') || new Date().toISOString().split('T')[0],
+             });
+             if (paymentInsertError) throw paymentInsertError;
+          }
+        } else if (formType === 'disease') {
+          const { error: diseaseInsertError } = await supabase.from('health_diseases').insert({
+            pet_id: petId,
+            disease_name: fd.get('disease_name'),
+            diagnosis_date: fd.get('diagnosis_date'),
+            treatment: fd.get('treatment')
+          })
+          if (diseaseInsertError) throw diseaseInsertError;
+        } else if (formType === 'allergy') {
+          const { error: allergyInsertError } = await supabase.from('health_allergies').insert({
+            pet_id: petId,
+            trigger_name: fd.get('trigger_name'),
+            symptoms: fd.get('symptoms'),
+            treatment: fd.get('treatment')
+          })
+          if (allergyInsertError) throw allergyInsertError;
+        } else if (formType === 'medication') {
+          const { error: medicationInsertError } = await supabase.from('health_medications').insert({
+            pet_id: petId,
+            medication_name: fd.get('medication_name'),
+            dose: fd.get('dose'),
+            usage_duration: fd.get('usage_duration')
+          })
+          if (medicationInsertError) throw medicationInsertError;
+        } else if (formType === 'payment') {
+          const { error: paymentInsertError } = await supabase.from('payments').insert({
+            pet_id: petId,
+            amount: fd.get('amount'),
+            payment_type: fd.get('payment_type'),
+            payment_date: fd.get('payment_date'),
+            notes: fd.get('notes')
+          })
+          if (paymentInsertError) throw paymentInsertError;
         }
-        
-        // Eğer tutar girildiyse ödeme kaydı da oluştur
-        const amountStr = fd.get('amount') as string;
-        if (amountStr && parseFloat(amountStr) > 0) {
-           await supabase.from('payments').insert({
-              pet_id: petId,
-              amount: parseFloat(amountStr),
-              payment_type: (selectedSchedule?.vaccines?.name || selectedSchedule?.title || 'Aşı / Parazit İşlemi'),
-              payment_date: fd.get('applied_date') || new Date().toISOString().split('T')[0],
-           });
-        }
-      } else if (formType === 'disease') {
-        await supabase.from('health_diseases').insert({
-          pet_id: petId,
-          disease_name: fd.get('disease_name'),
-          diagnosis_date: fd.get('diagnosis_date'),
-          treatment: fd.get('treatment')
-        })
-      } else if (formType === 'allergy') {
-        await supabase.from('health_allergies').insert({
-          pet_id: petId,
-          trigger_name: fd.get('trigger_name'),
-          symptoms: fd.get('symptoms'),
-          treatment: fd.get('treatment')
-        })
-      } else if (formType === 'medication') {
-        await supabase.from('health_medications').insert({
-          pet_id: petId,
-          medication_name: fd.get('medication_name'),
-          dose: fd.get('dose'),
-          usage_duration: fd.get('usage_duration')
-        })
-      } else if (formType === 'payment') {
-        await supabase.from('payments').insert({
-          pet_id: petId,
-          amount: fd.get('amount'),
-          payment_type: fd.get('payment_type'),
-          payment_date: fd.get('payment_date'),
-          notes: fd.get('notes')
-        })
-      }
       }
       setIsModalOpen(false)
       setSelectedSchedule(null)
@@ -267,7 +293,7 @@ export default function HealthClient({ petId }: { petId: string }) {
       router.refresh()
     } catch (err: any) {
       console.error('Kayıt Hatası Detayı:', err)
-      setFormError('Kayıt sırasında bir sorun oluştu. Lütfen tekrar deneyin.')
+      setFormError('Kayıt sırasında bir sorun oluştu. Lütfen bilgileri kontrol edip tekrar deneyin.')
     } finally {
       setIsSubmitting(false)
     }
@@ -282,22 +308,31 @@ export default function HealthClient({ petId }: { petId: string }) {
     setIsSubmitting(true);
     try {
       if (schedule.plan_type === 'vaccine') {
-        await supabase.from('vaccine_records').insert({
+        const { error: insertError } = await supabase.from('vaccine_records').insert({
           pet_id: petId,
           vaccine_id: schedule.vaccine_id,
           schedule_id: schedule.id,
           applied_date: schedule.due_date
         });
-        await supabase.rpc('adjust_care_score', { p_pet_id: petId, p_delta: 10 });
+        if (insertError) throw insertError;
+
+        const { error: careError } = await supabase.rpc('adjust_care_score', { p_pet_id: petId, p_delta: 10 });
+        if (careError) throw careError;
       } else {
-        await supabase.from('health_schedules').update({ status: 'done' }).eq('id', schedule.id);
-        await supabase.rpc('adjust_care_score', { p_pet_id: petId, p_delta: 5 });
+        const { error: updateError } = await supabase.from('health_schedules').update({ status: 'done' }).eq('id', schedule.id);
+        if (updateError) throw updateError;
+
+        const { error: careError } = await supabase.rpc('adjust_care_score', { p_pet_id: petId, p_delta: 5 });
+        if (careError) throw careError;
       }
       
       // Trigger predictive risk recalculation in background
       fetch(`/api/predictive-risk/${petId}?force=true`).catch(console.error);
 
-      fetchData();
+      await fetchData();
+    } catch (err: any) {
+      console.error('Hızlı onay hatası:', err)
+      setGlobalError('Hızlı onay işlemi sırasında bir sorun oluştu. Lütfen tekrar deneyin.')
     } finally {
       setIsSubmitting(false);
     }
@@ -314,24 +349,32 @@ export default function HealthClient({ petId }: { petId: string }) {
 
   const postponeSchedule = async (schedule: any, days: number) => {
     setIsSubmitting(true);
-    const newDate = new Date(schedule.due_date);
-    newDate.setDate(newDate.getDate() + days);
-    
-    await supabase.from('health_schedules').update({ 
-      due_date: newDate.toISOString().split('T')[0],
-      postpone_count: (schedule.postpone_count || 0) + 1
-    }).eq('id', schedule.id);
-    
-    // Care Score penalty for postponing
-    await supabase.rpc('adjust_care_score', { p_pet_id: petId, p_delta: -5 });
-    
-    // Trigger predictive risk recalculation in background
-    fetch(`/api/predictive-risk/${petId}?force=true`).catch(console.error);
-    
-    setIsModalOpen(false);
-    setSelectedSchedule(null);
-    fetchData();
-    setIsSubmitting(false);
+    try {
+      const newDate = new Date(schedule.due_date);
+      newDate.setDate(newDate.getDate() + days);
+      
+      const { error: updateError } = await supabase.from('health_schedules').update({ 
+        due_date: newDate.toISOString().split('T')[0],
+        postpone_count: (schedule.postpone_count || 0) + 1
+      }).eq('id', schedule.id);
+      if (updateError) throw updateError;
+      
+      // Care Score penalty for postponing
+      const { error: careError } = await supabase.rpc('adjust_care_score', { p_pet_id: petId, p_delta: -5 });
+      if (careError) throw careError;
+      
+      // Trigger predictive risk recalculation in background
+      fetch(`/api/predictive-risk/${petId}?force=true`).catch(console.error);
+      
+      setIsModalOpen(false);
+      setSelectedSchedule(null);
+      await fetchData();
+    } catch (err: any) {
+      console.error('Erteleme hatası:', err)
+      setFormError('Erteleme işlemi sırasında bir sorun oluştu. Lütfen tekrar deneyin.')
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   const cancelSchedule = async (schedule: any) => {
@@ -349,9 +392,16 @@ export default function HealthClient({ petId }: { petId: string }) {
     setIsSubmitting(true);
     setIsModalOpen(false);
     setSelectedSchedule(null);
-    await supabase.from('health_schedules').delete().eq('id', schedule.id);
-    fetchData();
-    setIsSubmitting(false);
+    try {
+      const { error } = await supabase.from('health_schedules').delete().eq('id', schedule.id);
+      if (error) throw error;
+      await fetchData();
+    } catch (err: any) {
+      console.error('Görev silme hatası:', err)
+      setGlobalError('Görevi silme sırasında bir sorun oluştu. Lütfen tekrar deneyin.')
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   const doDeleteAll = async (schedule: any) => {
@@ -359,9 +409,16 @@ export default function HealthClient({ petId }: { petId: string }) {
     setIsSubmitting(true);
     setIsModalOpen(false);
     setSelectedSchedule(null);
-    await supabase.from('health_schedules').delete().eq('plan_id', schedule.plan_id).gte('due_date', schedule.due_date);
-    fetchData();
-    setIsSubmitting(false);
+    try {
+      const { error } = await supabase.from('health_schedules').delete().eq('plan_id', schedule.plan_id).gte('due_date', schedule.due_date);
+      if (error) throw error;
+      await fetchData();
+    } catch (err: any) {
+      console.error('Tekrarlayan görevleri silme hatası:', err)
+      setGlobalError('Tekrarlayan görevleri silme sırasında bir sorun oluştu. Lütfen tekrar deneyin.')
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   const renderVaccines = () => {
@@ -668,6 +725,23 @@ export default function HealthClient({ petId }: { petId: string }) {
 
   return (
     <div className="flex flex-col gap-6">
+      {globalError && (
+        <div className="bg-error/10 border border-error/20 rounded-[24px] p-5 flex items-start justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-200">
+          <div className="flex items-start gap-3">
+            <span className="text-[20px] text-error mt-0.5">🚨</span>
+            <div>
+              <p className="text-[14px] font-black text-error">İşlem Başarısız Oldu</p>
+              <p className="text-[13px] font-bold text-error/80 mt-1">{globalError}</p>
+            </div>
+          </div>
+          <button 
+            onClick={() => setGlobalError(null)} 
+            className="text-error/70 hover:text-error font-extrabold text-[12px] bg-error/10 hover:bg-error/20 px-3 py-1.5 rounded-xl transition-all"
+          >
+            Kapat
+          </button>
+        </div>
+      )}
       {/* Action Bar */}
       <div className="flex items-center justify-between">
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">

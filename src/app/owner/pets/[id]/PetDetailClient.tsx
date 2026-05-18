@@ -70,6 +70,7 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
   const [activeTab, setActiveTab] = useState<Tab>('Özet')
   const [quickUpdateConfig, setQuickUpdateConfig] = useState<any>(null)
   const [timelineFilter, setTimelineFilter] = useState('Aşı & Parazit')
+  const [enrichOpen, setEnrichOpen] = useState(false)
 
   const switchToVaccines = () => {
     setActiveTab('Sağlık Geçmişi')
@@ -179,32 +180,55 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
         const progress = completedTasks === totalTasks ? 100 : Math.max(15, Math.round((completedTasks / totalTasks) * 100))
 
         return (
-          <div className="card-base p-5 border-l-4 border-l-primary shadow-sm bg-gradient-to-br from-white to-primary/5">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-[14px] font-extrabold text-text-primary flex items-center gap-2">
-                🌟 Profili Zenginleştir 
-                <span className="text-[11px] font-bold text-primary bg-primary-soft px-2 py-0.5 rounded-full">% {progress}</span>
-              </h2>
+          <div className="card-base border-l-4 border-l-primary shadow-sm bg-gradient-to-br from-white to-primary/5 overflow-hidden">
+            {/* Başlık – her zaman görünür, tıklayınca toggle */}
+            <button
+              onClick={() => setEnrichOpen(o => !o)}
+              className="w-full flex items-center justify-between p-5 text-left"
+            >
+              <div className="flex items-center gap-2">
+                <h2 className="text-[14px] font-extrabold text-text-primary flex items-center gap-2">
+                  🌟 Profili Zenginleştir
+                  <span className="text-[11px] font-bold text-primary bg-primary-soft px-2 py-0.5 rounded-full">% {progress}</span>
+                </h2>
+              </div>
+              <svg
+                width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2.5"
+                className={`text-text-secondary shrink-0 transition-transform duration-300 ${enrichOpen ? 'rotate-180' : 'rotate-0'}`}
+              >
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+
+            {/* Progress bar – her zaman görünür */}
+            <div className="px-5 pb-3">
+              <div className="w-full bg-border-main rounded-full h-1.5 overflow-hidden">
+                <div className="bg-primary h-1.5 rounded-full transition-all duration-1000" style={{ width: `${progress}%` }}></div>
+              </div>
             </div>
-            <div className="w-full bg-border-main rounded-full h-1.5 mb-3 overflow-hidden">
-              <div className="bg-primary h-1.5 rounded-full transition-all duration-1000" style={{ width: `${progress}%` }}></div>
-            </div>
-            <p className="text-[11px] text-text-secondary mb-4 leading-relaxed">
-              Odi.Pet'in akıllı özelliklerinden tam faydalanmak için aşağıdaki eksik bilgileri tamamlayın.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {tasks.map((t, i) => (
-                t.onClick ? (
-                  <button key={i} onClick={t.onClick} className="text-[12px] font-bold px-3 py-2 rounded-xl border border-border-main bg-white text-text-secondary hover:text-primary hover:border-primary hover:bg-primary/5 transition-all flex items-center gap-1.5 shadow-sm">
-                    <span className="text-[14px] text-primary">+</span> {t.label}
-                  </button>
-                ) : (
-                  <Link key={i} href={t.link || '#'} className="text-[12px] font-bold px-3 py-2 rounded-xl border border-border-main bg-white text-text-secondary hover:text-primary hover:border-primary hover:bg-primary/5 transition-all flex items-center gap-1.5 shadow-sm">
-                    <span className="text-[14px] text-primary">+</span> {t.label}
-                  </Link>
-                )
-              ))}
-            </div>
+
+            {/* Alt alanlar – toggle ile açılır/kapanır */}
+            {enrichOpen && (
+              <div className="px-5 pb-5">
+                <p className="text-[11px] text-text-secondary mb-4 leading-relaxed">
+                  Odi.Pet'in akıllı özelliklerinden tam faydalanmak için aşağıdaki eksik bilgileri tamamlayın.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {tasks.map((t, i) => (
+                    t.onClick ? (
+                      <button key={i} onClick={t.onClick} className="text-[12px] font-bold px-3 py-2 rounded-xl border border-border-main bg-white text-text-secondary hover:text-primary hover:border-primary hover:bg-primary/5 transition-all flex items-center gap-1.5 shadow-sm">
+                        <span className="text-[14px] text-primary">+</span> {t.label}
+                      </button>
+                    ) : (
+                      <Link key={i} href={t.link || '#'} className="text-[12px] font-bold px-3 py-2 rounded-xl border border-border-main bg-white text-text-secondary hover:text-primary hover:border-primary hover:bg-primary/5 transition-all flex items-center gap-1.5 shadow-sm">
+                        <span className="text-[14px] text-primary">+</span> {t.label}
+                      </Link>
+                    )
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )
       })()}
@@ -513,22 +537,11 @@ export default function PetDetailClient({ pet, age, score, overdue, upcoming, sc
           petId={pet.id}
           petName={pet.name}
           plan={subscription?.plan ?? 'free'}
+          payments={payments ?? []}
         />
       )}
 
-      {payments && payments.length > 0 && (
-        <div className="card-base p-5">
-          <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest mb-3">Son Harcamalar</h3>
-          <div className="flex flex-col gap-2">
-            {payments.slice(0, 3).map((p: any) => (
-              <div key={p.id} className="flex justify-between items-center text-[13px]">
-                <span className="text-text-primary font-medium">{p.description || 'Ödeme'}</span>
-                <span className="font-bold text-text-primary">₺{p.amount}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+
 
     </div>
   )

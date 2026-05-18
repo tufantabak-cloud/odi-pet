@@ -2036,6 +2036,8 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
   }
 
   const [showOverdueList, setShowOverdueList] = useState(false)
+  const [scheduleOpen, setScheduleOpen] = useState(false)
+  const [historyOpen, setHistoryOpen] = useState(false)
   const [showBatchScan, setShowBatchScan] = useState(false)
   const [isHistoricalImporting, setIsHistoricalImporting] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -2431,126 +2433,175 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
       )}
 
       {/* ── SCHEDULE (Yaklaşan Plan) ── */}
-      <div className="flex flex-col gap-2 animate-fadeIn mt-2">
-        <h3 className="text-[16px] font-extrabold text-text-primary mb-1 mt-2">Yaklaşan Planlar</h3>
-        {/* If embedded, show the warning here too */}
-        {overdueCount > 0 && (
-            <div className="p-3 bg-error/5 border border-error/20 rounded-2xl flex items-center justify-between gap-3 mb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-[18px]">🔴</span>
-                <p className="font-bold text-error text-[13px]">{overdueCount} {categoryFilter === 'parasite' ? 'gecikmiş uygulama' : 'gecikmiş aşı'} tespit edildi</p>
-              </div>
-              <button onClick={() => setShowOverdueList(true)} 
-                className="text-[11px] font-bold bg-error text-white px-2.5 py-1.5 rounded-lg hover:bg-error/90 transition-colors whitespace-nowrap shrink-0 shadow-sm"
-              >
-                İncele
-              </button>
-            </div>
-          )}
-          {filteredRecords.filter(r => r.status !== 'completed').length === 0 ? (
-            <div className="card-base p-8 flex flex-col items-center justify-center text-center mt-2">
-              <div className="w-14 h-14 bg-warning/10 rounded-full flex items-center justify-center text-[28px] mb-3">📅</div>
-              <p className="font-extrabold text-text-primary text-[15px]">Bekleyen İşlem Yok</p>
-              <p className="text-[12px] text-text-secondary mt-1 mb-4 leading-relaxed">Filtrelere uygun planlanmış herhangi bir işlem bulunmuyor.</p>
-              <button onClick={() => setManualConfig({ show: true, mode: 'plan', fixed: true })} className="btn-primary py-2 px-5 text-[12px]">
-                + {categoryFilter === 'parasite' ? 'Uygulama' : 'Aşı'} Planla
-              </button>
-            </div>
-          ) : filteredRecords.filter(r => r.status !== 'completed').map((r, i, arr) => {
-            // Find index in original array to calculate locks accurately
-            const origIndex = vaccineRecords.findIndex(vr => vr.id === r.id);
-            const isLocked = r.status === 'scheduled' && origIndex > 0 && vaccineRecords[origIndex - 1]?.status !== 'completed';
-            return (
-              <div key={r.id} className={`card-base p-2.5 flex items-center gap-3 ${isLocked ? 'opacity-50' : ''}`}>
-                <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${r.status === 'overdue' ? 'bg-error/10 text-error' : 'bg-warning/10 text-warning'}`}>
-                  <span className="text-[16px]">{isLocked ? '🔒' : STATUS_ICON[r.status] ?? '📌'}</span>
+      <div className="card-base overflow-hidden mt-2">
+        {/* Başlık – her zaman görünür */}
+        <button
+          onClick={() => setScheduleOpen(o => !o)}
+          className="w-full flex items-center justify-between px-4 py-3.5 text-left"
+        >
+          <div className="flex items-center gap-2">
+            <h3 className="text-[15px] font-extrabold text-text-primary">Yaklaşan Planlar</h3>
+            {filteredRecords.filter(r => r.status !== 'completed').length > 0 && (
+              <span className="text-[11px] font-bold bg-warning/10 text-warning px-2 py-0.5 rounded-full border border-warning/20">
+                {filteredRecords.filter(r => r.status !== 'completed').length}
+              </span>
+            )}
+            {overdueCount > 0 && (
+              <span className="text-[11px] font-bold bg-error/10 text-error px-2 py-0.5 rounded-full border border-error/20">
+                ⚠ {overdueCount} Gecikmiş
+              </span>
+            )}
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+            className={`text-text-secondary shrink-0 transition-transform duration-300 ${scheduleOpen ? 'rotate-180' : 'rotate-0'}`}>
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+
+        {/* İçerik – toggle ile açılır */}
+        {scheduleOpen && (
+          <div className="flex flex-col gap-2 px-4 pb-4">
+            {/* Gecikmiş uyarı bandı */}
+            {overdueCount > 0 && (
+              <div className="p-3 bg-error/5 border border-error/20 rounded-2xl flex items-center justify-between gap-3 mb-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[18px]">🔴</span>
+                  <p className="font-bold text-error text-[13px]">{overdueCount} {categoryFilter === 'parasite' ? 'gecikmiş uygulama' : 'gecikmiş aşı'} tespit edildi</p>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className={`font-bold text-[13px] truncate text-text-primary`}>{getDisplayName(r.vaccine_name, r.vaccine_code)}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className={`text-[11px] font-extrabold uppercase tracking-wide px-1.5 py-0.5 rounded border ${r.status === 'overdue' ? 'bg-error/10 text-error border-error/20' : 'bg-warning/10 text-warning border-warning/20'}`}>
-                      {STATUS_LABEL[r.status] ?? r.status}
-                    </span>
-                    {r.due_at && <span className="text-[11px] text-text-secondary font-medium">{new Date(r.due_at).toLocaleDateString('tr-TR')}</span>}
-                  </div>
-                </div>
-                {!isLocked && (
-                  <div className="flex gap-1.5 shrink-0 items-center">
-                    <button onClick={() => setQuickMarkRecord(r)}
-                      className="w-10 h-10 flex items-center justify-center bg-success/10 text-success rounded-xl hover:bg-success/20 transition-colors" title="Yapıldı İşaretle">
-                      <span className="text-[14px]">✓</span>
-                    </button>
-                    <button onClick={() => setPostponeRecord(r)}
-                      className="w-10 h-10 flex items-center justify-center bg-warning/10 text-warning rounded-xl hover:bg-warning/20 transition-colors" title="Ertele">
-                      <span className="text-[12px]">⏩</span>
-                    </button>
-                    <button onClick={() => {
-                      openConfirm(
-                        'Planı Sil',
-                        'Bu planlanmış işlemi silmek istiyor musunuz?',
-                        () => startTransition(async () => { await deleteVaccineRecord(r.id); refreshData() })
-                      )
-                    }} className="w-10 h-10 flex items-center justify-center bg-error/5 text-error/60 rounded-xl hover:bg-error/10 hover:text-error transition-colors" title="Sil">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                    </button>
-                  </div>
-                )}
+                <button onClick={() => setShowOverdueList(true)}
+                  className="text-[11px] font-bold bg-error text-white px-2.5 py-1.5 rounded-lg hover:bg-error/90 transition-colors whitespace-nowrap shrink-0 shadow-sm">
+                  İncele
+                </button>
               </div>
-            )
-          })}
+            )}
+            {filteredRecords.filter(r => r.status !== 'completed').length === 0 ? (
+              <div className="p-6 flex flex-col items-center justify-center text-center">
+                <div className="w-12 h-12 bg-warning/10 rounded-full flex items-center justify-center text-[24px] mb-3">📅</div>
+                <p className="font-extrabold text-text-primary text-[14px]">Bekleyen İşlem Yok</p>
+                <p className="text-[12px] text-text-secondary mt-1 mb-4 leading-relaxed">Filtrelere uygun planlanmış herhangi bir işlem bulunmuyor.</p>
+                <button onClick={() => setManualConfig({ show: true, mode: 'plan', fixed: true })} className="btn-primary py-2 px-5 text-[12px]">
+                  + {categoryFilter === 'parasite' ? 'Uygulama' : 'Aşı'} Planla
+                </button>
+              </div>
+            ) : filteredRecords.filter(r => r.status !== 'completed').map((r, i, arr) => {
+              const origIndex = vaccineRecords.findIndex(vr => vr.id === r.id);
+              const isLocked = r.status === 'scheduled' && origIndex > 0 && vaccineRecords[origIndex - 1]?.status !== 'completed';
+              return (
+                <div key={r.id} className={`card-base p-2.5 flex items-center gap-3 ${isLocked ? 'opacity-50' : ''}`}>
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${r.status === 'overdue' ? 'bg-error/10 text-error' : 'bg-warning/10 text-warning'}`}>
+                    <span className="text-[16px]">{isLocked ? '🔒' : STATUS_ICON[r.status] ?? '📌'}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-[13px] truncate text-text-primary">{getDisplayName(r.vaccine_name, r.vaccine_code)}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className={`text-[11px] font-extrabold uppercase tracking-wide px-1.5 py-0.5 rounded border ${r.status === 'overdue' ? 'bg-error/10 text-error border-error/20' : 'bg-warning/10 text-warning border-warning/20'}`}>
+                        {STATUS_LABEL[r.status] ?? r.status}
+                      </span>
+                      {r.due_at && <span className="text-[11px] text-text-secondary font-medium">{new Date(r.due_at).toLocaleDateString('tr-TR')}</span>}
+                    </div>
+                  </div>
+                  {!isLocked && (
+                    <div className="flex gap-1.5 shrink-0 items-center">
+                      <button onClick={() => setQuickMarkRecord(r)}
+                        className="w-10 h-10 flex items-center justify-center bg-success/10 text-success rounded-xl hover:bg-success/20 transition-colors" title="Yapıldı İşaretle">
+                        <span className="text-[14px]">✓</span>
+                      </button>
+                      <button onClick={() => setPostponeRecord(r)}
+                        className="w-10 h-10 flex items-center justify-center bg-warning/10 text-warning rounded-xl hover:bg-warning/20 transition-colors" title="Ertele">
+                        <span className="text-[12px]">⏩</span>
+                      </button>
+                      <button onClick={() => {
+                        openConfirm(
+                          'Planı Sil',
+                          'Bu planlanmış işlemi silmek istiyor musunuz?',
+                          () => startTransition(async () => { await deleteVaccineRecord(r.id); refreshData() })
+                        )
+                      }} className="w-10 h-10 flex items-center justify-center bg-error/5 text-error/60 rounded-xl hover:bg-error/10 hover:text-error transition-colors" title="Sil">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* ── KAYIT GEÇMİŞİ (Completed Records) ── */}
-      <div className="flex flex-col gap-2 mt-4">
-          <h3 className="text-[16px] font-extrabold text-text-primary mb-1">Kayıt Geçmişi</h3>
-          {filteredRecords.filter(r => r.status === 'completed').length === 0 ? (
-            <div className="card-base p-8 flex flex-col items-center justify-center text-center mt-2">
-              <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center text-[28px] mb-3">{categoryFilter === 'parasite' ? '🦠' : '💉'}</div>
-              <p className="font-extrabold text-text-primary text-[15px]">Kayıt Bulunamadı</p>
-              <p className="text-[12px] text-text-secondary mt-1 mb-4 leading-relaxed">Filtrelere uygun tamamlanan bir işlem yok.</p>
-              <button onClick={() => setManualConfig({ show: true, mode: 'record', fixed: true })} className="btn-primary py-2 px-5 text-[12px]">
-                + Geçmiş Kayıt Ekle
-              </button>
-            </div>
-          ) : filteredRecords.filter(r => r.status === 'completed')
-            .sort((a, b) => new Date(b.administered_at || '').getTime() - new Date(a.administered_at || '').getTime())
-            .map(r => (
-            <div key={r.id} className="card-base p-2.5">
-              <div className="flex items-center justify-between gap-3">
-                <div className="w-9 h-9 rounded-full bg-success/10 text-success flex items-center justify-center shrink-0">
-                  <span className="text-[16px]">✓</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-text-primary text-[13px] truncate">{getDisplayName(r.vaccine_name, r.vaccine_code)}</p>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    {r.administered_at && <span className="text-[11px] font-medium text-success">{new Date(r.administered_at).toLocaleDateString('tr-TR')}</span>}
-                    <span className="text-[10px] text-text-secondary opacity-40">•</span>
-                    <span className="text-[10px] text-text-secondary">{r.confidence_level === 'verified' ? 'Onaylı' : 'Kullanıcı'}</span>
+      <div className="card-base overflow-hidden mt-2">
+        {/* Başlık – her zaman görünür */}
+        <button
+          onClick={() => setHistoryOpen(o => !o)}
+          className="w-full flex items-center justify-between px-4 py-3.5 text-left"
+        >
+          <div className="flex items-center gap-2">
+            <h3 className="text-[15px] font-extrabold text-text-primary">Kayıt Geçmişi</h3>
+            {filteredRecords.filter(r => r.status === 'completed').length > 0 && (
+              <span className="text-[11px] font-bold bg-success/10 text-success px-2 py-0.5 rounded-full border border-success/20">
+                {filteredRecords.filter(r => r.status === 'completed').length}
+              </span>
+            )}
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+            className={`text-text-secondary shrink-0 transition-transform duration-300 ${historyOpen ? 'rotate-180' : 'rotate-0'}`}>
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+
+        {/* İçerik – toggle ile açılır */}
+        {historyOpen && (
+          <div className="flex flex-col gap-2 px-4 pb-4">
+            {filteredRecords.filter(r => r.status === 'completed').length === 0 ? (
+              <div className="p-6 flex flex-col items-center justify-center text-center">
+                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-[24px] mb-3">{categoryFilter === 'parasite' ? '🦠' : '💉'}</div>
+                <p className="font-extrabold text-text-primary text-[14px]">Kayıt Bulunamadı</p>
+                <p className="text-[12px] text-text-secondary mt-1 mb-4 leading-relaxed">Filtrelere uygun tamamlanan bir işlem yok.</p>
+                <button onClick={() => setManualConfig({ show: true, mode: 'record', fixed: true })} className="btn-primary py-2 px-5 text-[12px]">
+                  + Geçmiş Kayıt Ekle
+                </button>
+              </div>
+            ) : filteredRecords.filter(r => r.status === 'completed')
+              .sort((a, b) => new Date(b.administered_at || '').getTime() - new Date(a.administered_at || '').getTime())
+              .map(r => (
+              <div key={r.id} className="card-base p-2.5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="w-9 h-9 rounded-full bg-success/10 text-success flex items-center justify-center shrink-0">
+                    <span className="text-[16px]">✓</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-text-primary text-[13px] truncate">{getDisplayName(r.vaccine_name, r.vaccine_code)}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      {r.administered_at && <span className="text-[11px] font-medium text-success">{new Date(r.administered_at).toLocaleDateString('tr-TR')}</span>}
+                      <span className="text-[10px] text-text-secondary opacity-40">•</span>
+                      <span className="text-[10px] text-text-secondary">{r.confidence_level === 'verified' ? 'Onaylı' : 'Kullanıcı'}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button onClick={() => setQuickMarkRecord(r)}
+                      className="w-10 h-10 flex items-center justify-center text-text-secondary hover:text-primary hover:bg-primary/5 rounded-xl transition-colors" title="Düzenle">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button onClick={() => {
+                      openConfirm(
+                        'Kaydı Sil',
+                        'Bu kaydı silmek istiyor musunuz?',
+                        () => startTransition(async () => { await deleteVaccineRecord(r.id); refreshData() })
+                      )
+                    }} className="w-10 h-10 flex items-center justify-center text-text-secondary hover:text-error hover:bg-error/5 rounded-xl transition-colors" title="Sil">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                    </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <button onClick={() => setQuickMarkRecord(r)}
-                    className="w-10 h-10 flex items-center justify-center text-text-secondary hover:text-primary hover:bg-primary/5 rounded-xl transition-colors" title="Düzenle">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  </button>
-                  <button onClick={() => {
-                    openConfirm(
-                      'Kaydı Sil',
-                      'Bu kaydı silmek istiyor musunuz?',
-                      () => startTransition(async () => { await deleteVaccineRecord(r.id); refreshData() })
-                    )
-                  }} className="w-10 h-10 flex items-center justify-center text-text-secondary hover:text-error hover:bg-error/5 rounded-xl transition-colors" title="Sil">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                  </button>
-                </div>
+                {r.notes && (
+                  <p className="text-[11px] text-text-secondary mt-2 p-2 bg-bg-main/50 rounded-lg italic border border-border-main/20 line-clamp-2">
+                    {r.notes}
+                  </p>
+                )}
               </div>
-              {r.notes && (
-                <p className="text-[11px] text-text-secondary mt-2 p-2 bg-bg-main/50 rounded-lg italic border border-border-main/20 line-clamp-2">
-                  {r.notes}
-                </p>
-              )}
-            </div>
-          ))}
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ── Plan Yönetimi (Danger Zone) ── */}

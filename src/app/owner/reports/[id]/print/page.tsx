@@ -4,14 +4,27 @@ import { redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
+type RouteParams = {
+  id: string
+}
+
+type SearchParams = {
+  type?: string
+  range?: string
+  token?: string
+}
+
 export default async function PrintReportPage({ 
-  params,
-  searchParams
+  params: paramsPromise,
+  searchParams: searchParamsPromise
 }: { 
-  params: { id: string },
-  searchParams: { type?: string, range?: string, token?: string }
+  params: Promise<RouteParams>,
+  searchParams: Promise<SearchParams>
 }) {
-  const cookieStore = cookies()
+  const params = await paramsPromise
+  const searchParams = await searchParamsPromise
+
+  const cookieStore = await cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL || '',
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
@@ -20,8 +33,10 @@ export default async function PrintReportPage({
         getAll() {
           return cookieStore.getAll()
         },
-        setAll() {
-          // ignore setAll in server components
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options)
+          })
         },
       },
     }
@@ -39,9 +54,46 @@ export default async function PrintReportPage({
     return <div className="p-10 text-center font-bold text-lg">Pet bulunamadı.</div>
   }
 
-  // Fetch basic health data for the report
-  const { data: vaccines } = await supabase.from('vaccinations').select('*').eq('pet_id', params.id).order('vaccination_date', { ascending: false }).limit(5)
-  const { data: incidents } = await supabase.from('health_incidents').select('*').eq('pet_id', params.id).order('incident_date', { ascending: false }).limit(5)
+  // Fetch completed vaccines from vaccine_records_v2
+  const { data: v2Vaccines } = await supabase
+    .from('vaccine_records_v2')
+    .select('*')
+    .eq('pet_id', params.id)
+    .eq('status', 'completed')
+    .order('administered_at', { ascending: false })
+    .limit(5)
+
+  let displayVaccines = (v2Vaccines || []).map((v: any) => ({
+    id: v.id,
+    vaccine_name: v.vaccine_name,
+    administered_at: v.administered_at || v.due_at,
+  }))
+
+  // Fallback to legacy vaccine_records if v2 is empty
+  if (displayVaccines.length === 0) {
+    const { data: oldVaccines } = await supabase
+      .from('vaccine_records')
+      .select('*, vaccines(name)')
+      .eq('pet_id', params.id)
+      .order('applied_date', { ascending: false })
+      .limit(5)
+    
+    if (oldVaccines) {
+      displayVaccines = oldVaccines.map((v: any) => ({
+        id: v.id,
+        vaccine_name: v.vaccines?.name || 'Aşı',
+        administered_at: v.applied_date,
+      }))
+    }
+  }
+
+  // Fetch illnesses/incidents from health_diseases
+  const { data: incidents } = await supabase
+    .from('health_diseases')
+    .select('*')
+    .eq('pet_id', params.id)
+    .order('diagnosis_date', { ascending: false })
+    .limit(5)
 
   return (
     <div className="max-w-3xl mx-auto p-10 bg-white min-h-screen text-black">
@@ -49,12 +101,15 @@ export default async function PrintReportPage({
       <div className="border-b-2 border-gray-200 pb-6 mb-8 flex items-end justify-between">
         <div>
           <h1 className="text-3xl font-black text-gray-900">Odi.Pet Sağlık Raporu</h1>
-          <p className="text-gray-500 mt-1">Rapor Türü: {searchParams.type === 'summary' ? 'Hızlı Özet' : searchParams.type || 'Hızlı Özet'} • Tarih Aralığı: {searchParams.range === 'last_12_months' ? 'Son 12 Ay' : 'Tüm Geçmiş'}</p>
+          <p className="text-gray-500 mt-1">
+            Rapor Türü: {searchParams.type === 'summary' ? 'Hızlı Özet' : searchParams.type || 'Hızlı Özet'} • 
+            Tarih Aralığı: {searchParams.range === 'last_12_months' ? 'Son 12 Ay' : 'Tüm Geçmiş'}
+          </p>
         </div>
         <div className="text-right">
           <p className="font-bold text-xl">{pet.name}</p>
           <p className="text-sm text-gray-500 capitalize">
-            {pet.species === 'dog' ? 'Köpek' : pet.species === 'cat' ? 'Kedi' : pet.species} • {pet.breed || 'Irk Belirtilmemiş'}
+            {pet.species === 'dog' || pet.species?.toLowerCase() === 'köpek' ? 'Köpek' : pet.species === 'cat' || pet.species?.toLowerCase() === 'kedi' ? 'Kedi' : pet.species} • {pet.breed || 'Irk Belirtilmemiş'}
           </p>
         </div>
       </div>
@@ -63,12 +118,12 @@ export default async function PrintReportPage({
       <div className="grid grid-cols-2 gap-8 mb-8">
         <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100">
           <h2 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-4">Son Aşılar</h2>
-          {vaccines && vaccines.length > 0 ? (
+          {displayVaccines.length > 0 ? (
             <ul className="space-y-3">
-              {vaccines.map((v: any) => (
+              {displayVaccines.map((v: any) => (
                 <li key={v.id} className="flex justify-between items-center text-sm border-b border-gray-200 pb-2 last:border-0">
                   <span className="font-bold text-gray-700">{v.vaccine_name}</span>
-                  <span className="text-gray-500">{new Date(v.vaccination_date).toLocaleDateString('tr-TR')}</span>
+                  <span className="text-gray-500">{new Date(v.administered_at).toLocaleDateString('tr-TR')}</span>
                 </li>
               ))}
             </ul>
@@ -83,8 +138,9 @@ export default async function PrintReportPage({
             <ul className="space-y-3">
               {incidents.map((i: any) => (
                 <li key={i.id} className="flex flex-col text-sm border-b border-gray-200 pb-2 last:border-0">
-                  <span className="font-bold text-gray-700">{i.title || i.type || 'Vaka'}</span>
-                  <span className="text-gray-500">{new Date(i.incident_date).toLocaleDateString('tr-TR')}</span>
+                  <span className="font-bold text-gray-700">{i.disease_name}</span>
+                  <span className="text-gray-500">{new Date(i.diagnosis_date).toLocaleDateString('tr-TR')}</span>
+                  {i.treatment && <span className="text-xs text-gray-400 mt-0.5">Tedavi: {i.treatment}</span>}
                 </li>
               ))}
             </ul>
@@ -101,7 +157,6 @@ export default async function PrintReportPage({
       </div>
       
       {/* Print Trigger */}
-      {/* We wait a bit to ensure fonts/styles are loaded before triggering print */}
       <script dangerouslySetInnerHTML={{ __html: `window.onload = function() { setTimeout(function() { window.print(); }, 800); }` }} />
     </div>
   )
