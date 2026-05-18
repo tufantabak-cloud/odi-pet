@@ -1425,13 +1425,24 @@ function ProtocolTable({ pet, templates, records, onCellClick, onNewRecord, onNe
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {onNewRecord && (
-            <button 
-              onClick={() => onNewRecord('', '', new Date().toISOString())}
-              className="flex items-center gap-2 px-3 py-2 bg-success/5 text-success hover:bg-success/10 transition-all rounded-xl border border-success/20 group shadow-sm"
-            >
-              <span className="text-[16px] group-hover:scale-110 transition-transform">✅</span>
-              <span className="text-[11px] font-black uppercase tracking-wider">Yapıldı Kaydı Ekle</span>
-            </button>
+            <div className="relative">
+              <CoachMark
+                hintKey="vaccine_manual_record_intro"
+                title="Elle Aşı Kaydı Ekle"
+                message="Dostunun geçmişte yapılmış bir aşısını doğrudan elle kaydetmek istersen bu butona dokunarak bilgileri girebilirsin."
+                icon="✅"
+                position="bottom"
+                condition={records.filter((r: any) => r.status === 'completed').length === 0}
+                delay={2500}
+              />
+              <button 
+                onClick={() => onNewRecord('', '', new Date().toISOString())}
+                className="flex items-center gap-2 px-3 py-2 bg-success/5 text-success hover:bg-success/10 transition-all rounded-xl border border-success/20 group shadow-sm animate-pulse-slow"
+              >
+                <span className="text-[16px] group-hover:scale-110 transition-transform">✅</span>
+                <span className="text-[11px] font-black uppercase tracking-wider">Yapıldı Kaydı Ekle</span>
+              </button>
+            </div>
           )}
           {onNewPlan && (
             <button 
@@ -1753,13 +1764,24 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNe
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {onNewRecord && (
-            <button 
-              onClick={() => onNewRecord('', '', new Date().toISOString())}
-              className="flex items-center gap-2 px-3 py-2 bg-success/5 text-success hover:bg-success/10 transition-all rounded-xl border border-success/20 group shadow-sm"
-            >
-              <span className="text-[16px] group-hover:scale-110 transition-transform">✅</span>
-              <span className="text-[11px] font-black uppercase tracking-wider">Yapıldı Kaydı Ekle</span>
-            </button>
+            <div className="relative">
+              <CoachMark
+                hintKey="parasite_manual_record_intro"
+                title="Elle Parazit Kaydı Ekle"
+                message="Geçmişte uyguladığın parazit tedavilerini (hap/damla) doğrudan elle kaydetmek için bu butonu kullanabilirsin."
+                icon="✅"
+                position="bottom"
+                condition={records.filter((r: any) => r.status === 'completed').length === 0}
+                delay={2500}
+              />
+              <button 
+                onClick={() => onNewRecord('', '', new Date().toISOString())}
+                className="flex items-center gap-2 px-3 py-2 bg-success/5 text-success hover:bg-success/10 transition-all rounded-xl border border-success/20 group shadow-sm"
+              >
+                <span className="text-[16px] group-hover:scale-110 transition-transform">✅</span>
+                <span className="text-[11px] font-black uppercase tracking-wider">Yapıldı Kaydı Ekle</span>
+              </button>
+            </div>
           )}
           {onNewPlan && (
             <button 
