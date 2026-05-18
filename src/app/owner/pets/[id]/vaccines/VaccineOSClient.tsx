@@ -637,11 +637,15 @@ function ManualVaccineModal({
     if (!date) { setError('Tarih zorunludur.'); return }
     setError('')
     startTransition(async () => {
+      // "YYYY-MM-DD" formatı new Date() ile UTC midnight parse edilir.
+      // Türkiye (+3) saat diliminde bu bir gün öncesine kayar.
+      // T12:00:00 ekleyerek yerel öğle saatine sabitliyoruz.
+      const parsedDate = new Date(`${date}T12:00:00`)
       const result = await addManualVaccine(petId, {
         vaccine_name: name,
         vaccine_code: selectedCode || undefined,
-        due_at: new Date(date).toISOString(),
-        administered_at: mode === 'record' ? new Date(date).toISOString() : undefined,
+        due_at: parsedDate.toISOString(),
+        administered_at: mode === 'record' ? parsedDate.toISOString() : undefined,
         vet_name: toTitleCase(vet) || undefined,
         clinic: toTitleCase(clinic) || undefined,
         brand: toTitleCase(brand) || undefined,
