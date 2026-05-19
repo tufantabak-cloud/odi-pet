@@ -1747,7 +1747,7 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNe
 
     const completedRecords = allRecords
       .filter(r => r.status === 'completed')
-      .sort((a, b) => new Date(b.administered_at || b.due_at || '').getTime() - new Date(a.administered_at || a.due_at || '').getTime());
+      .sort((a, b) => new Date(b.administered_at || b.due_at || '').getTime() - new Date(a.administered_at || a.due_at || '').getTime()); // YENİ -> ESKİ
 
     const pendingRecords = allRecords
       .filter(r => !['completed', 'skipped', 'invalid'].includes(r.status))
@@ -1755,22 +1755,25 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNe
 
     const cells: any[] = [];
     
-    // ── Hücre 0: İlk Uygulama ──
-    const firstCompleted = completedRecords.length > 0 ? completedRecords[0] : null;
-    if (firstCompleted) {
-      cells.push(getCellState(firstCompleted, firstCompleted.administered_at));
-    } else if (pendingRecords.length > 0) {
-      const firstPending = pendingRecords[0];
-      cells.push(getCellState(firstPending, firstPending.due_at));
-      pendingRecords.shift(); // Remove from pending so it's not reused
+    // ── Hücre 0: İlk Uygulama (Kesinlikle Tamamlanmış veya Kayıt Gir) ──
+    const latestCompleted = completedRecords.length > 0 ? completedRecords[0] : null;
+    if (latestCompleted) {
+      cells.push(getCellState(latestCompleted, latestCompleted.administered_at));
     } else {
       cells.push({ date: null, bg: 'bg-primary/5 text-primary border-primary/20 border-dashed hover:bg-primary/10 cursor-pointer transition-all', emoji: '➕', record: null, title: 'Kayıt Gir', isPlaceholder: true });
     }
 
     // ── Hücre 1-5: Gelecek Planlar ──
-    let refDate = completedRecords.length > 0
-      ? new Date(completedRecords[0].administered_at || completedRecords[0].due_at || new Date().toISOString())
-      : (cells[0]?.record?.due_at ? new Date(cells[0].record.due_at) : null);
+    let refDate = latestCompleted 
+      ? new Date(latestCompleted.administered_at || latestCompleted.due_at || new Date().toISOString())
+      : (pendingRecords.length > 0 ? new Date(pendingRecords[0].due_at || new Date().toISOString()) : null);
+
+    // Eğer tamamlanmış kayıt yok ama bekleyen plan varsa, referans tarihini ilk plandan "geriye" doğru oturtalım
+    if (!latestCompleted && pendingRecords.length > 0 && tmpl.recurrence_days) {
+      const firstDue = new Date(pendingRecords[0].due_at || new Date().toISOString());
+      firstDue.setDate(firstDue.getDate() - tmpl.recurrence_days); // Planın recurrence kadar öncesi
+      refDate = firstDue;
+    }
 
     for (let i = 0; i < 5; i++) {
       if (!tmpl.recurrence_days || !refDate) {
@@ -1781,32 +1784,19 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNe
       const projectedDate = new Date(refDate);
       projectedDate.setDate(projectedDate.getDate() + tmpl.recurrence_days);
       
-      const matchedCompleted = completedRecords.find(r => {
-        if (r.id === firstCompleted?.id) return false;
+      const matchedPending = pendingRecords.find(r => {
         if (cells.some(c => c?.record?.id === r.id)) return false;
-        const rDate = new Date(r.administered_at || r.due_at || '');
+        const rDate = new Date(r.due_at || '');
         const diffDays = Math.abs(rDate.getTime() - projectedDate.getTime()) / 86400000;
         return diffDays < (tmpl.recurrence_days! / 2);
       });
-
-      if (matchedCompleted) {
-        cells.push(getCellState(matchedCompleted, matchedCompleted.administered_at));
-        refDate = new Date(matchedCompleted.administered_at || matchedCompleted.due_at || projectedDate.toISOString());
+      
+      if (matchedPending) {
+        cells.push(getCellState(matchedPending, matchedPending.due_at));
+        refDate = new Date(matchedPending.due_at || projectedDate.toISOString()); // Sapma
       } else {
-        const matchedPending = pendingRecords.find(r => {
-          if (cells.some(c => c?.record?.id === r.id)) return false;
-          const rDate = new Date(r.due_at || '');
-          const diffDays = Math.abs(rDate.getTime() - projectedDate.getTime()) / 86400000;
-          return diffDays < (tmpl.recurrence_days! / 2);
-        });
-        
-        if (matchedPending) {
-          cells.push(getCellState(matchedPending, matchedPending.due_at));
-          refDate = new Date(matchedPending.due_at || projectedDate.toISOString()); // sapma
-        } else {
-          cells.push(getCellState(null, projectedDate.toISOString()));
-          refDate = projectedDate;
-        }
+        cells.push(getCellState(null, projectedDate.toISOString()));
+        refDate = projectedDate; // Sapma yok, projected tarihle devam
       }
     }
 
