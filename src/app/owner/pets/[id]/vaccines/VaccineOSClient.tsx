@@ -1708,7 +1708,7 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNe
       if (record.status === 'skipped' || record.status === 'overdue') return { date: record.due_at || projectedDate, bg: 'bg-[#F44336] text-white border-slate-300 hover:opacity-80 cursor-pointer transition-all', emoji: '⚠️', record, title: `Gecikti/Atlandı.` };
       return { date: record.due_at || projectedDate, bg: 'bg-white text-text-primary border-slate-300 hover:bg-primary/10 cursor-pointer transition-all', emoji: '🔜', record, title: `Planlandı: ${new Date(record.due_at || projectedDate || '').toLocaleDateString('tr-TR')}` };
     }
-    return { date: projectedDate, bg: 'bg-white text-text-primary border-slate-300 opacity-60 hover:opacity-100 hover:bg-primary/10 cursor-pointer transition-all', emoji: '', record: null, title: `Tahmini: ${projectedDate ? new Date(projectedDate).toLocaleDateString('tr-TR') : ''}` };
+    return { date: projectedDate, bg: 'bg-white text-text-primary border-slate-300 hover:bg-primary/10 cursor-pointer transition-all', emoji: '🔜', record: null, title: `Planlandı: ${projectedDate ? new Date(projectedDate).toLocaleDateString('tr-TR') : ''}` };
   }
 
   const columns = ['İlk Uygulama', 'Gelecek Plan 1', 'Gelecek Plan 2', 'Gelecek Plan 3', 'Gelecek Plan 4', 'Gelecek Plan 5'];
@@ -1886,7 +1886,7 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNe
                   onClick={() => handleMatrixClick(cell, row, pet.id, onCellClick)}
                 >
                   <span className="text-[11px] uppercase tracking-wide opacity-70 mb-0.5">{columns[idx]}</span>
-                  {!row.is_active ? <span>Pasif</span> : cell?.record ? <><span className="text-[12px]">{cell.emoji}</span><span>{formatDate(cell.date)}</span></> : cell?.date ? <><span className="text-[12px] opacity-40">🔜</span><span className="opacity-60">{formatDate(cell.date)}</span></> : cell?.isPlaceholder ? <><span className="text-[14px] mb-0.5">{cell.emoji}</span><span className="text-[9px] opacity-70 uppercase tracking-wider">{cell.title}</span></> : <span>{idx === 0 ? '-' : ''}</span>}
+                  {!row.is_active ? <span>Pasif</span> : cell?.date && !cell.isPlaceholder ? <><span className="text-[12px]">{cell.emoji || '🔜'}</span><span>{formatDate(cell.date)}</span></> : cell?.isPlaceholder ? <><span className="text-[14px] mb-0.5">{cell.emoji}</span><span className="text-[9px] opacity-70 uppercase tracking-wider">{cell.title}</span></> : <span>{idx === 0 ? '-' : ''}</span>}
                 </button>
               ))}
             </div>
@@ -1941,7 +1941,7 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNe
                     title={!row.is_active ? 'Bu protokol pasif durumdadır.' : (cell?.title || '')}
                     onClick={() => handleMatrixClick(cell, row, pet.id, onCellClick)}
                   >
-                    {!row.is_active ? <span className="font-bold text-[10px] tracking-wider uppercase text-slate-400">Pasif</span> : cell?.record ? <span className="flex flex-col items-center gap-0"><span className="text-[11px]">{cell.emoji}</span><span>{formatDate(cell.date)}</span></span> : cell?.date ? <span className="flex flex-col items-center gap-0"><span className="text-[11px] opacity-40">🔜</span><span className="opacity-60">{formatDate(cell.date)}</span></span> : cell?.isPlaceholder ? <span className="flex flex-col items-center gap-0"><span className="text-[14px] mb-0.5">{cell.emoji}</span><span className="text-[9px] opacity-70 uppercase tracking-wider">{cell.title}</span></span> : <span>{idx === 0 ? '-' : ''}</span>}
+                    {!row.is_active ? <span className="font-bold text-[10px] tracking-wider uppercase text-slate-400">Pasif</span> : cell?.date && !cell.isPlaceholder ? <span className="flex flex-col items-center gap-0"><span className="text-[11px]">{cell.emoji || '🔜'}</span><span>{formatDate(cell.date)}</span></span> : cell?.isPlaceholder ? <span className="flex flex-col items-center gap-0"><span className="text-[14px] mb-0.5">{cell.emoji}</span><span className="text-[9px] opacity-70 uppercase tracking-wider">{cell.title}</span></span> : <span>{idx === 0 ? '-' : ''}</span>}
                   </td>
                 ))}
               </tr>
