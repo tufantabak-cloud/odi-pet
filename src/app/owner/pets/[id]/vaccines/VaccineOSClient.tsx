@@ -65,14 +65,14 @@ const handleMatrixClick = (cellOrDose: any, row: any, petId: string, onCellClick
   if (!row.is_active || !cellOrDose) return;
   if (cellOrDose.record) {
     onCellClick?.(cellOrDose.record);
-  } else if (cellOrDose.date) {
+  } else if (cellOrDose.date || cellOrDose.isPlaceholder) {
     onCellClick?.({
       id: `virtual_${row.code}_new`,
       pet_id: petId,
       vaccine_code: row.code,
       vaccine_name: row.name,
       status: 'due',
-      due_at: cellOrDose.date,
+      due_at: cellOrDose.date || new Date().toISOString(),
       _isVirtual: true
     });
   }
@@ -1719,6 +1719,7 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNe
 
     const allRecords = records
       .filter(r => {
+        if ((r as any)._isVirtual) return false;
         if (r.vaccine_code === tmpl.vaccine_code) return true
         // MANUAL or missing code — match by name similarity
         if (!r.vaccine_code || r.vaccine_code === 'MANUAL') {
@@ -1758,18 +1759,21 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNe
     const firstCompleted = completedRecords.length > 0 ? completedRecords[0] : null;
     if (firstCompleted) {
       cells.push(getCellState(firstCompleted, firstCompleted.administered_at));
+    } else if (pendingRecords.length > 0) {
+      const firstPending = pendingRecords[0];
+      cells.push(getCellState(firstPending, firstPending.due_at));
+      pendingRecords.shift(); // Remove from pending so it's not reused
     } else {
-      // Henüz kayıt yok → bugün projected
-      cells.push({ date: new Date().toISOString(), bg: 'bg-white text-text-primary border-slate-300 hover:bg-primary/10 cursor-pointer transition-all', emoji: '🔜', record: null, title: 'İlk kaydını gir' });
+      cells.push({ date: null, bg: 'bg-primary/5 text-primary border-primary/20 border-dashed hover:bg-primary/10 cursor-pointer transition-all', emoji: '➕', record: null, title: 'Kayıt Gir', isPlaceholder: true });
     }
 
     // ── Hücre 1-5: Gelecek Planlar ──
     let refDate = completedRecords.length > 0
       ? new Date(completedRecords[completedRecords.length - 1].administered_at || completedRecords[completedRecords.length - 1].due_at || new Date().toISOString())
-      : new Date();
+      : (cells[0]?.record?.due_at ? new Date(cells[0].record.due_at) : null);
 
     for (let i = 0; i < 5; i++) {
-      if (!tmpl.recurrence_days) {
+      if (!tmpl.recurrence_days || !refDate) {
         cells.push(null);
         continue;
       }
@@ -1902,7 +1906,7 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNe
                   onClick={() => handleMatrixClick(cell, row, pet.id, onCellClick)}
                 >
                   <span className="text-[11px] uppercase tracking-wide opacity-70 mb-0.5">{columns[idx]}</span>
-                  {!row.is_active ? <span>Pasif</span> : cell?.record ? <><span className="text-[12px]">{cell.emoji}</span><span>{formatDate(cell.date)}</span></> : cell?.date ? <><span className="text-[12px] opacity-40">🔜</span><span className="opacity-60">{formatDate(cell.date)}</span></> : <span>{idx === 0 ? '—' : ''}</span>}
+                  {!row.is_active ? <span>Pasif</span> : cell?.record ? <><span className="text-[12px]">{cell.emoji}</span><span>{formatDate(cell.date)}</span></> : cell?.date ? <><span className="text-[12px] opacity-40">🔜</span><span className="opacity-60">{formatDate(cell.date)}</span></> : cell?.isPlaceholder ? <><span className="text-[14px] mb-0.5">{cell.emoji}</span><span className="text-[9px] opacity-70 uppercase tracking-wider">{cell.title}</span></> : <span>{idx === 0 ? '-' : ''}</span>}
                 </button>
               ))}
             </div>
@@ -1957,7 +1961,7 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNe
                     title={!row.is_active ? 'Bu protokol pasif durumdadır.' : (cell?.title || '')}
                     onClick={() => handleMatrixClick(cell, row, pet.id, onCellClick)}
                   >
-                    {!row.is_active ? <span className="font-bold text-[10px] tracking-wider uppercase text-slate-400">Pasif</span> : cell?.record ? <span className="flex flex-col items-center gap-0"><span className="text-[11px]">{cell.emoji}</span><span>{formatDate(cell.date)}</span></span> : cell?.date ? <span className="flex flex-col items-center gap-0"><span className="text-[11px] opacity-40">🔜</span><span className="opacity-60">{formatDate(cell.date)}</span></span> : <span>{idx === 0 ? '-' : ''}</span>}
+                    {!row.is_active ? <span className="font-bold text-[10px] tracking-wider uppercase text-slate-400">Pasif</span> : cell?.record ? <span className="flex flex-col items-center gap-0"><span className="text-[11px]">{cell.emoji}</span><span>{formatDate(cell.date)}</span></span> : cell?.date ? <span className="flex flex-col items-center gap-0"><span className="text-[11px] opacity-40">🔜</span><span className="opacity-60">{formatDate(cell.date)}</span></span> : cell?.isPlaceholder ? <span className="flex flex-col items-center gap-0"><span className="text-[14px] mb-0.5">{cell.emoji}</span><span className="text-[9px] opacity-70 uppercase tracking-wider">{cell.title}</span></span> : <span>{idx === 0 ? '-' : ''}</span>}
                   </td>
                 ))}
               </tr>
@@ -1983,7 +1987,11 @@ export default function VaccineOSClient({ pet, setupProfile, vaccineRecords: all
   const baseRecords = categoryFilter
     ? allRecords.filter(r => {
         const tmpl = allTemplates.find(t => t.vaccine_code === r.vaccine_code);
-        if (!tmpl) return categoryFilter === 'vaccine';
+        if (!tmpl) {
+           const rName = (r.vaccine_name || '').toLowerCase();
+           const isParasite = rName.includes('parazit') || rName.includes('iç') || rName.includes('dış');
+           return categoryFilter === 'parasite' ? isParasite : !isParasite;
+        }
         return categoryFilter === 'parasite' ? tmpl.category === 'parasite' : tmpl.category !== 'parasite';
       })
     : allRecords;
