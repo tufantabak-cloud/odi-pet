@@ -1764,16 +1764,10 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNe
     }
 
     // ── Hücre 1-5: Gelecek Planlar ──
+    // KURAL: Eğer 'İlk Uygulama' (Tamamlanmış kayıt) yoksa, gelecek planlama yapılamaz (Tüm hücreler boş kalır).
     let refDate = latestCompleted 
       ? new Date(latestCompleted.administered_at || latestCompleted.due_at || new Date().toISOString())
-      : (pendingRecords.length > 0 ? new Date(pendingRecords[0].due_at || new Date().toISOString()) : null);
-
-    // Eğer tamamlanmış kayıt yok ama bekleyen plan varsa, referans tarihini ilk plandan "geriye" doğru oturtalım
-    if (!latestCompleted && pendingRecords.length > 0 && tmpl.recurrence_days) {
-      const firstDue = new Date(pendingRecords[0].due_at || new Date().toISOString());
-      firstDue.setDate(firstDue.getDate() - tmpl.recurrence_days); // Planın recurrence kadar öncesi
-      refDate = firstDue;
-    }
+      : null;
 
     for (let i = 0; i < 5; i++) {
       if (!tmpl.recurrence_days || !refDate) {
