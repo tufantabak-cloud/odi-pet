@@ -1708,16 +1708,16 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNe
       if (record.status === 'skipped' || record.status === 'overdue') return { date: record.due_at || projectedDate, bg: 'bg-[#F44336] text-white border-slate-300 hover:opacity-80 cursor-pointer transition-all', emoji: '⚠️', record, title: `Gecikti/Atlandı.` };
       return { date: record.due_at || projectedDate, bg: 'bg-white text-text-primary border-slate-300 hover:bg-primary/10 cursor-pointer transition-all', emoji: '🔜', record, title: `Planlandı: ${new Date(record.due_at || projectedDate || '').toLocaleDateString('tr-TR')}` };
     }
-    return { date: projectedDate, bg: 'bg-white text-text-primary border-slate-300 opacity-60', emoji: '', record: null, title: `Tahmini: ${projectedDate ? new Date(projectedDate).toLocaleDateString('tr-TR') : ''}` };
+    return { date: projectedDate, bg: 'bg-white text-text-primary border-slate-300 opacity-60 hover:opacity-100 hover:bg-primary/10 cursor-pointer transition-all', emoji: '', record: null, title: `Tahmini: ${projectedDate ? new Date(projectedDate).toLocaleDateString('tr-TR') : ''}` };
   }
 
-  const columns = ['Son Uygulama', 'Sıradaki Bekleyen', 'Gelecek Plan 1', 'Gelecek Plan 2', 'Gelecek Plan 3', 'Gelecek Plan 4'];
+  const columns = ['İlk Uygulama', 'Gelecek Plan 1', 'Gelecek Plan 2', 'Gelecek Plan 3', 'Gelecek Plan 4', 'Gelecek Plan 5'];
 
   const rows = parasiteTemplates.map(tmpl => {
     const tmplNameLower = tmpl.vaccine_name.toLowerCase()
     const tmplCodeLower = tmpl.vaccine_code.toLowerCase()
 
-    const sortedRecords = records
+    const allRecords = records
       .filter(r => {
         if (r.vaccine_code === tmpl.vaccine_code) return true
         // MANUAL or missing code — match by name similarity
@@ -1742,45 +1742,71 @@ function ParasiteTable({ pet, templates, records, onCellClick, onNewRecord, onNe
         }
         return false
       })
+      .sort((a, b) => new Date(a.administered_at || a.due_at || '').getTime() - new Date(b.administered_at || b.due_at || '').getTime());
+
+    const completedRecords = allRecords
+      .filter(r => r.status === 'completed')
+      .sort((a, b) => new Date(a.administered_at || a.due_at || '').getTime() - new Date(b.administered_at || b.due_at || '').getTime());
+
+    const pendingRecords = allRecords
+      .filter(r => !['completed', 'skipped', 'invalid'].includes(r.status))
       .sort((a, b) => new Date(a.due_at || '').getTime() - new Date(b.due_at || '').getTime());
-
-    const completedRecords = sortedRecords.filter(r => r.status === 'completed').sort((a, b) => new Date(b.administered_at || b.due_at || '').getTime() - new Date(a.administered_at || a.due_at || '').getTime());
-    const pendingRecords = sortedRecords.filter(r => r.status !== 'completed' && r.status !== 'skipped' && r.status !== 'invalid');
-
-    const lastCompleted = completedRecords.length > 0 ? completedRecords[0] : null;
-    const nextPending = pendingRecords.length > 0 ? pendingRecords[0] : null;
 
     const cells: any[] = [];
     
-    // 1. Son Uygulama (Last)
-    cells.push(getCellState(lastCompleted, lastCompleted?.administered_at || null));
-
-    // 2. Sıradaki (Next Due)
-    let nextDateStr = nextPending?.due_at || null;
-    if (!nextDateStr && lastCompleted && tmpl.recurrence_days) {
-      const d = new Date(lastCompleted.administered_at || lastCompleted.due_at || new Date().toISOString());
-      d.setDate(d.getDate() + tmpl.recurrence_days);
-      nextDateStr = d.toISOString();
+    // ── Hücre 0: İlk Uygulama ──
+    const firstCompleted = completedRecords.length > 0 ? completedRecords[0] : null;
+    if (firstCompleted) {
+      cells.push(getCellState(firstCompleted, firstCompleted.administered_at));
+    } else {
+      // Henüz kayıt yok → bugün projected
+      cells.push({ date: new Date().toISOString(), bg: 'bg-white text-text-primary border-slate-300 hover:bg-primary/10 cursor-pointer transition-all', emoji: '🔜', record: null, title: 'İlk kaydını gir' });
     }
-    if (!nextDateStr && !lastCompleted && !nextPending) {
-      nextDateStr = new Date().toISOString();
-    }
-    cells.push(getCellState(nextPending, nextDateStr));
 
-    // 3, 4, 5, 6. Gelecek (Future Projections)
-    let refDate = nextDateStr || new Date().toISOString();
-    for (let i = 0; i < 4; i++) {
-      if (tmpl.recurrence_days) {
-        const d = new Date(refDate);
-        d.setDate(d.getDate() + tmpl.recurrence_days);
-        refDate = d.toISOString();
-        
-        const targetYear = d.getFullYear();
-        const targetMonth = d.getMonth();
-        const futureRec = pendingRecords.find(r => r !== nextPending && new Date(r.due_at || '').getFullYear() === targetYear && new Date(r.due_at || '').getMonth() === targetMonth);
-        cells.push(getCellState(futureRec, refDate));
-      } else {
+    // ── Hücre 1-5: Gelecek Planlar ──
+    let refDate = completedRecords.length > 0
+      ? new Date(completedRecords[completedRecords.length - 1].administered_at || completedRecords[completedRecords.length - 1].due_at || new Date().toISOString())
+      : new Date();
+
+    for (let i = 0; i < 5; i++) {
+      if (!tmpl.recurrence_days) {
         cells.push(null);
+        continue;
+      }
+      
+      // Projected tarih hesapla
+      const projectedDate = new Date(refDate);
+      projectedDate.setDate(projectedDate.getDate() + tmpl.recurrence_days);
+      
+      // Bu tarih civarında completed kayıt var mı? (± periyodun yarısı tolerans)
+      const matchedCompleted = completedRecords.find(r => {
+        if (r.id === firstCompleted?.id) return false; // İlk uygulama zaten kullanıldı
+        if (cells.some(c => c?.record?.id === r.id)) return false; // Zaten kullanıldı
+        const rDate = new Date(r.administered_at || r.due_at || '');
+        const diffDays = Math.abs(rDate.getTime() - projectedDate.getTime()) / 86400000;
+        return diffDays < (tmpl.recurrence_days! / 2);
+      });
+      
+      if (matchedCompleted) {
+        cells.push(getCellState(matchedCompleted, matchedCompleted.administered_at));
+        // SAPMA: referans tarihini güncelle
+        refDate = new Date(matchedCompleted.administered_at || matchedCompleted.due_at || projectedDate.toISOString());
+      } else {
+        // Scheduled kayıt var mı?
+        const matchedPending = pendingRecords.find(r => {
+          if (cells.some(c => c?.record?.id === r.id)) return false;
+          const rDate = new Date(r.due_at || '');
+          const diffDays = Math.abs(rDate.getTime() - projectedDate.getTime()) / 86400000;
+          return diffDays < (tmpl.recurrence_days! / 2);
+        });
+        
+        if (matchedPending) {
+          cells.push(getCellState(matchedPending, matchedPending.due_at));
+        } else {
+          // Saf projeksiyon
+          cells.push(getCellState(null, projectedDate.toISOString()));
+        }
+        refDate = projectedDate; // Sapma olmadı, projected tarihle devam
       }
     }
 
