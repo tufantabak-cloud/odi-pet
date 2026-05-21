@@ -45,16 +45,20 @@ export function useWebPush() {
   }, [])
 
   const subscribe = useCallback(async (): Promise<boolean> => {
-    if (!swReady || !VAPID_PUBLIC_KEY) return false
+    if (!VAPID_PUBLIC_KEY) {
+      console.warn('VAPID_PUBLIC_KEY missing')
+      return false
+    }
 
     setIsLoading(true)
     try {
-      const reg = await navigator.serviceWorker.ready
-
-      // Request permission
+      // 1. Request permission FIRST (Must be synchronous to user click for iOS Safari)
       const result = await Notification.requestPermission()
       setPermission(result as PushPermission)
       if (result !== 'granted') return false
+
+      // 2. Then wait for the service worker
+      const reg = await navigator.serviceWorker.ready
 
       // Create push subscription
       const subscription = await reg.pushManager.subscribe({
