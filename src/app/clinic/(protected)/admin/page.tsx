@@ -37,10 +37,18 @@ export default async function ClinicAdminPage() {
 
       {/* Clinic Info Card */}
       {clinic && (
-        <div className="card-base p-6 sm:p-8">
+        <div className="card-base p-6 sm:p-8 relative">
           <div className="flex items-start justify-between gap-4 mb-6">
             <h2 className="text-[18px] font-extrabold text-text-primary">Klinik Bilgileri</h2>
-            <button className="btn-secondary text-[13px] py-2 px-4">Düzenle</button>
+            <button 
+              className="absolute top-5 right-5 text-text-secondary hover:text-primary transition-colors duration-200" 
+              title="Klinik Bilgilerini Düzenle"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+              </svg>
+            </button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[

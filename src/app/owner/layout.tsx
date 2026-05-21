@@ -53,12 +53,26 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
               width={40} 
               height={40}
               className="w-full h-full object-cover rounded-lg"
+              priority
             />
           </div>
           <span className="text-[18px] font-black text-text-primary tracking-tighter hidden sm:block">Odi.Pet</span>
         </Link>
 
         <div className="flex items-center gap-3">
+          {/* AI VET Button */}
+          <Link
+            href="/owner/ai-vet"
+            className="w-11 h-11 rounded-full bg-[#E05397]/10 flex items-center justify-center text-[#E05397] shadow-sm hover:bg-[#E05397]/20 transition-all duration-300 hover:scale-105 active:scale-95"
+            aria-label="AI VET"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M9.5 3h5v6.5H21v5h-6.5V21h-5v-6.5H3v-5h6.5z" />
+              <path d="M21 1a0.7 0.7 0 0 0-.6.4L19.5 3l-.9.4a0.7 0.7 0 0 0 0 1.2l.9.4.4 1.5a0.7 0.7 0 0 0 1.2 0l.4-1.5.9-.4a0.7 0.7 0 0 0 0-1.2L21.4 3l-.4-1.6A0.7 0.7 0 0 0 21 1z" />
+              <path d="M3 17a0.7 0.7 0 0 0-.6.4L1.5 19l-.9.4a0.7 0.7 0 0 0 0 1.2l.9.4.4 1.5a0.7 0.7 0 0 0 1.2 0l.4-1.5.9-.4a0.7 0.7 0 0 0 0-1.2L3.4 19l-.4-1.6A0.7 0.7 0 0 0 3 17z" />
+            </svg>
+          </Link>
+
           {/* SOS Button */}
           <FloatingSOS 
             petId={primaryPet?.id}

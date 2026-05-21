@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import citiesData from '@/lib/cities.json'
 import ConfirmModal from '@/components/ui/ConfirmModal'
 
@@ -25,11 +25,104 @@ const DOG_COLORS = ['Siyah', 'Beyaz', 'Kahverengi', 'Altın Sarısı', 'Krem', '
 
 export default function EditPetForm({ pet }: { pet: any }) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
-  const [yearOnly, setYearOnly] = useState(false)
+  const [birthDateMode, setBirthDateMode] = useState<'exact' | 'approximate'>('exact')
+  
+  const [activeTab, setActiveTab] = useState<'Genel' | 'Acil Durum'>('Genel')
+  
+  useEffect(() => {
+    if (searchParams.get('tab') === 'sos') {
+      setActiveTab('Acil Durum')
+    }
+  }, [searchParams])
+
+  // SOS State
+  const [sosContacts, setSosContacts] = useState<any[]>(pet.sos_contacts && pet.sos_contacts.length > 0 ? pet.sos_contacts : [
+    { name: '', phone: '', role: 'primary' },
+    { name: '', phone: '', role: 'secondary' }
+  ])
+  const [savingSos, setSavingSos] = useState(false)
+  const [sosStatus, setSosStatus] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
+
+  async function saveSos(e: React.FormEvent) {
+    e.preventDefault()
+    setSavingSos(true)
+    setSosStatus(null)
+    try {
+      const res = await fetch(`/api/pets/${pet.id}/sos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sos_contacts: sosContacts }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setSosStatus({ type: 'err', text: data.error || 'Hata oluştu' })
+        return
+      }
+      setSosStatus({ type: 'ok', text: 'Acil Durum Ağı başarıyla güncellendi.' })
+      pet.sos_contacts = sosContacts
+      setTimeout(() => {
+        setSosStatus(null)
+        router.refresh()
+      }, 1500)
+    } catch (err: any) {
+      setSosStatus({ type: 'err', text: err.message || 'Bağlantı hatası' })
+    } finally {
+      setSavingSos(false)
+    }
+  }
   
   const [petName, setPetName] = useState(pet.name || '')
   const [birthDate, setBirthDate] = useState(pet.birth_date || '')
+
+  // Parse existing birth date to calculate Yıl and Ay
+  const [approxYears, setApproxYears] = useState(() => {
+    if (!pet.birth_date) return ''
+    const born = new Date(pet.birth_date)
+    const now = new Date()
+    let diffMonths = (now.getFullYear() - born.getFullYear()) * 12 + (now.getMonth() - born.getMonth())
+    if (diffMonths < 0) diffMonths = 0
+    const y = Math.floor(diffMonths / 12)
+    return y > 0 ? String(y) : ''
+  })
+
+  const [approxMonths, setApproxMonths] = useState(() => {
+    if (!pet.birth_date) return ''
+    const born = new Date(pet.birth_date)
+    const now = new Date()
+    let diffMonths = (now.getFullYear() - born.getFullYear()) * 12 + (now.getMonth() - born.getMonth())
+    if (diffMonths < 0) diffMonths = 0
+    const m = diffMonths % 12
+    return m > 0 ? String(m) : ''
+  })
+
+  const handleApproxChange = (yStr: string, mStr: string) => {
+    setApproxYears(yStr)
+    setApproxMonths(mStr)
+    
+    const years = parseInt(yStr) || 0
+    const months = parseInt(mStr) || 0
+    
+    if (years === 0 && months === 0) {
+      setBirthDate('')
+      return
+    }
+    
+    const now = new Date()
+    now.setDate(1)
+    
+    let targetYear = now.getFullYear() - years
+    let targetMonth = now.getMonth() - months
+    
+    while (targetMonth < 0) {
+      targetMonth += 12
+      targetYear -= 1
+    }
+    
+    const targetDate = new Date(targetYear, targetMonth, 1)
+    setBirthDate(targetDate.toISOString().split('T')[0])
+  }
   const [selectedBreed, setSelectedBreed] = useState(pet.breed || '')
   const [selectedCityCode, setSelectedCityCode] = useState(() => {
     const city = citiesData.find(c => c.name === pet.city)
@@ -120,7 +213,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
   return (
     <div className="flex flex-col w-full mx-auto pb-10">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-6 border-b border-border-main pb-4 sticky top-0 bg-surface/90 backdrop-blur z-10 pt-2">
+      <div className="flex items-center gap-4 mb-4 border-b border-border-main pb-4 sticky top-0 bg-surface/90 backdrop-blur z-10 pt-2">
         <button type="button" onClick={() => router.back()}
           className="w-10 h-10 rounded-full border border-border-main flex items-center justify-center text-text-secondary hover:text-primary transition-all">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
@@ -131,7 +224,25 @@ export default function EditPetForm({ pet }: { pet: any }) {
         </div>
       </div>
 
-      {submitError && (
+      {/* Tabs Navigation */}
+      <div className="flex gap-2 bg-bg-main p-1.5 rounded-2xl border border-border-main overflow-x-auto mb-6">
+        <button 
+          onClick={() => { setActiveTab('Genel'); router.replace(`/owner/pets/${pet.id}/edit`) }}
+          className={`flex-1 px-4 py-3 rounded-xl text-[14px] font-bold transition-all ${activeTab === 'Genel' ? 'bg-white text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary'}`}
+        >
+          Genel Bilgiler
+        </button>
+        <button 
+          onClick={() => { setActiveTab('Acil Durum'); router.replace(`/owner/pets/${pet.id}/edit?tab=sos`) }}
+          className={`flex-1 px-4 py-3 rounded-xl text-[14px] font-bold transition-all flex items-center justify-center gap-2 ${activeTab === 'Acil Durum' ? 'bg-error text-white shadow-sm' : 'text-text-secondary hover:text-error'}`}
+        >
+          <span className="text-[16px]">🚨</span> Acil Durum (SOS)
+        </button>
+      </div>
+
+      {activeTab === 'Genel' && (
+        <>
+          {submitError && (
         <div className="mb-4 p-3 rounded-[12px] bg-error/10 border border-error/20 text-error text-[13px] font-semibold text-center">
           ⚠️ {submitError}
         </div>
@@ -183,22 +294,108 @@ export default function EditPetForm({ pet }: { pet: any }) {
                 ))}
               </div>
             </div>
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <label className="text-[13px] font-bold text-text-primary">Doğum Tarihi</label>
-                <button type="button" onClick={() => { setYearOnly(v => !v); setBirthDate('') }} className="text-[11px] font-bold text-primary hover:underline">
-                  {yearOnly ? 'Tam Tarih Gir' : 'Sadece Yıl Gir'}
-                </button>
-              </div>
-              {yearOnly ? (
-                <select value={birthDate ? birthDate.slice(0, 4) : ''} className="input-base" onChange={e => setBirthDate(e.target.value ? `${e.target.value}-01-01` : '')}>
-                  <option value="">Yıl seçin</option>
-                  {Array.from({ length: currentYear - 2000 + 1 }, (_, i) => currentYear - i).map(y => <option key={y} value={String(y)}>{y}</option>)}
-                </select>
-              ) : (
-                <input type="date" value={birthDate} max={new Date().toISOString().split('T')[0]} className="input-base" onChange={e => setBirthDate(e.target.value)}/>
-              )}
-            </div>
+             <div className="flex flex-col gap-3">
+               <label className="text-[13px] font-bold text-text-primary">Doğum Tarihi</label>
+               
+               {/* Sekme Seçici (Exact vs Approximate) */}
+               <div className="flex border-b border-border-main mb-2">
+                 <button
+                   type="button"
+                   onClick={() => {
+                     setBirthDateMode('exact')
+                     setBirthDate(pet.birth_date || '')
+                     // Recalculate approx values based on original birth date if any
+                     if (pet.birth_date) {
+                       const born = new Date(pet.birth_date)
+                       const now = new Date()
+                       let diffMonths = (now.getFullYear() - born.getFullYear()) * 12 + (now.getMonth() - born.getMonth())
+                       if (diffMonths < 0) diffMonths = 0
+                       const y = Math.floor(diffMonths / 12)
+                       const m = diffMonths % 12
+                       setApproxYears(y > 0 ? String(y) : '')
+                       setApproxMonths(m > 0 ? String(m) : '')
+                     } else {
+                       setApproxYears('')
+                       setApproxMonths('')
+                     }
+                   }}
+                   className={`flex-1 pb-2.5 text-center text-[13px] font-bold transition-all relative ${
+                     birthDateMode === 'exact'
+                       ? 'text-primary'
+                       : 'text-text-secondary hover:text-text-primary'
+                   }`}
+                 >
+                   Tam Tarih
+                   {birthDateMode === 'exact' && (
+                     <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full animate-scaleIn" />
+                   )}
+                 </button>
+                 <button
+                   type="button"
+                   onClick={() => {
+                     setBirthDateMode('approximate')
+                     // Initialize with current values
+                     handleApproxChange(approxYears, approxMonths)
+                   }}
+                   className={`flex-1 pb-2.5 text-center text-[13px] font-bold transition-all relative ${
+                     birthDateMode === 'approximate'
+                       ? 'text-primary'
+                       : 'text-text-secondary hover:text-text-primary'
+                   }`}
+                 >
+                   Yaklaşık
+                   {birthDateMode === 'approximate' && (
+                     <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full animate-scaleIn" />
+                   )}
+                 </button>
+               </div>
+
+               {birthDateMode === 'exact' ? (
+                 <div className="animate-scaleIn">
+                   <input
+                     type="date"
+                     value={birthDate}
+                     max={new Date().toISOString().split('T')[0]}
+                     className="input-base w-full animate-scaleIn"
+                     onChange={e => setBirthDate(e.target.value)}
+                   />
+                 </div>
+               ) : (
+                 <div className="flex flex-col gap-3.5 animate-scaleIn">
+                   {/* Yıl Girişi */}
+                   <div className="relative">
+                     <input
+                       type="number"
+                       min="0"
+                       max="30"
+                       placeholder="Yıl"
+                       value={approxYears}
+                       onChange={e => handleApproxChange(e.target.value, approxMonths)}
+                       className="w-full px-5 py-4 bg-surface border border-primary/20 rounded-[16px] text-[15px] font-medium placeholder-text-secondary/60 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all text-text-primary"
+                     />
+                     {approxYears && (
+                       <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[13px] font-bold text-text-secondary animate-scaleIn">Yıl</span>
+                     )}
+                   </div>
+
+                   {/* Ay Girişi */}
+                   <div className="relative">
+                     <input
+                       type="number"
+                       min="0"
+                       max="11"
+                       placeholder="Ay"
+                       value={approxMonths}
+                       onChange={e => handleApproxChange(approxYears, e.target.value)}
+                       className="w-full px-5 py-4 bg-surface border border-primary/20 rounded-[16px] text-[15px] font-medium placeholder-text-secondary/60 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all text-text-primary"
+                     />
+                     {approxMonths && (
+                       <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[13px] font-bold text-text-secondary animate-scaleIn">Ay</span>
+                     )}
+                   </div>
+                 </div>
+               )}
+             </div>
           </div>
         </section>
 
@@ -311,6 +508,103 @@ export default function EditPetForm({ pet }: { pet: any }) {
         onConfirm={() => { setConfirmDeleteOpen(false); handleDelete() }}
         onCancel={() => setConfirmDeleteOpen(false)}
       />
+        </>
+      )}
+
+      {activeTab === 'Acil Durum' && (
+        <div className="flex flex-col gap-5 animate-fadeInUp">
+          <div className="card-base p-6 bg-white border border-border-main shadow-sm rounded-2xl flex flex-col relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-error/5 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="flex items-start justify-between relative z-10 mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-14 h-14 bg-gradient-to-tr from-red-100 to-rose-50 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-error/10">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <linearGradient id="sirenGradProfile" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#EF4444" />
+                        <stop offset="100%" stop-color="#F43F5E" />
+                      </linearGradient>
+                    </defs>
+                    <path d="M12 2V4M12 2L9 5M12 2L15 5" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" opacity="0.8" />
+                    <rect x="5" y="16" width="14" height="3" rx="1.5" fill="#94A3B8" />
+                    <path d="M6 16C6 11.5817 9.58172 8 14 8C14.4183 8 14.75 8.3317 14.75 8.75V16H6Z" fill="url(#sirenGradProfile)" transform="translate(-2, 0)" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-text-primary text-[17px]">Acil Durum (SOS) Ağı</h3>
+                  <p className="text-[13px] text-text-secondary mt-0.5 leading-relaxed">
+                    Dostunuz kaybolduğunda veya acil bir sağlık durumunda ulaşılabilecek kişileri yönetin.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <form className="flex flex-col gap-4 relative z-10" onSubmit={saveSos}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-3 p-5 bg-error/[0.02] rounded-2xl border border-error/10 hover:border-error/30 transition-colors">
+                  <p className="text-[11px] font-black text-error uppercase tracking-widest">Kişi 1 (Birincil)</p>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[12px] font-bold text-text-secondary">Ad Soyad (İsim)</label>
+                    <input 
+                      type="text" 
+                      className="input-base text-[14px] py-3 px-4 bg-white" 
+                      placeholder="Ad Soyad (İsim)" 
+                      value={sosContacts[0]?.name || ''} 
+                      onChange={e => { const nc = [...sosContacts]; nc[0] = { ...nc[0], name: e.target.value }; setSosContacts(nc); }} 
+                      required 
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[12px] font-bold text-text-secondary">Telefon</label>
+                    <input 
+                      type="tel" 
+                      className="input-base text-[14px] py-3 px-4 bg-white" 
+                      placeholder="05XX XXX XX XX" 
+                      value={sosContacts[0]?.phone || ''} 
+                      onChange={e => { const nc = [...sosContacts]; nc[0] = { ...nc[0], phone: e.target.value }; setSosContacts(nc); }} 
+                      required 
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-3 p-5 bg-bg-main rounded-2xl border border-border-main hover:border-text-secondary/30 transition-colors">
+                  <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest">Kişi 2 (İsteğe Bağlı)</p>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[12px] font-bold text-text-secondary">Ad Soyad / İsim</label>
+                    <input 
+                      type="text" 
+                      className="input-base text-[14px] py-3 px-4 bg-white" 
+                      placeholder="Ad Soyad / İsim" 
+                      value={sosContacts[1]?.name || ''} 
+                      onChange={e => { const nc = [...sosContacts]; nc[1] = { ...nc[1], name: e.target.value }; setSosContacts(nc); }} 
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[12px] font-bold text-text-secondary">Telefon</label>
+                    <input 
+                      type="tel" 
+                      className="input-base text-[14px] py-3 px-4 bg-white" 
+                      placeholder="05XX XXX XX XX" 
+                      value={sosContacts[1]?.phone || ''} 
+                      onChange={e => { const nc = [...sosContacts]; nc[1] = { ...nc[1], phone: e.target.value }; setSosContacts(nc); }} 
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-3 mt-4 pt-4 border-t border-border-main">
+                {sosStatus ? (
+                  <div className={`text-[13px] font-bold px-4 py-2 rounded-xl ${sosStatus.type === 'ok' ? 'text-success bg-success/10' : 'text-error bg-error/10'}`}>
+                    {sosStatus.text}
+                  </div>
+                ) : <div/>}
+                <button type="submit" disabled={savingSos} className="btn-primary bg-error hover:bg-error/90 border-none py-3.5 px-8 text-[14px] font-black shadow-sm cursor-pointer rounded-xl transition-transform active:scale-95">
+                  {savingSos ? 'Kaydediliyor...' : 'Ağı Kaydet'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

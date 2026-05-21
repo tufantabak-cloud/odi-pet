@@ -3,10 +3,10 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-const navItems = [
+const primaryItems = [
   {
     href: '/owner/dashboard',
-    label: 'Ana Sayfa',
+    label: 'Anasayfa',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -14,6 +14,50 @@ const navItems = [
         <rect width="7" height="5" x="14" y="3" rx="1.5"/>
         <rect width="7" height="9" x="14" y="12" rx="1.5"/>
         <rect width="7" height="5" x="3" y="16" rx="1.5"/>
+      </svg>
+    ),
+  },
+  {
+    href: '/owner/pets',
+    label: 'Canlarım',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 10c-2.2 0-4 1.8-4 4 0 2.5 2.5 4.5 4 5.5 1.5-1 4-3 4-5.5 0-2.2-1.8-4-4-4z" />
+        <circle cx="6.5" cy="8.5" r="1.5" />
+        <circle cx="10" cy="5.5" r="1.5" />
+        <circle cx="14" cy="5.5" r="1.5" />
+        <circle cx="17.5" cy="8.5" r="1.5" />
+      </svg>
+    ),
+  },
+  {
+    href: '/owner/ai-vet',
+    label: 'AI VET',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2v20M2 12h20" />
+      </svg>
+    ),
+  },
+  {
+    href: '/owner/services',
+    label: 'Hizmetler',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 11c-.4 0-.8.1-1.1.4l-3.2 2.5c-.4.3-.5.9-.3 1.3.2.5.8.7 1.2.5l.8-.4v2.0c0 .9.7 1.6 1.6 1.6h5.4c.9 0 1.6-.7 1.6-1.6v-2.0l.8.4c.4.2 1 .1 1.2-.4.2-.4.1-1-.3-1.3L13.1 11.4c-.3-.3-.7-.4-1.1-.4z" />
+      </svg>
+    ),
+  },
+  {
+    href: '/owner/social',
+    label: 'Sosyal',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.7 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
       </svg>
     ),
   },
@@ -54,20 +98,6 @@ const shortcutItems = [
   },
 ]
 
-const intelligenceItems = [
-  {
-    href: '/owner/ai-vet',
-    label: 'AI Vet',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2z"/>
-        <path d="M12 8v4m0 4h.01"/>
-      </svg>
-    ),
-  },
-]
-
 function NavLink({ href, label, icon }: { href: string; label: string; icon: React.ReactNode }) {
   const pathname = usePathname()
   const isActive = pathname === href || pathname.startsWith(href + '/')
@@ -93,44 +123,19 @@ function NavLink({ href, label, icon }: { href: string; label: string; icon: Rea
 }
 
 export default function SideNav() {
-  const pathname = usePathname()
-  const isDashboardActive = pathname === '/owner/dashboard' || pathname.startsWith('/owner/dashboard/')
-
   return (
     <aside className="hidden md:flex w-[220px] shrink-0 flex-col gap-1 p-6 border-r border-border-main sticky top-16 h-[calc(100vh-4rem)] self-start overflow-y-auto">
-      {/* Ana Sayfa */}
-      <Link
-        href="/owner/dashboard"
-        className={`flex items-center gap-3 px-4 py-3 rounded-[14px] text-[14px] font-semibold transition-all group mb-4
-          ${isDashboardActive
-            ? 'bg-primary-soft text-primary'
-            : 'text-text-secondary hover:text-text-primary hover:bg-bg-main'
-          }`}
-      >
-        <span className={`shrink-0 transition-colors ${isDashboardActive ? 'text-primary' : 'group-hover:text-primary'}`}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect width="7" height="9" x="3" y="3" rx="1.5"/>
-            <rect width="7" height="5" x="14" y="3" rx="1.5"/>
-            <rect width="7" height="9" x="14" y="12" rx="1.5"/>
-            <rect width="7" height="5" x="3" y="16" rx="1.5"/>
-          </svg>
-        </span>
-        Ana Sayfa
-        {isDashboardActive && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
-      </Link>
-
       <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest px-4 mb-2 mt-2">
-        KISA YOLLAR
+        ANA MENÜ
       </p>
-      {shortcutItems.map((item) => (
+      {primaryItems.map((item) => (
         <NavLink key={item.href} {...item} />
       ))}
 
       <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest px-4 mb-2 mt-6">
-        INTELLIGENCE
+        KISA YOLLAR
       </p>
-      {intelligenceItems.map((item) => (
+      {shortcutItems.map((item) => (
         <NavLink key={item.href} {...item} />
       ))}
     </aside>

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { trackEvent } from '@/lib/analytics/track'
+import { VaccineIcon, VetIcon, BowlIcon } from '@/components/icons/PetIcons'
 
 const WIZARD_STEPS = [
   { id: 1, title: 'Ne yapıyor?' },
@@ -94,21 +95,27 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                 </h2>
                 <div className="flex flex-col gap-3 mb-2">
                   <div className="bg-primary/5 border border-primary/10 rounded-2xl p-4 flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-2xl shadow-sm shrink-0">💉</div>
+                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0">
+                      <VaccineIcon width={24} height={24} />
+                    </div>
                     <div className="text-left">
                       <h3 className="font-bold text-text-primary text-[15px]">Aşı & Parazit</h3>
                       <p className="text-text-secondary text-[13px] leading-tight mt-0.5">Takvim otomatik oluşturulur</p>
                     </div>
                   </div>
                   <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-2xl shadow-sm shrink-0">🤖</div>
+                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0">
+                      <VetIcon width={24} height={24} />
+                    </div>
                     <div className="text-left">
                       <h3 className="font-bold text-text-primary text-[15px]">AI Vet</h3>
                       <p className="text-text-secondary text-[13px] leading-tight mt-0.5">7/24 soru sor anında yanıt al</p>
                     </div>
                   </div>
                   <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4 flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-2xl shadow-sm shrink-0">🥩</div>
+                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0">
+                      <BowlIcon width={24} height={24} />
+                    </div>
                     <div className="text-left">
                       <h3 className="font-bold text-text-primary text-[15px]">Beslenme</h3>
                       <p className="text-text-secondary text-[13px] leading-tight mt-0.5">Maması bitmeden seni biz hatırlatalım</p>
@@ -128,7 +135,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                   {/* Mockup 1 */}
                   <div className="bg-white border border-gray-100 shadow-sm rounded-xl p-4 transform -rotate-2 relative z-10 mx-2 transition-transform hover:rotate-0">
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-lg">💉</span>
+                      <VaccineIcon width={20} height={20} />
                       <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Sonraki Aşı</span>
                     </div>
                     <div className="flex justify-between items-end mb-2">
@@ -143,7 +150,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                   {/* Mockup 2 */}
                   <div className="bg-white border border-gray-100 shadow-sm rounded-xl p-4 transform rotate-1 relative z-20 mx-2 -mt-4 transition-transform hover:rotate-0">
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-lg">🤖</span>
+                      <VetIcon width={20} height={20} />
                       <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">AI Vet</span>
                     </div>
                     <div className="flex flex-col gap-2">

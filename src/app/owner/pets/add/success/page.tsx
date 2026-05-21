@@ -34,29 +34,13 @@ function SuccessContent() {
       </div>
 
       <div className="flex flex-col w-full gap-3 mt-4 relative">
-        <CoachMark
-          hintKey="pet_add_success_next_step"
-          title="İlk adım: Aşı takvimi"
-          message="Evcil hayvanının sağlıklı gelişimi için ilk yapman gereken şey aşı takvimini oluşturmaktır. Başlayalım mı?"
-          icon="✨"
-          position="top"
-        />
-        {/* Tek bir ana CTA: Aşı Takvimi */}
-        <button
-          id="btn-setup-vaccines"
-          onClick={() => router.push(`/owner/pets/${petId}/vaccines`)}
-          className="btn-primary w-full py-4 text-[15px] font-black shadow-xl shadow-primary/20 flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-transform"
-        >
-          💉 Aşı Takvimini Kur (Önerilen) →
-        </button>
-
-        {/* Daha Sonra butonu */}
+        {/* Tek bir ana CTA: Profile Git */}
         <button
           id="btn-goto-profile"
           onClick={() => router.push(`/owner/pets/${petId}`)}
-          className="btn-secondary w-full py-3.5 text-[14px] font-bold text-text-secondary hover:text-text-primary transition-all rounded-[14px]"
+          className="btn-primary w-full py-4 text-[15px] font-black shadow-xl shadow-primary/20 flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-transform rounded-[14px]"
         >
-          Şimdi Değil, Profile Git
+          Profile Git →
         </button>
       </div>
     </div>

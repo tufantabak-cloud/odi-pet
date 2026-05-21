@@ -1,3 +1,4 @@
+import React from 'react'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
@@ -30,7 +31,9 @@ export default async function EditPetPage({ params }: { params: Promise<{ id: st
 
   return (
     <div className="flex flex-col gap-8 pb-10 w-full">
-      <EditPetForm pet={petWithOwners} />
+      <React.Suspense fallback={<div className="animate-pulse h-96 bg-bg-main rounded-2xl"></div>}>
+        <EditPetForm pet={petWithOwners} />
+      </React.Suspense>
     </div>
   )
 }

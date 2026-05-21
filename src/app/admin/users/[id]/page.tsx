@@ -22,15 +22,6 @@ function ageFromBirthDate(birthDate: string | null): string {
   return `${years} yaş`
 }
 
-function ageGroup(species: string | null, birthDate: string | null): string {
-  if (!birthDate) return ''
-  const years = (Date.now() - new Date(birthDate).getTime()) / (365.25 * 24 * 3600 * 1000)
-  if (years < 1) return 'Yavru'
-  if (years < 7) return 'Yetişkin'
-  if (years < 12) return 'Yaşlı'
-  return 'Yaşlı (12+)'
-}
-
 function RoleBadge({ role }: { role: string | null }) {
   const r = role ?? 'owner'
   const styleMap: Record<string, string> = {
@@ -174,11 +165,6 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
                       <div className="font-bold text-text-primary text-[14px]">{pet.name}</div>
                       <div className="text-[12px] text-text-secondary mt-0.5">
                         {pet.breed ?? pet.species ?? '—'} · {ageFromBirthDate(pet.birth_date)}
-                        {pet.birth_date && (
-                          <span className="ml-2 px-1.5 py-0.5 rounded bg-bg-main text-text-secondary text-[10px] font-semibold">
-                            {ageGroup(pet.species, pet.birth_date)}
-                          </span>
-                        )}
                       </div>
                     </div>
                     <Link

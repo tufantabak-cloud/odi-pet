@@ -25,23 +25,23 @@ test.describe('SOS Emergency Contacts', () => {
     await login(page);
   });
 
-  test('Family/SOS tab is reachable on pet detail page', async ({ page }) => {
+  test('Family/SOS tab is reachable on edit pet page', async ({ page }) => {
     if (!PET_ID) {
       test.skip(true, 'TEST_PET_ID not set.');
       return;
     }
-    await page.goto(`/owner/pets/${PET_ID}`);
+    await page.goto(`/owner/pets/${PET_ID}/edit`);
     await page.waitForLoadState('networkidle');
 
-    // Click on "Aile" or "SOS" tab
+    // Click on "Acil Durum (SOS)" tab
     const familyTab = page
-      .locator('button:has-text("Aile"), button:has-text("SOS"), a:has-text("Aile")')
+      .locator('button:has-text("Acil Durum")')
       .first();
     if (await familyTab.isVisible()) {
       await familyTab.click();
       // SOS contact form or list should now be visible
       await expect(
-        page.locator('text=Acil Kişi, text=SOS, input[placeholder*="İsim"], input[placeholder*="isim"]').first()
+        page.locator('text=Acil Durum (SOS) Ağı').first()
       ).toBeVisible({ timeout: 8_000 });
     }
   });
@@ -51,11 +51,11 @@ test.describe('SOS Emergency Contacts', () => {
       test.skip(true, 'TEST_PET_ID not set.');
       return;
     }
-    await page.goto(`/owner/pets/${PET_ID}`);
+    await page.goto(`/owner/pets/${PET_ID}/edit?tab=sos`);
     await page.waitForLoadState('networkidle');
 
     const familyTab = page
-      .locator('button:has-text("Aile"), button:has-text("SOS"), a:has-text("Aile")')
+      .locator('button:has-text("Acil Durum")')
       .first();
     if (!(await familyTab.isVisible())) return;
     await familyTab.click();

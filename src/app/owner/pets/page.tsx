@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { calcAge } from '@/lib/pets/utils'
+import { VaccineIcon, BowlIcon, PillIcon } from '@/components/icons/PetIcons'
 
 export const metadata = {
   title: 'Pati Dostlarım | Odi.Pet',
@@ -24,26 +25,15 @@ export default async function PetsPage() {
   return (
     <div className="flex flex-col gap-8 pb-20">
       {/* Başlık */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-[28px] sm:text-[32px] font-extrabold text-text-primary tracking-tight">
-            Pati Dostlarım
-          </h1>
-          <p className="text-text-secondary font-medium mt-1">
-            {pets && pets.length > 0
-              ? `${pets.length} pati kaydı bulunuyor`
-              : 'Henüz pati eklemediniz'}
-          </p>
-        </div>
-        <Link
-          href="/owner/pets/add"
-          className="btn-primary flex items-center gap-2 px-6 py-2.5 shadow-lg shadow-primary/20 whitespace-nowrap"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M5 12h14"/><path d="M12 5v14"/>
-          </svg>
-          Yeni Pati Ekle
-        </Link>
+      <div>
+        <h1 className="text-[28px] sm:text-[32px] font-extrabold text-text-primary tracking-tight">
+          Pati Dostlarım
+        </h1>
+        <p className="text-text-secondary font-medium mt-1">
+          {pets && pets.length > 0
+            ? `${pets.length} pati kaydı bulunuyor`
+            : 'Henüz pati eklemediniz'}
+        </p>
       </div>
 
       {/* İçerik */}
@@ -73,22 +63,13 @@ export default async function PetsPage() {
                       {pet.species === 'dog' ? '🐶 Köpek' : pet.species === 'cat' ? '🐱 Kedi' : pet.species} • {pet.breed || 'Irk Bilinmiyor'}
                     </p>
                   </div>
-                  {/* Yaş Etiketi */}
-                  <span className={`text-[11px] font-black px-2.5 py-1 rounded-full shrink-0 ${
-                    age.label === 'Yavru' ? 'bg-blue-50 text-blue-600'
-                    : age.label === 'Yetişkin' ? 'bg-green-50 text-green-600'
-                    : age.label === 'Yaşlı' ? 'bg-amber-50 text-amber-600'
-                    : 'bg-purple-50 text-purple-600'
-                  }`}>
-                    {age.label}
-                  </span>
                 </div>
 
                 {/* Meta Bilgiler */}
                 <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border-main">
                   <div className="flex flex-col gap-0.5">
                     <span className="text-[10px] font-black text-text-secondary uppercase tracking-widest">Yaş</span>
-                    <span className="text-[14px] font-bold text-text-primary">{age.text}</span>
+                    <span className="text-[14px] font-bold text-text-primary">{age.text} ({age.label})</span>
                   </div>
                   {pet.weight && (
                     <div className="flex flex-col gap-0.5">
@@ -100,35 +81,21 @@ export default async function PetsPage() {
 
                 {/* Kısayollar */}
                 <div className="flex gap-2">
-                  <span className="flex-1 text-center py-1.5 text-[11px] font-bold text-text-secondary bg-bg-main rounded-xl border border-border-main hover:border-primary/30 hover:text-primary transition-all">
-                    💉 Sağlık
+                  <span className="flex-1 py-1.5 text-[11px] font-bold text-text-secondary bg-bg-main rounded-xl border border-border-main hover:border-primary/30 hover:text-primary transition-all flex items-center justify-center gap-1">
+                    <VaccineIcon width={14} height={14} /> Sağlık
                   </span>
-                  <span className="flex-1 text-center py-1.5 text-[11px] font-bold text-text-secondary bg-bg-main rounded-xl border border-border-main hover:border-primary/30 hover:text-primary transition-all">
-                    🍽 Beslenme
+                  <span className="flex-1 py-1.5 text-[11px] font-bold text-text-secondary bg-bg-main rounded-xl border border-border-main hover:border-primary/30 hover:text-primary transition-all flex items-center justify-center gap-1">
+                    <BowlIcon width={14} height={14} /> Beslenme
                   </span>
-                  <span className="flex-1 text-center py-1.5 text-[11px] font-bold text-text-secondary bg-bg-main rounded-xl border border-border-main hover:border-primary/30 hover:text-primary transition-all">
-                    📋 Tedavi
+                  <span className="flex-1 py-1.5 text-[11px] font-bold text-text-secondary bg-bg-main rounded-xl border border-border-main hover:border-primary/30 hover:text-primary transition-all flex items-center justify-center gap-1">
+                    <PillIcon width={14} height={14} /> Tedavi
                   </span>
                 </div>
               </Link>
             )
           })}
 
-          {/* Yeni Pati Ekle Kartı */}
-          <Link
-            href="/owner/pets/add"
-            className="rounded-[20px] border-2 border-dashed border-border-main hover:border-primary/40 hover:bg-primary-soft/20 transition-all duration-200 p-6 flex flex-col items-center justify-center gap-3 cursor-pointer group min-h-[220px]"
-          >
-            <div className="w-14 h-14 rounded-full bg-primary-soft flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-200">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M5 12h14"/><path d="M12 5v14"/>
-              </svg>
-            </div>
-            <div className="text-center">
-              <p className="text-[15px] font-bold text-text-secondary group-hover:text-primary transition-colors">Yeni Pati Ekle</p>
-              <p className="text-[12px] text-text-secondary/60 mt-0.5">Pati ailenizi büyütün</p>
-            </div>
-          </Link>
+
         </div>
       ) : (
         // Boş Durum
@@ -139,12 +106,9 @@ export default async function PetsPage() {
           <div>
             <h2 className="text-[22px] font-extrabold text-text-primary mb-2">Henüz Pati Eklemediniz</h2>
             <p className="text-text-secondary font-medium max-w-sm">
-              Odi.Pet ile pati dostlarınızın sağlık, beslenme ve aşı takibini kolayca yapın.
+              Odi.Pet ile pati dostlarınızın sağlık, beslenme ve aşı takibini kolayca yapın. Alttaki <strong>+</strong> butonuna dokunarak ilk patiyi ekleyebilirsiniz.
             </p>
           </div>
-          <Link href="/owner/pets/add" className="btn-primary px-10 py-3 shadow-xl shadow-primary/20">
-            İlk Patiyi Ekle →
-          </Link>
         </div>
       )}
     </div>

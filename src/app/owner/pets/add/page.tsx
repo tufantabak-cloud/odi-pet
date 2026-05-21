@@ -79,8 +79,37 @@ function PetForm({ species, onBack }: { species: Species; onBack: () => void }) 
   const [selectedBreed, setSelectedBreed] = useState('')
   const [gender, setGender] = useState<'male' | 'female' | ''>('')
 
-  const [yearOnly, setYearOnly] = useState(true)
+  const [birthDateMode, setBirthDateMode] = useState<'exact' | 'approximate'>('exact')
   const [birthDate, setBirthDate] = useState('')
+  const [approxYears, setApproxYears] = useState('')
+  const [approxMonths, setApproxMonths] = useState('')
+
+  const handleApproxChange = (yStr: string, mStr: string) => {
+    setApproxYears(yStr)
+    setApproxMonths(mStr)
+    
+    const years = parseInt(yStr) || 0
+    const months = parseInt(mStr) || 0
+    
+    if (years === 0 && months === 0) {
+      setBirthDate('')
+      return
+    }
+    
+    const now = new Date()
+    now.setDate(1)
+    
+    let targetYear = now.getFullYear() - years
+    let targetMonth = now.getMonth() - months
+    
+    while (targetMonth < 0) {
+      targetMonth += 12
+      targetYear -= 1
+    }
+    
+    const targetDate = new Date(targetYear, targetMonth, 1)
+    setBirthDate(targetDate.toISOString().split('T')[0])
+  }
 
   const currentYear = new Date().getFullYear()
   const breeds = species === 'Kedi' ? CAT_BREEDS : DOG_BREEDS
@@ -195,48 +224,94 @@ function PetForm({ species, onBack }: { species: Species; onBack: () => void }) 
           </div>
 
           {/* Doğum Tarihi */}
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <label className="text-[13px] font-bold text-text-primary">Doğum Tarihi</label>
+          <div className="flex flex-col gap-3">
+            <label className="text-[13px] font-bold text-text-primary">Doğum Tarihi</label>
+            
+            {/* Sekme Seçici (Exact vs Approximate) */}
+            <div className="flex border-b border-border-main mb-2">
               <button
                 type="button"
                 onClick={() => {
-                  setYearOnly(v => !v)
+                  setBirthDateMode('exact')
                   setBirthDate('')
+                  setApproxYears('')
+                  setApproxMonths('')
                 }}
-                className={`text-[11px] font-bold px-3 py-1 rounded-full border transition-all ${
-                  !yearOnly ? 'bg-primary text-white border-primary' : 'bg-surface border-border-main text-text-secondary hover:border-primary/40'
+                className={`flex-1 pb-2.5 text-center text-[13px] font-bold transition-all relative ${
+                  birthDateMode === 'exact'
+                    ? 'text-primary'
+                    : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
-                {!yearOnly ? 'Sadece Yıl Gir' : 'Tam Tarih Gir'}
+                Tam Tarih
+                {birthDateMode === 'exact' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full animate-scaleIn" />
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setBirthDateMode('approximate')
+                  setBirthDate('')
+                  setApproxYears('')
+                  setApproxMonths('')
+                }}
+                className={`flex-1 pb-2.5 text-center text-[13px] font-bold transition-all relative ${
+                  birthDateMode === 'approximate'
+                    ? 'text-primary'
+                    : 'text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                Yaklaşık
+                {birthDateMode === 'approximate' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full animate-scaleIn" />
+                )}
               </button>
             </div>
 
-            {yearOnly ? (
-              <div className="relative animate-scaleIn">
-                <select
-                  value={birthDate ? birthDate.slice(0, 4) : ''}
-                  className="input-base w-full appearance-none cursor-pointer"
-                  onChange={e => setBirthDate(e.target.value ? `${e.target.value}-01-01` : '')}
-                >
-                  <option value="">Yıl seçin</option>
-                  {Array.from({ length: currentYear - 2000 + 1 }, (_, i) => currentYear - i).map(y => (
-                    <option key={y} value={String(y)}>{y}</option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-text-secondary">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                </div>
-              </div>
-            ) : (
-              <div className="animate-fadeInUp">
+            {birthDateMode === 'exact' ? (
+              <div className="animate-scaleIn">
                 <input
                   type="date"
                   value={birthDate}
                   max={new Date().toISOString().split('T')[0]}
-                  className="input-base"
+                  className="input-base w-full animate-scaleIn"
                   onChange={e => setBirthDate(e.target.value)}
                 />
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3.5 animate-scaleIn">
+                {/* Yıl Girişi */}
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    max="30"
+                    placeholder="Yıl"
+                    value={approxYears}
+                    onChange={e => handleApproxChange(e.target.value, approxMonths)}
+                    className="w-full px-5 py-4 bg-surface border border-primary/20 rounded-[16px] text-[15px] font-medium placeholder-text-secondary/60 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all text-text-primary"
+                  />
+                  {approxYears && (
+                    <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[13px] font-bold text-text-secondary animate-scaleIn">Yıl</span>
+                  )}
+                </div>
+
+                {/* Ay Girişi */}
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    max="11"
+                    placeholder="Ay"
+                    value={approxMonths}
+                    onChange={e => handleApproxChange(approxYears, e.target.value)}
+                    className="w-full px-5 py-4 bg-surface border border-primary/20 rounded-[16px] text-[15px] font-medium placeholder-text-secondary/60 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all text-text-primary"
+                  />
+                  {approxMonths && (
+                    <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[13px] font-bold text-text-secondary animate-scaleIn">Ay</span>
+                  )}
+                </div>
               </div>
             )}
           </div>

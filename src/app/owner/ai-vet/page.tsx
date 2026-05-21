@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import CoachMark from '@/components/ui/CoachMark'
 
@@ -52,6 +53,7 @@ const FOLLOWUP_CHIPS: Record<string, string[]> = {
 }
 
 export default function AIVetPage() {
+  const router = useRouter()
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'ai',
@@ -94,7 +96,17 @@ export default function AIVetPage() {
             diseases: p.health_diseases?.filter((d:any) => d.status === 'active' || d.status === 'chronic').map((d:any) => d.disease_name) || []
           }))
           setPets(formatted)
-          setSelectedPet(formatted[0])
+          
+          let defaultPet = formatted[0]
+          if (typeof window !== 'undefined') {
+            const urlParams = new URLSearchParams(window.location.search)
+            const urlPetId = urlParams.get('petId')
+            if (urlPetId) {
+              const found = formatted.find(p => p.id === urlPetId)
+              if (found) defaultPet = found
+            }
+          }
+          setSelectedPet(defaultPet)
         }
       } catch (err) {
         console.error('Pets fetch error:', err)
@@ -177,34 +189,40 @@ export default function AIVetPage() {
           icon="🤖"
           position="bottom"
         />
-        <div>
-          <h1 className="text-[24px] font-extrabold text-text-primary tracking-tight flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary-soft text-primary flex items-center justify-center shrink-0">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/>
-              </svg>
-            </div>
-            AI Vet
-          </h1>
-          <p className="text-text-secondary text-[13px] mt-0.5">Belirtileri yazın — detaylı ön değerlendirme alın.</p>
+        <div className="flex gap-4 items-start">
+          <button type="button" onClick={() => router.back()}
+            className="w-10 h-10 rounded-full border border-border-main flex items-center justify-center text-text-secondary hover:text-primary transition-all bg-surface shrink-0 mt-0.5 shadow-sm hover:scale-[1.05] active:scale-[0.95]">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          </button>
+          <div>
+            <h1 className="text-[24px] font-extrabold text-text-primary tracking-tight flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary-soft text-primary flex items-center justify-center shrink-0">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/>
+                </svg>
+              </div>
+              AI Vet
+            </h1>
+            <p className="text-text-secondary text-[13px] mt-0.5">Belirtileri yazın — detaylı ön değerlendirme alın.</p>
 
-          {pets.length > 0 && (
-            <div className="mt-4 flex items-center gap-2">
-              <span className="text-[12px] font-bold text-text-secondary uppercase tracking-wider">🐾 HASTA SEÇİMİ:</span>
-              <select 
-                className="input-base py-1.5 px-3 text-[13px] font-bold min-w-[140px] bg-primary/5 border-primary/20 text-primary cursor-pointer hover:bg-primary/10 transition-colors"
-                value={selectedPet?.id || ''}
-                onChange={(e) => {
-                  const p = pets.find(x => x.id === e.target.value)
-                  if(p) setSelectedPet(p)
-                }}
-              >
-                {pets.map(p => (
-                  <option key={p.id} value={p.id}>{p.name} ({p.species})</option>
-                ))}
-              </select>
-            </div>
-          )}
+            {pets.length > 0 && (
+              <div className="mt-4 flex items-center gap-2">
+                <span className="text-[12px] font-bold text-text-secondary uppercase tracking-wider">🐾 HASTA SEÇİMİ:</span>
+                <select 
+                  className="input-base py-1.5 px-3 text-[13px] font-bold min-w-[140px] bg-primary/5 border-primary/20 text-primary cursor-pointer hover:bg-primary/10 transition-colors"
+                  value={selectedPet?.id || ''}
+                  onChange={(e) => {
+                    const p = pets.find(x => x.id === e.target.value)
+                    if(p) setSelectedPet(p)
+                  }}
+                >
+                  {pets.map(p => (
+                    <option key={p.id} value={p.id}>{p.name} ({p.species})</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
         </div>
         <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary/70 bg-primary/10 px-2.5 py-1 rounded-full mt-1 shrink-0">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>

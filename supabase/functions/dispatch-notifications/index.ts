@@ -118,6 +118,16 @@ serve(async (_req) => {
     if (fnErr) throw new Error(`RPC error: ${fnErr.message}`)
     console.log(`[dispatch-notifications] Generated ${count} in-app notifications`)
 
+    // 1b. Generate birthday notifications via DB function
+    let bdayCount = 0
+    const { data: bCount, error: bdayErr } = await supabase.rpc("generate_birthday_notifications")
+    if (bdayErr) {
+      console.error(`[dispatch-notifications] Birthday RPC error:`, bdayErr)
+    } else {
+      bdayCount = bCount ?? 0
+      console.log(`[dispatch-notifications] Generated ${bdayCount} in-app birthday notifications`)
+    }
+
     // 2. Fetch unsent email notifications (created in last 24h, email not sent)
     const { data: unsent, error: fetchErr } = await supabase
       .from("notifications")
@@ -234,7 +244,7 @@ serve(async (_req) => {
     return new Response(
       JSON.stringify({
         status: "success",
-        in_app_notifications_created: count ?? 0,
+        in_app_notifications_created: (count ?? 0) + bdayCount,
         emails_sent: emailsSent,
         pushes_sent: pushesSent
       }),

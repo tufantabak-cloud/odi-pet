@@ -47,6 +47,13 @@ Yapılacak tüm yeni geliştirmelerde, arayüz tasarımlarında ve kod mimarisin
 2. Akışlar olabildiğince az tıklama ile hedefe ulaştırmalı.
 3. Kullanıcıya her zaman net, temiz ve premium bir "MVP (Minimum Viable Product)" deneyimi sunulmalıdır.
 
+## Odi.Pet Görsel Tasarım ve İkon Standartları (Visual Design & Icon Rule)
+**BİRİNCİL KURAL:** Uygulama genelinde kullanılacak tüm ikonlar, illüstrasyonlar ve görsel öğeler tek tip, kedi/köpek odaklı ve premium olmalıdır:
+1. **İnsani İkonların Yasaklanması:** Tenis raketi (Aktivite), biftek eti (Beslenme) gibi insan odaklı veya jenerik ikonlar kesinlikle kullanılmayacaktır. Yerlerine doğrudan evcil hayvan hayatını simgeleyen tasarımlar (kemik, mama kabı, kedi kumu küreği, taşıma kafesi vb.) tercih edilmelidir.
+2. **Yarı-3D İllüstrasyon Stili (Semi-3D Style):** İkonlar düz (flat) tek renkli çizgiler veya sıkıcı emojiler yerine; zengin gradyanlar (gradyan yönleri ve uyumlu renk çiftleri), katmanlı çizimler ve derinlik hissi veren yumuşak gölgeler (`feDropShadow`) içermelidir.
+3. **Canlı Renk Paleti:** Odi.Pet marka bütünlüğü için pembe/mor (Grooming), turkuaz/teal (Temizlik), turuncu/kırmızı (Aktivite), mavi/kırmızı (Medikal), koyu mor/indigo (Veteriner), altın/turuncu (Beslenme) gibi canlı, sıcak ve yüksek kaliteli renk geçişleri standart kabul edilecektir.
+4. **İnteraktif Geri Bildirim:** Etkileşimli tüm görsel öğeler, üzerine gelindiğinde veya seçildiğinde yumuşak animasyonlarla (`scale-[1.05]` veya `scale-[1.1]`) hafifçe büyümeli ve renk geçişleriyle kullanıcıya premium bir etkileşim hissi sunmalıdır.
+
 ## Veri Toplama Stratejisi (Progressive Profiling)
 **BİRİNCİL KURAL:** Kullanıcıdan boş, upuzun formlar doldurması İSTENMEYECEK.
 Odi.Pet Veri Toplama ve Zaman Matrisi (Progressive Profiling) süreci her daim gözetilecek ve sisteme adım adım dahil edilecektir:
