@@ -288,7 +288,7 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
 
         // 2) health_schedule'u güncelle — tüm alanlar dahil
 
-        const { data: updatedSchedule, error: updateError } = await supabase
+        const { data: updatedSchedules, error: updateError } = await supabase
           .from('health_schedules')
           .update({
             title: finalTitle,
@@ -307,11 +307,15 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
             },
           })
           .eq('id', taskToEdit.id)
-          .select('*, vaccines(name)')
-          .single();
+          .select('*, vaccines(name)');
 
         if (updateError) throw updateError;
-        onDone(updatedSchedule);
+        
+        const updatedSchedule = updatedSchedules && updatedSchedules.length > 0 
+          ? updatedSchedules[0] 
+          : null;
+          
+        onDone(updatedSchedule || taskToEdit);
         return;
       }
 
