@@ -18,7 +18,7 @@ export default function SocialPage() {
             Odi.Pet Sosyal Dünyası
           </h1>
           <p className="text-text-secondary text-[15px] md:text-[16px] font-medium leading-relaxed mb-6">
-            Diğer evcil hayvan sahipleriyle tanışabileceğiniz, pati dostunuz için oyun arkadaşları (playdate) bulabileceğiniz, deneyimlerinizi paylaşabileceğiniz ve topluluk etkinliklerine katılabileceğiniz sosyal ağımız sonraki aşamalarda burada yerini alacak!
+            Diğer evcil hayvan sahipleriyle tanışabileceğiniz, can dostunuz için oyun arkadaşları (playdate) bulabileceğiniz, deneyimlerinizi paylaşabileceğiniz ve topluluk etkinliklerine katılabileceğiniz sosyal ağımız sonraki aşamalarda burada yerini alacak!
           </p>
           <div className="w-full h-px bg-border-main my-4" />
           <p className="text-[13px] font-bold text-text-secondary uppercase tracking-widest">
@@ -38,7 +38,7 @@ export default function SocialPage() {
         </div>
         <div className="card-base p-6 text-center bg-white border border-border-main">
           <div className="text-[32px] mb-2">💬</div>
-          <h3 className="text-[16px] font-extrabold text-text-primary mb-1">Pati Forumları</h3>
+          <h3 className="text-[16px] font-extrabold text-text-primary mb-1">Can Dostu Forumları</h3>
           <p className="text-[12px] text-text-secondary leading-relaxed font-medium">
             Beslenme, eğitim ve sağlık konularında deneyimli sahiplerin tecrübelerinden faydalanın.
           </p>

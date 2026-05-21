@@ -128,6 +128,16 @@ serve(async (_req) => {
       console.log(`[dispatch-notifications] Generated ${bdayCount} in-app birthday notifications`)
     }
 
+    // 1c. Generate general schedule notifications via DB function
+    let scheduleCount = 0
+    const { data: sCount, error: scheduleErr } = await supabase.rpc("generate_schedule_notifications")
+    if (scheduleErr) {
+      console.error(`[dispatch-notifications] Schedule RPC error:`, scheduleErr)
+    } else {
+      scheduleCount = sCount ?? 0
+      console.log(`[dispatch-notifications] Generated ${scheduleCount} in-app schedule notifications`)
+    }
+
     // 2. Fetch unsent email notifications (created in last 24h, email not sent)
     const { data: unsent, error: fetchErr } = await supabase
       .from("notifications")
@@ -138,7 +148,7 @@ serve(async (_req) => {
         message,
         type,
         profiles!notifications_profile_id_fkey (
-          email:auth_email
+          email
         )
       `)
       .eq("sent_email", false)
@@ -244,7 +254,7 @@ serve(async (_req) => {
     return new Response(
       JSON.stringify({
         status: "success",
-        in_app_notifications_created: (count ?? 0) + bdayCount,
+        in_app_notifications_created: (count ?? 0) + bdayCount + scheduleCount,
         emails_sent: emailsSent,
         pushes_sent: pushesSent
       }),

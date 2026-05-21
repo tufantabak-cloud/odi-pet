@@ -6,8 +6,8 @@ import { calcAge } from '@/lib/pets/utils'
 import { VaccineIcon, BowlIcon, PillIcon } from '@/components/icons/PetIcons'
 
 export const metadata = {
-  title: 'Pati Dostlarım | Odi.Pet',
-  description: 'Tüm pati dostlarınızı görüntüleyin ve yönetin.',
+  title: 'Can Dostlarım | Odi.Pet',
+  description: 'Tüm can dostlarınızı görüntüleyin ve yönetin.',
 }
 
 export default async function PetsPage() {
@@ -25,15 +25,23 @@ export default async function PetsPage() {
   return (
     <div className="flex flex-col gap-8 pb-20">
       {/* Başlık */}
-      <div>
-        <h1 className="text-[28px] sm:text-[32px] font-extrabold text-text-primary tracking-tight">
-          Pati Dostlarım
-        </h1>
-        <p className="text-text-secondary font-medium mt-1">
-          {pets && pets.length > 0
-            ? `${pets.length} pati kaydı bulunuyor`
-            : 'Henüz pati eklemediniz'}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-[28px] sm:text-[32px] font-extrabold text-text-primary tracking-tight">
+            Can Dostlarım
+          </h1>
+          <p className="text-text-secondary font-medium mt-1">
+            {pets && pets.length > 0
+              ? `${pets.length} can dostu kaydı bulunuyor`
+              : 'Henüz can dostu eklemediniz'}
+          </p>
+        </div>
+        <Link
+          href="/owner/pets/add"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-white text-[13px] font-bold hover:bg-primary/90 hover:scale-[1.03] active:scale-[0.97] transition-all duration-200 shadow-sm whitespace-nowrap mt-1"
+        >
+          <span className="text-[16px] leading-none">+</span> Can Dost Ekle
+        </Link>
       </div>
 
       {/* İçerik */}
@@ -104,9 +112,9 @@ export default async function PetsPage() {
             🐾
           </div>
           <div>
-            <h2 className="text-[22px] font-extrabold text-text-primary mb-2">Henüz Pati Eklemediniz</h2>
+            <h2 className="text-[22px] font-extrabold text-text-primary mb-2">Henüz Can Dostu Eklemediniz</h2>
             <p className="text-text-secondary font-medium max-w-sm">
-              Odi.Pet ile pati dostlarınızın sağlık, beslenme ve aşı takibini kolayca yapın. Alttaki <strong>+</strong> butonuna dokunarak ilk patiyi ekleyebilirsiniz.
+              Odi.Pet ile can dostlarınızın sağlık, beslenme ve aşı takibini kolayca yapın. Alttaki <strong>+</strong> butonuna dokunarak ilk can dostunuzu ekleyebilirsiniz.
             </p>
           </div>
         </div>

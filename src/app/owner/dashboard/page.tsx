@@ -92,18 +92,28 @@ export default async function OwnerDashboard() {
       {/* Greeting */}
       <div>
         <h1 className="text-[28px] sm:text-[32px] font-extrabold text-text-primary tracking-tight">
-          Merhaba, {profile?.first_name || 'Hoş Geldin'} 👋
+          Merhaba, {profile?.first_name || 'Hoş Geldin'}
         </h1>
-        <p className="text-text-secondary font-medium mt-1">Pati dostlarının günlük özeti aşağıda.</p>
+        <p className="text-text-secondary font-medium mt-1">Can dostlarınızın günlük özeti aşağıda.</p>
       </div>
 
       {/* Pet Slider — Hero Card Design */}
       {petsWithStats && petsWithStats.length > 0 ? (
         <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-[16px] font-extrabold text-text-primary">Can Dostlarım</h2>
+            <Link
+              href="/owner/pets/add"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary text-white text-[12px] font-bold hover:bg-primary/90 hover:scale-[1.03] active:scale-[0.97] transition-all duration-200 shadow-sm whitespace-nowrap"
+            >
+              <span className="text-[14px] leading-none">+</span> Can Dost Ekle
+            </Link>
+          </div>
           <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-none snap-x snap-mandatory">
             {petsWithStats.map(pet => (
               <div
                 key={pet.id}
+                data-testid="pet-card"
                 className="snap-start shrink-0 w-[200px] sm:w-[220px] rounded-[24px] overflow-hidden group relative cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300"
                 style={{ background: 'var(--color-surface)' }}
               >
@@ -150,8 +160,8 @@ export default async function OwnerDashboard() {
           <div className="w-16 h-16 bg-primary-soft rounded-[18px] flex items-center justify-center text-primary mb-4">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5c2.8 0 5 2.2 5 5 0 3-4 8-5 10-1-2-5-7-5-10 0-2.8 2.2-5 5-5z"/></svg>
           </div>
-          <h3 className="text-[18px] font-bold text-text-primary">Henüz pati eklemediniz</h3>
-          <p className="text-[13px] text-text-secondary mt-2 max-w-xs">Alttaki <strong>+</strong> butonuna dokunarak ilk pati dostunuzu ekleyebilirsiniz.</p>
+          <h3 className="text-[18px] font-bold text-text-primary">Henüz can dostu eklemediniz</h3>
+          <p className="text-[13px] text-text-secondary mt-2 max-w-xs">Alttaki <strong>+</strong> butonuna dokunarak ilk can dostunuzu ekleyebilirsiniz.</p>
         </div>
       )}
 

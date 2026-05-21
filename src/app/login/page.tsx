@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, FormEvent, Suspense } from 'react'
+import { useState, FormEvent, Suspense, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -14,6 +14,19 @@ function LoginForm() {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError]     = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [hydrated, setHydrated] = useState(false)
+
+  useEffect(() => {
+    setHydrated(true)
+    const checkSession = async () => {
+      const supabase = createBrowserSupabaseClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        window.location.href = '/'
+      }
+    }
+    checkSession()
+  }, [])
 
   const reasonBanner: Record<string, { icon: string; text: string }> = {
     admin_required: {
@@ -166,7 +179,7 @@ function LoginForm() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={!hydrated || loading}
             className="btn-primary w-full mt-4 py-4 text-[15px] font-black shadow-xl shadow-primary/20 hover:shadow-primary/40 disabled:opacity-60 transition-all active:scale-[0.98]"
           >
             {loading ? (

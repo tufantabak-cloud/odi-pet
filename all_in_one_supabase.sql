@@ -49,6 +49,8 @@ CREATE TABLE public.pets (
   species TEXT NOT NULL,
   breed TEXT,
   birth_date DATE,
+  lifestyle TEXT,
+  size TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE public.pets ENABLE ROW LEVEL SECURITY;
@@ -194,7 +196,9 @@ ALTER TABLE public.pets
   ADD COLUMN IF NOT EXISTS pedigree_sire TEXT,
   ADD COLUMN IF NOT EXISTS pedigree_dam  TEXT,
   ADD COLUMN IF NOT EXISTS vet_name      TEXT,
-  ADD COLUMN IF NOT EXISTS vet_phone     TEXT;
+  ADD COLUMN IF NOT EXISTS vet_phone     TEXT,
+  ADD COLUMN IF NOT EXISTS lifestyle     TEXT,
+  ADD COLUMN IF NOT EXISTS size          TEXT;
 
 -- =============================================
 -- BÜYÜME ANALİZİ

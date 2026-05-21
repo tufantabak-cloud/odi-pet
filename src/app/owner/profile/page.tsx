@@ -38,7 +38,7 @@ export default async function ProfileMenuPage() {
   const completionChecks = [
     { done: !!(user?.phone || (profile as any)?.phone), label: 'Telefon Ekle', action: '+ Telefon Ekle', link: '/owner/profile/edit' },
     { done: isPremium, label: 'Ödeme Yöntemi Ekle', action: '+ Ödeme Yöntemi Ekle', link: '/owner/profile/subscription' },
-    { done: !!(pets && pets.length > 0), label: 'İlk Patiyi Ekle', action: '+ Pati Ekle', link: '/owner/pets/add' },
+    { done: !!(pets && pets.length > 0), label: 'İlk Can Dostunu Ekle', action: '+ Can Dost Ekle', link: '/owner/pets/add' },
     { done: hasVaccineRecords, label: 'Aşı Kaydı Gir', action: '+ Aşı Ekle', link: pets && pets.length > 0 ? `/owner/pets/${pets[0].id}` : '/owner/pets/add' },
   ]
 
@@ -168,7 +168,7 @@ export default async function ProfileMenuPage() {
       {/* 3. Pet Ecosystem Management */}
       <section className="flex flex-col gap-3">
         <div className="flex justify-between items-center px-2">
-          <h2 className="text-[12px] font-black text-text-secondary uppercase tracking-widest">Pati Dostlarım</h2>
+          <h2 className="text-[12px] font-black text-text-secondary uppercase tracking-widest">Can Dostlarım</h2>
         </div>
         
         <div className="grid grid-cols-1 gap-3">
@@ -189,7 +189,7 @@ export default async function ProfileMenuPage() {
           ))}
           {(!pets || pets.length === 0) && (
             <div className="card-base p-6 text-center text-text-secondary text-[14px]">
-              Henüz kayıtlı bir pati dostunuz yok.
+              Henüz kayıtlı bir can dostunuz yok.
             </div>
           )}
         </div>

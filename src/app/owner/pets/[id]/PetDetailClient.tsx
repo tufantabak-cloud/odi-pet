@@ -92,6 +92,14 @@ const migrateScheduleCategory = (s: any) => {
   return { ...s, category: cat };
 };
 
+/** Görevin tarih ve saatini birleştirerek Date nesnesi üretir */
+const getTaskDateTime = (s: any) => {
+  if (!s.due_date) return new Date(0)
+  const dateStr = s.due_date.includes('T') ? s.due_date.split('T')[0] : s.due_date
+  const timeStr = s.due_time || '12:00:00'
+  return new Date(`${dateStr}T${timeStr}`)
+};
+
 /** Tab'a ait CTA bilgileri — türe göre dinamik */
 function getTabCtaInfo(species: string | undefined): Record<string, { icon: React.ReactNode; btnLabel: string; desc: string; title: string; gradient: string }> {
   const isDog = species === 'Köpek' || species === 'dog';
@@ -123,12 +131,12 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   const tabCtaInfo = getTabCtaInfo(pet.species);
 
   const [localSchedules, setLocalSchedules] = useState<any[]>(() =>
-    schedules ? [...schedules].map(migrateScheduleCategory).sort((a: any, b: any) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()) : []
+    schedules ? [...schedules].map(migrateScheduleCategory).sort((a: any, b: any) => getTaskDateTime(a).getTime() - getTaskDateTime(b).getTime()) : []
   )
 
   useEffect(() => {
     if (schedules) {
-      setLocalSchedules([...schedules].map(migrateScheduleCategory).sort((a: any, b: any) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()))
+      setLocalSchedules([...schedules].map(migrateScheduleCategory).sort((a: any, b: any) => getTaskDateTime(a).getTime() - getTaskDateTime(b).getTime()))
     }
   }, [schedules])
 
@@ -158,7 +166,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       if (s.status === 'done') return false
       
       try {
-        const d = new Date(s.due_date)
+        const d = getTaskDateTime(s)
         
         if (period === 'overdue') return d < now
         
@@ -173,8 +181,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         return d <= end
       } catch { return false }
     }).sort((a: any, b: any) => {
-      if (period === 'done') return new Date(b.due_date).getTime() - new Date(a.due_date).getTime()
-      return new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
+      if (period === 'done') return getTaskDateTime(b).getTime() - getTaskDateTime(a).getTime()
+      return getTaskDateTime(a).getTime() - getTaskDateTime(b).getTime()
     })
   }
 
@@ -468,15 +476,19 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           onClose={() => { setTaskWizardOpen(false); setTaskToEdit(null); setWizardInitialCategory(null) }}
           onDone={(newTask?: any) => {
             if (newTask) {
+              const newTasksArray = Array.isArray(newTask) ? newTask : [newTask];
+              const normalizedNewTasks = newTasksArray.map(migrateScheduleCategory);
               setLocalSchedules(prev => {
-                const exists = prev.some(s => s.id === newTask.id);
-                if (exists) {
-                  return prev.map(s => s.id === newTask.id ? newTask : s)
-                    .sort((a: any, b: any) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
-                } else {
-                  return [...prev, newTask]
-                    .sort((a: any, b: any) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
-                }
+                const updated = [...prev];
+                normalizedNewTasks.forEach(task => {
+                  const idx = updated.findIndex(s => s.id === task.id);
+                  if (idx >= 0) {
+                    updated[idx] = task;
+                  } else {
+                    updated.push(task);
+                  }
+                });
+                return updated.sort((a: any, b: any) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
               });
             }
             router.refresh();
@@ -521,8 +533,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
            {/* Stats */}
           {(() => {
             const now = new Date()
-            const localOverdue = localSchedules.filter((s: any) => s.status !== 'done' && new Date(s.due_date) < now).length
-            const localPlanned = localSchedules.filter((s: any) => s.status !== 'done' && new Date(s.due_date) >= now).length
+            const localOverdue = localSchedules.filter((s: any) => s.status !== 'done' && getTaskDateTime(s) < now).length
+            const localPlanned = localSchedules.filter((s: any) => s.status !== 'done' && getTaskDateTime(s) >= now).length
             const localCompleted = localSchedules.filter((s: any) => s.status === 'done').length
             
             return (

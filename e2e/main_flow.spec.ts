@@ -87,7 +87,7 @@ test.describe('Pets Module', () => {
     await page.waitForLoadState('networkidle');
     // Either see a pet list or the empty-state CTA
     await expect(
-      page.locator('h1, h2').filter({ hasText: /Pet|Hayvan/i }).first()
+      page.locator('h1, h2').filter({ hasText: /Pet|Hayvan|Pati|Can Dost/i }).first()
     ).toBeVisible({ timeout: 10_000 });
   });
 });

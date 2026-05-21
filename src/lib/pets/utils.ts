@@ -18,7 +18,7 @@ export function calcAge(birthDate: string | null) {
 
   // If the birth date is in the future (invalid but possible data)
   if (born > today) {
-    return { text: '0 gün', label: 'Yavru' }
+    return { text: '0 günlük', label: 'Yavru' }
   }
 
   let years = today.getFullYear() - born.getFullYear()
@@ -42,11 +42,11 @@ export function calcAge(birthDate: string | null) {
   }
 
   const parts = []
-  if (years > 0) parts.push(`${years} yıl`)
-  if (months > 0) parts.push(`${months} ay`)
-  if (days > 0) parts.push(`${days} gün`)
+  if (years > 0) parts.push(`${years} yaşında`)
+  if (months > 0) parts.push(`${months} aylık`)
+  if (days > 0) parts.push(`${days} günlük`)
 
-  const text = parts.join(', ') || '0 gün'
+  const text = parts.join(' ') || '0 günlük'
 
   // Köpek & Kedi yaş gruplandırması:
   // - Yavru: 0 - 1 yaş (yaş < 1 yani years === 0 ise)

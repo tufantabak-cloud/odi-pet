@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import citiesData from '@/lib/cities.json'
 import Link from 'next/link'
+import { calcAge } from '@/lib/pets/utils'
 
 const CAT_BREEDS = [
   'British Shorthair', 'Scottish Fold', 'Scottish Straight',
@@ -280,7 +281,10 @@ export default function EditPetForm({ pet }: { pet: any }) {
               </div>
             </div>
              <div className="flex flex-col gap-3">
-               <label className="text-[13px] font-bold text-text-primary">Doğum Tarihi</label>
+               <div className="flex flex-col gap-0.5">
+                 <label className="text-[13px] font-bold text-text-primary">Doğum Tarihi / Yaş</label>
+                 <p className="text-[11px] text-text-secondary">Tam doğum tarihini seçebilir veya yaklaşık yaşını girebilirsiniz.</p>
+               </div>
                
                {/* Sekme Seçici (Exact vs Approximate) */}
                <div className="flex border-b border-border-main mb-2">
@@ -328,7 +332,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
                        : 'text-text-secondary hover:text-text-primary'
                    }`}
                  >
-                   Yaklaşık
+                   Yaklaşık Yaş
                    {birthDateMode === 'approximate' && (
                      <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full animate-scaleIn" />
                    )}
@@ -347,19 +351,19 @@ export default function EditPetForm({ pet }: { pet: any }) {
                  </div>
                ) : (
                  <div className="flex flex-col gap-3.5 animate-scaleIn">
-                   {/* Yıl Girişi */}
+                   {/* Yaş Girişi */}
                    <div className="relative">
                      <input
                        type="number"
                        min="0"
                        max="30"
-                       placeholder="Yıl"
+                       placeholder="Yaş (Örn: 1)"
                        value={approxYears}
                        onChange={e => handleApproxChange(e.target.value, approxMonths)}
                        className="w-full px-5 py-4 bg-surface border border-primary/20 rounded-[16px] text-[15px] font-medium placeholder-text-secondary/60 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all text-text-primary"
                      />
                      {approxYears && (
-                       <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[13px] font-bold text-text-secondary animate-scaleIn">Yıl</span>
+                       <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[13px] font-bold text-text-secondary animate-scaleIn">Yaş</span>
                      )}
                    </div>
 
@@ -369,7 +373,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
                        type="number"
                        min="0"
                        max="11"
-                       placeholder="Ay"
+                       placeholder="Ay (Örn: 4)"
                        value={approxMonths}
                        onChange={e => handleApproxChange(approxYears, e.target.value)}
                        className="w-full px-5 py-4 bg-surface border border-primary/20 rounded-[16px] text-[15px] font-medium placeholder-text-secondary/60 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all text-text-primary"
@@ -378,6 +382,13 @@ export default function EditPetForm({ pet }: { pet: any }) {
                        <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[13px] font-bold text-text-secondary animate-scaleIn">Ay</span>
                      )}
                    </div>
+                 </div>
+               )}
+
+               {birthDate && (
+                 <div className="text-[13px] font-bold text-primary bg-primary-soft/40 px-4 py-2.5 rounded-[14px] border border-primary/20 mt-1 animate-scaleIn flex items-center gap-2">
+                   <span>✨</span>
+                   <span>Hesaplanan Yaş: <strong>{calcAge(birthDate).text}</strong> ({calcAge(birthDate).label})</span>
                  </div>
                )}
              </div>

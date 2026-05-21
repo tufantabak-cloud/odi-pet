@@ -207,6 +207,13 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
       const todayStr = new Date().toISOString().split('T')[0];
       const isPastDate = (formData.date <= todayStr) && markAsDone;
 
+      const metadata = {
+        ...formData.metadata,
+        ...(selectedVaccine
+          ? { vaccine_code: selectedVaccine.code, vaccine_name: selectedVaccine.name }
+          : {}),
+      };
+
       // ── MÜKERRER KAYIT KONTROLÜ (Sadece Yeni Kayıt İçin) ────────
       if (!taskToEdit) {
         let duplicateQuery = supabase
@@ -280,12 +287,6 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
         }
 
         // 2) health_schedule'u güncelle — tüm alanlar dahil
-        const metadata = {
-          ...formData.metadata,
-          ...(selectedVaccine
-            ? { vaccine_code: selectedVaccine.code, vaccine_name: selectedVaccine.name }
-            : {}),
-        };
 
         const { data: updatedSchedule, error: updateError } = await supabase
           .from('health_schedules')
@@ -357,7 +358,7 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
 
       const inserts = [];
       for (let i = 0; i < finalRepeatCount; i++) {
-        let dStr = getNextDate(formData.date, formData.frequency, formData.interval, i);
+        const dStr = getNextDate(formData.date, formData.frequency, formData.interval, i);
         
         // Eğer bitiş tarihi seçiliyse ve aştıysa döngüyü kır
         if (formData.endCondition === 'date' && formData.endDate && dStr > formData.endDate) {
@@ -421,7 +422,7 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
         }
       }
 
-      onDone(newSchedule);
+      onDone(insertedSchedules);
     } catch (err: any) {
       setError(err.message || 'Görev kaydedilirken bir hata oluştu.');
       setLoading(false);
@@ -436,10 +437,6 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
     (needsVaccinePicker && !selectedVaccine && !showVaccinePicker) ||
     (!computeTitle() && category !== 'Diger');
 
-  // ── Kategorinin Türkçe label'ini bul ─────────────────────────────
-  const categoryLabel = category
-    ? (TASK_CATEGORIES.find(c => c.id === category)?.label ?? category)
-    : null;
 
   const todayStrUI = new Date().toISOString().split('T')[0];
   const isPastDateUI = formData.date <= todayStrUI;
@@ -566,7 +563,7 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
                 Bu işlem uygulandı (Tamamlandı)
               </p>
               <p className="text-[11px] text-text-secondary leading-relaxed">
-                Tarih geçmişe ait. Onaylarsanız görev tamamlanmış sayılır ve gelecek periyot planlanır. Seçilmezse "Planlandı" olarak bekler.
+                Tarih geçmişe ait. Onaylarsanız görev tamamlanmış sayılır ve gelecek periyot planlanır. Seçilmezse &quot;Planlandı&quot; olarak bekler.
               </p>
             </div>
           </label>

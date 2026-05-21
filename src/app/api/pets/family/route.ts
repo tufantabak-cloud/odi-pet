@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     success: true,
     invite,
     inviteLink,
-    message: `${pet?.name ?? 'Pati'}'nin bakım ekibine davet gönderildi.`,
+    message: `${pet?.name ?? 'Can Dostu'}'nun bakım ekibine davet gönderildi.`,
   })
 }
 

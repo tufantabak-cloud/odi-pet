@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { calcAge } from '@/lib/pets/utils'
 
 // ── Irk Listeleri ──────────────────────────────────────────────
 const CAT_BREEDS = [
@@ -26,7 +27,7 @@ function SpeciesSelector({ onSelect }: { onSelect: (s: Species) => void }) {
   return (
     <div className="flex flex-col items-center w-full mx-auto pt-6 pb-10 gap-10 animate-fadeIn">
       <div className="text-center">
-        <h1 className="text-[32px] font-extrabold text-text-primary tracking-tight">Patin Kim?</h1>
+        <h1 className="text-[32px] font-extrabold text-text-primary tracking-tight">Can Dostun Kim?</h1>
         <p className="text-text-secondary mt-2 text-[16px]">Devam etmek için önce tür seçin</p>
       </div>
 
@@ -225,7 +226,10 @@ function PetForm({ species, onBack }: { species: Species; onBack: () => void }) 
 
           {/* Doğum Tarihi */}
           <div className="flex flex-col gap-3">
-            <label className="text-[13px] font-bold text-text-primary">Doğum Tarihi</label>
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[13px] font-bold text-text-primary">Doğum Tarihi / Yaş</label>
+              <p className="text-[11px] text-text-secondary">Tam doğum tarihini seçebilir veya yaklaşık yaşını girebilirsiniz.</p>
+            </div>
             
             {/* Sekme Seçici (Exact vs Approximate) */}
             <div className="flex border-b border-border-main mb-2">
@@ -262,7 +266,7 @@ function PetForm({ species, onBack }: { species: Species; onBack: () => void }) 
                     : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
-                Yaklaşık
+                Yaklaşık Yaş
                 {birthDateMode === 'approximate' && (
                   <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full animate-scaleIn" />
                 )}
@@ -281,19 +285,19 @@ function PetForm({ species, onBack }: { species: Species; onBack: () => void }) 
               </div>
             ) : (
               <div className="flex flex-col gap-3.5 animate-scaleIn">
-                {/* Yıl Girişi */}
+                {/* Yaş Girişi */}
                 <div className="relative">
                   <input
                     type="number"
                     min="0"
                     max="30"
-                    placeholder="Yıl"
+                    placeholder="Yaş (Örn: 1)"
                     value={approxYears}
                     onChange={e => handleApproxChange(e.target.value, approxMonths)}
                     className="w-full px-5 py-4 bg-surface border border-primary/20 rounded-[16px] text-[15px] font-medium placeholder-text-secondary/60 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all text-text-primary"
                   />
                   {approxYears && (
-                    <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[13px] font-bold text-text-secondary animate-scaleIn">Yıl</span>
+                    <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[13px] font-bold text-text-secondary animate-scaleIn">Yaş</span>
                   )}
                 </div>
 
@@ -303,7 +307,7 @@ function PetForm({ species, onBack }: { species: Species; onBack: () => void }) 
                     type="number"
                     min="0"
                     max="11"
-                    placeholder="Ay"
+                    placeholder="Ay (Örn: 4)"
                     value={approxMonths}
                     onChange={e => handleApproxChange(approxYears, e.target.value)}
                     className="w-full px-5 py-4 bg-surface border border-primary/20 rounded-[16px] text-[15px] font-medium placeholder-text-secondary/60 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all text-text-primary"
@@ -312,6 +316,13 @@ function PetForm({ species, onBack }: { species: Species; onBack: () => void }) 
                     <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[13px] font-bold text-text-secondary animate-scaleIn">Ay</span>
                   )}
                 </div>
+              </div>
+            )}
+
+            {birthDate && (
+              <div className="text-[13px] font-bold text-primary bg-primary-soft/40 px-4 py-2.5 rounded-[14px] border border-primary/20 mt-1 animate-scaleIn flex items-center gap-2">
+                <span>✨</span>
+                <span>Hesaplanan Yaş: <strong>{calcAge(birthDate).text}</strong> ({calcAge(birthDate).label})</span>
               </div>
             )}
           </div>

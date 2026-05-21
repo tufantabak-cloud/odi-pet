@@ -184,7 +184,7 @@ export default function AIVetPage() {
       <div className="border-b border-border-main pb-4 mb-4 shrink-0 flex items-start justify-between gap-3 relative">
         <CoachMark
           hintKey="ai_vet_intro"
-          title="Pet'ini seç, semptomları anlat"
+          title="Can dostunu seç, semptomları anlat"
           message="Üst kısımdan evcil hayvanını seç ve şikayetini yaz. AI, cinsine ve yaşına göre kişisel değerlendirme yapacak."
           icon="🤖"
           position="bottom"

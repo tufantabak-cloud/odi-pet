@@ -5,7 +5,7 @@ export default function ServicesPage() {
     {
       id: 'groomer',
       title: 'Kuaför & Bakım',
-      description: 'Pati dostunuz için profesyonel tüy kesimi, banyo, tırnak bakımı ve spa hizmetleri.',
+      description: 'Can dostunuz için profesyonel tüy kesimi, banyo, tırnak bakımı ve spa hizmetleri.',
       icon: '✂️',
       badge: 'Son Fazda',
       color: 'from-pink-500/10 to-rose-500/10 text-pink-600 border-pink-500/20',
@@ -36,11 +36,35 @@ export default function ServicesPage() {
     },
     {
       id: 'petshop',
-      title: 'Premium Petshop',
+      title: 'Premium Can Dostu Mağazası',
       description: 'En kaliteli mamalar, sağlıklı ödül mamaları, oyuncaklar ve aksesuarlar en iyi fiyatlarla.',
       icon: '🛍️',
       badge: 'Son Fazda',
       color: 'from-emerald-500/10 to-teal-500/10 text-emerald-600 border-emerald-500/20',
+    },
+    {
+      id: 'sitter',
+      title: 'Bakıcı (Can Dostu Bakıcısı)',
+      description: 'Evinizde veya bakıcının evinde, can dostunuza özel ilgi ve sevgiyle bireysel bakım hizmeti.',
+      icon: '🏠',
+      badge: 'Çok Yakında',
+      color: 'from-cyan-500/10 to-sky-500/10 text-cyan-600 border-cyan-500/20',
+    },
+    {
+      id: 'insurance',
+      title: 'Can Dostu Sigortası',
+      description: 'Evcil hayvan sağlık sigortası ile beklenmedik veteriner masraflarına karşı güvence altında olun.',
+      icon: '🛡️',
+      badge: 'Çok Yakında',
+      color: 'from-lime-500/10 to-green-500/10 text-lime-600 border-lime-500/20',
+    },
+    {
+      id: 'photographer',
+      title: 'Pet Fotoğrafçısı',
+      description: 'Profesyonel evcil hayvan fotoğraf çekimleri ile can dostunuzun en özel anlarını ölümsüzleştirin.',
+      icon: '📸',
+      badge: 'Çok Yakında',
+      color: 'from-fuchsia-500/10 to-pink-500/10 text-fuchsia-600 border-fuchsia-500/20',
     },
   ]
 
@@ -69,7 +93,7 @@ export default function ServicesPage() {
               Hizmetler & Rezervasyon
             </h1>
             <p className="text-text-secondary text-[15px] md:text-[16px] font-medium leading-relaxed">
-              Odi.Pet ailesi olarak pati dostunuzun tüm bakım, otel, gezdirme, eğitim ve alışveriş ihtiyaçlarını tek çatı altında topluyoruz. Seçkin üyelerimiz ile rezervasyon ve sipariş kurgusu en kısa sürede burada olacak.
+              Odi.Pet ailesi olarak can dostunuzun tüm bakım, otel, gezdirme, eğitim ve alışveriş ihtiyaçlarını tek çatı altında topluyoruz. Seçkin üyelerimiz ile rezervasyon ve sipariş kurgusu en kısa sürede burada olacak.
             </p>
           </div>
           <div className="w-16 h-16 rounded-2xl bg-primary-soft flex items-center justify-center text-primary text-[32px] shrink-0 shadow-inner">

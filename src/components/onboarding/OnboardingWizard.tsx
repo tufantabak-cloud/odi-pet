@@ -7,7 +7,7 @@ import { VaccineIcon, VetIcon, BowlIcon } from '@/components/icons/PetIcons'
 
 const WIZARD_STEPS = [
   { id: 1, title: 'Ne yapıyor?' },
-  { id: 2, title: 'Pet ekle' },
+  { id: 2, title: 'Can Dostu Ekle' },
   { id: 3, title: 'İlk kurulum' }
 ]
 
@@ -91,7 +91,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
             {step === 1 && (
               <div className="flex flex-col animate-fadeIn">
                 <h2 className="text-[24px] font-black text-text-primary tracking-tight mb-6 text-center">
-                  Patin için akıllı asistan
+                  Can dostun için akıllı asistan
                 </h2>
                 <div className="flex flex-col gap-3 mb-2">
                   <div className="bg-primary/5 border border-primary/10 rounded-2xl p-4 flex items-center gap-4">
@@ -179,7 +179,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                   🎉
                 </div>
                 <h2 className="text-[24px] font-black text-text-primary tracking-tight mb-8">
-                  Hazır — şimdi patin kim?
+                  Hazır — şimdi CAN Dostun kim?
                 </h2>
                 
                 <div className="flex flex-col gap-4 w-full px-4 text-left">

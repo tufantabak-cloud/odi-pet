@@ -59,3 +59,8 @@ Yapılacak tüm yeni geliştirmelerde, arayüz tasarımlarında ve kod mimarisin
 Odi.Pet Veri Toplama ve Zaman Matrisi (Progressive Profiling) süreci her daim gözetilecek ve sisteme adım adım dahil edilecektir:
 1. İstenen veri (örneğin telefon no, mikroçip, konum), kullanıcıya sunulacak spesifik bir **özelliğin/faydanın kapsama bedeli** olarak bağlamsal şekilde (Smart Card vb.) istenecek.
 2. Profili zenginleştirme süreci, sadece özelliklerin tetiklemesiyle kalmayacak, aynı zamanda "Profili Zenginleştir" (Enrich Profile) oyunlaştırma modülü ile entegre bir şekilde, aşama aşama ilerletilecektir.
+
+## Dil Kuralı
+**BİRİNCİL KURAL:** Bu uygulamayı geliştirirken kullanıcıyla her zaman **TÜRKÇE** konuşacaksın.
+
+

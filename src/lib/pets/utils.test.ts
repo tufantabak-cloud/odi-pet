@@ -20,36 +20,36 @@ describe('Pet Utils - calcAge', () => {
   it('should return exact months under 1 year', () => {
     // 6 months old
     const result = calcAge('2025-11-12')
-    expect(result).toEqual({ text: '6 ay', label: 'Yavru' })
+    expect(result).toEqual({ text: '6 aylık', label: 'Yavru' })
   })
 
   it('should return exact years for mixed date with exact match', () => {
     // 3 years old
     const result = calcAge('2023-05-12')
-    expect(result).toEqual({ text: '3 yıl', label: 'Yetişkin' })
+    expect(result).toEqual({ text: '3 yaşında', label: 'Yetişkin' })
   })
 
   it('should return precise mix of years, months, and days', () => {
     // 4 years, 2 months, 2 days
     const result = calcAge('2022-03-10')
-    expect(result).toEqual({ text: '4 yıl, 2 ay, 2 gün', label: 'Yetişkin' })
+    expect(result).toEqual({ text: '4 yaşında 2 aylık 2 günlük', label: 'Yetişkin' })
   })
 
   it('should return precise mix with borrow day', () => {
     // Born: 2025-05-15. Today: 2026-05-12.
     // 11 months, 27 days
     const result = calcAge('2025-05-15')
-    expect(result).toEqual({ text: '11 ay, 27 gün', label: 'Yavru' })
+    expect(result).toEqual({ text: '11 aylık 27 günlük', label: 'Yavru' })
   })
 
-  it('should treat a future birthdate as a newborn (0 gün)', () => {
+  it('should treat a future birthdate as a newborn (0 günlük)', () => {
     const result = calcAge('2026-06-12')
-    expect(result).toEqual({ text: '0 gün', label: 'Yavru' })
+    expect(result).toEqual({ text: '0 günlük', label: 'Yavru' })
   })
 
-  it('should return 0 gün for a newborn (same-day registration)', () => {
+  it('should return 0 günlük for a newborn (same-day registration)', () => {
     const result = calcAge('2026-05-12')
-    expect(result).toEqual({ text: '0 gün', label: 'Yavru' })
+    expect(result).toEqual({ text: '0 günlük', label: 'Yavru' })
   })
 })
 

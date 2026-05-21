@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
   }
 
   const name = str(fd, 'name')
-  if (!name) return NextResponse.json({ error: 'Pati ismi belirtilmelidir.' }, { status: 400 })
+  if (!name) return NextResponse.json({ error: 'Can dostunun adı belirtilmelidir.' }, { status: 400 })
 
   const breed = str(fd, 'breed')
   if (!breed) return NextResponse.json({ error: 'Irk seçimi zorunludur.' }, { status: 400 })

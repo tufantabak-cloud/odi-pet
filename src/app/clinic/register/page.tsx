@@ -109,7 +109,7 @@ export default function ClinicRegisterPage() {
               id="clinicName"
               name="clinicName"
               type="text"
-              placeholder="Örn: Pati Veteriner Kliniği"
+              placeholder="Örn: Can Dost Veteriner Kliniği"
               required
               className="input-base py-3 text-[15px]"
             />
