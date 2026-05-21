@@ -3,6 +3,8 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { checkSubscription } from '@/lib/subscription/check'
 
+export const dynamic = 'force-dynamic'
+
 const generateReason = (metrics: {
   overdueCount: number, postponeCount: number, inactiveDays: number,
   lowScoreDays: number, waterLowDays: number, nutritionMissedDays: number,

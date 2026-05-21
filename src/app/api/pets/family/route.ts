@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(req: NextRequest) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -105,3 +107,4 @@ export async function DELETE(req: NextRequest) {
 
   return NextResponse.json({ success: true })
 }
+

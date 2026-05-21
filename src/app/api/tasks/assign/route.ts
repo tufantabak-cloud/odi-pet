@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 
+export const dynamic = 'force-dynamic'
+
 // POST: Assign a task to a member
 export async function POST(req: NextRequest) {
   const user = await getSessionUser()
@@ -151,3 +153,4 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({ tasks, notifications, unreadCount })
 }
+

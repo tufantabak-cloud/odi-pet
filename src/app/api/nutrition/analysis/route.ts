@@ -3,6 +3,8 @@ import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { checkSubscription } from '@/lib/subscription/check'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(req: NextRequest) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -47,3 +49,4 @@ export async function GET(req: NextRequest) {
     }
   })
 }
+

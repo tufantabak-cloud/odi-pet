@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const lat = searchParams.get('lat');
@@ -61,3 +63,4 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'İşlem sırasında bir hata oluştu.' }, { status: 500 });
   }
 }
+

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 
+export const dynamic = 'force-dynamic'
+
 // GET: All calendar events for household (tasks + appointments)
 export async function GET(req: NextRequest) {
   const user = await getSessionUser()
@@ -120,3 +122,4 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ escalated: data?.length ?? 0, items: data })
 }
+
