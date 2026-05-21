@@ -140,6 +140,32 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     }
   }, [schedules])
 
+  useEffect(() => {
+    let active = true;
+    const initRealtime = async () => {
+      const supabase = (await import('@/lib/supabase/client')).createBrowserSupabaseClient()
+      const channel = supabase.channel(`public:health_schedules:pet_${pet.id}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'health_schedules', filter: `pet_id=eq.${pet.id}` },
+          () => {
+            if (active) router.refresh();
+          }
+        )
+        .subscribe()
+      
+      return () => {
+        active = false;
+        supabase.removeChannel(channel)
+      }
+    }
+    
+    const cleanup = initRealtime();
+    return () => {
+      cleanup.then(fn => fn && fn())
+    }
+  }, [pet.id, router])
+
   const openWizardWithCategory = (cat: TaskCategory) => {
     setWizardInitialCategory(cat)
     setTaskToEdit(null)
