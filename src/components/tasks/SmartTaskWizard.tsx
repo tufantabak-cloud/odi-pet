@@ -412,17 +412,25 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
 
       // Eğer seçilen işlem bir Aşı ise, geçmiş onay verilirse (done olanlar için) vaccine_records tablosuna da ekle
       if (isPastDate && selectedVaccine) {
-        const doneInserts = insertedSchedules.filter((s: any) => s.status === 'done');
-        for (const s of doneInserts) {
-           const { error: vrError } = await supabase
-            .from('vaccine_records')
-            .insert({
-              pet_id: petId,
-              vaccine_id: selectedVaccine.id,
-              schedule_id: s.id,
-              applied_date: s.due_date
-            });
-           if (vrError) console.error('Aşı kaydı oluşturulurken hata:', vrError);
+        const { data: dbVac } = await supabase
+          .from('vaccines')
+          .select('id')
+          .eq('code', selectedVaccine.code)
+          .single();
+
+        if (dbVac?.id) {
+          const doneInserts = insertedSchedules.filter((s: any) => s.status === 'done');
+          for (const s of doneInserts) {
+             const { error: vrError } = await supabase
+              .from('vaccine_records')
+              .insert({
+                pet_id: petId,
+                vaccine_id: dbVac.id,
+                schedule_id: s.id,
+                applied_date: s.due_date
+              });
+             if (vrError) console.error('Aşı kaydı oluşturulurken hata:', vrError);
+          }
         }
       }
 

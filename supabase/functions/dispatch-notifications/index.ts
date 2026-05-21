@@ -113,10 +113,8 @@ serve(async (_req) => {
   console.log("[dispatch-notifications] Starting notification cycle…")
 
   try {
-    // 1. Generate in-app notifications via DB function
-    const { data: count, error: fnErr } = await supabase.rpc("generate_vaccine_notifications")
-    if (fnErr) throw new Error(`RPC error: ${fnErr.message}`)
-    console.log(`[dispatch-notifications] Generated ${count} in-app notifications`)
+    // 1. Generate in-app notifications via DB function (Deprecated: generate_vaccine_notifications removed)
+    // The new schedule_notifications and birthday_notifications cover these now.
 
     // 1b. Generate birthday notifications via DB function
     let bdayCount = 0
@@ -254,7 +252,7 @@ serve(async (_req) => {
     return new Response(
       JSON.stringify({
         status: "success",
-        in_app_notifications_created: (count ?? 0) + bdayCount + scheduleCount,
+        in_app_notifications_created: bdayCount + scheduleCount,
         emails_sent: emailsSent,
         pushes_sent: pushesSent
       }),

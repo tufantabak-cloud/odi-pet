@@ -647,7 +647,7 @@ export default function HealthClient({ petId }: { petId: string }) {
               {/* 1. Gecikmiş Aşılar */}
               {overdue.length > 0 && (
                 <div className="flex flex-col gap-3">
-                  <p className="text-[12px] font-black text-error uppercase tracking-wider ml-1">🔴 Gecikmiş İşlemler</p>
+                  <p className="text-[12px] font-black text-error uppercase tracking-wider ml-1 animate-pulse">🔴 Gecikmiş İşlemler</p>
                   {overdue.map(renderScheduleCard)}
                 </div>
               )}

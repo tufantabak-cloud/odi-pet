@@ -54,56 +54,64 @@ export default async function PetsPage() {
                 key={pet.id}
                 href={`/owner/pets/${pet.id}`}
                 data-testid="pet-card"
-                className="card-base p-5 flex flex-col gap-4 group hover:shadow-lg hover:border-primary/30 transition-all duration-200 cursor-pointer"
+                className="card-base overflow-hidden p-5 group hover:shadow-lg hover:border-primary/30 transition-all duration-200 cursor-pointer relative"
               >
-                {/* Avatar + İsim */}
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-[18px] bg-gradient-to-br from-primary-soft to-primary/10 flex items-center justify-center text-primary text-[28px] font-black shrink-0 group-hover:scale-105 transition-transform duration-200 overflow-hidden border border-border-main">
+                {/* Top Gradient Ribbon */}
+                <div className="h-1.5 bg-gradient-to-r from-primary to-primary-hover w-full absolute top-0 left-0" />
+
+                {/* Edit Pen Decoration */}
+                <div className="absolute top-5 right-5 text-text-secondary hover:text-primary transition-colors duration-200">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                  </svg>
+                </div>
+
+                {/* Horizontal Content */}
+                <div className="flex flex-row gap-4 items-start">
+                  {/* Avatar */}
+                  <div className="w-20 h-20 rounded-[20px] bg-gradient-to-br from-primary-soft to-white flex items-center justify-center text-primary text-[32px] font-black shrink-0 group-hover:scale-105 transition-transform duration-200 overflow-hidden border border-border-main shadow-sm">
                     {pet.avatar_url
                       ? <img src={pet.avatar_url} alt={pet.name} className="w-full h-full object-cover" />
                       : (pet.name || '?').charAt(0)}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h2 className="text-[18px] font-extrabold text-text-primary truncate group-hover:text-primary transition-colors">
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0 flex flex-col gap-1">
+                    <h2 className="text-[18px] font-extrabold text-text-primary truncate group-hover:text-primary transition-colors leading-tight">
                       {pet.name}
                     </h2>
-                    <p className="text-[13px] text-text-secondary font-medium">
-                      {pet.species === 'dog' ? '🐶 Köpek' : pet.species === 'cat' ? '🐱 Kedi' : pet.species} • {pet.breed || 'Irk Bilinmiyor'}
+                    <p className="text-[13px] text-text-secondary font-semibold">
+                      {pet.species === 'dog' ? 'Köpek' : pet.species === 'cat' ? 'Kedi' : pet.species} • {pet.breed || 'Irk Bilinmiyor'}
                     </p>
-                  </div>
-                </div>
 
-                {/* Meta Bilgiler */}
-                <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border-main">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-[10px] font-black text-text-secondary uppercase tracking-widest">Yaş</span>
-                    <span className="text-[14px] font-bold text-text-primary">{age.text} ({age.label})</span>
-                  </div>
-                  {pet.weight && (
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-[10px] font-black text-text-secondary uppercase tracking-widest">Ağırlık</span>
-                      <span className="text-[14px] font-bold text-text-primary">{pet.weight} kg</span>
+                    {/* Age Badge */}
+                    {pet.birth_date && (
+                      <div className="flex mt-0.5">
+                        <span className="text-[11.5px] bg-bg-main border border-border-main px-2.5 py-0.5 rounded-lg font-semibold text-text-secondary flex items-center gap-1 shadow-sm">
+                          🎂 {age.text}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Weight & Gender */}
+                    <div className="flex items-center flex-wrap gap-1.5 mt-0.5">
+                      {pet.weight && (
+                        <span className="text-[11.5px] bg-bg-main border border-border-main px-2.5 py-0.5 rounded-lg font-semibold text-text-secondary flex items-center gap-1 shadow-sm">
+                          ⚖️ {pet.weight} kg
+                        </span>
+                      )}
+                      {pet.gender && (
+                        <span className="text-text-secondary font-bold text-[12.5px] flex items-center gap-1 ml-0.5">
+                          • {pet.gender === 'male' ? 'Erkek' : pet.gender === 'female' ? 'Dişi' : 'Bilinmiyor'}
+                        </span>
+                      )}
                     </div>
-                  )}
-                </div>
-
-                {/* Kısayollar */}
-                <div className="flex gap-2">
-                  <span className="flex-1 py-1.5 text-[11px] font-bold text-text-secondary bg-bg-main rounded-xl border border-border-main hover:border-primary/30 hover:text-primary transition-all flex items-center justify-center gap-1">
-                    <VaccineIcon width={14} height={14} /> Sağlık
-                  </span>
-                  <span className="flex-1 py-1.5 text-[11px] font-bold text-text-secondary bg-bg-main rounded-xl border border-border-main hover:border-primary/30 hover:text-primary transition-all flex items-center justify-center gap-1">
-                    <BowlIcon width={14} height={14} /> Beslenme
-                  </span>
-                  <span className="flex-1 py-1.5 text-[11px] font-bold text-text-secondary bg-bg-main rounded-xl border border-border-main hover:border-primary/30 hover:text-primary transition-all flex items-center justify-center gap-1">
-                    <PillIcon width={14} height={14} /> Tedavi
-                  </span>
+                  </div>
                 </div>
               </Link>
             )
           })}
-
-
         </div>
       ) : (
         // Boş Durum

@@ -9,6 +9,7 @@ import { TaskCategory } from '@/lib/tasks/taskDefaults'
 import { FirstAidIcon, VaccineIcon, ShampooIcon, BowlIcon, CarrierIcon, ScoopIcon, BoneIcon, HouseIcon } from '@/components/icons/PetIcons'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 
 function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
   const [loading, setLoading] = useState(false)
@@ -116,6 +117,33 @@ function getTabCtaInfo(species: string | undefined): Record<string, { icon: Reac
   };
 }
 
+const getTurkishGenitiveSuffix = (name: string) => {
+  if (!name) return 'nin';
+  const vowels = 'aıoueiöü';
+  const lastChar = name.slice(-1).toLowerCase();
+  const isVowel = vowels.includes(lastChar);
+  
+  let lastVowel = 'e';
+  for (let i = name.length - 1; i >= 0; i--) {
+    const char = name[i].toLowerCase();
+    if (vowels.includes(char)) {
+      lastVowel = char;
+      break;
+    }
+  }
+  
+  const isBack = 'aıou'.includes(lastVowel);
+  const isRounded = 'ouöü'.includes(lastVowel);
+  
+  if (isVowel) {
+    if (isBack) return isRounded ? 'nun' : 'nın';
+    return isRounded ? 'nün' : 'nin';
+  } else {
+    if (isBack) return isRounded ? 'un' : 'ın';
+    return isRounded ? 'ün' : 'in';
+  }
+};
+
 export default function PetDetailClient({ pet, age, score, overdue, schedules, diseases, allergies, medications, growthRecords, appointments, nutritionLogs, payments, subscription }: any) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('Özet')
@@ -141,30 +169,23 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   }, [schedules])
 
   useEffect(() => {
-    let active = true;
-    const initRealtime = async () => {
-      const supabase = (await import('@/lib/supabase/client')).createBrowserSupabaseClient()
-      const channel = supabase.channel(`public:health_schedules:pet_${pet.id}`)
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'health_schedules', filter: `pet_id=eq.${pet.id}` },
-          () => {
-            if (active) router.refresh();
-          }
-        )
-        .subscribe()
-      
-      return () => {
-        active = false;
-        supabase.removeChannel(channel)
-      }
-    }
+    const supabase = createBrowserSupabaseClient()
+    const channel = supabase.channel(`public:health_schedules:pet_${pet.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'health_schedules', filter: `pet_id=eq.${pet.id}` },
+        () => {
+          router.refresh()
+        }
+      )
+      .subscribe()
     
-    const cleanup = initRealtime();
     return () => {
-      cleanup.then(fn => fn && fn())
+      supabase.removeChannel(channel)
     }
   }, [pet.id, router])
+
+  const localOverdue = (localSchedules ?? []).filter((s: any) => s.status !== 'done' && getTaskDateTime(s) < new Date()).length
 
   const openWizardWithCategory = (cat: TaskCategory) => {
     setWizardInitialCategory(cat)
@@ -285,7 +306,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     setActiveMenuId(null)
     if (!id.toString().startsWith('mock-')) {
       try {
-        await (await import('@/lib/supabase/client')).createBrowserSupabaseClient().from('health_schedules').delete().eq('id', id)
+        await createBrowserSupabaseClient().from('health_schedules').delete().eq('id', id)
         router.refresh()
       } catch {}
     }
@@ -296,7 +317,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     setActiveMenuId(null)
     if (!id.toString().startsWith('mock-')) {
       try {
-        await (await import('@/lib/supabase/client')).createBrowserSupabaseClient().from('health_schedules').update({ status: 'completed' }).eq('id', id)
+        await createBrowserSupabaseClient().from('health_schedules').update({ status: 'completed' }).eq('id', id)
         router.refresh()
       } catch {}
     }
@@ -314,7 +335,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     if (item && !id.toString().startsWith('mock-')) {
       const d = new Date(item.due_date); d.setDate(d.getDate() + 1)
       try {
-        await (await import('@/lib/supabase/client')).createBrowserSupabaseClient().from('health_schedules').update({ due_date: d.toISOString() }).eq('id', id)
+        await createBrowserSupabaseClient().from('health_schedules').update({ due_date: d.toISOString() }).eq('id', id)
         router.refresh()
       } catch {}
     }
@@ -436,11 +457,19 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   return (
     <div className="flex flex-col gap-6 pb-20 w-full mx-auto">
 
-      {/* Back */}
-      <Link href="/owner/dashboard" className="flex items-center gap-2 text-[14px] font-bold text-text-secondary hover:text-primary transition-colors group -mb-2">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:-translate-x-0.5 transition-transform"><polyline points="15 18 9 12 15 6"/></svg>
-        Ana Sayfa'ya Dön
-      </Link>
+      {/* Back & AI Chat */}
+      <div className="flex flex-row items-center justify-between gap-2 -mb-2 w-full">
+        <Link href="/owner/dashboard" className="flex items-center gap-1 sm:gap-2 text-[12.5px] sm:text-[14px] font-bold text-text-secondary hover:text-primary transition-colors group shrink-0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:-translate-x-0.5 transition-transform"><polyline points="15 18 9 12 15 6"/></svg>
+          Dön
+        </Link>
+        <Link 
+          href={`/owner/ai-vet?petId=${pet.id}`}
+          className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 sm:px-4 sm:py-2.5 rounded-xl bg-primary text-white text-[12px] sm:text-[13px] font-bold hover:bg-primary-hover hover:scale-[1.03] active:scale-[0.97] transition-all duration-200 shadow-md shadow-primary/15 whitespace-nowrap shrink-0"
+        >
+          <span>🧠</span> {pet.name}'{getTurkishGenitiveSuffix(pet.name)} AI Asistanı
+        </Link>
+      </div>
 
       {/* ── Unified Pet Hero & SOS Card ── */}
       <div className="card-base overflow-hidden flex flex-col group/card relative">
@@ -448,7 +477,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         <div className="h-1.5 bg-gradient-to-r from-primary to-primary-hover"/>
         
         {/* Hero Card Content */}
-        <div className="p-6 flex flex-col sm:flex-row gap-5 items-start sm:items-center">
+        <div className="p-5 flex flex-row gap-4 items-start sm:items-center relative">
           <Link 
             href={`/owner/pets/${pet.id}/edit`} 
             className="absolute top-5 right-5 text-text-secondary hover:text-primary transition-colors duration-200 z-10"
@@ -462,16 +491,39 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           <div className="w-24 h-24 rounded-[24px] bg-gradient-to-br from-primary-soft to-white flex items-center justify-center text-primary text-[40px] font-black shadow-sm ring-2 ring-border-main shrink-0 transition-transform duration-300 group-hover/card:scale-[1.02]">
             {pet.avatar_url ? <img src={pet.avatar_url} className="w-full h-full rounded-[22px] object-cover" alt={pet.name}/> : pet.name.charAt(0)}
           </div>
-          <div className="flex-1">
-            <div className="flex flex-wrap items-center gap-3 mb-1">
-              <h1 className="text-[28px] font-extrabold text-text-primary">{pet.name}</h1>
-            </div>
-            <p className="text-text-secondary font-medium text-[14px]">{pet.species}{pet.breed ? ` • ${pet.breed}` : ''}{pet.gender ? ` • ${genderLabel[pet.gender] ?? ''}` : ''}</p>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {pet.birth_date && <span className="text-[12px] bg-bg-main border border-border-main px-3 py-1 rounded-lg font-semibold text-text-secondary">🎂 {age.text} ({age.label})</span>}
-              {pet.microchip_no && <span className="text-[12px] bg-bg-main border border-border-main px-3 py-1 rounded-lg font-semibold text-text-secondary">📡 {pet.microchip_no}</span>}
-              {growthRecords && growthRecords.length > 0 && growthRecords[0].weight_kg && <span className="text-[12px] bg-bg-main border border-border-main px-3 py-1 rounded-lg font-semibold text-text-secondary">⚖️ {growthRecords[0].weight_kg} kg</span>}
-              {growthRecords && growthRecords.length > 0 && growthRecords[0].height_cm && <span className="text-[12px] bg-bg-main border border-border-main px-3 py-1 rounded-lg font-semibold text-text-secondary">📏 {growthRecords[0].height_cm} cm</span>}
+          <div className="flex-1 min-w-0 flex flex-col gap-1">
+            <h1 className="text-[22px] sm:text-[26px] font-extrabold text-text-primary leading-tight truncate">{pet.name}</h1>
+            <p className="text-text-secondary font-medium text-[13px] sm:text-[14px]">
+              {pet.species}{pet.breed ? ` • ${pet.breed}` : ''}
+            </p>
+            {pet.birth_date && (
+              <div className="flex mt-0.5">
+                <span className="text-[12px] bg-bg-main border border-border-main px-3 py-1 rounded-lg font-semibold text-text-secondary flex items-center gap-1">
+                  🎂 {age.text}
+                </span>
+              </div>
+            )}
+            <div className="flex items-center flex-wrap gap-2 mt-0.5">
+              {growthRecords && growthRecords.length > 0 && growthRecords[0].weight_kg && (
+                <span className="text-[12px] bg-bg-main border border-border-main px-3 py-1 rounded-lg font-semibold text-text-secondary flex items-center gap-1">
+                  ⚖️ {growthRecords[0].weight_kg} kg
+                </span>
+              )}
+              {pet.gender && (
+                <span className="text-text-secondary font-semibold text-[13.5px] flex items-center gap-1.5 ml-0.5">
+                  • {genderLabel[pet.gender] ?? ''}
+                </span>
+              )}
+              {growthRecords && growthRecords.length > 0 && growthRecords[0].height_cm && (
+                <span className="text-[12px] bg-bg-main border border-border-main px-3 py-1 rounded-lg font-semibold text-text-secondary flex items-center gap-1">
+                  📏 {growthRecords[0].height_cm} cm
+                </span>
+              )}
+              {pet.microchip_no && (
+                <span className="text-[12px] bg-bg-main border border-border-main px-3 py-1 rounded-lg font-semibold text-text-secondary flex items-center gap-1">
+                  📡 {pet.microchip_no}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -572,13 +624,23 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       )}
 
       {/* ── Tabs ── */}
-      <div id="pet-tabs" className="flex gap-1 bg-bg-main p-1 rounded-2xl border border-border-main overflow-x-auto sticky top-16 z-30">
-        {TABS.map(t => (
-          <button key={t} onClick={() => setActiveTab(t)}
-            className={`flex-1 min-w-max px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all whitespace-nowrap ${activeTab === t ? 'bg-white text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary'}`}>
-            {t}
-          </button>
-        ))}
+      <div id="pet-tabs" className="flex gap-1.5 bg-slate-100/80 p-1.5 rounded-2xl border border-border-main/60 overflow-x-auto sticky top-16 z-30 backdrop-blur-md shadow-sm scrollbar-hide">
+        {TABS.map(t => {
+          const isActive = activeTab === t;
+          return (
+            <button 
+              key={t} 
+              onClick={() => setActiveTab(t)}
+              className={`flex-1 min-w-max px-4 py-2.5 rounded-xl text-[13px] whitespace-nowrap transition-all duration-200 cursor-pointer ${
+                isActive 
+                  ? 'bg-primary text-white font-extrabold shadow-md shadow-primary/20 scale-[1.02] transform' 
+                  : 'text-text-secondary font-bold hover:text-text-primary hover:bg-white/40 active:scale-[0.98]'
+              }`}
+            >
+              {t}
+            </button>
+          )
+        })}
       </div>
 
       {/* ── Reusable Task List Helper ── */}
@@ -590,14 +652,13 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
            {/* Stats */}
           {(() => {
             const now = new Date()
-            const localOverdue = localSchedules.filter((s: any) => s.status !== 'done' && getTaskDateTime(s) < now).length
             const localPlanned = localSchedules.filter((s: any) => s.status !== 'done' && getTaskDateTime(s) >= now).length
             const localCompleted = localSchedules.filter((s: any) => s.status === 'done').length
             
             return (
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { id: 'overdue', label: 'Gecikmiş', value: `${localOverdue}`, color: localOverdue === 0 ? 'text-green-600' : 'text-red-500' },
+                  { id: 'overdue', label: 'Gecikmiş', value: `${localOverdue}`, color: localOverdue === 0 ? 'text-green-600' : 'text-red-500 font-extrabold animate-pulse' },
                   { id: 'done', label: 'Tamamlanan', value: `${localCompleted}`, color: 'text-primary' },
                   { id: 'week', label: 'Planlanmış', value: `${localPlanned}`, color: 'text-text-primary' },
                 ].map(w => (
@@ -605,7 +666,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                        onClick={() => { setTaskPeriodFilter(w.id as any); document.getElementById('pet-tasks')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
                        className="card-base p-4 flex flex-col items-center text-center cursor-pointer hover:bg-bg-main transition-colors">
                     <p className={`text-[28px] font-black ${w.color}`}>{w.value}</p>
-                    <p className="text-[11px] font-black text-text-secondary uppercase tracking-wide mt-0.5">{w.label}</p>
+                    <p className={`text-[11px] font-black uppercase tracking-wide mt-0.5 ${w.id === 'overdue' && localOverdue > 0 ? 'text-red-500 animate-pulse' : 'text-text-secondary'}`}>{w.label}</p>
                   </div>
                 ))}
               </div>
@@ -627,9 +688,18 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             <div className="flex border-b border-border-main/50 bg-bg-main/30 overflow-x-auto scrollbar-hide">
               {(['overdue', 'week', 'all', 'done'] as const).map(p => {
                 const label = p === 'week' ? 'Gelecek 7 Gün' : p === 'all' ? 'Tüm Zamanlar' : p === 'overdue' ? 'Gecikmiş' : 'Tamamlanan';
+                const isOverdueTabWithTasks = p === 'overdue' && localOverdue > 0;
+                
+                let btnClass = `flex-1 min-w-max px-4 py-3.5 text-[13px] font-extrabold transition-all border-b-[3px] relative `;
+                if (isOverdueTabWithTasks) {
+                  btnClass += `text-red-500 animate-pulse font-black ${taskPeriodFilter === p ? 'border-red-500 bg-red-50/30' : 'border-transparent hover:bg-red-50/10'}`;
+                } else {
+                  btnClass += `${taskPeriodFilter === p ? 'border-primary text-primary bg-white' : 'border-transparent text-text-secondary hover:text-text-primary hover:bg-white/50'}`;
+                }
+
                 return (
                   <button key={p} onClick={() => setTaskPeriodFilter(p)}
-                    className={`flex-1 min-w-max px-4 py-3.5 text-[13px] font-extrabold transition-all border-b-[3px] relative ${taskPeriodFilter === p ? 'border-primary text-primary bg-white' : 'border-transparent text-text-secondary hover:text-text-primary hover:bg-white/50'}`}>
+                    className={btnClass}>
                     {label}
                   </button>
                 )
