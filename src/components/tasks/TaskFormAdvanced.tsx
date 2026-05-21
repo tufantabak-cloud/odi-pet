@@ -91,7 +91,7 @@ export default function TaskFormAdvanced({
                 {isRecurring
                   ? `Her ${formData.interval > 1 ? formData.interval + ' ' : ''}${FREQ_LABEL[formData.frequency] ?? formData.frequency}`
                   : 'Tek seferlik'}
-                {formData.notificationEnabled ? ` · ${formData.notificationMinutes === 0 ? 'Bildirim açık' : formData.notificationMinutes < 60 ? `${formData.notificationMinutes} dk önce` : formData.notificationMinutes === 60 ? '1 saat önce' : '1 gün önce'}` : ''}
+                {formData.notificationEnabled ? ` · ${formData.notificationMinutes === 0 ? 'Bildirim açık' : formData.notificationMinutes < 60 ? `${formData.notificationMinutes} dk önce` : formData.notificationMinutes < 1440 ? `${formData.notificationMinutes / 60} saat önce` : `${formData.notificationMinutes / 1440} gün önce`}` : ''}
               </span>
             )}
           </div>
@@ -149,7 +149,18 @@ export default function TaskFormAdvanced({
                   <button
                     key={opt.value}
                     type="button"
-                    onClick={() => onChange({ frequency: opt.value as any })}
+                    onClick={() => {
+                      const newFreq = opt.value as any;
+                      let newNotificationMinutes = formData.notificationMinutes;
+                      if (newNotificationMinutes !== 0) {
+                        if (newFreq === 'daily' && newNotificationMinutes >= 1440) {
+                          newNotificationMinutes = 0; // Default to Zamanında
+                        } else if (newFreq !== 'daily' && newFreq !== 'once' && newNotificationMinutes < 1440) {
+                          newNotificationMinutes = 0; // Default to Zamanında
+                        }
+                      }
+                      onChange({ frequency: newFreq, notificationMinutes: newNotificationMinutes });
+                    }}
                     className={`py-2.5 px-1 rounded-xl text-[11px] font-extrabold border transition-all text-center ${
                       formData.frequency === opt.value
                         ? 'bg-primary text-white border-primary shadow-sm scale-[1.02]'
@@ -275,11 +286,33 @@ export default function TaskFormAdvanced({
                     onChange={(e) => onChange({ notificationMinutes: parseInt(e.target.value) })}
                     className="input-base py-1.5 text-[12px] bg-white cursor-pointer w-auto"
                   >
-                    {/* "Tam saatinde" (0 dk) kaldırıldı — push notification'da anlamsız */}
-                    <option value={15}>15 dk önce</option>
-                    <option value={30}>30 dk önce</option>
-                    <option value={60}>1 saat önce</option>
-                    <option value={1440}>1 gün önce</option>
+                    {formData.frequency === 'daily' ? (
+                      <>
+                        <option value={0}>Zamanında</option>
+                        <option value={60}>1 saat önce</option>
+                        <option value={180}>3 saat önce</option>
+                        <option value={300}>5 saat önce</option>
+                        <option value={420}>7 saat önce</option>
+                      </>
+                    ) : formData.frequency === 'once' ? (
+                      <>
+                        <option value={0}>Zamanında</option>
+                        <option value={60}>1 saat önce</option>
+                        <option value={180}>3 saat önce</option>
+                        <option value={1440}>1 gün önce</option>
+                        <option value={4320}>3 gün önce</option>
+                        <option value={7200}>5 gün önce</option>
+                        <option value={10080}>7 gün önce</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value={0}>Zamanında</option>
+                        <option value={1440}>1 gün önce</option>
+                        <option value={4320}>3 gün önce</option>
+                        <option value={7200}>5 gün önce</option>
+                        <option value={10080}>7 gün önce</option>
+                      </>
+                    )}
                   </select>
                 )}
                 <button

@@ -79,12 +79,13 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
     endDate: taskToEdit?.plan?.end_date || undefined,
     endOccurrences: taskToEdit?.plan?.end_occurrences || undefined,
     notificationEnabled: taskToEdit?.notification_rule?.enabled ?? true,
-    notificationMinutes: taskToEdit?.notification_rule?.minutes_before ?? 60,
+    notificationMinutes: taskToEdit?.notification_rule?.minutes_before ?? 0,
     notes: taskToEdit?.notes || '',
     metadata: taskToEdit?.metadata || {}
   }));
 
   const [advancedOpen, setAdvancedOpen] = useState<boolean>(() => !!taskToEdit);
+  const [markAsDone, setMarkAsDone] = useState<boolean>(false);
 
   // ── Fetch pet species if not provided ────────────────────────────
   const [resolvedSpecies, setResolvedSpecies] = useState<string | null>(petSpecies ?? null);
@@ -198,6 +199,8 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
 
     try {
       const supabase = createBrowserSupabaseClient();
+      const todayStr = new Date().toISOString().split('T')[0];
+      const isPastDate = (formData.date <= todayStr) && markAsDone;
 
       // ── MÜKERRER KAYIT KONTROLÜ (Sadece Yeni Kayıt İçin) ────────
       if (!taskToEdit) {
@@ -288,6 +291,7 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
             plan_type: category === 'Medikal' || category === 'Veteriner' ? 'checkup' : 'other',
             due_date: formData.date,
             due_time: formData.time,
+            status: isPastDate ? 'done' : 'upcoming',
             notes: formData.notes,
             metadata,
             notification_rule: {
@@ -309,9 +313,6 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Oturum bulunamadı.');
 
-      const todayStr = new Date().toISOString().split('T')[0];
-      const isPastDate = formData.date < todayStr;
-
       let planId = null;
       if (formData.frequency !== 'once') {
         const { data: plan, error: planError } = await supabase
@@ -330,24 +331,53 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
         planId = plan.id;
       }
 
-      const metadata = {
-        ...formData.metadata,
-        ...(selectedVaccine
-          ? { vaccine_code: selectedVaccine.code, vaccine_name: selectedVaccine.name }
-          : {}),
+      const getNextDate = (baseDateStr: string, frequency: string, interval: number, index: number) => {
+        if (index === 0) return baseDateStr;
+        const d = new Date(baseDateStr);
+        if (frequency === 'daily') d.setDate(d.getDate() + (interval * index));
+        if (frequency === 'weekly') d.setDate(d.getDate() + (interval * 7 * index));
+        if (frequency === 'monthly') d.setMonth(d.getMonth() + (interval * index));
+        if (frequency === 'yearly') d.setFullYear(d.getFullYear() + (interval * index));
+        return d.toISOString().split('T')[0];
       };
 
-      const { data: newSchedule, error: scheduleError } = await supabase
-        .from('health_schedules')
-        .insert({
+      let finalRepeatCount = 1;
+      if (formData.frequency !== 'once') {
+        if (formData.endCondition === 'occurrences' && formData.endOccurrences) {
+          finalRepeatCount = Math.min(formData.endOccurrences, 6);
+        } else {
+          finalRepeatCount = 6; // Max 6 occurrences logic
+        }
+      }
+
+      const inserts = [];
+      for (let i = 0; i < finalRepeatCount; i++) {
+        let dStr = getNextDate(formData.date, formData.frequency, formData.interval, i);
+        
+        // Eğer bitiş tarihi seçiliyse ve aştıysa döngüyü kır
+        if (formData.endCondition === 'date' && formData.endDate && dStr > formData.endDate) {
+          break;
+        }
+
+        // Geçmiş tarihli onay durumu
+        let status = 'upcoming';
+        if (isPastDate) {
+           if (dStr <= todayStr && markAsDone) {
+             status = 'done';
+           } else {
+             status = 'upcoming';
+           }
+        }
+
+        inserts.push({
           pet_id: petId,
           plan_type: category === 'Medikal' || category === 'Veteriner' ? 'checkup' : 'other',
           category: category,
           sub_category: subCategory,
           title: finalTitle,
-          due_date: formData.date,
+          due_date: dStr,
           due_time: formData.time,
-          status: isPastDate ? 'done' : 'upcoming',
+          status: status,
           plan_id: planId,
           notification_rule: {
             enabled: formData.notificationEnabled,
@@ -358,66 +388,32 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
           metadata,
           assigned_by: user.id,
           assigned_to: user.id
-        })
-        .select('*, vaccines(name)')
-        .single();
+        });
+      }
+
+      const { data: insertedSchedules, error: scheduleError } = await supabase
+        .from('health_schedules')
+        .insert(inserts)
+        .select('*, vaccines(name)');
 
       if (scheduleError) throw scheduleError;
 
-      // Geçmiş tarihli ve tekrar eden bir görevse, bir sonraki periyodu hesapla ve otomatik ekle
-      if (isPastDate && formData.frequency !== 'once' && planId) {
-        const getNextDate = (baseDateStr: string, frequency: string, interval: number) => {
-          const d = new Date(baseDateStr);
-          if (frequency === 'daily') d.setDate(d.getDate() + interval);
-          if (frequency === 'weekly') d.setDate(d.getDate() + (interval * 7));
-          if (frequency === 'monthly') d.setMonth(d.getMonth() + interval);
-          if (frequency === 'yearly') d.setFullYear(d.getFullYear() + interval);
-          return d.toISOString().split('T')[0];
-        };
+      const newSchedule = insertedSchedules[0];
 
-        let nextDateStr = getNextDate(formData.date, formData.frequency, formData.interval);
-        // Eğer hesaplanan sonraki tarih de geçmişte kalıyorsa, bugünü geçene kadar ileri sar
-        while (nextDateStr < todayStr) {
-          nextDateStr = getNextDate(nextDateStr, formData.frequency, formData.interval);
-        }
-
-        const { error: nextScheduleError } = await supabase
-          .from('health_schedules')
-          .insert({
-            pet_id: petId,
-            plan_type: category === 'Medikal' || category === 'Veteriner' ? 'checkup' : 'other',
-            category: category,
-            sub_category: subCategory,
-            title: finalTitle,
-            due_date: nextDateStr,
-            due_time: formData.time,
-            status: 'upcoming',
-            plan_id: planId,
-            notification_rule: {
-              enabled: formData.notificationEnabled,
-              minutes_before: formData.notificationMinutes,
-              frequency: formData.frequency,
-            },
-            notes: formData.notes,
-            metadata,
-            assigned_by: user.id,
-            assigned_to: user.id
-          });
-        
-        if (nextScheduleError) console.error('Sonraki plan oluşturulurken hata:', nextScheduleError);
-      }
-
-      // Eğer seçilen işlem bir Aşı ise, geçmiş onay verilirse vaccine_records tablosuna da ekle
+      // Eğer seçilen işlem bir Aşı ise, geçmiş onay verilirse (done olanlar için) vaccine_records tablosuna da ekle
       if (isPastDate && selectedVaccine) {
-        const { error: vrError } = await supabase
-          .from('vaccine_records')
-          .insert({
-            pet_id: petId,
-            vaccine_id: selectedVaccine.id,
-            schedule_id: newSchedule.id,
-            applied_date: formData.date
-          });
-        if (vrError) console.error('Aşı kaydı oluşturulurken hata:', vrError);
+        const doneInserts = insertedSchedules.filter((s: any) => s.status === 'done');
+        for (const s of doneInserts) {
+           const { error: vrError } = await supabase
+            .from('vaccine_records')
+            .insert({
+              pet_id: petId,
+              vaccine_id: selectedVaccine.id,
+              schedule_id: s.id,
+              applied_date: s.due_date
+            });
+           if (vrError) console.error('Aşı kaydı oluşturulurken hata:', vrError);
+        }
       }
 
       onDone(newSchedule);
@@ -441,7 +437,7 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
     : null;
 
   const todayStrUI = new Date().toISOString().split('T')[0];
-  const isPastDateUI = formData.date < todayStrUI;
+  const isPastDateUI = formData.date <= todayStrUI;
 
   return (
     <div className="fixed inset-0 z-[10005] bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 pb-12 sm:pb-4" onClick={onClose}>
@@ -549,18 +545,26 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
         {error && <p className="text-[12px] text-error font-bold p-3 bg-error/10 rounded-xl text-center mt-2">{error}</p>}
 
         {/* Geçmiş Tarih Uyarı & Onay Kutusu */}
-        {isPastDateUI && !taskToEdit && !showVaccinePicker && category && (
-          <div className="mt-4 p-4 bg-info/10 border-2 border-info/30 rounded-xl animate-fadeInUp">
-            <div className="flex items-start gap-3">
-              <span className="text-[20px] mt-0.5">💡</span>
-              <div>
-                <p className="text-[13px] font-extrabold text-info">Bu geçmiş bir tarih</p>
-                <p className="text-[12px] text-text-secondary mt-1 font-medium leading-relaxed">
-                  Uygulama yapıldı mı? Onaylayarak geçmiş kaydı oluşturabilir ve gelecek periyotların otomatik planlanmasını sağlayabilirsiniz.
-                </p>
-              </div>
+        {isPastDateUI && !taskToEdit && !showVaccinePicker && category && advancedOpen && (
+          <label className="mt-4 p-4 bg-primary-soft border border-primary/20 rounded-xl flex items-start gap-3 cursor-pointer group hover:bg-primary-soft/80 transition-colors animate-fadeInUp">
+            <div className="relative flex items-center mt-0.5 shrink-0">
+              <input 
+                type="checkbox" 
+                checked={markAsDone}
+                onChange={(e) => setMarkAsDone(e.target.checked)}
+                className="peer appearance-none w-5 h-5 border-2 border-primary/30 rounded bg-white checked:bg-primary checked:border-primary transition-all cursor-pointer"
+              />
+              <svg className="absolute inset-0 w-5 h-5 text-white p-0.5 pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
-          </div>
+            <div>
+              <p className="text-[13px] font-extrabold text-primary mb-0.5">
+                Bu işlem uygulandı (Tamamlandı)
+              </p>
+              <p className="text-[11px] text-text-secondary leading-relaxed">
+                Tarih geçmişe ait. Onaylarsanız görev tamamlanmış sayılır ve gelecek periyot planlanır. Seçilmezse "Planlandı" olarak bekler.
+              </p>
+            </div>
+          </label>
         )}
 
         {/* ── Actions ───────────────────────────────────────────── */}
@@ -582,7 +586,7 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
               ? 'Kaydediliyor...' 
               : taskToEdit 
                 ? 'Değişiklikleri Kaydet ✓' 
-                : (isPastDateUI ? 'Uygulandı Onayı ✓' : 'Görev Planla ✓')}
+                : ((isPastDateUI && markAsDone) ? 'Uygulandı Onayı ✓' : 'Görev Planla ✓')}
           </button>
         </div>
       </div>

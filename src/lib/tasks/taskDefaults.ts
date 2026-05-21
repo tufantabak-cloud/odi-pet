@@ -26,14 +26,19 @@ export const TASK_SUB_CATEGORIES: Record<TaskCategory, SubCategoryItem[]> = {
     { id: 'Tırnak Kesimi',   label: 'Tırnak Kesimi' },
   ],
   Hijyen: [
-    { id: 'Mama Kabı',  label: 'Mama Kabı Temizliği' },
-    { id: 'Yatak',      label: 'Yatak Temizliği' },
-    { id: 'Oyuncaklar', label: 'Oyuncak Temizliği' },
-    { id: 'Su Pınarı',  label: 'Su Pınarı Temizliği' },
-    { id: 'Tasma',      label: 'Tasma & Göğüslük Temizliği' },
-    { id: 'Kum Kabı',   label: 'Kum Kabı Temizliği',    species: ['Kedi'] },
-    { id: 'Tırmalama',  label: 'Tırmalama Tahtası',     species: ['Kedi'] },
-    { id: 'Kafes',      label: 'Kafes / Taşıma Kutusu' },
+    { id: 'Mama Kabı',       label: 'Mama Kabı Temizliği' },
+    { id: 'Yatak',           label: 'Yatak Temizliği' },
+    { id: 'Oyuncaklar',      label: 'Oyuncak Temizliği' },
+    { id: 'Su Pınarı',       label: 'Su Pınarı Temizliği' },
+    { id: 'Tasma',           label: 'Tasma & Göğüslük Temizliği' },
+    { id: 'Kum Kabı',        label: 'Kum Kabı Temizliği',       species: ['Kedi'] },
+    { id: 'Kum Değişimi',    label: 'Kum Değişimi & Yıkama',    species: ['Kedi'] },
+    { id: 'Kedi Tuvalet',    label: 'Kedi Tuvalet Eğitimi',     species: ['Kedi'] },
+    { id: 'Çiş Pedi',        label: 'Çiş Pedi Temizliği & Değişimi', species: ['Köpek'] },
+    { id: 'Köpek Tuvalet',   label: 'Dışarı Tuvalet Eğitimi',   species: ['Köpek'] },
+    { id: 'Tırmalama',       label: 'Tırmalama Tahtası',        species: ['Kedi'] },
+    { id: 'Kafes',           label: 'Kafes / Taşıma Kutusu' },
+    { id: 'Ortam Hijyeni',   label: 'Ev & Ortam Hijyeni' },
   ],
   Aktiviteler: [
     { id: 'Yürüyüş', label: 'Yürüyüş',           species: ['Köpek'] },
@@ -94,52 +99,57 @@ export type SmartDefault = {
 // Tüm alt kategoriler kapsanmıştır; fallback: once/1/60
 export const TASK_DEFAULTS: Record<string, SmartDefault> = {
   // ── Bakım ────────────────────────────────────────────────────────
-  'Banyo':           { frequency: 'monthly', interval: 1, notification_minutes: 60 },
-  'Tüy Bakımı':      { frequency: 'weekly',  interval: 1, notification_minutes: 30 },
-  'Kulak Temizliği': { frequency: 'weekly',  interval: 2, notification_minutes: 30 },
-  'Diş Fırçalama':   { frequency: 'weekly',  interval: 1, notification_minutes: 30 },
-  'Tırnak Kesimi':   { frequency: 'monthly', interval: 1, notification_minutes: 60 },
+  'Banyo':           { frequency: 'monthly', interval: 1, notification_minutes: 0 },
+  'Tüy Bakımı':      { frequency: 'weekly',  interval: 1, notification_minutes: 0 },
+  'Kulak Temizliği': { frequency: 'weekly',  interval: 2, notification_minutes: 0 },
+  'Diş Fırçalama':   { frequency: 'weekly',  interval: 1, notification_minutes: 0 },
+  'Tırnak Kesimi':   { frequency: 'monthly', interval: 1, notification_minutes: 0 },
 
   // ── Hijyen ───────────────────────────────────────────────────────
-  'Mama Kabı':  { frequency: 'daily',   interval: 1, notification_minutes: 15 },
-  'Yatak':      { frequency: 'monthly', interval: 1, notification_minutes: 60 },
-  'Oyuncaklar': { frequency: 'monthly', interval: 1, notification_minutes: 60 },
-  'Su Pınarı':  { frequency: 'weekly',  interval: 1, notification_minutes: 30 },
-  'Tasma':      { frequency: 'monthly', interval: 1, notification_minutes: 60 },
-  'Kum Kabı':   { frequency: 'daily',   interval: 1, notification_minutes: 30 },
-  'Tırmalama':  { frequency: 'monthly', interval: 1, notification_minutes: 60 },
-  'Kafes':      { frequency: 'monthly', interval: 1, notification_minutes: 60 },
+  'Mama Kabı':      { frequency: 'daily',   interval: 1, notification_minutes: 0 },
+  'Yatak':          { frequency: 'monthly', interval: 1, notification_minutes: 0 },
+  'Oyuncaklar':     { frequency: 'monthly', interval: 1, notification_minutes: 0 },
+  'Su Pınarı':      { frequency: 'weekly',  interval: 1, notification_minutes: 0 },
+  'Tasma':          { frequency: 'monthly', interval: 1, notification_minutes: 0 },
+  'Kum Kabı':       { frequency: 'daily',   interval: 1, notification_minutes: 0 },
+  'Kum Değişimi':   { frequency: 'weekly',  interval: 1, notification_minutes: 0 },
+  'Kedi Tuvalet':   { frequency: 'daily',   interval: 1, notification_minutes: 0 },
+  'Çiş Pedi':       { frequency: 'daily',   interval: 1, notification_minutes: 0 },
+  'Köpek Tuvalet':  { frequency: 'daily',   interval: 1, notification_minutes: 0 },
+  'Tırmalama':      { frequency: 'monthly', interval: 1, notification_minutes: 0 },
+  'Kafes':          { frequency: 'monthly', interval: 1, notification_minutes: 0 },
+  'Ortam Hijyeni':  { frequency: 'weekly',  interval: 1, notification_minutes: 0 },
 
   // ── Aktiviteler ──────────────────────────────────────────────────
-  'Yürüyüş': { frequency: 'daily',   interval: 1, notification_minutes: 15 },
-  'Yarışma':  { frequency: 'once',   interval: 1, notification_minutes: 1440 }, // etkinlik → tek seferlik, 1 gün önce
-  'Eğitim':   { frequency: 'weekly', interval: 1, notification_minutes: 30 },
-  'Oyun':     { frequency: 'daily',  interval: 1, notification_minutes: 15 },
+  'Yürüyüş': { frequency: 'daily',   interval: 1, notification_minutes: 0 },
+  'Yarışma':  { frequency: 'once',   interval: 1, notification_minutes: 0 }, // etkinlik → tek seferlik, 1 gün önce
+  'Eğitim':   { frequency: 'weekly', interval: 1, notification_minutes: 0 },
+  'Oyun':     { frequency: 'daily',  interval: 1, notification_minutes: 0 },
 
   // ── Medikal ──────────────────────────────────────────────────────
-  'Aşı':             { frequency: 'yearly',  interval: 1, notification_minutes: 1440 },
-  'İç Parazit':      { frequency: 'monthly', interval: 3, notification_minutes: 1440 },
-  'Dış Parazit':     { frequency: 'monthly', interval: 2, notification_minutes: 1440 },
-  'Parazit Tasması': { frequency: 'monthly', interval: 3, notification_minutes: 1440 },
+  'Aşı':             { frequency: 'yearly',  interval: 1, notification_minutes: 0 },
+  'İç Parazit':      { frequency: 'monthly', interval: 3, notification_minutes: 0 },
+  'Dış Parazit':     { frequency: 'monthly', interval: 2, notification_minutes: 0 },
+  'Parazit Tasması': { frequency: 'monthly', interval: 3, notification_minutes: 0 },
 
   // ── Veteriner ────────────────────────────────────────────────────
-  'Kontrol': { frequency: 'yearly', interval: 1, notification_minutes: 1440 },
-  'Acil':    { frequency: 'once',   interval: 1, notification_minutes: 15 },   // acil → tek seferlik
-  'Takip':   { frequency: 'once',   interval: 1, notification_minutes: 1440 }, // takip → tek seferlik, 1 gün önce
+  'Kontrol': { frequency: 'yearly', interval: 1, notification_minutes: 0 },
+  'Acil':    { frequency: 'once',   interval: 1, notification_minutes: 0 },   // acil → tek seferlik
+  'Takip':   { frequency: 'once',   interval: 1, notification_minutes: 0 }, // takip → tek seferlik, 1 gün önce
 
   // ── Sağlık ───────────────────────────────────────────────────────
-  'Kilo Takibi':     { frequency: 'monthly', interval: 1, notification_minutes: 1440 },
-  'Belirti Takibi':  { frequency: 'weekly',  interval: 1, notification_minutes: 60 },
-  'İlaç':            { frequency: 'daily',   interval: 1, notification_minutes: 15 },
-  'Tedavi/Pansuman': { frequency: 'daily',   interval: 1, notification_minutes: 60 },
-  'Tahlil/Rapor':    { frequency: 'once',    interval: 1, notification_minutes: 60 },
-  'Kronik Takip':    { frequency: 'monthly', interval: 1, notification_minutes: 1440 },
+  'Kilo Takibi':     { frequency: 'monthly', interval: 1, notification_minutes: 0 },
+  'Belirti Takibi':  { frequency: 'weekly',  interval: 1, notification_minutes: 0 },
+  'İlaç':            { frequency: 'daily',   interval: 1, notification_minutes: 0 },
+  'Tedavi/Pansuman': { frequency: 'daily',   interval: 1, notification_minutes: 0 },
+  'Tahlil/Rapor':    { frequency: 'once',    interval: 1, notification_minutes: 0 },
+  'Kronik Takip':    { frequency: 'monthly', interval: 1, notification_minutes: 0 },
 
   // ── Beslenme ─────────────────────────────────────────────────────
-  'Mama Siparişi':  { frequency: 'monthly', interval: 1, notification_minutes: 1440 },
-  'Diyet Değişimi': { frequency: 'once',    interval: 1, notification_minutes: 60 },
+  'Mama Siparişi':  { frequency: 'monthly', interval: 1, notification_minutes: 0 },
+  'Diyet Değişimi': { frequency: 'once',    interval: 1, notification_minutes: 0 },
 };
 
 export const getSmartDefault = (subCategory: string): SmartDefault => {
-  return TASK_DEFAULTS[subCategory] || { frequency: 'once', interval: 1, notification_minutes: 60 };
+  return TASK_DEFAULTS[subCategory] || { frequency: 'once', interval: 1, notification_minutes: 0 };
 };

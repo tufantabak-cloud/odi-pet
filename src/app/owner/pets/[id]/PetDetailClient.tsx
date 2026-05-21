@@ -126,6 +126,12 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     return localSchedules.filter((s: any) => s.category === dbCat && s.status !== 'done')
   }
 
+  const getCompletedSchedulesForTab = (tabName: string) => {
+    const dbCat = TAB_CATEGORY_MAP[tabName]
+    if (!dbCat) return []
+    return localSchedules.filter((s: any) => s.category === dbCat && s.status === 'done')
+  }
+
   const getSchedulesForPeriod = (period: 'week' | 'all' | 'overdue' | 'done') => {
     const now = new Date()
     
@@ -265,6 +271,84 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   }
 
   const filteredTimeline = timeline.filter(e => filterMap[timelineFilter]?.includes(e.type))
+
+
+  const renderTaskList = (title: string, list: any[]) => {
+    if (!list || list.length === 0) return null;
+    
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    return (
+      <div className="flex flex-col gap-3">
+        <h4 className="text-[12px] font-black text-text-secondary uppercase tracking-widest px-1">{title}</h4>
+        {list.map((item: any) => {
+          const isCompleted = item.status === 'done';
+          const targetDate = new Date(item.due_date);
+          targetDate.setHours(0,0,0,0);
+          const isOverdue = !isCompleted && targetDate < today;
+
+          // Determine styling based on status
+          let cardStyle = {
+            bg: 'bg-[#edf7f6]',
+            hoverBg: 'hover:bg-[#e0f4f1]',
+            textTitle: 'text-[#0f3a35]',
+            textSub: 'text-[#3c6b65]',
+            textDate: 'text-[#5a8680]',
+            textDots: 'text-[#3c6b65] hover:text-[#0f3a35]'
+          };
+
+          if (isOverdue) {
+            cardStyle = {
+              bg: 'bg-red-50/70 border border-red-100/50',
+              hoverBg: 'hover:bg-red-50/90',
+              textTitle: 'text-red-950',
+              textSub: 'text-red-800',
+              textDate: 'text-red-600',
+              textDots: 'text-red-800 hover:text-red-950'
+            };
+          } else if (!isCompleted) {
+            // Planned/Upcoming Task
+            cardStyle = {
+              bg: 'bg-primary-soft/70 border border-primary/10',
+              hoverBg: 'hover:bg-primary-soft/90',
+              textTitle: 'text-text-primary',
+              textSub: 'text-text-secondary',
+              textDate: 'text-primary',
+              textDots: 'text-text-secondary hover:text-primary'
+            };
+          }
+
+          return (
+            <div key={item.id} className={`flex items-center justify-between p-4 ${cardStyle.bg} ${cardStyle.hoverBg} rounded-[20px] transition-colors`}>
+              <div>
+                <p className={`font-extrabold text-[14px] ${cardStyle.textTitle}`}>{item.title || item.vaccines?.name || 'Görev'}</p>
+                {item.sub_category && <p className={`text-[11px] font-semibold ${cardStyle.textSub}`}>{item.sub_category}</p>}
+                <p className={`text-[11px] font-semibold mt-0.5 ${cardStyle.textDate}`}>{formatTaskDate(item.due_date, isCompleted)}</p>
+              </div>
+              <div className="relative">
+                <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(prev => prev === item.id ? null : item.id) }}
+                  className={`${cardStyle.textDots} p-2 transition-colors focus:outline-none cursor-pointer`}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
+                  </svg>
+                </button>
+                {activeMenuId === item.id && (
+                  <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-2xl shadow-xl border border-border-main/50 py-2 z-[200]">
+                    <button onClick={(e) => { e.stopPropagation(); handleMarkCompleted(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-success hover:bg-success/5 flex items-center gap-2 cursor-pointer">✓ Tamamlandı İşaretle</button>
+                    <button onClick={(e) => { e.stopPropagation(); handlePostpone(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary-soft flex items-center gap-2 cursor-pointer">📅 1 Gün Ertele</button>
+                    <div className="border-t border-border-main/30 mx-2 my-1"/>
+                    <button onClick={(e) => { e.stopPropagation(); setTaskToEdit(item); setActiveMenuId(null); setTaskWizardOpen(true) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
+                    <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer">❌ Sil</button>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 pb-20 w-full mx-auto">
@@ -411,7 +495,6 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       </div>
 
       {/* ── Reusable Task List Helper ── */}
-      {/* (rendered inline per-tab below) */}
 
       {/* ── Tab: Özet ── */}
       {activeTab === 'Özet' && (
@@ -470,6 +553,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             <div className="p-5 bg-white">
               {(() => {
                 const items = getSchedulesForPeriod(taskPeriodFilter)
+                const today = new Date();
+                today.setHours(0,0,0,0);
                 
                 const getCatStyle = (cat: string) => {
                   switch(cat) {
@@ -489,24 +574,63 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                   <div className="flex flex-col gap-3">
                     {items.map((item: any) => {
                       const style = getCatStyle(item.category)
+                      const isCompleted = item.status === 'done';
+                      const targetDate = new Date(item.due_date);
+                      targetDate.setHours(0,0,0,0);
+                      const isOverdue = !isCompleted && targetDate < today;
+
+                      // Determine styling based on status
+                      let cardStyle = {
+                        bg: 'bg-[#edf7f6]',
+                        hoverBg: 'hover:bg-[#e0f4f1]',
+                        textTitle: 'text-[#0f3a35]',
+                        textSub: 'text-[#3c6b65]',
+                        textDate: 'text-[#5a8680]',
+                        textDots: 'text-[#3c6b65] hover:text-[#0f3a35]',
+                        iconBorder: 'border-[#edf7f6]'
+                      };
+
+                      if (isOverdue) {
+                        cardStyle = {
+                          bg: 'bg-red-50/70 border border-red-100/50',
+                          hoverBg: 'hover:bg-red-50/90',
+                          textTitle: 'text-red-950',
+                          textSub: 'text-red-800',
+                          textDate: 'text-red-600',
+                          textDots: 'text-red-800 hover:text-red-950',
+                          iconBorder: 'border-red-100/50'
+                        };
+                      } else if (!isCompleted) {
+                        // Planned/Upcoming Task
+                        cardStyle = {
+                          bg: 'bg-primary-soft/70 border border-primary/10',
+                          hoverBg: 'hover:bg-primary-soft/90',
+                          textTitle: 'text-text-primary',
+                          textSub: 'text-text-secondary',
+                          textDate: 'text-primary',
+                          textDots: 'text-text-secondary hover:text-primary',
+                          iconBorder: 'border-primary/10'
+                        };
+                      }
+
                       return (
-                        <div key={item.id} className={`flex items-center justify-between p-4 rounded-[20px] border transition-colors ${style.bg} hover:brightness-[0.98]`}>
+                        <div key={item.id} className={`flex items-center justify-between p-4 rounded-[20px] transition-colors ${cardStyle.bg} ${cardStyle.hoverBg}`}>
                           <div className="flex items-center gap-3.5">
-                            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-[18px] bg-white shadow-sm border ${style.bg.split(' ')[1]}`}>
+                            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-[18px] bg-white shadow-sm border ${cardStyle.iconBorder}`}>
                               {style.icon}
                             </div>
                             <div>
-                              <p className={`font-extrabold text-[14px] ${style.text}`}>{item.title || item.vaccines?.name || 'Görev'}</p>
+                              <p className={`font-extrabold text-[14px] ${cardStyle.textTitle}`}>{item.title || item.vaccines?.name || 'Görev'}</p>
                               <div className="flex items-center gap-2 mt-0.5">
-                                {item.category && <span className={`text-[10px] font-black uppercase tracking-wider ${style.text} opacity-80`}>{item.category === 'Medikal' ? 'Aşı' : item.category === 'Saglik' ? 'Sağlık' : item.category === 'Temizlik' ? 'Hijyen' : item.category}</span>}
-                                <span className={`text-[10px] font-black ${style.text} opacity-50`}>•</span>
-                                <span className={`text-[11px] font-bold ${style.text} opacity-80`}>{formatTaskDate(item.due_date, item.status === 'done')}</span>
+                                {item.category && <span className={`text-[10px] font-black uppercase tracking-wider ${cardStyle.textSub} opacity-80`}>{item.category === 'Medikal' ? 'Aşı' : item.category === 'Saglik' ? 'Sağlık' : item.category === 'Temizlik' ? 'Hijyen' : item.category}</span>}
+                                <span className={`text-[10px] font-black ${cardStyle.textSub} opacity-50`}>•</span>
+                                <span className={`text-[11px] font-bold ${cardStyle.textDate}`}>{formatTaskDate(item.due_date, isCompleted)}</span>
                               </div>
                             </div>
                           </div>
                           <div className="relative">
                             <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(prev => prev === item.id ? null : item.id) }}
-                              className={`${style.text} hover:opacity-70 p-2 transition-opacity focus:outline-none cursor-pointer`}>
+                              className={`${cardStyle.textDots} p-2 transition-opacity focus:outline-none cursor-pointer`}>
                               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                 <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
                               </svg>
@@ -514,7 +638,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                             {activeMenuId === item.id && (
                               <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-2xl shadow-xl border border-border-main/50 py-2 z-[200]">
                                 <button onClick={(e) => { e.stopPropagation(); handleMarkCompleted(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-success hover:bg-success/5 flex items-center gap-2 cursor-pointer">✓ Tamamlandı İşaretle</button>
-                                <button onClick={(e) => { e.stopPropagation(); handlePostpone(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-text-primary hover:bg-bg-main flex items-center gap-2 cursor-pointer">📅 1 Gün Ertele</button>
+                                <button onClick={(e) => { e.stopPropagation(); handlePostpone(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary-soft flex items-center gap-2 cursor-pointer">📅 1 Gün Ertele</button>
                                 <div className="border-t border-border-main/30 mx-2 my-1"/>
                                 <button onClick={(e) => { e.stopPropagation(); setTaskToEdit(item); setActiveMenuId(null); setTaskWizardOpen(true) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
                                 <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer">❌ Sil</button>
@@ -595,37 +719,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               </button>
             </div>
             {/* Planned Tasks */}
-            {tasks.length > 0 && (
-              <div className="flex flex-col gap-3">
-                <h4 className="text-[12px] font-black text-text-secondary uppercase tracking-widest px-1">Planlanmış Sağlık Görevleri</h4>
-                {tasks.map((item: any) => (
-                  <div key={item.id} className="flex items-center justify-between p-4 bg-[#edf7f6] rounded-[20px] hover:bg-[#e0f4f1] transition-colors">
-                    <div>
-                      <p className="font-extrabold text-[14px] text-[#0f3a35]">{item.title || 'Görev'}</p>
-                      {item.sub_category && <p className="text-[11px] text-[#3c6b65] font-semibold">{item.sub_category}</p>}
-                      <p className="text-[11px] text-[#5a8680] font-semibold mt-0.5">{formatTaskDate(item.due_date, item.status === 'done')}</p>
-                    </div>
-                    <div className="relative">
-                      <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(prev => prev === item.id ? null : item.id) }}
-                        className="text-[#3c6b65] hover:text-[#0f3a35] p-2 transition-colors focus:outline-none cursor-pointer">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
-                        </svg>
-                      </button>
-                      {activeMenuId === item.id && (
-                        <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-2xl shadow-xl border border-border-main/50 py-2 z-[200]">
-                          <button onClick={(e) => { e.stopPropagation(); handleMarkCompleted(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-success hover:bg-success/5 flex items-center gap-2 cursor-pointer">✓ Tamamlandı İşaretle</button>
-                          <button onClick={(e) => { e.stopPropagation(); handlePostpone(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-[#0f3a35] hover:bg-[#edf7f6] flex items-center gap-2 cursor-pointer">📅 1 Gün Ertele</button>
-                          <div className="border-t border-border-main/30 mx-2 my-1"/>
-                          <button onClick={(e) => { e.stopPropagation(); setTaskToEdit(item); setActiveMenuId(null); setTaskWizardOpen(true) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
-                          <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer">❌ Sil</button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* Planned & Completed Tasks */}
+            {renderTaskList('Planlanmış Sağlık Görevleri', tasks)}
+            {renderTaskList('Tamamlanmış Sağlık Görevleri', getCompletedSchedulesForTab('Sağlık'))}
           </div>
         )
       })()}
@@ -654,37 +750,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               </button>
             </div>
             {/* Planned Tasks */}
-            {tasks.length > 0 && (
-              <div className="flex flex-col gap-3">
-                <h4 className="text-[12px] font-black text-text-secondary uppercase tracking-widest px-1">Planlanmış Aşı Görevleri</h4>
-                {tasks.map((item: any) => (
-                  <div key={item.id} className="flex items-center justify-between p-4 bg-[#edf7f6] rounded-[20px] hover:bg-[#e0f4f1] transition-colors">
-                    <div>
-                      <p className="font-extrabold text-[14px] text-[#0f3a35]">{item.title || item.vaccines?.name || 'Görev'}</p>
-                      {item.sub_category && <p className="text-[11px] text-[#3c6b65] font-semibold">{item.sub_category}</p>}
-                      <p className="text-[11px] text-[#5a8680] font-semibold mt-0.5">{formatTaskDate(item.due_date, item.status === 'done')}</p>
-                    </div>
-                    <div className="relative">
-                      <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(prev => prev === item.id ? null : item.id) }}
-                        className="text-[#3c6b65] hover:text-[#0f3a35] p-2 transition-colors focus:outline-none cursor-pointer">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
-                        </svg>
-                      </button>
-                      {activeMenuId === item.id && (
-                        <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-2xl shadow-xl border border-border-main/50 py-2 z-[200]">
-                          <button onClick={(e) => { e.stopPropagation(); handleMarkCompleted(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-success hover:bg-success/5 flex items-center gap-2 cursor-pointer">✓ Tamamlandı İşaretle</button>
-                          <button onClick={(e) => { e.stopPropagation(); handlePostpone(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-[#0f3a35] hover:bg-[#edf7f6] flex items-center gap-2 cursor-pointer">📅 1 Gün Ertele</button>
-                          <div className="border-t border-border-main/30 mx-2 my-1"/>
-                          <button onClick={(e) => { e.stopPropagation(); setTaskToEdit(item); setActiveMenuId(null); setTaskWizardOpen(true) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
-                          <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer">❌ Sil</button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* Planned & Completed Tasks */}
+            {renderTaskList('Planlanmış Aşı Görevleri', tasks)}
+            {renderTaskList('Tamamlanmış Aşı Görevleri', getCompletedSchedulesForTab('Aşı'))}
           </div>
         )
       })()}
@@ -711,37 +779,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                 {cta.btnLabel} →
               </button>
             </div>
-            {tasks.length > 0 && (
-              <div className="flex flex-col gap-3">
-                <h4 className="text-[12px] font-black text-text-secondary uppercase tracking-widest px-1">Planlanmış Beslenme Görevleri</h4>
-                {tasks.map((item: any) => (
-                  <div key={item.id} className="flex items-center justify-between p-4 bg-[#edf7f6] rounded-[20px] hover:bg-[#e0f4f1] transition-colors">
-                    <div>
-                      <p className="font-extrabold text-[14px] text-[#0f3a35]">{item.title || 'Görev'}</p>
-                      {item.sub_category && <p className="text-[11px] text-[#3c6b65] font-semibold">{item.sub_category}</p>}
-                      <p className="text-[11px] text-[#5a8680] font-semibold mt-0.5">{formatTaskDate(item.due_date, item.status === 'done')}</p>
-                    </div>
-                    <div className="relative">
-                      <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(prev => prev === item.id ? null : item.id) }}
-                        className="text-[#3c6b65] p-2 cursor-pointer">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
-                        </svg>
-                      </button>
-                      {activeMenuId === item.id && (
-                        <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-2xl shadow-xl border border-border-main/50 py-2 z-[200]">
-                          <button onClick={(e) => { e.stopPropagation(); handleMarkCompleted(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-success hover:bg-success/5 flex items-center gap-2 cursor-pointer">✓ Tamamlandı İşaretle</button>
-                          <button onClick={(e) => { e.stopPropagation(); handlePostpone(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-text-primary hover:bg-bg-main flex items-center gap-2 cursor-pointer">📅 1 Gün Ertele</button>
-                          <div className="border-t border-border-main/30 mx-2 my-1"/>
-                          <button onClick={(e) => { e.stopPropagation(); setTaskToEdit(item); setActiveMenuId(null); setTaskWizardOpen(true) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
-                          <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer">❌ Sil</button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* Planned & Completed Tasks */}
+            {renderTaskList('Planlanmış Beslenme Görevleri', tasks)}
+            {renderTaskList('Tamamlanmış Beslenme Görevleri', getCompletedSchedulesForTab('Beslenme'))}
           </div>
         )
       })()}
@@ -768,37 +808,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                 {cta.btnLabel} →
               </button>
             </div>
-            {tasks.length > 0 && (
-              <div className="flex flex-col gap-3">
-                <h4 className="text-[12px] font-black text-text-secondary uppercase tracking-widest px-1">Planlanmış Bakım Görevleri</h4>
-                {tasks.map((item: any) => (
-                  <div key={item.id} className="flex items-center justify-between p-4 bg-[#edf7f6] rounded-[20px] hover:bg-[#e0f4f1] transition-colors">
-                    <div>
-                      <p className="font-extrabold text-[14px] text-[#0f3a35]">{item.title || 'Görev'}</p>
-                      {item.sub_category && <p className="text-[11px] text-[#3c6b65] font-semibold">{item.sub_category}</p>}
-                      <p className="text-[11px] text-[#5a8680] font-semibold mt-0.5">{formatTaskDate(item.due_date, item.status === 'done')}</p>
-                    </div>
-                    <div className="relative">
-                      <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(prev => prev === item.id ? null : item.id) }}
-                        className="text-[#3c6b65] p-2 cursor-pointer">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
-                        </svg>
-                      </button>
-                      {activeMenuId === item.id && (
-                        <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-2xl shadow-xl border border-border-main/50 py-2 z-[200]">
-                          <button onClick={(e) => { e.stopPropagation(); handleMarkCompleted(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-success hover:bg-success/5 flex items-center gap-2 cursor-pointer">✓ Tamamlandı İşaretle</button>
-                          <button onClick={(e) => { e.stopPropagation(); handlePostpone(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-text-primary hover:bg-bg-main flex items-center gap-2 cursor-pointer">📅 1 Gün Ertele</button>
-                          <div className="border-t border-border-main/30 mx-2 my-1"/>
-                          <button onClick={(e) => { e.stopPropagation(); setTaskToEdit(item); setActiveMenuId(null); setTaskWizardOpen(true) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
-                          <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer">❌ Sil</button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* Planned & Completed Tasks */}
+            {renderTaskList('Planlanmış Bakım Görevleri', tasks)}
+            {renderTaskList('Tamamlanmış Bakım Görevleri', getCompletedSchedulesForTab('Bakım'))}
           </div>
         )
       })()}
@@ -877,37 +889,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                 {cta.btnLabel} →
               </button>
             </div>
-            {tasks.length > 0 && (
-              <div className="flex flex-col gap-3">
-                <h4 className="text-[12px] font-black text-text-secondary uppercase tracking-widest px-1">Planlanmış Veteriner Görevleri</h4>
-                {tasks.map((item: any) => (
-                  <div key={item.id} className="flex items-center justify-between p-4 bg-[#edf7f6] rounded-[20px] hover:bg-[#e0f4f1] transition-colors">
-                    <div>
-                      <p className="font-extrabold text-[14px] text-[#0f3a35]">{item.title || 'Görev'}</p>
-                      {item.sub_category && <p className="text-[11px] text-[#3c6b65] font-semibold">{item.sub_category}</p>}
-                      <p className="text-[11px] text-[#5a8680] font-semibold mt-0.5">{formatTaskDate(item.due_date, item.status === 'done')}</p>
-                    </div>
-                    <div className="relative">
-                      <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(prev => prev === item.id ? null : item.id) }}
-                        className="text-[#3c6b65] p-2 cursor-pointer">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
-                        </svg>
-                      </button>
-                      {activeMenuId === item.id && (
-                        <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-2xl shadow-xl border border-border-main/50 py-2 z-[200]">
-                          <button onClick={(e) => { e.stopPropagation(); handleMarkCompleted(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-success hover:bg-success/5 flex items-center gap-2 cursor-pointer">✓ Tamamlandı İşaretle</button>
-                          <button onClick={(e) => { e.stopPropagation(); handlePostpone(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-text-primary hover:bg-bg-main flex items-center gap-2 cursor-pointer">📅 1 Gün Ertele</button>
-                          <div className="border-t border-border-main/30 mx-2 my-1"/>
-                          <button onClick={(e) => { e.stopPropagation(); setTaskToEdit(item); setActiveMenuId(null); setTaskWizardOpen(true) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
-                          <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer">❌ Sil</button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* Planned & Completed Tasks */}
+            {renderTaskList('Planlanmış Veteriner Görevleri', tasks)}
+            {renderTaskList('Tamamlanmış Veteriner Görevleri', getCompletedSchedulesForTab('Veteriner'))}
           </div>
         )
       })()}
@@ -934,34 +918,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                 {cta.btnLabel} →
               </button>
             </div>
-            {tasks.length > 0 && (
-              <div className="flex flex-col gap-3">
-                <h4 className="text-[12px] font-black text-text-secondary uppercase tracking-widest px-1">Planlanmış Hijyen Görevleri</h4>
-                {tasks.map((item: any) => (
-                  <div key={item.id} className="flex items-center justify-between p-4 bg-[#edf7f6] rounded-[20px] hover:bg-[#e0f4f1] transition-colors">
-                    <div>
-                      <p className="font-extrabold text-[14px] text-[#0f3a35]">{item.title || 'Görev'}</p>
-                      {item.sub_category && <p className="text-[11px] text-[#3c6b65] font-semibold">{item.sub_category}</p>}
-                      <p className="text-[11px] text-[#5a8680] font-semibold mt-0.5">{formatTaskDate(item.due_date, item.status === 'done')}</p>
-                    </div>
-                    <div className="relative">
-                      <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(prev => prev === item.id ? null : item.id) }} className="text-[#3c6b65] p-2 cursor-pointer">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-                      </button>
-                      {activeMenuId === item.id && (
-                        <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-2xl shadow-xl border border-border-main/50 py-2 z-[200]">
-                          <button onClick={(e) => { e.stopPropagation(); handleMarkCompleted(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-success hover:bg-success/5 flex items-center gap-2 cursor-pointer">✓ Tamamlandı İşaretle</button>
-                          <button onClick={(e) => { e.stopPropagation(); handlePostpone(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-text-primary hover:bg-bg-main flex items-center gap-2 cursor-pointer">📅 1 Gün Ertele</button>
-                          <div className="border-t border-border-main/30 mx-2 my-1"/>
-                          <button onClick={(e) => { e.stopPropagation(); setTaskToEdit(item); setActiveMenuId(null); setTaskWizardOpen(true) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
-                          <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer">❌ Sil</button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* Planned & Completed Tasks */}
+            {renderTaskList('Planlanmış Hijyen Görevleri', tasks)}
+            {renderTaskList('Tamamlanmış Hijyen Görevleri', getCompletedSchedulesForTab('Hijyen'))}
           </div>
         )
       })()}
@@ -988,34 +947,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                 {cta.btnLabel} →
               </button>
             </div>
-            {tasks.length > 0 && (
-              <div className="flex flex-col gap-3">
-                <h4 className="text-[12px] font-black text-text-secondary uppercase tracking-widest px-1">Planlanmış Aktivite Görevleri</h4>
-                {tasks.map((item: any) => (
-                  <div key={item.id} className="flex items-center justify-between p-4 bg-[#edf7f6] rounded-[20px] hover:bg-[#e0f4f1] transition-colors">
-                    <div>
-                      <p className="font-extrabold text-[14px] text-[#0f3a35]">{item.title || 'Görev'}</p>
-                      {item.sub_category && <p className="text-[11px] text-[#3c6b65] font-semibold">{item.sub_category}</p>}
-                      <p className="text-[11px] text-[#5a8680] font-semibold mt-0.5">{formatTaskDate(item.due_date, item.status === 'done')}</p>
-                    </div>
-                    <div className="relative">
-                      <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(prev => prev === item.id ? null : item.id) }} className="text-[#3c6b65] p-2 cursor-pointer">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-                      </button>
-                      {activeMenuId === item.id && (
-                        <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-2xl shadow-xl border border-border-main/50 py-2 z-[200]">
-                          <button onClick={(e) => { e.stopPropagation(); handleMarkCompleted(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-success hover:bg-success/5 flex items-center gap-2 cursor-pointer">✓ Tamamlandı İşaretle</button>
-                          <button onClick={(e) => { e.stopPropagation(); handlePostpone(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-text-primary hover:bg-bg-main flex items-center gap-2 cursor-pointer">📅 1 Gün Ertele</button>
-                          <div className="border-t border-border-main/30 mx-2 my-1"/>
-                          <button onClick={(e) => { e.stopPropagation(); setTaskToEdit(item); setActiveMenuId(null); setTaskWizardOpen(true) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
-                          <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer">❌ Sil</button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* Planned & Completed Tasks */}
+            {renderTaskList('Planlanmış Aktivite Görevleri', tasks)}
+            {renderTaskList('Tamamlanmış Aktivite Görevleri', getCompletedSchedulesForTab('Aktivite'))}
           </div>
         )
       })()}
@@ -1040,34 +974,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             </button>
           </div>
           {/* Planlanmış Diğer Görevler */}
-          {getSchedulesForTab('Diğer').length > 0 && (
-            <div className="flex flex-col gap-3">
-              <h4 className="text-[12px] font-black text-text-secondary uppercase tracking-widest px-1">Planlanmış Görevler</h4>
-              {getSchedulesForTab('Diğer').map((item: any) => (
-                <div key={item.id} className="flex items-center justify-between p-4 bg-[#edf7f6] rounded-[20px] hover:bg-[#e0f4f1] transition-colors">
-                  <div>
-                    <p className="font-extrabold text-[14px] text-[#0f3a35]">{item.title || 'Görev'}</p>
-                    {item.sub_category && <p className="text-[11px] text-[#3c6b65] font-semibold">{item.sub_category}</p>}
-                    <p className="text-[11px] text-[#5a8680] font-semibold mt-0.5">{formatTaskDate(item.due_date, item.status === 'done')}</p>
-                  </div>
-                  <div className="relative">
-                    <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(prev => prev === item.id ? null : item.id) }} className="text-[#3c6b65] p-2 cursor-pointer">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-                    </button>
-                    {activeMenuId === item.id && (
-                      <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-2xl shadow-xl border border-border-main/50 py-2 z-[200]">
-                        <button onClick={(e) => { e.stopPropagation(); handleMarkCompleted(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-success hover:bg-success/5 flex items-center gap-2 cursor-pointer">✓ Tamamlandı İşaretle</button>
-                        <button onClick={(e) => { e.stopPropagation(); handlePostpone(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-text-primary hover:bg-bg-main flex items-center gap-2 cursor-pointer">📅 1 Gün Ertele</button>
-                        <div className="border-t border-border-main/30 mx-2 my-1"/>
-                        <button onClick={(e) => { e.stopPropagation(); setTaskToEdit(item); setActiveMenuId(null); setTaskWizardOpen(true) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
-                        <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer">❌ Sil</button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          {/* Planlanmış ve Tamamlanmış Görevler */}
+          {renderTaskList('Planlanmış Görevler', getSchedulesForTab('Diğer'))}
+          {renderTaskList('Tamamlanmış Görevler', getCompletedSchedulesForTab('Diğer'))}
           {/* SOS Ağı */}
           <FamilyTab
             petId={pet.id}

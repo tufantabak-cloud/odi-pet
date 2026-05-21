@@ -55,7 +55,7 @@ export default function SubCategoryChips({
             className={`px-4 py-2 rounded-full text-[13px] font-bold transition-all border cursor-pointer ${
               selectedSubCategory === sub.id
                 ? 'bg-primary text-white border-primary shadow-sm'
-                : 'bg-white text-text-secondary border-border-main hover:border-primary/50 hover:bg-primary-soft/10'
+                : 'bg-primary-soft text-primary border-primary/20 hover:border-primary/40 hover:bg-primary-soft/80'
             }`}
           >
             {sub.label}
