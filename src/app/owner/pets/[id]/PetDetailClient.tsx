@@ -186,7 +186,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     })
   }
 
-  const formatTaskDate = (dueDateStr: string, isDone?: boolean) => {
+  const formatTaskDate = (dueDateStr: string, dueTimeStr: string | null, isDone?: boolean) => {
     try {
       const d = new Date(dueDateStr)
       if (isNaN(d.getTime())) return dueDateStr
@@ -201,18 +201,50 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         )
       }
       
-      const today = new Date()
-      today.setHours(0,0,0,0)
-      const targetDate = new Date(d)
-      targetDate.setHours(0,0,0,0)
-      const diffDays = Math.round((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+      const now = new Date()
+      const dateOnlyStr = dueDateStr.includes('T') ? dueDateStr.split('T')[0] : dueDateStr
+      const timeStr = dueTimeStr || '12:00:00'
+      const taskDateTime = new Date(`${dateOnlyStr}T${timeStr}`)
+      
+      const isOverdue = taskDateTime < now
       
       let badge = null;
-      if (diffDays === 0) badge = <span className="text-orange-600 ml-1.5 font-bold tracking-wide">» Bugün</span>;
-      else if (diffDays === 1) badge = <span className="text-primary ml-1.5 font-bold tracking-wide">» Yarın</span>;
-      else if (diffDays === -1) badge = <span className="text-red-600 ml-1.5 font-bold tracking-wide">» Dün</span>;
-      else if (diffDays < -1) badge = <span className="text-red-600 ml-1.5 font-bold tracking-wide">» {Math.abs(diffDays)} gün gecikti</span>;
-      else if (diffDays > 1) badge = <span className="text-primary ml-1.5 font-bold tracking-wide">» {diffDays} gün kaldı</span>;
+      
+      if (isOverdue) {
+        const diffMs = now.getTime() - taskDateTime.getTime()
+        const diffMins = Math.floor(diffMs / (1000 * 60))
+        
+        if (diffMins < 60) {
+          const mins = Math.max(1, diffMins)
+          badge = <span className="text-red-600 ml-1.5 font-bold tracking-wide">» {mins} dk gecikti</span>
+        } else if (diffMins < 1440) { // 24 hours
+          const hours = Math.floor(diffMins / 60)
+          badge = <span className="text-red-600 ml-1.5 font-bold tracking-wide">» {hours} saat gecikti</span>
+        } else {
+          const days = Math.floor(diffMins / 1440)
+          badge = <span className="text-red-600 ml-1.5 font-bold tracking-wide">» {days} gün gecikti</span>
+        }
+      } else {
+        const today = new Date()
+        today.setHours(0,0,0,0)
+        const targetDate = new Date(d)
+        targetDate.setHours(0,0,0,0)
+        const diffDays = Math.round((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+        
+        let timeText = ''
+        if (dueTimeStr) {
+          const parts = dueTimeStr.split(':')
+          if (parts.length >= 2) {
+            timeText = ` ${parts[0]}:${parts[1]}`
+          }
+        }
+        
+        if (diffDays === 0) badge = <span className="text-orange-600 ml-1.5 font-bold tracking-wide">» Bugün{timeText}</span>;
+        else if (diffDays === 1) badge = <span className="text-primary ml-1.5 font-bold tracking-wide">» Yarın{timeText}</span>;
+        else if (diffDays === -1) badge = <span className="text-red-600 ml-1.5 font-bold tracking-wide">» Dün{timeText}</span>;
+        else if (diffDays < -1) badge = <span className="text-red-600 ml-1.5 font-bold tracking-wide">» {Math.abs(diffDays)} gün gecikti</span>;
+        else badge = <span className="text-primary ml-1.5 font-bold tracking-wide">» {diffDays} gün kaldı</span>;
+      }
       
       return (
         <span className="inline-flex items-center">
@@ -310,9 +342,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         <h4 className="text-[12px] font-black text-text-secondary uppercase tracking-widest px-1">{title}</h4>
         {list.map((item: any) => {
           const isCompleted = item.status === 'done';
-          const targetDate = new Date(item.due_date);
-          targetDate.setHours(0,0,0,0);
-          const isOverdue = !isCompleted && targetDate < today;
+          const now = new Date();
+          const isOverdue = !isCompleted && getTaskDateTime(item) < now;
 
           // Determine styling based on status
           let cardStyle = {
@@ -350,7 +381,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               <div>
                 <p className={`font-extrabold text-[14px] ${cardStyle.textTitle}`}>{item.title || item.vaccines?.name || 'Görev'}</p>
                 {item.sub_category && <p className={`text-[11px] font-semibold ${cardStyle.textSub}`}>{item.sub_category}</p>}
-                <p className={`text-[11px] font-semibold mt-0.5 ${cardStyle.textDate}`}>{formatTaskDate(item.due_date, isCompleted)}</p>
+                <p className={`text-[11px] font-semibold mt-0.5 ${cardStyle.textDate}`}>{formatTaskDate(item.due_date, item.due_time, isCompleted)}</p>
               </div>
               <div className="relative">
                 <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(prev => prev === item.id ? null : item.id) }}
@@ -605,9 +636,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                     {items.map((item: any) => {
                       const style = getCatStyle(item.category)
                       const isCompleted = item.status === 'done';
-                      const targetDate = new Date(item.due_date);
-                      targetDate.setHours(0,0,0,0);
-                      const isOverdue = !isCompleted && targetDate < today;
+                      const now = new Date();
+                      const isOverdue = !isCompleted && getTaskDateTime(item) < now;
 
                       // Determine styling based on status
                       let cardStyle = {
@@ -654,7 +684,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                               <div className="flex items-center gap-2 mt-0.5">
                                 {item.category && <span className={`text-[10px] font-black uppercase tracking-wider ${cardStyle.textSub} opacity-80`}>{item.category === 'Medikal' ? 'Aşı' : item.category === 'Saglik' ? 'Sağlık' : item.category === 'Temizlik' ? 'Hijyen' : item.category}</span>}
                                 <span className={`text-[10px] font-black ${cardStyle.textSub} opacity-50`}>•</span>
-                                <span className={`text-[11px] font-bold ${cardStyle.textDate}`}>{formatTaskDate(item.due_date, isCompleted)}</span>
+                                <span className={`text-[11px] font-bold ${cardStyle.textDate}`}>{formatTaskDate(item.due_date, item.due_time, isCompleted)}</span>
                               </div>
                             </div>
                           </div>
