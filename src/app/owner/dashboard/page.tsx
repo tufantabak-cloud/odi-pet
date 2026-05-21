@@ -49,19 +49,27 @@ export default async function OwnerDashboard() {
     .sort((a,b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
     .slice(0, 5);
 
-  const petsWithStats = await Promise.all((pets || []).map(async (pet) => {
+  const petIds = (pets || []).map(p => p.id);
+  
+  let allFeedingLogs: any[] = [];
+  let allWeightLogs: any[] = [];
+  
+  if (petIds.length > 0) {
+    const [feedingRes, weightRes] = await Promise.all([
+      supabase.from('feeding_logs').select('pet_id, created_at').in('pet_id', petIds).order('created_at', { ascending: false }),
+      supabase.from('weight_logs').select('pet_id, measured_at, weight_kg, height_cm').in('pet_id', petIds).order('measured_at', { ascending: false })
+    ]);
+    allFeedingLogs = feedingRes.data || [];
+    allWeightLogs = weightRes.data || [];
+  }
+
+  const petsWithStats = (pets || []).map((pet) => {
     let lastFeedingDate = 'Veri Yok';
     let weightVal = 'Veri Yok';
     let heightVal = '';
     
-    // Check feeding - use limit(1) array check to avoid single row errors
-    const { data: feedingList } = await supabase
-      .from('feeding_logs')
-      .select('created_at')
-      .eq('pet_id', pet.id)
-      .order('created_at', { ascending: false })
-      .limit(1);
-    const feeding = feedingList && feedingList.length > 0 ? feedingList[0] : null;
+    // Pick the most recent feeding log for this pet
+    const feeding = allFeedingLogs.find(f => f.pet_id === pet.id);
       
     if (feeding) {
       const diffHrs = Math.floor((now.getTime() - new Date(feeding.created_at).getTime()) / (1000 * 60 * 60));
@@ -69,14 +77,8 @@ export default async function OwnerDashboard() {
       else lastFeedingDate = `${Math.floor(diffHrs/24)} g. önce`;
     }
 
-    // Check weight - query measured_at and order by measured_at
-    const { data: weightList } = await supabase
-      .from('weight_logs')
-      .select('measured_at, weight_kg, height_cm')
-      .eq('pet_id', pet.id)
-      .order('measured_at', { ascending: false })
-      .limit(1);
-    const weight = weightList && weightList.length > 0 ? weightList[0] : null;
+    // Pick the most recent weight log for this pet
+    const weight = allWeightLogs.find(w => w.pet_id === pet.id);
       
     if (weight) {
       if (weight.weight_kg) weightVal = `${weight.weight_kg} kg`;
@@ -87,7 +89,7 @@ export default async function OwnerDashboard() {
     const hasData = !!feeding || !!weight || upcomingSchedules.some(s => s.pet_id === pet.id);
 
     return { ...pet, lastFeedingDate, weightVal, heightVal, overdueCount: overdueSchedulesCount, hasData };
-  }));
+  });
 
   return (
     <DashboardOnboardingWrapper>

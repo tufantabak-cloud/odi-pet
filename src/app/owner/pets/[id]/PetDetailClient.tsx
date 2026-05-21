@@ -144,7 +144,56 @@ const getTurkishGenitiveSuffix = (name: string) => {
   }
 };
 
-export default function PetDetailClient({ pet, age, score, overdue, schedules, diseases, allergies, medications, growthRecords, appointments, nutritionLogs, payments, subscription }: any) {
+export interface PetDetailProps {
+  pet: any;
+  age: { text: string; label: string };
+  score: number;
+  overdue: number;
+  schedules: any[];
+  diseases: any[];
+  allergies: any[];
+  medications: any[];
+  growthRecords: any[];
+  appointments: any[];
+  nutritionLogs: any[];
+  payments: any[];
+  subscription: any;
+}
+
+export function getTaskCardStyle(isOverdue: boolean, isCompleted: boolean) {
+  if (isOverdue) {
+    return {
+      bg: 'bg-red-50/70 border border-red-100/50',
+      hoverBg: 'hover:bg-red-50/90',
+      textTitle: 'text-red-950',
+      textSub: 'text-red-800',
+      textDate: 'text-red-600 animate-pulse',
+      textDots: 'text-red-800 hover:text-red-950',
+      iconBorder: 'border-red-100/50'
+    };
+  } else if (!isCompleted) {
+    return {
+      bg: 'bg-primary-soft/70 border border-primary/10',
+      hoverBg: 'hover:bg-primary-soft/90',
+      textTitle: 'text-text-primary',
+      textSub: 'text-text-secondary',
+      textDate: 'text-primary',
+      textDots: 'text-text-secondary hover:text-primary',
+      iconBorder: 'border-primary/10'
+    };
+  }
+  return {
+    bg: 'bg-[#edf7f6]',
+    hoverBg: 'hover:bg-[#e0f4f1]',
+    textTitle: 'text-[#0f3a35]',
+    textSub: 'text-[#3c6b65]',
+    textDate: 'text-[#5a8680]',
+    textDots: 'text-[#3c6b65] hover:text-[#0f3a35]',
+    iconBorder: 'border-[#edf7f6]'
+  };
+}
+
+export default function PetDetailClient({ pet, age, score, overdue, schedules, diseases, allergies, medications, growthRecords, appointments, nutritionLogs, payments, subscription }: PetDetailProps) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('Özet')
   const [quickUpdateConfig, setQuickUpdateConfig] = useState<any>(null)
@@ -393,35 +442,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           const isOverdue = !isCompleted && getTaskDateTime(item) < now;
 
           // Determine styling based on status
-          let cardStyle = {
-            bg: 'bg-[#edf7f6]',
-            hoverBg: 'hover:bg-[#e0f4f1]',
-            textTitle: 'text-[#0f3a35]',
-            textSub: 'text-[#3c6b65]',
-            textDate: 'text-[#5a8680]',
-            textDots: 'text-[#3c6b65] hover:text-[#0f3a35]'
-          };
-
-          if (isOverdue) {
-            cardStyle = {
-              bg: 'bg-red-50/70 border border-red-100/50',
-              hoverBg: 'hover:bg-red-50/90',
-              textTitle: 'text-red-950',
-              textSub: 'text-red-800',
-              textDate: 'text-red-600',
-              textDots: 'text-red-800 hover:text-red-950'
-            };
-          } else if (!isCompleted) {
-            // Planned/Upcoming Task
-            cardStyle = {
-              bg: 'bg-primary-soft/70 border border-primary/10',
-              hoverBg: 'hover:bg-primary-soft/90',
-              textTitle: 'text-text-primary',
-              textSub: 'text-text-secondary',
-              textDate: 'text-primary',
-              textDots: 'text-text-secondary hover:text-primary'
-            };
-          }
+          const cardStyle = getTaskCardStyle(isOverdue, isCompleted);
 
           return (
             <div key={item.id} className={`flex items-center justify-between p-4 ${cardStyle.bg} ${cardStyle.hoverBg} rounded-[20px] transition-colors`}>
@@ -736,38 +757,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                       const isOverdue = !isCompleted && getTaskDateTime(item) < now;
 
                       // Determine styling based on status
-                      let cardStyle = {
-                        bg: 'bg-[#edf7f6]',
-                        hoverBg: 'hover:bg-[#e0f4f1]',
-                        textTitle: 'text-[#0f3a35]',
-                        textSub: 'text-[#3c6b65]',
-                        textDate: 'text-[#5a8680]',
-                        textDots: 'text-[#3c6b65] hover:text-[#0f3a35]',
-                        iconBorder: 'border-[#edf7f6]'
-                      };
-
-                      if (isOverdue) {
-                        cardStyle = {
-                          bg: 'bg-red-50/70 border border-red-100/50',
-                          hoverBg: 'hover:bg-red-50/90',
-                          textTitle: 'text-red-950',
-                          textSub: 'text-red-800',
-                          textDate: 'text-red-600',
-                          textDots: 'text-red-800 hover:text-red-950',
-                          iconBorder: 'border-red-100/50'
-                        };
-                      } else if (!isCompleted) {
-                        // Planned/Upcoming Task
-                        cardStyle = {
-                          bg: 'bg-primary-soft/70 border border-primary/10',
-                          hoverBg: 'hover:bg-primary-soft/90',
-                          textTitle: 'text-text-primary',
-                          textSub: 'text-text-secondary',
-                          textDate: 'text-primary',
-                          textDots: 'text-text-secondary hover:text-primary',
-                          iconBorder: 'border-primary/10'
-                        };
-                      }
+                      const cardStyle = getTaskCardStyle(isOverdue, isCompleted);
 
                       return (
                         <div key={item.id} className={`flex items-center justify-between p-4 rounded-[20px] transition-colors ${cardStyle.bg} ${cardStyle.hoverBg}`}>
