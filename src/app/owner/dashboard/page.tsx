@@ -179,25 +179,75 @@ export default async function OwnerDashboard() {
           </h2>
           <div className="flex flex-col gap-3">
             {timelineSchedules.map(plan => {
-              const due = new Date(plan.due_date)
-              const daysLeft = Math.ceil((due.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-              const urgency = daysLeft <= 3 ? 'bg-error/10 text-error border-error/20'
-                : daysLeft <= 7 ? 'bg-warning/10 text-warning border-warning/20'
-                : 'bg-success/10 text-success border-success/20'
-              const label = daysLeft <= 3 ? 'Acil' : daysLeft <= 7 ? 'Yakında' : 'Planlı'
+              const due = new Date(plan.due_date);
+              const now = new Date();
+              const dateOnlyStr = plan.due_date.includes('T') ? plan.due_date.split('T')[0] : plan.due_date;
+              const timeStr = plan.due_time || '12:00:00';
+              const taskDateTime = new Date(`${dateOnlyStr}T${timeStr}`);
+              const isOverdue = taskDateTime < now;
+
+              let badgeText = '';
+              let badgeColor = '';
+
+              if (isOverdue) {
+                const diffMs = now.getTime() - taskDateTime.getTime();
+                const diffMins = Math.floor(diffMs / (1000 * 60));
+                
+                if (diffMins < 60) {
+                  badgeText = `${Math.max(1, diffMins)} dk gecikti`;
+                } else if (diffMins < 1440) {
+                  badgeText = `${Math.floor(diffMins / 60)} saat gecikti`;
+                } else {
+                  badgeText = `${Math.floor(diffMins / 1440)} gün gecikti`;
+                }
+                badgeColor = 'bg-red-50 text-red-600 border-red-100/50';
+              } else {
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                const targetDate = new Date(due);
+                targetDate.setHours(0,0,0,0);
+                const diffDays = Math.round((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                
+                let timeText = '';
+                if (plan.due_time) {
+                  const parts = plan.due_time.split(':');
+                  if (parts.length >= 2) {
+                    timeText = ` ${parts[0]}:${parts[1]}`;
+                  }
+                }
+
+                if (diffDays === 0) {
+                  badgeText = `Bugün${timeText}`;
+                  badgeColor = 'bg-orange-50 text-orange-600 border-orange-100/50';
+                } else if (diffDays === 1) {
+                  badgeText = `Yarın${timeText}`;
+                  badgeColor = 'bg-primary/10 text-primary border-primary/20';
+                } else if (diffDays === -1) {
+                  badgeText = `Dün${timeText}`;
+                  badgeColor = 'bg-red-50 text-red-600 border-red-100/50';
+                } else if (diffDays < -1) {
+                  badgeText = `${Math.abs(diffDays)} gün gecikti`;
+                  badgeColor = 'bg-red-50 text-red-600 border-red-100/50';
+                } else {
+                  badgeText = `${diffDays} gün kaldı`;
+                  badgeColor = diffDays <= 3 ? 'bg-warning/10 text-warning border-warning/20' : 'bg-success/10 text-success border-success/20';
+                }
+              }
 
               return (
-                <div key={plan.id} className="flex items-center gap-4 p-4 border border-border-main rounded-[16px] bg-surface hover:border-primary/20 transition-colors">
-                  <div className="flex flex-col items-center bg-bg-main rounded-[12px] px-3 py-2 shrink-0 min-w-[52px]">
+                <Link href={`/owner/pets/${plan.pet_id}#pet-tasks`} key={plan.id} className="flex items-center gap-4 p-4 border border-border-main rounded-[16px] bg-surface hover:border-primary/40 hover:shadow-md transition-all group">
+                  <div className="flex flex-col items-center bg-bg-main rounded-[12px] px-3 py-2 shrink-0 min-w-[52px] group-hover:bg-white transition-colors">
                     <p className="text-[18px] font-black text-text-primary leading-none">{due.getDate()}</p>
                     <p className="text-[11px] font-bold text-text-secondary">{due.toLocaleString('tr-TR', { month: 'short' })}</p>
                   </div>
                   <div className="flex flex-col flex-1 min-w-0">
-                    <p className="font-bold text-text-primary text-[15px] truncate">{plan.title || plan.vaccines?.name || 'Sağlık İşlemi'}</p>
+                    <p className="font-bold text-text-primary text-[15px] truncate group-hover:text-primary transition-colors">{plan.title || plan.vaccines?.name || 'Sağlık İşlemi'}</p>
                     <p className="text-[13px] text-text-secondary">{plan.pets?.name}</p>
                   </div>
-                  <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full border shrink-0 ${urgency}`}>{label}</span>
-                </div>
+                  <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full border shrink-0 whitespace-nowrap ${badgeColor}`}>
+                    {badgeText.startsWith('» ') ? badgeText.replace('» ', '') : badgeText}
+                  </span>
+                </Link>
               )
             })}
           </div>
