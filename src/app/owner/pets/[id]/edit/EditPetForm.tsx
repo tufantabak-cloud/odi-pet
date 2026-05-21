@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import citiesData from '@/lib/cities.json'
-import ConfirmModal from '@/components/ui/ConfirmModal'
+import Link from 'next/link'
 
 const CAT_BREEDS = [
   'British Shorthair', 'Scottish Fold', 'Scottish Straight',
@@ -193,22 +193,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
     }
   }
 
-  const [deleteError, setDeleteError] = useState('')
-  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
 
-  const handleDelete = async () => {
-    setLoading(true)
-    setDeleteError('')
-    try {
-      const res = await fetch(`/api/pets/${pet.id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Silinemedi')
-      router.push('/owner/dashboard')
-      router.refresh()
-    } catch(e) {
-      setDeleteError('Silme işlemi başarısız oldu. Sadece asıl sahip silebilir.')
-      setLoading(false)
-    }
-  }
 
   return (
     <div className="flex flex-col w-full mx-auto pb-10">
@@ -483,31 +468,42 @@ export default function EditPetForm({ pet }: { pet: any }) {
           </button>
         </div>
 
-        {/* ─── BÖLÜM 4: Tehlikeli Alan ─── */}
-        <section className="mt-8 border-2 border-error/20 bg-error/5 rounded-2xl p-6 flex flex-col items-center text-center gap-3">
-          <span className="text-[32px]">🗑️</span>
-          <p className="font-bold text-text-primary text-[15px]">Profili Kalıcı Olarak Sil</p>
-          <p className="text-[13px] text-text-secondary max-w-sm">Bu işlem geri alınamaz. {pet.name} profili, aşı kayıtları ve sağlık geçmişi silinecektir.</p>
-          {deleteError && (
-            <p className="text-[12px] text-error font-semibold bg-error/10 border border-error/20 px-3 py-2 rounded-xl w-full max-w-sm">{deleteError}</p>
-          )}
-          <button type="button" onClick={() => setConfirmDeleteOpen(true)} disabled={loading} className="mt-2 w-full max-w-[200px] py-3 rounded-xl border-2 border-error/40 text-error font-bold text-[13px] hover:bg-error/10 hover:-translate-y-0.5 transition-all shadow-sm">
-            Kalıcı Olarak Sil
-          </button>
+        {/* ─── BÖLÜM 4: Bilgi Kartı ─── */}
+        <section className="mt-8 border border-primary/20 bg-primary-soft/50 rounded-2xl p-5 flex flex-col sm:flex-row items-center sm:items-start gap-4 transition-all duration-300 hover:border-primary/30">
+          <div className="w-12 h-12 bg-gradient-to-tr from-primary-soft to-indigo-100/50 rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-primary/15">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="infoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#4F2DBA" />
+                  <stop offset="100%" stopColor="#7C3AED" />
+                </linearGradient>
+                <filter id="shadowFilter" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#4F2DBA" floodOpacity="0.15" filterUnits="userSpaceOnUse" />
+                </filter>
+              </defs>
+              <circle cx="12" cy="12" r="10" stroke="url(#infoGrad)" strokeWidth="2" filter="url(#shadowFilter)" />
+              <path d="M12 11V16" stroke="url(#infoGrad)" strokeWidth="2" strokeLinecap="round" />
+              <circle cx="12" cy="7.5" r="1.25" fill="url(#infoGrad)" />
+            </svg>
+          </div>
+          <div className="flex-1 flex flex-col gap-1.5 text-center sm:text-left">
+            <h3 className="font-bold text-text-primary text-[15px]">Profil Yönetimi</h3>
+            <p className="text-[13px] text-text-secondary leading-relaxed">
+              Dostunuzun profili üzerinde tam kontrol sahibi olmak ve silme/sağlık verisi temizleme işlemlerini gerçekleştirmek için <strong>Profil Ayarları</strong> sayfasını ziyaret edebilirsiniz.
+            </p>
+            <div className="mt-2.5 flex justify-center sm:justify-start">
+              <Link href="/owner/profile" className="inline-flex items-center gap-1.5 text-[13px] font-bold text-primary hover:text-primary-hover transition-colors group">
+                Profil Ayarları'na Git
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-0.5 transition-transform">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              </Link>
+            </div>
+          </div>
         </section>
 
       </form>
-
-      <ConfirmModal
-        open={confirmDeleteOpen}
-        title={`${pet.name} Profilini Sil`}
-        message="Bu işlem geri alınamaz. Tüm aşı kayıtları ve sağlık geçmişi kalıcı olarak silinecektir."
-        confirmLabel="Evet, Sil"
-        cancelLabel="İptal"
-        variant="danger"
-        onConfirm={() => { setConfirmDeleteOpen(false); handleDelete() }}
-        onCancel={() => setConfirmDeleteOpen(false)}
-      />
         </>
       )}
 

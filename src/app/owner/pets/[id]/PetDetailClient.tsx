@@ -80,16 +80,32 @@ const TAB_CATEGORY_MAP: Record<string, TaskCategory> = {
   'Diğer':     'Diger',
 }
 
-/** Tab'a ait CTA bilgileri */
-const TAB_CTA_INFO: Record<string, { icon: React.ReactNode; btnLabel: string; desc: string; title: string; gradient: string }> = {
-  'Sağlık':    { icon: <FirstAidIcon width={28} height={28} />, btnLabel: 'Sağlık Görevi Planla', desc: 'Kilo ölçümü, semptom takibi, ilaç kullanımı planlayın.', title: 'Sağlık Takibi', gradient: 'from-red-100 to-rose-50' },
-  'Aşı':       { icon: <VaccineIcon width={28} height={28} />, btnLabel: 'Aşı / Parazit Görevi Planla', desc: 'Aşı ve parazit koruma hatırlatmaları oluşturun.', title: 'Aşı Takibi', gradient: 'from-blue-100 to-sky-50' },
-  'Bakım':     { icon: <ShampooIcon width={28} height={28} />, btnLabel: 'Bakım Görevi Planla', desc: 'Tırnak kesimi, banyo ve tüy bakımı planlayın.', title: 'Bakım Rutini', gradient: 'from-pink-100 to-fuchsia-50' },
-  'Beslenme':  { icon: <BowlIcon width={28} height={28} />, btnLabel: 'Beslenme Görevi Planla', desc: 'Mama siparişi ve diyet değişikliği planlayın.', title: 'Beslenme Planı', gradient: 'from-orange-100 to-amber-50' },
-  'Hijyen':    { icon: <ScoopIcon width={28} height={28} />, btnLabel: 'Hijyen Görevi Planla', desc: 'Kum kabı temizleme, tuvalet eğitimi ve ortam hijyeni planlayın.', title: 'Hijyen Takibi', gradient: 'from-teal-100 to-emerald-50' },
-  'Aktivite':  { icon: <BoneIcon width={28} height={28} />, btnLabel: 'Aktivite Görevi Planla', desc: 'Yürüyüş, oyun ve egzersiz rutinleri oluşturun.', title: 'Aktivite Planı', gradient: 'from-green-100 to-lime-50' },
-  'Veteriner': { icon: <CarrierIcon width={28} height={28} />, btnLabel: 'Veteriner Görevi Planla', desc: 'Genel kontrol ve takip randevuları oluşturun.', title: 'Veteriner Takibi', gradient: 'from-purple-100 to-indigo-50' },
-  'Diğer':     { icon: <HouseIcon width={28} height={28} />, btnLabel: 'Diğer Görev Planla', desc: 'Diğer kategori görevleri ve hatırlatmaları oluşturun.', title: 'Diğer Görevler', gradient: 'from-gray-100 to-slate-50' },
+/** Tuvalet eğitimi alt kategorileri — Hijyen'den Aktiviteler'e taşındı */
+const TOILET_TRAINING_SUBS = ['Kedi Tuvalet', 'Köpek Tuvalet'];
+
+/** Türe göre schedule'ın kategorisini düzeltir (eski Hijyen → Aktiviteler migration) */
+const migrateScheduleCategory = (s: any) => {
+  let cat = s.category === 'Temizlik' ? 'Hijyen' : s.category;
+  if (cat === 'Hijyen' && TOILET_TRAINING_SUBS.includes(s.sub_category)) {
+    cat = 'Aktiviteler';
+  }
+  return { ...s, category: cat };
+};
+
+/** Tab'a ait CTA bilgileri — türe göre dinamik */
+function getTabCtaInfo(species: string | undefined): Record<string, { icon: React.ReactNode; btnLabel: string; desc: string; title: string; gradient: string }> {
+  const isDog = species === 'Köpek' || species === 'dog';
+  // const isCat = species === 'Kedi' || species === 'cat';
+  return {
+    'Sağlık':    { icon: <FirstAidIcon width={28} height={28} />, btnLabel: 'Sağlık Görevi Planla', desc: 'Kilo ölçümü, semptom takibi, ilaç kullanımı planlayın.', title: 'Sağlık Takibi', gradient: 'from-red-100 to-rose-50' },
+    'Aşı':       { icon: <VaccineIcon width={28} height={28} />, btnLabel: 'Aşı / Parazit Görevi Planla', desc: 'Aşı ve parazit koruma hatırlatmaları oluşturun.', title: 'Aşı Takibi', gradient: 'from-blue-100 to-sky-50' },
+    'Bakım':     { icon: <ShampooIcon width={28} height={28} />, btnLabel: 'Bakım Görevi Planla', desc: isDog ? 'Banyo, tırnak kesimi ve tüy bakımı planlayın.' : 'Tırnak kesimi, kulak temizliği ve tüy bakımı planlayın.', title: 'Bakım Rutini', gradient: 'from-pink-100 to-fuchsia-50' },
+    'Beslenme':  { icon: <BowlIcon width={28} height={28} />, btnLabel: 'Beslenme Görevi Planla', desc: 'Mama siparişi ve diyet değişikliği planlayın.', title: 'Beslenme Planı', gradient: 'from-orange-100 to-amber-50' },
+    'Hijyen':    { icon: <ScoopIcon width={28} height={28} />, btnLabel: 'Hijyen Görevi Planla', desc: isDog ? 'Çiş pedi temizliği, yatak ve ortam hijyeni planlayın.' : 'Kum kabı temizleme, yatak ve ortam hijyeni planlayın.', title: 'Hijyen Takibi', gradient: 'from-teal-100 to-emerald-50' },
+    'Aktivite':  { icon: <BoneIcon width={28} height={28} />, btnLabel: 'Aktivite Görevi Planla', desc: isDog ? 'Yürüyüş, dışarı tuvalet eğitimi, oyun ve egzersiz rutinleri oluşturun.' : 'Kedi tuvalet eğitimi, oyun ve eğitim seansları planlayın.', title: 'Aktivite Planı', gradient: 'from-green-100 to-lime-50' },
+    'Veteriner': { icon: <CarrierIcon width={28} height={28} />, btnLabel: 'Veteriner Görevi Planla', desc: 'Genel kontrol ve takip randevuları oluşturun.', title: 'Veteriner Takibi', gradient: 'from-purple-100 to-indigo-50' },
+    'Diğer':     { icon: <HouseIcon width={28} height={28} />, btnLabel: 'Diğer Görev Planla', desc: 'Diğer kategori görevleri ve hatırlatmaları oluşturun.', title: 'Diğer Görevler', gradient: 'from-gray-100 to-slate-50' },
+  };
 }
 
 export default function PetDetailClient({ pet, age, score, overdue, schedules, diseases, allergies, medications, growthRecords, appointments, nutritionLogs, payments, subscription }: any) {
@@ -104,13 +120,15 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   const [taskPeriodFilter, setTaskPeriodFilter] = useState<'week' | 'all' | 'overdue' | 'done'>('week')
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
   
+  const tabCtaInfo = getTabCtaInfo(pet.species);
+
   const [localSchedules, setLocalSchedules] = useState<any[]>(() =>
-    schedules ? [...schedules].map((s: any) => ({ ...s, category: s.category === 'Temizlik' ? 'Hijyen' : s.category })).sort((a: any, b: any) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()) : []
+    schedules ? [...schedules].map(migrateScheduleCategory).sort((a: any, b: any) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()) : []
   )
 
   useEffect(() => {
     if (schedules) {
-      setLocalSchedules([...schedules].map((s: any) => ({ ...s, category: s.category === 'Temizlik' ? 'Hijyen' : s.category })).sort((a: any, b: any) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()))
+      setLocalSchedules([...schedules].map(migrateScheduleCategory).sort((a: any, b: any) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()))
     }
   }, [schedules])
 
@@ -698,7 +716,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
       {/* ── Tab: Sağlık ── */}
       {activeTab === 'Sağlık' && (() => {
-        const cta = TAB_CTA_INFO['Sağlık']
+        const cta = tabCtaInfo['Sağlık']
         const tasks = getSchedulesForTab('Sağlık')
         return (
           <div className="flex flex-col gap-5 animate-fadeInUp">
@@ -728,7 +746,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
       {/* ── Tab: Aşı ── */}
       {activeTab === 'Aşı' && (() => {
-        const cta = TAB_CTA_INFO['Aşı']
+        const cta = tabCtaInfo['Aşı']
         const tasks = getSchedulesForTab('Aşı')
         return (
           <div className="flex flex-col gap-5 animate-fadeInUp">
@@ -759,7 +777,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
       {/* ── Tab: Beslenme ── */}
       {activeTab === 'Beslenme' && (() => {
-        const cta = TAB_CTA_INFO['Beslenme']
+        const cta = tabCtaInfo['Beslenme']
         const tasks = getSchedulesForTab('Beslenme')
         return (
           <div className="flex flex-col gap-5 animate-fadeInUp">
@@ -788,7 +806,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
       {/* ── Tab: Bakım ── */}
       {activeTab === 'Bakım' && (() => {
-        const cta = TAB_CTA_INFO['Bakım']
+        const cta = tabCtaInfo['Bakım']
         const tasks = getSchedulesForTab('Bakım')
         return (
           <div className="flex flex-col gap-5 animate-fadeInUp">
@@ -817,7 +835,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
       {/* ── Tab: Veteriner ── */}
       {activeTab === 'Veteriner' && (() => {
-        const cta = TAB_CTA_INFO['Veteriner']
+        const cta = tabCtaInfo['Veteriner']
         const tasks = getSchedulesForTab('Veteriner')
         return (
           <div className="flex flex-col gap-5 animate-fadeInUp">
@@ -898,7 +916,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
       {/* ── Tab: Hijyen ── */}
       {activeTab === 'Hijyen' && (() => {
-        const cta = TAB_CTA_INFO['Hijyen']
+        const cta = tabCtaInfo['Hijyen']
         const tasks = getSchedulesForTab('Hijyen')
         return (
           <div className="flex flex-col gap-5 animate-fadeInUp">
@@ -927,7 +945,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
       {/* ── Tab: Aktivite ── */}
       {activeTab === 'Aktivite' && (() => {
-        const cta = TAB_CTA_INFO['Aktivite']
+        const cta = tabCtaInfo['Aktivite']
         const tasks = getSchedulesForTab('Aktivite')
         return (
           <div className="flex flex-col gap-5 animate-fadeInUp">
@@ -959,18 +977,18 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         <div className="flex flex-col gap-5 animate-fadeInUp">
           {/* Diğer Görev CTA */}
           <div className="card-base p-6 bg-white border border-border-main shadow-sm rounded-2xl flex flex-col items-center text-center gap-4">
-            <div className={`w-14 h-14 bg-gradient-to-tr ${TAB_CTA_INFO['Diğer'].gradient} rounded-2xl flex items-center justify-center shadow-sm`}>
-              {TAB_CTA_INFO['Diğer'].icon}
+            <div className={`w-14 h-14 bg-gradient-to-tr ${tabCtaInfo['Diğer'].gradient} rounded-2xl flex items-center justify-center shadow-sm`}>
+              {tabCtaInfo['Diğer'].icon}
             </div>
             <div>
-              <h3 className="font-extrabold text-text-primary text-[17px] mb-1">{TAB_CTA_INFO['Diğer'].title}</h3>
-              <p className="text-[13px] text-text-secondary leading-relaxed">{TAB_CTA_INFO['Diğer'].desc}</p>
+              <h3 className="font-extrabold text-text-primary text-[17px] mb-1">{tabCtaInfo['Diğer'].title}</h3>
+              <p className="text-[13px] text-text-secondary leading-relaxed">{tabCtaInfo['Diğer'].desc}</p>
             </div>
             <button
               onClick={() => openWizardWithCategory(TAB_CATEGORY_MAP['Diğer'])}
               className="w-full btn-primary py-3.5 text-[14px] font-black rounded-2xl"
             >
-              {TAB_CTA_INFO['Diğer'].btnLabel} →
+              {tabCtaInfo['Diğer'].btnLabel} →
             </button>
           </div>
           {/* Planlanmış Diğer Görevler */}

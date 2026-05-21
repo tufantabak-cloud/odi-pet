@@ -33,18 +33,18 @@ export const TASK_SUB_CATEGORIES: Record<TaskCategory, SubCategoryItem[]> = {
     { id: 'Tasma',           label: 'Tasma & Göğüslük Temizliği' },
     { id: 'Kum Kabı',        label: 'Kum Kabı Temizliği',       species: ['Kedi'] },
     { id: 'Kum Değişimi',    label: 'Kum Değişimi & Yıkama',    species: ['Kedi'] },
-    { id: 'Kedi Tuvalet',    label: 'Kedi Tuvalet Eğitimi',     species: ['Kedi'] },
     { id: 'Çiş Pedi',        label: 'Çiş Pedi Temizliği & Değişimi', species: ['Köpek'] },
-    { id: 'Köpek Tuvalet',   label: 'Dışarı Tuvalet Eğitimi',   species: ['Köpek'] },
     { id: 'Tırmalama',       label: 'Tırmalama Tahtası',        species: ['Kedi'] },
     { id: 'Kafes',           label: 'Kafes / Taşıma Kutusu' },
     { id: 'Ortam Hijyeni',   label: 'Ev & Ortam Hijyeni' },
   ],
   Aktiviteler: [
-    { id: 'Yürüyüş', label: 'Yürüyüş',           species: ['Köpek'] },
-    { id: 'Yarışma',  label: 'Yarışma / Gösteri' },
-    { id: 'Eğitim',   label: 'Eğitim Seansı' },
-    { id: 'Oyun',     label: 'Oyun Zamanı' },
+    { id: 'Yürüyüş',        label: 'Yürüyüş',                  species: ['Köpek'] },
+    { id: 'Köpek Tuvalet',   label: 'Dışarı Tuvalet Eğitimi',   species: ['Köpek'] },
+    { id: 'Kedi Tuvalet',    label: 'Kedi Tuvalet Eğitimi',     species: ['Kedi'] },
+    { id: 'Yarışma',         label: 'Yarışma / Gösteri' },
+    { id: 'Eğitim',          label: 'Eğitim Seansı' },
+    { id: 'Oyun',            label: 'Oyun Zamanı' },
   ],
   Medikal: [
     { id: 'Aşı',            label: 'Aşı Uygulaması' },
@@ -113,18 +113,18 @@ export const TASK_DEFAULTS: Record<string, SmartDefault> = {
   'Tasma':          { frequency: 'monthly', interval: 1, notification_minutes: 0 },
   'Kum Kabı':       { frequency: 'daily',   interval: 1, notification_minutes: 0 },
   'Kum Değişimi':   { frequency: 'weekly',  interval: 1, notification_minutes: 0 },
-  'Kedi Tuvalet':   { frequency: 'daily',   interval: 1, notification_minutes: 0 },
   'Çiş Pedi':       { frequency: 'daily',   interval: 1, notification_minutes: 0 },
-  'Köpek Tuvalet':  { frequency: 'daily',   interval: 1, notification_minutes: 0 },
   'Tırmalama':      { frequency: 'monthly', interval: 1, notification_minutes: 0 },
   'Kafes':          { frequency: 'monthly', interval: 1, notification_minutes: 0 },
   'Ortam Hijyeni':  { frequency: 'weekly',  interval: 1, notification_minutes: 0 },
 
   // ── Aktiviteler ──────────────────────────────────────────────────
-  'Yürüyüş': { frequency: 'daily',   interval: 1, notification_minutes: 0 },
-  'Yarışma':  { frequency: 'once',   interval: 1, notification_minutes: 0 }, // etkinlik → tek seferlik, 1 gün önce
-  'Eğitim':   { frequency: 'weekly', interval: 1, notification_minutes: 0 },
-  'Oyun':     { frequency: 'daily',  interval: 1, notification_minutes: 0 },
+  'Yürüyüş':        { frequency: 'daily',   interval: 1, notification_minutes: 0 },
+  'Köpek Tuvalet':  { frequency: 'daily',   interval: 1, notification_minutes: 0 },
+  'Kedi Tuvalet':   { frequency: 'daily',   interval: 1, notification_minutes: 0 },
+  'Yarışma':        { frequency: 'once',    interval: 1, notification_minutes: 0 }, // etkinlik → tek seferlik, 1 gün önce
+  'Eğitim':         { frequency: 'weekly',  interval: 1, notification_minutes: 0 },
+  'Oyun':           { frequency: 'daily',   interval: 1, notification_minutes: 0 },
 
   // ── Medikal ──────────────────────────────────────────────────────
   'Aşı':             { frequency: 'yearly',  interval: 1, notification_minutes: 0 },

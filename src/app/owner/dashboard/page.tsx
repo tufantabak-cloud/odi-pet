@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation'
 import DashboardOnboardingWrapper from './DashboardOnboardingWrapper'
 import CoachMark from '@/components/ui/CoachMark'
 import { calcAge } from '@/lib/pets/utils'
-import { VaccineIcon, BowlIcon, RulerIcon, VetIcon } from '@/components/icons/PetIcons'
+
 
 export default async function OwnerDashboard() {
   const user = await getSessionUser()
@@ -127,14 +127,7 @@ export default async function OwnerDashboard() {
                   {/* Gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-                  {/* Status badge top-right */}
-                  <div className="absolute top-3 right-3 z-10">
-                    {pet.overdueCount > 0 ? (
-                      <span className="bg-red-500 text-white px-2.5 py-1 rounded-full font-bold text-[11px] shadow-md">⚠️ Dikkat</span>
-                    ) : pet.hasData ? (
-                      <span className="bg-emerald-500 text-white px-2.5 py-1 rounded-full font-bold text-[11px] shadow-md">✓ Sağlıklı</span>
-                    ) : null}
-                  </div>
+
 
                   {/* Name + species overlaid on photo bottom */}
                   <div className="absolute bottom-0 left-0 right-0 px-4 py-3 z-10">
@@ -145,26 +138,7 @@ export default async function OwnerDashboard() {
                   </div>
                 </div>
 
-                {/* Stats row below photo */}
-                <div className="flex gap-0 border-t border-border-main relative z-30 bg-surface">
-                  <div className="flex-1 flex flex-col items-center py-2 px-2">
-                    <BowlIcon width={24} height={24} />
-                    {pet.lastFeedingDate === 'Veri Yok' ? (
-                      <Link href={`/owner/pets/${pet.id}/nutrition`} className="text-[11px] font-bold text-primary mt-1 hover:underline z-40 relative">Ekle +</Link>
-                    ) : (
-                      <span className="text-[11px] font-bold text-text-primary mt-1 text-center">{pet.lastFeedingDate}</span>
-                    )}
-                  </div>
-                  <div className="w-px bg-border-main self-stretch my-2" />
-                  <div className="flex-1 flex flex-col items-center py-2 px-2">
-                    <RulerIcon width={24} height={24} />
-                    {pet.weightVal === 'Veri Yok' ? (
-                      <Link href={`/owner/pets/${pet.id}`} className="text-[11px] font-bold text-primary mt-1 hover:underline z-40 relative">Ekle +</Link>
-                    ) : (
-                      <span className="text-[11px] font-bold text-text-primary mt-1 text-center">{pet.weightVal}</span>
-                    )}
-                  </div>
-                </div>
+
               </div>
             ))}
 
@@ -181,71 +155,8 @@ export default async function OwnerDashboard() {
         </div>
       )}
 
-      {/* Quick Actions — Application-Specific Shortcuts */}
-      {primaryPet && (
-        <div>
-          <h2 className="text-[14px] font-black text-text-secondary uppercase tracking-widest mb-3">Hızlı İşlemler</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {/* Pet Detail shortcut instead of Vaccine Schedule */}
-            <Link
-              href={`/owner/pets/${primaryPet.id}`}
-              className="group flex flex-col items-center gap-2.5 p-4 rounded-[18px] bg-surface border border-border-main hover:border-primary/30 hover:bg-primary-soft/20 transition-all shadow-sm hover:shadow-md"
-            >
-              <div className="w-12 h-12 rounded-[14px] bg-[#ede9fe] flex items-center justify-center group-hover:scale-110 transition-transform">
-                <VetIcon width={32} height={32} />
-              </div>
-              <div className="text-center">
-                <p className="font-extrabold text-text-primary text-[13px] leading-tight">Pet Profili</p>
-                <p className="text-text-secondary text-[11px] mt-0.5">
-                  Görüntüle
-                </p>
-              </div>
-            </Link>
 
-            {/* Feeding Log */}
-            <Link
-              href={`/owner/pets/${primaryPet.id}/nutrition`}
-              className="group flex flex-col items-center gap-2.5 p-4 rounded-[18px] bg-surface border border-border-main hover:border-primary/30 hover:bg-primary-soft/20 transition-all shadow-sm hover:shadow-md"
-            >
-              <div className="w-12 h-12 rounded-[14px] bg-[#fef3c7] flex items-center justify-center group-hover:scale-110 transition-transform">
-                <BowlIcon width={32} height={32} />
-              </div>
-              <div className="text-center">
-                <p className="font-extrabold text-text-primary text-[13px] leading-tight">Besleme Ekle</p>
-                <p className="text-text-secondary text-[11px] mt-0.5">Günlük öğün</p>
-              </div>
-            </Link>
 
-            {/* Weight / Growth */}
-            <Link
-              href={`/owner/pets/${primaryPet.id}`}
-              className="group flex flex-col items-center gap-2.5 p-4 rounded-[18px] bg-surface border border-border-main hover:border-primary/30 hover:bg-primary-soft/20 transition-all shadow-sm hover:shadow-md"
-            >
-              <div className="w-12 h-12 rounded-[14px] bg-[#d1fae5] flex items-center justify-center group-hover:scale-110 transition-transform">
-                <RulerIcon width={32} height={32} />
-              </div>
-              <div className="text-center">
-                <p className="font-extrabold text-text-primary text-[13px] leading-tight">Büyüme Kaydı</p>
-                <p className="text-text-secondary text-[11px] mt-0.5">Kilo & boy</p>
-              </div>
-            </Link>
-
-            {/* AI Vet */}
-            <Link
-              href="/owner/ai-vet"
-              className="group flex flex-col items-center gap-2.5 p-4 rounded-[18px] bg-surface border border-border-main hover:border-primary/30 hover:bg-primary-soft/20 transition-all shadow-sm hover:shadow-md"
-            >
-              <div className="w-12 h-12 rounded-[14px] bg-[#fce7f3] flex items-center justify-center group-hover:scale-110 transition-transform">
-                <VetIcon width={32} height={32} />
-              </div>
-              <div className="text-center">
-                <p className="font-extrabold text-text-primary text-[13px] leading-tight">AI Vet</p>
-                <p className="text-text-secondary text-[11px] mt-0.5">Soru sor</p>
-              </div>
-            </Link>
-          </div>
-        </div>
-      )}
 
       {/* Upcoming Timeline */}
       {timelineSchedules.length > 0 && (

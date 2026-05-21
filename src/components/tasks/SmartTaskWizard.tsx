@@ -31,7 +31,12 @@ const SUB_CATEGORIES_WITH_PICKER: Record<string, 'vaccine'> = {
  */
 function resolveCategoryFromTask(task: any): TaskCategory | null {
   if (!task?.category) return null;
-  const category = task.category === 'Temizlik' ? 'Hijyen' : task.category;
+  let category = task.category === 'Temizlik' ? 'Hijyen' : task.category;
+  // Tuvalet eğitimi görevleri artık Aktiviteler altında
+  const toiletTrainingSubs = ['Kedi Tuvalet', 'Köpek Tuvalet'];
+  if (category === 'Hijyen' && toiletTrainingSubs.includes(task.sub_category)) {
+    category = 'Aktiviteler';
+  }
   const validIds = TASK_CATEGORIES.map(c => c.id);
   return validIds.includes(category) ? category as TaskCategory : null;
 }
