@@ -15,12 +15,12 @@
 Error: expect(page).toHaveURL(expected) failed
 
 Expected pattern: /\/owner\//
-Received string:  "http://127.0.0.1:3000/login?email=odiplatform%40gmail.com&password=password123"
+Received string:  "http://127.0.0.1:3000/login?email=odiplatform%40gmail.com&password=odi1472"
 Timeout: 15000ms
 
 Call log:
   - Expect "toHaveURL" with timeout 15000ms
-    18 × unexpected value "http://127.0.0.1:3000/login?email=odiplatform%40gmail.com&password=password123"
+    18 × unexpected value "http://127.0.0.1:3000/login?email=odiplatform%40gmail.com&password=odi1472"
 
 ```
 
@@ -50,7 +50,7 @@ Call log:
       - generic [ref=e25]:
         - generic [ref=e26]: Şifre
         - link "Şifremi Unuttum" [ref=e27] [cursor=pointer]:
-          - /url: "#"
+          - /url: /reset-password
       - generic [ref=e28]:
         - textbox "Şifre" [ref=e29]:
           - /placeholder: ••••••••

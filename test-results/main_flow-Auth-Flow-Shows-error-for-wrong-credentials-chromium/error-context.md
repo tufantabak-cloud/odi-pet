@@ -51,7 +51,7 @@ Call log:
       - generic [ref=e25]:
         - generic [ref=e26]: Şifre
         - link "Şifremi Unuttum" [ref=e27] [cursor=pointer]:
-          - /url: "#"
+          - /url: /reset-password
       - generic [ref=e28]:
         - textbox "Şifre" [ref=e29]:
           - /placeholder: ••••••••

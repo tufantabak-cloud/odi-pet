@@ -101,7 +101,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   const [taskWizardOpen, setTaskWizardOpen] = useState(false)
   const [taskToEdit, setTaskToEdit] = useState<any>(null)
   const [wizardInitialCategory, setWizardInitialCategory] = useState<TaskCategory | null>(null)
-  const [taskPeriodFilter, setTaskPeriodFilter] = useState<'week' | 'month' | 'overdue' | 'done'>('week')
+  const [taskPeriodFilter, setTaskPeriodFilter] = useState<'week' | 'all' | 'overdue' | 'done'>('week')
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
   
   const [localSchedules, setLocalSchedules] = useState<any[]>(() =>
@@ -126,7 +126,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     return localSchedules.filter((s: any) => s.category === dbCat && s.status !== 'done')
   }
 
-  const getSchedulesForPeriod = (period: 'week' | 'month' | 'overdue' | 'done') => {
+  const getSchedulesForPeriod = (period: 'week' | 'all' | 'overdue' | 'done') => {
     const now = new Date()
     
     return localSchedules.filter((s: any) => {
@@ -138,12 +138,13 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         
         if (period === 'overdue') return d < now
         
-        // For planned tasks (week/month), we show tasks that are NOT overdue
+        // For planned tasks (week/all), we show tasks that are NOT overdue
         if (d < now) return false
+        
+        if (period === 'all') return true
         
         const end = new Date(now)
         if (period === 'week') end.setDate(now.getDate() + 7)
-        else end.setDate(now.getDate() + 30)
         
         return d <= end
       } catch { return false }
@@ -153,12 +154,20 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     })
   }
 
-  const formatTaskDate = (dueDateStr: string) => {
+  const formatTaskDate = (dueDateStr: string, isDone?: boolean) => {
     try {
       const d = new Date(dueDateStr)
       if (isNaN(d.getTime())) return dueDateStr
       const months = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık']
       const dateText = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`
+      
+      if (isDone) {
+        return (
+          <span className="inline-flex items-center">
+            {dateText} <span className="text-success ml-1.5 font-bold tracking-wide">» Tamamlandı</span>
+          </span>
+        )
+      }
       
       const today = new Date()
       today.setHours(0,0,0,0)
@@ -171,7 +180,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       else if (diffDays === 1) badge = <span className="text-primary ml-1.5 font-bold tracking-wide">» Yarın</span>;
       else if (diffDays === -1) badge = <span className="text-red-600 ml-1.5 font-bold tracking-wide">» Dün</span>;
       else if (diffDays < -1) badge = <span className="text-red-600 ml-1.5 font-bold tracking-wide">» {Math.abs(diffDays)} gün gecikti</span>;
-      else if (diffDays > 1 && diffDays <= 45) badge = <span className="text-primary ml-1.5 font-bold tracking-wide">» {diffDays} gün kaldı</span>;
+      else if (diffDays > 1) badge = <span className="text-primary ml-1.5 font-bold tracking-wide">» {diffDays} gün kaldı</span>;
       
       return (
         <span className="inline-flex items-center">
@@ -446,8 +455,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             
             {/* Period Tabs */}
             <div className="flex border-b border-border-main/50 bg-bg-main/30 overflow-x-auto scrollbar-hide">
-              {(['overdue', 'week', 'month', 'done'] as const).map(p => {
-                const label = p === 'week' ? 'Gelecek 7 Gün' : p === 'month' ? 'Gelecek 30 Gün' : p === 'overdue' ? 'Gecikmiş' : 'Tamamlanan';
+              {(['overdue', 'week', 'all', 'done'] as const).map(p => {
+                const label = p === 'week' ? 'Gelecek 7 Gün' : p === 'all' ? 'Tüm Zamanlar' : p === 'overdue' ? 'Gecikmiş' : 'Tamamlanan';
                 return (
                   <button key={p} onClick={() => setTaskPeriodFilter(p)}
                     className={`flex-1 min-w-max px-4 py-3.5 text-[13px] font-extrabold transition-all border-b-[3px] relative ${taskPeriodFilter === p ? 'border-primary text-primary bg-white' : 'border-transparent text-text-secondary hover:text-text-primary hover:bg-white/50'}`}>
@@ -491,7 +500,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                               <div className="flex items-center gap-2 mt-0.5">
                                 {item.category && <span className={`text-[10px] font-black uppercase tracking-wider ${style.text} opacity-80`}>{item.category === 'Medikal' ? 'Aşı' : item.category === 'Saglik' ? 'Sağlık' : item.category === 'Temizlik' ? 'Hijyen' : item.category}</span>}
                                 <span className={`text-[10px] font-black ${style.text} opacity-50`}>•</span>
-                                <span className={`text-[11px] font-bold ${style.text} opacity-80`}>{formatTaskDate(item.due_date)}</span>
+                                <span className={`text-[11px] font-bold ${style.text} opacity-80`}>{formatTaskDate(item.due_date, item.status === 'done')}</span>
                               </div>
                             </div>
                           </div>
@@ -594,7 +603,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                     <div>
                       <p className="font-extrabold text-[14px] text-[#0f3a35]">{item.title || 'Görev'}</p>
                       {item.sub_category && <p className="text-[11px] text-[#3c6b65] font-semibold">{item.sub_category}</p>}
-                      <p className="text-[11px] text-[#5a8680] font-semibold mt-0.5">{formatTaskDate(item.due_date)}</p>
+                      <p className="text-[11px] text-[#5a8680] font-semibold mt-0.5">{formatTaskDate(item.due_date, item.status === 'done')}</p>
                     </div>
                     <div className="relative">
                       <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(prev => prev === item.id ? null : item.id) }}
@@ -653,7 +662,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                     <div>
                       <p className="font-extrabold text-[14px] text-[#0f3a35]">{item.title || item.vaccines?.name || 'Görev'}</p>
                       {item.sub_category && <p className="text-[11px] text-[#3c6b65] font-semibold">{item.sub_category}</p>}
-                      <p className="text-[11px] text-[#5a8680] font-semibold mt-0.5">{formatTaskDate(item.due_date)}</p>
+                      <p className="text-[11px] text-[#5a8680] font-semibold mt-0.5">{formatTaskDate(item.due_date, item.status === 'done')}</p>
                     </div>
                     <div className="relative">
                       <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(prev => prev === item.id ? null : item.id) }}
@@ -710,7 +719,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                     <div>
                       <p className="font-extrabold text-[14px] text-[#0f3a35]">{item.title || 'Görev'}</p>
                       {item.sub_category && <p className="text-[11px] text-[#3c6b65] font-semibold">{item.sub_category}</p>}
-                      <p className="text-[11px] text-[#5a8680] font-semibold mt-0.5">{formatTaskDate(item.due_date)}</p>
+                      <p className="text-[11px] text-[#5a8680] font-semibold mt-0.5">{formatTaskDate(item.due_date, item.status === 'done')}</p>
                     </div>
                     <div className="relative">
                       <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(prev => prev === item.id ? null : item.id) }}
@@ -767,7 +776,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                     <div>
                       <p className="font-extrabold text-[14px] text-[#0f3a35]">{item.title || 'Görev'}</p>
                       {item.sub_category && <p className="text-[11px] text-[#3c6b65] font-semibold">{item.sub_category}</p>}
-                      <p className="text-[11px] text-[#5a8680] font-semibold mt-0.5">{formatTaskDate(item.due_date)}</p>
+                      <p className="text-[11px] text-[#5a8680] font-semibold mt-0.5">{formatTaskDate(item.due_date, item.status === 'done')}</p>
                     </div>
                     <div className="relative">
                       <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(prev => prev === item.id ? null : item.id) }}
@@ -876,7 +885,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                     <div>
                       <p className="font-extrabold text-[14px] text-[#0f3a35]">{item.title || 'Görev'}</p>
                       {item.sub_category && <p className="text-[11px] text-[#3c6b65] font-semibold">{item.sub_category}</p>}
-                      <p className="text-[11px] text-[#5a8680] font-semibold mt-0.5">{formatTaskDate(item.due_date)}</p>
+                      <p className="text-[11px] text-[#5a8680] font-semibold mt-0.5">{formatTaskDate(item.due_date, item.status === 'done')}</p>
                     </div>
                     <div className="relative">
                       <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(prev => prev === item.id ? null : item.id) }}
@@ -933,7 +942,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                     <div>
                       <p className="font-extrabold text-[14px] text-[#0f3a35]">{item.title || 'Görev'}</p>
                       {item.sub_category && <p className="text-[11px] text-[#3c6b65] font-semibold">{item.sub_category}</p>}
-                      <p className="text-[11px] text-[#5a8680] font-semibold mt-0.5">{formatTaskDate(item.due_date)}</p>
+                      <p className="text-[11px] text-[#5a8680] font-semibold mt-0.5">{formatTaskDate(item.due_date, item.status === 'done')}</p>
                     </div>
                     <div className="relative">
                       <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(prev => prev === item.id ? null : item.id) }} className="text-[#3c6b65] p-2 cursor-pointer">
@@ -987,7 +996,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                     <div>
                       <p className="font-extrabold text-[14px] text-[#0f3a35]">{item.title || 'Görev'}</p>
                       {item.sub_category && <p className="text-[11px] text-[#3c6b65] font-semibold">{item.sub_category}</p>}
-                      <p className="text-[11px] text-[#5a8680] font-semibold mt-0.5">{formatTaskDate(item.due_date)}</p>
+                      <p className="text-[11px] text-[#5a8680] font-semibold mt-0.5">{formatTaskDate(item.due_date, item.status === 'done')}</p>
                     </div>
                     <div className="relative">
                       <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(prev => prev === item.id ? null : item.id) }} className="text-[#3c6b65] p-2 cursor-pointer">
@@ -1039,7 +1048,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                   <div>
                     <p className="font-extrabold text-[14px] text-[#0f3a35]">{item.title || 'Görev'}</p>
                     {item.sub_category && <p className="text-[11px] text-[#3c6b65] font-semibold">{item.sub_category}</p>}
-                    <p className="text-[11px] text-[#5a8680] font-semibold mt-0.5">{formatTaskDate(item.due_date)}</p>
+                    <p className="text-[11px] text-[#5a8680] font-semibold mt-0.5">{formatTaskDate(item.due_date, item.status === 'done')}</p>
                   </div>
                   <div className="relative">
                     <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(prev => prev === item.id ? null : item.id) }} className="text-[#3c6b65] p-2 cursor-pointer">

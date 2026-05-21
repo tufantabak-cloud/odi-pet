@@ -36,7 +36,7 @@ function resolveCategoryFromTask(task: any): TaskCategory | null {
   return validIds.includes(category) ? category as TaskCategory : null;
 }
 
-export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initialCategory = null, allowPastDate = false, onClose, onDone }: SmartTaskWizardProps) {
+export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initialCategory = null, allowPastDate = true, onClose, onDone }: SmartTaskWizardProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -199,6 +199,38 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
     try {
       const supabase = createBrowserSupabaseClient();
 
+      // ── MÜKERRER KAYIT KONTROLÜ (Sadece Yeni Kayıt İçin) ────────
+      if (!taskToEdit) {
+        let duplicateQuery = supabase
+          .from('health_schedules')
+          .select('id, due_date, status')
+          .eq('pet_id', petId)
+          .eq('category', category)
+          .eq('title', finalTitle);
+
+        if (subCategory) {
+          duplicateQuery = duplicateQuery.eq('sub_category', subCategory);
+        }
+
+        // Ya seçilen tarihte zaten bir kayıt varsa, ya da halihazırda 'upcoming' (gelecek planlı) bir kayıt varsa engelle
+        duplicateQuery = duplicateQuery.or(`due_date.eq.${formData.date},status.eq.upcoming`);
+
+        const { data: existingTasks, error: checkError } = await duplicateQuery.limit(1);
+
+        if (checkError) throw checkError;
+
+        if (existingTasks && existingTasks.length > 0) {
+          const isSameDate = existingTasks[0].due_date === formData.date;
+          if (isSameDate) {
+            setError('Bu tarihte aynı görev için zaten bir kayıt mevcut. Lütfen mevcut kaydı düzenleyin.');
+          } else {
+            setError('Bu görev için halihazırda planlanmış ileri tarihli (aktif) bir kayıt mevcut. Lütfen yeni kayıt açmak yerine mevcut planlamayı düzenleyin.');
+          }
+          setLoading(false);
+          return;
+        }
+      }
+
       // ── EDIT MODE ────────────────────────────────────────────────
       if (taskToEdit) {
         // 1) health_plans güncelle (frekans değiştiyse)
@@ -277,6 +309,9 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Oturum bulunamadı.');
 
+      const todayStr = new Date().toISOString().split('T')[0];
+      const isPastDate = formData.date < todayStr;
+
       let planId = null;
       if (formData.frequency !== 'once') {
         const { data: plan, error: planError } = await supabase
@@ -312,7 +347,7 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
           title: finalTitle,
           due_date: formData.date,
           due_time: formData.time,
-          status: 'upcoming',
+          status: isPastDate ? 'done' : 'upcoming',
           plan_id: planId,
           notification_rule: {
             enabled: formData.notificationEnabled,
@@ -328,6 +363,63 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
         .single();
 
       if (scheduleError) throw scheduleError;
+
+      // Geçmiş tarihli ve tekrar eden bir görevse, bir sonraki periyodu hesapla ve otomatik ekle
+      if (isPastDate && formData.frequency !== 'once' && planId) {
+        const getNextDate = (baseDateStr: string, frequency: string, interval: number) => {
+          const d = new Date(baseDateStr);
+          if (frequency === 'daily') d.setDate(d.getDate() + interval);
+          if (frequency === 'weekly') d.setDate(d.getDate() + (interval * 7));
+          if (frequency === 'monthly') d.setMonth(d.getMonth() + interval);
+          if (frequency === 'yearly') d.setFullYear(d.getFullYear() + interval);
+          return d.toISOString().split('T')[0];
+        };
+
+        let nextDateStr = getNextDate(formData.date, formData.frequency, formData.interval);
+        // Eğer hesaplanan sonraki tarih de geçmişte kalıyorsa, bugünü geçene kadar ileri sar
+        while (nextDateStr < todayStr) {
+          nextDateStr = getNextDate(nextDateStr, formData.frequency, formData.interval);
+        }
+
+        const { error: nextScheduleError } = await supabase
+          .from('health_schedules')
+          .insert({
+            pet_id: petId,
+            plan_type: category === 'Medikal' || category === 'Veteriner' ? 'checkup' : 'other',
+            category: category,
+            sub_category: subCategory,
+            title: finalTitle,
+            due_date: nextDateStr,
+            due_time: formData.time,
+            status: 'upcoming',
+            plan_id: planId,
+            notification_rule: {
+              enabled: formData.notificationEnabled,
+              minutes_before: formData.notificationMinutes,
+              frequency: formData.frequency,
+            },
+            notes: formData.notes,
+            metadata,
+            assigned_by: user.id,
+            assigned_to: user.id
+          });
+        
+        if (nextScheduleError) console.error('Sonraki plan oluşturulurken hata:', nextScheduleError);
+      }
+
+      // Eğer seçilen işlem bir Aşı ise, geçmiş onay verilirse vaccine_records tablosuna da ekle
+      if (isPastDate && selectedVaccine) {
+        const { error: vrError } = await supabase
+          .from('vaccine_records')
+          .insert({
+            pet_id: petId,
+            vaccine_id: selectedVaccine.id,
+            schedule_id: newSchedule.id,
+            applied_date: formData.date
+          });
+        if (vrError) console.error('Aşı kaydı oluşturulurken hata:', vrError);
+      }
+
       onDone(newSchedule);
     } catch (err: any) {
       setError(err.message || 'Görev kaydedilirken bir hata oluştu.');
@@ -347,6 +439,9 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
   const categoryLabel = category
     ? (TASK_CATEGORIES.find(c => c.id === category)?.label ?? category)
     : null;
+
+  const todayStrUI = new Date().toISOString().split('T')[0];
+  const isPastDateUI = formData.date < todayStrUI;
 
   return (
     <div className="fixed inset-0 z-[10005] bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 pb-12 sm:pb-4" onClick={onClose}>
@@ -453,6 +548,21 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
 
         {error && <p className="text-[12px] text-error font-bold p-3 bg-error/10 rounded-xl text-center mt-2">{error}</p>}
 
+        {/* Geçmiş Tarih Uyarı & Onay Kutusu */}
+        {isPastDateUI && !taskToEdit && !showVaccinePicker && category && (
+          <div className="mt-4 p-4 bg-info/10 border-2 border-info/30 rounded-xl animate-fadeInUp">
+            <div className="flex items-start gap-3">
+              <span className="text-[20px] mt-0.5">💡</span>
+              <div>
+                <p className="text-[13px] font-extrabold text-info">Bu geçmiş bir tarih</p>
+                <p className="text-[12px] text-text-secondary mt-1 font-medium leading-relaxed">
+                  Uygulama yapıldı mı? Onaylayarak geçmiş kaydı oluşturabilir ve gelecek periyotların otomatik planlanmasını sağlayabilirsiniz.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ── Actions ───────────────────────────────────────────── */}
         <div className="flex gap-3 pt-6 mt-auto">
           <button
@@ -468,7 +578,11 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
             disabled={isSaveDisabled}
             className="flex-[2] btn-primary py-3.5 disabled:opacity-50 shadow-sm text-[14px]"
           >
-            {loading ? 'Kaydediliyor...' : taskToEdit ? 'Değişiklikleri Kaydet ✓' : 'Görev Planla ✓'}
+            {loading 
+              ? 'Kaydediliyor...' 
+              : taskToEdit 
+                ? 'Değişiklikleri Kaydet ✓' 
+                : (isPastDateUI ? 'Uygulandı Onayı ✓' : 'Görev Planla ✓')}
           </button>
         </div>
       </div>
