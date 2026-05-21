@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
     district:      str(fd, 'district')      || null,
   }
 
-  console.log('[API/Pets] INSERT payload:', JSON.stringify({ ...payload, avatar_url: avatarUrl ? '✓ uploaded' : null }))
+
 
   const { data, error } = await supabase
     .from('pets')
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  console.log('[API/Pets] INSERT success:', data)
+
 
   // ─── Add Owner to pet_owners table ───────────────────────────
   await supabase

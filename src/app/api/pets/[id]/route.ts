@@ -119,7 +119,7 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
   const { id } = await context.params
   const supabase = await createServerSupabaseClient()
 
-  console.log('[API/Pets/DELETE] User:', user.id, 'Pet:', id)
+
 
   // Verify ownership via pet_owners table
   const { data: ownerRecord, error: ownerError } = await supabase
@@ -129,7 +129,7 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
     .eq('profile_id', user.id)
     .single()
 
-  console.log('[API/Pets/DELETE] Owner record:', ownerRecord, 'Error:', ownerError)
+
 
   if (!ownerRecord || ownerRecord.role !== 'owner') {
     return NextResponse.json({ error: 'Sadece asıl sahip evcil hayvanı silebilir.' }, { status: 403 })
@@ -145,7 +145,7 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
     .eq('id', id)
     .eq('owner_id', user.id)
 
-  console.log('[API/Pets/DELETE] Delete result — error:', error, 'count:', count)
+
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })

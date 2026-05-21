@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { getSessionUser } from '@/lib/auth/get-current-profile'
 
 const SYSTEM_INSTRUCTION = `Sen Odi AI Vet adlı bir veteriner triaj asistanısın. Türkçe konuşuyorsun.
 
@@ -45,9 +46,23 @@ function heuristicFallback(_symptomStr?: string) {
 }
 
 export async function POST(req: NextRequest) {
+  // Auth guard — Gemini API maliyetini korumak için
+  const user = await getSessionUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const body = await req.json()
   // history: array of { role: 'user'|'model', text: string }
   const history: { role: 'user' | 'model'; text: string }[] = body.history ?? []
+
+  // İçerik uzunluk limiti (flood / cost koruma)
+  if (history.length > 50) {
+    return NextResponse.json({ error: 'Konuşma geçmişi çok uzun. Yeni bir sohbet başlatın.' }, { status: 400 })
+  }
+  const lastMessage = history[history.length - 1]?.text ?? ''
+  if (lastMessage.length > 2000) {
+    return NextResponse.json({ error: 'Mesaj çok uzun (max 2000 karakter).' }, { status: 400 })
+  }
+
   const petContext = body.petContext ?? null
 
   let systemInstruction = SYSTEM_INSTRUCTION
@@ -84,7 +99,6 @@ export async function POST(req: NextRequest) {
       systemInstruction: systemInstruction,
     })
 
-    // Build Gemini chat history (all but last user message)
     const chatHistory: ChatMessage[] = history.slice(0, -1).map(m => ({
       role: m.role,
       parts: [{ text: m.text }],
@@ -95,7 +109,6 @@ export async function POST(req: NextRequest) {
       generationConfig: { maxOutputTokens: 1024, temperature: 0.7 },
     })
 
-    const lastMessage = history[history.length - 1]?.text ?? ''
     const result = await chat.sendMessage(lastMessage)
     const raw = result.response.text()
 

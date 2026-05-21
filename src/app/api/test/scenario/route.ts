@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { getSessionUser } from '@/lib/auth/get-current-profile'
 
 export async function POST(req: NextRequest) {
+  // Test senaryoları sadece admin ortamında çalışmalı
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Not available in production' }, { status: 403 })
+  }
+
+  const user = await getSessionUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const supabase = await createServerSupabaseClient()
   const body = await req.json()
   const { petId, scenario } = body

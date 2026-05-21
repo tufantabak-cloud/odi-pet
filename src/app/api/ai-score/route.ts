@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { getSessionUser } from '@/lib/auth/get-current-profile'
 
 const SYSTEM_PROMPT = `Sen bir veteriner triaj asistanısın. Kullanıcının tarif ettiği evcil hayvan belirtilerini değerlendirip aşağıdaki JSON formatında yanıt ver. SADECE JSON döndür, başka hiçbir şey yazma.
 
@@ -33,8 +34,17 @@ function heuristicFallback(symptomStr: string) {
 }
 
 export async function POST(req: NextRequest) {
+  // Auth guard — Gemini API maliyetini korumak için
+  const user = await getSessionUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const { symptoms } = await req.json()
   const symptomStr = (symptoms ?? '').toLowerCase()
+
+  // İçerik uzunluk limiti
+  if (symptomStr.length > 1000) {
+    return NextResponse.json({ error: 'Belirti açıklaması çok uzun (max 1000 karakter).' }, { status: 400 })
+  }
 
   const apiKey = process.env.GEMINI_API_KEY
   if (apiKey) {

@@ -79,7 +79,6 @@ export default function HealthClient({ petId }: { petId: string }) {
       
       // Sadece bu evcil hayvanın türüne ait aşıları listele
       const pData = petRes.data;
-      console.log('Pet Data Fetch Result:', pData); // Hata ayıklama için
       setPetData(pData);
       const filteredVaccines = (vListRes.data || []).filter(v => v.species === pData?.species);
       setVaccinesList(filteredVaccines)

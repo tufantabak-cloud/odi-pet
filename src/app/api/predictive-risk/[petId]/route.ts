@@ -277,14 +277,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ petI
     .select('*')
     .single()
 
-  // 8. LOGLAMA SİSTEMİ
-  console.log({
-    step: 'PREDICTIVE_EVAL',
-    petId,
-    metrics: { overdueCount, postponeCount, inactiveDays, lowScoreDays, acceptanceRate, declineRate, unassignedCritical, overloadedMember },
-    household: { householdScore, householdLevel },
-    result: { riskScore, riskLevel, reason: insightData.reason_code, message: insightData.message }
-  })
+  // 8. Hata durumunda kayıt
 
   if (error) {
     console.error('[PredictiveEngine] Kayıt hatası:', error)
