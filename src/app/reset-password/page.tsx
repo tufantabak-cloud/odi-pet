@@ -3,8 +3,10 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Turnstile } from '@marsidev/react-turnstile'
+import dynamic from 'next/dynamic'
 import { useForm } from 'react-hook-form'
+
+const Turnstile = dynamic(() => import('@marsidev/react-turnstile').then(mod => mod.Turnstile), { ssr: false })
 import { zodResolver } from '@hookform/resolvers/zod'
 import { resetPasswordSchema, type ResetPasswordInput } from '@/lib/validations/auth'
 
@@ -12,6 +14,7 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [showTurnstile, setShowTurnstile] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState<string>('')
 
   const {
@@ -59,7 +62,7 @@ export default function ResetPasswordPage() {
         <div className="text-center mb-10">
           <Link href="/" className="inline-flex items-center justify-center w-24 h-24 rounded-[24px] overflow-hidden shadow-2xl shadow-primary/20 mb-6 hover:scale-105 transition-transform bg-white p-0.5">
             <Image 
-              src="/logo.jpg" 
+              src="/logo.webp" 
               alt="Odi Logo" 
               width={96} 
               height={96}
@@ -82,14 +85,16 @@ export default function ResetPasswordPage() {
           </div>
         ) : (
           <form className="flex flex-col gap-6" onSubmit={handleSubmit(onSubmit)}>
-            <Turnstile
-              siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ''}
-              onSuccess={(token) => {
-                setTurnstileToken(token)
-                setValue('turnstileToken', token)
-              }}
-              options={{ size: 'invisible' }}
-            />
+            {showTurnstile && (
+              <Turnstile
+                siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ''}
+                onSuccess={(token) => {
+                  setTurnstileToken(token)
+                  setValue('turnstileToken', token)
+                }}
+                options={{ size: 'invisible' }}
+              />
+            )}
             {error && (
               <div className="p-4 rounded-2xl bg-error/10 border border-error/20 text-error text-[13px] font-bold text-center animate-in shake-in duration-300">
                 ⚠️ {error}
@@ -102,9 +107,10 @@ export default function ResetPasswordPage() {
               </label>
               <input
                 id="email"
-                type="email"
-                {...register('email')}
                 placeholder="ornek@email.com"
+                {...register('email')}
+                onFocus={() => setShowTurnstile(true)}
+                autoComplete="email"
                 className={`input-base py-3 text-[15px] ${errors.email ? 'border-error/50 focus:border-error focus:ring-error/20' : ''}`}
               />
               {errors.email && <span className="text-error text-[11px] font-bold ml-1">{errors.email.message}</span>}

@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   const parsed = resetPasswordSchema.safeParse(data);
 
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
+    return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 })
   }
 
   const { email, turnstileToken } = parsed.data;
@@ -43,7 +43,12 @@ export async function POST(req: NextRequest) {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
-            response.cookies.set(name, value, options)
+            const secureOptions = {
+              ...options,
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'lax' as const,
+            }
+            response.cookies.set(name, value, secureOptions)
           })
         },
       },

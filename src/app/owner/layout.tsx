@@ -49,7 +49,7 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
         <Link href="/owner/dashboard" className="flex items-center gap-2.5 hover:scale-[1.02] transition-transform">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl overflow-hidden shadow-sm shadow-primary/20 border border-border-main bg-white p-0.5">
             <Image 
-              src="/logo.jpg" 
+              src="/logo.webp" 
               alt="Odi Logo" 
               width={40} 
               height={40}

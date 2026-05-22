@@ -1,32 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
-import { getIP, registerRateLimit, verifyTurnstile } from '@/lib/auth-security'
-import { registerSchema } from '@/lib/validations/auth'
+import { getIP, updatePasswordRateLimit, verifyTurnstile } from '@/lib/auth-security'
+import { updatePasswordSchema } from '@/lib/validations/auth'
 
 export async function POST(req: NextRequest) {
   const ip = getIP(req);
 
   // Rate Limiting Check
-  if (registerRateLimit) {
-    const { success, pending, limit, reset, remaining } = await registerRateLimit.limit(ip);
+  if (updatePasswordRateLimit) {
+    const { success } = await updatePasswordRateLimit.limit(ip);
     if (!success) {
-      return NextResponse.json({ error: 'Çok fazla kayıt denemesi yaptınız. Lütfen daha sonra tekrar deneyin.' }, { status: 429 })
+      return NextResponse.json({ error: 'Çok fazla şifre güncelleme denemesi yaptınız. Lütfen daha sonra tekrar deneyin.' }, { status: 429 })
     }
   }
 
   const fd = await req.formData()
   const data = Object.fromEntries(fd.entries());
-  
-  const parsed = registerSchema.safeParse({
-    ...data,
-    terms: String(data.terms) === 'on' || String(data.terms) === 'true',
-  });
+
+  const parsed = updatePasswordSchema.safeParse(data);
 
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 })
   }
 
-  const { name, email, password, turnstileToken } = parsed.data;
+  const { password, turnstileToken } = parsed.data;
 
   // Turnstile Verification
   const isHuman = await verifyTurnstile(turnstileToken, ip);
@@ -34,7 +31,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.' }, { status: 400 })
   }
 
-  // Response nesnesini önceden oluşturuyoruz
   const response = NextResponse.json({ success: true })
 
   const supabase = createServerClient(
@@ -59,25 +55,16 @@ export async function POST(req: NextRequest) {
     }
   )
 
-  // Dinamik callback URL — production'da NEXT_PUBLIC_SITE_URL kullan,
-  // local'de request origin'inden türet (localhost:3000)
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    `https://${req.headers.get('host')}`
+  // Verify user is authenticated (they followed the reset link)
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return NextResponse.json({ error: 'Oturumunuz bulunamadı. Lütfen şifre sıfırlama bağlantısını tekrar kullanın.' }, { status: 401 })
+  }
 
-  const { error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      emailRedirectTo: `${siteUrl}/api/auth/callback?next=/owner/dashboard`,
-      data: {
-        first_name: name
-      }
-    }
-  })
+  const { error } = await supabase.auth.updateUser({ password })
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 })
+    return NextResponse.json({ error: 'Şifre güncellenemedi. Lütfen tekrar deneyin.' }, { status: 400 })
   }
 
   return response

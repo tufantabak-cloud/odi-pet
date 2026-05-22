@@ -6,23 +6,29 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Eye, EyeOff } from 'lucide-react'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
-import { Turnstile } from '@marsidev/react-turnstile'
+import dynamic from 'next/dynamic'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { loginSchema, type LoginInput } from '@/lib/validations/auth'
-import { BiometricLogin } from '@/components/BiometricLogin'
+import Loading from './loading'
+
+const Turnstile = dynamic(() => import('@marsidev/react-turnstile').then(mod => mod.Turnstile), { ssr: false })
+const BiometricLogin = dynamic(() => import('@/components/BiometricLogin').then(m => m.BiometricLogin), { ssr: false })
 
 function LoginForm() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const urlMessage = searchParams.get('message') ?? ''
   const reason = searchParams.get('reason') ?? ''
+  const errorParam = searchParams.get('error') ?? ''
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [appleLoading, setAppleLoading] = useState(false)
   const [error, setError]     = useState('')
+  const [success, setSuccess] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [hydrated, setHydrated] = useState(false)
+  const [showTurnstile, setShowTurnstile] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState<string>('')
 
   const {
@@ -52,6 +58,10 @@ function LoginForm() {
       icon: '🔒',
       text: 'Bu alana erişmek için yönetici veya kurucu yetkisi gereklidir. Lütfen yetkili hesabınızla giriş yapın.',
     },
+    session_expired: {
+      icon: '⏱️',
+      text: 'Oturumunuzun süresi dolmuştur. Lütfen tekrar giriş yapın.',
+    },
   }
   const banner = reasonBanner[reason] ?? null
 
@@ -68,7 +78,8 @@ function LoginForm() {
       })
       if (error) throw error
     } catch (err: any) {
-      setError(err.message || 'Google ile giriş yapılamadı.')
+      console.error('Google OAuth error:', err)
+      setError('Google ile giriş yapılamadı. Lütfen tekrar deneyin.')
       setGoogleLoading(false)
     }
   }
@@ -86,7 +97,8 @@ function LoginForm() {
       })
       if (error) throw error
     } catch (err: any) {
-      setError(err.message || 'Apple ile giriş yapılamadı.')
+      console.error('Apple OAuth error:', err)
+      setError('Apple ile giriş yapılamadı. Lütfen tekrar deneyin.')
       setAppleLoading(false)
     }
   }
@@ -112,7 +124,12 @@ function LoginForm() {
         return
       }
 
-      window.location.href = '/'
+      // Trigger success animation
+      setSuccess(true)
+      setTimeout(() => {
+        router.refresh()
+        router.push('/')
+      }, 800)
     } catch {
       setError('Sunucu bağlantı hatası. Lütfen tekrar deneyin.')
     } finally {
@@ -120,13 +137,20 @@ function LoginForm() {
     }
   }
 
+  // Compute the display message: prefer inline error, then URL error param, then urlMessage
+  const displayError = error || (errorParam === 'session_expired' ? '' : '') || urlMessage
+
   return (
     <div className="flex min-h-screen w-full items-center justify-center p-4 bg-bg-main bg-gradient-to-tr from-primary/5 via-transparent to-primary/5">
-      <div className="w-full max-w-[420px] card-base p-8 sm:p-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div className="text-center mb-10">
+      <div className="w-full max-w-sm bg-white rounded-[32px] p-6 sm:p-8 shadow-2xl shadow-primary/5 relative z-10 border border-border-main/50 relative overflow-hidden group">
+        <div className={`transition-all duration-700 ease-out ${success ? 'opacity-0 scale-95 blur-sm' : 'opacity-100 scale-100 blur-0'}`}>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-110 duration-700 pointer-events-none"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary/5 rounded-tr-full -ml-12 -mb-12 transition-transform group-hover:scale-110 duration-700 pointer-events-none"></div>
+
+          <div className="text-center mb-10 relative">
           <Link href="/" className="inline-flex items-center justify-center w-24 h-24 rounded-[24px] overflow-hidden shadow-2xl shadow-primary/20 mb-6 hover:scale-105 transition-transform bg-white p-0.5">
             <Image 
-              src="/logo.jpg" 
+              src="/logo.webp" 
               alt="Odi Logo" 
               width={96} 
               height={96}
@@ -139,23 +163,25 @@ function LoginForm() {
         </div>
 
         <form className="flex flex-col gap-6" onSubmit={handleSubmit(onSubmit)}>
-          <Turnstile
-            siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ''}
-            onSuccess={(token) => {
-              setTurnstileToken(token)
-              setValue('turnstileToken', token)
-            }}
-            options={{ size: 'invisible' }}
-          />
+          {showTurnstile && (
+            <Turnstile
+              siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ''}
+              onSuccess={(token) => {
+                setTurnstileToken(token)
+                setValue('turnstileToken', token)
+              }}
+              options={{ size: 'invisible' }}
+            />
+          )}
           {banner && (
-            <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-[13px] font-semibold text-center animate-in fade-in duration-300">
+            <div role="alert" className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-[13px] font-semibold text-center animate-in fade-in duration-300">
               <span className="text-[16px]">{banner.icon}</span>
               <p className="mt-1">{banner.text}</p>
             </div>
           )}
 
           {(error || urlMessage) && (
-            <div className="p-4 rounded-2xl bg-error/10 border border-error/20 text-error text-[13px] font-bold text-center animate-in shake-in duration-300">
+            <div role="alert" className="p-4 rounded-2xl bg-error/10 border border-error/20 text-error text-[13px] font-bold text-center animate-in fade-in slide-in-from-bottom-2 duration-300">
               ⚠️ {error || urlMessage}
             </div>
           )}
@@ -220,10 +246,11 @@ function LoginForm() {
               type="email"
               placeholder="ornek@email.com"
               {...register('email')}
+              onFocus={() => setShowTurnstile(true)}
               autoComplete="email"
               className={`input-base py-3 text-[15px] ${errors.email ? 'border-error/50 focus:border-error focus:ring-error/20' : ''}`}
             />
-            {errors.email && <span className="text-error text-[11px] font-bold ml-1">{errors.email.message}</span>}
+            {errors.email && <span role="alert" className="text-error text-[11px] font-bold ml-1">{errors.email.message}</span>}
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -232,7 +259,7 @@ function LoginForm() {
                 Şifre
               </label>
               <Link href="/reset-password" className="text-[12px] font-bold text-primary hover:text-primary-hover transition-colors">
-                Şifremi Unuttum (Magic Link)
+                Şifremi Unuttum
               </Link>
             </div>
             <div className="relative group">
@@ -241,6 +268,7 @@ function LoginForm() {
                 type={showPassword ? 'text' : 'password'}
                 placeholder="••••••••"
                 {...register('password')}
+                onFocus={() => setShowTurnstile(true)}
                 autoComplete="current-password"
                 className={`input-base py-3 text-[15px] pr-12 w-full ${errors.password ? 'border-error/50 focus:border-error focus:ring-error/20' : ''}`}
               />
@@ -253,7 +281,7 @@ function LoginForm() {
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
-            {errors.password && <span className="text-error text-[11px] font-bold ml-1">{errors.password.message}</span>}
+            {errors.password && <span role="alert" className="text-error text-[11px] font-bold ml-1">{errors.password.message}</span>}
           </div>
 
           <div className="flex items-center gap-2 ml-1">
@@ -281,7 +309,7 @@ function LoginForm() {
                 </svg>
                 Giriş yapılıyor…
               </span>
-            ) : 'Sisteme Güvenli Giriş Yap'}
+            ) : 'Giriş Yap'}
           </button>
 
           <BiometricLogin />
@@ -293,8 +321,13 @@ function LoginForm() {
                 Hemen Kayıt Olun
               </Link>
             </p>
+            <div className="flex items-center justify-center gap-4 mt-8 pt-6 border-t border-border-main/50 text-[11px] font-bold text-text-secondary/70">
+              <span className="flex items-center gap-1.5"><span className="text-[14px]">🔒</span> 256-bit SSL Koruması</span>
+              <span className="flex items-center gap-1.5"><span className="text-[14px]">🛡️</span> KVKK Uyumlu</span>
+            </div>
           </div>
         </form>
+        </div>
       </div>
     </div>
   )
@@ -302,7 +335,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<Loading />}>
       <LoginForm />
     </Suspense>
   )

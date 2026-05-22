@@ -2,6 +2,23 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  // CSRF Protection for state-changing requests
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
+    const origin = request.headers.get('origin') ?? request.headers.get('referer')
+    const host = request.headers.get('host')
+    
+    if (origin && host) {
+      try {
+        const originUrl = new URL(origin)
+        if (originUrl.host !== host) {
+          return NextResponse.json({ error: 'CSRF validation failed' }, { status: 403 })
+        }
+      } catch (e) {
+        return NextResponse.json({ error: 'Invalid origin header' }, { status: 403 })
+      }
+    }
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   })
@@ -22,9 +39,14 @@ export async function middleware(request: NextRequest) {
             request,
           })
           
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
+          cookiesToSet.forEach(({ name, value, options }) => {
+            const secureOptions = {
+              ...options,
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'lax' as const,
+            }
+            supabaseResponse.cookies.set(name, value, secureOptions)
+          })
 
           // IMPORTANT: Apply Supabase Auth headers to prevent reverse-proxy/CDN poisoning
           if (headers) {
@@ -64,6 +86,7 @@ export async function middleware(request: NextRequest) {
 
     const url = request.nextUrl.clone()
     url.pathname = '/login'
+    url.searchParams.set('reason', 'session_expired')
     return NextResponse.redirect(url)
   }
 

@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   const parsed = loginSchema.safeParse(data);
 
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
+    return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 })
   }
 
   const { email, password, turnstileToken, rememberMe } = parsed.data;
@@ -50,7 +50,12 @@ export async function POST(req: NextRequest) {
               delete options.maxAge;
               delete options.expires;
             }
-            response.cookies.set(name, value, options)
+            const secureOptions = {
+              ...options,
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'lax' as const,
+            }
+            response.cookies.set(name, value, secureOptions)
           })
         },
       },

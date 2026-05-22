@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Fingerprint, Loader2 } from 'lucide-react';
-import { createBrowserClient } from '@supabase/ssr';
+import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 
 export function BiometricLogin() {
   const router = useRouter();
@@ -14,20 +14,9 @@ export function BiometricLogin() {
     setLoading(true);
     setError(null);
     try {
-      const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-          auth: {
-            // @ts-ignore (Experimental types might not be fully up to date)
-            experimental: {
-              passkey: true,
-            },
-          },
-        }
-      );
+      const supabase = createBrowserSupabaseClient();
 
-      // @ts-ignore
+      // @ts-ignore — WebAuthn/Passkey API is experimental in Supabase
       const { data, error } = await supabase.auth.signInWithWebAuthn();
 
       if (error) {
@@ -51,16 +40,16 @@ export function BiometricLogin() {
       <button
         onClick={handlePasskeyLogin}
         disabled={loading}
-        className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-gray-200 bg-white text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-[0.98]"
+        className="btn-base w-full flex items-center justify-center gap-2 py-3 px-4 rounded-[14px] border border-border-main bg-white text-text-primary font-medium hover:bg-bg-subtle hover:border-primary/20 transition-all active:scale-[0.98]"
       >
         {loading ? (
           <Loader2 className="w-5 h-5 animate-spin" />
         ) : (
-          <Fingerprint className="w-5 h-5 text-indigo-600" />
+          <Fingerprint className="w-5 h-5 text-primary" />
         )}
         <span>FaceID / TouchID ile Giriş Yap</span>
       </button>
-      {error && <p className="text-red-500 text-sm mt-2 text-center" aria-live="polite">{error}</p>}
+      {error && <p className="text-error text-[12px] font-bold mt-2 text-center" role="alert" aria-live="polite">{error}</p>}
     </div>
   );
 }

@@ -25,6 +25,7 @@ const createRateLimit = (tokens: number, windowStr: string, prefix: string) => {
 export const loginRateLimit = createRateLimit(5, "1 m", "@upstash/ratelimit/login");
 export const registerRateLimit = createRateLimit(3, "1 m", "@upstash/ratelimit/register");
 export const resetRateLimit = createRateLimit(2, "1 m", "@upstash/ratelimit/reset");
+export const updatePasswordRateLimit = createRateLimit(3, "1 m", "@upstash/ratelimit/update-password");
 
 export async function verifyTurnstile(token: string | null | undefined, ip: string): Promise<boolean> {
   const secretKey = process.env.TURNSTILE_SECRET_KEY;

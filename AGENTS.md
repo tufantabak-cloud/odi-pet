@@ -63,4 +63,10 @@ Odi.Pet Veri Toplama ve Zaman Matrisi (Progressive Profiling) süreci her daim g
 ## Dil Kuralı
 **BİRİNCİL KURAL:** Bu uygulamayı geliştirirken kullanıcıyla her zaman **TÜRKÇE** konuşacaksın.
 
+## Mimari Bütünlük ve Cross-Platform Uyumluluk Kuralı (Architectural Integrity & Compatibility)
+**KRİTİK KURAL:** Uygulamada yapılacak **hiçbir güncelleme, düzeltme veya yeni özellik**; projenin mevcut kod mimarisini, ana hedefini ve web/mobil (cross-platform) uyumluluğunu **asla bozmamalıdır**. Her değişiklik mevcut sistemle **%100 uyumlu** olmalıdır.
+1. **Mimari Koruma:** Mevcut dosya yapısı, modül organizasyonu, routing mantığı ve bileşen hiyerarşisi korunmalıdır. Yeni eklentiler mevcut mimariye uygun şekilde entegre edilmelidir.
+2. **Cross-Platform Uyumluluk:** Tüm değişiklikler hem web hem de mobil (responsive/PWA) ortamlarda sorunsuz çalışmalıdır. Platform-specific bir değişiklik diğer platformları kırmamalıdır.
+3. **Geriye Dönük Uyumluluk:** Mevcut API endpoint'leri, veri yapıları ve kullanıcı akışları bozulmamalıdır. Breaking change yapılması gerekiyorsa, kullanıcıdan açık onay alınmalıdır.
+4. **Hedef Sadakati:** Uygulamanın ana hedefi (evcil hayvan bakım platformu) doğrultusundaki temel iş mantığı ve kullanıcı deneyimi her zaman öncelikli tutulmalıdır.
 
