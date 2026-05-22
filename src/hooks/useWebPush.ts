@@ -33,6 +33,10 @@ export function useWebPush() {
     const currentPermission = Notification.permission as PushPermission
     setPermission(currentPermission)
 
+    if (process.env.NODE_ENV === 'development') {
+      return;
+    }
+
     navigator.serviceWorker
       .register('/sw.js')
       .then(async (reg) => {
@@ -56,6 +60,12 @@ export function useWebPush() {
       const result = await Notification.requestPermission()
       setPermission(result as PushPermission)
       if (result !== 'granted') return false
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[useWebPush] Mocking subscription in development mode.');
+        setIsSubscribed(true);
+        return true;
+      }
 
       // 2. Then wait for the service worker
       const reg = await navigator.serviceWorker.ready
@@ -94,6 +104,12 @@ export function useWebPush() {
   const unsubscribe = useCallback(async (): Promise<boolean> => {
     setIsLoading(true)
     try {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[useWebPush] Mocking unsubscribe in development mode.');
+        setIsSubscribed(false);
+        return true;
+      }
+
       const reg = await navigator.serviceWorker.ready
       const sub = await reg.pushManager.getSubscription()
       if (!sub) return true

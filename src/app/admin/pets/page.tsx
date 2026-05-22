@@ -79,7 +79,7 @@ export default async function AdminPetsPage() {
                         </Link>
                       )}
                       <Link 
-                        href={`/owner/pets/${pet.id}`}
+                        href={`/admin/pets/${pet.id}`}
                         className="text-[12px] font-bold text-text-primary bg-bg-main hover:bg-border-main/50 px-2.5 py-1.5 rounded-xl border border-border-main transition-all"
                       >
                         Pet Detayları

@@ -122,9 +122,12 @@ export default async function PetsPage() {
           </div>
           <div>
             <h2 className="text-[22px] font-extrabold text-text-primary mb-2">Henüz Can Dostu Eklemediniz</h2>
-            <p className="text-text-secondary font-medium max-w-sm">
-              Odi.Pet ile can dostlarınızın sağlık, beslenme ve aşı takibini kolayca yapın. Alttaki <strong>+</strong> butonuna dokunarak ilk can dostunuzu ekleyebilirsiniz.
+            <p className="text-text-secondary font-medium max-w-sm mb-6">
+              Odi.Pet ile can dostlarınızın sağlık, beslenme ve aşı takibini kolayca yapın. Aşağıdaki butona dokunarak ilk can dostunuzu ekleyebilirsiniz.
             </p>
+            <Link href="/owner/pets/add" className="btn-primary py-3 px-8 rounded-xl font-bold text-[15px]">
+              + İlk Can Dostunu Ekle
+            </Link>
           </div>
         </div>
       )}

@@ -74,6 +74,14 @@ export async function middleware(request: NextRequest) {
   // Allow auth-related API routes without authentication
   const isAuthRoute = pathname.startsWith('/api/auth')
 
+  // Redirection rule for authenticated users trying to access auth pages
+  const isAuthPage = pathname === '/login' || pathname === '/register'
+  if (isAuthPage && user) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/'
+    return NextResponse.redirect(url)
+  }
+
   // Redirection rule for unauthenticated users
   if (isProtectedPath && !isAuthRoute && !user) {
     // API routes return 401 instead of redirect
@@ -99,5 +107,7 @@ export const config = {
     '/admin/:path*',
     '/clinic/:path*',
     '/api/:path*',
+    '/login',
+    '/register',
   ],
 }
