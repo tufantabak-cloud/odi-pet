@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { requireRole } from '@/lib/auth/get-current-profile'
 import { createAdminSupabaseClient } from '@/lib/supabase/server'
 import RoleChangeForm from './RoleChangeForm'
+import DeleteUserButton from './DeleteUserButton'
+import DeletePetButton from './DeletePetButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -167,12 +169,15 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
                         {pet.breed ?? pet.species ?? '—'} · {ageFromBirthDate(pet.birth_date)}
                       </div>
                     </div>
-                    <Link
-                      href={`/owner/pets/${pet.id}`}
-                      className="text-[12px] text-primary font-semibold hover:underline flex-shrink-0"
-                    >
-                      Görüntüle →
-                    </Link>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <Link
+                        href={`/owner/pets/${pet.id}`}
+                        className="text-[12px] text-primary font-semibold hover:underline px-2 py-1"
+                      >
+                        Görüntüle →
+                      </Link>
+                      <DeletePetButton petId={pet.id} petName={pet.name} />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -278,6 +283,17 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
               <span className="text-text-secondary">Plan</span>
               <span className="font-bold text-text-primary">{subscription?.plan?.toUpperCase() ?? 'FREE'}</span>
             </div>
+          </div>
+
+          {/* Danger Zone */}
+          <div className="card-base p-5 border-rose-100 bg-rose-50/30">
+            <h2 className="font-black text-[14px] text-rose-600 mb-2 flex items-center gap-2">
+              ⚠️ Tehlikeli Bölge
+            </h2>
+            <p className="text-[12px] text-text-secondary mb-4 leading-relaxed">
+              Bu hesabı sildiğinizde; kullanıcıya ait tüm evcil hayvanlar, etkinlik geçmişi ve abonelikler sistemden kalıcı olarak temizlenir. Bu işlem geri alınamaz.
+            </p>
+            <DeleteUserButton userId={profile.id} />
           </div>
         </div>
       </div>

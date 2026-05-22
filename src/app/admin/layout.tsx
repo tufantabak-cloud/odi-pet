@@ -38,9 +38,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Link href="/admin" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
               <span>🏠</span> Panel
             </Link>
-            <Link href="/admin/intelligence" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-              <span>📊</span> İstihbarat
-            </Link>
           </div>
 
           <div className="mb-4">
@@ -51,11 +48,18 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Link href="/admin/pets" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
               <span>🐾</span> Evcil Hayvanlar
             </Link>
-            <Link href="/admin/clinics" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-              <span>🏥</span> Klinikler
+            <Link href="/admin/social" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
+              <span>📱</span> Sosyal İçerikler
             </Link>
-            <Link href="/admin/outreach" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-              <span>📋</span> Görüşmeler (Outreach)
+          </div>
+
+          <div className="mb-4">
+            <p className="px-3 text-[11px] font-black text-text-secondary uppercase tracking-widest mb-2">Platform Servisleri</p>
+            <Link href="/admin/ai-vet" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
+              <span>🤖</span> AI-Vet Analiz
+            </Link>
+            <Link href="/admin/vets" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
+              <span>🩺</span> Veterinerler
             </Link>
           </div>
 

@@ -80,7 +80,7 @@ export default function RegisterPage() {
         type: 'signup',
         email,
         options: {
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/api/auth/callback`,
+          emailRedirectTo: `${window.location.origin}/api/auth/callback`,
         }
       })
       if (error) throw error
@@ -110,7 +110,7 @@ export default function RegisterPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/api/auth/callback`
+          redirectTo: `${window.location.origin}/api/auth/callback`
         }
       })
       if (error) throw error
@@ -129,7 +129,7 @@ export default function RegisterPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
         options: {
-          redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/api/auth/callback`
+          redirectTo: `${window.location.origin}/api/auth/callback`
         }
       })
       if (error) throw error

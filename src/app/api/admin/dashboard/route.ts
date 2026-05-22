@@ -65,17 +65,9 @@ export async function GET() {
   // ── Overdue vaccines ─────────────────────────────────────────
   const now = new Date().toISOString()
   const { count: overdueVaccines } = await supabase
-    .from('vaccine_records_v2')
+    .from('vaccine_records')
     .select('id', { count: 'exact', head: true })
-    .eq('status', 'overdue')
-    .lte('due_at', now)
-
-  // ── Clinic approval queue (pending clinics) ──────────────────
-  // Clinics that exist but is_public is false = awaiting approval
-  const { count: clinicQueue } = await supabase
-    .from('clinics')
-    .select('id', { count: 'exact', head: true })
-    .eq('is_public', false)
+    .lte('next_due_date', now)
 
   // ── Last 5 registered users ──────────────────────────────────
   const { data: recentUsers } = await supabase
@@ -106,7 +98,6 @@ export async function GET() {
       proRatePct: proRate,
     },
     overdueVaccines: overdueVaccines ?? 0,
-    clinicQueue: clinicQueue ?? 0,
     recentUsers: recentUsers ?? [],
   })
 }

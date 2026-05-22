@@ -10,7 +10,6 @@ interface DashboardData {
   pets: { today: number; week: number; month: number }
   subscriptions: { proTotal: number; proMonth: number; proRatePct: number }
   overdueVaccines: number
-  clinicQueue: number
   recentUsers: Array<{
     id: string
     first_name: string | null
@@ -245,14 +244,6 @@ export default function DashboardClient({ initialData }: { initialData: Dashboar
           href="/admin/pets"
         />
         <StatCard
-          icon="🏥"
-          label="Klinik Onay Kuyruğu"
-          value={data?.clinicQueue ?? 0}
-          sub="Onay bekleyen klinik sayısı"
-          accent={(data?.clinicQueue ?? 0) > 0 ? 'amber' : 'green'}
-          href="/admin/clinics"
-        />
-        <StatCard
           icon="👥"
           label="Toplam Pro Üye"
           value={data?.subscriptions.proTotal ?? 0}
@@ -331,21 +322,31 @@ export default function DashboardClient({ initialData }: { initialData: Dashboar
       {/* Quick actions */}
       <div>
         <h2 className="text-[15px] font-black text-text-primary mb-4">Hızlı Eylemler</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <Link href="/admin/users" className="card-base p-5 hover:border-primary transition-all group">
             <div className="text-[24px] mb-3">👥</div>
             <h3 className="font-bold text-[14px] text-text-primary group-hover:text-primary">Kullanıcıları Yönet</h3>
             <p className="text-[12px] text-text-secondary mt-1">Kayıtlı kullanıcıları görüntüle, düzenle veya engelle.</p>
           </Link>
-          <Link href="/admin/clinics" className="card-base p-5 hover:border-primary transition-all group">
-            <div className="text-[24px] mb-3">🏥</div>
-            <h3 className="font-bold text-[14px] text-text-primary group-hover:text-primary">Klinikleri Onayla</h3>
-            <p className="text-[12px] text-text-secondary mt-1">Bekleyen klinik başvurularını incele ve onayla.</p>
+          <Link href="/admin/pets" className="card-base p-5 hover:border-primary transition-all group">
+            <div className="text-[24px] mb-3">🐾</div>
+            <h3 className="font-bold text-[14px] text-text-primary group-hover:text-primary">Evcil Hayvanlar</h3>
+            <p className="text-[12px] text-text-secondary mt-1">Sistemdeki tüm kayıtlı evcil hayvanları görüntüle.</p>
           </Link>
-          <Link href="/admin/intelligence" className="card-base p-5 hover:border-primary transition-all group">
-            <div className="text-[24px] mb-3">📊</div>
-            <h3 className="font-bold text-[14px] text-text-primary group-hover:text-primary">Intelligence OS</h3>
-            <p className="text-[12px] text-text-secondary mt-1">Kapsamlı ürün metriklerini ve hunileri görüntüle.</p>
+          <Link href="/admin/social" className="card-base p-5 hover:border-primary transition-all group">
+            <div className="text-[24px] mb-3">📱</div>
+            <h3 className="font-bold text-[14px] text-text-primary group-hover:text-primary">Sosyal Moderasyon</h3>
+            <p className="text-[12px] text-text-secondary mt-1">Kullanıcı gönderilerini ve sosyal etkileşimleri incele.</p>
+          </Link>
+          <Link href="/admin/ai-vet" className="card-base p-5 hover:border-primary transition-all group">
+            <div className="text-[24px] mb-3">🤖</div>
+            <h3 className="font-bold text-[14px] text-text-primary group-hover:text-primary">AI-Vet Yönetimi</h3>
+            <p className="text-[12px] text-text-secondary mt-1">AI analizlerini ve sistem kullanım istatistiklerini gör.</p>
+          </Link>
+          <Link href="/admin/vets" className="card-base p-5 hover:border-primary transition-all group">
+            <div className="text-[24px] mb-3">🩺</div>
+            <h3 className="font-bold text-[14px] text-text-primary group-hover:text-primary">Veteriner Onayları</h3>
+            <p className="text-[12px] text-text-secondary mt-1">Veteriner başvuru ve belge incelemelerini yönet.</p>
           </Link>
         </div>
       </div>
