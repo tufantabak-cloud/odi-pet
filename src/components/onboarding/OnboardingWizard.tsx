@@ -100,7 +100,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                     </div>
                     <div className="text-left">
                       <h3 className="font-bold text-text-primary text-[15px]">Aşı & Parazit</h3>
-                      <p className="text-text-secondary text-[13px] leading-tight mt-0.5">Takvim otomatik oluşturulur</p>
+                      <p className="text-text-secondary text-[13px] leading-tight mt-0.5">Aşı süreçlerini kolayca takip et</p>
                     </div>
                   </div>
                   <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-center gap-4">
@@ -187,7 +187,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                     <div className="w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center shrink-0">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                     </div>
-                    <span className="font-semibold text-[15px] text-text-primary">Aşı takvimi otomatik kurulacak</span>
+                    <span className="font-semibold text-[15px] text-text-primary">Aşılarını düzenli takip edebileceksin</span>
                   </div>
                   <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
                     <div className="w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center shrink-0">
