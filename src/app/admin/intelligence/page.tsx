@@ -144,6 +144,7 @@ export default function FounderIntelligencePage() {
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
   const [sanity, setSanity] = useState<{ ok: boolean; lastEvent?: string; count24h?: number } | null>(null)
   const [pipeline, setPipeline] = useState<{ total: number; contacted: number; activated: number; conversionPct: number } | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const load = () => {
     setLoading(true)
@@ -219,6 +220,12 @@ export default function FounderIntelligencePage() {
             </Link>
           </div>
         </div>
+
+        {error && (
+          <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-600 text-sm font-semibold border border-red-100">
+            {error}
+          </div>
+        )}
 
         {loading && (
           <div className="flex items-center justify-center h-40 text-text-secondary">
@@ -471,7 +478,8 @@ export default function FounderIntelligencePage() {
                     a.download = `partner-performance-${new Date().toISOString().split('T')[0]}.json`;
                     a.click();
                   } catch (e) {
-                    alert("Export failed.");
+                    setError("Export failed.");
+                    setTimeout(() => setError(null), 3000);
                   }
                 }} className="text-[12px] font-bold text-primary bg-primary/10 px-3 py-1 rounded-lg hover:bg-primary/20 transition-colors">
                   Export Performance ↓
@@ -584,7 +592,8 @@ export default function FounderIntelligencePage() {
                     a.download = 'marketplace-leads.json';
                     a.click();
                   } catch (e) {
-                    alert("Export failed.");
+                    setError("Export failed.");
+                    setTimeout(() => setError(null), 3000);
                   }
                 }} className="text-[12px] font-bold text-primary bg-primary/10 px-3 py-1 rounded-lg hover:bg-primary/20 transition-colors">
                   Export Leads ↓
