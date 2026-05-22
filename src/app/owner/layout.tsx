@@ -11,7 +11,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { BiometricPrompt } from '@/components/BiometricPrompt'
 
 export default async function OwnerLayout({ children }: { children: ReactNode }) {
-  const profile = await requireRole(['owner'])
+  const profile = await requireRole(['owner', 'admin', 'founder'])
   if (!profile) redirect('/login')
 
   const supabase = await createServerSupabaseClient()

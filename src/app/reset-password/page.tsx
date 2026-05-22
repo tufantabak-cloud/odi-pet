@@ -14,7 +14,6 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
-  const [showTurnstile, setShowTurnstile] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState<string>('')
 
   const {
@@ -85,7 +84,7 @@ export default function ResetPasswordPage() {
           </div>
         ) : (
           <form className="flex flex-col gap-6" onSubmit={handleSubmit(onSubmit)}>
-            {showTurnstile && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+            {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
               <Turnstile
                 siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
                 onSuccess={(token) => {
@@ -109,7 +108,6 @@ export default function ResetPasswordPage() {
                 id="email"
                 placeholder="ornek@email.com"
                 {...register('email')}
-                onFocus={() => setShowTurnstile(true)}
                 autoComplete="email"
                 className={`input-base py-3 text-[15px] ${errors.email ? 'border-error/50 focus:border-error focus:ring-error/20' : ''}`}
               />

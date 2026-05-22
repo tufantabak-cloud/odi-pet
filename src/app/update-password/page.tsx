@@ -40,7 +40,6 @@ export default function UpdatePasswordPage() {
   const [success, setSuccess] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [showTurnstile, setShowTurnstile] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState<string>('')
 
   const {
@@ -122,7 +121,7 @@ export default function UpdatePasswordPage() {
           </div>
         ) : (
           <form className="flex flex-col gap-6" onSubmit={handleSubmit(onSubmit)}>
-            {showTurnstile && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+            {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
               <Turnstile
                 siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
                 onSuccess={(token) => {
@@ -148,7 +147,6 @@ export default function UpdatePasswordPage() {
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   {...register('password')}
-                  onFocus={() => setShowTurnstile(true)}
                   autoComplete="new-password"
                   className={`input-base py-3 text-[15px] pr-12 w-full ${errors.password ? 'border-error/50 focus:border-error focus:ring-error/20' : ''}`}
                 />
