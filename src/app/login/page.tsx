@@ -279,14 +279,9 @@ function LoginForm() {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between ml-1">
-              <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider" htmlFor="password">
-                Şifre
-              </label>
-              <Link href="/reset-password" className="text-[12px] font-bold text-primary hover:text-primary-hover transition-colors">
-                Şifremi Unuttum
-              </Link>
-            </div>
+            <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider ml-1" htmlFor="password">
+              Şifre
+            </label>
             <div className="relative group">
               <input
                 id="password"
@@ -308,16 +303,19 @@ function LoginForm() {
             {errors.password && <span role="alert" className="text-error text-[11px] font-bold ml-1">{errors.password.message}</span>}
           </div>
 
-          <div className="flex items-center gap-2 ml-1">
-            <input
-              id="rememberMe"
-              type="checkbox"
-              {...register('rememberMe')}
-              className="w-4 h-4 rounded-[4px] border-border-main text-primary focus:ring-primary/20 transition-all cursor-pointer"
-            />
-            <label htmlFor="rememberMe" className="text-[13px] font-bold text-text-secondary cursor-pointer select-none">
-              Beni Hatırla
+          <div className="flex items-center justify-between px-1">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                id="rememberMe"
+                type="checkbox"
+                {...register('rememberMe')}
+                className="w-4 h-4 rounded border-border-main text-primary focus:ring-primary"
+              />
+              <span className="text-[13px] text-text-secondary font-medium">Beni Hatırla</span>
             </label>
+            <Link href="/reset-password" className="text-[13px] text-primary font-bold hover:underline">
+              Şifremi Unuttum
+            </Link>
           </div>
 
           <button
