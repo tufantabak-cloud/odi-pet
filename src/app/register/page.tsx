@@ -238,11 +238,12 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <fieldset disabled={loading || googleLoading || appleLoading} className="flex flex-col gap-6 overflow-hidden pb-1">
-            <div 
-              className="flex w-[200%] transition-transform duration-500 ease-in-out" 
-              style={{ transform: `translateX(-${(step - 1) * 50}%)` }}
-            >
+          <fieldset disabled={loading || googleLoading || appleLoading} className="w-full min-w-0">
+            <div className="w-full overflow-hidden pb-1">
+              <div 
+                className="flex w-[200%] transition-transform duration-500 ease-in-out" 
+                style={{ transform: `translateX(-${(step - 1) * 50}%)` }}
+              >
               
               {/* STEP 1 */}
               <div className="w-1/2 flex flex-col gap-6 px-1">
@@ -474,7 +475,8 @@ export default function RegisterPage() {
                 </div>
               </div>
             </div>
-          </fieldset>
+          </div>
+        </fieldset>
         </form>
       </div>
     </div>

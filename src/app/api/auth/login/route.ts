@@ -21,7 +21,10 @@ export async function POST(req: NextRequest) {
   const fd = await req.formData()
   const data = Object.fromEntries(fd.entries());
   
-  const parsed = loginSchema.safeParse(data);
+  const parsed = loginSchema.safeParse({
+    ...data,
+    rememberMe: data.rememberMe === 'true' || data.rememberMe === true,
+  });
 
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 })
