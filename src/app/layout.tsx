@@ -18,6 +18,10 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "Odi Pet Care",
   description: "Pet bakım ve klinik takip sistemi",
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
 };
 
 export default function RootLayout({

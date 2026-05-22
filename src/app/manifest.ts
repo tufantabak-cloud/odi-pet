@@ -11,14 +11,16 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#ffffff',
     icons: [
       {
-        src: '/icon.jpg', // Next.js varsayılan ikon, varsa .png maskable versiyonlarla değiştirilmeli
+        src: '/icon-192.png',
         sizes: '192x192',
-        type: 'image/jpeg',
+        type: 'image/png',
+        purpose: 'maskable any',
       },
       {
-        src: '/icon.jpg',
+        src: '/icon-512.png',
         sizes: '512x512',
-        type: 'image/jpeg',
+        type: 'image/png',
+        purpose: 'maskable any',
       },
     ],
   };
