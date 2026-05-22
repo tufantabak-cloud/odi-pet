@@ -48,9 +48,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Link href="/admin/pets" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
               <span>🐾</span> Evcil Hayvanlar
             </Link>
-            <Link href="/admin/social" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-              <span>📱</span> Sosyal İçerikler
-            </Link>
+
           </div>
 
           <div className="mb-4">
@@ -58,9 +56,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Link href="/admin/ai-vet" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
               <span>🤖</span> AI-Vet Analiz
             </Link>
-            <Link href="/admin/vets" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-              <span>🩺</span> Veterinerler
-            </Link>
+
           </div>
 
           <div className="mb-4">
