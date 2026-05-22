@@ -1,14 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { getIP, registerRateLimit, verifyTurnstile } from '@/lib/auth-security'
+import { registerSchema } from '@/lib/validations/auth'
 
 export async function POST(req: NextRequest) {
-  const fd = await req.formData()
-  const name     = (fd.get('name')     as string)?.trim()
-  const email    = (fd.get('email')    as string)?.trim()
-  const password = (fd.get('password') as string)?.trim()
+  const ip = getIP(req);
 
-  if (!email || !password || !name) {
-    return NextResponse.json({ error: 'Tüm alanlar zorunludur.' }, { status: 400 })
+  // Rate Limiting Check
+  if (registerRateLimit) {
+    const { success, pending, limit, reset, remaining } = await registerRateLimit.limit(ip);
+    if (!success) {
+      return NextResponse.json({ error: 'Çok fazla kayıt denemesi yaptınız. Lütfen daha sonra tekrar deneyin.' }, { status: 429 })
+    }
+  }
+
+  const fd = await req.formData()
+  const data = Object.fromEntries(fd.entries());
+  
+  const parsed = registerSchema.safeParse({
+    ...data,
+    terms: data.terms === 'on' || data.terms === 'true' || data.terms === true,
+  });
+
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
+  }
+
+  const { name, email, password, turnstileToken } = parsed.data;
+
+  // Turnstile Verification
+  const isHuman = await verifyTurnstile(turnstileToken, ip);
+  if (!isHuman) {
+    return NextResponse.json({ error: 'Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.' }, { status: 400 })
   }
 
   // Response nesnesini önceden oluşturuyoruz

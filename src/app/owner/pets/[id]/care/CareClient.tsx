@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import CoachMark from '@/components/ui/CoachMark'
 
@@ -108,8 +109,8 @@ export default function CareClient({ pet, recentEvents }: { pet: any, recentEven
     return (
       <div className="flex flex-col gap-6 pb-20 w-full mx-auto animate-fadeIn">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-[20px] bg-gradient-to-br from-primary-soft to-white border-2 border-primary/20 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
-            {pet.avatar_url ? <img src={pet.avatar_url} className="w-full h-full object-cover" alt="" /> : <span className="text-[28px]">🛁</span>}
+          <div className="relative w-16 h-16 rounded-[20px] bg-gradient-to-br from-primary-soft to-white border-2 border-primary/20 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+            {pet.avatar_url ? <Image src={pet.avatar_url} alt="" fill={true} className="object-cover" sizes="64px" /> : <span className="text-[28px]">🛁</span>}
           </div>
           <div>
             <h1 className="text-[28px] font-extrabold text-text-primary tracking-tight">Bakım Planı Kurulumu</h1>
@@ -182,8 +183,8 @@ export default function CareClient({ pet, recentEvents }: { pet: any, recentEven
           icon="🛁"
           position="bottom"
         />
-        <div className="w-16 h-16 rounded-[20px] bg-gradient-to-br from-primary-soft to-white border-2 border-primary/20 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
-          {pet.avatar_url ? <img src={pet.avatar_url} className="w-full h-full object-cover" alt="" /> : <span className="text-[28px]">🛁</span>}
+        <div className="relative w-16 h-16 rounded-[20px] bg-gradient-to-br from-primary-soft to-white border-2 border-primary/20 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+          {pet.avatar_url ? <Image src={pet.avatar_url} alt="" fill={true} className="object-cover" sizes="64px" /> : <span className="text-[28px]">🛁</span>}
         </div>
         <div>
           <h1 className="text-[28px] font-extrabold text-text-primary tracking-tight">Kişisel Bakım</h1>

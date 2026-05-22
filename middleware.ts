@@ -1,12 +1,12 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   })
 
-  // Proxy maintains session across requests without querying DB for roles
+  // Middleware maintains session across requests without querying DB for roles
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-project.supabase.co',
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key',
@@ -46,10 +46,22 @@ export async function proxy(request: NextRequest) {
   const isProtectedPath = 
     pathname.startsWith('/owner') || 
     pathname.startsWith('/clinic') || 
-    pathname.startsWith('/admin')
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/api')
+
+  // Allow auth-related API routes without authentication
+  const isAuthRoute = pathname.startsWith('/api/auth')
 
   // Redirection rule for unauthenticated users
-  if (isProtectedPath && !user) {
+  if (isProtectedPath && !isAuthRoute && !user) {
+    // API routes return 401 instead of redirect
+    if (pathname.startsWith('/api')) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
@@ -60,6 +72,9 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/owner/:path*',
+    '/admin/:path*',
+    '/clinic/:path*',
+    '/api/:path*',
   ],
 }

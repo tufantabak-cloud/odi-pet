@@ -34,35 +34,35 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
         <nav className="flex-1 overflow-y-auto p-4 space-y-1">
           <div className="mb-4">
-            <p className="px-3 text-[11px] font-black text-text-secondary uppercase tracking-widest mb-2">Overview</p>
+            <p className="px-3 text-[11px] font-black text-text-secondary uppercase tracking-widest mb-2">Genel Bakış</p>
             <Link href="/admin" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-              <span>🏠</span> Dashboard
+              <span>🏠</span> Panel
             </Link>
             <Link href="/admin/intelligence" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-              <span>📊</span> Intelligence
+              <span>📊</span> İstihbarat
             </Link>
           </div>
 
           <div className="mb-4">
-            <p className="px-3 text-[11px] font-black text-text-secondary uppercase tracking-widest mb-2">Management</p>
+            <p className="px-3 text-[11px] font-black text-text-secondary uppercase tracking-widest mb-2">Yönetim</p>
             <Link href="/admin/users" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-              <span>👥</span> Users
+              <span>👥</span> Kullanıcılar
             </Link>
             <Link href="/admin/pets" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-              <span>🐾</span> Pets
+              <span>🐾</span> Evcil Hayvanlar
             </Link>
             <Link href="/admin/clinics" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-              <span>🏥</span> Clinics
+              <span>🏥</span> Klinikler
             </Link>
             <Link href="/admin/outreach" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-              <span>📋</span> Pipeline (Outreach)
+              <span>📋</span> Görüşmeler (Outreach)
             </Link>
           </div>
 
           <div className="mb-4">
-            <p className="px-3 text-[11px] font-black text-text-secondary uppercase tracking-widest mb-2">System</p>
+            <p className="px-3 text-[11px] font-black text-text-secondary uppercase tracking-widest mb-2">Sistem</p>
             <Link href="/admin/settings" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-              <span>⚙️</span> Settings & Flags
+              <span>⚙️</span> Ayarlar & Özellikler
             </Link>
           </div>
         </nav>
@@ -73,7 +73,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             🧑‍💻 {profile.first_name ?? profile.email ?? 'Unknown'}
           </div>
           <Link href="/owner/dashboard" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-            <span>←</span> Back to App
+            <span>←</span> Uygulamaya Dön
           </Link>
         </div>
       </aside>

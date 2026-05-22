@@ -20,13 +20,13 @@ export default async function AdminPetsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-text-primary">Pet Management</h1>
+          <h1 className="text-2xl font-black text-text-primary">Evcil Hayvan Yönetimi</h1>
           <p className="text-[13px] text-text-secondary mt-1">
-            View and manage registered pets. Showing last 100 pets.
+            Kayıtlı evcil hayvanları görüntüleyin ve yönetin. Son 100 evcil hayvan gösteriliyor.
           </p>
         </div>
         <Link href="/admin" className="btn-secondary text-[13px] px-4 py-2">
-          ← Back to Dashboard
+          ← Panele Dön
         </Link>
       </div>
 
@@ -35,11 +35,11 @@ export default async function AdminPetsPage() {
           <table className="w-full text-left text-[13px]">
             <thead className="bg-bg-main border-b border-border-main text-text-secondary font-black tracking-widest uppercase text-[11px]">
               <tr>
-                <th className="p-4">Pet Name / Type</th>
-                <th className="p-4">Owner</th>
-                <th className="p-4">Breed / Age</th>
-                <th className="p-4">Created At</th>
-                <th className="p-4 text-right">Actions</th>
+                <th className="p-4">Pet Adı / Türü</th>
+                <th className="p-4">Sahibi</th>
+                <th className="p-4">Irk / Yaş</th>
+                <th className="p-4">Kayıt Tarihi</th>
+                <th className="p-4 text-right">İşlemler</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-main">
@@ -75,14 +75,14 @@ export default async function AdminPetsPage() {
                           href={`/admin/users/${pet.owner_id}`}
                           className="text-[12px] font-bold text-primary bg-primary-soft hover:bg-primary-soft/80 px-2.5 py-1.5 rounded-xl transition-all"
                         >
-                          Owner Profile
+                          Sahip Profili
                         </Link>
                       )}
                       <Link 
                         href={`/owner/pets/${pet.id}`}
                         className="text-[12px] font-bold text-text-primary bg-bg-main hover:bg-border-main/50 px-2.5 py-1.5 rounded-xl border border-border-main transition-all"
                       >
-                        Pet Details
+                        Pet Detayları
                       </Link>
                     </div>
                   </td>
@@ -91,7 +91,7 @@ export default async function AdminPetsPage() {
               {!pets?.length && (
                 <tr>
                   <td colSpan={5} className="p-8 text-center text-text-secondary">
-                    No pets found.
+                    Evcil hayvan bulunamadı.
                   </td>
                 </tr>
               )}

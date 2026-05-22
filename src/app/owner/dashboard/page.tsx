@@ -1,15 +1,15 @@
 "use no memo"
 export const dynamic = 'force-dynamic'
-export const revalidate = 0
 
 import { getSessionUser } from '@/lib/auth/get-current-profile'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import DashboardOnboardingWrapper from './DashboardOnboardingWrapper'
 import CoachMark from '@/components/ui/CoachMark'
 import { calcAge } from '@/lib/pets/utils'
-
+import { getNowTR } from '@/lib/utils'
+import Image from 'next/image'
+import { getCachedDashboardData } from './dashboard-queries'
 
 export default async function OwnerDashboard() {
   const user = await getSessionUser()
@@ -17,51 +17,23 @@ export default async function OwnerDashboard() {
     redirect('/login')
   }
 
-  const supabase = await createServerSupabaseClient()
-
-  const { data: profile } = await supabase
-    .from('profiles').select('first_name').eq('id', user.id).single()
-
-  const { data: pets } = await supabase
-    .from('pets').select('*').eq('owner_id', user.id).order('created_at', { ascending: false })
+  const { profile, pets, upcomingSchedules, allFeedingLogs, allWeightLogs } =
+    await getCachedDashboardData(user.id)
 
   const primaryPet = pets && pets.length > 0 ? pets[0] : null;
 
   // Next Best Action logic & KPI stats
   // (Removed heroCta logic since it's redundant with pet cards and modules)
 
-  // Get Health Schedules
-  let upcomingSchedules: any[] = []
-  if (pets && pets.length > 0) {
-    const { data } = await supabase
-      .from('health_schedules')
-      .select('*, vaccines(name), pets(name)')
-      .in('pet_id', pets.map(p => p.id))
-      .neq('status', 'done');
-    if (data) upcomingSchedules = data
-  }
+  const now = getNowTR();
 
-  const now = new Date();
-
-  const in30 = new Date(); in30.setDate(in30.getDate() + 30);
+  const in30 = getNowTR(); in30.setDate(in30.getDate() + 30);
   const timelineSchedules = upcomingSchedules
     .filter(s => new Date(s.due_date) <= in30)
     .sort((a,b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
     .slice(0, 5);
 
-  const petIds = (pets || []).map(p => p.id);
-  
-  let allFeedingLogs: any[] = [];
-  let allWeightLogs: any[] = [];
-  
-  if (petIds.length > 0) {
-    const [feedingRes, weightRes] = await Promise.all([
-      supabase.from('feeding_logs').select('pet_id, created_at').in('pet_id', petIds).order('created_at', { ascending: false }),
-      supabase.from('weight_logs').select('pet_id, measured_at, weight_kg, height_cm').in('pet_id', petIds).order('measured_at', { ascending: false })
-    ]);
-    allFeedingLogs = feedingRes.data || [];
-    allWeightLogs = weightRes.data || [];
-  }
+  const petIds = (pets || []).map((p: any) => p.id);
 
   const petsWithStats = (pets || []).map((pet) => {
     let lastFeedingDate = 'Veri Yok';
@@ -127,10 +99,11 @@ export default async function OwnerDashboard() {
                 {/* Hero Photo */}
                 <div className="relative w-full" style={{ aspectRatio: '1 / 1' }}>
                   {pet.avatar_url ? (
-                    <img
+                    <Image
                       src={pet.avatar_url}
                       alt={pet.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-primary-soft via-[#ede9fe] to-white flex items-center justify-center">
@@ -184,11 +157,19 @@ export default async function OwnerDashboard() {
           </h2>
           <div className="flex flex-col gap-3">
             {timelineSchedules.map(plan => {
-              const due = new Date(plan.due_date);
-              const now = new Date();
               const dateOnlyStr = plan.due_date.includes('T') ? plan.due_date.split('T')[0] : plan.due_date;
+              const [y, m, d] = dateOnlyStr.split('-').map(Number);
+              const due = getNowTR();
+              due.setFullYear(y, m - 1, d);
+              
+              const now = getNowTR();
               const timeStr = plan.due_time || '12:00:00';
-              const taskDateTime = new Date(`${dateOnlyStr}T${timeStr}`);
+              const [th, tm, ts] = timeStr.split(':').map(Number);
+              
+              const taskDateTime = getNowTR();
+              taskDateTime.setFullYear(y, m - 1, d);
+              taskDateTime.setHours(th || 12, tm || 0, ts || 0, 0);
+              
               const isOverdue = taskDateTime < now;
 
               let badgeText = '';
@@ -207,9 +188,10 @@ export default async function OwnerDashboard() {
                 }
                 badgeColor = 'bg-red-50 text-red-600 border-red-100/50';
               } else {
-                const today = new Date();
+                const today = getNowTR();
                 today.setHours(0,0,0,0);
-                const targetDate = new Date(due);
+                const targetDate = getNowTR();
+                targetDate.setFullYear(y, m - 1, d);
                 targetDate.setHours(0,0,0,0);
                 const diffDays = Math.round((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
                 

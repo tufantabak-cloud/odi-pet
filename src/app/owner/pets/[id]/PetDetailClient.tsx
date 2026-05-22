@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import FamilyTab from './FamilyTab'
 import ReportsTab from './ReportsTab'
 import InsuranceWidget from '@/components/insurance/InsuranceWidget'
@@ -509,8 +510,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
             </svg>
           </Link>
-          <div className="w-24 h-24 rounded-[24px] bg-gradient-to-br from-primary-soft to-white flex items-center justify-center text-primary text-[40px] font-black shadow-sm ring-2 ring-border-main shrink-0 transition-transform duration-300 group-hover/card:scale-[1.02]">
-            {pet.avatar_url ? <img src={pet.avatar_url} className="w-full h-full rounded-[22px] object-cover" alt={pet.name}/> : pet.name.charAt(0)}
+          <div className="relative w-24 h-24 rounded-[24px] bg-gradient-to-br from-primary-soft to-white flex items-center justify-center text-primary text-[40px] font-black shadow-sm ring-2 ring-border-main shrink-0 transition-transform duration-300 group-hover/card:scale-[1.02]">
+            {pet.avatar_url ? <Image src={pet.avatar_url} fill={true} className="rounded-[22px] object-cover" alt={pet.name}/> : pet.name.charAt(0)}
           </div>
           <div className="flex-1 min-w-0 flex flex-col gap-1">
             <h1 className="text-[22px] sm:text-[26px] font-extrabold text-text-primary leading-tight truncate">{pet.name}</h1>

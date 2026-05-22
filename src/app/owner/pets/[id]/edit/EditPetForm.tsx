@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import citiesData from '@/lib/cities.json'
 import Link from 'next/link'
+import Image from 'next/image'
 import { calcAge } from '@/lib/pets/utils'
 
 const CAT_BREEDS = [
@@ -241,9 +242,14 @@ export default function EditPetForm({ pet }: { pet: any }) {
           <h2 className="text-[15px] font-black text-text-primary border-b border-border-main pb-3">1. Temel Kimlik ve Fotoğraf</h2>
           
           <div className="flex flex-col items-center gap-4 mb-2">
-            <div className="w-[120px] h-[120px] rounded-[28px] bg-gradient-to-br from-primary-soft to-white border-2 border-dashed border-primary/30 flex items-center justify-center overflow-hidden shadow-sm">
+            <div className="relative w-[120px] h-[120px] rounded-[28px] bg-gradient-to-br from-primary-soft to-white border-2 border-dashed border-primary/30 flex items-center justify-center overflow-hidden shadow-sm">
               {photoPreview ? (
-                <img src={photoPreview} alt="Önizleme" className="w-full h-full object-cover" />
+                photoPreview.startsWith('http') ? (
+                  <Image src={photoPreview} alt="Önizleme" fill={true} className="object-cover" sizes="120px" />
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={photoPreview} alt="Önizleme" className="w-full h-full object-cover" />
+                )
               ) : (
                 <span className="text-[40px]">{species === 'Kedi' ? '🐱' : '🐶'}</span>
               )}

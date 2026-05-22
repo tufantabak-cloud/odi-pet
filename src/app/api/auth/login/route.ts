@@ -1,13 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { getIP, loginRateLimit, verifyTurnstile } from '@/lib/auth-security'
+import { loginSchema } from '@/lib/validations/auth'
 
 export async function POST(req: NextRequest) {
-  const fd = await req.formData()
-  const email    = (fd.get('email')    as string)?.trim()
-  const password = (fd.get('password') as string)?.trim()
+  const ip = getIP(req);
 
-  if (!email || !password) {
-    return NextResponse.json({ error: 'E-posta ve şifre zorunludur.' }, { status: 400 })
+  // Rate Limiting Check
+  if (loginRateLimit) {
+    const { success, pending, limit, reset, remaining } = await loginRateLimit.limit(ip);
+    if (!success) {
+      return NextResponse.json({ error: 'Çok fazla giriş denemesi yaptınız. Lütfen daha sonra tekrar deneyin.' }, { status: 429 })
+    }
+  }
+
+  const fd = await req.formData()
+  const data = Object.fromEntries(fd.entries());
+  
+  const parsed = loginSchema.safeParse(data);
+
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
+  }
+
+  const { email, password, turnstileToken, rememberMe } = parsed.data;
+
+  // Turnstile Verification
+  const isHuman = await verifyTurnstile(turnstileToken, ip);
+  if (!isHuman) {
+    return NextResponse.json({ error: 'Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.' }, { status: 400 })
   }
 
   // Response nesnesini önceden oluşturuyoruz ki Supabase cookie'leri ona yazabilsin
@@ -24,6 +45,11 @@ export async function POST(req: NextRequest) {
         setAll(cookiesToSet) {
           // Auth cookie'lerini response'a yaz
           cookiesToSet.forEach(({ name, value, options }) => {
+            if (!rememberMe) {
+              // Beni hatırla seçili değilse session cookie yap
+              delete options.maxAge;
+              delete options.expires;
+            }
             response.cookies.set(name, value, options)
           })
         },

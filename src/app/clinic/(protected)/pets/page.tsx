@@ -1,6 +1,7 @@
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default async function ClinicPetsPage() {
   const user = await getSessionUser()
@@ -55,9 +56,9 @@ export default async function ClinicPetsPage() {
               <Link key={pet.id} href={`/clinic/pets/${pet.id}`}
                 className="card-base p-6 group cursor-pointer hover:border-primary/20 hover:shadow-medium transition-all duration-300">
                 <div className="flex items-center gap-4 mb-4 pb-4 border-b border-border-main/60">
-                  <div className="w-14 h-14 rounded-[16px] bg-gradient-to-tr from-primary-soft to-white flex items-center justify-center text-primary text-[22px] font-black shadow-sm group-hover:bg-primary group-hover:text-white transition-all duration-300 overflow-hidden shrink-0">
+                  <div className="relative w-14 h-14 rounded-[16px] bg-gradient-to-tr from-primary-soft to-white flex items-center justify-center text-primary text-[22px] font-black shadow-sm group-hover:bg-primary group-hover:text-white transition-all duration-300 overflow-hidden shrink-0">
                     {pet.avatar_url
-                      ? <img src={pet.avatar_url} className="w-full h-full object-cover" alt={pet.name}/>
+                      ? <Image src={pet.avatar_url} fill={true} className="object-cover" alt={pet.name}/>
                       : pet.name.charAt(0)
                     }
                   </div>

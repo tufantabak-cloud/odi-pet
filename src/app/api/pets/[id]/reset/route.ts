@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getSessionUser()
@@ -41,6 +41,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   revalidatePath('/owner/dashboard')
+  revalidateTag('dashboard')
   revalidatePath('/owner/pets')
   revalidatePath(`/owner/pets/${id}`)
   revalidatePath('/owner/profile')

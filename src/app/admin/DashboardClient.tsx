@@ -191,7 +191,7 @@ export default function DashboardClient({ initialData }: { initialData: Dashboar
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-text-primary flex items-center gap-2">
-            🏠 Dashboard
+            🏠 Panel
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-[11px] font-bold text-emerald-600">CANLI</span>
@@ -240,7 +240,7 @@ export default function DashboardClient({ initialData }: { initialData: Dashboar
           icon="⚠️"
           label="Gecikmiş Aşı"
           value={data?.overdueVaccines ?? 0}
-          sub="Tüm hayvanlarda overdue durum"
+          sub="Tüm hayvanlarda gecikmiş aşı durumu"
           accent={(data?.overdueVaccines ?? 0) > 0 ? 'red' : 'green'}
           href="/admin/pets"
         />

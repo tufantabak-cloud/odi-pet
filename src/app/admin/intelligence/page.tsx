@@ -215,7 +215,7 @@ export default function FounderIntelligencePage() {
               📋 Pipeline
             </Link>
             <Link href="/owner/dashboard" className="btn-primary text-[13px] px-4 py-2">
-              ← Dashboard
+              ← Panel
             </Link>
           </div>
         </div>

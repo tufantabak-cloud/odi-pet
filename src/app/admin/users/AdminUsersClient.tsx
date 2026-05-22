@@ -123,7 +123,7 @@ export default function AdminUsersClient() {
           </p>
         </div>
         <Link href="/admin" className="btn-secondary text-[13px] px-4 py-2">
-          ← Dashboard
+          ← Panel
         </Link>
       </div>
 

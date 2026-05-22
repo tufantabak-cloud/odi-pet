@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import CoachMark from '@/components/ui/CoachMark'
 
@@ -54,6 +54,7 @@ const FOLLOWUP_CHIPS: Record<string, string[]> = {
 
 export default function AIVetPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'ai',
@@ -98,13 +99,10 @@ export default function AIVetPage() {
           setPets(formatted)
           
           let defaultPet = formatted[0]
-          if (typeof window !== 'undefined') {
-            const urlParams = new URLSearchParams(window.location.search)
-            const urlPetId = urlParams.get('petId')
-            if (urlPetId) {
-              const found = formatted.find(p => p.id === urlPetId)
-              if (found) defaultPet = found
-            }
+          const urlPetId = searchParams.get('petId')
+          if (urlPetId) {
+            const found = formatted.find(p => p.id === urlPetId)
+            if (found) defaultPet = found
           }
           setSelectedPet(defaultPet)
         }

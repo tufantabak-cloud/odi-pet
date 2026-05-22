@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { generateVaccinationPlan } from '@/features/pets/vaccination-algorithm'
 
 function str(fd: FormData, key: string): string | null {
@@ -106,6 +106,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
   }
 
   revalidatePath('/owner/dashboard')
+  revalidateTag('dashboard')
   revalidatePath('/owner/pets')
   revalidatePath(`/owner/pets/${id}`)
 
@@ -161,6 +162,7 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
   }
 
   revalidatePath('/owner/dashboard')
+  revalidateTag('dashboard')
   revalidatePath('/owner/pets')
   revalidatePath('/owner/profile')
 

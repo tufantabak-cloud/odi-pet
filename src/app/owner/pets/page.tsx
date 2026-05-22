@@ -2,6 +2,7 @@ import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { calcAge } from '@/lib/pets/utils'
 import { VaccineIcon, BowlIcon, PillIcon } from '@/components/icons/PetIcons'
 
@@ -70,9 +71,9 @@ export default async function PetsPage() {
                 {/* Horizontal Content */}
                 <div className="flex flex-row gap-4 items-start">
                   {/* Avatar */}
-                  <div className="w-20 h-20 rounded-[20px] bg-gradient-to-br from-primary-soft to-white flex items-center justify-center text-primary text-[32px] font-black shrink-0 group-hover:scale-105 transition-transform duration-200 overflow-hidden border border-border-main shadow-sm">
+                  <div className="relative w-20 h-20 rounded-[20px] bg-gradient-to-br from-primary-soft to-white flex items-center justify-center text-primary text-[32px] font-black shrink-0 group-hover:scale-105 transition-transform duration-200 overflow-hidden border border-border-main shadow-sm">
                     {pet.avatar_url
-                      ? <img src={pet.avatar_url} alt={pet.name} className="w-full h-full object-cover" />
+                      ? <Image src={pet.avatar_url} alt={pet.name} fill={true} className="object-cover" />
                       : (pet.name || '?').charAt(0)}
                   </div>
 

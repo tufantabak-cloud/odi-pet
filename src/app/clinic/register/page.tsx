@@ -4,6 +4,7 @@ import { useState, FormEvent } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { Eye, EyeOff } from 'lucide-react'
 
 export default function ClinicRegisterPage() {
   const router = useRouter()
@@ -158,9 +159,10 @@ export default function ClinicRegisterPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? 'Şifreyi gizle' : 'Şifreyi göster'}
                 className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-text-secondary hover:text-primary transition-colors"
               >
-                {showPassword ? '🙈' : '👁️'}
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
           </div>

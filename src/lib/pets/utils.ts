@@ -1,3 +1,5 @@
+import { getNowTR } from '@/lib/utils'
+
 /**
  * Calculates the age of a pet based on birth date and returns human-readable text and group label.
  * Grouping follows the project rules:
@@ -10,7 +12,7 @@ export function calcAge(birthDate: string | null) {
   if (!birthDate) return { text: '—', label: '—' }
   
   const born = new Date(birthDate)
-  const today = new Date()
+  const today = getNowTR()
   
   if (isNaN(born.getTime())) {
     return { text: '—', label: '—' }

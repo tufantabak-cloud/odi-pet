@@ -6,6 +6,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { calcAge } from '@/lib/pets/utils'
+import { getNowTR } from '@/lib/utils'
 import PetDetailClient from './PetDetailClient'
 
 type PageProps = {
@@ -42,7 +43,7 @@ export default async function PetDetailPage(props: PageProps) {
 
   const age = calcAge(pet.birth_date)
   
-  const now = new Date()
+  const now = getNowTR()
   const overdue = (schedules ?? []).filter((s: any) => s.status !== 'done' && new Date(s.due_date) < now).length
   
   let score = pet.health_score ?? 100

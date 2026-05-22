@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 
 type RouteContext = {
   params: Promise<{ id: string }>
@@ -42,6 +42,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   revalidatePath('/owner/dashboard')
+  revalidateTag('dashboard')
   revalidatePath('/owner/pets')
   revalidatePath(`/owner/pets/${id}`)
 

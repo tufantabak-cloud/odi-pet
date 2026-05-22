@@ -1,30 +1,47 @@
 'use client'
 
-import { useState, FormEvent } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+import { Turnstile } from '@marsidev/react-turnstile'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { resetPasswordSchema, type ResetPasswordInput } from '@/lib/validations/auth'
 
 export default function ResetPasswordPage() {
-  const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState<string>('')
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<ResetPasswordInput>({
+    resolver: zodResolver(resetPasswordSchema),
+  })
+
+  const onSubmit = async (data: ResetPasswordInput) => {
     setLoading(true)
     setError('')
     setSuccess(false)
 
     try {
-      const supabase = createBrowserSupabaseClient()
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/update-password`,
+      const fd = new FormData()
+      fd.append('email', data.email)
+      fd.append('turnstileToken', turnstileToken)
+
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        body: fd
       })
 
-      if (error) {
-        setError(error.message || 'Şifre sıfırlama e-postası gönderilemedi.')
+      const resData = await res.json()
+
+      if (!res.ok) {
+        setError(resData.error || 'Şifre sıfırlama e-postası gönderilemedi.')
         return
       }
 
@@ -64,7 +81,15 @@ export default function ResetPasswordPage() {
             </Link>
           </div>
         ) : (
-          <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
+          <form className="flex flex-col gap-6" onSubmit={handleSubmit(onSubmit)}>
+            <Turnstile
+              siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ''}
+              onSuccess={(token) => {
+                setTurnstileToken(token)
+                setValue('turnstileToken', token)
+              }}
+              options={{ size: 'invisible' }}
+            />
             {error && (
               <div className="p-4 rounded-2xl bg-error/10 border border-error/20 text-error text-[13px] font-bold text-center animate-in shake-in duration-300">
                 ⚠️ {error}
@@ -78,17 +103,16 @@ export default function ResetPasswordPage() {
               <input
                 id="email"
                 type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
+                {...register('email')}
                 placeholder="ornek@email.com"
-                required
-                className="input-base py-3 text-[15px]"
+                className={`input-base py-3 text-[15px] ${errors.email ? 'border-error/50 focus:border-error focus:ring-error/20' : ''}`}
               />
+              {errors.email && <span className="text-error text-[11px] font-bold ml-1">{errors.email.message}</span>}
             </div>
 
             <button
               type="submit"
-              disabled={loading || !email}
+              disabled={loading}
               className="btn-primary w-full mt-2 py-4 text-[15px] font-black shadow-xl shadow-primary/20 hover:shadow-primary/40 disabled:opacity-60 transition-all active:scale-[0.98]"
             >
               {loading ? 'Gönderiliyor...' : 'Bağlantı Gönder'}

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { generateVaccinationPlan } from '@/features/pets/vaccination-algorithm'
 
 function str(fd: FormData, key: string): string | null {
@@ -122,6 +122,7 @@ export async function POST(req: NextRequest) {
   }
 
   revalidatePath('/owner/dashboard')
+  revalidateTag('dashboard')
   revalidatePath('/owner/pets')
   return NextResponse.json({ success: true, pet: data })
 }

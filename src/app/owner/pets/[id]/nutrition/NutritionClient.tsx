@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { calculateRefillRisk } from '@/lib/nutrition/refill-engine'
 import CoachMark from '@/components/ui/CoachMark'
 
@@ -125,8 +126,8 @@ export default function NutritionClient({
           icon="🍗"
           position="bottom"
         />
-        <div className="w-16 h-16 rounded-[20px] bg-gradient-to-br from-primary-soft to-white border-2 border-primary/20 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
-          {pet.avatar_url ? <img src={pet.avatar_url} className="w-full h-full object-cover" alt="" /> : <span className="text-[28px]">🍗</span>}
+        <div className="relative w-16 h-16 rounded-[20px] bg-gradient-to-br from-primary-soft to-white border-2 border-primary/20 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+          {pet.avatar_url ? <Image src={pet.avatar_url} fill={true} className="object-cover" alt="" /> : <span className="text-[28px]">🍗</span>}
         </div>
         <div>
           <h1 className="text-[28px] font-extrabold text-text-primary tracking-tight">Beslenme Planı</h1>

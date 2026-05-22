@@ -10,6 +10,16 @@ export const toTitleCase = (str: string) => {
 }
 
 /**
+ * Returns the current Date adjusted to Turkey Time (UTC+3)
+ * Useful for server-side calculations where the server is in UTC.
+ */
+export const getNowTR = (): Date => {
+  const now = new Date();
+  const trString = now.toLocaleString("en-US", { timeZone: "Europe/Istanbul" });
+  return new Date(trString);
+}
+
+/**
  * Formats a date string or Date object to Turkish locale format (DD.MM.YYYY).
  * @example formatTRDate('2024-05-21') → '21.05.2024'
  */
