@@ -122,9 +122,9 @@ export default function UpdatePasswordPage() {
           </div>
         ) : (
           <form className="flex flex-col gap-6" onSubmit={handleSubmit(onSubmit)}>
-            {showTurnstile && (
+            {showTurnstile && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
               <Turnstile
-                siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ''}
+                siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
                 onSuccess={(token) => {
                   setTurnstileToken(token)
                   setValue('turnstileToken', token)
