@@ -37,6 +37,7 @@ export default async function AdminDashboardPage() {
     { count: proMonth },
     { count: totalProfiles },
     { count: overdueVaccines },
+    { count: clinicQueue },
     { data: recentUsers },
   ] = await Promise.all([
     supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', todayISO),
@@ -48,7 +49,8 @@ export default async function AdminDashboardPage() {
     supabase.from('user_subscriptions').select('id', { count: 'exact', head: true }).in('plan', ['pro', 'ai_plus']),
     supabase.from('user_subscriptions').select('id', { count: 'exact', head: true }).in('plan', ['pro', 'ai_plus']).gte('created_at', monthISO),
     supabase.from('profiles').select('id', { count: 'exact', head: true }),
-    supabase.from('vaccine_records').select('id', { count: 'exact', head: true }).lte('next_due_date', now),
+    supabase.from('vaccine_records_v2').select('id', { count: 'exact', head: true }).eq('status', 'overdue').lte('due_at', now),
+    supabase.from('clinics').select('id', { count: 'exact', head: true }).eq('is_public', false),
     supabase.from('profiles').select('id, first_name, last_name, email, role, created_at').order('created_at', { ascending: false }).limit(5),
   ])
 
@@ -74,6 +76,7 @@ export default async function AdminDashboardPage() {
       proRatePct,
     },
     overdueVaccines: overdueVaccines ?? 0,
+    clinicQueue: clinicQueue ?? 0,
     recentUsers: recentUsers ?? [],
   }
 

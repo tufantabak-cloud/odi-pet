@@ -4,15 +4,13 @@ import { useState, Suspense, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Eye, EyeOff, AlertCircle } from 'lucide-react'
+import { Eye, EyeOff } from 'lucide-react'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import dynamic from 'next/dynamic'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { loginSchema, type LoginInput } from '@/lib/validations/auth'
 import Loading from './loading'
-import { GoogleIcon } from '@/components/icons/GoogleIcon'
-import { AppleIcon } from '@/components/icons/AppleIcon'
 
 const Turnstile = dynamic(() => import('@marsidev/react-turnstile').then(mod => mod.Turnstile), { ssr: false })
 const BiometricLogin = dynamic(() => import('@/components/BiometricLogin').then(m => m.BiometricLogin), { ssr: false })
@@ -29,7 +27,6 @@ function LoginForm() {
   const [error, setError]     = useState('')
   const [success, setSuccess] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [capsLockOn, setCapsLockOn] = useState(false)
   const [hydrated, setHydrated] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState<string>('')
   const [lockoutUntil, setLockoutUntil] = useState<number | null>(null)
@@ -53,19 +50,6 @@ function LoginForm() {
     }
   }, [lockoutUntil])
 
-  useEffect(() => {
-    let timer: NodeJS.Timeout
-    if (success) {
-      timer = setTimeout(() => {
-        router.refresh()
-        router.push('/')
-      }, 200)
-    }
-    return () => {
-      if (timer) clearTimeout(timer)
-    }
-  }, [success, router])
-
   const {
     register,
     handleSubmit,
@@ -77,6 +61,15 @@ function LoginForm() {
 
   useEffect(() => {
     setHydrated(true)
+    const checkSession = async () => {
+      const supabase = createBrowserSupabaseClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        router.refresh()
+        router.push('/')
+      }
+    }
+    checkSession()
   }, [])
 
   const reasonBanner: Record<string, { icon: string; text: string }> = {
@@ -155,6 +148,10 @@ function LoginForm() {
 
       // Trigger success animation
       setSuccess(true)
+      setTimeout(() => {
+        router.refresh()
+        router.push('/')
+      }, 800)
     } catch {
       setError('Sunucu bağlantı hatası. Lütfen tekrar deneyin.')
     } finally {
@@ -162,9 +159,12 @@ function LoginForm() {
     }
   }
 
+  // Compute the display message: prefer inline error, then URL error param, then urlMessage
+  const displayError = error || (errorParam === 'session_expired' ? '' : '') || urlMessage
+
   return (
-    <div className="flex min-h-[100dvh] w-full items-center justify-center p-4 bg-bg-main bg-gradient-to-tr from-primary/5 via-transparent to-primary/5">
-      <div className="w-full max-w-sm bg-white rounded-[32px] p-6 sm:p-8 shadow-2xl shadow-primary/5 relative z-10 border border-border-main/50 overflow-hidden group">
+    <div className="flex min-h-screen w-full items-center justify-center p-4 bg-bg-main bg-gradient-to-tr from-primary/5 via-transparent to-primary/5">
+      <div className="w-full max-w-sm bg-white rounded-[32px] p-6 sm:p-8 shadow-2xl shadow-primary/5 relative z-10 border border-border-main/50 relative overflow-hidden group">
         <div className={`transition-all duration-700 ease-out ${success ? 'opacity-0 scale-95 blur-sm' : 'opacity-100 scale-100 blur-0'}`}>
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-110 duration-700 pointer-events-none"></div>
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary/5 rounded-tr-full -ml-12 -mb-12 transition-transform group-hover:scale-110 duration-700 pointer-events-none"></div>
@@ -226,7 +226,12 @@ function LoginForm() {
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                 </svg>
               ) : (
-                <GoogleIcon className="w-5 h-5" />
+                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                </svg>
               )}
               {googleLoading ? 'Bağlanıyor...' : 'Google'}
             </button>
@@ -243,7 +248,9 @@ function LoginForm() {
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                 </svg>
               ) : (
-                <AppleIcon className="w-5 h-5" />
+                <svg className="w-5 h-5" viewBox="0 0 384 512" fill="currentColor">
+                  <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/>
+                </svg>
               )}
               {appleLoading ? 'Bağlanıyor...' : 'Apple'}
             </button>
@@ -260,21 +267,14 @@ function LoginForm() {
             <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider ml-1" htmlFor="email">
               E-posta Adresi
             </label>
-            <div className="relative">
-              <input
-                id="email"
-                type="email"
-                placeholder="ornek@email.com"
-                {...register('email')}
-                autoComplete="email"
-                className={`input-base py-3 text-[15px] w-full ${errors.email ? 'border-error/50 focus:border-error focus:ring-error/20 pr-10' : ''}`}
-              />
-              {errors.email && (
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-error">
-                  <AlertCircle className="w-5 h-5" />
-                </div>
-              )}
-            </div>
+            <input
+              id="email"
+              type="email"
+              placeholder="ornek@email.com"
+              {...register('email')}
+              autoComplete="email"
+              className={`input-base py-3 text-[15px] ${errors.email ? 'border-error/50 focus:border-error focus:ring-error/20' : ''}`}
+            />
             {errors.email && <span role="alert" className="text-error text-[11px] font-bold ml-1">{errors.email.message}</span>}
           </div>
 
@@ -293,27 +293,18 @@ function LoginForm() {
                 type={showPassword ? 'text' : 'password'}
                 placeholder="••••••••"
                 {...register('password')}
-                onKeyUp={(e) => setCapsLockOn(e.getModifierState('CapsLock'))}
                 autoComplete="current-password"
-                className={`input-base py-3 text-[15px] w-full ${errors.password ? 'border-error/50 focus:border-error focus:ring-error/20 pr-20' : 'pr-12'}`}
+                className={`input-base py-3 text-[15px] pr-12 w-full ${errors.password ? 'border-error/50 focus:border-error focus:ring-error/20' : ''}`}
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                {errors.password && (
-                  <div className="pointer-events-none text-error mr-1">
-                    <AlertCircle className="w-5 h-5" />
-                  </div>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? 'Şifreyi gizle' : 'Şifreyi göster'}
-                  className="p-1 text-text-secondary hover:text-primary transition-colors"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? 'Şifreyi gizle' : 'Şifreyi göster'}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-text-secondary hover:text-primary transition-colors"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
             </div>
-            {capsLockOn && <span className="text-amber-600 text-[11px] font-bold ml-1 flex items-center gap-1">⚠️ Caps Lock açık</span>}
             {errors.password && <span role="alert" className="text-error text-[11px] font-bold ml-1">{errors.password.message}</span>}
           </div>
 

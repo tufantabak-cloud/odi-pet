@@ -15,11 +15,10 @@ export async function GET(request: Request) {
     .eq('profile_id', session.user.id);
 
   if (error) {
-    console.warn('[API Hints] Error fetching hints:', error.message);
-    return NextResponse.json({ dismissed: [] });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const dismissed = data ? data.map(hint => hint.hint_key) : [];
+  const dismissed = data.map(hint => hint.hint_key);
   return NextResponse.json({ dismissed });
 }
 

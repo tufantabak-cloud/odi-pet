@@ -139,10 +139,7 @@ export default async function OwnerDashboard() {
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5c2.8 0 5 2.2 5 5 0 3-4 8-5 10-1-2-5-7-5-10 0-2.8 2.2-5 5-5z"/></svg>
           </div>
           <h3 className="text-[18px] font-bold text-text-primary">Henüz can dostu eklemediniz</h3>
-          <p className="text-[13px] text-text-secondary mt-2 mb-6 max-w-xs">Aşağıdaki butona dokunarak ilk can dostunuzu ekleyebilirsiniz.</p>
-          <Link href="/owner/pets/add" className="btn-primary py-2.5 px-6 rounded-xl font-bold text-[14px]">
-            + Can Dost Ekle
-          </Link>
+          <p className="text-[13px] text-text-secondary mt-2 max-w-xs">Alttaki <strong>+</strong> butonuna dokunarak ilk can dostunuzu ekleyebilirsiniz.</p>
         </div>
       )}
 

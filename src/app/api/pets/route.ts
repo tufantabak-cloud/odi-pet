@@ -108,20 +108,16 @@ export async function POST(req: NextRequest) {
     if (plans.length > 0) {
       const carePlansPayload = plans.map(p => ({
         pet_id: data.id,
-        owner_id: user.id,
         title: p.title,
-        category: 'Medikal',
-        sub_category: 'Aşı Uygulaması',
-        notes: p.description, // using notes or description depending on schema, let's use notes as that is common or just title
-        due_date: p.due_date,
-        status: 'upcoming'
+        description: p.description,
+        due_date: p.due_date
       }))
       
       const { error: planError } = await supabase
-        .from('health_schedules')
+        .from('care_plans')
         .insert(carePlansPayload)
       
-      if (planError) console.error('[API/Pets] Health schedule generation error:', planError)
+      if (planError) console.error('[API/Pets] Care plan generation error:', planError)
     }
   }
 
