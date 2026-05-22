@@ -46,6 +46,8 @@ export default function RegisterPage() {
   const [showTurnstile, setShowTurnstile] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState<string>('')
   const [step, setStep] = useState(1)
+  const [resendLoading, setResendLoading] = useState(false)
+  const [resendSuccess, setResendSuccess] = useState(false)
 
   const {
     register,
@@ -64,6 +66,30 @@ export default function RegisterPage() {
     if (isStep1Valid) {
       setStep(2)
       setTimeout(() => setFocus('password'), 300)
+    }
+  }
+
+  const handleResend = async () => {
+    setResendLoading(true)
+    try {
+      const email = watch('email')
+      if (!email) return
+
+      const supabase = createBrowserSupabaseClient()
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: {
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/api/auth/callback`,
+        }
+      })
+      if (error) throw error
+      setResendSuccess(true)
+      setTimeout(() => setResendSuccess(false), 5000)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setResendLoading(false)
     }
   }
 
@@ -163,6 +189,14 @@ export default function RegisterPage() {
             className="btn-primary w-full py-3.5 shadow-lg shadow-primary/30"
           >
             Giriş Sayfasına Git
+          </button>
+
+          <button 
+            onClick={handleResend}
+            disabled={resendLoading || resendSuccess}
+            className="w-full mt-4 py-3.5 text-[14px] font-bold text-text-secondary hover:text-primary transition-colors disabled:opacity-50"
+          >
+            {resendLoading ? 'Gönderiliyor...' : resendSuccess ? '✓ Tekrar Gönderildi' : 'E-postayı Tekrar Gönder'}
           </button>
         </div>
       </div>

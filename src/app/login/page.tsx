@@ -30,6 +30,26 @@ function LoginForm() {
   const [hydrated, setHydrated] = useState(false)
   const [showTurnstile, setShowTurnstile] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState<string>('')
+  const [lockoutUntil, setLockoutUntil] = useState<number | null>(null)
+  const [lockoutRemaining, setLockoutRemaining] = useState<number>(0)
+
+  useEffect(() => {
+    if (lockoutUntil) {
+      const updateRemaining = () => {
+        const remaining = Math.ceil((lockoutUntil - Date.now()) / 1000)
+        if (remaining <= 0) {
+          setLockoutUntil(null)
+          setLockoutRemaining(0)
+          setError('')
+        } else {
+          setLockoutRemaining(remaining)
+        }
+      }
+      updateRemaining()
+      const interval = setInterval(updateRemaining, 1000)
+      return () => clearInterval(interval)
+    }
+  }, [lockoutUntil])
 
   const {
     register,
@@ -120,6 +140,9 @@ function LoginForm() {
       const resData = await res.json()
 
       if (!res.ok) {
+        if (resData.reset) {
+          setLockoutUntil(resData.reset)
+        }
         setError(resData.error || 'Giriş yapılamadı.')
         return
       }
@@ -146,6 +169,10 @@ function LoginForm() {
         <div className={`transition-all duration-700 ease-out ${success ? 'opacity-0 scale-95 blur-sm' : 'opacity-100 scale-100 blur-0'}`}>
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-110 duration-700 pointer-events-none"></div>
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary/5 rounded-tr-full -ml-12 -mb-12 transition-transform group-hover:scale-110 duration-700 pointer-events-none"></div>
+          
+          <svg className="absolute -top-6 -right-6 w-32 h-32 text-primary opacity-5 transform rotate-[25deg] pointer-events-none" viewBox="0 0 512 512" fill="currentColor">
+            <path d="M226.5 92.9c14.3 73.1-.1 142-32.3 154s-85-30.4-99.3-103.5c-14.3-73.1 .1-142 32.3-154s85 30.4 99.3 103.5zm71.4 125c14.3-73.1-.1-142-32.3-154s-85-30.4-99.3-103.5c-14.3-73.1 .1-142 32.3-154s85 30.4 99.3 103.5zm84.4 76.2c33.2 41.3 22.3 95.8-24.3 121.7s-111.4 13.3-144.6-28-22.3-95.8 24.3-121.7s111.4-13.3 144.6 28zm103.5-35.3c-2.4 49-33 87.7-68.5 86.5s-62.1-41.9-59.7-90.8 33-87.7 68.5-86.5 62.1 41.9 59.7 90.8zM42.2 245.5C11.5 220-4.3 176.4 1.1 148.1s30.1-30.8 60.8-5.3 46.5 69.1 41.1 97.4-30.1 30.8-60.8 5.3z"/>
+          </svg>
 
           <div className="text-center mb-10 relative">
           <Link href="/" className="inline-flex items-center justify-center w-24 h-24 rounded-[24px] overflow-hidden shadow-2xl shadow-primary/20 mb-6 hover:scale-105 transition-transform bg-white p-0.5">
@@ -298,8 +325,8 @@ function LoginForm() {
 
           <button
             type="submit"
-            disabled={!hydrated || loading}
-            className="btn-primary w-full mt-4 py-4 text-[15px] font-black shadow-xl shadow-primary/20 hover:shadow-primary/40 disabled:opacity-60 hover:scale-[1.02] active:scale-[0.98] transition-all"
+            disabled={!hydrated || loading || lockoutUntil !== null}
+            className={`btn-primary w-full mt-4 py-4 text-[15px] font-black shadow-xl shadow-primary/20 hover:shadow-primary/40 disabled:opacity-60 transition-all ${lockoutUntil === null ? 'hover:scale-[1.02] active:scale-[0.98]' : 'bg-bg-subtle text-text-secondary border-border-main shadow-none cursor-not-allowed'}`}
           >
             {loading ? (
               <span className="flex items-center justify-center gap-3">
@@ -308,6 +335,10 @@ function LoginForm() {
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
                 </svg>
                 Giriş yapılıyor…
+              </span>
+            ) : lockoutUntil !== null ? (
+              <span className="flex items-center justify-center gap-2">
+                🔒 {lockoutRemaining} saniye bekleyin
               </span>
             ) : 'Giriş Yap'}
           </button>

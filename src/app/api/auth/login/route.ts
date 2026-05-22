@@ -10,7 +10,11 @@ export async function POST(req: NextRequest) {
   if (loginRateLimit) {
     const { success, pending, limit, reset, remaining } = await loginRateLimit.limit(ip);
     if (!success) {
-      return NextResponse.json({ error: 'Çok fazla giriş denemesi yaptınız. Lütfen daha sonra tekrar deneyin.' }, { status: 429 })
+      const waitSeconds = Math.ceil((reset - Date.now()) / 1000);
+      return NextResponse.json({ 
+        error: `Çok fazla hatalı giriş denemesi. Lütfen ${waitSeconds} saniye sonra tekrar deneyin.`,
+        reset 
+      }, { status: 429 })
     }
   }
 
@@ -62,10 +66,19 @@ export async function POST(req: NextRequest) {
     }
   )
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password })
 
   if (error) {
+    if (error.message.includes('Email not confirmed')) {
+      return NextResponse.json({ error: 'Lütfen giriş yapmadan önce e-posta adresinizi doğrulayın.' }, { status: 403 })
+    }
     return NextResponse.json({ error: 'Kullanıcı adı veya şifre hatalı.' }, { status: 401 })
+  }
+
+  // Strict E3 check (Eğer Supabase'te confirm zorunlu değilse bile biz enforce edebiliriz)
+  if (authData?.user && !authData.user.email_confirmed_at) {
+    await supabase.auth.signOut()
+    return NextResponse.json({ error: 'Lütfen giriş yapmadan önce e-posta adresinizi doğrulayın.' }, { status: 403 })
   }
 
   // Cookie'leri içeren response'u döndür
