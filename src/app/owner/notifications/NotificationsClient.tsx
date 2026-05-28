@@ -172,7 +172,20 @@ export default function NotificationsClient({
             return (
               <button
                 key={notif.id}
-                onClick={() => !notif.is_read && markOneRead(notif.id)}
+                onClick={async () => {
+                  if (!notif.is_read) {
+                    await markOneRead(notif.id)
+                  }
+                  if (notif.pet_id) {
+                    if (notif.type.includes('vaccine')) {
+                      router.push(`/owner/dashboard?highlight=vaccine-${notif.pet_id}`)
+                    } else {
+                      router.push(`/owner/dashboard?highlight=parasite-${notif.pet_id}`)
+                    }
+                  } else {
+                    router.push('/owner/dashboard')
+                  }
+                }}
                 className={`card-base text-left flex gap-4 p-5 transition-all w-full ${
                   !notif.is_read ? 'border-l-4 border-l-primary' : 'opacity-70'
                 }`}

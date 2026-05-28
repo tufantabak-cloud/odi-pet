@@ -1,0 +1,148 @@
+'use client'
+
+import { useState } from 'react'
+import Image from 'next/image'
+
+interface LostPetWizardProps {
+  pet: any;
+  ownerPhone?: string;
+  onComplete?: () => void;
+  onCancel?: () => void;
+}
+
+export default function LostPetWizard({ pet, ownerPhone, onComplete, onCancel }: LostPetWizardProps) {
+  const [step, setStep] = useState(1)
+  const [contactPhone, setContactPhone] = useState(ownerPhone || pet.sos_contacts?.[0]?.phone || '')
+  const [location, setLocation] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleNext = () => setStep(2)
+
+  const handleSubmit = async () => {
+    if (!location.trim()) {
+      setError('Lütfen son görüldüğü yeri girin.')
+      return
+    }
+
+    setLoading(true)
+    setError('')
+
+    try {
+      const res = await fetch(`/api/pets/${pet.id}/lost`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contact_phone: contactPhone,
+          last_seen_location: location
+        })
+      })
+
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'İlan oluşturulamadı')
+
+      if (onComplete) onComplete()
+    } catch (err: any) {
+      setError(err.message)
+      setLoading(false)
+    }
+  }
+
+  const handleGetLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setLocation(`${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`)
+        },
+        () => setError('Konum alınamadı, lütfen izin verin veya adresi manuel yazın.')
+      )
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={onCancel}>
+      <div className="w-full max-w-md mx-auto bg-surface rounded-[28px] border border-border-main/60 p-6 shadow-2xl flex flex-col justify-between min-h-[480px] transition-all duration-300 relative overflow-hidden animate-fade-in" onClick={e => e.stopPropagation()}>
+        
+        <div className="absolute top-0 right-0 w-32 h-32 bg-error/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="flex flex-col gap-6 relative z-10">
+          <span className="text-[12px] font-black text-error uppercase tracking-wider">
+            Adım {step}/2: {step === 1 ? 'İletişim' : 'Konum'}
+          </span>
+
+          <div className="flex flex-col gap-2">
+            <h2 className="text-[24px] font-extrabold text-text-primary tracking-tight leading-tight">
+              Kayıp İlanı Oluştur
+            </h2>
+            <p className="text-[14px] text-text-secondary font-medium leading-relaxed">
+              {step === 1 ? 'Dostunuz bulunduğunda size ulaşılacak numarayı teyit edin.' : 'Lütfen son görüldüğü yeri haritadan seçin veya adres olarak girin.'}
+            </p>
+          </div>
+
+          {error && <div className="p-3 bg-error/10 text-error text-[13px] font-bold rounded-xl">{error}</div>}
+
+          {step === 1 ? (
+            <div className="flex flex-col gap-5 mt-2">
+              {/* Pet Info ReadOnly */}
+              <div className="flex items-center gap-4 p-4 border border-border-main rounded-[16px] bg-bg-main">
+                <div className="w-14 h-14 bg-gradient-to-br from-primary-soft to-white rounded-[14px] flex items-center justify-center text-[24px] overflow-hidden relative shadow-sm">
+                  {pet.avatar_url ? <Image src={pet.avatar_url} fill={true} className="object-cover" alt={pet.name} /> : (pet.species === 'Kedi' ? '🐱' : '🐶')}
+                </div>
+                <div>
+                  <p className="font-extrabold text-text-primary text-[15px]">{pet.name}</p>
+                  <p className="text-text-secondary text-[12px] font-medium">{pet.species} • {pet.breed || 'Bilinmiyor'}</p>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-[12px] font-bold text-text-secondary uppercase tracking-wider">İletişim Numarası</label>
+                <input
+                  type="tel"
+                  value={contactPhone}
+                  onChange={(e) => setContactPhone(e.target.value)}
+                  placeholder="05XX XXX XX XX"
+                  className="w-full input-base py-3.5 px-4 text-[14px] bg-white border border-border-main rounded-xl focus:outline-none focus:border-error transition-all"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-5 mt-2">
+              <div className="flex flex-col gap-2">
+                <label className="text-[12px] font-bold text-text-secondary uppercase tracking-wider">Son Görüldüğü Yer</label>
+                <textarea
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="Mahalle, sokak veya belirgin bir adres..."
+                  rows={3}
+                  className="w-full input-base py-3.5 px-4 text-[14px] bg-white border border-border-main rounded-xl focus:outline-none focus:border-error transition-all resize-none"
+                />
+              </div>
+              <button onClick={handleGetLocation} type="button" className="flex justify-center items-center gap-2 py-3 bg-blue-50 text-blue-600 rounded-xl font-bold text-[13px] border border-blue-100 hover:bg-blue-100 transition-colors">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                Mevcut Konumumu Al
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-8 flex flex-col gap-3 relative z-10">
+          {step === 1 ? (
+            <button onClick={handleNext} disabled={!contactPhone.trim()} className="w-full bg-text-primary text-white font-bold rounded-xl py-3.5 px-4 active:scale-[0.98] transition-all text-[15px] text-center shadow-md disabled:opacity-50">
+              Devam Et
+            </button>
+          ) : (
+            <button onClick={handleSubmit} disabled={loading || !location.trim()} className="w-full bg-error text-white font-bold rounded-xl py-3.5 px-4 active:scale-[0.98] transition-all text-[15px] text-center shadow-md disabled:opacity-50">
+              {loading ? 'Yayınlanıyor...' : 'İlanı Yayınla'}
+            </button>
+          )}
+          {onCancel && (
+            <button onClick={onCancel} type="button" className="w-full text-text-secondary hover:text-text-primary text-[13px] font-bold py-2 transition-all text-center">
+              Vazgeç
+            </button>
+          )}
+        </div>
+
+      </div>
+    </div>
+  )
+}

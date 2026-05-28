@@ -136,6 +136,24 @@ serve(async (_req) => {
       console.log(`[dispatch-notifications] Generated ${scheduleCount} in-app schedule notifications`)
     }
 
+    // 1d. Quiet Hours Protection (22:00 - 08:00 Istanbul time)
+    // Avoid sending emails or push notifications during these hours to protect user's peace.
+    const istanbulTime = new Date().toLocaleString("en-US", { timeZone: "Europe/Istanbul" })
+    const istanbulHour = new Date(istanbulTime).getHours()
+    
+    if (istanbulHour >= 22 || istanbulHour < 8) {
+      console.log(`[dispatch-notifications] Quiet hours active (Istanbul hour: ${istanbulHour}). Skipping email/push dispatch.`)
+      return new Response(
+        JSON.stringify({
+          status: "skipped_quiet_hours",
+          istanbul_hour: istanbulHour,
+          in_app_notifications_created: bdayCount + scheduleCount,
+          message: "Dispatches skipped during quiet hours to avoid disturbance."
+        }),
+        { headers: { "Content-Type": "application/json" } }
+      )
+    }
+
     // 2. Fetch unsent email notifications (created in last 24h, email not sent)
     const { data: unsent, error: fetchErr } = await supabase
       .from("notifications")
@@ -145,6 +163,7 @@ serve(async (_req) => {
         title,
         message,
         type,
+        pet_id,
         profiles!notifications_profile_id_fkey (
           email
         )
@@ -205,12 +224,17 @@ serve(async (_req) => {
       if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
         const userSubs = subsByProfile.get(profileId) ?? []
         for (const notif of notifs) {
+          const deepLinkUrl = notif.pet_id 
+            ? `/owner/pets/${notif.pet_id}#pet-tasks`
+            : '/owner/notifications'
+
           const payload = JSON.stringify({
             title: notif.title,
             body: notif.message,
-            icon: '/logo.jpg',
-            badge: '/logo.jpg',
-            url: '/owner/notifications'
+            icon: '/icons/icon-192x192.png',
+            badge: '/icons/icon-192x192.png',
+            url: deepLinkUrl,
+            tag: notif.id // unique tag to prevent duplicate alerts or group them
           })
 
           for (const sub of userSubs) {

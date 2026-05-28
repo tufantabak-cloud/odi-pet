@@ -11,7 +11,9 @@ import { FirstAidIcon, VaccineIcon, ShampooIcon, BowlIcon, CarrierIcon, ScoopIco
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
-
+import HumanAgeCalculator from '@/components/pets/HumanAgeCalculator'
+import BreedHealthCard from '@/components/pets/BreedHealthCard'
+import LostPetWizard from '@/components/pets/LostPetWizard'
 function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -159,6 +161,7 @@ export interface PetDetailProps {
   nutritionLogs: any[];
   payments: any[];
   subscription: any;
+  activeLostReport?: any;
 }
 
 export function getTaskCardStyle(isOverdue: boolean, isCompleted: boolean) {
@@ -194,7 +197,7 @@ export function getTaskCardStyle(isOverdue: boolean, isCompleted: boolean) {
   };
 }
 
-export default function PetDetailClient({ pet, age, score, overdue, schedules, diseases, allergies, medications, growthRecords, appointments, nutritionLogs, payments, subscription }: PetDetailProps) {
+export default function PetDetailClient({ pet, age, score, overdue, schedules, diseases, allergies, medications, growthRecords, appointments, nutritionLogs, payments, subscription, activeLostReport }: PetDetailProps) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('Özet')
   const [quickUpdateConfig, setQuickUpdateConfig] = useState<any>(null)
@@ -206,6 +209,35 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   const [taskPeriodFilter, setTaskPeriodFilter] = useState<'week' | 'all' | 'overdue' | 'done'>('week')
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
   
+  const [lostWizardOpen, setLostWizardOpen] = useState(false)
+  const [markFoundLoading, setMarkFoundLoading] = useState(false)
+  const [tagBrand, setTagBrand] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedBrand = localStorage.getItem(`odi_device_brand_${pet.id}_tag`)
+      if (savedBrand) setTagBrand(savedBrand)
+    }
+  }, [pet.id])
+
+  const handleMarkFound = async () => {
+    if (!confirm('Dostunuz bulundu mu? İlan kapatılacaktır.')) return;
+    setMarkFoundLoading(true)
+    try {
+      const res = await fetch(`/api/pets/${pet.id}/lost`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'found' })
+      })
+      if (!res.ok) throw new Error('Hata oluştu')
+      router.refresh()
+    } catch(err) {
+      alert('İşlem başarısız oldu.')
+    } finally {
+      setMarkFoundLoading(false)
+    }
+  }
+
   const tabCtaInfo = getTabCtaInfo(pet.species);
 
   const [localSchedules, setLocalSchedules] = useState<any[]>(() =>
@@ -547,6 +579,57 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                 </span>
               )}
             </div>
+
+            {/* Kamera & TAG Quick Action Buttons */}
+            <div className="flex gap-2.5 mt-3.5 z-10 flex-wrap sm:flex-nowrap">
+              <Link
+                href={`/owner/devices/camera?petId=${pet.id}`}
+                className="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white text-center py-2 px-3.5 rounded-xl text-[12px] font-black tracking-wider uppercase shadow-sm active:scale-95 hover:scale-[1.03] transition-all duration-200 flex items-center justify-center gap-1"
+              >
+                <span className="animate-pulse">🟢</span> Canlı İzle
+              </Link>
+              {tagBrand ? (
+                <a
+                  href={
+                    tagBrand === 'airtag' ? 'findmy://' :
+                    tagBrand === 'smarttag' ? 'smartthings://' :
+                    tagBrand === 'tractive' ? 'tractive://' :
+                    `/owner/devices/setup?petId=${pet.id}&type=tag`
+                  }
+                  className="bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white text-center py-2 px-3.5 rounded-xl text-[12px] font-black tracking-wider uppercase shadow-md active:scale-95 hover:scale-[1.03] transition-all duration-200 flex items-center gap-1.5"
+                >
+                  <span className="text-[14px]">
+                    {tagBrand === 'airtag' ? '🍎' : tagBrand === 'smarttag' ? '🌌' : tagBrand === 'tractive' ? '📍' : '🏷️'}
+                  </span>
+                  {tagBrand === 'airtag' ? 'AirTag ile Bul' : 
+                   tagBrand === 'smarttag' ? 'SmartTag ile Bul' : 
+                   tagBrand === 'tractive' ? 'Tractive ile Bul' : 'Künye ile Bul'}
+                </a>
+              ) : (
+                <Link
+                  href={`/owner/devices/setup?petId=${pet.id}&type=tag`}
+                  className="bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white text-center py-2 px-3.5 rounded-xl text-[12px] font-black tracking-wider uppercase shadow-md active:scale-95 hover:scale-[1.03] transition-all duration-200"
+                >
+                  Akıllı Künye (TAG)
+                </Link>
+              )}
+              {activeLostReport ? (
+                <button
+                  onClick={handleMarkFound}
+                  disabled={markFoundLoading}
+                  className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white text-center py-2 px-3.5 rounded-xl text-[12px] font-black tracking-wider uppercase shadow-md active:scale-95 hover:scale-[1.03] transition-all duration-200 flex-1 sm:flex-none disabled:opacity-50"
+                >
+                  {markFoundLoading ? 'Kapatılıyor...' : 'Bulundu İşaretle'}
+                </button>
+              ) : (
+                <button
+                  onClick={() => setLostWizardOpen(true)}
+                  className="bg-gradient-to-r from-error to-rose-600 hover:from-error/90 hover:to-rose-700 text-white text-center py-2 px-3.5 rounded-xl text-[12px] font-black tracking-wider uppercase shadow-md active:scale-95 hover:scale-[1.03] transition-all duration-200 flex-1 sm:flex-none"
+                >
+                  Kayıp İlanı Ver
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -555,6 +638,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       {(() => {
         const enrichTasks: { label: string; onClick?: () => void; link?: string }[] = []
         if (!pet.avatar_url) enrichTasks.push({ label: 'Fotoğraf Ekle', onClick: () => setQuickUpdateConfig({ title: 'Fotoğraf Ekle', desc: 'Petinizin profilini tamamlamak için bir fotoğraf yükleyin.', fields: [{ name: 'avatar', type: 'file', label: 'Fotoğraf Seç', required: true }] }) })
+        if (!pet.breed) enrichTasks.push({ label: 'Irk Bilgisi Gir', onClick: () => setQuickUpdateConfig({ title: 'Irk Bilgisi', desc: 'Petinizin ırkına özel sağlık riskleri ve öneriler alabilmek için ırk bilgisini ekleyin.', fields: [{ name: 'breed', type: 'text', label: 'Irk', placeholder: 'Örn: Golden Retriever', required: true }] }) })
         if (!pet.vet_name) enrichTasks.push({ label: 'Veteriner Bilgisi Gir', onClick: () => setQuickUpdateConfig({ title: 'Veteriner Bilgisi', desc: 'Sağlık kayıtlarının eşleşebilmesi için veteriner bilgisini girin.', fields: [{ name: 'vet_name', type: 'text', label: 'Veteriner Adı', placeholder: 'Örn: Dr. Ali Yılmaz', required: true }, { name: 'vet_phone', type: 'tel', label: 'Telefon (Opsiyonel)', placeholder: '05xx xxx xx xx' }] }) })
         if (!localSchedules || !localSchedules.some(s => s.category === 'Medikal')) enrichTasks.push({ label: 'İlk Aşısını Gir', onClick: () => openWizardWithCategory('Medikal') })
         if (!pet.microchip_no) enrichTasks.push({ label: 'Kimlik & Çip Bilgisi', onClick: () => setQuickUpdateConfig({ title: 'Kimlik & Çip', desc: 'Petinizin yasal kayıt numaralarını sisteme işleyin.', fields: [{ name: 'microchip_no', type: 'text', label: 'Mikroçip Numarası', placeholder: '15 Haneli No', required: true }, { name: 'passport_no', type: 'text', label: 'Pasaport Numarası (Opsiyonel)' }] }) })
@@ -839,7 +923,17 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             </div>
           )}
 
+          <BreedHealthCard petName={pet.name} breed={pet.breed} />
           <InsuranceWidget petId={pet.id} plan={subscription?.plan ?? 'free'} />
+
+          {pet.birth_date && (
+            <HumanAgeCalculator 
+              species={pet.species} 
+              birthDate={pet.birth_date} 
+              weightKg={growthRecords && growthRecords.length > 0 ? growthRecords[0].weight_kg : undefined} 
+              petName={pet.name} 
+            />
+          )}
         </div>
       )}
 
@@ -1150,6 +1244,13 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         />
       )}
 
+      {lostWizardOpen && (
+        <LostPetWizard 
+          pet={pet}
+          onComplete={() => { setLostWizardOpen(false); router.refresh(); }}
+          onCancel={() => setLostWizardOpen(false)}
+        />
+      )}
     </div>
   )
 }

@@ -5,6 +5,58 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import CoachMark from '@/components/ui/CoachMark'
 
+function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const router = useRouter()
+  
+  async function handleSubmit(e: any) {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    const fd = new FormData(e.target)
+    try {
+      const endpoint = config.endpoint || `/api/pets/${petId}`
+      const method = config.method || 'PATCH'
+      const res = await fetch(endpoint, { method, body: fd })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Hata oluştu')
+      }
+      onDone()
+    } catch(err: any) {
+      setError(err.message)
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-surface w-full max-w-sm rounded-[28px] p-6 shadow-2xl overflow-hidden animate-fade-in" onClick={e => e.stopPropagation()}>
+        <h3 className="text-[17px] font-extrabold text-text-primary mb-1">{config.title}</h3>
+        <p className="text-[13px] text-text-secondary mb-5 leading-relaxed">{config.desc}</p>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {config.fields.map((f: any) => (
+             <div key={f.name} className="flex flex-col gap-1.5">
+               <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider">{f.label}</label>
+               {f.type === 'file' ? (
+                 <input name={f.name} type="file" accept="image/*" className="input-base py-2.5 text-[13px]" required={f.required} />
+               ) : (
+                 <input name={f.name} type={f.type} step={f.type === 'number' ? 'any' : undefined} placeholder={f.placeholder} className="input-base py-3 text-[14px]" required={f.required} />
+               )}
+             </div>
+          ))}
+          {error && <p className="text-[12px] text-error font-bold p-2 bg-error/10 rounded-lg text-center mt-1">{error}</p>}
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose} className="flex-1 py-3.5 rounded-xl border-2 border-border-main text-text-secondary font-bold text-[14px]">İptal</button>
+            <button type="submit" disabled={loading} className="flex-[2] btn-primary py-3.5 disabled:opacity-50 shadow-sm text-[14px]">{loading ? 'Kaydediliyor...' : 'Kaydet ✓'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 interface Message {
   role: 'user' | 'ai'
   text: string
@@ -68,40 +120,42 @@ export default function AIVetPage() {
 
   const [pets, setPets] = useState<any[]>([])
   const [selectedPet, setSelectedPet] = useState<any>(null)
+  const [quickUpdateConfig, setQuickUpdateConfig] = useState<any>(null)
 
-  useEffect(() => {
-    async function fetchPets() {
-      try {
-        const supabase = createBrowserSupabaseClient()
+  const fetchPets = async () => {
+    try {
+      const supabase = createBrowserSupabaseClient()
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
 
         const { data: petData } = await supabase
           .from('pets')
           .select(`
-            id, name, species, breed, gender, birth_date,
+            id, name, species, breed, gender, birth_date, vet_name, vet_phone,
             vaccine_records_v2(vaccine_name, status),
-            health_diseases(disease_name, status)
+            health_diseases(disease_name)
           `)
           .eq('owner_id', user.id)
 
         if (petData && petData.length > 0) {
-          const formatted = petData.map(p => ({
+          const formatted = petData.map((p: any) => ({
             id: p.id,
             name: p.name,
             species: p.species,
             breed: p.breed,
             gender: p.gender,
             birth_date: p.birth_date,
+            vet_name: p.vet_name,
+            vet_phone: p.vet_phone,
             vaccines: p.vaccine_records_v2?.filter((v:any) => v.status === 'done' || v.status === 'completed').map((v:any) => v.vaccine_name) || [],
-            diseases: p.health_diseases?.filter((d:any) => d.status === 'active' || d.status === 'chronic').map((d:any) => d.disease_name) || []
+            diseases: p.health_diseases?.map((d:any) => d.disease_name) || []
           }))
           setPets(formatted)
           
           let defaultPet = formatted[0]
           const urlPetId = searchParams.get('petId')
           if (urlPetId) {
-            const found = formatted.find(p => p.id === urlPetId)
+            const found = formatted.find((p: any) => p.id === urlPetId)
             if (found) defaultPet = found
           }
           setSelectedPet(defaultPet)
@@ -109,7 +163,9 @@ export default function AIVetPage() {
       } catch (err) {
         console.error('Pets fetch error:', err)
       }
-    }
+  }
+
+  useEffect(() => {
     fetchPets()
   }, [])
 
@@ -291,6 +347,75 @@ export default function AIVetPage() {
                     )}
                   </div>
                 )}
+
+                {/* CTA and Disclaimer */}
+                {!isUser && msg.severity && (
+                  <div className="mt-4 flex flex-col items-start w-full">
+                    <p className="text-[11px] font-medium text-text-secondary/80 leading-snug mb-6">
+                      Bu araç genel bilgi amaçlıdır, veteriner kararının yerini tutmaz.
+                    </p>
+                    
+                    <div className="w-full flex flex-col gap-3">
+                      {selectedPet?.vet_name ? (
+                        <button
+                          onClick={() => {
+                            if (selectedPet?.vet_phone) {
+                              window.location.href = `tel:${selectedPet.vet_phone}`;
+                            } else {
+                              router.push('/owner/veterinary');
+                            }
+                          }}
+                          className={`w-full py-3.5 px-5 rounded-2xl font-black text-[13px] transition-all flex items-center justify-center gap-2 ${
+                            msg.severity === 'critical' ? 'btn-primary shadow-sm' : 'bg-primary-soft text-primary hover:bg-primary/20'
+                          }`}
+                        >
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                          Veterineriniz {selectedPet.vet_name}&apos;e Soralım
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            if (selectedPet?.id) {
+                              setQuickUpdateConfig({ 
+                                title: 'Veteriner Bilgisi', 
+                                desc: 'Size en doğru yönlendirmeyi yapabilmemiz için veterinerinizin adını girin.', 
+                                fields: [
+                                  { name: 'vet_name', type: 'text', label: 'Veteriner Adı', placeholder: 'Örn: Dr. Ali Yılmaz', required: true }, 
+                                  { name: 'vet_phone', type: 'tel', label: 'Telefon (Opsiyonel)', placeholder: '05xx xxx xx xx' }
+                                ] 
+                              })
+                            } else {
+                              router.push('/owner/pets');
+                            }
+                          }}
+                          className={`w-full py-3.5 px-5 rounded-2xl font-black text-[13px] transition-all flex items-center justify-center gap-2 ${
+                            msg.severity === 'critical' ? 'btn-primary shadow-sm' : 'bg-primary-soft text-primary hover:bg-primary/20 shadow-sm'
+                          }`}
+                        >
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                          Veterinerinize Soralım
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => router.push('/owner/veterinary')}
+                        className="w-full py-3.5 px-5 rounded-2xl font-black text-[13px] transition-all flex items-center justify-center gap-2 border-2 border-border-main bg-surface hover:bg-bg-main text-text-secondary hover:text-text-primary shadow-sm"
+                      >
+                        {msg.severity === 'critical' ? (
+                          <>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12h4l2-9 5 18 3-10h6"/></svg>
+                            Yakındaki Kliniklere Göz Atın
+                          </>
+                        ) : (
+                          <>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                            Kliniklere Göz Atın
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )
@@ -370,10 +495,22 @@ export default function AIVetPage() {
           </button>
         </div>
 
-        <p className="text-[11px] text-text-secondary/60 text-center">
+        <p className="text-[11px] text-text-secondary/60 text-center mt-3 mb-1">
           Bu araç genel bilgi amaçlıdır, veteriner kararının yerini tutmaz.
         </p>
       </div>
+
+      {quickUpdateConfig && selectedPet?.id && (
+        <QuickUpdateModal
+          petId={selectedPet.id}
+          config={quickUpdateConfig}
+          onClose={() => setQuickUpdateConfig(null)}
+          onDone={() => {
+            setQuickUpdateConfig(null)
+            fetchPets()
+          }}
+        />
+      )}
     </div>
   )
 }

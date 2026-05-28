@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { useParams } from 'next/navigation'
 
 export default function FloatingSOS({
   petId,
@@ -16,10 +17,26 @@ export default function FloatingSOS({
 }) {
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [lostReport, setLostReport] = useState<any>(null)
+
+  const params = useParams()
+  const activePetId = (params?.id as string) || petId
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  useEffect(() => {
+    if (open && activePetId) {
+      fetch(`/api/pets/${activePetId}/lost`, { cache: 'no-store' })
+        .then(res => res.json())
+        .then(data => {
+          if (data.report) setLostReport(data.report)
+          else setLostReport(null)
+        })
+        .catch(console.error)
+    }
+  }, [open, activePetId])
 
   // Find active emergency phone number
   let activePhone = vetPhone || null
@@ -53,6 +70,22 @@ export default function FloatingSOS({
           </div>
         </div>
 
+        {lostReport && (
+          <div className="mb-5 p-4 bg-error/10 border border-error/20 rounded-2xl animate-fade-in">
+            <h3 className="font-extrabold text-error flex items-center gap-2 mb-1">
+              <span className="animate-pulse">🚨</span> KAYIP İLANI AKTİF
+            </h3>
+            <p className="text-[13px] text-error font-medium mb-1">
+              <strong>Son Görülme:</strong> {lostReport.last_seen_location}
+            </p>
+            {lostReport.contact_phone && (
+              <p className="text-[13px] text-error font-medium">
+                <strong>İletişim:</strong> {lostReport.contact_phone}
+              </p>
+            )}
+          </div>
+        )}
+
         <div className="flex flex-col gap-3">
           {isConfigured ? (
             <a href={`tel:${activePhone}`} className="flex items-center gap-4 p-4 bg-error/5 border border-error/20 rounded-[16px] hover:bg-error/10 hover:border-error/30 hover:scale-[1.01] active:scale-[0.99] transition-all duration-200">
@@ -68,7 +101,7 @@ export default function FloatingSOS({
             </a>
           ) : (
             <a 
-              href={petId ? `/owner/pets/${petId}/edit` : '/owner/pets/add'} 
+              href={activePetId ? `/owner/pets/${activePetId}/edit` : '/owner/pets/add'} 
               onClick={() => setOpen(false)}
               className="flex items-center gap-4 p-4 bg-primary/5 border border-primary/20 rounded-[16px] hover:bg-primary/10 hover:border-primary/30 hover:scale-[1.01] active:scale-[0.99] transition-all duration-200"
             >

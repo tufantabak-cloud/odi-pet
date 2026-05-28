@@ -30,6 +30,7 @@ export default async function PetDetailPage(props: PageProps) {
     { data: appointments },
     { data: nutritionLogs },
     { data: payments },
+    { data: activeLostReport },
   ] = await Promise.all([
     supabase.from('health_schedules').select('*, vaccines(name)').eq('pet_id', id).order('due_date').limit(100),
     supabase.from('health_diseases').select('*').eq('pet_id', id).order('diagnosis_date', { ascending: false }).limit(5),
@@ -39,6 +40,7 @@ export default async function PetDetailPage(props: PageProps) {
     supabase.from('appointments').select('*, clinics(name)').eq('pet_id', id).order('scheduled_at', { ascending: false }).limit(5),
     supabase.from('nutrition_logs').select('*').eq('pet_id', id).order('date', { ascending: false }).limit(7),
     supabase.from('payments').select('*').eq('pet_id', id).order('payment_date', { ascending: false }).limit(5),
+    supabase.from('lost_reports').select('*').eq('pet_id', id).eq('status', 'active').limit(1).maybeSingle(),
   ])
 
   const age = calcAge(pet.birth_date)
@@ -70,6 +72,7 @@ export default async function PetDetailPage(props: PageProps) {
       nutritionLogs={nutritionLogs ?? []}
       payments={payments ?? []}
       subscription={sub}
+      activeLostReport={activeLostReport || null}
     />
   )
 }

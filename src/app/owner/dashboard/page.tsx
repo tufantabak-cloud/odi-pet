@@ -5,11 +5,13 @@ import { getSessionUser } from '@/lib/auth/get-current-profile'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import DashboardOnboardingWrapper from './DashboardOnboardingWrapper'
+import DashboardSmartCards from './DashboardSmartCards'
 import CoachMark from '@/components/ui/CoachMark'
 import { calcAge } from '@/lib/pets/utils'
 import { getNowTR } from '@/lib/utils'
 import Image from 'next/image'
 import { getCachedDashboardData } from './dashboard-queries'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 export default async function OwnerDashboard() {
   const user = await getSessionUser()
@@ -19,6 +21,14 @@ export default async function OwnerDashboard() {
 
   const { profile, pets, upcomingSchedules, allFeedingLogs, allWeightLogs } =
     await getCachedDashboardData(user.id)
+
+  const supabase = await createServerSupabaseClient()
+  const { data: lostReports } = await supabase
+    .from('lost_reports')
+    .select('*, pets(name, avatar_url, species, breed)')
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
+    .limit(10)
 
   const primaryPet = pets && pets.length > 0 ? pets[0] : null;
 
@@ -87,7 +97,7 @@ export default async function OwnerDashboard() {
             </Link>
           </div>
           <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-none snap-x snap-mandatory">
-            {petsWithStats.map(pet => (
+            {petsWithStats.map((pet: any) => (
               <div
                 key={pet.id}
                 data-testid="pet-card"
@@ -115,22 +125,32 @@ export default async function OwnerDashboard() {
                   {/* Gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-
-
                   {/* Name + species overlaid on photo bottom */}
-                  <div className="absolute bottom-0 left-0 right-0 px-4 py-3 z-10">
+                  <div className="absolute bottom-12 left-0 right-0 px-4 z-10">
                     <p className="font-extrabold text-white text-[16px] leading-tight drop-shadow">{pet.name}</p>
-                    <p className="text-white/80 text-[12px] font-medium drop-shadow">
-                      {pet.species} · {calcAge(pet.birth_date).text} ({calcAge(pet.birth_date).label})
+                    <p className="text-white/80 text-[11px] font-medium drop-shadow leading-tight">
+                      {pet.species} · {calcAge(pet.birth_date).text}
                     </p>
                   </div>
+
+                  {/* Kamera & TAG Quick Action Buttons */}
+                  <div className="absolute bottom-2.5 left-2.5 right-2.5 flex gap-2 z-30">
+                    <Link
+                      href={`/owner/devices/camera?petId=${pet.id}`}
+                      className="flex-1 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white text-center py-2 px-1 rounded-xl text-[11px] font-black tracking-wider uppercase shadow-md active:scale-95 hover:scale-[1.05] transition-all duration-200 flex items-center justify-center gap-1"
+                    >
+                      <span className="animate-pulse">🟢</span> Canlı İzle
+                    </Link>
+                    <Link
+                      href={`/owner/devices/setup?petId=${pet.id}&type=tag`}
+                      className="flex-1 bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white text-center py-2 px-1 rounded-xl text-[11px] font-black tracking-wider uppercase shadow-md active:scale-95 hover:scale-[1.05] transition-all duration-200"
+                    >
+                      TAG
+                    </Link>
+                  </div>
                 </div>
-
-
               </div>
             ))}
-
-
           </div>
         </div>
       ) : (
@@ -143,8 +163,46 @@ export default async function OwnerDashboard() {
         </div>
       )}
 
+      {/* Kayıp İlanları (Duman SOS Ağı) */}
+      {lostReports && lostReports.length > 0 && (
+        <div className="flex flex-col gap-3">
+          <h2 className="text-[16px] font-extrabold text-error flex items-center gap-2">
+            <span className="animate-pulse">🚨</span> Duman SOS Ağı - Kayıp İlanları
+          </h2>
+          <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-none snap-x snap-mandatory">
+            {lostReports.map((report: any) => (
+              <div key={report.id} className="snap-start shrink-0 w-[240px] bg-error/5 border border-error/20 rounded-[24px] p-4 flex flex-col gap-3 relative shadow-sm">
+                <div className="absolute top-4 right-4 w-3 h-3 bg-error rounded-full animate-ping opacity-75" />
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 relative rounded-[14px] bg-white shadow-sm overflow-hidden border border-error/10 shrink-0 flex items-center justify-center text-error">
+                    {report.pets?.avatar_url ? (
+                      <Image src={report.pets.avatar_url} alt={report.pets.name} fill className="object-cover" />
+                    ) : (
+                      <span className="text-[20px]">{(report.pets?.name || '?').charAt(0)}</span>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-extrabold text-text-primary text-[15px] truncate">{report.pets?.name}</p>
+                    <p className="text-[11px] text-text-secondary font-medium truncate">{report.pets?.species} • {report.pets?.breed || 'Bilinmiyor'}</p>
+                  </div>
+                </div>
+                <div className="bg-white rounded-[12px] p-2.5 border border-error/10">
+                  <p className="text-[11px] text-text-secondary mb-0.5">Son Görülme</p>
+                  <p className="text-[13px] font-bold text-text-primary leading-tight line-clamp-2">{report.last_seen_location}</p>
+                </div>
+                <a href={`tel:${report.contact_phone}`} className="w-full bg-error text-white font-bold text-[13px] rounded-xl py-2.5 text-center flex items-center justify-center gap-2 hover:bg-error/90 active:scale-[0.98] transition-all">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.6 19.79 19.79 0 0 1 1.62 5.05 2 2 0 0 1 3.6 2.87h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 10.4a16 16 0 0 0 6 6l.88-.88a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 18z"/></svg>
+                  Hemen Ara
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-
+      {pets && pets.length > 0 && (
+        <DashboardSmartCards pets={pets} upcomingSchedules={upcomingSchedules} />
+      )}
 
       {/* Upcoming Timeline */}
       {timelineSchedules.length > 0 && (
