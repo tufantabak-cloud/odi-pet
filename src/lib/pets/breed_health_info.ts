@@ -116,6 +116,42 @@ export const breedHealthData: Record<string, BreedHealthInfo> = {
     species: 'Cat',
     risks: ['Sağırlık (Özellikle mavi gözlülerde)', 'Güneş Yanığı (Beyaz tüyler)'],
     description: "Beyaz tüylü ve mavi gözlü kedilerde sağırlık riski yüksektir. Ayrıca kulak uçları ve burunları güneşe karşı hassastır."
+  },
+  'ragdoll': {
+    breed: 'Ragdoll',
+    species: 'Cat',
+    risks: ['Hipertrofik Kardiyomiyopati (HKM)', 'Mesane Taşı', 'Obezite'],
+    description: "Ragdoll'lar genetik olarak kalp hastalıklarına yatkındır. Sakin yapıları kilo almaya neden olabileceğinden diyetleri kontrol edilmelidir."
+  },
+  'ankara kedisi': {
+    breed: 'Ankara Kedisi',
+    species: 'Cat',
+    risks: ['Sağırlık (Mavi gözlülerde)', 'Ataksi (Denge Bozukluğu)'],
+    description: "Özellikle beyaz tüylü ve mavi gözlü Ankara kedilerinde sağırlık sık görülür. Genetik nörolojik bozukluklara karşı dikkatli olunmalıdır."
+  },
+  'bengal': {
+    breed: 'Bengal',
+    species: 'Cat',
+    risks: ['Katarakt', 'Hipertrofik Kardiyomiyopati (HKM)', 'Anestezi Hassasiyeti'],
+    description: "Bengal kedileri çok aktif ve hareketlidir. Göz rahatsızlıklarına (Katarakt, PRA) yatkınlıkları nedeniyle düzenli göz muayenesi önerilir."
+  },
+  'abyssinian': {
+    breed: 'Abyssinian',
+    species: 'Cat',
+    risks: ['Diş Eti ve Periodontal Hastalıklar', 'Böbrek Yetmezliği (Amiloidoz)', 'Piruvat Kinaz Eksikliği (Anemi)'],
+    description: "Abyssinian'lar erken yaşta diş problemlerine yatkındır. Ağız sağlığına özel önem gösterilmeli ve böbrek değerleri yıllık takip edilmelidir."
+  },
+  'devon rex': {
+    breed: 'Devon Rex',
+    species: 'Cat',
+    risks: ['Güneş Yanığı', 'Hipertrofik Kardiyomiyopati (HKM)', 'Patella Luksasyonu (Diz Kapağı Çıkığı)'],
+    description: "Kısa tüyleri nedeniyle güneşe ve soğuğa karşı hassastırlar. Eklem ve kalp sağlığı kontrolleri aksatılmamalıdır."
+  },
+  'sphynx': {
+    breed: 'Sphynx (Sfenks)',
+    species: 'Cat',
+    risks: ['Güneş Yanığı', 'Cilt Yağlanması ve Enfeksiyonları', 'Hipertrofik Kardiyomiyopati (HKM)'],
+    description: "Tüysüz oldukları için vücut ısılarını korumakta zorlanırlar ve ciltleri hızlı yağlanır. Düzenli banyo, güneşten korunma ve kalp taraması kritiktir."
   }
 };
 
