@@ -41,7 +41,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   revalidatePath('/owner/dashboard')
-  revalidateTag('dashboard')
+  revalidateTag('dashboard', 'default')
   revalidatePath('/owner/pets')
   revalidatePath(`/owner/pets/${id}`)
   revalidatePath('/owner/profile')

@@ -122,7 +122,7 @@ export async function POST(req: NextRequest) {
   }
 
   revalidatePath('/owner/dashboard')
-  revalidateTag('dashboard')
+  revalidateTag('dashboard', 'default')
   revalidatePath('/owner/pets')
   return NextResponse.json({ success: true, pet: data })
 }

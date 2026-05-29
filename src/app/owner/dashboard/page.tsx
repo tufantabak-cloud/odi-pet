@@ -19,7 +19,7 @@ export default async function OwnerDashboard() {
     redirect('/login')
   }
 
-  const { profile, pets, upcomingSchedules, allFeedingLogs, allWeightLogs } =
+  const { profile, pets, upcomingSchedules, completedSchedules, allFeedingLogs, allWeightLogs } =
     await getCachedDashboardData(user.id)
 
   const supabase = await createServerSupabaseClient()
@@ -201,7 +201,33 @@ export default async function OwnerDashboard() {
       )}
 
       {pets && pets.length > 0 && (
-        <DashboardSmartCards pets={pets} upcomingSchedules={upcomingSchedules} />
+        <DashboardSmartCards pets={pets} upcomingSchedules={upcomingSchedules} completedSchedules={completedSchedules} />
+      )}
+
+      {/* Pet Günlüğü - Quick Action Bar */}
+      {pets && pets.length > 0 && (
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-[16px] font-extrabold text-text-primary">Pet Günlüğü</h2>
+            <Link href={pets.length === 1 ? `/owner/pets/${pets[0].id}/journal` : `/owner/journal/select-pet?redirect=journal`} className="text-[13px] font-bold text-primary hover:underline">
+              Tümünü Gör
+            </Link>
+          </div>
+          <div className="card-base p-4 flex items-center justify-between gap-4 border border-border-main hover:border-primary/30 transition-colors">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+              </div>
+              <div className="min-w-0">
+                <p className="text-[14px] font-extrabold text-text-primary truncate">Yeni Durum Kaydet</p>
+                <p className="text-[12px] text-text-secondary font-medium truncate">İştah, ruh hali, notlar...</p>
+              </div>
+            </div>
+            <Link href={pets.length === 1 ? `/owner/pets/${pets[0].id}/journal/new` : `/owner/journal/select-pet?redirect=new`} className="btn-primary py-2.5 px-4 text-[13px] font-bold whitespace-nowrap shrink-0 shadow-sm">
+              Kaydet +
+            </Link>
+          </div>
+        </div>
       )}
 
       {/* Upcoming Timeline */}

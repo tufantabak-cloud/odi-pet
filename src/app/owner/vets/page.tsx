@@ -131,7 +131,7 @@ export default function VetsPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Arama sırasında bir hata oluştu.');
+        throw new Error(data.error || 'Klinik araması başarısız oldu. Lütfen tekrar deneyin.');
       }
 
       let fetchedClinics: Clinic[] = data.clinics || [];
@@ -194,12 +194,15 @@ export default function VetsPage() {
         if (err.code === 1) {
           // GPS Permission Denied
           setGpsDenied(true);
+        } else if (err.code === 3) {
+          // GPS Timeout
+          setError('Konum sinyali zaman aşımına uğradı. Lütfen cihaz konumunu kontrol edin veya şehri manuel seçin.');
         } else {
-          setError('Konum alınırken bir sorun oluştu.');
+          setError('Konum alınırken bir sorun oluştu. Lütfen cihazınızın konum servislerini kontrol edin.');
         }
         setLoading(false);
       },
-      { timeout: 10000 }
+      { timeout: 10000, enableHighAccuracy: false, maximumAge: 60000 }
     );
   };
 

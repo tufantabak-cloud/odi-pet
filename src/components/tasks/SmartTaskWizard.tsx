@@ -97,7 +97,7 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
   useEffect(() => {
     if (petSpecies !== undefined) return;
     const supabase = createBrowserSupabaseClient();
-    supabase.from('pets').select('species').eq('id', petId).single().then(({ data }) => {
+    supabase.from('pets').select('species').eq('id', petId).single().then(({ data }: any) => {
       if (data?.species) setResolvedSpecies(data.species);
     });
   }, [petId, petSpecies]);

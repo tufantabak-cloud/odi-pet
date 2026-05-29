@@ -17,11 +17,24 @@ export default function LostPetWizard({ pet, ownerPhone, onComplete, onCancel }:
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const handleNext = () => setStep(2)
+  const handleNext = () => {
+    const phone = contactPhone.replace(/[\s-()]/g, '')
+    if (!/^\+?[0-9]{10,15}$/.test(phone)) {
+      setError('Lütfen geçerli bir telefon numarası giriniz (örn: 05554443322).')
+      return
+    }
+    setError('')
+    setStep(2)
+  }
 
   const handleSubmit = async () => {
-    if (!location.trim()) {
-      setError('Lütfen son görüldüğü yeri girin.')
+    const trimmedLoc = location.trim()
+    if (!trimmedLoc || trimmedLoc.length < 5) {
+      setError('Lütfen son görüldüğü yeri detaylı giriniz (en az 5 karakter).')
+      return
+    }
+    if (trimmedLoc.length > 500) {
+      setError('Konum bilgisi çok uzun, lütfen kısaltınız (en fazla 500 karakter).')
       return
     }
 

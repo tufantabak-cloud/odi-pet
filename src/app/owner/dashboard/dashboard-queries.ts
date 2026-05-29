@@ -25,6 +25,7 @@ export async function getCachedDashboardData(userId: string) {
 
       // Health schedules for all user's pets
       let upcomingSchedules: any[] = []
+      let completedSchedules: any[] = []
       if (pets && pets.length > 0) {
         const { data } = await supabase
           .from('health_schedules')
@@ -32,6 +33,15 @@ export async function getCachedDashboardData(userId: string) {
           .in('pet_id', pets.map((p: any) => p.id))
           .neq('status', 'done')
         if (data) upcomingSchedules = data
+
+        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+        const { data: completed } = await supabase
+          .from('health_schedules')
+          .select('*, vaccines(name), pets(name)')
+          .in('pet_id', pets.map((p: any) => p.id))
+          .in('status', ['completed', 'done'])
+          .gte('updated_at', yesterday)
+        if (completed) completedSchedules = completed
       }
 
       // Feeding & weight logs
@@ -60,6 +70,7 @@ export async function getCachedDashboardData(userId: string) {
         profile,
         pets: pets || [],
         upcomingSchedules,
+        completedSchedules,
         allFeedingLogs,
         allWeightLogs,
       }

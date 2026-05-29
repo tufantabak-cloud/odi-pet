@@ -42,7 +42,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   revalidatePath('/owner/dashboard')
-  revalidateTag('dashboard')
+  revalidateTag('dashboard', 'default')
   revalidatePath('/owner/pets')
   revalidatePath(`/owner/pets/${id}`)
 

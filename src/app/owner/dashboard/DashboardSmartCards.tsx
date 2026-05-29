@@ -57,9 +57,10 @@ function QuickUpdateModal({ config, onClose, onDone }: any) {
 interface DashboardSmartCardsProps {
   pets: any[]
   upcomingSchedules: any[]
+  completedSchedules?: any[]
 }
 
-export default function DashboardSmartCards({ pets, upcomingSchedules }: DashboardSmartCardsProps) {
+export default function DashboardSmartCards({ pets, upcomingSchedules, completedSchedules = [] }: DashboardSmartCardsProps) {
   const router = useRouter()
   const [activeCard, setActiveCard] = useState<any>(null)
   const [quickUpdateConfig, setQuickUpdateConfig] = useState<any>(null)
@@ -278,7 +279,35 @@ export default function DashboardSmartCards({ pets, upcomingSchedules }: Dashboa
       return
     }
 
-    // ── 3. Check Pet Dostu Mekanlar Card Condition ───────────
+    // ── 3. Check Aşı Sonrası İştah (Appetite) Card Condition ───────────
+    const recentVaccine = completedSchedules.find(s => {
+      const isCompleted = s.status === 'completed' || s.status === 'done'
+      const updatedDate = s.updated_at ? new Date(s.updated_at) : new Date(s.completed_at || s.due_date)
+      const isRecent = updatedDate.getTime() > Date.now() - 24 * 60 * 60 * 1000
+      return isCompleted && isRecent
+    })
+
+    if (recentVaccine) {
+      const appetiteCardId = `appetite-${recentVaccine.id}`
+      const showAppetiteCard = !dismissedCards.includes(appetiteCardId)
+
+      if (showAppetiteCard) {
+        const pet = pets.find(p => p.id === recentVaccine.pet_id) || targetPet
+        setActiveCard({
+          id: appetiteCardId,
+          type: 'appetite',
+          title: 'Aşı Sonrası Takip',
+          text: `${pet.name}'nın aşısı tamamlandı. Aşı sonrası ilk 24 saat iştah takibi önemlidir. İştahını kaydetmek ister misin?`,
+          btnLabel: 'İştahı Kaydet',
+          action: () => {
+            router.push(`/owner/pets/${pet.id}/journal/new/appetite`)
+          }
+        })
+        return
+      }
+    }
+
+    // ── 4. Check Pet Dostu Mekanlar Card Condition ───────────
     const venueCardId = `venues-${targetPet.id}`
     const showVenueCard = !dismissedCards.includes(venueCardId)
 

@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   
   const parsed = loginSchema.safeParse({
     ...data,
-    rememberMe: data.rememberMe === 'true' || data.rememberMe === true,
+    rememberMe: data.rememberMe === 'true',
   });
 
   if (!parsed.success) {

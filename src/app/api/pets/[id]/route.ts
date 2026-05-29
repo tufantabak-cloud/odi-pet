@@ -106,7 +106,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
   }
 
   revalidatePath('/owner/dashboard')
-  revalidateTag('dashboard')
+  revalidateTag('dashboard', 'default')
   revalidatePath('/owner/pets')
   revalidatePath(`/owner/pets/${id}`)
 
@@ -162,7 +162,7 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
   }
 
   revalidatePath('/owner/dashboard')
-  revalidateTag('dashboard')
+  revalidateTag('dashboard', 'default')
   revalidatePath('/owner/pets')
   revalidatePath('/owner/profile')
 
