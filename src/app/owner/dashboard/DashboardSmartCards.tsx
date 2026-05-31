@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+import EmptyState from '@/components/ui/EmptyState'
+import { VaccineIcon, PillIcon, BowlIcon, PawIcon, HouseIcon } from '@/components/icons/PetIcons'
 
 // Minimalist Single-Field Modal for Frequency input
 function QuickUpdateModal({ config, onClose, onDone }: any) {
@@ -329,39 +331,59 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
 
   }, [pets, upcomingSchedules, dismissedCards])
 
-  if (!activeCard) return null
+  if (!activeCard) {
+    return (
+      <EmptyState
+        title="Tüm görevleriniz tamam"
+        message="Şu an için dikkat edilmesi gereken bir görev yok."
+      />
+    )
+  }
 
-  const isTagCard = activeCard.type === 'tag_offline'
-  const paddingClass = isTagCard ? 'p-4' : 'p-6'
-  const gapClass = isTagCard ? 'gap-2' : 'gap-2' // Ensuring 8px spacing (gap-2 is 8px)
-  const paragraphMarginClass = isTagCard ? 'mb-0' : 'mb-2'
+  const renderIcon = (type: string) => {
+    switch (type) {
+      case 'vaccine': return <VaccineIcon width={40} height={40} />
+      case 'parasite': return <PillIcon width={40} height={40} />
+      case 'appetite': return <BowlIcon width={40} height={40} />
+      case 'venues': return <HouseIcon width={40} height={40} />
+      case 'tag_offline': return <PawIcon width={40} height={40} />
+      default: return <PawIcon width={40} height={40} />
+    }
+  }
 
   return (
-    <div className={`card-base ${paddingClass} flex flex-col ${gapClass} relative bg-surface border border-border-main/60 shadow-sm transition-all duration-300`}>
-      <h3 className="text-[16px] font-extrabold text-text-primary tracking-tight">
-        {activeCard.title}
-      </h3>
-      <p className={`text-[13.5px] text-text-secondary font-medium leading-relaxed ${paragraphMarginClass}`}>
-        {activeCard.text}
-      </p>
+    <div className="card-base py-4 px-5 flex flex-col gap-6 relative bg-surface border border-border-main/60 shadow-md rounded-[20px] transition-all duration-300">
+      <div className="flex items-start gap-3">
+        <div className="flex-shrink-0 pt-0.5">
+          {renderIcon(activeCard.type)}
+        </div>
+        <div className="flex flex-col gap-1">
+          <h3 className="text-[20px] font-semibold text-text-primary tracking-tight">
+            {activeCard.title}
+          </h3>
+          <p className="text-[14px] text-text-secondary font-normal leading-relaxed">
+            {activeCard.text}
+          </p>
+        </div>
+      </div>
       <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
         <button
           onClick={activeCard.action}
-          className="bg-[#2A4B7C] text-white font-bold rounded-lg px-4 py-3 hover:bg-[#1E3559] active:scale-[0.98] transition-all text-[14px] flex-1 text-center"
+          className="bg-[#3F51B5] text-white font-semibold rounded-xl px-4 py-3 hover:bg-[#303F9F] active:scale-[0.98] transition-all text-[14px] flex-1 text-center shadow-sm"
         >
           {activeCard.btnLabel}
         </button>
         {activeCard.secondaryBtnLabel ? (
           <button
             onClick={activeCard.secondaryAction}
-            className="text-text-secondary hover:text-text-primary text-[13px] font-bold py-3 px-4 rounded-lg hover:bg-slate-50 transition-all text-center border-2 border-border-main"
+            className="text-text-secondary hover:text-text-primary text-[14px] font-semibold py-3 px-4 rounded-xl hover:bg-slate-50 transition-all text-center border-2 border-border-main"
           >
             {activeCard.secondaryBtnLabel}
           </button>
         ) : (
           <button
             onClick={() => dismissCard(activeCard.id)}
-            className="text-text-secondary hover:text-text-primary text-[13px] font-bold py-3 px-4 rounded-lg hover:bg-slate-50 transition-all text-center"
+            className="text-text-secondary hover:text-text-primary text-[14px] font-semibold py-3 px-4 rounded-xl hover:bg-slate-50 transition-all text-center"
           >
             Daha Sonra
           </button>

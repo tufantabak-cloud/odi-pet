@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { createPortal } from 'react-dom'
 
 const actionMenuItems = [
+  { label: 'Akıllı Tarama', href: '/owner/scanner' },
   { label: 'Rapor Paylaş', href: '/owner/pets' },
   { label: 'Yeni Görev Planla', href: '/owner/pets' },
   { label: 'Sağlık Kaydı / Aşı', href: '/owner/pets' },

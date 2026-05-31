@@ -7,6 +7,7 @@ import TaskFormAdvanced, { TaskFormData } from './TaskFormAdvanced';
 import VaccineSelectorSheet, { VaccineOption } from './VaccineSelectorSheet';
 import { TaskCategory, TASK_CATEGORIES, getSmartDefault } from '@/lib/tasks/taskDefaults';
 import { createBrowserSupabaseClient } from '@/lib/supabase/client';
+import { SmartScanner } from '@/components/ui/SmartScanner';
 
 interface SmartTaskWizardProps {
   petId: string;
@@ -44,6 +45,7 @@ function resolveCategoryFromTask(task: any): TaskCategory | null {
 export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initialCategory = null, allowPastDate = true, onClose, onDone }: SmartTaskWizardProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showScanner, setShowScanner] = useState(false);
 
   // ── State 1: Category ─────────────────────────────────────────────
   const [category, setCategory] = useState<TaskCategory | null>(() =>
@@ -495,6 +497,25 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
           />
         )}
 
+        {/* ── 2b. Premium Smart Scanner Banner (Beslenme Özel) ── */}
+        {!taskToEdit && (subCategory === 'Mama Siparişi' || subCategory === 'Diyet Değişimi') && !showVaccinePicker && (
+          <div 
+            onClick={() => setShowScanner(true)}
+            className="card-base p-4 bg-gradient-to-r from-primary to-indigo-600 text-white relative overflow-hidden group cursor-pointer shadow-md mb-2 animate-fadeInUp mt-2 shrink-0"
+          >
+            <div className="absolute right-[-10px] bottom-[-20px] text-[70px] opacity-20 group-hover:scale-110 group-hover:-rotate-12 transition-transform duration-500">📸</div>
+            <div className="flex flex-col gap-1 relative z-10">
+              <div className="flex items-center gap-2">
+                <span className="bg-white/20 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider backdrop-blur-sm">Odi Premium</span>
+                <h3 className="font-extrabold text-[15px] leading-tight">Akıllı Tarama ile Hızlı Planla</h3>
+              </div>
+              <p className="text-[11px] text-white/90 font-medium max-w-[85%] leading-relaxed">
+                Mama paketini okutun, hem stoğu hem de bitiş tarihine göre planlamayı Odi Asistan halletsin.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* ── 2b. Başlık düzenleme (edit modunda, alt kategori seçilince) ── */}
         {taskToEdit && subCategory && subCategory !== 'Diğer' && !showVaccinePicker && (
           <div className="flex flex-col gap-1.5 mt-3 animate-fadeInUp">
@@ -604,6 +625,16 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
           </button>
         </div>
       </div>
+      {showScanner && (
+        <SmartScanner 
+          petId={petId} 
+          onClose={() => setShowScanner(false)} 
+          onSave={() => {
+            setShowScanner(false);
+            onDone(); // Tarama başarılıysa sihirbazı tamamla (arkaplanda RPC ile schedule zaten eklendi)
+          }} 
+        />
+      )}
     </div>
   );
 }

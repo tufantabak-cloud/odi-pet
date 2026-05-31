@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import CoachMark from '@/components/ui/CoachMark'
+import EmptyState from '@/components/ui/EmptyState'
+import { Stethoscope } from 'lucide-react'
 
 function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
   const [loading, setLoading] = useState(false)
@@ -107,12 +109,7 @@ const FOLLOWUP_CHIPS: Record<string, string[]> = {
 export default function AIVetPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'ai',
-      text: 'Merhaba! Ben **Odi AI Vet**. Evcil dostunuzun belirtilerini ayrıntılı anlatın — aciliyet değerlendirmesi yapıp olası nedenler hakkında bilgi vereyim. 🐾',
-    },
-  ])
+  const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -175,9 +172,7 @@ export default function AIVetPage() {
 
   // Build Gemini history from messages (skip welcome)
   const buildHistory = (msgs: Message[]) =>
-    msgs
-      .slice(1) // skip welcome AI message
-      .map(m => ({ role: m.role === 'user' ? 'user' : 'model', text: m.text }))
+    msgs.map(m => ({ role: m.role === 'user' ? 'user' : 'model', text: m.text }))
 
   const send = async (overrideText?: string) => {
     const userText = (overrideText ?? input).trim()
@@ -220,7 +215,7 @@ export default function AIVetPage() {
 
   const lastAiMsg = [...messages].reverse().find(m => m.role === 'ai' && m.severity)
   const followupChips = lastAiMsg?.severity ? FOLLOWUP_CHIPS[lastAiMsg.severity] : []
-  const showQuickPrompts = messages.length === 1
+  const showQuickPrompts = messages.length === 0
 
   // Render bold markdown (**text**)
   const renderText = (text: string) => {
@@ -238,7 +233,7 @@ export default function AIVetPage() {
       <div className="border-b border-border-main pb-4 mb-4 shrink-0 flex items-start justify-between gap-3 relative">
         <CoachMark
           hintKey="ai_vet_intro"
-          title="Can dostunu seç, semptomları anlat"
+          title="Pet seç, semptomları anlat"
           message="Üst kısımdan evcil hayvanını seç ve şikayetini yaz. AI, cinsine ve yaşına göre kişisel değerlendirme yapacak."
           icon="🤖"
           position="bottom"
@@ -286,6 +281,13 @@ export default function AIVetPage() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto flex flex-col gap-4 pr-1 scrollbar-none">
+        {messages.length === 0 && (
+          <EmptyState
+            icon={<Stethoscope />}
+            title="Odi AI Vet"
+            message="Petinizin sağlığı hakkında bilgi alın. Unutmayın, kesin tanı vermez ve her zaman bir veteriner hekime danışmanızı önerir."
+          />
+        )}
         {messages.map((msg, i) => {
           const isUser = msg.role === 'user'
           const cfg = msg.severity ? SEV_CONFIG[msg.severity] : null

@@ -1,5 +1,5 @@
 CREATE TABLE pet_journal_entries (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     entry_type TEXT NOT NULL CHECK (entry_type IN ('health', 'mood', 'nutrition', 'activity', 'note')),

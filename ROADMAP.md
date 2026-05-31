@@ -13,7 +13,7 @@
 - [x] **Sağlık ve Aşı Sistemi (Vaccine OS):** Aşı/parazit alias sistemi, otomatik matris takibi ve akıllı hatırlatıcılar.
 - [x] **Tedavi Takibi:** İlaç, dozaj, süre ve hastalık kayıtları, çoklu ilaç yönetimi.
 - [x] **Gelişim (Kilo & Boy) Takibi:** Sağlık geçmişine entegre veri girişi ve grafiksel raporlama.
-- [x] **Acil Durum (Duman SOS Ağı):** Pet bazlı özel JSONB entegrasyonu ile 2 acil durum kişisi atama.
+- [x] **Acil Durum (SOS):** Pet bazlı özel JSONB entegrasyonu ile 2 acil durum kişisi atama.
 - [x] **Beslenme ve Bakım:** Temel stok, mama markası ve bakım rutinleri takibi.
 - [x] **Progressive Profiling:** Mikroçip, kayıt numarası vb. bilgilerin kullanıcıyı yormadan adım adım toplanması.
 

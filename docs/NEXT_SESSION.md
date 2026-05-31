@@ -46,7 +46,7 @@ See docs/PRE_LAUNCH_FEATURE_TODO.md:
   minimum data, rate-limited, robots noindex)
 - Research: how does QR code generation actually work in Odi.Pet? 
   (Antigravity found only 3rd-party tags integration, no own QR yet 
-  — but Lost Pet Mode and Duman SOS were marked "implemented" in 
+  — but Lost Pet Mode and SOS were marked "implemented" in 
   past sprints — investigate before redesign)
 - care_events and predictive_insights tables: what feature, used in UI?
 

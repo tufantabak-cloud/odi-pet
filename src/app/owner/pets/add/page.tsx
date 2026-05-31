@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { calcAge } from '@/lib/pets/utils'
-
 // ── Irk Listeleri ──────────────────────────────────────────────
 const CAT_BREEDS = [
   'British Shorthair', 'Scottish Fold', 'Scottish Straight',
@@ -22,10 +21,20 @@ const DOG_BREEDS = [
 
 type Species = 'Kedi' | 'Köpek'
 
+
 // ── Adım 1: Tür Seçimi ──────────────────────────────────────────
-function SpeciesSelector({ onSelect }: { onSelect: (s: Species) => void }) {
+function SpeciesSelector({ onSelect, onBack }: { onSelect: (s: Species) => void, onBack: () => void }) {
   return (
     <div className="flex flex-col items-center w-full mx-auto pt-6 pb-10 gap-10 animate-fadeIn">
+      <div className="w-full flex justify-start mb-[-20px]">
+        <button onClick={onBack}
+          aria-label="Geri"
+          className="w-10 h-10 rounded-full border border-border-main flex items-center justify-center text-text-secondary hover:text-primary hover:border-primary/30 transition-all shrink-0">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+          </svg>
+        </button>
+      </div>
       <div className="text-center">
         <h1 className="text-[32px] font-extrabold text-text-primary tracking-tight">Can Dostun Kim?</h1>
         <p className="text-text-secondary mt-2 text-[16px]">Devam etmek için önce tür seçin</p>
@@ -347,14 +356,22 @@ function PetForm({ species, onBack }: { species: Species; onBack: () => void }) 
 
 // ── Ana Sayfa ───────────────────────────────────────────────────
 export default function AddPetPage() {
+  const router = useRouter()
   const [selectedSpecies, setSelectedSpecies] = useState<Species | null>(null)
 
   return (
     <>
-      {!selectedSpecies
-        ? <SpeciesSelector onSelect={setSelectedSpecies}/>
-        : <PetForm species={selectedSpecies} onBack={() => setSelectedSpecies(null)}/>
-      }
+      {!selectedSpecies ? (
+        <SpeciesSelector 
+          onSelect={setSelectedSpecies} 
+          onBack={() => router.back()} 
+        />
+      ) : (
+        <PetForm 
+          species={selectedSpecies} 
+          onBack={() => setSelectedSpecies(null)} 
+        />
+      )}
     </>
   )
 }

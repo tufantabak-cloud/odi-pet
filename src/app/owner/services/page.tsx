@@ -1,6 +1,22 @@
 import Link from 'next/link'
+import { getSessionUser } from '@/lib/auth/get-current-profile'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+import ServicesInsuranceWrapper from '@/components/insurance/ServicesInsuranceWrapper'
 
-export default function ServicesPage() {
+export default async function ServicesPage() {
+  const user = await getSessionUser()
+  let profile = null
+  let pets: any[] = []
+
+  if (user) {
+    const supabase = await createServerSupabaseClient()
+    const { data: profileData } = await supabase.from('profiles').select('subscription_plan').eq('id', user.id).single()
+    profile = profileData
+
+    const { data: petData } = await supabase.from('pets').select('id, name').eq('owner_id', user.id)
+    pets = petData || []
+  }
+
   const services = [
     {
       id: 'groomer',
@@ -50,14 +66,7 @@ export default function ServicesPage() {
       badge: 'Çok Yakında',
       color: 'from-cyan-500/10 to-sky-500/10 text-cyan-600 border-cyan-500/20',
     },
-    {
-      id: 'insurance',
-      title: 'Can Dostu Sigortası',
-      description: 'Evcil hayvan sağlık sigortası ile beklenmedik veteriner masraflarına karşı güvence altında olun.',
-      icon: '🛡️',
-      badge: 'Çok Yakında',
-      color: 'from-lime-500/10 to-green-500/10 text-lime-600 border-lime-500/20',
-    },
+
     {
       id: 'photographer',
       title: 'Pet Fotoğrafçısı',
@@ -101,6 +110,16 @@ export default function ServicesPage() {
           </div>
         </div>
       </section>
+
+      {/* Aktif Hizmetler */}
+      {pets && pets.length > 0 && (
+        <section className="flex flex-col gap-4">
+          <h2 className="text-[12px] font-black text-text-secondary uppercase tracking-widest px-2">
+            Aktif Hizmetler
+          </h2>
+          <ServicesInsuranceWrapper pets={pets} plan={profile?.subscription_plan ?? 'free'} />
+        </section>
+      )}
 
       {/* Services Grid */}
       <section className="flex flex-col gap-4">

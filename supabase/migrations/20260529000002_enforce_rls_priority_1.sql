@@ -6,7 +6,7 @@
 ALTER TABLE public.pets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.vaccine_records_v2 ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.health_treatments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.health_treatments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.pet_journal_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.lost_reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
@@ -41,7 +41,7 @@ BEGIN
     END IF;
 
     -- health_treatments
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'health_treatments' AND policyname = 'users_manage_treatments_strict') THEN
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'health_treatments') AND NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'health_treatments' AND policyname = 'users_manage_treatments_strict') THEN
         CREATE POLICY "users_manage_treatments_strict" ON public.health_treatments FOR ALL USING (
             pet_id IN (SELECT pet_id FROM public.pet_owners WHERE profile_id = auth.uid())
         );

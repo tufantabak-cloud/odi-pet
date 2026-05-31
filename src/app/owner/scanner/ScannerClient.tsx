@@ -1,0 +1,72 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Image from 'next/image'
+import { SmartScanner } from '@/components/ui/SmartScanner'
+
+export default function ScannerClient({ pets }: { pets: any[] }) {
+  const router = useRouter()
+  const [selectedPetId, setSelectedPetId] = useState<string | null>(
+    pets.length === 1 ? pets[0].id : null
+  )
+
+  const handleSave = async (data: any) => {
+    // Burada aslında API'ye kayıt yapılabilir. 
+    // MOCK MVP için şimdilik sadece dashboard'a dönüyoruz.
+    router.push(`/owner/pets/${selectedPetId}`)
+  }
+
+  if (selectedPetId) {
+    return (
+      <SmartScanner 
+        petId={selectedPetId}
+        onClose={() => router.push('/owner/dashboard')}
+        onSave={handleSave}
+      />
+    )
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-50 flex flex-col pt-12 p-6">
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-2xl font-extrabold text-slate-800">Akıllı Tarama</h1>
+        <button
+          onClick={() => router.push('/owner/dashboard')}
+          className="p-2 rounded-full bg-slate-200 text-slate-600 hover:bg-slate-300 transition-colors"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <p className="text-slate-600 mb-6 font-medium">Hangi can dostunuz için tarama yapacaksınız?</p>
+
+      <div className="grid gap-4">
+        {pets.map(pet => (
+          <button
+            key={pet.id}
+            onClick={() => setSelectedPetId(pet.id)}
+            className="flex items-center gap-4 p-4 bg-white border border-slate-200 rounded-2xl shadow-sm hover:border-primary hover:shadow-md transition-all text-left"
+          >
+            <div className="w-14 h-14 rounded-full bg-slate-100 overflow-hidden relative shrink-0">
+              {pet.avatar_url ? (
+                <Image src={pet.avatar_url} alt={pet.name} fill className="object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-xl">
+                  {pet.species === 'Köpek' || pet.species === 'dog' ? '🐶' : '🐱'}
+                </div>
+              )}
+            </div>
+            <div>
+              <h3 className="font-extrabold text-slate-800 text-lg">{pet.name}</h3>
+              <p className="text-slate-500 text-sm">{pet.species === 'Köpek' || pet.species === 'dog' ? 'Köpek' : 'Kedi'}</p>
+            </div>
+            <div className="ml-auto text-primary">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}

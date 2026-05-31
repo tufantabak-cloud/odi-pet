@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ConfirmModal from '@/components/ui/ConfirmModal'
 import CoachMark from '@/components/ui/CoachMark'
+import EmptyState from '@/components/ui/EmptyState'
+import { Syringe } from 'lucide-react'
 
 const COMMON_DISEASES = [
   "Rutin Check-up",
@@ -309,12 +311,12 @@ export default function TreatmentsClient({ pet, initialTreatments }: { pet: any,
       </div>
 
       {treatments.length === 0 ? (
-        <div className="card-base p-10 flex flex-col items-center justify-center text-center border-dashed border-2 border-border-main">
-          <span className="text-[40px] mb-3 opacity-50">📋</span>
-          <h3 className="text-[18px] font-bold text-text-primary mb-2">Henüz Tedavi Kaydı Yok</h3>
-          <p className="text-[14px] text-text-secondary mb-5 max-w-sm">Aktif veya geçmiş tedavileri kaydedin, süreci ve masrafları kolayca takip edin.\nİlk kaydınızda süreci detaylandırarak sağlığını koruyun.</p>
-          <button onClick={openNewForm} className="btn-secondary py-2 px-6">İlk Kaydı Oluştur</button>
-        </div>
+        <EmptyState
+          icon={<Syringe />}
+          title="Henüz tedavi kaydı yok"
+          message="Petinizin aşı, ilaç ve tedavi geçmişini buradan takip edebilirsiniz."
+          cta={{ label: "İlk Kaydı Oluştur", onClick: openNewForm }}
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {treatments.map((t: any) => (

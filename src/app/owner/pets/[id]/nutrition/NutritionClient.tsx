@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { calculateRefillRisk } from '@/lib/nutrition/refill-engine'
 import CoachMark from '@/components/ui/CoachMark'
+import { SmartScanner } from '@/components/ui/SmartScanner'
 
 // Tabs
 const TABS = ['Mama & Stok', 'Öğünler & Hatırlatıcı', 'Kilo Takibi'] as const
@@ -27,6 +28,7 @@ export default function NutritionClient({
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('Mama & Stok')
   const [loading, setLoading] = useState(false)
+  const [showScanner, setShowScanner] = useState(false)
 
   // Engine Calcs
   const dailyUsage = (inventory?.estimated_daily_usage as number) ?? (profile?.daily_grams as number) ?? 0;
@@ -170,9 +172,26 @@ export default function NutritionClient({
             </div>
           </div>
 
+          {/* Premium Akıllı Tarama Banner */}
+          <div 
+            onClick={() => setShowScanner(true)}
+            className="card-base p-6 bg-gradient-to-r from-primary to-primary-soft text-white relative overflow-hidden group cursor-pointer shadow-lg shadow-primary/30 mt-2"
+          >
+            <div className="absolute right-[-10px] bottom-[-20px] text-[100px] opacity-20 group-hover:scale-110 group-hover:-rotate-12 transition-transform duration-500">📸</div>
+            <div className="flex flex-col gap-2 relative z-10">
+              <div className="flex items-center gap-2">
+                <span className="bg-white/20 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider backdrop-blur-sm">Odi Premium</span>
+                <h3 className="font-extrabold text-[18px] leading-tight">Akıllı Tarama ile Diyet Değişimi</h3>
+              </div>
+              <p className="text-[13px] text-white/90 font-medium max-w-[85%] leading-relaxed">
+                Mama paketinin fotoğrafını çekin, marka, stok ve bitiş tarihini yapay zeka saniyeler içinde ayarlasın.
+              </p>
+            </div>
+          </div>
+
           <form onSubmit={handleUpdateBrandAndStock} className="card-base p-6 flex flex-col gap-6 mt-2">
-            <h3 className="font-extrabold text-[16px] text-text-primary">Mama Bilgilerini Güncelle</h3>
-            
+            <h3 className="font-extrabold text-[16px] text-text-primary">Manuel Olarak Güncelle</h3>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div className="flex flex-col gap-2">
                 <label className="text-[12px] font-bold text-text-secondary">Marka *</label>
@@ -321,6 +340,16 @@ export default function NutritionClient({
             </div>
           )}
         </div>
+      )}
+      {showScanner && (
+        <SmartScanner 
+          petId={pet.id} 
+          onClose={() => setShowScanner(false)} 
+          onSave={() => {
+            setShowScanner(false);
+            router.refresh();
+          }} 
+        />
       )}
     </div>
   )
