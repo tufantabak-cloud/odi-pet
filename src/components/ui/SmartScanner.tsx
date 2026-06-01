@@ -113,9 +113,10 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
               <label className="text-[12px] font-bold text-slate-500 mb-1 block">Yaş Grubu</label>
               <select value={parsedData.target_age_group || ""} onChange={(e) => setParsedData({...parsedData, target_age_group: e.target.value})} className="w-full font-semibold text-[15px] bg-transparent focus:outline-none">
                 <option value="">Seçiniz</option>
-                <option value="kitten">Yavru (0-1)</option>
-                <option value="adult">Yetişkin</option>
-                <option value="senior">Yaşlı</option>
+                <option value="kitten">Yavru (0-1 yaş)</option>
+                <option value="adult">Yetişkin (1-7 yaş)</option>
+                <option value="senior">Yaşlı (7-12 yaş)</option>
+                <option value="senior_plus">Yaşlı (12+ yaş)</option>
                 <option value="all">Tüm Yaşlar</option>
               </select>
             </div>
@@ -325,14 +326,14 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
             <div className="flex gap-3 w-full">
               <button 
                 onClick={() => fileInputRef.current?.click()}
-                className="flex-1 py-4 bg-primary hover:bg-primary-hover text-white font-bold rounded-2xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all active:scale-95"
+                className="flex-1 py-4 bg-primary hover:bg-primary-hover text-white font-bold rounded-2xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all hover:scale-[1.03] active:scale-[0.97] duration-200"
               >
                 <Camera className="w-5 h-5" />
                 Fotoğraf Çek
               </button>
               <button 
                 onClick={() => galleryInputRef.current?.click()}
-                className="flex-1 py-4 bg-white hover:bg-slate-50 text-slate-700 font-bold border-2 border-slate-200 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-95 hover:border-primary hover:text-primary"
+                className="flex-1 py-4 bg-white hover:bg-slate-50 text-slate-700 font-bold border-2 border-slate-200 rounded-2xl flex items-center justify-center gap-2 transition-all hover:scale-[1.03] active:scale-[0.97] duration-200 hover:border-primary hover:text-primary"
               >
                 <ImageIcon className="w-5 h-5" />
                 Galeriden Seç
@@ -405,14 +406,14 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
             <div className="mt-4">
               <button 
                 onClick={handleConfirm}
-                className="w-full py-4 bg-primary hover:bg-primary-hover text-white font-bold rounded-2xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all active:scale-95 mb-3"
+                className="w-full py-4 bg-primary hover:bg-primary-hover text-white font-bold rounded-2xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] duration-200 mb-3"
               >
                 <Check className="w-5 h-5" />
                 Onayla ve Kaydet
               </button>
               <button 
                 onClick={() => setStep("ready")}
-                className="w-full py-4 bg-white hover:bg-slate-50 text-slate-600 font-bold border border-slate-200 rounded-2xl flex items-center justify-center transition-all"
+                className="w-full py-4 bg-white hover:bg-slate-50 text-slate-600 font-bold border border-slate-200 rounded-2xl flex items-center justify-center transition-all hover:scale-[1.02] active:scale-[0.98] duration-200"
               >
                 Yeniden Fotoğraf Çek
               </button>
