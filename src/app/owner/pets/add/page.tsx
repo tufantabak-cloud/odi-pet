@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { calcAge } from '@/lib/pets/utils'
+import { DefaultCatAvatar, DefaultDogAvatar } from '@/components/icons/PetIcons'
 // ── Irk Listeleri ──────────────────────────────────────────────
 const CAT_BREEDS = [
   'British Shorthair', 'Scottish Fold', 'Scottish Straight',
@@ -44,7 +45,7 @@ function SpeciesSelector({ onSelect, onBack }: { onSelect: (s: Species) => void,
         {([
           {
             species: 'Kedi' as Species,
-            emoji: '🐱',
+            avatar: <DefaultCatAvatar width={90} height={90} />,
             label: 'Kedi',
             desc: 'Bağımsız, zarif',
             gradient: 'from-violet-50 to-purple-50',
@@ -53,21 +54,21 @@ function SpeciesSelector({ onSelect, onBack }: { onSelect: (s: Species) => void,
           },
           {
             species: 'Köpek' as Species,
-            emoji: '🐶',
+            avatar: <DefaultDogAvatar width={90} height={90} />,
             label: 'Köpek',
             desc: 'Sadık, enerjik',
             gradient: 'from-amber-50 to-orange-50',
             border: 'hover:border-amber-400',
             badge: 'bg-amber-100 text-amber-700',
           },
-        ]).map(({ species, emoji, label, desc, gradient, border, badge }) => (
+        ]).map(({ species, avatar, label, desc, gradient, border, badge }) => (
           <button
             key={species}
             onClick={() => onSelect(species)}
             className={`flex flex-col items-center gap-4 p-6 sm:p-8 rounded-[24px] border-2 border-border-main bg-gradient-to-br ${gradient} ${border} hover:shadow-medium transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] group cursor-pointer`}
           >
-            <div className="text-[72px] sm:text-[88px] leading-none filter drop-shadow-md group-hover:scale-105 transition-transform duration-300">
-              {emoji}
+            <div className="flex items-center justify-center w-[90px] h-[90px] filter drop-shadow-md group-hover:scale-105 transition-transform duration-300">
+              {avatar}
             </div>
             <div className="flex flex-col items-center gap-1.5">
               <span className="text-[22px] font-extrabold text-text-primary">{label}</span>
@@ -123,7 +124,7 @@ function PetForm({ species, onBack }: { species: Species; onBack: () => void }) 
 
   const currentYear = new Date().getFullYear()
   const breeds = species === 'Kedi' ? CAT_BREEDS : DOG_BREEDS
-  const emoji = species === 'Kedi' ? '🐱' : '🐶'
+  const AvatarHeader = species === 'Kedi' ? <DefaultCatAvatar width={36} height={36} /> : <DefaultDogAvatar width={36} height={36} />
   const [submitError, setSubmitError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -179,7 +180,7 @@ function PetForm({ species, onBack }: { species: Species; onBack: () => void }) 
         </button>
         <div className="flex flex-col flex-1">
           <div className="flex items-center gap-2">
-            <span className="text-[22px]">{emoji}</span>
+            <span className="flex items-center justify-center w-9 h-9">{AvatarHeader}</span>
             <h1 className="text-[20px] font-extrabold text-text-primary tracking-tight">Temel Kimlik Bilgileri</h1>
           </div>
           <p className="text-[12px] text-text-secondary font-medium">Bu bilgilerle anında profili oluşturulacaktır.</p>
@@ -345,7 +346,10 @@ function PetForm({ species, onBack }: { species: Species; onBack: () => void }) 
                 Kaydediliyor...
               </span>
             ) : (
-              `${emoji} Profili Oluştur`
+              <span className="flex items-center justify-center gap-2">
+                <span className="w-5 h-5">{species === 'Kedi' ? <DefaultCatAvatar width={20} height={20} /> : <DefaultDogAvatar width={20} height={20} />}</span>
+                Profili Oluştur
+              </span>
             )}
           </button>
         </div>

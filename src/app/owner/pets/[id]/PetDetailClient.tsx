@@ -968,22 +968,6 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           onClose={() => setIsSmartScannerOpen(false)}
           onSave={async (data) => {
             setIsSmartScannerOpen(false);
-            
-            // Gerçek uygulamada RPC fonksiyonu (process_approved_scanned_item) çağrılmalıdır.
-            // MVP ve test için geçici olarak yerel görev listesine ekliyoruz.
-            const newTask = {
-              id: `mock-${Date.now()}`,
-              category: data.record_type === 'vaccine_card' || data.record_type === 'medicine_packaging' ? 'Medikal' : 'Diğer',
-              sub_category: data.record_type === 'vaccine_card' ? 'Aşı' : 'Genel',
-              title: data.title,
-              due_date: new Date(data.due_date).toISOString(),
-              due_time: '12:00',
-              status: 'pending',
-              notes: data.notes
-            };
-            
-            setLocalSchedules(prev => [...prev, newTask].sort((a: any, b: any) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()));
-            
             router.refresh();
           }}
         />
@@ -1238,6 +1222,26 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         const tasks = getSchedulesForTab('Aşı')
         return (
           <div className="flex flex-col gap-5 animate-fadeInUp">
+          
+            {/* Smart Scan Banner */}
+            <div className="bg-gradient-to-tr from-blue-600 to-indigo-700 p-6 rounded-2xl shadow-lg flex flex-col items-center text-center gap-4 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3 blur-2xl pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-400/20 rounded-full translate-y-1/3 -translate-x-1/4 blur-xl pointer-events-none" />
+              
+              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30 text-white shadow-sm z-10">
+                <VaccineIcon width={28} height={28} />
+              </div>
+              <div className="z-10">
+                <h3 className="font-extrabold text-white text-[18px] mb-1">Aşı Kayıtlarınızı Kolayca Yönetin</h3>
+                <p className="text-[14px] text-white/90 leading-relaxed max-w-[280px] mx-auto">Smart Scan ile aşı belgelerinizi tarayarak kayıtlarınızı otomatik güncelleyin.</p>
+              </div>
+              <button
+                onClick={() => setIsSmartScannerOpen(true)}
+                className="w-full bg-white text-indigo-700 py-3.5 text-[14px] font-black rounded-2xl mt-1 shadow-sm hover:bg-slate-50 transition-colors z-10"
+              >
+                Belge Tara
+              </button>
+            </div>
 
             {/* CTA Card */}
             <div className="card-base p-6 bg-white border border-border-main shadow-sm rounded-2xl flex flex-col items-center text-center gap-4">
@@ -1641,6 +1645,13 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-3">
         {fabOpen && (
           <div className="flex flex-col items-end gap-3 mb-2 animate-fade-in origin-bottom">
+            <Link
+              href={`/owner/pets/${pet.id}/share`}
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 px-5 rounded-2xl text-[13px] font-black tracking-wider shadow-lg active:scale-95 transition-all flex items-center gap-2"
+              onClick={() => setFabOpen(false)}
+            >
+              <span className="text-[16px]">🤝</span> Emanet Et / Paylaş
+            </Link>
             <Link
               href={`/owner/devices/camera?petId=${pet.id}`}
               className="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white py-3 px-5 rounded-2xl text-[13px] font-black tracking-wider shadow-lg active:scale-95 transition-all flex items-center gap-2"

@@ -48,8 +48,17 @@ export default async function CameraViewPage({ searchParams }: { searchParams: P
         </div>
 
         <div className="card-base p-10 flex flex-col items-center text-center gap-6 w-full border border-border-main/60 shadow-lg">
-          <div className="w-24 h-24 rounded-[32px] bg-gradient-to-tr from-teal-50 to-emerald-50 flex items-center justify-center text-[48px] shadow-sm ring-4 ring-white">
-            📹
+          <div className="w-24 h-24 rounded-[32px] bg-gradient-to-tr from-teal-50 to-emerald-50 flex items-center justify-center shadow-sm ring-4 ring-white">
+            <svg viewBox="0 0 64 64" fill="none" className="w-12 h-12 drop-shadow-md">
+              <rect x="8" y="16" width="48" height="32" rx="8" fill="url(#cam-grad-body)" />
+              <circle cx="32" cy="32" r="10" fill="#ffffff" />
+              <circle cx="32" cy="32" r="6" fill="url(#cam-grad-lens)" />
+              <path d="M42 22h6v6" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" />
+              <defs>
+                <linearGradient id="cam-grad-body" x1="8" y1="16" x2="56" y2="48" gradientUnits="userSpaceOnUse"><stop stopColor="#0D9488" /><stop offset="1" stopColor="#0F766E" /></linearGradient>
+                <linearGradient id="cam-grad-lens" x1="26" y1="26" x2="38" y2="38" gradientUnits="userSpaceOnUse"><stop stopColor="#374151" /><stop offset="1" stopColor="#111827" /></linearGradient>
+              </defs>
+            </svg>
           </div>
           <div>
             <h2 className="text-[24px] font-extrabold text-text-primary mb-2">Kamera Bulunamadı</h2>
@@ -185,29 +194,29 @@ export default async function CameraViewPage({ searchParams }: { searchParams: P
         {/* Quick Features */}
         {status === 'online' && (
           <div className="grid grid-cols-4 gap-3 mt-2">
-            <button className="flex flex-col items-center justify-center gap-2 bg-surface border border-border-main p-3 rounded-2xl hover:bg-primary-soft hover:border-primary/50 transition-colors group">
-              <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+            <button className="flex flex-col items-center justify-center gap-2 bg-surface border border-border-main p-3 rounded-2xl hover:bg-primary-soft/50 hover:border-primary/40 hover:shadow-md transition-all group hover:-translate-y-0.5">
+              <div className="w-12 h-12 rounded-[16px] bg-gradient-to-br from-white to-slate-50 border border-slate-100 shadow-sm flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
               </div>
-              <span className="text-[11px] font-bold text-text-secondary group-hover:text-primary">Seslen</span>
+              <span className="text-[12px] font-bold text-text-secondary group-hover:text-primary transition-colors">Seslen</span>
             </button>
-            <button className="flex flex-col items-center justify-center gap-2 bg-surface border border-border-main p-3 rounded-2xl hover:bg-primary-soft hover:border-primary/50 transition-colors group">
-              <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <button className="flex flex-col items-center justify-center gap-2 bg-surface border border-border-main p-3 rounded-2xl hover:bg-primary-soft/50 hover:border-primary/40 hover:shadow-md transition-all group hover:-translate-y-0.5">
+              <div className="w-12 h-12 rounded-[16px] bg-gradient-to-br from-white to-slate-50 border border-slate-100 shadow-sm flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
               </div>
-              <span className="text-[11px] font-bold text-text-secondary group-hover:text-primary">Fotoğraf</span>
+              <span className="text-[12px] font-bold text-text-secondary group-hover:text-primary transition-colors">Fotoğraf</span>
             </button>
-            <button className="flex flex-col items-center justify-center gap-2 bg-surface border border-border-main p-3 rounded-2xl hover:bg-primary-soft hover:border-primary/50 transition-colors group">
-              <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            <button className="flex flex-col items-center justify-center gap-2 bg-surface border border-border-main p-3 rounded-2xl hover:bg-primary-soft/50 hover:border-primary/40 hover:shadow-md transition-all group hover:-translate-y-0.5">
+              <div className="w-12 h-12 rounded-[16px] bg-gradient-to-br from-white to-slate-50 border border-slate-100 shadow-sm flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
               </div>
-              <span className="text-[11px] font-bold text-text-secondary group-hover:text-primary">Kayıt</span>
+              <span className="text-[12px] font-bold text-text-secondary group-hover:text-primary transition-colors">Kayıt</span>
             </button>
-            <button className="flex flex-col items-center justify-center gap-2 bg-surface border border-border-main p-3 rounded-2xl hover:bg-primary-soft hover:border-primary/50 transition-colors group">
-              <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <button className="flex flex-col items-center justify-center gap-2 bg-surface border border-border-main p-3 rounded-2xl hover:bg-primary-soft/50 hover:border-primary/40 hover:shadow-md transition-all group hover:-translate-y-0.5">
+              <div className="w-12 h-12 rounded-[16px] bg-gradient-to-br from-white to-slate-50 border border-slate-100 shadow-sm flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
               </div>
-              <span className="text-[11px] font-bold text-text-secondary group-hover:text-primary">Hareket</span>
+              <span className="text-[12px] font-bold text-text-secondary group-hover:text-primary transition-colors">Hareket</span>
             </button>
           </div>
         )}

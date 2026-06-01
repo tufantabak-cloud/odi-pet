@@ -70,34 +70,34 @@ interface Message {
 const SEV_CONFIG: Record<string, { label: string; color: string; bar: string; emoji: string; bg: string }> = {
   critical: {
     label: 'Kritik',
-    color: 'text-red-500',
-    bar: 'bg-red-500',
+    color: 'text-error',
+    bar: 'bg-error',
     emoji: '🚨',
-    bg: 'bg-red-50 border-red-200',
+    bg: 'bg-error/10 border-error/20',
   },
   medium: {
     label: 'Orta Risk',
-    color: 'text-amber-500',
-    bar: 'bg-amber-400',
+    color: 'text-warning',
+    bar: 'bg-warning',
     emoji: '⚠️',
-    bg: 'bg-amber-50 border-amber-200',
+    bg: 'bg-warning/10 border-warning/20',
   },
   low: {
     label: 'Düşük Risk',
-    color: 'text-emerald-500',
-    bar: 'bg-emerald-400',
+    color: 'text-success',
+    bar: 'bg-success',
     emoji: '✅',
-    bg: 'bg-emerald-50 border-emerald-200',
+    bg: 'bg-success/10 border-success/20',
   },
 }
 
 const QUICK_PROMPTS = [
-  { icon: '💉', text: 'Aşıları gecikti, sorun olur mu?' },
-  { icon: '🤢', text: 'Bugün halsiz ve iştahsız' },
-  { icon: '🐾', text: 'Sürekli kaşınıyor, tüy dökülüyor' },
-  { icon: '🌡️', text: 'Ateşi var, sıcak hissediliyor' },
-  { icon: '💩', text: 'İshal ve kusma birlikte' },
-  { icon: '😴', text: 'Normalden çok uyuyor, ilgisiz' },
+  { icon: <svg viewBox="0 0 32 32" className="w-4 h-4 drop-shadow-sm"><path d="M6 26l8-8M10 22l8-8" stroke="#EC4899" strokeWidth="2" strokeLinecap="round"/><path d="M14 14l4-4 4 4-4 4z" fill="url(#syr-grad)"/><defs><linearGradient id="syr-grad" x1="14" y1="14" x2="22" y2="22" gradientUnits="userSpaceOnUse"><stop stopColor="#F472B6"/><stop offset="1" stopColor="#BE185D"/></linearGradient></defs></svg>, text: 'Aşıları gecikti, sorun olur mu?' },
+  { icon: <svg viewBox="0 0 32 32" className="w-4 h-4 drop-shadow-sm"><circle cx="16" cy="16" r="12" fill="url(#sad-grad)"/><path d="M11 12h2M19 12h2M11 22q5-3 10 0" stroke="#fff" strokeWidth="2" strokeLinecap="round" fill="none"/><defs><linearGradient id="sad-grad" x1="4" y1="4" x2="28" y2="28" gradientUnits="userSpaceOnUse"><stop stopColor="#10B981"/><stop offset="1" stopColor="#047857"/></linearGradient></defs></svg>, text: 'Bugün halsiz ve iştahsız' },
+  { icon: <svg viewBox="0 0 32 32" className="w-4 h-4 drop-shadow-sm"><circle cx="16" cy="16" r="12" fill="url(#paw-grad)"/><path d="M12 12A2 2 0 1 1 12 11M20 12A2 2 0 1 1 20 11M16 8A2 2 0 1 1 16 7M16 20c-3 0-5-2-5-4s2-2 5-2 5 0 5 2-2 4-5 4z" fill="#fff"/><defs><linearGradient id="paw-grad" x1="4" y1="4" x2="28" y2="28" gradientUnits="userSpaceOnUse"><stop stopColor="#8B5CF6"/><stop offset="1" stopColor="#5B21B6"/></linearGradient></defs></svg>, text: 'Sürekli kaşınıyor, tüy dökülüyor' },
+  { icon: <svg viewBox="0 0 32 32" className="w-4 h-4 drop-shadow-sm"><rect x="12" y="4" width="8" height="20" rx="4" fill="url(#therm-grad)"/><circle cx="16" cy="24" r="6" fill="#EF4444"/><path d="M16 24v-10" stroke="#EF4444" strokeWidth="4" strokeLinecap="round"/><defs><linearGradient id="therm-grad" x1="12" y1="4" x2="20" y2="24" gradientUnits="userSpaceOnUse"><stop stopColor="#FCA5A5"/><stop offset="1" stopColor="#F87171"/></linearGradient></defs></svg>, text: 'Ateşi var, sıcak hissediliyor' },
+  { icon: <svg viewBox="0 0 32 32" className="w-4 h-4 drop-shadow-sm"><path d="M16 6c-4 0-6 4-6 8s2 6 6 8 8-2 8-8-2-8-8-8z" fill="url(#poop-grad)"/><defs><linearGradient id="poop-grad" x1="10" y1="6" x2="24" y2="22" gradientUnits="userSpaceOnUse"><stop stopColor="#A16207"/><stop offset="1" stopColor="#713F12"/></linearGradient></defs></svg>, text: 'İshal ve kusma birlikte' },
+  { icon: <svg viewBox="0 0 32 32" className="w-4 h-4 drop-shadow-sm"><path d="M10 16L18 8v8h8" stroke="url(#sleep-grad)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none"/><defs><linearGradient id="sleep-grad" x1="10" y1="8" x2="26" y2="16" gradientUnits="userSpaceOnUse"><stop stopColor="#3B82F6"/><stop offset="1" stopColor="#1D4ED8"/></linearGradient></defs></svg>, text: 'Normalden çok uyuyor, ilgisiz' },
 ]
 
 const FOLLOWUP_CHIPS: Record<string, string[]> = {
@@ -283,7 +283,16 @@ export default function AIVetPage() {
       <div className="flex-1 overflow-y-auto flex flex-col gap-4 pr-1 scrollbar-none">
         {messages.length === 0 && (
           <EmptyState
-            icon={<Stethoscope />}
+            icon={
+              <svg viewBox="0 0 32 32" className="w-12 h-12 drop-shadow-sm mx-auto mb-2 text-primary">
+                <path d="M12 4h8v4h-8z" fill="#D1D5DB" />
+                <path d="M8 8h16v18a4 4 0 01-4 4H12a4 4 0 01-4-4V8z" fill="url(#ai-steth-grad)" />
+                <path d="M16 12v10M11 17h10" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" />
+                <defs>
+                  <linearGradient id="ai-steth-grad" x1="8" y1="8" x2="24" y2="30" gradientUnits="userSpaceOnUse"><stop stopColor="#3B82F6" /><stop offset="1" stopColor="#1D4ED8" /></linearGradient>
+                </defs>
+              </svg>
+            }
             title="Odi AI Vet"
             message="Petinizin sağlığı hakkında bilgi alın. Unutmayın, kesin tanı vermez ve her zaman bir veteriner hekime danışmanızı önerir."
           />
@@ -367,7 +376,7 @@ export default function AIVetPage() {
                               router.push('/owner/veterinary');
                             }
                           }}
-                          className={`w-full py-3.5 px-5 rounded-2xl font-black text-[13px] transition-all flex items-center justify-center gap-2 ${
+                          className={`w-full py-3.5 px-5 rounded-2xl font-black text-[13px] transition-all hover:scale-[1.03] active:scale-[0.98] flex items-center justify-center gap-2 ${
                             msg.severity === 'critical' ? 'btn-primary shadow-sm' : 'bg-primary-soft text-primary hover:bg-primary/20'
                           }`}
                         >
@@ -390,7 +399,7 @@ export default function AIVetPage() {
                               router.push('/owner/pets');
                             }
                           }}
-                          className={`w-full py-3.5 px-5 rounded-2xl font-black text-[13px] transition-all flex items-center justify-center gap-2 ${
+                          className={`w-full py-3.5 px-5 rounded-2xl font-black text-[13px] transition-all hover:scale-[1.03] active:scale-[0.98] flex items-center justify-center gap-2 ${
                             msg.severity === 'critical' ? 'btn-primary shadow-sm' : 'bg-primary-soft text-primary hover:bg-primary/20 shadow-sm'
                           }`}
                         >
@@ -401,7 +410,7 @@ export default function AIVetPage() {
 
                       <button
                         onClick={() => router.push('/owner/veterinary')}
-                        className="w-full py-3.5 px-5 rounded-2xl font-black text-[13px] transition-all flex items-center justify-center gap-2 border-2 border-border-main bg-surface hover:bg-bg-main text-text-secondary hover:text-text-primary shadow-sm"
+                        className="w-full py-3.5 px-5 rounded-2xl font-black text-[13px] transition-all hover:scale-[1.03] active:scale-[0.98] flex items-center justify-center gap-2 border-2 border-border-main bg-surface hover:bg-bg-main text-text-secondary hover:text-text-primary shadow-sm"
                       >
                         {msg.severity === 'critical' ? (
                           <>

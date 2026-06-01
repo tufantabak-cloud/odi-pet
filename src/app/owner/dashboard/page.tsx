@@ -13,7 +13,7 @@ import Image from 'next/image'
 import { getCachedDashboardData } from './dashboard-queries'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import EmptyState from '@/components/ui/EmptyState'
-import { PawPrint, Calendar } from 'lucide-react'
+import { DefaultCatAvatar, DefaultDogAvatar, PawIcon, CarrierIcon } from '@/components/icons/PetIcons'
 
 export default async function OwnerDashboard() {
   const user = await getSessionUser()
@@ -23,23 +23,6 @@ export default async function OwnerDashboard() {
 
   const { profile, pets, upcomingSchedules, completedSchedules, allFeedingLogs, allWeightLogs } =
     await getCachedDashboardData(user.id)
-
-  const supabase = await createServerSupabaseClient()
-  const { data: lostReportsRaw } = await supabase
-    .from('lost_reports')
-    .select('*, pets(name, avatar_url, species, breed, city)')
-    .eq('status', 'active')
-    .order('created_at', { ascending: false })
-    .limit(50)
-
-  const userCities = Array.from(new Set((pets || []).map((p: any) => p.city).filter(Boolean)));
-  
-  const lostReports = lostReportsRaw?.filter((report: any) => {
-    if (userCities.length === 0) return false;
-    const reportCity = report.pets?.city;
-    if (!reportCity) return false;
-    return userCities.includes(reportCity);
-  }).slice(0, 10);
 
   const primaryPet = pets && pets.length > 0 ? pets[0] : null;
 
@@ -127,10 +110,12 @@ export default async function OwnerDashboard() {
                       className="object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-primary-soft via-[#ede9fe] to-white flex items-center justify-center">
-                      <span className="text-[72px] font-black text-primary/40 select-none leading-none">
-                        {(pet.name || '?').charAt(0)}
-                      </span>
+                    <div className="w-full h-full">
+                      {pet.species?.toLowerCase() === 'kedi' || pet.species?.toLowerCase() === 'cat' ? (
+                        <DefaultCatAvatar />
+                      ) : (
+                        <DefaultDogAvatar />
+                      )}
                     </div>
                   )}
                   {/* Gradient overlay */}
@@ -150,49 +135,14 @@ export default async function OwnerDashboard() {
         </div>
       ) : (
         <EmptyState
-          icon={<PawPrint />}
+          icon={<PawIcon width={48} height={48} />}
           title="Henüz pet eklemediniz"
           message="İlk petinizi eklemek için aşağıdaki butona dokunun."
           cta={{ label: "Pet Ekle", href: "/owner/pets/add" }}
         />
       )}
 
-      {/* Kayıp İlanları */}
-      {lostReports && lostReports.length > 0 && (
-        <div className="flex flex-col gap-3">
-          <h2 className="text-[16px] font-extrabold text-error flex items-center gap-2">
-            <span className="animate-pulse">🚨</span> Kayıp İlanları
-          </h2>
-          <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-none snap-x snap-mandatory">
-            {lostReports.map((report: any) => (
-              <div key={report.id} className="snap-start shrink-0 w-[240px] bg-error/5 border border-error/20 rounded-[24px] p-4 flex flex-col gap-3 relative shadow-sm">
-                <div className="absolute top-4 right-4 w-3 h-3 bg-error rounded-full animate-ping opacity-75" />
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 relative rounded-[14px] bg-white shadow-sm overflow-hidden border border-error/10 shrink-0 flex items-center justify-center text-error">
-                    {report.pets?.avatar_url ? (
-                      <Image src={report.pets.avatar_url} alt={report.pets.name} fill className="object-cover" />
-                    ) : (
-                      <span className="text-[20px]">{(report.pets?.name || '?').charAt(0)}</span>
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-extrabold text-text-primary text-[15px] truncate">{report.pets?.name}</p>
-                    <p className="text-[11px] text-text-secondary font-medium truncate">{report.pets?.species} • {report.pets?.breed || 'Bilinmiyor'}</p>
-                  </div>
-                </div>
-                <div className="bg-white rounded-[12px] p-2.5 border border-error/10">
-                  <p className="text-[11px] text-text-secondary mb-0.5">Son Görülme</p>
-                  <p className="text-[13px] font-bold text-text-primary leading-tight line-clamp-2">{report.last_seen_location}</p>
-                </div>
-                <a href={`tel:${report.contact_phone}`} className="w-full bg-error text-white font-bold text-[13px] rounded-xl py-2.5 text-center flex items-center justify-center gap-2 hover:bg-error/90 active:scale-[0.98] transition-all">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.6 19.79 19.79 0 0 1 1.62 5.05 2 2 0 0 1 3.6 2.87h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 10.4a16 16 0 0 0 6 6l.88-.88a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 18z"/></svg>
-                  Hemen Ara
-                </a>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+
 
       {pets && pets.length > 0 && (
         <DashboardSmartCards pets={pets} upcomingSchedules={upcomingSchedules} completedSchedules={completedSchedules} />
@@ -265,7 +215,7 @@ export default async function OwnerDashboard() {
                   } else {
                     badgeText = `${Math.floor(diffMins / 1440)} gün gecikti`;
                   }
-                  badgeColor = 'bg-red-50 text-red-600 border-red-100/50';
+                  badgeColor = 'bg-error/10 text-error border-error/20';
                 } else {
                   const today = getNowTR();
                   today.setHours(0,0,0,0);
@@ -284,16 +234,16 @@ export default async function OwnerDashboard() {
 
                   if (diffDays === 0) {
                     badgeText = `Bugün${timeText}`;
-                    badgeColor = 'bg-orange-50 text-orange-600 border-orange-100/50';
+                    badgeColor = 'bg-warning/10 text-warning border-warning/20';
                   } else if (diffDays === 1) {
                     badgeText = `Yarın${timeText}`;
                     badgeColor = 'bg-primary/10 text-primary border-primary/20';
                   } else if (diffDays === -1) {
                     badgeText = `Dün${timeText}`;
-                    badgeColor = 'bg-red-50 text-red-600 border-red-100/50';
+                    badgeColor = 'bg-error/10 text-error border-error/20';
                   } else if (diffDays < -1) {
                     badgeText = `${Math.abs(diffDays)} gün gecikti`;
-                    badgeColor = 'bg-red-50 text-red-600 border-red-100/50';
+                    badgeColor = 'bg-error/10 text-error border-error/20';
                   } else {
                     badgeText = `${diffDays} gün kaldı`;
                     badgeColor = diffDays <= 3 ? 'bg-warning/10 text-warning border-warning/20' : 'bg-success/10 text-success border-success/20';
@@ -319,7 +269,7 @@ export default async function OwnerDashboard() {
             </div>
           ) : (
             <EmptyState
-              icon={<Calendar />}
+              icon={<CarrierIcon width={48} height={48} />}
               title="Yaklaşan etkinlik yok"
               message="Petinizin sağlık takvimi henüz oluşturulmadı. Aşı veya ilaç hatırlatıcılarınız burada görünecek."
             />

@@ -51,9 +51,9 @@ export default function HumanAgeCalculator({ species, birthDate, weightKg, petNa
 
   const getLifeStage = (y: number) => {
     if (y <= 1) return { label: 'Yavru', color: 'bg-stone-100 text-stone-700', border: 'border-stone-200' }
-    if (y <= 6) return { label: 'Yetişkin', color: 'bg-[#6a2b86] text-white', border: 'border-[#5b2473]' }
-    if (y <= 11) return { label: 'Yaşlı', color: 'bg-[#00c814] text-white', border: 'border-[#00a811]' }
-    return { label: 'İleri Yaşlı', color: 'bg-[#ff9914] text-white', border: 'border-[#d98211]' }
+    if (y <= 7) return { label: 'Yetişkin', color: 'bg-[#6a2b86] text-white', border: 'border-[#5b2473]' }
+    if (y <= 12) return { label: 'Yaşlı', color: 'bg-[#00c814] text-white', border: 'border-[#00a811]' }
+    return { label: 'Yaşlı (12+)', color: 'bg-[#ff9914] text-white', border: 'border-[#d98211]' }
   }
 
   const currentStage = getLifeStage(displayYear)
@@ -150,7 +150,7 @@ export default function HumanAgeCalculator({ species, birthDate, weightKg, petNa
       
       {/* Legend */}
           <div className="p-4 bg-bg-main/50 border-t border-border-main flex flex-wrap justify-center gap-3">
-            {[1, 6, 11, 15].map(y => {
+            {[1, 4, 10, 15].map(y => {
               const stage = getLifeStage(y)
               return (
                 <div key={y} className="flex items-center gap-1.5">

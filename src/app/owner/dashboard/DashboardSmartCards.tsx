@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import EmptyState from '@/components/ui/EmptyState'
-import { VaccineIcon, PillIcon, BowlIcon, PawIcon, HouseIcon } from '@/components/icons/PetIcons'
+import { VaccineIcon, PillIcon, BowlIcon, PawIcon, HouseIcon, FirstAidIcon } from '@/components/icons/PetIcons'
 
 // Minimalist Single-Field Modal for Frequency input
 function QuickUpdateModal({ config, onClose, onDone }: any) {
@@ -334,6 +334,7 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
   if (!activeCard) {
     return (
       <EmptyState
+        icon={<FirstAidIcon width={48} height={48} />}
         title="Tüm görevleriniz tamam"
         message="Şu an için dikkat edilmesi gereken bir görev yok."
       />
@@ -369,7 +370,7 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
       <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
         <button
           onClick={activeCard.action}
-          className="bg-[#3F51B5] text-white font-semibold rounded-xl px-4 py-3 hover:bg-[#303F9F] active:scale-[0.98] transition-all text-[14px] flex-1 text-center shadow-sm"
+          className="bg-primary text-white font-semibold rounded-xl px-4 py-3 hover:bg-primary/90 active:scale-[0.98] transition-all text-[14px] flex-1 text-center shadow-sm"
         >
           {activeCard.btnLabel}
         </button>

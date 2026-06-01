@@ -35,6 +35,7 @@ export function QRScanner({
           
           const html5QrCode = new Html5Qrcode(regionId, {
             formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+            verbose: false,
           });
           scannerRef.current = html5QrCode;
 

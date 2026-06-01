@@ -59,6 +59,7 @@ export default function TreatmentsClient({ pet, initialTreatments }: { pet: any,
   const [medDays, setMedDays] = useState('5')
   const [medDose, setMedDose] = useState('1 Tablet')
   const [trackMedEnd, setTrackMedEnd] = useState(false)
+  const [formStep, setFormStep] = useState(1)
 
   useEffect(() => {
     if (notification) {
@@ -83,6 +84,7 @@ export default function TreatmentsClient({ pet, initialTreatments }: { pet: any,
     setReminderNote('')
     setMedications([])
     setShowMedForm(false)
+    setFormStep(1)
     setIsModalOpen(true)
   }
 
@@ -107,6 +109,7 @@ export default function TreatmentsClient({ pet, initialTreatments }: { pet: any,
     setReminderNote('')
     setMedications([])
     setShowMedForm(false)
+    setFormStep(1)
     setIsModalOpen(true)
   }
 
@@ -299,7 +302,16 @@ export default function TreatmentsClient({ pet, initialTreatments }: { pet: any,
           position="bottom"
         />
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-soft to-primary/20 flex items-center justify-center text-[24px]">🩺</div>
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-soft to-primary/20 flex items-center justify-center shrink-0">
+            <svg viewBox="0 0 32 32" className="w-7 h-7 drop-shadow-sm">
+              <path d="M12 4h8v4h-8z" fill="#D1D5DB" />
+              <path d="M8 8h16v18a4 4 0 01-4 4H12a4 4 0 01-4-4V8z" fill="url(#steth-grad)" />
+              <path d="M16 12v10M11 17h10" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" />
+              <defs>
+                <linearGradient id="steth-grad" x1="8" y1="8" x2="24" y2="30" gradientUnits="userSpaceOnUse"><stop stopColor="#3B82F6" /><stop offset="1" stopColor="#1D4ED8" /></linearGradient>
+              </defs>
+            </svg>
+          </div>
           <div>
             <h1 className="text-[24px] font-black text-text-primary">Tedavi Takip Modülü</h1>
             <p className="text-[14px] text-text-secondary font-medium">{pet.name} için hastalık, randevu ve ödeme geçmişi</p>
@@ -320,8 +332,7 @@ export default function TreatmentsClient({ pet, initialTreatments }: { pet: any,
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {treatments.map((t: any) => (
-            <div key={t.id} className="card-base p-5 border-l-4 hover:shadow-md transition-shadow cursor-pointer flex flex-col justify-between" 
-                 style={{ borderLeftColor: t.status === 'Tamamlandı' ? '#10B981' : t.status === 'İptal Edildi' ? '#EF4444' : '#3B82F6' }}
+            <div key={t.id} className={`card-base p-5 border-l-4 hover:shadow-md hover:scale-[1.03] transition-all duration-300 cursor-pointer flex flex-col justify-between ${t.status === 'Tamamlandı' ? 'border-l-success' : t.status === 'İptal Edildi' ? 'border-l-error' : 'border-l-primary'}`} 
                  onClick={() => openEditForm(t)}>
               <div>
                 <div className="flex justify-between items-start mb-2">
@@ -427,6 +438,16 @@ export default function TreatmentsClient({ pet, initialTreatments }: { pet: any,
                 </div>
               </div>
 
+              {formStep === 1 && (
+                <div className="flex justify-end mt-2 pb-10 sm:pb-0">
+                  <button type="button" onClick={() => setFormStep(2)} className="btn-primary py-3 px-10 text-[13px] font-black tracking-tight shadow-xl shadow-primary/30 min-w-[140px] rounded-2xl">
+                    İleri (Detaylar)
+                  </button>
+                </div>
+              )}
+
+              {formStep === 2 && (
+                <div className="flex flex-col gap-7 animate-in fade-in duration-300">
               <div className="flex flex-col gap-1.5">
                 <label className="text-[11px] font-black text-text-secondary uppercase tracking-widest">Uygulanan Yöntemler / Notlar</label>
                 <textarea rows={3} value={methods} onChange={e => setMethods(e.target.value)} className="input-base text-[16px] font-medium bg-bg-main border-none resize-none" placeholder="İlaç kullanımı, pansuman vb. kısa notlar" />
@@ -436,7 +457,8 @@ export default function TreatmentsClient({ pet, initialTreatments }: { pet: any,
               <div className="bg-blue-50/40 p-6 rounded-[24px] border border-blue-100/50 shadow-inner">
                 <div className="flex items-center justify-between mb-5">
                   <h4 className="text-[14px] font-black text-blue-700 flex items-center gap-2">
-                    <span className="text-[18px]">💊</span> İlaç Takip & Hatırlatma
+                    <svg viewBox="0 0 32 32" className="w-6 h-6 drop-shadow-sm"><rect x="6" y="10" width="20" height="12" rx="6" fill="url(#pill-grad)"/><path d="M16 10v12" stroke="#fff" strokeWidth="2"/><defs><linearGradient id="pill-grad" x1="6" y1="10" x2="26" y2="22" gradientUnits="userSpaceOnUse"><stop stopColor="#3B82F6"/><stop offset="0.5" stopColor="#3B82F6"/><stop offset="0.5" stopColor="#93C5FD"/><stop offset="1" stopColor="#93C5FD"/></linearGradient></defs></svg>
+                    İlaç Takip & Hatırlatma
                   </h4>
                   <button type="button" onClick={() => setShowMedForm(!showMedForm)} className="text-[12px] font-black text-blue-600 hover:text-blue-800 transition-colors bg-white px-3 py-1 rounded-full shadow-sm border border-blue-100">
                     {showMedForm ? 'Vazgeç' : '+ İlaç Ekle'}
@@ -503,7 +525,8 @@ export default function TreatmentsClient({ pet, initialTreatments }: { pet: any,
               {/* Gelecek Adım / Randevu */}
               <div className="bg-primary/5 p-6 rounded-[24px] border border-primary/10">
                 <h4 className="text-[14px] font-black text-primary mb-4 flex items-center gap-2">
-                  <span className="text-[18px]">📅</span> Gelecek Adım & Randevu
+                  <svg viewBox="0 0 32 32" className="w-6 h-6 drop-shadow-sm"><rect x="4" y="6" width="24" height="22" rx="4" fill="#fff" stroke="url(#cal-grad)" strokeWidth="2"/><path d="M4 14h24" stroke="url(#cal-grad)" strokeWidth="2"/><path d="M10 4v4M22 4v4" stroke="url(#cal-grad)" strokeWidth="2" strokeLinecap="round"/><defs><linearGradient id="cal-grad" x1="4" y1="4" x2="28" y2="28" gradientUnits="userSpaceOnUse"><stop stopColor="#EC4899"/><stop offset="1" stopColor="#BE185D"/></linearGradient></defs></svg>
+                  Gelecek Adım & Randevu
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div className="flex flex-col gap-1.5">
@@ -522,7 +545,8 @@ export default function TreatmentsClient({ pet, initialTreatments }: { pet: any,
                 <div className="flex flex-col gap-5">
                   <div className="flex justify-between items-center">
                     <h4 className="text-[14px] font-black text-text-primary flex items-center gap-2">
-                      <span className="text-[18px]">💰</span> Finansal Takip
+                      <svg viewBox="0 0 32 32" className="w-6 h-6 drop-shadow-sm"><circle cx="16" cy="16" r="14" fill="url(#coin-grad)"/><path d="M16 8v16M11 12h10M11 20h10M16 12a4 4 0 010 8" stroke="#fff" strokeWidth="2" strokeLinecap="round"/><defs><linearGradient id="coin-grad" x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse"><stop stopColor="#F59E0B"/><stop offset="1" stopColor="#D97706"/></linearGradient></defs></svg>
+                      Finansal Takip
                     </h4>
                     <div className="flex bg-surface p-1 rounded-full border border-border-main/50">
                       <button type="button" onClick={() => setPaymentStatus('Ödendi')} className={`px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-tight transition-all ${paymentStatus === 'Ödendi' ? 'bg-success text-white shadow-md' : 'text-text-secondary hover:text-text-primary'}`}>Ödendi</button>
@@ -549,12 +573,14 @@ export default function TreatmentsClient({ pet, initialTreatments }: { pet: any,
                   </button>
                 ) : <div/>}
                 <div className="flex gap-3 ml-auto">
-                  <button type="button" onClick={() => setIsModalOpen(false)} className="btn-secondary py-3 px-8 text-[13px] font-black tracking-tight rounded-2xl">Vazgeç</button>
+                  <button type="button" onClick={() => setFormStep(1)} className="btn-secondary py-3 px-8 text-[13px] font-black tracking-tight rounded-2xl">Geri</button>
                   <button type="submit" disabled={isSubmitting} className="btn-primary py-3 px-10 text-[13px] font-black tracking-tight shadow-xl shadow-primary/30 min-w-[140px] rounded-2xl">
                     {isSubmitting ? 'İşleniyor...' : (editingTreatment ? 'Güncelle' : 'Kaydet')}
                   </button>
                 </div>
               </div>
+              </div>
+              )}
 
             </form>
             </div>

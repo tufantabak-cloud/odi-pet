@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import citiesData from '@/lib/cities.json'
 import Link from 'next/link'
 import Image from 'next/image'
 import { calcAge } from '@/lib/pets/utils'
@@ -82,10 +81,22 @@ export default function EditPetForm({ pet }: { pet: any }) {
     setBirthDate(targetDate.toISOString().split('T')[0])
   }
   const [selectedBreed, setSelectedBreed] = useState(pet.breed || '')
-  const [selectedCityCode, setSelectedCityCode] = useState(() => {
-    const city = citiesData.find(c => c.name === pet.city)
-    return city?.code || ''
-  })
+  
+  const [selectedCity, setSelectedCity] = useState(pet.city || '')
+  const [selectedDistrict, setSelectedDistrict] = useState(pet.district || '')
+  const [provinces, setProvinces] = useState<any[]>([])
+
+  useEffect(() => {
+    fetch('https://turkiyeapi.dev/api/v1/provinces')
+      .then(res => res.json())
+      .then(res => {
+        if (res.status === 'OK' && res.data) {
+          const sorted = res.data.sort((a: any, b: any) => a.name.localeCompare(b.name, 'tr'))
+          setProvinces(sorted)
+        }
+      })
+      .catch(err => console.error("Provinces fetch error:", err))
+  }, [])
   const [photoPreview, setPhotoPreview] = useState(pet.avatar_url || '')
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [submitError, setSubmitError] = useState('')
@@ -134,8 +145,8 @@ export default function EditPetForm({ pet }: { pet: any }) {
     if (vetEmail) fd.set('vet_email', vetEmail)
     if (photoFile) fd.set('avatar', photoFile)
     
-    const cityName = citiesData.find(c => c.code === selectedCityCode)?.name
-    if (cityName) fd.set('city', cityName)
+    if (selectedCity) fd.set('city', selectedCity)
+    if (selectedDistrict) fd.set('district', selectedDistrict)
 
     try {
       const res = await fetch(`/api/pets/${pet.id}`, { method: 'PATCH', body: fd })
@@ -356,9 +367,23 @@ export default function EditPetForm({ pet }: { pet: any }) {
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-[13px] font-bold text-text-primary">Şehir</label>
-              <select value={selectedCityCode} onChange={e => setSelectedCityCode(e.target.value)} className="input-base">
+              <select value={selectedCity} onChange={e => { setSelectedCity(e.target.value); setSelectedDistrict('') }} className="input-base">
                 <option value="">Şehir seçin (opsiyonel)</option>
-                {citiesData.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+                {provinces.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+              </select>
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-text-primary">İlçe</label>
+              <select 
+                value={selectedDistrict} 
+                onChange={e => setSelectedDistrict(e.target.value)} 
+                disabled={!selectedCity}
+                className="input-base disabled:bg-gray-50 disabled:text-gray-400"
+              >
+                <option value="">İlçe seçin (opsiyonel)</option>
+                {selectedCity && provinces.find(p => p.name === selectedCity)?.districts?.sort((a:any, b:any) => a.name.localeCompare(b.name, 'tr')).map((d: any) => (
+                  <option key={d.id} value={d.name}>{d.name}</option>
+                ))}
               </select>
             </div>
           </div>

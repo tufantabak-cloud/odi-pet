@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import BottomNav from '@/components/BottomNav'
 import SideNav from '@/components/SideNav'
 import FloatingSOS from '@/components/FloatingSOS'
+import FloatingLostPets from '@/components/FloatingLostPets'
 import NotificationBell from '@/components/NotificationBell'
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
@@ -19,7 +20,7 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
   const [{ data: pets }, { data: onboardingData }, { count: unreadCount }] = await Promise.all([
     supabase
       .from('pets')
-      .select('id, name, vet_phone, vet_name, sos_contacts')
+      .select('id, name, vet_phone, vet_name, sos_contacts, city')
       .eq('owner_id', profile.id)
       .order('created_at', { ascending: false }),
     supabase
@@ -38,6 +39,8 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
   const primaryPet = pets && pets.length > 0 ? pets[0] : null
 
   const showNav = petCount > 0 && onboardingData?.wizard_completed === true
+
+  const userCities = Array.from(new Set((pets || []).map(p => p.city).filter(Boolean))) as string[]
 
   const initial = profile.first_name?.charAt(0)?.toUpperCase() ?? 'U'
 
@@ -69,6 +72,7 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
             vetName={primaryPet?.vet_name}
             sosContacts={primaryPet?.sos_contacts}
           />
+          <FloatingLostPets userCities={userCities} />
           
           {/* Notifications */}
           <NotificationBell initialCount={unreadCount ?? 0} />

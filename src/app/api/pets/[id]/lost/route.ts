@@ -34,7 +34,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
   const { id } = await context.params
   const body = await req.json().catch(() => ({}))
-  const { last_seen_location, contact_phone, last_seen_at } = body
+  const { last_seen_location, contact_phone, last_seen_at, city } = body
   const supabase = await createServerSupabaseClient()
 
   // Validation
@@ -96,6 +96,10 @@ export async function POST(req: NextRequest, context: RouteContext) {
     })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  if (city && typeof city === 'string') {
+    await supabase.from('pets').update({ city: city.trim() }).eq('id', id)
+  }
 
   revalidatePath(`/owner/pets/${id}`)
   

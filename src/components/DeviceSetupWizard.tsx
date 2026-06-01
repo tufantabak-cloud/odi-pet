@@ -81,8 +81,7 @@ export default function DeviceSetupWizard({ type = 'tag', onComplete, onCancel }
         <button
           onClick={handleConnect}
           disabled={!selectedWifi || isConnecting}
-          className="w-full text-white font-bold rounded-xl py-3.5 px-4 active:scale-[0.98] transition-all text-[15px] text-center shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
-          style={{ backgroundColor: '#2A4B7C' }}
+          className="w-full btn-primary font-bold rounded-xl py-3.5 px-4 active:scale-[0.98] transition-all text-[15px] text-center shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 flex items-center justify-center"
         >
           {isConnecting ? 'Bağlanıyor...' : 'Cihazı Bağla'}
         </button>

@@ -1,3 +1,10 @@
+-- Alter tables to add Smart Scan columns
+ALTER TABLE public.vaccine_records ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'smart_scan';
+ALTER TABLE public.vaccine_records ADD COLUMN IF NOT EXISTS scan_details JSONB;
+
+ALTER TABLE public.health_medications ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'smart_scan';
+ALTER TABLE public.health_medications ADD COLUMN IF NOT EXISTS scan_details JSONB;
+
 -- RPC for processing smart scanner results atomically
 CREATE OR REPLACE FUNCTION public.process_smart_scan_results(
     p_pet_id UUID,
@@ -130,13 +137,15 @@ BEGIN
           AND status = 'upcoming';
 
         -- Add vaccine record
-        INSERT INTO public.vaccine_records (pet_id, applied_date, brand_name, lot_number, next_due_date)
+        INSERT INTO public.vaccine_records (pet_id, applied_date, brand_name, lot_number, next_due_date, source, scan_details)
         VALUES (
             p_pet_id, 
             (p_parsed_data->>'date')::DATE, 
             p_parsed_data->>'brand', 
             p_parsed_data->>'lot_number', 
-            (p_parsed_data->>'next_date')::DATE
+            (p_parsed_data->>'next_date')::DATE,
+            'smart_scan',
+            p_parsed_data
         );
 
         -- Add new upcoming schedule if next_date exists
@@ -165,12 +174,14 @@ BEGIN
 
     ELSIF p_record_type = 'medicine_packaging' OR p_record_type = 'parasite_product' THEN
         -- Add medication
-        INSERT INTO public.health_medications (pet_id, medication_name, dose, usage_duration)
+        INSERT INTO public.health_medications (pet_id, medication_name, dose, usage_duration, source, scan_details)
         VALUES (
             p_pet_id, 
             p_parsed_data->>'title', 
             p_parsed_data->>'dose', 
-            p_parsed_data->>'duration'
+            p_parsed_data->>'duration',
+            'smart_scan',
+            p_parsed_data
         ) RETURNING id INTO v_medication_id;
 
         -- Add schedule for medication/parasite

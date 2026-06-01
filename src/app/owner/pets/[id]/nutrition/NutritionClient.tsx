@@ -129,7 +129,9 @@ export default function NutritionClient({
           position="bottom"
         />
         <div className="relative w-16 h-16 rounded-[20px] bg-gradient-to-br from-primary-soft to-white border-2 border-primary/20 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
-          {pet.avatar_url ? <Image src={pet.avatar_url} fill={true} className="object-cover" alt="" /> : <span className="text-[28px]">🍗</span>}
+          {pet.avatar_url ? <Image src={pet.avatar_url} fill={true} className="object-cover" alt="" /> : (
+            <svg viewBox="0 0 32 32" className="w-8 h-8 drop-shadow-sm"><path d="M12 10c0-3.3 5.4-3.3 5.4 0 0 3.3 5.3 3.3 5.3 6.6S16 26 12 26 2.7 20 2.7 16.6C2.7 13.3 12 13.3 12 10z" fill="url(#nut-grad)" /><path d="M26 8c-2 0-3 2-3 4h6c0-2-1-4-3-4z" fill="#D1D5DB" /><defs><linearGradient id="nut-grad" x1="2" y1="8" x2="28" y2="28" gradientUnits="userSpaceOnUse"><stop stopColor="#EF4444" /><stop offset="1" stopColor="#B91C1C" /></linearGradient></defs></svg>
+          )}
         </div>
         <div>
           <h1 className="text-[28px] font-extrabold text-text-primary tracking-tight">Beslenme Planı</h1>
@@ -177,7 +179,9 @@ export default function NutritionClient({
             onClick={() => setShowScanner(true)}
             className="card-base p-6 bg-gradient-to-r from-primary to-primary-soft text-white relative overflow-hidden group cursor-pointer shadow-lg shadow-primary/30 mt-2"
           >
-            <div className="absolute right-[-10px] bottom-[-20px] text-[100px] opacity-20 group-hover:scale-110 group-hover:-rotate-12 transition-transform duration-500">📸</div>
+            <div className="absolute right-[-10px] bottom-[-20px] opacity-20 group-hover:scale-110 group-hover:-rotate-12 transition-transform duration-500">
+              <svg viewBox="0 0 32 32" className="w-[100px] h-[100px] drop-shadow-sm"><rect x="4" y="8" width="24" height="18" rx="4" fill="#fff" stroke="url(#cam-grad)" strokeWidth="2"/><circle cx="16" cy="17" r="5" fill="url(#cam-grad)"/><path d="M12 8l2-4h4l2 4" fill="#fff" stroke="url(#cam-grad)" strokeWidth="2" strokeLinecap="round"/><defs><linearGradient id="cam-grad" x1="4" y1="4" x2="28" y2="26" gradientUnits="userSpaceOnUse"><stop stopColor="#F472B6"/><stop offset="1" stopColor="#DB2777"/></linearGradient></defs></svg>
+            </div>
             <div className="flex flex-col gap-2 relative z-10">
               <div className="flex items-center gap-2">
                 <span className="bg-white/20 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider backdrop-blur-sm">Odi Premium</span>
@@ -234,40 +238,6 @@ export default function NutritionClient({
       {/* ── Tab: Öğünler & Hatırlatıcı ── */}
       {activeTab === 'Öğünler & Hatırlatıcı' && (
         <div className="flex flex-col gap-4 animate-fadeIn">
-          
-          {/* Hatırlatıcı UI (Coming Soon) */}
-          <div className="card-base p-6 border border-primary/20 bg-primary/5 relative overflow-hidden group">
-            <div className="absolute inset-0 bg-white/50 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center transition-all">
-              <span className="text-[28px] mb-2 group-hover:scale-110 transition-transform">🚀</span>
-              <span className="bg-primary text-white text-[12px] font-bold px-4 py-1.5 rounded-full shadow-md">Bildirimler Çok Yakında</span>
-            </div>
-            
-            <h3 className="font-extrabold text-[15px] text-primary mb-1">⏰ Öğün Hatırlatıcıları</h3>
-            <p className="text-[12px] text-text-secondary mb-4">Push bildirimleriyle öğün saatlerini kaçırmayın.</p>
-            
-            <div className="flex flex-col gap-3 opacity-40 select-none pointer-events-none">
-              <div className="flex items-center justify-between p-3 rounded-xl bg-white border border-border-main">
-                <div className="flex items-center gap-3">
-                  <span className="text-[20px]">🕒</span>
-                  <span className="font-bold text-[16px] text-text-primary">08:00</span>
-                </div>
-                <div className="w-11 h-6 bg-primary/50 rounded-full relative">
-                  <div className="absolute top-[2px] right-[2px] bg-white rounded-full h-5 w-5"></div>
-                </div>
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-xl bg-white border border-border-main">
-                <div className="flex items-center gap-3">
-                  <span className="text-[20px]">🕒</span>
-                  <span className="font-bold text-[16px] text-text-primary">19:00</span>
-                </div>
-                <div className="w-11 h-6 bg-border-main rounded-full relative">
-                  <div className="absolute top-[2px] left-[2px] bg-white rounded-full h-5 w-5 border border-gray-300"></div>
-                </div>
-              </div>
-            </div>
-            <button disabled className="text-[12px] font-bold text-primary mt-4 opacity-40 cursor-not-allowed">+ Yeni Saat Ekle</button>
-          </div>
-
           {/* Günlük Giriş */}
           <form onSubmit={handleAddLog} className="card-base p-6">
             <h3 className="font-extrabold text-[15px] text-text-primary mb-4">Öğün Kaydet</h3>

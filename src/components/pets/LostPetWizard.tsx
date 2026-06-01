@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
+import { DefaultCatAvatar, DefaultDogAvatar } from '@/components/icons/PetIcons'
 
 interface LostPetWizardProps {
   pet: any;
@@ -14,8 +15,25 @@ export default function LostPetWizard({ pet, ownerPhone, onComplete, onCancel }:
   const [step, setStep] = useState(1)
   const [contactPhone, setContactPhone] = useState(ownerPhone || pet.sos_contacts?.[0]?.phone || '')
   const [location, setLocation] = useState('')
+  const [selectedCity, setSelectedCity] = useState('')
+  const [selectedDistrict, setSelectedDistrict] = useState('')
+  const [provinces, setProvinces] = useState<any[]>([])
+  
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    fetch('https://turkiyeapi.dev/api/v1/provinces')
+      .then(res => res.json())
+      .then(res => {
+        if (res.status === 'OK' && res.data) {
+          // Sort alphabetically
+          const sorted = res.data.sort((a: any, b: any) => a.name.localeCompare(b.name, 'tr'))
+          setProvinces(sorted)
+        }
+      })
+      .catch(err => console.error("Provinces fetch error:", err))
+  }, [])
 
   const handleNext = () => {
     const phone = contactPhone.replace(/[\s-()]/g, '')
@@ -29,6 +47,14 @@ export default function LostPetWizard({ pet, ownerPhone, onComplete, onCancel }:
 
   const handleSubmit = async () => {
     const trimmedLoc = location.trim()
+    if (!selectedCity) {
+      setError('Lütfen bir il seçiniz.')
+      return
+    }
+    if (!selectedDistrict) {
+      setError('Lütfen bir ilçe seçiniz.')
+      return
+    }
     if (!trimmedLoc || trimmedLoc.length < 5) {
       setError('Lütfen son görüldüğü yeri detaylı giriniz (en az 5 karakter).')
       return
@@ -42,12 +68,16 @@ export default function LostPetWizard({ pet, ownerPhone, onComplete, onCancel }:
     setError('')
 
     try {
+      const fullLocation = `${selectedCity} / ${selectedDistrict} - ${trimmedLoc}`
+
       const res = await fetch(`/api/pets/${pet.id}/lost`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contact_phone: contactPhone,
-          last_seen_location: location
+          last_seen_location: fullLocation,
+          city: selectedCity,
+          district: selectedDistrict
         })
       })
 
@@ -99,7 +129,7 @@ export default function LostPetWizard({ pet, ownerPhone, onComplete, onCancel }:
               {/* Pet Info ReadOnly */}
               <div className="flex items-center gap-4 p-4 border border-border-main rounded-[16px] bg-bg-main">
                 <div className="w-14 h-14 bg-gradient-to-br from-primary-soft to-white rounded-[14px] flex items-center justify-center text-[24px] overflow-hidden relative shadow-sm">
-                  {pet.avatar_url ? <Image src={pet.avatar_url} fill={true} className="object-cover" alt={pet.name} /> : (pet.species === 'Kedi' ? '🐱' : '🐶')}
+                  {pet.avatar_url ? <Image src={pet.avatar_url} fill={true} className="object-cover" alt={pet.name} /> : (pet.species === 'Kedi' ? <DefaultCatAvatar width={36} height={36} /> : <DefaultDogAvatar width={36} height={36} />)}
                 </div>
                 <div>
                   <p className="font-extrabold text-text-primary text-[15px]">{pet.name}</p>
@@ -120,13 +150,46 @@ export default function LostPetWizard({ pet, ownerPhone, onComplete, onCancel }:
             </div>
           ) : (
             <div className="flex flex-col gap-5 mt-2">
+              <div className="flex gap-3">
+                <div className="flex flex-col gap-2 flex-1">
+                  <label className="text-[12px] font-bold text-text-secondary uppercase tracking-wider">İl *</label>
+                  <select
+                    value={selectedCity}
+                    onChange={(e) => {
+                      setSelectedCity(e.target.value)
+                      setSelectedDistrict('')
+                    }}
+                    className="w-full input-base py-3.5 px-4 text-[14px] bg-white border border-border-main rounded-xl focus:outline-none focus:border-error transition-all"
+                  >
+                    <option value="">Seçiniz</option>
+                    {provinces.map(p => (
+                      <option key={p.id} value={p.name}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex flex-col gap-2 flex-1">
+                  <label className="text-[12px] font-bold text-text-secondary uppercase tracking-wider">İlçe *</label>
+                  <select
+                    value={selectedDistrict}
+                    onChange={(e) => setSelectedDistrict(e.target.value)}
+                    disabled={!selectedCity}
+                    className="w-full input-base py-3.5 px-4 text-[14px] bg-white border border-border-main rounded-xl focus:outline-none focus:border-error transition-all disabled:bg-gray-50 disabled:text-gray-400"
+                  >
+                    <option value="">Seçiniz</option>
+                    {selectedCity && provinces.find(p => p.name === selectedCity)?.districts?.sort((a:any, b:any) => a.name.localeCompare(b.name, 'tr')).map((d: any) => (
+                      <option key={d.id} value={d.name}>{d.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
               <div className="flex flex-col gap-2">
-                <label className="text-[12px] font-bold text-text-secondary uppercase tracking-wider">Son Görüldüğü Yer</label>
+                <label className="text-[12px] font-bold text-text-secondary uppercase tracking-wider">Detaylı Adres / Not</label>
                 <textarea
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   placeholder="Mahalle, sokak veya belirgin bir adres..."
-                  rows={3}
+                  rows={2}
                   className="w-full input-base py-3.5 px-4 text-[14px] bg-white border border-border-main rounded-xl focus:outline-none focus:border-error transition-all resize-none"
                 />
               </div>

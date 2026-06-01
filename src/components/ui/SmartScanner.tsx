@@ -15,6 +15,7 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
   const [recordType, setRecordType] = useState<string>("unknown");
   const [errorMessage, setErrorMessage] = useState("");
   const [validationError, setValidationError] = useState("");
+  const [editingField, setEditingField] = useState<string | null>(null);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   
   const [tempImageSrc, setTempImageSrc] = useState<string | null>(null);
@@ -210,6 +211,7 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
 
       setRecordType(data.data.record_type);
       setParsedData(data.data.parsed || {});
+      setEditingField(null);
       setStep("confirm");
 
     } catch (err: any) {
@@ -258,6 +260,48 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
     }
   };
 
+  const renderField = (key: string, label: string, value: string, type: string = "text", highlight: boolean = false, options?: {value: string, label: string}[]) => {
+    const isEditing = editingField === key;
+    
+    return (
+      <div className={`bg-white p-4 rounded-2xl shadow-sm cursor-pointer border-2 transition-colors ${highlight ? 'border-primary/40 bg-primary/5' : 'border-slate-200 hover:border-slate-300'}`} onClick={() => !isEditing && setEditingField(key)}>
+        <label className={`text-[12px] font-bold mb-1 block flex items-center gap-1 ${highlight ? 'text-primary' : 'text-slate-500'}`}>
+          {label} 
+          {highlight && <span className="text-[10px] bg-primary text-white px-1.5 py-0.5 rounded-md ml-auto">Kritik</span>}
+          {!isEditing && <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-md ml-auto opacity-70">Düzenle</span>}
+        </label>
+        
+        {isEditing ? (
+          options ? (
+            <select
+              autoFocus
+              value={value || ""}
+              onChange={(e) => setParsedData({ ...parsedData, [key]: e.target.value })}
+              onBlur={() => setEditingField(null)}
+              className={`w-full font-extrabold text-[15px] bg-transparent focus:outline-none focus:border-b-2 ${highlight ? 'text-primary border-primary' : 'text-slate-800 border-slate-400'}`}
+            >
+              {options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+            </select>
+          ) : (
+            <input 
+              autoFocus
+              type={type} 
+              value={value || ""} 
+              onChange={(e) => setParsedData({ ...parsedData, [key]: e.target.value })}
+              onBlur={() => setEditingField(null)}
+              onKeyDown={(e) => e.key === 'Enter' && setEditingField(null)}
+              className={`w-full font-extrabold text-[15px] bg-transparent focus:outline-none focus:border-b-2 ${highlight ? 'text-primary border-primary' : 'text-slate-800 border-slate-400'}`}
+            />
+          )
+        ) : (
+          <div className={`w-full font-extrabold text-[15px] truncate ${highlight ? 'text-primary' : 'text-slate-800'}`}>
+            {value ? (options ? options.find(o => o.value === value)?.label || value : value) : <span className="opacity-40 italic">Belirtilmemiş</span>}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderConfirmFields = () => {
     if (recordType === "food_packaging") {
       return (
@@ -268,55 +312,29 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
           </div>
           
           <div className="flex gap-4">
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex-1">
-              <label className="text-[12px] font-bold text-slate-500 mb-1 block">Hedef Tür</label>
-              <select value={parsedData.target_species || ""} onChange={(e) => setParsedData({...parsedData, target_species: e.target.value})} className="w-full font-semibold text-[15px] bg-transparent focus:outline-none">
-                <option value="">Seçiniz</option>
-                <option value="dog">Köpek</option>
-                <option value="cat">Kedi</option>
-                <option value="bird">Kuş</option>
-                <option value="other">Diğer</option>
-              </select>
+            <div className="flex-1">
+              {renderField('target_species', 'Hedef Tür', parsedData.target_species, 'select', false, [
+                {value: '', label: 'Seçiniz'}, {value: 'dog', label: 'Köpek'}, {value: 'cat', label: 'Kedi'}, {value: 'bird', label: 'Kuş'}, {value: 'other', label: 'Diğer'}
+              ])}
             </div>
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex-1">
-              <label className="text-[12px] font-bold text-slate-500 mb-1 block">Yaş Grubu</label>
-              <select value={parsedData.target_age_group || ""} onChange={(e) => setParsedData({...parsedData, target_age_group: e.target.value})} className="w-full font-semibold text-[15px] bg-transparent focus:outline-none">
-                <option value="">Seçiniz</option>
-                <option value="kitten">Yavru (0-1 yaş)</option>
-                <option value="adult">Yetişkin (1-7 yaş)</option>
-                <option value="senior">Yaşlı (7-12 yaş)</option>
-                <option value="senior_plus">Yaşlı (12+ yaş)</option>
-                <option value="all">Tüm Yaşlar</option>
-              </select>
+            <div className="flex-1">
+              {renderField('target_age_group', 'Yaş Grubu', parsedData.target_age_group, 'select', false, [
+                {value: '', label: 'Seçiniz'}, {value: 'kitten', label: 'Yavru (0-1 yaş)'}, {value: 'adult', label: 'Yetişkin (1-7 yaş)'}, {value: 'senior', label: 'Yaşlı (7-12 yaş)'}, {value: 'senior_plus', label: 'Yaşlı (12+ yaş)'}, {value: 'all', label: 'Tüm Yaşlar'}
+              ])}
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-            <label className="text-[12px] font-bold text-slate-500 mb-1 block">Marka</label>
-            <input type="text" value={parsedData.food_brand || ""} onChange={(e) => setParsedData({...parsedData, food_brand: e.target.value})} className="w-full font-semibold text-[15px] bg-transparent focus:outline-none focus:border-b-2 border-primary" />
-          </div>
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-            <label className="text-[12px] font-bold text-slate-500 mb-1 block">Ürün Adı</label>
-            <input type="text" value={parsedData.food_product || ""} onChange={(e) => setParsedData({...parsedData, food_product: e.target.value})} className="w-full font-semibold text-[15px] bg-transparent focus:outline-none focus:border-b-2 border-primary" />
-          </div>
-          <div className="bg-white p-4 rounded-2xl border-2 border-primary/40 shadow-sm bg-primary/5">
-            <label className="text-[12px] font-bold text-primary mb-1 block flex items-center gap-1">Paket Boyutu (Gram) <span className="text-[10px] bg-primary text-white px-1.5 py-0.5 rounded-md ml-auto">Kritik</span></label>
-            <input type="number" value={parsedData.package_size_grams || ""} onChange={(e) => setParsedData({...parsedData, package_size_grams: e.target.value})} className="w-full font-extrabold text-[16px] text-primary bg-transparent focus:outline-none" />
-          </div>
-
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-            <label className="text-[12px] font-bold text-slate-500 mb-1 block">Mevcut Stok (Gram)</label>
-            <input type="number" placeholder="Evde kalan mamanız varsa yazınız" value={parsedData.existing_stock_grams || ""} onChange={(e) => setParsedData({...parsedData, existing_stock_grams: e.target.value})} className="w-full font-semibold text-[15px] bg-transparent focus:outline-none focus:border-b-2 border-primary" />
-          </div>
-
+          {renderField('food_brand', 'Marka', parsedData.food_brand)}
+          {renderField('food_product', 'Ürün Adı', parsedData.food_product)}
+          {renderField('package_size_grams', 'Paket Boyutu (Gram)', parsedData.package_size_grams, 'number', true)}
+          {renderField('existing_stock_grams', 'Mevcut Stok (Gram)', parsedData.existing_stock_grams, 'number')}
+          
           <div className="flex gap-4">
-            <div className="bg-white p-4 rounded-2xl border-2 border-orange-500/40 shadow-sm bg-orange-500/5 flex-1">
-              <label className="text-[12px] font-bold text-orange-600 mb-1 block flex items-center gap-1">Günlük Tüketim (Gram) <span className="text-[10px] bg-orange-500 text-white px-1.5 py-0.5 rounded-md ml-auto">Yeni</span></label>
-              <input type="number" placeholder="Örn: 150" value={parsedData.daily_grams || ""} onChange={(e) => setParsedData({...parsedData, daily_grams: e.target.value})} className="w-full font-extrabold text-[15px] text-orange-600 bg-transparent focus:outline-none" />
+            <div className="flex-1">
+              {renderField('daily_grams', 'Günlük Tüketim (Gram)', parsedData.daily_grams, 'number', true)}
             </div>
-            <div className="bg-white p-4 rounded-2xl border-2 border-orange-500/40 shadow-sm bg-orange-500/5 flex-1">
-              <label className="text-[12px] font-bold text-orange-600 mb-1 block flex items-center gap-1">Öğün Sayısı <span className="text-[10px] bg-orange-500 text-white px-1.5 py-0.5 rounded-md ml-auto">Yeni</span></label>
-              <input type="number" placeholder="Örn: 2" value={parsedData.meals_per_day || ""} onChange={(e) => setParsedData({...parsedData, meals_per_day: e.target.value})} className="w-full font-extrabold text-[15px] text-orange-600 bg-transparent focus:outline-none" />
+            <div className="flex-1">
+              {renderField('meals_per_day', 'Öğün Sayısı', parsedData.meals_per_day, 'number', true)}
             </div>
           </div>
           
@@ -347,23 +365,18 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
     if (recordType === "vaccine_card") {
       return (
         <div className="flex flex-col gap-4 mb-4">
-          <div className="bg-red-50 text-red-800 p-3 rounded-xl border border-red-200 flex items-start gap-2 mb-2">
+          <div className="bg-blue-50 text-blue-800 p-3 rounded-xl border border-blue-200 flex items-start gap-2 mb-2">
             <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-            <p className="text-[13px] font-medium leading-tight">Aşı tarihleri sağlık takviminizi etkiler. Lütfen tarihlerin karnedekiyle birebir aynı olduğundan emin olun.</p>
+            <p className="text-[13px] font-medium leading-tight">Bu bilgiler, taradığınız belgeden otomatik olarak alınmıştır. Gerekirse tıklayarak düzenleyebilirsiniz.</p>
           </div>
 
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-            <label className="text-[12px] font-bold text-slate-500 mb-1 block">Aşı Adı</label>
-            <input type="text" value={parsedData.title || ""} onChange={(e) => setParsedData({...parsedData, title: e.target.value})} className="w-full font-semibold text-[15px] bg-transparent focus:outline-none focus:border-b-2 border-primary" />
-          </div>
+          {renderField('title', 'Aşı Adı', parsedData.title)}
           <div className="flex gap-4">
-            <div className="bg-white p-4 rounded-2xl border-2 border-primary/40 shadow-sm bg-primary/5 flex-1">
-              <label className="text-[12px] font-bold text-primary mb-1 block flex items-center gap-1">Uygulama <span className="text-[10px] bg-primary text-white px-1.5 py-0.5 rounded-md ml-auto">Kritik</span></label>
-              <input type="date" value={parsedData.date || ""} onChange={(e) => setParsedData({...parsedData, date: e.target.value})} className="w-full font-extrabold text-[15px] text-primary bg-transparent focus:outline-none" />
+            <div className="flex-1">
+              {renderField('date', 'Uygulama', parsedData.date, 'date', true)}
             </div>
-            <div className="bg-white p-4 rounded-2xl border-2 border-primary/40 shadow-sm bg-primary/5 flex-1">
-              <label className="text-[12px] font-bold text-primary mb-1 block flex items-center gap-1">Sonraki <span className="text-[10px] bg-primary text-white px-1.5 py-0.5 rounded-md ml-auto">Kritik</span></label>
-              <input type="date" value={parsedData.next_date || ""} onChange={(e) => setParsedData({...parsedData, next_date: e.target.value})} className="w-full font-extrabold text-[15px] text-primary bg-transparent focus:outline-none" />
+            <div className="flex-1">
+              {renderField('next_date', 'Sonraki Doz', parsedData.next_date, 'date', true)}
             </div>
           </div>
         </div>
@@ -373,23 +386,14 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
     if (recordType === "medicine_packaging") {
       return (
         <div className="flex flex-col gap-4 mb-4">
-          <div className="bg-red-50 text-red-800 p-3 rounded-xl border border-red-200 flex items-start gap-2 mb-2">
+          <div className="bg-blue-50 text-blue-800 p-3 rounded-xl border border-blue-200 flex items-start gap-2 mb-2">
             <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-            <p className="text-[13px] font-medium leading-tight">Bu ilaç için sağlık takvimine hatırlatıcı kurulacaktır. Doz ve sürenin veteriner önerisiyle uyumlu olduğundan emin olun.</p>
+            <p className="text-[13px] font-medium leading-tight">Bu bilgiler, taradığınız belgeden otomatik olarak alınmıştır. Gerekirse tıklayarak düzenleyebilirsiniz.</p>
           </div>
 
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-            <label className="text-[12px] font-bold text-slate-500 mb-1 block">İlaç Adı</label>
-            <input type="text" value={parsedData.title || ""} onChange={(e) => setParsedData({...parsedData, title: e.target.value})} className="w-full font-semibold text-[15px] bg-transparent focus:outline-none focus:border-b-2 border-primary" />
-          </div>
-          <div className="bg-white p-4 rounded-2xl border-2 border-primary/40 shadow-sm bg-primary/5">
-            <label className="text-[12px] font-bold text-primary mb-1 block flex items-center gap-1">Doz <span className="text-[10px] bg-primary text-white px-1.5 py-0.5 rounded-md ml-auto">Kritik</span></label>
-            <input type="text" value={parsedData.dose || ""} onChange={(e) => setParsedData({...parsedData, dose: e.target.value})} className="w-full font-extrabold text-[15px] text-primary bg-transparent focus:outline-none" />
-          </div>
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-            <label className="text-[12px] font-bold text-slate-500 mb-1 block">Süre (Örn: 7 gün)</label>
-            <input type="text" value={parsedData.duration || ""} onChange={(e) => setParsedData({...parsedData, duration: e.target.value})} className="w-full font-semibold text-[15px] bg-transparent focus:outline-none focus:border-b-2 border-primary" />
-          </div>
+          {renderField('title', 'İlaç Adı', parsedData.title)}
+          {renderField('dose', 'Doz', parsedData.dose, 'text', true)}
+          {renderField('duration', 'Süre (Örn: 7 gün)', parsedData.duration)}
         </div>
       );
     }
@@ -397,26 +401,17 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
     if (recordType === "parasite_product") {
       return (
         <div className="flex flex-col gap-4 mb-4">
-          <div className="bg-red-50 text-red-800 p-3 rounded-xl border border-red-200 flex items-start gap-2 mb-2">
+          <div className="bg-blue-50 text-blue-800 p-3 rounded-xl border border-blue-200 flex items-start gap-2 mb-2">
             <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-            <p className="text-[13px] font-medium leading-tight">Uygulama tarihi aşı ve koruma takviminizi güncelleyecektir. Sonraki dozu kaçırmamak için kontrol edin.</p>
+            <p className="text-[13px] font-medium leading-tight">Bu bilgiler, taradığınız belgeden otomatik olarak alınmıştır. Gerekirse tıklayarak düzenleyebilirsiniz.</p>
           </div>
           
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-            <label className="text-[12px] font-bold text-slate-500 mb-1 block">Ürün Adı</label>
-            <input type="text" value={parsedData.title || ""} onChange={(e) => setParsedData({...parsedData, title: e.target.value})} className="w-full font-semibold text-[15px] bg-transparent focus:outline-none focus:border-b-2 border-primary" />
-          </div>
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-            <label className="text-[12px] font-bold text-slate-500 mb-1 block">Tür (İç/Dış Parazit)</label>
-            <select value={parsedData.parasite_type || ""} onChange={(e) => setParsedData({...parsedData, parasite_type: e.target.value})} className="w-full font-semibold text-[15px] bg-transparent focus:outline-none">
-              <option value="Dış Parazit">Dış Parazit</option>
-              <option value="İç Parazit">İç Parazit</option>
-            </select>
-          </div>
-          <div className="bg-white p-4 rounded-2xl border-2 border-primary/40 shadow-sm bg-primary/5">
-            <label className="text-[12px] font-bold text-primary mb-1 block flex items-center gap-1">Sonraki Doz Tarihi <span className="text-[10px] bg-primary text-white px-1.5 py-0.5 rounded-md ml-auto">Kritik</span></label>
-            <input type="date" value={parsedData.next_date || ""} onChange={(e) => setParsedData({...parsedData, next_date: e.target.value})} className="w-full font-extrabold text-[15px] text-primary bg-transparent focus:outline-none" />
-          </div>
+          {renderField('title', 'Ürün Adı', parsedData.title)}
+          {renderField('parasite_type', 'Tür (İç/Dış Parazit)', parsedData.parasite_type, 'select', false, [
+            {value: 'Dış Parazit', label: 'Dış Parazit'},
+            {value: 'İç Parazit', label: 'İç Parazit'}
+          ])}
+          {renderField('next_date', 'Sonraki Doz Tarihi', parsedData.next_date, 'date', true)}
         </div>
       );
     }
@@ -439,7 +434,7 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
            step === "camera" ? "Belge Tara" : 
            step === "adjust" ? "Belgeyi İncele" : 
            step === "error" ? "Belge Bulunamadı" : 
-           step === "saving" ? "Kaydediliyor" : "Tarama Sonuçları"}
+           step === "saving" ? "Kaydediliyor" : editingField ? "Bilgileri Düzenle" : "Taranan Bilgileri Onayla"}
         </h2>
         <button
           onClick={onClose}
@@ -739,7 +734,7 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
                 className="w-full py-4 bg-primary hover:bg-primary-hover text-white font-bold rounded-2xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] duration-200 mb-3"
               >
                 <Check className="w-5 h-5" />
-                Onayla ve Kaydet
+                Bilgileri Kaydet
               </button>
               <button 
                 onClick={() => setStep("ready")}

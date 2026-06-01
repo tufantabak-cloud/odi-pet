@@ -39,8 +39,8 @@ export default async function ClinicPetsPage() {
 
       {pets.length === 0 ? (
         <div className="card-base p-16 text-center flex flex-col items-center">
-          <div className="w-16 h-16 bg-primary-soft rounded-[18px] flex items-center justify-center text-primary mb-4 rotate-3">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5c2.8 0 5 2.2 5 5 0 3-4 8-5 10-1-2-5-7-5-10 0-2.8 2.2-5 5-5z"/></svg>
+          <div className="w-20 h-20 bg-primary-soft rounded-[24px] flex items-center justify-center mb-5 rotate-3 shadow-sm border border-primary/20">
+            <svg viewBox="0 0 32 32" className="w-12 h-12 drop-shadow-md"><circle cx="16" cy="16" r="14" fill="url(#clinic-grad)"/><path d="M16 8v16M8 16h16" stroke="#fff" strokeWidth="4" strokeLinecap="round"/><defs><linearGradient id="clinic-grad" x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse"><stop stopColor="#3B82F6"/><stop offset="1" stopColor="#1E3A8A"/></linearGradient></defs></svg>
           </div>
           <h3 className="text-[18px] font-bold text-text-primary">Henüz hasta kaydı yok</h3>
           <p className="text-text-secondary text-[14px] mt-2">Pet sahipleri bu klinike randevu aldığında hasta listesi oluşur.</p>
@@ -54,7 +54,7 @@ export default async function ClinicPetsPage() {
 
             return (
               <Link key={pet.id} href={`/clinic/pets/${pet.id}`}
-                className="card-base p-6 group cursor-pointer hover:border-primary/20 hover:shadow-medium transition-all duration-300">
+                className="card-base p-6 group cursor-pointer hover:border-primary/20 hover:shadow-medium hover:scale-[1.02] transition-all duration-300">
                 <div className="flex items-center gap-4 mb-4 pb-4 border-b border-border-main/60">
                   <div className="relative w-14 h-14 rounded-[16px] bg-gradient-to-tr from-primary-soft to-white flex items-center justify-center text-primary text-[22px] font-black shadow-sm group-hover:bg-primary group-hover:text-white transition-all duration-300 overflow-hidden shrink-0">
                     {pet.avatar_url

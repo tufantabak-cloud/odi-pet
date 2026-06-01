@@ -488,3 +488,135 @@ export function FirstAidIcon({ width = 34, height = 34, className = '', isSelect
     </svg>
   );
 }
+
+// 13. DefaultCatAvatar - Minimalist 3D Sticker Style
+export function DefaultCatAvatar({ width = "100%", height = "100%", className = '' }: IconProps) {
+  return (
+    <svg
+      width={width}
+      height={height}
+      viewBox="0 0 100 100"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={`transition-all duration-300 ease-out hover:scale-[1.05] ${className}`}
+    >
+      <defs>
+        <linearGradient id="catHeadGrad" x1="50" y1="30" x2="50" y2="78" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#FFFFFF" />
+          <stop offset="100%" stopColor="#F1F5F9" />
+        </linearGradient>
+        <linearGradient id="starGradCat" x1="15" y1="4" x2="35" y2="24" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#FEF08A" />
+          <stop offset="100%" stopColor="#EAB308" />
+        </linearGradient>
+      </defs>
+
+      {/* Floor Shadow */}
+      <ellipse cx="50" cy="85" rx="30" ry="6" fill="#000000" fillOpacity="0.1" />
+
+      {/* Ears Thickness (Back) */}
+      <polygon points="25,43 32,18 45,38" fill="#CBD5E1" stroke="#CBD5E1" strokeWidth="6" strokeLinejoin="round" />
+      <polygon points="75,43 68,18 55,38" fill="#CBD5E1" stroke="#CBD5E1" strokeWidth="6" strokeLinejoin="round" />
+
+      {/* Ears Front */}
+      <polygon points="25,40 32,15 45,35" fill="#F8FAFC" stroke="#F8FAFC" strokeWidth="6" strokeLinejoin="round" />
+      <polygon points="75,40 68,15 55,35" fill="#F8FAFC" stroke="#F8FAFC" strokeWidth="6" strokeLinejoin="round" />
+
+      {/* Ears Inner */}
+      <polygon points="28,36 32,23 41,34" fill="#FBCFE8" stroke="#FBCFE8" strokeWidth="3" strokeLinejoin="round" />
+      <polygon points="72,36 68,23 59,34" fill="#FBCFE8" stroke="#FBCFE8" strokeWidth="3" strokeLinejoin="round" />
+
+      {/* Head Thickness (Back) */}
+      <rect x="20" y="34" width="60" height="48" rx="24" fill="#CBD5E1" />
+      
+      {/* Head Front */}
+      <rect x="20" y="30" width="60" height="48" rx="24" fill="url(#catHeadGrad)" />
+
+      {/* Face (Minimal) */}
+      <circle cx="35" cy="50" r="4.5" fill="#334155" />
+      <circle cx="36.5" cy="48.5" r="1.5" fill="#FFFFFF" />
+      
+      <circle cx="65" cy="50" r="4.5" fill="#334155" />
+      <circle cx="66.5" cy="48.5" r="1.5" fill="#FFFFFF" />
+      
+      <ellipse cx="50" cy="56" rx="5" ry="3.5" fill="#F472B6" />
+
+      {/* Yellow 3D Star Sparkle */}
+      <g transform="translate(-2, 0)">
+        {/* Star Thickness */}
+        <path d="M25 6 Q 25 16 15 16 Q 25 16 25 26 Q 25 16 35 16 Q 25 16 25 6 Z" fill="#CA8A04" />
+        {/* Star Front */}
+        <path d="M25 4 Q 25 14 15 14 Q 25 14 25 24 Q 25 14 35 14 Q 25 14 25 4 Z" fill="url(#starGradCat)" />
+      </g>
+    </svg>
+  );
+}
+
+// 14. DefaultDogAvatar - Minimalist 3D Sticker Style
+export function DefaultDogAvatar({ width = "100%", height = "100%", className = '' }: IconProps) {
+  return (
+    <svg
+      width={width}
+      height={height}
+      viewBox="0 0 100 100"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={`transition-all duration-300 ease-out hover:scale-[1.05] ${className}`}
+    >
+      <defs>
+        <linearGradient id="dogHeadGrad" x1="50" y1="30" x2="50" y2="78" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#FDBA74" />
+          <stop offset="100%" stopColor="#FB923C" />
+        </linearGradient>
+        <linearGradient id="dogSnoutGrad" x1="50" y1="52" x2="50" y2="72" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#FFFFFF" />
+          <stop offset="100%" stopColor="#FFEDD5" />
+        </linearGradient>
+        <linearGradient id="starGradDog" x1="15" y1="4" x2="35" y2="24" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#FEF08A" />
+          <stop offset="100%" stopColor="#EAB308" />
+        </linearGradient>
+      </defs>
+
+      {/* Floor Shadow */}
+      <ellipse cx="50" cy="85" rx="30" ry="6" fill="#000000" fillOpacity="0.1" />
+
+      {/* Ears Thickness (Back) */}
+      <rect x="16" y="40" width="18" height="34" rx="9" fill="#C2410C" />
+      <rect x="66" y="40" width="18" height="34" rx="9" fill="#C2410C" />
+
+      {/* Ears Front */}
+      <rect x="16" y="36" width="18" height="34" rx="9" fill="#EA580C" />
+      <rect x="66" y="36" width="18" height="34" rx="9" fill="#EA580C" />
+
+      {/* Head Thickness (Back) */}
+      <rect x="25" y="34" width="50" height="48" rx="24" fill="#F97316" />
+      
+      {/* Head Front */}
+      <rect x="25" y="30" width="50" height="48" rx="24" fill="url(#dogHeadGrad)" />
+
+      {/* Snout Thickness */}
+      <ellipse cx="50" cy="65" rx="15" ry="11" fill="#FED7AA" />
+      {/* Snout Front */}
+      <ellipse cx="50" cy="62" rx="15" ry="11" fill="url(#dogSnoutGrad)" />
+
+      {/* Face (Minimal) */}
+      <circle cx="38" cy="46" r="4.5" fill="#431407" />
+      <circle cx="39.5" cy="44.5" r="1.5" fill="#FFFFFF" />
+      
+      <circle cx="62" cy="46" r="4.5" fill="#431407" />
+      <circle cx="63.5" cy="44.5" r="1.5" fill="#FFFFFF" />
+      
+      <ellipse cx="50" cy="58" rx="5.5" ry="3.5" fill="#431407" />
+
+      {/* Yellow 3D Star Sparkle (on the right) */}
+      <g transform="translate(48, 0)">
+        {/* Star Thickness */}
+        <path d="M25 6 Q 25 16 15 16 Q 25 16 25 26 Q 25 16 35 16 Q 25 16 25 6 Z" fill="#CA8A04" />
+        {/* Star Front */}
+        <path d="M25 4 Q 25 14 15 14 Q 25 14 25 24 Q 25 14 35 14 Q 25 14 25 4 Z" fill="url(#starGradDog)" />
+      </g>
+    </svg>
+  );
+}
+

@@ -54,7 +54,7 @@ export default async function PetsPage() {
               <div
                 key={pet.id}
                 data-testid="pet-card"
-                className="card-base overflow-hidden p-5 group hover:shadow-lg hover:border-primary/30 transition-all duration-200 relative"
+                className="card-base overflow-hidden p-5 group hover:shadow-lg hover:border-primary/30 hover:scale-[1.02] transition-all duration-200 relative"
               >
                 {/* Main Link overlay */}
                 <Link href={`/owner/pets/${pet.id}`} className="absolute inset-0 z-20" aria-label={`${pet.name} profiline git`} />
@@ -142,11 +142,14 @@ export default async function PetsPage() {
           <div className="w-20 h-20 rounded-[24px] bg-primary-soft flex items-center justify-center text-[40px]">
             🐾
           </div>
-          <div>
+          <div className="flex flex-col items-center">
             <h2 className="text-[22px] font-extrabold text-text-primary mb-2">Henüz Can Dostu Eklemediniz</h2>
-            <p className="text-text-secondary font-medium max-w-sm">
-              Odi.Pet ile can dostlarınızın sağlık, beslenme ve aşı takibini kolayca yapın. Alttaki <strong>+</strong> butonuna dokunarak ilk can dostunuzu ekleyebilirsiniz.
+            <p className="text-text-secondary font-medium max-w-sm mb-6">
+              Odi.Pet ile can dostlarınızın sağlık, beslenme ve aşı takibini kolayca yapın. İlk can dostunuzu hemen ekleyin.
             </p>
+            <Link href="/owner/pets/add" className="btn-primary inline-flex mt-2 shadow-lg hover:-translate-y-0.5 transition-transform">
+              <span className="text-[16px] leading-none mr-1.5">+</span> Can Dost Ekle
+            </Link>
           </div>
         </div>
       )}
