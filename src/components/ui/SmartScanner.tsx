@@ -19,6 +19,10 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
   
   const [tempImageSrc, setTempImageSrc] = useState<string | null>(null);
   const [rotation, setRotation] = useState<number>(0);
+  const [scale, setScale] = useState<number>(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = useRef({ x: 0, y: 0 });
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -64,6 +68,8 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
     reader.onload = (e) => {
       setTempImageSrc(e.target?.result as string);
       setRotation(0);
+      setScale(1);
+      setPosition({ x: 0, y: 0 });
       setStep("adjust");
     };
     reader.readAsDataURL(file);
@@ -90,6 +96,43 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
     }
   };
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    dragStart.current = { x: e.clientX - position.x, y: e.clientY - position.y };
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    setPosition({
+      x: e.clientX - dragStart.current.x,
+      y: e.clientY - dragStart.current.y
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      setIsDragging(true);
+      const touch = e.touches[0];
+      dragStart.current = { x: touch.clientX - position.x, y: touch.clientY - position.y };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      setPosition({
+        x: touch.clientX - dragStart.current.x,
+        y: touch.clientY - dragStart.current.y
+      });
+    }
+  };
+
   const applyAdjustmentAndScan = () => {
     if (!tempImageSrc) return;
 
@@ -99,46 +142,43 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      const isRotated90or270 = rotation === 90 || rotation === 270;
-      const width = isRotated90or270 ? img.height : img.width;
-      const height = isRotated90or270 ? img.width : img.height;
+      const containerWidth = 300;
+      const containerHeight = 400;
 
-      // Target aspect ratio 3:4 (matches guide container)
-      let cropWidth = width;
-      let cropHeight = (width * 4) / 3;
+      canvas.width = 768; // High resolution crop output
+      canvas.height = 1024;
 
-      if (cropHeight > height) {
-        cropHeight = height;
-        cropWidth = (height * 3) / 4;
-      }
+      const scaleFactor = canvas.width / containerWidth;
 
-      const cropX = (width - cropWidth) / 2;
-      const cropY = (height - cropHeight) / 2;
+      // Draw background
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      canvas.width = cropWidth;
-      canvas.height = cropHeight;
-
-      // Apply transformations and draw image centered
-      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.save();
+      // Translate to center + user drag offsets
+      ctx.translate(
+        canvas.width / 2 + position.x * scaleFactor, 
+        canvas.height / 2 + position.y * scaleFactor
+      );
+      
+      // Rotate
       ctx.rotate((rotation * Math.PI) / 180);
+      
+      // Scale (base containment scale * user zoom * high-res factor)
+      const baseScale = Math.min(containerWidth / img.width, containerHeight / img.height);
+      const finalScale = scale * baseScale * scaleFactor;
+      ctx.scale(finalScale, finalScale);
 
-      // Translate back to draw
-      if (rotation === 0) {
-        ctx.drawImage(img, -width / 2 - cropX, -height / 2 - cropY, width, height);
-      } else if (rotation === 90) {
-        ctx.drawImage(img, -height / 2 - cropY, -width / 2 - cropX, height, width);
-      } else if (rotation === 180) {
-        ctx.drawImage(img, -width / 2 - cropX, -height / 2 - cropY, width, height);
-      } else if (rotation === 270) {
-        ctx.drawImage(img, -height / 2 - cropY, -width / 2 - cropX, height, width);
-      }
+      // Draw centered
+      ctx.drawImage(img, -img.width / 2, -img.height / 2);
+      ctx.restore();
 
       canvas.toBlob((blob) => {
         if (blob) {
           const file = new File([blob], "adjusted_doc.jpg", { type: "image/jpeg" });
           processFile(file);
         }
-      }, "image/jpeg", 0.92);
+      }, "image/jpeg", 0.95);
     };
     img.src = tempImageSrc;
   };
@@ -534,23 +574,36 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
         )}
 
         {step === "adjust" && tempImageSrc && (
-          <div className="flex flex-col items-center w-full animate-fadeIn">
+          <div className="flex flex-col items-center w-full animate-fadeIn select-none">
             <h3 className="text-slate-800 font-extrabold text-[18px] mb-3 text-center">Belgeyi İncele</h3>
             <p className="text-slate-500 text-[13px] font-medium mb-4 text-center px-4">
-              Görseli döndürerek kılavuzun içine sığmasını sağlayın. Analizi bozacak çevre nesneleri otomatik kırpılacaktır.
+              Görseli sürükleyip yakınlaştırarak kılavuz çizgileri arasına hizalayın.
             </p>
             
-            <div className="w-full aspect-[3/4] max-h-[300px] overflow-hidden rounded-[24px] border border-slate-200 bg-slate-900 relative shadow-inner mb-6">
-              {/* Image element with rotation applied */}
+            <div 
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleMouseUp}
+              style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+              className="w-full aspect-[3/4] max-h-[300px] overflow-hidden rounded-[24px] border border-slate-200 bg-slate-900 relative shadow-inner mb-4 select-none touch-none"
+            >
+              {/* Image element with rotation, scale and translation applied */}
               <img 
                 src={tempImageSrc} 
                 alt="Ayarlanacak Belge" 
-                style={{ transform: `rotate(${rotation}deg)` }}
-                className="w-full h-full object-contain transition-transform duration-300"
+                style={{ 
+                  transform: `translate(${position.x}px, ${position.y}px) rotate(${rotation}deg) scale(${scale})`,
+                  transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                }}
+                className="w-full h-full object-contain pointer-events-none"
               />
               
               {/* Outer Crop Indicator Guide (Yine 3:4 oranlı kadraj overlay'i) */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none p-4">
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none p-4 z-10">
                 <div className="w-[85%] aspect-[3/4] border-2 border-dashed border-primary rounded-[20px] relative shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]">
                   {/* L Corners */}
                   <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-white rounded-tl-md" />
@@ -561,21 +614,38 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
               </div>
             </div>
 
+            {/* Zoom Slider Control */}
+            <div className="w-full px-2 mb-5 flex flex-col gap-1.5">
+              <div className="flex justify-between items-center text-[12px] font-bold text-slate-400">
+                <span>Yakınlaştır / Uzaklaştır</span>
+                <span className="text-primary font-extrabold">% {Math.round(scale * 100)}</span>
+              </div>
+              <input 
+                type="range" 
+                min="0.8" 
+                max="3" 
+                step="0.05" 
+                value={scale} 
+                onChange={(e) => setScale(parseFloat(e.target.value))}
+                className="w-full accent-primary h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+              />
+            </div>
+
             {/* Rotation Control Toolbar */}
-            <div className="flex justify-center gap-4 w-full mb-8">
+            <div className="flex justify-center gap-4 w-full mb-6">
               <button 
                 onClick={() => setRotation((prev) => (prev - 90 + 360) % 360)}
-                className="py-2.5 px-4 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl flex items-center gap-2 hover:border-primary hover:text-primary transition-all hover:scale-[1.03]"
+                className="py-2 px-3.5 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl flex items-center gap-2 hover:border-primary hover:text-primary transition-all hover:scale-[1.03]"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
                 Sola Döndür
               </button>
               
               <button 
                 onClick={() => setRotation((prev) => (prev + 90) % 360)}
-                className="py-2.5 px-4 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl flex items-center gap-2 hover:border-primary hover:text-primary transition-all hover:scale-[1.03]"
+                className="py-2 px-3.5 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl flex items-center gap-2 hover:border-primary hover:text-primary transition-all hover:scale-[1.03]"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M2.5 2v6h6M2.66 15.57a10 10 0 1 0 .57-8.38L2.5 8"/></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M2.5 2v6h6M2.66 15.57a10 10 0 1 0 .57-8.38L2.5 8"/></svg>
                 Sağa Döndür
               </button>
             </div>
