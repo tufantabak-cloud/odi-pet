@@ -396,8 +396,9 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
       <div className="flex items-center justify-between p-4 sm:p-0 mb-4 bg-white sm:bg-transparent sticky top-0 z-10 border-b border-border-main sm:border-0 shadow-sm sm:shadow-none">
         <h2 className="text-xl font-bold text-slate-800">
           {step === "ready" ? "Akıllı Tarama" : 
-           step === "processing" ? "Taranıyor" : 
-           step === "error" ? "Tarama Hatası" : 
+           step === "camera" ? "Belge Tara" : 
+           step === "adjust" ? "Belgeyi İncele" : 
+           step === "error" ? "Belge Bulunamadı" : 
            step === "saving" ? "Kaydediliyor" : "Tarama Sonuçları"}
         </h2>
         <button
@@ -483,7 +484,7 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
             {/* Visual Guide Overlay (Kadraj Kılavuzu) */}
             <div className="absolute inset-0 flex flex-col justify-between pointer-events-none p-6 z-10">
               <div className="text-center bg-black/60 backdrop-blur-xs text-white text-[11px] font-bold py-2 px-4 rounded-full self-center mt-2 shadow-sm">
-                Belgeyi veya ambalajı kılavuz çizgilerine hizalayın
+                Belgeyi düz ve aydınlık bir zemine yerleştirin
               </div>
               
               {/* Target Frame Box */}
@@ -534,7 +535,7 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
 
         {step === "adjust" && tempImageSrc && (
           <div className="flex flex-col items-center w-full animate-fadeIn">
-            <h3 className="text-slate-800 font-extrabold text-[18px] mb-3 text-center">Görseli Ayarlayın</h3>
+            <h3 className="text-slate-800 font-extrabold text-[18px] mb-3 text-center">Belgeyi İncele</h3>
             <p className="text-slate-500 text-[13px] font-medium mb-4 text-center px-4">
               Görseli döndürerek kılavuzun içine sığmasını sağlayın. Analizi bozacak çevre nesneleri otomatik kırpılacaktır.
             </p>
@@ -618,16 +619,16 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
             <div className="w-20 h-20 bg-error/10 rounded-full flex items-center justify-center mb-6 text-error text-3xl">
               🚨
             </div>
-            <h2 className="text-[24px] font-extrabold text-slate-800 mb-3">İşlem Hatası</h2>
+            <h2 className="text-[24px] font-extrabold text-slate-800 mb-3">Belge bulunamadı</h2>
             <p className="text-slate-600 font-medium mb-8 px-2">
-              {errorMessage}
+              Kamerayı belgeye doğru tuttuğunuzdan emin olun.
             </p>
             
             <button 
               onClick={() => setStep("ready")}
               className="w-full py-4 bg-primary hover:bg-primary-hover text-white font-bold rounded-2xl shadow-lg shadow-primary/20 mb-3 transition-all active:scale-95"
             >
-              Tekrar Dene
+              Tekrar Tara
             </button>
             <button 
               onClick={onClose}
