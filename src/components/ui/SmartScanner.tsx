@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Camera, X, Check, Loader2, ImageIcon, AlertCircle } from "lucide-react";
 
 interface SmartScannerProps {
@@ -10,49 +10,112 @@ interface SmartScannerProps {
 }
 
 export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
-  const [step, setStep] = useState<"ready" | "processing" | "confirm" | "error" | "saving">("ready");
+  const [step, setStep] = useState<"ready" | "camera" | "processing" | "confirm" | "error" | "saving">("ready");
   const [parsedData, setParsedData] = useState<any>({});
   const [recordType, setRecordType] = useState<string>("unknown");
   const [errorMessage, setErrorMessage] = useState("");
   const [validationError, setValidationError] = useState("");
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Clean up stream on unmount
+  useEffect(() => {
+    return () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [cameraStream]);
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      setCameraStream(stream);
+      setStep("camera");
+      // Wait for element to render before setting srcObject
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      }, 150);
+    } catch (err) {
+      console.warn("Kamera erişilemez durumda, fallback olarak dosya seçici açılıyor:", err);
+      fileInputRef.current?.click();
+    }
+  };
+
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
+    }
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current) {
+      const video = videoRef.current;
+      const canvas = document.createElement("canvas");
+      // Video çözünürlüğünü yakala
+      canvas.width = video.videoWidth || 1280;
+      canvas.height = video.videoHeight || 720;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const file = new File([blob], "captured_doc.jpg", { type: "image/jpeg" });
+            stopCamera();
+            processFile(file);
+          }
+        }, "image/jpeg", 0.95);
+      }
+    }
+  };
+
+  const processFile = async (file: File) => {
+    setStep("processing");
+
+    // Kullanım sayısını artır
+    const usageCount = parseInt(localStorage.getItem('smart_scanner_usage') || '0');
+    localStorage.setItem('smart_scanner_usage', (usageCount + 1).toString());
+
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      if (petId) {
+        formData.append("pet_id", petId);
+      }
+
+      const res = await fetch("/api/scan-document", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Metin okunamadı.");
+      }
+
+      setRecordType(data.data.record_type);
+      setParsedData(data.data.parsed || {});
+      setStep("confirm");
+
+    } catch (err: any) {
+      setErrorMessage(err.message || "Tarama sırasında bir hata oluştu.");
+      setStep("error");
+    }
+  };
 
   const handleCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setStep("processing");
-
-      // Kullanım sayısını artır
-      const usageCount = parseInt(localStorage.getItem('smart_scanner_usage') || '0');
-      localStorage.setItem('smart_scanner_usage', (usageCount + 1).toString());
-
-      try {
-        const formData = new FormData();
-        formData.append("image", file);
-        if (petId) {
-          formData.append("pet_id", petId);
-        }
-
-        const res = await fetch("/api/scan-document", {
-          method: "POST",
-          body: formData
-        });
-
-        const data = await res.json();
-
-        if (!res.ok || !data.success) {
-          throw new Error(data.error || "Metin okunamadı.");
-        }
-
-        setRecordType(data.data.record_type);
-        setParsedData(data.data.parsed || {});
-        setStep("confirm");
-
-      } catch (err: any) {
-        setErrorMessage(err.message || "Tarama sırasında bir hata oluştu.");
-        setStep("error");
-      }
+      processFile(file);
     }
   };
 
@@ -325,7 +388,7 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
 
             <div className="flex gap-3 w-full">
               <button 
-                onClick={() => fileInputRef.current?.click()}
+                onClick={startCamera}
                 className="flex-1 py-4 bg-primary hover:bg-primary-hover text-white font-bold rounded-2xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all hover:scale-[1.03] active:scale-[0.97] duration-200"
               >
                 <Camera className="w-5 h-5" />
@@ -337,6 +400,67 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
               >
                 <ImageIcon className="w-5 h-5" />
                 Galeriden Seç
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === "camera" && (
+          <div className="flex flex-col items-center w-full animate-fadeIn relative h-[480px] sm:h-[500px] overflow-hidden rounded-[32px] border border-slate-200 bg-black">
+            <video 
+              ref={videoRef} 
+              autoPlay 
+              playsInline 
+              className="absolute inset-0 w-full h-full object-cover" 
+            />
+            
+            {/* Visual Guide Overlay (Kadraj Kılavuzu) */}
+            <div className="absolute inset-0 flex flex-col justify-between pointer-events-none p-6 z-10">
+              <div className="text-center bg-black/60 backdrop-blur-xs text-white text-[11px] font-bold py-2 px-4 rounded-full self-center mt-2 shadow-sm">
+                Belgeyi veya ambalajı kılavuz çizgilerine hizalayın
+              </div>
+              
+              {/* Target Frame Box */}
+              <div className="w-[85%] aspect-[3/4] max-h-[280px] border-2 border-dashed border-white/80 rounded-[24px] self-center relative shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]">
+                {/* L-corners for aesthetic camera overlay feel */}
+                <div className="absolute -top-1.5 -left-1.5 w-6 h-6 border-t-4 border-l-4 border-primary rounded-tl-lg" />
+                <div className="absolute -top-1.5 -right-1.5 w-6 h-6 border-t-4 border-r-4 border-primary rounded-tr-lg" />
+                <div className="absolute -bottom-1.5 -left-1.5 w-6 h-6 border-b-4 border-l-4 border-primary rounded-bl-lg" />
+                <div className="absolute -bottom-1.5 -right-1.5 w-6 h-6 border-b-4 border-r-4 border-primary rounded-br-lg" />
+              </div>
+
+              <div className="h-10" /> {/* Spacer */}
+            </div>
+
+            {/* Controls Layer */}
+            <div className="absolute bottom-6 left-0 right-0 flex justify-center items-center gap-8 px-8 z-20">
+              <button 
+                onClick={() => { stopCamera(); setStep("ready"); }}
+                className="w-12 h-12 bg-white/20 hover:bg-white/30 text-white rounded-full flex items-center justify-center backdrop-blur-md transition-all hover:scale-105 active:scale-90"
+                title="İptal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              
+              <button 
+                onClick={capturePhoto}
+                className="w-16 h-16 bg-white text-primary rounded-full flex items-center justify-center shadow-2xl transition-all hover:scale-105 active:scale-95 border-4 border-primary/20"
+                title="Fotoğraf Çek"
+              >
+                <div className="w-11 h-11 rounded-full bg-primary flex items-center justify-center text-white">
+                  <Camera className="w-5 h-5" />
+                </div>
+              </button>
+
+              <button 
+                onClick={() => {
+                  stopCamera();
+                  galleryInputRef.current?.click();
+                }}
+                className="w-12 h-12 bg-white/20 hover:bg-white/30 text-white rounded-full flex items-center justify-center backdrop-blur-md transition-all hover:scale-105 active:scale-90"
+                title="Galeriden Seç"
+              >
+                <ImageIcon className="w-5 h-5" />
               </button>
             </div>
           </div>
