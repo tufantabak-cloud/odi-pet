@@ -28,7 +28,7 @@ export default function DeleteUserButton({ userId }: { userId: string }) {
 
       setSuccess('Kullanıcı başarıyla silindi.')
       setTimeout(() => {
-        router.push('/admin/users')
+        router.replace('/admin/users')
         router.refresh()
       }, 3000)
     } catch (err: any) {

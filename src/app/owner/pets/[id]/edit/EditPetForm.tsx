@@ -157,7 +157,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
         return
       }
 
-      router.push(`/owner/pets/${pet.id}`)
+      router.replace(`/owner/pets/${pet.id}`)
       router.refresh()
     } catch (err: any) {
       setSubmitError('Sunucu bağlantı hatası: ' + err.message)
@@ -183,7 +183,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
       </div>
 
       {submitError && (
-        <div className="mb-4 p-3 rounded-[12px] bg-error/10 border border-error/20 text-error text-[13px] font-semibold text-center">
+        <div role="alert" aria-live="assertive" className="mb-4 p-3 rounded-[12px] bg-error/10 border border-error/20 text-error text-[13px] font-semibold text-center">
           ⚠️ {submitError}
         </div>
       )}
@@ -219,7 +219,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div className="flex flex-col gap-2">
               <label className="text-[13px] font-bold text-text-primary">İsim *</label>
-              <input value={petName} onChange={e => setPetName(e.target.value)} className="input-base" required/>
+              <input autoFocus value={petName} onChange={e => setPetName(e.target.value)} className="input-base" required/>
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-[13px] font-bold text-text-primary">Irk *</label>

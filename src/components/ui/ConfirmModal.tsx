@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 interface ConfirmModalProps {
   open: boolean
@@ -24,6 +25,13 @@ export default function ConfirmModal({
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true)
+  }, [])
+
   // Close on Escape key
   useEffect(() => {
     if (!open) return
@@ -32,7 +40,7 @@ export default function ConfirmModal({
     return () => window.removeEventListener('keydown', handler)
   }, [open, onCancel])
 
-  if (!open) return null
+  if (!open || !mounted) return null
 
   const confirmClass =
     variant === 'danger'
@@ -51,7 +59,7 @@ export default function ConfirmModal({
   const icon =
     variant === 'danger' ? '🗑️' : variant === 'warning' ? '⚠️' : '❓'
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain"
       onClick={onCancel}
@@ -87,6 +95,8 @@ export default function ConfirmModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
+

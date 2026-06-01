@@ -47,7 +47,7 @@ export default async function CaregiverPage({ params }: CaregiverPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20">
+    <div className="min-h-dvh bg-slate-50 dark:bg-slate-950 pb-20">
       {/* Sticky Acil Yardım Butonu */}
       <div className="sticky top-0 z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 p-4 shadow-sm">
         <div className="container max-w-2xl mx-auto">

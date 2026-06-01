@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function KVKKPage() {
   return (
-    <div className="min-h-screen bg-bg-main py-10 px-4">
+    <div className="min-h-dvh bg-bg-main py-10 px-4">
       <div className="max-w-3xl mx-auto card-base p-6 md:p-10 animate-fadeIn">
         <Link href="/" className="inline-flex items-center gap-2 text-[14px] font-bold text-primary hover:underline mb-8">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>

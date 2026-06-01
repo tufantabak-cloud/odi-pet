@@ -74,7 +74,7 @@ export default function VaccineSelectorSheet({
           <p className="text-[12px] font-black text-text-secondary uppercase tracking-wider">
             Aşı Seçin
           </p>
-          <p className="text-[11px] text-text-secondary/70 mt-0.5">
+          <p className="text-[11px] text-text-secondary mt-0.5">
             {(species?.toLowerCase() === 'dog' || species?.toLowerCase() === 'köpek') ? '🐶 Köpek aşıları' : (species?.toLowerCase() === 'cat' || species?.toLowerCase() === 'kedi') ? '🐱 Kedi aşıları' : 'Tüm aşılar'}
           </p>
         </div>

@@ -3,7 +3,7 @@ import Image from 'next/image'
 
 export default function NotFound() {
   return (
-    <div className="flex min-h-screen w-full flex-col items-center justify-center p-4 bg-bg-main bg-gradient-to-tr from-primary/5 via-transparent to-primary/5 text-center font-sans">
+    <div className="flex min-h-dvh w-full flex-col items-center justify-center p-4 bg-bg-main bg-gradient-to-tr from-primary/5 via-transparent to-primary/5 text-center font-sans">
       <div className="mb-6">
         <Image src="/logo.webp" alt="Odi.Pet Logo" width={80} height={80} className="rounded-[20px] shadow-lg shadow-primary/20 mx-auto mb-4" />
       </div>

@@ -96,7 +96,7 @@ export default async function PrintReportPage({
     .limit(5)
 
   return (
-    <div className="max-w-3xl mx-auto p-10 bg-white min-h-screen text-black">
+    <div className="max-w-3xl mx-auto p-10 bg-white min-h-dvh text-black">
       {/* Header */}
       <div className="border-b-2 border-gray-200 pb-6 mb-8 flex items-end justify-between">
         <div>

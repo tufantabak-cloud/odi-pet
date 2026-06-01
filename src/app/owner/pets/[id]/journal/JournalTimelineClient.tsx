@@ -121,7 +121,7 @@ export default function JournalTimelineClient({ petId, petName, initialItems }: 
               <div className="flex flex-col justify-center">
                 <p className="text-[14px] font-extrabold text-text-primary leading-tight mb-1">{getTitle(item)}</p>
                 {item.note && <p className="text-[13px] text-text-secondary leading-snug mb-1">{item.note}</p>}
-                <p className="text-[11px] font-medium text-text-secondary/70">
+                <p className="text-[11px] font-medium text-text-secondary">
                   {new Date(item.sortDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>

@@ -18,7 +18,7 @@ export default async function ClinicLayout({ children }: { children: ReactNode }
   const initial = profile.first_name?.charAt(0)?.toUpperCase() ?? 'D'
 
   return (
-    <div className="flex min-h-screen flex-col font-sans">
+    <div className="flex min-h-dvh flex-col font-sans">
 
       {/* Clinic Header */}
       <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border-main bg-surface/80 backdrop-blur-lg px-5 lg:px-10">

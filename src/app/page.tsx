@@ -41,7 +41,7 @@ export default async function IndexPage({ searchParams }: { searchParams: Promis
 
   // Fallback (profil rolü db'de hatalı veya beklenen rollerden değilse)
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <div className="flex min-h-dvh items-center justify-center p-4">
       <div className="card-base p-6 text-center">
          <h1 className="text-xl font-bold text-error">Yetkisiz Rol</h1>
          <p className="text-text-secondary mt-2">Hesabınızın uyguniyet statüsü belirsiz. Yöneticinize başvurun.</p>

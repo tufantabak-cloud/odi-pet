@@ -157,7 +157,7 @@ export default function SharePetPage() {
             <button className="w-full h-12 bg-primary text-white rounded-xl text-lg font-semibold hover:bg-primary/90 transition-colors" onClick={handleCopyLink}>
               Bağlantıyı Kopyala
             </button>
-            <button className="w-full h-12 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-lg font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" onClick={() => router.push(`/owner/pets/${id}`)}>
+            <button className="w-full h-12 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-lg font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" onClick={() => router.replace(`/owner/pets/${id}`)}>
               Panele Dön
             </button>
           </div>

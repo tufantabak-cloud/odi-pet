@@ -7,11 +7,9 @@ export async function POST(req: NextRequest) {
   const ip = getIP(req);
 
   // Rate Limiting Check
-  if (registerRateLimit) {
-    const { success, pending, limit, reset, remaining } = await registerRateLimit.limit(ip);
-    if (!success) {
-      return NextResponse.json({ error: 'Çok fazla kayıt denemesi yaptınız. Lütfen daha sonra tekrar deneyin.' }, { status: 429 })
-    }
+  const { success } = await registerRateLimit.limit(ip);
+  if (!success) {
+    return NextResponse.json({ error: 'Çok fazla kayıt denemesi yaptınız. Lütfen daha sonra tekrar deneyin.' }, { status: 429 })
   }
 
   const fd = await req.formData()

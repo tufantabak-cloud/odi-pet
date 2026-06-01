@@ -14,14 +14,14 @@ export default function ScannerClient({ pets }: { pets: any[] }) {
   const handleSave = async (data: any) => {
     // Burada aslında API'ye kayıt yapılabilir. 
     // MOCK MVP için şimdilik sadece dashboard'a dönüyoruz.
-    router.push(`/owner/pets/${selectedPetId}`)
+    router.replace(`/owner/pets/${selectedPetId}`)
   }
 
   if (selectedPetId) {
     return (
       <SmartScanner 
         petId={selectedPetId}
-        onClose={() => router.push('/owner/dashboard')}
+        onClose={() => router.replace('/owner/dashboard')}
         onSave={handleSave}
       />
     )
@@ -32,7 +32,7 @@ export default function ScannerClient({ pets }: { pets: any[] }) {
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-extrabold text-slate-800">Akıllı Tarama</h1>
         <button
-          onClick={() => router.push('/owner/dashboard')}
+          onClick={() => router.replace('/owner/dashboard')}
           className="p-2 rounded-full bg-slate-200 text-slate-600 hover:bg-slate-300 transition-colors"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>

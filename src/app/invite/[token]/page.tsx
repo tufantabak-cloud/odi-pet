@@ -73,7 +73,7 @@ export default function InviteAcceptPage({ params }: { params: Promise<{ token: 
 
   // ── Loading ──
   if (state.phase === 'loading') return (
-    <div className="min-h-screen flex items-center justify-center bg-bg-main">
+    <div className="min-h-dvh flex items-center justify-center bg-bg-main">
       <div className="flex flex-col items-center gap-4 text-text-secondary">
         <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"/>
         <p className="font-semibold">Davet doğrulanıyor...</p>
@@ -83,7 +83,7 @@ export default function InviteAcceptPage({ params }: { params: Promise<{ token: 
 
   // ── Invalid ──
   if (state.phase === 'invalid') return (
-    <div className="min-h-screen flex items-center justify-center bg-bg-main p-6">
+    <div className="min-h-dvh flex items-center justify-center bg-bg-main p-6">
       <div className="card-base max-w-sm w-full p-8 flex flex-col items-center text-center gap-4">
         <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center text-[32px]">❌</div>
         <h1 className="text-[22px] font-extrabold text-text-primary">Geçersiz Davet</h1>
@@ -95,7 +95,7 @@ export default function InviteAcceptPage({ params }: { params: Promise<{ token: 
 
   // ── Error ──
   if (state.phase === 'error') return (
-    <div className="min-h-screen flex items-center justify-center bg-bg-main p-6">
+    <div className="min-h-dvh flex items-center justify-center bg-bg-main p-6">
       <div className="card-base max-w-sm w-full p-8 flex flex-col items-center text-center gap-4">
         <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center text-[32px]">⚠️</div>
         <h1 className="text-[22px] font-extrabold text-text-primary">Hata Oluştu</h1>
@@ -112,7 +112,7 @@ export default function InviteAcceptPage({ params }: { params: Promise<{ token: 
   if (state.phase === 'success') {
     const roleInfo = ROLE_LABELS[state.role] ?? ROLE_LABELS.viewer
     return (
-      <div className="min-h-screen flex items-center justify-center bg-bg-main p-6">
+      <div className="min-h-dvh flex items-center justify-center bg-bg-main p-6">
         <div className="card-base max-w-md w-full overflow-hidden">
           <div className="h-1.5 bg-gradient-to-r from-primary to-primary-hover"/>
           <div className="p-8 flex flex-col items-center text-center gap-5">
@@ -161,7 +161,7 @@ export default function InviteAcceptPage({ params }: { params: Promise<{ token: 
   const ownerName = invite?.pets?.profiles ? `${invite.pets.profiles.first_name ?? ''} ${invite.pets.profiles.last_name ?? ''}`.trim() : 'Bir kullanıcı'
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-bg-main p-6">
+    <div className="min-h-dvh flex items-center justify-center bg-bg-main p-6">
       <div className="card-base max-w-md w-full overflow-hidden">
         <div className="h-1.5 bg-gradient-to-r from-primary to-primary-hover"/>
         <div className="p-8 flex flex-col items-center text-center gap-5">

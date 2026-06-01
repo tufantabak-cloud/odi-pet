@@ -70,7 +70,7 @@ export default function OutreachCRM() {
   const filtered = filterStage === 'all' ? contacts : contacts.filter(c => c.stage === filterStage)
 
   return (
-    <div className="min-h-screen bg-bg-main p-6 md:p-10">
+    <div className="min-h-dvh bg-bg-main p-6 md:p-10">
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>

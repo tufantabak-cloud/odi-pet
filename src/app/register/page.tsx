@@ -58,6 +58,7 @@ export default function RegisterPage() {
     formState: { errors },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
+    mode: 'onBlur',
   })
 
   const handleNextStep = async () => {
@@ -174,7 +175,7 @@ export default function RegisterPage() {
 
   if (success) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center p-4 bg-bg-main">
+      <div className="flex min-h-dvh w-full items-center justify-center p-4 bg-bg-main">
         <div className="w-full max-w-[400px] card-base p-10 text-center animate-in zoom-in duration-300">
           <div className="w-20 h-20 rounded-full bg-success/10 flex items-center justify-center text-success text-4xl mx-auto mb-6 shadow-inner shadow-success/20">
             ✓
@@ -203,7 +204,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center p-4 bg-bg-main bg-gradient-to-tr from-primary/5 via-transparent to-primary/5">
+    <div className="flex min-h-dvh w-full items-center justify-center p-4 bg-bg-main bg-gradient-to-tr from-primary/5 via-transparent to-primary/5">
       <div className="w-full max-w-[420px] card-base p-8 sm:p-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="text-center mb-10">
           <Link href="/" className="inline-flex items-center justify-center w-24 h-24 rounded-[24px] overflow-hidden shadow-2xl shadow-primary/20 mb-6 hover:scale-105 transition-transform bg-white p-0.5">
@@ -232,7 +233,7 @@ export default function RegisterPage() {
             />
           )}
           {error && (
-            <div role="alert" className="p-4 rounded-2xl bg-error/10 border border-error/20 text-error text-[13px] font-bold text-center animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div role="alert" aria-live="assertive" className="p-4 rounded-2xl bg-error/10 border border-error/20 text-error text-[13px] font-bold text-center animate-in fade-in slide-in-from-bottom-2 duration-300">
               ⚠️ {error}
             </div>
           )}
@@ -305,6 +306,7 @@ export default function RegisterPage() {
                     id="name"
                     type="text"
                     placeholder="Örn: Ahmet Yılmaz"
+                    autoFocus
                     {...register('name')}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
@@ -312,9 +314,11 @@ export default function RegisterPage() {
                         handleNextStep();
                       }
                     }}
+                    aria-invalid={!!errors.name}
+                    aria-describedby={errors.name ? 'name-error' : undefined}
                     className={`input-base py-3 text-[15px] ${errors.name ? 'border-error/50 focus:border-error focus:ring-error/20' : ''}`}
                   />
-                  {errors.name && <span role="alert" className="text-error text-[11px] font-bold ml-1">{errors.name.message}</span>}
+                  {errors.name && <span id="name-error" role="alert" className="text-error text-[11px] font-bold ml-1">{errors.name.message}</span>}
                 </div>
 
                 <div className="flex flex-col gap-1.5">
@@ -332,9 +336,11 @@ export default function RegisterPage() {
                         handleNextStep();
                       }
                     }}
+                    aria-invalid={!!errors.email}
+                    aria-describedby={errors.email ? 'register-email-error' : undefined}
                     className={`input-base py-3 text-[15px] ${errors.email ? 'border-error/50 focus:border-error focus:ring-error/20' : ''}`}
                   />
-                  {errors.email && <span role="alert" className="text-error text-[11px] font-bold ml-1">{errors.email.message}</span>}
+                  {errors.email && <span id="register-email-error" role="alert" className="text-error text-[11px] font-bold ml-1">{errors.email.message}</span>}
                 </div>
 
                 <button
@@ -376,6 +382,8 @@ export default function RegisterPage() {
                 type={showPassword ? 'text' : 'password'}
                 placeholder="••••••••"
                 {...register('password')}
+                aria-invalid={!!errors.password}
+                aria-describedby={errors.password ? 'register-password-error' : undefined}
                 className={`input-base py-3 text-[15px] pr-12 w-full ${errors.password ? 'border-error/50 focus:border-error focus:ring-error/20' : ''}`}
               />
               <button
@@ -412,7 +420,7 @@ export default function RegisterPage() {
               </ul>
             )}
             
-            {errors.password && <span role="alert" className="text-error text-[11px] font-bold ml-1">{errors.password.message}</span>}
+            {errors.password && <span id="register-password-error" role="alert" className="text-error text-[11px] font-bold ml-1">{errors.password.message}</span>}
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -425,6 +433,8 @@ export default function RegisterPage() {
                 type={showConfirmPassword ? 'text' : 'password'}
                 placeholder="••••••••"
                 {...register('confirmPassword')}
+                aria-invalid={!!errors.confirmPassword}
+                aria-describedby={errors.confirmPassword ? 'confirm-password-error' : undefined}
                 className={`input-base py-3 text-[15px] pr-12 w-full ${errors.confirmPassword ? 'border-error/50 focus:border-error focus:ring-error/20' : ''}`}
               />
               <button
@@ -436,7 +446,7 @@ export default function RegisterPage() {
                 {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
-            {errors.confirmPassword && <span role="alert" className="text-error text-[11px] font-bold ml-1">{errors.confirmPassword.message}</span>}
+            {errors.confirmPassword && <span id="confirm-password-error" role="alert" className="text-error text-[11px] font-bold ml-1">{errors.confirmPassword.message}</span>}
           </div>
 
           <div className="flex flex-col gap-1">
@@ -465,7 +475,7 @@ export default function RegisterPage() {
             ) : 'Kayıt Ol ve Başla'}
           </button>
 
-                <div className="flex items-center justify-center gap-4 mt-8 pt-6 border-t border-border-main/50 text-[11px] font-bold text-text-secondary/70">
+                <div className="flex items-center justify-center gap-4 mt-8 pt-6 border-t border-border-main/50 text-[12px] font-bold text-text-secondary">
                   <span className="flex items-center gap-1.5"><span className="text-[14px]">🔒</span> 256-bit SSL Koruması</span>
                   <span className="flex items-center gap-1.5"><span className="text-[14px]">🛡️</span> KVKK Uyumlu</span>
                 </div>

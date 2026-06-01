@@ -43,7 +43,7 @@ export default function JournalFormClient({ petId, category }: { petId: string, 
       setError(insertError.message)
       setLoading(false)
     } else {
-      router.push(`/owner/pets/${petId}/journal`)
+      router.replace(`/owner/pets/${petId}/journal`)
       router.refresh()
     }
   }
@@ -153,7 +153,7 @@ export default function JournalFormClient({ petId, category }: { petId: string, 
       </div>
 
       {error && (
-        <div className="p-3 bg-error/10 text-error text-[13px] font-bold rounded-xl text-center border border-error/20">
+        <div role="alert" aria-live="assertive" className="p-3 bg-error/10 text-error text-[13px] font-bold rounded-xl text-center border border-error/20">
           {error}
         </div>
       )}

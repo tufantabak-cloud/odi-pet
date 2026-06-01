@@ -4,7 +4,7 @@ import Image from 'next/image'
 
 export default function OfflinePage() {
   return (
-    <div className="flex min-h-screen w-full items-center justify-center p-4 bg-bg-main bg-gradient-to-tr from-primary/5 via-transparent to-primary/5">
+    <div className="flex min-h-dvh w-full items-center justify-center p-4 bg-bg-main bg-gradient-to-tr from-primary/5 via-transparent to-primary/5">
       <div className="w-full max-w-sm bg-white rounded-[32px] p-8 shadow-2xl shadow-primary/5 border border-border-main/50 text-center">
 
         {/* Logo */}
@@ -45,7 +45,7 @@ export default function OfflinePage() {
         </button>
 
         {/* Footer */}
-        <div className="flex items-center justify-center gap-2 mt-8 pt-6 border-t border-border-main/50 text-[11px] font-bold text-text-secondary/70">
+        <div className="flex items-center justify-center gap-2 mt-8 pt-6 border-t border-border-main/50 text-[11px] font-bold text-text-secondary">
           <span className="text-[14px]">📶</span>
           <span>Çevrimdışı Mod</span>
         </div>

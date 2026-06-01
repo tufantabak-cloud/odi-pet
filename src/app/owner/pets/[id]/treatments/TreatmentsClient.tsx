@@ -509,7 +509,7 @@ export default function TreatmentsClient({ pet, initialTreatments }: { pet: any,
                     </div>
                     <div className="mt-5 flex items-center justify-between gap-4">
                       <label className="flex items-center gap-2 cursor-pointer shrink-0 group">
-                        <input type="checkbox" checked={trackMedEnd} onChange={e => setTrackMedEnd(e.target.checked)} className="w-4 h-4 rounded border-blue-300 text-blue-600 focus:ring-blue-500" />
+                        <input type="checkbox" checked={trackMedEnd} onChange={e => setTrackMedEnd(e.target.checked)} className="w-5 h-5 rounded border-blue-300 text-blue-600 focus:ring-blue-500" />
                         <span className="text-[11px] font-black text-blue-700 group-hover:text-blue-900 transition-colors uppercase tracking-tight">İlaç Bitimini Takip Et</span>
                       </label>
                       <button type="button" onClick={addMedication} className="btn-primary py-2 px-6 text-[12px] font-black shadow-md shadow-primary/20">Listeye Ekle</button>

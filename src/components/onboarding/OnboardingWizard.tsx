@@ -28,7 +28,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
     })
     
     onComplete()
-    router.push('/owner/pets/add')
+    router.replace('/owner/pets/add')
   }
 
   async function handleDemo() {

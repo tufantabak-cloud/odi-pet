@@ -57,6 +57,7 @@ function LoginForm() {
     formState: { errors },
   } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
+    mode: 'onBlur',
   })
 
   useEffect(() => {
@@ -150,8 +151,8 @@ function LoginForm() {
       setSuccess(true)
       setTimeout(() => {
         router.refresh()
-        router.push('/')
-      }, 800)
+        router.replace('/')
+      }, 1200)
     } catch {
       setError('Sunucu bağlantı hatası. Lütfen tekrar deneyin.')
     } finally {
@@ -159,11 +160,10 @@ function LoginForm() {
     }
   }
 
-  // Compute the display message: prefer inline error, then URL error param, then urlMessage
-  const displayError = error || (errorParam === 'session_expired' ? '' : '') || urlMessage
+
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center p-4 bg-bg-main bg-gradient-to-tr from-primary/5 via-transparent to-primary/5">
+    <div className="flex min-h-dvh w-full items-center justify-center p-4 bg-bg-main bg-gradient-to-tr from-primary/5 via-transparent to-primary/5">
       <div className="w-full max-w-sm bg-white rounded-[32px] p-6 sm:p-8 shadow-2xl shadow-primary/5 relative z-10 border border-border-main/50 relative overflow-hidden group">
         <div className={`transition-all duration-700 ease-out ${success ? 'opacity-0 scale-95 blur-sm' : 'opacity-100 scale-100 blur-0'}`}>
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-110 duration-700 pointer-events-none"></div>
@@ -207,7 +207,7 @@ function LoginForm() {
           )}
 
           {(error || urlMessage) && (
-            <div role="alert" className="p-4 rounded-2xl bg-error/10 border border-error/20 text-error text-[13px] font-bold text-center animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div role="alert" aria-live="assertive" className="p-4 rounded-2xl bg-error/10 border border-error/20 text-error text-[13px] font-bold text-center animate-in fade-in slide-in-from-bottom-2 duration-300">
               ⚠️ {error || urlMessage}
             </div>
           )}
@@ -271,11 +271,14 @@ function LoginForm() {
               id="email"
               type="email"
               placeholder="ornek@email.com"
+              autoFocus
               {...register('email')}
               autoComplete="email"
+              aria-invalid={!!errors.email}
+              aria-describedby={errors.email ? 'email-error' : undefined}
               className={`input-base py-3 text-[15px] ${errors.email ? 'border-error/50 focus:border-error focus:ring-error/20' : ''}`}
             />
-            {errors.email && <span role="alert" className="text-error text-[11px] font-bold ml-1">{errors.email.message}</span>}
+            {errors.email && <span id="email-error" role="alert" className="text-error text-[11px] font-bold ml-1">{errors.email.message}</span>}
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -289,6 +292,8 @@ function LoginForm() {
                 placeholder="••••••••"
                 {...register('password')}
                 autoComplete="current-password"
+                aria-invalid={!!errors.password}
+                aria-describedby={errors.password ? 'password-error' : undefined}
                 className={`input-base py-3 text-[15px] pr-12 w-full ${errors.password ? 'border-error/50 focus:border-error focus:ring-error/20' : ''}`}
               />
               <button
@@ -300,18 +305,18 @@ function LoginForm() {
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
-            {errors.password && <span role="alert" className="text-error text-[11px] font-bold ml-1">{errors.password.message}</span>}
+            {errors.password && <span id="password-error" role="alert" className="text-error text-[11px] font-bold ml-1">{errors.password.message}</span>}
           </div>
 
           <div className="flex items-center justify-between px-1">
-            <label className="flex items-center gap-2 cursor-pointer">
+            <label className="flex items-center gap-2.5 cursor-pointer group/remember">
               <input
                 id="rememberMe"
                 type="checkbox"
                 {...register('rememberMe')}
-                className="w-4 h-4 rounded border-border-main text-primary focus:ring-primary"
+                className="w-5 h-5 rounded border-border-main text-primary focus:ring-primary cursor-pointer"
               />
-              <span className="text-[13px] text-text-secondary font-medium">Beni Hatırla</span>
+              <span className="text-[13px] text-text-secondary font-medium group-hover/remember:text-text-primary transition-colors">Beni Hatırla</span>
             </label>
             <Link href="/reset-password" className="text-[13px] text-primary font-bold hover:underline">
               Şifremi Unuttum
@@ -347,13 +352,24 @@ function LoginForm() {
                 Hemen Kayıt Olun
               </Link>
             </p>
-            <div className="flex items-center justify-center gap-4 mt-8 pt-6 border-t border-border-main/50 text-[11px] font-bold text-text-secondary/70">
+            <div className="flex items-center justify-center gap-4 mt-8 pt-6 border-t border-border-main/50 text-[12px] font-bold text-text-secondary">
               <span className="flex items-center gap-1.5"><span className="text-[14px]">🔒</span> 256-bit SSL Koruması</span>
               <span className="flex items-center gap-1.5"><span className="text-[14px]">🛡️</span> KVKK Uyumlu</span>
             </div>
           </div>
         </form>
         </div>
+
+        {/* Başarılı giriş overlay */}
+        {success && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500 z-20 rounded-[32px]">
+            <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center text-success text-3xl mb-4 shadow-inner shadow-success/20 animate-in zoom-in duration-300">
+              ✓
+            </div>
+            <p className="text-[20px] font-black text-text-primary">Hoş Geldiniz!</p>
+            <p className="text-[13px] text-text-secondary mt-1">Yönlendiriliyorsunuz…</p>
+          </div>
+        )}
       </div>
     </div>
   )

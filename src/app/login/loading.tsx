@@ -1,6 +1,6 @@
 export default function Loading() {
   return (
-    <div className="flex min-h-screen w-full items-center justify-center p-4 bg-bg-main">
+    <div className="flex min-h-dvh w-full items-center justify-center p-4 bg-bg-main">
       <div className="w-full max-w-[420px] card-base p-8 sm:p-10 animate-pulse">
         <div className="flex flex-col items-center mb-10">
           <div className="w-24 h-24 bg-border-main rounded-[24px] mb-6"/>

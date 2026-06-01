@@ -97,6 +97,8 @@ export default function RoleChangeForm({ userId, currentRole, actorRole }: Props
 
       {status && (
         <div
+          role="alert"
+          aria-live="assertive"
           className={`rounded-xl px-4 py-3 text-[13px] font-semibold border ${
             status.ok
               ? 'bg-emerald-50 text-emerald-700 border-emerald-200'

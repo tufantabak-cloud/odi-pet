@@ -15,7 +15,7 @@ export default function Error({
   }, [error])
  
   return (
-    <div className="flex min-h-screen w-full flex-col items-center justify-center p-4 bg-bg-main text-center font-sans">
+    <div className="flex min-h-dvh w-full flex-col items-center justify-center p-4 bg-bg-main text-center font-sans">
       <div className="mb-6">
         <div className="w-20 h-20 rounded-full bg-error/10 flex items-center justify-center text-error text-4xl mx-auto shadow-inner shadow-error/20">
           ⚠️

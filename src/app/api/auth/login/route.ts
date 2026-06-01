@@ -7,15 +7,13 @@ export async function POST(req: NextRequest) {
   const ip = getIP(req);
 
   // Rate Limiting Check
-  if (loginRateLimit) {
-    const { success, pending, limit, reset, remaining } = await loginRateLimit.limit(ip);
-    if (!success) {
-      const waitSeconds = Math.ceil((reset - Date.now()) / 1000);
-      return NextResponse.json({ 
-        error: `Çok fazla hatalı giriş denemesi. Lütfen ${waitSeconds} saniye sonra tekrar deneyin.`,
-        reset 
-      }, { status: 429 })
-    }
+  const { success, reset } = await loginRateLimit.limit(ip);
+  if (!success) {
+    const waitSeconds = Math.ceil((reset - Date.now()) / 1000);
+    return NextResponse.json({ 
+      error: `Çok fazla hatalı giriş denemesi. Lütfen ${waitSeconds} saniye sonra tekrar deneyin.`,
+      reset 
+    }, { status: 429 })
   }
 
   const fd = await req.formData()

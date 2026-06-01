@@ -1101,7 +1101,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                 const dayPrefix = isToday ? 'Bugün' : selectedDate.toLocaleDateString('tr-TR', {weekday: 'long'});
 
                 if (dayTasks.length === 0) {
-                  return <div className="h-full flex items-center justify-center text-[14px] font-bold text-text-secondary/70 py-6">{dayPrefix} için görev yok.</div>
+                  return <div className="h-full flex items-center justify-center text-[14px] font-bold text-text-secondary py-6">{dayPrefix} için görev yok.</div>
                 }
 
                 return (

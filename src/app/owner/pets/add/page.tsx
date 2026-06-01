@@ -190,7 +190,7 @@ function PetForm({ species, onBack }: { species: Species; onBack: () => void }) 
       <form onSubmit={handleSubmit} className="card-base p-6 sm:p-8 flex flex-col gap-6">
         
         {submitError && (
-          <div className="p-3 bg-error/10 text-error text-[13px] font-bold rounded-xl border border-error/20">
+          <div role="alert" aria-live="assertive" className="p-3 bg-error/10 text-error text-[13px] font-bold rounded-xl border border-error/20">
             ⚠️ {submitError}
           </div>
         )}
@@ -200,6 +200,7 @@ function PetForm({ species, onBack }: { species: Species; onBack: () => void }) 
           <div className="flex flex-col gap-2">
             <label htmlFor="name" className="text-[13px] font-bold text-text-primary">İsim *</label>
             <input id="name" type="text"
+              autoFocus
               value={petName} onChange={e => setPetName(e.target.value)}
               placeholder={species === 'Kedi' ? 'Örn: Mia, Boncuk' : 'Örn: Max, Karamel'}
               className="input-base" required/>

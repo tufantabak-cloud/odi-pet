@@ -248,7 +248,7 @@ export default function VetsPage() {
   const isOpenNow = selectedClinicDetails !== null ? selectedClinicDetails.open_now : selectedClinic?.open_now;
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-12 min-h-screen pb-28">
+    <div className="max-w-4xl mx-auto px-6 py-12 min-h-dvh pb-28">
       {/* Navigation */}
       <div className="mb-8 animate-fadeInUp">
         {selectedClinic ? (

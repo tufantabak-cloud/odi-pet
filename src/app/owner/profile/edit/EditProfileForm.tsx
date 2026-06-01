@@ -32,7 +32,7 @@ export default function EditProfileForm({ profile }: { profile: any }) {
 
       if (updateError) throw updateError
 
-      router.push('/owner/profile')
+      router.replace('/owner/profile')
       router.refresh()
     } catch (err: any) {
       console.error(err)
@@ -45,7 +45,7 @@ export default function EditProfileForm({ profile }: { profile: any }) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
       {error && (
-        <div className="p-3 rounded-lg bg-error/10 text-error text-[13px] font-medium border border-error/20">
+        <div role="alert" aria-live="assertive" className="p-3 rounded-lg bg-error/10 text-error text-[13px] font-medium border border-error/20">
           {error}
         </div>
       )}
@@ -53,6 +53,7 @@ export default function EditProfileForm({ profile }: { profile: any }) {
       <div className="flex flex-col gap-1.5">
         <label className="text-[13px] font-bold text-text-secondary ml-1">Adınız</label>
         <input 
+          autoFocus
           type="text" 
           value={firstName}
           onChange={e => setFirstName(e.target.value)}

@@ -48,7 +48,7 @@ export default async function ClinicCarePlansPage() {
           <p className="text-[13px] text-text-secondary mt-0.5">
             {plan.pets?.name} &bull; {plan.pets?.species}
           </p>
-          {plan.description && <p className="text-[12px] text-text-secondary/70 mt-0.5 truncate">{plan.description}</p>}
+          {plan.description && <p className="text-[12px] text-text-secondary mt-0.5 truncate">{plan.description}</p>}
         </div>
         <span className={`text-[11px] font-bold px-2.5 py-1.5 rounded-full border shrink-0 ${s.badge}`}>{s.label}</span>
       </div>

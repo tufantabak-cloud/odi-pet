@@ -12,8 +12,36 @@ try {
 }
 
 // Fallback to a dummy ratelimiter if Redis is not configured (prevents crashing if user forgets env vars)
+// In-memory fallback for when Redis is unavailable (basic protection, not distributed)
+const inMemoryStore = new Map<string, { count: number; resetAt: number }>();
+
+type RateLimitResult = {
+  success: boolean;
+  limit: number;
+  remaining: number;
+  reset: number;
+};
+
+const createInMemoryLimiter = (tokens: number, windowMs: number) => ({
+  async limit(key: string): Promise<RateLimitResult> {
+    const now = Date.now();
+    const entry = inMemoryStore.get(key);
+    if (!entry || now >= entry.resetAt) {
+      inMemoryStore.set(key, { count: 1, resetAt: now + windowMs });
+      return { success: true, limit: tokens, remaining: tokens - 1, reset: now + windowMs };
+    }
+    entry.count += 1;
+    const success = entry.count <= tokens;
+    return { success, limit: tokens, remaining: Math.max(0, tokens - entry.count), reset: entry.resetAt };
+  },
+});
+
 const createRateLimit = (tokens: number, windowStr: string, prefix: string) => {
-  if (!redis) return null;
+  const windowMs = 60_000; // 1 minute default
+  if (!redis) {
+    console.warn(`Redis unavailable — using in-memory rate limiter for ${prefix}`);
+    return createInMemoryLimiter(tokens, windowMs);
+  }
   return new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(tokens, windowStr as any),
@@ -26,6 +54,7 @@ export const loginRateLimit = createRateLimit(5, "1 m", "@upstash/ratelimit/logi
 export const registerRateLimit = createRateLimit(3, "1 m", "@upstash/ratelimit/register");
 export const resetRateLimit = createRateLimit(2, "1 m", "@upstash/ratelimit/reset");
 export const updatePasswordRateLimit = createRateLimit(3, "1 m", "@upstash/ratelimit/update-password");
+
 
 export async function verifyTurnstile(token: string | null | undefined, ip: string): Promise<boolean> {
   const secretKey = process.env.TURNSTILE_SECRET_KEY;

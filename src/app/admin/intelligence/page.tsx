@@ -196,7 +196,7 @@ export default function FounderIntelligencePage() {
     : '⚠️ Friction risk (>5 min)'
 
   return (
-    <div className="min-h-screen bg-bg-main p-6 md:p-10">
+    <div className="min-h-dvh bg-bg-main p-6 md:p-10">
       <div className="max-w-4xl mx-auto">
 
         {/* Header */}
