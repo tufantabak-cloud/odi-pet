@@ -1642,7 +1642,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       )}
 
       {/* Floating Action Button (FAB) */}
-      <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-3">
+      <div className="fixed bottom-24 md:bottom-6 right-4 md:right-6 z-[100] flex flex-col items-end gap-3">
         {fabOpen && (
           <div className="flex flex-col items-end gap-3 mb-2 animate-fade-in origin-bottom">
             <Link
