@@ -10,12 +10,15 @@ interface SmartScannerProps {
 }
 
 export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
-  const [step, setStep] = useState<"ready" | "camera" | "processing" | "confirm" | "error" | "saving">("ready");
+  const [step, setStep] = useState<"ready" | "camera" | "adjust" | "processing" | "confirm" | "error" | "saving">("ready");
   const [parsedData, setParsedData] = useState<any>({});
   const [recordType, setRecordType] = useState<string>("unknown");
   const [errorMessage, setErrorMessage] = useState("");
   const [validationError, setValidationError] = useState("");
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  
+  const [tempImageSrc, setTempImageSrc] = useState<string | null>(null);
+  const [rotation, setRotation] = useState<number>(0);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -56,6 +59,16 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
     }
   };
 
+  const handleImageSelected = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setTempImageSrc(e.target?.result as string);
+      setRotation(0);
+      setStep("adjust");
+    };
+    reader.readAsDataURL(file);
+  };
+
   const capturePhoto = () => {
     if (videoRef.current) {
       const video = videoRef.current;
@@ -70,11 +83,64 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
           if (blob) {
             const file = new File([blob], "captured_doc.jpg", { type: "image/jpeg" });
             stopCamera();
-            processFile(file);
+            handleImageSelected(file);
           }
         }, "image/jpeg", 0.95);
       }
     }
+  };
+
+  const applyAdjustmentAndScan = () => {
+    if (!tempImageSrc) return;
+
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      const isRotated90or270 = rotation === 90 || rotation === 270;
+      const width = isRotated90or270 ? img.height : img.width;
+      const height = isRotated90or270 ? img.width : img.height;
+
+      // Target aspect ratio 3:4 (matches guide container)
+      let cropWidth = width;
+      let cropHeight = (width * 4) / 3;
+
+      if (cropHeight > height) {
+        cropHeight = height;
+        cropWidth = (height * 3) / 4;
+      }
+
+      const cropX = (width - cropWidth) / 2;
+      const cropY = (height - cropHeight) / 2;
+
+      canvas.width = cropWidth;
+      canvas.height = cropHeight;
+
+      // Apply transformations and draw image centered
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate((rotation * Math.PI) / 180);
+
+      // Translate back to draw
+      if (rotation === 0) {
+        ctx.drawImage(img, -width / 2 - cropX, -height / 2 - cropY, width, height);
+      } else if (rotation === 90) {
+        ctx.drawImage(img, -height / 2 - cropY, -width / 2 - cropX, height, width);
+      } else if (rotation === 180) {
+        ctx.drawImage(img, -width / 2 - cropX, -height / 2 - cropY, width, height);
+      } else if (rotation === 270) {
+        ctx.drawImage(img, -height / 2 - cropY, -width / 2 - cropX, height, width);
+      }
+
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const file = new File([blob], "adjusted_doc.jpg", { type: "image/jpeg" });
+          processFile(file);
+        }
+      }, "image/jpeg", 0.92);
+    };
+    img.src = tempImageSrc;
   };
 
   const processFile = async (file: File) => {
@@ -115,7 +181,7 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
   const handleCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      processFile(file);
+      handleImageSelected(file);
     }
   };
 
@@ -461,6 +527,75 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
                 title="Galeriden Seç"
               >
                 <ImageIcon className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === "adjust" && tempImageSrc && (
+          <div className="flex flex-col items-center w-full animate-fadeIn">
+            <h3 className="text-slate-800 font-extrabold text-[18px] mb-3 text-center">Görseli Ayarlayın</h3>
+            <p className="text-slate-500 text-[13px] font-medium mb-4 text-center px-4">
+              Görseli döndürerek kılavuzun içine sığmasını sağlayın. Analizi bozacak çevre nesneleri otomatik kırpılacaktır.
+            </p>
+            
+            <div className="w-full aspect-[3/4] max-h-[300px] overflow-hidden rounded-[24px] border border-slate-200 bg-slate-900 relative shadow-inner mb-6">
+              {/* Image element with rotation applied */}
+              <img 
+                src={tempImageSrc} 
+                alt="Ayarlanacak Belge" 
+                style={{ transform: `rotate(${rotation}deg)` }}
+                className="w-full h-full object-contain transition-transform duration-300"
+              />
+              
+              {/* Outer Crop Indicator Guide (Yine 3:4 oranlı kadraj overlay'i) */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none p-4">
+                <div className="w-[85%] aspect-[3/4] border-2 border-dashed border-primary rounded-[20px] relative shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]">
+                  {/* L Corners */}
+                  <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-white rounded-tl-md" />
+                  <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-white rounded-tr-md" />
+                  <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-white rounded-bl-md" />
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-white rounded-br-md" />
+                </div>
+              </div>
+            </div>
+
+            {/* Rotation Control Toolbar */}
+            <div className="flex justify-center gap-4 w-full mb-8">
+              <button 
+                onClick={() => setRotation((prev) => (prev - 90 + 360) % 360)}
+                className="py-2.5 px-4 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl flex items-center gap-2 hover:border-primary hover:text-primary transition-all hover:scale-[1.03]"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                Sola Döndür
+              </button>
+              
+              <button 
+                onClick={() => setRotation((prev) => (prev + 90) % 360)}
+                className="py-2.5 px-4 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl flex items-center gap-2 hover:border-primary hover:text-primary transition-all hover:scale-[1.03]"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M2.5 2v6h6M2.66 15.57a10 10 0 1 0 .57-8.38L2.5 8"/></svg>
+                Sağa Döndür
+              </button>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 w-full">
+              <button 
+                onClick={() => {
+                  setTempImageSrc(null);
+                  setStep("ready");
+                }}
+                className="flex-1 py-4 bg-white hover:bg-slate-50 text-slate-600 font-bold border border-slate-200 rounded-2xl transition-all hover:scale-[1.03] active:scale-[0.97]"
+              >
+                Yeniden Seç
+              </button>
+              <button 
+                onClick={applyAdjustmentAndScan}
+                className="flex-1 py-4 bg-primary hover:bg-primary-hover text-white font-bold rounded-2xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all hover:scale-[1.03] active:scale-[0.97]"
+              >
+                <Check className="w-5 h-5" />
+                Kırp ve Tara
               </button>
             </div>
           </div>

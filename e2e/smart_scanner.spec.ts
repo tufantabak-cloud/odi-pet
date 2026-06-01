@@ -87,6 +87,14 @@ test.describe('Akıllı Tarama (Smart Scanner) Akışı', () => {
       });
     }
 
+    // Görseli ayarlama ekranının geldiğini kontrol edelim
+    await expect(page.locator('h3:has-text("Görseli Ayarlayın")').first()).toBeVisible({ timeout: 5_000 });
+    
+    // Kırp ve Tara butonuna basalım
+    const cropBtn = page.locator('button:has-text("Kırp ve Tara")').first();
+    await expect(cropBtn).toBeVisible();
+    await cropBtn.click();
+
     // Taranıyor durumunun geçişini bekleyelim
     await expect(page.locator('h2:has-text("Tarama Sonuçları")').first()).toBeVisible({ timeout: 15_000 });
 
@@ -137,6 +145,14 @@ test.describe('Akıllı Tarama (Smart Scanner) Akışı', () => {
       mimeType: 'image/png',
       buffer: Buffer.from('fake-image-content')
     });
+
+    // Görseli ayarlama ekranının geldiğini kontrol edelim
+    await expect(page.locator('h3:has-text("Görseli Ayarlayın")').first()).toBeVisible({ timeout: 5_000 });
+    
+    // Kırp ve Tara butonuna basalım
+    const cropBtn = page.locator('button:has-text("Kırp ve Tara")').first();
+    await expect(cropBtn).toBeVisible();
+    await cropBtn.click();
 
     // Tarama sonuçları onay sayfasını bekleyelim
     await expect(page.locator('h2:has-text("Tarama Sonuçları")').first()).toBeVisible({ timeout: 10_000 });
