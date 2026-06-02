@@ -1,27 +1,29 @@
 import React from 'react'
-import { getSessionUser } from '@/lib/auth/get-current-profile'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { getCurrentProfile } from '@/lib/auth/get-current-profile'
+import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import EditPetForm from './EditPetForm'
 
 export default async function EditPetPage({ params }: { params: Promise<{ id: string }> }) {
-  const user = await getSessionUser()
-  if (!user) redirect('/login')
+  const profile = await getCurrentProfile()
+  if (!profile) redirect('/login')
 
   const { id } = await params
-  const supabase = await createServerSupabaseClient()
+  const isAdmin = profile.role === 'admin' || profile.role === 'founder'
+  
+  // Use admin client for admins/founders to bypass RLS, otherwise use server client
+  const supabase = isAdmin ? createAdminSupabaseClient() : await createServerSupabaseClient()
 
-  // Auth: simple owner_id check (always reliable)
-  const { data: pet } = await supabase
-    .from('pets')
-    .select('*')
-    .eq('id', id)
-    .eq('owner_id', user.id)
-    .single()
+  // Auth: simple owner_id check (bypassed for admins/founders)
+  let petQuery = supabase.from('pets').select('*').eq('id', id)
+  if (!isAdmin) {
+    petQuery = petQuery.eq('owner_id', profile.id)
+  }
+  const { data: pet } = await petQuery.single()
 
   if (!pet) redirect('/owner/dashboard')
 
-  // Fetch pet_owners separately (non-blocking — table may not exist yet)
+  // Fetch pet_owners separately
   const { data: petOwners } = await supabase
     .from('pet_owners')
     .select('profile_id, role, profiles(first_name, last_name)')

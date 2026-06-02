@@ -179,6 +179,8 @@ export interface PetDetailProps {
   payments: any[];
   subscription: any;
   activeLostReport?: any;
+  hasPasskey?: boolean;
+  isAdminView?: boolean;
 }
 
 export function getTaskCardStyle(isOverdue: boolean, isCompleted: boolean) {
@@ -214,7 +216,7 @@ export function getTaskCardStyle(isOverdue: boolean, isCompleted: boolean) {
   };
 }
 
-export default function PetDetailClient({ pet, age, score, overdue, schedules, diseases, allergies, medications, growthRecords, appointments, nutritionLogs, payments, subscription, activeLostReport }: PetDetailProps) {
+export default function PetDetailClient({ pet, age, score, overdue, schedules, diseases, allergies, medications, growthRecords, appointments, nutritionLogs, payments, subscription, activeLostReport, hasPasskey = false, isAdminView = false }: PetDetailProps) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('Özet')
   const [quickUpdateConfig, setQuickUpdateConfig] = useState<any>(null)
@@ -792,9 +794,30 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   return (
     <div className="flex flex-col gap-6 pb-20 w-full mx-auto">
 
+      {/* Admin Notice Banner */}
+      {isAdminView && (
+        <div className="bg-gradient-to-r from-violet-600 via-indigo-600 to-primary text-white text-[13px] font-bold px-5 py-4 rounded-[24px] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg shadow-indigo-500/15 border border-white/10 animate-fade-in">
+          <div className="flex items-center gap-2">
+            <span className="text-lg animate-bounce">🔑</span>
+            <span>Yönetici Görünümü: Bu evcil hayvanın bilgilerini görüntülüyorsunuz.</span>
+          </div>
+          {pet.owner_id && (
+            <Link 
+              href={`/admin/users/${pet.owner_id}`}
+              className="bg-white/20 hover:bg-white/30 active:scale-[0.98] transition-all px-4 py-2 rounded-xl text-[12px] font-black tracking-tight self-stretch sm:self-auto text-center"
+            >
+              Sahip Profiline Dön
+            </Link>
+          )}
+        </div>
+      )}
+
       {/* Back & AI Chat */}
       <div className="flex flex-row items-center justify-between gap-2 -mb-2 w-full">
-        <Link href="/owner/dashboard" className="flex items-center gap-1 sm:gap-2 text-[12.5px] sm:text-[14px] font-bold text-text-secondary hover:text-primary transition-colors group shrink-0">
+        <Link 
+          href={isAdminView ? (pet.owner_id ? `/admin/users/${pet.owner_id}` : '/admin/pets') : '/owner/dashboard'} 
+          className="flex items-center gap-1 sm:gap-2 text-[12.5px] sm:text-[14px] font-bold text-text-secondary hover:text-primary transition-colors group shrink-0"
+        >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:-translate-x-0.5 transition-transform"><polyline points="15 18 9 12 15 6"/></svg>
           Dön
         </Link>
@@ -877,8 +900,10 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         if (!growthRecords || !growthRecords[0]?.weight_kg) enrichTasks.push({ label: 'Kilo & Boy Bilgisi Gir', onClick: () => setQuickUpdateConfig({ title: 'Gelişim Bilgisi', desc: 'Gelişimi takip edebilmek için güncel kilo ve boyunu girin.', endpoint: `/api/pets/${pet.id}/growth`, method: 'POST', fields: [{ name: 'weight_kg', type: 'number', label: 'Kilo (kg)', placeholder: 'Örn: 4.5', required: true }, { name: 'height_cm', type: 'number', label: 'Boy (cm)', placeholder: 'Örn: 35.5', required: false }] }) })
         if (!nutritionLogs || nutritionLogs.length === 0) enrichTasks.push({ label: 'Kullandığı Mamayı Ekle', onClick: () => { setActiveTab('Beslenme'); window.scrollTo(0, 0); } })
         if (!pet.sos_contacts?.[0]?.phone) enrichTasks.push({ label: 'SOS Ağı Kur', link: `/owner/pets/${pet.id}/edit?tab=sos` })
+        if (!hasPasskey) enrichTasks.push({ label: 'Biyometrik Giriş Tanımla', link: '/owner/profile?biometric=true' })
+        
         if (enrichTasks.length === 0) return null
-        const totalTasks = 7
+        const totalTasks = 9
         const completedTasks = totalTasks - enrichTasks.length
         const progress = completedTasks === totalTasks ? 100 : Math.max(15, Math.round((completedTasks / totalTasks) * 100))
         return (

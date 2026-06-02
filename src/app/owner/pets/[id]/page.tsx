@@ -1,8 +1,8 @@
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-import { getSessionUser } from '@/lib/auth/get-current-profile'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { getCurrentProfile } from '@/lib/auth/get-current-profile'
+import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { calcAge } from '@/lib/pets/utils'
@@ -14,11 +14,21 @@ type PageProps = {
 };
 
 export default async function PetDetailPage(props: PageProps) {
-  const user = await getSessionUser()
-  const { id } = await props.params
-  const supabase = await createServerSupabaseClient()
+  const profile = await getCurrentProfile()
+  if (!profile) redirect('/login')
 
-  const { data: pet } = await supabase.from('pets').select('*').eq('id', id).eq('owner_id', user?.id).single()
+  const { id } = await props.params
+  const isAdmin = profile.role === 'admin' || profile.role === 'founder'
+  
+  // Use admin client for admins/founders to bypass RLS, otherwise use server client
+  const supabase = isAdmin ? createAdminSupabaseClient() : await createServerSupabaseClient()
+
+  let petQuery = supabase.from('pets').select('*').eq('id', id)
+  if (!isAdmin) {
+    petQuery = petQuery.eq('owner_id', profile.id)
+  }
+  const { data: pet } = await petQuery.single()
+
   if (!pet) redirect('/owner/dashboard')
 
   const [
@@ -53,8 +63,9 @@ export default async function PetDetailPage(props: PageProps) {
     score = Math.max(0, score - (overdue * 25))
   }
 
-  const [{ data: sub }] = await Promise.all([
-    supabase.from('user_subscriptions').select('plan').eq('profile_id', user?.id ?? '').single(),
+  const [{ data: sub }, { count: passkeyCount }] = await Promise.all([
+    supabase.from('user_subscriptions').select('plan').eq('profile_id', pet.owner_id).single(),
+    supabase.from('passkeys').select('id', { count: 'exact', head: true }).eq('user_id', profile.id),
   ])
 
   return (
@@ -73,6 +84,8 @@ export default async function PetDetailPage(props: PageProps) {
       payments={payments ?? []}
       subscription={sub}
       activeLostReport={activeLostReport || null}
+      hasPasskey={(passkeyCount ?? 0) > 0}
+      isAdminView={isAdmin}
     />
   )
 }

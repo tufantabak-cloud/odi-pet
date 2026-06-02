@@ -1,28 +1,33 @@
-import { getSessionUser } from '@/lib/auth/get-current-profile'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { getCurrentProfile } from '@/lib/auth/get-current-profile'
+import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import NutritionClient from './NutritionClient'
 
 export default async function PetNutritionPage({ params }: { params: Promise<{ id: string }> }) {
-  const user = await getSessionUser()
+  const profile = await getCurrentProfile()
+  if (!profile) redirect('/login')
+
   const { id } = await params
-  if (!user) redirect('/login')
+  const isAdmin = profile.role === 'admin' || profile.role === 'founder'
+  
+  // Use admin client for admins/founders to bypass RLS, otherwise use server client
+  const supabase = isAdmin ? createAdminSupabaseClient() : await createServerSupabaseClient()
 
-  const supabase = await createServerSupabaseClient()
+  if (!isAdmin) {
+    // Ensure owner access
+    const { data: isOwner } = await supabase
+      .from('pet_owners')
+      .select('role')
+      .eq('pet_id', id)
+      .eq('profile_id', profile.id)
+      .single()
 
-  // Ensure owner access
-  const { data: isOwner } = await supabase
-    .from('pet_owners')
-    .select('role')
-    .eq('pet_id', id)
-    .eq('profile_id', user.id)
-    .single()
-
-  if (!isOwner) redirect('/owner/dashboard')
+    if (!isOwner) redirect('/owner/dashboard')
+  }
 
   const [
     { data: pet },
-    { data: profile },
+    { data: nutritionProfile },
     { data: inventory },
     { data: feedingLogs },
     { data: weightLogs }
@@ -39,7 +44,7 @@ export default async function PetNutritionPage({ params }: { params: Promise<{ i
   return (
     <NutritionClient
       pet={pet}
-      profile={profile ?? null}
+      profile={nutritionProfile ?? null}
       inventory={inventory ?? null}
       feedingLogs={feedingLogs ?? []}
       weightLogs={weightLogs ?? []}

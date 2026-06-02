@@ -82,19 +82,47 @@ function SpeciesSelector({ onSelect, onBack }: { onSelect: (s: Species) => void,
 }
 
 // ── Adım 2: Hızlı Kayıt Formu ──────────────────────────────────
-function PetForm({ species, onBack }: { species: Species; onBack: () => void }) {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
+interface PetFormProps {
+  species: Species
+  onBack: () => void
+  petName: string
+  setPetName: (v: string) => void
+  selectedBreed: string
+  setSelectedBreed: (v: string) => void
+  gender: 'male' | 'female' | ''
+  setGender: (v: 'male' | 'female' | '') => void
+  birthDateMode: 'exact' | 'approximate'
+  setBirthDateMode: (v: 'exact' | 'approximate') => void
+  birthDate: string
+  setBirthDate: (v: string) => void
+  approxYears: string
+  setApproxYears: (v: string) => void
+  approxMonths: string
+  setApproxMonths: (v: string) => void
+  onSubmit: (e: React.FormEvent) => void
+  submitError: string
+}
 
-  const [petName, setPetName] = useState('')
-  const [selectedBreed, setSelectedBreed] = useState('')
-  const [gender, setGender] = useState<'male' | 'female' | ''>('')
-
-  const [birthDateMode, setBirthDateMode] = useState<'exact' | 'approximate'>('exact')
-  const [birthDate, setBirthDate] = useState('')
-  const [approxYears, setApproxYears] = useState('')
-  const [approxMonths, setApproxMonths] = useState('')
-
+function PetForm({
+  species,
+  onBack,
+  petName,
+  setPetName,
+  selectedBreed,
+  setSelectedBreed,
+  gender,
+  setGender,
+  birthDateMode,
+  setBirthDateMode,
+  birthDate,
+  setBirthDate,
+  approxYears,
+  setApproxYears,
+  approxMonths,
+  setApproxMonths,
+  onSubmit,
+  submitError
+}: PetFormProps) {
   const handleApproxChange = (yStr: string, mStr: string) => {
     setApproxYears(yStr)
     setApproxMonths(mStr)
@@ -122,56 +150,15 @@ function PetForm({ species, onBack }: { species: Species; onBack: () => void }) 
     setBirthDate(targetDate.toISOString().split('T')[0])
   }
 
-  const currentYear = new Date().getFullYear()
   const breeds = species === 'Kedi' ? CAT_BREEDS : DOG_BREEDS
   const AvatarHeader = species === 'Kedi' ? <DefaultCatAvatar width={36} height={36} /> : <DefaultDogAvatar width={36} height={36} />
-  const [submitError, setSubmitError] = useState('')
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setSubmitError('')
-
-    if (!petName.trim() || !selectedBreed) {
-      setSubmitError('Lütfen İsim ve Irk alanlarını doldurun.')
-      return
-    }
-
-    setLoading(true)
-
-    const fd = new FormData()
-    fd.set('species', species)
-    fd.set('name', petName.trim())
-    fd.set('breed', selectedBreed)
-    if (gender) fd.set('gender', gender)
-    if (birthDate) fd.set('birth_date', birthDate)
-
-    try {
-      const res  = await fetch('/api/pets', { method: 'POST', body: fd })
-      const data = await res.json()
-
-      if (!res.ok) {
-        setSubmitError(data.error || 'Kayıt sırasında bir hata oluştu.')
-        return
-      }
-
-      // ✅ Başarı: inline state yerine ayrı bir route'a replace ile yönlendir
-      // replace() kullanılıyor — böylece geri tuşu formu değil, önceki sayfayı açar
-      const id   = data.pet.id
-      const name = encodeURIComponent(petName.trim())
-      const sp   = encodeURIComponent(species)
-      router.replace(`/owner/pets/add/success?id=${id}&name=${name}&species=${sp}`)
-    } catch (err: any) {
-      setSubmitError('Sunucu bağlantı hatası: ' + err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   return (
     <div className="flex flex-col w-full mx-auto pb-10 animate-fadeIn">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6 border-b border-border-main pb-4">
         <button onClick={onBack}
+          type="button"
           aria-label="Geri"
           className="w-10 h-10 rounded-full border border-border-main flex items-center justify-center text-text-secondary hover:text-primary hover:border-primary/30 transition-all shrink-0">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -187,7 +174,7 @@ function PetForm({ species, onBack }: { species: Species; onBack: () => void }) 
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="card-base p-6 sm:p-8 flex flex-col gap-6">
+      <form onSubmit={onSubmit} className="card-base p-6 sm:p-8 flex flex-col gap-6">
         
         {submitError && (
           <div role="alert" aria-live="assertive" className="p-3 bg-error/10 text-error text-[13px] font-bold rounded-xl border border-error/20">
@@ -340,18 +327,8 @@ function PetForm({ species, onBack }: { species: Species; onBack: () => void }) 
         </div>
 
         <div className="flex justify-end mt-4 pt-6 border-t border-border-main">
-          <button type="submit" disabled={loading} className="btn-primary min-w-[200px] py-3.5 text-[15px] shadow-lg shadow-primary/20 disabled:opacity-50 hover:-translate-y-0.5 transition-transform">
-            {loading ? (
-              <span className="flex items-center gap-2 justify-center">
-                <svg className="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" strokeDasharray="60" strokeDashoffset="15"/></svg>
-                Kaydediliyor...
-              </span>
-            ) : (
-              <span className="flex items-center justify-center gap-2">
-                <span className="w-5 h-5">{species === 'Kedi' ? <DefaultCatAvatar width={20} height={20} /> : <DefaultDogAvatar width={20} height={20} />}</span>
-                Profili Oluştur
-              </span>
-            )}
+          <button type="submit" className="btn-primary min-w-[200px] py-3.5 text-[15px] shadow-lg shadow-primary/20 hover:-translate-y-0.5 transition-transform flex items-center justify-center gap-2">
+            <span>Devam Et →</span>
           </button>
         </div>
       </form>
@@ -359,24 +336,330 @@ function PetForm({ species, onBack }: { species: Species; onBack: () => void }) 
   )
 }
 
-// ── Ana Sayfa ───────────────────────────────────────────────────
-export default function AddPetPage() {
-  const router = useRouter()
-  const [selectedSpecies, setSelectedSpecies] = useState<Species | null>(null)
+// ── Adım 3: Profil Fotoğrafı Ekleme ────────────────────────────
+interface PetPhotoStepProps {
+  species: Species
+  petName: string
+  photoPreview: string
+  setPhotoPreview: (p: string) => void
+  photoFile: File | null
+  setPhotoFile: (f: File | null) => void
+  onBack: () => void
+  onSubmit: () => void
+  loading: boolean
+  submitError: string
+}
+
+function PetPhotoStep({
+  species,
+  petName,
+  photoPreview,
+  setPhotoPreview,
+  photoFile,
+  setPhotoFile,
+  onBack,
+  onSubmit,
+  loading,
+  submitError
+}: PetPhotoStepProps) {
+  const defaultAvatar = species === 'Kedi' ? (
+    <DefaultCatAvatar width={110} height={110} />
+  ) : (
+    <DefaultDogAvatar width={110} height={110} />
+  )
+
+  const isCat = species === 'Kedi'
+  const gradientClass = isCat 
+    ? 'from-violet-50 to-purple-50 border-violet-200 hover:border-violet-400' 
+    : 'from-amber-50 to-orange-50 border-amber-200 hover:border-amber-400'
+  const bgSoftClass = isCat 
+    ? 'bg-violet-100 hover:bg-violet-200 text-violet-700' 
+    : 'bg-amber-100 hover:bg-amber-200 text-amber-700'
 
   return (
-    <>
-      {!selectedSpecies ? (
-        <SpeciesSelector 
-          onSelect={setSelectedSpecies} 
-          onBack={() => router.back()} 
-        />
-      ) : (
-        <PetForm 
-          species={selectedSpecies} 
-          onBack={() => setSelectedSpecies(null)} 
-        />
-      )}
-    </>
+    <div className="flex flex-col w-full mx-auto pb-10 animate-fadeIn">
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-6 border-b border-border-main pb-4">
+        <button onClick={onBack}
+          type="button"
+          aria-label="Geri"
+          className="w-10 h-10 rounded-full border border-border-main flex items-center justify-center text-text-secondary hover:text-primary hover:border-primary/30 transition-all shrink-0">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+          </svg>
+        </button>
+        <div className="flex flex-col flex-1">
+          <h1 className="text-[20px] font-extrabold text-text-primary tracking-tight">Profil Fotoğrafı Ekle</h1>
+          <p className="text-[12px] text-text-secondary font-medium">{petName} dostumuz için güzel bir fotoğraf seçebilirsiniz.</p>
+        </div>
+      </div>
+
+      <div className="card-base p-6 sm:p-8 flex flex-col gap-6 items-center">
+        {submitError && (
+          <div role="alert" aria-live="assertive" className="w-full p-3 bg-error/10 text-error text-[13px] font-bold rounded-xl border border-error/20">
+            ⚠️ {submitError}
+          </div>
+        )}
+
+        <div className="flex flex-col items-center gap-5 my-4 w-full">
+          {/* Photo Frame Container */}
+          <div className={`relative w-[160px] h-[160px] rounded-[36px] bg-gradient-to-br ${gradientClass} border-2 border-dashed flex items-center justify-center overflow-hidden shadow-md group transition-all duration-300 hover:scale-[1.03]`}>
+            {photoPreview ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={photoPreview} alt="Önizleme" className="w-full h-full object-cover animate-scaleIn" />
+            ) : (
+              <div className="w-[110px] h-[110px] flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+                {defaultAvatar}
+              </div>
+            )}
+            
+            {/* Camera Overlay when no photo */}
+            {!photoPreview && (
+              <div className="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-white shadow-md border border-gray-100 flex items-center justify-center text-text-secondary group-hover:text-primary group-hover:scale-110 transition-all">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+              </div>
+            )}
+          </div>
+
+          {/* Action buttons for selection */}
+          <div className="flex flex-col sm:flex-row gap-3 items-center">
+            <label className={`text-[13px] font-bold px-5 py-2.5 rounded-full cursor-pointer transition-all duration-200 ${bgSoftClass} active:scale-[0.97] inline-block text-center`}>
+              {photoPreview ? 'Fotoğrafı Değiştir' : 'Fotoğraf Seç'}
+              <input 
+                type="file" 
+                accept="image/*" 
+                className="sr-only" 
+                onChange={e => {
+                  const file = e.target.files?.[0]
+                  if (file) {
+                    setPhotoFile(file)
+                    setPhotoPreview(URL.createObjectURL(file))
+                  }
+                }}
+              />
+            </label>
+
+            {photoPreview && (
+              <button 
+                type="button"
+                onClick={() => {
+                  setPhotoFile(null)
+                  setPhotoPreview('')
+                }}
+                className="text-[13px] font-bold px-5 py-2.5 rounded-full bg-gray-100 hover:bg-gray-250 text-text-secondary hover:text-text-primary transition-all active:scale-[0.97]"
+              >
+                Görseli Kaldır
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Dynamic Tip Card for Premium Aesthetics */}
+        <div className="w-full border border-primary/10 bg-primary-soft/20 rounded-2xl p-4 flex gap-3 text-left">
+          <span className="text-[20px] shrink-0">✨</span>
+          <p className="text-[12px] text-text-secondary leading-relaxed">
+            Dostunuzun fotoğrafı ana panelde, aşı bildirimlerinde ve raporlarda yer alacaktır. Şimdi eklemek istemiyorsanız daha sonra profil ayarlarından da güncelleyebilirsiniz.
+          </p>
+        </div>
+
+        {/* Footer Actions */}
+        <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-4 mt-6 pt-6 border-t border-border-main">
+          <button 
+            type="button" 
+            onClick={onBack}
+            className="text-[14px] font-bold text-text-secondary hover:text-text-primary px-4 py-2 transition-colors order-2 sm:order-1"
+          >
+            ← Geri
+          </button>
+          
+          <button 
+            type="button" 
+            onClick={onSubmit} 
+            disabled={loading} 
+            className="btn-primary min-w-[200px] py-3.5 text-[15px] shadow-lg shadow-primary/20 disabled:opacity-50 hover:-translate-y-0.5 transition-transform w-full sm:w-auto order-1 sm:order-2"
+          >
+            {loading ? (
+              <span className="flex items-center gap-2 justify-center">
+                <svg className="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" strokeDasharray="60" strokeDashoffset="15"/></svg>
+                Oluşturuluyor...
+              </span>
+            ) : (
+              <span className="flex items-center justify-center gap-2">
+                Profili Oluştur →
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
+
+// ── Ana Sayfa ───────────────────────────────────────────────────
+const WIZARD_STEPS = [
+  { id: 1, label: 'Tür Seçimi' },
+  { id: 2, label: 'Kimlik Bilgileri' },
+  { id: 3, label: 'Profil Fotoğrafı' }
+]
+
+export default function AddPetPage() {
+  const router = useRouter()
+  const [step, setStep] = useState(1)
+  const [selectedSpecies, setSelectedSpecies] = useState<Species | null>(null)
+
+  // Form states
+  const [petName, setPetName] = useState('')
+  const [selectedBreed, setSelectedBreed] = useState('')
+  const [gender, setGender] = useState<'male' | 'female' | ''>('')
+  
+  const [birthDateMode, setBirthDateMode] = useState<'exact' | 'approximate'>('exact')
+  const [birthDate, setBirthDate] = useState('')
+  const [approxYears, setApproxYears] = useState('')
+  const [approxMonths, setApproxMonths] = useState('')
+
+  // Photo states
+  const [photoPreview, setPhotoPreview] = useState('')
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+
+  const [loading, setLoading] = useState(false)
+  const [submitError, setSubmitError] = useState('')
+
+  const handleSpeciesSelect = (species: Species) => {
+    setSelectedSpecies(species)
+    setStep(2)
+  }
+
+  const handleStep2Next = (e: React.FormEvent) => {
+    e.preventDefault()
+    setSubmitError('')
+    if (!petName.trim() || !selectedBreed) {
+      setSubmitError('Lütfen İsim ve Irk alanlarını doldurun.')
+      return
+    }
+    setStep(3)
+  }
+
+  const handleSubmit = async () => {
+    setSubmitError('')
+    setLoading(true)
+
+    const fd = new FormData()
+    fd.set('species', selectedSpecies!)
+    fd.set('name', petName.trim())
+    fd.set('breed', selectedBreed)
+    if (gender) fd.set('gender', gender)
+    if (birthDate) fd.set('birth_date', birthDate)
+    if (photoFile) fd.set('avatar', photoFile)
+
+    try {
+      const res  = await fetch('/api/pets', { method: 'POST', body: fd })
+      const data = await res.json()
+
+      if (!res.ok) {
+        setSubmitError(data.error || 'Kayıt sırasında bir hata oluştu.')
+        return
+      }
+
+      const id   = data.pet.id
+      const name = encodeURIComponent(petName.trim())
+      const sp   = encodeURIComponent(selectedSpecies!)
+      router.replace(`/owner/pets/add/success?id=${id}&name=${name}&species=${sp}`)
+    } catch (err: any) {
+      setSubmitError('Sunucu bağlantı hatası: ' + err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-6 w-full max-w-2xl mx-auto pb-8">
+      {/* Visual Stepper Progress Bar */}
+      <div className="flex items-center justify-center gap-2 sm:gap-6 mb-2 mt-2">
+        {WIZARD_STEPS.map((s) => {
+          const isActive = step >= s.id
+          const isCurrent = step === s.id
+          const isCompleted = step > s.id
+          return (
+            <div key={s.id} className="flex items-center gap-2">
+              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[12px] sm:text-[13px] font-bold transition-all duration-300 ${
+                isCurrent 
+                  ? 'bg-primary-soft/50 border-primary text-primary scale-105 shadow-sm' 
+                  : isCompleted
+                    ? 'bg-green-50 border-green-200 text-green-600'
+                    : 'bg-surface border-border-main text-text-secondary'
+              }`}>
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-extrabold ${
+                  isCurrent
+                    ? 'bg-primary text-white'
+                    : isCompleted
+                      ? 'bg-green-500 text-white'
+                      : 'bg-gray-100 text-text-secondary'
+                }`}>
+                  {isCompleted ? '✓' : s.id}
+                </div>
+                <span>{s.label}</span>
+              </div>
+              {s.id < 3 && (
+                <div className={`h-[2px] w-4 sm:w-10 rounded-full transition-colors duration-300 ${
+                  step > s.id ? 'bg-green-300' : 'bg-border-main'
+                }`} />
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {step === 1 && (
+        <SpeciesSelector 
+          onSelect={handleSpeciesSelect} 
+          onBack={() => router.back()} 
+        />
+      )}
+
+      {step === 2 && selectedSpecies && (
+        <PetForm 
+          species={selectedSpecies}
+          onBack={() => {
+            setSelectedSpecies(null)
+            setStep(1)
+          }}
+          petName={petName}
+          setPetName={setPetName}
+          selectedBreed={selectedBreed}
+          setSelectedBreed={setSelectedBreed}
+          gender={gender}
+          setGender={setGender}
+          birthDateMode={birthDateMode}
+          setBirthDateMode={setBirthDateMode}
+          birthDate={birthDate}
+          setBirthDate={setBirthDate}
+          approxYears={approxYears}
+          setApproxYears={setApproxYears}
+          approxMonths={approxMonths}
+          setApproxMonths={setApproxMonths}
+          onSubmit={handleStep2Next}
+          submitError={submitError}
+        />
+      )}
+
+      {step === 3 && selectedSpecies && (
+        <PetPhotoStep 
+          species={selectedSpecies}
+          petName={petName}
+          photoPreview={photoPreview}
+          setPhotoPreview={setPhotoPreview}
+          photoFile={photoFile}
+          setPhotoFile={setPhotoFile}
+          onBack={() => setStep(2)}
+          onSubmit={handleSubmit}
+          loading={loading}
+          submitError={submitError}
+        />
+      )}
+    </div>
+  )
+}
+

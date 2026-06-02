@@ -9,7 +9,6 @@ import FloatingLostPets from '@/components/FloatingLostPets'
 import NotificationBell from '@/components/NotificationBell'
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { BiometricPrompt } from '@/components/BiometricPrompt'
 
 export default async function OwnerLayout({ children }: { children: ReactNode }) {
   const profile = await requireRole(['owner', 'admin', 'founder'])
@@ -97,8 +96,6 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
 
       {/* Mobile Glass Bottom Nav */}
       {showNav && <BottomNav />}
-
-      <BiometricPrompt />
     </div>
   )
 }

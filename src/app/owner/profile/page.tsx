@@ -5,10 +5,14 @@ import { logout } from '@/features/auth/actions'
 import PetCardActions from './PetCardActions'
 import NotificationSettings from './NotificationSettings'
 import CoachMark from '@/components/ui/CoachMark'
-export default async function ProfileMenuPage() {
+import { BiometricPrompt } from '@/components/BiometricPrompt'
+import { BiometricSettingsRow } from '@/components/BiometricSettingsRow'
+export default async function ProfileMenuPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const profile = await getCurrentProfile()
   const user = await getSessionUser()
   const supabase = await createServerSupabaseClient()
+  const params = await searchParams
+  const showBiometricPrompt = params.biometric === 'true'
   
   const { data: pets } = await supabase
     .from('pets')
@@ -33,10 +37,17 @@ export default async function ProfileMenuPage() {
     hasVaccineRecords = (count ?? 0) > 0
   }
 
+  // Fetch Passkeys Count for Biometric Task Completion
+  const { count: passkeyCount } = await supabase
+    .from('passkeys')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user?.id ?? '')
+
   // Calculate Profile Completion Tasks
   // Her check bir "slot" temsil eder; totalTasks = olası maksimum slot sayısı
   const completionChecks = [
     { done: !!(user?.phone || (profile as any)?.phone), label: 'Telefon Ekle', action: '+ Telefon Ekle', link: '/owner/profile/edit' },
+    { done: (passkeyCount ?? 0) > 0, label: 'Biyometrik Giriş Tanımla', action: '+ Şifresiz Giriş', link: '/owner/profile?biometric=true' },
     { done: isPremium, label: 'Ödeme Yöntemi Ekle', action: '+ Ödeme Yöntemi Ekle', link: '/owner/profile/subscription' },
     { done: !!(pets && pets.length > 0), label: 'İlk Can Dostunu Ekle', action: '+ Can Dost Ekle', link: '/owner/pets/add' },
     { done: hasVaccineRecords, label: 'Aşı Kaydı Gir', action: '+ Aşı Ekle', link: pets && pets.length > 0 ? `/owner/pets/${pets[0].id}` : '/owner/pets/add' },
@@ -292,6 +303,7 @@ export default async function ProfileMenuPage() {
               Profil Bilgilerini Düzenle
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-secondary"><polyline points="9 18 15 12 9 6"/></svg>
             </Link>
+            <BiometricSettingsRow initialHasPasskey={(passkeyCount ?? 0) > 0} />
             <div className="p-4 hover:bg-bg-main transition-colors cursor-pointer flex justify-between items-center">
               Şifre Değiştir
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-secondary"><polyline points="9 18 15 12 9 6"/></svg>
@@ -348,6 +360,7 @@ export default async function ProfileMenuPage() {
         </div>
       </div>
 
+      <BiometricPrompt forceOpen={showBiometricPrompt} />
     </div>
   )
 }

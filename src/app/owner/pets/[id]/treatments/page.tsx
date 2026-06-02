@@ -1,5 +1,5 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { getSessionUser } from '@/lib/auth/get-current-profile'
+import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
+import { getCurrentProfile } from '@/lib/auth/get-current-profile'
 import { redirect, notFound } from 'next/navigation'
 import TreatmentsClient from './TreatmentsClient'
 
@@ -9,20 +9,25 @@ type PageProps = {
 
 export default async function TreatmentsPage(props: PageProps) {
   const { id } = await props.params
-  const user = await getSessionUser()
-  if (!user) redirect('/login')
+  const profile = await getCurrentProfile()
+  if (!profile) redirect('/login')
 
-  const supabase = await createServerSupabaseClient()
+  const isAdmin = profile.role === 'admin' || profile.role === 'founder'
+  
+  // Use admin client for admins/founders to bypass RLS, otherwise use server client
+  const supabase = isAdmin ? createAdminSupabaseClient() : await createServerSupabaseClient()
 
-  // Verify ownership
-  const { data: ownership } = await supabase
-    .from('pet_owners')
-    .select('pet_id')
-    .eq('pet_id', id)
-    .eq('profile_id', user.id)
-    .single()
+  if (!isAdmin) {
+    // Verify ownership
+    const { data: ownership } = await supabase
+      .from('pet_owners')
+      .select('pet_id')
+      .eq('pet_id', id)
+      .eq('profile_id', profile.id)
+      .single()
 
-  if (!ownership) notFound()
+    if (!ownership) notFound()
+  }
 
   // Fetch pet
   const { data: pet } = await supabase

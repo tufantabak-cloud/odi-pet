@@ -4,20 +4,24 @@ import { useState, useEffect } from 'react';
 import { Fingerprint, Loader2, X } from 'lucide-react';
 import { createBrowserClient } from '@supabase/ssr';
 
-export function BiometricPrompt() {
+export function BiometricPrompt({ forceOpen = false }: { forceOpen?: boolean }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    if (forceOpen) {
+      setVisible(true);
+      return;
+    }
     const dismissed = localStorage.getItem('biometric_prompt_dismissed');
     if (!dismissed) {
       // Sadece 1.5 saniye sonra göster (Gözü yormasın)
       const timer = setTimeout(() => setVisible(true), 1500);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [forceOpen]);
 
   const dismiss = () => {
     localStorage.setItem('biometric_prompt_dismissed', 'true');

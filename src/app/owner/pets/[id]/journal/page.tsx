@@ -1,5 +1,5 @@
-import { getSessionUser } from '@/lib/auth/get-current-profile'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { getCurrentProfile } from '@/lib/auth/get-current-profile'
+import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import JournalTimelineClient from './JournalTimelineClient'
@@ -9,11 +9,14 @@ type PageProps = {
 };
 
 export default async function PetJournalPage(props: PageProps) {
-  const user = await getSessionUser()
-  const { id } = await props.params
-  if (!user) redirect('/login')
+  const profile = await getCurrentProfile()
+  if (!profile) redirect('/login')
 
-  const supabase = await createServerSupabaseClient()
+  const { id } = await props.params
+  const isAdmin = profile.role === 'admin' || profile.role === 'founder'
+  
+  // Use admin client for admins/founders to bypass RLS, otherwise use server client
+  const supabase = isAdmin ? createAdminSupabaseClient() : await createServerSupabaseClient()
 
   const { data: pet } = await supabase
     .from('pets')
