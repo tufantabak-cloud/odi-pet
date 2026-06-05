@@ -45,10 +45,12 @@ describe('Nutrition - calculateRefillRisk', () => {
     expect(result.risk).toBe('CRITICAL')
   })
 
-  it('should handle zero dailyUsage gracefully (no division by zero)', () => {
+  it('should return OK and null daysLeft when dailyUsage is 0', () => {
     const result = calculateRefillRisk({ stockGrams: 5000, dailyUsage: 0 })
-    expect(result.daysLeft).toBe(0)
-    expect(result.risk).toBe('CRITICAL')
+    expect(result.daysLeft).toBeNull()
+    expect(result.risk).toBe('OK')
+    expect(result.shouldNotify).toBe(false)
+    expect(result.shouldUrgentRefill).toBe(false)
   })
 
   it('should respect a custom thresholdDays', () => {
@@ -85,10 +87,9 @@ describe('Nutrition - estimateNextRefillDate', () => {
     expect(result.toDateString()).toBe(expected.toDateString())
   })
 
-  it('should return today when dailyUsage is 0', () => {
+  it('should return null when dailyUsage is 0', () => {
     const result = estimateNextRefillDate({ stockGrams: 1000, dailyUsage: 0 })
-    const today = new Date('2026-05-12')
-    expect(result.toDateString()).toBe(today.toDateString())
+    expect(result).toBeNull()
   })
 })
 

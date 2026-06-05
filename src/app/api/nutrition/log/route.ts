@@ -29,8 +29,8 @@ export async function POST(req: NextRequest) {
   }
 
   // Trigger predictive risk in background (no await)
-  const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-  fetch(`${origin}/api/predictive-risk/${petId}?force=true`).catch(console.error)
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? req.nextUrl.origin
+  fetch(`${appUrl}/api/predictive-risk/${petId}?force=true`).catch(console.error)
 
   return NextResponse.json({ success: true, data })
 }

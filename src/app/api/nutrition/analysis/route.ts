@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
   const { data: logs } = await supabase
     .from('nutrition_logs')
-    .select('*')
+    .select('id, date, food_logged, water_logged, notes')
     .eq('pet_id', petId)
     .gte('date', thirtyDaysAgo)
     .order('date', { ascending: false })
@@ -43,8 +43,8 @@ export async function GET(req: NextRequest) {
     success: true,
     analysis: {
       total_recorded_days: totalLogs,
-      food_consistency: totalLogs > 0 ? (foodDays / 30) * 100 : 0,
-      water_consistency: totalLogs > 0 ? (waterDays / 30) * 100 : 0,
+      food_consistency: totalLogs > 0 ? Math.round((foodDays / totalLogs) * 100) : 0,
+      water_consistency: totalLogs > 0 ? Math.round((waterDays / totalLogs) * 100) : 0,
       recent_logs: logs?.slice(0, 5)
     }
   })

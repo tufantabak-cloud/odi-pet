@@ -5,11 +5,12 @@ import { Camera, X, Check, Loader2, ImageIcon, AlertCircle } from "lucide-react"
 
 interface SmartScannerProps {
   petId?: string;
-  onSave: (data: any) => void;
+  onSave?: (data: any) => void;
+  onResult?: (data: any) => void;
   onClose: () => void;
 }
 
-export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
+export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerProps) {
   const [step, setStep] = useState<"ready" | "camera" | "adjust" | "processing" | "confirm" | "error" | "saving">("ready");
   const [parsedData, setParsedData] = useState<any>({});
   const [recordType, setRecordType] = useState<string>("unknown");
@@ -253,7 +254,9 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
         throw new Error(data.error || "Kaydedilirken bir hata oluştu.");
       }
 
-      onSave(parsedData); // Üst bileşeni bilgilendir
+      if (onSave) {
+        onSave(parsedData); // Üst bileşeni bilgilendir
+      }
     } catch (err: any) {
       setErrorMessage(err.message || "Kayıt sırasında bir hata oluştu.");
       setStep("error");
@@ -729,13 +732,25 @@ export function SmartScanner({ petId, onSave, onClose }: SmartScannerProps) {
             )}
 
             <div className="mt-4">
-              <button 
-                onClick={handleConfirm}
-                className="w-full py-4 bg-primary hover:bg-primary-hover text-white font-bold rounded-2xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] duration-200 mb-3"
-              >
-                <Check className="w-5 h-5" />
-                Bilgileri Kaydet
-              </button>
+              {onResult ? (
+                <button 
+                  onClick={() => {
+                    onResult(parsedData);
+                  }}
+                  className="w-full py-4 bg-primary hover:bg-primary-hover text-white font-bold rounded-2xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] duration-200 mb-3"
+                >
+                  <Check className="w-5 h-5" />
+                  Forma Aktar
+                </button>
+              ) : (
+                <button 
+                  onClick={handleConfirm}
+                  className="w-full py-4 bg-primary hover:bg-primary-hover text-white font-bold rounded-2xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] duration-200 mb-3"
+                >
+                  <Check className="w-5 h-5" />
+                  Bilgileri Kaydet
+                </button>
+              )}
               <button 
                 onClick={() => setStep("ready")}
                 className="w-full py-4 bg-white hover:bg-slate-50 text-slate-600 font-bold border border-slate-200 rounded-2xl flex items-center justify-center transition-all hover:scale-[1.02] active:scale-[0.98] duration-200"

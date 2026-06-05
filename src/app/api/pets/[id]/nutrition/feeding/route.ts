@@ -22,6 +22,9 @@ export async function GET(_req: NextRequest, { params }: Params) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
+  if (!(await assertOwner(id, user.id))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
   const supabase = await createServerSupabaseClient()
 
   const { data, error } = await supabase
@@ -53,10 +56,10 @@ export async function POST(req: NextRequest, { params }: Params) {
     .insert({
       pet_id: id,
       meal_time: body.meal_time ?? new Date().toISOString(),
-      amount_grams: body.amount_grams ? Number(body.amount_grams) : null,
-      appetite_score: body.appetite_score ? Number(body.appetite_score) : null,
+      amount_grams: body.amount_grams != null ? Number(body.amount_grams) : null,
+      appetite_score: body.appetite_score != null ? Number(body.appetite_score) : null,
       consumed_percent: body.consumed_percent != null ? Number(body.consumed_percent) : null,
-      stool_quality: body.stool_quality ? Number(body.stool_quality) : null,
+      stool_quality: body.stool_quality != null ? Number(body.stool_quality) : null,
       notes: body.notes ?? null,
     })
     .select()

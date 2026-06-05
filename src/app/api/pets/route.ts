@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
   // ─── Generate Vaccination Plan ────────────────────────────────
   const birthDate = str(fd, 'birth_date')
   if (birthDate) {
-    const plans = generateVaccinationPlan(birthDate, species)
+    const plans = await generateVaccinationPlan(birthDate, species, supabase)
     if (plans.length > 0) {
       const carePlansPayload = plans.map(p => ({
         pet_id: data.id,
@@ -122,7 +122,7 @@ export async function POST(req: NextRequest) {
   }
 
   revalidatePath('/owner/dashboard')
-  revalidateTag('dashboard', 'default')
+  revalidateTag('dashboard')
   revalidatePath('/owner/pets')
   return NextResponse.json({ success: true, pet: data })
 }

@@ -76,6 +76,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
   if (fd.has('district')) payload.district = str(fd, 'district')
   if (fd.has('lifestyle')) payload.lifestyle = str(fd, 'lifestyle')
   if (fd.has('size')) payload.size = str(fd, 'size')
+  if (fd.has('is_neutered')) payload.is_neutered = fd.get('is_neutered') === 'true'
 
   const { error: updateError } = await supabase
     .from('pets')
@@ -83,6 +84,22 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     .eq('id', id)
 
   if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 })
+
+  // Save weight and height if provided
+  const weight_kg = fd.get('weight_kg') as string | null
+  const height_cm = fd.get('height_cm') as string | null
+  if (weight_kg) {
+    const { error: growthError } = await supabase
+      .from('weight_logs')
+      .insert({
+        pet_id: id,
+        weight_kg: Number(weight_kg.replace(',', '.')),
+        height_cm: height_cm ? Number(height_cm.replace(',', '.')) : null
+      })
+    if (growthError) {
+      console.error('Error updating weight/height:', growthError)
+    }
+  }
 
   // ─── Regenerate Vaccination Plan if birth_date changed ────────────────
   const newBirthDate = payload.birth_date
@@ -95,7 +112,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
       .eq('pet_id', id)
       .or('title.ilike.%Karma%,title.ilike.%Kuduz%,title.ilike.%Corona%,title.ilike.%Lösemi%')
 
-    const plans = generateVaccinationPlan(newBirthDate, pet.species)
+    const plans = await generateVaccinationPlan(newBirthDate, pet.species, supabase)
     if (plans.length > 0) {
       const carePlansPayload = plans.map(p => ({
         pet_id: id,

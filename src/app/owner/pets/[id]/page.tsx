@@ -46,7 +46,7 @@ export default async function PetDetailPage(props: PageProps) {
     supabase.from('health_diseases').select('*').eq('pet_id', id).order('diagnosis_date', { ascending: false }).limit(5),
     supabase.from('health_allergies').select('*').eq('pet_id', id).limit(5),
     supabase.from('health_medications').select('*').eq('pet_id', id).limit(5),
-    supabase.from('growth_records').select('*').eq('pet_id', id).order('recorded_at', { ascending: false }).limit(15),
+    supabase.from('weight_logs').select('*').eq('pet_id', id).order('measured_at', { ascending: false }).limit(15),
     supabase.from('appointments').select('*, clinics(name)').eq('pet_id', id).order('scheduled_at', { ascending: false }).limit(5),
     supabase.from('nutrition_logs').select('*').eq('pet_id', id).order('date', { ascending: false }).limit(7),
     supabase.from('payments').select('*').eq('pet_id', id).order('payment_date', { ascending: false }).limit(5),

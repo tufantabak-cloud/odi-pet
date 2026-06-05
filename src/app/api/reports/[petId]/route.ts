@@ -108,7 +108,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     // 4c. Active/Pending Appointments
     const { data: appointments } = await supabase
       .from('appointments')
-      .select('*')
+      .select('id, title, scheduled_at, status, vet_name')
       .eq('pet_id', petId)
       .order('scheduled_at', { ascending: true })
 
@@ -135,7 +135,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
         date_range: dateRange,
         verification_hash: verificationHash,
       })
-      .select('*')
+      .select('verification_hash, created_at, share_token')
       .single()
 
     if (insertError || !reportRow) {

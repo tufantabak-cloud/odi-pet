@@ -4,6 +4,10 @@ import Link from 'next/link'
 import Image from 'next/image'
 import FamilyTab from './FamilyTab'
 import ReportsTab from './ReportsTab'
+import GalleryTab from '@/components/pets/tabs/GalleryTab'
+import MatchTab from '@/components/pets/tabs/MatchTab'
+import BudgetTab from '@/components/pets/tabs/BudgetTab'
+import AdoptionTab from '@/components/pets/tabs/AdoptionTab'
 
 import SmartTaskWizard from '@/components/tasks/SmartTaskWizard'
 import { TaskCategory } from '@/lib/tasks/taskDefaults'
@@ -16,6 +20,7 @@ import BreedHealthCard from '@/components/pets/BreedHealthCard'
 import LostPetWizard from '@/components/pets/LostPetWizard'
 import MinimalGrowthChart from '@/components/pets/MinimalGrowthChart'
 import { SmartScanner } from '@/components/ui/SmartScanner'
+import FloatingSOS from '@/components/FloatingSOS'
 
 function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
   const [loading, setLoading] = useState(false)
@@ -85,7 +90,7 @@ function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
 
 const genderLabel: Record<string, string> = { male: 'Erkek', female: 'Dişi', unknown: 'Bilinmiyor' }
 
-const TABS = ['Özet', 'Sağlık', 'Aşı', 'Bakım', 'Beslenme', 'Hijyen', 'Aktivite', 'Veteriner', 'Diğer', 'Raporlar', 'SOS'] as const
+const TABS = ['Özet', 'Sağlık', 'Aşı', 'Bakım', 'Beslenme', 'Hijyen', 'Aktivite', 'Veteriner', 'Diğer', 'Raporlar', 'Galeri', 'Eş Bul', 'Bütçe', 'Sahiplendir'] as const
 type Tab = typeof TABS[number]
 
 /** Tab adı → DB category eşleştirmesi */
@@ -231,44 +236,10 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   
   const [lostWizardOpen, setLostWizardOpen] = useState(false)
   const [markFoundLoading, setMarkFoundLoading] = useState(false)
-  const [tagBrand, setTagBrand] = useState<string | null>(null)
   const [fabOpen, setFabOpen] = useState(false)
+  const [generalError, setGeneralError] = useState<string | null>(null)
 
-  // SOS State
-  const [sosContacts, setSosContacts] = useState<any[]>(pet.sos_contacts && pet.sos_contacts.length > 0 ? pet.sos_contacts : [
-    { name: '', phone: '', role: 'primary' },
-    { name: '', phone: '', role: 'secondary' }
-  ])
-  const [savingSos, setSavingSos] = useState(false)
-  const [sosStatus, setSosStatus] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
-  async function saveSos(e: React.FormEvent) {
-    e.preventDefault()
-    setSavingSos(true)
-    setSosStatus(null)
-    try {
-      const res = await fetch(`/api/pets/${pet.id}/sos`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sos_contacts: sosContacts }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setSosStatus({ type: 'err', text: data.error || 'Hata oluştu' })
-        return
-      }
-      setSosStatus({ type: 'ok', text: 'Acil Durum Ağı başarıyla güncellendi.' })
-      pet.sos_contacts = sosContacts
-      setTimeout(() => {
-        setSosStatus(null)
-        router.refresh()
-      }, 1500)
-    } catch (err: any) {
-      setSosStatus({ type: 'err', text: err.message || 'Bağlantı hatası' })
-    } finally {
-      setSavingSos(false)
-    }
-  }
 
   const [plannedTimeFilter, setPlannedTimeFilter] = useState<string>('Bugün + Gecikenler')
   const [plannedSubCatFilter, setPlannedSubCatFilter] = useState<string>('Tümü')
@@ -285,12 +256,6 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     setShowCompleted(false)
   }, [activeTab])
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedBrand = localStorage.getItem(`odi_device_brand_${pet.id}_tag`)
-      if (savedBrand) setTagBrand(savedBrand)
-    }
-  }, [pet.id])
 
   const handleEditVetInfo = () => {
     setQuickUpdateConfig({
@@ -310,6 +275,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   const handleMarkFound = async () => {
     if (!confirm('Dostunuz bulundu mu? İlan kapatılacaktır.')) return;
     setMarkFoundLoading(true)
+    setGeneralError(null)
     try {
       const res = await fetch(`/api/pets/${pet.id}/lost`, {
         method: 'PATCH',
@@ -319,7 +285,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       if (!res.ok) throw new Error('Hata oluştu')
       router.refresh()
     } catch(err) {
-      alert('İşlem başarısız oldu.')
+      setGeneralError('İşlem başarısız oldu.')
+      setTimeout(() => setGeneralError(null), 3000)
     } finally {
       setMarkFoundLoading(false)
     }
@@ -646,7 +613,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           const cardStyle = getTaskCardStyle(isOverdue, isCompleted);
 
           return (
-            <div key={item.id} className={`flex items-center justify-between p-4 ${cardStyle.bg} ${cardStyle.hoverBg} rounded-[20px] transition-colors`}>
+            <div key={item.id} onClick={() => { setTaskToEdit(item); setTaskWizardOpen(true) }} className={`flex items-center justify-between p-4 ${cardStyle.bg} ${cardStyle.hoverBg} rounded-[20px] transition-colors cursor-pointer`}>
               <div>
                 <p className={`font-extrabold text-[14px] ${cardStyle.textTitle}`}>{item.title || item.vaccines?.name || 'Görev'}</p>
                 {item.sub_category && <p className={`text-[11px] font-semibold ${cardStyle.textSub}`}>{item.sub_category}</p>}
@@ -793,6 +760,11 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
   return (
     <div className="flex flex-col gap-6 pb-20 w-full mx-auto">
+      {generalError && (
+        <div role="alert" className="p-3 bg-error/10 text-error text-[13px] font-bold rounded-xl text-center border border-error/20 mx-4 mt-4">
+          {generalError}
+        </div>
+      )}
 
       {/* Admin Notice Banner */}
       {isAdminView && (
@@ -834,11 +806,12 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         {/* Top Gradient Ribbon */}
         <div className="h-1.5 bg-gradient-to-r from-primary to-primary-hover"/>
         
+
         {/* Hero Card Content */}
         <div className="p-5 flex flex-row gap-4 items-start sm:items-center relative">
           <Link 
             href={`/owner/pets/${pet.id}/edit`} 
-            className="absolute top-5 right-5 text-text-secondary hover:text-primary transition-colors duration-200 z-10"
+            className="absolute top-5 right-[72px] text-text-secondary hover:text-primary transition-colors duration-200 z-10"
             title="Profili Düzenle"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -847,7 +820,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             </svg>
           </Link>
           <div className="relative w-24 h-24 rounded-[24px] bg-gradient-to-br from-primary-soft to-white flex items-center justify-center text-primary text-[40px] font-black shadow-sm ring-2 ring-border-main shrink-0 transition-transform duration-300 group-hover/card:scale-[1.02]">
-            {pet.avatar_url ? <Image src={pet.avatar_url} fill={true} className="rounded-[22px] object-cover" alt={pet.name}/> : pet.name.charAt(0)}
+            {pet.avatar_url ? <Image src={pet.avatar_url} fill={true} sizes="96px" priority={true} className="rounded-[22px] object-cover" alt={pet.name}/> : pet.name.charAt(0)}
           </div>
           <div className="flex-1 min-w-0 flex flex-col gap-1">
             <h1 className="text-[22px] sm:text-[26px] font-extrabold text-text-primary leading-tight truncate">{pet.name}</h1>
@@ -887,19 +860,31 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             {/* Quick Action Buttons removed (moved to FAB) */}
           </div>
         </div>
+
+        {/* SOS Footer */}
+        <div className="border-t border-border-main mx-5 py-3 flex items-center justify-between">
+          <span className="text-[11px] font-bold text-text-secondary uppercase tracking-widest">Acil Durum</span>
+          <FloatingSOS
+            petId={pet.id}
+            petName={pet.name}
+            vetPhone={pet.vet_phone}
+            vetName={pet.vet_name}
+            sosContacts={pet.sos_contacts}
+          />
+        </div>
       </div>
 
       {/* ── Profili Zenginleştir Widget ── */}
       {(() => {
         const enrichTasks: { label: string; onClick?: () => void; link?: string }[] = []
-        if (!pet.avatar_url) enrichTasks.push({ label: 'Fotoğraf Ekle', onClick: () => setQuickUpdateConfig({ title: 'Fotoğraf Ekle', desc: 'Petinizin profilini tamamlamak için bir fotoğraf yükleyin.', fields: [{ name: 'avatar', type: 'file', label: 'Fotoğraf Seç', required: true }] }) })
-        if (!pet.breed) enrichTasks.push({ label: 'Irk Bilgisi Gir', onClick: () => setQuickUpdateConfig({ title: 'Irk Bilgisi', desc: 'Petinizin ırkına özel sağlık riskleri ve öneriler alabilmek için ırk bilgisini ekleyin.', fields: [{ name: 'breed', type: 'text', label: 'Irk', placeholder: 'Örn: Golden Retriever', required: true }] }) })
-        if (!pet.vet_name) enrichTasks.push({ label: 'Veteriner Bilgisi Gir', onClick: () => setQuickUpdateConfig({ title: 'Veteriner Bilgisi', desc: 'Sağlık kayıtlarının eşleşebilmesi için veteriner bilgisini girin.', fields: [{ name: 'vet_name', type: 'text', label: 'Veteriner Adı', placeholder: 'Örn: Dr. Ali Yılmaz', required: true }, { name: 'vet_phone', type: 'tel', label: 'Telefon (Opsiyonel)', placeholder: '05xx xxx xx xx' }] }) })
+        if (!pet.avatar_url) enrichTasks.push({ label: 'Fotoğraf Ekle', link: `/owner/pets/${pet.id}/edit#temel-section` })
+        if (!pet.breed) enrichTasks.push({ label: 'Irk Bilgisi Gir', link: `/owner/pets/${pet.id}/edit#temel-section` })
+        if (!pet.vet_name) enrichTasks.push({ label: 'Veteriner Bilgisi Gir', link: `/owner/pets/${pet.id}/edit#veteriner-section` })
         if (!localSchedules || !localSchedules.some(s => s.category === 'Medikal')) enrichTasks.push({ label: 'İlk Aşısını Gir', onClick: () => openWizardWithCategory('Medikal') })
-        if (!pet.microchip_no) enrichTasks.push({ label: 'Kimlik & Çip Bilgisi', onClick: () => setQuickUpdateConfig({ title: 'Kimlik & Çip', desc: 'Petinizin yasal kayıt numaralarını sisteme işleyin.', fields: [{ name: 'microchip_no', type: 'text', label: 'Mikroçip Numarası', placeholder: '15 Haneli No', required: true }, { name: 'passport_no', type: 'text', label: 'Pasaport Numarası (Opsiyonel)' }] }) })
+        if (!pet.microchip_no) enrichTasks.push({ label: 'Kimlik & Çip Bilgisi', link: `/owner/pets/${pet.id}/edit#veteriner-section` })
         if (!growthRecords || !growthRecords[0]?.weight_kg) enrichTasks.push({ label: 'Kilo & Boy Bilgisi Gir', onClick: () => setQuickUpdateConfig({ title: 'Gelişim Bilgisi', desc: 'Gelişimi takip edebilmek için güncel kilo ve boyunu girin.', endpoint: `/api/pets/${pet.id}/growth`, method: 'POST', fields: [{ name: 'weight_kg', type: 'number', label: 'Kilo (kg)', placeholder: 'Örn: 4.5', required: true }, { name: 'height_cm', type: 'number', label: 'Boy (cm)', placeholder: 'Örn: 35.5', required: false }] }) })
         if (!nutritionLogs || nutritionLogs.length === 0) enrichTasks.push({ label: 'Kullandığı Mamayı Ekle', onClick: () => { setActiveTab('Beslenme'); window.scrollTo(0, 0); } })
-        if (!pet.sos_contacts?.[0]?.phone) enrichTasks.push({ label: 'SOS Ağı Kur', link: `/owner/pets/${pet.id}/edit?tab=sos` })
+        if (!pet.sos_contacts?.[0]?.phone) enrichTasks.push({ label: 'SOS Ağı Kur', link: `/owner/pets/${pet.id}/edit#sos-section` })
         if (!hasPasskey) enrichTasks.push({ label: 'Biyometrik Giriş Tanımla', link: '/owner/profile?biometric=true' })
         
         if (enrichTasks.length === 0) return null
@@ -937,6 +922,29 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           </div>
         )
       })()}
+
+      {/* ── Premium Custom Bar: Galeri, Eş Bul, Bütçe, Sahiplendir ── */}
+      <div className="grid grid-cols-4 gap-2 w-full mt-2 animate-fade-in">
+        {[
+          { id: 'Galeri', icon: '📸', gradient: 'from-blue-500 to-indigo-500' },
+          { id: 'Eş Bul', icon: '❤️', gradient: 'from-rose-400 to-pink-500' },
+          { id: 'Bütçe', icon: '💰', gradient: 'from-emerald-400 to-teal-500' },
+          { id: 'Sahiplendir', icon: '🏠', gradient: 'from-amber-400 to-orange-500' }
+        ].map((item) => (
+          <button
+            key={item.id}
+            onClick={() => { setActiveTab(item.id as Tab); document.getElementById('pet-tabs')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
+            className={`relative overflow-hidden rounded-[20px] p-3 flex flex-col items-center justify-center gap-1.5 transition-all duration-300 hover:scale-[1.03] active:scale-95 shadow-sm border border-border-main/50 ${activeTab === item.id ? 'ring-2 ring-primary bg-primary/5' : 'bg-white hover:bg-slate-50'}`}
+          >
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-[20px] bg-gradient-to-br ${item.gradient} text-white shadow-inner`}>
+              {item.icon}
+            </div>
+            <span className={`text-[11px] sm:text-[12px] font-black tracking-tight ${activeTab === item.id ? 'text-primary' : 'text-text-secondary'}`}>
+              {item.id}
+            </span>
+          </button>
+        ))}
+      </div>
 
       {/* SmartTaskWizard Modal */}
       {taskWizardOpen && (
@@ -991,25 +999,67 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         <SmartScanner
           petId={pet.id}
           onClose={() => setIsSmartScannerOpen(false)}
-          onSave={async (data) => {
-            setIsSmartScannerOpen(false);
-            router.refresh();
+          onSave={async (data: any) => {
+            const { record_type, parsed } = data
+            try {
+              if (record_type === 'vaccine_card') {
+                await fetch(`/api/pets/${pet.id}/treatments`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    disease_name: parsed.title || parsed.vaccine_name || 'Aşı Kaydı',
+                    category: 'Aşı Uygulaması',
+                    status: 'Tamamlandı',
+                    start_date: parsed.date || new Date().toISOString().split('T')[0],
+                    clinic_name: parsed.vet_name || '',
+                    notes: parsed.lot_number ? 'Lot: ' + parsed.lot_number : '',
+                  }),
+                })
+              } else if (record_type === 'food_packaging') {
+                await fetch(`/api/pets/${pet.id}/nutrition/profile`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    food_brand: parsed.food_brand,
+                    food_product: parsed.food_product,
+                    food_type: parsed.food_type,
+                  }),
+                })
+              } else if (record_type === 'medicine_packaging' || record_type === 'parasite_product') {
+                await fetch(`/api/pets/${pet.id}/treatments`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    disease_name: parsed.title || parsed.product_name || 'Tedavi Kaydı',
+                    category: record_type === 'parasite_product' ? 'İç/Dış Parazit Uygulaması' : 'İlaç Tedavisi',
+                    status: 'Tamamlandı',
+                    start_date: new Date().toISOString().split('T')[0],
+                    notes: parsed.active_ingredient || '',
+                  }),
+                })
+              }
+            } catch (err) {
+              console.error('Tarama kaydedilemedi:', err)
+            } finally {
+              setIsSmartScannerOpen(false)
+              router.refresh()
+            }
           }}
         />
       )}
 
       {/* ── Tabs ── */}
       <div id="pet-tabs" className="flex gap-1.5 bg-slate-100/80 p-1.5 rounded-2xl border border-border-main/60 overflow-x-auto sticky top-16 z-30 backdrop-blur-md shadow-sm scrollbar-hide">
-        {TABS.map(t => {
+        {TABS.filter(t => !['Galeri', 'Eş Bul', 'Bütçe', 'Sahiplendir'].includes(t)).map(t => {
           const isActive = activeTab === t;
           return (
             <button 
               key={t} 
               onClick={() => setActiveTab(t)}
-              className={`flex-1 min-w-max px-4 py-2.5 rounded-xl text-[13px] whitespace-nowrap transition-all duration-200 cursor-pointer ${
+              className={`flex-1 min-w-max px-4 py-2.5 rounded-xl text-[13px] whitespace-nowrap transition-all duration-300 cursor-pointer ${
                 isActive 
-                  ? 'bg-primary text-white font-extrabold shadow-md shadow-primary/20 scale-[1.02] transform' 
-                  : 'text-text-secondary font-bold hover:text-text-primary hover:bg-white/40 active:scale-[0.98]'
+                  ? 'bg-primary text-white font-extrabold shadow-md shadow-primary/20 scale-[1.05]' 
+                  : 'bg-white/50 text-text-secondary font-bold hover:text-primary hover:bg-white hover:shadow-sm hover:scale-[1.02] active:scale-[0.98]'
               }`}
             >
               {t}
@@ -1024,65 +1074,23 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       {activeTab === 'Özet' && (
         <div className="flex flex-col gap-4">
           
-          {/* Smart Card & SOS */}
-          {(() => {
-            const now = new Date()
-            const upcomingTask = localSchedules
-              .filter((s: any) => s.status !== 'done')
-              .sort((a, b) => getTaskDateTime(a).getTime() - getTaskDateTime(b).getTime())[0];
-            
-            return (
-              <div className="flex flex-col gap-3">
-                <div className="card-base p-5 bg-gradient-to-r from-primary-soft to-white border border-primary/20 shadow-sm flex flex-col gap-3 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-10 -mt-10 blur-xl" />
-                  {upcomingTask && getTaskDateTime(upcomingTask) <= new Date(new Date().setHours(23, 59, 59, 999)) ? (
-                    <>
-                      <h3 className="text-[16px] sm:text-[18px] font-extrabold text-text-primary leading-tight relative z-10">
-                        Bugün {pet.name}'{getTurkishGenitiveSuffix(pet.name)} {upcomingTask.title || upcomingTask.sub_category} zamanı. <br className="hidden sm:block"/>
-                        Tamamladığında işaretle.
-                      </h3>
-                      <button 
-                        onClick={() => handleMarkCompleted(upcomingTask.id)}
-                        className="bg-primary hover:bg-primary-hover text-white font-bold py-3 px-5 rounded-xl text-[14px] shadow-md shadow-primary/20 transition-all active:scale-95 w-max relative z-10"
-                      >
-                        İşaretle
-                      </button>
-                    </>
-                  ) : (
-                    <h3 className="text-[16px] font-bold text-text-secondary py-2 relative z-10">
-                      Bugün yapılması gereken bir şey yok. Her şey yolunda.
-                    </h3>
-                  )}
-                </div>
-              </div>
-            )
-          })()}
-          
-          {/* Overdue (Gecikmiş) Tasks Notification */}
-          {(() => {
-            if (localOverdue > 0) {
-              return (
-                <div className="bg-error/10 border border-error/20 p-4 rounded-2xl flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-error/20 rounded-full flex items-center justify-center text-[18px]">🚨</div>
-                    <div>
-                      <h3 className="text-[15px] font-extrabold text-error leading-tight">{localOverdue} Adet Gecikmiş Görev Var</h3>
-                      <p className="text-[13px] font-bold text-error/80 mt-0.5">Lütfen planlarınızı kontrol edin.</p>
-                    </div>
-                  </div>
-                  <button onClick={() => setActiveTab('Sağlık')} className="bg-error hover:bg-error/90 text-white font-bold py-2.5 px-4 rounded-xl text-[13px] shadow-sm transition-transform active:scale-95 whitespace-nowrap">
-                    Hemen Çöz
-                  </button>
-                </div>
-              )
-            }
-            return null;
-          })()}
-
-          {/* Weekly Timeline Strip */}
+          {/* ── Unified Tasks & Calendar Section ── */}
           <div className="flex flex-col gap-3">
-            <h2 className="text-[15px] font-black text-text-primary px-1">Bu Hafta</h2>
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x">
+            <div className="flex items-center justify-between px-1">
+              <h2 className="text-[16px] font-black text-text-primary">Görevler & Ajanda</h2>
+              {localOverdue > 0 && (
+                <button 
+                  onClick={() => setSelectedDate(new Date(new Date().setHours(0,0,0,0)))}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-error/10 text-error hover:bg-error/20 transition-colors cursor-pointer"
+                >
+                  <span className="text-[14px]">🚨</span>
+                  <span className="text-[12px] font-bold">{localOverdue} Gecikmiş</span>
+                </button>
+              )}
+            </div>
+
+            {/* Weekly Timeline Strip */}
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x mt-1">
               {Array.from({length: 7}).map((_, i) => {
                 const date = new Date();
                 date.setHours(0,0,0,0);
@@ -1114,42 +1122,131 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             </div>
 
             {/* Selected Day Tasks */}
-            <div className="bg-white rounded-2xl border border-border-main/50 p-4 shadow-sm min-h-[120px]">
+            <div className="bg-white rounded-3xl border border-border-main/60 p-5 shadow-sm min-h-[140px] flex flex-col gap-4">
               {(() => {
-                const dayTasks = localSchedules.filter((s: any) => {
-                  const td = getTaskDateTime(s);
-                  td.setHours(0,0,0,0);
-                  return td.getTime() === selectedDate.getTime();
-                }).sort((a,b) => getTaskDateTime(a).getTime() - getTaskDateTime(b).getTime());
-
                 const isToday = selectedDate.getTime() === new Date(new Date().setHours(0,0,0,0)).getTime();
                 const dayPrefix = isToday ? 'Bugün' : selectedDate.toLocaleDateString('tr-TR', {weekday: 'long'});
+                const now = new Date();
 
-                if (dayTasks.length === 0) {
-                  return <div className="h-full flex items-center justify-center text-[14px] font-bold text-text-secondary py-6">{dayPrefix} için görev yok.</div>
+                // Overdue tasks (only show if Today is selected)
+                const overdueTasks = isToday ? localSchedules.filter((s: any) => {
+                  return s.status !== 'done' && getTaskDateTime(s) < now;
+                }).sort((a,b) => getTaskDateTime(a).getTime() - getTaskDateTime(b).getTime()) : [];
+
+                // Normal tasks for selected day
+                const dayTasks = localSchedules.filter((s: any) => {
+                  const td = new Date(getTaskDateTime(s));
+                  td.setHours(0,0,0,0);
+                  const isThisDate = td.getTime() === selectedDate.getTime();
+                  if (!isThisDate) return false;
+                  // If it's today, exclude if it's already in overdueTasks
+                  if (isToday) {
+                    return getTaskDateTime(s) >= now || s.status === 'done';
+                  }
+                  return true;
+                }).sort((a,b) => getTaskDateTime(a).getTime() - getTaskDateTime(b).getTime());
+
+                if (dayTasks.length === 0 && overdueTasks.length === 0) {
+                  return (
+                    <div className="h-full flex flex-col items-center justify-center text-center py-8 gap-3 opacity-60">
+                      <span className="text-4xl">✨</span>
+                      <p className="text-[14px] font-bold text-text-secondary">
+                        {isToday ? 'Bugün için planlı görev yok. Harika!' : `${dayPrefix} günü için planlı görev yok.`}
+                      </p>
+                    </div>
+                  );
                 }
 
                 return (
-                  <div className="flex flex-col gap-3">
-                    {dayTasks.map((t: any) => {
-                      const isDone = t.status === 'done';
-                      const title = t.title || t.vaccines?.name || t.category;
-                      return (
-                        <div key={t.id} className="flex items-center justify-between group">
-                          <div className="flex items-center gap-3">
-                            <button onClick={() => { if(!isDone) handleMarkCompleted(t.id) }} className={`w-6 h-6 flex items-center justify-center rounded-full border-2 transition-colors flex-shrink-0 ${isDone ? 'bg-text-secondary/20 border-text-secondary/20 text-text-secondary' : 'border-primary/40 hover:bg-primary hover:border-primary text-transparent hover:text-white'}`}>
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                            </button>
-                            <span className={`text-[14px] font-bold ${isDone ? 'text-text-secondary/60 line-through' : 'text-text-primary'}`}>{isDone ? `${dayPrefix}: ${title} tamamlandı.` : `${dayPrefix}: ${title}`}</span>
-                          </div>
-                          {!isDone && (
-                             <button onClick={(e) => { e.stopPropagation(); setTaskToEdit(t); setTaskWizardOpen(true) }} className="opacity-0 group-hover:opacity-100 p-1.5 text-text-secondary hover:text-primary transition-opacity">
-                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                             </button>
-                          )}
+                  <div className="flex flex-col gap-4">
+                    {/* Overdue Section */}
+                    {overdueTasks.length > 0 && (
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="w-2 h-2 rounded-full bg-error animate-pulse" />
+                          <h3 className="text-[12px] font-black text-error uppercase tracking-widest">Gecikmiş Görevler</h3>
                         </div>
-                      )
-                    })}
+                        {overdueTasks.map((t: any) => {
+                          const title = t.title || t.vaccines?.name || t.category;
+                          return (
+                            <div key={t.id} onClick={() => { setTaskToEdit(t); setTaskWizardOpen(true) }} className="flex items-start justify-between group bg-error/5 p-3.5 rounded-2xl border border-error/10 hover:bg-error/10 transition-colors cursor-pointer">
+                              <div className="flex items-start gap-3">
+                                <button onClick={(e) => { e.stopPropagation(); handleMarkCompleted(t.id); }} className="mt-0.5 w-6 h-6 flex items-center justify-center rounded-full border-2 border-error/40 hover:bg-error hover:border-error text-transparent hover:text-white transition-colors flex-shrink-0">
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                </button>
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-[14px] font-bold text-error">{title}</span>
+                                  <span className="text-[11px] font-bold text-error/70 flex items-center gap-1">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                    {formatTaskDate(t.due_date, t.due_time, false)}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1.5 relative" onClick={(e) => e.stopPropagation()}>
+                                <button onClick={(e) => { e.stopPropagation(); handlePostpone(t.id); }} className="px-2 py-1.5 bg-white/60 hover:bg-white text-error font-bold text-[11px] rounded-lg border border-error/20 transition-colors shadow-sm whitespace-nowrap">
+                                  📅 +1 Gün
+                                </button>
+                                <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(prev => prev === t.id ? null : t.id) }} className="p-1 text-error/50 hover:text-error transition-colors focus:outline-none rounded-lg hover:bg-white/50">
+                                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
+                                  </svg>
+                                </button>
+                                {activeMenuId === t.id && (
+                                  <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-2xl shadow-xl border border-border-main/50 py-2 z-[200]">
+                                    <button onClick={(e) => { e.stopPropagation(); setTaskToEdit(t); setActiveMenuId(null); setTaskWizardOpen(true) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
+                                    <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(t.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer">❌ Sil</button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Regular Tasks Section */}
+                    {dayTasks.length > 0 && (
+                      <div className="flex flex-col gap-3">
+                        {overdueTasks.length > 0 && (
+                          <div className="flex items-center gap-2 mb-1 mt-2">
+                            <span className="w-2 h-2 rounded-full bg-primary" />
+                            <h3 className="text-[12px] font-black text-primary uppercase tracking-widest">{dayPrefix}</h3>
+                          </div>
+                        )}
+                        {dayTasks.map((t: any) => {
+                          const isDone = t.status === 'done';
+                          const title = t.title || t.vaccines?.name || t.category;
+                          return (
+                            <div key={t.id} onClick={() => { if(!isDone) { setTaskToEdit(t); setTaskWizardOpen(true); } }} className={`flex items-center justify-between group p-3.5 rounded-2xl border transition-colors ${isDone ? 'bg-text-secondary/5 border-transparent' : 'cursor-pointer bg-white border-border-main/50 hover:border-primary/30 hover:bg-primary/5'}`}>
+                              <div className="flex items-center gap-3">
+                                <button onClick={(e) => { e.stopPropagation(); if(!isDone) handleMarkCompleted(t.id); }} className={`w-6 h-6 flex items-center justify-center rounded-full border-2 transition-colors flex-shrink-0 ${isDone ? 'bg-text-secondary/20 border-text-secondary/20 text-text-secondary' : 'border-primary/40 hover:bg-primary hover:border-primary text-transparent hover:text-white'}`}>
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                </button>
+                                <span className={`text-[14px] font-bold ${isDone ? 'text-text-secondary/60 line-through' : 'text-text-primary'}`}>{title}</span>
+                              </div>
+                              {!isDone && (
+                                <div className="flex items-center gap-1.5 relative" onClick={(e) => e.stopPropagation()}>
+                                  <button onClick={(e) => { e.stopPropagation(); handlePostpone(t.id); }} className="px-2 py-1.5 bg-text-secondary/5 hover:bg-text-secondary/10 text-text-secondary font-bold text-[11px] rounded-lg border border-transparent hover:border-border-main transition-colors whitespace-nowrap">
+                                    📅 +1 Gün
+                                  </button>
+                                  <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(prev => prev === t.id ? null : t.id) }} className="p-1 text-text-secondary/50 hover:text-text-secondary transition-colors focus:outline-none rounded-lg hover:bg-bg-main">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                      <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
+                                    </svg>
+                                  </button>
+                                  {activeMenuId === t.id && (
+                                    <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-2xl shadow-xl border border-border-main/50 py-2 z-[200]">
+                                      <button onClick={(e) => { e.stopPropagation(); setTaskToEdit(t); setActiveMenuId(null); setTaskWizardOpen(true) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
+                                      <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(t.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer">❌ Sil</button>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 )
               })()}
@@ -1563,100 +1660,19 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         </div>
       )}
 
-      {activeTab === 'SOS' && (
-        <div className="flex flex-col gap-5 animate-fadeInUp">
-          <div className="card-base p-6 bg-white border border-border-main shadow-sm rounded-2xl flex flex-col relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-error/5 rounded-full blur-3xl pointer-events-none" />
-            
-            <div className="flex items-start justify-between relative z-10 mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-14 h-14 bg-gradient-to-tr from-red-100 to-rose-50 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-error/10">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                      <linearGradient id="sirenGradProfile" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#EF4444" />
-                        <stop offset="100%" stopColor="#F43F5E" />
-                      </linearGradient>
-                    </defs>
-                    <path d="M12 2V4M12 2L9 5M12 2L15 5" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" opacity="0.8" />
-                    <rect x="5" y="16" width="14" height="3" rx="1.5" fill="#94A3B8" />
-                    <path d="M6 16C6 11.5817 9.58172 8 14 8C14.4183 8 14.75 8.3317 14.75 8.75V16H6Z" fill="url(#sirenGradProfile)" transform="translate(-2, 0)" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-text-primary text-[17px]">Acil Durum (SOS) Ağı</h3>
-                  <p className="text-[13px] text-text-secondary mt-0.5 leading-relaxed">
-                    Dostunuz kaybolduğunda veya acil bir sağlık durumunda ulaşılabilecek kişileri yönetin.
-                  </p>
-                </div>
-              </div>
-            </div>
 
-            <form className="flex flex-col gap-4 relative z-10" onSubmit={saveSos}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="flex flex-col gap-3 p-5 bg-error/[0.02] rounded-2xl border border-error/10 hover:border-error/30 transition-colors">
-                  <p className="text-[11px] font-black text-error uppercase tracking-widest">Kişi 1 (Birincil)</p>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[12px] font-bold text-text-secondary">Ad Soyad (İsim)</label>
-                    <input 
-                      type="text" 
-                      className="input-base text-[14px] py-3 px-4 bg-white" 
-                      placeholder="Ad Soyad (İsim)" 
-                      value={sosContacts[0]?.name || ''} 
-                      onChange={e => { const nc = [...sosContacts]; nc[0] = { ...nc[0], name: e.target.value }; setSosContacts(nc); }} 
-                      required 
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[12px] font-bold text-text-secondary">Telefon</label>
-                    <input 
-                      type="tel" 
-                      className="input-base text-[14px] py-3 px-4 bg-white" 
-                      placeholder="05XX XXX XX XX" 
-                      value={sosContacts[0]?.phone || ''} 
-                      onChange={e => { const nc = [...sosContacts]; nc[0] = { ...nc[0], phone: e.target.value }; setSosContacts(nc); }} 
-                      required 
-                    />
-                  </div>
-                </div>
-                <div className="flex flex-col gap-3 p-5 bg-bg-main rounded-2xl border border-border-main hover:border-text-secondary/30 transition-colors">
-                  <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest">Kişi 2 (İsteğe Bağlı)</p>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[12px] font-bold text-text-secondary">Ad Soyad / İsim</label>
-                    <input 
-                      type="text" 
-                      className="input-base text-[14px] py-3 px-4 bg-white" 
-                      placeholder="Ad Soyad / İsim" 
-                      value={sosContacts[1]?.name || ''} 
-                      onChange={e => { const nc = [...sosContacts]; nc[1] = { ...nc[1], name: e.target.value }; setSosContacts(nc); }} 
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[12px] font-bold text-text-secondary">Telefon</label>
-                    <input 
-                      type="tel" 
-                      className="input-base text-[14px] py-3 px-4 bg-white" 
-                      placeholder="05XX XXX XX XX" 
-                      value={sosContacts[1]?.phone || ''} 
-                      onChange={e => { const nc = [...sosContacts]; nc[1] = { ...nc[1], phone: e.target.value }; setSosContacts(nc); }} 
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center justify-between gap-3 mt-4 pt-4 border-t border-border-main">
-                {sosStatus ? (
-                  <div className={`text-[13px] font-bold px-4 py-2 rounded-xl ${sosStatus.type === 'ok' ? 'text-success bg-success/10' : 'text-error bg-error/10'}`}>
-                    {sosStatus.text}
-                  </div>
-                ) : <div/>}
-                <button type="submit" disabled={savingSos} className="btn-primary bg-error hover:bg-error/90 border-none py-3.5 px-8 text-[14px] font-black shadow-sm cursor-pointer rounded-xl transition-transform active:scale-95">
-                  {savingSos ? 'Kaydediliyor...' : 'Ağı Kaydet'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+
+      {/* ── Tab: Galeri ── */}
+      {activeTab === 'Galeri' && <GalleryTab pet={pet} />}
+
+      {/* ── Tab: Eş Bul ── */}
+      {activeTab === 'Eş Bul' && <MatchTab pet={pet} />}
+
+      {/* ── Tab: Bütçe ── */}
+      {activeTab === 'Bütçe' && <BudgetTab pet={pet} />}
+
+      {/* ── Tab: Sahiplendir ── */}
+      {activeTab === 'Sahiplendir' && <AdoptionTab pet={pet} />}
 
       {lostWizardOpen && (
         <LostPetWizard 
@@ -1677,40 +1693,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             >
               <span className="text-[16px]">🤝</span> Emanet Et / Paylaş
             </Link>
-            <Link
-              href={`/owner/devices/camera?petId=${pet.id}`}
-              className="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white py-3 px-5 rounded-2xl text-[13px] font-black tracking-wider shadow-lg active:scale-95 transition-all flex items-center gap-2"
-              onClick={() => setFabOpen(false)}
-            >
-              <span className="animate-pulse">🟢</span> Canlı İzle
-            </Link>
-            {tagBrand ? (
-              <a
-                href={
-                  tagBrand === 'airtag' ? 'findmy://' :
-                  tagBrand === 'smarttag' ? 'smartthings://' :
-                  tagBrand === 'tractive' ? 'tractive://' :
-                  `/owner/devices/setup?petId=${pet.id}&type=tag`
-                }
-                className="bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white py-3 px-5 rounded-2xl text-[13px] font-black tracking-wider shadow-lg active:scale-95 transition-all flex items-center gap-2"
-                onClick={() => setFabOpen(false)}
-              >
-                <span className="text-[16px]">
-                  {tagBrand === 'airtag' ? '🍎' : tagBrand === 'smarttag' ? '🌌' : tagBrand === 'tractive' ? '📍' : '🏷️'}
-                </span>
-                {tagBrand === 'airtag' ? 'AirTag ile Bul' : 
-                 tagBrand === 'smarttag' ? 'SmartTag ile Bul' : 
-                 tagBrand === 'tractive' ? 'Tractive ile Bul' : 'Künye ile Bul'}
-              </a>
-            ) : (
-              <Link
-                href={`/owner/devices/setup?petId=${pet.id}&type=tag`}
-                className="bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white py-3 px-5 rounded-2xl text-[13px] font-black tracking-wider shadow-lg active:scale-95 transition-all"
-                onClick={() => setFabOpen(false)}
-              >
-                Akıllı Künye (TAG)
-              </Link>
-            )}
+
             {activeLostReport ? (
               <button
                 onClick={() => { handleMarkFound(); setFabOpen(false); }}

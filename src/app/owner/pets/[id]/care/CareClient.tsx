@@ -7,12 +7,12 @@ import { useRouter } from 'next/navigation'
 import CoachMark from '@/components/ui/CoachMark'
 
 const ALL_ROUTINES = [
-  { key: 'grooming', label: 'Tüy Tarama', icon: '🐾', defaultFreq: 'Günlük' },
-  { key: 'nail_trim', label: 'Tırnak Kesimi', icon: '✂️', defaultFreq: 'Aylık' },
-  { key: 'bath', label: 'Banyo', icon: '🚿', defaultFreq: 'Aylık' },
-  { key: 'ear_clean', label: 'Kulak Temizliği', icon: '👂', defaultFreq: 'Haftalık' },
-  { key: 'teeth_brush', label: 'Diş Fırçalama', icon: '🪥', defaultFreq: 'Haftalık' },
-  { key: 'eye_clean', label: 'Göz Temizliği', icon: '👁️', defaultFreq: 'Günlük' },
+  { key: 'grooming',   label: 'Tüy Tarama',      icon: '🐾',  defaultFreq: 'Günlük' },
+  { key: 'nail_trim',  label: 'Tırnak Kesimi',    icon: '🦴',  defaultFreq: 'Aylık' },
+  { key: 'bath',       label: 'Banyo',             icon: '🛁',  defaultFreq: 'Aylık' },
+  { key: 'ear_clean',  label: 'Kulak Temizliği',   icon: '🐕',  defaultFreq: 'Haftalık' },
+  { key: 'teeth_brush',label: 'Diş Fırçalama',    icon: '🦷',  defaultFreq: 'Haftalık' },
+  { key: 'eye_clean',  label: 'Göz Temizliği',    icon: '🐱',  defaultFreq: 'Günlük' },
 ]
 
 export default function CareClient({ pet, recentEvents }: { pet: any, recentEvents: any[] }) {

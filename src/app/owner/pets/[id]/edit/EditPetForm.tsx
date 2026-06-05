@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { calcAge } from '@/lib/pets/utils'
+import { SmartScanner } from '@/components/ui/SmartScanner'
 
 const CAT_BREEDS = [
   'British Shorthair', 'Scottish Fold', 'Scottish Straight',
@@ -28,6 +29,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
+  const [showDocScanner, setShowDocScanner] = useState(false)
   const [birthDateMode, setBirthDateMode] = useState<'exact' | 'approximate'>('exact')
   
   const [petName, setPetName] = useState(pet.name || '')
@@ -80,6 +82,21 @@ export default function EditPetForm({ pet }: { pet: any }) {
     const targetDate = new Date(targetYear, targetMonth, 1)
     setBirthDate(targetDate.toISOString().split('T')[0])
   }
+
+  const handleStep = (field: 'weight' | 'height', type: 'inc' | 'dec') => {
+    if (field === 'weight') {
+      const current = parseFloat(weightKg) || 0
+      const next = type === 'inc' ? current + 0.5 : current - 0.5
+      setWeightKg(next > 0 ? String(parseFloat(next.toFixed(2))) : '0')
+    } else {
+      const current = parseFloat(heightCm) || 0
+      const next = type === 'inc' ? current + 1 : current - 1
+      setHeightCm(next > 0 ? String(parseFloat(next.toFixed(1))) : '0')
+    }
+  }
+
+
+
   const [selectedBreed, setSelectedBreed] = useState(pet.breed || '')
   
   const [selectedCity, setSelectedCity] = useState(pet.city || '')
@@ -105,6 +122,9 @@ export default function EditPetForm({ pet }: { pet: any }) {
   const [color, setColor] = useState(pet.color || '')
   const [lifestyle, setLifestyle] = useState(pet.lifestyle || '')
   const [size, setSize] = useState(pet.size || '')
+  const [isNeutered, setIsNeutered] = useState<boolean>(pet.is_neutered || false)
+  const [weightKg, setWeightKg] = useState(pet.weight_kg !== undefined && pet.weight_kg !== null ? String(pet.weight_kg) : '')
+  const [heightCm, setHeightCm] = useState(pet.height_cm !== undefined && pet.height_cm !== null ? String(pet.height_cm) : '')
   const [microchipNo, setMicrochipNo] = useState(pet.microchip_no || '')
   const [passportNo, setPassportNo] = useState(pet.passport_no || '')
   const [vetCompany, setVetCompany] = useState(pet.vet_company || '')
@@ -112,10 +132,46 @@ export default function EditPetForm({ pet }: { pet: any }) {
   const [vetPhone, setVetPhone] = useState(pet.vet_phone || '')
   const [vetEmail, setVetEmail] = useState(pet.vet_email || '')
 
+  const [sosContacts, setSosContacts] = useState<{name:string; phone:string; relation:string}[]>(
+    pet.sos_contacts && pet.sos_contacts.length > 0
+      ? pet.sos_contacts
+      : [{ name: '', phone: '', relation: '' }, { name: '', phone: '', relation: '' }]
+  )
+  const [sosSaving, setSosSaving] = useState(false)
+  const [sosMsg, setSosMsg] = useState<{type:'ok'|'err'; text:string} | null>(null)
+
   const species = pet.species as 'Kedi' | 'Köpek'
   const breeds = species === 'Kedi' ? CAT_BREEDS : DOG_BREEDS
   const colors = species === 'Kedi' ? CAT_COLORS : DOG_COLORS
   const currentYear = new Date().getFullYear()
+
+  const calculateSize = (weightStr: string, petSpecies: 'Kedi' | 'Köpek'): string => {
+    const w = parseFloat(weightStr)
+    if (isNaN(w) || w <= 0) return ''
+    if (petSpecies === 'Kedi') {
+      if (w < 4) return 'small'
+      if (w < 6.5) return 'medium'
+      return 'large'
+    } else {
+      if (w < 5) return 'toy'
+      if (w < 10) return 'small'
+      if (w < 25) return 'medium'
+      if (w < 45) return 'large'
+      return 'giant'
+    }
+  }
+
+  useEffect(() => {
+    const calculated = calculateSize(weightKg, species)
+    setSize(calculated)
+  }, [weightKg, species])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const el = document.getElementById(window.location.hash.replace('#', ''))
+      if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -147,6 +203,9 @@ export default function EditPetForm({ pet }: { pet: any }) {
     
     if (selectedCity) fd.set('city', selectedCity)
     if (selectedDistrict) fd.set('district', selectedDistrict)
+    fd.set('is_neutered', String(isNeutered))
+    fd.set('weight_kg', weightKg.trim())
+    fd.set('height_cm', heightCm.trim())
 
     try {
       const res = await fetch(`/api/pets/${pet.id}`, { method: 'PATCH', body: fd })
@@ -163,6 +222,23 @@ export default function EditPetForm({ pet }: { pet: any }) {
       setSubmitError('Sunucu bağlantı hatası: ' + err.message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSaveSos = async () => {
+    setSosSaving(true)
+    setSosMsg(null)
+    try {
+      const res = await fetch(`/api/pets/${pet.id}/sos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sos_contacts: sosContacts.filter(c => c.name || c.phone) }),
+      })
+      setSosMsg(res.ok ? { type: 'ok', text: 'Acil durum ağı güncellendi.' } : { type: 'err', text: 'Kaydedilemedi.' })
+    } catch {
+      setSosMsg({ type: 'err', text: 'Bağlantı hatası.' })
+    } finally {
+      setSosSaving(false)
     }
   }
 
@@ -191,7 +267,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
       <form onSubmit={handleSubmit} className="flex flex-col gap-8">
 
         {/* ─── BÖLÜM 1: Temel Kimlik ─── */}
-        <section className="card-base p-6 sm:p-8 flex flex-col gap-6">
+        <section id="temel-section" className="card-base p-6 sm:p-8 flex flex-col gap-6">
           <h2 className="text-[15px] font-black text-text-primary border-b border-border-main pb-3">1. Temel Kimlik ve Fotoğraf</h2>
           
           <div className="flex flex-col items-center gap-4 mb-2">
@@ -351,11 +427,93 @@ export default function EditPetForm({ pet }: { pet: any }) {
                  </div>
                )}
              </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-text-primary">Kilo (kg) *</label>
+              <div className="relative flex items-center h-[54px] w-full border-2 border-primary/40 focus-within:border-primary rounded-[16px] overflow-hidden bg-white transition-all">
+                <button
+                  type="button"
+                  onClick={() => handleStep('weight', 'dec')}
+                  className="w-14 h-full flex items-center justify-center text-primary hover:bg-primary-soft/30 active:scale-95 transition-all border-r border-border-main font-bold text-xl select-none"
+                >
+                  —
+                </button>
+                <div className="flex-1 flex items-center justify-center relative h-full">
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    min="0.01" 
+                    value={weightKg} 
+                    onChange={e => setWeightKg(e.target.value)} 
+                    placeholder="Örn: 4.5" 
+                    className="w-full h-full text-center bg-transparent border-0 focus:outline-none focus:ring-0 text-[15px] font-extrabold text-text-primary pr-8" 
+                    required 
+                  />
+                  <span className="absolute right-4 pointer-events-none text-[12px] font-bold text-text-secondary">kg</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleStep('weight', 'inc')}
+                  className="w-14 h-full flex items-center justify-center text-primary hover:bg-primary-soft/30 active:scale-95 transition-all border-l border-border-main font-bold text-xl select-none"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-text-primary">Boy (cm) *</label>
+              <div className="relative flex items-center h-[54px] w-full border-2 border-primary/40 focus-within:border-primary rounded-[16px] overflow-hidden bg-white transition-all">
+                <button
+                  type="button"
+                  onClick={() => handleStep('height', 'dec')}
+                  className="w-14 h-full flex items-center justify-center text-primary hover:bg-primary-soft/30 active:scale-95 transition-all border-r border-border-main font-bold text-xl select-none"
+                >
+                  —
+                </button>
+                <div className="flex-1 flex items-center justify-center relative h-full">
+                  <input 
+                    type="number" 
+                    step="0.1" 
+                    min="1" 
+                    value={heightCm} 
+                    onChange={e => setHeightCm(e.target.value)} 
+                    placeholder="Örn: 35" 
+                    className="w-full h-full text-center bg-transparent border-0 focus:outline-none focus:ring-0 text-[15px] font-extrabold text-text-primary pr-8" 
+                    required 
+                  />
+                  <span className="absolute right-4 pointer-events-none text-[12px] font-bold text-text-secondary">cm</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleStep('height', 'inc')}
+                  className="w-14 h-full flex items-center justify-center text-primary hover:bg-primary-soft/30 active:scale-95 transition-all border-l border-border-main font-bold text-xl select-none"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 col-span-1 sm:col-span-2 mt-2">
+              <label className="text-[13px] font-bold text-text-primary">Otomatik Hesaplanan Beden Büyüklüğü</label>
+              <div className="p-4 bg-primary-soft/20 border border-primary/20 rounded-[16px] flex items-center justify-between animate-scaleIn">
+                <span className="text-[13px] font-bold text-text-secondary">
+                  {species === 'Kedi' ? 'Kedi Boyut Skalası (Ağırlık bazlı)' : 'Köpek Boyut Skalası (Ağırlık bazlı)'}
+                </span>
+                <span className="px-4 py-1.5 rounded-full text-[13px] font-black bg-primary text-white flex items-center gap-1.5 shadow-sm">
+                  {size === 'toy' && '🧸 Oyuncak / Ekstra Küçük'}
+                  {size === 'small' && '🐩 Küçük'}
+                  {size === 'medium' && '🐕 Orta'}
+                  {size === 'large' && '🦮 Büyük'}
+                  {size === 'giant' && '🦁 Dev'}
+                  {!size && 'Kilo Girilmelidir'}
+                </span>
+              </div>
+            </div>
           </div>
         </section>
 
         {/* ─── BÖLÜM 2: Fiziksel Özellikler ─── */}
-        <section className="card-base p-6 sm:p-8 flex flex-col gap-6">
+        <section id="fiziksel-section" className="card-base p-6 sm:p-8 flex flex-col gap-6">
           <h2 className="text-[15px] font-black text-text-primary border-b border-border-main pb-3">2. Fiziksel ve Yaşam Alanı</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div className="flex flex-col gap-2">
@@ -386,6 +544,25 @@ export default function EditPetForm({ pet }: { pet: any }) {
                 ))}
               </select>
             </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-text-primary">Kısırlaştırma Durumu</label>
+              <div className="flex gap-2">
+                {[[true, '✂️ Kısırlaştırıldı'], [false, '❤️ Kısırlaştırılmadı']].map(([v, l]) => (
+                  <button
+                    key={String(v)}
+                    type="button"
+                    onClick={() => setIsNeutered(v as boolean)}
+                    className={`flex-1 flex items-center justify-center p-3 border-2 rounded-[14px] cursor-pointer text-[13px] font-bold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+                      isNeutered === v 
+                        ? 'border-primary bg-primary-soft/30 text-primary' 
+                        : 'border-border-main text-text-secondary'
+                    }`}
+                  >
+                    {l as string}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {species === 'Kedi' && (
@@ -401,30 +578,44 @@ export default function EditPetForm({ pet }: { pet: any }) {
               </div>
             </div>
           )}
-
-          {species === 'Köpek' && (
-            <div className="flex flex-col gap-2 mt-2">
-              <label className="text-[13px] font-bold text-text-primary">Beden Büyüklüğü</label>
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { v: 'small',  emoji: '🐩', label: 'Küçük' },
-                  { v: 'medium', emoji: '🐕', label: 'Orta' },
-                  { v: 'large',  emoji: '🦮', label: 'Büyük' },
-                ].map(({ v, emoji, label }) => (
-                  <label key={v} className={`flex flex-col items-center gap-1 p-3 border-2 rounded-[16px] cursor-pointer text-center transition-all ${size === v ? 'border-primary bg-primary-soft/30 text-primary' : 'border-border-main text-text-secondary hover:border-primary/40'}`}>
-                    <input type="radio" name="size" value={v} checked={size === v} onChange={() => setSize(v)} className="sr-only"/>
-                    <span className="text-[24px]">{emoji}</span>
-                    <span className="text-[13px] font-bold">{label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
         </section>
 
         {/* ─── BÖLÜM 3: Evrak ve Veteriner ─── */}
-        <section className="card-base p-6 sm:p-8 flex flex-col gap-6">
-          <h2 className="text-[15px] font-black text-text-primary border-b border-border-main pb-3">3. Evrak & Veteriner Bilgisi</h2>
+        <section id="veteriner-section" className="card-base p-6 sm:p-8 flex flex-col gap-6">
+          <h2 className="text-[15px] font-black text-text-primary border-b border-border-main pb-3 flex items-center justify-between flex-wrap gap-2">
+            <span>3. Evrak & Veteriner Bilgisi</span>
+            
+            {!showDocScanner && (
+              <button type="button"
+                onClick={() => setShowDocScanner(true)}
+                className="flex items-center gap-2 px-4 py-2 text-[12px] font-bold
+                           text-primary bg-primary/5 border border-primary/20 rounded-xl
+                           hover:bg-primary/10 transition-all">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+                Pasaport veya Belgeyi Tara
+              </button>
+            )}
+          </h2>
+
+          {showDocScanner && (
+            <SmartScanner
+              petId={pet.id}
+              onClose={() => setShowDocScanner(false)}
+              onResult={(data: any) => {
+                const parsed = data?.parsed || data
+                if (parsed?.microchip_no) setMicrochipNo(parsed.microchip_no)
+                if (parsed?.passport_no)  setPassportNo(parsed.passport_no)
+                if (parsed?.vet_name)     setVetName(parsed.vet_name)
+                if (parsed?.vet_phone)    setVetPhone(parsed.vet_phone)
+                setShowDocScanner(false)
+              }}
+            />
+          )}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div className="flex flex-col gap-2">
               <label className="text-[13px] font-bold text-text-primary">Mikroçip No</label>
@@ -453,48 +644,58 @@ export default function EditPetForm({ pet }: { pet: any }) {
           </div>
         </section>
 
-        {/* SAVE BUTTON */}
-        <div className="sticky bottom-4 z-10 flex justify-end">
+        <section id="sos-section" className="card-base p-6 sm:p-8 flex flex-col gap-6">
+          <h2 className="text-[15px] font-black text-text-primary border-b border-border-main pb-3">4. Acil Durum Ağı</h2>
+          <p className="text-[12px] text-text-secondary">Evcil dostunuza bir şey olursa aranacak kişiler.</p>
+
+          {sosMsg && (
+            <div className={`p-3 rounded-xl text-[13px] font-bold border ${sosMsg.type === 'ok' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-error/10 text-error border-error/20'}`}>
+              {sosMsg.text}
+            </div>
+          )}
+
+          {[0, 1].map(i => (
+            <div key={i} className="flex flex-col gap-3 p-4 bg-bg-main rounded-2xl border border-border-main">
+              <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest">
+                {i === 0 ? 'Kişi 1 (Birincil)' : 'Kişi 2 (İsteğe Bağlı)'}
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[12px] font-bold text-text-secondary">Ad Soyad</label>
+                  <input type="text" className="input-base"
+                    value={sosContacts[i]?.name || ''}
+                    onChange={e => { const c = [...sosContacts]; c[i] = {...c[i], name: e.target.value}; setSosContacts(c) }}
+                    placeholder="Örn: Ali Yılmaz" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[12px] font-bold text-text-secondary">Telefon</label>
+                  <input type="tel" className="input-base"
+                    value={sosContacts[i]?.phone || ''}
+                    onChange={e => { const c = [...sosContacts]; c[i] = {...c[i], phone: e.target.value}; setSosContacts(c) }}
+                    placeholder="05XX XXX XX XX" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[12px] font-bold text-text-secondary">Yakınlık</label>
+                  <input type="text" className="input-base"
+                    value={sosContacts[i]?.relation || ''}
+                    onChange={e => { const c = [...sosContacts]; c[i] = {...c[i], relation: e.target.value}; setSosContacts(c) }}
+                    placeholder="Örn: Eşi, Komşusu" />
+                </div>
+              </div>
+            </div>
+          ))}
+
+          <button type="button" onClick={handleSaveSos} disabled={sosSaving}
+            className="btn-secondary w-full sm:w-auto py-3 text-[14px] font-bold disabled:opacity-50">
+            {sosSaving ? 'Kaydediliyor...' : '🆘 Acil Durum Ăĵını Kaydet'}
+          </button>
+        </section>
+
+        <div className="flex flex-col sm:flex-row justify-end gap-4 pt-2">
           <button type="submit" disabled={loading} className="btn-primary w-full sm:w-auto min-w-[200px] py-4 text-[15px] shadow-2xl shadow-primary/40 disabled:opacity-50">
             {loading ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
           </button>
         </div>
-
-        {/* ─── BÖLÜM 4: Bilgi Kartı ─── */}
-        <section className="mt-8 border border-primary/20 bg-primary-soft/50 rounded-2xl p-5 flex flex-col sm:flex-row items-center sm:items-start gap-4 transition-all duration-300 hover:border-primary/30">
-          <div className="w-12 h-12 bg-gradient-to-tr from-primary-soft to-indigo-100/50 rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-primary/15">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="infoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#4F2DBA" />
-                  <stop offset="100%" stopColor="#7C3AED" />
-                </linearGradient>
-                <filter id="shadowFilter" x="-20%" y="-20%" width="140%" height="140%">
-                  <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#4F2DBA" floodOpacity="0.15" filterUnits="userSpaceOnUse" />
-                </filter>
-              </defs>
-              <circle cx="12" cy="12" r="10" stroke="url(#infoGrad)" strokeWidth="2" filter="url(#shadowFilter)" />
-              <path d="M12 11V16" stroke="url(#infoGrad)" strokeWidth="2" strokeLinecap="round" />
-              <circle cx="12" cy="7.5" r="1.25" fill="url(#infoGrad)" />
-            </svg>
-          </div>
-          <div className="flex-1 flex flex-col gap-1.5 text-center sm:text-left">
-            <h3 className="font-bold text-text-primary text-[15px]">Profil Yönetimi</h3>
-            <p className="text-[13px] text-text-secondary leading-relaxed">
-              Dostunuzun profili üzerinde tam kontrol sahibi olmak ve silme/sağlık verisi temizleme işlemlerini gerçekleştirmek için <strong>Profil Ayarları</strong> sayfasını ziyaret edebilirsiniz.
-            </p>
-            <div className="mt-2.5 flex justify-center sm:justify-start">
-              <Link href="/owner/profile" className="inline-flex items-center gap-1.5 text-[13px] font-bold text-primary hover:text-primary-hover transition-colors group">
-                Profil Ayarları'na Git
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-0.5 transition-transform">
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                  <polyline points="12 5 19 12 12 19" />
-                </svg>
-              </Link>
-            </div>
-          </div>
-        </section>
-
       </form>
     </div>
   )

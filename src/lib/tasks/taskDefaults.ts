@@ -128,9 +128,6 @@ export const TASK_DEFAULTS: Record<string, SmartDefault> = {
 
   // ── Medikal ──────────────────────────────────────────────────────
   'Aşı':             { frequency: 'yearly',  interval: 1, notification_minutes: 0 },
-  'İç Parazit':      { frequency: 'monthly', interval: 3, notification_minutes: 0 },
-  'Dış Parazit':     { frequency: 'monthly', interval: 2, notification_minutes: 0 },
-  'Parazit Tasması': { frequency: 'monthly', interval: 3, notification_minutes: 0 },
 
   // ── Veteriner ────────────────────────────────────────────────────
   'Kontrol': { frequency: 'yearly', interval: 1, notification_minutes: 0 },

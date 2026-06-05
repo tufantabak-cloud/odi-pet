@@ -166,7 +166,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ petI
   const [schedulesRes, scoresRes, nutritionRes, assignmentRes] = await Promise.all([
     supabase.from('health_schedules').select('due_date, status, postpone_count, assignment_status, escalation_level, priority, assigned_to').eq('pet_id', petId).neq('status', 'done'),
     supabase.from('daily_scores').select('score, date, created_at').eq('pet_id', petId).order('date', { ascending: false }).limit(7),
-    supabase.from('nutrition_logs').select('*').eq('pet_id', petId).gte('date', sevenDaysAgo),
+    supabase.from('nutrition_logs').select('food_logged, water_logged').eq('pet_id', petId).gte('date', sevenDaysAgo),
     supabase.from('health_schedules').select('assignment_status, assigned_to').eq('pet_id', petId).not('assignment_status', 'eq', 'unassigned').gte('assigned_at', sevenDaysAgo)
   ])
 

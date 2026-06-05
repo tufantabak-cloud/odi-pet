@@ -15,6 +15,13 @@ try {
 // In-memory fallback for when Redis is unavailable (basic protection, not distributed)
 const inMemoryStore = new Map<string, { count: number; resetAt: number }>();
 
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of inMemoryStore) {
+    if (now >= v.resetAt) inMemoryStore.delete(k);
+  }
+}, 60_000).unref();
+
 type RateLimitResult = {
   success: boolean;
   limit: number;
@@ -54,6 +61,11 @@ export const loginRateLimit = createRateLimit(5, "1 m", "@upstash/ratelimit/logi
 export const registerRateLimit = createRateLimit(3, "1 m", "@upstash/ratelimit/register");
 export const resetRateLimit = createRateLimit(2, "1 m", "@upstash/ratelimit/reset");
 export const updatePasswordRateLimit = createRateLimit(3, "1 m", "@upstash/ratelimit/update-password");
+
+export const aiVetRateLimit      = createRateLimit(20, "1 m", "@upstash/ratelimit/ai-vet");
+export const aiScoreRateLimit    = createRateLimit(30, "1 m", "@upstash/ratelimit/ai-score");
+export const scanDocRateLimit    = createRateLimit(10, "1 m", "@upstash/ratelimit/scan-doc");
+export const aiSummaryRateLimit  = createRateLimit(10, "1 m", "@upstash/ratelimit/ai-summary");
 
 
 export async function verifyTurnstile(token: string | null | undefined, ip: string): Promise<boolean> {

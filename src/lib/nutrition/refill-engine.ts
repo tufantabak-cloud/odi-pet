@@ -15,8 +15,17 @@ export function calculateRefillRisk({
   dailyUsage: number;
   thresholdDays?: number;
 }) {
-  const daysLeft = dailyUsage > 0 ? stockGrams / dailyUsage : 0;
+  if (dailyUsage <= 0) {
+    return {
+      daysLeft: null,
+      risk: 'OK',
+      shouldNotify: false,
+      shouldSuggestRefill: false,
+      shouldUrgentRefill: false
+    };
+  }
 
+  const daysLeft = stockGrams / dailyUsage;
   let risk: RefillRisk = 'OK';
 
   if (daysLeft <= 3) risk = 'CRITICAL';
@@ -37,8 +46,9 @@ export function estimateNextRefillDate({
 }: {
   stockGrams: number;
   dailyUsage: number;
-}) {
-  const daysLeft = dailyUsage > 0 ? stockGrams / dailyUsage : 0;
+}): Date | null {
+  if (dailyUsage <= 0) return null;
+  const daysLeft = stockGrams / dailyUsage;
 
   const nextDate = new Date();
   nextDate.setDate(nextDate.getDate() + Math.floor(daysLeft));
@@ -55,7 +65,11 @@ export function computeWeightTrend(
 ): number | null {
   if (entries.length < 2) return null
 
-  const points = entries.map((e, i) => ({ x: i, y: Number(e.weight_kg) }))
+  const first = new Date(entries[0].measured_at).getTime()
+  const points = entries.map(e => ({
+    x: (new Date(e.measured_at).getTime() - first) / (1000 * 60 * 60 * 24), // gün
+    y: Number(e.weight_kg)
+  }))
   const n = points.length
   const sumX = points.reduce((s, p) => s + p.x, 0)
   const sumY = points.reduce((s, p) => s + p.y, 0)
@@ -64,8 +78,8 @@ export function computeWeightTrend(
 
   const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX)
 
-  // Convert "per-entry" slope to kg/week assuming roughly weekly measurements
-  return Math.round(slope * 100) / 100
+  // Convert "per-day" slope to kg/week
+  return Math.round(slope * 7 * 100) / 100
 }
 
 /**

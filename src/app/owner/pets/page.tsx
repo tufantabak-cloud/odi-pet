@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { calcAge } from '@/lib/pets/utils'
 import { VaccineIcon, BowlIcon, PillIcon } from '@/components/icons/PetIcons'
+import FloatingSOS from '@/components/FloatingSOS'
 
 export const metadata = {
   title: 'Can Dostlarım | Odi.Pet',
@@ -116,20 +117,18 @@ export default async function PetsPage() {
                     </div>
                   </div>
 
-                  {/* Kamera & TAG Quick Action Buttons */}
-                  <div className="flex gap-2.5 z-30 mt-1">
-                    <Link
-                      href={`/owner/devices/camera?petId=${pet.id}`}
-                      className="flex-1 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white text-center py-2.5 px-2 rounded-xl text-[12px] font-black tracking-wider uppercase shadow-sm active:scale-95 hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-1"
-                    >
-                      <span className="animate-pulse">🟢</span> Canlı İzle
-                    </Link>
-                    <Link
-                      href={`/owner/devices/setup?petId=${pet.id}&type=tag`}
-                      className="flex-1 bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white text-center py-2.5 px-2 rounded-xl text-[12px] font-black tracking-wider uppercase shadow-md active:scale-95 hover:scale-[1.02] transition-all duration-200"
-                    >
-                      Akıllı Künye (TAG)
-                    </Link>
+
+
+                  {/* SOS Footer */}
+                  <div className="border-t border-border-main mt-3 pt-3 flex items-center justify-between z-30 relative">
+                    <span className="text-[11px] font-bold text-text-secondary uppercase tracking-widest">Acil Durum</span>
+                    <FloatingSOS
+                      petId={pet.id}
+                      petName={pet.name}
+                      vetPhone={pet.vet_phone}
+                      vetName={pet.vet_name}
+                      sosContacts={pet.sos_contacts}
+                    />
                   </div>
                 </div>
               </div>

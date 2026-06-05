@@ -21,9 +21,12 @@ interface SmartTaskWizardProps {
   onDone: (newTask?: any) => void;
 }
 
-/** Sub-categories that require a 3rd-level item picker before scheduling */
-const SUB_CATEGORIES_WITH_PICKER: Record<string, 'vaccine'> = {
+const SUB_CATEGORIES_WITH_PICKER: Record<string, 'vaccine' | 'parasite'> = {
   'Aşı': 'vaccine',
+  'İç Parazit': 'parasite',
+  'Dış Parazit': 'parasite',
+  'Parazit Tasması': 'parasite',
+  'Birleşik Parazit': 'parasite'
 };
 
 /**
@@ -141,16 +144,29 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subCategory]);
 
-  // ── Vaccine picker handler ────────────────────────────────────────
   const handleVaccineSelect = (vaccine: VaccineOption) => {
     setSelectedVaccine(vaccine);
     setEditTitle(vaccine.name); // aşı seçilince başlık otomatik güncellenir
     setShowVaccinePicker(false);
+    
+    if (vaccine.isParasite && vaccine.protection_duration_days) {
+      setFormData(prev => {
+        const d = new Date(prev.date);
+        d.setDate(d.getDate() + (vaccine.protection_duration_days || 0));
+        return {
+          ...prev,
+          frequency: 'once',
+          interval: 1,
+          date: d.toISOString().split('T')[0]
+        };
+      });
+    }
+
     setAdvancedOpen(true);
   };
 
   // ── Computed helpers ──────────────────────────────────────────────
-  const needsVaccinePicker = subCategory !== null && SUB_CATEGORIES_WITH_PICKER[subCategory] === 'vaccine';
+  const needsVaccinePicker = subCategory !== null && !!SUB_CATEGORIES_WITH_PICKER[subCategory];
   const pickerSatisfied = !needsVaccinePicker || selectedVaccine !== null;
 
   // Edit modunda kategori değişince alt kategori sıfırlanır
@@ -532,9 +548,42 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
           </div>
         )}
 
-        {/* ── 3a. Vaccine Picker (3rd level) ───────────────────── */}
-        {showVaccinePicker && subCategory && SUB_CATEGORIES_WITH_PICKER[subCategory] === 'vaccine' && (
+        {/* ── 3. Karneyi Tara (Sadece Aşı uygulamasında, seçim yapılmadan önce) ── */}
+        {subCategory === 'Aşı' && !selectedVaccine && !showVaccinePicker && !showScanner && (
+          <button type="button" onClick={() => setShowScanner(true)}
+            className="flex items-center justify-center gap-2 px-4 py-3 mt-2 w-full text-[13px] font-bold text-primary bg-primary/5 border border-primary/20 rounded-xl hover:bg-primary/10 transition-all animate-fadeInUp">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+            Karneyi Tara
+          </button>
+        )}
+
+        {showScanner && (
+          <SmartScanner
+            petId={petId}
+            onClose={() => setShowScanner(false)}
+            onResult={(data: any) => {
+              if (data?.parsed?.title || data?.parsed?.vaccine_name) {
+                setEditTitle(data.parsed.title || data.parsed.vaccine_name)
+                setAdvancedOpen(true)
+                if (data.parsed.date) {
+                  setFormData(prev => ({
+                    ...prev,
+                    date: data.parsed.date
+                  }))
+                }
+              }
+              setShowScanner(false)
+            }}
+          />
+        )}
+
+        {showVaccinePicker && subCategory && SUB_CATEGORIES_WITH_PICKER[subCategory] && (
           <VaccineSelectorSheet
+            pickerType={SUB_CATEGORIES_WITH_PICKER[subCategory]}
+            subCategory={subCategory}
             species={resolvedSpecies}
             selectedVaccineCode={selectedVaccine?.code ?? null}
             onSelect={handleVaccineSelect}
@@ -552,16 +601,24 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
           <button
             type="button"
             onClick={() => setShowVaccinePicker(true)}
-            className="flex items-center justify-between px-4 py-3 rounded-xl border-2 border-primary bg-primary/5 w-full mt-2 group animate-fadeInUp"
+            className="flex items-center justify-between px-4 py-3 rounded-xl border-2 border-primary/30 bg-primary/5 w-full text-left group transition-all hover:border-primary mt-2 animate-fadeInUp"
           >
             <div className="flex items-center gap-2.5 min-w-0">
-              <span className="text-primary text-[16px]">💉</span>
+              <span className="text-primary text-[16px]">
+                {selectedVaccine.isParasite ? '🛡️' : '💉'}
+              </span>
               <div className="min-w-0">
-                <p className="text-[12px] font-black text-primary uppercase tracking-wider">Aşı</p>
-                <p className="text-[14px] font-bold text-text-primary truncate">{selectedVaccine.name}</p>
+                <p className="text-[12px] font-black text-primary uppercase tracking-wider">
+                  {selectedVaccine.isParasite ? 'Ürün' : 'Aşı'}
+                </p>
+                <p className="text-[14px] font-bold text-text-primary truncate">
+                  {selectedVaccine.name}
+                </p>
               </div>
             </div>
-            <span className="text-[11px] font-bold text-text-secondary group-hover:text-primary transition-colors shrink-0 ml-2">Değiştir →</span>
+            <span className="text-[11px] font-bold text-text-secondary group-hover:text-primary transition-colors shrink-0 ml-2">
+              Değiştir →
+            </span>
           </button>
         )}
 

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { getIP, scanDocRateLimit } from '@/lib/auth-security'
+import { getSessionUser } from '@/lib/auth/get-current-profile'
 
 export const runtime = 'edge';
 export const preferredRegion = 'fra1';
@@ -45,13 +46,15 @@ Lütfen verileri olabildiğince eksiksiz doldur. Tespit edemediğin alanları nu
 
 export async function POST(req: Request) {
   try {
-    const supabase = await createServerSupabaseClient()
-    
     // Auth kontrolü
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
+    const user = await getSessionUser()
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const ip = getIP(req)
+    const { success } = await scanDocRateLimit.limit(`${user.id}:${ip}`)
+    if (!success) return NextResponse.json({ error: 'Çok fazla istek. Lütfen bekleyin.' }, { status: 429 })
 
     const formData = await req.formData()
     const image = formData.get('image') as File

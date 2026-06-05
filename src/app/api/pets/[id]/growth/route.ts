@@ -26,7 +26,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
   const weight_kg = fd.get('weight_kg')?.toString().replace(',', '.')
   const height_cm = fd.get('height_cm')?.toString().replace(',', '.')
-  const recorded_at = fd.get('recorded_at')?.toString()
+  const measured_at = fd.get('measured_at')?.toString()
   
   if (!weight_kg) {
     return NextResponse.json({ error: 'Kilo bilgisi zorunludur.' }, { status: 400 })
@@ -38,18 +38,18 @@ export async function POST(req: NextRequest, context: RouteContext) {
     height_cm: height_cm ? Number(height_cm) : null
   }
 
-  if (recorded_at) {
-    insertData.recorded_at = new Date(recorded_at).toISOString()
+  if (measured_at) {
+    insertData.measured_at = new Date(measured_at).toISOString()
   }
 
   const { error } = await supabase
-    .from('growth_records')
+    .from('weight_logs')
     .insert(insertData)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   revalidatePath('/owner/dashboard')
-  revalidateTag('dashboard', 'default')
+  revalidateTag('dashboard')
   revalidatePath('/owner/pets')
   revalidatePath(`/owner/pets/${id}`)
 

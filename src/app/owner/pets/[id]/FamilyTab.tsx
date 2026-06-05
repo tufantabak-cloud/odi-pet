@@ -27,6 +27,8 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
   const [role, setRole] = useState('editor')
   const [inviting, setInviting] = useState(false)
   const [inviteMsg, setInviteMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
+  const [inviteLink, setInviteLink] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
 
   async function load() {
     if (loaded) return
@@ -47,6 +49,8 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
     e.preventDefault()
     setInviting(true)
     setInviteMsg(null)
+    setInviteLink(null)
+    setCopied(false)
     try {
       const res = await fetch('/api/pets/family', {
         method: 'POST',
@@ -56,9 +60,23 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
       const data = await res.json()
       if (!res.ok) { setInviteMsg({ type: 'err', text: data.error }); return }
       setInviteMsg({ type: 'ok', text: data.message })
+      if (data.inviteLink) setInviteLink(data.inviteLink)
       setEmail('')
       setLoaded(false)
     } finally { setInviting(false) }
+  }
+
+  async function copyLink() {
+    if (!inviteLink) return
+    try {
+      await navigator.clipboard.writeText(inviteLink)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2500)
+    } catch {
+      // Fallback: select text in input for manual copy
+      const input = document.getElementById('invite-link-input') as HTMLInputElement
+      if (input) { input.select(); document.execCommand('copy'); setCopied(true); setTimeout(() => setCopied(false), 2500) }
+    }
   }
 
   async function removeMember(memberId: string) {
@@ -157,6 +175,33 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
         {inviteMsg && (
           <div className={`p-3 rounded-lg text-[13px] font-medium mb-4 ${inviteMsg.type === 'ok' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
             {inviteMsg.text}
+          </div>
+        )}
+        {inviteLink && (
+          <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 mb-4">
+            <p className="text-[11px] font-bold text-blue-600 uppercase tracking-wide mb-2">📎 Davet Bağlantısı</p>
+            <div className="flex gap-2">
+              <input
+                id="invite-link-input"
+                type="text"
+                readOnly
+                value={inviteLink}
+                className="flex-1 input-base text-[12px] bg-white/80 select-all"
+                onFocus={e => e.target.select()}
+              />
+              <button
+                type="button"
+                onClick={copyLink}
+                className={`shrink-0 px-3 py-2 rounded-lg text-[12px] font-bold transition-all duration-200 ${
+                  copied
+                    ? 'bg-green-500 text-white'
+                    : 'bg-blue-500 hover:bg-blue-600 text-white'
+                }`}
+              >
+                {copied ? '✓ Kopyalandı' : 'Kopyala'}
+              </button>
+            </div>
+            <p className="text-[10px] text-blue-500 mt-1.5">Bu bağlantıyı davet ettiğiniz kişiye gönderin.</p>
           </div>
         )}
         <form onSubmit={sendInvite} className="flex flex-col gap-3">

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { getIP, aiSummaryRateLimit } from '@/lib/auth-security'
 
 const SYSTEM_INSTRUCTION = `Sen Odi.Pet uygulamasının veri özetleme asistanısın. Kullanıcıya evcil hayvanının son günlerdeki günlük kayıtlarının kısa bir trend özetini sunuyorsun. Türkçe konuşuyorsun.
 
@@ -16,6 +17,10 @@ Not: Yukarıdaki paragraftaki [trend özetine uygun 1-2 kelime] kısmını cüml
 export async function POST(req: NextRequest) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const ip = getIP(req)
+  const { success } = await aiSummaryRateLimit.limit(`${user.id}:${ip}`)
+  if (!success) return NextResponse.json({ error: 'Çok fazla istek. Lütfen bekleyin.' }, { status: 429 })
 
   const body = await req.json()
   const petId = body.petId

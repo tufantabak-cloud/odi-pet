@@ -12,6 +12,7 @@ export default function DeviceNotificationSettings({ onSave, onCancel }: DeviceN
   const [sensitivity, setSensitivity] = useState('medium')
   const [quietHours, setQuietHours] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
   const handleSave = () => {
     setIsSaving(true)
@@ -20,7 +21,8 @@ export default function DeviceNotificationSettings({ onSave, onCancel }: DeviceN
       if (onSave) {
         onSave({ motionAlerts, sensitivity, quietHours })
       } else {
-        alert('Bildirim ayarları başarıyla kaydedildi.')
+        setSuccessMsg('Bildirim ayarları başarıyla kaydedildi.')
+        setTimeout(() => setSuccessMsg(null), 3000)
       }
     }, 1000)
   }
@@ -116,6 +118,7 @@ export default function DeviceNotificationSettings({ onSave, onCancel }: DeviceN
 
       {/* Action Buttons Section */}
       <div className="mt-8 flex flex-col gap-3">
+        {successMsg && <div role="alert" className="p-3 bg-success/10 text-success text-[13px] font-bold rounded-xl text-center border border-success/20">{successMsg}</div>}
         <button
           onClick={handleSave}
           disabled={isSaving}

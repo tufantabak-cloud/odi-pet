@@ -68,9 +68,9 @@ export default function HumanAgeCalculator({ species, birthDate, weightKg, petNa
       {/* Header section */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full p-5 flex flex-col items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50 border-b border-border-main relative overflow-hidden focus:outline-none transition-all hover:opacity-95"
+        className="w-full p-4 flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50 border-b border-border-main relative overflow-hidden focus:outline-none transition-all hover:opacity-95"
       >
-        <div className="absolute top-4 right-4 text-text-secondary">
+        <div className="absolute top-1/2 -translate-y-1/2 right-4 text-text-secondary">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : 'rotate-0'}`}><polyline points="6 9 12 15 18 9"/></svg>
         </div>
 
@@ -78,20 +78,15 @@ export default function HumanAgeCalculator({ species, birthDate, weightKg, petNa
         <div className="absolute -top-10 -right-10 w-32 h-32 bg-purple-200 rounded-full blur-3xl opacity-50"></div>
         <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-blue-200 rounded-full blur-3xl opacity-50"></div>
         
-        <div className="relative z-10 text-center flex flex-col items-center gap-2">
-          <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border border-border-main flex items-center justify-center text-[28px] mb-1">
-            ⏳
-          </div>
-          <h3 className="text-[14px] font-bold text-text-secondary uppercase tracking-widest">
+        <div className="relative z-10 flex items-center justify-center gap-2 flex-wrap text-center pr-6">
+          <h3 className="text-[13px] font-bold text-text-secondary uppercase tracking-wider">
             {petName} İnsan Olsaydı...
           </h3>
-          <div className="flex items-baseline gap-2">
-            <span className="text-[42px] font-black text-primary leading-none">{humanAge}</span>
-            <span className="text-[18px] font-extrabold text-text-secondary">Yaşında Olurdu</span>
-          </div>
-          <div className={`mt-2 px-4 py-1.5 rounded-full font-bold text-[12px] uppercase tracking-wide border shadow-sm ${currentStage.color} ${currentStage.border}`}>
+          <span className="text-[20px] font-black text-primary leading-none">{humanAge}</span>
+          <span className="text-[13px] font-extrabold text-text-secondary">Yaşında Olurdu</span>
+          <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wide border shadow-sm ${currentStage.color} ${currentStage.border}`}>
             {currentStage.label} Dönemi
-          </div>
+          </span>
         </div>
       </button>
 

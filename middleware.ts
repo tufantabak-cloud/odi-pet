@@ -72,7 +72,12 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/api')
 
   // Allow auth-related API routes without authentication
-  const isAuthRoute = pathname.startsWith('/api/auth')
+  const isAuthRoute =
+    pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/api/beta/signup') ||
+    (pathname.startsWith('/api/pets/') && pathname.endsWith('/lost') && request.method === 'GET') ||
+    (pathname.startsWith('/api/share/get/')) ||
+    (pathname.startsWith('/api/calendar/feed/'))
 
   // Redirection rule for unauthenticated users
   if (isProtectedPath && !isAuthRoute && !user) {

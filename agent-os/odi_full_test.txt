@@ -1,0 +1,140 @@
+=============================================================
+ODI.PET — TAM UYGULAMA TEST BRİFİ
+Tüm Agent Takımı Kapsamlı Doğrulama Görevi
+=============================================================
+
+GÖREV: Odi.Pet uygulamasının tüm modüllerini aşağıdaki agent rolleri
+perspektifinden bağımsız olarak test et ve raporla.
+
+=== A. GÜVENLİK AGENTİ ===
+
+1. Middleware kontrolü:
+   - /api/beta/signup, /api/share/get/[token], /api/calendar/feed/[token],
+     /api/pets/[id]/lost (GET) public route olarak tanımlı mı?
+   - Diğer tüm /api/* rotaları auth gerektiriyor mu?
+
+2. BOLA/IDOR kontrolü:
+   - /api/pets/[id]/nutrition/weight GET → assertOwner çağrılıyor mu?
+   - /api/pets/[id]/nutrition/feeding GET → assertOwner çağrılıyor mu?
+
+3. Rate limit kontrolü:
+   - /api/ai-vet, /api/ai-score, /api/scan-document, /api/journal/ai-summary
+     rate limiter kullanıyor mu?
+
+4. Test endpoint güvenliği:
+   - /api/test/scenario → admin/founder rol kontrolü var mı?
+
+5. revalidateTag kullanımı:
+   - Tüm dosyalarda revalidateTag ikinci argüman almıyor mu?
+   Grep: revalidateTag('dashboard', 'default')
+   Beklenti: 0 sonuç
+
+=== B. BACKEND/API AGENTİ ===
+
+1. Vaccine Protocols:
+   - vaccine_protocols tablosu var mı?
+   - generateVaccinationPlan async ve supabase parametresi alıyor mu?
+   - Hardcoded DOG_VACCINES/CAT_VACCINES array yok mu?
+
+2. Parasite Products:
+   - parasite_products tablosu var mı? (24+ kayıt bekleniyor)
+   - description ve image_url kolonları var mı?
+   - VaccineSelectorSheet species filtresi .or() ile mi çalışıyor?
+
+3. Vaccine Brands:
+   - vaccine_brands tablosu var mı? (37+ kayıt bekleniyor)
+   - VaccineSelectorSheet pickerType=vaccine ise vaccine_brands sorguluyor mu?
+
+4. SOS Modülü:
+   - /api/pets/[id]/sos POST çalışıyor mu?
+   - sos_contacts pet_owners kontrolü yapıyor mu?
+   - add/page.tsx step 4 mevcut mu? (WIZARD_STEPS 4 eleman içeriyor mu?)
+
+5. Nutrition:
+   - feeding/route.ts: amount_grams != null kullanıyor mu? (0 değeri kaybolmuyor mu?)
+   - weight/route.ts: isNaN kontrolü var mı?
+   - nutrition/log: process.env.NEXT_PUBLIC_APP_URL kullanıyor mu?
+
+6. Devices/Cihaz modülü:
+   - TagSetupWizard, DeviceSetupWizard, CameraSetupWizard dosyaları DELETED mi?
+   - /api/pets/[id]/devices/route.ts DELETED mi?
+   - PetDetailClient ve pets/page.tsx'te Canlı İzle / Akıllı Künye yok mu?
+
+=== C. FRONTEND/UX AGENTİ ===
+
+1. SmartScanner entegrasyonu (7 konum doğrula):
+   - /owner/scanner/ScannerClient.tsx → onSave gerçek API çağrısı yapıyor mu?
+   - PetDetailClient → SmartScanner petId + onSave var mı?
+   - SmartTaskWizard → showScanner state, "Karneyi Tara" butonu var mı?
+   - VaccineSelectorSheet → onResult prop ile SmartScanner kullanıyor mu?
+   - TreatmentsClient → showTreatmentScanner + tara butonu var mı?
+   - EditPetForm → showDocScanner + "Pasaport veya Belgeyi Tara" var mı?
+   - JournalFormClient → showJournalScanner + "Reçete Tara" var mı?
+
+2. VaccineScanner:
+   - VaccineScanner.tsx içinde setTimeout/mock veri yok mu?
+   - SmartScanner'ı wrap ediyor mu?
+
+3. SOS UI kontrolü:
+   - FloatingSOS: toIntlPhone fonksiyonu, wa.me linkleri var mı?
+   - FloatingSOS: handleFindVet → navigator.geolocation kullanıyor mu?
+   - pets/page.tsx: her kart için SOS footer mevcut mu?
+   - EditPetForm: "4. Acil Durum Ağı" section var mı?
+
+4. CareClient ikon kontrolü:
+   - ✂️ 🚿 👂 👁️ emojileri YOK mu?
+   - 🦴 🛁 🐕 🦷 🐱 kullanılıyor mu?
+
+5. Alert kullanımı:
+   - Tüm src/ içinde alert() çağrısı: 0 bekleniyor
+
+=== D. VERİ/ANALİTİK AGENTİ ===
+
+1. Nutrition hesaplama:
+   - nutrition/analysis: food_consistency payda totalLogs mi (30 değil)?
+   - refill-engine: dailyUsage=0 → risk='OK', daysLeft=null dönüyor mu?
+   - computeWeightTrend: x ekseni index değil gün farkı mı?
+
+2. calcAge:
+   - 0-1 yaş → Yavru
+   - 1-7 yaş → Yetişkin
+   - 7-12 yaş → Yaşlı
+   - 12+ yaş → Yaşlı (12+)
+
+3. Match sistemi:
+   - match/route.ts: oppositeGender 'male'/'female' kullanıyor mu? (Türkçe değil)
+
+=== E. PERFORMANS AGENTİ ===
+
+1. checkSubscription: React cache() ile wrap edilmiş mi?
+2. inMemoryStore: setInterval + .unref() ile temizleme var mı?
+3. select('*') azaltıldı mı?
+   - nutrition/analysis: select('id, date, food_logged, water_logged, notes')
+   - reports/[petId]: appointments için select('id, title, scheduled_at, status, vet_name')
+
+=== F. ÜRÜN/CHARTER AGENTİ ===
+
+1. Deep link anchor sistemi:
+   - EditPetForm: id="sos-section", id="veteriner-section", id="temel-section" var mı?
+   - useEffect içinde window.location.hash → scrollIntoView var mı?
+   - PetDetailClient enrichTasks: #sos-section, #veteriner-section ile bitiyor mu?
+
+2. Vaccine Catalog Suggestions API:
+   - /api/vaccine-suggestions/route.ts mevcut mu?
+   - POST (kullanıcı öneri), GET (admin liste), PATCH (admin onay/ret) var mı?
+
+3. Yeni Marka Ekle formu:
+   - VaccineSelectorSheet: "Ambalajı Tara" butonu mevcut mu?
+   - SmartScanner onResult → form alanlarını dolduruyor mu, kaydetmiyor mu?
+
+=== TEST RAPORU FORMATI ===
+
+Her agent için:
+PASS ✅ / FAIL ❌ / WARNING ⚠️
+
+Kritik bulgular için:
+- Dosya adı ve satır numarası
+- Beklenen vs gerçek durum
+- Risk seviyesi: CRITICAL / MAJOR / MINOR
+
+Genel skor: X/Y kontrol geçti

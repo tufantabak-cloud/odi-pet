@@ -12,6 +12,14 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const supabase = await createServerSupabaseClient()
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+  if (!profile || !['admin', 'founder'].includes(profile.role)) {
+    return NextResponse.json({ error: 'Forbidden: Admin only' }, { status: 403 })
+  }
   const body = await req.json()
   const { petId, scenario } = body
 

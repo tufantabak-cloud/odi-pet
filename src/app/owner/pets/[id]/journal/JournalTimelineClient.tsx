@@ -8,10 +8,12 @@ export default function JournalTimelineClient({ petId, petName, initialItems }: 
   const [filter, setFilter] = useState('all')
   const [summary, setSummary] = useState<string | null>(null)
   const [loadingSummary, setLoadingSummary] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleGenerateSummary = async () => {
     setLoadingSummary(true)
     setSummary(null)
+    setError(null)
     try {
       const res = await fetch('/api/journal/ai-summary', {
         method: 'POST',
@@ -22,11 +24,11 @@ export default function JournalTimelineClient({ petId, petName, initialItems }: 
       if (res.ok) {
         setSummary(data.summary)
       } else {
-        alert('Özet oluşturulurken bir hata oluştu.')
+        setError('Özet oluşturulurken bir hata oluştu.')
       }
     } catch (err) {
       console.error(err)
-      alert('Özet oluşturulurken bir hata oluştu.')
+      setError('Özet oluşturulurken bir hata oluştu.')
     } finally {
       setLoadingSummary(false)
     }
@@ -82,6 +84,8 @@ export default function JournalTimelineClient({ petId, petName, initialItems }: 
               {loadingSummary ? 'Üretiliyor...' : 'Özet Oluştur'}
             </button>
           </div>
+          
+          {error && <div role="alert" className="p-3 bg-error/10 text-error text-[13px] font-bold rounded-xl text-center border border-error/20">{error}</div>}
           
           {summary && (
             <div className="bg-white/80 rounded-[16px] p-4 text-[14px] text-[#2A4B7C] leading-relaxed border border-white font-medium shadow-sm animate-fade-in flex flex-col gap-4">

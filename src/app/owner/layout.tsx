@@ -4,7 +4,6 @@ import { requireRole } from '@/lib/auth/get-current-profile'
 import { redirect } from 'next/navigation'
 import BottomNav from '@/components/BottomNav'
 import SideNav from '@/components/SideNav'
-import FloatingSOS from '@/components/FloatingSOS'
 import FloatingLostPets from '@/components/FloatingLostPets'
 import NotificationBell from '@/components/NotificationBell'
 import Link from 'next/link'
@@ -64,13 +63,6 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
 
         <div className="flex items-center gap-3">
 
-          {/* SOS Button */}
-          <FloatingSOS 
-            petId={primaryPet?.id}
-            vetPhone={primaryPet?.vet_phone}
-            vetName={primaryPet?.vet_name}
-            sosContacts={primaryPet?.sos_contacts}
-          />
           <FloatingLostPets userCities={userCities} />
           
           {/* Notifications */}

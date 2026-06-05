@@ -22,6 +22,9 @@ export async function GET(_req: NextRequest, { params }: Params) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
+  if (!(await assertOwner(id, user.id))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
   const supabase = await createServerSupabaseClient()
 
   const { data, error } = await supabase
@@ -48,11 +51,16 @@ export async function POST(req: NextRequest, { params }: Params) {
   const body = await req.json()
   const supabase = await createServerSupabaseClient()
 
+  const weightKg = body.weight_kg != null ? Number(body.weight_kg) : NaN
+  if (!body.weight_kg || isNaN(weightKg) || weightKg <= 0) {
+    return NextResponse.json({ error: 'Geçerli bir kilo değeri giriniz.' }, { status: 400 })
+  }
+
   const { data, error } = await supabase
     .from('weight_logs')
     .insert({
       pet_id: id,
-      weight_kg: Number(body.weight_kg),
+      weight_kg: weightKg,
       height_cm: body.height_cm ? Number(body.height_cm) : null,
       body_condition_score: body.body_condition_score ? Number(body.body_condition_score) : null,
       measured_at: body.measured_at ?? new Date().toISOString(),

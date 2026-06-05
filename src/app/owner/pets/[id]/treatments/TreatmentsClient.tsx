@@ -8,6 +8,7 @@ import ConfirmModal from '@/components/ui/ConfirmModal'
 import CoachMark from '@/components/ui/CoachMark'
 import EmptyState from '@/components/ui/EmptyState'
 import { Syringe } from 'lucide-react'
+import { SmartScanner } from '@/components/ui/SmartScanner'
 
 const COMMON_DISEASES = [
   "Rutin Check-up",
@@ -36,6 +37,7 @@ export default function TreatmentsClient({ pet, initialTreatments }: { pet: any,
   const [editingTreatment, setEditingTreatment] = useState<any>(null)
   const [notification, setNotification] = useState<{type: 'success' | 'error', message: string} | null>(null)
   const [treatmentToDelete, setTreatmentToDelete] = useState<string | null>(null)
+  const [showTreatmentScanner, setShowTreatmentScanner] = useState(false)
 
   // Form states
   const [diseaseSelect, setDiseaseSelect] = useState('')
@@ -387,6 +389,39 @@ export default function TreatmentsClient({ pet, initialTreatments }: { pet: any,
 
             {/* Modal Body */}
             <div className="p-5 sm:p-8 overflow-y-auto custom-scrollbar">
+              {isModalOpen && showTreatmentScanner && (
+                <SmartScanner
+                  petId={pet.id}
+                  onClose={() => setShowTreatmentScanner(false)}
+                  onResult={(data: any) => {
+                    const parsed = data?.parsed || data
+                    if (parsed?.title || parsed?.vaccine_name || parsed?.product_name) {
+                      setDiseaseSelect('Diğer') // Varsayılanı 'Diğer' yapıp custom alana dolduralım
+                      setCustomDisease(parsed.title || parsed.vaccine_name || parsed.product_name || '')
+                      if (parsed.date) setStartDate(parsed.date)
+                      if (parsed.vet_name) setClinicName(parsed.vet_name)
+                      if (parsed.active_ingredient) setMethods(parsed.active_ingredient)
+                    }
+                    setShowTreatmentScanner(false)
+                  }}
+                />
+              )}
+
+              {isModalOpen && !showTreatmentScanner && (
+                <button type="button"
+                  onClick={() => setShowTreatmentScanner(true)}
+                  className="w-full py-2.5 flex items-center justify-center gap-2 text-[13px]
+                             font-bold text-primary bg-primary/5 border border-primary/20
+                             rounded-xl hover:bg-primary/10 transition-all mb-4">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                    <circle cx="12" cy="13" r="4"/>
+                  </svg>
+                  İlaç veya Aşı Ambalajını Tara
+                </button>
+              )}
+
               <form onSubmit={handleSubmit} className="flex flex-col gap-7">
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">

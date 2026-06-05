@@ -498,41 +498,182 @@ function PetPhotoStep({
   )
 }
 
-// ── Ana Sayfa ───────────────────────────────────────────────────
+// ── Adım 4: Acil Durum Ağı ──────────────────────────────────────────
+interface PetSOSStepProps {
+  petName: string
+  sosContacts: { name: string; phone: string; relation: string }[]
+  setSosContacts: (contacts: { name: string; phone: string; relation: string }[]) => void
+  onSkip: () => void
+  onSubmit: () => void
+  loading: boolean
+  submitError: string
+}
+
+function PetSOSStep({
+  petName,
+  sosContacts,
+  setSosContacts,
+  onSkip,
+  onSubmit,
+  loading,
+  submitError
+}: PetSOSStepProps) {
+  return (
+    <div className="flex flex-col w-full mx-auto pb-10 animate-fadeIn">
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-6 border-b border-border-main pb-4">
+        <div className="flex flex-col flex-1">
+          <h1 className="text-[20px] font-extrabold text-text-primary tracking-tight">Acil Durum Ağı 🆘</h1>
+          <p className="text-[12px] text-text-secondary font-medium">Evcil dostunuza bir şey olursa kiminle iletişime geçelim? (İsteğe bağlı)</p>
+        </div>
+      </div>
+
+      <div className="card-base p-6 sm:p-8 flex flex-col gap-6">
+        {submitError && (
+          <div role="alert" aria-live="assertive" className="p-3 bg-error/10 text-error text-[13px] font-bold rounded-xl border border-error/20">
+            ⚠️ {submitError}
+          </div>
+        )}
+
+        <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-3 p-5 bg-error/[0.02] rounded-2xl border border-error/10 hover:border-error/30 transition-colors">
+            <p className="text-[11px] font-black text-error uppercase tracking-widest">Kişi 1 (Birincil)</p>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[12px] font-bold text-text-secondary">Ad Soyad</label>
+              <input 
+                type="text" 
+                className="input-base text-[14px] py-3 px-4 bg-white" 
+                placeholder="Örn: Ali Yılmaz" 
+                value={sosContacts[0]?.name || ''} 
+                onChange={e => { const nc = [...sosContacts]; nc[0] = { ...nc[0], name: e.target.value }; setSosContacts(nc); }} 
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[12px] font-bold text-text-secondary">Telefon</label>
+              <input 
+                type="tel" 
+                className="input-base text-[14px] py-3 px-4 bg-white" 
+                placeholder="Örn: 0555 123 4567" 
+                value={sosContacts[0]?.phone || ''} 
+                onChange={e => { const nc = [...sosContacts]; nc[0] = { ...nc[0], phone: e.target.value }; setSosContacts(nc); }} 
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[12px] font-bold text-text-secondary">Yakınlık</label>
+              <input 
+                type="text" 
+                className="input-base text-[14px] py-3 px-4 bg-white" 
+                placeholder="Örn: Sahibi, Eşi" 
+                value={sosContacts[0]?.relation || ''} 
+                onChange={e => { const nc = [...sosContacts]; nc[0] = { ...nc[0], relation: e.target.value }; setSosContacts(nc); }} 
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 p-5 bg-bg-main rounded-2xl border border-border-main hover:border-text-secondary/30 transition-colors">
+            <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest">Kişi 2 (İsteğe Bağlı)</p>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[12px] font-bold text-text-secondary">Ad Soyad</label>
+              <input 
+                type="text" 
+                className="input-base text-[14px] py-3 px-4 bg-white" 
+                placeholder="Örn: Ayşe Yılmaz" 
+                value={sosContacts[1]?.name || ''} 
+                onChange={e => { const nc = [...sosContacts]; nc[1] = { ...nc[1], name: e.target.value }; setSosContacts(nc); }} 
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[12px] font-bold text-text-secondary">Telefon</label>
+              <input 
+                type="tel" 
+                className="input-base text-[14px] py-3 px-4 bg-white" 
+                placeholder="Örn: 0555 987 6543" 
+                value={sosContacts[1]?.phone || ''} 
+                onChange={e => { const nc = [...sosContacts]; nc[1] = { ...nc[1], phone: e.target.value }; setSosContacts(nc); }} 
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[12px] font-bold text-text-secondary">Yakınlık</label>
+              <input 
+                type="text" 
+                className="input-base text-[14px] py-3 px-4 bg-white" 
+                placeholder="Örn: Komşusu" 
+                value={sosContacts[1]?.relation || ''} 
+                onChange={e => { const nc = [...sosContacts]; nc[1] = { ...nc[1], relation: e.target.value }; setSosContacts(nc); }} 
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-4 mt-6 pt-6 border-t border-border-main">
+          <button 
+            type="button" 
+            onClick={onSkip}
+            className="text-[14px] font-bold text-text-secondary hover:text-text-primary px-4 py-2 transition-colors order-2 sm:order-1"
+          >
+            Atla →
+          </button>
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={loading}
+            className="btn-primary min-w-[200px] py-3.5 text-[15px] shadow-lg shadow-primary/20 disabled:opacity-50 order-1 sm:order-2"
+          >
+            {loading ? (
+              <span className="flex items-center gap-2 justify-center">
+                <svg className="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                Kaydediliyor...
+              </span>
+            ) : (
+              <span className="flex items-center justify-center gap-2">
+                Kaydet ve Tamamla ✓
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Wizard Steps Config ───────────────────────────────────────────────────
 const WIZARD_STEPS = [
   { id: 1, label: 'Tür Seçimi' },
-  { id: 2, label: 'Kimlik Bilgileri' },
-  { id: 3, label: 'Profil Fotoğrafı' }
+  { id: 2, label: 'Bilgiler' },
+  { id: 3, label: 'Profil Fotoğrafı' },
+  { id: 4, label: 'Acil Durum Ağı' },
 ]
 
 export default function AddPetPage() {
   const router = useRouter()
   const [step, setStep] = useState(1)
-  const [selectedSpecies, setSelectedSpecies] = useState<Species | null>(null)
+  const [selectedSpecies, setSelectedSpecies] = useState(null)
 
-  // Form states
   const [petName, setPetName] = useState('')
   const [selectedBreed, setSelectedBreed] = useState('')
-  const [gender, setGender] = useState<'male' | 'female' | ''>('')
-  
-  const [birthDateMode, setBirthDateMode] = useState<'exact' | 'approximate'>('exact')
+  const [gender, setGender] = useState('')
+  const [birthDateMode, setBirthDateMode] = useState('exact')
   const [birthDate, setBirthDate] = useState('')
   const [approxYears, setApproxYears] = useState('')
   const [approxMonths, setApproxMonths] = useState('')
-
-  // Photo states
   const [photoPreview, setPhotoPreview] = useState('')
-  const [photoFile, setPhotoFile] = useState<File | null>(null)
-
+  const [photoFile, setPhotoFile] = useState(null)
   const [loading, setLoading] = useState(false)
   const [submitError, setSubmitError] = useState('')
 
-  const handleSpeciesSelect = (species: Species) => {
+  const [createdPetId, setCreatedPetId] = useState(null)
+  const [sosContacts, setSosContacts] = useState([
+    { name: '', phone: '', relation: '' },
+    { name: '', phone: '', relation: '' },
+  ])
+  const [sosLoading, setSosLoading] = useState(false)
+
+  const handleSpeciesSelect = (species) => {
     setSelectedSpecies(species)
     setStep(2)
   }
 
-  const handleStep2Next = (e: React.FormEvent) => {
+  const handleStep2Next = (e) => {
     e.preventDefault()
     setSubmitError('')
     if (!petName.trim() || !selectedBreed) {
@@ -545,121 +686,109 @@ export default function AddPetPage() {
   const handleSubmit = async () => {
     setSubmitError('')
     setLoading(true)
-
     const fd = new FormData()
-    fd.set('species', selectedSpecies!)
+    fd.set('species', selectedSpecies)
     fd.set('name', petName.trim())
     fd.set('breed', selectedBreed)
     if (gender) fd.set('gender', gender)
     if (birthDate) fd.set('birth_date', birthDate)
     if (photoFile) fd.set('avatar', photoFile)
-
     try {
-      const res  = await fetch('/api/pets', { method: 'POST', body: fd })
+      const res = await fetch('/api/pets', { method: 'POST', body: fd })
       const data = await res.json()
-
-      if (!res.ok) {
-        setSubmitError(data.error || 'Kayıt sırasında bir hata oluştu.')
-        return
-      }
-
-      const id   = data.pet.id
-      const name = encodeURIComponent(petName.trim())
-      const sp   = encodeURIComponent(selectedSpecies!)
-      router.replace(`/owner/pets/add/success?id=${id}&name=${name}&species=${sp}`)
-    } catch (err: any) {
+      if (!res.ok) { setSubmitError(data.error || 'Kayıt sırasında bir hata oluştu.'); return }
+      setCreatedPetId(data.pet.id)
+      setStep(4)
+    } catch (err) {
       setSubmitError('Sunucu bağlantı hatası: ' + err.message)
     } finally {
       setLoading(false)
     }
   }
 
+  const getSuccessUrl = (id) =>
+    `/owner/pets/add/success?id=${id}&name=${encodeURIComponent(petName.trim())}&species=${encodeURIComponent(selectedSpecies)}`
+
+  const handleSosSubmit = async () => {
+    if (!createdPetId) return
+    setSosLoading(true)
+    try {
+      await fetch(`/api/pets/${createdPetId}/sos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sos_contacts: sosContacts.filter(c => c.name || c.phone) }),
+      })
+    } finally {
+      setSosLoading(false)
+      router.replace(getSuccessUrl(createdPetId))
+    }
+  }
+
+  const handleSosSkip = () => { if (createdPetId) router.replace(getSuccessUrl(createdPetId)) }
+
   return (
     <div className="flex flex-col gap-6 w-full max-w-2xl mx-auto pb-8">
-      {/* Visual Stepper Progress Bar */}
-      <div className="flex items-center justify-center gap-2 sm:gap-6 mb-2 mt-2">
+      <div className="flex items-center justify-center gap-2 sm:gap-4 mb-2 mt-2 flex-wrap">
         {WIZARD_STEPS.map((s) => {
-          const isActive = step >= s.id
           const isCurrent = step === s.id
           const isCompleted = step > s.id
           return (
             <div key={s.id} className="flex items-center gap-2">
-              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[12px] sm:text-[13px] font-bold transition-all duration-300 ${
-                isCurrent 
-                  ? 'bg-primary-soft/50 border-primary text-primary scale-105 shadow-sm' 
-                  : isCompleted
-                    ? 'bg-green-50 border-green-200 text-green-600'
-                    : 'bg-surface border-border-main text-text-secondary'
-              }`}>
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-extrabold ${
-                  isCurrent
-                    ? 'bg-primary text-white'
-                    : isCompleted
-                      ? 'bg-green-500 text-white'
-                      : 'bg-gray-100 text-text-secondary'
-                }`}>
+              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[12px] sm:text-[13px] font-bold transition-all duration-300 ${isCurrent ? 'bg-primary-soft/50 border-primary text-primary scale-105 shadow-sm' : isCompleted ? 'bg-green-50 border-green-200 text-green-600' : 'bg-surface border-border-main text-text-secondary'}`}>
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-extrabold ${isCurrent ? 'bg-primary text-white' : isCompleted ? 'bg-green-500 text-white' : 'bg-gray-100 text-text-secondary'}`}>
                   {isCompleted ? '✓' : s.id}
                 </div>
                 <span>{s.label}</span>
               </div>
-              {s.id < 3 && (
-                <div className={`h-[2px] w-4 sm:w-10 rounded-full transition-colors duration-300 ${
-                  step > s.id ? 'bg-green-300' : 'bg-border-main'
-                }`} />
-              )}
+              {s.id < 4 && <div className={`h-[2px] w-4 sm:w-8 rounded-full transition-colors duration-300 ${step > s.id ? 'bg-green-300' : 'bg-border-main'}`} />}
             </div>
           )
         })}
       </div>
 
-      {step === 1 && (
-        <SpeciesSelector 
-          onSelect={handleSpeciesSelect} 
-          onBack={() => router.back()} 
-        />
-      )}
+      {step === 1 && <SpeciesSelector onSelect={handleSpeciesSelect} onBack={() => router.back()} />}
 
       {step === 2 && selectedSpecies && (
-        <PetForm 
+        <PetForm
           species={selectedSpecies}
-          onBack={() => {
-            setSelectedSpecies(null)
-            setStep(1)
-          }}
-          petName={petName}
-          setPetName={setPetName}
-          selectedBreed={selectedBreed}
-          setSelectedBreed={setSelectedBreed}
-          gender={gender}
-          setGender={setGender}
-          birthDateMode={birthDateMode}
-          setBirthDateMode={setBirthDateMode}
-          birthDate={birthDate}
-          setBirthDate={setBirthDate}
-          approxYears={approxYears}
-          setApproxYears={setApproxYears}
-          approxMonths={approxMonths}
-          setApproxMonths={setApproxMonths}
+          onBack={() => { setSelectedSpecies(null); setStep(1) }}
+          petName={petName} setPetName={setPetName}
+          selectedBreed={selectedBreed} setSelectedBreed={setSelectedBreed}
+          gender={gender} setGender={setGender}
+          birthDateMode={birthDateMode} setBirthDateMode={setBirthDateMode}
+          birthDate={birthDate} setBirthDate={setBirthDate}
+          approxYears={approxYears} setApproxYears={setApproxYears}
+          approxMonths={approxMonths} setApproxMonths={setApproxMonths}
           onSubmit={handleStep2Next}
           submitError={submitError}
         />
       )}
 
       {step === 3 && selectedSpecies && (
-        <PetPhotoStep 
+        <PetPhotoStep
           species={selectedSpecies}
           petName={petName}
-          photoPreview={photoPreview}
-          setPhotoPreview={setPhotoPreview}
-          photoFile={photoFile}
-          setPhotoFile={setPhotoFile}
+          photoPreview={photoPreview} setPhotoPreview={setPhotoPreview}
+          photoFile={photoFile} setPhotoFile={setPhotoFile}
           onBack={() => setStep(2)}
           onSubmit={handleSubmit}
           loading={loading}
           submitError={submitError}
         />
       )}
+
+      {step === 4 && (
+        <PetSOSStep
+          petName={petName}
+          sosContacts={sosContacts}
+          setSosContacts={setSosContacts}
+          onSkip={handleSosSkip}
+          onSubmit={handleSosSubmit}
+          loading={sosLoading}
+          submitError=""
+        />
+      )}
     </div>
   )
 }
-
+ 

@@ -171,29 +171,6 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
     const highlight = searchParams.get('highlight')
 
     if (highlight) {
-      if (highlight.startsWith('tag-offline-')) {
-        const petId = highlight.replace('tag-offline-', '')
-        const pet = pets.find(p => p.id === petId) || targetPet
-        setActiveCard({
-          id: highlight,
-          type: 'tag_offline',
-          title: 'Cihaz Durumu',
-          text: `${pet.name}'nın künyesi çevrimdışı.`,
-          btnLabel: 'Daha Sonra',
-          secondaryBtnLabel: 'Bağlantıyı Kontrol Et',
-          action: () => {
-            dismissCard(highlight)
-            const url = new URL(window.location.href)
-            url.searchParams.delete('highlight')
-            window.history.replaceState({}, '', url.toString())
-          },
-          secondaryAction: () => {
-            router.push(`/owner/devices/setup?petId=${pet.id}&type=tag`)
-          }
-        })
-        return
-      }
-
       if (highlight.startsWith('parasite-') || highlight.startsWith('vaccine-')) {
         const isVaccine = highlight.startsWith('vaccine-')
         const petId = isVaccine 
@@ -230,26 +207,6 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
         }
         return
       }
-    }
-
-    // ── 1. Check Cihaz Durumu / Künye Çevrimdışı (En Yüksek Öncelik) ──────────────────
-    const tagCardId = `tag-offline-${targetPet.id}`
-    const showTagCard = !dismissedCards.includes(tagCardId)
-
-    if (showTagCard) {
-      setActiveCard({
-        id: tagCardId,
-        type: 'tag_offline',
-        title: 'Cihaz Durumu',
-        text: `${targetPet.name}'nın künyesi çevrimdışı.`,
-        btnLabel: 'Daha Sonra',
-        secondaryBtnLabel: 'Bağlantıyı Kontrol Et',
-        action: () => dismissCard(tagCardId),
-        secondaryAction: () => {
-          router.push('/owner/devices/setup')
-        }
-      })
-      return
     }
 
     // ── 2. Check Dış Parazit Card Condition ──────────────────
@@ -347,7 +304,6 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
       case 'parasite': return <PillIcon width={40} height={40} />
       case 'appetite': return <BowlIcon width={40} height={40} />
       case 'venues': return <HouseIcon width={40} height={40} />
-      case 'tag_offline': return <PawIcon width={40} height={40} />
       default: return <PawIcon width={40} height={40} />
     }
   }

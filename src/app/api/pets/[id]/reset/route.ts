@@ -25,7 +25,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // Clear data from related tables
   const tables = [
     'vaccine_records_v2',
-    'growth_records',
+    'weight_logs',
     'nutrition_logs',
     'medications',
     'disease_records',
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   revalidatePath('/owner/dashboard')
-  revalidateTag('dashboard', 'default')
+  revalidateTag('dashboard')
   revalidatePath('/owner/pets')
   revalidatePath(`/owner/pets/${id}`)
   revalidatePath('/owner/profile')

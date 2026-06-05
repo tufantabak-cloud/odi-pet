@@ -55,16 +55,21 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const dailyUsage = Number(body.estimated_daily_usage ?? 0)
   const nextRefill = estimateNextRefillDate({ stockGrams: currentStock, dailyUsage })
 
-  const payload = {
+  const payload: any = {
     pet_id: id,
     current_stock_grams: currentStock,
     estimated_daily_usage: dailyUsage || null,
     last_refill_date: body.last_refill_date ?? null,
-    next_refill_estimate: nextRefill?.toISOString() ?? null,
     low_stock_threshold_days: body.low_stock_threshold_days
       ? Number(body.low_stock_threshold_days)
       : 5,
     updated_at: new Date().toISOString(),
+  }
+
+  if (nextRefill) {
+    payload.next_refill_estimate = nextRefill.toISOString()
+  } else {
+    payload.next_refill_estimate = null
   }
 
   const { data, error } = await supabase

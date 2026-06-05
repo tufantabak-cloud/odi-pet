@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
+import { getIP, aiVetRateLimit } from '@/lib/auth-security'
 
 const SYSTEM_INSTRUCTION = `Sen Odi AI Vet adlı bir veteriner triaj asistanısın. Türkçe konuşuyorsun.
 
@@ -49,6 +50,10 @@ export async function POST(req: NextRequest) {
   // Auth guard — Gemini API maliyetini korumak için
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const ip = getIP(req)
+  const { success } = await aiVetRateLimit.limit(`${user.id}:${ip}`)
+  if (!success) return NextResponse.json({ error: 'Çok fazla istek. Lütfen bekleyin.' }, { status: 429 })
 
   const body = await req.json()
   // history: array of { role: 'user'|'model', text: string }

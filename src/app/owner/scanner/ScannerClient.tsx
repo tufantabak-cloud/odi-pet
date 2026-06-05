@@ -12,9 +12,51 @@ export default function ScannerClient({ pets }: { pets: any[] }) {
   )
 
   const handleSave = async (data: any) => {
-    // Burada aslında API'ye kayıt yapılabilir. 
-    // MOCK MVP için şimdilik sadece dashboard'a dönüyoruz.
-    router.replace(`/owner/pets/${selectedPetId}`)
+    if (!selectedPetId) return
+    const { record_type, parsed } = data
+
+    try {
+      if (record_type === 'vaccine_card') {
+        await fetch(`/api/pets/${selectedPetId}/treatments`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            disease_name: parsed.title || parsed.vaccine_name || 'Aşı Kaydı',
+            category: 'Aşı Uygulaması',
+            status: 'Tamamlandı',
+            start_date: parsed.date || new Date().toISOString().split('T')[0],
+            clinic_name: parsed.vet_name || '',
+            notes: parsed.lot_number ? `Lot: ${parsed.lot_number}` : '',
+          }),
+        })
+      } else if (record_type === 'food_packaging') {
+        await fetch(`/api/pets/${selectedPetId}/nutrition/profile`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            food_brand: parsed.food_brand,
+            food_product: parsed.food_product,
+            food_type: parsed.food_type,
+          }),
+        })
+      } else if (record_type === 'medicine_packaging' || record_type === 'parasite_product') {
+        await fetch(`/api/pets/${selectedPetId}/treatments`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            disease_name: parsed.title || parsed.product_name || 'Tedavi Kaydı',
+            category: record_type === 'parasite_product' ? 'İç/Dış Parazit Uygulaması' : 'İlaç Tedavisi',
+            status: 'Tamamlandı',
+            start_date: new Date().toISOString().split('T')[0],
+            notes: parsed.active_ingredient || '',
+          }),
+        })
+      }
+    } catch (err) {
+      console.error('Tarama kaydedilemedi:', err)
+    } finally {
+      router.replace(`/owner/pets/${selectedPetId}`)
+    }
   }
 
   if (selectedPetId) {
