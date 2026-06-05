@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 
-export const runtime = 'edge';
-export const preferredRegion = 'fra1';
+
 
 export async function POST(req: Request) {
   try {

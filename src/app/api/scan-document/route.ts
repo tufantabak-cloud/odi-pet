@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server'
 import { getIP, scanDocRateLimit } from '@/lib/auth-security'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 
-export const runtime = 'edge';
-export const preferredRegion = 'fra1';
+
 
 const SYSTEM_PROMPT = `
 Sen bir evcil hayvan bakım uygulaması için akıllı belge tarama asistanısın.
