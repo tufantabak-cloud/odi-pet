@@ -9,11 +9,6 @@ export default function GalleryTab({ pet }: { pet: any }) {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const supabase = createBrowserSupabaseClient();
-
-  useEffect(() => {
-    fetchPhotos();
-  }, [pet.id]);
-
   const fetchPhotos = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -28,6 +23,12 @@ export default function GalleryTab({ pet }: { pet: any }) {
     setLoading(false);
   };
 
+  useEffect(() => {
+    fetchPhotos();
+  }, [pet.id]);
+
+
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -40,7 +41,7 @@ export default function GalleryTab({ pet }: { pet: any }) {
       if (!userId) throw new Error("Kullanıcı oturumu bulunamadı.");
 
       const ext = file.name.split('.').pop() || 'jpg';
-      const fileName = `${pet.id}/${Date.now()}.${ext}`;
+      const fileName = `${pet.id}/${Math.random().toString(36).substring(7)}.${ext}`;
 
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('pet_gallery_bucket')

@@ -156,7 +156,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
     return NextResponse.json(reportResponse, { status: 200 })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[reports] POST exception:', error)
     return NextResponse.json({ error: 'Rapor oluşturulurken beklenmeyen bir hata oluştu.' }, { status: 500 })
   }

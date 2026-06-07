@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
 
   // Log activity
   if (assigned_to) {
@@ -101,7 +101,7 @@ export async function PATCH(req: NextRequest) {
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
 
   // Log activity
   const actionLabels: Record<string, string> = { accept: 'kabul etti', decline: 'reddetti', complete: 'tamamladı' }

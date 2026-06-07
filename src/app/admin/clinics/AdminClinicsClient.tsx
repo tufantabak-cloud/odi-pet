@@ -307,7 +307,7 @@ export default function AdminClinicsClient() {
   // Sync search → URL
   useEffect(() => {
     setParam({ search: debouncedSearch, page: '1' })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [debouncedSearch])
 
   const showToast = (message: string, type: 'success' | 'error') => {

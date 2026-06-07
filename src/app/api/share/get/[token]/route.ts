@@ -3,9 +3,9 @@ import { createAdminSupabaseClient } from '@/lib/supabase/server'
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { token: string } }
+  context: { params: Promise<{ token: string }> }
 ) {
-  const { token } = params
+  const { token } = await context.params
 
   if (!token) {
     return NextResponse.json({ error: 'Token bulunamadı.' }, { status: 400 })
@@ -49,7 +49,7 @@ export async function GET(
       owner: card.profiles
     })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[API/Share/Get] Error:', error)
     return NextResponse.json({ error: 'Sunucu hatası.' }, { status: 500 })
   }

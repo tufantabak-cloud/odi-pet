@@ -21,11 +21,11 @@ export async function DELETE(
       .eq('id', id)
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+  } catch (err: unknown) {
+    return NextResponse.json({ error: (err instanceof Error ? err.message : String(err)) }, { status: 500 })
   }
 }

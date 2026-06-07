@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
   const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password })
 
   if (error) {
-    if (error.message.includes('Email not confirmed')) {
+    if ((error instanceof Error ? error.message : String(error)).includes('Email not confirmed')) {
       return NextResponse.json({ error: 'Lütfen giriş yapmadan önce e-posta adresinizi doğrulayın.' }, { status: 403 })
     }
     return NextResponse.json({ error: 'Kullanıcı adı veya şifre hatalı.' }, { status: 401 })

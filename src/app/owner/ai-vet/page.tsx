@@ -396,7 +396,7 @@ export default function AIVetPage() {
                                 ] 
                               })
                             } else {
-                              router.push('/owner/pets');
+                              router.push('/owner/dashboard');
                             }
                           }}
                           className={`w-full py-3.5 px-5 rounded-2xl font-black text-[13px] transition-all hover:scale-[1.03] active:scale-[0.98] flex items-center justify-center gap-2 ${

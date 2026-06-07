@@ -83,7 +83,7 @@ export default function VetsPage() {
     } catch (e) {
       // sessionStorage erişim hatası — sessizce devam et
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, []);
 
   // Monitor online status

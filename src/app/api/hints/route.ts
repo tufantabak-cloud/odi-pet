@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     .eq('profile_id', session.user.id);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 });
   }
 
   const dismissed = data.map(hint => hint.hint_key);
@@ -42,11 +42,11 @@ export async function POST(request: Request) {
       .upsert({ profile_id: session.user.id, hint_key }, { onConflict: 'profile_id,hint_key' });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return NextResponse.json({ error: (err instanceof Error ? err.message : String(err)) }, { status: 500 });
   }
 }

@@ -1,20 +1,48 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import { Camera, X, Check, Loader2, ImageIcon, AlertCircle } from "lucide-react";
+
+export interface ParsedScannerData {
+  title?: string;
+  brand?: string;
+  product_name?: string;
+  active_ingredient?: string;
+  ingredient?: string;
+  duration_days?: number;
+  duration_months?: number;
+  application_method?: string;
+  parasite_type?: string;
+  vaccine_name?: string;
+  vaccine_brand?: string;
+  composition?: string;
+  target_species?: string;
+  target_age_group?: string;
+  food_brand?: string;
+  food_product?: string;
+  package_size_grams?: string | number;
+  existing_stock_grams?: string | number;
+  daily_grams?: string | number;
+  meals_per_day?: string | number;
+  date?: string;
+  next_date?: string;
+  dose?: string;
+  duration?: string;
+  [key: string]: string | number | undefined;
+}
 
 interface SmartScannerProps {
   petId?: string;
-  onSave?: (data: any) => void;
-  onResult?: (data: any) => void;
+  onSave?: (data: ParsedScannerData) => void;
+  onResult?: (data: ParsedScannerData) => void;
   onClose: () => void;
 }
 
 export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerProps) {
   const [step, setStep] = useState<"ready" | "camera" | "adjust" | "processing" | "confirm" | "error" | "saving">("ready");
-  const [parsedData, setParsedData] = useState<any>({});
+  const [parsedData, setParsedData] = useState<ParsedScannerData>({});
   const [recordType, setRecordType] = useState<string>("unknown");
-  const [errorMessage, setErrorMessage] = useState("");
   const [validationError, setValidationError] = useState("");
   const [editingField, setEditingField] = useState<string | null>(null);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
@@ -138,7 +166,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
   const applyAdjustmentAndScan = () => {
     if (!tempImageSrc) return;
 
-    const img = new Image();
+    const img = new window.Image();
     img.onload = () => {
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
@@ -215,8 +243,8 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
       setEditingField(null);
       setStep("confirm");
 
-    } catch (err: any) {
-      setErrorMessage(err.message || "Tarama sırasında bir hata oluştu.");
+    } catch (err: unknown) {
+      console.error("Tarama hatası:", err);
       setStep("error");
     }
   };
@@ -257,13 +285,13 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
       if (onSave) {
         onSave(parsedData); // Üst bileşeni bilgilendir
       }
-    } catch (err: any) {
-      setErrorMessage(err.message || "Kayıt sırasında bir hata oluştu.");
+    } catch (err: unknown) {
+      console.error("Kayıt hatası:", err);
       setStep("error");
     }
   };
 
-  const renderField = (key: string, label: string, value: string, type: string = "text", highlight: boolean = false, options?: {value: string, label: string}[]) => {
+  const renderField = (key: string, label: string, value: string | number | undefined, type: string = "text", highlight: boolean = false, options?: {value: string, label: string}[]) => {
     const isEditing = editingField === key;
     
     return (
@@ -590,14 +618,15 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
               className="w-full aspect-[3/4] max-h-[300px] overflow-hidden rounded-[24px] border border-slate-200 bg-slate-900 relative shadow-inner mb-4 select-none touch-none"
             >
               {/* Image element with rotation, scale and translation applied */}
-              <img 
+              <Image 
                 src={tempImageSrc} 
                 alt="Ayarlanacak Belge" 
+                fill
                 style={{ 
                   transform: `translate(${position.x}px, ${position.y}px) rotate(${rotation}deg) scale(${scale})`,
                   transition: isDragging ? 'none' : 'transform 0.15s ease-out'
                 }}
-                className="w-full h-full object-contain pointer-events-none"
+                className="object-contain pointer-events-none"
               />
               
               {/* Outer Crop Indicator Guide (Yine 3:4 oranlı kadraj overlay'i) */}

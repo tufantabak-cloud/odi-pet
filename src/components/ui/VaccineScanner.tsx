@@ -1,8 +1,8 @@
 'use client'
-import { SmartScanner } from '@/components/ui/SmartScanner'
+import { SmartScanner, ParsedScannerData } from '@/components/ui/SmartScanner'
 
 interface VaccineScannerProps {
-  onSave: (data: any) => void
+  onSave: (data: ParsedScannerData) => void
   onClose: () => void
 }
 

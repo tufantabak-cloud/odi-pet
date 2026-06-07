@@ -10,7 +10,6 @@ export interface CoachMarkProps {
   message: string;
   icon: string;
   position: CoachMarkPosition;
-  targetRef?: RefObject<HTMLElement>;
   delay?: number;
   condition?: boolean;
 }
@@ -21,17 +20,15 @@ export default function CoachMark({
   message,
   icon,
   position,
-  targetRef,
   delay = 1500,
   condition = true,
 }: CoachMarkProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const [isTooltipOpen, setIsTooltipOpen] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
+
 
   useEffect(() => {
-    setIsMounted(true);
     if (!condition) return;
 
     const checkStatus = async () => {
@@ -87,7 +84,6 @@ export default function CoachMark({
     }
   };
 
-  if (!isMounted) return null;
 
   const positionClasses = {
     top: 'bottom-full left-1/2 -translate-x-1/2 mb-2',

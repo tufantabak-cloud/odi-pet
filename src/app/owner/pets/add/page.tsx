@@ -405,7 +405,7 @@ function PetPhotoStep({
           {/* Photo Frame Container */}
           <div className={`relative w-[160px] h-[160px] rounded-[36px] bg-gradient-to-br ${gradientClass} border-2 border-dashed flex items-center justify-center overflow-hidden shadow-md group transition-all duration-300 hover:scale-[1.03]`}>
             {photoPreview ? (
-              // eslint-disable-next-line @next/next/no-img-element
+               
               <img src={photoPreview} alt="Önizleme" className="w-full h-full object-cover animate-scaleIn" />
             ) : (
               <div className="w-[110px] h-[110px] flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
@@ -571,7 +571,7 @@ function PetSOSStep({
           </div>
 
           <div className="flex flex-col gap-3 p-5 bg-bg-main rounded-2xl border border-border-main hover:border-text-secondary/30 transition-colors">
-            <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest">Kişi 2 (İsteğe Bağlı)</p>
+            <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest">Kişi 2 (Yedek Bağlantı)</p>
             <div className="flex flex-col gap-1.5">
               <label className="text-[12px] font-bold text-text-secondary">Ad Soyad</label>
               <input 
@@ -647,33 +647,33 @@ const WIZARD_STEPS = [
 export default function AddPetPage() {
   const router = useRouter()
   const [step, setStep] = useState(1)
-  const [selectedSpecies, setSelectedSpecies] = useState(null)
+  const [selectedSpecies, setSelectedSpecies] = useState<Species | null>(null)
 
   const [petName, setPetName] = useState('')
   const [selectedBreed, setSelectedBreed] = useState('')
-  const [gender, setGender] = useState('')
-  const [birthDateMode, setBirthDateMode] = useState('exact')
+  const [gender, setGender] = useState<'male' | 'female' | ''>('')
+  const [birthDateMode, setBirthDateMode] = useState<'exact' | 'approximate'>('exact')
   const [birthDate, setBirthDate] = useState('')
   const [approxYears, setApproxYears] = useState('')
   const [approxMonths, setApproxMonths] = useState('')
   const [photoPreview, setPhotoPreview] = useState('')
-  const [photoFile, setPhotoFile] = useState(null)
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [submitError, setSubmitError] = useState('')
 
-  const [createdPetId, setCreatedPetId] = useState(null)
+  const [createdPetId, setCreatedPetId] = useState<string | null>(null)
   const [sosContacts, setSosContacts] = useState([
     { name: '', phone: '', relation: '' },
     { name: '', phone: '', relation: '' },
   ])
   const [sosLoading, setSosLoading] = useState(false)
 
-  const handleSpeciesSelect = (species) => {
+  const handleSpeciesSelect = (species: Species) => {
     setSelectedSpecies(species)
     setStep(2)
   }
 
-  const handleStep2Next = (e) => {
+  const handleStep2Next = (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitError('')
     if (!petName.trim() || !selectedBreed) {
@@ -687,7 +687,7 @@ export default function AddPetPage() {
     setSubmitError('')
     setLoading(true)
     const fd = new FormData()
-    fd.set('species', selectedSpecies)
+    fd.set('species', selectedSpecies!)
     fd.set('name', petName.trim())
     fd.set('breed', selectedBreed)
     if (gender) fd.set('gender', gender)
@@ -699,15 +699,15 @@ export default function AddPetPage() {
       if (!res.ok) { setSubmitError(data.error || 'Kayıt sırasında bir hata oluştu.'); return }
       setCreatedPetId(data.pet.id)
       setStep(4)
-    } catch (err) {
+    } catch (err: any) {
       setSubmitError('Sunucu bağlantı hatası: ' + err.message)
     } finally {
       setLoading(false)
     }
   }
 
-  const getSuccessUrl = (id) =>
-    `/owner/pets/add/success?id=${id}&name=${encodeURIComponent(petName.trim())}&species=${encodeURIComponent(selectedSpecies)}`
+  const getSuccessUrl = (id: string) =>
+    `/owner/pets/add/success?id=${id}&name=${encodeURIComponent(petName.trim())}&species=${encodeURIComponent(selectedSpecies ?? '')}`
 
   const handleSosSubmit = async () => {
     if (!createdPetId) return
@@ -791,4 +791,3 @@ export default function AddPetPage() {
     </div>
   )
 }
- 

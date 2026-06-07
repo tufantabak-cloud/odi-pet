@@ -127,7 +127,7 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
     }
   }
 
-  const handleMarkParasiteDone = (petId: string, parasiteTask?: any) => {
+  const handleMarkParasiteDone = (petId: string, parasiteTask: any, cardId: string) => {
     const savedFrequency = localStorage.getItem(`parasite-frequency-${petId}`)
 
     if (!savedFrequency) {
@@ -149,12 +149,12 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
         }],
         onSaveLocal: async (value: string) => {
           saveParasiteFrequency(petId, Number(value), parasiteTask?.id)
-          dismissCard(`parasite-${petId}`)
+          dismissCard(cardId)
         }
       })
     } else {
       saveParasiteFrequency(petId, Number(savedFrequency), parasiteTask?.id)
-      dismissCard(`parasite-${petId}`)
+      dismissCard(cardId)
     }
   }
 
@@ -191,6 +191,8 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
           })
         } else {
           const parasiteTask = getParasiteTask()
+          const nextParasiteDateStr = localStorage.getItem(`parasite-next-date-${pet.id}`)
+          const cardId = parasiteTask ? `parasite-task-${parasiteTask.id}` : `parasite-local-${pet.id}-${nextParasiteDateStr || 'init'}`
           setActiveCard({
             id: highlight,
             type: 'parasite',
@@ -198,7 +200,7 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
             text: `Bugün ${pet.name}'nın dış parazit uygulaması zamanı. Yaptıktan sonra işaretleyin.`,
             btnLabel: 'Uygulamayı İşaretle',
             action: () => {
-              handleMarkParasiteDone(pet.id, parasiteTask)
+              handleMarkParasiteDone(pet.id, parasiteTask, cardId)
               const url = new URL(window.location.href)
               url.searchParams.delete('highlight')
               window.history.replaceState({}, '', url.toString())
@@ -212,7 +214,6 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
     // ── 2. Check Dış Parazit Card Condition ──────────────────
     const parasiteTask = getParasiteTask()
     const petIdForParasite = parasiteTask ? parasiteTask.pet_id : targetPet.id
-    const parasiteCardId = `parasite-${petIdForParasite}`
 
     const nextParasiteDateStr = localStorage.getItem(`parasite-next-date-${petIdForParasite}`)
     let isParasiteDue = true
@@ -223,6 +224,7 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
       }
     }
 
+    const parasiteCardId = parasiteTask ? `parasite-task-${parasiteTask.id}` : `parasite-local-${petIdForParasite}-${nextParasiteDateStr || 'init'}`
     const showParasiteCard = isParasiteDue && !dismissedCards.includes(parasiteCardId)
 
     if (showParasiteCard) {
@@ -233,7 +235,7 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
         title: 'Dış Parazit Uygulaması',
         text: `Bugün ${pet.name}'nın dış parazit uygulaması zamanı. Yaptıktan sonra işaretleyin.`,
         btnLabel: 'Uygulamayı İşaretle',
-        action: () => handleMarkParasiteDone(pet.id, parasiteTask)
+        action: () => handleMarkParasiteDone(pet.id, parasiteTask, parasiteCardId)
       })
       return
     }
@@ -289,13 +291,7 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
   }, [pets, upcomingSchedules, dismissedCards])
 
   if (!activeCard) {
-    return (
-      <EmptyState
-        icon={<FirstAidIcon width={48} height={48} />}
-        title="Tüm görevleriniz tamam"
-        message="Şu an için dikkat edilmesi gereken bir görev yok."
-      />
-    )
+    return null
   }
 
   const renderIcon = (type: string) => {
@@ -308,43 +304,54 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
     }
   }
 
+  // Kart tipine gore sol bordur ve ikon bg rengi
+  const cardAccent: Record<string, { border: string; bg: string }> = {
+    parasite: { border: 'border-l-teal-400',   bg: 'bg-teal-50' },
+    vaccine:  { border: 'border-l-blue-400',   bg: 'bg-blue-50' },
+    appetite: { border: 'border-l-amber-400',  bg: 'bg-amber-50' },
+    venues:   { border: 'border-l-primary',    bg: 'bg-primary-soft' },
+  }
+  const accent = cardAccent[activeCard.type] ?? { border: 'border-l-primary', bg: 'bg-primary-soft' }
+
   return (
-    <div className="card-base py-4 px-5 flex flex-col gap-6 relative bg-surface border border-border-main/60 shadow-md rounded-[20px] transition-all duration-300">
-      <div className="flex items-start gap-3">
-        <div className="flex-shrink-0 pt-0.5">
-          {renderIcon(activeCard.type)}
+    <div className={`relative bg-surface rounded-[20px] border border-border-main/60 border-l-4 ${accent.border} shadow-md overflow-hidden transition-all duration-300`}>
+      <div className="p-4 flex flex-col gap-4">
+        <div className="flex items-start gap-3">
+          <div className={`w-10 h-10 rounded-xl ${accent.bg} flex items-center justify-center shrink-0`}>
+            {renderIcon(activeCard.type)}
+          </div>
+          <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+            <h3 className="text-[15px] font-extrabold text-text-primary tracking-tight leading-snug">
+              {activeCard.title}
+            </h3>
+            <p className="text-[13px] text-text-secondary font-normal leading-relaxed">
+              {activeCard.text}
+            </p>
+          </div>
         </div>
-        <div className="flex flex-col gap-1">
-          <h3 className="text-[20px] font-semibold text-text-primary tracking-tight">
-            {activeCard.title}
-          </h3>
-          <p className="text-[14px] text-text-secondary font-normal leading-relaxed">
-            {activeCard.text}
-          </p>
+        <div className="flex gap-2.5">
+          <button
+            onClick={activeCard.action}
+            className="btn-primary flex-1 py-2.5 text-[13px] font-bold shadow-sm active:scale-[0.98] transition-all"
+          >
+            {activeCard.btnLabel}
+          </button>
+          {activeCard.secondaryBtnLabel ? (
+            <button
+              onClick={activeCard.secondaryAction}
+              className="flex-1 btn-secondary py-2.5 text-[13px] font-bold"
+            >
+              {activeCard.secondaryBtnLabel}
+            </button>
+          ) : (
+            <button
+              onClick={() => dismissCard(activeCard.id)}
+              className="px-4 py-2.5 rounded-btn text-[13px] font-semibold text-text-secondary hover:text-text-primary hover:bg-bg-main transition-all border border-border-main"
+            >
+              Sonra
+            </button>
+          )}
         </div>
-      </div>
-      <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
-        <button
-          onClick={activeCard.action}
-          className="bg-primary text-white font-semibold rounded-xl px-4 py-3 hover:bg-primary/90 active:scale-[0.98] transition-all text-[14px] flex-1 text-center shadow-sm"
-        >
-          {activeCard.btnLabel}
-        </button>
-        {activeCard.secondaryBtnLabel ? (
-          <button
-            onClick={activeCard.secondaryAction}
-            className="text-text-secondary hover:text-text-primary text-[14px] font-semibold py-3 px-4 rounded-xl hover:bg-slate-50 transition-all text-center border-2 border-border-main"
-          >
-            {activeCard.secondaryBtnLabel}
-          </button>
-        ) : (
-          <button
-            onClick={() => dismissCard(activeCard.id)}
-            className="text-text-secondary hover:text-text-primary text-[14px] font-semibold py-3 px-4 rounded-xl hover:bg-slate-50 transition-all text-center"
-          >
-            Daha Sonra
-          </button>
-        )}
       </div>
 
       {quickUpdateConfig && (

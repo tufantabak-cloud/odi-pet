@@ -83,7 +83,9 @@ describe('Nutrition - estimateNextRefillDate', () => {
   it('should return today + daysLeft', () => {
     // 10 days left
     const result = estimateNextRefillDate({ stockGrams: 1000, dailyUsage: 100 })
+    expect(result).not.toBeNull()
     const expected = new Date('2026-05-22')
+    if (!result) throw new Error("result is null");
     expect(result.toDateString()).toBe(expected.toDateString())
   })
 
@@ -111,7 +113,8 @@ describe('Nutrition - computeWeightTrend', () => {
     ]
     const trend = computeWeightTrend(entries)
     expect(trend).not.toBeNull()
-    expect(trend!).toBeGreaterThan(0)
+    if (trend === null) throw new Error("trend is null");
+    expect(trend).toBeGreaterThan(0)
   })
 
   it('should return negative slope for decreasing weight', () => {
@@ -121,7 +124,8 @@ describe('Nutrition - computeWeightTrend', () => {
       { measured_at: '2026-01-15', weight_kg: 4.0 },
     ]
     const trend = computeWeightTrend(entries)
-    expect(trend!).toBeLessThan(0)
+    if (trend === null) throw new Error("trend is null");
+    expect(trend).toBeLessThan(0)
   })
 
   it('should return 0 for perfectly flat weight', () => {

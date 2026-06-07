@@ -22,7 +22,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
     .single()
 
   if (error && error.code !== 'PGRST116') {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
   }
 
   return NextResponse.json({ report: data || null })
@@ -95,7 +95,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
       status: 'active'
     })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
 
   if (city && typeof city === 'string') {
     await supabase.from('pets').update({ city: city.trim() }).eq('id', id)
@@ -130,7 +130,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     .eq('pet_id', id)
     .eq('status', 'active')
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
 
   revalidatePath(`/owner/pets/${id}`)
   

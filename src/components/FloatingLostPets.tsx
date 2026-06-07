@@ -5,10 +5,27 @@ import { createPortal } from 'react-dom'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import Image from 'next/image'
 
+interface PetDetails {
+  name: string;
+  avatar_url: string | null;
+  species: string;
+  breed: string | null;
+  city: string;
+}
+
+interface LostReport {
+  id: string;
+  status: string;
+  last_seen_location: string;
+  contact_phone: string | null;
+  created_at: string;
+  pets: PetDetails;
+}
+
 export default function FloatingLostPets({ userCities }: { userCities: string[] }) {
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [lostReports, setLostReports] = useState<any[]>([])
+  const [lostReports, setLostReports] = useState<LostReport[]>([])
 
   useEffect(() => {
     setMounted(true)
@@ -27,7 +44,7 @@ export default function FloatingLostPets({ userCities }: { userCities: string[] 
       .in('pets.city', userCities)
       .order('created_at', { ascending: false })
       .limit(10)
-      .then(({ data, error }) => {
+      .then(({ data, error }: { data: LostReport[] | null, error: Error | null }) => {
         if (!error && data) {
           setLostReports(data)
         }

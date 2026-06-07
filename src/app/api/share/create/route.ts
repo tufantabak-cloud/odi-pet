@@ -39,13 +39,13 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error('[API/Share/Create] Insert error:', error)
-      return NextResponse.json({ error: `Kayıt hatası: ${error.message}` }, { status: 500 })
+      return NextResponse.json({ error: `Kayıt hatası: ${(error instanceof Error ? error.message : String(error))}` }, { status: 500 })
     }
 
     return NextResponse.json({ success: true, token: data.share_token, expires_at: data.expires_at })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[API/Share/Create] Error:', error)
-    return NextResponse.json({ error: error.message || 'Sunucu hatası oluştu.' }, { status: 500 })
+    return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) || 'Sunucu hatası oluştu.' }, { status: 500 })
   }
 }

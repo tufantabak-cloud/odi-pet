@@ -107,7 +107,7 @@ export default function AdminUsersClient() {
   // Sync search → URL (reset page)
   useEffect(() => {
     setParam({ search: debouncedSearch, page: '1' })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [debouncedSearch])
 
   const counts = data?.roleCounts ?? {}

@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
   })
 
   if (error) {
-    return NextResponse.json({ error: error.message || 'Şifre sıfırlama e-postası gönderilemedi.' }, { status: 400 })
+    return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) || 'Şifre sıfırlama e-postası gönderilemedi.' }, { status: 400 })
   }
 
   return response

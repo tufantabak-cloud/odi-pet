@@ -32,7 +32,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
     .single()
 
   if (error && error.code !== 'PGRST116') {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
   }
 
   return NextResponse.json({ inventory: data ?? null })
@@ -78,7 +78,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
 
   // Fire refill_risk event if critical
   if (dailyUsage > 0) {

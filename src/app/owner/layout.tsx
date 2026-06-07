@@ -40,8 +40,6 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
 
   const userCities = Array.from(new Set((pets || []).map(p => p.city).filter(Boolean))) as string[]
 
-  const initial = profile.first_name?.charAt(0)?.toUpperCase() ?? 'U'
-
   return (
     <div className="flex min-h-dvh flex-col font-sans">
 
@@ -67,10 +65,6 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
           
           {/* Notifications */}
           <NotificationBell initialCount={unreadCount ?? 0} />
-          {/* Avatar */}
-          <Link href="/owner/profile" className="w-11 h-11 rounded-full bg-primary-soft border-2 border-white shadow-sm flex items-center justify-center hover:ring-2 hover:ring-primary/20 transition-all">
-            <span className="text-primary font-extrabold text-[14px]">{initial}</span>
-          </Link>
         </div>
       </header>
 

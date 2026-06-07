@@ -109,7 +109,7 @@ function buildEmailHtml(notifications: Array<{ title: string; message: string; t
 }
 
 // ── Main Handler ────────────────────────────────────────────────
-serve(async (_req) => {
+serve(async (_req: Request) => {
   console.log("[dispatch-notifications] Starting notification cycle…")
 
   try {
@@ -175,9 +175,21 @@ serve(async (_req) => {
     if (fetchErr) throw new Error(`Fetch error: ${fetchErr.message}`)
 
     // 3. Group by profile
-    const byProfile = new Map<string, { email: string; notifs: typeof unsent }>()
-    for (const n of unsent ?? []) {
-      const email = (n as any).profiles?.email
+    interface NotificationPayload {
+      id: string;
+      profile_id: string;
+      title: string;
+      message: string;
+      type: string;
+      pet_id: string | null;
+      profiles: { email: string } | { email: string }[] | null;
+    }
+    
+    const byProfile = new Map<string, { email: string; notifs: NotificationPayload[] }>()
+    const typedUnsent = (unsent as unknown as NotificationPayload[]) ?? []
+    
+    for (const n of typedUnsent) {
+      const email = Array.isArray(n.profiles) ? n.profiles[0]?.email : n.profiles?.email
       if (!email) continue
       if (!byProfile.has(n.profile_id)) {
         byProfile.set(n.profile_id, { email, notifs: [] })
@@ -192,8 +204,15 @@ serve(async (_req) => {
       .select("*")
       .in("profile_id", profileIds)
 
-    const subsByProfile = new Map<string, any[]>()
-    for (const sub of pushSubs ?? []) {
+    interface PushSubscriptionRow {
+      id: string;
+      profile_id: string;
+      endpoint: string;
+      p256dh: string;
+      auth_key: string;
+    }
+    const subsByProfile = new Map<string, PushSubscriptionRow[]>()
+    for (const sub of (pushSubs as PushSubscriptionRow[]) ?? []) {
       if (!subsByProfile.has(sub.profile_id)) {
         subsByProfile.set(sub.profile_id, [])
       }
@@ -214,7 +233,7 @@ serve(async (_req) => {
           : `🐾 ${notifs.length} yeni hatırlatma – Odi.Pet`
 
       // 4a. Send Email
-      const sent = await sendEmail(email, subject, buildEmailHtml(notifs as any))
+      const sent = await sendEmail(email, subject, buildEmailHtml(notifs))
       if (sent) {
         emailsSent++
         sentIds.push(...notifs.map((n) => n.id))
@@ -250,12 +269,13 @@ serve(async (_req) => {
                 payload
               )
               pushesSent++
-            } catch (err: any) {
+            } catch (err: unknown) {
               // If subscription is invalid/expired, delete it
-              if (err.statusCode === 410 || err.statusCode === 404) {
+              const pushErr = err as { statusCode?: number }
+              if (pushErr.statusCode === 410 || pushErr.statusCode === 404) {
                 await supabase.from("push_subscriptions").delete().eq("id", sub.id)
               } else {
-                console.error(`[dispatch-notifications] Web push error for ${profileId}:`, err)
+                console.error(`[dispatch-notifications] Web push error for ${profileId}:`, pushErr)
               }
             }
           }

@@ -31,6 +31,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
   const [loading, setLoading] = useState(false)
   const [showDocScanner, setShowDocScanner] = useState(false)
   const [birthDateMode, setBirthDateMode] = useState<'exact' | 'approximate'>('exact')
+  const [sizeLocked, setSizeLocked] = useState(false)
   
   const [petName, setPetName] = useState(pet.name || '')
   const [birthDate, setBirthDate] = useState(pet.birth_date || '')
@@ -139,6 +140,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
   )
   const [sosSaving, setSosSaving] = useState(false)
   const [sosMsg, setSosMsg] = useState<{type:'ok'|'err'; text:string} | null>(null)
+  const [successToast, setSuccessToast] = useState(false)
 
   const species = pet.species as 'Kedi' | 'Köpek'
   const breeds = species === 'Kedi' ? CAT_BREEDS : DOG_BREEDS
@@ -161,10 +163,24 @@ export default function EditPetForm({ pet }: { pet: any }) {
     }
   }
 
+  const breedSizeLabel = (breed: string, petSpecies: 'Kedi' | 'Köpek'): string => {
+    if (petSpecies === 'Kedi') return 'Kedi Boyut Skalası (Kilo Bazlı)'
+    const small = ['Chihuahua', 'Pomeranian', 'Maltese', 'Dachshund (Sosis)', 'Poodle (Kaniş)', 'Shih Tzu']
+    const medium = ['Beagle', 'Cocker Spaniel', 'Border Collie', 'French Bulldog', 'Bulldog']
+    const large = ['Golden Retriever', 'Labrador Retriever', 'Alman Çoban Köpeği', 'Rottweiler', 'Husky']
+    const giant = ['Kangal', 'Akbaş']
+    if (small.some(b => breed.includes(b.split(' ')[0]))) return 'Köpek Boyut Skalası (Küçük Irk)'
+    if (medium.some(b => breed.includes(b.split(' ')[0]))) return 'Köpek Boyut Skalası (Orta Irk)'
+    if (large.some(b => breed.includes(b.split(' ')[0]))) return 'Köpek Boyut Skalası (Büyük Irk)'
+    if (giant.some(b => breed.includes(b.split(' ')[0]))) return 'Köpek Boyut Skalası (Dev Irk)'
+    return 'Köpek Boyut Skalası (Ağırlık Bazlı)'
+  }
+
   useEffect(() => {
+    if (sizeLocked) return
     const calculated = calculateSize(weightKg, species)
     setSize(calculated)
-  }, [weightKg, species])
+  }, [weightKg, species, sizeLocked])
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.location.hash) {
@@ -216,8 +232,9 @@ export default function EditPetForm({ pet }: { pet: any }) {
         return
       }
 
-      router.replace(`/owner/pets/${pet.id}`)
+      setSuccessToast(true)
       router.refresh()
+      setTimeout(() => setSuccessToast(false), 3000)
     } catch (err: any) {
       setSubmitError('Sunucu bağlantı hatası: ' + err.message)
     } finally {
@@ -258,6 +275,13 @@ export default function EditPetForm({ pet }: { pet: any }) {
         </div>
       </div>
 
+      {successToast && (
+        <div role="status" aria-live="polite" className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-3 rounded-[14px] bg-green-500 text-white text-[14px] font-bold shadow-xl animate-scaleIn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Bilgiler başarıyla güncellendi.
+        </div>
+      )}
+
       {submitError && (
         <div role="alert" aria-live="assertive" className="mb-4 p-3 rounded-[12px] bg-error/10 border border-error/20 text-error text-[13px] font-semibold text-center">
           ⚠️ {submitError}
@@ -276,7 +300,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
                 photoPreview.startsWith('http') ? (
                   <Image src={photoPreview} alt="Önizleme" fill={true} className="object-cover" sizes="120px" />
                 ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
+                   
                   <img src={photoPreview} alt="Önizleme" className="w-full h-full object-cover" />
                 )
               ) : (
@@ -495,18 +519,52 @@ export default function EditPetForm({ pet }: { pet: any }) {
 
             <div className="flex flex-col gap-2 col-span-1 sm:col-span-2 mt-2">
               <label className="text-[13px] font-bold text-text-primary">Otomatik Hesaplanan Beden Büyüklüğü</label>
-              <div className="p-4 bg-primary-soft/20 border border-primary/20 rounded-[16px] flex items-center justify-between animate-scaleIn">
+              <div className="p-4 bg-primary-soft/20 border border-primary/20 rounded-[16px] flex items-center justify-between gap-3 animate-scaleIn flex-wrap">
                 <span className="text-[13px] font-bold text-text-secondary">
-                  {species === 'Kedi' ? 'Kedi Boyut Skalası (Ağırlık bazlı)' : 'Köpek Boyut Skalası (Ağırlık bazlı)'}
+                  {breedSizeLabel(selectedBreed, species)}
                 </span>
-                <span className="px-4 py-1.5 rounded-full text-[13px] font-black bg-primary text-white flex items-center gap-1.5 shadow-sm">
-                  {size === 'toy' && '🧸 Oyuncak / Ekstra Küçük'}
-                  {size === 'small' && '🐩 Küçük'}
-                  {size === 'medium' && '🐕 Orta'}
-                  {size === 'large' && '🦮 Büyük'}
-                  {size === 'giant' && '🦁 Dev'}
-                  {!size && 'Kilo Girilmelidir'}
-                </span>
+                <div className="flex items-center gap-2">
+                  {sizeLocked ? (
+                    <select
+                      value={size}
+                      onChange={e => setSize(e.target.value)}
+                      className="text-[12px] font-bold border border-primary/30 rounded-[10px] px-2 py-1 bg-white text-primary focus:outline-none"
+                    >
+                      {species === 'Köpek' && <option value="toy">🧸 Oyuncak / Ekstra Küçük</option>}
+                      <option value="small">🐩 Küçük</option>
+                      <option value="medium">🐕 Orta</option>
+                      <option value="large">🦮 Büyük</option>
+                      {species === 'Köpek' && <option value="giant">🦁 Dev</option>}
+                    </select>
+                  ) : (
+                    <span className="px-4 py-1.5 rounded-full text-[13px] font-black bg-primary text-white flex items-center gap-1.5 shadow-sm">
+                      {size === 'toy' && '🧸 Oyuncak / Ekstra Küçük'}
+                      {size === 'small' && '🐩 Küçük'}
+                      {size === 'medium' && '🐕 Orta'}
+                      {size === 'large' && '🦮 Büyük'}
+                      {size === 'giant' && '🦁 Dev'}
+                      {!size && 'Kilo Girilmelidir'}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => { setSizeLocked(l => !l) }}
+                    title={sizeLocked ? 'Otomatik hesaba dön' : 'Manuel olarak kilitle'}
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-bold border transition-all ${sizeLocked ? 'bg-amber-100 border-amber-300 text-amber-700 hover:bg-amber-200' : 'bg-white border-primary/20 text-text-secondary hover:border-primary/40'}`}
+                  >
+                    {sizeLocked ? (
+                      <>
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        Kilitli
+                      </>
+                    ) : (
+                      <>
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+                        Kilitlenmemiş
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -618,8 +676,23 @@ export default function EditPetForm({ pet }: { pet: any }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div className="flex flex-col gap-2">
-              <label className="text-[13px] font-bold text-text-primary">Mikroçip No</label>
-              <input value={microchipNo} onChange={e => setMicrochipNo(e.target.value)} placeholder="15 haneli no" className="input-base"/>
+              <label className="text-[13px] font-bold text-text-primary flex items-center gap-2">
+                Mikroçip No
+                {microchipNo.replace(/\s/g, '').length === 15 && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[11px] font-bold border border-green-200 animate-scaleIn">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Doğrulandı
+                  </span>
+                )}
+              </label>
+              <div className="relative">
+                <input value={microchipNo} onChange={e => setMicrochipNo(e.target.value)} placeholder="15 haneli no" className={`input-base pr-10 transition-all ${microchipNo.replace(/\s/g, '').length === 15 ? 'border-green-400 focus:border-green-500' : ''}`}/>
+                {microchipNo.replace(/\s/g, '').length === 15 && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 animate-scaleIn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                )}
+              </div>
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-[13px] font-bold text-text-primary">Pasaport No</label>
@@ -657,7 +730,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
           {[0, 1].map(i => (
             <div key={i} className="flex flex-col gap-3 p-4 bg-bg-main rounded-2xl border border-border-main">
               <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest">
-                {i === 0 ? 'Kişi 1 (Birincil)' : 'Kişi 2 (İsteğe Bağlı)'}
+                {i === 0 ? 'Kişi 1 (Birincil)' : 'Kişi 2 (Yedek Bağlantı)'}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="flex flex-col gap-1">

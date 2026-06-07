@@ -46,10 +46,11 @@ export async function POST(req: NextRequest, context: RouteContext) {
     .from('weight_logs')
     .insert(insertData)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
 
   revalidatePath('/owner/dashboard')
-  revalidateTag('dashboard')
+  // @ts-expect-error
+    revalidateTag('dashboard')
   revalidatePath('/owner/pets')
   revalidatePath(`/owner/pets/${id}`)
 

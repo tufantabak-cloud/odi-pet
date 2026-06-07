@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   if (error) {
     const isdup = error.code === '23505'
     return NextResponse.json(
-      { error: isdup ? 'Bu email zaten kayıtlı.' : error.message },
+      { error: isdup ? 'Bu email zaten kayıtlı.' : (error instanceof Error ? error.message : String(error)) },
       { status: isdup ? 409 : 500 }
     )
   }

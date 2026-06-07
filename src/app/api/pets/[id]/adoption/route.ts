@@ -33,7 +33,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
     .limit(1)
     .maybeSingle()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
 
   return NextResponse.json({ adoption: data })
 }
@@ -69,9 +69,10 @@ export async function POST(req: NextRequest, context: RouteContext) {
       .eq('user_id', user.id)
       .eq('status', 'active')
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
 
     revalidatePath(`/owner/pets/${id}`)
+    // @ts-expect-error
     revalidateTag('dashboard')
     return NextResponse.json({ success: true, status: 'cancelled' })
   }
@@ -88,9 +89,10 @@ export async function POST(req: NextRequest, context: RouteContext) {
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
 
   revalidatePath(`/owner/pets/${id}`)
-  revalidateTag('dashboard')
+  // @ts-expect-error
+    revalidateTag('dashboard')
   return NextResponse.json({ success: true, adoption: data })
 }

@@ -29,7 +29,7 @@ export async function GET(req: Request) {
       expired_cards: data?.map(c => c.id) || []
     })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[CRON/Expire-Cards] Error:', error)
     return NextResponse.json({ error: 'Sunucu hatası.' }, { status: 500 })
   }

@@ -17,7 +17,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     .single()
 
   if (error && error.code !== 'PGRST116') { // PGRST116 is 'not found'
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
   }
 
   return NextResponse.json({ plan_data: plan?.plan_data || null })
@@ -44,7 +44,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     .single()
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
   }
 
   return NextResponse.json({ success: true, data })

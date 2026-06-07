@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { getVaccineCatalog, VaccineCatalogItem } from '@/lib/tasks/vaccineCatalog';
 import { createBrowserSupabaseClient } from '@/lib/supabase/client';
-import { SmartScanner } from '@/components/ui/SmartScanner';
+import { SmartScanner, ParsedScannerData } from '@/components/ui/SmartScanner';
+import Image from 'next/image';
 
 export type VaccineOption = VaccineCatalogItem & {
   isParasite?: boolean;
@@ -57,9 +58,11 @@ export default function VaccineSelectorSheet({
   const [addSuccess, setAddSuccess] = useState(false);
   const [addError, setAddError] = useState('');
 
-  const handleScanResult = (result: any) => {
-    const parsed = result?.parsed || result
-    if (!parsed) return
+  const handleScanResult = (result: ParsedScannerData | { parsed: ParsedScannerData }) => {
+    const parsed: ParsedScannerData = (result as any).parsed && typeof (result as any).parsed === 'object' 
+      ? (result as any).parsed 
+      : (result as ParsedScannerData);
+    if (!parsed) return;
 
     // Parazit ambalajı için
     if (parsed.title || parsed.brand || parsed.parasite_type) {
@@ -143,8 +146,12 @@ export default function VaccineSelectorSheet({
         setAddForm({ brand: '', name: '', type: 'internal', method: 'oral', active_ingredient: '', duration: '' });
       }, 3000);
 
-    } catch (err: any) {
-      setAddError(err.message || 'Bir hata oluştu.');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setAddError(err.message);
+      } else {
+        setAddError('Bir hata oluştu.');
+      }
     } finally {
       setAddLoading(false);
     }
@@ -173,21 +180,22 @@ export default function VaccineSelectorSheet({
         .or(`species.eq.both,species.eq.${speciesEng}`)
         .eq('is_active', true)
         .in('type', typeFilter)
-        .then(({ data, error }) => {
+        .then(({ data, error }: { data: Record<string, unknown>[] | null, error: Error | null }) => {
           if (!error && data) {
-            const mapped = data.map((d: any) => ({
-              code: d.id,
+            const mapped = data.map((d) => ({
+              code: String(d.id),
+              species: (d.species === 'cat' ? 'cat' : 'dog') as 'dog' | 'cat',
               name: `${d.brand} - ${d.name}`,
               nameTr: `${d.active_ingredient} (${d.application_method})`,
-              group: 'core', // Varsayılan olarak temel gösterelim
+              group: 'core' as 'core' | 'optional',
               isParasite: true,
-              protection_duration_days: d.protection_duration_days,
-              image_url: d.image_url,
-              description: d.description,
-              type: d.type,
-              application_method: d.application_method,
-              active_ingredient: d.active_ingredient,
-              brand: d.brand
+              protection_duration_days: Number(d.protection_duration_days) || undefined,
+              image_url: d.image_url ? String(d.image_url) : undefined,
+              description: d.description ? String(d.description) : undefined,
+              type: d.type ? String(d.type) : undefined,
+              application_method: d.application_method ? String(d.application_method) : undefined,
+              active_ingredient: d.active_ingredient ? String(d.active_ingredient) : undefined,
+              brand: d.brand ? String(d.brand) : undefined
             }));
             setDbProducts(mapped);
           }
@@ -205,17 +213,17 @@ export default function VaccineSelectorSheet({
         .eq('status', 'approved')
         .order('is_core', { ascending: false })
         .order('brand_name')
-        .then(({ data, error }) => {
+        .then(({ data, error }: { data: Record<string, unknown>[] | null, error: Error | null }) => {
           if (!error && data) {
-            const mapped = data.map((d: any) => ({
-              code: d.vaccine_code,
-              name: d.brand_name,
-              nameTr: d.manufacturer,
-              group: d.is_core ? 'core' : 'optional',
-              species: d.species,
-              image_url: d.image_url,
-              description: d.description,
-              brand: d.manufacturer,
+            const mapped = data.map((d) => ({
+              code: String(d.vaccine_code),
+              name: String(d.brand_name),
+              nameTr: String(d.manufacturer),
+              group: (d.is_core ? 'core' : 'optional') as 'core' | 'optional',
+              species: (d.species === 'cat' ? 'cat' : 'dog') as 'dog' | 'cat',
+              image_url: d.image_url ? String(d.image_url) : undefined,
+              description: d.description ? String(d.description) : undefined,
+              brand: String(d.manufacturer),
               isParasite: false,
             }));
             setDbProducts(mapped);
@@ -317,9 +325,9 @@ export default function VaccineSelectorSheet({
                     className="flex items-start gap-3 p-3 rounded-xl border border-border-main hover:border-primary/40 hover:bg-primary/5 transition-all text-left w-full"
                   >
                     {/* Left: Image or Initial */}
-                    <div className="w-12 h-12 rounded-lg shrink-0 overflow-hidden bg-primary/10 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-lg shrink-0 overflow-hidden bg-primary/10 relative flex items-center justify-center">
                       {vaccine.image_url ? (
-                        <img src={vaccine.image_url} alt={vaccine.name} className="w-full h-full object-cover" />
+                        <Image src={vaccine.image_url} alt={vaccine.name} fill sizes="48px" className="object-cover" />
                       ) : (
                         <span className="text-primary font-bold text-[18px]">
                           {(vaccine.brand || vaccine.name).charAt(0).toUpperCase()}

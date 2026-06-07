@@ -18,25 +18,23 @@ function urlBase64ToUint8Array(base64String: string) {
 export type PushPermission = 'default' | 'granted' | 'denied' | 'unsupported'
 
 export function useWebPush() {
-  const [permission, setPermission] = useState<PushPermission>('default')
+  const [permission, setPermission] = useState<PushPermission>(() => {
+    if (typeof window === 'undefined') return 'default';
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return 'unsupported';
+    return Notification.permission as PushPermission;
+  })
   const [isSubscribed, setIsSubscribed] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [swReady, setSwReady] = useState(false)
 
   // Register service worker and check current state
   useEffect(() => {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      setPermission('unsupported')
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) {
       return
     }
-
-    const currentPermission = Notification.permission as PushPermission
-    setPermission(currentPermission)
 
     navigator.serviceWorker
       .register('/sw.js')
       .then(async (reg) => {
-        setSwReady(true)
         // Check if already subscribed
         const sub = await reg.pushManager.getSubscription()
         setIsSubscribed(!!sub)
@@ -50,12 +48,13 @@ export function useWebPush() {
       return false
     }
 
-    setIsLoading(true)
     try {
       // 1. Request permission FIRST (Must be synchronous to user click for iOS Safari)
       const result = await Notification.requestPermission()
       setPermission(result as PushPermission)
       if (result !== 'granted') return false
+
+      setIsLoading(true)
 
       // 2. Then wait for the service worker
       const reg = await navigator.serviceWorker.ready
@@ -89,7 +88,7 @@ export function useWebPush() {
     } finally {
       setIsLoading(false)
     }
-  }, [swReady])
+  }, [])
 
   const unsubscribe = useCallback(async (): Promise<boolean> => {
     setIsLoading(true)

@@ -10,12 +10,18 @@ export default function FloatingSOS({
   vetPhone,
   vetName,
   sosContacts,
+  fullWidth = false,
+  onLostReport,
+  onMarkFound,
 }: {
   petId?: string | null
   petName?: string | null
   vetPhone?: string | null
   vetName?: string | null
   sosContacts?: any[] | null
+  fullWidth?: boolean
+  onLostReport?: () => void
+  onMarkFound?: () => void
 }) {
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -201,7 +207,7 @@ export default function FloatingSOS({
 
         {validContacts.length === 0 && (
           <a
-            href={activePetId ? `/owner/pets/${activePetId}/edit#sos-section` : '/owner/pets'}
+            href={activePetId ? `/owner/pets/${activePetId}/edit#sos-section` : '/owner/dashboard'}
             onClick={() => setOpen(false)}
             className="flex items-center gap-3 p-3.5 bg-primary/5 border border-primary/20 rounded-2xl hover:bg-primary/10 transition-all"
           >
@@ -215,12 +221,72 @@ export default function FloatingSOS({
           </a>
         )}
 
+        {/* Kayıp & Güvenlik */}
+        {(onLostReport || onMarkFound) && (
+          <div className="flex flex-col gap-2">
+            <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest px-1">Kayıp &amp; Güvenlik</p>
+
+            {!lostReport && onLostReport && (
+              <button
+                onClick={() => { setOpen(false); onLostReport(); }}
+                className="flex items-center gap-3 p-3.5 bg-error/5 border border-error/20 rounded-2xl hover:bg-error/10 transition-all active:scale-[0.98] w-full text-left"
+              >
+                <div className="w-9 h-9 rounded-full bg-error flex items-center justify-center shrink-0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-bold text-text-primary text-[14px]">Kayıp İlanı Ver</p>
+                  <p className="text-[11px] text-text-secondary">Kayıp ilanı oluştur ve ilan yayınla</p>
+                </div>
+              </button>
+            )}
+
+            {lostReport && onMarkFound && (
+              <button
+                onClick={() => { setOpen(false); onMarkFound(); }}
+                className="flex items-center gap-3 p-3.5 bg-success/5 border border-success/20 rounded-2xl hover:bg-success/10 transition-all active:scale-[0.98] w-full text-left"
+              >
+                <div className="w-9 h-9 rounded-full bg-success flex items-center justify-center shrink-0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-bold text-text-primary text-[14px]">Bulundu İşaretle</p>
+                  <p className="text-[11px] text-text-secondary">Aktif kayıp ilanını kapat</p>
+                </div>
+              </button>
+            )}
+          </div>
+        )}
+
         <button onClick={() => setOpen(false)} className="btn-secondary w-full py-3 text-[14px] mt-1">
           Kapat
         </button>
       </div>
     </div>
   )
+
+  if (fullWidth) {
+    return (
+      <>
+        {open && mounted && createPortal(modalContent, document.body)}
+        <button
+          onClick={() => setOpen(true)}
+          className="relative w-full h-11 rounded-[14px] bg-error flex items-center justify-center gap-2 shadow-md hover:bg-error/90 active:scale-[0.98] transition-all duration-200 focus:outline-none overflow-hidden"
+          aria-label="Acil SOS"
+        >
+          <span className="absolute inset-0 bg-error/20 animate-pulse rounded-[14px]" />
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="relative z-10">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6.09 6.09l1.62-1.62a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+          </svg>
+          <span className="relative z-10 text-white text-[13px] font-black tracking-wide">🆘 Acil Durum</span>
+        </button>
+      </>
+    )
+  }
 
   return (
     <>
@@ -236,4 +302,3 @@ export default function FloatingSOS({
     </>
   )
 }
-           

@@ -7,12 +7,13 @@ import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 export default function EditProfileForm({ profile }: { profile: any }) {
   const router = useRouter()
   const supabase = createBrowserSupabaseClient()
-  
+
   const [firstName, setFirstName] = useState(profile.first_name || '')
   const [lastName, setLastName] = useState(profile.last_name || '')
   const [phone, setPhone] = useState(profile.phone || '')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [successToast, setSuccessToast] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -32,8 +33,9 @@ export default function EditProfileForm({ profile }: { profile: any }) {
 
       if (updateError) throw updateError
 
-      router.replace('/owner/profile')
+      setSuccessToast(true)
       router.refresh()
+      setTimeout(() => setSuccessToast(false), 3000)
     } catch (err: any) {
       console.error(err)
       setError(err.message || 'Profil güncellenirken bir hata oluştu.')
@@ -44,6 +46,19 @@ export default function EditProfileForm({ profile }: { profile: any }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      {successToast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-3 rounded-[14px] bg-green-500 text-white text-[14px] font-bold shadow-xl animate-scaleIn"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          Bilgiler başarıyla güncellendi.
+        </div>
+      )}
+
       {error && (
         <div role="alert" aria-live="assertive" className="p-3 rounded-lg bg-error/10 text-error text-[13px] font-medium border border-error/20">
           {error}
@@ -52,12 +67,12 @@ export default function EditProfileForm({ profile }: { profile: any }) {
 
       <div className="flex flex-col gap-1.5">
         <label className="text-[13px] font-bold text-text-secondary ml-1">Adınız</label>
-        <input 
+        <input
           autoFocus
-          type="text" 
+          type="text"
           value={firstName}
-          onChange={e => setFirstName(e.target.value)}
-          required 
+          onChange={(e) => setFirstName(e.target.value)}
+          required
           className="input-base"
           placeholder="Adınız"
         />
@@ -65,11 +80,11 @@ export default function EditProfileForm({ profile }: { profile: any }) {
 
       <div className="flex flex-col gap-1.5">
         <label className="text-[13px] font-bold text-text-secondary ml-1">Soyadınız</label>
-        <input 
-          type="text" 
+        <input
+          type="text"
           value={lastName}
-          onChange={e => setLastName(e.target.value)}
-          required 
+          onChange={(e) => setLastName(e.target.value)}
+          required
           className="input-base"
           placeholder="Soyadınız"
         />
@@ -77,26 +92,26 @@ export default function EditProfileForm({ profile }: { profile: any }) {
 
       <div className="flex flex-col gap-1.5">
         <label className="text-[13px] font-bold text-text-secondary ml-1">Telefon Numarası</label>
-        <input 
-          type="tel" 
+        <input
+          type="tel"
           value={phone}
-          onChange={e => setPhone(e.target.value)}
+          onChange={(e) => setPhone(e.target.value)}
           className="input-base"
           placeholder="0555 555 5555"
         />
       </div>
 
       <div className="flex gap-3 mt-4">
-        <button 
-          type="button" 
+        <button
+          type="button"
           onClick={() => router.back()}
           className="btn-secondary flex-1 py-3"
           disabled={isSubmitting}
         >
           İptal
         </button>
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           className="btn-primary flex-1 py-3"
           disabled={isSubmitting}
         >

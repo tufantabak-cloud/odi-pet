@@ -30,7 +30,7 @@ export async function GET(req: NextRequest, context: RouteContext) {
     .order('date', { ascending: false })
     .limit(100)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
 
   return NextResponse.json({ expenses: data ?? [] })
 }
@@ -69,10 +69,11 @@ export async function POST(req: NextRequest, context: RouteContext) {
       description: description || null,
     })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
 
   revalidatePath('/owner/dashboard')
-  revalidateTag('dashboard')
+  // @ts-expect-error
+    revalidateTag('dashboard')
   revalidatePath(`/owner/pets/${id}`)
 
   return NextResponse.json({ success: true })

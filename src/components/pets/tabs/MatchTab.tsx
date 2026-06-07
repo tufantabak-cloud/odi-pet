@@ -14,6 +14,15 @@ interface Candidate {
   birth_date: string | null
 }
 
+const PetPawIcon = () => (
+  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500">
+    <path d="M12 2a3 3 0 0 0-3 3v1a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+    <path d="M19 8a3 3 0 0 0-3 3v1a3 3 0 0 0 6 0v-1a3 3 0 0 0-3-3Z" />
+    <path d="M5 8a3 3 0 0 0-3 3v1a3 3 0 0 0 6 0v-1a3 3 0 0 0-3-3Z" />
+    <path d="M12 22a7 7 0 0 0 7-7 4 4 0 0 0-4-4 4 4 0 0 0-6 0 4 4 0 0 0-4 4 7 7 0 0 0 7 7Z" />
+  </svg>
+)
+
 export default function MatchTab({ pet }: { pet: any }) {
   const [selectedCities, setSelectedCities] = useState<string[]>(pet.city ? [pet.city] : ['İstanbul'])
   const [candidates, setCandidates] = useState<Candidate[]>([])
@@ -83,15 +92,6 @@ export default function MatchTab({ pet }: { pet: any }) {
     setSelectedCities(prev => prev.filter(c => c !== city))
   }
 
-  // Pet-odaklı 3D illüstrasyon SVG'si (Empty state ve fallback için)
-  const PetPawIcon = () => (
-    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500">
-      <path d="M12 2a3 3 0 0 0-3 3v1a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-      <path d="M19 8a3 3 0 0 0-3 3v1a3 3 0 0 0 6 0v-1a3 3 0 0 0-3-3Z" />
-      <path d="M5 8a3 3 0 0 0-3 3v1a3 3 0 0 0 6 0v-1a3 3 0 0 0-3-3Z" />
-      <path d="M12 22a7 7 0 0 0 7-7 4 4 0 0 0-4-4 4 4 0 0 0-6 0 4 4 0 0 0-4 4 7 7 0 0 0 7 7Z" />
-    </svg>
-  )
 
   if (mutualMatch) {
     return (

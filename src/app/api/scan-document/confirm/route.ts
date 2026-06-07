@@ -40,8 +40,8 @@ export async function POST(req: Request) {
       data: data
     })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Confirm Scan Error:', error)
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) || 'Internal server error' }, { status: 500 })
   }
 }

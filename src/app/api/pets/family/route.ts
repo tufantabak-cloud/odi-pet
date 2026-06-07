@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
 
   // Log activity
   await supabase.from('pet_activity_log').insert({
@@ -103,7 +103,7 @@ export async function DELETE(req: NextRequest) {
   if (member?.role === 'owner') return NextResponse.json({ error: 'Sahip kaldırılamaz' }, { status: 400 })
 
   const { error } = await supabase.from('pet_members').delete().eq('id', member_id)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
 
   return NextResponse.json({ success: true })
 }

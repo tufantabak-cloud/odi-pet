@@ -141,7 +141,7 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
       setSelectedVaccine(null);
       setAdvancedOpen(true);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [subCategory]);
 
   const handleVaccineSelect = (vaccine: VaccineOption) => {

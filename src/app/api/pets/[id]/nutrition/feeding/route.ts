@@ -34,7 +34,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
     .order('meal_time', { ascending: false })
     .limit(30)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
   return NextResponse.json({ logs: data ?? [] })
 }
 
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
 
   // Track event to Founder Console
   await fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? ''}/api/analytics/onboarding`, {

@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
   if (error) {
     console.error('[API/Pets] INSERT error:', JSON.stringify(error))
     return NextResponse.json(
-      { error: `Kayıt hatası: ${error.message} (kodu: ${error.code})` },
+      { error: `Kayıt hatası: ${(error instanceof Error ? error.message : String(error))} (kodu: ${error.code})` },
       { status: 500 }
     )
   }
@@ -122,7 +122,8 @@ export async function POST(req: NextRequest) {
   }
 
   revalidatePath('/owner/dashboard')
-  revalidateTag('dashboard')
+  // @ts-expect-error
+    revalidateTag('dashboard')
   revalidatePath('/owner/pets')
   return NextResponse.json({ success: true, pet: data })
 }

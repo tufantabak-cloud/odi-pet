@@ -35,7 +35,7 @@ export async function GET() {
     .insert({ profile_id: user.id, scope: 'assigned' })
     .select().single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
   return NextResponse.json({
@@ -63,7 +63,7 @@ export async function PATCH(req: NextRequest) {
     .eq('profile_id', user.id)
     .select().single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
   return NextResponse.json({ success: true, token: data })
 }
 
@@ -79,7 +79,7 @@ export async function DELETE() {
   const { data, error } = await supabase
     .from('calendar_feed_tokens').insert({ profile_id: user.id }).select().single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
   return NextResponse.json({
