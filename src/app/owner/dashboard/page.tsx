@@ -9,7 +9,8 @@ import DashboardSmartCards from './DashboardSmartCards'
 import { calcAge } from '@/lib/pets/utils'
 import { getNowTR } from '@/lib/utils'
 import Image from 'next/image'
-import { getCachedDashboardData } from './dashboard-queries'
+import { getCachedDashboardData, DashboardPet } from './dashboard-queries'
+import { getTimelineSchedules, getPetsWithStats, getGreeting, getActiveCount } from './dashboard-utils'
 import EmptyState from '@/components/ui/EmptyState'
 import {
   DefaultCatAvatar, DefaultDogAvatar, PawIcon, CarrierIcon,
@@ -25,7 +26,7 @@ const AiVetIcon = (
 )
 
 // ── Modül Kısayol Izgarası ───────────────────────────────────────
-function ModuleGrid({ pets }: { pets: any[] }) {
+function ModuleGrid({ pets }: { pets: DashboardPet[] }) {
   const single = pets.length === 1
   const pid = pets[0]?.id ?? ''
   const petHref = (key: string, path: string) =>
@@ -164,48 +165,14 @@ export default async function OwnerDashboard() {
 
   const now = getNowTR()
 
-  // Timeline: bugünden 30 gün ilerisi + son 7 günün gecikmiş görevleri
-  const in30 = getNowTR(); in30.setDate(in30.getDate() + 30)
-  const sevenDaysAgo = getNowTR(); sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-  const timelineSchedules = upcomingSchedules
-    .filter((s: any) => {
-      const due = new Date(s.due_date)
-      return due >= sevenDaysAgo && due <= in30
-    })
-    .sort((a: any, b: any) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
-    .slice(0, 5)
-
-  // Pet istatistikleri
-  const petsWithStats = (pets || []).map((pet: any) => {
-    const feeding = allFeedingLogs.find((f: any) => f.pet_id === pet.id)
-    let lastFeedingLabel = ''
-    if (feeding) {
-      const hrs = Math.floor((now.getTime() - new Date(feeding.created_at).getTime()) / 3600000)
-      lastFeedingLabel = hrs < 1 ? 'Az önce beslendi' : hrs < 24 ? `${hrs} sa. önce` : `${Math.floor(hrs / 24)} g. önce`
-    }
-    const weight = allWeightLogs.find((w: any) => w.pet_id === pet.id)
-    const weightLabel = weight?.weight_kg ? `${weight.weight_kg} kg` : ''
-    const overdueCount = upcomingSchedules.filter(
-      (s: any) => s.pet_id === pet.id && s.status !== 'done' && new Date(s.due_date) < now
-    ).length
-    let score = pet.health_score ?? 100
-    if (overdueCount > 0) score = Math.max(0, score - overdueCount * 25)
-    return { ...pet, lastFeedingLabel, weightLabel, overdueCount, score }
-  })
-
-  // Saat bazlı selamlama
-  const hr = now.getHours()
-  const greeting = hr < 12 ? 'Günaydın' : hr < 18 ? 'İyi Günler' : 'İyi Akşamlar'
+  const timelineSchedules = getTimelineSchedules(upcomingSchedules, now)
+  const petsWithStats = getPetsWithStats(pets || [], allFeedingLogs, allWeightLogs, upcomingSchedules, now)
+  const greeting = getGreeting(now)
+  const activeCount = getActiveCount(upcomingSchedules, now)
 
   const dateLabel = now.toLocaleString('tr-TR', { day: 'numeric', month: 'long' })
   const firstName = profile?.first_name || 'Hoş Geldin'
   const hasPets = pets && pets.length > 0
-
-  // Aktif görev sayısı: bugün ve öncesi, tamamlanmamış
-  const todayEnd = getNowTR(); todayEnd.setHours(23, 59, 59, 999)
-  const activeCount = upcomingSchedules.filter(
-    (s: any) => s.status !== 'done' && new Date(s.due_date) <= todayEnd
-  ).length
 
   // Pet Günlüğü linkleri — iki kez kullanıldığı için değişkene alındı
   const journalListHref = pets && pets.length === 1
@@ -251,7 +218,7 @@ export default async function OwnerDashboard() {
               </div>
 
               <div className={petsWithStats.length === 1 ? "flex" : "flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory -mx-1 px-1"}>
-                {petsWithStats.map((pet: any) => {
+                {petsWithStats.map((pet) => {
                   const r = 13
                   const circ = 2 * Math.PI * r
                   const fill = circ * (pet.score / 100)
@@ -371,7 +338,7 @@ export default async function OwnerDashboard() {
 
               {timelineSchedules.length > 0 ? (
                 <div className="flex flex-col gap-2">
-                  {timelineSchedules.map((plan: any) => {
+                  {timelineSchedules.map((plan) => {
                     const ds = plan.due_date.includes('T') ? plan.due_date.split('T')[0] : plan.due_date
                     const [y, m, d] = ds.split('-').map(Number)
                     const due = getNowTR(); due.setFullYear(y, m - 1, d)

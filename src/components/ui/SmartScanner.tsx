@@ -272,6 +272,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
         body: JSON.stringify({
           pet_id: petId,
           record_type: recordType,
+          category: 'Medikal',
           parsed_data: parsedData
         })
       });

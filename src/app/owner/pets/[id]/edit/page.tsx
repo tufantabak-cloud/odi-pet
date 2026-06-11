@@ -3,6 +3,7 @@ import { getCurrentProfile } from '@/lib/auth/get-current-profile'
 import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import EditPetForm from './EditPetForm'
+import FloatingSOS from '@/components/FloatingSOS'
 
 export default async function EditPetPage({ params }: { params: Promise<{ id: string }> }) {
   const profile = await getCurrentProfile()
@@ -50,6 +51,17 @@ export default async function EditPetPage({ params }: { params: Promise<{ id: st
       <React.Suspense fallback={<div className="animate-pulse h-96 bg-bg-main rounded-2xl"></div>}>
         <EditPetForm pet={petWithOwners} />
       </React.Suspense>
+      
+      {/* Floating SOS Button */}
+      <div className="fixed bottom-24 right-4 z-[90]">
+        <FloatingSOS
+          petId={pet.id}
+          petName={pet.name}
+          vetPhone={pet.vet_phone}
+          vetName={pet.vet_name}
+          sosContacts={pet.sos_contacts}
+        />
+      </div>
     </div>
   )
 }

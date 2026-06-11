@@ -44,13 +44,13 @@ export interface DashboardSchedule {
 }
 
 /** Feeding log — sadece son beslenme zamanı hesabı için */
-interface DashboardFeedingLog {
+export interface DashboardFeedingLog {
   pet_id: string
   created_at: string
 }
 
 /** Weight log — son ağırlık/boy gösterimi için */
-interface DashboardWeightLog {
+export interface DashboardWeightLog {
   pet_id: string
   measured_at: string
   weight_kg: number | null

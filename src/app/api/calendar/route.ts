@@ -1,6 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
+import { Database } from '@/lib/database.types'
+
+type PetRow = Database['public']['Tables']['pets']['Row']
+type HealthScheduleRow = Database['public']['Tables']['health_schedules']['Row']
+type VaccineRow = Database['public']['Tables']['vaccines']['Row']
+type ProfileRow = Database['public']['Tables']['profiles']['Row']
+type AppointmentRow = Database['public']['Tables']['appointments']['Row']
+type ClinicRow = Database['public']['Tables']['clinics']['Row']
+
+type ScheduleWithRelations = Pick<HealthScheduleRow, 'id' | 'pet_id' | 'title' | 'due_date' | 'status' | 'plan_type' | 'priority' | 'escalation_level' | 'assignment_status' | 'assigned_to'> & {
+  vaccines: Pick<VaccineRow, 'name'> | null;
+  profiles: Pick<ProfileRow, 'first_name' | 'last_name'> | null;
+}
+
+type AppointmentWithRelations = Pick<AppointmentRow, 'id' | 'pet_id' | 'scheduled_at' | 'status'> & {
+  clinics: Pick<ClinicRow, 'name'> | null;
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -39,7 +56,7 @@ export async function GET(req: NextRequest) {
 
   const petsMap = Object.fromEntries([
     ...(ownedPets ?? []).map(p => [p.id, p]),
-    ...(memberPets ?? []).map(m => [m.pet_id, (m as any).pets]),
+    ...(memberPets ?? []).map(m => [m.pet_id, (m as unknown as { pets: Pick<PetRow, 'id' | 'name' | 'species'> }).pets]),
   ])
 
   // Build queries
@@ -66,36 +83,42 @@ export async function GET(req: NextRequest) {
 
   // Build unified event list
   const events = [
-    ...(schedules ?? []).map((s: any) => ({
-      id: s.id,
+    ...(schedules ?? []).map((s: unknown) => {
+      const typedS = s as ScheduleWithRelations;
+      return {
+      id: typedS.id,
       type: 'task',
-      plan_type: s.plan_type,
-      title: s.title || s.vaccines?.name || 'Bakım Görevi',
-      date: s.due_date,
-      pet_id: s.pet_id,
-      pet_name: petsMap[s.pet_id]?.name ?? '',
-      pet_species: petsMap[s.pet_id]?.species ?? '',
-      status: s.status,
-      assignment_status: s.assignment_status,
-      escalation_level: s.escalation_level ?? 'none',
-      priority: s.priority ?? 'normal',
-      assigned_to: s.assigned_to,
-      assignee_name: s.profiles ? `${s.profiles.first_name ?? ''} ${s.profiles.last_name ?? ''}`.trim() : null,
-    })),
-    ...(appointments ?? []).map((a: any) => ({
-      id: a.id,
+      plan_type: typedS.plan_type,
+      title: typedS.title || typedS.vaccines?.name || 'Bakım Görevi',
+      date: typedS.due_date,
+      pet_id: typedS.pet_id,
+      pet_name: petsMap[typedS.pet_id ?? '']?.name ?? '',
+      pet_species: petsMap[typedS.pet_id ?? '']?.species ?? '',
+      status: typedS.status,
+      assignment_status: typedS.assignment_status,
+      escalation_level: typedS.escalation_level ?? 'none',
+      priority: typedS.priority ?? 'normal',
+      assigned_to: typedS.assigned_to,
+      assignee_name: typedS.profiles ? `${typedS.profiles.first_name ?? ''} ${typedS.profiles.last_name ?? ''}`.trim() : null,
+      }
+    }),
+    ...(appointments ?? []).map((a: unknown) => {
+      const typedA = a as AppointmentWithRelations;
+      return {
+      id: typedA.id,
       type: 'appointment',
       plan_type: 'appointment',
-      title: a.clinics?.name ?? 'Randevu',
-      date: a.scheduled_at?.split('T')[0],
-      pet_id: a.pet_id,
-      pet_name: petsMap[a.pet_id]?.name ?? '',
-      status: a.status,
+      title: typedA.clinics?.name ?? 'Randevu',
+      date: typedA.scheduled_at?.split('T')[0] ?? '',
+      pet_id: typedA.pet_id,
+      pet_name: petsMap[typedA.pet_id ?? '']?.name ?? '',
+      status: typedA.status,
       escalation_level: 'none',
       priority: 'high',
       assigned_to: null,
       assignee_name: null,
-    })),
+      }
+    }),
   ]
 
   // Member workload summary

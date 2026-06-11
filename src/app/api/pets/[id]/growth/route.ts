@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { revalidatePath, revalidateTag } from 'next/cache'
+import { Database } from '@/lib/database.types'
+
+type WeightLogInsert = Database['public']['Tables']['weight_logs']['Insert']
 
 type RouteContext = {
   params: Promise<{ id: string }>
@@ -32,7 +35,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: 'Kilo bilgisi zorunludur.' }, { status: 400 })
   }
 
-  const insertData: any = {
+  const insertData: WeightLogInsert = {
     pet_id: id,
     weight_kg: Number(weight_kg),
     height_cm: height_cm ? Number(height_cm) : null
@@ -50,7 +53,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
   revalidatePath('/owner/dashboard')
   // @ts-expect-error
-    revalidateTag('dashboard')
+  revalidateTag('dashboard')
   revalidatePath('/owner/pets')
   revalidatePath(`/owner/pets/${id}`)
 

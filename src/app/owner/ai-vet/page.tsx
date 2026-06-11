@@ -6,17 +6,18 @@ import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import CoachMark from '@/components/ui/CoachMark'
 import EmptyState from '@/components/ui/EmptyState'
 import { Stethoscope } from 'lucide-react'
+import { QuickUpdateModalProps, AIVetPet, QuickUpdateConfig } from './ai-vet-types'
 
-function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
+function QuickUpdateModal({ petId, config, onClose, onDone }: QuickUpdateModalProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
   
-  async function handleSubmit(e: any) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
     setError('')
-    const fd = new FormData(e.target)
+    const fd = new FormData(e.currentTarget)
     try {
       const endpoint = config.endpoint || `/api/pets/${petId}`
       const method = config.method || 'PATCH'
@@ -38,7 +39,7 @@ function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
         <h3 className="text-[17px] font-extrabold text-text-primary mb-1">{config.title}</h3>
         <p className="text-[13px] text-text-secondary mb-5 leading-relaxed">{config.desc}</p>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {config.fields.map((f: any) => (
+          {config.fields.map((f) => (
              <div key={f.name} className="flex flex-col gap-1.5">
                <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider">{f.label}</label>
                {f.type === 'file' ? (
@@ -115,9 +116,9 @@ export default function AIVetPage() {
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const [pets, setPets] = useState<any[]>([])
-  const [selectedPet, setSelectedPet] = useState<any>(null)
-  const [quickUpdateConfig, setQuickUpdateConfig] = useState<any>(null)
+  const [pets, setPets] = useState<AIVetPet[]>([])
+  const [selectedPet, setSelectedPet] = useState<AIVetPet | null>(null)
+  const [quickUpdateConfig, setQuickUpdateConfig] = useState<QuickUpdateConfig | null>(null)
 
   const fetchPets = async () => {
     try {
@@ -152,7 +153,7 @@ export default function AIVetPage() {
           let defaultPet = formatted[0]
           const urlPetId = searchParams.get('petId')
           if (urlPetId) {
-            const found = formatted.find((p: any) => p.id === urlPetId)
+            const found = formatted.find((p: AIVetPet) => p.id === urlPetId)
             if (found) defaultPet = found
           }
           setSelectedPet(defaultPet)

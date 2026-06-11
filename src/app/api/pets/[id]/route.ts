@@ -3,10 +3,13 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { revalidatePath, revalidateTag } from 'next/cache'
 import { generateVaccinationPlan } from '@/features/pets/vaccination-algorithm'
+import { Database } from '@/lib/database.types'
 
-function str(fd: FormData, key: string): string | null {
+type PetUpdate = Database['public']['Tables']['pets']['Update']
+
+function str(fd: FormData, key: string): string | undefined {
   const v = fd.get(key) as string | null
-  return v?.trim() || null
+  return v?.trim() || undefined
 }
 
 type RouteContext = {
@@ -56,10 +59,10 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     }
   }
 
-  const payload: any = {}
+  const payload: PetUpdate = {}
   if (fd.has('name')) payload.name = str(fd, 'name')
   if (fd.has('breed')) payload.breed = str(fd, 'breed')
-  if (avatarUrl !== pet.avatar_url) payload.avatar_url = avatarUrl
+  if (avatarUrl !== pet.avatar_url) payload.avatar_url = avatarUrl ?? undefined
   if (fd.has('birth_date')) payload.birth_date = str(fd, 'birth_date')
   if (fd.has('gender')) payload.gender = str(fd, 'gender')
   if (fd.has('color')) payload.color = str(fd, 'color')
@@ -76,7 +79,6 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
   if (fd.has('district')) payload.district = str(fd, 'district')
   if (fd.has('lifestyle')) payload.lifestyle = str(fd, 'lifestyle')
   if (fd.has('size')) payload.size = str(fd, 'size')
-  if (fd.has('is_neutered')) payload.is_neutered = fd.get('is_neutered') === 'true'
 
   const { error: updateError } = await supabase
     .from('pets')

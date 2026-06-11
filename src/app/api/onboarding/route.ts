@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
+import { Database } from '@/lib/database.types'
+import { SupabaseClient } from '@supabase/supabase-js'
+
+type OnboardingProgressRow = Database['public']['Tables']['onboarding_progress']['Row']
+
 
 // GET: fetch onboarding progress (upsert if missing)
 export async function GET() {
@@ -38,7 +43,7 @@ export async function PATCH(req: NextRequest) {
   const supabase = await createServerSupabaseClient()
 
   // Check if all steps complete → award points
-  const updateData: Record<string, any> = { ...body, updated_at: new Date().toISOString() }
+  const updateData: Partial<OnboardingProgressRow> & Record<string, unknown> = { ...body, updated_at: new Date().toISOString() }
 
   // Check completion for reward
   if (body.has_generated_report) {
@@ -139,11 +144,13 @@ export async function POST(req: NextRequest) {
 }
 
 // Backfill progress from existing user data
-async function backfillProgress(supabase: any, userId: string) {
+async function backfillProgress(supabase: SupabaseClient<Database>, userId: string) {
+  const { data: pets } = await supabase.from('pets').select('id').eq('owner_id', userId)
+  const petIds = pets?.map(p => p.id) || ['00000000-0000-0000-0000-000000000000']
   const [{ count: petCount }, { count: vaccineCount }, { count: nutritionCount }, { count: inviteCount }, { count: reportCount }] = await Promise.all([
     supabase.from('pets').select('id', { count: 'exact', head: true }).eq('owner_id', userId),
-    supabase.from('vaccine_records').select('id', { count: 'exact', head: true }).eq('owner_id', userId),
-    supabase.from('nutrition_logs').select('id', { count: 'exact', head: true }).eq('owner_id', userId),
+    supabase.from('vaccine_records').select('id', { count: 'exact', head: true }).in('pet_id', petIds),
+    supabase.from('nutrition_logs').select('id', { count: 'exact', head: true }).in('pet_id', petIds),
     supabase.from('pet_invites').select('id', { count: 'exact', head: true }).eq('invited_by', userId),
     supabase.from('pet_reports').select('id', { count: 'exact', head: true }).eq('profile_id', userId),
   ])

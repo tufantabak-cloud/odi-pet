@@ -65,7 +65,7 @@ export async function POST(req: Request) {
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) {
       console.warn("GEMINI_API_KEY is not set. Using mock response.");
-      await new Promise(r => setTimeout(r, 1500));
+      await new Promise(r => setTimeout(r, 300));
       return NextResponse.json({
         success: true,
         data: {

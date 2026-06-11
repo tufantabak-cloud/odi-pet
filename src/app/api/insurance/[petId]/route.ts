@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { computeInsuranceEligibility } from '@/lib/insurance/eligibility-engine'
+import { Database } from '@/lib/database.types'
+
+type VaccineRow = Database['public']['Tables']['vaccines']['Row']
+type DiseaseRecordRow = Database['public']['Tables']['health_diseases']['Row']
+type DailyScoreRow = Database['public']['Tables']['daily_scores']['Row']
+
+type VaccineRecordWithRelations = { vaccines: Pick<VaccineRow, 'name'> | null }
+
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ petId: string }> }) {
   const user = await getSessionUser()
@@ -43,9 +51,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ petI
   ] = await Promise.all([
     supabase.from('pets').select('name, species, breed, birth_date, microchip_no').eq('id', petId).single(),
     supabase.from('vaccine_records').select('applied_date, vaccines(name)').eq('pet_id', petId).gte('applied_date', since12m),
-    supabase.from('disease_records').select('is_chronic, severity').eq('pet_id', petId),
-    supabase.from('disease_records').select('id, severity').eq('pet_id', petId).gte('diagnosis_date', since6m),
-    supabase.from('disease_records').select('severity').eq('pet_id', petId).gte('diagnosis_date', since30d),
+    supabase.from('health_diseases').select('is_resolved').eq('pet_id', petId),
+    supabase.from('health_diseases').select('id, is_resolved').eq('pet_id', petId).gte('diagnosis_date', since6m),
+    supabase.from('health_diseases').select('is_resolved').eq('pet_id', petId).gte('diagnosis_date', since30d),
     supabase.from('daily_scores').select('score').eq('pet_id', petId).order('date', { ascending: false }).limit(30),
     supabase.from('predictive_insights').select('risk_score').eq('pet_id', petId).order('created_at', { ascending: false }).limit(1).single(),
   ])
@@ -53,20 +61,20 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ petI
   if (!pet) return NextResponse.json({ error: 'Pet bulunamadı' }, { status: 404 })
 
   // ── Derive input signals ────────────────────────────────
-  const hasRabiesVaccine = (vaccines ?? []).some((v: any) =>
-    v.vaccines?.name?.toLowerCase().match(/kuduz|rabies/)
+  const hasRabiesVaccine = (vaccines ?? []).some((v: unknown) =>
+    (v as VaccineRecordWithRelations).vaccines?.name?.toLowerCase().match(/kuduz|rabies/)
   )
   const ageKnown = !!pet.birth_date
   const profileComplete = !!(pet.name && pet.species && pet.breed && pet.birth_date)
-  const chronicConditionCount = (diseases ?? []).filter((d: any) => d.is_chronic).length
+  const chronicConditionCount = (diseases ?? []).filter((d: Partial<DiseaseRecordRow>) => d.is_resolved === false).length
   const incidentCount = diseases?.length ?? 0
   const incidentCountLast6Months = diseases6m?.length ?? 0
-  const recentCriticalIncident = (diseases30d ?? []).some((d: any) => d.severity === 'critical')
+  const recentCriticalIncident = (diseases30d ?? []).some((d: Partial<DiseaseRecordRow>) => d.is_resolved === false)
   const missingVaccineHistory = (vaccines?.length ?? 0) === 0
 
   // Care consistency: avg of last 30 daily scores
   const avgScore = scores && scores.length > 0
-    ? Math.round(scores.reduce((s: number, r: any) => s + (r.score ?? 0), 0) / scores.length)
+    ? Math.round(scores.reduce((s: number, r: Pick<DailyScoreRow, 'score'>) => s + (r.score ?? 0), 0) / scores.length)
     : 50
 
   // Preventive compliance: vaccinations vs expected

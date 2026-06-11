@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
+import { Database } from '@/lib/database.types'
+
+type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
 
 export const dynamic = 'force-dynamic'
 
@@ -83,7 +86,7 @@ export async function POST(req: NextRequest) {
       if (rpcErr1) throw rpcErr1
     } catch {
       // Fallback if RPC doesn't exist yet
-      await supabase.from('profiles').update({ care_points: 50 } as any).eq('id', invite.invited_by)
+      await supabase.from('profiles').update({ care_points: 50 } as ProfileUpdate).eq('id', invite.invited_by)
     }
 
     // Invited: +25 Care Points
@@ -91,7 +94,7 @@ export async function POST(req: NextRequest) {
       const { error: rpcErr2 } = await supabase.rpc('increment_care_points', { p_profile_id: user.id, p_amount: 25 })
       if (rpcErr2) throw rpcErr2
     } catch {
-      await supabase.from('profiles').update({ care_points: 25 } as any).eq('id', user.id)
+      await supabase.from('profiles').update({ care_points: 25 } as ProfileUpdate).eq('id', user.id)
     }
 
     // Log rewards

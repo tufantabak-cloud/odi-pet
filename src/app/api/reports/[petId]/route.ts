@@ -43,7 +43,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     }
 
     // 2. Parse request payload
-    let body: any = {}
+    let body: Record<string, string> = {}
     try {
       body = await req.json()
     } catch (e) {

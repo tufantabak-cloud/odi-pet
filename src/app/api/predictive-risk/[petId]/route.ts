@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { checkSubscription } from '@/lib/subscription/check'
+import { Database } from '@/lib/database.types'
 
-export const dynamic = 'force-dynamic'
+type VetRow = Database['public']['Tables']['vets']['Row']
+type NutritionLogRow = Database['public']['Tables']['nutrition_logs']['Row']
+type HealthScheduleRow = Database['public']['Tables']['health_schedules']['Row']
 
 const generateReason = (metrics: {
   overdueCount: number, postponeCount: number, inactiveDays: number,
@@ -137,7 +140,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ petI
     }
     
     const { data: verif } = await supabase.from('vet_verifications').select('vets(name)').eq('risk_id', riskId).single()
-    const vetObj = verif?.vets as any
+    const vetObj = verif?.vets as unknown as Pick<VetRow, 'name'> | Pick<VetRow, 'name'>[]
     const vetName = Array.isArray(vetObj) ? vetObj[0]?.name : vetObj?.name
     return { vetReviewStatus: 'approved', vetName: vetName || 'Veteriner', reviewCreatedAt: review.created_at, reviewClaimedAt: review.claimed_at }
   }
@@ -192,16 +195,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ petI
     inactiveDays = Math.floor((Date.now() - new Date(scores[0].created_at).getTime()) / 86400000)
   } else { inactiveDays = 3 }
 
-  let nutritionMissedDays = 7 - nutritionLogs.filter((l: any) => l.food_logged).length
-  let waterLowDays = 7 - nutritionLogs.filter((l: any) => l.water_logged).length
+  let nutritionMissedDays = 7 - nutritionLogs.filter((l: Partial<NutritionLogRow>) => l.food_logged).length
+  let waterLowDays = 7 - nutritionLogs.filter((l: Partial<NutritionLogRow>) => l.water_logged).length
   if (nutritionMissedDays < 0) nutritionMissedDays = 0
   if (waterLowDays < 0) waterLowDays = 0
 
   // ── Household Assignment Signals ──
   const totalAssigned = assignments.length
-  const accepted  = assignments.filter((a: any) => ['accepted','completed'].includes(a.assignment_status)).length
-  const declined  = assignments.filter((a: any) => a.assignment_status === 'declined').length
-  const reassigned = assignments.filter((a: any) => a.assignment_status === 'reassigned').length
+  const accepted  = assignments.filter((a: Partial<HealthScheduleRow>) => ['accepted','completed'].includes(a.assignment_status ?? '')).length
+  const declined  = assignments.filter((a: Partial<HealthScheduleRow>) => a.assignment_status === 'declined').length
+  const reassigned = assignments.filter((a: Partial<HealthScheduleRow>) => a.assignment_status === 'reassigned').length
   const acceptanceRate = totalAssigned > 0 ? accepted / totalAssigned : 1
   const declineRate    = totalAssigned > 0 ? declined / totalAssigned : 0
 
@@ -214,9 +217,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ petI
   const overloadedMember = totalAssigned >= 5 && maxLoad / totalAssigned > 0.7
 
   // Unassigned critical tasks (priority=critical, overdue, no assignee)
-  const unassignedCritical = schedules.filter((s: any) =>
+  const unassignedCritical = schedules.filter((s: Partial<HealthScheduleRow>) =>
     s.priority === 'critical' &&
-    s.due_date < todayStr &&
+    (s.due_date ?? '') < todayStr &&
     (!s.assigned_to || s.assignment_status === 'unassigned')
   ).length
 

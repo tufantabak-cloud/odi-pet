@@ -114,7 +114,7 @@ export async function GET() {
 
   if (events) {
     for (const e of events) {
-      const payload = (e.payload as any) || {}
+      const payload = (e.payload as Record<string, string | undefined>) || {}
       
       if (e.event === 'nutrition_profile_created') nutritionProfiles.add(e.profile_id)
       if (e.event === 'feeding_logged') {

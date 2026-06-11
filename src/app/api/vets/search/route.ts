@@ -40,7 +40,20 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Google API isteğinde bir hata oluştu.' }, { status: 500 });
     }
 
-    const clinics = data.results.map((place: any) => ({
+    interface GooglePlaceResult {
+      place_id: string;
+      name: string;
+      vicinity?: string;
+      formatted_address?: string;
+      geometry?: { location?: { lat: number, lng: number } };
+      rating?: number;
+      user_ratings_total?: number;
+      opening_hours?: { open_now: boolean };
+      photos?: { photo_reference: string }[];
+      types?: string[];
+    }
+
+    const clinics = data.results.map((place: GooglePlaceResult) => ({
       id: place.place_id,
       name: place.name,
       address: place.vicinity || place.formatted_address || '',

@@ -3,6 +3,9 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { estimateNextRefillDate } from '@/lib/nutrition/refill-engine'
 import { revalidatePath } from 'next/cache'
+import { Database } from '@/lib/database.types'
+
+type FoodInventoryInsert = Database['public']['Tables']['food_inventory']['Insert']
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -55,7 +58,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const dailyUsage = Number(body.estimated_daily_usage ?? 0)
   const nextRefill = estimateNextRefillDate({ stockGrams: currentStock, dailyUsage })
 
-  const payload: any = {
+  const payload: FoodInventoryInsert = {
     pet_id: id,
     current_stock_grams: currentStock,
     estimated_daily_usage: dailyUsage || null,

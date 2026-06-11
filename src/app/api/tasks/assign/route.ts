@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 
+import { Database } from '@/lib/database.types'
+
+type HealthScheduleUpdate = Database['public']['Tables']['health_schedules']['Update']
+
 export const dynamic = 'force-dynamic'
+
 
 // POST: Assign a task to a member
 export async function POST(req: NextRequest) {
@@ -90,7 +95,7 @@ export async function PATCH(req: NextRequest) {
     complete: 'completed',
   }
 
-  const updateData: any = { assignment_status: statusMap[action] }
+  const updateData: HealthScheduleUpdate = { assignment_status: statusMap[action] as HealthScheduleUpdate['assignment_status'] }
   if (action === 'decline') updateData.decline_reason = decline_reason ?? null
   if (action === 'complete') updateData.status = 'done'
 

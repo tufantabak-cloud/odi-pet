@@ -1,5 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { Database } from '@/lib/database.types'
+
+type PetRow = Database['public']['Tables']['pets']['Row']
+type HealthScheduleRow = Database['public']['Tables']['health_schedules']['Row']
+type VaccineRow = Database['public']['Tables']['vaccines']['Row']
+type AppointmentRow = Database['public']['Tables']['appointments']['Row']
+type ClinicRow = Database['public']['Tables']['clinics']['Row']
+
+type ScheduleWithRelations = Pick<HealthScheduleRow, 'id' | 'pet_id' | 'title' | 'due_date' | 'plan_type' | 'priority' | 'status' | 'escalation_level' | 'assigned_to'> & {
+  vaccines: Pick<VaccineRow, 'name'> | null;
+}
+
+type AppointmentWithRelations = Pick<AppointmentRow, 'id' | 'pet_id' | 'scheduled_at' | 'status'> & {
+  clinics: Pick<ClinicRow, 'name'> | null;
+}
 
 // Escape ICS text values
 function icsEscape(s: string) {
@@ -107,7 +122,8 @@ export async function GET(
   const petsMap: Record<string, string> = {}
   for (const p of ownedPets ?? []) petsMap[p.id] = p.name
   for (const m of memberPets ?? []) {
-    if (m.pet_id && (m as any).pets?.name) petsMap[m.pet_id] = (m as any).pets.name
+    const petsName = (m as unknown as { pets?: Pick<PetRow, 'name'> | null }).pets?.name
+    if (m.pet_id && petsName) petsMap[m.pet_id] = petsName
   }
 
   // Build schedule query
@@ -146,9 +162,10 @@ export async function GET(
     if (!filters[s.plan_type ?? 'task']) continue
     if (plan === 'free' && s.priority === 'low') continue // free: skip low priority
 
-    const petName = petsMap[s.pet_id] ?? 'Pet'
-    const icon = TYPE_ICONS[s.plan_type] ?? '📋'
-    const title = s.title || (s as any).vaccines?.name || 'Bakım Görevi'
+    const petName = s.pet_id ? (petsMap[s.pet_id] ?? 'Pet') : 'Pet'
+    const icon = TYPE_ICONS[s.plan_type ?? 'task'] ?? '📋'
+    const sTyped = s as unknown as ScheduleWithRelations
+    const title = sTyped.title || sTyped.vaccines?.name || 'Bakım Görevi'
     const esc = s.escalation_level !== 'none' ? ` [${s.escalation_level?.toUpperCase()}]` : ''
 
     events.push(buildEvent({
@@ -165,11 +182,12 @@ export async function GET(
   // Appointments → ICS events
   if (filters.appointments !== false) {
     for (const a of appointments ?? []) {
-      const petName = petsMap[a.pet_id] ?? 'Pet'
+      const petName = a.pet_id ? (petsMap[a.pet_id] ?? 'Pet') : 'Pet'
+      const aTyped = a as unknown as AppointmentWithRelations
       events.push(buildEvent({
         uid: `apt-${a.id}`,
-        summary: `🏥 ${(a as any).clinics?.name ?? 'Veteriner Randevu'} — ${petName}`,
-        description: `Pet: ${petName}\nKlinik: ${(a as any).clinics?.name ?? '—'}\nODI'de görüntüle: ${appUrl}/owner/pets/${a.pet_id}`,
+        summary: `🏥 ${aTyped.clinics?.name ?? 'Veteriner Randevu'} — ${petName}`,
+        description: `Pet: ${petName}\nKlinik: ${aTyped.clinics?.name ?? '—'}\nODI'de görüntüle: ${appUrl}/owner/pets/${a.pet_id}`,
         date: a.scheduled_at,
         allDay: false,
         priority: 'high',
