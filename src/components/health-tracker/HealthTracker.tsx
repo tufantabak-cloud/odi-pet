@@ -43,14 +43,14 @@ export function HealthTracker({ petId, onEditTask }: HealthTrackerProps) {
   }
 
   return (
-    <div className="py-3 bg-white rounded-3xl border border-border-main shadow-sm">
+    <div className="py-2 bg-white">
       {categoryGroups.map((group, gi) => (
-        <div key={group.category} className={gi > 0 ? 'mt-2' : ''}>
-          {/* Kategori Başlığı */}
-          <div className="flex items-center justify-between px-5 py-2">
+        <div key={group.category} className="mb-6">
+          {/* Kategori Başlığı: Mockuptaki gibi tam genişlikte arka planlı */}
+          <div className="flex items-center justify-between px-4 py-2.5 bg-[#f6f5f2] rounded-xl mb-3">
             <div className="flex items-center gap-2">
-              <span className="text-[16px]">{group.icon}</span>
-              <h3 className="text-[14px] font-black text-text-primary">{group.label}</h3>
+              <span className="text-[15px] opacity-70 grayscale">{group.icon}</span>
+              <h3 className="text-[14px] font-bold text-text-primary">{group.label}</h3>
             </div>
             <button className="text-text-secondary hover:text-text-primary transition-colors p-1">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -79,12 +79,12 @@ export function HealthTracker({ petId, onEditTask }: HealthTrackerProps) {
       ))}
 
       {/* Renk Lejandı */}
-      <div className="flex items-center gap-4 px-5 pt-3 pb-2 mt-2 border-t border-border-main/30 flex-wrap">
-        <LegendDot color="bg-emerald-500" label="Yapıldı" />
-        <LegendDot color="bg-red-400" label="Kaçırıldı" />
-        <LegendDot color="border border-teal-400 bg-white" label="Yaklaşıyor" />
-        <LegendDot color="border-2 border-blue-500 bg-white" label="Bugün" />
-        <LegendDot color="bg-gray-200" label="Planlandı" />
+      <div className="flex items-center gap-4 px-4 pt-4 pb-2 mt-2 border-t border-border-main/30 flex-wrap">
+        <LegendDot color="bg-[#2ca67a]" label="Yapıldı" />
+        <LegendDot color="bg-[#e25353]" label="Kaçırıldı" />
+        <LegendDot color="border border-[#93c5fd] bg-[#eff6ff]" label="Yaklaşıyor" />
+        <LegendDot color="border border-[#d49944] bg-[#fdf8ed]" label="Bugün" />
+        <LegendDot color="border border-[#e5e7eb] bg-[#fcfcfc]" label="Planlandı" />
       </div>
     </div>
   );

@@ -19,9 +19,8 @@ export function TodayMarker() {
   }, []);
 
   return (
-    <div ref={markerRef} className="flex flex-col items-center justify-center shrink-0 w-8 mx-1">
-      <div className="w-1.5 h-1.5 rounded-full bg-primary mb-1"></div>
-      <div className="w-0.5 h-full min-h-[40px] bg-gradient-to-b from-primary/50 to-transparent rounded-full"></div>
+    <div ref={markerRef} className="flex flex-col items-center justify-center shrink-0 w-4">
+      <div className="w-0.5 h-[40px] bg-[#664c28] rounded-full"></div>
     </div>
   );
 }

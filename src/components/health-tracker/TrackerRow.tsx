@@ -52,52 +52,64 @@ export function TrackerRow({ taskRow, frequencyLabel, onMarkDone, onPostpone, on
     return d.getTime() >= today.getTime();
   });
 
+  const displayFreq = frequencyLabel === taskRow.task.title ? null : frequencyLabel;
+
   return (
-    <div className="flex items-center gap-0 py-2.5 border-b border-border-main/30 last:border-0">
-      {/* Sol Kolon: Görev adı + frekans */}
-      <div className="shrink-0 w-[130px] min-w-[130px] pl-4 pr-2">
+    <div className="flex items-center py-3 border-b border-border-main/50 last:border-0 relative">
+      {/* Sol Kolon: Görev adı + frekans (alt alta, daha iyi sığması için) */}
+      <div className="shrink-0 w-[120px] flex flex-col justify-center pl-4 pr-2">
         <p className="text-[13px] font-bold text-text-primary leading-tight truncate">
           {taskRow.task.title}
         </p>
-        <p className="text-[11px] text-text-secondary mt-0.5 truncate">
-          {frequencyLabel}
-        </p>
+        {displayFreq && (
+          <p className="text-[11px] text-text-secondary mt-0.5 truncate">
+            {displayFreq}
+          </p>
+        )}
       </div>
 
-      {/* Sağ Kolon: Yatay kaydırılabilir chip timeline */}
+      {/* Sağ Kolon: Timeline */}
       <div
         ref={scrollRef}
         onMouseDown={handleMouseDown}
         onMouseLeave={handleMouseLeave}
         onMouseUp={handleMouseUp}
         onMouseMove={handleMouseMove}
-        className={`flex items-center gap-2 overflow-x-auto pr-4 scrollbar-none select-none flex-1 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        className={`flex items-center overflow-x-auto pr-4 scrollbar-none select-none flex-1 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         style={{ scrollBehavior: isDragging ? 'auto' : 'smooth' }}
       >
-        {pastEvents.map(event => (
-          <div key={event.id} className="shrink-0">
-            <ChipItem
-              event={event}
-              onMarkDone={onMarkDone}
-              onPostpone={onPostpone}
-              onEdit={onEdit}
-              onDelete={onDelete}
-            />
-          </div>
+        {pastEvents.map((event, i) => (
+          <React.Fragment key={event.id}>
+            {i > 0 && <div className="w-4 h-px bg-border-main shrink-0" />}
+            <div className="shrink-0">
+              <ChipItem
+                event={event}
+                onMarkDone={onMarkDone}
+                onPostpone={onPostpone}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            </div>
+          </React.Fragment>
         ))}
 
+        {pastEvents.length > 0 && <div className="w-4 h-px bg-border-main shrink-0" />}
         <TodayMarker />
+        {todayAndFuture.length > 0 && <div className="w-4 h-px bg-border-main shrink-0" />}
 
-        {todayAndFuture.map(event => (
-          <div key={event.id} className="shrink-0">
-            <ChipItem
-              event={event}
-              onMarkDone={onMarkDone}
-              onPostpone={onPostpone}
-              onEdit={onEdit}
-              onDelete={onDelete}
-            />
-          </div>
+        {todayAndFuture.map((event, i) => (
+          <React.Fragment key={event.id}>
+            {i > 0 && <div className="w-4 h-px bg-border-main shrink-0" />}
+            <div className="shrink-0">
+              <ChipItem
+                event={event}
+                onMarkDone={onMarkDone}
+                onPostpone={onPostpone}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            </div>
+          </React.Fragment>
         ))}
       </div>
     </div>

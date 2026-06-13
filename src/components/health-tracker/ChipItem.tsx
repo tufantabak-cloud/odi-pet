@@ -31,7 +31,32 @@ export function ChipItem({ event, onMarkDone, onPostpone, onEdit, onDelete }: Ch
   const targetDate = new Date(event.scheduled_at);
 
   // Tarih formatı
-  const dateStr = targetDate.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+  const month = targetDate.toLocaleDateString('tr-TR', { month: 'short' });
+  const day = targetDate.getDate();
+  const formattedMonth = month.charAt(0).toUpperCase() + month.slice(1);
+  const dateStr = `${formattedMonth} ${day}`;
+
+  const isYearly = (event.pet_care_tasks?.frequency_days || 0) >= 365;
+  const hasSpecificTime = event.scheduled_at.includes('T') && !event.scheduled_at.includes('T12:00:00') && !event.scheduled_at.includes('T00:00:00');
+
+  let topText = dateStr;
+  let bottomText: string | null = statusLabel(computedStatus);
+
+  if (isYearly) {
+    topText = targetDate.getFullYear().toString();
+    bottomText = `${day} ${formattedMonth}`;
+    if (computedStatus === 'done') bottomText += ' ✓';
+    else bottomText += `\n${statusLabel(computedStatus)}`; // Just to show status, or maybe just "8 Haz" for future
+  } else if (hasSpecificTime) {
+    const timeStr = event.scheduled_at.split('T')[1].slice(0, 5);
+    topText = `${day} ${formattedMonth} ${timeStr}`;
+    if (computedStatus === 'done') {
+      topText += ' ✓';
+      bottomText = null;
+    } else {
+      bottomText = null;
+    }
+  }
 
   // Durum bazlı stiller — referans mockup'a birebir uyumlu
   let chipClasses = '';
@@ -39,25 +64,25 @@ export function ChipItem({ event, onMarkDone, onPostpone, onEdit, onDelete }: Ch
 
   switch (computedStatus) {
     case 'done':
-      chipClasses = 'bg-emerald-500 text-white border-transparent';
-      labelClasses = 'text-white/90';
+      chipClasses = 'bg-[#2ca67a] text-white border-transparent';
+      labelClasses = 'text-white/90 font-medium';
       break;
     case 'missed':
-      chipClasses = 'bg-red-400 text-white border-transparent';
-      labelClasses = 'text-white/90';
+      chipClasses = 'bg-[#e25353] text-white border-transparent';
+      labelClasses = 'text-white/90 font-medium';
       break;
     case 'today':
-      chipClasses = 'bg-white text-blue-600 border-2 border-blue-500 shadow-sm';
-      labelClasses = 'text-blue-500';
+      chipClasses = 'bg-[#fdf8ed] text-[#b47120] border border-[#d49944] shadow-sm';
+      labelClasses = 'text-[#b47120] font-medium';
       break;
     case 'upcoming':
-      chipClasses = 'bg-white text-teal-600 border border-teal-400';
-      labelClasses = 'text-teal-500';
+      chipClasses = 'bg-[#eff6ff] text-[#3b82f6] border border-[#93c5fd] shadow-sm';
+      labelClasses = 'text-[#60a5fa] font-medium';
       break;
     case 'future':
     default:
-      chipClasses = 'bg-gray-100 text-gray-500 border border-gray-200';
-      labelClasses = 'text-gray-400';
+      chipClasses = 'bg-[#fcfcfc] text-[#6b7280] border border-[#e5e7eb]';
+      labelClasses = 'text-[#9ca3af] font-medium';
       break;
   }
 
@@ -67,20 +92,22 @@ export function ChipItem({ event, onMarkDone, onPostpone, onEdit, onDelete }: Ch
         onClick={() => setShowMenu(!showMenu)}
         className={`
           flex flex-col items-center justify-center
-          rounded-2xl transition-all duration-200
-          px-4 py-2.5 min-w-[80px]
+          rounded-xl transition-all duration-200
+          px-3 py-2 min-w-[76px] h-[52px]
           ${chipClasses}
           hover:scale-105 active:scale-95
         `}
       >
-        {/* Üst satır: Tarih (+ done ise ✓) */}
-        <span className="text-[13px] font-bold leading-tight">
-          {computedStatus === 'done' && '✓ '}{dateStr}
+        {/* Üst satır: Tarih */}
+        <span className="text-[13px] font-bold leading-tight text-center">
+          {topText}
         </span>
         {/* Alt satır: Durum etiketi */}
-        <span className={`text-[10px] font-semibold mt-0.5 ${labelClasses}`}>
-          {statusLabel(computedStatus)}
-        </span>
+        {bottomText && (
+          <span className={`text-[11px] mt-0.5 leading-tight text-center whitespace-pre-line ${labelClasses}`}>
+            {bottomText}
+          </span>
+        )}
       </button>
 
       {showMenu && (
