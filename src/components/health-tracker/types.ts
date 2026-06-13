@@ -1,5 +1,7 @@
 export type TaskCategory = 'care' | 'health' | 'medication' | string;
 
+export type ComputedStatus = 'done' | 'missed' | 'upcoming' | 'today' | 'future';
+
 export interface PetCareTask {
   id: string;
   pet_id: string;
@@ -16,20 +18,26 @@ export interface PetCareEvent {
   pet_id: string;
   scheduled_at: string;
   completed_at?: string | null;
-  status: string; // will be calculated client-side as done, missed, upcoming, warning, future
+  status: string;
   notes?: string | null;
   created_at?: string;
   pet_care_tasks?: PetCareTask; // Joined data
 }
 
-export type ComputedStatus = 'done' | 'missed' | 'upcoming' | 'warning' | 'future';
-
 export interface ComputedEvent extends PetCareEvent {
   computedStatus: ComputedStatus;
 }
 
-export interface TrackerGroup {
+/** Her satır = 1 görev (task) ve onun tekrarlayan event'leri */
+export interface TaskRow {
+  task: PetCareTask;
+  events: ComputedEvent[];
+}
+
+/** Kategori grubu (Bakım, Sağlık, İlaç) — altında birden fazla TaskRow */
+export interface CategoryGroup {
   category: TaskCategory;
   label: string;
-  events: ComputedEvent[];
+  icon: string;
+  taskRows: TaskRow[];
 }

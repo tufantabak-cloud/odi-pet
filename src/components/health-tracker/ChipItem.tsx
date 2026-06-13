@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+'use client';
+import React, { useState, useRef } from 'react';
 import { ComputedEvent } from './types';
 import { ActionSheet } from './ActionSheet';
 
@@ -10,46 +11,77 @@ interface ChipItemProps {
   onDelete: (id: string) => void;
 }
 
+/** Türkçe durum etiketi */
+function statusLabel(s: string): string {
+  switch (s) {
+    case 'done': return 'yapıldı';
+    case 'missed': return 'kaçırıldı';
+    case 'upcoming': return 'yaklaşıyor';
+    case 'today': return 'bugün';
+    case 'future': return 'planlandı';
+    default: return s;
+  }
+}
+
 export function ChipItem({ event, onMarkDone, onPostpone, onEdit, onDelete }: ChipItemProps) {
   const [showMenu, setShowMenu] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setShowMenu(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   const { computedStatus } = event;
-  
-  let statusColor = 'bg-bg-main text-text-secondary border-border-main'; // future
-  if (computedStatus === 'done') {
-    statusColor = 'bg-success text-white border-transparent';
-  } else if (computedStatus === 'missed') {
-    statusColor = 'bg-error text-white border-transparent';
-  } else if (computedStatus === 'warning') {
-    statusColor = 'bg-warning text-text-primary border-transparent';
-  } else if (computedStatus === 'upcoming') {
-    statusColor = 'bg-primary-soft text-primary border-primary/20';
-  }
 
   const targetDate = new Date(event.scheduled_at);
+
+  // Tarih formatı
+  const dateStr = targetDate.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+
+  // Durum bazlı stiller — referans mockup'a birebir uyumlu
+  let chipClasses = '';
+  let labelClasses = '';
+
+  switch (computedStatus) {
+    case 'done':
+      chipClasses = 'bg-emerald-500 text-white border-transparent';
+      labelClasses = 'text-white/90';
+      break;
+    case 'missed':
+      chipClasses = 'bg-red-400 text-white border-transparent';
+      labelClasses = 'text-white/90';
+      break;
+    case 'today':
+      chipClasses = 'bg-white text-blue-600 border-2 border-blue-500 shadow-sm';
+      labelClasses = 'text-blue-500';
+      break;
+    case 'upcoming':
+      chipClasses = 'bg-white text-teal-600 border border-teal-400';
+      labelClasses = 'text-teal-500';
+      break;
+    case 'future':
+    default:
+      chipClasses = 'bg-gray-100 text-gray-500 border border-gray-200';
+      labelClasses = 'text-gray-400';
+      break;
+  }
+
+  const isToday = computedStatus === 'today';
 
   return (
     <div className="relative inline-block" ref={containerRef}>
       <button
         onClick={() => setShowMenu(!showMenu)}
-        className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-[13px] font-bold transition-colors ${statusColor} hover:opacity-90`}
+        className={`
+          flex flex-col items-center justify-center
+          rounded-2xl transition-all duration-200
+          ${isToday ? 'px-5 py-3 min-w-[90px]' : 'px-4 py-2.5 min-w-[76px]'}
+          ${chipClasses}
+          hover:scale-105 active:scale-95
+        `}
       >
-        <span className="truncate max-w-[140px]">
-          {event.pet_care_tasks?.title || event.notes || 'Bilinmeyen Görev'}
+        {/* Üst satır: Tarih (+ done ise ✓) */}
+        <span className={`text-[13px] font-bold leading-tight ${isToday ? 'text-[14px]' : ''}`}>
+          {computedStatus === 'done' && '✓ '}{dateStr}
         </span>
-        <span className="text-[11px] font-semibold opacity-80 shrink-0">
-          {targetDate.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
+        {/* Alt satır: Durum etiketi */}
+        <span className={`text-[10px] font-semibold mt-0.5 ${labelClasses}`}>
+          {statusLabel(computedStatus)}
         </span>
       </button>
 
