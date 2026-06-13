@@ -22,6 +22,8 @@ export interface PetCareEvent {
   notes?: string | null;
   created_at?: string;
   pet_care_tasks?: PetCareTask; // Joined data
+  vaccines?: any;
+  [key: string]: any;
 }
 
 export interface ComputedEvent extends PetCareEvent {
@@ -32,12 +34,22 @@ export interface ComputedEvent extends PetCareEvent {
 export interface TaskRow {
   task: PetCareTask;
   events: ComputedEvent[];
+  /** Aşı kategorisinde alt grup etiketi (Zorunlu Aşılar / Opsiyonel Aşılar) */
+  subGroupLabel?: string;
 }
 
-/** Kategori grubu (Bakım, Sağlık, İlaç) — altında birden fazla TaskRow */
+/** Alt grup (örneğin: Zorunlu Aşılar, Opsiyonel Aşılar) */
+export interface SubCategoryGroup {
+  label: string;
+  taskRows: TaskRow[];
+}
+
+/** Kategori grubu — altında düz satırlar veya alt gruplar olabilir */
 export interface CategoryGroup {
   category: TaskCategory;
   label: string;
   icon: string;
   taskRows: TaskRow[];
+  /** Varsa alt gruplar (Aşı kategorisi için kullanılır) */
+  subGroups?: SubCategoryGroup[];
 }

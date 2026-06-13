@@ -2,6 +2,73 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 import { ComputedStatus, CategoryGroup, TaskRow, PetCareTask, PetCareEvent, ComputedEvent } from './types';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Veri Kaynağı Notu:
+// Aşı ve parazit sınıflandırması için tek kaynak gerçek: vaccine_templates tablosu.
+// mandatory_level alanı:
+//   'legal_required' → Zorunlu Aşılar (legal)
+//   'core'           → Zorunlu Aşılar
+//   'optional'       → Opsiyonel Aşılar
+// Statik vaccineCatalog.ts bu hook içinde KULLANILMAZ.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** vaccine_templates tablosundan yüklenen lookup map türü */
+type VaccineTemplateMap = Map<string, 'core' | 'optional'>;
+
+/** mandatory_level → UI grubu */
+function mandatoryLevelToGroup(level: string): 'core' | 'optional' {
+  return (level === 'core' || level === 'legal_required') ? 'core' : 'optional';
+}
+
+/**
+ * vaccine_templates map'ine bakarak vaccine_code veya vaccine_name üzerinden
+ * zorunlu/opsiyonel grubunu belirler.
+ * Map yoksa (henüz yüklenmemişse) null döner → fallback: is_core DB flag'ı.
+ */
+function resolveVaccineGroup(
+  vaccineTemplateMap: VaccineTemplateMap,
+  vaccineCode?: string | null,
+  vaccineName?: string | null,
+  isCoreFlag?: boolean | null,
+  subCategory?: string | null,
+): 'core' | 'optional' {
+  // Template map henuz yuklenmemisse DB flaglarina don
+  if (vaccineTemplateMap.size === 0) {
+    if (isCoreFlag === true) return 'core';
+    if (isCoreFlag === false) return 'optional';
+    if ((subCategory || '').toLowerCase().includes('zorunlu')) return 'core';
+    return 'core';
+  }
+
+  // 1) vaccine_code ile birebir bak (hem uppercase hem as-is dene)
+  if (vaccineCode) {
+    const byCode = vaccineTemplateMap.get(vaccineCode.toUpperCase())
+                ?? vaccineTemplateMap.get(vaccineCode);
+    if (byCode) return byCode;
+  }
+
+  // 2) vaccine_name / title ile tam key eslesme
+  if (vaccineName) {
+    const lower = vaccineName.toLowerCase().trim();
+    const exact = vaccineTemplateMap.get(lower);
+    if (exact) return exact;
+
+    // 3) Partial: template adi title icinde geciyor mu? (min 4 karakter guard)
+    for (const [key, group] of vaccineTemplateMap) {
+      if (key.length >= 4 && lower.includes(key)) return group;
+    }
+  }
+
+  // 4) DB is_core flag
+  if (isCoreFlag === true) return 'core';
+  if (isCoreFlag === false) return 'optional';
+
+  // 5) sub_category metni
+  if ((subCategory || '').toLowerCase().includes('zorunlu')) return 'core';
+
+  return 'core'; // safe default
+}
+
 /** Frekans gün sayısından okunabilir Türkçe etiket üret */
 export function formatFrequency(days: number, label?: string | null): string {
   if (label) return label;
@@ -17,18 +84,121 @@ export function formatFrequency(days: number, label?: string | null): string {
   return `${days} günde 1`;
 }
 
-/** DB category → UI kategori eşleştirmesi (PetDetailClient'taki TAB_CATEGORY_MAP'in tersi) */
+/** DB category → UI kategori eşleştirmesi */
 const DB_CATEGORY_TO_UI: Record<string, { category: string; label: string; icon: string; order: number }> = {
-  'Saglik':       { category: 'Saglik',       label: 'Sağlık takibi',    icon: '❤️',  order: 0 },
-  'Asi':          { category: 'Asi',          label: 'Aşı Uygulaması',   icon: '💉',  order: 1 },
-  'Parazit':      { category: 'Parazit',      label: 'Parazit Koruması', icon: '🛡️', order: 2 },
-  'Bakım':        { category: 'Bakım',        label: 'Bakım takibi',     icon: '♡',   order: 3 },
-  'Beslenme':     { category: 'Beslenme',     label: 'Beslenme takibi',  icon: '🍽',  order: 4 },
-  'Hijyen':       { category: 'Hijyen',       label: 'Hijyen takibi',    icon: '🧹',  order: 5 },
-  'Aktiviteler':  { category: 'Aktiviteler',  label: 'Aktivite takibi',  icon: '🦴',  order: 6 },
-  'Veteriner':    { category: 'Veteriner',    label: 'Veteriner takibi', icon: '🏥',  order: 7 },
-  'Diger':        { category: 'Diger',        label: 'Diğer görevler',   icon: '📋',  order: 8 },
+  'Saglik':   { category: 'Saglik',   label: 'Sağlık',   icon: '❤️',  order: 0 },
+  'Asi':      { category: 'Asi',      label: 'Aşı',      icon: '💉',  order: 1 },
+  'Parazit':  { category: 'Parazit',  label: 'Parazit',  icon: '🦠',  order: 2 },
+  'Bakım':    { category: 'Bakım',    label: 'Bakım',    icon: '🧼',  order: 3 },
+  'Beslenme': { category: 'Beslenme', label: 'Beslenme', icon: '🥣',  order: 4 },
+  'Hijyen':   { category: 'Hijyen',   label: 'Hijyen',   icon: '🧹',  order: 5 },
+  'Aktivite': { category: 'Aktivite', label: 'Aktivite', icon: '🦴',  order: 6 },
 };
+
+/** DB kaydını UI kategori + alt kategorisine map'le */
+function mapDbToUI(
+  category: string,
+  subCategory: string | null,
+  title: string,
+  vaccineTemplateMap: VaccineTemplateMap,
+  vaccineCode?: string | null,
+  isCoreVaccine?: boolean | null,
+): { category: string; subCategory: string } {
+  let dbCat = category;
+  if (dbCat === 'Temizlik') dbCat = 'Hijyen';
+
+  const titleLower = title.toLowerCase();
+  const subCatLower = (subCategory || '').toLowerCase();
+
+  // ── PARAZİT KONTROLÜ (Tüm kategoriler için intercept) ──────────────────────
+  const isParasite =
+    titleLower.includes('parazit') ||
+    subCatLower.includes('parazit') ||
+    subCatLower.includes('tasması');
+
+  if (isParasite || dbCat === 'Parazit') {
+    let sub = 'Parazit Uygulamaları';
+    if (subCatLower.includes('iç parazit') || titleLower.includes('iç parazit') || titleLower.includes('ic parazit')) sub = 'İç Parazit Uygulaması';
+    else if (subCatLower.includes('dış parazit') || titleLower.includes('dış parazit') || titleLower.includes('dis parazit')) sub = 'Dış Parazit Uygulaması';
+    else if (subCatLower.includes('tasma') || titleLower.includes('tasma')) sub = 'Parazit Tasması';
+    return { category: 'Parazit', subCategory: sub };
+  }
+
+  // ── 1. Sağlık ──────────────────────────────────────────────────────────────
+  if (dbCat === 'Saglik') {
+    let sub = 'Sağlık Takibi';
+    if (subCategory === 'Kilo Takibi') sub = 'Kilo Ölçümü';
+    else if (subCategory === 'Belirti Takibi') sub = 'Semptom & Belirti Takibi';
+    else if (subCategory === 'İlaç') sub = 'İlaç Kullanımı';
+    else if (subCategory === 'Tedavi/Pansuman') sub = 'Tedavi & Pansuman';
+    else if (subCategory === 'Tahlil/Rapor') sub = 'Tahlil & Rapor';
+    else if (subCategory === 'Kronik Takip') sub = 'Kronik Rahatsızlık Takibi';
+    else if (subCategory) sub = subCategory;
+    return { category: 'Saglik', subCategory: sub };
+  }
+
+  // ── 2. Medikal (eski kategori adı) → Aşı ────────────────────────────────────
+  if (dbCat === 'Medikal') {
+    const group = resolveVaccineGroup(vaccineTemplateMap, vaccineCode, title, isCoreVaccine, subCategory);
+    return { category: 'Asi', subCategory: group === 'core' ? 'Zorunlu Aşılar' : 'Opsiyonel Aşılar' };
+  }
+
+  // ── 4. Aşı (doğrudan Asi category) ─────────────────────────────────────────
+  if (dbCat === 'Asi') {
+    const group = resolveVaccineGroup(vaccineTemplateMap, vaccineCode, title, isCoreVaccine, subCategory);
+    return { category: 'Asi', subCategory: group === 'core' ? 'Zorunlu Aşılar' : 'Opsiyonel Aşılar' };
+  }
+
+  // ── 5. Bakım ────────────────────────────────────────────────────────────────
+  if (dbCat === 'Bakım') {
+    let sub = subCategory || 'Bakım';
+    if (subCategory === 'Banyo') sub = 'Banyo';
+    else if (subCategory === 'Tüy Bakımı') sub = 'Tüy Bakımı';
+    else if (subCategory === 'Kulak Temizliği') sub = 'Kulak Temizliği';
+    else if (subCategory === 'Diş Fırçalama') sub = 'Diş Fırçalama';
+    else if (subCategory === 'Tırnak Kesimi') sub = 'Tırnak Kesimi';
+    return { category: 'Bakım', subCategory: sub };
+  }
+
+  // ── 6. Beslenme ─────────────────────────────────────────────────────────────
+  if (dbCat === 'Beslenme') {
+    let sub = subCategory || 'Beslenme';
+    if (subCategory === 'Mama Siparişi') sub = 'Mama Siparişi / Stok';
+    else if (subCategory === 'Diyet Değişimi') sub = 'Diyet Değişimi';
+    return { category: 'Beslenme', subCategory: sub };
+  }
+
+  // ── 7. Hijyen ───────────────────────────────────────────────────────────────
+  if (dbCat === 'Hijyen') {
+    let sub = subCategory || 'Hijyen';
+    if (subCategory === 'Mama Kabı') sub = 'Mama Kabı Temizliği';
+    else if (subCategory === 'Yatak') sub = 'Yatak Temizliği';
+    else if (subCategory === 'Oyuncaklar') sub = 'Oyuncak Temizliği';
+    else if (subCategory === 'Su Pınarı') sub = 'Su Pınarı Temizliği';
+    else if (subCategory === 'Tasma') sub = 'Tasma & Göğüslük Temizliği';
+    else if (subCategory === 'Çiş Pedi') sub = 'Çiş Pedi Temizliği & Değişimi';
+    else if (subCategory === 'Kum Kabı') sub = 'Kum Kabı Temizliği';
+    else if (subCategory === 'Kum Değişimi') sub = 'Kum Değişimi & Yıkama';
+    else if (subCategory === 'Kafes') sub = 'Kafes / Taşıma Kutusu';
+    else if (subCategory === 'Ortam Hijyeni') sub = 'Ev & Ortam Hijyeni';
+    return { category: 'Hijyen', subCategory: sub };
+  }
+
+  // ── 8. Aktivite ─────────────────────────────────────────────────────────────
+  if (dbCat === 'Aktiviteler' || dbCat === 'Aktivite') {
+    let sub = subCategory || 'Aktivite';
+    if (subCategory === 'Yürüyüş') sub = 'Yürüyüş';
+    else if (subCategory === 'Köpek Tuvalet') sub = 'Dışarı Tuvalet Eğitimi';
+    else if (subCategory === 'Kedi Tuvalet') sub = 'Kedi Tuvalet Eğitimi';
+    else if (subCategory === 'Yarışma') sub = 'Yarışma / Gösteri';
+    else if (subCategory === 'Eğitim') sub = 'Eğitim Seansı';
+    else if (subCategory === 'Oyun') sub = 'Oyun Zamanı';
+    return { category: 'Aktivite', subCategory: sub };
+  }
+
+  // Fallback
+  return { category: dbCat, subCategory: subCategory || title || 'Diğer' };
+}
 
 /** health_schedules kaydından status hesapla */
 function computeStatus(schedule: any): ComputedStatus {
@@ -36,8 +206,7 @@ function computeStatus(schedule: any): ComputedStatus {
 
   const now = new Date();
   const dueDate = new Date(schedule.due_date);
-  
-  // Takvim günü bazlı fark
+
   const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const scheduledDate = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
   const diffDays = Math.round((scheduledDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -52,14 +221,16 @@ function computeStatus(schedule: any): ComputedStatus {
 function toComputedEvent(s: any): ComputedEvent {
   const computedStatus = computeStatus(s);
   return {
+    ...s,
     id: s.id,
-    task_id: s.plan_id || s.id, // plan_id varsa aynı plan altında grupla, yoksa kendi başına
+    task_id: s.plan_id || s.id,
     pet_id: s.pet_id,
     scheduled_at: s.due_date + (s.due_time ? `T${s.due_time}` : 'T12:00:00'),
     completed_at: s.status === 'done' ? (s.created_at || new Date().toISOString()) : null,
     status: s.status || 'scheduled',
     notes: s.notes,
     created_at: s.created_at,
+    vaccines: s.vaccines,
     pet_care_tasks: {
       id: s.plan_id || s.id,
       pet_id: s.pet_id,
@@ -77,6 +248,50 @@ export function useHealthTracker(petId: string) {
   const [loading, setLoading] = useState(true);
   const supabase = createBrowserSupabaseClient();
 
+  /**
+   * vaccine_templates tablosundan yüklenen lookup map.
+   * Key: vaccine_code (BÜYÜK HARF) veya vaccine_name (küçük harf normalize)
+   * Value: 'core' | 'optional'
+   */
+  const [vaccineTemplateMap, setVaccineTemplateMap] = useState<VaccineTemplateMap>(new Map());
+
+  // ── vaccine_templates'i yükle (her iki tür için, species filtresi yok — en kapsamlı) ──
+  useEffect(() => {
+    async function loadTemplates() {
+      try {
+        const { data, error } = await supabase
+          .from('vaccine_templates')
+          .select('vaccine_code, vaccine_name, mandatory_level, category')
+          .eq('is_active', true);
+
+        if (error) {
+          console.error('[useHealthTracker] vaccine_templates load error:', error);
+          return;
+        }
+
+        const map = new Map<string, 'core' | 'optional'>();
+        (data || []).forEach((t: any) => {
+          // Sadece aşı şablonlarını al (parazit değil)
+          if (t.category !== 'vaccine') return;
+          const group = mandatoryLevelToGroup(t.mandatory_level);
+          // vaccine_code ile kayıt (büyük harf key — select'te uppercase normalize)
+          if (t.vaccine_code) map.set(t.vaccine_code.toUpperCase(), group);
+          // vaccine_name ile kayıt (küçük harf key — fuzzy match için)
+          if (t.vaccine_name) map.set(t.vaccine_name.toLowerCase().trim(), group);
+        });
+
+        setVaccineTemplateMap(map);
+      } catch (err) {
+        console.error('[useHealthTracker] vaccine_templates exception:', err);
+      }
+    }
+
+    loadTemplates();
+    // Yalnızca mount'ta çalışsın; supabase instance referansı stabil
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── health_schedules events ──────────────────────────────────────────────────
   const fetchEvents = useCallback(async () => {
     if (!petId) return;
     try {
@@ -88,10 +303,11 @@ export function useHealthTracker(petId: string) {
       const future90 = new Date();
       future90.setDate(now.getDate() + 90);
 
-      // health_schedules tablosundan oku — uygulamanın ana veri kaynağı
+      // vaccines join: is_core + code (template eşleştirme için)
+      // vaccines tablosunda alan adı: code (vaccine_code değil)
       const { data, error } = await supabase
         .from('health_schedules')
-        .select('*')
+        .select('*, vaccines(is_core, code, name)')
         .eq('pet_id', petId)
         .gte('due_date', past30.toISOString().split('T')[0])
         .lte('due_date', future90.toISOString().split('T')[0])
@@ -111,7 +327,6 @@ export function useHealthTracker(petId: string) {
   useEffect(() => {
     fetchEvents();
 
-    // health_schedules tablosundaki değişiklikleri dinle
     const channel = supabase
       .channel('health_schedules_changes')
       .on(
@@ -124,74 +339,113 @@ export function useHealthTracker(petId: string) {
     return () => { supabase.removeChannel(channel); };
   }, [fetchEvents, petId, supabase]);
 
-  /** Event'leri title bazında grupla, ardından kategoriye göre CategoryGroup[] döndür */
+  // ── Gruplama Mantığı ─────────────────────────────────────────────────────────
   const categoryGroups: CategoryGroup[] = useMemo(() => {
-    // 1) Title bazında grupla (aynı isimli görevler bir satıra)
     const taskMap = new Map<string, TaskRow>();
 
     events.forEach(event => {
       const task = event.pet_care_tasks;
       if (!task) return;
 
-      // Aynı başlıktaki görevleri grupla
-      const groupKey = `${task.category}::${task.title}`;
+      // vaccines join'dan gelen alanlar (vaccines.code = vaccineCatalog kodu)
+      const vaccineCode = (event.vaccines as any)?.code ?? null;
+      const isCoreFlag  = (event.vaccines as any)?.is_core ?? null;
+
+      const mapped = mapDbToUI(
+        task.category,
+        task.frequency_label || null,
+        task.title,
+        vaccineTemplateMap,  // ← vaccine_templates tek kaynak
+        vaccineCode,
+        isCoreFlag,
+      );
+
+      // Veteriner ve Diğer dahil olmayacak
+      if (mapped.category === 'Veteriner' || mapped.category === 'Diger') return;
+
+      // Aşı ve Parazit → 3 seviye (category::subCategory::productName)
+      // Diğer → 2 seviye (category::subCategory)
+      const isVaccineOrParasite = mapped.category === 'Asi' || mapped.category === 'Parazit';
+      const productName = task.title || task.frequency_label || (mapped.category === 'Asi' ? 'Aşı' : 'Parazit Koruması');
+      
+      const groupKey = isVaccineOrParasite
+        ? `${mapped.category}::${mapped.subCategory}::${productName}`
+        : `${mapped.category}::${mapped.subCategory}`;
 
       if (!taskMap.has(groupKey)) {
-        taskMap.set(groupKey, { task, events: [] });
+        taskMap.set(groupKey, {
+          task: {
+            ...task,
+            title: isVaccineOrParasite ? productName : mapped.subCategory,
+            category: mapped.category,
+            frequency_label: mapped.subCategory,
+          },
+          events: [],
+          subGroupLabel: isVaccineOrParasite ? mapped.subCategory : undefined,
+        });
       }
       taskMap.get(groupKey)!.events.push(event);
     });
 
-    // 2) Kategoriye göre grupla
+    // Kategoriye göre grupla
     const catMap = new Map<string, CategoryGroup>();
-
     taskMap.forEach(taskRow => {
-      let cat = taskRow.task.category || 'Diger';
-      
-      // Medikal kategorisini Aşı ve Parazit olarak ikiye ayır
-      if (cat === 'Medikal') {
-        const titleStr = (taskRow.task.title || '').toLowerCase();
-        const subCatStr = (taskRow.task.frequency_label || '').toLowerCase();
-        
-        if (titleStr.includes('parazit') || subCatStr.includes('parazit')) {
-          cat = 'Parazit';
-        } else {
-          cat = 'Asi';
-        }
-      }
-
-      const meta = DB_CATEGORY_TO_UI[cat] || { category: cat, label: cat, icon: '📋', order: 99 };
+      const cat = taskRow.task.category || 'Diger';
+      const meta = DB_CATEGORY_TO_UI[cat];
+      if (!meta) return;
 
       if (!catMap.has(cat)) {
-        catMap.set(cat, { category: cat, label: meta.label, icon: meta.icon, taskRows: [] });
+        catMap.set(cat, { category: cat, label: meta.label, icon: meta.icon, taskRows: [], subGroups: [] });
       }
       catMap.get(cat)!.taskRows.push(taskRow);
     });
 
-    // 3) Sabit sıralama
+    // Aşı kategorisi → Zorunlu / Opsiyonel alt grupları
+    // Parazit kategorisi → İç / Dış / Tasma alt grupları
+    const VACCINE_SUB_GROUP_ORDER = ['Zorunlu Aşılar', 'Opsiyonel Aşılar'];
+    const PARASITE_SUB_GROUP_ORDER = ['İç Parazit Uygulaması', 'Dış Parazit Uygulaması', 'Parazit Tasması'];
+    
+    catMap.forEach(group => {
+      if (group.category === 'Asi' || group.category === 'Parazit') {
+        const subGroupMap = new Map<string, TaskRow[]>();
+        group.taskRows.forEach(row => {
+          const label = row.subGroupLabel || (group.category === 'Asi' ? 'Opsiyonel Aşılar' : 'Parazit Uygulamaları');
+          if (!subGroupMap.has(label)) subGroupMap.set(label, []);
+          subGroupMap.get(label)!.push(row);
+        });
+        
+        const orderArray = group.category === 'Asi' ? VACCINE_SUB_GROUP_ORDER : PARASITE_SUB_GROUP_ORDER;
+        group.subGroups = orderArray
+          .filter(l => subGroupMap.has(l))
+          .map(l => ({ label: l, taskRows: subGroupMap.get(l)! }));
+          
+        // Any leftovers not in the predefined order
+        const leftOvers = Array.from(subGroupMap.keys()).filter(l => !orderArray.includes(l));
+        leftOvers.forEach(l => {
+          group.subGroups!.push({ label: l, taskRows: subGroupMap.get(l)! });
+        });
+      }
+    });
+
+    // Sabit sıralama
     return Array.from(catMap.values()).sort((a, b) => {
       const ma = DB_CATEGORY_TO_UI[a.category];
       const mb = DB_CATEGORY_TO_UI[b.category];
       return (ma?.order ?? 99) - (mb?.order ?? 99);
     });
-  }, [events]);
+  }, [events, vaccineTemplateMap]);
 
+  // ── Actions ──────────────────────────────────────────────────────────────────
   const markEventStatus = async (eventId: string, newStatus: string) => {
     try {
-      // Optimistic update
-      setEvents(prev => prev.map(e => 
+      setEvents(prev => prev.map(e =>
         e.id === eventId ? { ...e, status: newStatus, computedStatus: newStatus as ComputedStatus } : e
       ));
-
-      const updatePayload: Record<string, string> = { status: newStatus };
-      const { error } = await supabase.from('health_schedules').update(updatePayload).eq('id', eventId);
+      const { error } = await supabase.from('health_schedules').update({ status: newStatus }).eq('id', eventId);
       if (error) throw error;
-      
-      // Manual refetch as fallback
       fetchEvents();
     } catch (err) {
       console.error('Error updating event status:', err);
-      // Revert optimistic update on error
       fetchEvents();
     }
   };

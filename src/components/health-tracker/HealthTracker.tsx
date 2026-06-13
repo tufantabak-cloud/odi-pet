@@ -44,9 +44,9 @@ export function HealthTracker({ petId, onEditTask }: HealthTrackerProps) {
 
   return (
     <div className="py-2 bg-white">
-      {categoryGroups.map((group, gi) => (
+      {categoryGroups.map((group) => (
         <div key={group.category} className="mb-6">
-          {/* Kategori Başlığı: Mockuptaki gibi tam genişlikte arka planlı */}
+          {/* Kategori Başlığı */}
           <div className="flex items-center justify-between px-4 py-2.5 bg-[#f6f5f2] rounded-xl mb-3">
             <div className="flex items-center gap-2">
               <span className="text-[15px] opacity-70 grayscale">{group.icon}</span>
@@ -61,20 +61,51 @@ export function HealthTracker({ petId, onEditTask }: HealthTrackerProps) {
             </button>
           </div>
 
-          {/* Görev Satırları */}
-          <div className="flex flex-col">
-            {group.taskRows.map(taskRow => (
-              <TrackerRow
-                key={taskRow.task.id}
-                taskRow={taskRow}
-                frequencyLabel={formatFrequency(taskRow.task.frequency_days, taskRow.task.frequency_label)}
-                onMarkDone={(id) => markEventStatus(id, 'done')}
-                onPostpone={(id) => postponeEvent(id, 1)}
-                onEdit={onEditTask || (() => {})}
-                onDelete={deleteEvent}
-              />
-            ))}
-          </div>
+          {/* Aşı kategorisi: alt gruplar (Zorunlu / Opsiyonel) + aşı isimleri */}
+          {group.subGroups && group.subGroups.length > 0 ? (
+            <div className="flex flex-col">
+              {group.subGroups.map((subGroup) => (
+                <div key={subGroup.label} className="mb-2">
+                  {/* Alt grup başlığı */}
+                  <div className="flex items-center gap-2 px-4 py-1.5">
+                    <div className="w-1 h-4 rounded-full bg-primary/30" />
+                    <span className="text-[11px] font-black text-text-secondary uppercase tracking-widest">
+                      {subGroup.label}
+                    </span>
+                  </div>
+                  {/* Aşı satırları */}
+                  <div className="flex flex-col">
+                    {subGroup.taskRows.map(taskRow => (
+                      <TrackerRow
+                        key={`${taskRow.task.id}-${taskRow.task.title}`}
+                        taskRow={taskRow}
+                        frequencyLabel={formatFrequency(taskRow.task.frequency_days, taskRow.task.frequency_label)}
+                        onMarkDone={(id) => markEventStatus(id, 'done')}
+                        onPostpone={(id) => postponeEvent(id, 1)}
+                        onEdit={onEditTask || (() => {})}
+                        onDelete={deleteEvent}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            /* Diğer kategoriler: düz satır listesi */
+            <div className="flex flex-col">
+              {group.taskRows.map(taskRow => (
+                <TrackerRow
+                  key={`${taskRow.task.id}-${taskRow.task.title}`}
+                  taskRow={taskRow}
+                  frequencyLabel={formatFrequency(taskRow.task.frequency_days, taskRow.task.frequency_label)}
+                  onMarkDone={(id) => markEventStatus(id, 'done')}
+                  onPostpone={(id) => postponeEvent(id, 1)}
+                  onEdit={onEditTask || (() => {})}
+                  onDelete={deleteEvent}
+                />
+              ))}
+            </div>
+          )}
         </div>
       ))}
 
