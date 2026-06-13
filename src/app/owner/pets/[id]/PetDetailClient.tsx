@@ -21,6 +21,7 @@ import LostPetWizard from '@/components/pets/LostPetWizard'
 import MinimalGrowthChart from '@/components/pets/MinimalGrowthChart'
 import { SmartScanner } from '@/components/ui/SmartScanner'
 import FloatingSOS from '@/components/FloatingSOS'
+import { HealthTracker } from '@/components/health-tracker/HealthTracker'
 
 function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
   const [loading, setLoading] = useState(false)
@@ -1282,6 +1283,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             })}
           />
         </div>
+
+      <HealthTracker petId={pet.id} onEditTask={(t) => { setTaskToEdit(t); setTaskWizardOpen(true); }} />
 
       {/* ── Layer 2: Sağlık ve Bakım Accordion ── */}
       <div className="flex flex-col gap-2">
