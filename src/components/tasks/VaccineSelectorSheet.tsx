@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { getVaccineCatalog, VaccineCatalogItem } from '@/lib/tasks/vaccineCatalog';
+import { VaccineCatalogItem } from '@/lib/tasks/vaccineCatalog';
 import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 import { SmartScanner, ParsedScannerData } from '@/components/ui/SmartScanner';
 import Image from 'next/image';
@@ -157,37 +157,87 @@ export default function VaccineSelectorSheet({
     }
   };
 
-  // Aşıları statik dosyadan alıyoruz
-  const vaccines = useMemo(() => getVaccineCatalog(species), [species]);
-
-  // Parazit ürünlerini asenkron DB'den alıyoruz
+  // Aşıları ve ürünleri asenkron DB'den alıyoruz (Sistem şablonları + Kullanıcı önerileri)
   useEffect(() => {
-    if (pickerType === 'parasite' && species) {
+    async function fetchData() {
+      if (!species) {
+        setDbProducts([]);
+        return;
+      }
       setLoading(true);
-      const supabase = createBrowserSupabaseClient();
-      
-      let typeFilter: string[] = ['internal', 'external', 'combined'];
-      if (subCategory === 'İç Parazit') typeFilter = ['internal', 'combined'];
-      if (subCategory === 'Dış Parazit' || subCategory === 'Parazit Tasması') typeFilter = ['external', 'combined'];
+      try {
+        const supabase = createBrowserSupabaseClient();
+        const speciesTr = (species.toLowerCase() === 'cat' || species.toLowerCase() === 'kedi') ? 'Kedi' : 'Köpek';
+        const speciesEng = speciesTr === 'Kedi' ? 'cat' : 'dog';
+        
+        // 1. Sistem Şablonlarını Getir (vaccine_templates)
+        const { data: templates } = await supabase
+          .from('vaccine_templates')
+          .select('*')
+          .eq('species', speciesEng)
+          .eq('is_active', true);
+          
+        let templateOptions: VaccineOption[] = [];
+        if (templates) {
+           templateOptions = templates
+            .filter((t: any) => {
+               if (pickerType === 'vaccine') return t.category === 'vaccine';
+               return t.category === 'parasite';
+            })
+            .map((t: any) => ({
+              code: t.vaccine_code,
+              name: t.vaccine_name,
+              nameTr: t.vaccine_name,
+              species: speciesEng,
+              group: (t.mandatory_level === 'core' || t.mandatory_level === 'mandatory') ? 'core' : 'optional',
+              isParasite: pickerType === 'parasite',
+              protection_duration_days: t.recurrence_days || undefined,
+              isTemplate: true,
+            }));
+        }
 
-      const speciesEng = (species?.toLowerCase() === 'kedi' || species?.toLowerCase() === 'cat') 
-        ? 'cat' 
-        : 'dog'
+        // 2. Kullanıcı Önerilerini/Markaları Getir
+        let customOptions: VaccineOption[] = [];
+        if (pickerType === 'vaccine') {
+           const { data: brands } = await supabase
+             .from('vaccine_brands')
+             .select('*')
+             .or(`species.eq.both,species.eq.${speciesEng}`)
+             .eq('is_active', true)
+             .eq('status', 'approved');
+           
+           if (brands) {
+             customOptions = brands.map((d: any) => ({
+              code: String(d.vaccine_code),
+              name: String(d.brand_name),
+              nameTr: String(d.manufacturer),
+              group: (d.is_core ? 'core' : 'optional') as 'core' | 'optional',
+              species: speciesEng,
+              image_url: d.image_url ? String(d.image_url) : undefined,
+              description: d.description ? String(d.description) : undefined,
+              brand: String(d.manufacturer),
+              isParasite: false,
+             }));
+           }
+        } else if (pickerType === 'parasite') {
+           let typeFilter: string[] = ['internal', 'external', 'combined'];
+           if (subCategory === 'İç Parazit') typeFilter = ['internal', 'combined'];
+           if (subCategory === 'Dış Parazit' || subCategory === 'Parazit Tasması') typeFilter = ['external', 'combined'];
 
-      supabase
-        .from('parasite_products')
-        .select('*')
-        .or(`species.eq.both,species.eq.${speciesEng}`)
-        .eq('is_active', true)
-        .in('type', typeFilter)
-        .then(({ data, error }: { data: Record<string, unknown>[] | null, error: Error | null }) => {
-          if (!error && data) {
-            const mapped = data.map((d) => ({
+           const { data: products } = await supabase
+             .from('parasite_products')
+             .select('*')
+             .or(`species.eq.both,species.eq.${speciesEng}`)
+             .eq('is_active', true)
+             .in('type', typeFilter);
+             
+           if (products) {
+             customOptions = products.map((d: any) => ({
               code: String(d.id),
-              species: (d.species === 'cat' ? 'cat' : 'dog') as 'dog' | 'cat',
+              species: speciesEng,
               name: `${d.brand} - ${d.name}`,
               nameTr: `${d.active_ingredient} (${d.application_method})`,
-              group: 'core' as 'core' | 'optional',
+              group: 'optional' as 'core' | 'optional',
               isParasite: true,
               protection_duration_days: Number(d.protection_duration_days) || undefined,
               image_url: d.image_url ? String(d.image_url) : undefined,
@@ -196,43 +246,18 @@ export default function VaccineSelectorSheet({
               application_method: d.application_method ? String(d.application_method) : undefined,
               active_ingredient: d.active_ingredient ? String(d.active_ingredient) : undefined,
               brand: d.brand ? String(d.brand) : undefined
-            }));
-            setDbProducts(mapped);
-          }
-          setLoading(false);
-        });
-    } else if (pickerType === 'vaccine' && species) {
-      setLoading(true);
-      const supabase = createBrowserSupabaseClient();
-      const speciesEng = (species?.toLowerCase() === 'kedi' || species?.toLowerCase() === 'cat') ? 'cat' : 'dog';
-      supabase
-        .from('vaccine_brands')
-        .select('*')
-        .or(`species.eq.both,species.eq.${speciesEng}`)
-        .eq('is_active', true)
-        .eq('status', 'approved')
-        .order('is_core', { ascending: false })
-        .order('brand_name')
-        .then(({ data, error }: { data: Record<string, unknown>[] | null, error: Error | null }) => {
-          if (!error && data) {
-            const mapped = data.map((d) => ({
-              code: String(d.vaccine_code),
-              name: String(d.brand_name),
-              nameTr: String(d.manufacturer),
-              group: (d.is_core ? 'core' : 'optional') as 'core' | 'optional',
-              species: (d.species === 'cat' ? 'cat' : 'dog') as 'dog' | 'cat',
-              image_url: d.image_url ? String(d.image_url) : undefined,
-              description: d.description ? String(d.description) : undefined,
-              brand: String(d.manufacturer),
-              isParasite: false,
-            }));
-            setDbProducts(mapped);
-          }
-          setLoading(false);
-        });
-    } else {
-      setDbProducts([]);
+             }));
+           }
+        }
+
+        setDbProducts([...templateOptions, ...customOptions]);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     }
+    fetchData();
   }, [pickerType, species, subCategory]);
 
   // Auto-focus search after mount
@@ -241,14 +266,14 @@ export default function VaccineSelectorSheet({
     return () => clearTimeout(t);
   }, []);
 
-  const itemsToFilter = dbProducts.length > 0 ? dbProducts : vaccines;
+  const itemsToFilter = dbProducts;
 
   const filtered = itemsToFilter.filter((v) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return (
       v.name.toLowerCase().includes(q) ||
-      v.nameTr.toLowerCase().includes(q) ||
+      (v.nameTr && v.nameTr.toLowerCase().includes(q)) ||
       v.code.toLowerCase().includes(q)
     );
   });
@@ -338,9 +363,16 @@ export default function VaccineSelectorSheet({
                     {/* Right: Info */}
                     <div className="flex-1 min-w-0 flex flex-col gap-1">
                       <div>
-                        <p className="text-[14px] font-bold text-text-primary truncate">
-                          {vaccine.name}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-[14px] font-bold text-text-primary truncate">
+                            {vaccine.name}
+                          </p>
+                          {(vaccine as any).isTemplate && (
+                            <span className="px-1.5 py-0.5 bg-blue-50 text-blue-700 text-[9px] font-black uppercase tracking-wider rounded border border-blue-100">
+                              Standart
+                            </span>
+                          )}
+                        </div>
                         {vaccine.active_ingredient && (
                           <p className="text-[11px] text-text-secondary truncate">{vaccine.active_ingredient}</p>
                         )}
@@ -354,7 +386,7 @@ export default function VaccineSelectorSheet({
                         )}
                         {vaccine.protection_duration_days ? (
                           <span className="px-1.5 py-0.5 rounded border border-border-main text-[10px] text-text-secondary bg-white">
-                            {vaccine.protection_duration_days} gün
+                            {vaccine.protection_duration_days} gün koruma
                           </span>
                         ) : null}
                       </div>

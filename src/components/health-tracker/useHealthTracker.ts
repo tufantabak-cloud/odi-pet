@@ -20,13 +20,14 @@ export function formatFrequency(days: number, label?: string | null): string {
 /** DB category → UI kategori eşleştirmesi (PetDetailClient'taki TAB_CATEGORY_MAP'in tersi) */
 const DB_CATEGORY_TO_UI: Record<string, { category: string; label: string; icon: string; order: number }> = {
   'Saglik':       { category: 'Saglik',       label: 'Sağlık takibi',    icon: '❤️',  order: 0 },
-  'Medikal':      { category: 'Medikal',      label: 'Aşı & Parazit',   icon: '🛡',  order: 1 },
-  'Bakım':        { category: 'Bakım',        label: 'Bakım takibi',     icon: '♡',   order: 2 },
-  'Beslenme':     { category: 'Beslenme',     label: 'Beslenme takibi',  icon: '🍽',  order: 3 },
-  'Hijyen':       { category: 'Hijyen',       label: 'Hijyen takibi',    icon: '🧹',  order: 4 },
-  'Aktiviteler':  { category: 'Aktiviteler',  label: 'Aktivite takibi',  icon: '🦴',  order: 5 },
-  'Veteriner':    { category: 'Veteriner',    label: 'Veteriner takibi', icon: '🏥',  order: 6 },
-  'Diger':        { category: 'Diger',        label: 'Diğer görevler',   icon: '📋',  order: 7 },
+  'Asi':          { category: 'Asi',          label: 'Aşı Uygulaması',   icon: '💉',  order: 1 },
+  'Parazit':      { category: 'Parazit',      label: 'Parazit Koruması', icon: '🛡️', order: 2 },
+  'Bakım':        { category: 'Bakım',        label: 'Bakım takibi',     icon: '♡',   order: 3 },
+  'Beslenme':     { category: 'Beslenme',     label: 'Beslenme takibi',  icon: '🍽',  order: 4 },
+  'Hijyen':       { category: 'Hijyen',       label: 'Hijyen takibi',    icon: '🧹',  order: 5 },
+  'Aktiviteler':  { category: 'Aktiviteler',  label: 'Aktivite takibi',  icon: '🦴',  order: 6 },
+  'Veteriner':    { category: 'Veteriner',    label: 'Veteriner takibi', icon: '🏥',  order: 7 },
+  'Diger':        { category: 'Diger',        label: 'Diğer görevler',   icon: '📋',  order: 8 },
 };
 
 /** health_schedules kaydından status hesapla */
@@ -145,7 +146,20 @@ export function useHealthTracker(petId: string) {
     const catMap = new Map<string, CategoryGroup>();
 
     taskMap.forEach(taskRow => {
-      const cat = taskRow.task.category || 'Diger';
+      let cat = taskRow.task.category || 'Diger';
+      
+      // Medikal kategorisini Aşı ve Parazit olarak ikiye ayır
+      if (cat === 'Medikal') {
+        const titleStr = (taskRow.task.title || '').toLowerCase();
+        const subCatStr = (taskRow.task.frequency_label || '').toLowerCase();
+        
+        if (titleStr.includes('parazit') || subCatStr.includes('parazit')) {
+          cat = 'Parazit';
+        } else {
+          cat = 'Asi';
+        }
+      }
+
       const meta = DB_CATEGORY_TO_UI[cat] || { category: cat, label: cat, icon: '📋', order: 99 };
 
       if (!catMap.has(cat)) {

@@ -14,7 +14,7 @@ export function TodayMarker() {
           container.scrollTo({ left: scrollPosition, behavior: 'smooth' });
         }
       }
-    }, 100);
+    }, 250);
     return () => clearTimeout(timeout);
   }, []);
 

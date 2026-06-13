@@ -1228,63 +1228,65 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               })()}
             </div>
           </div>
-
-          {/* Alerjiler — sadece veri varsa */}
-          {allergies && allergies.length > 0 && (
-            <div className="card-base p-5">
-              <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest mb-3">Alerjiler</h3>
-              <div className="flex flex-wrap gap-2">
-                {allergies.map((a: any) => <span key={a.id} className="px-3 py-1.5 rounded-full bg-red-50 text-red-700 text-[12px] font-bold border border-red-100">{a.trigger_name}</span>)}
-              </div>
-            </div>
-          )}
-          <BreedHealthCard petName={pet.name} breed={pet.breed} />
-
-          {pet.birth_date && (
-            <HumanAgeCalculator 
-              species={pet.species} 
-              birthDate={pet.birth_date} 
-              weightKg={growthRecords && growthRecords.length > 0 ? growthRecords[0].weight_kg : undefined} 
-              petName={pet.name} 
-            />
-          )}
-
-          {/* Vet quick info */}
-          {(pet.vet_company || pet.vet_name || pet.vet_phone || pet.vet_email) && (
-            <div className="card-base p-5">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest">Veteriner</h3>
-                <button onClick={handleEditVetInfo} className="text-[12px] font-bold text-primary hover:underline">Düzenle</button>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 text-[20px] shrink-0">🩺</div>
-                <div>
-                  {pet.vet_company && <p className="font-bold text-text-primary">{pet.vet_company}</p>}
-                  {pet.vet_name && <p className="font-semibold text-text-secondary text-[14px]">{pet.vet_name}</p>}
-                  {pet.vet_phone && <a href={`tel:${pet.vet_phone}`} className="text-[14px] text-primary font-semibold hover:underline block mt-0.5">{pet.vet_phone}</a>}
-                  {pet.vet_email && <a href={`mailto:${pet.vet_email}`} className="text-[14px] text-primary font-semibold hover:underline block">{pet.vet_email}</a>}
-                </div>
-              </div>
-            </div>
-          )}
-
-          <MinimalGrowthChart 
-            records={growthRecords} 
-            onAddRecord={() => setQuickUpdateConfig({ 
-              title: 'Gelişim Bilgisi', 
-              desc: 'Gelişimi takip edebilmek için güncel kilo ve boyunu girin.', 
-              endpoint: `/api/pets/${pet.id}/growth`, 
-              method: 'POST', 
-              fields: [
-                { name: 'recorded_at', type: 'date', label: 'Tarih', defaultValue: new Date().toISOString().split('T')[0], required: true },
-                { name: 'weight_kg', type: 'number', label: 'Kilo (kg)', placeholder: 'Örn: 4.5', required: true }, 
-                { name: 'height_cm', type: 'number', label: 'Boy (cm)', placeholder: 'Örn: 35.5', required: false }
-              ] 
-            })}
-          />
         </div>
 
       <HealthTracker petId={pet.id} onEditTask={(t) => { setTaskToEdit(t); setTaskWizardOpen(true); }} />
+
+      <div className="flex flex-col gap-4">
+        <MinimalGrowthChart 
+          records={growthRecords} 
+          onAddRecord={() => setQuickUpdateConfig({ 
+            title: 'Gelişim Bilgisi', 
+            desc: 'Gelişimi takip edebilmek için güncel kilo ve boyunu girin.', 
+            endpoint: `/api/pets/${pet.id}/growth`, 
+            method: 'POST', 
+            fields: [
+              { name: 'recorded_at', type: 'date', label: 'Tarih', defaultValue: new Date().toISOString().split('T')[0], required: true },
+              { name: 'weight_kg', type: 'number', label: 'Kilo (kg)', placeholder: 'Örn: 4.5', required: true }, 
+              { name: 'height_cm', type: 'number', label: 'Boy (cm)', placeholder: 'Örn: 35.5', required: false }
+            ] 
+          })}
+        />
+
+        {/* Vet quick info */}
+        {(pet.vet_company || pet.vet_name || pet.vet_phone || pet.vet_email) && (
+          <div className="card-base p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest">Veteriner</h3>
+              <button onClick={handleEditVetInfo} className="text-[12px] font-bold text-primary hover:underline">Düzenle</button>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 text-[20px] shrink-0">🩺</div>
+              <div>
+                {pet.vet_company && <p className="font-bold text-text-primary">{pet.vet_company}</p>}
+                {pet.vet_name && <p className="font-semibold text-text-secondary text-[14px]">{pet.vet_name}</p>}
+                {pet.vet_phone && <a href={`tel:${pet.vet_phone}`} className="text-[14px] text-primary font-semibold hover:underline block mt-0.5">{pet.vet_phone}</a>}
+                {pet.vet_email && <a href={`mailto:${pet.vet_email}`} className="text-[14px] text-primary font-semibold hover:underline block">{pet.vet_email}</a>}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Alerjiler — sadece veri varsa */}
+        {allergies && allergies.length > 0 && (
+          <div className="card-base p-5">
+            <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest mb-3">Alerjiler</h3>
+            <div className="flex flex-wrap gap-2">
+              {allergies.map((a: any) => <span key={a.id} className="px-3 py-1.5 rounded-full bg-red-50 text-red-700 text-[12px] font-bold border border-red-100">{a.trigger_name}</span>)}
+            </div>
+          </div>
+        )}
+        <BreedHealthCard petName={pet.name} breed={pet.breed} />
+
+        {pet.birth_date && (
+          <HumanAgeCalculator 
+            species={pet.species} 
+            birthDate={pet.birth_date} 
+            weightKg={growthRecords && growthRecords.length > 0 ? growthRecords[0].weight_kg : undefined} 
+            petName={pet.name} 
+          />
+        )}
+      </div>
 
       {/* ── Layer 2: Sağlık ve Bakım Accordion ── */}
       <div className="flex flex-col gap-2">

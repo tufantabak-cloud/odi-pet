@@ -75,7 +75,7 @@ export function TrackerRow({ taskRow, frequencyLabel, onMarkDone, onPostpone, on
         onMouseLeave={handleMouseLeave}
         onMouseUp={handleMouseUp}
         onMouseMove={handleMouseMove}
-        className={`flex items-center overflow-x-auto pr-4 scrollbar-none select-none flex-1 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        className={`flex items-center overflow-x-auto pr-4 scrollbar-none select-none flex-1 relative ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         style={{ scrollBehavior: isDragging ? 'auto' : 'smooth' }}
       >
         {pastEvents.map((event, i) => (
