@@ -61,8 +61,6 @@ export function ChipItem({ event, onMarkDone, onPostpone, onEdit, onDelete }: Ch
       break;
   }
 
-  const isToday = computedStatus === 'today';
-
   return (
     <div className="relative inline-block" ref={containerRef}>
       <button
@@ -70,13 +68,13 @@ export function ChipItem({ event, onMarkDone, onPostpone, onEdit, onDelete }: Ch
         className={`
           flex flex-col items-center justify-center
           rounded-2xl transition-all duration-200
-          ${isToday ? 'px-5 py-3 min-w-[90px]' : 'px-4 py-2.5 min-w-[76px]'}
+          px-4 py-2.5 min-w-[80px]
           ${chipClasses}
           hover:scale-105 active:scale-95
         `}
       >
         {/* Üst satır: Tarih (+ done ise ✓) */}
-        <span className={`text-[13px] font-bold leading-tight ${isToday ? 'text-[14px]' : ''}`}>
+        <span className="text-[13px] font-bold leading-tight">
           {computedStatus === 'done' && '✓ '}{dateStr}
         </span>
         {/* Alt satır: Durum etiketi */}
