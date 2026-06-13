@@ -1,8 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ComputedEvent } from './types';
 
 interface ActionSheetProps {
   event: ComputedEvent;
+  anchorRef: React.RefObject<HTMLDivElement | null>;
   onClose: () => void;
   onMarkDone: (id: string) => void;
   onPostpone: (id: string) => void;
@@ -10,21 +12,49 @@ interface ActionSheetProps {
   onDelete: (id: string) => void;
 }
 
-export function ActionSheet({ event, onClose, onMarkDone, onPostpone, onEdit, onDelete }: ActionSheetProps) {
+export function ActionSheet({ event, anchorRef, onClose, onMarkDone, onPostpone, onEdit, onDelete }: ActionSheetProps) {
   const menuRef = useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState({ top: 0, left: 0 });
+
+  useEffect(() => {
+    function updatePosition() {
+      if (anchorRef.current) {
+        const rect = anchorRef.current.getBoundingClientRect();
+        // Position below the chip, aligned to the right edge of the chip if possible
+        setCoords({
+          top: rect.bottom + window.scrollY + 4, // 4px gap
+          left: rect.right + window.scrollX - 192, // 192 is w-48
+        });
+      }
+    }
+    updatePosition();
+    
+    // We listen to resize or scroll just in case, but typically clicking outside closes it anyway
+    window.addEventListener('resize', updatePosition);
+    return () => window.removeEventListener('resize', updatePosition);
+  }, [anchorRef]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        // Also check if click is inside the anchor, we don't want to immediately toggle back and forth
+        if (anchorRef.current && anchorRef.current.contains(e.target as Node)) return;
         onClose();
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [onClose]);
+  }, [onClose, anchorRef]);
 
-  return (
-    <div className="absolute top-full right-0 mt-1 w-48 bg-white border border-border-main/50 rounded-xl shadow-lg z-50 overflow-hidden text-sm" ref={menuRef}>
+  // Don't render until we have valid coordinates to prevent a flash at 0,0
+  if (coords.top === 0) return null;
+
+  return createPortal(
+    <div 
+      ref={menuRef}
+      className="absolute bg-white border border-border-main/50 rounded-xl shadow-xl z-[9999] overflow-hidden text-sm" 
+      style={{ top: coords.top, left: Math.max(8, coords.left), width: '192px' }}
+    >
       <button 
         onClick={(e) => { e.stopPropagation(); onMarkDone(event.id); onClose(); }}
         className="w-full text-left px-4 py-3 hover:bg-bg-main text-text-primary transition-colors font-medium border-b border-border-main/30"
@@ -49,6 +79,7 @@ export function ActionSheet({ event, onClose, onMarkDone, onPostpone, onEdit, on
       >
         ❌ Sil
       </button>
-    </div>
+    </div>,
+    document.body
   );
 }

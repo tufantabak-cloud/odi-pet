@@ -9,7 +9,10 @@ function computeEventStatus(event: PetCareEvent): ComputedStatus {
   const scheduled = new Date(event.scheduled_at);
   const diffMs = scheduled.getTime() - now.getTime();
   const diffHours = diffMs / (1000 * 60 * 60);
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const scheduledDate = new Date(scheduled.getFullYear(), scheduled.getMonth(), scheduled.getDate());
+  const diffDays = Math.round((scheduledDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
 
   if (diffMs < 0) return 'missed';
   if (diffHours >= 0 && diffHours <= 2) return 'warning';

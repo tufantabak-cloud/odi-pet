@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -39,6 +39,92 @@ export type Database = {
   }
   public: {
     Tables: {
+      pet_care_tasks: {
+        Row: {
+          id: string
+          pet_id: string
+          title: string
+          category: string
+          frequency_days: number
+          frequency_label: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          pet_id: string
+          title: string
+          category: string
+          frequency_days: number
+          frequency_label?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          pet_id?: string
+          title?: string
+          category?: string
+          frequency_days?: number
+          frequency_label?: string | null
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pet_care_tasks_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      pet_care_events: {
+        Row: {
+          id: string
+          task_id: string
+          pet_id: string
+          scheduled_at: string
+          completed_at: string | null
+          status: string | null
+          notes: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          task_id: string
+          pet_id: string
+          scheduled_at: string
+          completed_at?: string | null
+          status?: string | null
+          notes?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          task_id?: string
+          pet_id?: string
+          scheduled_at?: string
+          completed_at?: string | null
+          status?: string | null
+          notes?: string | null
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pet_care_events_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "pet_care_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pet_care_events_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       activation_metrics: {
         Row: {
           completed_at: string | null

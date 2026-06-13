@@ -56,6 +56,7 @@ export function ChipItem({ event, onMarkDone, onPostpone, onEdit, onDelete }: Ch
       {showMenu && (
         <ActionSheet
           event={event}
+          anchorRef={containerRef}
           onClose={() => setShowMenu(false)}
           onMarkDone={onMarkDone}
           onPostpone={onPostpone}
