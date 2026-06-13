@@ -7,7 +7,12 @@ export function TodayMarker() {
     // We add a tiny delay to ensure layout is complete and siblings are rendered
     const timeout = setTimeout(() => {
       if (markerRef.current) {
-        markerRef.current.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        const marker = markerRef.current;
+        const container = marker.parentElement;
+        if (container) {
+          const scrollPosition = marker.offsetLeft - container.clientWidth / 2 + marker.clientWidth / 2;
+          container.scrollTo({ left: scrollPosition, behavior: 'smooth' });
+        }
       }
     }, 100);
     return () => clearTimeout(timeout);
