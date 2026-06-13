@@ -164,11 +164,21 @@ export function useHealthTracker(petId: string) {
 
   const markEventStatus = async (eventId: string, newStatus: string) => {
     try {
+      // Optimistic update
+      setEvents(prev => prev.map(e => 
+        e.id === eventId ? { ...e, status: newStatus, computedStatus: newStatus as ComputedStatus } : e
+      ));
+
       const updatePayload: Record<string, string> = { status: newStatus };
       const { error } = await supabase.from('health_schedules').update(updatePayload).eq('id', eventId);
       if (error) throw error;
+      
+      // Manual refetch as fallback
+      fetchEvents();
     } catch (err) {
       console.error('Error updating event status:', err);
+      // Revert optimistic update on error
+      fetchEvents();
     }
   };
 
@@ -181,6 +191,7 @@ export function useHealthTracker(petId: string) {
       const newDueDate = oldDate.toISOString().split('T')[0];
       const { error } = await supabase.from('health_schedules').update({ due_date: newDueDate }).eq('id', eventId);
       if (error) throw error;
+      fetchEvents();
     } catch (err) {
       console.error('Error postponing event:', err);
     }
@@ -190,6 +201,7 @@ export function useHealthTracker(petId: string) {
     try {
       const { error } = await supabase.from('health_schedules').delete().eq('id', eventId);
       if (error) throw error;
+      fetchEvents();
     } catch (err) {
       console.error('Error deleting event:', err);
     }
