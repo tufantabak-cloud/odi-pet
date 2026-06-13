@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createBrowserSupabaseClient } from '@/lib/supabase/client';
-import { PetCareEvent, ComputedEvent, ComputedStatus, CategoryGroup, TaskRow } from './types';
+import { ComputedStatus, CategoryGroup, TaskRow, PetCareTask, PetCareEvent, ComputedEvent } from './types';
 
 /** Frekans gün sayısından okunabilir Türkçe etiket üret */
-function formatFrequency(days: number, label?: string | null): string {
+export function formatFrequency(days: number, label?: string | null): string {
   if (label) return label;
   if (days === 1) return 'Her gün';
   if (days <= 3) return `${days} günde 1`;
@@ -17,28 +17,58 @@ function formatFrequency(days: number, label?: string | null): string {
   return `${days} günde 1`;
 }
 
-/** Kategori meta bilgisi */
-const CATEGORY_META: Record<string, { label: string; icon: string }> = {
-  care:       { label: 'Bakım takibi',  icon: '♡' },
-  health:     { label: 'Sağlık takibi', icon: '🛡' },
-  medication: { label: 'İlaç takibi',   icon: '💊' },
+/** DB category → UI kategori eşleştirmesi (PetDetailClient'taki TAB_CATEGORY_MAP'in tersi) */
+const DB_CATEGORY_TO_UI: Record<string, { category: string; label: string; icon: string; order: number }> = {
+  'Saglik':       { category: 'Saglik',       label: 'Sağlık takibi',    icon: '❤️',  order: 0 },
+  'Medikal':      { category: 'Medikal',      label: 'Aşı & Parazit',   icon: '🛡',  order: 1 },
+  'Bakım':        { category: 'Bakım',        label: 'Bakım takibi',     icon: '♡',   order: 2 },
+  'Beslenme':     { category: 'Beslenme',     label: 'Beslenme takibi',  icon: '🍽',  order: 3 },
+  'Hijyen':       { category: 'Hijyen',       label: 'Hijyen takibi',    icon: '🧹',  order: 4 },
+  'Aktiviteler':  { category: 'Aktiviteler',  label: 'Aktivite takibi',  icon: '🦴',  order: 5 },
+  'Veteriner':    { category: 'Veteriner',    label: 'Veteriner takibi', icon: '🏥',  order: 6 },
+  'Diger':        { category: 'Diger',        label: 'Diğer görevler',   icon: '📋',  order: 7 },
 };
 
-function computeEventStatus(event: PetCareEvent): ComputedStatus {
-  if (event.completed_at) return 'done';
+/** health_schedules kaydından status hesapla */
+function computeStatus(schedule: any): ComputedStatus {
+  if (schedule.status === 'done' || schedule.status === 'completed') return 'done';
 
   const now = new Date();
-  const scheduled = new Date(event.scheduled_at);
-
+  const dueDate = new Date(schedule.due_date);
+  
   // Takvim günü bazlı fark
   const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const scheduledDate = new Date(scheduled.getFullYear(), scheduled.getMonth(), scheduled.getDate());
+  const scheduledDate = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
   const diffDays = Math.round((scheduledDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
 
   if (diffDays < 0) return 'missed';
   if (diffDays === 0) return 'today';
   if (diffDays <= 3) return 'upcoming';
   return 'future';
+}
+
+/** health_schedules kaydını ComputedEvent'e dönüştür */
+function toComputedEvent(s: any): ComputedEvent {
+  const computedStatus = computeStatus(s);
+  return {
+    id: s.id,
+    task_id: s.plan_id || s.id, // plan_id varsa aynı plan altında grupla, yoksa kendi başına
+    pet_id: s.pet_id,
+    scheduled_at: s.due_date + (s.due_time ? `T${s.due_time}` : 'T12:00:00'),
+    completed_at: s.status === 'done' ? (s.created_at || new Date().toISOString()) : null,
+    status: s.status || 'scheduled',
+    notes: s.notes,
+    created_at: s.created_at,
+    pet_care_tasks: {
+      id: s.plan_id || s.id,
+      pet_id: s.pet_id,
+      title: s.title || s.plan_type || 'Görev',
+      category: s.category || 'Diger',
+      frequency_days: 0,
+      frequency_label: s.sub_category || null,
+    },
+    computedStatus,
+  };
 }
 
 export function useHealthTracker(petId: string) {
@@ -54,24 +84,21 @@ export function useHealthTracker(petId: string) {
       const now = new Date();
       const past30 = new Date();
       past30.setDate(now.getDate() - 30);
-
       const future90 = new Date();
       future90.setDate(now.getDate() + 90);
 
+      // health_schedules tablosundan oku — uygulamanın ana veri kaynağı
       const { data, error } = await supabase
-        .from('pet_care_events')
-        .select('*, pet_care_tasks(*)')
+        .from('health_schedules')
+        .select('*')
         .eq('pet_id', petId)
-        .gte('scheduled_at', past30.toISOString())
-        .lte('scheduled_at', future90.toISOString())
-        .order('scheduled_at', { ascending: true });
+        .gte('due_date', past30.toISOString().split('T')[0])
+        .lte('due_date', future90.toISOString().split('T')[0])
+        .order('due_date', { ascending: true });
 
       if (error) throw error;
 
-      const computed = (data as unknown as PetCareEvent[]).map(ev => ({
-        ...ev,
-        computedStatus: computeEventStatus(ev),
-      }));
+      const computed = (data || []).map(toComputedEvent);
       setEvents(computed);
     } catch (err) {
       console.error('Error fetching health tracker events:', err);
@@ -83,11 +110,12 @@ export function useHealthTracker(petId: string) {
   useEffect(() => {
     fetchEvents();
 
+    // health_schedules tablosundaki değişiklikleri dinle
     const channel = supabase
-      .channel('pet_care_events_changes')
+      .channel('health_schedules_changes')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'pet_care_events', filter: `pet_id=eq.${petId}` },
+        { event: '*', schema: 'public', table: 'health_schedules', filter: `pet_id=eq.${petId}` },
         () => { fetchEvents(); }
       )
       .subscribe();
@@ -95,28 +123,30 @@ export function useHealthTracker(petId: string) {
     return () => { supabase.removeChannel(channel); };
   }, [fetchEvents, petId, supabase]);
 
-  /** Event'leri task bazında grupla, ardından kategoriye göre CategoryGroup[] döndür */
+  /** Event'leri title bazında grupla, ardından kategoriye göre CategoryGroup[] döndür */
   const categoryGroups: CategoryGroup[] = useMemo(() => {
-    // 1) Task bazında grupla
+    // 1) Title bazında grupla (aynı isimli görevler bir satıra)
     const taskMap = new Map<string, TaskRow>();
 
     events.forEach(event => {
-      const taskId = event.task_id;
       const task = event.pet_care_tasks;
       if (!task) return;
 
-      if (!taskMap.has(taskId)) {
-        taskMap.set(taskId, { task, events: [] });
+      // Aynı başlıktaki görevleri grupla
+      const groupKey = `${task.category}::${task.title}`;
+
+      if (!taskMap.has(groupKey)) {
+        taskMap.set(groupKey, { task, events: [] });
       }
-      taskMap.get(taskId)!.events.push(event);
+      taskMap.get(groupKey)!.events.push(event);
     });
 
     // 2) Kategoriye göre grupla
     const catMap = new Map<string, CategoryGroup>();
 
     taskMap.forEach(taskRow => {
-      const cat = taskRow.task.category || 'care';
-      const meta = CATEGORY_META[cat] || { label: cat, icon: '📋' };
+      const cat = taskRow.task.category || 'Diger';
+      const meta = DB_CATEGORY_TO_UI[cat] || { category: cat, label: cat, icon: '📋', order: 99 };
 
       if (!catMap.has(cat)) {
         catMap.set(cat, { category: cat, label: meta.label, icon: meta.icon, taskRows: [] });
@@ -124,22 +154,18 @@ export function useHealthTracker(petId: string) {
       catMap.get(cat)!.taskRows.push(taskRow);
     });
 
-    // 3) Sabit sıralama: care → health → medication → diğer
-    const order = ['care', 'health', 'medication'];
+    // 3) Sabit sıralama
     return Array.from(catMap.values()).sort((a, b) => {
-      const ia = order.indexOf(a.category);
-      const ib = order.indexOf(b.category);
-      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+      const ma = DB_CATEGORY_TO_UI[a.category];
+      const mb = DB_CATEGORY_TO_UI[b.category];
+      return (ma?.order ?? 99) - (mb?.order ?? 99);
     });
   }, [events]);
 
   const markEventStatus = async (eventId: string, newStatus: string) => {
     try {
       const updatePayload: Record<string, string> = { status: newStatus };
-      if (newStatus === 'done') {
-        updatePayload.completed_at = new Date().toISOString();
-      }
-      const { error } = await supabase.from('pet_care_events').update(updatePayload).eq('id', eventId);
+      const { error } = await supabase.from('health_schedules').update(updatePayload).eq('id', eventId);
       if (error) throw error;
     } catch (err) {
       console.error('Error updating event status:', err);
@@ -150,9 +176,10 @@ export function useHealthTracker(petId: string) {
     try {
       const event = events.find(e => e.id === eventId);
       if (!event) return;
-      const newDate = new Date(event.scheduled_at);
-      newDate.setDate(newDate.getDate() + days);
-      const { error } = await supabase.from('pet_care_events').update({ scheduled_at: newDate.toISOString() }).eq('id', eventId);
+      const oldDate = new Date(event.scheduled_at);
+      oldDate.setDate(oldDate.getDate() + days);
+      const newDueDate = oldDate.toISOString().split('T')[0];
+      const { error } = await supabase.from('health_schedules').update({ due_date: newDueDate }).eq('id', eventId);
       if (error) throw error;
     } catch (err) {
       console.error('Error postponing event:', err);
@@ -161,7 +188,7 @@ export function useHealthTracker(petId: string) {
 
   const deleteEvent = async (eventId: string) => {
     try {
-      const { error } = await supabase.from('pet_care_events').delete().eq('id', eventId);
+      const { error } = await supabase.from('health_schedules').delete().eq('id', eventId);
       if (error) throw error;
     } catch (err) {
       console.error('Error deleting event:', err);
