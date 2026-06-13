@@ -363,12 +363,13 @@ export function useHealthTracker(petId: string) {
       // Veteriner ve Diğer dahil olmayacak
       if (mapped.category === 'Veteriner' || mapped.category === 'Diger') return;
 
-      // Aşı ve Parazit → 3 seviye (category::subCategory::productName)
+      // Aşı → 3 seviye (category::subCategory::vaccineName) → aşı ismi ayrı satır
+      // Parazit → 2 seviye (category::subCategory) → alt başlık tek bir satır
       // Diğer → 2 seviye (category::subCategory)
-      const isVaccineOrParasite = mapped.category === 'Asi' || mapped.category === 'Parazit';
-      const productName = task.title || task.frequency_label || (mapped.category === 'Asi' ? 'Aşı' : 'Parazit Koruması');
-      
-      const groupKey = isVaccineOrParasite
+      const isVaccine = mapped.category === 'Asi';
+      const productName = task.title || task.frequency_label || 'Aşı';
+
+      const groupKey = isVaccine
         ? `${mapped.category}::${mapped.subCategory}::${productName}`
         : `${mapped.category}::${mapped.subCategory}`;
 
@@ -376,12 +377,12 @@ export function useHealthTracker(petId: string) {
         taskMap.set(groupKey, {
           task: {
             ...task,
-            title: isVaccineOrParasite ? productName : mapped.subCategory,
+            title: isVaccine ? productName : mapped.subCategory,
             category: mapped.category,
-            frequency_label: mapped.subCategory,
+            frequency_label: isVaccine ? mapped.subCategory : null,
           },
           events: [],
-          subGroupLabel: isVaccineOrParasite ? mapped.subCategory : undefined,
+          subGroupLabel: isVaccine ? mapped.subCategory : undefined,
         });
       }
       taskMap.get(groupKey)!.events.push(event);
@@ -400,30 +401,35 @@ export function useHealthTracker(petId: string) {
       catMap.get(cat)!.taskRows.push(taskRow);
     });
 
-    // Aşı kategorisi → Zorunlu / Opsiyonel alt grupları
-    // Parazit kategorisi → İç / Dış / Tasma alt grupları
+    // Aşı kategorisi → Zorunlu / Opsiyonel alt grupları (subGroups)
+    // Parazit kategorisi → düz taskRows (alt başlık = satır başlığı)
     const VACCINE_SUB_GROUP_ORDER = ['Zorunlu Aşılar', 'Opsiyonel Aşılar'];
-    const PARASITE_SUB_GROUP_ORDER = ['İç Parazit Uygulaması', 'Dış Parazit Uygulaması', 'Parazit Tasması'];
-    
+
     catMap.forEach(group => {
-      if (group.category === 'Asi' || group.category === 'Parazit') {
+      if (group.category === 'Asi') {
         const subGroupMap = new Map<string, TaskRow[]>();
         group.taskRows.forEach(row => {
-          const label = row.subGroupLabel || (group.category === 'Asi' ? 'Opsiyonel Aşılar' : 'Parazit Uygulamaları');
+          const label = row.subGroupLabel || 'Opsiyonel Aşılar';
           if (!subGroupMap.has(label)) subGroupMap.set(label, []);
           subGroupMap.get(label)!.push(row);
         });
-        
-        const orderArray = group.category === 'Asi' ? VACCINE_SUB_GROUP_ORDER : PARASITE_SUB_GROUP_ORDER;
-        group.subGroups = orderArray
+        group.subGroups = VACCINE_SUB_GROUP_ORDER
           .filter(l => subGroupMap.has(l))
           .map(l => ({ label: l, taskRows: subGroupMap.get(l)! }));
-          
-        // Any leftovers not in the predefined order
-        const leftOvers = Array.from(subGroupMap.keys()).filter(l => !orderArray.includes(l));
-        leftOvers.forEach(l => {
-          group.subGroups!.push({ label: l, taskRows: subGroupMap.get(l)! });
+        // leftover groups (eğer varsa)
+        Array.from(subGroupMap.keys())
+          .filter(l => !VACCINE_SUB_GROUP_ORDER.includes(l))
+          .forEach(l => group.subGroups!.push({ label: l, taskRows: subGroupMap.get(l)! }));
+      }
+      // Parazit için subGroups boş kalır, taskRows düz sıralanır
+      if (group.category === 'Parazit') {
+        const PARASITE_ORDER = ['İç Parazit Uygulaması', 'Dış Parazit Uygulaması', 'Parazit Tasması'];
+        group.taskRows.sort((a, b) => {
+          const ai = PARASITE_ORDER.indexOf(a.task.title);
+          const bi = PARASITE_ORDER.indexOf(b.task.title);
+          return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
         });
+        group.subGroups = []; // subGroups yok → HealthTracker düz liste render eder
       }
     });
 
