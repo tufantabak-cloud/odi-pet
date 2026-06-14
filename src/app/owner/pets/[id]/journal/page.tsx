@@ -46,7 +46,7 @@ export default async function PetJournalPage(props: PageProps) {
   // Merge and sort
   const allTimelineItems = [
     ...(entries || []).map((e: any) => ({ ...e, source: 'journal', sortDate: new Date(e.created_at).getTime() })),
-    ...(vaccines || []).map((v: any) => ({ ...v, source: 'vaccine', sortDate: new Date(v.updated_at || v.completed_at || v.due_date).getTime() }))
+    ...(vaccines || []).map((v: any) => ({ ...v, source: 'vaccine', sortDate: new Date(v.due_date).getTime() }))
   ].sort((a, b) => b.sortDate - a.sortDate)
 
   return (

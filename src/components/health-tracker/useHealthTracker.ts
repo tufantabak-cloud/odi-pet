@@ -36,7 +36,7 @@ function resolveVaccineGroup(
   if (vaccineTemplateMap.size === 0) {
     if (isCoreFlag === true) return 'core';
     if (isCoreFlag === false) return 'optional';
-    if ((subCategory || '').toLowerCase().includes('zorunlu')) return 'core';
+    if ((subCategory || '').toLocaleLowerCase('tr-TR').includes('zorunlu')) return 'core';
     return 'core';
   }
 
@@ -49,7 +49,7 @@ function resolveVaccineGroup(
 
   // 2) vaccine_name / title ile tam key eslesme
   if (vaccineName) {
-    const lower = vaccineName.toLowerCase().trim();
+    const lower = vaccineName.toLocaleLowerCase('tr-TR').trim();
     const exact = vaccineTemplateMap.get(lower);
     if (exact) return exact;
 
@@ -64,7 +64,7 @@ function resolveVaccineGroup(
   if (isCoreFlag === false) return 'optional';
 
   // 5) sub_category metni
-  if ((subCategory || '').toLowerCase().includes('zorunlu')) return 'core';
+  if ((subCategory || '').toLocaleLowerCase('tr-TR').includes('zorunlu')) return 'core';
 
   return 'core'; // safe default
 }
@@ -72,6 +72,7 @@ function resolveVaccineGroup(
 /** Frekans gün sayısından okunabilir Türkçe etiket üret */
 export function formatFrequency(days: number, label?: string | null): string {
   if (label) return label;
+  if (!days) return 'Yıllık';
   if (days === 1) return 'Her gün';
   if (days <= 3) return `${days} günde 1`;
   if (days === 7) return 'Haftada 1';
@@ -107,14 +108,15 @@ function mapDbToUI(
   let dbCat = category;
   if (dbCat === 'Temizlik') dbCat = 'Hijyen';
 
-  const titleLower = title.toLowerCase();
-  const subCatLower = (subCategory || '').toLowerCase();
+  const titleLower = title.toLocaleLowerCase('tr-TR');
+  const subCatLower = (subCategory || '').toLocaleLowerCase('tr-TR');
 
   // ── PARAZİT KONTROLÜ (Tüm kategoriler için intercept) ──────────────────────
   const isParasite =
     titleLower.includes('parazit') ||
     subCatLower.includes('parazit') ||
-    subCatLower.includes('tasması');
+    subCatLower.includes('tasma') ||
+    titleLower.includes('tasma');
 
   if (isParasite || dbCat === 'Parazit') {
     let sub = 'Parazit Uygulamaları';
@@ -277,7 +279,7 @@ export function useHealthTracker(petId: string) {
           // vaccine_code ile kayıt (büyük harf key — select'te uppercase normalize)
           if (t.vaccine_code) map.set(t.vaccine_code.toUpperCase(), group);
           // vaccine_name ile kayıt (küçük harf key — fuzzy match için)
-          if (t.vaccine_name) map.set(t.vaccine_name.toLowerCase().trim(), group);
+          if (t.vaccine_name) map.set(t.vaccine_name.toLocaleLowerCase('tr-TR').trim(), group);
         });
 
         setVaccineTemplateMap(map);
@@ -300,8 +302,8 @@ export function useHealthTracker(petId: string) {
       const now = new Date();
       const past30 = new Date();
       past30.setDate(now.getDate() - 30);
-      const future90 = new Date();
-      future90.setDate(now.getDate() + 90);
+      const future365 = new Date();
+      future365.setDate(now.getDate() + 365);
 
       // vaccines join: is_core + code (template eşleştirme için)
       // vaccines tablosunda alan adı: code (vaccine_code değil)
@@ -310,7 +312,7 @@ export function useHealthTracker(petId: string) {
         .select('*, vaccines(is_core, code, name)')
         .eq('pet_id', petId)
         .gte('due_date', past30.toISOString().split('T')[0])
-        .lte('due_date', future90.toISOString().split('T')[0])
+        .lte('due_date', future365.toISOString().split('T')[0])
         .order('due_date', { ascending: true });
 
       if (error) throw error;
