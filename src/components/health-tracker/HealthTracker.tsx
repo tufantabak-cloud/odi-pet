@@ -42,17 +42,68 @@ export function HealthTracker({ petId, onEditTask }: HealthTrackerProps) {
     );
   }
 
+  // T1: Aksiyon Gerekiyor Banner'ı için event'leri topla
+  const actionRequiredEvents = categoryGroups.flatMap(g => 
+    g.taskRows.flatMap(tr => 
+      tr.events.filter(e => e.computedStatus === 'today' || e.computedStatus === 'missed')
+    ).concat(
+      g.subGroups?.flatMap(sg => 
+        sg.taskRows.flatMap(tr => 
+          tr.events.filter(e => e.computedStatus === 'today' || e.computedStatus === 'missed')
+        )
+      ) || []
+    )
+  ).sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
+
+  const displayActionEvents = actionRequiredEvents.slice(0, 3);
+  const hiddenActionCount = actionRequiredEvents.length - displayActionEvents.length;
+
   return (
     <div className="py-2 bg-white">
+      {actionRequiredEvents.length > 0 && (
+        <div className="mx-4 mb-6 bg-error/5 border border-error/20 rounded-2xl p-4 relative overflow-hidden shadow-sm">
+          <div className="absolute top-0 left-0 w-1 h-full bg-error" />
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-error animate-pulse">🔴</span>
+            <h3 className="text-[14px] font-extrabold text-error">Aksiyon Gerekiyor</h3>
+          </div>
+          <div className="flex flex-col gap-2">
+            {displayActionEvents.map(e => (
+              <div key={e.id} className="flex items-center justify-between bg-white rounded-xl p-2.5 shadow-sm border border-border-main/50">
+                <div className="flex flex-col">
+                  <span className="text-[13px] font-bold text-text-primary line-clamp-1">{e.pet_care_tasks?.title || 'Görev'}</span>
+                  <span className={`text-[11px] font-medium ${e.computedStatus === 'missed' ? 'text-error' : 'text-[#b47120]'}`}>
+                    {e.computedStatus === 'missed' ? 'Kaçırıldı' : 'Bugün'}
+                  </span>
+                </div>
+                <button 
+                  onClick={() => markEventStatus(e.id, 'done')}
+                  className="bg-success text-white text-[11px] font-bold px-3 py-1.5 rounded-lg hover:bg-success/90 active:scale-95 transition-transform"
+                >
+                  Tamamla
+                </button>
+              </div>
+            ))}
+            {hiddenActionCount > 0 && (
+              <p className="text-[11px] text-text-secondary text-center mt-1 font-medium">
+                +{hiddenActionCount} görev daha bekliyor
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
       {categoryGroups.map((group) => (
         <div key={group.category} className="mb-6">
           {/* Kategori Başlığı */}
-          <div className="flex items-center justify-between px-4 py-2.5 bg-[#f6f5f2] rounded-xl mb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-[15px] opacity-70 grayscale">{group.icon}</span>
-              <h3 className="text-[14px] font-bold text-text-primary">{group.label}</h3>
+          <div className="flex items-center justify-between px-4 py-3 bg-surface border-b border-border-main/50 mb-3 relative">
+            {/* T4: Kategori başlıkları daha belirgin */}
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/20 rounded-r-sm" />
+            <div className="flex items-center gap-2.5 pl-1">
+              <span className="text-[18px] opacity-90">{group.icon}</span>
+              <h3 className="text-[13px] font-extrabold text-text-primary uppercase tracking-wider">{group.label}</h3>
             </div>
-            <button className="text-text-secondary hover:text-text-primary transition-colors p-1">
+            <button className="text-text-secondary hover:text-text-primary transition-colors p-1 bg-bg-main rounded-lg">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <circle cx="3" cy="8" r="1.5" fill="currentColor" />
                 <circle cx="8" cy="8" r="1.5" fill="currentColor" />

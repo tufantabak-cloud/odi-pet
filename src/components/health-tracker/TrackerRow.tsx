@@ -40,7 +40,6 @@ export function TrackerRow({ taskRow, frequencyLabel, onMarkDone, onPostpone, on
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Geçmiş ve gelecek event'leri ayır (today marker pozisyonunu belirlemek için)
   const pastEvents = taskRow.events.filter(e => {
     const d = new Date(e.scheduled_at);
     d.setHours(0, 0, 0, 0);
@@ -53,6 +52,12 @@ export function TrackerRow({ taskRow, frequencyLabel, onMarkDone, onPostpone, on
   });
 
   const displayFreq = frequencyLabel === taskRow.task.title ? null : frequencyLabel;
+
+  const displayPastEvents = pastEvents.slice(-1); // son 1 geçmiş
+  const hiddenPastCount = pastEvents.length - displayPastEvents.length;
+
+  const displayFutureEvents = todayAndFuture.slice(0, 3); // ilk 3 gelecek (bugün dahil)
+  const hiddenFutureCount = todayAndFuture.length - displayFutureEvents.length;
 
   return (
     <div className="flex items-center py-3 border-b border-border-main/50 last:border-0 relative">
@@ -78,7 +83,14 @@ export function TrackerRow({ taskRow, frequencyLabel, onMarkDone, onPostpone, on
         className={`flex items-center overflow-x-auto pr-4 scrollbar-none select-none flex-1 relative ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         style={{ scrollBehavior: isDragging ? 'auto' : 'smooth' }}
       >
-        {pastEvents.map((event, i) => (
+        {hiddenPastCount > 0 && (
+          <div className="shrink-0 px-2 flex items-center justify-center">
+            <span className="text-[10px] font-medium text-text-secondary/50">+{hiddenPastCount} geçmiş</span>
+            <div className="w-2 h-px bg-border-main ml-2" />
+          </div>
+        )}
+
+        {displayPastEvents.map((event, i) => (
           <React.Fragment key={event.id}>
             {i > 0 && <div className="w-4 h-px bg-border-main shrink-0" />}
             <div className="shrink-0">
@@ -93,11 +105,11 @@ export function TrackerRow({ taskRow, frequencyLabel, onMarkDone, onPostpone, on
           </React.Fragment>
         ))}
 
-        {pastEvents.length > 0 && <div className="w-4 h-px bg-border-main shrink-0" />}
+        {displayPastEvents.length > 0 && <div className="w-4 h-px bg-border-main shrink-0" />}
         <TodayMarker />
-        {todayAndFuture.length > 0 && <div className="w-4 h-px bg-border-main shrink-0" />}
+        {displayFutureEvents.length > 0 && <div className="w-4 h-px bg-border-main shrink-0" />}
 
-        {todayAndFuture.map((event, i) => (
+        {displayFutureEvents.map((event, i) => (
           <React.Fragment key={event.id}>
             {i > 0 && <div className="w-4 h-px bg-border-main shrink-0" />}
             <div className="shrink-0">
@@ -111,6 +123,13 @@ export function TrackerRow({ taskRow, frequencyLabel, onMarkDone, onPostpone, on
             </div>
           </React.Fragment>
         ))}
+
+        {hiddenFutureCount > 0 && (
+          <div className="shrink-0 px-2 flex items-center justify-center">
+            <div className="w-2 h-px bg-border-main mr-2" />
+            <span className="text-[10px] font-medium text-text-secondary/50">+{hiddenFutureCount} sonraki</span>
+          </div>
+        )}
       </div>
     </div>
   );

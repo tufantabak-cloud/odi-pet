@@ -112,14 +112,19 @@ export function ChipItem({ event, onMarkDone, onPostpone, onEdit, onDelete }: Ch
           hover:scale-105 active:scale-95
         `}
       >
+        <span className="absolute top-1 right-1.5 opacity-40 text-[10px] tracking-tighter">···</span>
+        
         {/* Üst satır: Tarih */}
-        <span className="text-[13px] font-bold leading-tight text-center">
+        <span className="text-[13px] font-bold leading-tight text-center relative z-10">
           {topText}
         </span>
         {/* Alt satır: Durum etiketi */}
         {bottomText && (
-          <span className={`text-[11px] mt-0.5 leading-tight text-center whitespace-pre-line ${labelClasses}`}>
+          <span className={`text-[11px] mt-0.5 leading-tight text-center whitespace-pre-line relative z-10 ${labelClasses}`}>
             {bottomText}
+            {(computedStatus === 'today' || computedStatus === 'missed') && (
+              <span className="block text-[9.5px] opacity-80 mt-0.5">Tamamla →</span>
+            )}
           </span>
         )}
       </button>
