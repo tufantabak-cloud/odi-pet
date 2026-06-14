@@ -62,35 +62,50 @@ export function HealthTracker({ petId, onEditTask }: HealthTrackerProps) {
   return (
     <div className="py-2 bg-white">
       {actionRequiredEvents.length > 0 && (
-        <div className="mx-4 mb-6 bg-error/5 border border-error/20 rounded-2xl p-4 relative overflow-hidden shadow-sm">
-          <div className="absolute top-0 left-0 w-1 h-full bg-error" />
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-error animate-pulse">🔴</span>
-            <h3 className="text-[14px] font-extrabold text-error">Aksiyon Gerekiyor</h3>
-          </div>
-          <div className="flex flex-col gap-2">
-            {displayActionEvents.map(e => (
-              <div key={e.id} className="flex items-center justify-between bg-white rounded-xl p-2.5 shadow-sm border border-border-main/50">
-                <div className="flex flex-col">
-                  <span className="text-[13px] font-bold text-text-primary line-clamp-1">{e.pet_care_tasks?.title || 'Görev'}</span>
-                  <span className={`text-[11px] font-medium ${e.computedStatus === 'missed' ? 'text-error' : 'text-[#b47120]'}`}>
-                    {e.computedStatus === 'missed' ? 'Kaçırıldı' : 'Bugün'}
-                  </span>
-                </div>
-                <button 
-                  onClick={() => markEventStatus(e.id, 'done')}
-                  className="bg-success text-white text-[11px] font-bold px-3 py-1.5 rounded-lg hover:bg-success/90 active:scale-95 transition-transform"
-                >
-                  Tamamla
-                </button>
+        <div className="mx-4 mb-6">
+          {/* Gecikmiş Görevler */}
+          {actionRequiredEvents.some(e => e.computedStatus === 'missed') && (
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2 ml-1">
+                <div className="w-2 h-2 rounded-full bg-[#ff7675]" />
+                <h3 className="text-[12px] font-extrabold text-[#ff7675] uppercase tracking-wider">Gecikmiş Görevler</h3>
               </div>
-            ))}
-            {hiddenActionCount > 0 && (
-              <p className="text-[11px] text-text-secondary text-center mt-1 font-medium">
-                +{hiddenActionCount} görev daha bekliyor
-              </p>
-            )}
-          </div>
+              <div className="flex flex-col gap-2">
+                {actionRequiredEvents.filter(e => e.computedStatus === 'missed').map(e => (
+                  <ActionBannerItem 
+                    key={e.id} 
+                    event={e} 
+                    onMarkDone={markEventStatus}
+                    onPostpone={postponeEvent}
+                    onEdit={onEditTask}
+                    onDelete={deleteEvent}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Bugün */}
+          {actionRequiredEvents.some(e => e.computedStatus === 'today') && (
+            <div>
+              <div className="flex items-center gap-2 mb-2 ml-1">
+                <div className="w-2 h-2 rounded-full bg-[#6c5ce7]" />
+                <h3 className="text-[12px] font-extrabold text-[#6c5ce7] uppercase tracking-wider">Bugün</h3>
+              </div>
+              <div className="flex flex-col gap-2">
+                {actionRequiredEvents.filter(e => e.computedStatus === 'today').map(e => (
+                  <ActionBannerItem 
+                    key={e.id} 
+                    event={e} 
+                    onMarkDone={markEventStatus}
+                    onPostpone={postponeEvent}
+                    onEdit={onEditTask}
+                    onDelete={deleteEvent}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -179,6 +194,123 @@ function LegendDot({ color, label }: { color: string; label: string }) {
     <div className="flex items-center gap-1.5">
       <div className={`w-3 h-3 rounded-sm ${color}`} />
       <span className="text-[11px] text-text-secondary font-medium">{label}</span>
+    </div>
+  );
+}
+
+/** Yeni temiz Action Banner Satırı */
+function ActionBannerItem({ 
+  event, 
+  onMarkDone, 
+  onPostpone, 
+  onEdit, 
+  onDelete 
+}: { 
+  event: any; 
+  onMarkDone: (id: string, status: string) => void;
+  onPostpone: (id: string, days: number) => void;
+  onEdit?: (event: any) => void;
+  onDelete: (id: string) => void;
+}) {
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  const menuRef = React.useRef<HTMLDivElement>(null);
+  
+  const isMissed = event.computedStatus === 'missed';
+  
+  // Dışarı tıklama
+  React.useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const d = new Date(event.scheduled_at);
+  const day = d.getDate();
+  const month = d.toLocaleDateString('tr-TR', { month: 'long' });
+  const year = d.getFullYear();
+  const dateStr = `${day} ${month} ${year}`;
+  
+  let diffStr = '';
+  if (isMissed) {
+    const todayDate = new Date();
+    todayDate.setHours(0,0,0,0);
+    const schDate = new Date(d);
+    schDate.setHours(0,0,0,0);
+    const diffDays = Math.round((todayDate.getTime() - schDate.getTime()) / (1000 * 60 * 60 * 24));
+    diffStr = `» ${diffDays} gün gecikti`;
+  }
+
+  return (
+    <div className={`flex items-center justify-between p-3 rounded-2xl border transition-colors ${
+      isMissed ? 'bg-[#fff5f5] border-[#ffe3e3]' : 'bg-white border-border-main/50'
+    }`}>
+      
+      {/* Sol: Yuvarlak ve Metinler */}
+      <div className="flex items-center gap-3">
+        {/* Checkbox Yuvarlağı */}
+        <button 
+          onClick={() => onMarkDone(event.id, 'done')}
+          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+            isMissed ? 'border-[#ff7675]/50 hover:bg-[#ff7675]/10' : 'border-[#6c5ce7]/30 hover:bg-[#6c5ce7]/10'
+          }`}
+        />
+        
+        <div className="flex flex-col">
+          <span className="text-[14px] font-bold text-text-primary">
+            {event.pet_care_tasks?.title || 'Görev'}
+          </span>
+          <div className={`flex items-center gap-1 text-[11px] font-bold mt-0.5 ${isMissed ? 'text-[#ff7675]' : 'text-text-secondary'}`}>
+            <span className="opacity-70">🕒</span>
+            <span>{dateStr}</span>
+            {isMissed && <span className="ml-1 text-[#ff7675]">{diffStr}</span>}
+          </div>
+        </div>
+      </div>
+
+      {/* Sağ: Butonlar */}
+      <div className="flex items-center gap-2">
+        <button 
+          onClick={() => onPostpone(event.id, 1)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-[12px] shadow-sm transition-transform active:scale-95 ${
+            isMissed ? 'bg-white text-[#ff7675]' : 'bg-surface text-[#6c5ce7]'
+          }`}
+        >
+          <span className="text-[14px]">📅</span> +1 Gün
+        </button>
+        
+        <div className="relative" ref={menuRef}>
+          <button 
+            onClick={() => setMenuOpen(!menuOpen)}
+            className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-[16px] transition-colors ${
+              isMissed ? 'bg-white text-[#ff7675]' : 'bg-surface text-text-secondary'
+            }`}
+          >
+            ⋮
+          </button>
+          
+          {menuOpen && (
+            <div className="absolute right-0 top-10 w-32 bg-white border border-border-main/50 rounded-2xl shadow-xl z-50 overflow-hidden py-1">
+              <button 
+                onClick={() => { setMenuOpen(false); onEdit?.(event); }}
+                className="w-full flex items-center gap-2 px-4 py-2.5 hover:bg-bg-main transition-colors text-[13px] font-bold text-[#6c5ce7]"
+              >
+                <span>✏️</span> Düzenle
+              </button>
+              <button 
+                onClick={() => { setMenuOpen(false); onDelete(event.id); }}
+                className="w-full flex items-center gap-2 px-4 py-2.5 hover:bg-[#fff5f5] transition-colors text-[13px] font-bold text-[#ff7675]"
+              >
+                <span>❌</span> Sil
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+      
     </div>
   );
 }
