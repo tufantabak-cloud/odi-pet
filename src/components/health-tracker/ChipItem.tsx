@@ -37,7 +37,21 @@ export function ChipItem({ event, onMarkDone, onPostpone, onEdit, onDelete }: Ch
   const dateStr = `${formattedMonth} ${day}`;
 
   const isYearly = (event.pet_care_tasks?.frequency_days || 0) >= 365;
-  const hasSpecificTime = event.scheduled_at.includes('T') && !event.scheduled_at.includes('T12:00:00') && !event.scheduled_at.includes('T00:00:00');
+
+  // Saat yalnızca anlamlı olduğu kategorilerde gösterilir
+  const TIME_RELEVANT_CATEGORIES = ['Veteriner', 'Saglik']; // Veteriner randevusu, İlaç
+  const TIME_RELEVANT_SUB_CATEGORIES = ['İlaç Kullanımı', 'Tedavi & Pansuman'];
+  const category = event.pet_care_tasks?.category ?? '';
+  const subCategory = event.pet_care_tasks?.frequency_label ?? '';
+  const isTimeRelevant =
+    TIME_RELEVANT_CATEGORIES.includes(category) ||
+    TIME_RELEVANT_SUB_CATEGORIES.includes(subCategory);
+
+  const hasSpecificTime =
+    isTimeRelevant &&
+    event.scheduled_at.includes('T') &&
+    !event.scheduled_at.includes('T12:00:00') &&
+    !event.scheduled_at.includes('T00:00:00');
 
   let topText = dateStr;
   let bottomText: string | null = statusLabel(computedStatus);
