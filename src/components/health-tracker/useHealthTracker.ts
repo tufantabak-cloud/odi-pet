@@ -13,11 +13,38 @@ import { ComputedStatus, CategoryGroup, TaskRow, PetCareTask, PetCareEvent, Comp
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** vaccine_templates tablosundan yüklenen lookup map türü */
-type VaccineTemplateMap = Map<string, 'core' | 'optional'>;
+type VaccineTemplateEntry = {
+  group: 'core' | 'optional';
+  recurrence_days: number | null;
+  has_annual_booster: boolean;
+};
+type VaccineTemplateMap = Map<string, VaccineTemplateEntry>;
 
 /** mandatory_level → UI grubu */
 function mandatoryLevelToGroup(level: string): 'core' | 'optional' {
   return (level === 'core' || level === 'legal_required') ? 'core' : 'optional';
+}
+
+/** Template map'ten recurrence_days al */
+function getTemplateRecurrenceDays(
+  vaccineTemplateMap: VaccineTemplateMap,
+  vaccineCode?: string | null,
+  vaccineName?: string | null,
+): number | null {
+  if (vaccineCode) {
+    const byCode = vaccineTemplateMap.get(vaccineCode.toUpperCase())
+                ?? vaccineTemplateMap.get(vaccineCode);
+    if (byCode) return byCode.recurrence_days;
+  }
+  if (vaccineName) {
+    const lower = vaccineName.toLowerCase().trim();
+    const exact = vaccineTemplateMap.get(lower);
+    if (exact) return exact.recurrence_days;
+    for (const [key, entry] of vaccineTemplateMap) {
+      if (key.length >= 4 && lower.includes(key)) return entry.recurrence_days;
+    }
+  }
+  return null;
 }
 
 /**
@@ -36,7 +63,7 @@ function resolveVaccineGroup(
   if (vaccineTemplateMap.size === 0) {
     if (isCoreFlag === true) return 'core';
     if (isCoreFlag === false) return 'optional';
-    if ((subCategory || '').toLocaleLowerCase('tr-TR').includes('zorunlu')) return 'core';
+    if ((subCategory || '').toLowerCase().includes('zorunlu')) return 'core';
     return 'core';
   }
 
@@ -44,18 +71,18 @@ function resolveVaccineGroup(
   if (vaccineCode) {
     const byCode = vaccineTemplateMap.get(vaccineCode.toUpperCase())
                 ?? vaccineTemplateMap.get(vaccineCode);
-    if (byCode) return byCode;
+    if (byCode) return byCode.group;
   }
 
   // 2) vaccine_name / title ile tam key eslesme
   if (vaccineName) {
-    const lower = vaccineName.toLocaleLowerCase('tr-TR').trim();
+    const lower = vaccineName.toLowerCase().trim();
     const exact = vaccineTemplateMap.get(lower);
-    if (exact) return exact;
+    if (exact) return exact.group;
 
     // 3) Partial: template adi title icinde geciyor mu? (min 4 karakter guard)
-    for (const [key, group] of vaccineTemplateMap) {
-      if (key.length >= 4 && lower.includes(key)) return group;
+    for (const [key, entry] of vaccineTemplateMap) {
+      if (key.length >= 4 && lower.includes(key)) return entry.group;
     }
   }
 
@@ -70,9 +97,9 @@ function resolveVaccineGroup(
 }
 
 /** Frekans gün sayısından okunabilir Türkçe etiket üret */
-export function formatFrequency(days: number, label?: string | null): string {
+export function formatFrequency(days: number | null | undefined, label?: string | null): string {
   if (label) return label;
-  if (!days) return 'Yıllık';
+  if (!days || days === 0) return 'Her Yıl'; // null veya 0 → has_annual_booster fallback
   if (days === 1) return 'Her gün';
   if (days <= 3) return `${days} günde 1`;
   if (days === 7) return 'Haftada 1';
@@ -263,7 +290,7 @@ export function useHealthTracker(petId: string) {
       try {
         const { data, error } = await supabase
           .from('vaccine_templates')
-          .select('vaccine_code, vaccine_name, mandatory_level, category')
+          .select('vaccine_code, vaccine_name, mandatory_level, category, recurrence_days, has_annual_booster')
           .eq('is_active', true);
 
         if (error) {
@@ -271,15 +298,18 @@ export function useHealthTracker(petId: string) {
           return;
         }
 
-        const map = new Map<string, 'core' | 'optional'>();
+        const map = new Map<string, VaccineTemplateEntry>();
         (data || []).forEach((t: any) => {
-          // Sadece aşı şablonlarını al (parazit değil)
-          if (t.category !== 'vaccine') return;
           const group = mandatoryLevelToGroup(t.mandatory_level);
-          // vaccine_code ile kayıt (büyük harf key — select'te uppercase normalize)
-          if (t.vaccine_code) map.set(t.vaccine_code.toUpperCase(), group);
+          const entry: VaccineTemplateEntry = {
+            group,
+            recurrence_days: t.recurrence_days ?? null,
+            has_annual_booster: t.has_annual_booster ?? false,
+          };
+          // vaccine_code ile kayıt (büyük harf key)
+          if (t.vaccine_code) map.set(t.vaccine_code.toUpperCase(), entry);
           // vaccine_name ile kayıt (küçük harf key — fuzzy match için)
-          if (t.vaccine_name) map.set(t.vaccine_name.toLocaleLowerCase('tr-TR').trim(), group);
+          if (t.vaccine_name) map.set(t.vaccine_name.toLocaleLowerCase('tr-TR').trim(), entry);
         });
 
         setVaccineTemplateMap(map);
@@ -376,11 +406,18 @@ export function useHealthTracker(petId: string) {
         : `${mapped.category}::${mapped.subCategory}`;
 
       if (!taskMap.has(groupKey)) {
+        // Frekans gün sayısını vaccine_templates'tan al
+        const templateRecurrenceDays = getTemplateRecurrenceDays(
+          vaccineTemplateMap,
+          vaccineCode,
+          productName,
+        );
         taskMap.set(groupKey, {
           task: {
             ...task,
             title: isVaccine ? productName : mapped.subCategory,
             category: mapped.category,
+            frequency_days: templateRecurrenceDays ?? 0,
             frequency_label: isVaccine ? mapped.subCategory : null,
           },
           events: [],
