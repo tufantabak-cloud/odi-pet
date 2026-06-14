@@ -55,10 +55,12 @@ Yapılacak tüm yeni geliştirmelerde, arayüz tasarımlarında ve kod mimarisin
 4. **İnteraktif Geri Bildirim:** Etkileşimli tüm görsel öğeler, üzerine gelindiğinde veya seçildiğinde yumuşak animasyonlarla (`scale-[1.05]` veya `scale-[1.1]`) hafifçe büyümeli ve renk geçişleriyle kullanıcıya premium bir etkileşim hissi sunmalıdır.
 
 ## Veri Toplama Stratejisi (Progressive Profiling)
-**BİRİNCİL KURAL:** Kullanıcıdan boş, upuzun formlar doldurması İSTENMEYECEK.
-Odi.Pet Veri Toplama ve Zaman Matrisi (Progressive Profiling) süreci her daim gözetilecek ve sisteme adım adım dahil edilecektir:
-1. İstenen veri (örneğin telefon no, mikroçip, konum), kullanıcıya sunulacak spesifik bir **özelliğin/faydanın kapsama bedeli** olarak bağlamsal şekilde (Smart Card vb.) istenecek.
-2. Profili zenginleştirme süreci, sadece özelliklerin tetiklemesiyle kalmayacak, aynı zamanda "Profili Zenginleştir" (Enrich Profile) oyunlaştırma modülü ile entegre bir şekilde, aşama aşama ilerletilecektir.
+**BİRİNCİL KURAL:** Kullanıcıdan boş, upuzun formlar doldurması İSTENMEYECEK. Uygulama içi tüm yeni modül geliştirmelerinde "Aşamalı Veri Toplama (Progressive Profiling)" yol haritası kesinlikle uygulanacaktır.
+Odi.Pet Veri Toplama ve Zaman Matrisi süreci her daim gözetilecek ve sisteme adım adım dahil edilecektir:
+1. **Katman 1 (Onboarding):** Kayıt anında sadece uygulamanın çalışması için gerekli minimum veriler (Tür, İsim, Yaş, Cinsiyet, Kısırlaştırma, Kilo, Irk) istenecek. İlk formlar kısa ve sürtünmesiz tutulacak.
+2. **Katman 2 (Contextual Profiling):** İstenen veri (örneğin aşı belgesi, telefon no, mama markası), kullanıcıya sunulacak spesifik bir **özelliğin/faydanın kapsama bedeli** olarak bağlamsal şekilde (örn. Odi.Pet SmartCardBanner, FormModal kullanılarak) istenecek.
+3. **Katman 3 (Micro-Surveys & AI Engine):** Kullanıcının günlük rutinine entegre edilmiş, tek tıklamalı mikro anketler kullanılacak. AI motoru, `user_survey_stats` üzerinden "Soru Yorgunluğu (Ad-Fatigue)" limitlerini denetleyecek ve kullanıcıyı asla bunaltmayacak.
+4. **Sürekli Geliştirme İlkesi:** Gelecekte sisteme eklenecek her yeni modül için, "Bu modül için kullanıcıdan eksik bir veriyi onu yormadan nasıl alırım?" sorusu sorulacak ve bu yapı her daim korunarak genişletilecektir.
 
 ## Dil Kuralı
 **BİRİNCİL KURAL:** Bu uygulamayı geliştirirken kullanıcıyla her zaman **TÜRKÇE** konuşacaksın.

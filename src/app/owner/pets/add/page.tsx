@@ -99,6 +99,10 @@ interface PetFormProps {
   setApproxYears: (v: string) => void
   approxMonths: string
   setApproxMonths: (v: string) => void
+  isNeutered: boolean
+  setIsNeutered: (v: boolean) => void
+  weight: string
+  setWeight: (v: string) => void
   onSubmit: (e: React.FormEvent) => void
   submitError: string
 }
@@ -120,6 +124,10 @@ function PetForm({
   setApproxYears,
   approxMonths,
   setApproxMonths,
+  isNeutered,
+  setIsNeutered,
+  weight,
+  setWeight,
   onSubmit,
   submitError
 }: PetFormProps) {
@@ -323,6 +331,32 @@ function PetForm({
                 <span>Hesaplanan Yaş: <strong>{calcAge(birthDate).text}</strong> ({calcAge(birthDate).label})</span>
               </div>
             )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-1">
+          {/* Kısırlaştırılma Durumu */}
+          <div className="flex flex-col gap-2">
+            <label className="text-[13px] font-bold text-text-primary">Kısırlaştırılma Durumu</label>
+            <label className="flex items-center justify-between gap-2 p-3.5 border-2 border-border-main rounded-[14px] cursor-pointer hover:border-primary/50 transition-all text-[13px] font-bold text-text-secondary has-[:checked]:border-primary has-[:checked]:bg-primary-soft/30 group">
+              <div className="flex items-center gap-2">
+                <span className="text-[16px] group-hover:scale-110 transition-transform">✂️</span>
+                <span className="group-has-[:checked]:text-primary">Kısırlaştırıldı</span>
+              </div>
+              <input type="checkbox" checked={isNeutered} onChange={e => setIsNeutered(e.target.checked)} className="w-5 h-5 text-primary focus:ring-primary rounded-[6px] border-border-main bg-white cursor-pointer"/>
+            </label>
+          </div>
+
+          {/* Kilo */}
+          <div className="flex flex-col gap-2">
+            <label htmlFor="weight" className="text-[13px] font-bold text-text-primary">Kilo (Opsiyonel)</label>
+            <div className="relative flex items-center">
+              <input id="weight" type="number" step="0.1" min="0" max="150"
+                value={weight} onChange={e => setWeight(e.target.value)}
+                placeholder="Örn: 4.5"
+                className="input-base w-full pr-12 text-[15px]"/>
+              <span className="absolute right-4 text-[13px] font-bold text-text-secondary">kg</span>
+            </div>
           </div>
         </div>
 
@@ -658,6 +692,8 @@ export default function AddPetPage() {
   const [approxMonths, setApproxMonths] = useState('')
   const [photoPreview, setPhotoPreview] = useState('')
   const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [isNeutered, setIsNeutered] = useState(false)
+  const [weight, setWeight] = useState('')
   const [loading, setLoading] = useState(false)
   const [submitError, setSubmitError] = useState('')
 
@@ -693,6 +729,8 @@ export default function AddPetPage() {
     if (gender) fd.set('gender', gender)
     if (birthDate) fd.set('birth_date', birthDate)
     if (photoFile) fd.set('avatar', photoFile)
+    fd.set('is_neutered', isNeutered.toString())
+    if (weight) fd.set('weight', weight)
     try {
       const res = await fetch('/api/pets', { method: 'POST', body: fd })
       const data = await res.json()
@@ -759,6 +797,8 @@ export default function AddPetPage() {
           birthDate={birthDate} setBirthDate={setBirthDate}
           approxYears={approxYears} setApproxYears={setApproxYears}
           approxMonths={approxMonths} setApproxMonths={setApproxMonths}
+          isNeutered={isNeutered} setIsNeutered={setIsNeutered}
+          weight={weight} setWeight={setWeight}
           onSubmit={handleStep2Next}
           submitError={submitError}
         />

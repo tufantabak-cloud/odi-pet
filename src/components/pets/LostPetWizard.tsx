@@ -23,7 +23,7 @@ export default function LostPetWizard({ pet, ownerPhone, onComplete, onCancel }:
   const [error, setError] = useState('')
 
   useEffect(() => {
-    fetch('https://turkiyeapi.dev/api/v1/provinces')
+    fetch('/api/provinces')
       .then(res => res.json())
       .then(res => {
         if (res.status === 'OK' && res.data) {
@@ -93,11 +93,58 @@ export default function LostPetWizard({ pet, ownerPhone, onComplete, onCancel }:
 
   const handleGetLocation = () => {
     if (navigator.geolocation) {
+      setLoading(true)
       navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setLocation(`${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`)
+        async (pos) => {
+          const lat = pos.coords.latitude
+          const lon = pos.coords.longitude
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&accept-language=tr`)
+            const data = await res.json()
+            if (data && data.address) {
+              const addr = data.address
+              const provinceName = addr.province || addr.city || addr.state
+              let districtName = addr.town || addr.county || addr.city_district || addr.district || addr.suburb
+
+              if (provinceName) {
+                const matchedProv = provinces.find(p => p.name.localeCompare(provinceName, 'tr', { sensitivity: 'base' }) === 0 || provinceName.includes(p.name))
+                if (matchedProv) {
+                  setSelectedCity(matchedProv.name)
+                  
+                  if (districtName) {
+                    let cleanDist = districtName.replace(' İlçesi', '').replace(' Belediyesi', '').trim()
+                    let matchedDist = matchedProv.districts?.find((d: any) => d.name.localeCompare(cleanDist, 'tr', { sensitivity: 'base' }) === 0 || cleanDist.includes(d.name))
+                    
+                    if (matchedDist) {
+                      setSelectedDistrict(matchedDist.name)
+                    } else {
+                      setSelectedDistrict('')
+                    }
+                  }
+                }
+              }
+
+              const road = addr.road || ''
+              const suburb = addr.suburb || addr.neighbourhood || ''
+              const parts = [suburb, road].filter(Boolean)
+              if (parts.length > 0) {
+                setLocation(parts.join(', '))
+              } else {
+                setLocation(`${lat.toFixed(6)}, ${lon.toFixed(6)}`)
+              }
+            } else {
+              setLocation(`${lat.toFixed(6)}, ${lon.toFixed(6)}`)
+            }
+          } catch (err) {
+            setLocation(`${lat.toFixed(6)}, ${lon.toFixed(6)}`)
+          } finally {
+            setLoading(false)
+          }
         },
-        () => setError('Konum alınamadı, lütfen izin verin veya adresi manuel yazın.')
+        () => {
+          setError('Konum alınamadı, lütfen izin verin veya adresi manuel yazın.')
+          setLoading(false)
+        }
       )
     }
   }
@@ -150,6 +197,15 @@ export default function LostPetWizard({ pet, ownerPhone, onComplete, onCancel }:
             </div>
           ) : (
             <div className="flex flex-col gap-5 mt-2">
+              <button onClick={handleGetLocation} disabled={loading} type="button" className="flex justify-center items-center gap-2 py-3 bg-blue-50 text-blue-600 rounded-xl font-bold text-[13px] border border-blue-100 hover:bg-blue-100 transition-colors disabled:opacity-50">
+                {loading ? (
+                  <span className="w-4 h-4 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin" />
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                )}
+                {loading ? 'Konum Çözümleniyor...' : 'Mevcut Konumumu Al'}
+              </button>
+
               <div className="flex gap-3">
                 <div className="flex flex-col gap-2 flex-1">
                   <label className="text-[12px] font-bold text-text-secondary uppercase tracking-wider">İl *</label>
@@ -193,10 +249,6 @@ export default function LostPetWizard({ pet, ownerPhone, onComplete, onCancel }:
                   className="w-full input-base py-3.5 px-4 text-[14px] bg-white border border-border-main rounded-xl focus:outline-none focus:border-error transition-all resize-none"
                 />
               </div>
-              <button onClick={handleGetLocation} type="button" className="flex justify-center items-center gap-2 py-3 bg-blue-50 text-blue-600 rounded-xl font-bold text-[13px] border border-blue-100 hover:bg-blue-100 transition-colors">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                Mevcut Konumumu Al
-              </button>
             </div>
           )}
         </div>
@@ -207,7 +259,7 @@ export default function LostPetWizard({ pet, ownerPhone, onComplete, onCancel }:
               Devam Et
             </button>
           ) : (
-            <button onClick={handleSubmit} disabled={loading || !location.trim()} className="w-full bg-error text-white font-bold rounded-xl py-3.5 px-4 active:scale-[0.98] transition-all text-[15px] text-center shadow-md disabled:opacity-50">
+            <button onClick={handleSubmit} disabled={loading || !location.trim() || !selectedCity || !selectedDistrict} className="w-full bg-error text-white font-bold rounded-xl py-3.5 px-4 active:scale-[0.98] transition-all text-[15px] text-center shadow-md disabled:opacity-50">
               {loading ? 'Yayınlanıyor...' : 'İlanı Yayınla'}
             </button>
           )}

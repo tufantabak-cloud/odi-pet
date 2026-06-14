@@ -147,10 +147,10 @@ function mapDbToUI(
 
   if (isParasite || dbCat === 'Parazit') {
     let sub = 'Parazit Uygulamaları';
-    if (subCatLower.includes('iç parazit') || titleLower.includes('iç parazit') || titleLower.includes('ic parazit')) sub = 'İç Parazit Uygulaması';
-    else if (subCatLower.includes('dış parazit') || titleLower.includes('dış parazit') || titleLower.includes('dis parazit')) sub = 'Dış Parazit Uygulaması';
+    if (subCatLower.includes('iç parazit') || titleLower.includes('iç parazit') || titleLower.includes('ic parazit')) sub = 'İç Parazit';
+    else if (subCatLower.includes('dış parazit') || titleLower.includes('dış parazit') || titleLower.includes('dis parazit')) sub = 'Dış Parazit';
     else if (subCatLower.includes('tasma') || titleLower.includes('tasma')) sub = 'Parazit Tasması';
-    return { category: 'Parazit', subCategory: sub };
+    return { category: 'Asi', subCategory: sub };
   }
 
   // ── 1. Sağlık ──────────────────────────────────────────────────────────────
@@ -442,7 +442,7 @@ export function useHealthTracker(petId: string) {
 
     // Aşı kategorisi → Zorunlu / Opsiyonel alt grupları (subGroups)
     // Parazit kategorisi → düz taskRows (alt başlık = satır başlığı)
-    const VACCINE_SUB_GROUP_ORDER = ['Zorunlu Aşılar', 'Opsiyonel Aşılar'];
+    const VACCINE_SUB_GROUP_ORDER = ['Zorunlu Aşılar', 'Opsiyonel Aşılar', 'İç Parazit', 'Dış Parazit', 'Parazit Tasması', 'Parazit Uygulamaları', 'Diğer Aşılar'];
 
     catMap.forEach(group => {
       if (group.category === 'Asi') {

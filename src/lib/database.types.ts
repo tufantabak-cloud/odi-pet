@@ -2509,6 +2509,54 @@ export type Database = {
           },
         ]
       }
+      pet_estrus_cycles: {
+        Row: {
+          created_at: string | null
+          end_date: string | null
+          id: string
+          notes: string | null
+          pet_id: string
+          start_date: string
+          symptoms: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          pet_id: string
+          start_date: string
+          symptoms?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          pet_id?: string
+          start_date?: string
+          symptoms?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pet_estrus_cycles_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_overview"
+            referencedColumns: ["pet_id"]
+          },
+          {
+            foreignKeyName: "pet_estrus_cycles_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pets: {
         Row: {
           avatar_url: string | null
@@ -2522,6 +2570,7 @@ export type Database = {
           health_score: number | null
           id: string
           is_demo: boolean | null
+          is_neutered: boolean | null
           lifestyle: string | null
           microchip_no: string | null
           name: string
@@ -2550,6 +2599,7 @@ export type Database = {
           health_score?: number | null
           id?: string
           is_demo?: boolean | null
+          is_neutered?: boolean | null
           lifestyle?: string | null
           microchip_no?: string | null
           name: string
@@ -2578,6 +2628,7 @@ export type Database = {
           health_score?: number | null
           id?: string
           is_demo?: boolean | null
+          is_neutered?: boolean | null
           lifestyle?: string | null
           microchip_no?: string | null
           name?: string

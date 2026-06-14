@@ -76,6 +76,7 @@ export async function POST(req: NextRequest) {
     vet_phone:     str(fd, 'vet_phone')     || null,
     city:          str(fd, 'city')          || null,
     district:      str(fd, 'district')      || null,
+    is_neutered:   str(fd, 'is_neutered') === 'true',
   }
 
 
@@ -100,6 +101,19 @@ export async function POST(req: NextRequest) {
   await supabase
     .from('pet_owners')
     .insert({ pet_id: data.id, profile_id: user.id, role: 'owner' })
+
+  // ─── Katman 1: İlk Kilo Kaydının Alınması ──────────────────────
+  const weightVal = str(fd, 'weight')
+  if (weightVal && !isNaN(parseFloat(weightVal))) {
+    const { error: weightError } = await supabase
+      .from('weight_logs')
+      .insert({ 
+        pet_id: data.id, 
+        weight_kg: parseFloat(weightVal), 
+        measurement_date: new Date().toISOString().split('T')[0] 
+      })
+    if (weightError) console.error('[API/Pets] Weight log error:', weightError)
+  }
 
   // ─── Generate Vaccination Plan ────────────────────────────────
   const birthDate = str(fd, 'birth_date')

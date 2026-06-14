@@ -4,7 +4,9 @@ import React, { useState, useMemo } from 'react'
 
 interface GrowthRecord {
   id: string;
-  recorded_at: string;
+  recorded_at?: string;
+  measured_at?: string;
+  created_at?: string;
   weight_kg: number | null;
   height_cm: number | null;
   [key: string]: any;
@@ -21,7 +23,7 @@ export default function MinimalGrowthChart({ records, onAddRecord }: MinimalGrow
 
   // Sort chronologically (oldest first for left-to-right plotting)
   const sortedRecords = useMemo(() => {
-    return [...records].sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime())
+    return [...records].sort((a, b) => new Date(a.recorded_at || a.measured_at || a.created_at || '').getTime() - new Date(b.recorded_at || b.measured_at || b.created_at || '').getTime())
   }, [records])
 
   // Filter out records that don't have the active tab's value
@@ -52,7 +54,7 @@ export default function MinimalGrowthChart({ records, onAddRecord }: MinimalGrow
     const val = activeTab === 'weight' ? Number(d.weight_kg) : Number(d.height_cm)
     const x = padding.left + (chartData.length > 1 ? (i / (chartData.length - 1)) * innerWidth : innerWidth / 2)
     const y = padding.top + innerHeight - ((val - yMin) / yRange) * innerHeight
-    return { x, y, val, date: new Date(d.recorded_at) }
+    return { x, y, val, date: new Date(d.recorded_at || d.measured_at || d.created_at || '') }
   })
 
   let linePath = ''

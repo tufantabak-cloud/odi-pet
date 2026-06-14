@@ -289,38 +289,7 @@ export default async function OwnerDashboard() {
             {/* Hızlı Erişim modülleri */}
             <ModuleGrid pets={pets} />
 
-            {/* Akıllı aksiyon kartı */}
-            <DashboardSmartCards
-              pets={pets}
-              upcomingSchedules={upcomingSchedules}
-              completedSchedules={completedSchedules}
-            />
 
-            {/* Pet Günlüğü hızlı işlem */}
-            <div className="flex flex-col gap-2.5">
-              <div className="flex items-center justify-between">
-                <h2 className="text-[15px] font-extrabold text-text-primary">Pet Günlüğü</h2>
-                <Link href={journalListHref} className="text-[12px] font-bold text-primary hover:underline">
-                  Tümünü Gör
-                </Link>
-              </div>
-              <div className="card-base p-3.5 flex items-center justify-between gap-3 border border-border-main hover:border-primary/30 transition-colors">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
-                    </svg>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[13px] font-extrabold text-text-primary truncate">Yeni Durum Kaydet</p>
-                    <p className="text-[11px] text-text-secondary font-medium truncate">İştah, ruh hali, notlar…</p>
-                  </div>
-                </div>
-                <Link href={journalNewHref} className="btn-primary py-2 px-3.5 text-[12px] font-bold whitespace-nowrap shrink-0 shadow-sm">
-                  Kaydet +
-                </Link>
-              </div>
-            </div>
 
             {/* Yaklaşan Etkinlikler */}
             <div className="card-base p-5">

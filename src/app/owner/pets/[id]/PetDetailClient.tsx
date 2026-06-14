@@ -12,7 +12,7 @@ import AdoptionTab from '@/components/pets/tabs/AdoptionTab'
 import SmartTaskWizard from '@/components/tasks/SmartTaskWizard'
 import { TaskCategory } from '@/lib/tasks/taskDefaults'
 import { FirstAidIcon, VaccineIcon, ShampooIcon, BowlIcon, CarrierIcon, ScoopIcon, BoneIcon, HouseIcon } from '@/components/icons/PetIcons'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import HumanAgeCalculator from '@/components/pets/HumanAgeCalculator'
@@ -22,6 +22,7 @@ import MinimalGrowthChart from '@/components/pets/MinimalGrowthChart'
 import { SmartScanner } from '@/components/ui/SmartScanner'
 import FloatingSOS from '@/components/FloatingSOS'
 import { HealthTracker } from '@/components/health-tracker/HealthTracker'
+import { EstrusTracker } from '@/components/estrus-tracker/EstrusTracker'
 
 function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
   const [loading, setLoading] = useState(false)
@@ -111,6 +112,10 @@ const migrateScheduleCategory = (s: any) => {
   let cat = s.category === 'Temizlik' ? 'Hijyen' : s.category;
   if (cat === 'Hijyen' && TOILET_TRAINING_SUBS.includes(s.sub_category)) {
     cat = 'Aktiviteler';
+  }
+  // İç Parazit ve Dış Parazit görevlerini Sağlık'tan Aşı (Medikal) kategorisine taşı
+  if ((cat === 'Saglik' || cat === 'Parazit') && (s.sub_category?.includes('Parazit') || s.title?.includes('Parazit'))) {
+    cat = 'Medikal';
   }
   let stat = s.status === 'completed' ? 'done' : s.status;
   return { ...s, category: cat, status: stat };
@@ -231,6 +236,18 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   const [wizardInitialCategory, setWizardInitialCategory] = useState<TaskCategory | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date>(() => { const d = new Date(); d.setHours(0,0,0,0); return d; })
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
+  const timelineScrollRef = useRef<HTMLDivElement>(null)
+  
+  useEffect(() => {
+    if (timelineScrollRef.current) {
+      const todayElement = timelineScrollRef.current.querySelector('[data-istoday="true"]');
+      if (todayElement) {
+        setTimeout(() => {
+          todayElement.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }, 100);
+      }
+    }
+  }, []);
   
   const [lostWizardOpen, setLostWizardOpen] = useState(false)
   const [markFoundLoading, setMarkFoundLoading] = useState(false)
@@ -369,8 +386,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       
       if (isDone) {
         return (
-          <span className="inline-flex items-center">
-            {dateText} <span className="text-success ml-1.5 font-bold tracking-wide">» Tamamlandı</span>
+          <span className="inline-flex items-center flex-wrap gap-1.5">
+            <span>{dateText}</span>
+            <span className="text-success bg-success/10 px-2 py-0.5 rounded-md font-bold tracking-wide">✓ Tamamlandı</span>
           </span>
         )
       }
@@ -390,13 +408,13 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         
         if (diffMins < 60) {
           const mins = Math.max(1, diffMins)
-          badge = <span className="text-red-600 ml-1.5 font-bold tracking-wide">» {mins} dk gecikti</span>
+          badge = <span className="text-error bg-error/10 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">⚠️ {mins} dk gecikti</span>
         } else if (diffMins < 1440) { // 24 hours
           const hours = Math.floor(diffMins / 60)
-          badge = <span className="text-red-600 ml-1.5 font-bold tracking-wide">» {hours} saat gecikti</span>
+          badge = <span className="text-error bg-error/10 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">⚠️ {hours} saat gecikti</span>
         } else {
           const days = Math.floor(diffMins / 1440)
-          badge = <span className="text-red-600 ml-1.5 font-bold tracking-wide">» {days} gün gecikti</span>
+          badge = <span className="text-error bg-error/10 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">⚠️ {days} gün gecikti</span>
         }
       } else {
         const today = new Date()
@@ -413,16 +431,18 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           }
         }
         
-        if (diffDays === 0) badge = <span className="text-orange-600 ml-1.5 font-bold tracking-wide">» Bugün{timeText}</span>;
-        else if (diffDays === 1) badge = <span className="text-primary ml-1.5 font-bold tracking-wide">» Yarın{timeText}</span>;
-        else if (diffDays === -1) badge = <span className="text-red-600 ml-1.5 font-bold tracking-wide">» Dün{timeText}</span>;
-        else if (diffDays < -1) badge = <span className="text-red-600 ml-1.5 font-bold tracking-wide">» {Math.abs(diffDays)} gün gecikti</span>;
-        else badge = <span className="text-primary ml-1.5 font-bold tracking-wide">» {diffDays} gün kaldı</span>;
+        if (diffDays === 0) badge = <span className="text-orange-700 bg-orange-100/80 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">⏳ Bugün{timeText}</span>;
+        else if (diffDays === 1) badge = <span className="text-orange-700 bg-orange-100/80 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">⏳ Yarın{timeText}</span>;
+        else if (diffDays === -1) badge = <span className="text-error bg-error/10 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">⚠️ Dün{timeText}</span>;
+        else if (diffDays < -1) badge = <span className="text-error bg-error/10 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">⚠️ {Math.abs(diffDays)} gün gecikti</span>;
+        else if (diffDays <= 3) badge = <span className="text-orange-700 bg-orange-100/80 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">⏳ {diffDays} gün kaldı</span>;
+        else badge = <span className="text-primary bg-primary/10 px-2 py-0.5 rounded-md font-bold tracking-wide">🗓️ {diffDays} gün kaldı</span>;
       }
       
       return (
-        <span className="inline-flex items-center">
-          {dateText} {badge}
+        <span className="inline-flex items-center flex-wrap gap-1.5">
+          <span>{dateText}</span>
+          {badge}
         </span>
       )
     } catch { return dueDateStr }
@@ -588,20 +608,32 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     return true;
   }
 
-  const renderTaskList = (title: string, list: any[], emptyMessage?: string) => {
-    if ((!list || list.length === 0) && !emptyMessage) return null;
+  const formatFrequency = (days: number | null | undefined, label?: string | null): string => {
+    if (label) return label;
+    if (!days) return 'Her Yıl';
+    if (days === 30) return 'Ayda Bir';
+    if (days === 60) return '2 Ayda Bir';
+    if (days === 90) return '3 Ayda Bir';
+    if (days === 365) return 'Her Yıl';
+    return `${days} Günde Bir`;
+  };
+
+  const renderTaskList = (title: string, list: any[], emptyMessage?: string, customEmptyContent?: React.ReactNode, emptyIcon: string = '✨') => {
+    if ((!list || list.length === 0) && !emptyMessage && !customEmptyContent) return null;
     
     const today = new Date();
     today.setHours(0,0,0,0);
 
     return (
       <div className="flex flex-col gap-3">
-        <h4 className="text-[12px] font-black text-text-secondary uppercase tracking-widest px-1">{title}</h4>
+        {title && <h4 className="text-[12px] font-black text-text-secondary uppercase tracking-widest px-1">{title}</h4>}
         {(!list || list.length === 0) ? (
-          <div className="py-6 bg-bg-main/50 rounded-[20px] border border-dashed border-border-main text-center flex flex-col items-center gap-2">
-            <span className="text-2xl opacity-80">🎉</span>
-            <p className="text-[13px] font-bold text-text-secondary">{emptyMessage}</p>
-          </div>
+          customEmptyContent ? customEmptyContent : (
+            <div className="py-6 bg-bg-main/50 rounded-[20px] border border-dashed border-border-main text-center flex flex-col items-center gap-2">
+              <span className="text-2xl opacity-80">{emptyIcon}</span>
+              <p className="text-[13px] font-bold text-text-secondary">{emptyMessage}</p>
+            </div>
+          )
         ) : (
           list.map((item: any) => {
           const isCompleted = item.status === 'done';
@@ -613,12 +645,17 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
           return (
             <div key={item.id} onClick={() => { setTaskToEdit(item); setTaskWizardOpen(true) }} className={`flex items-center justify-between p-4 ${cardStyle.bg} ${cardStyle.hoverBg} rounded-[20px] transition-colors cursor-pointer`}>
-              <div>
-                <p className={`font-extrabold text-[14px] ${cardStyle.textTitle}`}>{item.title || item.vaccines?.name || 'Görev'}</p>
-                {item.sub_category && <p className={`text-[11px] font-semibold ${cardStyle.textSub}`}>{item.sub_category}</p>}
-                <p className={`text-[11px] font-semibold mt-0.5 ${cardStyle.textDate}`}>{formatTaskDate(item.due_date, item.due_time, isCompleted)}</p>
+              <div className="flex-1 min-w-0 pr-3">
+                <p className={`font-extrabold text-[14px] line-clamp-2 break-words ${cardStyle.textTitle}`}>
+                  {item.title || item.vaccines?.name || 'Görev'}
+                  {item.sub_category === 'Zorunlu Aşılar' && (
+                    <span className="font-normal opacity-80 ml-1">/ {formatFrequency(item.vaccines?.frequency_days, item.vaccines?.frequency_label || item.frequency_label)}</span>
+                  )}
+                </p>
+                {item.sub_category && item.sub_category !== (item.title || item.vaccines?.name) && <p className={`text-[11px] font-semibold ${cardStyle.textSub}`}>{item.sub_category}</p>}
+                <div className={`text-[11px] font-semibold mt-1.5 ${cardStyle.textDate}`}>{formatTaskDate(item.due_date, item.due_time, isCompleted)}</div>
               </div>
-              <div className="relative">
+              <div className="relative shrink-0">
                 <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(prev => prev === item.id ? null : item.id) }}
                   className={`${cardStyle.textDots} p-2 transition-colors focus:outline-none cursor-pointer`}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -664,6 +701,68 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
     const filteredPlanned = filterList(plannedTasks, plannedTimeFilter, plannedSubCatFilter);
     const filteredCompleted = filterList(completedTasks, completedTimeFilter, completedSubCatFilter);
+    const hasAnyTasks = plannedTasks.length > 0 || completedTasks.length > 0;
+    const cta = (tabCtaInfo as any)[tabName];
+
+    const upcomingTasks = plannedTasks.filter(item => {
+      const diffMs = getTaskDateTime(item).getTime() - new Date().getTime();
+      return diffMs > 0;
+    }).sort((a,b) => getTaskDateTime(a).getTime() - getTaskDateTime(b).getTime());
+
+    let customEmptyContent: React.ReactNode = undefined;
+    if (filteredPlanned.length === 0 && plannedTimeFilter === 'Bugün + Gecikenler' && upcomingTasks.length > 0) {
+      customEmptyContent = (
+        <div className="flex flex-col gap-4">
+          <div className="py-6 bg-bg-main/50 rounded-[20px] border border-dashed border-border-main text-center flex flex-col items-center gap-2 px-4">
+            <span className="text-2xl opacity-80">✨</span>
+            <p className="text-[13px] font-bold text-text-secondary leading-relaxed">
+              Bugün için planlı göreviniz yok. İleri tarihli <span className="text-primary font-black">{upcomingTasks.length}</span> görevinizi görmek için filtreyi &apos;Tüm Zamanlar&apos; olarak değiştirin.
+            </p>
+          </div>
+          {renderTaskList('Yaklaşan Görevler', upcomingTasks.slice(0, 3))}
+        </div>
+      );
+    }
+
+    const handleCtaClick = () => {
+      if (tabName === 'Veteriner' && !pet.vet_company && !pet.vet_name && !pet.vet_phone && !pet.vet_email) {
+        setQuickUpdateConfig({
+          title: 'Veteriner Bilgisi',
+          desc: 'Veteriner görevi planlayabilmek için veteriner bilgisini girin.',
+          fields: [
+            { name: 'vet_company', type: 'text', label: 'Klinik / Şirket Adı', placeholder: 'Örn: Pati Veteriner Kliniği', required: true },
+            { name: 'vet_name', type: 'text', label: 'Veteriner Adı (Opsiyonel)', placeholder: 'Örn: Dr. Ali Yılmaz', required: false },
+            { name: 'vet_phone', type: 'tel', label: 'Telefon (Opsiyonel)', placeholder: '05xx xxx xx xx', required: false },
+            { name: 'vet_email', type: 'email', label: 'E-posta (Opsiyonel)', placeholder: 'klinik@email.com', required: false }
+          ],
+          onSuccess: () => openWizardWithCategory(TAB_CATEGORY_MAP['Veteriner'])
+        });
+      } else {
+        openWizardWithCategory(TAB_CATEGORY_MAP[tabName as keyof typeof TAB_CATEGORY_MAP]);
+      }
+    };
+
+    if (!hasAnyTasks) {
+      return (
+        <div className="flex flex-col gap-4 w-full">
+          <div className="py-8 px-4 bg-bg-main/50 rounded-[20px] border border-dashed border-border-main text-center flex flex-col items-center gap-3">
+            <div className={`w-12 h-12 bg-gradient-to-tr ${cta?.gradient || 'from-slate-200 to-slate-300'} rounded-2xl flex items-center justify-center shadow-sm mb-1`}>
+              <span className="text-2xl">🗓️</span>
+            </div>
+            <h3 className="font-extrabold text-text-primary text-[15px]">Henüz görev planlanmamış</h3>
+            <p className="text-[13px] text-text-secondary max-w-[260px] leading-relaxed mb-2">{cta?.desc || 'Bu kategoride henüz bir görev planlamadınız.'}</p>
+            {cta && (
+              <button
+                onClick={handleCtaClick}
+                className="btn-primary py-2.5 px-6 text-[13px] font-bold rounded-xl"
+              >
+                + {cta.btnLabel}
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div className="flex flex-col gap-4 w-full">
@@ -701,7 +800,17 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           </div>
         )}
 
-        {renderTaskList(`Planlanmış ${tabName === 'Diğer' ? '' : tabName} Görevleri`, filteredPlanned, 'Bu filtrelere uygun planlanmış görev bulunmuyor.')}
+        {(() => {
+          let plannedEmptyMessage = 'Bu filtrelere uygun planlanmış görev bulunmuyor.';
+          let plannedEmptyIcon = '✨';
+
+          if (plannedTasks.length === 0 && completedTasks.length > 0) {
+            plannedEmptyMessage = 'Harika! Tüm görevler tamamlandı';
+            plannedEmptyIcon = '✅';
+          }
+
+          return renderTaskList('', filteredPlanned, plannedEmptyMessage, customEmptyContent, plannedEmptyIcon);
+        })()}
         
         {completedTasks.length > 0 && (
           <div className="mt-2">
@@ -748,7 +857,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                     )}
                   </div>
                 )}
-                {renderTaskList(`Tamamlanmış ${tabName === 'Diğer' ? '' : tabName} Görevleri`, filteredCompleted, 'Bu filtrelere uygun tamamlanmış görev bulunmuyor.')}
+                {renderTaskList('', filteredCompleted, 'Bu filtrelere uygun tamamlanmış görev bulunmuyor.')}
               </div>
             )}
           </div>
@@ -832,17 +941,17 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                     <circle cx="54" cy="54" r={r} fill="none" stroke={scoreColor} strokeWidth="5"
                       strokeDasharray={`${fill} ${circ}`} strokeLinecap="round"/>
                   </svg>
-                  {/* Skor metni (sağ üst) */}
-                  <div className="absolute -top-1 -right-1 flex flex-col items-center justify-center w-9 h-9 rounded-full bg-white border-2 shadow-sm" style={{ borderColor: score >= 75 ? '#22C55E' : score >= 40 ? '#FACC15' : '#EF4444' }}>
-                    <span className="text-[9px] font-black leading-none" style={{ color: score >= 75 ? '#22C55E' : score >= 40 ? '#CA8A04' : '#EF4444' }}>{score}%</span>
-                    <span className="text-[7px] font-bold text-text-secondary/60 leading-none">sağlık</span>
-                  </div>
                   {/* Avatar */}
-                  <div className="w-20 h-20 rounded-[20px] bg-gradient-to-br from-primary-soft to-white overflow-hidden flex items-center justify-center text-primary text-[32px] font-black ring-2 ring-border-main">
+                  <div className="relative w-20 h-20 rounded-[20px] bg-gradient-to-br from-primary-soft to-white overflow-hidden flex items-center justify-center text-primary text-[32px] font-black ring-2 ring-border-main">
                     {pet.avatar_url
                       ? <Image src={pet.avatar_url} fill={true} sizes="80px" priority={true} className="object-cover" alt={pet.name}/>
                       : pet.name.charAt(0)
                     }
+                  </div>
+                  {/* Skor metni (sağ üst) */}
+                  <div className="absolute top-0 -right-2 z-20 flex flex-col items-center justify-center w-[44px] h-[44px] rounded-full bg-white border-[2.5px] shadow-sm" style={{ borderColor: score >= 75 ? '#22C55E' : score >= 40 ? '#FACC15' : '#EF4444' }}>
+                    <span className="text-[11px] font-black leading-none mt-0.5" style={{ color: score >= 75 ? '#22C55E' : score >= 40 ? '#CA8A04' : '#EF4444' }}>{score}%</span>
+                    <span className="text-[8.5px] font-bold text-text-secondary/60 leading-none whitespace-nowrap mt-[2px] tracking-tight">Sağlık</span>
                   </div>
                 </div>
               )
@@ -1079,8 +1188,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           </div>
 
           {/* Weekly Timeline Strip */}
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x mt-1">
-            {Array.from({length: 7}).map((_, i) => {
+          <div ref={timelineScrollRef} className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x mt-1">
+            {Array.from({length: 61}).map((_, idx) => {
+              const i = idx - 30;
               const date = new Date();
               date.setHours(0,0,0,0);
               date.setDate(date.getDate() + i);
@@ -1092,7 +1202,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                 return td.getTime() === date.getTime();
               });
               return (
-                <button key={i} onClick={() => setSelectedDate(date)} className={`snap-center flex-shrink-0 w-[60px] h-[72px] flex flex-col items-center justify-center rounded-2xl transition-all duration-200 border-2 ${isSelected ? 'border-primary bg-primary/5 shadow-sm' : 'border-border-main/50 bg-white hover:border-primary/30'} ${isToday && !isSelected ? 'border-text-secondary/20 bg-bg-main/50' : ''}`}>
+                <button key={i} data-istoday={isToday} onClick={() => setSelectedDate(date)} className={`snap-center flex-shrink-0 w-[60px] h-[72px] flex flex-col items-center justify-center rounded-2xl transition-all duration-200 border-2 ${isSelected ? 'border-primary bg-primary/5 shadow-sm' : 'border-border-main/50 bg-white hover:border-primary/30'} ${isToday && !isSelected ? 'border-text-secondary/20 bg-bg-main/50' : ''}`}>
                   <span className={`text-[11px] font-bold uppercase tracking-wider mb-1 ${isSelected ? 'text-primary' : 'text-text-secondary'}`}>{isToday ? 'BGN' : date.toLocaleDateString('tr-TR', {weekday: 'short'})}</span>
                   <span className={`text-[18px] font-black leading-none ${isSelected ? 'text-primary' : 'text-text-primary'}`}>{date.getDate()}</span>
                   <div className="flex gap-1 mt-1.5 h-1.5">
@@ -1150,8 +1260,13 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                               <button onClick={(e) => { e.stopPropagation(); handleMarkCompleted(t.id); }} className="mt-0.5 w-6 h-6 flex items-center justify-center rounded-full border-2 border-error/40 hover:bg-error hover:border-error text-transparent hover:text-white transition-colors flex-shrink-0">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                               </button>
-                              <div className="flex flex-col gap-1">
-                                <span className="text-[14px] font-bold text-error">{title}</span>
+                              <div className="flex flex-col gap-1 flex-1 min-w-0 pr-2">
+                                <span className="text-[14px] font-bold text-error line-clamp-2 break-words">
+                                  {title}
+                                  {t.sub_category === 'Zorunlu Aşılar' && (
+                                    <span className="font-normal opacity-80 ml-1">/ {formatFrequency(t.vaccines?.frequency_days, t.vaccines?.frequency_label || t.frequency_label)}</span>
+                                  )}
+                                </span>
                                 <span className="text-[11px] font-bold text-error/70 flex items-center gap-1">
                                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                                   {formatTaskDate(t.due_date, t.due_time, false)}
@@ -1193,12 +1308,17 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                           const isDone = t.status === 'done';
                           const title = t.title || t.vaccines?.name || t.category;
                           return (
-                            <div key={t.id} onClick={() => { if(!isDone) { setTaskToEdit(t); setTaskWizardOpen(true); } }} className={`flex items-center justify-between group p-3.5 rounded-2xl border transition-colors ${isDone ? 'bg-text-secondary/5 border-transparent' : 'cursor-pointer bg-white border-border-main/50 hover:border-primary/30 hover:bg-primary/5'}`}>
-                              <div className="flex items-center gap-3">
-                                <button onClick={(e) => { e.stopPropagation(); if(!isDone) handleMarkCompleted(t.id); }} className={`w-6 h-6 flex items-center justify-center rounded-full border-2 transition-colors flex-shrink-0 ${isDone ? 'bg-text-secondary/20 border-text-secondary/20 text-text-secondary' : 'border-primary/40 hover:bg-primary hover:border-primary text-transparent hover:text-white'}`}>
+                            <div key={t.id} onClick={() => { if(!isDone) { setTaskToEdit(t); setTaskWizardOpen(true); } }} className={`flex items-start justify-between group p-3.5 rounded-2xl border transition-colors ${isDone ? 'bg-text-secondary/5 border-transparent' : 'cursor-pointer bg-white border-border-main/50 hover:border-primary/30 hover:bg-primary/5'}`}>
+                              <div className="flex items-start gap-3 flex-1 min-w-0 pr-2">
+                                <button onClick={(e) => { e.stopPropagation(); if(!isDone) handleMarkCompleted(t.id); }} className={`mt-0.5 w-6 h-6 flex items-center justify-center rounded-full border-2 transition-colors flex-shrink-0 ${isDone ? 'bg-text-secondary/20 border-text-secondary/20 text-text-secondary' : 'border-primary/40 hover:bg-primary hover:border-primary text-transparent hover:text-white'}`}>
                                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                                 </button>
-                                <span className={`text-[14px] font-bold ${isDone ? 'text-text-secondary/60 line-through' : 'text-text-primary'}`}>{title}</span>
+                                <span className={`text-[14px] font-bold line-clamp-2 break-words ${isDone ? 'text-text-secondary/60 line-through' : 'text-text-primary'}`}>
+                                  {title}
+                                  {t.sub_category === 'Zorunlu Aşılar' && (
+                                    <span className="font-normal opacity-80 ml-1">/ {formatFrequency(t.vaccines?.frequency_days, t.vaccines?.frequency_label || t.frequency_label)}</span>
+                                  )}
+                                </span>
                               </div>
                               {!isDone && (
                                 <div className="flex items-center gap-1.5 relative" onClick={(e) => e.stopPropagation()}>
@@ -1231,6 +1351,10 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         </div>
 
       <HealthTracker petId={pet.id} onEditTask={(t) => { setTaskToEdit(t); setTaskWizardOpen(true); }} />
+
+      {pet.gender === 'female' && !pet.is_neutered && (
+        <EstrusTracker petId={pet.id} petSpecies={pet.species} />
+      )}
 
       <div className="flex flex-col gap-4">
         <MinimalGrowthChart 
@@ -1323,6 +1447,32 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                     </div>
                   )}
                 </div>
+                {isOpen && (pending.length > 0 || getCompletedSchedulesForTab(module.name).length > 0) && cta && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (module.name === 'Veteriner' && !pet.vet_company && !pet.vet_name && !pet.vet_phone && !pet.vet_email) {
+                        setQuickUpdateConfig({
+                          title: 'Veteriner Bilgisi',
+                          desc: 'Veteriner görevi planlayabilmek için veteriner bilgisini girin.',
+                          fields: [
+                            { name: 'vet_company', type: 'text', label: 'Klinik / Şirket Adı', placeholder: 'Örn: Pati Veteriner Kliniği', required: true },
+                            { name: 'vet_name', type: 'text', label: 'Veteriner Adı (Opsiyonel)', placeholder: 'Örn: Dr. Ali Yılmaz', required: false },
+                            { name: 'vet_phone', type: 'tel', label: 'Telefon (Opsiyonel)', placeholder: '05xx xxx xx xx', required: false },
+                            { name: 'vet_email', type: 'email', label: 'E-posta (Opsiyonel)', placeholder: 'klinik@email.com', required: false }
+                          ],
+                          onSuccess: () => openWizardWithCategory(TAB_CATEGORY_MAP['Veteriner'])
+                        });
+                      } else {
+                        openWizardWithCategory(TAB_CATEGORY_MAP[module.name as keyof typeof TAB_CATEGORY_MAP]);
+                      }
+                    }}
+                    className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-[10px] text-[12px] font-bold hover:bg-primary-hover hover:scale-105 active:scale-95 transition-all shadow-sm"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Ekle
+                  </button>
+                )}
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={`text-text-secondary shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9"/></svg>
               </button>
 
@@ -1395,41 +1545,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                     </>
                   )}
 
-                  {/* CTA Kartı */}
-                  {cta && (
-                    <div className="card-base p-5 bg-white border border-border-main shadow-sm rounded-2xl flex flex-col items-center text-center gap-3">
-                      <div className={`w-12 h-12 bg-gradient-to-tr ${cta.gradient} rounded-2xl flex items-center justify-center shadow-sm`}>
-                        {cta.icon}
-                      </div>
-                      <div>
-                        <h3 className="font-extrabold text-text-primary text-[16px] mb-0.5">{cta.title}</h3>
-                        <p className="text-[12px] text-text-secondary leading-relaxed">{cta.desc}</p>
-                      </div>
-                      <button
-                        onClick={() => {
-                          if (module.name === 'Veteriner' && !pet.vet_company && !pet.vet_name && !pet.vet_phone && !pet.vet_email) {
-                            setQuickUpdateConfig({
-                              title: 'Veteriner Bilgisi',
-                              desc: 'Veteriner görevi planlayabilmek için veteriner bilgisini girin.',
-                              fields: [
-                                { name: 'vet_company', type: 'text', label: 'Klinik / Şirket Adı', placeholder: 'Örn: Pati Veteriner Kliniği', required: true },
-                                { name: 'vet_name', type: 'text', label: 'Veteriner Adı (Opsiyonel)', placeholder: 'Örn: Dr. Ali Yılmaz', required: false },
-                                { name: 'vet_phone', type: 'tel', label: 'Telefon (Opsiyonel)', placeholder: '05xx xxx xx xx', required: false },
-                                { name: 'vet_email', type: 'email', label: 'E-posta (Opsiyonel)', placeholder: 'klinik@email.com', required: false }
-                              ],
-                              onSuccess: () => openWizardWithCategory(TAB_CATEGORY_MAP['Veteriner'])
-                            })
-                          } else {
-                            openWizardWithCategory(TAB_CATEGORY_MAP[module.name as keyof typeof TAB_CATEGORY_MAP])
-                          }
-                        }}
-                        className="w-full btn-primary py-3 text-[13px] font-black rounded-2xl"
-                      >
-                        {cta.btnLabel} →
-                      </button>
-                    </div>
-                  )}
-
+                  {/* CTA Kartı Kaldırıldı - Artık görev yoksa empty state altında veya module header'da + Ekle olarak gösteriliyor */}
                   {renderTabFiltersAndTasks(module.name)}
                 </div>
               )}
