@@ -43,17 +43,18 @@ export function HealthTracker({ petId, onEditTask }: HealthTrackerProps) {
   }
 
   // T1: Aksiyon Gerekiyor Banner'ı için event'leri topla
-  const actionRequiredEvents = categoryGroups.flatMap(g => 
-    g.taskRows.flatMap(tr => 
-      tr.events.filter(e => e.computedStatus === 'today' || e.computedStatus === 'missed')
-    ).concat(
-      g.subGroups?.flatMap(sg => 
+  const actionRequiredEvents = categoryGroups.flatMap(g => {
+    if (g.subGroups && g.subGroups.length > 0) {
+      return g.subGroups.flatMap(sg => 
         sg.taskRows.flatMap(tr => 
           tr.events.filter(e => e.computedStatus === 'today' || e.computedStatus === 'missed')
         )
-      ) || []
-    )
-  ).sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
+      );
+    }
+    return g.taskRows.flatMap(tr => 
+      tr.events.filter(e => e.computedStatus === 'today' || e.computedStatus === 'missed')
+    );
+  }).sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
 
   const displayActionEvents = actionRequiredEvents.slice(0, 3);
   const hiddenActionCount = actionRequiredEvents.length - displayActionEvents.length;
