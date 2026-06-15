@@ -749,10 +749,23 @@ export default function EditPetForm({ pet }: { pet: any }) {
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-[12px] font-bold text-text-secondary">Yakınlık</label>
-                  <input type="text" className="input-base"
+                  <select 
+                    className="input-base bg-white"
                     value={sosContacts[i]?.relation || ''}
                     onChange={e => { const c = [...sosContacts]; c[i] = {...c[i], relation: e.target.value}; setSosContacts(c) }}
-                    placeholder="Örn: Eşi, Komşusu" />
+                  >
+                    <option value="" disabled>Seçiniz</option>
+                    <option value="Aile Üyesi">Aile Üyesi</option>
+                    <option value="Eşi / Partneri">Eşi / Partneri</option>
+                    <option value="Komşu">Komşu</option>
+                    <option value="Arkadaş / Yakın">Arkadaş / Yakın</option>
+                    <option value="Evcil Hayvan Bakıcısı">Evcil Hayvan Bakıcısı</option>
+                    <option value="Veteriner Hekim">Veteriner Hekim</option>
+                    <option value="Diğer">Diğer</option>
+                    {sosContacts[i]?.relation && !['Aile Üyesi', 'Eşi / Partneri', 'Komşu', 'Arkadaş / Yakın', 'Evcil Hayvan Bakıcısı', 'Veteriner Hekim', 'Diğer'].includes(sosContacts[i].relation) && (
+                      <option value={sosContacts[i].relation}>{sosContacts[i].relation}</option>
+                    )}
+                  </select>
                 </div>
               </div>
             </div>

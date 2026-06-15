@@ -594,13 +594,23 @@ function PetSOSStep({
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-[12px] font-bold text-text-secondary">Yakınlık</label>
-              <input 
-                type="text" 
+              <select 
                 className="input-base text-[14px] py-3 px-4 bg-white" 
-                placeholder="Örn: Sahibi, Eşi" 
                 value={sosContacts[0]?.relation || ''} 
-                onChange={e => { const nc = [...sosContacts]; nc[0] = { ...nc[0], relation: e.target.value }; setSosContacts(nc); }} 
-              />
+                onChange={e => { const nc = [...sosContacts]; nc[0] = { ...nc[0], relation: e.target.value }; setSosContacts(nc); }}
+              >
+                <option value="" disabled>Seçiniz</option>
+                <option value="Aile Üyesi">Aile Üyesi</option>
+                <option value="Eşi / Partneri">Eşi / Partneri</option>
+                <option value="Komşu">Komşu</option>
+                <option value="Arkadaş / Yakın">Arkadaş / Yakın</option>
+                <option value="Evcil Hayvan Bakıcısı">Evcil Hayvan Bakıcısı</option>
+                <option value="Veteriner Hekim">Veteriner Hekim</option>
+                <option value="Diğer">Diğer</option>
+                {sosContacts[0]?.relation && !['Aile Üyesi', 'Eşi / Partneri', 'Komşu', 'Arkadaş / Yakın', 'Evcil Hayvan Bakıcısı', 'Veteriner Hekim', 'Diğer'].includes(sosContacts[0].relation) && (
+                  <option value={sosContacts[0].relation}>{sosContacts[0].relation}</option>
+                )}
+              </select>
             </div>
           </div>
 
@@ -628,13 +638,23 @@ function PetSOSStep({
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-[12px] font-bold text-text-secondary">Yakınlık</label>
-              <input 
-                type="text" 
+              <select 
                 className="input-base text-[14px] py-3 px-4 bg-white" 
-                placeholder="Örn: Komşusu" 
                 value={sosContacts[1]?.relation || ''} 
-                onChange={e => { const nc = [...sosContacts]; nc[1] = { ...nc[1], relation: e.target.value }; setSosContacts(nc); }} 
-              />
+                onChange={e => { const nc = [...sosContacts]; nc[1] = { ...nc[1], relation: e.target.value }; setSosContacts(nc); }}
+              >
+                <option value="" disabled>Seçiniz</option>
+                <option value="Aile Üyesi">Aile Üyesi</option>
+                <option value="Eşi / Partneri">Eşi / Partneri</option>
+                <option value="Komşu">Komşu</option>
+                <option value="Arkadaş / Yakın">Arkadaş / Yakın</option>
+                <option value="Evcil Hayvan Bakıcısı">Evcil Hayvan Bakıcısı</option>
+                <option value="Veteriner Hekim">Veteriner Hekim</option>
+                <option value="Diğer">Diğer</option>
+                {sosContacts[1]?.relation && !['Aile Üyesi', 'Eşi / Partneri', 'Komşu', 'Arkadaş / Yakın', 'Evcil Hayvan Bakıcısı', 'Veteriner Hekim', 'Diğer'].includes(sosContacts[1].relation) && (
+                  <option value={sosContacts[1].relation}>{sosContacts[1].relation}</option>
+                )}
+              </select>
             </div>
           </div>
         </div>
