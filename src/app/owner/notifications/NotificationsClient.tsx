@@ -33,8 +33,31 @@ function iconFor(type: string) {
 function PushPermissionCard({ onDismiss }: { onDismiss: () => void }) {
   const { permission, isSubscribed, isLoading, subscribe } = useWebPush()
   const [result, setResult] = useState<'idle' | 'success' | 'denied'>('idle')
+  const [testSending, setTestSending] = useState(false)
 
-  if (isSubscribed || permission === 'granted' || permission === 'unsupported') return null
+  const triggerLocalTestNotification = async () => {
+    if (!('serviceWorker' in navigator)) return;
+    setTestSending(true);
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      reg.showNotification('🐾 Odi.Pet Test Bildirimi', {
+        body: 'Harika! Telefon bildirimlerin ve Service Worker bağlantın başarıyla çalışıyor. 🌟',
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
+        tag: 'test-notification',
+        data: {
+          url: '/owner/notifications'
+        }
+      });
+    } catch (err) {
+      console.error('Test bildirimi gönderilemedi:', err);
+    } finally {
+      setTestSending(false);
+    }
+  };
+
+  if (permission === 'unsupported') return null
+
   if (permission === 'denied') return (
     <div className="p-4 bg-warning/10 border border-warning/20 rounded-2xl flex gap-3 items-start">
       <span className="text-[20px] shrink-0">⚠️</span>
@@ -48,12 +71,28 @@ function PushPermissionCard({ onDismiss }: { onDismiss: () => void }) {
     </div>
   )
 
-  if (result === 'success') return (
-    <div className="p-4 bg-success/10 border border-success/20 rounded-2xl flex gap-3 items-center animate-in fade-in">
-      <span className="text-[24px]">🎉</span>
-      <div>
-        <p className="text-[14px] font-extrabold text-success">Bildirimler Açık!</p>
-        <p className="text-[12px] text-text-secondary mt-0.5">Artık aşı hatırlatmaları telefonuna gelecek.</p>
+  if (isSubscribed || permission === 'granted' || result === 'success') return (
+    <div className="p-5 bg-success/5 border border-success/20 rounded-2xl flex gap-4 items-start animate-in fade-in duration-300">
+      <div className="w-12 h-12 rounded-xl bg-success/15 flex items-center justify-center text-[24px] shrink-0">
+        🎉
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-extrabold text-[15px] text-success">Bildirimleriniz Aktif!</p>
+        <p className="text-[13px] text-text-secondary mt-1 leading-relaxed">
+          Mia'nın aşı, ilaç ve beslenme hatırlatmaları artık telefonunuza anında gelecek.
+        </p>
+        <div className="flex gap-2 mt-3">
+          <button
+            onClick={triggerLocalTestNotification}
+            disabled={testSending}
+            className="px-4 py-2 bg-success text-white font-bold text-[13px] rounded-xl hover:bg-success/90 transition-colors flex items-center gap-2 cursor-pointer shadow-sm active:scale-95"
+          >
+            {testSending ? (
+              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : '🔔'}
+            Test Bildirimi Gönder
+          </button>
+        </div>
       </div>
     </div>
   )
