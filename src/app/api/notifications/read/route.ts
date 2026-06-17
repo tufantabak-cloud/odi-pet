@@ -27,17 +27,28 @@ export async function PATCH(request: Request) {
   return NextResponse.json({ success: true })
 }
 
-// GET /api/notifications/read  — get unread count
+// GET /api/notifications/read  — get unread count and latest 5 notifications
 export async function GET() {
   const user = await getSessionUser()
-  if (!user) return NextResponse.json({ count: 0 })
+  if (!user) return NextResponse.json({ count: 0, notifications: [] })
 
   const supabase = await createServerSupabaseClient()
-  const { count } = await supabase
-    .from('notifications')
-    .select('id', { count: 'exact', head: true })
-    .eq('profile_id', user.id)
-    .eq('is_read', false)
+  const [{ count }, { data: latest }] = await Promise.all([
+    supabase
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('profile_id', user.id)
+      .eq('is_read', false),
+    supabase
+      .from('notifications')
+      .select('*')
+      .eq('profile_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(5)
+  ])
 
-  return NextResponse.json({ count: count ?? 0 })
+  return NextResponse.json({ 
+    count: count ?? 0, 
+    notifications: latest ?? [] 
+  })
 }
