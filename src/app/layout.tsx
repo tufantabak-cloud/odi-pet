@@ -11,15 +11,22 @@ const inter = Inter({
 });
 
 export const viewport: Viewport = {
-  width: "device-width",
+  width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
+  themeColor: '#6C5CE7',
 };
 
 export const metadata: Metadata = {
-  title: "Odi Pet Care",
-  description: "Pet bakım ve klinik takip sistemi",
+  title: 'Odi.Pet — Can Dostunun Yaşam Platformu',
+  description: 'Can Dostunun Yaşam Platformu',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Odi.Pet',
+  },
   icons: {
     icon: '/favicon.ico',
     apple: '/apple-touch-icon.png',

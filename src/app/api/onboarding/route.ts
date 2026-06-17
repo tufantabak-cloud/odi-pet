@@ -4,37 +4,41 @@ import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { Database } from '@/lib/database.types'
 import { SupabaseClient } from '@supabase/supabase-js'
 
-type OnboardingProgressRow = Database['public']['Tables']['onboarding_progress']['Row']
-
-
-// GET: fetch onboarding progress (upsert if missing)
+// GET: fetch completed onboarding steps
 export async function GET() {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const supabase = await createServerSupabaseClient()
 
+  // Get demo mode and wizard completion status
   const { data: progress } = await supabase
     .from('onboarding_progress')
-    .select('*')
+    .select('demo_mode, wizard_completed')
     .eq('profile_id', user.id)
     .single()
 
-  if (progress) return NextResponse.json(progress)
+  // Get completed steps
+  const { data: steps, error } = await supabase
+    .from('user_onboarding_steps')
+    .select('step_id')
+    .eq('user_id', user.id)
+    .eq('is_completed', true)
 
-  // Auto-create if missing (existing users pre-migration)
-  const { data: fresh } = await supabase
-    .from('onboarding_progress')
-    .insert({ profile_id: user.id })
-    .select().single()
+  if (error && error.code !== 'PGRST116') {
+    console.error('Error fetching steps:', error)
+  }
 
-  // Backfill from existing data
-  await backfillProgress(supabase, user.id)
+  const completedSteps = steps?.map(s => s.step_id) || []
 
-  return NextResponse.json(fresh)
+  return NextResponse.json({
+    completedSteps,
+    demoMode: progress?.demo_mode || false,
+    wizard_completed: progress?.wizard_completed || false
+  })
 }
 
-// PATCH: update specific checklist step
+// PATCH: update onboarding progress table (e.g. wizard_completed)
 export async function PATCH(req: NextRequest) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -42,38 +46,50 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json()
   const supabase = await createServerSupabaseClient()
 
-  // Check if all steps complete → award points
-  const updateData: Partial<OnboardingProgressRow> & Record<string, unknown> = { ...body, updated_at: new Date().toISOString() }
-
-  // Check completion for reward
-  if (body.has_generated_report) {
-    const { data: prog } = await supabase.from('onboarding_progress').select('*').eq('profile_id', user.id).single()
-    const allDone = prog?.has_added_pet && prog?.has_added_vaccine &&
-      prog?.has_added_feeding_log && prog?.has_invited_member && body.has_generated_report
-
-    if (allDone && !prog?.activation_points_awarded) {
-      updateData.activation_points_awarded = true
-      // Award 100 Care Points
-      await supabase.rpc('increment_care_points', { uid: user.id, points: 100 })
-    }
-  }
-
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('onboarding_progress')
-    .upsert({ profile_id: user.id, ...updateData }, { onConflict: 'profile_id' })
-    .select().single()
+    .upsert({ 
+      profile_id: user.id, 
+      ...body, 
+      updated_at: new Date().toISOString() 
+    }, { onConflict: 'profile_id' })
+    .select()
+    .single()
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
 
   return NextResponse.json(data)
 }
 
-// POST: seed demo mode data for the current user
+// POST: complete a step or handle demo data
 export async function POST(req: NextRequest) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { action } = await req.json()
+  const body = await req.json()
+  const { action, stepId } = body
   const supabase = await createServerSupabaseClient()
 
+  if (action === 'complete_step' && stepId) {
+    const { error } = await supabase
+      .from('user_onboarding_steps')
+      .upsert({ 
+        user_id: user.id, 
+        step_id: stepId,
+        is_completed: true,
+        completed_at: new Date().toISOString()
+      }, { onConflict: 'user_id, step_id' })
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
+  }
+
+  // Preserve demo logic
   if (action === 'enable_demo') {
     // Check if demo pet already exists
     const { data: existing } = await supabase.from('pets')
@@ -94,7 +110,6 @@ export async function POST(req: NextRequest) {
 
       if (demoPet) {
         const past = (d: number) => new Date(Date.now() - d * 86400000).toISOString().split('T')[0]
-        const pastTs = (d: number) => new Date(Date.now() - d * 86400000).toISOString()
 
         await Promise.all([
           // Overdue health task
@@ -143,25 +158,3 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
 }
 
-// Backfill progress from existing user data
-async function backfillProgress(supabase: SupabaseClient<Database>, userId: string) {
-  const { data: pets } = await supabase.from('pets').select('id').eq('owner_id', userId)
-  const petIds = pets?.map(p => p.id) || ['00000000-0000-0000-0000-000000000000']
-  const [{ count: petCount }, { count: vaccineCount }, { count: nutritionCount }, { count: inviteCount }, { count: reportCount }] = await Promise.all([
-    supabase.from('pets').select('id', { count: 'exact', head: true }).eq('owner_id', userId),
-    supabase.from('vaccine_records').select('id', { count: 'exact', head: true }).in('pet_id', petIds),
-    supabase.from('nutrition_logs').select('id', { count: 'exact', head: true }).in('pet_id', petIds),
-    supabase.from('pet_invites').select('id', { count: 'exact', head: true }).eq('invited_by', userId),
-    supabase.from('pet_reports').select('id', { count: 'exact', head: true }).eq('profile_id', userId),
-  ])
-
-  await supabase.from('onboarding_progress').upsert({
-    profile_id: userId,
-    has_added_pet: (petCount ?? 0) > 0,
-    has_added_vaccine: (vaccineCount ?? 0) > 0,
-    has_added_feeding_log: (nutritionCount ?? 0) > 0,
-    has_invited_member: (inviteCount ?? 0) > 0,
-    has_generated_report: (reportCount ?? 0) > 0,
-    wizard_completed: (petCount ?? 0) > 0,
-  }, { onConflict: 'profile_id' })
-}

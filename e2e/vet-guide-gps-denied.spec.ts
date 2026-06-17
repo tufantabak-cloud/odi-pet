@@ -38,9 +38,8 @@ test.describe('Veterinary Guide GPS and Edge Cases', () => {
     // Simulate offline mode
     await context.setOffline(true)
     
-    // Wait for the UI to react to the 'offline' event
-    // The exact text is "İnternet bağlantınız yok"
-    const offlineMsg = page.getByText('İnternet bağlantınız yok')
+    // The exact text is "İnternet Bağlantısı Yok"
+    const offlineMsg = page.getByText('İnternet Bağlantısı Yok')
     await expect(offlineMsg).toBeVisible()
   })
 })

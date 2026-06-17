@@ -1,4 +1,5 @@
 import React from 'react';
+import { CategoryKey } from '@/lib/categoryThemes';
 
 interface IconProps {
   width?: number | string;
@@ -489,6 +490,46 @@ export function FirstAidIcon({ width = 34, height = 34, className = '', isSelect
   );
 }
 
+// 12.5 ParasiteIcon - Parazit Koruması (Teal-to-Green Protection Shield with a bug symbol)
+export function ParasiteIcon({ width = 34, height = 34, className = '', isSelected = false }: IconProps) {
+  const scaleClass = isSelected ? 'scale-[1.1]' : 'hover:scale-[1.05]';
+  return (
+    <svg
+      width={width}
+      height={height}
+      viewBox="0 0 32 32"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={`transition-all duration-300 ease-out ${scaleClass} ${className}`}
+    >
+      <defs>
+        <linearGradient id="parasiteGrad" x1="4" y1="4" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#10B981" />
+          <stop offset="100%" stopColor="#059669" />
+        </linearGradient>
+        <filter id="parasiteShadow" x="-10%" y="-10%" width="120%" height="120%">
+          <feDropShadow dx="0" dy="2" stdDeviation="1.5" floodColor="#059669" floodOpacity="0.35"/>
+        </filter>
+      </defs>
+      {/* Shield Shape */}
+      <path d="M16 4L6 8V16C6 22 10 26.5 16 28C22 26.5 26 22 26 16V8L16 4Z" fill="url(#parasiteGrad)" filter="url(#parasiteShadow)" />
+      {/* Inner Shield Line */}
+      <path d="M16 6L8 9.2V16C8 20.8 11.2 24.5 16 25.8C20.8 24.5 24 20.8 24 16V9.2L16 6Z" stroke="#FFFFFF" strokeWidth="1.5" strokeOpacity="0.5" fill="none" />
+      {/* Bug / Virus icon inside */}
+      <circle cx="16" cy="15" r="3.5" fill="#FFFFFF" />
+      {/* Legs */}
+      <line x1="12" y1="13" x2="14" y2="14.5" stroke="#FFFFFF" strokeWidth="1.2" strokeLinecap="round" />
+      <line x1="11.5" y1="15" x2="13.5" y2="15" stroke="#FFFFFF" strokeWidth="1.2" strokeLinecap="round" />
+      <line x1="12" y1="17" x2="14" y2="15.5" stroke="#FFFFFF" strokeWidth="1.2" strokeLinecap="round" />
+      <line x1="20" y1="13" x2="18" y2="14.5" stroke="#FFFFFF" strokeWidth="1.2" strokeLinecap="round" />
+      <line x1="20.5" y1="15" x2="18.5" y2="15" stroke="#FFFFFF" strokeWidth="1.2" strokeLinecap="round" />
+      <line x1="20" y1="17" x2="18" y2="15.5" stroke="#FFFFFF" strokeWidth="1.2" strokeLinecap="round" />
+      {/* Head */}
+      <circle cx="16" cy="10.5" r="1.5" fill="#FFFFFF" />
+    </svg>
+  );
+}
+
 // 13. DefaultCatAvatar - Minimalist 3D Sticker Style
 export function DefaultCatAvatar({ width = "100%", height = "100%", className = '' }: IconProps) {
   return (
@@ -620,3 +661,225 @@ export function DefaultDogAvatar({ width = "100%", height = "100%", className = 
   );
 }
 
+export const PetIcons: Record<CategoryKey, {
+  icon: (props: { size?: number }) => React.JSX.Element
+  subIcons: Record<string, () => React.JSX.Element>
+}> = {
+  asi: {
+    icon: ({ size = 48 }) => (
+      <svg width={size} height={size} viewBox="0 0 48 48">
+        <defs>
+          <linearGradient id="asiGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#60A5FA"/>
+            <stop offset="100%" stopColor="#06B6D4"/>
+          </linearGradient>
+          <filter id="asiShadow">
+            <feDropShadow dx="0" dy="2"
+              stdDeviation="2" floodOpacity="0.2"/>
+          </filter>
+        </defs>
+        {/* Şırınga gövdesi */}
+        <rect x="10" y="20" width="28" height="8"
+          rx="4" fill="url(#asiGrad)"
+          filter="url(#asiShadow)"/>
+        {/* İğne ucu */}
+        <rect x="36" y="22" width="8" height="4"
+          rx="2" fill="#93C5FD"/>
+        {/* Piston */}
+        <rect x="6" y="21" width="6" height="6"
+          rx="1" fill="#BFDBFE"/>
+        {/* İlaç bölümü */}
+        <rect x="16" y="22" width="12" height="4"
+          rx="2" fill="white" fillOpacity="0.4"/>
+      </svg>
+    ),
+    subIcons: {
+      'Karma Aşı': () => <svg></svg>,
+      'Kuduz':     () => <svg></svg>,
+    }
+  },
+
+  beslenme: {
+    icon: ({ size = 48 }) => (
+      <svg width={size} height={size} viewBox="0 0 48 48">
+        <defs>
+          <linearGradient id="besGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#FCD34D"/>
+            <stop offset="100%" stopColor="#F97316"/>
+          </linearGradient>
+          <filter id="besShadow">
+            <feDropShadow dx="0" dy="2"
+              stdDeviation="2" floodOpacity="0.2"/>
+          </filter>
+        </defs>
+        {/* Mama kabı dış */}
+        <ellipse cx="24" cy="32" rx="16" ry="6"
+          fill="url(#besGrad)" filter="url(#besShadow)"/>
+        {/* Mama kabı iç */}
+        <ellipse cx="24" cy="30" rx="12" ry="4"
+          fill="#FDE68A"/>
+        {/* Mama granülleri */}
+        <circle cx="20" cy="29" r="2" fill="#F59E0B"/>
+        <circle cx="24" cy="28" r="2" fill="#F59E0B"/>
+        <circle cx="28" cy="29" r="2" fill="#F59E0B"/>
+        {/* Buhar */}
+        <path d="M18 22 Q19 18 18 14" stroke="#FCD34D"
+          strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+        <path d="M24 20 Q25 16 24 12" stroke="#FCD34D"
+          strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+      </svg>
+    ),
+    subIcons: {}
+  },
+
+  bakim: {
+    icon: ({ size = 48 }) => (
+      <svg width={size} height={size} viewBox="0 0 48 48">
+        <defs>
+          <linearGradient id="bakGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#F472B6"/>
+            <stop offset="100%" stopColor="#FB7185"/>
+          </linearGradient>
+          <filter id="bakShadow">
+            <feDropShadow dx="0" dy="2"
+              stdDeviation="2" floodOpacity="0.2"/>
+          </filter>
+        </defs>
+        {/* Makas gövdesi */}
+        <line x1="14" y1="14" x2="34" y2="34"
+          stroke="url(#bakGrad)" strokeWidth="4"
+          strokeLinecap="round" filter="url(#bakShadow)"/>
+        <line x1="34" y1="14" x2="14" y2="34"
+          stroke="url(#bakGrad)" strokeWidth="4"
+          strokeLinecap="round"/>
+        {/* Makas halkaları */}
+        <circle cx="12" cy="12" r="5"
+          fill="none" stroke="url(#bakGrad)" strokeWidth="3"/>
+        <circle cx="36" cy="12" r="5"
+          fill="none" stroke="url(#bakGrad)" strokeWidth="3"/>
+      </svg>
+    ),
+    subIcons: {}
+  },
+
+  aktivite: {
+    icon: ({ size = 48 }) => (
+      <svg width={size} height={size} viewBox="0 0 48 48">
+        <defs>
+          <linearGradient id="aktGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#FB923C"/>
+            <stop offset="100%" stopColor="#EF4444"/>
+          </linearGradient>
+          <filter id="aktShadow">
+            <feDropShadow dx="0" dy="2"
+              stdDeviation="2" floodOpacity="0.2"/>
+          </filter>
+        </defs>
+        {/* Kemik yatay gövde */}
+        <rect x="12" y="21" width="24" height="6"
+          rx="3" fill="url(#aktGrad)"
+          filter="url(#aktShadow)"/>
+        {/* Sol üst top */}
+        <circle cx="13" cy="16" r="5" fill="url(#aktGrad)"/>
+        {/* Sol alt top */}
+        <circle cx="13" cy="32" r="5" fill="url(#aktGrad)"/>
+        {/* Sağ üst top */}
+        <circle cx="35" cy="16" r="5" fill="url(#aktGrad)"/>
+        {/* Sağ alt top */}
+        <circle cx="35" cy="32" r="5" fill="url(#aktGrad)"/>
+        {/* Parlama */}
+        <ellipse cx="20" cy="19" rx="4" ry="2"
+          fill="white" fillOpacity="0.25" transform="rotate(-30 20 19)"/>
+      </svg>
+    ),
+    subIcons: {}
+  },
+
+  parazit: {
+    icon: ({ size = 48 }) => (
+      <svg width={size} height={size} viewBox="0 0 48 48">
+        <defs>
+          <linearGradient id="parGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#4ADE80"/>
+            <stop offset="100%" stopColor="#10B981"/>
+          </linearGradient>
+          <filter id="parShadow">
+            <feDropShadow dx="0" dy="2"
+              stdDeviation="2" floodOpacity="0.2"/>
+          </filter>
+        </defs>
+        {/* Kalkan */}
+        <path d="M24 6 L38 12 L38 26
+                 C38 34 24 42 24 42
+                 C24 42 10 34 10 26
+                 L10 12 Z"
+          fill="url(#parGrad)" filter="url(#parShadow)"/>
+        {/* Tik işareti */}
+        <path d="M17 24 L22 29 L31 18"
+          stroke="white" strokeWidth="3"
+          strokeLinecap="round" strokeLinejoin="round"
+          fill="none"/>
+      </svg>
+    ),
+    subIcons: {}
+  },
+
+  hijyen: {
+    icon: ({ size = 48 }) => (
+      <svg width={size} height={size} viewBox="0 0 48 48">
+        <defs>
+          <linearGradient id="hijGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#38BDF8"/>
+            <stop offset="100%" stopColor="#6366F1"/>
+          </linearGradient>
+          <filter id="hijShadow">
+            <feDropShadow dx="0" dy="2"
+              stdDeviation="2" floodOpacity="0.2"/>
+          </filter>
+        </defs>
+        {/* Diş fırçası sapı */}
+        <rect x="20" y="8" width="8" height="26"
+          rx="4" fill="url(#hijGrad)"
+          filter="url(#hijShadow)"/>
+        {/* Fırça baş */}
+        <rect x="16" y="30" width="16" height="10"
+          rx="4" fill="#BAE6FD"/>
+        {/* Kıl demetleri */}
+        <line x1="20" y1="32" x2="20" y2="38"
+          stroke="white" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="24" y1="32" x2="24" y2="38"
+          stroke="white" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="28" y1="32" x2="28" y2="38"
+          stroke="white" strokeWidth="2" strokeLinecap="round"/>
+      </svg>
+    ),
+    subIcons: {}
+  },
+
+  saglik: {
+    icon: ({ size = 48 }) => (
+      <svg width={size} height={size} viewBox="0 0 48 48">
+        <defs>
+          <linearGradient id="sagGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#F87171"/>
+            <stop offset="100%" stopColor="#E11D48"/>
+          </linearGradient>
+          <filter id="sagShadow">
+            <feDropShadow dx="0" dy="2"
+              stdDeviation="2" floodOpacity="0.2"/>
+          </filter>
+        </defs>
+        {/* Artı işareti — sağlık */}
+        <rect x="20" y="10" width="8" height="28"
+          rx="4" fill="url(#sagGrad)"
+          filter="url(#sagShadow)"/>
+        <rect x="10" y="20" width="28" height="8"
+          rx="4" fill="url(#sagGrad)"/>
+        {/* Parlama */}
+        <ellipse cx="22" cy="16" rx="2" ry="4"
+          fill="white" fillOpacity="0.3"/>
+      </svg>
+    ),
+    subIcons: {}
+  },
+}

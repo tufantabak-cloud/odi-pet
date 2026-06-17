@@ -10,14 +10,30 @@ export default function OnboardingGate({ children }: { children: React.ReactNode
   const [error, setError] = useState(false)
 
   useEffect(() => {
+    const isTestDisabled = typeof window !== 'undefined' && window.localStorage.getItem('onboarding_disabled') === 'true';
+    if (process.env.NEXT_PUBLIC_ONBOARDING_ENABLED === 'false' || isTestDisabled) {
+      setLoading(false)
+      return;
+    }
+
     fetch('/api/onboarding')
-      .then(r => r.json())
+      .then(async r => {
+        console.log('OnboardingGate API status:', r.status);
+        if (!r.ok) {
+          const text = await r.text();
+          console.error('OnboardingGate API error text:', text);
+          throw new Error('API failed');
+        }
+        return r.json();
+      })
       .then(data => {
+        console.log('OnboardingGate API data:', data);
         setProgress(data)
         if (!data.wizard_completed) setShowWizard(true)
         setLoading(false)
       })
-      .catch(() => {
+      .catch((e) => {
+        console.error('OnboardingGate fetch caught error:', e);
         setError(true)
         setLoading(false)
       })
@@ -33,7 +49,12 @@ export default function OnboardingGate({ children }: { children: React.ReactNode
   if (loading) return <>{children}</>
   if (error) return <>{children}</>
   if (showWizard && progress) {
-    return <OnboardingWizard onComplete={finishWizard} />
+    return (
+      <>
+        {children}
+        <OnboardingWizard onComplete={finishWizard} />
+      </>
+    )
   }
 
   return <>{children}</>

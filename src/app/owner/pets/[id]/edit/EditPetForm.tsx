@@ -105,7 +105,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
   const [provinces, setProvinces] = useState<any[]>([])
 
   useEffect(() => {
-    fetch('https://turkiyeapi.dev/api/v1/provinces')
+    fetch('/api/provinces')
       .then(res => res.json())
       .then(res => {
         if (res.status === 'OK' && res.data) {
@@ -319,9 +319,9 @@ export default function EditPetForm({ pet }: { pet: any }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div className="flex flex-col gap-2">
               <label className="text-[13px] font-bold text-text-primary">İsim *</label>
-              <input autoFocus value={petName} onChange={e => setPetName(e.target.value)} className="input-base" required/>
+              <input id="name" autoFocus value={petName} onChange={e => setPetName(e.target.value)} className="input-base" required/>
             </div>
-            <div className="flex flex-col gap-2">
+            <div id="breed-input" className="flex flex-col gap-2">
               <label className="text-[13px] font-bold text-text-primary">Irk *</label>
               <select value={selectedBreed} onChange={e => setSelectedBreed(e.target.value)} className="input-base" required>
                 <option value="" disabled>Irk seçin</option>
@@ -452,7 +452,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
                )}
              </div>
 
-            <div className="flex flex-col gap-2">
+            <div id="weight-input" className="flex flex-col gap-2">
               <label className="text-[13px] font-bold text-text-primary">Kilo (kg) *</label>
               <div className="relative flex items-center h-[54px] w-full border-2 border-primary/40 focus-within:border-primary rounded-[16px] overflow-hidden bg-white transition-all">
                 <button
@@ -464,6 +464,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
                 </button>
                 <div className="flex-1 flex items-center justify-center relative h-full">
                   <input 
+                    id="weight"
                     type="number" 
                     step="0.01" 
                     min="0.01" 
@@ -485,7 +486,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-[13px] font-bold text-text-primary">Boy (cm) *</label>
+              <label className="text-[13px] font-bold text-text-primary">Boy (cm)</label>
               <div className="relative flex items-center h-[54px] w-full border-2 border-primary/40 focus-within:border-primary rounded-[16px] overflow-hidden bg-white transition-all">
                 <button
                   type="button"
@@ -503,7 +504,6 @@ export default function EditPetForm({ pet }: { pet: any }) {
                     onChange={e => setHeightCm(e.target.value)} 
                     placeholder="Örn: 35" 
                     className="w-full h-full text-center bg-transparent border-0 focus:outline-none focus:ring-0 text-[15px] font-extrabold text-text-primary pr-8" 
-                    required 
                   />
                   <span className="absolute right-4 pointer-events-none text-[12px] font-bold text-text-secondary">cm</span>
                 </div>

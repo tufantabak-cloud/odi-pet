@@ -8,6 +8,8 @@ import FloatingLostPets from '@/components/FloatingLostPets'
 import NotificationBell from '@/components/NotificationBell'
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import SpotlightTour from '@/components/onboarding/SpotlightTour'
+import DashboardPendingReferral from '@/components/DashboardPendingReferral'
 
 export default async function OwnerLayout({ children }: { children: ReactNode }) {
   const profile = await requireRole(['owner', 'admin', 'founder'])
@@ -36,7 +38,7 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
   const petCount = pets?.length ?? 0
   const primaryPet = pets && pets.length > 0 ? pets[0] : null
 
-  const showNav = petCount > 0 && onboardingData?.wizard_completed === true
+  const showNav = petCount > 0 || onboardingData?.wizard_completed === false
 
   const userCities = Array.from(new Set((pets || []).map(p => p.city).filter(Boolean))) as string[]
 
@@ -82,6 +84,9 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
 
       {/* Mobile Glass Bottom Nav */}
       {showNav && <BottomNav />}
+
+      <SpotlightTour />
+      <DashboardPendingReferral />
     </div>
   )
 }

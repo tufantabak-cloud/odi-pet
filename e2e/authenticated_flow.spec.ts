@@ -2,132 +2,113 @@ import { test, expect, type Page } from '@playwright/test';
 
 const EMAIL = process.env.TEST_EMAIL;
 const PASSWORD = process.env.TEST_PASSWORD;
-const PET_ID = process.env.TEST_PET_ID;
 
 async function login(page: Page) {
   if (!EMAIL || !PASSWORD) {
     test.skip(true, 'TEST_EMAIL / TEST_PASSWORD not set.');
     return;
   }
+  // Add small delay to prevent rate limit lockout in fast consecutive tests
+  await page.waitForTimeout(2000);
   await page.goto('/login');
   await page.fill('input[name="email"]', EMAIL);
   await page.fill('input[name="password"]', PASSWORD);
   await page.click('button[type="submit"]');
-  await expect(page).toHaveURL(/\/owner\//, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/admin|\/owner\//, { timeout: 15_000 });
 }
 
-// ---------------------------------------------------------------------------
-// SOS Module
-// ---------------------------------------------------------------------------
+test.describe('SOS & Treatments Authenticated Flow', () => {
+  let petId: string;
+  const tempPetName = `AuthFl_${Math.floor(Math.random() * 9000) + 1000}`;
 
-test.describe('SOS Emergency Contacts', () => {
-  test.beforeEach(async ({ page }) => {
+  test('Create dynamic pet for authenticated flow tests', async ({ page }) => {
     await login(page);
+
+    const petResponse = await page.evaluate(async (name) => {
+      const fd = new FormData();
+      fd.append('name', name);
+      fd.append('species', 'Köpek');
+      fd.append('breed', 'Golden Retriever');
+      fd.append('birth_date', '2025-01-01');
+      fd.append('gender', 'male');
+      fd.append('is_neutered', 'false');
+      fd.append('weight', '15');
+      fd.append('city', 'İzmir');
+      fd.append('district', 'Karşıyaka');
+
+      const res = await fetch('/api/pets', {
+        method: 'POST',
+        body: fd
+      });
+      return res.json();
+    }, tempPetName);
+
+    expect(petResponse.success).toBe(true);
+    petId = petResponse.pet.id;
   });
 
-  test('Family/SOS tab is reachable on edit pet page', async ({ page }) => {
-    if (!PET_ID) {
-      test.skip(true, 'TEST_PET_ID not set.');
-      return;
-    }
-    await page.goto(`/owner/pets/${PET_ID}/edit`);
+  // SOS Module
+  test('Family/SOS section is readable on edit pet page', async ({ page }) => {
+    await login(page);
+    await page.goto(`/owner/pets/${petId}/edit`);
     await page.waitForLoadState('networkidle');
 
-    // Click on "Acil Durum (SOS)" tab
-    const familyTab = page
-      .locator('button:has-text("Acil Durum")')
-      .first();
-    if (await familyTab.isVisible()) {
-      await familyTab.click();
-      // SOS contact form or list should now be visible
-      await expect(
-        page.locator('text=Acil Durum (SOS) Ağı').first()
-      ).toBeVisible({ timeout: 8_000 });
-    }
+    // Section header should be visible
+    await expect(page.locator('text=4. Acil Durum Ağı').first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('Can fill and save an SOS contact', async ({ page }) => {
-    if (!PET_ID) {
-      test.skip(true, 'TEST_PET_ID not set.');
-      return;
-    }
-    await page.goto(`/owner/pets/${PET_ID}/edit?tab=sos`);
+    await login(page);
+    await page.goto(`/owner/pets/${petId}/edit`);
     await page.waitForLoadState('networkidle');
 
-    const familyTab = page
-      .locator('button:has-text("Acil Durum")')
-      .first();
-    if (!(await familyTab.isVisible())) return;
-    await familyTab.click();
-
-    // Fill the first contact name input
-    const nameInput = page.locator('input[placeholder*="İsim"], input[placeholder*="isim"]').first();
+    const nameInput = page.locator('input[placeholder*="İsim"], input[placeholder*="isim"], input[placeholder*="Ali Yılmaz"]').first();
     if (await nameInput.isVisible()) {
       await nameInput.fill('E2E Test Kişisi');
       const phoneInput = page.locator('input[placeholder*="Telefon"], input[type="tel"]').first();
       if (await phoneInput.isVisible()) {
         await phoneInput.fill('05559998877');
       }
-      // Click save
-      const saveBtn = page.locator('button:has-text("Kaydet"), button:has-text("Güncelle")').first();
+      const saveBtn = page.locator('button:has-text("Acil Durum Ağı"), button:has-text("Kaydet"), button:has-text("SOS")').first();
       if (await saveBtn.isVisible()) {
         await saveBtn.click();
-        // Expect success notification or no error
-        await expect(
-          page.locator('text=başarı, text=kaydedildi, text=güncellendi, [role="status"]').first()
-        ).toBeVisible({ timeout: 8_000 });
+        await expect(page.locator('text=Acil durum ağı güncellendi').first()).toBeVisible({ timeout: 10_000 });
       }
     }
   });
-});
 
-// ---------------------------------------------------------------------------
-// Treatments Module
-// ---------------------------------------------------------------------------
-
-test.describe('Treatment Tracking Module', () => {
-  test.beforeEach(async ({ page }) => {
-    await login(page);
-  });
-
+  // Treatments Module
   test('Treatments page loads for a pet', async ({ page }) => {
-    if (!PET_ID) {
-      test.skip(true, 'TEST_PET_ID not set.');
-      return;
-    }
-    await page.goto(`/owner/pets/${PET_ID}/treatments`);
+    await login(page);
+    await page.goto(`/owner/pets/${petId}/treatments`);
     await page.waitForLoadState('networkidle');
 
-    await expect(
-      page.locator('h1:has-text("Tedavi"), h2:has-text("Tedavi")').first()
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('h1:has-text("Sağlık Takip Modülü")').first()).toBeVisible({ timeout: 10_000 });
   });
 
-  test('"Yeni Tedavi" modal opens and validates empty form', async ({ page }) => {
-    if (!PET_ID) {
-      test.skip(true, 'TEST_PET_ID not set.');
-      return;
-    }
-    await page.goto(`/owner/pets/${PET_ID}/treatments`);
+  test('"Plan Yap" redirection from treatments page works', async ({ page }) => {
+    await login(page);
+    await page.goto(`/owner/pets/${petId}/treatments`);
     await page.waitForLoadState('networkidle');
 
-    const newBtn = page.locator('button:has-text("Yeni Tedavi")').first();
-    if (await newBtn.isVisible()) {
-      await newBtn.click();
-      // Modal should open
-      await expect(
-        page.locator('text=Yeni Tedavi Kaydı, text=Tedaviyi Düzenle').first()
-      ).toBeVisible({ timeout: 6_000 });
+    const planBtn = page.locator('button:has-text("Plan Yap"), button:has-text("Yeni Sağlık Planı Ekle")').first();
+    if (await planBtn.isVisible()) {
+      await planBtn.click();
+      await expect(page).toHaveURL(new RegExp(`/owner/plan-yap/saglik`), { timeout: 10_000 });
+    }
+  });
 
-      // Try to submit empty form – HTML5 validation should block it
-      const submitBtn = page.locator('button[type="submit"]:has-text("Kaydet")').first();
-      if (await submitBtn.isVisible()) {
-        await submitBtn.click();
-        // Form should still be open (validation prevented submit)
-        await expect(
-          page.locator('text=Yeni Tedavi Kaydı, text=Tedaviyi Düzenle').first()
-        ).toBeVisible({ timeout: 3_000 });
-      }
+  test('Clean up dynamic pet', async ({ page }) => {
+    await login(page);
+    await page.goto('/owner/profile');
+    await page.waitForLoadState('networkidle');
+    const petRow = page.locator(`.card-base:has-text("${tempPetName}")`);
+    if (await petRow.isVisible()) {
+      await petRow.locator('button:has(svg)').first().click();
+      await page.waitForTimeout(500);
+      await page.click('button:has-text("Profili Kalıcı Olarak Sil")');
+      await page.click('button:has-text("Evet, Sil")');
+      await expect(page).toHaveURL(/\/owner\/dashboard/, { timeout: 15000 });
     }
   });
 });

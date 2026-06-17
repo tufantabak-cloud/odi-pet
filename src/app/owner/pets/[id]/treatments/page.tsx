@@ -38,26 +38,5 @@ export default async function TreatmentsPage(props: PageProps) {
 
   if (!pet) notFound()
 
-  // SADECE GÜVENLİ BİR ŞEKİLDE TABLOYU ÇEKMEYİ DENE, EĞER TABLO YOKSA BOŞ LİSTE DÖN (HATA FIRLATMA)
-  let treatments = []
-  try {
-    const { data, error } = await supabase
-      .from('health_treatments')
-      .select('*')
-      .eq('pet_id', id)
-      .order('start_date', { ascending: false })
-    
-    if (!error && data) {
-      treatments = data
-    }
-  } catch (err) {
-    console.error('Tedaviler tablosu bulunamadı veya yetki hatası:', err)
-  }
-
-  return (
-    <TreatmentsClient
-      pet={pet}
-      initialTreatments={treatments}
-    />
-  )
+  return <TreatmentsClient pet={pet} />
 }

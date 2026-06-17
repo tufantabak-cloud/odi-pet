@@ -13,7 +13,7 @@ async function login(page: Page) {
   await page.fill('input[name="email"]', EMAIL);
   await page.fill('input[name="password"]', PASSWORD);
   await page.click('button[type="submit"]');
-  await expect(page).toHaveURL(/\/owner\//, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/admin|\/owner\//, { timeout: 15_000 });
 }
 
 test.describe('Lost Pet Duplicate Prevention API Test', () => {

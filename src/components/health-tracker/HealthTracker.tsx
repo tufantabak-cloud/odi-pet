@@ -42,73 +42,8 @@ export function HealthTracker({ petId, onEditTask }: HealthTrackerProps) {
     );
   }
 
-  // T1: Aksiyon Gerekiyor Banner'ı için event'leri topla
-  const actionRequiredEvents = categoryGroups.flatMap(g => {
-    if (g.subGroups && g.subGroups.length > 0) {
-      return g.subGroups.flatMap(sg => 
-        sg.taskRows.flatMap(tr => 
-          tr.events.filter(e => e.computedStatus === 'today' || e.computedStatus === 'missed')
-        )
-      );
-    }
-    return g.taskRows.flatMap(tr => 
-      tr.events.filter(e => e.computedStatus === 'today' || e.computedStatus === 'missed')
-    );
-  }).sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
-
-  const displayActionEvents = actionRequiredEvents.slice(0, 3);
-  const hiddenActionCount = actionRequiredEvents.length - displayActionEvents.length;
-
   return (
     <div className="py-2 bg-white">
-      {actionRequiredEvents.length > 0 && (
-        <div className="mx-4 mb-6">
-          {/* Gecikmiş Görevler */}
-          {actionRequiredEvents.some(e => e.computedStatus === 'missed') && (
-            <div className="mb-4">
-              <div className="flex items-center gap-2 mb-2 ml-1">
-                <div className="w-2 h-2 rounded-full bg-[#ff7675]" />
-                <h3 className="text-[12px] font-extrabold text-[#ff7675] uppercase tracking-wider">Gecikmiş Görevler</h3>
-              </div>
-              <div className="flex flex-col gap-2">
-                {actionRequiredEvents.filter(e => e.computedStatus === 'missed').map(e => (
-                  <ActionBannerItem 
-                    key={e.id} 
-                    event={e} 
-                    onMarkDone={markEventStatus}
-                    onPostpone={postponeEvent}
-                    onEdit={onEditTask}
-                    onDelete={deleteEvent}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Bugün */}
-          {actionRequiredEvents.some(e => e.computedStatus === 'today') && (
-            <div>
-              <div className="flex items-center gap-2 mb-2 ml-1">
-                <div className="w-2 h-2 rounded-full bg-[#6c5ce7]" />
-                <h3 className="text-[12px] font-extrabold text-[#6c5ce7] uppercase tracking-wider">Bugün</h3>
-              </div>
-              <div className="flex flex-col gap-2">
-                {actionRequiredEvents.filter(e => e.computedStatus === 'today').map(e => (
-                  <ActionBannerItem 
-                    key={e.id} 
-                    event={e} 
-                    onMarkDone={markEventStatus}
-                    onPostpone={postponeEvent}
-                    onEdit={onEditTask}
-                    onDelete={deleteEvent}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
       {categoryGroups.map((group) => (
         <div key={group.category} className="mb-6">
           {/* Kategori Başlığı */}

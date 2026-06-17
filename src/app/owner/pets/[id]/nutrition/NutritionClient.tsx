@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { calculateRefillRisk } from '@/lib/nutrition/refill-engine'
 import CoachMark from '@/components/ui/CoachMark'
 import { SmartScanner } from '@/components/ui/SmartScanner'
+import SmartCardBanner from '@/components/profiling/SmartCardBanner'
 
 // Tabs
 const TABS = ['Mama & Stok', 'Öğünler & Hatırlatıcı', 'Kilo Takibi'] as const
@@ -29,6 +30,7 @@ export default function NutritionClient({
   const [activeTab, setActiveTab] = useState<Tab>('Mama & Stok')
   const [loading, setLoading] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
+  const [dismissedBanner, setDismissedBanner] = useState(false)
 
   // Engine Calcs
   const dailyUsage = (inventory?.estimated_daily_usage as number) ?? (profile?.daily_grams as number) ?? 0;
@@ -99,11 +101,13 @@ export default function NutritionClient({
     e.preventDefault()
     setLoading(true)
     const fd = new FormData(e.currentTarget)
+    const rawVal = fd.get('weight_kg')?.toString() || ''
+    const sanitizedVal = rawVal.replace(',', '.')
     try {
       await fetch(`/api/pets/${pet.id}/nutrition/weight`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ weight_kg: fd.get('weight_kg') }),
+        body: JSON.stringify({ weight_kg: parseFloat(sanitizedVal) }),
       })
       e.currentTarget.reset()
       router.refresh()
@@ -138,6 +142,21 @@ export default function NutritionClient({
           <p className="text-text-secondary font-medium">Mama, stok ve öğün takibi</p>
         </div>
       </div>
+
+      {!inventory && !dismissedBanner && (
+        <div className="animate-in fade-in slide-in-from-top-4 duration-500">
+          <SmartCardBanner
+            title="MAMA PORSİYONU HESAPLAMA"
+            message={`${pet.name}'in günlük beslenme porsiyonunu hesaplayabilmemiz için hangi marka ve tip mama kullanıyorsun?`}
+            ctaText="Akıllı Tarama ile Ekle"
+            icon="🍗"
+            gradient="from-amber-50 to-orange-50"
+            iconBg="bg-amber-100 text-amber-700"
+            onClick={() => setShowScanner(true)}
+            onDismiss={() => setDismissedBanner(true)}
+          />
+        </div>
+      )}
 
       {showBanner && (
         <div className="p-4 rounded-xl border-l-4 font-medium text-[14px] bg-red-50 border-red-500 text-red-800">
@@ -290,7 +309,7 @@ export default function NutritionClient({
             <div className="flex gap-4 items-end">
               <div className="flex-1 flex flex-col gap-2">
                 <label className="text-[12px] font-bold text-text-secondary">Kilo (kg)</label>
-                <input name="weight_kg" type="number" step="0.1" className="input-base" placeholder="Örn: 4.5" required/>
+                <input name="weight_kg" type="number" step="any" className="input-base" placeholder="Örn: 4.5" required/>
               </div>
               <button type="submit" disabled={loading} className="btn-primary px-8">Ekle</button>
             </div>

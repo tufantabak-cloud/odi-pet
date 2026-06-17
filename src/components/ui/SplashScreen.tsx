@@ -17,11 +17,11 @@ export default function SplashScreen() {
       setPhase(2);
     }, 2000);
 
-    // 2. aşamada 800ms fade-in/fade-out olduktan sonra, toplamda örn. 2 saniye daha gösterip kapat
-    // (Kullanıcı 800ms geçişin ardından 2. resmi bir süre görecek)
+    // 2. aşamada 800ms fade-in/fade-out olduktan sonra, toplamda örn. 3 saniye daha gösterip kapat
+    // (Kullanıcı 800ms geçişin ardından 2. resmi daha uzun süre görecek)
     const endTimer = setTimeout(() => {
       setIsVisible(false);
-    }, 4000); // 2000 (aşama 1) + 800 (geçiş) + 1200 (bekleme) = 4000ms
+    }, 5000); // 2000 (aşama 1) + 800 (geçiş) + 2200 (bekleme) = 5000ms
 
     return () => {
       clearTimeout(phase2Timer);
@@ -30,21 +30,41 @@ export default function SplashScreen() {
   };
 
   useEffect(() => {
+    if (isVisible) {
+      document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    };
+  }, [isVisible]);
+
+  useEffect(() => {
+    // Disable in E2E testing
+    if (typeof window !== 'undefined' && (window.navigator.userAgent.includes('Playwright') || window.location.search.includes('test=true'))) {
+      setIsVisible(false);
+      return;
+    }
+
+    // Her oturumda (session) splash ekranını sadece bir kez göster
+    if (typeof window !== 'undefined') {
+      const splashShown = sessionStorage.getItem("odi_splash_shown");
+      if (splashShown) {
+        setIsVisible(false);
+        return;
+      }
+      sessionStorage.setItem("odi_splash_shown", "true");
+    }
+
     // İlk açılışta animasyonu çalıştır
     const cleanup = runSplashAnimation();
 
-    // Uygulama arka plandan ön plana geldiğinde tekrar çalıştır
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        runSplashAnimation();
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
     return () => {
       cleanup();
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 

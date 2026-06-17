@@ -16,6 +16,8 @@ import {
   DefaultCatAvatar, DefaultDogAvatar, PawIcon, CarrierIcon,
   VaccineIcon, BowlIcon, ShampooIcon,
 } from '@/components/icons/PetIcons'
+import SmartQuestionCard from '@/components/profiling/SmartQuestionCard'
+import SmartInsightCard from '@/components/profiling/SmartInsightCard'
 
 // Paylaşılan AI Vet ikonu — iki yerde kullanıldığı için dışarı alındı
 const AiVetIcon = (
@@ -35,7 +37,7 @@ function ModuleGrid({ pets }: { pets: DashboardPet[] }) {
   const modules = [
     {
       label: 'Sağlık & Aşı',
-      href: petHref('health', ''),
+      href: petHref('health', '/treatments'),
       gradient: 'from-blue-500/15 to-sky-400/10',
       iconBg: 'bg-blue-500/15',
       color: 'text-blue-700',
@@ -134,6 +136,7 @@ function EmptyDashboard({ firstName }: { firstName: string }) {
           </p>
         </div>
         <Link
+          id="onb-pet-add"
           href="/owner/pets/add"
           className="w-full btn-primary py-3.5 text-[15px] font-black shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
         >
@@ -160,7 +163,7 @@ export default async function OwnerDashboard() {
   const user = await getSessionUser()
   if (!user) redirect('/login')
 
-  const { profile, pets, upcomingSchedules, completedSchedules, allFeedingLogs, allWeightLogs } =
+  const { profile, pets, upcomingSchedules, completedSchedules, allFeedingLogs, allWeightLogs, plans, activeQuestion, activeInsight } =
     await getCachedDashboardData(user.id)
 
   const now = getNowTR()
@@ -205,11 +208,17 @@ export default async function OwnerDashboard() {
         {/* Pet var */}
         {hasPets && (
           <>
+            <div className="animate-in fade-in zoom-in-95 duration-500">
+              {activeInsight && <SmartInsightCard insight={activeInsight} />}
+              {activeQuestion && <SmartQuestionCard question={activeQuestion} />}
+            </div>
+
             {/* Pet Slider */}
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-[15px] font-extrabold text-text-primary">Petlerim</h2>
                 <Link
+                  id="onb-pet-add"
                   href="/owner/pets/add"
                   className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-primary text-white text-[12px] font-bold hover:bg-primary-hover active:scale-[0.97] transition-all shadow-sm"
                 >
@@ -227,6 +236,7 @@ export default async function OwnerDashboard() {
 
                   return (
                     <Link
+                      id="onb-dashboard-card"
                       key={pet.id}
                       href={`/owner/pets/${pet.id}`}
                       data-testid="pet-card"
@@ -285,6 +295,29 @@ export default async function OwnerDashboard() {
                 })}
               </div>
             </div>
+
+            {/* Davet Bannerı */}
+            <Link
+              id="onb-referral"
+              href="/owner/referral"
+              className="flex items-center gap-4 p-4 rounded-[20px] bg-gradient-to-r from-primary/10 to-violet-500/10 border border-primary/15 hover:border-primary/30 hover:shadow-md active:scale-[0.98] transition-all duration-200 group"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-primary/15 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-extrabold text-text-primary text-[14px] leading-tight">Arkadaşlarını Davet Et</p>
+                <p className="text-[12px] text-text-secondary mt-0.5">Can dostunu tanıştır, rozetler kazan! 🐾</p>
+              </div>
+              <span className="text-[13px] font-black text-primary shrink-0 group-hover:translate-x-0.5 transition-transform duration-200">
+                Davet Et →
+              </span>
+            </Link>
 
             {/* Hızlı Erişim modülleri */}
             <ModuleGrid pets={pets} />
@@ -364,6 +397,53 @@ export default async function OwnerDashboard() {
                   icon={<CarrierIcon width={40} height={40} />}
                   title="Yaklaşan etkinlik yok"
                   message="Sağlık takvimi henüz oluşturulmadı."
+                />
+              )}
+            </div>
+
+            {/* Aktif Planlar */}
+            <div className="card-base p-5 mt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-[16px] font-extrabold text-text-primary flex items-center gap-2.5">
+                  <div className="bg-primary/10 text-primary p-1.5 rounded-lg">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+                      <path d="M12 6v6l4 2"/>
+                    </svg>
+                  </div>
+                  Aktif Planlarım
+                </h2>
+                <Link id="onb-plan-add" href="/owner/plan-yap" className="text-xs font-bold text-primary hover:underline">
+                  Yeni Ekle
+                </Link>
+              </div>
+              {plans && plans.length > 0 ? (
+                <div className="flex flex-col gap-2">
+                  {plans.map((plan) => (
+                    <Link
+                      href={`/owner/plan-yap/edit/${plan.id}`}
+                      key={plan.id}
+                      className="flex items-center justify-between p-3 border border-border-main rounded-[14px] bg-surface hover:shadow-sm hover:border-primary/30 transition-all group"
+                    >
+                      <div className="flex flex-col">
+                        <span className="font-bold text-text-primary text-[13px] capitalize group-hover:text-primary transition-colors">
+                          {plan.category}
+                        </span>
+                        <span className="text-[11px] text-text-secondary">
+                          {plan.pets?.name} • {plan.extra_data?.option || 'Özel'}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-surface-hover text-text-secondary">
+                        Düzenle
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  icon={<BowlIcon width={40} height={40} />}
+                  title="Henüz plan yok"
+                  message="Dostunuz için beslenme veya bakım planı oluşturabilirsiniz."
                 />
               )}
             </div>

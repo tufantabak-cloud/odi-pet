@@ -16,11 +16,13 @@ async function login(page: Page) {
     test.skip(true, 'TEST_EMAIL / TEST_PASSWORD not set.');
     return;
   }
+  // Add small delay to prevent rate limit lockout in fast consecutive tests
+  await page.waitForTimeout(2000);
   await page.goto('/login');
   await page.fill('input[name="email"]', EMAIL);
   await page.fill('input[name="password"]', PASSWORD);
   await page.click('button[type="submit"]');
-  await expect(page).toHaveURL(/\/owner\//, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/admin|\/owner\//, { timeout: 15_000 });
 }
 
 // ---------------------------------------------------------------------------
@@ -50,7 +52,7 @@ test.describe('Auth Flow', () => {
     await login(page);
     await page.goto('/login');
     // Should redirect back to dashboard
-    await expect(page).toHaveURL(/\/owner\//, { timeout: 10_000 });
+    await expect(page).toHaveURL(/\/admin|\/owner\//, { timeout: 10_000 });
   });
 });
 

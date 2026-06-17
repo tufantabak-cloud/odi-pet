@@ -29,6 +29,17 @@ export default function VaccineSettingsPage() {
     fetchTemplates();
   }, []);
 
+  useEffect(() => {
+    if (wizardOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [wizardOpen]);
+
   const handleDelete = async (id: string) => {
     if (!confirm('Bu şablonu silmek istediğinize emin misiniz?')) return;
     try {
@@ -203,9 +214,9 @@ export default function VaccineSettingsPage() {
 
       {/* Wizard Modal (Simplified inline for demo) */}
       {wizardOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-          <div className="bg-white w-full sm:w-[480px] max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl shadow-2xl animate-in slide-in-from-bottom-10 sm:slide-in-from-bottom-4 duration-300 p-6 flex flex-col gap-5">
-            <div className="flex justify-between items-center mb-2">
+        <div className="fixed inset-0 z-[10000] bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full sm:w-[480px] max-h-[85vh] overflow-y-auto overscroll-contain rounded-t-3xl sm:rounded-3xl shadow-2xl animate-in slide-in-from-bottom-10 sm:slide-in-from-bottom-4 duration-300 p-6 flex flex-col gap-5">
+            <div className="flex justify-between items-center mb-2 shrink-0">
               <h2 className="text-[20px] font-black text-text-primary tracking-tight">{editingTemplate ? 'Şablonu Düzenle' : 'Yeni Aşı Şablonu'}</h2>
               <button onClick={() => setWizardOpen(false)} className="w-8 h-8 flex items-center justify-center bg-bg-main rounded-full text-text-secondary hover:text-text-primary">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>

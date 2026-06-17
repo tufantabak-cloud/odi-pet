@@ -52,9 +52,22 @@ export default function MinimalGrowthChart({ records, onAddRecord }: MinimalGrow
 
   const points = chartData.map((d, i) => {
     const val = activeTab === 'weight' ? Number(d.weight_kg) : Number(d.height_cm)
-    const x = padding.left + (chartData.length > 1 ? (i / (chartData.length - 1)) * innerWidth : innerWidth / 2)
+    const date = new Date(d.recorded_at || d.measured_at || d.created_at || '')
+    
+    let x = padding.left + innerWidth / 2
+    if (chartData.length > 1) {
+      const firstTime = new Date(chartData[0].recorded_at || chartData[0].measured_at || chartData[0].created_at || '').getTime()
+      const lastTime = new Date(chartData[chartData.length - 1].recorded_at || chartData[chartData.length - 1].measured_at || chartData[chartData.length - 1].created_at || '').getTime()
+      const timeDiff = lastTime - firstTime
+      if (timeDiff > 0) {
+        x = padding.left + ((date.getTime() - firstTime) / timeDiff) * innerWidth
+      } else {
+        x = padding.left + (i / (chartData.length - 1)) * innerWidth
+      }
+    }
+
     const y = padding.top + innerHeight - ((val - yMin) / yRange) * innerHeight
-    return { x, y, val, date: new Date(d.recorded_at || d.measured_at || d.created_at || '') }
+    return { x, y, val, date }
   })
 
   let linePath = ''
@@ -180,7 +193,12 @@ export default function MinimalGrowthChart({ records, onAddRecord }: MinimalGrow
       {chartData.length > 0 && (
         <div className="flex justify-between items-center text-[12px] font-semibold text-text-secondary px-1 pt-1 mt-1 z-10 relative border-t border-border-main/40">
           <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full" style={{backgroundColor: activeColor}}></span> Son Ölçüm:</span>
-          <span className="font-extrabold text-text-primary">{activeTab === 'weight' ? `${points[points.length-1].val} kg` : `${points[points.length-1].val} cm`}</span>
+          <span className="font-extrabold text-text-primary">
+            {activeTab === 'weight' ? `${points[points.length-1].val} kg` : `${points[points.length-1].val} cm`}
+            <span className="text-[11px] font-normal text-text-secondary/70 ml-1.5">
+              ({points[points.length-1].date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' })})
+            </span>
+          </span>
         </div>
       )}
     </div>

@@ -64,8 +64,8 @@ function LoginForm() {
     setHydrated(true)
     const checkSession = async () => {
       const supabase = createBrowserSupabaseClient()
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
         router.refresh()
         router.push('/')
       }

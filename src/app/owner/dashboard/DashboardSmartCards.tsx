@@ -116,11 +116,20 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
 
   const markTaskCompleteInDB = async (taskId: string) => {
     try {
-      const supabase = createBrowserSupabaseClient()
-      await supabase
-        .from('health_schedules')
-        .update({ status: 'completed' })
-        .eq('id', taskId)
+      if (taskId.startsWith('plan_')) {
+        const realId = taskId.replace('plan_', '')
+        await fetch(`/api/plans/${realId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'completed' })
+        })
+      } else {
+        const supabase = createBrowserSupabaseClient()
+        await supabase
+          .from('health_schedules')
+          .update({ status: 'completed' })
+          .eq('id', taskId)
+      }
       router.refresh()
     } catch (err) {
       console.error('Error updating task status:', err)

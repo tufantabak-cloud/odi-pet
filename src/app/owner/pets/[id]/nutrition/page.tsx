@@ -36,7 +36,7 @@ export default async function PetNutritionPage({ params }: { params: Promise<{ i
     supabase.from('pet_nutrition_profiles').select('*').eq('pet_id', id).single(),
     supabase.from('food_inventory').select('*').eq('pet_id', id).single(),
     supabase.from('feeding_logs').select('*').eq('pet_id', id).order('meal_time', { ascending: false }).limit(30),
-    supabase.from('weight_logs').select('*').eq('pet_id', id).order('measured_at', { ascending: true }).limit(20)
+    supabase.from('weight_logs').select('*').eq('pet_id', id).order('measured_at', { ascending: false }).limit(20)
   ])
 
   if (!pet) redirect('/owner/dashboard')

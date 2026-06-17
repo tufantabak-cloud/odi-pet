@@ -42,7 +42,7 @@ export function ChipItem({ event, onMarkDone, onPostpone, onEdit, onDelete }: Ch
   const TIME_RELEVANT_CATEGORIES = ['Veteriner', 'Saglik']; // Veteriner randevusu, İlaç
   const TIME_RELEVANT_SUB_CATEGORIES = ['İlaç Kullanımı', 'Tedavi & Pansuman'];
   const category = event.pet_care_tasks?.category ?? '';
-  const subCategory = event.pet_care_tasks?.frequency_label ?? '';
+  const subCategory = event.sub_category ?? '';
   const isTimeRelevant =
     TIME_RELEVANT_CATEGORIES.includes(category) ||
     TIME_RELEVANT_SUB_CATEGORIES.includes(subCategory);
@@ -104,6 +104,7 @@ export function ChipItem({ event, onMarkDone, onPostpone, onEdit, onDelete }: Ch
     <div className="relative inline-block" ref={containerRef}>
       <button
         onClick={() => setShowMenu(!showMenu)}
+        data-status={computedStatus}
         className={`
           flex flex-col items-center justify-center
           rounded-xl transition-all duration-200

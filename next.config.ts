@@ -26,6 +26,12 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: '/plan-yap/(.*)',
+        headers: [
+          { key: 'Cache-Control', value: 'no-store, max-age=0' },
+        ],
+      },
+      {
         source: '/(.*)',
         headers: [
           { key: 'X-Frame-Options', value: 'DENY' },

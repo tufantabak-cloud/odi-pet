@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { requireRole } from '@/lib/auth/get-current-profile'
+import { logout } from '@/features/auth/actions'
 
 export const metadata: Metadata = {
   title: 'Admin Console — ODI Pet',
@@ -75,6 +76,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/owner/dashboard" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
             <span>←</span> Uygulamaya Dön
           </Link>
+          <form action={logout} className="w-full mt-1">
+            <button type="submit" className="w-full flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-error hover:bg-error/10 rounded-xl transition-all">
+              <span>🚪</span> Çıkış Yap
+            </button>
+          </form>
         </div>
       </aside>
 

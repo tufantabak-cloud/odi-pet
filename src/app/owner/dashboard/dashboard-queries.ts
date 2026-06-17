@@ -1,5 +1,7 @@
 import { unstable_cache } from 'next/cache'
 import { createAdminSupabaseClient } from '@/lib/supabase/server'
+import { getDailyQuestion, SmartQuestion } from '@/lib/profiling-engine'
+import { detectAnomalies, SmartInsight } from '@/lib/insight-engine'
 
 /* ── Dashboard veri sözleşmesi ────────────────────────────── */
 
@@ -57,6 +59,15 @@ export interface DashboardWeightLog {
   height_cm: number | null
 }
 
+export interface DashboardPlan {
+  id: string
+  pet_id: string
+  category: string
+  extra_data: any
+  next_run: string | null
+  pets: { name: string } | null
+}
+
 /**
  * fetchDashboardData'nın dönüş tipi.
  * page.tsx bu yapıya güvenerek destructure eder.
@@ -68,6 +79,9 @@ export interface DashboardData {
   completedSchedules: DashboardSchedule[]
   allFeedingLogs: DashboardFeedingLog[]
   allWeightLogs: DashboardWeightLog[]
+  plans: DashboardPlan[]
+  activeQuestion: SmartQuestion | null
+  activeInsight: SmartInsight | null
 }
 
 /* ── Cache'li veri çekme ──────────────────────────────────── */
@@ -146,6 +160,52 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
           }
         }
 
+        /* ── Plans tablosundan veri çek ve merge et ───────── */
+        let userPlans: DashboardPlan[] = []
+        if (pets && pets.length > 0) {
+          const petIdList = pets.map((p) => p.id)
+          const { data: plansRes, error: plansError } = await supabase
+            .from('plans')
+            .select('*')
+            .in('pet_id', petIdList)
+
+          if (plansError) {
+            console.error('[dashboard] plans fetch failed:', plansError.message)
+          } else if (plansRes) {
+            userPlans = plansRes as DashboardPlan[]
+            
+            // Plans'ı health_schedules formatına dönüştür ve merge et
+            const PLAN_CAT_MAP: Record<string, string> = {
+              saglik: 'Saglik', asi: 'Medikal', parazit: 'Medikal',
+              bakim: 'Bakım', beslenme: 'Beslenme', hijyen: 'Hijyen', aktivite: 'Aktiviteler'
+            }
+            
+            for (const p of plansRes as any[]) {
+              const asSchedule = {
+                id: `plan_${p.id}`,
+                _plan_id: p.id,
+                _source: 'plans',
+                pet_id: p.pet_id,
+                title: p.sub_type || p.extra_data?.vaccine?.name || 'Plan',
+                due_date: p.scheduled_at,
+                status: p.status === 'completed' ? 'done' : p.status === 'cancelled' ? 'done' : 'upcoming',
+                category: PLAN_CAT_MAP[p.category] || p.category,
+                sub_category: p.sub_type,
+                vaccines: p.extra_data?.vaccine ? { name: p.extra_data.vaccine.name } : null,
+                pets: pets.find((pet: any) => pet.id === p.pet_id) ? { name: pets.find((pet: any) => pet.id === p.pet_id)!.name } : null,
+                notes: p.note,
+                updated_at: p.updated_at,
+              } as any
+              
+              if (asSchedule.status === 'done') {
+                completedSchedules.push(asSchedule)
+              } else {
+                upcomingSchedules.push(asSchedule)
+              }
+            }
+          }
+        }
+
         /* ── Feeding & weight logs (sessiz) ──────────────── */
         const petIds = (pets || []).map((p) => p.id)
         let allFeedingLogs: DashboardFeedingLog[] = []
@@ -178,14 +238,35 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
           }
         }
 
+        /* ── Survey Stats (sessiz) ───────────────────────────────── */
+        let surveyStats = null
+        const { data: surveyRes } = await supabase
+          .from('user_survey_stats')
+          .select('*')
+          .eq('user_id', uid)
+          .single()
+        
+        if (surveyRes) {
+          surveyStats = surveyRes
+        }
+
+        /* ── Profiling Engine ───────────────────────────────── */
+        const activeQuestion = getDailyQuestion((pets || []), surveyStats);
+
+        /* ── Insight Engine (Proactive Anomaly Detector) ────── */
+        const activeInsight = detectAnomalies((pets || []), allFeedingLogs, allWeightLogs);
+
         /* ── Güvenli return ──────────────────────────────── */
         return {
           profile: profileError ? null : (profile as DashboardProfile | null),
-          pets: (pets || []) as DashboardPet[],
+          pets: (pets as DashboardPet[]) || [],
           upcomingSchedules,
           completedSchedules,
           allFeedingLogs,
           allWeightLogs,
+          plans: userPlans,
+          activeQuestion,
+          activeInsight,
         }
       } catch (err) {
         console.error('[dashboard] fetchDashboardData fatal:', err)

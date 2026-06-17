@@ -1,3 +1,5 @@
+create extension if not exists moddatetime schema extensions;
+
 create table public.user_survey_stats (
     user_id uuid references public.profiles(id) on delete cascade primary key,
     ad_fatigue_score integer default 0 not null,
@@ -25,4 +27,4 @@ create policy "Users can insert own survey stats"
 
 -- Trigger for updated_at
 create trigger handle_updated_at before update on public.user_survey_stats
-    for each row execute procedure moddatetime (updated_at);
+    for each row execute procedure extensions.moddatetime (updated_at);

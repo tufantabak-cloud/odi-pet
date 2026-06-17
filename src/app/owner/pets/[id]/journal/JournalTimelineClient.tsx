@@ -17,25 +17,27 @@ type JournalEntry = {
   created_at: string
 }
 
-type VaccineItem = {
+type PlanItem = {
   id: string
-  source: 'vaccine'
-  title?: string
-  vaccines?: { name: string }
+  source: 'plan'
+  category: 'saglik' | 'asi' | 'parazit' | 'bakim' | 'beslenme' | 'hijyen' | 'aktivite'
+  sub_type: string
+  status: 'active' | 'completed' | 'cancelled'
+  scheduled_at: string
   note?: string
   sortDate: number
-  due_date: string
 }
 
-type JournalItem = JournalEntry | VaccineItem
+type JournalItem = JournalEntry | PlanItem
 
 // ── Filtre Tanımları (T2) ───────────────────────────────────────────────────
 
-type FilterKey = 'all' | 'health' | 'mood' | 'appetite' | 'nutrition' | 'activity'
+type FilterKey = 'all' | 'health' | 'care' | 'mood' | 'appetite' | 'nutrition' | 'activity'
 
 const FILTERS: { key: FilterKey; label: string }[] = [
   { key: 'all',       label: 'Tümü' },
   { key: 'health',    label: '💉 Sağlık & Aşı' },
+  { key: 'care',      label: '🛁 Bakım & Hijyen' },
   { key: 'mood',      label: '🎭 Ruh Hali' },
   { key: 'appetite',  label: '🥣 İştah' },
   { key: 'nutrition', label: '🥩 Beslenme' },
@@ -51,6 +53,8 @@ function getDateGroup(sortDate: number): string {
   const itemDay = new Date(itemDate.getFullYear(), itemDate.getMonth(), itemDate.getDate())
   const diffDays = Math.round((today.getTime() - itemDay.getTime()) / (1000 * 60 * 60 * 24))
 
+  if (diffDays < -7) return 'Gelecek'
+  if (diffDays < 0) return 'Yaklaşan'
   if (diffDays === 0) return 'Bugün'
   if (diffDays === 1) return 'Dün'
   if (diffDays <= 7) return 'Bu Hafta'
@@ -58,7 +62,7 @@ function getDateGroup(sortDate: number): string {
   return 'Daha Önce'
 }
 
-const GROUP_ORDER = ['Bugün', 'Dün', 'Bu Hafta', 'Bu Ay', 'Daha Önce']
+const GROUP_ORDER = ['Gelecek', 'Yaklaşan', 'Bugün', 'Dün', 'Bu Hafta', 'Bu Ay', 'Daha Önce']
 
 function groupByDate(items: JournalItem[]): { label: string; items: JournalItem[] }[] {
   const map = new Map<string, JournalItem[]>()
@@ -75,7 +79,14 @@ function groupByDate(items: JournalItem[]): { label: string; items: JournalItem[
 // ── İkon & Başlık Yardımcıları ───────────────────────────────────────────────
 
 function getIcon(item: JournalItem): string {
-  if (item.source === 'vaccine') return '💉'
+  if (item.source === 'plan') {
+    const p = item as PlanItem
+    if (['saglik', 'asi', 'parazit'].includes(p.category)) return '💉'
+    if (['bakim', 'hijyen'].includes(p.category)) return '🛁'
+    if (p.category === 'beslenme') return '🥩'
+    if (p.category === 'aktivite') return '🦴'
+    return '📅'
+  }
   switch ((item as JournalEntry).entry_type) {
     case 'appetite':  return '🥣'
     case 'mood':      return '🎭'
@@ -87,8 +98,10 @@ function getIcon(item: JournalItem): string {
 }
 
 function getTitle(item: JournalItem): string {
-  if (item.source === 'vaccine') {
-    return `Aşı: ${(item as VaccineItem).title || (item as VaccineItem).vaccines?.name || 'Sağlık İşlemi'} tamamlandı`
+  if (item.source === 'plan') {
+    const p = item as PlanItem
+    const statusText = p.status === 'completed' ? 'Tamamlandı' : p.status === 'cancelled' ? 'İptal' : 'Planlandı'
+    return `${p.sub_type} (${statusText})`
   }
   const e = item as JournalEntry
   switch (e.entry_type) {
@@ -99,6 +112,21 @@ function getTitle(item: JournalItem): string {
     case 'note':      return 'Not eklendi'
     default:          return 'Kayıt'
   }
+}
+
+function getCardStyle(item: JournalItem): string {
+  if (item.source === 'plan') {
+    const p = item as PlanItem
+    if (p.status === 'completed') return 'border-l-4 border-l-success bg-success/5'
+    
+    // Check if overdue
+    const isPast = new Date(p.scheduled_at).getTime() < new Date().getTime()
+    if (p.status === 'active' && isPast) return 'border-l-4 border-l-error bg-error/5'
+    
+    // Upcoming
+    return 'border-l-4 border-l-primary bg-surface'
+  }
+  return 'border border-border-main bg-surface'
 }
 
 function formatTime(sortDate: number): string {
@@ -152,7 +180,12 @@ export default function JournalTimelineClient({
   // Filtre uygula (T2)
   const filteredItems = initialItems.filter(item => {
     if (filter === 'all') return true
-    if (filter === 'health') return item.source === 'vaccine' || (item as JournalEntry).entry_type === 'health'
+    if (filter === 'health') {
+      return (item.source === 'plan' && ['saglik', 'asi', 'parazit'].includes((item as PlanItem).category)) || (item.source === 'journal' && (item as JournalEntry).entry_type === 'health')
+    }
+    if (filter === 'care') {
+      return item.source === 'plan' && ['bakim', 'hijyen'].includes((item as PlanItem).category)
+    }
     return item.source === 'journal' && (item as JournalEntry).entry_type === filter
   })
 
@@ -245,7 +278,7 @@ export default function JournalTimelineClient({
               {/* Grup Kartları */}
               <div className="flex flex-col gap-2">
                 {group.items.map(item => (
-                  <div key={item.id} className="card-base p-4 flex gap-4 bg-surface border border-border-main">
+                  <div key={item.id} className={`card-base p-4 flex gap-4 ${getCardStyle(item)}`}>
                     <div className="w-12 h-12 rounded-2xl bg-bg-main flex items-center justify-center shrink-0 text-[20px] shadow-sm">
                       {getIcon(item)}
                     </div>
@@ -253,6 +286,9 @@ export default function JournalTimelineClient({
                       <p className="text-[14px] font-extrabold text-text-primary leading-tight mb-1">
                         {getTitle(item)}
                       </p>
+                      {item.source === 'plan' && (item as PlanItem).status === 'active' && new Date((item as PlanItem).scheduled_at).getTime() < new Date().getTime() && (
+                        <p className="text-[12px] font-bold text-error">⚠️ Gecikmiş Görev</p>
+                      )}
                       {item.note && (
                         <p className="text-[13px] text-text-secondary leading-snug mb-1 line-clamp-2">
                           {item.note}

@@ -34,19 +34,18 @@ export default async function PetJournalPage(props: PageProps) {
     .order('created_at', { ascending: false })
     .limit(100)
 
-  // Fetch completed vaccines
-  const { data: vaccines } = await supabase
-    .from('health_schedules')
-    .select('*, vaccines(name)')
+  // Fetch plans
+  const { data: plans } = await supabase
+    .from('plans')
+    .select('*')
     .eq('pet_id', id)
-    .in('status', ['completed', 'done'])
-    .order('updated_at', { ascending: false })
+    .order('scheduled_at', { ascending: false })
     .limit(100)
 
   // Merge and sort
   const allTimelineItems = [
     ...(entries || []).map((e: any) => ({ ...e, source: 'journal', sortDate: new Date(e.created_at).getTime() })),
-    ...(vaccines || []).map((v: any) => ({ ...v, source: 'vaccine', sortDate: new Date(v.due_date).getTime() }))
+    ...(plans || []).map((p: any) => ({ ...p, source: 'plan', sortDate: new Date(p.scheduled_at).getTime() }))
   ].sort((a, b) => b.sortDate - a.sortDate)
 
   return (

@@ -11,26 +11,36 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const supabase = await createServerSupabaseClient()
 
   // Verify ownership
-  const { data: ownerRecord } = await supabase
+  const { data: ownerRecord, error: ownerError } = await supabase
     .from('pet_owners')
     .select('role')
     .eq('pet_id', id)
     .eq('profile_id', user.id)
     .single()
 
+  console.log('[API/Pets/Reset] ownerRecord:', ownerRecord, 'ownerError:', ownerError, 'petId:', id, 'userId:', user.id)
+
   if (!ownerRecord || ownerRecord.role !== 'owner') {
+    console.error('[API/Pets/Reset] Access denied. ownerRecord:', ownerRecord)
     return NextResponse.json({ error: 'Sadece asıl sahip verileri temizleyebilir.' }, { status: 403 })
   }
 
   // Clear data from related tables
   const tables = [
+    'plans',
+    'health_schedules',
     'vaccine_records_v2',
     'weight_logs',
     'nutrition_logs',
-    'medications',
-    'disease_records',
+    'health_medications',
+    'health_diseases',
+    'health_allergies',
+    'pet_care_events',
+    'pet_care_tasks',
     'care_plans',
-    'payments'
+    'payments',
+    'pet_care_plans',
+    'pet_health_schedules'
   ]
 
   for (const table of tables) {
@@ -42,7 +52,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   revalidatePath('/owner/dashboard')
   // @ts-expect-error
-    revalidateTag('dashboard')
+  revalidateTag('dashboard')
   revalidatePath('/owner/pets')
   revalidatePath(`/owner/pets/${id}`)
   revalidatePath('/owner/profile')

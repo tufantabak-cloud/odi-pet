@@ -33,30 +33,75 @@ export default async function PetDetailPage(props: PageProps) {
 
   const [
     { data: schedules },
+    { data: plans },
     { data: diseases },
     { data: allergies },
     { data: medications },
     { data: growthRecords },
     { data: appointments },
-    { data: nutritionLogs },
+    { data: nutritionProfile },
     { data: payments },
     { data: activeLostReport },
   ] = await Promise.all([
     supabase.from('health_schedules').select('*, vaccines(name)').eq('pet_id', id).order('due_date').limit(100),
+    supabase.from('plans').select('*').eq('pet_id', id).order('scheduled_at').limit(100),
     supabase.from('health_diseases').select('*').eq('pet_id', id).order('diagnosis_date', { ascending: false }).limit(5),
     supabase.from('health_allergies').select('*').eq('pet_id', id).limit(5),
     supabase.from('health_medications').select('*').eq('pet_id', id).limit(5),
     supabase.from('weight_logs').select('*').eq('pet_id', id).order('measured_at', { ascending: false }).limit(15),
     supabase.from('appointments').select('*, clinics(name)').eq('pet_id', id).order('scheduled_at', { ascending: false }).limit(5),
-    supabase.from('nutrition_logs').select('*').eq('pet_id', id).order('date', { ascending: false }).limit(7),
+    supabase.from('pet_nutrition_profiles').select('*').eq('pet_id', id).maybeSingle(),
     supabase.from('payments').select('*').eq('pet_id', id).order('payment_date', { ascending: false }).limit(5),
     supabase.from('lost_reports').select('*').eq('pet_id', id).eq('status', 'active').limit(1).maybeSingle(),
   ])
 
+  // plans tablosundaki kayıtları health_schedules formatına dönüştür
+  const PLAN_CATEGORY_MAP: Record<string, string> = {
+    saglik: 'Saglik',
+    asi: 'Medikal',
+    parazit: 'Medikal',
+    bakim: 'Bakım',
+    beslenme: 'Beslenme',
+    hijyen: 'Hijyen',
+    aktivite: 'Aktiviteler',
+  }
+
+  const plansAsSchedules = (plans ?? []).map((p: any) => {
+    let dueTime = '12:00:00'
+    if (p.scheduled_at) {
+      const d = new Date(p.scheduled_at)
+      if (!isNaN(d.getTime())) {
+        dueTime = d.toTimeString().slice(0, 8)
+      }
+    }
+    return {
+      id: `plan_${p.id}`,
+      _plan_id: p.id,
+      _source: 'plans',
+      pet_id: p.pet_id,
+      title: p.sub_type || p.extra_data?.vaccine?.name || 'Plan',
+      due_date: p.scheduled_at,
+      due_time: dueTime,
+      status: p.status === 'completed' ? 'done' : p.status === 'cancelled' ? 'done' : 'upcoming',
+      category: PLAN_CATEGORY_MAP[p.category] || p.category,
+      sub_category: p.sub_type,
+      plan_type: p.repeat_rule || 'once',
+      notes: p.note,
+      vaccines: p.extra_data?.vaccine ? { name: p.extra_data.vaccine.name } : null,
+      repeat_rule: p.repeat_rule,
+      extra_data: p.extra_data,
+      created_at: p.created_at,
+      updated_at: p.updated_at,
+    }
+  })
+
+  // Merge: health_schedules + plans (duplicate'leri önle — plan_id eşleşmesi)
+  const allSchedules = [...(schedules ?? []), ...plansAsSchedules]
+
   const age = calcAge(pet.birth_date)
   
   const now = getNowTR()
-  const overdue = (schedules ?? []).filter((s: any) => s.status !== 'done' && new Date(s.due_date) < now).length
+  const overdue = allSchedules.filter((s: any) => s.status !== 'done' && new Date(s.due_date) < now).length
   
   let score = pet.health_score ?? 100
   if (overdue > 0) {
@@ -64,7 +109,7 @@ export default async function PetDetailPage(props: PageProps) {
   }
 
   const [{ data: sub }, { count: passkeyCount }] = await Promise.all([
-    supabase.from('user_subscriptions').select('plan').eq('profile_id', pet.owner_id).single(),
+    supabase.from('user_subscriptions').select('plan').eq('profile_id', pet.owner_id).maybeSingle(),
     supabase.from('passkeys').select('id', { count: 'exact', head: true }).eq('user_id', profile.id),
   ])
 
@@ -74,13 +119,13 @@ export default async function PetDetailPage(props: PageProps) {
       age={age}
       score={score}
       overdue={overdue}
-      schedules={schedules ?? []}
+      schedules={allSchedules}
       diseases={diseases ?? []}
       allergies={allergies ?? []}
       medications={medications ?? []}
       growthRecords={growthRecords ?? []}
       appointments={appointments ?? []}
-      nutritionLogs={nutritionLogs ?? []}
+      nutritionLogs={nutritionProfile ? [nutritionProfile] : []}
       payments={payments ?? []}
       subscription={sub}
       activeLostReport={activeLostReport || null}

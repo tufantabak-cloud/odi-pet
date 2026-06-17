@@ -10,6 +10,7 @@ import dynamic from 'next/dynamic'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { registerSchema, type RegisterInput } from '@/lib/validations/auth'
+import ReferralCaptureListener from '@/components/ReferralCaptureListener'
 
 const Turnstile = dynamic(() => import('@marsidev/react-turnstile').then(mod => mod.Turnstile), { ssr: false })
 
@@ -222,6 +223,9 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-dvh w-full items-center justify-center p-4"
       style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(79,45,186,0.07) 0%, #F8FAFC 65%)' }}>
+
+      {/* Referral parametresini pasif olarak yakala */}
+      <ReferralCaptureListener />
 
       <div className="w-full max-w-sm">
         <div className="bg-white rounded-[32px] shadow-2xl shadow-primary/10 border border-border-main/60 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">

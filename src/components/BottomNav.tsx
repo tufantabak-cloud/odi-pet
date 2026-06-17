@@ -11,6 +11,21 @@ import { Suspense } from 'react'
 
 const actionMenuItems = [
   { 
+    label: 'Plan Yap', 
+    actionKey: 'plan-yap',
+    gradient: 'from-fuchsia-500 to-pink-500',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.2))' }}>
+        <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+        <line x1="16" x2="16" y1="2" y2="6"/>
+        <line x1="8" x2="8" y1="2" y2="6"/>
+        <line x1="3" x2="21" y1="10" y2="10"/>
+        <line x1="10" x2="14" y1="16" y2="16"/>
+        <line x1="12" x2="12" y1="14" y2="18"/>
+      </svg>
+    )
+  },
+  { 
     label: 'Sağlık Kaydı / Aşı', 
     actionKey: 'vaccine',
     gradient: 'from-blue-500 to-red-400',
@@ -153,17 +168,27 @@ function BottomNavContent() {
       setIsPetSelectorOpen(true)
     } else {
       const petId = pets.length === 1 ? pets[0].id : ''
-      router.push(`?modal=${actionKey}${petId ? '&petId='+petId : ''}`)
+      if (actionKey === 'plan-yap') {
+        router.push(`/owner/plan-yap${petId ? '?pet_id=' + petId : ''}`)
+      } else {
+        router.push(`?modal=${actionKey}${petId ? '&petId='+petId : ''}`)
+      }
     }
   }
 
   const handlePetSelect = (petId: string) => {
     if (pendingAction) {
-      router.push(`?modal=${pendingAction}&petId=${petId}`)
+      if (pendingAction === 'plan-yap') {
+        router.push(`/owner/plan-yap?pet_id=${petId}`)
+      } else {
+        router.push(`?modal=${pendingAction}&petId=${petId}`)
+      }
       setIsPetSelectorOpen(false)
       setPendingAction(null)
     }
   }
+
+  if (pathname.includes('/plan-yap')) return null;
 
   return (
     <>
@@ -270,6 +295,7 @@ function BottomNavContent() {
               return (
                 <button
                   key="action-btn"
+                  id="nav-action-btn"
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                   className="flex flex-col items-center justify-center gap-1.5 py-1 px-1 transition-all duration-300 select-none cursor-pointer focus:outline-none z-[10000]"
                 >
@@ -280,10 +306,16 @@ function BottomNavContent() {
               )
             }
 
+            // Map href to a selector-friendly ID prefix
+            const elementId = tab.href === '/owner/dashboard' ? 'nav-home' 
+                            : tab.href === '/owner/profile' ? 'nav-profile' 
+                            : undefined;
+
             return (
               <Link
                 key={tab.href}
                 href={tab.href}
+                id={elementId}
                 className={`flex flex-col items-center justify-center gap-1.5 py-1 px-1 transition-all duration-300 select-none cursor-pointer
                   ${isActive ? 'text-[#E05397] scale-105' : 'text-[#8E8E93] hover:text-[#5c5c60]'}`}
               >

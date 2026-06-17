@@ -18,7 +18,8 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1, // To avoid DB concurrency issues if any
-  reporter: 'html',
+  reporter: [['html', { outputFolder: '../playwright-report' }]],
+  outputDir: '../playwright-results',
   use: {
     baseURL: 'http://127.0.0.1:3000',
     trace: 'on-first-retry',
@@ -27,7 +28,10 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: { 
+        ...devices['Desktop Chrome'],
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 Playwright'
+      },
     },
   ],
   /* Run your local dev server before starting the tests */
@@ -36,5 +40,8 @@ export default defineConfig({
     url: 'http://127.0.0.1:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 180 * 1000,
+    env: {
+      PLAYWRIGHT_TEST: 'true'
+    }
   },
 });

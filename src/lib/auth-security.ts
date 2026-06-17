@@ -44,14 +44,16 @@ const createInMemoryLimiter = (tokens: number, windowMs: number) => ({
 });
 
 const createRateLimit = (tokens: number, windowStr: string, prefix: string) => {
+  const isTest = process.env.PLAYWRIGHT_TEST === 'true' || process.env.NODE_ENV === 'test';
+  const finalTokens = isTest ? 1000 : tokens;
   const windowMs = 60_000; // 1 minute default
   if (!redis) {
     console.warn(`Redis unavailable — using in-memory rate limiter for ${prefix}`);
-    return createInMemoryLimiter(tokens, windowMs);
+    return createInMemoryLimiter(finalTokens, windowMs);
   }
   return new Ratelimit({
     redis,
-    limiter: Ratelimit.slidingWindow(tokens, windowStr as any),
+    limiter: Ratelimit.slidingWindow(finalTokens, windowStr as any),
     analytics: true,
     prefix,
   });
@@ -69,6 +71,11 @@ export const aiSummaryRateLimit  = createRateLimit(10, "1 m", "@upstash/ratelimi
 
 
 export async function verifyTurnstile(token: string | null | undefined, ip: string): Promise<boolean> {
+  // Allow bypass in test environment
+  if (process.env.PLAYWRIGHT_TEST === 'true' || process.env.NODE_ENV === 'test') {
+    return true;
+  }
+
   const secretKey = process.env.TURNSTILE_SECRET_KEY;
   if (!secretKey) {
     console.warn("TURNSTILE_SECRET_KEY is not set. Bypassing check.");

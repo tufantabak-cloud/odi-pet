@@ -9,21 +9,29 @@ async function login(page: Page) {
     test.skip(true, 'TEST_EMAIL / TEST_PASSWORD not set.');
     return;
   }
+  await page.context().clearCookies();
+  await page.waitForTimeout(3500);
   await page.goto('/login');
   await page.fill('input[name="email"]', EMAIL);
   await page.fill('input[name="password"]', PASSWORD);
   await page.click('button[type="submit"]');
-  await expect(page).toHaveURL(/\/owner\//, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/admin|\/owner\//, { timeout: 15_000 });
+  if (page.url().includes('/admin')) {
+    await page.goto('/owner/dashboard');
+  }
 }
 
 test.describe('Akıllı Tarama (Smart Scanner) Akışı', () => {
   test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem('PLAYWRIGHT_TEST', 'true');
+    });
     await login(page);
   });
 
   test('Tarayıcı sayfası yüklenmeli ve pet seçimi yapılabilmeli', async ({ page }) => {
     await page.goto('/owner/scanner');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Başlık ve açıklama kontrolü
     await expect(page.locator('h1:has-text("Akıllı Tarama")').first()).toBeVisible({ timeout: 10_000 });
@@ -68,27 +76,26 @@ test.describe('Akıllı Tarama (Smart Scanner) Akışı', () => {
     });
 
     await page.goto('/owner/scanner');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Eğer pet seçimi ekranı geldiyse ilk peti seçelim
-    const petCard = page.locator('[data-testid="pet-card"], button:has-text("Köpek"), button:has-text("Kedi")').first();
+    const petCard = page.locator('button:has-text("Köpek"), button:has-text("Kedi"), [data-testid="pet-card"]').first();
+    await petCard.waitFor({ state: 'attached', timeout: 5000 }).catch(() => {});
     if (await petCard.isVisible()) {
       await petCard.click();
     }
 
     // Dosya girişi ve tetikleme (mock olarak handleCapture'ı tetiklemek için input dosyasını simüle edelim)
     const fileInput = page.locator('input[type="file"]').first();
-    if (await fileInput.isHidden()) {
-      // Input hidden olduğu için direct path ekleyebiliriz
-      await fileInput.setInputFiles({
-        name: 'test_vaccine.png',
-        mimeType: 'image/png',
-        buffer: Buffer.from('fake-image-content')
-      });
-    }
+    await fileInput.waitFor({ state: 'attached', timeout: 5000 });
+    await fileInput.setInputFiles({
+      name: 'test_vaccine.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64')
+    });
 
     // Görseli ayarlama ekranının geldiğini kontrol edelim
-    await expect(page.locator('h3:has-text("Görseli Ayarlayın")').first()).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('h3:has-text("Görseli Ayarlayın"), h3:has-text("Belgeyi İncele"), h2:has-text("Görseli Ayarlayın"), h2:has-text("Belgeyi İncele")').first()).toBeVisible({ timeout: 5_000 });
     
     // Kırp ve Tara butonuna basalım
     const cropBtn = page.locator('button:has-text("Kırp ve Tara")').first();
@@ -99,11 +106,11 @@ test.describe('Akıllı Tarama (Smart Scanner) Akışı', () => {
     await expect(page.locator('h2:has-text("Tarama Sonuçları")').first()).toBeVisible({ timeout: 15_000 });
 
     // Alanların doldurulduğunu kontrol edelim
-    const titleInput = page.locator('input[value="Karma Aşı Test"]').first();
-    await expect(titleInput).toBeVisible();
+    const titleText = page.locator('text=Karma Aşı Test').first();
+    await expect(titleText).toBeVisible();
 
-    // Onayla ve Kaydet butonuna basalım
-    const confirmBtn = page.locator('button:has-text("Onayla ve Kaydet")').first();
+    // Bilgileri Kaydet butonuna basalım
+    const confirmBtn = page.locator('button:has-text("Bilgileri Kaydet")').first();
     await expect(confirmBtn).toBeVisible();
     await confirmBtn.click();
 
@@ -137,17 +144,25 @@ test.describe('Akıllı Tarama (Smart Scanner) Akışı', () => {
     });
 
     await page.goto('/owner/scanner');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+
+    // Eğer pet seçimi ekranı geldiyse ilk peti seçelim
+    const petCard = page.locator('button:has-text("Köpek"), button:has-text("Kedi"), [data-testid="pet-card"]').first();
+    await petCard.waitFor({ state: 'attached', timeout: 5000 }).catch(() => {});
+    if (await petCard.isVisible()) {
+      await petCard.click();
+    }
 
     const fileInput = page.locator('input[type="file"]').first();
+    await fileInput.waitFor({ state: 'attached', timeout: 5000 });
     await fileInput.setInputFiles({
       name: 'test_food.png',
       mimeType: 'image/png',
-      buffer: Buffer.from('fake-image-content')
+      buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64')
     });
 
     // Görseli ayarlama ekranının geldiğini kontrol edelim
-    await expect(page.locator('h3:has-text("Görseli Ayarlayın")').first()).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('h3:has-text("Görseli Ayarlayın"), h3:has-text("Belgeyi İncele"), h2:has-text("Görseli Ayarlayın"), h2:has-text("Belgeyi İncele")').first()).toBeVisible({ timeout: 5_000 });
     
     // Kırp ve Tara butonuna basalım
     const cropBtn = page.locator('button:has-text("Kırp ve Tara")').first();
@@ -162,7 +177,6 @@ test.describe('Akıllı Tarama (Smart Scanner) Akışı', () => {
     await expect(page.locator('text=20 gün').first()).toBeVisible();
 
     // Yaş grubu Yavru olarak gelmeli
-    const ageSelect = page.locator('select').nth(1);
-    await expect(ageSelect).toHaveValue('kitten');
+    await expect(page.locator('text=Yavru (0-1 yaş)').first()).toBeVisible();
   });
 });

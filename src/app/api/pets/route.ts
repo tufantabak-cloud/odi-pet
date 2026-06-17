@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
       .insert({ 
         pet_id: data.id, 
         weight_kg: parseFloat(weightVal), 
-        measurement_date: new Date().toISOString().split('T')[0] 
+        measured_at: new Date().toISOString()
       })
     if (weightError) console.error('[API/Pets] Weight log error:', weightError)
   }

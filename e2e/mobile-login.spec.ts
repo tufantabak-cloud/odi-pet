@@ -1,14 +1,16 @@
 import { test, expect, devices } from '@playwright/test';
 
 test.use({
-  ...devices['iPhone 13'],
+  viewport: { width: 375, height: 812 },
+  isMobile: true,
+  hasTouch: true,
 });
 
 test('Mobile Google Login Redirect Flow', async ({ page }) => {
   console.log('Test başlatılıyor: Mobil ortamda (iPhone 13) odi.pet login sayfası açılıyor...');
   
-  // odi.pet canlı adresine gidiyoruz
-  await page.goto('https://odi.pet/login');
+  // Yerel login adresine gidiyoruz
+  await page.goto('/login');
   
   console.log('Sayfa yüklendi, Google ile Giriş Yap butonu aranıyor...');
   // Butonu bul (Google metnini içeren buton)

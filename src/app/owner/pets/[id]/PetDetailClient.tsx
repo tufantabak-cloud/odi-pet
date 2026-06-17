@@ -11,7 +11,7 @@ import AdoptionTab from '@/components/pets/tabs/AdoptionTab'
 
 import SmartTaskWizard from '@/components/tasks/SmartTaskWizard'
 import { TaskCategory } from '@/lib/tasks/taskDefaults'
-import { FirstAidIcon, VaccineIcon, ShampooIcon, BowlIcon, CarrierIcon, ScoopIcon, BoneIcon, HouseIcon } from '@/components/icons/PetIcons'
+import { FirstAidIcon, VaccineIcon, ShampooIcon, BowlIcon, CarrierIcon, ScoopIcon, BoneIcon, HouseIcon, ParasiteIcon } from '@/components/icons/PetIcons'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
@@ -96,6 +96,7 @@ const genderLabel: Record<string, string> = { male: 'Erkek', female: 'Dişi', un
 const TAB_CATEGORY_MAP: Record<string, TaskCategory> = {
   'Sağlık':    'Saglik',
   'Aşı':       'Medikal',
+  'Parazit':   'Medikal',
   'Bakım':     'Bakım',
   'Beslenme':  'Beslenme',
   'Hijyen':    'Hijyen',
@@ -109,6 +110,11 @@ const TOILET_TRAINING_SUBS = ['Kedi Tuvalet', 'Köpek Tuvalet'];
 
 /** Türe göre schedule'ın kategorisini düzeltir (eski Hijyen → Aktiviteler migration) */
 const migrateScheduleCategory = (s: any) => {
+  // plans tablosundan gelen veriler zaten dönüştürülmüş, tekrar migrate etme
+  if (s._source === 'plans') {
+    const stat = s.status === 'completed' ? 'done' : s.status;
+    return { ...s, status: stat };
+  }
   let cat = s.category === 'Temizlik' ? 'Hijyen' : s.category;
   if (cat === 'Hijyen' && TOILET_TRAINING_SUBS.includes(s.sub_category)) {
     cat = 'Aktiviteler';
@@ -135,12 +141,13 @@ function getTabCtaInfo(species: string | undefined): Record<string, { icon: Reac
   // const isCat = species === 'Kedi' || species === 'cat';
   return {
     'Sağlık':    { icon: <FirstAidIcon width={28} height={28} />, btnLabel: 'Sağlık Görevi Planla', desc: 'Kilo ölçümü, semptom takibi, ilaç kullanımı planlayın.', title: 'Sağlık Takibi', gradient: 'from-red-100 to-rose-50' },
-    'Aşı':       { icon: <VaccineIcon width={28} height={28} />, btnLabel: 'Aşı / Parazit Görevi Planla', desc: 'Aşı ve parazit koruma hatırlatmaları oluşturun.', title: 'Aşı Takibi', gradient: 'from-blue-100 to-sky-50' },
+    'Aşı':       { icon: <VaccineIcon width={28} height={28} />, btnLabel: 'Aşı Görevi Planla', desc: 'Aşı ve bağışıklık hatırlatmaları oluşturun.', title: 'Aşı Takibi', gradient: 'from-blue-100 to-sky-50' },
+    'Parazit':   { icon: <ParasiteIcon width={28} height={28} />, btnLabel: 'Parazit Görevi Planla', desc: 'İç ve dış parazit koruma hatırlatmaları oluşturun.', title: 'Parazit Koruması', gradient: 'from-teal-100 to-emerald-50' },
     'Bakım':     { icon: <ShampooIcon width={28} height={28} />, btnLabel: 'Bakım Görevi Planla', desc: isDog ? 'Banyo, tırnak kesimi ve tüy bakımı planlayın.' : 'Tırnak kesimi, kulak temizliği ve tüy bakımı planlayın.', title: 'Bakım Rutini', gradient: 'from-pink-100 to-fuchsia-50' },
     'Beslenme':  { icon: <BowlIcon width={28} height={28} />, btnLabel: 'Beslenme Görevi Planla', desc: 'Mama siparişi ve diyet değişikliği planlayın.', title: 'Beslenme Planı', gradient: 'from-orange-100 to-amber-50' },
     'Hijyen':    { icon: <ScoopIcon width={28} height={28} />, btnLabel: 'Hijyen Görevi Planla', desc: isDog ? 'Çiş pedi temizliği, yatak ve ortam hijyeni planlayın.' : 'Kum kabı temizleme, yatak ve ortam hijyeni planlayın.', title: 'Hijyen Takibi', gradient: 'from-teal-100 to-emerald-50' },
     'Aktivite':  { icon: <BoneIcon width={28} height={28} />, btnLabel: 'Aktivite Görevi Planla', desc: isDog ? 'Yürüyüş, dışarı tuvalet eğitimi, oyun ve egzersiz rutinleri oluşturun.' : 'Kedi tuvalet eğitimi, oyun ve eğitim seansları planlayın.', title: 'Aktivite Planı', gradient: 'from-green-100 to-lime-50' },
-    'Veteriner': { icon: <CarrierIcon width={28} height={28} />, btnLabel: 'Veteriner Görevi Planla', desc: 'Genel kontrol ve takip randevuları oluşturun.', title: 'Veteriner Takibi', gradient: 'from-purple-100 to-indigo-50' },
+    'Veteriner': { icon: <CarrierIcon width={28} height={28} />, btnLabel: 'Veteriner Görevi Planla', desc: 'Genel kontrol and takip randevuları oluşturun.', title: 'Veteriner Takibi', gradient: 'from-purple-100 to-indigo-50' },
     'Diğer':     { icon: <HouseIcon width={28} height={28} />, btnLabel: 'Diğer Görev Planla', desc: 'Diğer kategori görevleri ve hatırlatmaları oluşturun.', title: 'Diğer Görevler', gradient: 'from-gray-100 to-slate-50' },
   };
 }
@@ -314,10 +321,17 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
   useEffect(() => {
     const supabase = createBrowserSupabaseClient()
-    const channel = supabase.channel(`public:health_schedules:pet_${pet.id}`)
+    const channel = supabase.channel(`public:schedules_and_plans:pet_${pet.id}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'health_schedules', filter: `pet_id=eq.${pet.id}` },
+        () => {
+          router.refresh()
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'plans', filter: `pet_id=eq.${pet.id}` },
         () => {
           router.refresh()
         }
@@ -337,16 +351,56 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     setTaskWizardOpen(true)
   }
 
+  const handlePlanla = (tabName: string) => {
+    if (tabName === 'Beslenme') {
+      router.push(`/owner/pets/${pet.id}/nutrition`)
+      return
+    }
+    const routeMap: Record<string, string> = {
+      'Sağlık': 'saglik',
+      'Aşı': 'asi',
+      'Parazit': 'parazit',
+      'Bakım': 'bakim',
+      'Hijyen': 'hijyen',
+      'Aktivite': 'aktivite',
+      'Veteriner': 'saglik'
+    }
+    const routeKey = routeMap[tabName]
+    if (routeKey) {
+      router.push(`/owner/plan-yap/${routeKey}?pet_id=${pet.id}`)
+    } else {
+      router.push(`/owner/plan-yap?pet_id=${pet.id}`)
+    }
+  }
+
   const getSchedulesForTab = (tabName: string) => {
     const dbCat = TAB_CATEGORY_MAP[tabName]
     if (!dbCat) return []
-    return localSchedules.filter((s: any) => s.category === dbCat && s.status !== 'done')
+    return localSchedules.filter((s: any) => {
+      if (s.category !== dbCat) return false;
+      if (tabName === 'Aşı') {
+        return (s.sub_category || '').includes('Aşı') || !(s.sub_category || '').includes('Parazit');
+      }
+      if (tabName === 'Parazit') {
+        return (s.sub_category || '').includes('Parazit') || (s.title || '').toLowerCase().includes('parazit');
+      }
+      return true;
+    }).filter((s: any) => s.status !== 'done')
   }
 
   const getCompletedSchedulesForTab = (tabName: string) => {
     const dbCat = TAB_CATEGORY_MAP[tabName]
     if (!dbCat) return []
-    return localSchedules.filter((s: any) => s.category === dbCat && s.status === 'done')
+    return localSchedules.filter((s: any) => {
+      if (s.category !== dbCat) return false;
+      if (tabName === 'Aşı') {
+        return (s.sub_category || '').includes('Aşı') || !(s.sub_category || '').includes('Parazit');
+      }
+      if (tabName === 'Parazit') {
+        return (s.sub_category || '').includes('Parazit') || (s.title || '').toLowerCase().includes('parazit');
+      }
+      return true;
+    }).filter((s: any) => s.status === 'done')
   }
 
   const getSchedulesForPeriod = (period: 'week' | 'all' | 'overdue' | 'done') => {
@@ -448,12 +502,20 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     } catch { return dueDateStr }
   }
 
+  /** plans tablosundan gelen kayıtları tespit et */
+  const isPlanSource = (id: string) => id.toString().startsWith('plan_')
+  const getRealPlanId = (id: string) => id.replace('plan_', '')
+
   const handleDeleteTask = async (id: string) => {
     setLocalSchedules(prev => prev.filter(s => s.id !== id))
     setActiveMenuId(null)
     if (!id.toString().startsWith('mock-')) {
       try {
-        await createBrowserSupabaseClient().from('health_schedules').delete().eq('id', id)
+        if (isPlanSource(id)) {
+          await fetch(`/api/plans/${getRealPlanId(id)}`, { method: 'DELETE' })
+        } else {
+          await createBrowserSupabaseClient().from('health_schedules').delete().eq('id', id)
+        }
         router.refresh()
       } catch {}
     }
@@ -468,7 +530,15 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       setLocalSchedules(prev => prev.map(s => s.id === id ? { ...s, status: 'done' } : s));
       if (!id.toString().startsWith('mock-')) {
         try {
-          await createBrowserSupabaseClient().from('health_schedules').update({ status: 'completed' }).eq('id', id);
+          if (isPlanSource(id)) {
+            await fetch(`/api/plans/${getRealPlanId(id)}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ status: 'completed' })
+            })
+          } else {
+            await createBrowserSupabaseClient().from('health_schedules').update({ status: 'completed' }).eq('id', id);
+          }
           router.refresh();
         } catch {}
       }
@@ -504,10 +574,18 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         customHandler: async (fd: FormData) => {
           const brand = fd.get('medicine_brand');
           if (!id.toString().startsWith('mock-') && brand) {
-            await createBrowserSupabaseClient().from('health_schedules').update({ 
-              status: 'completed',
-              notes: brand 
-            }).eq('id', id);
+            if (isPlanSource(id)) {
+              await fetch(`/api/plans/${getRealPlanId(id)}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'completed', note: brand })
+              })
+            } else {
+              await createBrowserSupabaseClient().from('health_schedules').update({ 
+                status: 'completed',
+                notes: brand 
+              }).eq('id', id);
+            }
           }
           setLocalSchedules(prev => prev.map(s => s.id === id ? { ...s, status: 'done', notes: brand } : s));
           router.refresh();
@@ -531,7 +609,15 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     if (item && !id.toString().startsWith('mock-')) {
       const d = new Date(item.due_date); d.setDate(d.getDate() + 1)
       try {
-        await createBrowserSupabaseClient().from('health_schedules').update({ due_date: d.toISOString() }).eq('id', id)
+        if (isPlanSource(id)) {
+          await fetch(`/api/plans/${getRealPlanId(id)}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ scheduled_at: d.toISOString() })
+          })
+        } else {
+          await createBrowserSupabaseClient().from('health_schedules').update({ due_date: d.toISOString() }).eq('id', id)
+        }
         router.refresh()
       } catch {}
     }
@@ -735,10 +821,10 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             { name: 'vet_phone', type: 'tel', label: 'Telefon (Opsiyonel)', placeholder: '05xx xxx xx xx', required: false },
             { name: 'vet_email', type: 'email', label: 'E-posta (Opsiyonel)', placeholder: 'klinik@email.com', required: false }
           ],
-          onSuccess: () => openWizardWithCategory(TAB_CATEGORY_MAP['Veteriner'])
+          onSuccess: () => handlePlanla('Veteriner')
         });
       } else {
-        openWizardWithCategory(TAB_CATEGORY_MAP[tabName as keyof typeof TAB_CATEGORY_MAP]);
+        handlePlanla(tabName);
       }
     };
 
@@ -1285,70 +1371,70 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                               {activeMenuId === t.id && (
                                 <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-2xl shadow-xl border border-border-main/50 py-2 z-[200]">
                                   <button onClick={(e) => { e.stopPropagation(); setTaskToEdit(t); setActiveMenuId(null); setTaskWizardOpen(true) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
+                                  <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(t.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer">❌ Sil</button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Regular Tasks Section */}
+                  {dayTasks.length > 0 && (
+                    <div className="flex flex-col gap-3">
+                      {overdueTasks.length > 0 && (
+                        <div className="flex items-center gap-2 mb-1 mt-2">
+                          <span className="w-2 h-2 rounded-full bg-primary" />
+                          <h3 className="text-[12px] font-black text-primary uppercase tracking-widest">{dayPrefix}</h3>
+                        </div>
+                      )}
+                      {dayTasks.map((t: any) => {
+                        const isDone = t.status === 'done';
+                        const title = t.title || t.vaccines?.name || t.category;
+                        return (
+                          <div key={t.id} onClick={() => { if(!isDone) { setTaskToEdit(t); setTaskWizardOpen(true); } }} className={`flex items-start justify-between group p-3.5 rounded-2xl border transition-colors ${isDone ? 'bg-text-secondary/5 border-transparent' : 'cursor-pointer bg-white border-border-main/50 hover:border-primary/30 hover:bg-primary/5'}`}>
+                            <div className="flex items-start gap-3 flex-1 min-w-0 pr-2">
+                              <button onClick={(e) => { e.stopPropagation(); if(!isDone) handleMarkCompleted(t.id); }} className={`mt-0.5 w-6 h-6 flex items-center justify-center rounded-full border-2 transition-colors flex-shrink-0 ${isDone ? 'bg-text-secondary/20 border-text-secondary/20 text-text-secondary' : 'border-primary/40 hover:bg-primary hover:border-primary text-transparent hover:text-white'}`}>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                              </button>
+                              <span className={`text-[14px] font-bold line-clamp-2 break-words ${isDone ? 'text-text-secondary/60 line-through' : 'text-text-primary'}`}>
+                                {title}
+                                {t.sub_category === 'Zorunlu Aşılar' && (
+                                  <span className="font-normal opacity-80 ml-1">/ {formatFrequency(t.vaccines?.frequency_days, t.vaccines?.frequency_label || t.frequency_label)}</span>
+                                )}
+                              </span>
+                            </div>
+                            {!isDone && (
+                              <div className="flex items-center gap-1.5 relative" onClick={(e) => e.stopPropagation()}>
+                                <button onClick={(e) => { e.stopPropagation(); handlePostpone(t.id); }} className="px-2 py-1.5 bg-text-secondary/5 hover:bg-text-secondary/10 text-text-secondary font-bold text-[11px] rounded-lg border border-transparent hover:border-border-main transition-colors whitespace-nowrap">
+                                  📅 +1 Gün
+                                </button>
+                                <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(prev => prev === t.id ? null : t.id) }} className="p-1 text-text-secondary/50 hover:text-text-secondary transition-colors focus:outline-none rounded-lg hover:bg-bg-main">
+                                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
+                                  </svg>
+                                </button>
+                                {activeMenuId === t.id && (
+                                  <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-2xl shadow-xl border border-border-main/50 py-2 z-[200]">
+                                    <button onClick={(e) => { e.stopPropagation(); setTaskToEdit(t); setActiveMenuId(null); setTaskWizardOpen(true) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
                                     <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(t.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer">❌ Sil</button>
                                   </div>
                                 )}
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {/* Regular Tasks Section */}
-                    {dayTasks.length > 0 && (
-                      <div className="flex flex-col gap-3">
-                        {overdueTasks.length > 0 && (
-                          <div className="flex items-center gap-2 mb-1 mt-2">
-                            <span className="w-2 h-2 rounded-full bg-primary" />
-                            <h3 className="text-[12px] font-black text-primary uppercase tracking-widest">{dayPrefix}</h3>
+                            )}
                           </div>
-                        )}
-                        {dayTasks.map((t: any) => {
-                          const isDone = t.status === 'done';
-                          const title = t.title || t.vaccines?.name || t.category;
-                          return (
-                            <div key={t.id} onClick={() => { if(!isDone) { setTaskToEdit(t); setTaskWizardOpen(true); } }} className={`flex items-start justify-between group p-3.5 rounded-2xl border transition-colors ${isDone ? 'bg-text-secondary/5 border-transparent' : 'cursor-pointer bg-white border-border-main/50 hover:border-primary/30 hover:bg-primary/5'}`}>
-                              <div className="flex items-start gap-3 flex-1 min-w-0 pr-2">
-                                <button onClick={(e) => { e.stopPropagation(); if(!isDone) handleMarkCompleted(t.id); }} className={`mt-0.5 w-6 h-6 flex items-center justify-center rounded-full border-2 transition-colors flex-shrink-0 ${isDone ? 'bg-text-secondary/20 border-text-secondary/20 text-text-secondary' : 'border-primary/40 hover:bg-primary hover:border-primary text-transparent hover:text-white'}`}>
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                                </button>
-                                <span className={`text-[14px] font-bold line-clamp-2 break-words ${isDone ? 'text-text-secondary/60 line-through' : 'text-text-primary'}`}>
-                                  {title}
-                                  {t.sub_category === 'Zorunlu Aşılar' && (
-                                    <span className="font-normal opacity-80 ml-1">/ {formatFrequency(t.vaccines?.frequency_days, t.vaccines?.frequency_label || t.frequency_label)}</span>
-                                  )}
-                                </span>
-                              </div>
-                              {!isDone && (
-                                <div className="flex items-center gap-1.5 relative" onClick={(e) => e.stopPropagation()}>
-                                  <button onClick={(e) => { e.stopPropagation(); handlePostpone(t.id); }} className="px-2 py-1.5 bg-text-secondary/5 hover:bg-text-secondary/10 text-text-secondary font-bold text-[11px] rounded-lg border border-transparent hover:border-border-main transition-colors whitespace-nowrap">
-                                    📅 +1 Gün
-                                  </button>
-                                  <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(prev => prev === t.id ? null : t.id) }} className="p-1 text-text-secondary/50 hover:text-text-secondary transition-colors focus:outline-none rounded-lg hover:bg-bg-main">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                      <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
-                                    </svg>
-                                  </button>
-                                  {activeMenuId === t.id && (
-                                    <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-2xl shadow-xl border border-border-main/50 py-2 z-[200]">
-                                      <button onClick={(e) => { e.stopPropagation(); setTaskToEdit(t); setActiveMenuId(null); setTaskWizardOpen(true) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
-                                      <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(t.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer">❌ Sil</button>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )
-              })()}
-            </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
           </div>
         </div>
+      </div>
 
       <HealthTracker petId={pet.id} onEditTask={(t) => { setTaskToEdit(t); setTaskWizardOpen(true); }} />
 
@@ -1356,61 +1442,29 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         <EstrusTracker petId={pet.id} petSpecies={pet.species} />
       )}
 
-      <div className="flex flex-col gap-4">
-        <MinimalGrowthChart 
-          records={growthRecords} 
-          onAddRecord={() => setQuickUpdateConfig({ 
-            title: 'Gelişim Bilgisi', 
-            desc: 'Gelişimi takip edebilmek için güncel kilo ve boyunu girin.', 
-            endpoint: `/api/pets/${pet.id}/growth`, 
-            method: 'POST', 
-            fields: [
-              { name: 'recorded_at', type: 'date', label: 'Tarih', defaultValue: new Date().toISOString().split('T')[0], required: true },
-              { name: 'weight_kg', type: 'number', label: 'Kilo (kg)', placeholder: 'Örn: 4.5', required: true }, 
-              { name: 'height_cm', type: 'number', label: 'Boy (cm)', placeholder: 'Örn: 35.5', required: false }
-            ] 
-          })}
+      <MinimalGrowthChart 
+        records={growthRecords} 
+        onAddRecord={() => setQuickUpdateConfig({ 
+          title: 'Gelişim Bilgisi', 
+          desc: 'Gelişimi takip edebilmek için güncel kilo ve boyunu girin.', 
+          endpoint: `/api/pets/${pet.id}/growth`, 
+          method: 'POST', 
+          fields: [
+            { name: 'recorded_at', type: 'date', label: 'Tarih', defaultValue: new Date().toISOString().split('T')[0], required: true },
+            { name: 'weight_kg', type: 'number', label: 'Kilo (kg)', placeholder: 'Örn: 4.5', required: true }, 
+            { name: 'height_cm', type: 'number', label: 'Boy (cm)', placeholder: 'Örn: 35.5', required: false }
+          ] 
+        })}
+      />
+
+      {pet.birth_date && (
+        <HumanAgeCalculator 
+          species={pet.species} 
+          birthDate={pet.birth_date} 
+          weightKg={growthRecords && growthRecords.length > 0 ? growthRecords[0].weight_kg : undefined} 
+          petName={pet.name} 
         />
-
-        {/* Vet quick info */}
-        {(pet.vet_company || pet.vet_name || pet.vet_phone || pet.vet_email) && (
-          <div className="card-base p-5">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest">Veteriner</h3>
-              <button onClick={handleEditVetInfo} className="text-[12px] font-bold text-primary hover:underline">Düzenle</button>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 text-[20px] shrink-0">🩺</div>
-              <div>
-                {pet.vet_company && <p className="font-bold text-text-primary">{pet.vet_company}</p>}
-                {pet.vet_name && <p className="font-semibold text-text-secondary text-[14px]">{pet.vet_name}</p>}
-                {pet.vet_phone && <a href={`tel:${pet.vet_phone}`} className="text-[14px] text-primary font-semibold hover:underline block mt-0.5">{pet.vet_phone}</a>}
-                {pet.vet_email && <a href={`mailto:${pet.vet_email}`} className="text-[14px] text-primary font-semibold hover:underline block">{pet.vet_email}</a>}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Alerjiler — sadece veri varsa */}
-        {allergies && allergies.length > 0 && (
-          <div className="card-base p-5">
-            <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest mb-3">Alerjiler</h3>
-            <div className="flex flex-wrap gap-2">
-              {allergies.map((a: any) => <span key={a.id} className="px-3 py-1.5 rounded-full bg-red-50 text-red-700 text-[12px] font-bold border border-red-100">{a.trigger_name}</span>)}
-            </div>
-          </div>
-        )}
-        <BreedHealthCard petName={pet.name} breed={pet.breed} />
-
-        {pet.birth_date && (
-          <HumanAgeCalculator 
-            species={pet.species} 
-            birthDate={pet.birth_date} 
-            weightKg={growthRecords && growthRecords.length > 0 ? growthRecords[0].weight_kg : undefined} 
-            petName={pet.name} 
-          />
-        )}
-      </div>
+      )}
 
       {/* ── Layer 2: Sağlık ve Bakım Accordion ── */}
       <div className="flex flex-col gap-2">
@@ -1418,6 +1472,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         {([
           { name: 'Sağlık', icon: <FirstAidIcon width={22} height={22} />, color: 'text-red-500', bg: 'bg-red-50' },
           { name: 'Aşı', icon: <VaccineIcon width={22} height={22} />, color: 'text-blue-500', bg: 'bg-blue-50' },
+          { name: 'Parazit', icon: <ParasiteIcon width={22} height={22} />, color: 'text-emerald-600', bg: 'bg-emerald-50' },
           { name: 'Bakım', icon: <ShampooIcon width={22} height={22} />, color: 'text-pink-500', bg: 'bg-pink-50' },
           { name: 'Beslenme', icon: <BowlIcon width={22} height={22} />, color: 'text-orange-500', bg: 'bg-orange-50' },
           { name: 'Hijyen', icon: <ScoopIcon width={22} height={22} />, color: 'text-teal-500', bg: 'bg-teal-50' },
@@ -1461,10 +1516,10 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                             { name: 'vet_phone', type: 'tel', label: 'Telefon (Opsiyonel)', placeholder: '05xx xxx xx xx', required: false },
                             { name: 'vet_email', type: 'email', label: 'E-posta (Opsiyonel)', placeholder: 'klinik@email.com', required: false }
                           ],
-                          onSuccess: () => openWizardWithCategory(TAB_CATEGORY_MAP['Veteriner'])
+                          onSuccess: () => handlePlanla('Veteriner')
                         });
                       } else {
-                        openWizardWithCategory(TAB_CATEGORY_MAP[module.name as keyof typeof TAB_CATEGORY_MAP]);
+                        handlePlanla(module.name);
                       }
                     }}
                     className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-[10px] text-[12px] font-bold hover:bg-primary-hover hover:scale-105 active:scale-95 transition-all shadow-sm"
@@ -1533,6 +1588,23 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                     </div>
                   )}
 
+                  {/* Beslenme: Aktif mama ve porsiyon bilgisi */}
+                  {module.name === 'Beslenme' && nutritionLogs && nutritionLogs.length > 0 && (
+                    <div className="card-base p-4 bg-orange-50/40 border border-orange-100/50 flex flex-col gap-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[12px] font-black text-orange-800 uppercase tracking-widest">Kayıtlı Beslenme Planı</span>
+                        <Link href={`/owner/pets/${pet.id}/nutrition`} className="text-[12px] font-bold text-primary hover:underline">Düzenle</Link>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-[20px]">🍖</div>
+                        <div>
+                          <p className="font-bold text-text-primary text-[14px]">{nutritionLogs[0].food_brand || 'Markasız'} ({nutritionLogs[0].food_product || 'Çeşit Belirtilmedi'})</p>
+                          <p className="text-[12px] text-text-secondary">Günlük Tüketim: <span className="font-extrabold text-orange-700">{nutritionLogs[0].daily_grams || 0} g</span></p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Diğer: SOS ağı ve belge kasası */}
                   {module.name === 'Diğer' && (
                     <>
@@ -1592,6 +1664,38 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         {openSections.has('Bütçe') && <div className="animate-fade-in"><BudgetTab pet={pet} /></div>}
         {openSections.has('Sahiplendir') && <div className="animate-fade-in"><AdoptionTab pet={pet} /></div>}
         {openSections.has('Raporlar') && <div className="animate-fade-in"><ReportsTab petId={pet.id} petName={pet.name} plan={subscription?.plan ?? 'free'} payments={payments ?? []} /></div>}
+
+        {/* Veteriner Bilgileri */}
+        {(pet.vet_company || pet.vet_name || pet.vet_phone || pet.vet_email) && (
+          <div className="card-base p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest">Veteriner Bilgileri</h3>
+              <button onClick={handleEditVetInfo} className="text-[12px] font-bold text-primary hover:underline">Düzenle</button>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 text-[20px] shrink-0">🩺</div>
+              <div>
+                {pet.vet_company && <p className="font-bold text-text-primary">{pet.vet_company}</p>}
+                {pet.vet_name && <p className="font-semibold text-text-secondary text-[14px]">{pet.vet_name}</p>}
+                {pet.vet_phone && <a href={`tel:${pet.vet_phone}`} className="text-[14px] text-primary font-semibold hover:underline block mt-0.5">{pet.vet_phone}</a>}
+                {pet.vet_email && <a href={`mailto:${pet.vet_email}`} className="text-[14px] text-primary font-semibold hover:underline block">{pet.vet_email}</a>}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Irka Özel Sağlık Rehberi */}
+        <BreedHealthCard petName={pet.name} breed={pet.breed} />
+
+        {/* Alerjiler — sadece veri varsa */}
+        {allergies && allergies.length > 0 && (
+          <div className="card-base p-5">
+            <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest mb-3">Alerjiler</h3>
+            <div className="flex flex-wrap gap-2">
+              {allergies.map((a: any) => <span key={a.id} className="px-3 py-1.5 rounded-full bg-red-50 text-red-700 text-[12px] font-bold border border-red-100">{a.trigger_name}</span>)}
+            </div>
+          </div>
+        )}
       </div>
 
 

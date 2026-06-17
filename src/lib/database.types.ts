@@ -179,6 +179,105 @@ export type Database = {
           },
         ]
       }
+      notification_jobs: {
+        Row: {
+          id: string
+          user_id: string
+          pet_id: string
+          job_type: string
+          payload: Json | null
+          status: string
+          scheduled_for: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          pet_id: string
+          job_type: string
+          payload?: Json | null
+          status?: string
+          scheduled_for: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          pet_id?: string
+          job_type?: string
+          payload?: Json | null
+          status?: string
+          scheduled_for?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_jobs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_jobs_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      plans: {
+        Row: {
+          id: string
+          user_id: string
+          pet_id: string
+          category: string
+          extra_data: Json | null
+          repeat_rule: string | null
+          next_run: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          pet_id: string
+          category: string
+          extra_data?: Json | null
+          repeat_rule?: string | null
+          next_run?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          pet_id?: string
+          category?: string
+          extra_data?: Json | null
+          repeat_rule?: string | null
+          next_run?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plans_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plans_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       alerts: {
         Row: {
           created_at: string | null
@@ -1573,6 +1672,38 @@ export type Database = {
           },
         ]
       }
+      user_onboarding_steps: {
+        Row: {
+          user_id: string
+          step_id: string
+          is_completed: boolean
+          completed_at: string | null
+          created_at: string | null
+        }
+        Insert: {
+          user_id: string
+          step_id: string
+          is_completed?: boolean
+          completed_at?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          user_id?: string
+          step_id?: string
+          is_completed?: boolean
+          completed_at?: string | null
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_onboarding_steps_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       outreach_pipeline: {
         Row: {
           activated_at: string | null
@@ -2726,6 +2857,7 @@ export type Database = {
           last_name: string | null
           phone: string | null
           pro_trial_until: string | null
+          referral_code: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string | null
         }
@@ -2738,6 +2870,7 @@ export type Database = {
           last_name?: string | null
           phone?: string | null
           pro_trial_until?: string | null
+          referral_code?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
         }
@@ -2750,6 +2883,7 @@ export type Database = {
           last_name?: string | null
           phone?: string | null
           pro_trial_until?: string | null
+          referral_code?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
         }
@@ -2848,6 +2982,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      referrals: {
+        Row: {
+          id: string
+          referrer_id: string
+          referred_id: string
+          referral_code: string
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          referrer_id: string
+          referred_id: string
+          referral_code: string
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          referrer_id?: string
+          referred_id?: string
+          referral_code?: string
+          created_at?: string | null
+        }
+        Relationships: []
+      }
+      user_badges: {
+        Row: {
+          id: string
+          user_id: string
+          badge_key: string
+          earned_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          badge_key: string
+          earned_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          badge_key?: string
+          earned_at?: string | null
+        }
+        Relationships: []
       }
       shared_pet_cards: {
         Row: {
