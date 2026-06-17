@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { calcAge } from '@/lib/pets/utils'
 import { DefaultCatAvatar, DefaultDogAvatar } from '@/components/icons/PetIcons'
@@ -600,6 +600,7 @@ function PetSOSStep({
                 onChange={e => { const nc = [...sosContacts]; nc[0] = { ...nc[0], relation: e.target.value }; setSosContacts(nc); }}
               >
                 <option value="" disabled>Seçiniz</option>
+                <option value="Sahibi">Sahibi</option>
                 <option value="Aile Üyesi">Aile Üyesi</option>
                 <option value="Eşi / Partneri">Eşi / Partneri</option>
                 <option value="Komşu">Komşu</option>
@@ -607,7 +608,7 @@ function PetSOSStep({
                 <option value="Evcil Hayvan Bakıcısı">Evcil Hayvan Bakıcısı</option>
                 <option value="Veteriner Hekim">Veteriner Hekim</option>
                 <option value="Diğer">Diğer</option>
-                {sosContacts[0]?.relation && !['Aile Üyesi', 'Eşi / Partneri', 'Komşu', 'Arkadaş / Yakın', 'Evcil Hayvan Bakıcısı', 'Veteriner Hekim', 'Diğer'].includes(sosContacts[0].relation) && (
+                {sosContacts[0]?.relation && !['Sahibi', 'Aile Üyesi', 'Eşi / Partneri', 'Komşu', 'Arkadaş / Yakın', 'Evcil Hayvan Bakıcısı', 'Veteriner Hekim', 'Diğer'].includes(sosContacts[0].relation) && (
                   <option value={sosContacts[0].relation}>{sosContacts[0].relation}</option>
                 )}
               </select>
@@ -644,6 +645,7 @@ function PetSOSStep({
                 onChange={e => { const nc = [...sosContacts]; nc[1] = { ...nc[1], relation: e.target.value }; setSosContacts(nc); }}
               >
                 <option value="" disabled>Seçiniz</option>
+                <option value="Sahibi">Sahibi</option>
                 <option value="Aile Üyesi">Aile Üyesi</option>
                 <option value="Eşi / Partneri">Eşi / Partneri</option>
                 <option value="Komşu">Komşu</option>
@@ -651,7 +653,7 @@ function PetSOSStep({
                 <option value="Evcil Hayvan Bakıcısı">Evcil Hayvan Bakıcısı</option>
                 <option value="Veteriner Hekim">Veteriner Hekim</option>
                 <option value="Diğer">Diğer</option>
-                {sosContacts[1]?.relation && !['Aile Üyesi', 'Eşi / Partneri', 'Komşu', 'Arkadaş / Yakın', 'Evcil Hayvan Bakıcısı', 'Veteriner Hekim', 'Diğer'].includes(sosContacts[1].relation) && (
+                {sosContacts[1]?.relation && !['Sahibi', 'Aile Üyesi', 'Eşi / Partneri', 'Komşu', 'Arkadaş / Yakın', 'Evcil Hayvan Bakıcısı', 'Veteriner Hekim', 'Diğer'].includes(sosContacts[1].relation) && (
                   <option value={sosContacts[1].relation}>{sosContacts[1].relation}</option>
                 )}
               </select>
@@ -701,6 +703,11 @@ const WIZARD_STEPS = [
 export default function AddPetPage() {
   const router = useRouter()
   const [step, setStep] = useState(1)
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' as any })
+  }, [step])
+
   const [selectedSpecies, setSelectedSpecies] = useState<Species | null>(null)
 
   const [petName, setPetName] = useState('')
