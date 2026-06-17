@@ -68,10 +68,18 @@ export default async function PetDetailPage(props: PageProps) {
 
   const plansAsSchedules = (plans ?? []).map((p: any) => {
     let dueTime = '12:00:00'
+    let dueDate = p.scheduled_at ? p.scheduled_at.split('T')[0] : ''
     if (p.scheduled_at) {
       const d = new Date(p.scheduled_at)
       if (!isNaN(d.getTime())) {
-        dueTime = d.toTimeString().slice(0, 8)
+        dueDate = d.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
+        dueTime = d.toLocaleTimeString('tr-TR', { 
+          timeZone: 'Europe/Istanbul', 
+          hour: '2-digit', 
+          minute: '2-digit', 
+          second: '2-digit',
+          hour12: false 
+        })
       }
     }
     return {
@@ -80,7 +88,7 @@ export default async function PetDetailPage(props: PageProps) {
       _source: 'plans',
       pet_id: p.pet_id,
       title: p.sub_type || p.extra_data?.vaccine?.name || 'Plan',
-      due_date: p.scheduled_at,
+      due_date: dueDate,
       due_time: dueTime,
       status: p.status === 'completed' ? 'done' : p.status === 'cancelled' ? 'done' : 'upcoming',
       category: PLAN_CATEGORY_MAP[p.category] || p.category,

@@ -371,8 +371,14 @@ export function useHealthTracker(petId: string) {
           if (p.scheduled_at) {
             try {
               const d = new Date(p.scheduled_at);
-              dueDateStr = d.toISOString().split('T')[0];
-              dueTimeStr = d.toISOString().split('T')[1].substring(0, 8);
+              dueDateStr = d.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' });
+              dueTimeStr = d.toLocaleTimeString('tr-TR', { 
+                timeZone: 'Europe/Istanbul', 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit',
+                hour12: false 
+              });
             } catch(e) {}
           }
           let freqDays = p.extra_data?.frequency_days || 0;

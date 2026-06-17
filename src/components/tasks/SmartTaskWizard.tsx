@@ -266,6 +266,134 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
 
       // ── EDIT MODE ────────────────────────────────────────────────
       if (taskToEdit) {
+        // Eğer bu plans tablosundan gelen bir plan kaydı ise
+        if (taskToEdit.id.toString().startsWith('plan_')) {
+          const realPlanId = taskToEdit.id.replace('plan_', '');
+          
+          const PLAN_CAT_MAP_REV: Record<string, string> = {
+            'Saglik': 'saglik',
+            'Medikal': 'asi',
+            'Bakım': 'bakim',
+            'Beslenme': 'beslenme',
+            'Hijyen': 'hijyen',
+            'Aktiviteler': 'aktivite',
+          };
+          let planCategory = PLAN_CAT_MAP_REV[category] || category.toLowerCase();
+          if (planCategory === 'asi' && subCategory && (subCategory.includes('Parazit') || subCategory.includes('Tasma') || subCategory.includes('Birleşik'))) {
+            planCategory = 'parazit';
+          }
+
+          const scheduledAtISO = `${formData.date}T${formData.time}:00+03:00`;
+
+          let notifBefore = formData.notificationMinutes;
+          let notifUnit = 'minute';
+          if (formData.notificationEnabled) {
+            if (notifBefore === 0) {
+              notifBefore = 0;
+              notifUnit = 'minute';
+            } else if (notifBefore % 10080 === 0) {
+              notifBefore = notifBefore / 10080;
+              notifUnit = 'day';
+            } else if (notifBefore % 1440 === 0) {
+              notifBefore = notifBefore / 1440;
+              notifUnit = 'day';
+            } else if (notifBefore % 60 === 0) {
+              notifBefore = notifBefore / 60;
+              notifUnit = 'hour';
+            }
+          } else {
+            notifBefore = 0;
+            notifUnit = 'minute';
+          }
+
+          const { data: updatedPlan, error: planUpdateError } = await supabase
+            .from('plans')
+            .update({
+              category: planCategory,
+              sub_type: subCategory,
+              scheduled_at: scheduledAtISO,
+              repeat_rule: formData.frequency === 'once' ? null : formData.frequency,
+              ends_at: (formData.frequency !== 'once' && formData.endCondition === 'date' && formData.endDate) ? formData.endDate : null,
+              notif_before: notifBefore,
+              notif_unit: notifUnit,
+              note: formData.notes,
+              extra_data: {
+                ...metadata,
+                interval: formData.interval,
+                endCondition: formData.endCondition,
+                endOccurrences: formData.endOccurrences,
+              },
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', realPlanId)
+            .select()
+            .single();
+
+          if (planUpdateError) throw planUpdateError;
+
+          if (formData.notificationEnabled) {
+            const fireAtDate = new Date(scheduledAtISO);
+            if (notifUnit === 'minute') {
+              fireAtDate.setMinutes(fireAtDate.getMinutes() - notifBefore);
+            } else if (notifUnit === 'hour') {
+              fireAtDate.setHours(fireAtDate.getHours() - notifBefore);
+            } else if (notifUnit === 'day') {
+              fireAtDate.setDate(fireAtDate.getDate() - notifBefore);
+            }
+            const fireAtISO = fireAtDate.toISOString();
+
+            const { data: existingJobs } = await supabase
+              .from('notification_jobs')
+              .select('id')
+              .eq('plan_id', realPlanId)
+              .eq('sent', false)
+              .limit(1);
+
+            if (existingJobs && existingJobs.length > 0) {
+              await supabase
+                .from('notification_jobs')
+                .update({ fire_at: fireAtISO })
+                .eq('id', existingJobs[0].id);
+            } else {
+              await supabase
+                .from('notification_jobs')
+                .insert({
+                  plan_id: realPlanId,
+                  fire_at: fireAtISO,
+                  sent: false
+                });
+            }
+          } else {
+            await supabase
+              .from('notification_jobs')
+              .delete()
+              .eq('plan_id', realPlanId)
+              .eq('sent', false);
+          }
+
+          const returnSchedule = {
+            id: `plan_${updatedPlan.id}`,
+            _plan_id: updatedPlan.id,
+            _source: 'plans',
+            pet_id: updatedPlan.pet_id,
+            title: updatedPlan.sub_type || updatedPlan.extra_data?.vaccine?.name || 'Plan',
+            due_date: formData.date,
+            due_time: formData.time + ':00',
+            status: updatedPlan.status === 'completed' ? 'done' : updatedPlan.status === 'cancelled' ? 'done' : 'upcoming',
+            category: category,
+            sub_category: updatedPlan.sub_type,
+            plan_type: updatedPlan.repeat_rule || 'once',
+            notes: updatedPlan.note,
+            vaccines: updatedPlan.extra_data?.vaccine ? { name: updatedPlan.extra_data.vaccine.name } : null,
+            repeat_rule: updatedPlan.repeat_rule,
+            extra_data: updatedPlan.extra_data,
+            created_at: updatedPlan.created_at,
+            updated_at: updatedPlan.updated_at,
+          };
+
+          onDone(returnSchedule);
+          return;
+        }
         // 1) health_plans güncelle (frekans değiştiyse)
         if (taskToEdit.plan_id) {
           if (formData.frequency === 'once') {
