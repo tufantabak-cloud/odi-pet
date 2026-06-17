@@ -284,7 +284,7 @@ function BottomNavContent() {
       )}
 
       {/* Navigation Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-white border-t border-border-main/80 pt-2 pb-5 px-2 shadow-[0_-4px_24px_rgba(0,0,0,0.04)]">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-white border-t border-border-main/80 pt-2 pb-[calc(12px+env(safe-area-inset-bottom))] px-2 shadow-[0_-4px_24px_rgba(0,0,0,0.04)]">
         <div className="grid grid-cols-5 w-full max-w-lg mx-auto">
           {tabs.map((tab: any) => {
             const isActive = tab.href === '/owner/dashboard'
