@@ -118,60 +118,73 @@ export default function SpotlightTour({ steps, onComplete }: SpotlightTourProps 
     if (!isReady || !isEnabled) return;
 
     if (hasStarted.current) return;
-    hasStarted.current = true;
-    isUnmounting.current = false;
 
-    const driveSteps = steps.map(s => ({
-      element: `#${s.targetId}`,
-      popover: {
-        title: s.title,
-        description: s.message,
-        side: s.position || 'bottom',
-        align: 'start' as const
+    // Check if splash screen is active and wait for it
+    const checkSplash = setInterval(() => {
+      if (document.body.classList.contains('odi-splash-active')) {
+        return;
       }
-    }));
+      clearInterval(checkSplash);
 
-    console.log('[SpotlightTour Effect 1] Initializing driver.js for Wizard');
-    const inst = driver({
-      showProgress: false,
-      showButtons: ['next'], // only show Next (which becomes Done at the last step)
-      allowClose: false,
-      overlayColor: 'rgba(0, 0, 0, 0.65)',
-      popoverClass: 'odi-driver-popover',
-      nextBtnText: 'Devam Et',
-      doneBtnText: 'Başla 🐾',
-      onNextClick: (el, step, { config, state }) => {
-        if (state.activeIndex === driveSteps.length - 1) {
-          inst.destroy();
-          if (onCompleteRef.current) onCompleteRef.current();
-        } else {
-          inst.moveNext();
+      if (hasStarted.current) return;
+      hasStarted.current = true;
+      isUnmounting.current = false;
+
+      const driveSteps = steps.map(s => ({
+        element: `#${s.targetId}`,
+        popover: {
+          title: s.title,
+          description: s.message,
+          side: s.position || 'bottom',
+          align: 'start' as const
         }
-      },
-      onDestroyStarted: () => {
-        if (!isUnmounting.current) {
-          if (onCompleteRef.current) onCompleteRef.current();
-          inst.destroy();
+      }));
+
+      console.log('[SpotlightTour Effect 1] Initializing driver.js for Wizard');
+      const inst = driver({
+        showProgress: false,
+        showButtons: ['next'], // only show Next (which becomes Done at the last step)
+        allowClose: false,
+        overlayColor: 'rgba(0, 0, 0, 0.65)',
+        popoverClass: 'odi-driver-popover',
+        nextBtnText: 'Devam Et',
+        doneBtnText: 'Başla 🐾',
+        onNextClick: (el, step, { config, state }) => {
+          if (state.activeIndex === driveSteps.length - 1) {
+            inst.destroy();
+            if (onCompleteRef.current) onCompleteRef.current();
+          } else {
+            inst.moveNext();
+          }
+        },
+        onDestroyStarted: () => {
+          if (!isUnmounting.current) {
+            if (onCompleteRef.current) onCompleteRef.current();
+            inst.destroy();
+          }
         }
-      }
-    });
+      });
 
-    driverObj.current = inst;
+      driverObj.current = inst;
 
-    inst.setConfig({
-      ...inst.getConfig(),
-      steps: driveSteps
-    });
+      inst.setConfig({
+        ...inst.getConfig(),
+        steps: driveSteps
+      });
 
-    // Start the tour
-    console.log('[SpotlightTour Effect 1] Calling inst.drive() with steps:', driveSteps);
-    inst.drive();
+      // Start the tour
+      console.log('[SpotlightTour Effect 1] Calling inst.drive() with steps:', driveSteps);
+      inst.drive();
+    }, 200);
 
     return () => {
       console.log('[SpotlightTour Effect 1] Unmounting');
+      clearInterval(checkSplash);
       isUnmounting.current = true;
-      inst.destroy();
-      driverObj.current = null;
+      if (driverObj.current) {
+        driverObj.current.destroy();
+        driverObj.current = null;
+      }
       hasStarted.current = false;
     };
   }, [steps, isReady, isEnabled]);
@@ -199,6 +212,11 @@ export default function SpotlightTour({ steps, onComplete }: SpotlightTourProps 
       // Retry logic for elements that might render lazily
       let attempts = 0;
       const interval = setInterval(() => {
+        // Wait for splash screen to finish
+        if (document.body.classList.contains('odi-splash-active')) {
+          return;
+        }
+
         const el = document.querySelector(activeStep.target);
         if (el) {
           console.log('[SpotlightTour Effect 2] Element found! Highlighting', activeStep.target);

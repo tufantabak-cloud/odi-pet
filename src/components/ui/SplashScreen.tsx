@@ -39,13 +39,16 @@ export default function SplashScreen() {
     if (isVisible) {
       document.body.style.overflow = "hidden";
       document.documentElement.style.overflow = "hidden";
+      document.body.classList.add("odi-splash-active");
     } else {
       document.body.style.overflow = "";
       document.documentElement.style.overflow = "";
+      document.body.classList.remove("odi-splash-active");
     }
     return () => {
       document.body.style.overflow = "";
       document.documentElement.style.overflow = "";
+      document.body.classList.remove("odi-splash-active");
     };
   }, [isVisible]);
 
