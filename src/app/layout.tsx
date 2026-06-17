@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import OfflineIndicator from "@/components/ui/OfflineIndicator";
 import SplashScreen from "@/components/ui/SplashScreen";
+import PwaEnforcer from "@/components/ui/PwaEnforcer";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -42,6 +43,7 @@ export default function RootLayout({
   return (
     <html lang="tr" className={`${inter.variable} antialiased h-full`}>
       <body className="min-h-full flex flex-col font-sans text-[16px] bg-bg-main text-text-primary">
+        <PwaEnforcer />
         <SplashScreen />
         <OfflineIndicator />
         {children}

@@ -274,22 +274,28 @@ export default async function OwnerDashboard() {
                         </div>
                       </div>
 
-                      {/* Alt şerit: besleme + kilo */}
-                      {(pet.lastFeedingLabel || pet.weightLabel) && (
-                        <div className="flex items-center justify-between px-3 py-2 bg-white gap-1.5">
-                          {pet.lastFeedingLabel ? (
-                            <span className="flex items-center gap-1 text-[10px] text-text-secondary font-semibold truncate">
-                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-amber-500 shrink-0" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M3 11l19-9-9 19-2-8-8-2z"/>
-                              </svg>
-                              {pet.lastFeedingLabel}
-                            </span>
-                          ) : <span />}
+                      {/* Alt şerit: besleme, kilo ve yönlendirme */}
+                      <div className="flex items-center justify-between px-3 py-2 bg-white gap-1.5 border-t border-border-main/10">
+                        {pet.lastFeedingLabel ? (
+                          <span className="flex items-center gap-1 text-[10px] text-text-secondary font-semibold truncate max-w-[85px] sm:max-w-[100px]">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-amber-500 shrink-0" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+                            </svg>
+                            {pet.lastFeedingLabel}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-primary font-bold animate-pulse">Profili Gör</span>
+                        )}
+
+                        <div className="flex items-center gap-1.5 shrink-0">
                           {pet.weightLabel && (
                             <span className="text-[10px] font-bold text-text-secondary bg-bg-main px-1.5 py-0.5 rounded-lg shrink-0">{pet.weightLabel}</span>
                           )}
+                          <span className="text-[10px] text-primary font-extrabold flex items-center gap-0.5 transition-colors">
+                            <span className="inline-block transition-transform duration-200 group-hover:translate-x-0.5">→</span>
+                          </span>
                         </div>
-                      )}
+                      </div>
                     </Link>
                   )
                 })}

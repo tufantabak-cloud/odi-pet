@@ -75,8 +75,8 @@ function PushPermissionCard({ onDismiss }: { onDismiss: () => void }) {
           <button
             id="push-enable-btn"
             onClick={async () => {
-              const ok = await subscribe()
-              setResult(ok ? 'success' : 'denied')
+              const result = await subscribe()
+              setResult(result.success ? 'success' : 'denied')
             }}
             disabled={isLoading}
             className="px-4 py-2 bg-primary text-white font-bold text-[13px] rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-60 flex items-center gap-2"

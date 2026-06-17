@@ -21,13 +21,15 @@ function SuccessContent() {
 
   const handleSubscribe = async () => {
     setErrorMsg('')
-    const success = await subscribe()
-    if (success) {
+    const result = await subscribe()
+    if (result.success) {
       setJustSubscribed(true)
       // Redirect after 1.5s
       setTimeout(() => {
         router.push(`/owner/pets/${petId}`)
       }, 1500)
+    } else if (result.error) {
+      setErrorMsg(result.error)
     } else {
       if (Notification.permission === 'denied') {
         setErrorMsg('Tarayıcınızda bildirim izinleri engellenmiş. Lütfen tarayıcı ayarlarından izni açın.')

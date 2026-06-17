@@ -9,6 +9,7 @@ export default function PushNotificationPrompt() {
   const { completeStepByTrigger } = useOnboarding()
   const [showPrompt, setShowPrompt] = useState(false)
   const [toastMsg, setToastMsg] = useState<string | null>(null)
+  const [toastType, setToastType] = useState<'success' | 'error'>('success')
   
   const [dismissed, setDismissed] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -36,7 +37,7 @@ export default function PushNotificationPrompt() {
     return (
       <>
         {toastMsg && (
-          <div className={`fixed bottom-4 right-4 px-4 py-3 rounded-xl shadow-lg z-[999999] animate-in slide-in-from-bottom flex items-center space-x-2 text-white font-medium bg-slate-800`}>
+          <div className={`fixed bottom-4 right-4 px-4 py-3 rounded-xl shadow-lg z-[999999] animate-in slide-in-from-bottom flex items-center space-x-2 text-white font-medium ${toastType === 'error' ? 'bg-red-600' : 'bg-slate-800'}`}>
             <span>{toastMsg}</span>
           </div>
         )}
@@ -51,19 +52,29 @@ export default function PushNotificationPrompt() {
     completeStepByTrigger('action:notification_permission')
     
     // Show toast
+    setToastType('success')
     setToastMsg('Sorun değil, ayarlardan açabilirsin')
     setTimeout(() => setToastMsg(null), 3000)
   }
 
   const handleSubscribe = async () => {
-    const success = await subscribe()
-    if (success) {
+    const result = await subscribe()
+    if (result.success) {
       setShowPrompt(false)
       completeStepByTrigger('action:notification_permission')
+      setToastType('success')
+      setToastMsg('Bildirimler başarıyla etkinleştirildi!')
+      setTimeout(() => setToastMsg(null), 3000)
+    } else if (result.error) {
+      // Actual error occurred — show error toast but keep prompt visible for retry
+      setToastType('error')
+      setToastMsg(result.error)
+      setTimeout(() => setToastMsg(null), 5000)
     } else {
-      // İşlem başarısız veya reddedildiyse prompt'u kapat
+      // User denied or cancelled — dismiss gracefully (no error field means user choice)
       setShowPrompt(false)
       completeStepByTrigger('action:notification_permission')
+      setToastType('success')
       setToastMsg('Sorun değil, ayarlardan açabilirsin')
       setTimeout(() => setToastMsg(null), 3000)
     }
@@ -108,7 +119,7 @@ export default function PushNotificationPrompt() {
         </div>
       </div>
       {toastMsg && (
-        <div className={`fixed bottom-4 right-4 px-4 py-3 rounded-xl shadow-lg z-[999999] animate-in slide-in-from-bottom flex items-center space-x-2 text-white font-medium bg-slate-800`}>
+        <div className={`fixed bottom-4 right-4 px-4 py-3 rounded-xl shadow-lg z-[999999] animate-in slide-in-from-bottom flex items-center space-x-2 text-white font-medium ${toastType === 'error' ? 'bg-red-600' : 'bg-slate-800'}`}>
           <span>{toastMsg}</span>
         </div>
       )}
