@@ -71,7 +71,7 @@ export function WizardShell({
         <div className="flex items-center justify-between px-4 h-14 max-w-3xl mx-auto w-full">
           <button 
             onClick={handleBack} 
-            className="p-2 -ml-2 rounded-full hover:bg-slate-100 transition-colors"
+            className="w-11 h-11 flex items-center justify-center -ml-2 rounded-full hover:bg-slate-100 transition-colors"
           >
             <ChevronLeft className="w-6 h-6 text-slate-700" />
           </button>
@@ -86,7 +86,7 @@ export function WizardShell({
 
       {/* Content Area - Scrollable */}
       <main className="flex-1 overflow-y-auto overflow-x-hidden w-full">
-        <div className="max-w-3xl mx-auto w-full min-h-[calc(100vh-8rem)] flex flex-col pb-24 relative">
+        <div className="max-w-3xl mx-auto w-full min-h-[calc(100vh-8rem)] flex flex-col pb-32 pb-safe relative">
           {children}
         </div>
       </main>

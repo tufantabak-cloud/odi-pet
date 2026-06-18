@@ -45,7 +45,7 @@ export default function EditProfileForm({ profile }: { profile: any }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5 pb-32 pb-safe">
       {successToast && (
         <div
           role="status"
@@ -68,7 +68,6 @@ export default function EditProfileForm({ profile }: { profile: any }) {
       <div className="flex flex-col gap-1.5">
         <label className="text-[13px] font-bold text-text-secondary ml-1">Adınız</label>
         <input
-          autoFocus
           type="text"
           value={firstName}
           onChange={(e) => setFirstName(e.target.value)}
@@ -105,14 +104,14 @@ export default function EditProfileForm({ profile }: { profile: any }) {
         <button
           type="button"
           onClick={() => router.back()}
-          className="btn-secondary flex-1 py-3"
+          className="btn-secondary flex-1 min-h-[50px] flex items-center justify-center"
           disabled={isSubmitting}
         >
           İptal
         </button>
         <button
           type="submit"
-          className="btn-primary flex-1 py-3"
+          className="btn-primary flex-1 min-h-[50px] flex items-center justify-center"
           disabled={isSubmitting}
         >
           {isSubmitting ? 'Kaydediliyor...' : 'Kaydet'}

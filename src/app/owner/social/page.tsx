@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 export default function SocialPage() {
   return (
-    <div className="flex flex-col gap-8 pb-20 w-full mx-auto font-sans animate-fadeInUp">
+    <div className="flex flex-col gap-8 pb-32 pb-safe w-full mx-auto font-sans animate-fadeInUp">
       
       {/* Hero Header */}
       <section className="card-base overflow-hidden relative shadow-lg shadow-primary/5 bg-white p-8 md:p-10 border border-border-main text-center">
@@ -54,7 +54,7 @@ export default function SocialPage() {
 
       {/* Action / Back to Dashboard */}
       <div className="flex justify-center mt-2">
-        <Link href="/owner/dashboard" className="btn-primary flex items-center gap-2 text-[14px]">
+        <Link href="/owner/dashboard" className="btn-primary min-h-[50px] flex items-center justify-center px-6 gap-2 text-[14px]">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <polyline points="15 18 9 12 15 6"/>
           </svg>

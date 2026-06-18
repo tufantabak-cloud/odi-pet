@@ -37,7 +37,7 @@ export default function TreatmentsClient({ pet }: { pet: any }) {
   const completedPlans = plans.filter(p => p.status === 'completed')
 
   return (
-    <div className="flex flex-col gap-6 pb-20 w-full mx-auto animate-fadeIn">
+    <div className="flex flex-col gap-6 pb-32 pb-safe w-full mx-auto animate-fadeIn">
       <Link href={`/owner/pets/${pet.id}`} className="flex items-center gap-2 text-[14px] font-bold text-text-secondary hover:text-primary transition-colors group -mb-2">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:-translate-x-0.5 transition-transform"><polyline points="15 18 9 12 15 6"/></svg>
         Sağlık Geçmişi'ne Dön
@@ -64,7 +64,7 @@ export default function TreatmentsClient({ pet }: { pet: any }) {
 
       <div className="card-base p-5 border-l-4 border-l-primary flex flex-col gap-3">
         <p className="text-[14px] text-text-secondary font-medium">Yeni ilaç tedavisi veya sağlık planı eklemek için ana sayfadaki veya menüdeki <b>Plan Yap</b> sihirbazını kullanın.</p>
-        <button onClick={() => router.push(`/owner/plan-yap/saglik?pet_id=${pet.id}`)} className="btn-primary w-max py-2 px-4 shadow-sm">
+        <button onClick={() => router.push(`/owner/plan-yap/saglik?pet_id=${pet.id}`)} className="btn-primary w-max min-h-[50px] flex items-center justify-center px-4 shadow-sm">
           + Yeni Sağlık Planı Ekle
         </button>
       </div>

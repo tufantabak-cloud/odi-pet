@@ -117,7 +117,7 @@ export default function NutritionClient({
   }
 
   return (
-    <div className="flex flex-col gap-6 pb-20 w-full mx-auto">
+    <div className="flex flex-col gap-6 pb-32 pb-safe w-full mx-auto">
       {/* Header */}
       <Link href={`/owner/pets/${pet.id}`} className="flex items-center gap-2 text-[14px] font-bold text-text-secondary hover:text-primary transition-colors group -mb-2">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:-translate-x-0.5 transition-transform"><polyline points="15 18 9 12 15 6"/></svg>
@@ -247,7 +247,7 @@ export default function NutritionClient({
               <input name="current_stock_grams" type="number" defaultValue={currentStock || ''} className="input-base" placeholder="Mevcut gramaj"/>
             </div>
 
-            <button type="submit" disabled={loading} className="btn-primary py-3.5 mt-2 shadow-lg shadow-primary/20">
+            <button type="submit" disabled={loading} className="btn-primary min-h-[50px] flex items-center justify-center mt-2 shadow-lg shadow-primary/20">
               {loading ? 'Kaydediliyor...' : 'Bilgileri Kaydet'}
             </button>
           </form>
@@ -271,7 +271,7 @@ export default function NutritionClient({
                   <input name="appetite_score" type="number" min="1" max="5" defaultValue="5" className="input-base" required/>
                 </div>
               </div>
-              <button type="submit" disabled={loading} className="btn-primary w-full">Kaydet</button>
+              <button type="submit" disabled={loading} className="btn-primary w-full min-h-[50px] flex items-center justify-center">Kaydet</button>
             </div>
           </form>
 
@@ -311,7 +311,7 @@ export default function NutritionClient({
                 <label className="text-[12px] font-bold text-text-secondary">Kilo (kg)</label>
                 <input name="weight_kg" type="number" step="any" className="input-base" placeholder="Örn: 4.5" required/>
               </div>
-              <button type="submit" disabled={loading} className="btn-primary px-8">Ekle</button>
+              <button type="submit" disabled={loading} className="btn-primary px-8 min-h-[50px] flex items-center justify-center">Ekle</button>
             </div>
           </form>
 

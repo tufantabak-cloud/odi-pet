@@ -138,11 +138,11 @@ export default function JournalFormClient({ petId, category }: { petId: string, 
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6 pb-32 pb-safe">
       {!showJournalScanner && (
         <button type="button"
           onClick={() => setShowJournalScanner(true)}
-          className="flex items-center gap-2 px-4 py-2.5 text-[13px] font-bold
+          className="flex items-center justify-center gap-2 px-4 py-2.5 min-h-[50px] text-[13px] font-bold
                      text-primary bg-primary/5 border border-primary/20 rounded-xl
                      hover:bg-primary/10 transition-all w-full">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -183,7 +183,7 @@ export default function JournalFormClient({ petId, category }: { petId: string, 
         <div className="flex flex-col gap-2">
           <label className="text-[13px] font-extrabold text-text-primary">Opsiyonel Not</label>
           <textarea 
-            className="input-base min-h-[100px] resize-none" 
+            className="input-base min-h-[100px] resize-y" 
             placeholder="Eklemek istediğiniz başka bir şey var mı?"
             value={note}
             onChange={e => setNote(e.target.value)}
@@ -197,7 +197,7 @@ export default function JournalFormClient({ petId, category }: { petId: string, 
         </div>
       )}
 
-      <button type="submit" disabled={loading} className="btn-primary py-3.5 text-[15px] shadow-sm disabled:opacity-50 mt-2">
+      <button type="submit" disabled={loading} className="btn-primary min-h-[50px] flex items-center justify-center py-3.5 text-[15px] shadow-sm disabled:opacity-50 mt-2">
         {loading ? 'Kaydediliyor...' : 'Kaydı Tamamla'}
       </button>
     </form>

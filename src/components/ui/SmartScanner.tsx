@@ -548,7 +548,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
         )}
 
         {step === "camera" && (
-          <div className="flex flex-col items-center w-full animate-fadeIn relative h-[480px] sm:h-[500px] overflow-hidden rounded-[32px] border border-slate-200 bg-black">
+          <div className="flex flex-col items-center w-full animate-fadeIn relative h-[60vh] max-h-[500px] min-h-[400px] overflow-hidden rounded-[32px] border border-slate-200 bg-black">
             <video 
               ref={videoRef} 
               autoPlay 

@@ -840,7 +840,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             {cta && (
               <button
                 onClick={handleCtaClick}
-                className="btn-primary py-2.5 px-6 text-[13px] font-bold rounded-xl"
+                className="btn-primary min-h-[50px] flex items-center justify-center px-6 text-[13px] font-bold rounded-xl"
               >
                 + {cta.btnLabel}
               </button>
@@ -953,7 +953,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   }
 
   return (
-    <div className="flex flex-col gap-6 pb-20 w-full mx-auto">
+    <div className="flex flex-col gap-6 pb-32 pb-safe w-full mx-auto">
       {generalError && (
         <div role="alert" className="p-3 bg-error/10 text-error text-[13px] font-bold rounded-xl text-center border border-error/20 mx-4 mt-4">
           {generalError}
@@ -989,7 +989,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         </Link>
         <Link 
           href={`/owner/ai-vet?petId=${pet.id}`}
-          className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 sm:px-4 sm:py-2.5 rounded-xl bg-primary text-white text-[12px] sm:text-[13px] font-bold hover:bg-primary-hover hover:scale-[1.03] active:scale-[0.97] transition-all duration-200 shadow-md shadow-primary/15 whitespace-nowrap shrink-0"
+          className="flex items-center justify-center gap-1.5 min-h-[50px] px-2.5 sm:px-4 rounded-xl bg-primary text-white text-[12px] sm:text-[13px] font-bold hover:bg-primary-hover hover:scale-[1.03] active:scale-[0.97] transition-all duration-200 shadow-md shadow-primary/15 whitespace-nowrap shrink-0"
         >
           <span>🧠</span> {pet.name}'{getTurkishGenitiveSuffix(pet.name)} AI Asistanı
         </Link>

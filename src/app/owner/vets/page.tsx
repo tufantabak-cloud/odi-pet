@@ -248,13 +248,13 @@ export default function VetsPage() {
   const isOpenNow = selectedClinicDetails !== null ? selectedClinicDetails.open_now : selectedClinic?.open_now;
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-12 min-h-dvh pb-28">
+    <div className="max-w-4xl mx-auto px-6 py-12 min-h-dvh pb-32 pb-safe">
       {/* Navigation */}
       <div className="mb-8 animate-fadeInUp">
         {selectedClinic ? (
           <button 
             onClick={closeClinicDetail} 
-            className="inline-flex items-center gap-2 text-text-secondary hover:text-primary font-bold text-sm transition-colors group cursor-pointer"
+            className="inline-flex items-center gap-2 min-h-[44px] text-text-secondary hover:text-primary font-bold text-sm transition-colors group cursor-pointer"
           >
             <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
@@ -262,7 +262,7 @@ export default function VetsPage() {
             Listeye Geri Dön
           </button>
         ) : (
-          <Link href="/owner/dashboard" className="inline-flex items-center gap-2 text-text-secondary hover:text-primary font-bold text-sm transition-colors group">
+          <Link href="/owner/dashboard" className="inline-flex items-center gap-2 min-h-[44px] text-text-secondary hover:text-primary font-bold text-sm transition-colors group">
             <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
             </svg>
@@ -298,7 +298,7 @@ export default function VetsPage() {
           {/* Back button */}
           <button 
             onClick={closeClinicDetail}
-            className="inline-flex items-center gap-2 text-text-secondary hover:text-[#34495E] font-bold text-[14px] transition-colors group mb-8 self-start cursor-pointer"
+            className="inline-flex items-center gap-2 min-h-[44px] text-text-secondary hover:text-[#34495E] font-bold text-[14px] transition-colors group mb-8 self-start cursor-pointer"
           >
             <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
@@ -386,7 +386,7 @@ export default function VetsPage() {
           </div>
 
           {/* Sticky Footer */}
-          <div className="fixed bottom-0 left-0 right-0 z-45 px-[16px] pb-[16px] bg-gradient-to-t from-bg-main via-bg-main/90 to-transparent pt-8">
+          <div className="fixed bottom-0 left-0 right-0 z-45 px-[16px] pb-[16px] pb-safe bg-gradient-to-t from-bg-main via-bg-main/90 to-transparent pt-8">
             <div className="max-w-xl mx-auto flex gap-[16px]">
               {/* Ara Button */}
               {selectedClinicDetails?.phone ? (
@@ -443,7 +443,7 @@ export default function VetsPage() {
                   citySelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
               }}
-              className="w-full sm:w-auto bg-[#34495E] hover:bg-[#2C3E50] text-white text-[16px] font-bold px-[24px] py-[12px] rounded-btn transition-all duration-300 active:scale-[0.98] cursor-pointer"
+              className="w-full sm:w-auto bg-[#34495E] hover:bg-[#2C3E50] text-white text-[16px] min-h-[50px] flex items-center justify-center font-bold px-[24px] rounded-btn transition-all duration-300 active:scale-[0.98] cursor-pointer"
             >
               Şehir Seç
             </button>
@@ -482,14 +482,14 @@ export default function VetsPage() {
             <button 
               onClick={handleManualSearch} 
               disabled={!selectedCity || loading} 
-              className="bg-[#34495E] hover:bg-[#2C3E50] text-white font-bold py-[16px] px-[32px] rounded-btn transition-all duration-300 active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-[#34495E] hover:bg-[#2C3E50] text-white min-h-[50px] flex items-center justify-center font-bold px-[32px] rounded-btn transition-all duration-300 active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Ara
             </button>
             <button 
               onClick={requestLocation} 
               disabled={loading} 
-              className="border border-border-main text-text-primary bg-surface hover:border-[#34495E]/30 hover:bg-slate-50 transition-all duration-300 rounded-btn py-[16px] px-[24px] cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed" 
+              className="border border-border-main text-text-primary min-h-[50px] flex items-center justify-center bg-surface hover:border-[#34495E]/30 hover:bg-slate-50 transition-all duration-300 rounded-btn px-[24px] cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed" 
               title="Konumumu Kullan"
             >
               <svg className="w-5 h-5 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -603,7 +603,7 @@ export default function VetsPage() {
                           citySelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }
                       }}
-                      className="mt-[24px] bg-[#34495E] hover:bg-[#2C3E50] text-white text-[14px] font-bold px-[24px] py-[12px] rounded-btn transition-all duration-300 active:scale-[0.98] cursor-pointer"
+                      className="mt-[24px] bg-[#34495E] hover:bg-[#2C3E50] text-white text-[14px] min-h-[50px] flex items-center justify-center font-bold px-[24px] rounded-btn transition-all duration-300 active:scale-[0.98] cursor-pointer"
                     >
                       Şehir Seç
                     </button>

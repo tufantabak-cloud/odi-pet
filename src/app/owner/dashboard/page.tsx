@@ -220,9 +220,9 @@ export default async function OwnerDashboard() {
                 <Link
                   id="onb-pet-add"
                   href="/owner/pets/add"
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-primary text-white text-[12px] font-bold hover:bg-primary-hover active:scale-[0.97] transition-all shadow-sm"
+                  className="flex items-center gap-1 px-4 h-11 rounded-xl bg-primary text-white text-[13px] font-bold hover:bg-primary-hover active:scale-[0.97] transition-all shadow-sm"
                 >
-                  <span className="text-[13px] leading-none">+</span> Pet Ekle
+                  <span className="text-[14px] leading-none">+</span> Pet Ekle
                 </Link>
               </div>
 

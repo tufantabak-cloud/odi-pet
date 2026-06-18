@@ -69,7 +69,9 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
-  const { action, stepId } = body
+  // Support both new direct `step_key` payload and backwards-compatible `action` + `stepId` payload
+  const action = body.action || (body.step_key ? 'complete_step' : null)
+  const stepId = body.stepId || body.step_key
   const supabase = await createServerSupabaseClient()
 
   if (action === 'complete_step' && stepId) {

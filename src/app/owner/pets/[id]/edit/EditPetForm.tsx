@@ -262,11 +262,11 @@ export default function EditPetForm({ pet }: { pet: any }) {
 
 
   return (
-    <div className="flex flex-col w-full mx-auto pb-10">
+    <div className="flex flex-col w-full mx-auto pb-32 pb-safe">
       {/* Header */}
       <div className="flex items-center gap-4 mb-4 border-b border-border-main pb-4 sticky top-0 bg-surface/90 backdrop-blur z-10 pt-2">
         <button type="button" onClick={() => router.back()}
-          className="w-10 h-10 rounded-full border border-border-main flex items-center justify-center text-text-secondary hover:text-primary transition-all">
+          className="w-11 h-11 rounded-full border border-border-main flex items-center justify-center text-text-secondary hover:text-primary transition-all">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
         </button>
         <div className="flex flex-col flex-1">
@@ -772,13 +772,13 @@ export default function EditPetForm({ pet }: { pet: any }) {
           ))}
 
           <button type="button" onClick={handleSaveSos} disabled={sosSaving}
-            className="btn-secondary w-full sm:w-auto py-3 text-[14px] font-bold disabled:opacity-50">
-            {sosSaving ? 'Kaydediliyor...' : '🆘 Acil Durum Ăĵını Kaydet'}
+            className="btn-secondary w-full sm:w-auto h-[50px] flex items-center justify-center text-[14px] font-bold disabled:opacity-50">
+            {sosSaving ? 'Kaydediliyor...' : '🆘 Acil Durum Ağını Kaydet'}
           </button>
         </section>
 
         <div className="flex flex-col sm:flex-row justify-end gap-4 pt-2">
-          <button type="submit" disabled={loading} className="btn-primary w-full sm:w-auto min-w-[200px] py-4 text-[15px] shadow-2xl shadow-primary/40 disabled:opacity-50">
+          <button type="submit" disabled={loading} className="btn-primary w-full sm:w-auto min-w-[200px] h-[50px] flex items-center justify-center text-[15px] shadow-2xl shadow-primary/40 disabled:opacity-50">
             {loading ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
           </button>
         </div>

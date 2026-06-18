@@ -297,7 +297,7 @@ export default function WizardOrchestrator() {
                 key={pet.id}
                 onClick={() => {
                   setStepData({ pet_id: pet.id });
-                  setTimeout(() => nextStep(), 350);
+                  nextStep();
                 }}
                 className={`relative p-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-3 transition-all ${
                   isSelected ? 'border-indigo-500 shadow-md bg-indigo-50/30 scale-[1.02]' : 'border-slate-200 bg-white hover:bg-slate-50'
@@ -327,9 +327,9 @@ export default function WizardOrchestrator() {
                 key={sub.id}
                 onClick={() => {
                   setStepData({ subCategory: sub.id, selectedVaccine: null });
-                  setTimeout(() => nextStep(), 350);
+                  nextStep();
                 }}
-                className={`px-4 py-3 rounded-xl text-sm font-bold transition-all border text-left ${
+                className={`px-4 py-3 min-h-[50px] rounded-xl text-sm font-bold flex items-center transition-all border text-left ${
                   isSelected
                     ? 'bg-indigo-600 text-white border-indigo-600 shadow-md scale-[1.02]'
                     : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-300'
@@ -433,7 +433,7 @@ export default function WizardOrchestrator() {
       return (
         <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-2">
           <button type="button" onClick={() => setShowScanner(true)}
-            className="flex items-center justify-center gap-2 px-4 py-3 mb-2 w-full text-[13px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-100 transition-all">
+            className="flex items-center justify-center gap-2 px-4 py-3 min-h-[50px] mb-2 w-full text-[13px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-100 transition-all">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
             </svg>
@@ -562,7 +562,7 @@ export default function WizardOrchestrator() {
                 <button
                   key={opt.value}
                   onClick={() => setStepData({ frequency: opt.value })}
-                  className={`py-3 px-2 rounded-xl text-xs font-bold border transition-all text-center ${
+                  className={`py-3 px-2 min-h-[50px] rounded-xl text-xs font-bold border flex items-center justify-center transition-all text-center ${
                     wizardData.frequency === opt.value
                       ? 'bg-indigo-600 text-white border-indigo-600 shadow-md scale-[1.02]'
                       : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300'
@@ -632,9 +632,11 @@ export default function WizardOrchestrator() {
                   <option value={4320}>3 gün önce</option>
                 </select>
               )}
-              <button onClick={() => setStepData({ notificationEnabled: !wizardData.notificationEnabled })} className={`w-11 h-6 rounded-full p-1 transition-colors ${wizardData.notificationEnabled ? 'bg-indigo-500' : 'bg-slate-300'}`}>
-                <div className={`w-4 h-4 rounded-full bg-white transition-transform ${wizardData.notificationEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
-              </button>
+              <div className="flex items-center justify-center w-11 h-11">
+                <button onClick={() => setStepData({ notificationEnabled: !wizardData.notificationEnabled })} className={`w-11 h-6 rounded-full p-1 transition-colors ${wizardData.notificationEnabled ? 'bg-indigo-500' : 'bg-slate-300'}`}>
+                  <div className={`w-4 h-4 rounded-full bg-white transition-transform ${wizardData.notificationEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                </button>
+              </div>
             </div>
           </div>
 

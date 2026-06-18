@@ -18,7 +18,7 @@ export default function SmartBackButton({ fallbackHref }: { fallbackHref: string
   return (
     <button 
       onClick={handleBack}
-      className="w-10 h-10 bg-surface rounded-xl flex items-center justify-center shadow-sm border border-border-main text-text-secondary hover:text-text-primary transition-colors shrink-0"
+      className="w-11 h-11 bg-surface rounded-xl flex items-center justify-center shadow-sm border border-border-main text-text-secondary hover:text-text-primary transition-colors shrink-0"
       aria-label="Geri Dön"
     >
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

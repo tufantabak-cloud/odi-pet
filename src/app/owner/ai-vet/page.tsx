@@ -241,7 +241,7 @@ export default function AIVetPage() {
         />
         <div className="flex gap-4 items-start">
           <button type="button" onClick={() => router.back()}
-            className="w-10 h-10 rounded-full border border-border-main flex items-center justify-center text-text-secondary hover:text-primary transition-all bg-surface shrink-0 mt-0.5 shadow-sm hover:scale-[1.05] active:scale-[0.95]">
+            className="w-11 h-11 rounded-full border border-border-main flex items-center justify-center text-text-secondary hover:text-primary transition-all bg-surface shrink-0 mt-0.5 shadow-sm hover:scale-[1.05] active:scale-[0.95]">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
           </button>
           <div>
@@ -377,7 +377,7 @@ export default function AIVetPage() {
                               router.push('/owner/veterinary');
                             }
                           }}
-                          className={`w-full py-3.5 px-5 rounded-2xl font-black text-[13px] transition-all hover:scale-[1.03] active:scale-[0.98] flex items-center justify-center gap-2 ${
+                          className={`w-full min-h-[50px] flex items-center justify-center gap-2 px-5 rounded-2xl font-black text-[13px] transition-all hover:scale-[1.03] active:scale-[0.98] ${
                             msg.severity === 'critical' ? 'btn-primary shadow-sm' : 'bg-primary-soft text-primary hover:bg-primary/20'
                           }`}
                         >
@@ -400,7 +400,7 @@ export default function AIVetPage() {
                               router.push('/owner/dashboard');
                             }
                           }}
-                          className={`w-full py-3.5 px-5 rounded-2xl font-black text-[13px] transition-all hover:scale-[1.03] active:scale-[0.98] flex items-center justify-center gap-2 ${
+                          className={`w-full min-h-[50px] flex items-center justify-center gap-2 px-5 rounded-2xl font-black text-[13px] transition-all hover:scale-[1.03] active:scale-[0.98] ${
                             msg.severity === 'critical' ? 'btn-primary shadow-sm' : 'bg-primary-soft text-primary hover:bg-primary/20 shadow-sm'
                           }`}
                         >
@@ -411,7 +411,7 @@ export default function AIVetPage() {
 
                       <button
                         onClick={() => router.push('/owner/veterinary')}
-                        className="w-full py-3.5 px-5 rounded-2xl font-black text-[13px] transition-all hover:scale-[1.03] active:scale-[0.98] flex items-center justify-center gap-2 border-2 border-border-main bg-surface hover:bg-bg-main text-text-secondary hover:text-text-primary shadow-sm"
+                        className="w-full min-h-[50px] flex items-center justify-center gap-2 px-5 rounded-2xl font-black text-[13px] transition-all hover:scale-[1.03] active:scale-[0.98] border-2 border-border-main bg-surface hover:bg-bg-main text-text-secondary hover:text-text-primary shadow-sm"
                       >
                         {msg.severity === 'critical' ? (
                           <>
@@ -450,7 +450,7 @@ export default function AIVetPage() {
       </div>
 
       {/* Input area */}
-      <div className="pt-4 border-t border-border-main mt-4 shrink-0 flex flex-col gap-3" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+      <div className="pt-4 border-t border-border-main mt-4 shrink-0 flex flex-col gap-3 pb-8 pb-safe">
         {/* Quick prompts (initial state) */}
         {showQuickPrompts && (
           <div className="flex flex-wrap gap-2">
@@ -499,7 +499,7 @@ export default function AIVetPage() {
             onClick={() => send()}
             disabled={loading || !input.trim()}
             aria-label="Gönder"
-            className="btn-primary px-5 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary min-h-[50px] flex items-center justify-center px-5 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>

@@ -35,7 +35,7 @@ export function WizardStep({ title, description, children, isActive }: WizardSte
 
   return (
     <div
-      className={`absolute inset-0 px-4 pt-6 transition-all duration-300 ease-out transform
+      className={`w-full px-4 pt-6 transition-all duration-300 ease-out transform
         ${animate 
           ? 'translate-x-0 opacity-100 pointer-events-auto' 
           : 'translate-x-8 opacity-0 pointer-events-none'

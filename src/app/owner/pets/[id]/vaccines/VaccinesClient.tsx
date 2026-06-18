@@ -60,7 +60,7 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
   }
 
   return (
-    <div className="flex flex-col gap-6 pb-20 w-full mx-auto animate-fadeIn">
+    <div className="flex flex-col gap-6 pb-32 pb-safe w-full mx-auto animate-fadeIn">
       {/* Back link */}
       <Link href={`/owner/pets/${pet.id}`} className="flex items-center gap-2 text-[14px] font-bold text-text-secondary hover:text-primary transition-colors group -mb-2">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:-translate-x-0.5 transition-transform"><polyline points="15 18 9 12 15 6"/></svg>
@@ -80,7 +80,7 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
         </div>
         <button 
           onClick={() => setShowModal(true)}
-          className="btn-primary py-2.5 px-4 text-[13px] font-bold shadow-sm"
+          className="btn-primary min-h-[50px] flex items-center justify-center px-4 text-[13px] font-bold shadow-sm"
         >
           Manuel İşlem
         </button>
@@ -171,6 +171,12 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
             className="bg-surface w-full max-w-md rounded-[28px] shadow-2xl p-6 relative flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200"
             onClick={e => e.stopPropagation()}
           >
+            <button 
+              onClick={() => setShowModal(false)}
+              className="absolute top-4 right-4 w-11 h-11 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors"
+            >
+              ✕
+            </button>
             <div>
               <h3 className="text-[18px] font-black text-text-primary">Aşı Kaydı Ekle</h3>
               <p className="text-[12px] text-text-secondary font-medium">Manuel olarak aşı geçmişi ekleyin.</p>
@@ -231,14 +237,14 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 py-3 rounded-xl border-2 border-border-main text-text-secondary font-bold text-[14px] hover:bg-bg-main transition-colors"
+                  className="flex-1 min-h-[50px] flex items-center justify-center rounded-xl border-2 border-border-main text-text-secondary font-bold text-[14px] hover:bg-bg-main transition-colors"
                 >
                   İptal
                 </button>
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="flex-1 py-3 rounded-xl bg-primary hover:bg-primary/95 text-white font-bold text-[14px] disabled:opacity-50 transition-colors"
+                  className="flex-1 min-h-[50px] flex items-center justify-center rounded-xl bg-primary hover:bg-primary/95 text-white font-bold text-[14px] disabled:opacity-50 transition-colors"
                 >
                   {isPending ? 'Kaydediliyor...' : 'Kaydet'}
                 </button>
