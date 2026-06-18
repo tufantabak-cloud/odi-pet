@@ -95,6 +95,30 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Admin Role Guard
+  const isAdminPath = pathname.startsWith('/admin') || pathname.startsWith('/api/users')
+  
+  if (isAdminPath && user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (profile?.role !== 'admin' && profile?.role !== 'founder') {
+      if (pathname.startsWith('/api')) {
+        return NextResponse.json(
+          { error: 'Forbidden: Admin access required' },
+          { status: 403 }
+        )
+      } else {
+        const url = request.nextUrl.clone()
+        url.pathname = '/owner/dashboard'
+        return NextResponse.redirect(url)
+      }
+    }
+  }
+
   return supabaseResponse
 }
 

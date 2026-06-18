@@ -107,6 +107,17 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
     day: '2-digit', month: 'long', year: 'numeric',
   })
 
+  // Profile Completion Calculation
+  let completionPct = 0
+  if (profile.first_name) completionPct += 25
+  if (profile.last_name) completionPct += 25
+  if (profile.phone) completionPct += 25
+  if ((pets ?? []).length > 0) completionPct += 25
+
+  let completionColor = 'text-rose-600 bg-rose-50 border-rose-200'
+  if (completionPct >= 50 && completionPct < 100) completionColor = 'text-amber-600 bg-amber-50 border-amber-200'
+  else if (completionPct === 100) completionColor = 'text-emerald-600 bg-emerald-50 border-emerald-200'
+
   return (
     <div className="space-y-8">
       {/* Breadcrumb */}
@@ -268,9 +279,17 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
             />
           </div>
 
-          {/* Quick stats */}
+            {/* Quick stats */}
           <div className="card-base p-5 space-y-3">
             <h2 className="font-black text-[14px] text-text-primary mb-1">📊 Özet</h2>
+            
+            <div className="flex items-center justify-between text-[13px] pb-2 border-b border-border-main">
+              <span className="text-text-secondary">Profil Tamamlanma</span>
+              <span className={`px-2 py-0.5 rounded-md border text-[11px] font-bold ${completionColor}`}>
+                %{completionPct}
+              </span>
+            </div>
+
             <div className="flex items-center justify-between text-[13px]">
               <span className="text-text-secondary">Toplam Pet</span>
               <span className="font-bold text-text-primary">{(pets ?? []).length}</span>

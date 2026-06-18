@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+import BulkActionBar from '@/components/admin/BulkActionBar'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface User {
@@ -72,6 +73,29 @@ export default function AdminUsersClient() {
   const role = (searchParams.get('role') ?? 'all') as RoleId
   const page = parseInt(searchParams.get('page') ?? '1', 10)
 
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+
+  // Selection handlers
+  const toggleSelection = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    )
+  }
+
+  const toggleSelectAll = () => {
+    if (!data?.users || data.users.length === 0) return
+    if (selectedIds.length === data.users.length) {
+      setSelectedIds([])
+    } else {
+      setSelectedIds(data.users.map((u) => u.id))
+    }
+  }
+
+  const handleBulkClear = () => setSelectedIds([])
+  const handleBulkExport = () => alert(`Exported ${selectedIds.length} users (UI Layer Only)`)
+  const handleBulkLabel = () => alert(`Label ${selectedIds.length} users (UI Layer Only)`)
+  const handleBulkDelete = () => alert(`Delete ${selectedIds.length} users (UI Layer Only)`)
+
   // Debounce search
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 350)
@@ -100,7 +124,10 @@ export default function AdminUsersClient() {
 
     fetch(`/api/admin/users?${p.toString()}`)
       .then((r) => r.json())
-      .then((d) => setData(d))
+      .then((d) => {
+        setData(d)
+        setSelectedIds([]) // reset selection on data change
+      })
       .finally(() => setLoading(false))
   }, [role, page, debouncedSearch])
 
@@ -184,6 +211,14 @@ export default function AdminUsersClient() {
           <table className="w-full text-left text-[13px]">
             <thead className="bg-bg-main border-b border-border-main text-text-secondary font-black tracking-widest uppercase text-[11px]">
               <tr>
+                <th className="p-4 w-12">
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 rounded border-border-main text-primary focus:ring-primary cursor-pointer accent-primary"
+                    checked={data?.users && data.users.length > 0 && selectedIds.length === data.users.length}
+                    onChange={toggleSelectAll}
+                  />
+                </th>
                 <th className="p-4">Kullanıcı</th>
                 <th className="p-4">Rol</th>
                 <th className="p-4 hidden sm:table-cell">Telefon</th>
@@ -195,6 +230,7 @@ export default function AdminUsersClient() {
               {loading
                 ? Array.from({ length: 8 }).map((_, i) => (
                     <tr key={i} className="animate-pulse">
+                      <td className="p-4"><div className="w-4 h-4 rounded bg-bg-main" /></td>
                       <td className="p-4"><div className="h-4 bg-bg-main rounded w-40" /></td>
                       <td className="p-4"><div className="h-5 bg-bg-main rounded w-16" /></td>
                       <td className="p-4 hidden sm:table-cell"><div className="h-4 bg-bg-main rounded w-24" /></td>
@@ -208,6 +244,14 @@ export default function AdminUsersClient() {
                       className="hover:bg-bg-main/50 transition-colors cursor-pointer group"
                       onClick={() => router.push(`/admin/users/${user.id}`)}
                     >
+                      <td className="p-4" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 rounded border-border-main text-primary focus:ring-primary cursor-pointer accent-primary"
+                          checked={selectedIds.includes(user.id)}
+                          onChange={() => toggleSelection(user.id)}
+                        />
+                      </td>
                       <td className="p-4">
                         <div className="font-semibold text-text-primary group-hover:text-primary transition-colors">
                           {[user.first_name, user.last_name].filter(Boolean).join(' ') || '—'}
@@ -239,7 +283,7 @@ export default function AdminUsersClient() {
 
               {!loading && (!data?.users || data.users.length === 0) && (
                 <tr>
-                  <td colSpan={5} className="p-12 text-center">
+                  <td colSpan={6} className="p-12 text-center">
                     <div className="text-4xl mb-3">👥</div>
                     <p className="text-text-secondary font-semibold text-[14px]">
                       Bu kritere uygun kullanıcı bulunamadı.
@@ -279,6 +323,14 @@ export default function AdminUsersClient() {
           </div>
         </div>
       )}
+
+      <BulkActionBar
+        selectedCount={selectedIds.length}
+        onClear={handleBulkClear}
+        onExport={handleBulkExport}
+        onLabel={handleBulkLabel}
+        onDelete={handleBulkDelete}
+      />
     </div>
   )
 }
