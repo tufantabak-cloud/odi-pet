@@ -20,7 +20,9 @@ export type PushPermission = 'default' | 'granted' | 'denied' | 'unsupported'
 export function useWebPush() {
   const [permission, setPermission] = useState<PushPermission>(() => {
     if (typeof window === 'undefined') return 'default';
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return 'unsupported';
+    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+      return 'unsupported';
+    }
     return Notification.permission as PushPermission;
   })
   const [isSubscribed, setIsSubscribed] = useState(false)
@@ -76,8 +78,8 @@ export function useWebPush() {
       return { success: false, error: msg }
     }
 
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      const msg = 'Bu tarayıcı push bildirimlerini desteklemiyor.'
+    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+      const msg = 'Bu tarayıcı veya cihaz push bildirimlerini desteklemiyor.'
       console.warn('[useWebPush]', msg)
       setError(msg)
       return { success: false, error: msg }

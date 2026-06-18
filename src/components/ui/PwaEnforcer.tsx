@@ -64,12 +64,15 @@ export default function PwaEnforcer() {
       window.matchMedia("(display-mode: standalone)").matches || 
       (window.navigator as any).standalone === true;
 
-    const hasNotificationPermission = Notification.permission === 'granted';
+    const hasNotificationPermission = pushPermission === 'granted';
 
     if (!isStandalone) {
       // PWA is completely enforced, no dismiss logic anymore
       setEnforceType("pwa");
       setShouldShow(true);
+    } else if (pushPermission === 'unsupported') {
+      // Cihaz bildirimleri desteklemiyorsa kilitlenme yaşanmaması için bypass et
+      setShouldShow(false);
     } else if (!hasNotificationPermission) {
       setEnforceType("notification");
       setShouldShow(true);
