@@ -11,7 +11,11 @@ export interface SmartQuestion {
   iconBg?: string;
 }
 
-export function getDailyQuestion(pets: any[], surveyStats: any | null): SmartQuestion | null {
+export function getDailyQuestion(
+  pets: any[],
+  surveyStats: any | null,
+  weightLogs: any[] = []
+): SmartQuestion | null {
   // Check Ad-Fatigue (Max 1 question per day)
   if (surveyStats && surveyStats.last_question_asked_at) {
     const lastDate = new Date(surveyStats.last_question_asked_at);
@@ -31,8 +35,28 @@ export function getDailyQuestion(pets: any[], surveyStats: any | null): SmartQue
 
   if (!pets || pets.length === 0) return null;
 
-  // 1. Missing Weight
-  const petMissingWeight = pets.find(p => p.weight === null || p.weight === undefined);
+  // 1. Missing or Outdated Weight (Ayda 1 kez kilo güncelleme istenecek)
+  const petMissingWeight = pets.find(p => {
+    // Evcil hayvana ait kilo kayıtlarını filtrele ve tarihe göre sırala
+    const petLogs = weightLogs
+      .filter(log => log.pet_id === p.id)
+      .sort((a, b) => new Date(b.measured_at).getTime() - new Date(a.measured_at).getTime());
+    
+    // Eğer hiç kilo kaydı yoksa, kilo bilgisi eksiktir
+    if (petLogs.length === 0) {
+      return true;
+    }
+
+    // En son kilo kaydı
+    const latestLog = petLogs[0];
+    const latestDate = new Date(latestLog.measured_at);
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    // En son girilen kilo kaydı 30 günden daha eski ise kilo bilgisi eksik/güncellenmeli kabul edilir
+    return latestDate < thirtyDaysAgo;
+  });
+
   if (petMissingWeight) {
     return {
       id: `weight_missing_${petMissingWeight.id}`,

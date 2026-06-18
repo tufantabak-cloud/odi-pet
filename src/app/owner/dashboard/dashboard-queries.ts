@@ -251,7 +251,7 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
         }
 
         /* ── Profiling Engine ───────────────────────────────── */
-        const activeQuestion = getDailyQuestion((pets || []), surveyStats);
+        const activeQuestion = getDailyQuestion((pets || []), surveyStats, allWeightLogs);
 
         /* ── Insight Engine (Proactive Anomaly Detector) ────── */
         const activeInsight = detectAnomalies((pets || []), allFeedingLogs, allWeightLogs);
