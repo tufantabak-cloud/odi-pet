@@ -124,9 +124,7 @@ export default function PwaEnforcer() {
     }
   };
 
-  const handleClosePage = () => {
-    window.close(); // Attempt to close the tab
-  };
+
 
   if (!isMounted || !shouldShow) return null;
 
@@ -219,12 +217,7 @@ export default function PwaEnforcer() {
             <p className="text-[15px] text-zinc-300 mb-8 leading-relaxed max-w-[280px]">
               Yükleme işlemi tamamlandığında, lütfen telefonunuzun <strong className="text-white">ana ekranından</strong> Odi.Pet uygulamasına tıklayarak giriş yapınız.
             </p>
-            <button
-              onClick={handleClosePage}
-              className="w-full py-4 bg-transparent border-2 border-white/20 text-white font-extrabold text-[15px] rounded-2xl hover:bg-white/5 transition-all active:scale-[0.98] cursor-pointer"
-            >
-              Sayfayı Kapat
-            </button>
+
           </div>
         ) : (
           <>
