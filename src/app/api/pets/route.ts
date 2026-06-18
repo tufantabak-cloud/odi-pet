@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { revalidatePath, revalidateTag } from 'next/cache'
 import { generateVaccinationPlan } from '@/features/pets/vaccination-algorithm'
+import { logOnboardingEvent } from '@/lib/agents/dataQualityAgent'
 
 function str(fd: FormData, key: string): string | null {
   const v = fd.get(key) as string | null
@@ -26,11 +27,17 @@ export async function POST(req: NextRequest) {
 
   const species = str(fd, 'species')
   if (!species || !['Kedi', 'Köpek'].includes(species)) {
+    await logOnboardingEvent(user.id, 'pet_species_selected', 'validation_rejected', { error: 'Geçersiz tür' })
     return NextResponse.json({ error: 'Geçersiz tür.' }, { status: 400 })
   }
+  await logOnboardingEvent(user.id, 'pet_species_selected')
 
   const name = str(fd, 'name')
-  if (!name) return NextResponse.json({ error: 'Can dostunun adı belirtilmelidir.' }, { status: 400 })
+  if (!name) {
+    await logOnboardingEvent(user.id, 'pet_name_entered', 'validation_rejected', { error: 'İsim eksik' })
+    return NextResponse.json({ error: 'Can dostunun adı belirtilmelidir.' }, { status: 400 })
+  }
+  await logOnboardingEvent(user.id, 'pet_name_entered')
 
   const breed = str(fd, 'breed')
   if (!breed) return NextResponse.json({ error: 'Irk seçimi zorunludur.' }, { status: 400 })

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { calculateChurnRisk, emitHealthEvent } from '@/lib/agents/userHealthAgent';
+import { calculateCompleteness } from '@/lib/agents/dataQualityAgent';
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
@@ -17,7 +18,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     // Hizmet rolü (Service Role) key'i gerekir çünkü admin işlemleri
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -43,8 +44,8 @@ export async function GET(request: Request) {
     let highRisks = 0;
 
     for (const profile of profiles || []) {
-      // Mock Completeness Score (Data Quality Agent'dan gelecektir)
-      const mockCompleteness = Math.floor(Math.random() * 100); 
+      // Data Quality Agent'dan gerçek Completeness Score
+      const { score: mockCompleteness } = await calculateCompleteness(profile.id);
 
       // Risk Hesapla
       const { segment, days_inactive } = calculateChurnRisk(mockCompleteness, profile.updated_at);

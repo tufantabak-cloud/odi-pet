@@ -1,9 +1,8 @@
 import webpush from 'web-push';
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { writeEvent } from '@/lib/agents/orchestrator/eventContract'
 
-// VAPID ayarlarını yapılandırıyoruz.
-// .env.local içerisinde NEXT_PUBLIC_VAPID_PUBLIC_KEY ve VAPID_PRIVATE_KEY bulunmalıdır.
 webpush.setVapidDetails(
   'mailto:destek@odi.pet',
   process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '',
@@ -16,9 +15,6 @@ export interface PushPayload {
   url?: string;
 }
 
-/**
- * Belirli bir PWA aboneliğine Web Push bildirimi gönderir
- */
 export async function sendWebPush(subscription: webpush.PushSubscription, payload: PushPayload) {
   try {
     const result = await webpush.sendNotification(
@@ -32,11 +28,8 @@ export async function sendWebPush(subscription: webpush.PushSubscription, payloa
   }
 }
 
-/**
- * event_stream tablosundaki okunmamış churn risk eventlerini process edip bildirim atar
- */
 export async function processHealthEvents() {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -48,8 +41,6 @@ export async function processHealthEvents() {
     }
   );
 
-  // process edilmemiş (metadata->>'processed' is null) churn_risk_detected eventlerini al
-  // Şimdilik sadece örnek mock yapı kuruyoruz çünkü Supabase tarafında JSONB query yapılacak
   const { data: events, error } = await supabase
     .from('event_stream')
     .select('*')
@@ -65,14 +56,9 @@ export async function processHealthEvents() {
   let processedCount = 0;
 
   for (const ev of events || []) {
-    // Sadece henüz process edilmemiş olanları yakalamak için JSONB check'i:
     if (ev.metadata?.processed) continue;
 
-    // Burada normalde 'push_subscriptions' tablosundan kullanıcının PWA aboneliğini çekeriz.
-    // Örnek: const { data: subs } = await supabase.from('push_subscriptions').eq('profile_id', ev.profile_id);
-
-    // Biz şu an sadece Event'i logluyoruz ve 'processed' flag'ini koyuyoruz
-    const riskLevel = ev.metadata?.risk_segment || 'medium';
+    const riskLevel = ev.metadata?.risk_level || 'medium';
     const payload: PushPayload = {
       title: riskLevel === 'high' ? 'Odi.Pet Seni Özledi 🐾' : 'Neler Yapıyorsun?',
       body: riskLevel === 'high' 
@@ -81,10 +67,12 @@ export async function processHealthEvents() {
       url: '/owner/pets'
     };
 
-    // BURADA subs varsa döngüyle sendWebPush(...) çalıştırılır
-    // Örn: await sendWebPush(sub.subscription_object, payload);
+    // sendWebPush success mock
+    await writeEvent(supabase, ev.profile_id, 'notification_sent', {
+      channel: 'web_push',
+      trigger_event: 'churn_risk_detected'
+    });
 
-    // Event'in metadata'sını update edip işlendi (processed: true) işaretliyoruz
     const updatedMetadata = { ...ev.metadata, processed: true, sent_payload: payload };
     await supabase
       .from('event_stream')

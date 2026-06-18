@@ -62,6 +62,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
           <div className="mb-4">
             <p className="px-3 text-[11px] font-black text-text-secondary uppercase tracking-widest mb-2">Sistem</p>
+            <Link href="/admin/system-health" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
+              <span>🩺</span> Sistem Sağlığı
+            </Link>
+            <Link href="/admin/weekly-reports" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
+              <span>📊</span> Haftalık Raporlar
+            </Link>
             <Link href="/admin/settings" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
               <span>⚙️</span> Ayarlar & Özellikler
             </Link>
