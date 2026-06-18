@@ -162,8 +162,19 @@ function BottomNavContent() {
       router.push('/owner/scanner')
       return
     }
+
+    // Aktif bulunulan sayfanın URL'sinden pet_id'yi çıkar
+    const pathMatch = pathname.match(/^\/owner\/pets\/([^\/]+)/)
+    const activePetId = pathMatch && pathMatch[1] !== 'add' ? pathMatch[1] : null
     
-    if (pets.length > 1) {
+    if (activePetId) {
+      // Eğer kullanıcı zaten bir pet sayfasındaysa, pet seçtirmeden o pet_id ile yönlendir
+      if (actionKey === 'plan-yap') {
+        router.push(`/owner/plan-yap?pet_id=${activePetId}`)
+      } else {
+        router.push(`?modal=${actionKey}&petId=${activePetId}`)
+      }
+    } else if (pets.length > 1) {
       setPendingAction(actionKey)
       setIsPetSelectorOpen(true)
     } else {
