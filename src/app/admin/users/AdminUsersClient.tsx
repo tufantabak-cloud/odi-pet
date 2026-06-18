@@ -94,7 +94,27 @@ export default function AdminUsersClient() {
   const handleBulkClear = () => setSelectedIds([])
   const handleBulkExport = () => alert(`Exported ${selectedIds.length} users (UI Layer Only)`)
   const handleBulkLabel = () => alert(`Label ${selectedIds.length} users (UI Layer Only)`)
-  const handleBulkDelete = () => alert(`Delete ${selectedIds.length} users (UI Layer Only)`)
+  const handleBulkDelete = async () => {
+    if (!confirm(`${selectedIds.length} kullanıcıyı (ve bağlı verilerini) kalıcı olarak silmek istediğinize emin misiniz?`)) return;
+    
+    try {
+      const res = await fetch('/api/users/bulk', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_ids: selectedIds })
+      });
+      
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.error || 'Silme işlemi başarısız.');
+      
+      alert(resData.message || 'Başarıyla silindi');
+      setSelectedIds([]);
+      // Refresh table
+      setParam({ page: '1' });
+    } catch (err: any) {
+      alert(err.message);
+    }
+  }
 
   // Debounce search
   useEffect(() => {
