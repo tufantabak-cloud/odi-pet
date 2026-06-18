@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useWebPush } from "@/hooks/useWebPush";
 
 export default function PwaEnforcer() {
@@ -10,6 +11,7 @@ export default function PwaEnforcer() {
   const [os, setOs] = useState<"ios" | "android" | "other">("other");
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showIosGuide, setShowIosGuide] = useState(false);
+  const [showPostInstallGuide, setShowPostInstallGuide] = useState(false);
 
   const { subscribe, isLoading, permission: pushPermission } = useWebPush();
 
@@ -65,22 +67,9 @@ export default function PwaEnforcer() {
     const hasNotificationPermission = Notification.permission === 'granted';
 
     if (!isStandalone) {
-      // Check dismissal
-      const dismissedAt = localStorage.getItem('pwa_prompt_dismissed');
-      let isDismissed = false;
-      if (dismissedAt) {
-        const timeSinceDismissal = Date.now() - parseInt(dismissedAt, 10);
-        if (timeSinceDismissal < 3 * 24 * 60 * 60 * 1000) {
-          isDismissed = true;
-        }
-      }
-
-      if (!isDismissed) {
-        setEnforceType("pwa");
-        setShouldShow(true);
-      } else {
-        setShouldShow(false);
-      }
+      // PWA is completely enforced, no dismiss logic anymore
+      setEnforceType("pwa");
+      setShouldShow(true);
     } else if (!hasNotificationPermission) {
       setEnforceType("notification");
       setShouldShow(true);
@@ -126,15 +115,17 @@ export default function PwaEnforcer() {
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === 'accepted') {
         setDeferredPrompt(null);
+        setShowPostInstallGuide(true);
       }
     } else if (os === 'ios') {
       setShowIosGuide(true);
+    } else {
+      setShowPostInstallGuide(true);
     }
   };
 
-  const handleDismiss = () => {
-    localStorage.setItem('pwa_prompt_dismissed', Date.now().toString());
-    setShouldShow(false);
+  const handleClosePage = () => {
+    window.close(); // Attempt to close the tab
   };
 
   if (!isMounted || !shouldShow) return null;
@@ -216,76 +207,85 @@ export default function PwaEnforcer() {
 
       <div className="relative w-full max-w-md bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col items-center text-center">
         
-        <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-[#FF6B6B] to-[#FF8E53] p-4 flex items-center justify-center mb-6 shadow-[0_8px_24px_rgba(255,107,107,0.3)] animate-pulse">
-          <svg className="w-full h-full text-white" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35zM8.5 7.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm7 0c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z" />
-          </svg>
+        <div className="w-24 h-24 rounded-3xl mb-6 shadow-[0_8px_32px_rgba(0,0,0,0.5)] animate-in fade-in zoom-in duration-500 flex items-center justify-center bg-white overflow-hidden p-1">
+          <Image src="/icon-192.png" alt="Odi.Pet Logo" width={96} height={96} className="w-full h-full object-contain rounded-[20px]" />
         </div>
 
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-white via-violet-200 to-white bg-clip-text text-transparent mb-2">
-          Odi.Pet'e Hoş Geldiniz!
-        </h1>
-        
-        <p className="text-[14px] text-zinc-400 mb-6 leading-relaxed max-w-[280px]">
-          Uygulamamızı kullanmaya devam edebilmek için ana ekranınıza yüklemeniz gerekmektedir.
-        </p>
-
-        {showIosGuide && os === 'ios' && (
-          <div className="w-full text-left space-y-4 mb-6 animate-in slide-in-from-top-4 duration-300">
-            <div className="flex items-start gap-4 bg-white/[0.02] border border-white/[0.04] p-4 rounded-2xl">
-              <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-violet-600/30 flex items-center justify-center text-violet-400 font-bold text-sm">
-                1
-              </div>
-              <div>
-                <h3 className="font-semibold text-[15px] text-zinc-100 flex items-center gap-1.5">
-                  Paylaş Menüsünü Açın
-                </h3>
-                <p className="text-[13px] text-zinc-400 mt-1">
-                  Alt bardaki <strong className="text-zinc-200">Paylaş</strong> butonuna dokunun.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-4 bg-white/[0.02] border border-white/[0.04] p-4 rounded-2xl">
-              <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-violet-600/30 flex items-center justify-center text-violet-400 font-bold text-sm">
-                2
-              </div>
-              <div>
-                <h3 className="font-semibold text-[15px] text-zinc-100">
-                  Ana Ekrana Ekleyin
-                </h3>
-                <p className="text-[13px] text-zinc-400 mt-1">
-                  Seçeneklerden <strong className="text-zinc-200">"Ana Ekrana Ekle"</strong>ye dokunun.
-                </p>
-              </div>
-            </div>
-            
-            <p className="text-[12px] text-center text-zinc-500 italic mt-2">
-              En iyi deneyim için Safari iOS 16.4+ önerilir
+        {showPostInstallGuide ? (
+          <div className="flex flex-col items-center w-full animate-in zoom-in-95 duration-300">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-white via-violet-200 to-white bg-clip-text text-transparent mb-4">
+              Yükleme Tamamlanıyor...
+            </h1>
+            <p className="text-[15px] text-zinc-300 mb-8 leading-relaxed max-w-[280px]">
+              Yükleme işlemi tamamlandığında, lütfen telefonunuzun <strong className="text-white">ana ekranından</strong> Odi.Pet uygulamasına tıklayarak giriş yapınız.
             </p>
-            
-            <div className="w-full flex justify-center mt-2 animate-bounce">
-              <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-              </svg>
-            </div>
+            <button
+              onClick={handleClosePage}
+              className="w-full py-4 bg-transparent border-2 border-white/20 text-white font-extrabold text-[15px] rounded-2xl hover:bg-white/5 transition-all active:scale-[0.98] cursor-pointer"
+            >
+              Sayfayı Kapat
+            </button>
           </div>
-        )}
+        ) : (
+          <>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-white via-violet-200 to-white bg-clip-text text-transparent mb-2">
+              Odi.Pet'e Hoş Geldiniz!
+            </h1>
+            
+            <p className="text-[14px] text-zinc-400 mb-6 leading-relaxed max-w-[280px]">
+              Uygulamamızı kullanmaya devam edebilmek için cihazınıza yüklemeniz gerekmektedir.
+            </p>
 
-        {(!showIosGuide || os !== 'ios') && (
-          <button
-            onClick={handleInstallClick}
-            className="w-full py-4 bg-primary text-white font-extrabold text-[15px] rounded-2xl shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-[0.98] cursor-pointer"
-          >
-            Hemen Yükle
-          </button>
-        )}
+            {showIosGuide && os === 'ios' ? (
+              <div className="w-full text-left space-y-4 mb-6 animate-in slide-in-from-top-4 duration-300">
+                <div className="flex items-start gap-4 bg-white/[0.02] border border-white/[0.04] p-4 rounded-2xl">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-violet-600/30 flex items-center justify-center text-violet-400 font-bold text-sm">
+                    1
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-[15px] text-zinc-100 flex items-center gap-1.5">
+                      Paylaş Menüsünü Açın
+                    </h3>
+                    <p className="text-[13px] text-zinc-400 mt-1">
+                      Alt bardaki <strong className="text-zinc-200">Paylaş</strong> butonuna dokunun.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4 bg-white/[0.02] border border-white/[0.04] p-4 rounded-2xl">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-violet-600/30 flex items-center justify-center text-violet-400 font-bold text-sm">
+                    2
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-[15px] text-zinc-100">
+                      Ana Ekrana Ekleyin
+                    </h3>
+                    <p className="text-[13px] text-zinc-400 mt-1">
+                      Seçeneklerden <strong className="text-zinc-200">"Ana Ekrana Ekle"</strong>ye dokunun.
+                    </p>
+                  </div>
+                </div>
+                
+                <p className="text-[12px] text-center text-zinc-500 italic mt-2 mb-4">
+                  En iyi deneyim için Safari önerilir. Ekleme bittikten sonra aşağıdaki butona basabilirsiniz.
+                </p>
 
-        <button
-          onClick={handleDismiss}
-          className="mt-4 w-full py-3 bg-transparent border border-white/10 text-zinc-300 font-semibold text-[14px] rounded-2xl hover:bg-white/5 transition-all active:scale-[0.98] cursor-pointer"
-        >
-          Daha Sonra Yüklerim
-        </button>
+                <button
+                  onClick={() => setShowPostInstallGuide(true)}
+                  className="w-full py-4 bg-primary text-white font-extrabold text-[15px] rounded-2xl shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-[0.98] cursor-pointer"
+                >
+                  Ekledim, Devam Et
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleInstallClick}
+                className="w-full py-4 bg-primary text-white font-extrabold text-[15px] rounded-2xl shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-[0.98] cursor-pointer"
+              >
+                Hemen Yükle
+              </button>
+            )}
+          </>
+        )}
 
       </div>
     </div>
