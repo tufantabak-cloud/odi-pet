@@ -13,6 +13,8 @@ type PageProps = {
   params: Promise<{ id: string }>;
 };
 
+import OnboardingGate from '@/components/onboarding/OnboardingGate'
+
 export default async function PetDetailPage(props: PageProps) {
   const profile = await getCurrentProfile()
   if (!profile) redirect('/login')
@@ -122,23 +124,25 @@ export default async function PetDetailPage(props: PageProps) {
   ])
 
   return (
-    <PetDetailClient
-      pet={pet}
-      age={age}
-      score={score}
-      overdue={overdue}
-      schedules={allSchedules}
-      diseases={diseases ?? []}
-      allergies={allergies ?? []}
-      medications={medications ?? []}
-      growthRecords={growthRecords ?? []}
-      appointments={appointments ?? []}
-      nutritionLogs={nutritionProfile ? [nutritionProfile] : []}
-      payments={payments ?? []}
-      subscription={sub}
-      activeLostReport={activeLostReport || null}
-      hasPasskey={(passkeyCount ?? 0) > 0}
-      isAdminView={isAdmin}
-    />
+    <OnboardingGate>
+      <PetDetailClient
+        pet={pet}
+        age={age}
+        score={score}
+        overdue={overdue}
+        schedules={allSchedules}
+        diseases={diseases ?? []}
+        allergies={allergies ?? []}
+        medications={medications ?? []}
+        growthRecords={growthRecords ?? []}
+        appointments={appointments ?? []}
+        nutritionLogs={nutritionProfile ? [nutritionProfile] : []}
+        payments={payments ?? []}
+        subscription={sub}
+        activeLostReport={activeLostReport || null}
+        hasPasskey={(passkeyCount ?? 0) > 0}
+        isAdminView={isAdmin}
+      />
+    </OnboardingGate>
   )
 }

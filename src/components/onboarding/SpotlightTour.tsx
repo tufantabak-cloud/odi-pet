@@ -154,6 +154,13 @@ export default function SpotlightTour({ steps, onComplete }: SpotlightTourProps 
             inst.destroy();
             if (onCompleteRef.current) onCompleteRef.current();
           } else {
+            if (step.element === '#nav-action-btn') {
+              const nextEl = document.querySelector('#action-btn-plan-yap');
+              if (!nextEl) {
+                const btn = document.querySelector('#nav-action-btn') as HTMLElement;
+                if (btn) btn.click();
+              }
+            }
             inst.moveNext();
           }
         },

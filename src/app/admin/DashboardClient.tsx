@@ -50,7 +50,7 @@ function PeriodToggle({ value, onChange }: { value: Period; onChange: (p: Period
         <button
           key={o.key}
           onClick={() => onChange(o.key)}
-          className={`px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all ${
+          className={`h-11 px-4 rounded-lg text-[12px] font-bold transition-all active:scale-[0.97] flex items-center justify-center ${
             value === o.key
               ? 'bg-primary text-white shadow-sm'
               : 'text-text-secondary hover:text-text-primary'
@@ -196,16 +196,24 @@ export default function DashboardClient({ initialData }: { initialData: Dashboar
               <span className="text-[11px] font-bold text-emerald-600">CANLI</span>
             </span>
           </h1>
-          <p className="text-[12px] text-text-secondary mt-1">
-            Son güncelleme: {mounted && lastRefresh ? lastRefresh.toLocaleTimeString('tr-TR') : '—'} &nbsp;·&nbsp;
+          <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[12px] text-text-secondary">
+            <span>Son güncelleme: {mounted && lastRefresh ? lastRefresh.toLocaleTimeString('tr-TR') : '—'}</span>
+            <span className="hidden sm:inline">·</span>
             <button
               onClick={() => refresh(false)}
-              className="text-primary font-semibold hover:underline"
+              className="inline-flex items-center justify-center min-h-[38px] sm:min-h-[44px] px-3 text-primary font-bold bg-primary/10 hover:bg-primary/20 rounded-lg transition-all active:scale-[0.97] disabled:opacity-50"
               disabled={loading}
             >
-              {loading ? 'Yükleniyor…' : 'Yenile'}
+              {loading ? (
+                <span className="flex items-center gap-1">
+                  <span className="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  Yükleniyor…
+                </span>
+              ) : (
+                '🔄 Yenile'
+              )}
             </button>
-          </p>
+          </div>
         </div>
         <PeriodToggle value={period} onChange={setPeriod} />
       </div>

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { requireRole } from '@/lib/auth/get-current-profile'
 import { logout } from '@/features/auth/actions'
+import MobileAdminHeader from './MobileAdminHeader'
 
 export const metadata: Metadata = {
   title: 'Admin Console — ODI Pet',
@@ -93,18 +94,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       {/* Main Content */}
       <main className="flex-1 w-full overflow-x-hidden">
         {/* Mobile Header */}
-        <div className="md:hidden border-b border-border-main bg-surface sticky top-0 z-40 p-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-[18px]">🔭</span>
-            <span className="font-black text-text-primary text-[14px]">Odi Admin</span>
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ml-1 ${roleBadgeColor}`}>
-              {roleBadge}
-            </span>
-          </div>
-          <Link href="/owner/dashboard" className="text-[12px] font-semibold text-text-secondary">
-            ← App
-          </Link>
-        </div>
+        <MobileAdminHeader profile={profile} roleBadgeColor={roleBadgeColor} roleBadge={roleBadge} />
         <div className="p-6 md:p-10 max-w-6xl mx-auto">
           {children}
         </div>

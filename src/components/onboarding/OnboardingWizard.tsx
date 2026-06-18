@@ -63,24 +63,17 @@ const PetTagIcon = (
 
 const TOUR_STEPS: TourStep[] = [
   {
-    targetId: 'nav-home',
-    title: 'Anasayfa Paneli',
-    message: 'Can dostunuzun günlük gelişimini, aşı durumunu ve yaklaşan tüm görevlerini bu ekrandan takip edebilirsiniz.',
-    icon: <Semi3DIcon svgPath={HouseWithPaw} className="w-10 h-10 text-indigo-500" />,
-    position: 'top'
-  },
-  {
     targetId: 'nav-action-btn',
-    title: 'Hızlı Aksiyon Menüsü',
-    message: 'Tek bir dokunuşla AI destekli plan oluşturabilir, aşı/sağlık kaydı girebilir, mama paketi/aşı karnesi taraması yapabilirsiniz.',
+    title: 'İlk Adım',
+    message: 'Yeni bir giriş yapmak için navigasyondaki + butonuna basınız.',
     icon: <Semi3DIcon svgPath={PlusWithPaw} className="w-10 h-10 text-rose-500" />,
     position: 'top'
   },
   {
-    targetId: 'nav-profile',
-    title: 'Profil & Ayarlar',
-    message: 'Kendi bilgilerinizi güncelleyebilir, acil durum SOS kişilerini yönetebilir ve sistem ayarlarını düzenleyebilirsiniz.',
-    icon: <Semi3DIcon svgPath={PetTagIcon} className="w-10 h-10 text-sky-500" />,
+    targetId: 'action-btn-plan-yap',
+    title: 'Rutin Planla',
+    message: 'Örneğin; dostunuzun ilk kilosunu kaydederek başlayabilirsiniz. "Plan Yap" diyerek ilerleyin.',
+    icon: <Semi3DIcon svgPath={HouseWithPaw} className="w-10 h-10 text-indigo-500" />,
     position: 'top'
   }
 ]

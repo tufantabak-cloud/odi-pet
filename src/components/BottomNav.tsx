@@ -203,6 +203,7 @@ function BottomNavContent() {
             {actionMenuItems.map((item, index) => (
               <button
                 key={item.label}
+                id={`action-btn-${item.actionKey}`}
                 onClick={() => handleActionClick(item.actionKey as string)}
                 className={`pointer-events-auto bg-gradient-to-r ${item.gradient} text-white px-5 py-3.5 rounded-[20px] shadow-xl font-bold text-[14.5px] flex items-center justify-start gap-4 transition-all duration-300 animate-in slide-in-from-bottom-8 fade-in hover:scale-105 active:scale-95 border border-white/20 w-64 relative overflow-hidden`}
                 style={{ animationDelay: `${(actionMenuItems.length - 1 - index) * 50}ms`, animationFillMode: 'both' }}
