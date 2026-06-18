@@ -53,7 +53,7 @@ function ModuleGrid({ pets }: { pets: DashboardPet[] }) {
     },
     {
       label: 'Bakım',
-      href: petHref('care', '/care'),
+      href: single ? `/owner/plan-yap/bakim?pet_id=${pid}` : '/owner/plan-yap',
       gradient: 'from-pink-500/15 to-fuchsia-400/10',
       iconBg: 'bg-pink-500/15',
       color: 'text-pink-700',
@@ -419,7 +419,7 @@ export default async function OwnerDashboard() {
                   </div>
                   Aktif Planlarım
                 </h2>
-                <Link id="onb-plan-add" href="/owner/plan-yap" className="text-xs font-bold text-primary hover:underline">
+                <Link id="onb-plan-add" href="/owner/plan-yap" className="text-xs font-bold text-primary hover:underline py-2 px-1">
                   Yeni Ekle
                 </Link>
               </div>

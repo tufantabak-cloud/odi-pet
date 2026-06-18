@@ -37,14 +37,14 @@ export default function SmartCardBanner({
       <div className="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
         <button 
           onClick={onClick}
-          className="flex-1 sm:flex-none px-5 py-2.5 bg-primary text-white text-[13px] font-bold rounded-xl shadow-sm hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all"
+          className="flex-1 sm:flex-none px-5 py-3 bg-primary text-white text-[13px] font-bold rounded-xl shadow-sm hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all"
         >
           {ctaText}
         </button>
         {onDismiss && (
           <button 
             onClick={onDismiss}
-            className="px-4 py-2.5 text-[13px] font-bold text-text-secondary border border-border-main rounded-xl hover:bg-white hover:text-text-primary active:scale-[0.98] transition-all"
+            className="px-4 py-3 text-[13px] font-bold text-text-secondary border border-border-main rounded-xl hover:bg-white hover:text-text-primary active:scale-[0.98] transition-all"
             aria-label="Kapat"
           >
             Atla

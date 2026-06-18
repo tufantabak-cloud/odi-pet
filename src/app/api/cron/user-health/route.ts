@@ -52,7 +52,7 @@ export async function GET(request: Request) {
 
       // Sadece Orta ve Yüksek riskte event at
       if (segment === 'high' || segment === 'medium') {
-        const success = await emitHealthEvent(profile.id, segment, {
+        const success = await emitHealthEvent(supabase, profile.id, segment, {
           completeness_score: mockCompleteness,
           days_inactive,
           action_required: 'trigger_notification'

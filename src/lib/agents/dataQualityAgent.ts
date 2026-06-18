@@ -23,14 +23,14 @@ export async function runBatchQualityScan() {
 }
 
 export async function getScoreDistribution() {
-  return { high: 10, medium: 20, low: 5, critical: 1 };
+  return { high: 10, medium: 20, low: 5, critical: 1, no_pet: 0 };
 }
 
 export async function getFieldFillRates(limit: number = 500) {
   return [
-    { field: 'breed', rate: 45 },
-    { field: 'lifestyle', rate: 30 },
-    { field: 'birth_date', rate: 20 }
+    { field: 'breed', fill_rate: 45 },
+    { field: 'lifestyle', fill_rate: 30 },
+    { field: 'birth_date', fill_rate: 20 }
   ]
 }
 

@@ -298,7 +298,7 @@ function BottomNavContent() {
                   key="action-btn"
                   id="nav-action-btn"
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="flex flex-col items-center justify-center gap-1.5 py-1 px-1 transition-all duration-300 select-none cursor-pointer focus:outline-none z-[10000]"
+                  className="flex flex-col items-center justify-center gap-1.5 py-2.5 px-1 transition-all duration-300 select-none cursor-pointer focus:outline-none z-[10000]"
                 >
                   <div className="flex items-center justify-center w-6 h-6">
                     {tab.icon(false, isMenuOpen)}
@@ -317,7 +317,7 @@ function BottomNavContent() {
                 key={tab.href}
                 href={tab.href}
                 id={elementId}
-                className={`flex flex-col items-center justify-center gap-1.5 py-1 px-1 transition-all duration-300 select-none cursor-pointer
+                className={`flex flex-col items-center justify-center gap-1.5 py-2.5 px-1 transition-all duration-300 select-none cursor-pointer
                   ${isActive ? 'text-[#E05397] scale-105' : 'text-[#8E8E93] hover:text-[#5c5c60]'}`}
               >
                 <div className="flex items-center justify-center w-6 h-6">

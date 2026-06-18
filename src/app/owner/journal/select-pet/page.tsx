@@ -8,7 +8,7 @@ const REDIRECT_MAP: Record<string, (id: string) => string> = {
   journal:   (id) => `/owner/pets/${id}/journal`,
   new:       (id) => `/owner/pets/${id}/journal/new`,
   nutrition: (id) => `/owner/pets/${id}/nutrition`,
-  care:      (id) => `/owner/pets/${id}/care`,
+  care:      (id) => `/owner/plan-yap/bakim?pet_id=${id}`,
   health:    (id) => `/owner/pets/${id}/treatments`,
 }
 
