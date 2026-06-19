@@ -5,6 +5,7 @@ import { RefreshCw, X } from "lucide-react";
 
 export default function PwaUpdater() {
   const [showUpdate, setShowUpdate] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
@@ -21,12 +22,19 @@ export default function PwaUpdater() {
       try {
         const reg = await navigator.serviceWorker.getRegistration();
         if (reg) {
+          // Listen for new service worker installation directly on the registration
+          reg.addEventListener('updatefound', () => {
+            setShowUpdate(true);
+          });
           await reg.update();
         }
       } catch (error) {
         console.error("SW Update check failed", error);
       }
     };
+
+    // İlk yüklemede de kontrol et
+    checkUpdate();
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
@@ -44,6 +52,33 @@ export default function PwaUpdater() {
     };
   }, []);
 
+  const handleHardRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      // 1. Tarayıcı önbelleklerini (SW caches) tamamen temizle
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+      }
+      
+      // 2. Bekleyen Service Worker varsa aktif et (Zaten skipWaiting: true olduğu için bu adıma genelde gerek kalmaz)
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg && reg.waiting) {
+        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+      }
+
+      // 3. Mevcut sayfayı cache kullanmadan (Hard Reload) zorla yenile
+      // Query string ile tarayıcı seviyesi cache buster
+      const currentUrl = new URL(window.location.href);
+      currentUrl.searchParams.set('updated', Date.now().toString());
+      window.location.href = currentUrl.toString();
+      
+    } catch (e) {
+      console.error("Cache temizleme hatası:", e);
+      window.location.reload();
+    }
+  };
+
   if (!showUpdate) return null;
 
   return (
@@ -53,7 +88,7 @@ export default function PwaUpdater() {
         
         <div className="flex items-start gap-4 relative z-10">
           <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center shrink-0 shadow-inner">
-            <RefreshCw className="w-6 h-6 text-white animate-[spin_3s_linear_infinite]" />
+            <RefreshCw className={`w-6 h-6 text-white ${isRefreshing ? 'animate-spin' : 'animate-[spin_3s_linear_infinite]'}`} />
           </div>
           <div className="flex-1 pt-0.5">
             <h3 className="text-white font-black text-base">Yeni Sürüm Hazır! 🚀</h3>
@@ -62,14 +97,16 @@ export default function PwaUpdater() {
             </p>
             <div className="flex gap-2">
               <button
-                onClick={() => window.location.reload()}
-                className="bg-white text-indigo-600 hover:bg-indigo-50 px-5 py-2.5 rounded-xl text-sm font-extrabold transition-colors shadow-sm active:scale-95"
+                onClick={handleHardRefresh}
+                disabled={isRefreshing}
+                className="bg-white text-indigo-600 hover:bg-indigo-50 px-5 py-2.5 rounded-xl text-sm font-extrabold transition-colors shadow-sm active:scale-95 disabled:opacity-70 disabled:active:scale-100"
               >
-                Hemen Yenile
+                {isRefreshing ? 'Yenileniyor...' : 'Hemen Yenile'}
               </button>
               <button
                 onClick={() => setShowUpdate(false)}
-                className="bg-black/20 text-white hover:bg-black/30 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors active:scale-95"
+                disabled={isRefreshing}
+                className="bg-black/20 text-white hover:bg-black/30 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors active:scale-95 disabled:opacity-70"
               >
                 Sonra
               </button>
@@ -79,6 +116,7 @@ export default function PwaUpdater() {
 
         <button 
           onClick={() => setShowUpdate(false)}
+          disabled={isRefreshing}
           className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors p-1"
         >
           <X className="w-5 h-5" />
