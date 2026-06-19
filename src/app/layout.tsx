@@ -4,6 +4,7 @@ import "./globals.css";
 import OfflineIndicator from "@/components/ui/OfflineIndicator";
 import SplashScreen from "@/components/ui/SplashScreen";
 import PwaEnforcer from "@/components/ui/PwaEnforcer";
+import PwaUpdater from "@/components/ui/PwaUpdater";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -46,6 +47,7 @@ export default function RootLayout({
         <PwaEnforcer />
         <SplashScreen />
         <OfflineIndicator />
+        <PwaUpdater />
         {children}
       </body>
     </html>
