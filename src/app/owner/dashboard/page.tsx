@@ -53,7 +53,7 @@ function ModuleGrid({ pets }: { pets: DashboardPet[] }) {
     },
     {
       label: 'Bakım',
-      href: single ? `/owner/plan-yap/bakim?pet_id=${pid}` : '/owner/plan-yap',
+      href: single ? `/owner/plan-yap/bakim?pet_id=${pid}` : '/owner/journal/select-pet?redirect=care',
       gradient: 'from-pink-500/15 to-fuchsia-400/10',
       iconBg: 'bg-pink-500/15',
       color: 'text-pink-700',
