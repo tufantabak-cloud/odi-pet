@@ -64,7 +64,7 @@ ALTER TABLE public.security_audit_logs ENABLE ROW LEVEL SECURITY;
 -- Only super_admin or postgres roles can read
 CREATE POLICY "Super admins can read audit logs" ON public.security_audit_logs
     FOR SELECT
-    USING (auth.uid() IN (SELECT id FROM public.users WHERE role = 'super_admin'));
+    USING (auth.uid() IN (SELECT id FROM public.users WHERE role = 'admin'));
 
 -- Only internal authenticated server roles can insert
 -- Or we can just let service role handle inserts and deny all insert for normal authenticated users

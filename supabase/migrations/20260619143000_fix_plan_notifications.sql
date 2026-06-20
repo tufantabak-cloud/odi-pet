@@ -1,6 +1,6 @@
 -- =============================================
--- PLAN TASKS NOTIFICATIONS FIX
--- Updates generate_schedule_notifications to also scan the new `plans` table
+-- PLAN TASKS NOTIFICATIONS FIX (v2)
+-- Updates generate_schedule_notifications to scan `plans` table using correct schema
 -- =============================================
 
 CREATE OR REPLACE FUNCTION public.generate_schedule_notifications()
@@ -44,13 +44,9 @@ BEGIN
       AND hs.due_date IS NOT NULL
       AND COALESCE((hs.notification_rule->>'enabled')::boolean, false) = true
   LOOP
-    -- Calculate due timestamp (local timestamp in Istanbul)
     due_ts := (rec.due_date + COALESCE(rec.due_time, '12:00:00'::time));
-    
-    -- Calculate notify timestamp (due_ts minus minutes_before)
     notify_ts := due_ts - (COALESCE((rec.notification_rule->>'minutes_before')::integer, 0) || ' minutes')::interval;
 
-    -- Translate category for user-friendly notifications
     category_tr := CASE rec.category
       WHEN 'Saglik' THEN 'Sağlık'
       WHEN 'Medikal' THEN 'Aşı'
@@ -62,7 +58,6 @@ BEGIN
       ELSE 'Genel'
     END;
 
-    -- 1a. OVERDUE NOTIFICATION
     IF due_ts < now_ist THEN
       IF NOT EXISTS (
         SELECT 1 FROM public.notifications n
@@ -80,7 +75,6 @@ BEGIN
         
         notif_count := notif_count + 1;
         
-        -- Update the schedule status to 'overdue' if not already
         IF rec.status = 'upcoming' THEN
           UPDATE public.health_schedules
           SET status = 'overdue'
@@ -88,7 +82,6 @@ BEGIN
         END IF;
       END IF;
 
-    -- 1b. UPCOMING REMINDER NOTIFICATION
     ELSIF now_ist >= notify_ts THEN
       IF NOT EXISTS (
         SELECT 1 FROM public.notifications n
@@ -116,24 +109,31 @@ BEGIN
     SELECT 
       pl.id          AS plan_id, 
       pl.pet_id, 
-      COALESCE(pl.extra_data->>'option', pl.category) AS title, 
+      COALESCE(pl.sub_type, pl.category) AS title, 
       pl.category, 
-      pl.next_run, 
+      pl.scheduled_at, 
+      COALESCE(pl.notif_before, 0) AS notif_before,
+      COALESCE(pl.notif_unit, 'minute') AS notif_unit,
       u.id           AS profile_id, 
       p.name         AS pet_name
     FROM public.plans pl
     JOIN public.users u ON u.id = pl.user_id
     JOIN public.pets p ON p.id = pl.pet_id
-    WHERE pl.next_run IS NOT NULL
-      AND COALESCE((pl.extra_data->>'notifications_enabled')::boolean, true) = true
+    WHERE pl.scheduled_at IS NOT NULL
+      AND pl.status = 'active'
   LOOP
-    -- Calculate due timestamp (convert from UTC/Timestamptz to Istanbul timezone)
-    due_ts := pl.next_run AT TIME ZONE 'Europe/Istanbul';
+    -- Calculate due timestamp
+    due_ts := pl.scheduled_at AT TIME ZONE 'Europe/Istanbul';
     
-    -- Notify 30 minutes before for plans by default
-    notify_ts := due_ts - INTERVAL '30 minutes';
+    -- Calculate notify timestamp dynamically based on notif_before and notif_unit
+    IF rec.notif_unit = 'hour' THEN
+      notify_ts := due_ts - (rec.notif_before || ' hours')::interval;
+    ELSIF rec.notif_unit = 'day' THEN
+      notify_ts := due_ts - (rec.notif_before || ' days')::interval;
+    ELSE
+      notify_ts := due_ts - (rec.notif_before || ' minutes')::interval;
+    END IF;
     
-    -- Translate category
     category_tr := CASE rec.category
       WHEN 'Saglik' THEN 'Sağlık'
       WHEN 'Medikal' THEN 'Aşı'
@@ -145,7 +145,6 @@ BEGIN
       ELSE 'Genel'
     END;
 
-    -- 2a. OVERDUE NOTIFICATION
     IF due_ts < now_ist THEN
       IF NOT EXISTS (
         SELECT 1 FROM public.notifications n
@@ -162,9 +161,13 @@ BEGIN
         VALUES (rec.profile_id, 'general', title_text, msg_text, rec.pet_id);
         
         notif_count := notif_count + 1;
+        
+        -- Mark plan as overdue in DB
+        UPDATE public.plans
+        SET status = 'overdue'
+        WHERE id = rec.plan_id;
       END IF;
 
-    -- 2b. UPCOMING REMINDER NOTIFICATION
     ELSIF now_ist >= notify_ts THEN
       IF NOT EXISTS (
         SELECT 1 FROM public.notifications n

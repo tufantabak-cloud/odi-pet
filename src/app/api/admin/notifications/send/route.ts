@@ -30,23 +30,51 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Normalde kullanıcının push aboneliğini DB'den (örn push_subscriptions tablosu) çekeriz.
-    // Şimdilik sistemin altyapısı kurulduğu için temsili success dönüyoruz.
-    // İleride: const { data: sub } = await supabase.from('push_subscriptions').eq('profile_id', profile_id).single();
+    const { data: subs, error: subsErr } = await supabase
+      .from('push_subscriptions')
+      .select('*')
+      .eq('profile_id', profile_id);
+
+    if (subsErr || !subs || subs.length === 0) {
+      return NextResponse.json({ error: 'Bu kullanıcı için aktif push aboneliği bulunamadı.' }, { status: 404 });
+    }
     
-    // Test Mock'u
     const payload: PushPayload = {
       title,
       body: message,
       url: '/'
     };
 
-    // İleride: await sendWebPush(sub.subscription_object, payload);
+    let sentCount = 0;
+    const errors = [];
+
+    for (const sub of subs) {
+      const pushSub = {
+        endpoint: sub.endpoint,
+        keys: {
+          p256dh: sub.p256dh,
+          auth: sub.auth_key
+        }
+      };
+
+      const result = await sendWebPush(pushSub as any, payload);
+      if (result.success) {
+        sentCount++;
+      } else {
+        errors.push(result.error);
+        const errStatusCode = (result.error as any)?.statusCode;
+        // Eğer cihaz abonelikten çıkmışsa veya silinmişse veritabanından temizle
+        if (errStatusCode === 410 || errStatusCode === 404) {
+          await supabase.from('push_subscriptions').delete().eq('id', sub.id);
+        }
+      }
+    }
 
     return NextResponse.json({
-      success: true,
-      message: 'Manuel bildirim tetiklendi (Mock)',
-      payload
+      success: sentCount > 0,
+      message: sentCount > 0 ? `${sentCount} cihaza bildirim gönderildi.` : 'Bildirim gönderilemedi.',
+      payload,
+      errors: errors.length > 0 ? errors : undefined
     });
 
   } catch (error: any) {

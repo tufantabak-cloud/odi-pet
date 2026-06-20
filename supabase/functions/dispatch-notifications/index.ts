@@ -283,6 +283,75 @@ serve(async (_req: Request) => {
       }
     }
 
+    // 3b. Send push for notification_jobs
+    const { data: pendingJobs } = await supabase
+      .from("notification_jobs")
+      .select("id, fire_at, plan_id, plans(user_id, pet_id, category, sub_type)")
+      .eq("sent", false)
+      .lte("fire_at", new Date().toISOString())
+
+    if (pendingJobs && pendingJobs.length > 0) {
+      const jobProfileIds = pendingJobs
+        .map((j: any) => j.plans?.user_id)
+        .filter(Boolean)
+
+      const { data: jobPushSubs } = await supabase
+        .from("push_subscriptions")
+        .select("*")
+        .in("profile_id", jobProfileIds)
+
+      const jobSubsByProfile = new Map<string, any[]>()
+      for (const sub of jobPushSubs ?? []) {
+        if (!jobSubsByProfile.has(sub.profile_id)) jobSubsByProfile.set(sub.profile_id, [])
+        jobSubsByProfile.get(sub.profile_id)!.push(sub)
+      }
+
+      const sentJobIds: string[] = []
+
+      for (const job of pendingJobs as any[]) {
+        const plan = job.plans
+        if (!plan) continue
+        const profileId = plan.user_id
+        const userSubs = jobSubsByProfile.get(profileId) ?? []
+        const deepLink = plan.pet_id ? `/owner/pets/${plan.pet_id}#pet-tasks` : "/owner/notifications"
+        const title = `${plan.sub_type ?? plan.category} Hatırlatması ⏰`
+        const body = `Planladığınız görevin zamanı geldi.`
+
+        const payload = JSON.stringify({
+          title,
+          body,
+          icon: "/icons/icon-192x192.png",
+          badge: "/icons/icon-192x192.png",
+          url: deepLink,
+          tag: job.id
+        })
+
+        for (const sub of userSubs) {
+          try {
+            await webpush.sendNotification(
+              { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth_key } },
+              payload
+            )
+            pushesSent++
+          } catch (err: any) {
+            if (err.statusCode === 410 || err.statusCode === 404) {
+              await supabase.from("push_subscriptions").delete().eq("id", sub.id)
+            } else {
+              console.error(`[dispatch-notifications] Job push error for ${profileId}:`, err)
+            }
+          }
+        }
+        sentJobIds.push(job.id)
+      }
+
+      if (sentJobIds.length > 0) {
+        await supabase
+          .from("notification_jobs")
+          .update({ sent: true })
+          .in("id", sentJobIds)
+      }
+    }
+
     // 5. Mark as sent
     if (sentIds.length > 0) {
       await supabase
