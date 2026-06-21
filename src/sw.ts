@@ -35,6 +35,15 @@ const serwist = new Serwist({
 
 serwist.addEventListeners();
 
+// ── Explicit Install & Activate Handlers ────────────────────────
+self.addEventListener('install', (event: ExtendableEvent) => {
+  event.waitUntil(self.skipWaiting())
+})
+
+self.addEventListener('activate', (event: ExtendableEvent) => {
+  event.waitUntil(self.clients.claim())
+})
+
 // ── PWA Push Notification Handler ───────────────────────────────
 // Receives push messages from the server (web-push) and displays
 // OS-level notifications. Without this listener, pushes arrive
