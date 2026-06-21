@@ -829,6 +829,19 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           ],
           onSuccess: () => handlePlanla('Veteriner')
         });
+      } else if (tabName === 'Beslenme' && (!nutritionLogs || nutritionLogs.length === 0)) {
+        setQuickUpdateConfig({
+          title: 'Beslenme Bilgisi',
+          desc: 'Beslenme görevi planlayabilmek için önce kullanılan mamayı kaydedin.',
+          endpoint: `/api/pets/${pet.id}/nutrition/profile`,
+          method: 'POST',
+          fields: [
+            { name: 'food_brand', type: 'text', label: 'Mama Markası', placeholder: 'Örn: Royal Canin', required: true },
+            { name: 'food_type', type: 'select', label: 'Mama Türü', options: [{label: 'Kuru Mama', value: 'kuru'}, {label: 'Yaş Mama', value: 'yas'}, {label: 'Ödül Maması', value: 'odul'}], required: true },
+            { name: 'daily_grams', type: 'number', label: 'Günlük Tüketim (Gram)', placeholder: 'Örn: 120', required: true }
+          ],
+          onSuccess: () => handlePlanla('Beslenme')
+        });
       } else {
         handlePlanla(tabName);
       }
@@ -1535,6 +1548,19 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                             { name: 'vet_email', type: 'email', label: 'E-posta (Opsiyonel)', placeholder: 'klinik@email.com', required: false }
                           ],
                           onSuccess: () => handlePlanla('Veteriner')
+                        });
+                      } else if (module.name === 'Beslenme' && (!nutritionLogs || nutritionLogs.length === 0)) {
+                        setQuickUpdateConfig({
+                          title: 'Beslenme Bilgisi',
+                          desc: 'Beslenme görevi planlayabilmek için önce kullanılan mamayı kaydedin.',
+                          endpoint: `/api/pets/${pet.id}/nutrition/profile`,
+                          method: 'POST',
+                          fields: [
+                            { name: 'food_brand', type: 'text', label: 'Mama Markası', placeholder: 'Örn: Royal Canin', required: true },
+                            { name: 'food_type', type: 'select', label: 'Mama Türü', options: [{label: 'Kuru Mama', value: 'kuru'}, {label: 'Yaş Mama', value: 'yas'}, {label: 'Ödül Maması', value: 'odul'}], required: true },
+                            { name: 'daily_grams', type: 'number', label: 'Günlük Tüketim (Gram)', placeholder: 'Örn: 120', required: true }
+                          ],
+                          onSuccess: () => handlePlanla('Beslenme')
                         });
                       } else {
                         handlePlanla(module.name);
