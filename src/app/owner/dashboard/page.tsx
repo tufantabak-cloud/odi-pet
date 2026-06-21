@@ -77,6 +77,7 @@ function ModuleGrid({ pets }: { pets: DashboardPet[] }) {
     },
     {
       label: 'Günlük',
+      id: 'onb-journal-add',
       href: petHref('journal', '/journal'),
       gradient: 'from-teal-500/15 to-emerald-400/10',
       iconBg: 'bg-teal-500/15',
@@ -96,6 +97,7 @@ function ModuleGrid({ pets }: { pets: DashboardPet[] }) {
         {modules.map((mod) => (
           <Link
             key={mod.href}
+            id={mod.id}
             href={mod.href}
             className={`flex flex-col items-center gap-2 p-3 rounded-[16px] bg-gradient-to-br ${mod.gradient} border border-white/80 hover:scale-[1.04] active:scale-[0.97] transition-all duration-200 shadow-sm`}
           >
@@ -345,33 +347,53 @@ export default async function OwnerDashboard() {
               </h2>
 
               {timelineSchedules.length > 0 ? (
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2.5">
                   {timelineSchedules.map((plan) => {
                     const ds = plan.due_date.includes('T') ? plan.due_date.split('T')[0] : plan.due_date
                     const [y, m, d] = ds.split('-').map(Number)
-                    const due = getNowTR(); due.setFullYear(y, m - 1, d)
+                    // Her zaman ortamın yerel saat diliminde parse ediyoruz:
+                    const due = new Date(`${ds}T00:00:00`)
                     const ts = plan.due_time || '12:00:00'
-                    const [th, tm] = ts.split(':').map(Number)
-                    const taskDT = getNowTR(); taskDT.setFullYear(y, m - 1, d); taskDT.setHours(th || 12, tm || 0, 0, 0)
+                    const taskDT = new Date(`${ds}T${ts}`)
                     const isOverdue = taskDT < now
-                    const tod = getNowTR(); tod.setHours(0, 0, 0, 0)
-                    const tgt = getNowTR(); tgt.setFullYear(y, m - 1, d); tgt.setHours(0, 0, 0, 0)
-                    const dd = Math.round((tgt.getTime() - tod.getTime()) / 86400000)
-                    const tl = plan.due_time ? ' ' + ts.slice(0, 5) : ''
+                    
+                    // Gün farkı hesaplama (TRT saat dilimine göre gün sınırlarını alarak)
+                    const formatTRDateString = (dateObj: Date) => {
+                      const formatter = new Intl.DateTimeFormat('en-US', {
+                        timeZone: 'Europe/Istanbul',
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit'
+                      })
+                      const [{ value: mo },,{ value: da },,{ value: ye }] = formatter.formatToParts(dateObj)
+                      return `${ye}-${mo}-${da}`
+                    }
+                    
+                    const todayStr = formatTRDateString(now)
+                    const targetStr = ds
+                    
+                    const todDate = new Date(`${todayStr}T00:00:00`)
+                    const tgtDate = new Date(`${targetStr}T00:00:00`)
+                    const dd = Math.round((tgtDate.getTime() - todDate.getTime()) / 86400000)
+                    
+                    const timeStr = plan.due_time ? ' · ' + ts.slice(0, 5) : ''
                     let badge = ''; let badgeClass = ''; let rowBorder = ''
 
                     if (isOverdue) {
                       const dm = Math.floor((now.getTime() - taskDT.getTime()) / 60000)
-                      badge = dm < 60 ? `${Math.max(1, dm)} dk gecikti` : dm < 1440 ? `${Math.floor(dm / 60)} saat gecikti` : `${Math.floor(dm / 1440)} gün gecikti`
-                      badgeClass = 'bg-error/10 text-error border-error/20'
+                      const delayText = dm < 60 ? `${Math.max(1, dm)} dk gecikti` : dm < 1440 ? `${Math.floor(dm / 60)} saat gecikti` : `${Math.floor(dm / 1440)} gün gecikti`
+                      badge = `${delayText}${timeStr}`
+                      badgeClass = 'bg-error/10 text-error border-error/25 font-extrabold shadow-sm'
                       rowBorder = 'border-l-error'
                     } else if (dd === 0) {
-                      badge = 'Bugün' + tl; badgeClass = 'bg-warning/10 text-warning border-warning/20'; rowBorder = 'border-l-warning'
+                      badge = 'Bugün' + timeStr; badgeClass = 'bg-warning/10 text-warning border-warning/25 font-extrabold shadow-sm'; rowBorder = 'border-l-warning'
                     } else if (dd === 1) {
-                      badge = 'Yarın' + tl; badgeClass = 'bg-primary/10 text-primary border-primary/20'; rowBorder = 'border-l-primary'
+                      badge = 'Yarın' + timeStr; badgeClass = 'bg-primary/10 text-primary border-primary/25 font-extrabold shadow-sm'; rowBorder = 'border-l-primary'
                     } else {
-                      badge = `${dd} gün kaldı`
-                      badgeClass = dd <= 3 ? 'bg-warning/10 text-warning border-warning/20' : 'bg-success/10 text-success border-success/20'
+                      badge = `${dd} gün kaldı${timeStr}`
+                      badgeClass = dd <= 3 
+                        ? 'bg-warning/10 text-warning border-warning/25 font-extrabold shadow-sm' 
+                        : 'bg-success/10 text-success border-success/25 font-extrabold shadow-sm'
                       rowBorder = dd <= 3 ? 'border-l-warning' : 'border-l-success'
                     }
 
@@ -379,21 +401,30 @@ export default async function OwnerDashboard() {
                       <Link
                         href={`/owner/pets/${plan.pet_id}#pet-tasks`}
                         key={plan.id}
-                        className={`flex items-center gap-3 p-3 border border-border-main border-l-4 ${rowBorder} rounded-[14px] bg-surface hover:shadow-sm transition-all group`}
+                        className={`flex items-center gap-4 p-4 border border-border-main border-l-4 ${rowBorder} rounded-[16px] bg-surface hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 ease-out group relative overflow-hidden`}
                       >
-                        <div className="flex flex-col items-center bg-bg-main rounded-[10px] px-2 py-1 shrink-0 min-w-[40px]">
-                          <p className="text-[15px] font-black text-text-primary leading-none">{due.getDate()}</p>
-                          <p className="text-[9px] font-bold text-text-secondary">{due.toLocaleString('tr-TR', { month: 'short' })}</p>
+                        <div className="flex flex-col items-center justify-center bg-bg-main rounded-xl px-3 py-2 shrink-0 min-w-[56px] shadow-sm border border-border-main/60 relative z-10 group-hover:border-primary/30 transition-colors">
+                          <p className="text-[18px] font-black text-text-primary leading-none group-hover:text-primary transition-colors">{due.getDate()}</p>
+                          <p className="text-[11px] font-extrabold text-text-secondary uppercase mt-1 tracking-widest">{due.toLocaleString('tr-TR', { month: 'short' })}</p>
                         </div>
-                        <div className="flex flex-col flex-1 min-w-0">
-                          <p className="font-bold text-text-primary text-[13px] truncate group-hover:text-primary transition-colors">
+                        <div className="flex flex-col flex-1 min-w-0 z-10">
+                          <p className="font-extrabold text-text-primary text-[15px] truncate group-hover:text-primary transition-colors leading-tight">
                             {plan.title || (plan.vaccines && plan.vaccines.name) || 'Sağlık İşlemi'}
                           </p>
-                          <p className="text-[11px] text-text-secondary">{plan.pets && plan.pets.name}</p>
+                          <div className="flex items-center gap-2 mt-1.5">
+                            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-bg-main border border-border-main/50 text-[12px] font-bold text-text-secondary shadow-sm">
+                              <span className="text-[11px]">🐾</span>
+                              <span className="truncate max-w-[80px] sm:max-w-[120px]">{plan.pets && plan.pets.name}</span>
+                            </span>
+                          </div>
                         </div>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 whitespace-nowrap ${badgeClass}`}>
-                          {badge}
-                        </span>
+                        <div className="shrink-0 z-10">
+                          <span className={`text-[12px] px-3 py-1.5 rounded-xl border whitespace-nowrap tracking-wide transition-all shadow-sm ${badgeClass}`}>
+                            {badge}
+                          </span>
+                        </div>
+                        {/* Hover effect overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/[0.03] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
                       </Link>
                     )
                   })}

@@ -181,13 +181,31 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
             }
             
             for (const p of plansRes as any[]) {
+              let dueDate = p.scheduled_at?.split('T')[0]
+              let dueTime = null
+              
+              if (p.scheduled_at) {
+                try {
+                  const d = new Date(p.scheduled_at)
+                  dueDate = d.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
+                  dueTime = d.toLocaleTimeString('tr-TR', { 
+                    timeZone: 'Europe/Istanbul', 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    second: '2-digit',
+                    hour12: false 
+                  })
+                } catch(e) {}
+              }
+
               const asSchedule = {
                 id: `plan_${p.id}`,
                 _plan_id: p.id,
                 _source: 'plans',
                 pet_id: p.pet_id,
                 title: p.sub_type || p.extra_data?.vaccine?.name || 'Plan',
-                due_date: p.scheduled_at,
+                due_date: dueDate,
+                due_time: dueTime,
                 status: p.status === 'completed' ? 'done' : p.status === 'cancelled' ? 'done' : 'upcoming',
                 category: PLAN_CAT_MAP[p.category] || p.category,
                 sub_category: p.sub_type,

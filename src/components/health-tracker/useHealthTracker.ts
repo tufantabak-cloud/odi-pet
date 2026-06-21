@@ -272,7 +272,7 @@ function toComputedEvent(s: any): ComputedEvent {
   };
 }
 
-export function useHealthTracker(petId: string) {
+export function useHealthTracker(petId: string, refreshTrigger?: number) {
   const [events, setEvents] = useState<ComputedEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = createBrowserSupabaseClient();
@@ -445,7 +445,7 @@ export function useHealthTracker(petId: string) {
       supabase.removeChannel(channel1); 
       supabase.removeChannel(channel2); 
     };
-  }, [fetchEvents, petId, supabase]);
+  }, [fetchEvents, petId, supabase, refreshTrigger]);
 
   // ── Gruplama Mantığı ─────────────────────────────────────────────────────────
   const categoryGroups: CategoryGroup[] = useMemo(() => {

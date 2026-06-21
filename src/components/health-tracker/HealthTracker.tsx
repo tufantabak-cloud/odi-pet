@@ -5,11 +5,12 @@ import { TrackerRow } from './TrackerRow';
 
 interface HealthTrackerProps {
   petId: string;
-  onEditTask?: (event: any) => void;
+  onEditTask?: (task: any) => void;
+  refreshTrigger?: number;
 }
 
-export function HealthTracker({ petId, onEditTask }: HealthTrackerProps) {
-  const { categoryGroups, loading, markEventStatus, postponeEvent, deleteEvent, formatFrequency } = useHealthTracker(petId);
+export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrackerProps) {
+  const { categoryGroups, loading, markEventStatus, postponeEvent, deleteEvent, formatFrequency } = useHealthTracker(petId, refreshTrigger);
 
   if (loading) {
     return (
@@ -47,20 +48,15 @@ export function HealthTracker({ petId, onEditTask }: HealthTrackerProps) {
       {categoryGroups.map((group) => (
         <div key={group.category} className="mb-6">
           {/* Kategori Başlığı */}
-          <div className="flex items-center justify-between px-4 py-3 bg-surface border-b border-border-main/50 mb-3 relative">
+          <div className="flex items-center justify-between px-4 py-2 bg-primary/5 border border-primary/20 rounded-lg mb-4 mt-2 relative overflow-hidden shadow-sm">
             {/* T4: Kategori başlıkları daha belirgin */}
-            <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/20 rounded-r-sm" />
-            <div className="flex items-center gap-2.5 pl-1">
-              <span className="text-[18px] opacity-90">{group.icon}</span>
-              <h3 className="text-[13px] font-extrabold text-text-primary uppercase tracking-wider">{group.label}</h3>
+            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary rounded-r-md" />
+            <div className="flex items-center gap-3 pl-2">
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white shadow-sm border border-primary/10 text-[18px] opacity-90">
+                {group.icon}
+              </div>
+              <h3 className="text-[14px] font-black text-primary uppercase tracking-widest">{group.label}</h3>
             </div>
-            <button className="text-text-secondary hover:text-text-primary transition-colors p-1 bg-bg-main rounded-lg">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <circle cx="3" cy="8" r="1.5" fill="currentColor" />
-                <circle cx="8" cy="8" r="1.5" fill="currentColor" />
-                <circle cx="13" cy="8" r="1.5" fill="currentColor" />
-              </svg>
-            </button>
           </div>
 
           {/* Aşı kategorisi: alt gruplar (Zorunlu / Opsiyonel) + aşı isimleri */}
@@ -167,16 +163,33 @@ function ActionBannerItem({
   const day = d.getDate();
   const month = d.toLocaleDateString('tr-TR', { month: 'long' });
   const year = d.getFullYear();
-  const dateStr = `${day} ${month} ${year}`;
+  
+  let timeStr = '';
+  try {
+    const parts = event.scheduled_at.split('T');
+    if (parts.length > 1 && parts[1]) {
+      const timeParts = parts[1].split(':');
+      if (timeParts.length >= 2) {
+        timeStr = ` - ${timeParts[0]}:${timeParts[1]}`;
+      }
+    }
+  } catch (e) {}
+
+  const dateStr = `${day} ${month} ${year}${timeStr}`;
   
   let diffStr = '';
   if (isMissed) {
-    const todayDate = new Date();
-    todayDate.setHours(0,0,0,0);
-    const schDate = new Date(d);
-    schDate.setHours(0,0,0,0);
-    const diffDays = Math.round((todayDate.getTime() - schDate.getTime()) / (1000 * 60 * 60 * 24));
-    diffStr = `» ${diffDays} gün gecikti`;
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 60) {
+      diffStr = `» ${Math.max(1, diffMins)} dk gecikti`;
+    } else if (diffMins < 1440) {
+      diffStr = `» ${Math.floor(diffMins / 60)} saat gecikti`;
+    } else {
+      diffStr = `» ${Math.floor(diffMins / 1440)} gün gecikti`;
+    }
   }
 
   return (

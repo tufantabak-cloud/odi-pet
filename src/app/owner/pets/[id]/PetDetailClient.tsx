@@ -243,6 +243,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   const [wizardInitialCategory, setWizardInitialCategory] = useState<TaskCategory | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date>(() => { const d = new Date(); d.setHours(0,0,0,0); return d; })
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
+  const [trackerRefreshKey, setTrackerRefreshKey] = useState(0)
   const timelineScrollRef = useRef<HTMLDivElement>(null)
   
   useEffect(() => {
@@ -436,7 +437,15 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       const d = new Date(dueDateStr)
       if (isNaN(d.getTime())) return dueDateStr
       const months = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık']
-      const dateText = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`
+      
+      let timeText = ''
+      if (dueTimeStr) {
+        const parts = dueTimeStr.split(':')
+        if (parts.length >= 2) {
+          timeText = ` - ${parts[0]}:${parts[1]}`
+        }
+      }
+      const dateText = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}${timeText}`
       
       if (isDone) {
         return (
@@ -462,7 +471,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         
         if (diffMins < 60) {
           const mins = Math.max(1, diffMins)
-          badge = <span className="text-error bg-error/10 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">⚠️ {mins} dk gecikti</span>
+          // Minor delay (0-60 min): Amber warning
+          badge = <span className="text-amber-800 bg-amber-100/90 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">⚠️ {mins} dk gecikti</span>
         } else if (diffMins < 1440) { // 24 hours
           const hours = Math.floor(diffMins / 60)
           badge = <span className="text-error bg-error/10 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">⚠️ {hours} saat gecikti</span>
@@ -477,17 +487,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         targetDate.setHours(0,0,0,0)
         const diffDays = Math.round((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
         
-        let timeText = ''
-        if (dueTimeStr) {
-          const parts = dueTimeStr.split(':')
-          if (parts.length >= 2) {
-            timeText = ` ${parts[0]}:${parts[1]}`
-          }
-        }
-        
-        if (diffDays === 0) badge = <span className="text-orange-700 bg-orange-100/80 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">⏳ Bugün{timeText}</span>;
-        else if (diffDays === 1) badge = <span className="text-orange-700 bg-orange-100/80 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">⏳ Yarın{timeText}</span>;
-        else if (diffDays === -1) badge = <span className="text-error bg-error/10 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">⚠️ Dün{timeText}</span>;
+        if (diffDays === 0) badge = <span className="text-orange-700 bg-orange-100/80 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">⏳ Bugün</span>;
+        else if (diffDays === 1) badge = <span className="text-orange-700 bg-orange-100/80 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">⏳ Yarın</span>;
+        else if (diffDays === -1) badge = <span className="text-error bg-error/10 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">⚠️ Dün</span>;
         else if (diffDays < -1) badge = <span className="text-error bg-error/10 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">⚠️ {Math.abs(diffDays)} gün gecikti</span>;
         else if (diffDays <= 3) badge = <span className="text-orange-700 bg-orange-100/80 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">⏳ {diffDays} gün kaldı</span>;
         else badge = <span className="text-primary bg-primary/10 px-2 py-0.5 rounded-md font-bold tracking-wide">🗓️ {diffDays} gün kaldı</span>;
@@ -519,6 +521,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         router.refresh()
       } catch {}
     }
+    setTrackerRefreshKey(prev => prev + 1)
   }
 
   const handleMarkCompleted = async (id: string) => {
@@ -542,6 +545,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           router.refresh();
         } catch {}
       }
+      setTrackerRefreshKey(prev => prev + 1);
     };
 
     if (item.sub_category === 'Kilo Takibi') {
@@ -588,6 +592,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             }
           }
           setLocalSchedules(prev => prev.map(s => s.id === id ? { ...s, status: 'done', notes: brand } : s));
+          setTrackerRefreshKey(prev => prev + 1);
           router.refresh();
         }
       });
@@ -621,6 +626,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         router.refresh()
       } catch {}
     }
+    setTrackerRefreshKey(prev => prev + 1)
   }
 
   const scrollToTasks = () => {
@@ -1028,7 +1034,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                       strokeDasharray={`${fill} ${circ}`} strokeLinecap="round"/>
                   </svg>
                   {/* Avatar */}
-                  <div className="relative w-20 h-20 rounded-[20px] bg-gradient-to-br from-primary-soft to-white overflow-hidden flex items-center justify-center text-primary text-[32px] font-black ring-2 ring-border-main">
+                  <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-primary-soft to-white overflow-hidden flex items-center justify-center text-primary text-[32px] font-black ring-2 ring-border-main">
                     {pet.avatar_url
                       ? <Image src={pet.avatar_url} fill={true} sizes="80px" priority={true} className="object-cover" alt={pet.name}/>
                       : pet.name.charAt(0)
@@ -1180,6 +1186,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                 return updated.sort((a: any, b: any) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
               });
             }
+            setTrackerRefreshKey(prev => prev + 1);
             router.refresh();
             setTaskWizardOpen(false);
             setTaskToEdit(null);
@@ -1369,7 +1376,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                                 </svg>
                               </button>
                               {activeMenuId === t.id && (
-                                <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-2xl shadow-xl border border-border-main/50 py-2 z-[200]">
+                                <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-2xl shadow-xl border border-border-main/50 py-2 z-[200]">
+                                  <button onClick={(e) => { e.stopPropagation(); handleMarkCompleted(t.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-success hover:bg-success/5 flex items-center gap-2 cursor-pointer">✓ Tamamla</button>
+                                  <div className="border-t border-border-main/30 mx-2 my-1"/>
                                   <button onClick={(e) => { e.stopPropagation(); setTaskToEdit(t); setActiveMenuId(null); setTaskWizardOpen(true) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
                                   <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(t.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer">❌ Sil</button>
                                 </div>
@@ -1417,7 +1426,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                                   </svg>
                                 </button>
                                 {activeMenuId === t.id && (
-                                  <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-2xl shadow-xl border border-border-main/50 py-2 z-[200]">
+                                  <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-2xl shadow-xl border border-border-main/50 py-2 z-[200]">
+                                    <button onClick={(e) => { e.stopPropagation(); handleMarkCompleted(t.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-success hover:bg-success/5 flex items-center gap-2 cursor-pointer">✓ Tamamla</button>
+                                    <div className="border-t border-border-main/30 mx-2 my-1"/>
                                     <button onClick={(e) => { e.stopPropagation(); setTaskToEdit(t); setActiveMenuId(null); setTaskWizardOpen(true) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
                                     <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(t.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer">❌ Sil</button>
                                   </div>
@@ -1436,7 +1447,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         </div>
       </div>
 
-      <HealthTracker petId={pet.id} onEditTask={(t) => { setTaskToEdit(t); setTaskWizardOpen(true); }} />
+      <HealthTracker refreshTrigger={trackerRefreshKey} petId={pet.id} onEditTask={(t) => { setTaskToEdit(t); setTaskWizardOpen(true); }} />
 
       {pet.gender === 'female' && !pet.is_neutered && (
         <EstrusTracker petId={pet.id} petSpecies={pet.species} />
