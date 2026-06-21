@@ -5,7 +5,7 @@ import { useWebPush } from '@/hooks/useWebPush'
 import { useOnboarding } from '@/lib/onboarding/useOnboarding'
 
 export default function PushNotificationPrompt() {
-  const { permission, subscribe, isLoading } = useWebPush()
+  const { permission, subscribe, isLoading, showBatteryGuide, dismissBatteryGuide } = useWebPush()
   const { completeStepByTrigger } = useOnboarding()
   const [showPrompt, setShowPrompt] = useState(false)
   const [toastMsg, setToastMsg] = useState<string | null>(null)
@@ -106,6 +106,37 @@ export default function PushNotificationPrompt() {
                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
               )}
               İzin Ver
+            </button>
+          </div>
+        </div>
+      )}
+      {/* ── Battery Optimization Guide Modal ─────────────── */}
+      {showBatteryGuide && (
+        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 animate-in fade-in duration-300">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={dismissBatteryGuide} />
+          {/* Modal */}
+          <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6 animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
+            {/* Icon */}
+            <div className="mx-auto w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mb-4 shadow-lg shadow-orange-200">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="6" y="2" width="12" height="20" rx="2" ry="2" />
+                <line x1="12" y1="18" x2="12" y2="18.01" />
+              </svg>
+            </div>
+            {/* Title */}
+            <h3 className="text-center text-lg font-bold text-text-primary mb-2">Bildirimleri Her Zaman Alın</h3>
+            {/* Content */}
+            <p className="text-center text-sm text-text-secondary leading-relaxed mb-6">
+              Arka planda bildirim alabilmek için:<br />
+              <span className="font-semibold text-text-primary">Telefon Ayarları → Uygulamalar → Chrome → Pil → Kısıtlama Yok</span> seçeneğini açın.
+            </p>
+            {/* Button */}
+            <button
+              onClick={dismissBatteryGuide}
+              className="w-full py-3 rounded-xl bg-primary text-white font-bold text-[15px] hover:bg-primary/90 active:scale-[0.98] transition-all shadow-sm"
+            >
+              Tamam
             </button>
           </div>
         </div>

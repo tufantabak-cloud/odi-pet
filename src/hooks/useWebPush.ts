@@ -28,6 +28,7 @@ export function useWebPush() {
   const [isSubscribed, setIsSubscribed] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showBatteryGuide, setShowBatteryGuide] = useState(false)
   const swRegRef = useRef<ServiceWorkerRegistration | null>(null)
 
   // Register service worker and check current state
@@ -140,6 +141,13 @@ export function useWebPush() {
       if (res.ok) {
         setIsSubscribed(true)
         setError(null)
+
+        // Show battery optimization guide once
+        if (typeof window !== 'undefined' && !localStorage.getItem('notif_guide_shown')) {
+          localStorage.setItem('notif_guide_shown', 'true')
+          setShowBatteryGuide(true)
+        }
+
         return { success: true }
       }
 
@@ -199,5 +207,9 @@ export function useWebPush() {
     }
   }, [])
 
-  return { permission, isSubscribed, isLoading, error, subscribe, unsubscribe }
+  const dismissBatteryGuide = useCallback(() => {
+    setShowBatteryGuide(false)
+  }, [])
+
+  return { permission, isSubscribed, isLoading, error, subscribe, unsubscribe, showBatteryGuide, dismissBatteryGuide }
 }
