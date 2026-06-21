@@ -1025,7 +1025,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             {(() => {
               const r = 48; const circ = 2 * Math.PI * r
               const fill = circ * (score / 100)
-              const scoreColor = score >= 75 ? '#22C55E' : score >= 40 ? '#FACC15' : '#EF4444'
+              const scoreColor = score >= 75 ? '#22C55E' : score >= 40 ? '#EAB308' : '#EF4444'
               return (
                 <div className="relative w-[108px] h-[108px] flex items-center justify-center">
                   <svg width="108" height="108" viewBox="0 0 108 108" className="absolute inset-0" style={{ transform: 'rotate(-90deg)' }}>
@@ -1041,9 +1041,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                     }
                   </div>
                   {/* Skor metni (sağ üst) */}
-                  <div className="absolute top-0 -right-2 z-20 flex flex-col items-center justify-center w-[44px] h-[44px] rounded-full bg-white border-[2.5px] shadow-sm" style={{ borderColor: score >= 75 ? '#22C55E' : score >= 40 ? '#FACC15' : '#EF4444' }}>
-                    <span className="text-[11px] font-black leading-none mt-0.5" style={{ color: score >= 75 ? '#22C55E' : score >= 40 ? '#CA8A04' : '#EF4444' }}>{score}%</span>
-                    <span className="text-[8.5px] font-bold text-text-secondary/60 leading-none whitespace-nowrap mt-[2px] tracking-tight">Sağlık</span>
+                  <div className="absolute top-0 -right-2 z-20 flex flex-col items-center justify-center w-[46px] h-[46px] rounded-full bg-white border-[2.5px] shadow-sm" style={{ borderColor: score >= 75 ? '#22C55E' : score >= 40 ? '#EAB308' : '#EF4444' }}>
+                    <span className="text-[12px] font-black leading-none mt-0.5" style={{ color: score >= 75 ? '#22C55E' : score >= 40 ? '#A16207' : '#EF4444' }}>{score}%</span>
+                    <span className="text-[10px] font-bold text-text-secondary/80 leading-none whitespace-nowrap mt-[2px] tracking-tight">Sağlık</span>
                   </div>
                 </div>
               )
@@ -1059,22 +1059,22 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             {/* Chip'ler */}
             <div className="flex items-center flex-wrap gap-1.5 mt-0.5">
               {pet.birth_date && (
-                <span className="text-[11px] bg-bg-main border border-border-main px-2.5 py-1 rounded-lg font-semibold text-text-secondary">
+                <span className="text-[12px] bg-bg-main border border-border-main px-2.5 py-1 rounded-lg font-semibold text-text-secondary">
                   🎂 {age.text}
                 </span>
               )}
               {growthRecords && growthRecords[0]?.weight_kg && (
-                <span className="text-[11px] bg-bg-main border border-border-main px-2.5 py-1 rounded-lg font-semibold text-text-secondary">
+                <span className="text-[12px] bg-bg-main border border-border-main px-2.5 py-1 rounded-lg font-semibold text-text-secondary">
                   {growthRecords[0].weight_kg} kg
                 </span>
               )}
               {pet.gender && (
-                <span className="text-[11px] bg-bg-main border border-border-main px-2.5 py-1 rounded-lg font-semibold text-text-secondary capitalize">
+                <span className="text-[12px] bg-bg-main border border-border-main px-2.5 py-1 rounded-lg font-semibold text-text-secondary capitalize">
                   {genderLabel[pet.gender] ?? pet.gender}
                 </span>
               )}
               {pet.microchip_no && (
-                <span className="text-[11px] bg-bg-main border border-border-main px-2.5 py-1 rounded-lg font-semibold text-text-secondary">
+                <span className="text-[12px] bg-bg-main border border-border-main px-2.5 py-1 rounded-lg font-semibold text-text-secondary">
                   📡 Çipli
                 </span>
               )}
