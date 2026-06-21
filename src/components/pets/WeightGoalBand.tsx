@@ -52,21 +52,24 @@ export default function WeightGoalBand({ assessment, currentWeight, compact = fa
 
   if (compact) {
     return (
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 8,
-        padding: '9px 16px',
-        background: cfg.bg,
-        borderTop: `0.5px solid ${cfg.border}`,
-        borderBottomLeftRadius: 'var(--radius-lg, 0.5rem)',
-        borderBottomRightRadius: 'var(--radius-lg, 0.5rem)',
-      }}>
-        <i className={`ti ${cfg.icon}`} style={{ color: cfg.color, fontSize: '14px' }} />
-        <span style={{ fontWeight: 600, color: cfg.color, fontSize: '12px' }}>{cfg.label}</span>
-        <span style={{ color: cfg.color, opacity: 0.85, fontSize: '12px' }}>
-          {cfg.message(diffKg)}
-        </span>
+      <div 
+        className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 px-4 py-2.5"
+        style={{
+          background: cfg.bg,
+          borderTop: `0.5px solid ${cfg.border}`,
+          borderBottomLeftRadius: 'var(--radius-lg, 0.5rem)',
+          borderBottomRightRadius: 'var(--radius-lg, 0.5rem)',
+        }}
+      >
+        <div className="flex items-start sm:items-center gap-2">
+          <i className={`ti ${cfg.icon} mt-[3px] sm:mt-0 shrink-0`} style={{ color: cfg.color, fontSize: '14px' }} />
+          <div className="leading-snug" style={{ color: cfg.color, fontSize: '12px' }}>
+            <span style={{ fontWeight: 600 }}>{cfg.label} </span>
+            <span style={{ opacity: 0.85 }}>{cfg.message(diffKg)}</span>
+          </div>
+        </div>
         {isFallback && (
-          <span style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--color-text-tertiary, #9ca3af)', whiteSpace: 'nowrap' }}>
+          <span className="sm:ml-auto text-[10px] text-text-tertiary sm:whitespace-nowrap mt-0.5 sm:mt-0">
             Genel profil kullanıldı — Irk girerek doğruluğu artır
           </span>
         )}
