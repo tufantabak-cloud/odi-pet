@@ -266,7 +266,11 @@ serve(async (_req: Request) => {
                     auth: sub.auth_key
                   }
                 },
-                payload
+                payload,
+                {
+                  urgency: 'high',
+                  TTL: 86400
+                }
               )
               pushesSent++
             } catch (err: unknown) {
@@ -330,7 +334,11 @@ serve(async (_req: Request) => {
           try {
             await webpush.sendNotification(
               { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth_key } },
-              payload
+              payload,
+              {
+                urgency: 'high',
+                TTL: 86400
+              }
             )
             pushesSent++
           } catch (err: any) {
