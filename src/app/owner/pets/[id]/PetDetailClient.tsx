@@ -1008,30 +1008,16 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
         {/* Hero içerik */}
         <div className="p-4 flex flex-row gap-4 items-center relative">
-          {/* Üst Sağ İkonlar */}
-          <div className="absolute top-4 right-4 flex gap-2 z-10">
-            {/* Paylaş */}
-            <Link
-              href={`/owner/pets/${pet.id}/share`}
-              className="w-8 h-8 rounded-xl bg-bg-main border border-border-main flex items-center justify-center text-text-secondary hover:text-primary hover:border-primary/40 transition-all"
-              title="Paylaş"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-              </svg>
-            </Link>
-            {/* Düzenle ikonu */}
-            <Link
-              href={`/owner/pets/${pet.id}/edit`}
-              className="w-8 h-8 rounded-xl bg-bg-main border border-border-main flex items-center justify-center text-text-secondary hover:text-primary hover:border-primary/40 transition-all"
-              title="Profili Düzenle"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-              </svg>
-            </Link>
-          </div>
+          {/* Düzenle ikonu */}
+          <Link
+            href={`/owner/pets/${pet.id}/edit`}
+            className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-bg-main border border-border-main flex items-center justify-center text-text-secondary hover:text-primary hover:border-primary/40 transition-all z-10"
+            title="Profili Düzenle"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+            </svg>
+          </Link>
 
           {/* Avatar + Sağlık Skoru Halkası */}
           <div className="relative shrink-0">
@@ -1096,20 +1082,83 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           </div>
         </div>
 
-        {/* Acil Durum (SOS) */}
-        <div className="mx-4 mb-4">
-          <FloatingSOS
-            petId={pet.id}
-            petName={pet.name}
-            vetPhone={pet.vet_phone}
-            vetName={pet.vet_name}
-            sosContacts={pet.sos_contacts}
-            fullWidth={true}
-            onLostReport={activeLostReport ? undefined : () => setLostWizardOpen(true)}
-            onMarkFound={activeLostReport ? () => { handleMarkFound(); } : undefined}
-          />
+        {/* Alt buton çifti: Paylaş + Acil Durum */}
+        <div className="mx-4 mb-4 flex gap-2.5">
+          {/* Paylaş */}
+          <Link
+            href={`/owner/pets/${pet.id}/share`}
+            className="flex-1 h-11 rounded-[14px] bg-primary-soft border border-primary/20 flex items-center justify-center gap-2 text-primary font-black text-[13px] hover:bg-primary/10 hover:scale-[1.02] active:scale-[0.98] transition-all"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            </svg>
+            Paylaş
+          </Link>
+          {/* Acil Durum */}
+          <div className="flex-1">
+            <FloatingSOS
+              petId={pet.id}
+              petName={pet.name}
+              vetPhone={pet.vet_phone}
+              vetName={pet.vet_name}
+              sosContacts={pet.sos_contacts}
+              fullWidth={true}
+              onLostReport={activeLostReport ? undefined : () => setLostWizardOpen(true)}
+              onMarkFound={activeLostReport ? () => { handleMarkFound(); } : undefined}
+            />
+          </div>
         </div>
       </div>
+
+      {/* ── Profili Zenginleştir Widget ── */}
+      {(() => {
+        const enrichTasks: { label: string; onClick?: () => void; link?: string }[] = []
+        if (!pet.avatar_url) enrichTasks.push({ label: 'Fotoğraf Ekle', link: `/owner/pets/${pet.id}/edit#temel-section` })
+        if (!pet.breed) enrichTasks.push({ label: 'Irk Bilgisi Gir', link: `/owner/pets/${pet.id}/edit#temel-section` })
+        if (!pet.vet_name) enrichTasks.push({ label: 'Veteriner Bilgisi Gir', link: `/owner/pets/${pet.id}/edit#veteriner-section` })
+        if (!localSchedules || !localSchedules.some(s => s.category === 'Medikal')) enrichTasks.push({ label: 'İlk Aşısını Gir', onClick: () => openWizardWithCategory('Medikal') })
+        if (!pet.microchip_no) enrichTasks.push({ label: 'Kimlik & Çip Bilgisi', link: `/owner/pets/${pet.id}/edit#veteriner-section` })
+        if (!growthRecords || !growthRecords[0]?.weight_kg) enrichTasks.push({ label: 'Kilo & Boy Bilgisi Gir', onClick: () => setQuickUpdateConfig({ title: 'Gelişim Bilgisi', desc: 'Gelişimi takip edebilmek için güncel kilo ve boyunu girin.', endpoint: `/api/pets/${pet.id}/growth`, method: 'POST', fields: [{ name: 'weight_kg', type: 'number', label: 'Kilo (kg)', placeholder: 'Örn: 4.5', required: true }, { name: 'height_cm', type: 'number', label: 'Boy (cm)', placeholder: 'Örn: 35.5', required: false }] }) })
+        if (!nutritionLogs || nutritionLogs.length === 0) enrichTasks.push({ label: 'Kullandığı Mamayı Ekle', onClick: () => { setOpenSections(prev => new Set(prev).add('Beslenme')); } })
+        if (!pet.sos_contacts?.[0]?.phone) enrichTasks.push({ label: 'SOS Ağı Kur', link: `/owner/pets/${pet.id}/edit#sos-section` })
+        if (!hasPasskey) enrichTasks.push({ label: 'Biyometrik Giriş Tanımla', link: '/owner/profile?biometric=true' })
+        
+        if (enrichTasks.length === 0) return null
+        const totalTasks = 9
+        const completedTasks = totalTasks - enrichTasks.length
+        const progress = completedTasks === totalTasks ? 100 : Math.max(15, Math.round((completedTasks / totalTasks) * 100))
+        return (
+          <div className="card-base border-l-4 border-l-primary shadow-sm bg-gradient-to-br from-white to-primary/5 overflow-hidden">
+            <button onClick={() => setEnrichOpen(o => !o)} className="w-full flex items-center justify-between p-5 text-left">
+              <h2 className="text-[14px] font-extrabold text-text-primary flex items-center gap-2">
+                🌟 Profili Zenginleştir
+                <span className="text-[11px] font-bold text-primary bg-primary-soft px-2 py-0.5 rounded-full">% {progress}</span>
+              </h2>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={`text-text-secondary shrink-0 transition-transform duration-300 ${enrichOpen ? 'rotate-180' : 'rotate-0'}`}><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div className="px-5 pb-3"><div className="w-full bg-border-main rounded-full h-1.5 overflow-hidden"><div className="bg-primary h-1.5 rounded-full transition-all duration-1000" style={{ width: `${progress}%` }}/></div></div>
+            {enrichOpen && (
+              <div className="px-5 pb-5">
+                <p className="text-[11px] text-text-secondary mb-4 leading-relaxed">Odi.Pet'in akıllı özelliklerinden tam faydalanmak için aşağıdaki eksik bilgileri tamamlayın.</p>
+                <div className="flex flex-wrap gap-2">
+                  {enrichTasks.map((t, i) => (
+                    t.onClick ? (
+                      <button key={i} onClick={t.onClick} className="text-[12px] font-bold px-3 py-2 rounded-xl border border-border-main bg-white text-text-secondary hover:text-primary hover:border-primary hover:bg-primary/5 transition-all flex items-center gap-1.5 shadow-sm">
+                        <span className="text-[14px] text-primary">+</span> {t.label}
+                      </button>
+                    ) : (
+                      <Link key={i} href={t.link || '#'} className="text-[12px] font-bold px-3 py-2 rounded-xl border border-border-main bg-white text-text-secondary hover:text-primary hover:border-primary hover:bg-primary/5 transition-all flex items-center gap-1.5 shadow-sm">
+                        <span className="text-[14px] text-primary">+</span> {t.label}
+                      </Link>
+                    )
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )
+      })()}
 
 
       {/* SmartTaskWizard Modal */}
@@ -1398,54 +1447,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         </div>
       </div>
 
-      {/* ── Profili Zenginleştir Widget ── */}
-      {(() => {
-        const enrichTasks: { label: string; onClick?: () => void; link?: string }[] = []
-        if (!pet.avatar_url) enrichTasks.push({ label: 'Fotoğraf Ekle', link: `/owner/pets/${pet.id}/edit#temel-section` })
-        if (!pet.breed) enrichTasks.push({ label: 'Irk Bilgisi Gir', link: `/owner/pets/${pet.id}/edit#temel-section` })
-        if (!pet.vet_name) enrichTasks.push({ label: 'Veteriner Bilgisi Gir', link: `/owner/pets/${pet.id}/edit#veteriner-section` })
-        if (!localSchedules || !localSchedules.some(s => s.category === 'Medikal')) enrichTasks.push({ label: 'İlk Aşısını Gir', onClick: () => openWizardWithCategory('Medikal') })
-        if (!pet.microchip_no) enrichTasks.push({ label: 'Kimlik & Çip Bilgisi', link: `/owner/pets/${pet.id}/edit#veteriner-section` })
-        if (!growthRecords || !growthRecords[0]?.weight_kg) enrichTasks.push({ label: 'Kilo & Boy Bilgisi Gir', onClick: () => setQuickUpdateConfig({ title: 'Gelişim Bilgisi', desc: 'Gelişimi takip edebilmek için güncel kilo ve boyunu girin.', endpoint: `/api/pets/${pet.id}/growth`, method: 'POST', fields: [{ name: 'weight_kg', type: 'number', label: 'Kilo (kg)', placeholder: 'Örn: 4.5', required: true }, { name: 'height_cm', type: 'number', label: 'Boy (cm)', placeholder: 'Örn: 35.5', required: false }] }) })
-        if (!nutritionLogs || nutritionLogs.length === 0) enrichTasks.push({ label: 'Kullandığı Mamayı Ekle', onClick: () => { setOpenSections(prev => new Set(prev).add('Beslenme')); } })
-        if (!pet.sos_contacts?.[0]?.phone) enrichTasks.push({ label: 'SOS Ağı Kur', link: `/owner/pets/${pet.id}/edit#sos-section` })
-        if (!hasPasskey) enrichTasks.push({ label: 'Biyometrik Giriş Tanımla', link: '/owner/profile?biometric=true' })
-        
-        if (enrichTasks.length === 0) return null
-        const totalTasks = 9
-        const completedTasks = totalTasks - enrichTasks.length
-        const progress = completedTasks === totalTasks ? 100 : Math.max(15, Math.round((completedTasks / totalTasks) * 100))
-        return (
-          <div className="card-base border-l-4 border-l-primary shadow-sm bg-gradient-to-br from-white to-primary/5 overflow-hidden">
-            <button onClick={() => setEnrichOpen(o => !o)} className="w-full flex items-center justify-between p-5 text-left">
-              <h2 className="text-[14px] font-extrabold text-text-primary flex items-center gap-2">
-                🌟 Profili Zenginleştir
-                <span className="text-[11px] font-bold text-primary bg-primary-soft px-2 py-0.5 rounded-full">% {progress}</span>
-              </h2>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={`text-text-secondary shrink-0 transition-transform duration-300 ${enrichOpen ? 'rotate-180' : 'rotate-0'}`}><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div className="px-5 pb-3"><div className="w-full bg-border-main rounded-full h-1.5 overflow-hidden"><div className="bg-primary h-1.5 rounded-full transition-all duration-1000" style={{ width: `${progress}%` }}/></div></div>
-            {enrichOpen && (
-              <div className="px-5 pb-5">
-                <p className="text-[11px] text-text-secondary mb-4 leading-relaxed">Odi.Pet'in akıllı özelliklerinden tam faydalanmak için aşağıdaki eksik bilgileri tamamlayın.</p>
-                <div className="flex flex-wrap gap-2">
-                  {enrichTasks.map((t, i) => (
-                    t.onClick ? (
-                      <button key={i} onClick={t.onClick} className="text-[12px] font-bold px-3 py-2 rounded-xl border border-border-main bg-white text-text-secondary hover:text-primary hover:border-primary hover:bg-primary/5 transition-all flex items-center gap-1.5 shadow-sm">
-                        <span className="text-[14px] text-primary">+</span> {t.label}
-                      </button>
-                    ) : (
-                      <Link key={i} href={t.link || '#'} className="text-[12px] font-bold px-3 py-2 rounded-xl border border-border-main bg-white text-text-secondary hover:text-primary hover:border-primary hover:bg-primary/5 transition-all flex items-center gap-1.5 shadow-sm">
-                        <span className="text-[14px] text-primary">+</span> {t.label}
-                      </Link>
-                    )
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )
-      })()}
+
 
       <HealthTracker refreshTrigger={trackerRefreshKey} petId={pet.id} onEditTask={(t) => { setTaskToEdit(t); setTaskWizardOpen(true); }} />
 
