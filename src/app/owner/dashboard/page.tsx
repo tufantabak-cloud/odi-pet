@@ -401,27 +401,31 @@ export default async function OwnerDashboard() {
                       <Link
                         href={`/owner/pets/${plan.pet_id}#pet-tasks`}
                         key={plan.id}
-                        className={`flex items-center gap-4 p-4 border border-border-main border-l-4 ${rowBorder} rounded-[16px] bg-surface hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 ease-out group relative overflow-hidden`}
+                        className={`flex items-start sm:items-center gap-3 sm:gap-4 p-4 border border-border-main border-l-4 ${rowBorder} rounded-[16px] bg-surface hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 ease-out group relative overflow-hidden`}
                       >
-                        <div className="flex flex-col items-center justify-center bg-bg-main rounded-xl px-3 py-2 shrink-0 min-w-[56px] shadow-sm border border-border-main/60 relative z-10 group-hover:border-primary/30 transition-colors">
+                        <div className="flex flex-col items-center justify-center bg-bg-main rounded-xl px-3 py-2 shrink-0 min-w-[56px] shadow-sm border border-border-main/60 relative z-10 group-hover:border-primary/30 transition-colors mt-0.5 sm:mt-0">
                           <p className="text-[18px] font-black text-text-primary leading-none group-hover:text-primary transition-colors">{due.getDate()}</p>
                           <p className="text-[11px] font-extrabold text-text-secondary uppercase mt-1 tracking-widest">{due.toLocaleString('tr-TR', { month: 'short' })}</p>
                         </div>
-                        <div className="flex flex-col flex-1 min-w-0 z-10">
-                          <p className="font-extrabold text-text-primary text-[15px] truncate group-hover:text-primary transition-colors leading-tight">
-                            {plan.title || (plan.vaccines && plan.vaccines.name) || 'Sağlık İşlemi'}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1.5">
-                            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-bg-main border border-border-main/50 text-[12px] font-bold text-text-secondary shadow-sm">
-                              <span className="text-[11px]">🐾</span>
-                              <span className="truncate max-w-[80px] sm:max-w-[120px]">{plan.pets && plan.pets.name}</span>
+                        
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between flex-1 min-w-0 z-10 gap-3">
+                          <div className="flex flex-col min-w-0">
+                            <p className="font-extrabold text-text-primary text-[15px] truncate group-hover:text-primary transition-colors leading-tight">
+                              {plan.title || (plan.vaccines && plan.vaccines.name) || 'Sağlık İşlemi'}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1.5">
+                              <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-bg-main border border-border-main/50 text-[12px] font-bold text-text-secondary shadow-sm max-w-full">
+                                <span className="text-[11px] shrink-0">🐾</span>
+                                <span className="truncate">{plan.pets && plan.pets.name}</span>
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="shrink-0 self-start sm:self-auto">
+                            <span className={`text-[12px] inline-block px-3 py-1.5 rounded-xl border whitespace-nowrap tracking-wide transition-all shadow-sm ${badgeClass}`}>
+                              {badge}
                             </span>
                           </div>
-                        </div>
-                        <div className="shrink-0 z-10">
-                          <span className={`text-[12px] px-3 py-1.5 rounded-xl border whitespace-nowrap tracking-wide transition-all shadow-sm ${badgeClass}`}>
-                            {badge}
-                          </span>
                         </div>
                         {/* Hover effect overlay */}
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/[0.03] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
