@@ -206,10 +206,21 @@ export default function SpotlightTour({ steps, onComplete }: SpotlightTourProps 
 
     const globalDriver = driver({
       showProgress: false,
-      showButtons: [], // remove buttons, pure action based
-      allowClose: false,
+      showButtons: ['close'],
+      allowClose: true,
       overlayColor: 'rgba(0, 0, 0, 0.65)',
       popoverClass: 'odi-driver-popover action-tour-popover',
+      closeBtnText: 'Geç',
+      onCloseClick: () => {
+        if (activeStep) {
+          // Kullanıcı "Geç" diyerek atladığında da adımı tamamlandı işaretliyoruz
+          // ki bir daha karşılarına çıkmasın.
+          if (completeStepByTrigger && activeStep.completionTrigger) {
+            completeStepByTrigger(activeStep.completionTrigger);
+          }
+        }
+        globalDriver.destroy();
+      }
     });
 
     driverObj.current = globalDriver;
