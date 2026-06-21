@@ -1,6 +1,8 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
+import { assessWeight, type Species, type Gender, type WeightAssessment } from '@/lib/vetStandards/weightStandards'
+import WeightGoalBand from '@/components/pets/WeightGoalBand'
 
 interface GrowthRecord {
   id: string;
@@ -15,21 +17,54 @@ interface GrowthRecord {
 interface MinimalGrowthChartProps {
   records: GrowthRecord[];
   onAddRecord?: () => void;
+  petSpecies?: 'cat' | 'dog';
+  petBreed?: string | null;
+  petBirthDate?: string | null;
+  petGender?: 'male' | 'female' | 'unknown';
+  isNeutered?: boolean;
 }
 
-export default function MinimalGrowthChart({ records, onAddRecord }: MinimalGrowthChartProps) {
+export default function MinimalGrowthChart({
+  records,
+  onAddRecord,
+  petSpecies = 'cat',
+  petBreed,
+  petBirthDate,
+  petGender = 'unknown',
+  isNeutered = false
+}: MinimalGrowthChartProps) {
   const [activeTab, setActiveTab] = useState<'weight' | 'height'>('weight')
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
+  const getTimestamp = (r: GrowthRecord) => {
+    const d = new Date(r.recorded_at || r.measured_at || r.created_at || '')
+    return isNaN(d.getTime()) ? 0 : d.getTime()
+  }
+
   // Sort chronologically (oldest first for left-to-right plotting)
   const sortedRecords = useMemo(() => {
-    return [...records].sort((a, b) => new Date(a.recorded_at || a.measured_at || a.created_at || '').getTime() - new Date(b.recorded_at || b.measured_at || b.created_at || '').getTime())
+    return [...records].sort((a, b) => getTimestamp(a) - getTimestamp(b))
   }, [records])
 
   // Filter out records that don't have the active tab's value
   const chartData = useMemo(() => {
     return sortedRecords.filter(r => activeTab === 'weight' ? r.weight_kg != null : r.height_cm != null)
   }, [sortedRecords, activeTab])
+
+  const lastRecord = chartData.at(-1)
+  const lastWeightKg = lastRecord?.weight_kg ?? null
+
+  const weightAssessment: WeightAssessment | null =
+    lastWeightKg !== null && petBirthDate
+      ? assessWeight({
+          species: petSpecies,
+          breed: petBreed,
+          birthDate: petBirthDate,
+          weightKg: lastWeightKg,
+          isNeutered,
+          gender: petGender
+        })
+      : null
 
   const activeColor = activeTab === 'weight' ? '#0d9488' : '#8b5cf6' // Teal for weight, Violet for height
   const gradientId = `chartGrad_${activeTab}`
@@ -42,8 +77,21 @@ export default function MinimalGrowthChart({ records, onAddRecord }: MinimalGrow
   const innerHeight = height - padding.top - padding.bottom
 
   const values = chartData.map(r => (activeTab === 'weight' ? Number(r.weight_kg) : Number(r.height_cm)))
-  const minVal = values.length ? Math.min(...values) : 0
-  const maxVal = values.length ? Math.max(...values) : 0
+  let minVal = values.length ? Math.min(...values) : 0
+  let maxVal = values.length ? Math.max(...values) : 0
+  
+  if (activeTab === 'weight' && weightAssessment && weightAssessment.status !== 'unknown') {
+    const dataRange = maxVal - minVal || 1
+    if (weightAssessment.idealMin < minVal) {
+      minVal = Math.min(minVal, weightAssessment.idealMin - dataRange * 0.1)
+    }
+    if (weightAssessment.idealMax > maxVal) {
+      const gap = weightAssessment.idealMax - maxVal
+      if (gap < dataRange * 2) {
+        maxVal = Math.max(maxVal, weightAssessment.idealMax + dataRange * 0.1)
+      }
+    }
+  }
   
   const range = maxVal === minVal ? 1 : maxVal - minVal
   const yMin = Math.max(0, minVal - range * 0.1)
@@ -56,11 +104,11 @@ export default function MinimalGrowthChart({ records, onAddRecord }: MinimalGrow
     
     let x = padding.left + innerWidth / 2
     if (chartData.length > 1) {
-      const firstTime = new Date(chartData[0].recorded_at || chartData[0].measured_at || chartData[0].created_at || '').getTime()
-      const lastTime = new Date(chartData[chartData.length - 1].recorded_at || chartData[chartData.length - 1].measured_at || chartData[chartData.length - 1].created_at || '').getTime()
+      const firstTime = getTimestamp(chartData[0])
+      const lastTime = getTimestamp(chartData[chartData.length - 1])
       const timeDiff = lastTime - firstTime
       if (timeDiff > 0) {
-        x = padding.left + ((date.getTime() - firstTime) / timeDiff) * innerWidth
+        x = padding.left + ((getTimestamp(d) - firstTime) / timeDiff) * innerWidth
       } else {
         x = padding.left + (i / (chartData.length - 1)) * innerWidth
       }
@@ -154,6 +202,35 @@ export default function MinimalGrowthChart({ records, onAddRecord }: MinimalGrow
               <line x1={padding.left} y1={padding.top + innerHeight / 2} x2={width - padding.right} y2={padding.top + innerHeight / 2} stroke="#cbd5e1" strokeWidth="1" strokeDasharray="4 4" strokeOpacity="0.5" />
               <line x1={padding.left} y1={padding.top} x2={width - padding.right} y2={padding.top} stroke="#cbd5e1" strokeWidth="1" strokeDasharray="4 4" strokeOpacity="0.5" />
 
+              {activeTab === 'weight' && weightAssessment && weightAssessment.status !== 'unknown' && (() => {
+                const bandTop = padding.top + innerHeight - ((weightAssessment.idealMax - yMin) / yRange) * innerHeight
+                const bandH = ((weightAssessment.idealMax - weightAssessment.idealMin) / yRange) * innerHeight
+                if (bandTop < padding.top || bandTop > height - padding.bottom) return null
+                return (
+                  <React.Fragment>
+                    <rect
+                      x={padding.left}
+                      y={bandTop}
+                      width={innerWidth}
+                      height={bandH}
+                      fill="rgba(29, 158, 117, 0.08)"
+                      stroke="rgba(29, 158, 117, 0.25)"
+                      strokeWidth={1}
+                      strokeDasharray="4 3"
+                    />
+                    <text
+                      x={padding.left + innerWidth - 6}
+                      y={bandTop + 14}
+                      textAnchor="end"
+                      fontSize={9}
+                      fill="rgba(29, 158, 117, 0.6)"
+                    >
+                      İdeal
+                    </text>
+                  </React.Fragment>
+                )
+              })()}
+
               <path d={areaPath} fill={`url(#${gradientId})`} className="transition-all duration-500 ease-in-out" />
               <path d={linePath} fill="none" stroke={activeColor} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" filter="url(#shadow)" className="transition-all duration-500 ease-in-out" />
 
@@ -199,6 +276,24 @@ export default function MinimalGrowthChart({ records, onAddRecord }: MinimalGrow
               ({points[points.length-1].date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' })})
             </span>
           </span>
+        </div>
+      )}
+
+      {activeTab === 'weight' && weightAssessment && lastWeightKg !== null && (
+        <WeightGoalBand
+          assessment={weightAssessment}
+          currentWeight={lastWeightKg}
+          compact={true}
+          isNeutered={isNeutered}
+        />
+      )}
+      
+      {activeTab === 'weight' && chartData.length > 0 && !petBirthDate && (
+        <div style={{ padding: '8px 12px', fontSize: 12,
+          color: 'var(--color-text-tertiary)',
+          borderTop: '0.5px solid var(--color-border-tertiary)' }}>
+          <i className="ti ti-info-circle" style={{ marginRight: 6 }} />
+          Kilo hedefi için doğum tarihini ekle
         </div>
       )}
     </div>

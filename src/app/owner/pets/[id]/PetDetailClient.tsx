@@ -1455,6 +1455,11 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
       <MinimalGrowthChart 
         records={growthRecords} 
+        petSpecies={pet.species as 'cat' | 'dog'}
+        petBreed={pet.breed}
+        petBirthDate={pet.birth_date}
+        petGender={pet.gender as 'male' | 'female' | 'unknown'}
+        isNeutered={pet.is_neutered ?? false}
         onAddRecord={() => setQuickUpdateConfig({ 
           title: 'Gelişim Bilgisi', 
           desc: 'Gelişimi takip edebilmek için güncel kilo ve boyunu girin.', 
