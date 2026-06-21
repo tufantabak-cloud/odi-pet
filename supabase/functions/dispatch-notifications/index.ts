@@ -250,9 +250,9 @@ serve(async (_req: Request) => {
           const payload = JSON.stringify({
             title: notif.title,
             body: notif.message,
-            icon: '/icons/icon-192x192.png',
-            badge: '/icons/icon-192x192.png',
-            url: deepLinkUrl,
+            icon: 'https://odi.pet/icon-192.png',
+            badge: 'https://odi.pet/icon-192.png',
+            url: `https://odi.pet${deepLinkUrl}`,
             tag: notif.id // unique tag to prevent duplicate alerts or group them
           })
 
@@ -322,11 +322,11 @@ serve(async (_req: Request) => {
         const body = `Planladığınız görevin zamanı geldi.`
 
         const payload = JSON.stringify({
-          title,
-          body,
-          icon: "/icons/icon-192x192.png",
-          badge: "/icons/icon-192x192.png",
-          url: deepLink,
+          title: title,
+          body: body,
+          icon: 'https://odi.pet/icon-192.png',
+          badge: 'https://odi.pet/icon-192.png',
+          url: `https://odi.pet${deepLink}`,
           tag: job.id
         })
 
