@@ -442,52 +442,61 @@ export default async function OwnerDashboard() {
               )}
             </div>
 
-            {/* Aktif Planlar */}
-            <div className="card-base p-5 mt-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-[16px] font-extrabold text-text-primary flex items-center gap-2.5">
-                  <div className="bg-primary/10 text-primary p-1.5 rounded-lg">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
-                      <path d="M12 6v6l4 2"/>
-                    </svg>
-                  </div>
-                  Aktif Planlarım
-                </h2>
-                <Link id="onb-plan-add" href="/owner/plan-yap" className="text-xs font-bold text-primary hover:underline py-2 px-1">
-                  Yeni Ekle
-                </Link>
-              </div>
-              {plans && plans.length > 0 ? (
-                <div className="flex flex-col gap-2">
-                  {plans.map((plan) => (
-                    <Link
-                      href={`/owner/plan-yap/edit/${plan.id}`}
-                      key={plan.id}
-                      className="flex items-center justify-between p-3 border border-border-main rounded-[14px] bg-surface hover:shadow-sm hover:border-primary/30 transition-all group"
-                    >
-                      <div className="flex flex-col">
-                        <span className="font-bold text-text-primary text-[13px] capitalize group-hover:text-primary transition-colors">
-                          {plan.category}
-                        </span>
-                        <span className="text-[11px] text-text-secondary">
-                          {plan.pets?.name} • {plan.extra_data?.option || 'Özel'}
-                        </span>
-                      </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-surface-hover text-text-secondary">
-                        Düzenle
-                      </span>
-                    </Link>
-                  ))}
+            {/* Aktif Planlar (Sadece birden fazla pet varsa gösterilir) */}
+            {pets && pets.length > 1 && (
+              <div className="card-base p-5 mt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-[16px] font-extrabold text-text-primary flex items-center gap-2.5">
+                    <div className="bg-primary/10 text-primary p-1.5 rounded-lg">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+                        <path d="M12 6v6l4 2"/>
+                      </svg>
+                    </div>
+                    Aktif Planlarım
+                  </h2>
+                  <Link id="onb-plan-add" href="/owner/plan-yap" className="text-xs font-bold text-primary hover:underline py-2 px-1">
+                    Yeni Ekle
+                  </Link>
                 </div>
-              ) : (
-                <EmptyState
-                  icon={<BowlIcon width={40} height={40} />}
-                  title="Henüz plan yok"
-                  message="Dostunuz için beslenme veya bakım planı oluşturabilirsiniz."
-                />
-              )}
-            </div>
+                {plans && plans.length > 0 ? (
+                  <div className="flex flex-col gap-2">
+                    {plans.map((plan) => (
+                      <Link
+                        href={`/owner/plan-yap/edit/${plan.id}`}
+                        key={plan.id}
+                        className="flex items-center justify-between p-3 border border-border-main rounded-[14px] bg-surface hover:shadow-sm hover:border-primary/30 transition-all group"
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-bold text-text-primary text-[13px] capitalize group-hover:text-primary transition-colors">
+                            {plan.sub_type || plan.category}
+                          </span>
+                          <span className="text-[11px] text-text-secondary">
+                            {plan.pets?.name} • {(plan.category === 'saglik' ? 'Sağlık' :
+                              plan.category === 'asi' ? 'Aşı' :
+                              plan.category === 'parazit' ? 'Parazit' :
+                              plan.category === 'bakim' ? 'Bakım' :
+                              plan.category === 'beslenme' ? 'Beslenme' :
+                              plan.category === 'hijyen' ? 'Hijyen' :
+                              plan.category === 'aktivite' ? 'Aktivite' :
+                              plan.category)}
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-surface-hover text-text-secondary">
+                          Düzenle
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState
+                    icon={<BowlIcon width={40} height={40} />}
+                    title="Henüz plan yok"
+                    message="Dostunuz için beslenme veya bakım planı oluşturabilirsiniz."
+                  />
+                )}
+              </div>
+            )}
           </>
         )}
 

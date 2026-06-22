@@ -49,6 +49,8 @@ export interface DashboardSchedule {
 export interface DashboardFeedingLog {
   pet_id: string
   created_at: string
+  appetite_score?: number | null
+  meal_time?: string | null
 }
 
 /** Weight log — son ağırlık/boy gösterimi için */
@@ -63,6 +65,7 @@ export interface DashboardPlan {
   id: string
   pet_id: string
   category: string
+  sub_type: string
   extra_data: any
   next_run: string | null
   pets: { name: string } | null
@@ -166,7 +169,7 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
           const petIdList = pets.map((p) => p.id)
           const { data: plansRes, error: plansError } = await supabase
             .from('plans')
-            .select('*')
+            .select('*, pets(name)')
             .in('pet_id', petIdList)
 
           if (plansError) {
@@ -233,7 +236,7 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
           const [feedingRes, weightRes] = await Promise.all([
             supabase
               .from('feeding_logs')
-              .select('pet_id, created_at')
+              .select('pet_id, created_at, appetite_score, meal_time')
               .in('pet_id', petIds)
               .order('created_at', { ascending: false }),
             supabase
