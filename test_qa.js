@@ -18,11 +18,17 @@ async function runTests() {
   await supabase.from('plans').delete().eq('pet_id', petId);
   await supabase.from('health_schedules').delete().eq('pet_id', petId);
   await supabase.from('vaccine_records_v2').delete().eq('pet_id', petId);
+  await supabase.from('pet_owners').delete().eq('pet_id', petId);
   await supabase.from('pets').delete().eq('id', petId);
 
   // Create pet
   await supabase.from('pets').insert({
     id: petId, owner_id: ownerId, name: 'Test QA Pet', species: 'cat'
+  });
+
+  // Create owner relation
+  await supabase.from('pet_owners').insert({
+    pet_id: petId, profile_id: ownerId, role: 'owner'
   });
 
   // --- Scenario P: Plan Yap ---
@@ -96,6 +102,7 @@ async function runTests() {
   console.log(`\nqa_plans_migration_completed: scenarios_passed: [${passed}], failed: [${failed}]`);
 
   // Cleanup
+  await supabase.from('pet_owners').delete().eq('pet_id', petId);
   await supabase.from('pets').delete().eq('id', petId);
 }
 

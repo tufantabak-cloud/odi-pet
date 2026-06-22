@@ -10,6 +10,7 @@ async function run() {
   const testPetId = 'b0000000-0000-0000-0000-000000000001';
   
   // Clean up previous run if exists
+  await supabase.from('pet_owners').delete().eq('pet_id', testPetId);
   await supabase.from('pets').delete().eq('id', testPetId);
 
   // Insert test pet with 'cat'
@@ -25,8 +26,15 @@ async function run() {
   if (error) {
     console.error('Insert Failed:', error);
   } else {
+    // Add owner link
+    await supabase.from('pet_owners').insert({
+      pet_id: testPetId,
+      profile_id: '4f1256db-2a84-434d-852c-bdba22e538ca',
+      role: 'owner'
+    });
     console.log('✅ Insert Successful! Species saved as:', data.species);
     // Cleanup
+    await supabase.from('pet_owners').delete().eq('pet_id', testPetId);
     await supabase.from('pets').delete().eq('id', testPetId);
   }
 }

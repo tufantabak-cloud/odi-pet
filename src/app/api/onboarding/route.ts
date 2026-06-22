@@ -114,6 +114,12 @@ export async function POST(req: NextRequest) {
         const past = (d: number) => new Date(Date.now() - d * 86400000).toISOString().split('T')[0]
 
         await Promise.all([
+          // Add owner link
+          supabase.from('pet_owners').insert({
+            pet_id: demoPet.id,
+            profile_id: user.id,
+            role: 'owner'
+          }),
           // Overdue health task
           supabase.from('health_schedules').insert({
             pet_id: demoPet.id, owner_id: user.id,
