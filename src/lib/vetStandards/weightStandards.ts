@@ -83,19 +83,44 @@ export const DOG_STANDARDS: BreedStandard[] = [
 ]
 
 export function findBreedStandard(
-  species: Species,
+  species: string,
   breedRaw: string | null | undefined
 ): BreedStandard {
-  const allStandards = species === 'cat' ? CAT_STANDARDS : DOG_STANDARDS;
-  const fallbackKey = species === 'cat' ? 'domestic_shorthair' : 'mixed';
+  const normSpecies = (species?.toLowerCase() === 'cat' || species?.toLowerCase() === 'kedi') ? 'cat' : 'dog';
+  const allStandards = normSpecies === 'cat' ? CAT_STANDARDS : DOG_STANDARDS;
+  const fallbackKey = normSpecies === 'cat' ? 'domestic_shorthair' : 'mixed';
   
   if (!breedRaw) {
     return allStandards.find(b => b.breedKey === fallbackKey)!;
   }
   
   const normalized = breedRaw.toLowerCase().replace(/[^a-z0-9]/g, '_');
-  const found = allStandards.find(b => b.breedKey === normalized || b.displayName.toLowerCase() === breedRaw.toLowerCase());
   
+  // 1. Exact match by breedKey or displayName
+  let found = allStandards.find(b => b.breedKey === normalized || b.displayName.toLowerCase() === breedRaw.toLowerCase());
+  if (found) return found;
+
+  // 2. Keyword/substring matching
+  const raw = breedRaw.toLowerCase();
+  const rawClean = raw.replace(/[^a-z0-9\s]/g, ' ');
+  const rawWords = rawClean.split(/\s+/).filter(w => w.length >= 3);
+  
+  found = allStandards.find(b => {
+    const key = b.breedKey.toLowerCase();
+    const disp = b.displayName.toLowerCase();
+    
+    if (raw.includes(key) || key.includes(raw)) return true;
+    if (raw.includes(disp) || disp.includes(raw)) return true;
+    
+    for (const word of rawWords) {
+      if (word === 'kopek' || word === 'kedi' || word === 'dog' || word === 'cat' || word === 'mixed' || word === 'melez') {
+        continue;
+      }
+      if (key.includes(word) || disp.includes(word)) return true;
+    }
+    return false;
+  });
+
   if (found) return found;
   
   return allStandards.find(b => b.breedKey === fallbackKey)!;
@@ -112,7 +137,7 @@ export function getAgeInMonths(birthDate: string | Date): number {
 }
 
 export function assessWeight(params: {
-  species: Species
+  species: any
   breed: string | null | undefined
   birthDate: string | Date | null | undefined
   weightKg: number
@@ -131,12 +156,18 @@ export function assessWeight(params: {
     }
   }
 
-  const allStandards = params.species === 'cat' ? CAT_STANDARDS : DOG_STANDARDS;
-  const normalized = params.breed ? params.breed.toLowerCase().replace(/[^a-z0-9]/g, '_') : '';
-  const exactMatch = params.breed ? allStandards.some(b => b.breedKey === normalized || b.displayName.toLowerCase() === params.breed?.toLowerCase()) : false;
-  const isFallback = !params.breed || !exactMatch;
+  const normSpecies = (params.species?.toLowerCase() === 'cat' || params.species?.toLowerCase() === 'kedi') ? 'cat' : 'dog';
+  const standard = findBreedStandard(normSpecies, params.breed);
+  
+  const fallbackKey = normSpecies === 'cat' ? 'domestic_shorthair' : 'mixed';
+  const isFallback = params.breed 
+    ? (standard.breedKey === fallbackKey && 
+       params.breed.toLowerCase() !== fallbackKey && 
+       !params.breed.toLowerCase().includes('melez') && 
+       !params.breed.toLowerCase().includes('sokak') &&
+       !params.breed.toLowerCase().includes('mixed')) 
+    : true;
 
-  const standard = findBreedStandard(params.species, params.breed);
   const ageMonths = getAgeInMonths(params.birthDate);
   const profile = standard.profiles.find(p => ageMonths >= p.ageMonthMin && ageMonths <= p.ageMonthMax) || standard.profiles[standard.profiles.length - 1];
 

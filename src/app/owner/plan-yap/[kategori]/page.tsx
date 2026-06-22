@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 import { CategoryKey } from '@/lib/categoryThemes';
 import { useWizardStore } from '@/store/wizardStore';
@@ -40,11 +40,16 @@ const END_OPTIONS = [
 export default function WizardOrchestrator() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get('editId');
   const categoryKey = params.kategori as CategoryKey;
   
-  const { stepIndex, wizardData, setStepData, nextStep, prevStep, resetWizard } = useWizardStore();
+  const { stepIndex, wizardData, setStepData, setStepIndex, nextStep, prevStep, resetWizard } = useWizardStore();
   const [pets, setPets] = useState<any[]>([]);
   const [loadingPets, setLoadingPets] = useState(true);
+  const [loadingEdit, setLoadingEdit] = useState(!!editId);
+  const [isEditMode, setIsEditMode] = useState(!!editId);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -59,35 +64,79 @@ export default function WizardOrchestrator() {
   // Initialize
   useEffect(() => {
     resetWizard();
-    // Default initial values
     const d = new Date();
     d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-    setStepData({
-      date: d.toISOString().split('T')[0],
-      time: '12:00',
-      frequency: 'once',
-      interval: 1,
-      endCondition: 'never',
-      notificationMinutes: 0,
-      notificationEnabled: true,
-      metadata: {},
-      notes: ''
-    });
-
-    const fetchPets = async () => {
+    
+    const fetchPetsAndPlan = async () => {
       const supabase = createBrowserSupabaseClient();
+      
+      let initialPlanData: any = null;
+      if (editId) {
+        const { data: planData } = await supabase.from('plans').select('*').eq('id', editId).single();
+        if (planData) initialPlanData = planData;
+      }
+
+      if (initialPlanData) {
+        const scheduleDate = new Date(initialPlanData.scheduled_at);
+        const dateStr = scheduleDate.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' });
+        const timeStr = scheduleDate.toLocaleTimeString('tr-TR', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit', hour12: false });
+        
+        let endDateStr = null;
+        if (initialPlanData.ends_at) {
+          const ed = new Date(initialPlanData.ends_at);
+          endDateStr = ed.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' });
+        }
+
+        const isDiğer = initialPlanData.sub_type === 'Diğer' || initialPlanData.sub_type === 'Genel';
+        
+        setStepData({
+          pet_id: initialPlanData.pet_id,
+          subCategory: isDiğer ? 'Diğer' : initialPlanData.sub_type,
+          customText: isDiğer ? (initialPlanData.extra_data?.customText || initialPlanData.sub_type) : '',
+          date: dateStr,
+          time: timeStr,
+          frequency: initialPlanData.repeat_rule || 'once',
+          interval: initialPlanData.extra_data?.interval || 1,
+          endCondition: initialPlanData.extra_data?.endCondition || 'never',
+          endOccurrences: initialPlanData.extra_data?.endOccurrences || 1,
+          endDate: endDateStr || '',
+          notificationEnabled: initialPlanData.notif_before !== null && initialPlanData.notif_before >= 0,
+          notificationMinutes: initialPlanData.notif_before || 0,
+          notes: initialPlanData.note || '',
+          metadata: initialPlanData.extra_data?.metadata || {},
+          selectedVaccine: initialPlanData.extra_data?.vaccine || null,
+          markAsDone: initialPlanData.extra_data?.is_past_done || false,
+        });
+        setIsEditMode(true);
+        // Doğrudan Adım 2'ye geç (Pet seçimini atla)
+        setStepIndex(1);
+      } else {
+        setStepData({
+          date: d.toISOString().split('T')[0],
+          time: '12:00',
+          frequency: 'once',
+          interval: 1,
+          endCondition: 'never',
+          notificationMinutes: 0,
+          notificationEnabled: true,
+          metadata: {},
+          notes: ''
+        });
+      }
+
       const { data, error } = await supabase.from('pets').select('id, name, species, avatar_url');
       if (!error && data) {
         setPets(data.map((p: any) => ({ ...p, type: p.species })));
-        if (data.length === 1) {
+        if (data.length === 1 && !initialPlanData) {
           setStepData({ pet_id: data[0].id });
         }
       }
       setLoadingPets(false);
+      if (editId) setLoadingEdit(false);
     };
-    fetchPets();
+    fetchPetsAndPlan();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [categoryKey]); // reset on category change
+  }, [categoryKey, editId]); // reset on category change
 
   const activePet = pets.find(p => p.id === wizardData.pet_id);
   const speciesStr = activePet?.type;
@@ -160,7 +209,7 @@ export default function WizardOrchestrator() {
     }
   }, [wizardData.subCategory, categoryKey, speciesStr]);
 
-  if (loadingPets) {
+  if (loadingPets || loadingEdit) {
     return <div className="min-h-screen bg-slate-50 flex items-center justify-center">Yükleniyor...</div>;
   }
 
@@ -226,6 +275,20 @@ export default function WizardOrchestrator() {
   if (currentStep?.key === 'metadata' && subCat === 'Diğer' && !wizardData.customText?.trim()) isNextDisabled = true;
   if (currentStep?.key === 'recurrence' && wizardData.frequency !== 'once' && wizardData.endCondition === 'date' && !wizardData.endDate) isNextDisabled = true;
 
+  const handleDelete = async () => {
+    if (!window.confirm('Bu planı silmek istediğinize emin misiniz?')) return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/plans/${editId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Silme başarısız');
+      router.push('/owner/dashboard');
+      router.refresh();
+    } catch (err: any) {
+      alert(err.message);
+      setIsDeleting(false);
+    }
+  };
+
   // ── API Payload Hazırlama ─────────────────────────────────────────
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -264,8 +327,8 @@ export default function WizardOrchestrator() {
     };
 
     try {
-      const res = await fetch('/api/plans', {
-        method: 'POST',
+      const res = await fetch('/api/plans' + (editId ? `/${editId}` : ''), {
+        method: editId ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
@@ -682,8 +745,8 @@ export default function WizardOrchestrator() {
             <CheckCircle2 className="w-10 h-10" />
           </div>
           <div>
-            <h2 className="text-2xl font-black text-slate-900">Rutin Oluşturuldu!</h2>
-            <p className="text-slate-500 text-sm mt-1">{petInfo?.name || 'Evcil hayvanınız'} için plan başarıyla kaydedildi.</p>
+            <h2 className="text-2xl font-black text-slate-900">{isEditMode ? 'Rutin Güncellendi!' : 'Rutin Oluşturuldu!'}</h2>
+            <p className="text-slate-500 text-sm mt-1">{petInfo?.name || 'Evcil hayvanınız'} için plan başarıyla {isEditMode ? 'güncellendi' : 'kaydedildi'}.</p>
           </div>
           <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 text-left space-y-3">
              <div className="flex justify-between items-start py-2 border-b border-slate-50">
@@ -712,6 +775,17 @@ export default function WizardOrchestrator() {
 
   return (
     <>
+      {isEditMode && stepIndex < steps.length && (
+        <div className="max-w-3xl mx-auto w-full px-4 mb-4 mt-4 flex justify-end relative z-10">
+          <button 
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="flex items-center gap-2 text-sm font-bold text-red-500 hover:text-red-600 px-4 py-2 bg-red-50 rounded-xl"
+          >
+            {isDeleting ? 'Siliniyor...' : 'Planı Sil'}
+          </button>
+        </div>
+      )}
       <WizardShell
         category={categoryKey}
         totalSteps={totalSteps}

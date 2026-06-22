@@ -1,5 +1,7 @@
 import { getLatestScores } from '@/lib/agents/dataQualityAgent'
 
+export const dynamic = 'force-dynamic';
+
 export default async function UsersPage() {
   const scores = await getLatestScores(50)
 

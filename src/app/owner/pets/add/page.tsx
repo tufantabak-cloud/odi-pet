@@ -20,7 +20,7 @@ const DOG_BREEDS = [
   'Pomeranian', 'Kangal', 'Akbaş', 'Diğer',
 ]
 
-type Species = 'Kedi' | 'Köpek'
+type Species = 'cat' | 'dog'
 
 
 // ── Adım 1: Tür Seçimi ──────────────────────────────────────────
@@ -44,7 +44,7 @@ function SpeciesSelector({ onSelect, onBack }: { onSelect: (s: Species) => void,
       <div className="grid grid-cols-2 gap-5 w-full">
         {([
           {
-            species: 'Kedi' as Species,
+            species: 'cat' as Species,
             avatar: <DefaultCatAvatar width={90} height={90} />,
             label: 'Kedi',
             desc: 'Bağımsız, zarif',
@@ -53,7 +53,7 @@ function SpeciesSelector({ onSelect, onBack }: { onSelect: (s: Species) => void,
             badge: 'bg-violet-100 text-violet-700',
           },
           {
-            species: 'Köpek' as Species,
+            species: 'dog' as Species,
             avatar: <DefaultDogAvatar width={90} height={90} />,
             label: 'Köpek',
             desc: 'Sadık, enerjik',
@@ -158,8 +158,8 @@ function PetForm({
     setBirthDate(targetDate.toISOString().split('T')[0])
   }
 
-  const breeds = species === 'Kedi' ? CAT_BREEDS : DOG_BREEDS
-  const AvatarHeader = species === 'Kedi' ? <DefaultCatAvatar width={36} height={36} /> : <DefaultDogAvatar width={36} height={36} />
+  const breeds = species === 'cat' ? CAT_BREEDS : DOG_BREEDS
+  const AvatarHeader = species === 'cat' ? <DefaultCatAvatar width={36} height={36} /> : <DefaultDogAvatar width={36} height={36} />
 
   return (
     <div className="flex flex-col w-full mx-auto pb-10 animate-fadeIn">
@@ -197,7 +197,7 @@ function PetForm({
             <input id="name" type="text"
               autoFocus
               value={petName} onChange={e => setPetName(e.target.value)}
-              placeholder={species === 'Kedi' ? 'Örn: Mia, Boncuk' : 'Örn: Max, Karamel'}
+              placeholder={species === 'cat' ? 'Örn: Mia, Boncuk' : 'Örn: Max, Karamel'}
               className="input-base" required/>
           </div>
 
@@ -396,13 +396,13 @@ function PetPhotoStep({
   loading,
   submitError
 }: PetPhotoStepProps) {
-  const defaultAvatar = species === 'Kedi' ? (
+  const defaultAvatar = species === 'cat' ? (
     <DefaultCatAvatar width={110} height={110} />
   ) : (
     <DefaultDogAvatar width={110} height={110} />
   )
 
-  const isCat = species === 'Kedi'
+  const isCat = species === 'cat'
   const gradientClass = isCat 
     ? 'from-violet-50 to-purple-50 border-violet-200 hover:border-violet-400' 
     : 'from-amber-50 to-orange-50 border-amber-200 hover:border-amber-400'

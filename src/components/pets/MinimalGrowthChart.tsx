@@ -65,7 +65,6 @@ export default function MinimalGrowthChart({
           gender: petGender
         })
       : null
-
   const activeColor = activeTab === 'weight' ? '#0d9488' : '#8b5cf6' // Teal for weight, Violet for height
   const gradientId = `chartGrad_${activeTab}`
 

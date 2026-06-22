@@ -142,15 +142,15 @@ export default function EditPetForm({ pet }: { pet: any }) {
   const [sosMsg, setSosMsg] = useState<{type:'ok'|'err'; text:string} | null>(null)
   const [successToast, setSuccessToast] = useState(false)
 
-  const species = pet.species as 'Kedi' | 'Köpek'
-  const breeds = species === 'Kedi' ? CAT_BREEDS : DOG_BREEDS
-  const colors = species === 'Kedi' ? CAT_COLORS : DOG_COLORS
+  const species = pet.species as 'cat' | 'dog'
+  const breeds = species === 'cat' ? CAT_BREEDS : DOG_BREEDS
+  const colors = species === 'cat' ? CAT_COLORS : DOG_COLORS
   const currentYear = new Date().getFullYear()
 
-  const calculateSize = (weightStr: string, petSpecies: 'Kedi' | 'Köpek'): string => {
+  const calculateSize = (weightStr: string, petSpecies: 'cat' | 'dog'): string => {
     const w = parseFloat(weightStr)
     if (isNaN(w) || w <= 0) return ''
-    if (petSpecies === 'Kedi') {
+    if (petSpecies === 'cat') {
       if (w < 4) return 'small'
       if (w < 6.5) return 'medium'
       return 'large'
@@ -163,8 +163,8 @@ export default function EditPetForm({ pet }: { pet: any }) {
     }
   }
 
-  const breedSizeLabel = (breed: string, petSpecies: 'Kedi' | 'Köpek'): string => {
-    if (petSpecies === 'Kedi') return 'Kedi Boyut Skalası (Kilo Bazlı)'
+  const breedSizeLabel = (breed: string, petSpecies: 'cat' | 'dog'): string => {
+    if (petSpecies === 'cat') return 'Kedi Boyut Skalası (Kilo Bazlı)'
     const small = ['Chihuahua', 'Pomeranian', 'Maltese', 'Dachshund (Sosis)', 'Poodle (Kaniş)', 'Shih Tzu']
     const medium = ['Beagle', 'Cocker Spaniel', 'Border Collie', 'French Bulldog', 'Bulldog']
     const large = ['Golden Retriever', 'Labrador Retriever', 'Alman Çoban Köpeği', 'Rottweiler', 'Husky']
@@ -304,7 +304,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
                   <img src={photoPreview} alt="Önizleme" className="w-full h-full object-cover" />
                 )
               ) : (
-                <span className="text-[40px]">{species === 'Kedi' ? '🐱' : '🐶'}</span>
+                <span className="text-[40px]">{species === 'cat' ? '🐱' : '🐶'}</span>
               )}
             </div>
             <label className="text-[12px] font-bold text-primary bg-primary/10 px-4 py-2 rounded-full cursor-pointer hover:bg-primary/20 transition-colors">
@@ -530,11 +530,11 @@ export default function EditPetForm({ pet }: { pet: any }) {
                       onChange={e => setSize(e.target.value)}
                       className="text-[12px] font-bold border border-primary/30 rounded-[10px] px-2 py-1 bg-white text-primary focus:outline-none"
                     >
-                      {species === 'Köpek' && <option value="toy">🧸 Oyuncak / Ekstra Küçük</option>}
+                      {species === 'dog' && <option value="toy">🧸 Oyuncak / Ekstra Küçük</option>}
                       <option value="small">🐩 Küçük</option>
                       <option value="medium">🐕 Orta</option>
                       <option value="large">🦮 Büyük</option>
-                      {species === 'Köpek' && <option value="giant">🦁 Dev</option>}
+                      {species === 'dog' && <option value="giant">🦁 Dev</option>}
                     </select>
                   ) : (
                     <span className="px-4 py-1.5 rounded-full text-[13px] font-black bg-primary text-white flex items-center gap-1.5 shadow-sm">
@@ -623,7 +623,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
             </div>
           </div>
 
-          {species === 'Kedi' && (
+          {species === 'cat' && (
             <div className="flex flex-col gap-2 mt-2">
               <label className="text-[13px] font-bold text-text-primary">Yaşam Alanı</label>
               <div className="flex gap-3">

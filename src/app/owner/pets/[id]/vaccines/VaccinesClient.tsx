@@ -48,6 +48,29 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
 
         if (error) throw error
 
+        // Dual-write: plans tablosuna da geçmiş (completed) olarak ekle
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session?.user?.id) {
+          const { error: planError } = await supabase.from('plans').insert({
+            user_id: session.user.id,
+            pet_id: pet.id,
+            category: 'asi',
+            sub_type: vaccineName.trim(),
+            scheduled_at: new Date(adminDate).toISOString(),
+            status: 'completed',
+            is_active: true,
+            note: notes.trim() || null,
+            extra_data: {
+              source: 'manual',
+              vaccine: {
+                name: vaccineName.trim(),
+                code: vaccineCode.trim() || 'CUSTOM'
+              }
+            }
+          })
+          if (planError) console.error('Plan eklenemedi:', planError)
+        }
+
         setShowModal(false)
         setVaccineName('')
         setVaccineCode('')

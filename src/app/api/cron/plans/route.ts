@@ -94,6 +94,13 @@ export async function GET(req: Request) {
         .eq('id', update.id);
     }
 
+    // Trigger schedule notifications generator
+    const { error: rpcError } = await supabase.rpc('generate_schedule_notifications');
+    if (rpcError) {
+      console.error('[CRON/Plans] RPC Error:', rpcError);
+      // We don't throw to not fail the whole cron, but log it.
+    }
+
     return NextResponse.json({ 
       success: true,
       message: 'Processed plans successfully', 

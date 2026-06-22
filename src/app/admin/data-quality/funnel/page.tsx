@@ -1,5 +1,7 @@
 import { getDropoffFunnel } from '@/lib/agents/dataQualityAgent'
 
+export const dynamic = 'force-dynamic';
+
 export default async function FunnelPage() {
   const { counts, failures } = await getDropoffFunnel()
 

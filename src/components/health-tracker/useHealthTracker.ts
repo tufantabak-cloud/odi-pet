@@ -338,10 +338,12 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
       const past30Str = past30.toISOString().split('T')[0];
       const future365Str = future365.toISOString().split('T')[0];
 
+      const usePlansOnly = process.env.NEXT_PUBLIC_USE_PLANS_ONLY === 'true';
+
       // vaccines join: is_core + code (template eşleştirme için)
       // vaccines tablosunda alan adı: code (vaccine_code değil)
       const [schedulesRes, plansRes] = await Promise.all([
-        supabase
+        usePlansOnly ? Promise.resolve({ data: [], error: null }) : supabase
           .from('health_schedules')
           .select('*, vaccines(is_core, code, name)')
           .eq('pet_id', petId)
@@ -423,14 +425,19 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
   useEffect(() => {
     fetchEvents();
 
-    const channel1 = supabase
-      .channel('health_schedules_changes_tracker')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'health_schedules', filter: `pet_id=eq.${petId}` },
-        () => { fetchEvents(); }
-      )
-      .subscribe();
+    const usePlansOnly = process.env.NEXT_PUBLIC_USE_PLANS_ONLY === 'true';
+    let channel1: any;
+
+    if (!usePlansOnly) {
+      channel1 = supabase
+        .channel('health_schedules_changes_tracker')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'health_schedules', filter: `pet_id=eq.${petId}` },
+          () => { fetchEvents(); }
+        )
+        .subscribe();
+    }
       
     const channel2 = supabase
       .channel('plans_changes_tracker')
@@ -442,7 +449,7 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
       .subscribe();
 
     return () => { 
-      supabase.removeChannel(channel1); 
+      if (channel1) supabase.removeChannel(channel1); 
       supabase.removeChannel(channel2); 
     };
   }, [fetchEvents, petId, supabase, refreshTrigger]);
@@ -563,17 +570,12 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
         e.id === eventId ? { ...e, status: newStatus, computedStatus: newStatus as ComputedStatus } : e
       ));
       
-      if (eventId.toString().startsWith('plan_')) {
-        const realId = eventId.replace('plan_', '');
-        await fetch(`/api/plans/${realId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: newStatus === 'done' ? 'completed' : newStatus })
-        });
-      } else {
-        const { error } = await supabase.from('health_schedules').update({ status: newStatus }).eq('id', eventId);
-        if (error) throw error;
-      }
+      const realId = eventId.toString().startsWith('plan_') ? eventId.replace('plan_', '') : eventId;
+      await fetch(`/api/plans/${realId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus === 'done' ? 'completed' : newStatus })
+      });
       
       fetchEvents();
     } catch (err) {
@@ -590,17 +592,12 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
       oldDate.setDate(oldDate.getDate() + days);
       const newDueDate = oldDate.toISOString().split('T')[0];
       
-      if (eventId.toString().startsWith('plan_')) {
-        const realId = eventId.replace('plan_', '');
-        await fetch(`/api/plans/${realId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ scheduled_at: newDueDate })
-        });
-      } else {
-        const { error } = await supabase.from('health_schedules').update({ due_date: newDueDate }).eq('id', eventId);
-        if (error) throw error;
-      }
+      const realId = eventId.toString().startsWith('plan_') ? eventId.replace('plan_', '') : eventId;
+      await fetch(`/api/plans/${realId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scheduled_at: newDueDate })
+      });
       
       fetchEvents();
     } catch (err) {
@@ -610,13 +607,8 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
 
   const deleteEvent = async (eventId: string) => {
     try {
-      if (eventId.toString().startsWith('plan_')) {
-        const realId = eventId.replace('plan_', '');
-        await fetch(`/api/plans/${realId}`, { method: 'DELETE' });
-      } else {
-        const { error } = await supabase.from('health_schedules').delete().eq('id', eventId);
-        if (error) throw error;
-      }
+      const realId = eventId.toString().startsWith('plan_') ? eventId.replace('plan_', '') : eventId;
+      await fetch(`/api/plans/${realId}`, { method: 'DELETE' });
       fetchEvents();
     } catch (err) {
       console.error('Error deleting event:', err);
