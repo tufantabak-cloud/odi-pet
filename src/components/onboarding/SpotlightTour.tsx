@@ -210,7 +210,6 @@ export default function SpotlightTour({ steps, onComplete }: SpotlightTourProps 
       allowClose: true,
       overlayColor: 'rgba(0, 0, 0, 0.65)',
       popoverClass: 'odi-driver-popover action-tour-popover',
-      closeBtnText: 'Geç',
       onCloseClick: () => {
         if (activeStep) {
           // Kullanıcı "Geç" diyerek atladığında da adımı tamamlandı işaretliyoruz

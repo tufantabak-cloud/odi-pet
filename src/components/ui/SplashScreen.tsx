@@ -3,20 +3,15 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 
-// Bu değişken React bileşeninin dışında olduğu için, Next.js uygulaması
-// sekme açık kaldığı sürece (örneğin login sonrası router.refresh yapıldığında)
-// hafızada kalır ve true değerini korur. 
-// Uygulama tamamen kapatılıp açıldığında (veya F5 atıldığında) tekrar false olur.
-let hasPlayedThisSession = false;
-
 export default function SplashScreen() {
   const [isVisible, setIsVisible] = useState(true);
   const [phase, setPhase] = useState<1 | 2>(1);
 
   useEffect(() => {
     // E2E testlerde veya bu React oturumunda zaten oynatıldıysa tekrar gösterme
+    const isPlayed = typeof window !== "undefined" && sessionStorage.getItem("odi_splash_played") === "true";
     if (
-      hasPlayedThisSession ||
+      isPlayed ||
       (typeof window !== "undefined" &&
         (window.navigator.userAgent.includes("Playwright") ||
           window.location.search.includes("test=true") ||
@@ -29,7 +24,9 @@ export default function SplashScreen() {
     }
 
     // Bu oturumda artık oynatıldı olarak işaretle
-    hasPlayedThisSession = true;
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("odi_splash_played", "true");
+    }
 
     // Faz 1 → Faz 2 geçişi: 2 saniye sonra
     const phase2Timer = setTimeout(() => {
