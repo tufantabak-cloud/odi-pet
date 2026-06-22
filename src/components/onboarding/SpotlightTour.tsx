@@ -113,7 +113,6 @@ export default function SpotlightTour({ steps, onComplete }: SpotlightTourProps 
 
   // Effect 1: Wizard-driven tour
   useEffect(() => {
-    console.log('[SpotlightTour Effect 1] steps length:', steps?.length, 'isReady:', isReady, 'isEnabled:', isEnabled, 'hasStarted:', hasStarted.current);
     if (!steps || steps.length === 0) return;
     if (!isReady || !isEnabled) return;
 
@@ -140,7 +139,7 @@ export default function SpotlightTour({ steps, onComplete }: SpotlightTourProps 
         }
       }));
 
-      console.log('[SpotlightTour Effect 1] Initializing driver.js for Wizard');
+
       const inst = driver({
         showProgress: false,
         showButtons: ['next'], // only show Next (which becomes Done at the last step)
@@ -180,12 +179,10 @@ export default function SpotlightTour({ steps, onComplete }: SpotlightTourProps 
       });
 
       // Start the tour
-      console.log('[SpotlightTour Effect 1] Calling inst.drive() with steps:', driveSteps);
       inst.drive();
     }, 200);
 
     return () => {
-      console.log('[SpotlightTour Effect 1] Unmounting');
       clearInterval(checkSplash);
       isUnmounting.current = true;
       if (driverObj.current) {
@@ -198,7 +195,6 @@ export default function SpotlightTour({ steps, onComplete }: SpotlightTourProps 
 
   // Effect 2: Global action-driven tour
   useEffect(() => {
-    console.log('[SpotlightTour Effect 2] steps length:', steps?.length, 'isReady:', isReady, 'isEnabled:', isEnabled);
     // If steps are provided, this component is dedicated to the wizard, so skip the global tour
     if (steps && steps.length > 0) return;
 
@@ -225,8 +221,8 @@ export default function SpotlightTour({ steps, onComplete }: SpotlightTourProps 
     driverObj.current = globalDriver;
 
     if (activeStep) {
-      console.log('[SpotlightTour Effect 2] Active step found:', activeStep.key, 'target:', activeStep.target);
-      // Retry logic for elements that might render lazily
+      // Do a quick check first: if the element is nowhere in the DOM after a short delay,
+      // this page doesn't own that onboarding step — silently bail out.
       let attempts = 0;
       const interval = setInterval(() => {
         // Wait for splash screen to finish
@@ -236,7 +232,6 @@ export default function SpotlightTour({ steps, onComplete }: SpotlightTourProps 
 
         const el = document.querySelector(activeStep.target);
         if (el) {
-          console.log('[SpotlightTour Effect 2] Element found! Highlighting', activeStep.target);
           clearInterval(interval);
           globalDriver.highlight({
             element: activeStep.target,
@@ -247,11 +242,14 @@ export default function SpotlightTour({ steps, onComplete }: SpotlightTourProps 
               align: 'start'
             }
           });
-        } else {
-          console.log('[SpotlightTour Effect 2] Attempt', attempts, 'Element NOT found:', activeStep.target);
         }
         attempts++;
-        if (attempts > 10) clearInterval(interval); // give up after 5 seconds
+        // After 5 seconds (10 attempts × 500ms): silently give up — wrong page
+        if (attempts > 10) {
+          clearInterval(interval);
+          globalDriver.destroy();
+          driverObj.current = null;
+        }
       }, 500);
 
       const handleClick = (e: MouseEvent) => {
