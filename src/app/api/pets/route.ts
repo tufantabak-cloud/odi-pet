@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     .upsert({ id: user.id }, { onConflict: 'id', ignoreDuplicates: true })
 
   const species = str(fd, 'species')
-  if (!species || !['Kedi', 'Köpek'].includes(species)) {
+  if (!species || !['cat', 'dog'].includes(species)) {
     await logOnboardingEvent(user.id, 'pet_species_selected', 'validation_rejected', { error: 'Geçersiz tür' })
     return NextResponse.json({ error: 'Geçersiz tür.' }, { status: 400 })
   }
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
   if (error) {
     console.error('[API/Pets] INSERT error:', JSON.stringify(error))
     return NextResponse.json(
-      { error: `Kayıt hatası: ${(error instanceof Error ? error.message : String(error))} (kodu: ${error.code})` },
+      { error: `Kayıt hatası: ${(error as any)?.message || (error instanceof Error ? error.message : String(error))} (kodu: ${(error as any)?.code || 'Bilinmiyor'})` },
       { status: 500 }
     )
   }
