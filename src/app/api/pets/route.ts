@@ -20,6 +20,10 @@ export async function POST(req: NextRequest) {
   const fd = await req.formData()
   const supabase = await createServerSupabaseClient()
 
+  // Diagnostic Log
+  console.log('[API/Pets/POST] FormData keys:', Array.from(fd.keys()))
+  console.log('[API/Pets/POST] species field:', fd.get('species'), 'type:', typeof fd.get('species'))
+
   // ─── Profiles kaydının var olduğundan emin ol ─────────────────
   await supabase
     .from('profiles')
@@ -27,8 +31,9 @@ export async function POST(req: NextRequest) {
 
   const species = str(fd, 'species')
   if (!species || !['cat', 'dog'].includes(species)) {
-    await logOnboardingEvent(user.id, 'pet_species_selected', 'validation_rejected', { error: 'Geçersiz tür' })
-    return NextResponse.json({ error: 'Geçersiz tür.' }, { status: 400 })
+    console.error('[API/Pets/POST] Rejected due to invalid species:', species)
+    await logOnboardingEvent(user.id, 'pet_species_selected', 'validation_rejected', { error: `Geçersiz tür: ${species}` })
+    return NextResponse.json({ error: `Geçersiz tür: ${species || 'belirtilmemiş'}.` }, { status: 400 })
   }
   await logOnboardingEvent(user.id, 'pet_species_selected')
 
