@@ -59,7 +59,7 @@ function PushPermissionCard({ onDismiss }: { onDismiss: () => void }) {
   if (permission === 'unsupported') return null
 
   if (permission === 'denied') return (
-    <div className="p-4 bg-warning/10 border border-warning/20 rounded-2xl flex gap-3 items-start">
+    <div suppressHydrationWarning={true} className="p-4 bg-warning/10 border border-warning/20 rounded-2xl flex gap-3 items-start">
       <span className="text-[20px] shrink-0">⚠️</span>
       <div className="flex-1">
         <p className="text-[13px] font-bold text-warning">Bildirimler engellenmiş</p>

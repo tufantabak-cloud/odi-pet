@@ -18,18 +18,22 @@ function urlBase64ToUint8Array(base64String: string) {
 export type PushPermission = 'default' | 'granted' | 'denied' | 'unsupported'
 
 export function useWebPush() {
-  const [permission, setPermission] = useState<PushPermission>(() => {
-    if (typeof window === 'undefined') return 'default';
-    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
-      return 'unsupported';
-    }
-    return Notification.permission as PushPermission;
-  })
+  const [permission, setPermission] = useState<PushPermission>('default')
   const [isSubscribed, setIsSubscribed] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showBatteryGuide, setShowBatteryGuide] = useState(false)
   const swRegRef = useRef<ServiceWorkerRegistration | null>(null)
+
+  // Register service worker and check current state
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+      setPermission('unsupported');
+      return;
+    }
+    setPermission(Notification.permission as PushPermission);
+  }, []);
 
   // Register service worker and check current state
   useEffect(() => {

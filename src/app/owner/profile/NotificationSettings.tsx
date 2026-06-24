@@ -20,7 +20,7 @@ export default function NotificationSettings() {
         <div className="p-5 flex justify-between items-center group hover:bg-bg-main/30 transition-colors">
           <div>
             <p className="text-[15px] font-bold text-text-primary">Tarayıcı & Push Bildirimleri</p>
-            <p className="text-[13px] text-text-secondary">
+            <p suppressHydrationWarning={true} className="text-[13px] text-text-secondary">
               {permission === 'denied' 
                 ? 'Tarayıcı ayarlarından izin vermeniz gerekiyor' 
                 : 'Aşı, parazit ve mama hatırlatmaları alın'}
