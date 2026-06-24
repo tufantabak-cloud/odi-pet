@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
-export async function checkDataQuality(petId: string) {
+export async function evaluateTriggers(userId: string) {
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-  const { data } = await supabase.from('pets').select('id, name, breed').eq('id', petId).limit(1);
+  const { data } = await supabase.from('user_activation_scores').select('*').eq('user_id', userId).limit(1);
   return data;
 }
