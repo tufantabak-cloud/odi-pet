@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import Image from 'next/image'
@@ -1054,14 +1054,14 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           href={`/owner/ai-vet?petId=${pet.id}`}
           className="flex items-center justify-center gap-1.5 min-h-[50px] px-2.5 sm:px-4 rounded-xl bg-primary text-white text-[12px] sm:text-[13px] font-bold hover:bg-primary-hover hover:scale-[1.03] active:scale-[0.97] transition-all duration-200 shadow-md shadow-primary/15 whitespace-nowrap shrink-0"
         >
-          <span>🧠</span> {pet.name}'{getTurkishGenitiveSuffix(pet.name)} AI Asistanı
+          {pet.name}'{getTurkishGenitiveSuffix(pet.name)} AI Asistanı
         </Link>
       </div>
 
       {/* ── Pet Hero Kartı ── */}
       <div className="card-base overflow-hidden flex flex-col group/card relative">
         {/* Mor üst şerit */}
-        <div className="h-1.5 bg-gradient-to-r from-primary to-primary-hover"/>
+        <div className="h-1 bg-[var(--color-primary)]"/>
 
         {/* Hero içerik */}
         <div className="p-4 flex flex-row gap-4 items-center relative">
@@ -1117,7 +1117,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             <div className="flex items-center flex-wrap gap-1.5 mt-0.5">
               {pet.birth_date && (
                 <span className="text-[12px] bg-bg-main border border-border-main px-2.5 py-1 rounded-lg font-semibold text-text-secondary">
-                  🎂 {age.text}
+                  {age.text}
                 </span>
               )}
               {growthRecords && growthRecords[0]?.weight_kg && (
@@ -1189,7 +1189,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           <div className="card-base border-l-4 border-l-primary shadow-sm bg-gradient-to-br from-white to-primary/5 overflow-hidden">
             <button onClick={() => setEnrichOpen(o => !o)} className="w-full flex items-center justify-between p-5 text-left">
               <h2 className="text-[14px] font-extrabold text-text-primary flex items-center gap-2">
-                🌟 Profili Zenginleştir
+                Profili Zenginleştir
                 <span className="text-[11px] font-bold text-primary bg-primary-soft px-2 py-0.5 rounded-full">% {progress}</span>
               </h2>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={`text-text-secondary shrink-0 transition-transform duration-300 ${enrichOpen ? 'rotate-180' : 'rotate-0'}`}><polyline points="6 9 12 15 18 9"/></svg>
