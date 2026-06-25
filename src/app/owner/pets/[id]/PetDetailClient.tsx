@@ -13,7 +13,7 @@ import SmartTaskWizard from '@/components/tasks/SmartTaskWizard'
 import { TaskCategory } from '@/lib/tasks/taskDefaults'
 import { FirstAidIcon, VaccineIcon, ShampooIcon, BowlIcon, CarrierIcon, ScoopIcon, BoneIcon, HouseIcon, ParasiteIcon } from '@/components/icons/PetIcons'
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import HumanAgeCalculator from '@/components/pets/HumanAgeCalculator'
 import BreedHealthCard from '@/components/pets/BreedHealthCard'
@@ -233,7 +233,17 @@ export function getTaskCardStyle(isOverdue: boolean, isCompleted: boolean) {
 
 export default function PetDetailClient({ pet, age, score, overdue, schedules, diseases, allergies, medications, growthRecords, appointments, nutritionLogs, payments, subscription, activeLostReport, hasPasskey = false, isAdminView = false }: PetDetailProps) {
   const router = useRouter()
-  const [openSections, setOpenSections] = useState<Set<string>>(new Set())
+  const searchParams = useSearchParams()
+  const TAB_URL_MAP: Record<string, string> = {
+    'ozet': 'Özet', 'saglik': 'Sağlık', 'asi': 'Aşı',
+    'bakim': 'Bakım', 'beslenme': 'Beslenme', 'hijyen': 'Hijyen',
+    'aktivite': 'Aktivite', 'veteriner': 'Veteriner',
+    'diger': 'Diğer', 'raporlar': 'Raporlar',
+  }
+  const initialSection = TAB_URL_MAP[searchParams?.get('tab') ?? ''] ?? null
+  const [openSections, setOpenSections] = useState<Set<string>>(
+    initialSection ? new Set([initialSection]) : new Set()
+  )
   const [quickUpdateConfig, setQuickUpdateConfig] = useState<any>(null)
   const [timelineFilter, setTimelineFilter] = useState('Aşı & Parazit')
   const [enrichOpen, setEnrichOpen] = useState(false)
