@@ -29,7 +29,17 @@ export default async function Page() {
             </li>
           ))
         ) : (
-          <p>Kayıt bulunamadı.</p>
+          <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-primary">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            </div>
+            <h3 className="text-[18px] font-black text-text-primary mb-2">Henüz Mesajınız Yok</h3>
+            <p className="text-[13px] text-text-secondary max-w-xs leading-relaxed">
+              Veteriner veya hizmet sağlayıcılarla iletişiminiz burada görünecek.
+            </p>
+          </div>
         )}
       </ul>
     </div>
