@@ -244,6 +244,19 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   const [openSections, setOpenSections] = useState<Set<string>>(
     initialSection ? new Set([initialSection]) : new Set()
   )
+
+  // URL'den gelen tab varsa o bölüme scroll et
+  useEffect(() => {
+    const tabParam = searchParams?.get('tab')
+    if (!tabParam) return
+    const sectionName = TAB_URL_MAP[tabParam]
+    if (!sectionName) return
+    const timer = setTimeout(() => {
+      const el = document.getElementById(`section-${sectionName}`)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [])
   const [quickUpdateConfig, setQuickUpdateConfig] = useState<any>(null)
   const [timelineFilter, setTimelineFilter] = useState('Aşı & Parazit')
   const [enrichOpen, setEnrichOpen] = useState(false)
@@ -1526,7 +1539,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           const overdueCount = pending.filter((s: any) => getTaskDateTime(s) < new Date()).length
           const cta = tabCtaInfo[module.name]
           return (
-            <div key={module.name} className="card-base overflow-hidden border border-border-main/60">
+            <div key={module.name} id={`section-${module.name}`} className="card-base overflow-hidden border border-border-main/60">
               <button
                 onClick={() => toggleSection(module.name)}
                 className="w-full flex items-center gap-3 p-4 text-left hover:bg-bg-main/50 transition-colors"
