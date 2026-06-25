@@ -224,7 +224,7 @@ export default async function OwnerDashboard() {
           <Link
             id="onb-referral"
             href="/owner/referral"
-            className="mx-[var(--space-4)] flex items-center gap-3 p-[var(--space-4)] rounded-[var(--radius-lg)] bg-[var(--color-primary-soft)] border border-[var(--color-primary)]/15 hover:border-[var(--color-primary)]/30 active:scale-[0.98] transition-all duration-200 group shadow-[var(--shadow-sm)]"
+            className="mx-[var(--space-4)] flex items-center gap-2 p-[var(--space-3)] rounded-[var(--radius-lg)] bg-[var(--color-primary-soft)] border border-[var(--color-primary)]/15 hover:border-[var(--color-primary)]/30 active:scale-[0.98] transition-all duration-200 group shadow-[var(--shadow-sm)]"
           >
             <div className="w-10 h-10 rounded-[var(--radius-sm)] bg-[var(--color-primary)]/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--color-primary)]">
@@ -238,7 +238,7 @@ export default async function OwnerDashboard() {
               <p className="font-700 text-[var(--color-text-primary)] text-[13px] leading-tight">Arkadaşlarını Davet Et</p>
               <p className="text-[11px] text-[var(--color-text-secondary)] font-500 mt-0.5">Can dostunu tanıştır, rozetler kazan!</p>
             </div>
-            <span className="text-[12px] font-700 text-[var(--color-primary)] shrink-0 group-hover:translate-x-0.5 transition-transform duration-200">
+            <span className="text-[11px] font-700 text-[var(--color-primary)] shrink-0 whitespace-nowrap group-hover:translate-x-0.5 transition-transform duration-200">
               Davet Et →
             </span>
           </Link>
