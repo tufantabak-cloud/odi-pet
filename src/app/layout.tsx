@@ -1,14 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import OfflineIndicator from "@/components/ui/OfflineIndicator";
 import SplashScreen from "@/components/ui/SplashScreen";
 import PwaEnforcer from "@/components/ui/PwaEnforcer";
 import PwaUpdater from "@/components/ui/PwaUpdater";
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: "--font-plus-jakarta",
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
 
@@ -42,7 +43,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr" className={`${inter.variable} antialiased h-full`}>
+    <html lang="tr" className={`${plusJakarta.variable} antialiased h-full`}>
       <body className="min-h-full flex flex-col font-sans text-[16px] bg-bg-main text-text-primary">
         <PwaEnforcer />
         <SplashScreen />
