@@ -211,7 +211,7 @@ export default async function OwnerDashboard() {
         {hasPets && (
           <>
             <div className="animate-in fade-in zoom-in-95 duration-500">
-              {activeInsight && <SmartInsightCard insight={activeInsight} />}
+              {activeInsight && !activeQuestion && <SmartInsightCard insight={activeInsight} />}
               {activeQuestion && <SmartQuestionCard question={activeQuestion} />}
             </div>
 
