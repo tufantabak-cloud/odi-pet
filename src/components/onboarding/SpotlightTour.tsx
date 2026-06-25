@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useRef } from 'react';
 import { driver } from 'driver.js';
@@ -281,3 +281,4 @@ export default function SpotlightTour({ steps, onComplete }: SpotlightTourProps 
 
   return null;
 }
+
