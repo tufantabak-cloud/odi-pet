@@ -77,7 +77,7 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
         {showNav && <SideNav />}
 
         {/* Main Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-10 pb-32 md:pb-10 min-w-0">
+        <main className="flex-1 p-4 sm:p-6 lg:p-10 pb-10 min-w-0">
           {children}
         </main>
       </div>
