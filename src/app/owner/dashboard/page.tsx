@@ -157,7 +157,7 @@ export default async function OwnerDashboard() {
           <div className="mx-[var(--space-4)] bg-[var(--color-surface)] rounded-[var(--radius-lg)] overflow-hidden shadow-[var(--shadow-md)] border border-[var(--color-border)]">
             <div className="relative w-full h-[160px] bg-gradient-to-br from-[var(--color-primary-soft)] to-[var(--color-surface-secondary)]">
               {primaryPet.avatar_url && (
-                <Image src={primaryPet.avatar_url} alt={primaryPet.name} fill sizes="400px" className="object-cover" />
+                <Image src={primaryPet.avatar_url} alt={primaryPet.name} fill sizes="400px" className="object-cover" priority />
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
               <div className="absolute bottom-[-14px] left-[16px]">
@@ -428,7 +428,7 @@ export default async function OwnerDashboard() {
                 { label: 'Vet Bul', href: '/owner/vets', bg: 'var(--color-vet-soft)', color: '#4F46E5', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> },
                 { id: 'onb-journal-add', label: 'Gunluk', href: pets.length === 1 ? `/owner/pets/${pets[0].id}/journal` : '/owner/pets', bg: 'var(--color-hygiene-soft)', color: '#0D9488', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> },
               ].map((mod) => (
-                <Link key={(mod as any).id || mod.href} href={mod.href} id={(mod as any).id}
+                <Link key={(mod as any).id || mod.label} href={mod.href} id={(mod as any).id}
                   className="flex flex-col items-center gap-2 p-3 rounded-[var(--radius-md)] bg-[var(--color-surface)] border border-[var(--color-border)] hover:shadow-[var(--shadow-sm)] hover:border-[var(--color-primary)]/30 active:scale-[0.97] transition-all duration-200">
                   <div className="w-9 h-9 rounded-[10px] flex items-center justify-center"
                     style={{ background: mod.bg, color: mod.color }}>
