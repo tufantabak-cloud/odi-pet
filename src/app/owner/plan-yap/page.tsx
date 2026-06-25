@@ -91,7 +91,15 @@ function PlanYapContent() {
             <div className="p-3 bg-indigo-100 rounded-2xl">
               <Semi3DIcon svgPath={PetIcons.DefaultAvatar} className="w-8 h-8 text-indigo-600" />
             </div>
-            <h1 className="text-3xl font-extrabold text-gray-900">Plan Yap</h1>
+            <div className="flex items-center gap-3 mb-2">
+              <button
+                onClick={() => router.back()}
+                className="w-9 h-9 rounded-xl bg-bg-main border border-border-main flex items-center justify-center hover:bg-surface-hover transition-colors"
+              >
+                <ArrowLeft size={18} className="text-text-secondary" />
+              </button>
+              <h1 className="text-[22px] font-black text-text-primary">Plan Yap</h1>
+            </div>
           </div>
           <p className="text-gray-500 mb-8 ml-1">Kimin için plan oluşturuyoruz?</p>
           
