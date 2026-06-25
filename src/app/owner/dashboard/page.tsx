@@ -1,4 +1,4 @@
-"use no memo"
+﻿"use no memo"
 export const dynamic = 'force-dynamic'
 
 import { getSessionUser } from '@/lib/auth/get-current-profile'
@@ -9,500 +9,332 @@ import DashboardSmartCards from './DashboardSmartCards'
 import { calcAge } from '@/lib/pets/utils'
 import { getNowTR } from '@/lib/utils'
 import Image from 'next/image'
-import { getCachedDashboardData, DashboardPet } from './dashboard-queries'
-import { getTimelineSchedules, getPetsWithStats, getGreeting, getActiveCount } from './dashboard-utils'
+import { getCachedDashboardData } from './dashboard-queries'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 import EmptyState from '@/components/ui/EmptyState'
-import {
-  DefaultCatAvatar, DefaultDogAvatar, PawIcon, CarrierIcon,
-  VaccineIcon, BowlIcon, ShampooIcon,
-} from '@/components/icons/PetIcons'
-import SmartQuestionCard from '@/components/profiling/SmartQuestionCard'
-import SmartInsightCard from '@/components/profiling/SmartInsightCard'
-
-// Paylaşılan AI Vet ikonu — iki yerde kullanıldığı için dışarı alındı
-const AiVetIcon = (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 2a5 5 0 0 1 5 5c0 2.76-2.24 5-5 5s-5-2.24-5-5a5 5 0 0 1 5-5z"/>
-    <path d="M12 14c-5.33 0-8 2.67-8 4v1h16v-1c0-1.33-2.67-4-8-4z"/>
-  </svg>
-)
-
-// ── Modül Kısayol Izgarası ───────────────────────────────────────
-function ModuleGrid({ pets }: { pets: DashboardPet[] }) {
-  const single = pets.length === 1
-  const pid = pets[0]?.id ?? ''
-  const petHref = (key: string, path: string) =>
-    single ? `/owner/pets/${pid}${path}` : `/owner/journal/select-pet?redirect=${key}`
-
-  const modules = [
-    {
-      label: 'Sağlık & Aşı',
-      href: petHref('health', '/treatments'),
-      gradient: 'from-blue-500/15 to-sky-400/10',
-      iconBg: 'bg-blue-500/15',
-      color: 'text-blue-700',
-      icon: <VaccineIcon width={24} height={24} />,
-    },
-    {
-      label: 'Beslenme',
-      href: petHref('nutrition', '/nutrition'),
-      gradient: 'from-amber-500/15 to-orange-400/10',
-      iconBg: 'bg-amber-500/15',
-      color: 'text-amber-700',
-      icon: <BowlIcon width={24} height={24} />,
-    },
-    {
-      label: 'Bakım',
-      href: single ? `/owner/plan-yap/bakim?pet_id=${pid}` : '/owner/journal/select-pet?redirect=care',
-      gradient: 'from-pink-500/15 to-fuchsia-400/10',
-      iconBg: 'bg-pink-500/15',
-      color: 'text-pink-700',
-      icon: <ShampooIcon width={24} height={24} />,
-    },
-    {
-      label: 'AI Vet',
-      href: '/owner/ai-vet',
-      gradient: 'from-primary/15 to-violet-500/10',
-      iconBg: 'bg-primary/15',
-      color: 'text-primary',
-      icon: AiVetIcon,
-    },
-    {
-      label: 'Vet Bul',
-      href: '/owner/vets',
-      gradient: 'from-indigo-500/15 to-purple-400/10',
-      iconBg: 'bg-indigo-500/15',
-      color: 'text-indigo-700',
-      icon: <CarrierIcon width={24} height={24} />,
-    },
-    {
-      label: 'Günlük',
-      id: 'onb-journal-add',
-      href: petHref('journal', '/journal'),
-      gradient: 'from-teal-500/15 to-emerald-400/10',
-      iconBg: 'bg-teal-500/15',
-      color: 'text-teal-700',
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
-        </svg>
-      ),
-    },
-  ]
-
-  return (
-    <div className="flex flex-col gap-3">
-      <h2 className="text-[15px] font-extrabold text-text-primary">Hızlı Erişim</h2>
-      <div className="grid grid-cols-3 gap-2.5">
-        {modules.map((mod) => (
-          <Link
-            key={mod.href}
-            id={mod.id}
-            href={mod.href}
-            suppressHydrationWarning
-            className={`flex flex-col items-center gap-2 p-3 rounded-[16px] bg-gradient-to-br ${mod.gradient} border border-white/80 hover:scale-[1.04] active:scale-[0.97] transition-all duration-200 shadow-sm`}
-          >
-            <div className={`w-10 h-10 rounded-[12px] ${mod.iconBg} flex items-center justify-center ${mod.color}`}>
-              {mod.icon}
-            </div>
-            <span className={`text-[11px] font-bold ${mod.color} text-center leading-tight`}>
-              {mod.label}
-            </span>
-          </Link>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ── Boş Durum — Pet Yok ──────────────────────────────────────────
-function EmptyDashboard({ firstName }: { firstName: string }) {
-  const features = [
-    { label: 'Sağlık & Aşılar', bg: 'bg-blue-50',   color: 'text-blue-600',   icon: <VaccineIcon width={22} height={22} /> },
-    { label: 'Beslenme',         bg: 'bg-amber-50',  color: 'text-amber-600',  icon: <BowlIcon width={22} height={22} /> },
-    { label: 'Bakım',            bg: 'bg-pink-50',   color: 'text-pink-600',   icon: <ShampooIcon width={22} height={22} /> },
-    { label: 'AI Vet',           bg: 'bg-purple-50', color: 'text-purple-600', icon: AiVetIcon },
-  ]
-
-  return (
-    <div className="flex flex-col gap-6 animate-fadeInUp">
-      <div className="card-base p-6 flex flex-col items-center text-center gap-4 border border-primary/10 bg-gradient-to-b from-primary-soft to-white">
-        <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
-          <PawIcon width={40} height={40} />
-        </div>
-        <div>
-          <h2 className="text-[20px] font-black text-text-primary tracking-tight">
-            Hoş Geldiniz, {firstName}!
-          </h2>
-          <p className="text-[13px] text-text-secondary mt-1.5 leading-relaxed max-w-xs mx-auto">
-            Premium evcil hayvan bakım paneronuz Odi.Pet ile tanışın. Can dostunuzun profilini oluşturun, aşı takibini başlatın.
-          </p>
-        </div>
-        <Link
-          id="onb-pet-add"
-          href="/owner/pets/add"
-          suppressHydrationWarning
-          className="w-full btn-primary py-3.5 text-[15px] font-black shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
-        >
-          İlk Can Dostunu Ekle
-        </Link>
-      </div>
-
-      <div className="flex flex-col gap-3">
-        <p className="text-[12px] font-black text-text-secondary uppercase tracking-widest">Neler yapabilirsiniz?</p>
-        <div className="grid grid-cols-2 gap-3">
-          {features.map(f => (
-            <div key={f.label} className={`${f.bg} rounded-[16px] p-4 flex items-center gap-3`}>
-              <div className={`${f.color} shrink-0`}>{f.icon}</div>
-              <span className={`text-[12px] font-bold ${f.color} leading-tight`}>{f.label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
+import { PawPrint, Calendar, Phone, Activity, Syringe, Pencil } from 'lucide-react'
+import { SectionHeader } from '@/components/ui/primitives'
 
 export default async function OwnerDashboard() {
   const user = await getSessionUser()
   if (!user) redirect('/login')
 
-  const { profile, pets, upcomingSchedules, completedSchedules, allFeedingLogs, allWeightLogs, plans, activeQuestion, activeInsight } =
+  const { profile, pets, upcomingSchedules, completedSchedules, allFeedingLogs, allWeightLogs } =
     await getCachedDashboardData(user.id)
 
+  const supabase = await createServerSupabaseClient()
+  const { data: lostReportsRaw } = await supabase
+    .from('lost_reports')
+    .select('*, pets(name, avatar_url, species, breed, city)')
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
+    .limit(50)
+
+  const userCities = Array.from(new Set((pets || []).map((p: any) => p.city).filter(Boolean)))
+  const lostReports = lostReportsRaw?.filter((report: any) => {
+    if (userCities.length === 0) return false
+    const reportCity = report.pets?.city
+    if (!reportCity) return false
+    return userCities.includes(reportCity)
+  }).slice(0, 10)
+
   const now = getNowTR()
+  const in30 = getNowTR()
+  in30.setDate(in30.getDate() + 30)
 
-  const timelineSchedules = getTimelineSchedules(upcomingSchedules, now)
-  const petsWithStats = getPetsWithStats(pets || [], allFeedingLogs, allWeightLogs, upcomingSchedules, now)
-  const greeting = getGreeting(now)
-  const activeCount = getActiveCount(upcomingSchedules, now)
+  const timelineSchedules = upcomingSchedules
+    .filter(s => new Date(s.due_date) <= in30)
+    .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+    .slice(0, 5)
 
-  const dateLabel = now.toLocaleString('tr-TR', { day: 'numeric', month: 'long' })
+  const petsWithStats = (pets || []).map((pet: any) => {
+    let lastFeedingDate = 'Veri Yok'
+    let weightVal = 'Veri Yok'
+
+    const feeding = allFeedingLogs.find((f: any) => f.pet_id === pet.id)
+    if (feeding) {
+      const diffHrs = Math.floor((now.getTime() - new Date(feeding.created_at).getTime()) / (1000 * 60 * 60))
+      if (diffHrs < 24) lastFeedingDate = `${diffHrs} s. önce`
+      else lastFeedingDate = `${Math.floor(diffHrs / 24)} g. önce`
+    }
+
+    const weight = allWeightLogs.find((w: any) => w.pet_id === pet.id)
+    if (weight?.weight_kg) weightVal = `${weight.weight_kg} kg`
+
+    const overdueCount = upcomingSchedules.filter(
+      (s: any) => s.pet_id === pet.id && new Date(s.due_date) < now
+    ).length
+
+    return { ...pet, lastFeedingDate, weightVal, overdueCount }
+  })
+
   const firstName = profile?.first_name || 'Hoş Geldin'
-  const hasPets = pets && pets.length > 0
-
-  // Pet Günlüğü linkleri — iki kez kullanıldığı için değişkene alındı
-  const journalListHref = pets && pets.length === 1
-    ? `/owner/pets/${pets[0].id}/journal`
-    : `/owner/journal/select-pet?redirect=journal`
-  const journalNewHref = pets && pets.length === 1
-    ? `/owner/pets/${pets[0].id}/journal/new`
-    : `/owner/journal/select-pet?redirect=new`
 
   return (
     <DashboardOnboardingWrapper>
       <div className="flex flex-col gap-6 pb-4">
 
         {/* Selamlama */}
-        <div>
-          <h1 className="text-[26px] sm:text-[28px] font-extrabold text-text-primary tracking-tight leading-tight">
-            {greeting}, {firstName}
+        <div className="px-[var(--space-4)] pt-2">
+          <h1 className="text-[24px] font-800 text-[var(--color-text-primary)] tracking-tight leading-tight">
+            Merhaba, {firstName}
           </h1>
-          <p className="text-[13px] text-text-secondary font-medium mt-1">
-            {dateLabel}
-            {activeCount > 0 && (
-              <span className="ml-2 text-warning font-bold">• {activeCount} Aktif Görev</span>
-            )}
+          <p className="text-[13px] font-500 text-[var(--color-text-secondary)] mt-1">
+            Petlerinizin günlük özeti aşağıda.
           </p>
         </div>
 
-        {/* Pet yok */}
-        {!hasPets && <EmptyDashboard firstName={firstName} />}
+        {/* Smart Cards */}
+        {pets && pets.length > 0 && (
+          <DashboardSmartCards
+            pets={pets}
+            upcomingSchedules={upcomingSchedules}
+            completedSchedules={completedSchedules}
+          />
+        )}
 
-        {/* Pet var */}
-        {hasPets && (
-          <>
-            <div className="animate-in fade-in zoom-in-95 duration-500">
-              {activeInsight && !activeQuestion && <SmartInsightCard insight={activeInsight} />}
-              {activeQuestion && <SmartQuestionCard question={activeQuestion} />}
+        {/* Pet Slider */}
+        {petsWithStats && petsWithStats.length > 0 ? (
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between px-[var(--space-4)]">
+              <h2 className="text-[15px] font-700 text-[var(--color-text-primary)]">Petlerim</h2>
+              <Link
+                href="/owner/pets/add"
+                className="flex items-center gap-1 px-3 h-8 rounded-[var(--radius-xs)] bg-[var(--color-primary)] text-white text-[12px] font-600 hover:bg-[var(--color-primary-dark)] active:scale-[0.97] transition-all"
+              >
+                + Pet Ekle
+              </Link>
+            </div>
+            <div className="flex gap-3 overflow-x-auto px-[var(--space-4)] pb-2 scrollbar-none snap-x snap-mandatory">
+              {petsWithStats.map((pet: any) => (
+                <Link
+                  key={pet.id}
+                  href={`/owner/pets/${pet.id}`}
+                  data-testid="pet-card"
+                  aria-label={`${pet.name} profiline git`}
+                  className="snap-start shrink-0 w-[160px] rounded-[var(--radius-lg)] overflow-hidden shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all duration-200 bg-[var(--color-surface)] border border-[var(--color-border)]"
+                >
+                  {/* Fotoğraf */}
+                  <div className="relative w-full" style={{ aspectRatio: '1/1' }}>
+                    {pet.avatar_url ? (
+                      <Image
+                        src={pet.avatar_url}
+                        alt={pet.name}
+                        fill
+                        sizes="160px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-[var(--color-primary-soft)] flex items-center justify-center">
+                        <span className="text-[56px] font-800 text-[var(--color-primary)] opacity-30 leading-none select-none">
+                          {(pet.name || '?').charAt(0)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+
+                    {/* Gecikmiş badge */}
+                    {pet.overdueCount > 0 && (
+                      <div className="absolute top-2 left-2 bg-[var(--color-danger)] text-white text-[9px] font-700 px-1.5 py-0.5 rounded-full">
+                        {pet.overdueCount} gecikti
+                      </div>
+                    )}
+
+                    {/* İsim */}
+                    <div className="absolute bottom-0 left-0 right-0 px-2.5 pb-2">
+                      <p className="font-700 text-white text-[13px] leading-tight truncate drop-shadow">{pet.name}</p>
+                      <p className="text-white/70 text-[10px] font-500 leading-tight">
+                        {pet.species} · {calcAge(pet.birth_date).text}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Alt şerit */}
+                  <div className="flex items-center justify-between px-2.5 py-2 bg-[var(--color-surface)] border-t border-[var(--color-border)]">
+                    <span className="text-[10px] font-600 text-[var(--color-text-muted)] truncate">
+                      {pet.weightVal !== 'Veri Yok' ? pet.weightVal : 'Profili Gör'}
+                    </span>
+                    <span className="text-[10px] font-700 text-[var(--color-primary)]">→</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="px-[var(--space-4)]">
+            <EmptyState
+              icon={<PawPrint />}
+              title="Henüz pet eklemediniz"
+              message="İlk petinizi eklemek için aşağıdaki butona dokunun."
+              cta={{ label: "Pet Ekle", href: "/owner/pets/add" }}
+            />
+          </div>
+        )}
+
+        {/* Kayıp İlanları — korundu */}
+        {lostReports && lostReports.length > 0 && (
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2 px-[var(--space-4)]">
+              <div className="w-2 h-2 rounded-full bg-[var(--color-danger)] animate-pulse" />
+              <h2 className="text-[15px] font-700 text-[var(--color-danger)]">Kayıp İlanları</h2>
+            </div>
+            <div className="flex gap-3 overflow-x-auto px-[var(--space-4)] pb-2 scrollbar-none snap-x snap-mandatory">
+              {lostReports.map((report: any) => (
+                <div
+                  key={report.id}
+                  className="snap-start shrink-0 w-[220px] bg-[var(--color-danger-soft)] border border-[var(--color-danger)]/20 rounded-[var(--radius-lg)] p-[var(--space-4)] flex flex-col gap-3 shadow-[var(--shadow-sm)]"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 relative rounded-[var(--radius-sm)] overflow-hidden border border-[var(--color-danger)]/15 bg-[var(--color-surface)] shrink-0">
+                      {report.pets?.avatar_url ? (
+                        <Image src={report.pets.avatar_url} alt={report.pets.name} fill sizes="44px" className="object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[var(--color-danger)]">
+                          <PawPrint size={20} />
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-700 text-[var(--color-text-primary)] text-[14px] truncate">{report.pets?.name}</p>
+                      <p className="text-[11px] text-[var(--color-text-secondary)] truncate">
+                        {report.pets?.species} · {report.pets?.breed || 'Bilinmiyor'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="bg-[var(--color-surface)] rounded-[var(--radius-xs)] p-2.5 border border-[var(--color-danger)]/10">
+                    <p className="text-[10px] text-[var(--color-text-muted)] mb-0.5 font-600">Son Görülme</p>
+                    <p className="text-[12px] font-600 text-[var(--color-text-primary)] leading-tight line-clamp-2">{report.last_seen_location}</p>
+                  </div>
+                  <a
+                    href={`tel:${report.contact_phone}`}
+                    className="w-full bg-[var(--color-danger)] text-white font-700 text-[12px] rounded-[var(--radius-sm)] py-2.5 flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all"
+                  >
+                    <Phone size={13} />
+                    Hemen Ara
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Pet Günlüğü Quick Action */}
+        {pets && pets.length > 0 && (
+          <div className="flex flex-col gap-2 px-[var(--space-4)]">
+            <div className="flex items-center justify-between">
+              <h2 className="text-[15px] font-700 text-[var(--color-text-primary)]">Pet Günlüğü</h2>
+              <Link
+                href={pets.length === 1 ? `/owner/pets/${pets[0].id}/journal` : `/owner/journal/select-pet?redirect=journal`}
+                className="text-[12px] font-700 text-[var(--color-primary)] hover:underline"
+              >
+                Tümünü Gör
+              </Link>
+            </div>
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-md)] p-[var(--space-4)] flex items-center justify-between gap-3 hover:border-[var(--color-primary)]/30 transition-colors shadow-[var(--shadow-sm)]">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-[var(--radius-xs)] bg-[var(--color-primary-soft)] text-[var(--color-primary)] flex items-center justify-center shrink-0">
+                  <Pencil size={16} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[13px] font-700 text-[var(--color-text-primary)] truncate">Yeni Durum Kaydet</p>
+                  <p className="text-[11px] font-500 text-[var(--color-text-muted)] truncate">İştah, ruh hali, notlar...</p>
+                </div>
+              </div>
+              <Link
+                href={pets.length === 1 ? `/owner/pets/${pets[0].id}/journal/new` : `/owner/journal/select-pet?redirect=new`}
+                className="shrink-0 h-8 px-3 rounded-[var(--radius-xs)] bg-[var(--color-primary)] text-white text-[12px] font-600 flex items-center hover:bg-[var(--color-primary-dark)] active:scale-[0.97] transition-all"
+              >
+                Kaydet +
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* Yaklaşan Etkinlikler */}
+        {pets && pets.length > 0 && (
+          <div className="mx-[var(--space-4)] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] overflow-hidden shadow-[var(--shadow-sm)]">
+            <div className="flex items-center gap-2.5 px-[var(--space-4)] py-[var(--space-3)] border-b border-[var(--color-border)]">
+              <div className="w-7 h-7 rounded-[var(--radius-xs)] bg-[var(--color-warning-soft)] flex items-center justify-center">
+                <Calendar size={14} className="text-[var(--color-warning)]" />
+              </div>
+              <h2 className="text-[15px] font-700 text-[var(--color-text-primary)]">Yaklaşan Etkinlikler</h2>
             </div>
 
-            {/* Pet Slider */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-[15px] font-extrabold text-text-primary">Petlerim</h2>
-                <Link
-                  id="onb-pet-add"
-                  href="/owner/pets/add"
-                  suppressHydrationWarning
-                  className="flex items-center gap-1 px-4 h-11 rounded-xl bg-primary text-white text-[13px] font-bold hover:bg-primary-hover active:scale-[0.97] transition-all shadow-sm"
-                >
-                  <span className="text-[14px] leading-none">+</span> Pet Ekle
-                </Link>
-              </div>
+            {timelineSchedules.length > 0 ? (
+              <div className="flex flex-col divide-y divide-[var(--color-border)]">
+                {timelineSchedules.map(plan => {
+                  const dateStr = plan.due_date.includes('T') ? plan.due_date.split('T')[0] : plan.due_date
+                  const [y, m, d] = dateStr.split('-').map(Number)
+                  const due = new Date(y, m - 1, d)
 
-              <div className={petsWithStats.length === 1 ? "flex" : "flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory -mx-1 px-1"}>
-                {petsWithStats.map((pet) => {
-                  const r = 13
-                  const circ = 2 * Math.PI * r
-                  const fill = circ * (pet.score / 100)
-                  const scoreColor = pet.score >= 75 ? '#22C55E' : pet.score >= 40 ? '#FACC15' : '#EF4444'
-                  const isCat = pet.species?.toLowerCase().includes('kedi') || pet.species?.toLowerCase().includes('cat')
+                  const timeStr = plan.due_time || '12:00:00'
+                  const [th, tm] = timeStr.split(':').map(Number)
+                  const taskDT = new Date(y, m - 1, d, th || 12, tm || 0)
+                  const isOverdue = taskDT < now
+
+                  const today = new Date(now)
+                  today.setHours(0, 0, 0, 0)
+                  const target = new Date(y, m - 1, d)
+                  const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000)
+
+                  let badgeText = ''
+                  let badgeClass = ''
+
+                  if (isOverdue) {
+                    const dm = Math.floor((now.getTime() - taskDT.getTime()) / 60000)
+                    badgeText = dm < 60 ? `${Math.max(1, dm)} dk gecikti` : dm < 1440 ? `${Math.floor(dm / 60)} sa gecikti` : `${Math.floor(dm / 1440)} gün gecikti`
+                    badgeClass = 'bg-[var(--color-danger-soft)] text-[var(--color-danger)]'
+                  } else if (diffDays === 0) {
+                    badgeText = `Bugün${plan.due_time ? ' ' + timeStr.slice(0, 5) : ''}`
+                    badgeClass = 'bg-[var(--color-warning-soft)] text-[var(--color-warning)]'
+                  } else if (diffDays === 1) {
+                    badgeText = `Yarın`
+                    badgeClass = 'bg-[var(--color-primary-soft)] text-[var(--color-primary)]'
+                  } else {
+                    badgeText = `${diffDays} gün kaldı`
+                    badgeClass = diffDays <= 3
+                      ? 'bg-[var(--color-warning-soft)] text-[var(--color-warning)]'
+                      : 'bg-[var(--color-success-soft)] text-[var(--color-success)]'
+                  }
 
                   return (
                     <Link
-                      id="onb-dashboard-card"
-                      key={pet.id}
-                      href={`/owner/pets/${pet.id}`}
-                      data-testid="pet-card"
-                      aria-label={`${pet.name} profiline git`}
-                      suppressHydrationWarning
-                      className={`${petsWithStats.length === 1 ? "w-full" : "snap-start shrink-0 w-[160px] sm:w-[175px]"} rounded-[22px] overflow-hidden group cursor-pointer shadow-sm hover:shadow-lg transition-all duration-300 bg-surface border border-border-main/40`}
+                      key={plan.id}
+                      href={`/owner/pets/${plan.pet_id}#pet-tasks`}
+                      className="flex items-center gap-3 px-[var(--space-4)] py-3 hover:bg-[var(--color-surface-secondary)] transition-colors group"
                     >
-                      <div className="relative w-full" style={{ aspectRatio: '1/1' }}>
-                        {pet.avatar_url ? (
-                          <Image src={pet.avatar_url} alt={pet.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
-                        ) : (
-                          <div className="w-full h-full">{isCat ? <DefaultCatAvatar /> : <DefaultDogAvatar />}</div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/5 to-transparent" />
-
-                        {/* Sağlık skoru halkası */}
-                        <div className="absolute top-2 right-2 z-10">
-                          <svg width="32" height="32" viewBox="0 0 30 30" style={{ transform: 'rotate(-90deg)' }}>
-                            <circle cx="15" cy="15" r={r} fill="rgba(0,0,0,0.3)" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5" />
-                            <circle cx="15" cy="15" r={r} fill="none" stroke={scoreColor} strokeWidth="2.5" strokeDasharray={`${fill} ${circ}`} strokeLinecap="round" />
-                          </svg>
-                          <span className="absolute inset-0 flex items-center justify-center text-[8px] font-black text-white">{pet.score}</span>
-                        </div>
-
-                        {/* Gecikmiş görev badge */}
-                        {pet.overdueCount > 0 && (
-                          <div className="absolute top-2 left-2 z-10 bg-error text-white text-[9px] font-black px-1.5 py-0.5 rounded-full animate-pulse">
-                            {pet.overdueCount} gecikti
-                          </div>
-                        )}
-
-                        {/* İsim + yaş */}
-                        <div className="absolute bottom-0 left-0 right-0 px-3 pb-2.5 z-10">
-                          <p className="font-extrabold text-white text-[14px] leading-tight truncate drop-shadow">{pet.name}</p>
-                          <p className="text-white/70 text-[10px] font-medium">{pet.species} · {calcAge(pet.birth_date).text}</p>
-                        </div>
+                      <div className="flex flex-col items-center bg-[var(--color-surface-secondary)] rounded-[var(--radius-xs)] px-2.5 py-1.5 shrink-0 min-w-[44px] text-center">
+                        <p className="text-[16px] font-800 text-[var(--color-text-primary)] leading-none tabular-nums">{due.getDate()}</p>
+                        <p className="text-[10px] font-600 text-[var(--color-text-muted)] uppercase">
+                          {due.toLocaleString('tr-TR', { month: 'short' })}
+                        </p>
                       </div>
-
-                      {/* Alt şerit: besleme, kilo ve yönlendirme */}
-                      <div className="flex items-center justify-between px-3 py-2 bg-white gap-1.5 border-t border-border-main/10">
-                        {pet.lastFeedingLabel ? (
-                          <span className="flex items-center gap-1 text-[10px] text-text-secondary font-semibold truncate max-w-[85px] sm:max-w-[100px]">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-amber-500 shrink-0" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M3 11l19-9-9 19-2-8-8-2z"/>
-                            </svg>
-                            {pet.lastFeedingLabel}
-                          </span>
-                        ) : (
-                          <span className="text-[10px] text-primary font-bold animate-pulse">Profili Gör</span>
-                        )}
-
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          {pet.weightLabel && (
-                            <span className="text-[10px] font-bold text-text-secondary bg-bg-main px-1.5 py-0.5 rounded-lg shrink-0">{pet.weightLabel}</span>
-                          )}
-                          <span className="text-[10px] text-primary font-extrabold flex items-center gap-0.5 transition-colors">
-                            <span className="inline-block transition-transform duration-200 group-hover:translate-x-0.5">→</span>
-                          </span>
-                        </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-600 text-[var(--color-text-primary)] truncate group-hover:text-[var(--color-primary)] transition-colors">
+                          {plan.title || (plan as any).vaccines?.name || 'Sağlık İşlemi'}
+                        </p>
+                        <p className="text-[11px] text-[var(--color-text-muted)] font-500 flex items-center gap-1 mt-0.5">
+                          <PawPrint size={9} />
+                          {(plan as any).pets?.name}
+                        </p>
                       </div>
+                      <span className={`text-[10px] font-700 px-2 py-1 rounded-[var(--radius-xs)] shrink-0 whitespace-nowrap ${badgeClass}`}>
+                        {badgeText}
+                      </span>
                     </Link>
                   )
                 })}
               </div>
-            </div>
-
-            {/* Davet Bannerı */}
-            <Link
-              id="onb-referral"
-              href="/owner/referral"
-              suppressHydrationWarning
-              className="flex items-center gap-4 p-4 rounded-[20px] bg-gradient-to-r from-primary/10 to-violet-500/10 border border-primary/15 hover:border-primary/30 hover:shadow-md active:scale-[0.98] transition-all duration-200 group"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-primary/15 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-extrabold text-text-primary text-[14px] leading-tight">Arkadaşlarını Davet Et</p>
-                <p className="text-[12px] text-text-secondary mt-0.5">Can dostunu tanıştır, rozetler kazan! 🐾</p>
-              </div>
-              <span className="text-[13px] font-black text-primary shrink-0 group-hover:translate-x-0.5 transition-transform duration-200">
-                Davet Et →
-              </span>
-            </Link>
-
-            {/* Hızlı Erişim modülleri */}
-            <ModuleGrid pets={pets} />
-
-
-
-            {/* Yaklaşan Etkinlikler */}
-            <div className="card-base p-5">
-              <h2 className="text-[16px] font-extrabold text-text-primary mb-4 flex items-center gap-2.5">
-                <div className="bg-warning/10 text-warning p-1.5 rounded-lg">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <rect width="18" height="18" x="3" y="4" rx="2"/>
-                    <line x1="16" x2="16" y1="2" y2="6"/>
-                    <line x1="8" x2="8" y1="2" y2="6"/>
-                    <line x1="3" x2="21" y1="10" y2="10"/>
-                  </svg>
-                </div>
-                Yaklaşan Etkinlikler
-              </h2>
-
-              {timelineSchedules.length > 0 ? (
-                <div className="flex flex-col gap-2.5">
-                  {timelineSchedules.map((plan) => {
-                    const ds = plan.due_date.includes('T') ? plan.due_date.split('T')[0] : plan.due_date
-                    const [y, m, d] = ds.split('-').map(Number)
-                    // Her zaman ortamın yerel saat diliminde parse ediyoruz:
-                    const due = new Date(`${ds}T00:00:00`)
-                    const ts = plan.due_time || '12:00:00'
-                    const taskDT = new Date(`${ds}T${ts}`)
-                    const isOverdue = taskDT < now
-                    
-                    // Gün farkı hesaplama (TRT saat dilimine göre gün sınırlarını alarak)
-                    const formatTRDateString = (dateObj: Date) => {
-                      const formatter = new Intl.DateTimeFormat('en-US', {
-                        timeZone: 'Europe/Istanbul',
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit'
-                      })
-                      const [{ value: mo },,{ value: da },,{ value: ye }] = formatter.formatToParts(dateObj)
-                      return `${ye}-${mo}-${da}`
-                    }
-                    
-                    const todayStr = formatTRDateString(now)
-                    const targetStr = ds
-                    
-                    const todDate = new Date(`${todayStr}T00:00:00`)
-                    const tgtDate = new Date(`${targetStr}T00:00:00`)
-                    const dd = Math.round((tgtDate.getTime() - todDate.getTime()) / 86400000)
-                    
-                    const timeStr = plan.due_time ? ' · ' + ts.slice(0, 5) : ''
-                    let badge = ''; let badgeClass = ''; let rowBorder = ''
-
-                    if (isOverdue) {
-                      const dm = Math.floor((now.getTime() - taskDT.getTime()) / 60000)
-                      const delayText = dm < 60 ? `${Math.max(1, dm)} dk gecikti` : dm < 1440 ? `${Math.floor(dm / 60)} saat gecikti` : `${Math.floor(dm / 1440)} gün gecikti`
-                      badge = `${delayText}${timeStr}`
-                      badgeClass = 'bg-error/10 text-error border-error/25 font-extrabold shadow-sm'
-                      rowBorder = 'border-l-error'
-                    } else if (dd === 0) {
-                      badge = 'Bugün' + timeStr; badgeClass = 'bg-warning/10 text-warning border-warning/25 font-extrabold shadow-sm'; rowBorder = 'border-l-warning'
-                    } else if (dd === 1) {
-                      badge = 'Yarın' + timeStr; badgeClass = 'bg-primary/10 text-primary border-primary/25 font-extrabold shadow-sm'; rowBorder = 'border-l-primary'
-                    } else {
-                      badge = `${dd} gün kaldı${timeStr}`
-                      badgeClass = dd <= 3 
-                        ? 'bg-warning/10 text-warning border-warning/25 font-extrabold shadow-sm' 
-                        : 'bg-success/10 text-success border-success/25 font-extrabold shadow-sm'
-                      rowBorder = dd <= 3 ? 'border-l-warning' : 'border-l-success'
-                    }
-
-                    return (
-                      <Link
-                        href={`/owner/pets/${plan.pet_id}#pet-tasks`}
-                        key={plan.id}
-                        className={`flex items-start sm:items-center gap-3 sm:gap-4 p-4 border border-border-main border-l-4 ${rowBorder} rounded-[16px] bg-surface hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 ease-out group relative overflow-hidden`}
-                      >
-                        <div className="flex flex-col items-center justify-center bg-bg-main rounded-xl px-3 py-2 shrink-0 min-w-[56px] shadow-sm border border-border-main/60 relative z-10 group-hover:border-primary/30 transition-colors mt-0.5 sm:mt-0">
-                          <p className="text-[18px] font-black text-text-primary leading-none group-hover:text-primary transition-colors">{due.getDate()}</p>
-                          <p className="text-[11px] font-extrabold text-text-secondary uppercase mt-1 tracking-widest">{due.toLocaleString('tr-TR', { month: 'short' })}</p>
-                        </div>
-                        
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between flex-1 min-w-0 z-10 gap-3">
-                          <div className="flex flex-col min-w-0">
-                            <p className="font-extrabold text-text-primary text-[15px] truncate group-hover:text-primary transition-colors leading-tight">
-                              {plan.title || (plan.vaccines && plan.vaccines.name) || 'Sağlık İşlemi'}
-                            </p>
-                            <div className="flex items-center gap-2 mt-1.5">
-                              <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-bg-main border border-border-main/50 text-[12px] font-bold text-text-secondary shadow-sm max-w-full">
-                                <span className="text-[11px] shrink-0">🐾</span>
-                                <span className="truncate">{plan.pets && plan.pets.name}</span>
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <div className="shrink-0 self-start sm:self-auto">
-                            <span className={`text-[12px] inline-block px-3 py-1.5 rounded-xl border whitespace-nowrap tracking-wide transition-all shadow-sm ${badgeClass}`}>
-                              {badge}
-                            </span>
-                          </div>
-                        </div>
-                        {/* Hover effect overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/[0.03] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
-                      </Link>
-                    )
-                  })}
-                </div>
-              ) : (
+            ) : (
+              <div className="p-[var(--space-5)]">
                 <EmptyState
-                  icon={<CarrierIcon width={40} height={40} />}
+                  icon={<Calendar />}
                   title="Yaklaşan etkinlik yok"
-                  message="Sağlık takvimi henüz oluşturulmadı."
+                  message="Petinizin sağlık takvimi henüz oluşturulmadı."
                 />
-              )}
-            </div>
-
-            {/* Aktif Planlar (Sadece birden fazla pet varsa gösterilir) */}
-            {pets && pets.length > 1 && (
-              <div className="card-base p-5 mt-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-[16px] font-extrabold text-text-primary flex items-center gap-2.5">
-                    <div className="bg-primary/10 text-primary p-1.5 rounded-lg">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
-                        <path d="M12 6v6l4 2"/>
-                      </svg>
-                    </div>
-                    Aktif Planlarım
-                  </h2>
-                  <Link id="onb-plan-add" href="/owner/plan-yap" suppressHydrationWarning className="text-xs font-bold text-primary hover:underline py-2 px-1">
-                    Yeni Ekle
-                  </Link>
-                </div>
-                {plans && plans.length > 0 ? (
-                  <div className="flex flex-col gap-2">
-                    {plans.map((plan) => (
-                      <Link
-                        href={`/owner/plan-yap/edit/${plan.id}`}
-                        key={plan.id}
-                        className="flex items-center justify-between p-3 border border-border-main rounded-[14px] bg-surface hover:shadow-sm hover:border-primary/30 transition-all group"
-                      >
-                        <div className="flex flex-col">
-                          <span className="font-bold text-text-primary text-[13px] capitalize group-hover:text-primary transition-colors">
-                            {plan.sub_type || plan.category}
-                          </span>
-                          <span className="text-[11px] text-text-secondary">
-                            {plan.pets?.name} • {(plan.category === 'saglik' ? 'Sağlık' :
-                              plan.category === 'asi' ? 'Aşı' :
-                              plan.category === 'parazit' ? 'Parazit' :
-                              plan.category === 'bakim' ? 'Bakım' :
-                              plan.category === 'beslenme' ? 'Beslenme' :
-                              plan.category === 'hijyen' ? 'Hijyen' :
-                              plan.category === 'aktivite' ? 'Aktivite' :
-                              plan.category)}
-                          </span>
-                        </div>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-surface-hover text-text-secondary">
-                          Düzenle
-                        </span>
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <EmptyState
-                    icon={<BowlIcon width={40} height={40} />}
-                    title="Henüz plan yok"
-                    message="Dostunuz için beslenme veya bakım planı oluşturabilirsiniz."
-                  />
-                )}
               </div>
             )}
-          </>
+          </div>
         )}
 
       </div>
