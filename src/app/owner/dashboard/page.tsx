@@ -218,6 +218,127 @@ export default async function OwnerDashboard() {
           </div>
         )}
 
+
+        {/* Davet Et Banner */}
+        {pets && pets.length > 0 && (
+          <Link
+            id="onb-referral"
+            href="/owner/referral"
+            className="mx-[var(--space-4)] flex items-center gap-3 p-[var(--space-4)] rounded-[var(--radius-lg)] bg-[var(--color-primary-soft)] border border-[var(--color-primary)]/15 hover:border-[var(--color-primary)]/30 active:scale-[0.98] transition-all duration-200 group shadow-[var(--shadow-sm)]"
+          >
+            <div className="w-10 h-10 rounded-[var(--radius-sm)] bg-[var(--color-primary)]/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--color-primary)]">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-700 text-[var(--color-text-primary)] text-[13px] leading-tight">Arkadaşlarını Davet Et</p>
+              <p className="text-[11px] text-[var(--color-text-secondary)] font-500 mt-0.5">Can dostunu tanıştır, rozetler kazan!</p>
+            </div>
+            <span className="text-[12px] font-700 text-[var(--color-primary)] shrink-0 group-hover:translate-x-0.5 transition-transform duration-200">
+              Davet Et →
+            </span>
+          </Link>
+        )}
+
+        {/* Hızlı Erişim */}
+        {pets && pets.length > 0 && (
+          <div className="flex flex-col gap-2 px-[var(--space-4)]">
+            <h2 className="text-[11px] font-700 text-[var(--color-text-muted)] uppercase tracking-[0.8px]">Hızlı Erişim</h2>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                {
+                  label: 'Sağlık & Aşı',
+                  href: pets.length === 1 ? `/owner/pets/${pets[0].id}/treatments` : '/owner/journal/select-pet?redirect=health',
+                  iconBg: 'var(--color-health-soft)',
+                  iconColor: 'var(--color-danger)',
+                  icon: (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                    </svg>
+                  ),
+                },
+                {
+                  label: 'Beslenme',
+                  href: pets.length === 1 ? `/owner/pets/${pets[0].id}/nutrition` : '/owner/journal/select-pet?redirect=nutrition',
+                  iconBg: 'var(--color-nutrition-soft)',
+                  iconColor: 'var(--color-warning)',
+                  icon: (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+                    </svg>
+                  ),
+                },
+                {
+                  label: 'Bakım',
+                  href: pets.length === 1 ? `/owner/plan-yap/bakim?pet_id=${pets[0].id}` : '/owner/journal/select-pet?redirect=care',
+                  iconBg: 'var(--color-care-soft)',
+                  iconColor: '#EC4899',
+                  icon: (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
+                  ),
+                },
+                {
+                  label: 'AI Vet',
+                  href: '/owner/ai-vet',
+                  iconBg: 'var(--color-activity-soft)',
+                  iconColor: 'var(--color-primary)',
+                  icon: (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 2a5 5 0 0 1 5 5c0 2.76-2.24 5-5 5s-5-2.24-5-5a5 5 0 0 1 5-5z"/>
+                      <path d="M12 14c-5.33 0-8 2.67-8 4v1h16v-1c0-1.33-2.67-4-8-4z"/>
+                    </svg>
+                  ),
+                },
+                {
+                  label: 'Vet Bul',
+                  href: '/owner/vets',
+                  iconBg: 'var(--color-vet-soft)',
+                  iconColor: '#4F46E5',
+                  icon: (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                    </svg>
+                  ),
+                },
+                {
+                  label: 'Günlük',
+                  id: 'onb-journal-add',
+                  href: pets.length === 1 ? `/owner/pets/${pets[0].id}/journal` : '/owner/journal/select-pet?redirect=journal',
+                  iconBg: 'var(--color-hygiene-soft)',
+                  iconColor: '#0D9488',
+                  icon: (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+                    </svg>
+                  ),
+                },
+              ].map((mod) => (
+                <Link
+                  key={mod.href}
+                  id={(mod as any).id}
+                  href={mod.href}
+                  className="flex flex-col items-center gap-2 p-3 rounded-[var(--radius-md)] bg-[var(--color-surface)] border border-[var(--color-border)] hover:border-[var(--color-primary)]/30 hover:shadow-[var(--shadow-sm)] active:scale-[0.97] transition-all duration-200"
+                >
+                  <div
+                    className="w-9 h-9 rounded-[10px] flex items-center justify-center"
+                    style={{ background: mod.iconBg, color: mod.iconColor }}
+                  >
+                    {mod.icon}
+                  </div>
+                  <span className="text-[10px] font-700 text-[var(--color-text-secondary)] text-center leading-tight">
+                    {mod.label}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
         {/* Pet Günlüğü Quick Action */}
         {pets && pets.length > 0 && (
           <div className="flex flex-col gap-2 px-[var(--space-4)]">
