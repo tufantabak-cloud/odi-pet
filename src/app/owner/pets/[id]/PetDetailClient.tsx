@@ -234,13 +234,36 @@ export function getTaskCardStyle(isOverdue: boolean, isCompleted: boolean) {
 export default function PetDetailClient({ pet, age, score, overdue, schedules, diseases, allergies, medications, growthRecords, appointments, nutritionLogs, payments, subscription, activeLostReport, hasPasskey = false, isAdminView = false }: PetDetailProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
+
+  // url-param → url-safe section id (div id ve scroll için)
   const TAB_URL_MAP: Record<string, string> = {
+    'ozet':     'ozet',
+    'saglik':   'saglik',
+    'asi':      'asi',
+    'bakim':    'bakim',
+    'beslenme': 'beslenme',
+    'hijyen':   'hijyen',
+    'aktivite': 'aktivite',
+    'veteriner':'veteriner',
+    'diger':    'diger',
+    'raporlar': 'raporlar',
+  }
+  // url-param → Turkish module.name (openSections için)
+  const SECTION_NAME_MAP: Record<string, string> = {
     'ozet': 'Özet', 'saglik': 'Sağlık', 'asi': 'Aşı',
     'bakim': 'Bakım', 'beslenme': 'Beslenme', 'hijyen': 'Hijyen',
     'aktivite': 'Aktivite', 'veteriner': 'Veteriner',
     'diger': 'Diğer', 'raporlar': 'Raporlar',
   }
-  const initialSection = TAB_URL_MAP[searchParams?.get('tab') ?? ''] ?? null
+  // Turkish module.name → url-safe id (div id için)
+  const MODULE_ID_MAP: Record<string, string> = {
+    'Özet': 'ozet', 'Sağlık': 'saglik', 'Aşı': 'asi',
+    'Bakım': 'bakim', 'Beslenme': 'beslenme', 'Hijyen': 'hijyen',
+    'Aktivite': 'aktivite', 'Veteriner': 'veteriner',
+    'Diğer': 'diger', 'Raporlar': 'raporlar',
+  }
+
+  const initialSection = SECTION_NAME_MAP[searchParams?.get('tab') ?? ''] ?? null
   const [openSections, setOpenSections] = useState<Set<string>>(
     initialSection ? new Set([initialSection]) : new Set()
   )
@@ -249,10 +272,10 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   useEffect(() => {
     const tabParam = searchParams?.get('tab')
     if (!tabParam) return
-    const sectionName = TAB_URL_MAP[tabParam]
-    if (!sectionName) return
+    const sectionId = TAB_URL_MAP[tabParam]
+    if (!sectionId) return
     const timer = setTimeout(() => {
-      const el = document.getElementById(`section-${sectionName}`)
+      const el = document.getElementById(`section-${sectionId}`)
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }, 500)
     return () => clearTimeout(timer)
@@ -1539,7 +1562,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           const overdueCount = pending.filter((s: any) => getTaskDateTime(s) < new Date()).length
           const cta = tabCtaInfo[module.name]
           return (
-            <div key={module.name} id={`section-${module.name}`} className="card-base overflow-hidden border border-border-main/60">
+            <div key={module.name} id={`section-${MODULE_ID_MAP[module.name] ?? module.name}`} className="card-base overflow-hidden border border-border-main/60">
               <button
                 onClick={() => toggleSection(module.name)}
                 className="w-full flex items-center gap-3 p-4 text-left hover:bg-bg-main/50 transition-colors"
