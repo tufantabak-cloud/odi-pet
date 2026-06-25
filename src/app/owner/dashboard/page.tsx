@@ -99,6 +99,7 @@ function ModuleGrid({ pets }: { pets: DashboardPet[] }) {
             key={mod.href}
             id={mod.id}
             href={mod.href}
+            suppressHydrationWarning
             className={`flex flex-col items-center gap-2 p-3 rounded-[16px] bg-gradient-to-br ${mod.gradient} border border-white/80 hover:scale-[1.04] active:scale-[0.97] transition-all duration-200 shadow-sm`}
           >
             <div className={`w-10 h-10 rounded-[12px] ${mod.iconBg} flex items-center justify-center ${mod.color}`}>
@@ -140,6 +141,7 @@ function EmptyDashboard({ firstName }: { firstName: string }) {
         <Link
           id="onb-pet-add"
           href="/owner/pets/add"
+          suppressHydrationWarning
           className="w-full btn-primary py-3.5 text-[15px] font-black shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
         >
           İlk Can Dostunu Ekle
@@ -222,6 +224,7 @@ export default async function OwnerDashboard() {
                 <Link
                   id="onb-pet-add"
                   href="/owner/pets/add"
+                  suppressHydrationWarning
                   className="flex items-center gap-1 px-4 h-11 rounded-xl bg-primary text-white text-[13px] font-bold hover:bg-primary-hover active:scale-[0.97] transition-all shadow-sm"
                 >
                   <span className="text-[14px] leading-none">+</span> Pet Ekle
@@ -243,6 +246,7 @@ export default async function OwnerDashboard() {
                       href={`/owner/pets/${pet.id}`}
                       data-testid="pet-card"
                       aria-label={`${pet.name} profiline git`}
+                      suppressHydrationWarning
                       className={`${petsWithStats.length === 1 ? "w-full" : "snap-start shrink-0 w-[160px] sm:w-[175px]"} rounded-[22px] overflow-hidden group cursor-pointer shadow-sm hover:shadow-lg transition-all duration-300 bg-surface border border-border-main/40`}
                     >
                       <div className="relative w-full" style={{ aspectRatio: '1/1' }}>
@@ -308,6 +312,7 @@ export default async function OwnerDashboard() {
             <Link
               id="onb-referral"
               href="/owner/referral"
+              suppressHydrationWarning
               className="flex items-center gap-4 p-4 rounded-[20px] bg-gradient-to-r from-primary/10 to-violet-500/10 border border-primary/15 hover:border-primary/30 hover:shadow-md active:scale-[0.98] transition-all duration-200 group"
             >
               <div className="w-12 h-12 rounded-2xl bg-primary/15 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
@@ -455,7 +460,7 @@ export default async function OwnerDashboard() {
                     </div>
                     Aktif Planlarım
                   </h2>
-                  <Link id="onb-plan-add" href="/owner/plan-yap" className="text-xs font-bold text-primary hover:underline py-2 px-1">
+                  <Link id="onb-plan-add" href="/owner/plan-yap" suppressHydrationWarning className="text-xs font-bold text-primary hover:underline py-2 px-1">
                     Yeni Ekle
                   </Link>
                 </div>
