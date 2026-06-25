@@ -272,10 +272,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   useEffect(() => {
     const tabParam = searchParams?.get('tab')
     if (!tabParam) return
-    const sectionId = TAB_URL_MAP[tabParam]
-    if (!sectionId) return
     const timer = setTimeout(() => {
-      const el = document.getElementById(`section-${sectionId}`)
+      const el = document.getElementById(`section-${tabParam}`)
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }, 500)
     return () => clearTimeout(timer)
