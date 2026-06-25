@@ -103,3 +103,6 @@ Yönetim panelinin hiçbir manuel müdahaleye gerek kalmadan, uygulamanın mevcu
 **🚫 Kesin Kısıtlamalar (Guardrails)**
 - Ana uygulamanın canlı veritabanında (Production DB) ASLA doğrudan silme (DROP, DELETE) işlemi başlatma; yalnızca yönetim arayüzü kodlarını güncelle.
 - Yönetim panelindeki güvenlik duvarlarını, yetkilendirme token'larını ve şifreleme yöntemlerini hiçbir koşulda esnetme veya değiştirme.
+
+## Uygulama Koruma ve Onay Kuralı
+**KESİN KURAL:** Kullanıcının (Tufan) açık ve yazılı onayı olmadan, uygulama asla yeni baştan yazılmayacak, mevcut dosyalar/yapı topluca silinmeyecek veya köklü mimari sıfırlamalar yapılmayacaktır. Her türlü büyük değişiklik ve yeniden yazım kararı önce kullanıcı onayına sunulmalıdır.
