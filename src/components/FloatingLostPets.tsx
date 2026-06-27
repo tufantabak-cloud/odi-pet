@@ -27,6 +27,7 @@ export default function FloatingLostPets({ userCities }: { userCities: string[] 
   const [mounted, setMounted] = useState(false)
   const [lostReports, setLostReports] = useState<LostReport[]>([])
   const [loaded, setLoaded] = useState(false)
+  const [hasMyActiveReport, setHasMyActiveReport] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -40,20 +41,32 @@ export default function FloatingLostPets({ userCities }: { userCities: string[] 
 
     const supabase = createBrowserSupabaseClient()
 
-    supabase
-      .from('lost_reports')
-      .select('*, pets!inner(name, avatar_url, species, breed, city)')
-      .eq('status', 'active')
-      .in('pets.city', userCities)
-      .order('created_at', { ascending: false })
-      .limit(10)
-      .then(({ data, error }: { data: LostReport[] | null; error: Error | null }) => {
-        if (!error && data) setLostReports(data)
-        setLoaded(true)
-      })
+    Promise.all([
+      supabase.auth.getUser(),
+      supabase
+        .from('lost_reports')
+        .select('*, pets!inner(name, avatar_url, species, breed, city, owner_id)')
+        .eq('status', 'active')
+        .in('pets.city', userCities)
+        .order('created_at', { ascending: false })
+        .limit(10)
+    ]).then(([userRes, reportsRes]) => {
+      const currentUser = userRes.data?.user
+      const data = reportsRes.data
+      const error = reportsRes.error
+
+      if (!error && data) {
+        setLostReports(data as any)
+        if (currentUser) {
+          const hasOwn = data.some((r: any) => r.pets?.owner_id === currentUser.id && r.status === 'active')
+          setHasMyActiveReport(hasOwn)
+        }
+      }
+      setLoaded(true)
+    })
   }, [userCities])
 
-  // Veriler yüklenmeden veya şehirde eşleşen ilan yoksa butonu gösterme
+  // Veriler yüklenmeden veya şehirde eşleşen ilan yoksa (veya kendi ilanı varsa)
   if (!loaded || lostReports.length === 0) return null
 
   const modalContent = (
@@ -131,11 +144,15 @@ export default function FloatingLostPets({ userCities }: { userCities: string[] 
 
       <button
         onClick={() => setOpen(true)}
-        className="relative w-12 h-12 rounded-full bg-warning flex items-center justify-center shadow-md focus:outline-none hover:bg-warning/90 transition-all duration-300 hover:scale-105 active:scale-95"
+        className={`relative w-12 h-12 rounded-full flex items-center justify-center shadow-md focus:outline-none transition-all duration-300 hover:scale-105 active:scale-95 ${
+          hasMyActiveReport ? 'bg-red-600 hover:bg-red-700' : 'bg-warning hover:bg-warning/90'
+        }`}
         aria-label="Kayıp İlanları"
       >
         {/* Sürekli pulse — aktif ilan var demek */}
-        <span className="absolute inline-flex w-full h-full rounded-full bg-warning opacity-50 animate-ping" />
+        <span className={`absolute inline-flex w-full h-full rounded-full opacity-50 animate-ping ${
+          hasMyActiveReport ? 'bg-red-600' : 'bg-warning'
+        }`} />
 
         <span className="relative text-white text-[10px] font-black tracking-tight pt-[1px]">KAYIP</span>
 

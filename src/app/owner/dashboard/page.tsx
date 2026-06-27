@@ -13,7 +13,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { PawPrint, Calendar, Pencil } from 'lucide-react'
 import SmartQuestionCard from '@/components/profiling/SmartQuestionCard'
 import SmartInsightCard from '@/components/profiling/SmartInsightCard'
-import LostReportsDrawer from '@/components/dashboard/LostReportsDrawer'
+import SocialShortcuts from '@/components/dashboard/SocialShortcuts'
 import QuickJournalWidget from '@/components/dashboard/QuickJournalWidget'
 
 export default async function OwnerDashboard() {
@@ -106,11 +106,6 @@ export default async function OwnerDashboard() {
               </span>
             </p>
           </div>
-
-          {/* Şehir Bazlı Kayıp İlanları Drawer Tetikleyicisi */}
-          {lostReports.length > 0 && (
-            <LostReportsDrawer reports={lostReports} />
-          )}
         </div>
 
         {/* Profiling Engine Questions & Insights */}
@@ -128,10 +123,12 @@ export default async function OwnerDashboard() {
               pets={pets}
               upcomingSchedules={upcomingSchedules}
               completedSchedules={completedSchedules}
-              lostReports={lostReports}
             />
           </div>
         )}
+
+        {/* Social Shortcuts Grid */}
+        <SocialShortcuts lostReportsCount={lostReports.length} />
 
         {/* Petlerim */}
         {petsWithStats && petsWithStats.length > 0 && (

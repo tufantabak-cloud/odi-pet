@@ -61,15 +61,9 @@ interface DashboardSmartCardsProps {
   pets: any[]
   upcomingSchedules: any[]
   completedSchedules?: any[]
-  lostReports?: Array<{
-    id: string
-    pet: { name: string; species: string | null } | null
-    last_seen_at: string | null
-    created_at: string | null
-  }>
 }
 
-export default function DashboardSmartCards({ pets, upcomingSchedules, completedSchedules = [], lostReports = [] }: DashboardSmartCardsProps) {
+export default function DashboardSmartCards({ pets, upcomingSchedules, completedSchedules = [] }: DashboardSmartCardsProps) {
   const router = useRouter()
   const [activeCard, setActiveCard] = useState<any>(null)
   const [quickUpdateConfig, setQuickUpdateConfig] = useState<any>(null)
@@ -284,25 +278,7 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
       }
     }
 
-    // ── 3.5. Check Normal Lost Card Condition (Orta Öncelik — 48 saat sonrası) ────
-    if (normalLost.length > 0) {
-      const normalLostCardId = `lost-normal-${normalLost[0].id}`
-      const showNormalLostCard = !dismissedCards.includes(normalLostCardId)
 
-      if (showNormalLostCard) {
-        setActiveCard({
-          id: normalLostCardId,
-          type: 'lost_normal',
-          title: 'Yakınında Kayıp İlanı',
-          text: `Bölgendeki bazı evcil dostlar aranıyor. Göz kulak olmak ister misin?`,
-          btnLabel: 'İlanları İncele',
-          action: () => {
-            router.push('/owner/social?tab=lost')
-          }
-        })
-        return
-      }
-    }
 
     // ── 4. Check Pet Dostu Mekanlar Card Condition ───────────
     const venueCardId = `venues-${targetPet.id}`
@@ -324,49 +300,7 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
 
     setActiveCard(null)
 
-  }, [pets, upcomingSchedules, dismissedCards, lostReports])
-
-  const now = Date.now()
-
-  const urgentLost = lostReports?.filter(r => {
-    const ref = r.last_seen_at || r.created_at
-    if (!ref) return true
-    const hoursAgo = (now - new Date(ref).getTime()) / (1000 * 60 * 60)
-    return hoursAgo <= 48
-  }) ?? []
-
-  const normalLost = lostReports?.filter(r => {
-    const ref = r.last_seen_at || r.created_at
-    if (!ref) return false
-    const hoursAgo = (now - new Date(ref).getTime()) / (1000 * 60 * 60)
-    return hoursAgo > 48
-  }) ?? []
-
-  if (urgentLost.length > 0) {
-    return (
-      <div className="card-base border-2 border-red-200 bg-red-50/50 p-5 flex flex-col gap-3 relative overflow-hidden">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="animate-pulse text-[20px]">🚨</span>
-          <span className="font-black text-red-600 text-[15px]">
-            Yakınında Kayıp Pet Var!
-          </span>
-        </div>
-        
-        <p className="text-[13px] text-red-700 leading-relaxed">
-          Bölgende <strong>{urgentLost.length}</strong> aktif kayıp ilanı bulunuyor. Çevrenize dikkat edin!
-        </p>
-        
-        <div className="flex">
-          <Link
-            href="/owner/social?tab=lost"
-            className="inline-flex items-center gap-1 text-[13px] font-bold text-white bg-red-600 hover:bg-red-700 px-4 py-2 rounded-btn transition-all shadow-sm shadow-red-600/10 active:scale-95"
-          >
-            İlanları Gör →
-          </Link>
-        </div>
-      </div>
-    )
-  }
+  }, [pets, upcomingSchedules, dismissedCards])
 
   if (!activeCard) {
     return null
@@ -377,7 +311,6 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
       case 'vaccine': return <VaccineIcon width={40} height={40} />
       case 'parasite': return <PillIcon width={40} height={40} />
       case 'appetite': return <BowlIcon width={40} height={40} />
-      case 'lost_normal': return <span className="text-xl">🚨</span>
       case 'venues': return <HouseIcon width={40} height={40} />
       default: return <PawIcon width={40} height={40} />
     }
@@ -388,7 +321,6 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
     parasite: { border: 'border-l-teal-400',   bg: 'bg-teal-50' },
     vaccine:  { border: 'border-l-blue-400',   bg: 'bg-blue-50' },
     appetite: { border: 'border-l-amber-400',  bg: 'bg-amber-50' },
-    lost_normal: { border: 'border-l-orange-400', bg: 'bg-orange-50/50' },
     venues:   { border: 'border-l-primary',    bg: 'bg-primary-soft' },
   }
   const accent = cardAccent[activeCard.type] ?? { border: 'border-l-primary', bg: 'bg-primary-soft' }
