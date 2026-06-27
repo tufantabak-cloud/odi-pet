@@ -25,6 +25,17 @@ export const ONBOARDING_STEPS: GuideStep[] = [
     completionTrigger: 'api:POST:/api/plans'
   },
   {
+    key: 'onb_scanner',
+    target: '#onb-scanner-capture',
+    title: 'Akıllı Tarama',
+    description: 'Hemen bir fotoğraf çek ve analiz et.',
+    position: 'bottom',
+    completionTrigger: 'click:scanner-capture'
+  }
+];
+
+export const OPTIONAL_ONBOARDING_STEPS: GuideStep[] = [
+  {
     key: 'onb_notification',
     target: '#onb-notifications',
     title: 'Bildirim İzni',
@@ -39,14 +50,6 @@ export const ONBOARDING_STEPS: GuideStep[] = [
     description: 'Detayları görmek için karta tıkla.',
     position: 'bottom',
     completionTrigger: 'click:dashboard-card'
-  },
-  {
-    key: 'onb_scanner',
-    target: '#onb-scanner-capture',
-    title: 'Akıllı Tarama',
-    description: 'Hemen bir fotoğraf çek ve analiz et.',
-    position: 'bottom',
-    completionTrigger: 'click:scanner-capture'
   },
   {
     key: 'onb_journal',

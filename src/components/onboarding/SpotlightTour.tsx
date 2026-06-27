@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useRef } from 'react';
 import { driver } from 'driver.js';
@@ -57,10 +57,6 @@ const driverCssOverride = `
   }
   .driver-popover-prev-btn:hover {
     background-color: #e2e8f0 !important;
-  }
-  /* Hide the close button completely */
-  .driver-popover-close-btn {
-    display: none !important;
   }
   /* The active element highlight border */
   div#driver-highlighted-element-stage {
@@ -143,7 +139,7 @@ export default function SpotlightTour({ steps, onComplete }: SpotlightTourProps 
       const inst = driver({
         showProgress: false,
         showButtons: ['next'], // only show Next (which becomes Done at the last step)
-        allowClose: false,
+        allowClose: true,
         overlayColor: 'rgba(0, 0, 0, 0.65)',
         popoverClass: 'odi-driver-popover',
         nextBtnText: 'Devam Et',
@@ -161,6 +157,19 @@ export default function SpotlightTour({ steps, onComplete }: SpotlightTourProps 
               }
             }
             inst.moveNext();
+          }
+        },
+        onPopoverRender: (popover) => {
+          const footer = popover.footer;
+          if (footer && !footer.querySelector('.skip-tour-btn')) {
+            const skipBtn = document.createElement('button');
+            skipBtn.innerText = 'Turu Atla';
+            skipBtn.className = 'skip-tour-btn text-[12px] text-slate-500 underline py-1 px-3 mr-auto';
+            skipBtn.onclick = () => {
+              inst.destroy();
+              if (onCompleteRef.current) onCompleteRef.current();
+            };
+            footer.insertBefore(skipBtn, footer.firstChild);
           }
         },
         onDestroyStarted: () => {

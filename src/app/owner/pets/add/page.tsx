@@ -661,19 +661,12 @@ function PetSOSStep({
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-4 mt-6 pt-6 border-t border-border-main">
-          <button 
-            type="button" 
-            onClick={onSkip}
-            className="text-[14px] font-bold text-text-secondary hover:text-text-primary px-4 py-2 transition-colors order-2 sm:order-1"
-          >
-            Atla →
-          </button>
+        <div className="flex flex-col items-center w-full gap-2 mt-6 pt-6 border-t border-border-main">
           <button
             type="button"
             onClick={onSubmit}
             disabled={loading}
-            className="btn-primary min-w-[200px] py-3.5 text-[15px] shadow-lg shadow-primary/20 disabled:opacity-50 order-1 sm:order-2"
+            className="btn-primary min-w-[200px] w-full sm:w-auto py-3.5 text-[15px] shadow-lg shadow-primary/20 disabled:opacity-50"
           >
             {loading ? (
               <span className="flex items-center gap-2 justify-center">
@@ -685,6 +678,14 @@ function PetSOSStep({
                 Kaydet ve Tamamla ✓
               </span>
             )}
+          </button>
+          
+          <button 
+            type="button" 
+            onClick={onSkip}
+            className="text-[13px] text-text-secondary underline mt-3 py-2 w-full text-center"
+          >
+            Şimdilik Atla
           </button>
         </div>
       </div>
