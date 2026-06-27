@@ -42,6 +42,24 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
 
   const userCities = Array.from(new Set((pets || []).map(p => p.city).filter(Boolean))) as string[]
 
+  const { data: navItems } = await supabase
+    .from('navigation_items')
+    .select('*')
+    .eq('is_active', true)
+    .order('order_index')
+
+  const bottomNavItems = navItems?.filter(
+    i => i.slot === 'bottom_nav'
+  ) ?? []
+
+  const actionMenuItems = navItems?.filter(
+    i => i.slot === 'action_menu'
+  ) ?? []
+
+  const menuDrawerItems = navItems?.filter(
+    i => i.slot === 'menu_drawer'
+  ) ?? []
+
   return (
     <div className="flex min-h-dvh flex-col font-sans">
 
@@ -83,7 +101,13 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
       </div>
 
       {/* Mobile Glass Bottom Nav */}
-      {showNav && <BottomNav />}
+      {showNav && (
+        <BottomNav
+          bottomNavItems={bottomNavItems}
+          actionMenuItems={actionMenuItems}
+          menuDrawerItems={menuDrawerItems}
+        />
+      )}
 
       <SpotlightTour />
       <DashboardPendingReferral />

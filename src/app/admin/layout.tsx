@@ -72,6 +72,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Link href="/admin/settings" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
               <span>⚙️</span> Ayarlar & Özellikler
             </Link>
+            <Link href="/admin/navigation" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
+              <span>🧭</span> Navigasyon
+            </Link>
           </div>
         </nav>
 

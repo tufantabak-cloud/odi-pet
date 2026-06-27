@@ -39,6 +39,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      navigation_items: {
+        Row: {
+          id: string
+          label: string
+          icon: string
+          href: string
+          slot: 'bottom_nav' | 'action_menu' | 'menu_drawer'
+          order_index: number
+          is_active: boolean
+          match_type: 'exact' | 'startsWith'
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          label: string
+          icon: string
+          href: string
+          slot: 'bottom_nav' | 'action_menu' | 'menu_drawer'
+          order_index?: number
+          is_active?: boolean
+          match_type?: 'exact' | 'startsWith'
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          label?: string
+          icon?: string
+          href?: string
+          slot?: 'bottom_nav' | 'action_menu' | 'menu_drawer'
+          order_index?: number
+          is_active?: boolean
+          match_type?: 'exact' | 'startsWith'
+          created_at?: string | null
+        }
+        Relationships: []
+      }
+      navigation_pages: {
+        Row: {
+          id: string
+          label: string
+          href: string
+          icon: string
+          is_locked: boolean
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          label: string
+          href: string
+          icon: string
+          is_locked?: boolean
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          label?: string
+          href?: string
+          icon?: string
+          is_locked?: boolean
+          created_at?: string | null
+        }
+        Relationships: []
+      }
       adoption_applications: {
         Row: {
           id: string

@@ -4,8 +4,26 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createPortal } from 'react-dom'
+import { getIcon } from '@/lib/navigation/iconMap'
 
-const actionMenuItems = [
+export type NavItem = {
+  id: string
+  label: string
+  icon: string
+  href: string
+  slot: string
+  order_index: number
+  is_active: boolean
+  match_type: 'exact' | 'startsWith'
+}
+
+type BottomNavProps = {
+  bottomNavItems?: NavItem[]
+  actionMenuItems?: NavItem[]
+  menuDrawerItems?: NavItem[]
+}
+
+const fallbackActionMenuItems = [
   { label: 'Plan Yap',     href: '/owner/plan-yap' },
   { label: 'Sağlık Kaydı/Aşı',   href: '/owner/pets' },
   { label: 'Akıllı Tarama',    href: '/owner/scanner' },
@@ -69,15 +87,65 @@ const tabs = [
   },
 ]
 
-export default function BottomNav() {
+export default function BottomNav({
+  bottomNavItems,
+  actionMenuItems: actionItemsFromDB,
+  menuDrawerItems
+}: BottomNavProps) {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => { setMounted(true) }, [])
 
+  const dynamicTabs: any[] | null = bottomNavItems && bottomNavItems.length > 0
+    ? bottomNavItems.map(item => ({
+        id: item.id,
+        label: item.label,
+        href: item.href,
+        iconString: item.icon,
+        matchType: item.match_type,
+        isAction: false
+      }))
+    : null
+
+  // Ensure action button is always inserted in dynamicTabs if it exists
+  const finalDynamicTabs = dynamicTabs ? [...dynamicTabs] : null
+  if (finalDynamicTabs && finalDynamicTabs.length > 0) {
+    // Inject the + button in the middle (usually index 2 if there are 4 items)
+    const midIndex = Math.floor(finalDynamicTabs.length / 2)
+    finalDynamicTabs.splice(midIndex, 0, {
+      ...tabs[2],
+      id: 'action-btn',
+      iconString: '',
+      matchType: 'exact' as const
+    })
+  }
+
+  const activeTabs = finalDynamicTabs ?? tabs
+  
+  const activeActionMenuItems = actionItemsFromDB && actionItemsFromDB.length > 0 
+    ? actionItemsFromDB 
+    : fallbackActionMenuItems
+
+  const handleNavClick = (e: React.MouseEvent, tab: any) => {
+    if (tab.isAction) {
+      e.preventDefault()
+      setIsMenuOpen(!isMenuOpen)
+      return
+    }
+    
+    if (tab.href === '#' || tab.label === 'Menü') {
+      e.preventDefault()
+      setIsDrawerOpen(true)
+      return
+    }
+  }
+
   return (
     <>
+      {/* Action Menu (Popup) */}
       {mounted && isMenuOpen && createPortal(
         <div className="fixed inset-0 z-[9990] flex flex-col justify-end">
           <div
@@ -85,14 +153,15 @@ export default function BottomNav() {
             onClick={() => setIsMenuOpen(false)}
           />
           <div className="relative z-[9991] w-full max-w-lg mx-auto px-[var(--space-4)] pb-[100px] flex flex-col items-end gap-2 pointer-events-none">
-            {actionMenuItems.map((item, index) => (
+            {activeActionMenuItems.map((item: any, index) => (
               <Link
                 key={item.label}
                 href={item.href}
                 onClick={() => setIsMenuOpen(false)}
                 className="pointer-events-auto bg-[var(--color-surface)] text-[var(--color-text-primary)] px-[var(--space-5)] py-3 rounded-[var(--radius-md)] shadow-[var(--shadow-md)] font-bold text-[14px] flex items-center justify-center transition-all duration-200 animate-in slide-in-from-bottom-4 fade-in hover:bg-[var(--color-surface-secondary)] active:scale-[0.98]"
-                style={{ animationDelay: `${(actionMenuItems.length - 1 - index) * 40}ms`, animationFillMode: 'both' }}
+                style={{ animationDelay: `${(activeActionMenuItems.length - 1 - index) * 40}ms`, animationFillMode: 'both' }}
               >
+                {item.icon && <span className="mr-2">{getIcon(item.icon, 18)}</span>}
                 {item.label}
               </Link>
             ))}
@@ -101,47 +170,100 @@ export default function BottomNav() {
         document.body
       )}
 
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-[var(--color-surface)] border-t border-[var(--color-border)] pt-2 pb-5 px-2 shadow-[0_-2px_12px_rgba(16,24,40,0.06)]">
-        <div className="grid grid-cols-5 w-full max-w-lg mx-auto">
-          {tabs.map((tab: any) => {
+      {/* Menu Drawer */}
+      {mounted && isDrawerOpen && createPortal(
+        <div className="fixed inset-0 z-[9990] flex flex-col justify-end">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-in fade-in"
+            onClick={() => setIsDrawerOpen(false)}
+          />
+          <div className="relative z-[9991] w-full max-w-lg mx-auto bg-surface rounded-t-3xl shadow-xl animate-in slide-in-from-bottom-full overflow-hidden">
+            <div className="p-5 border-b border-border-main flex justify-between items-center">
+              <h3 className="font-black text-[18px] text-text-primary">Daha Fazla</h3>
+              <button onClick={() => setIsDrawerOpen(false)} className="w-8 h-8 flex items-center justify-center bg-bg-main rounded-full text-text-secondary hover:text-text-primary">
+                &times;
+              </button>
+            </div>
+            
+            <div className="p-6">
+              {menuDrawerItems && menuDrawerItems.length > 0 ? (
+                <div className="grid grid-cols-3 gap-y-6 gap-x-4">
+                  {menuDrawerItems.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={item.href}
+                      onClick={() => setIsDrawerOpen(false)}
+                      className="flex flex-col items-center gap-2 text-center group"
+                    >
+                      <div className="w-14 h-14 rounded-2xl bg-bg-main flex items-center justify-center text-text-secondary group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                        {getIcon(item.icon, 24)}
+                      </div>
+                      <span className="text-[11px] font-bold text-text-primary tracking-tight">
+                        {item.label}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-10 text-text-secondary text-[13px]">
+                  Bu alana henüz öğe eklenmedi.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Main Bottom Nav */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[9989] bg-[var(--color-surface)] border-t border-[var(--color-border)] pt-2 pb-5 px-2 shadow-[0_-2px_12px_rgba(16,24,40,0.06)]">
+        <div className="flex justify-evenly items-center w-full max-w-lg mx-auto">
+          {activeTabs.map((tab: any, idx) => {
             let isActive = false
-            if (tab.href === '/owner/dashboard') {
-              isActive = pathname === tab.href || pathname.startsWith(tab.href + '/')
+            
+            if (tab.matchType) {
+              if (tab.matchType === 'exact') {
+                isActive = pathname === tab.href
+              } else {
+                isActive = pathname.startsWith(tab.href)
+              }
             } else {
               isActive = pathname === tab.href || pathname.startsWith(tab.href + '/')
             }
 
             if (tab.isAction) {
               return (
-                <button
-                  key="action-btn"
-                  id="nav-action-btn"
-                  aria-label="Yeni kayıt ekle"
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="flex flex-col items-center justify-center gap-1.5 py-1 px-1 transition-all duration-200 select-none cursor-pointer focus:outline-none z-[10000]"
-                >
-                  <div className="flex items-center justify-center w-6 h-6">
-                    {tab.icon(isActive, isMenuOpen)}
-                  </div>
-                </button>
+                <div key="action-btn-wrapper" className="flex-1 flex justify-center">
+                  <button
+                    id="nav-action-btn"
+                    aria-label="Yeni kayıt ekle"
+                    onClick={(e) => handleNavClick(e, tab)}
+                    className="flex flex-col items-center justify-center gap-1.5 py-1 px-1 transition-all duration-200 select-none cursor-pointer focus:outline-none z-[9990]"
+                  >
+                    <div className="flex items-center justify-center w-6 h-6">
+                      {tab.icon ? tab.icon(isActive, isMenuOpen) : null}
+                    </div>
+                  </button>
+                </div>
               )
             }
 
             return (
               <Link
-                key={tab.href}
+                key={tab.id || tab.href || idx}
                 href={tab.href}
-                className={`flex flex-col items-center justify-center gap-1 py-1 px-1 transition-all duration-200 select-none cursor-pointer ${
+                onClick={(e) => handleNavClick(e, tab)}
+                className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 px-1 transition-all duration-200 select-none cursor-pointer ${
                   isActive
                     ? 'text-[var(--color-primary)]'
                     : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
                 }`}
               >
                 <div className="flex items-center justify-center w-6 h-6">
-                  {tab.icon(isActive)}
+                  {tab.iconString ? getIcon(tab.iconString, 22) : (tab.icon && tab.icon(isActive))}
                 </div>
                 {tab.label && (
-                  <span className={`text-[10px] font-bold tracking-tight transition-colors duration-200 ${isActive ? 'font-black' : ''}`}>
+                  <span className={`text-[10px] font-bold tracking-tight transition-colors duration-200 truncate px-1 max-w-full ${isActive ? 'font-black' : ''}`}>
                     {tab.label}
                   </span>
                 )}
