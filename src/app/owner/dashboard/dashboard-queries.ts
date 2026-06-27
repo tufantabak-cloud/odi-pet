@@ -138,7 +138,7 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
 
           const { data: upcoming, error: upcomingError } = await supabase
             .from('health_schedules')
-            .select('*, vaccines(name), pets(name)')
+            .select('*, pets(name)')
             .in('pet_id', petIdList)
             .neq('status', 'done')
 
@@ -151,7 +151,7 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
           const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
           const { data: completed, error: completedError } = await supabase
             .from('health_schedules')
-            .select('*, vaccines(name), pets(name)')
+            .select('*, pets(name)')
             .in('pet_id', petIdList)
             .in('status', ['completed', 'done'])
             .gte('updated_at', yesterday)
