@@ -39,6 +39,21 @@ export async function POST(req: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: 'Title zorunludur' }, { status: 400 })
   }
 
+  // Aktif ilan kontrolü
+  const { data: existingListing } = await supabase
+    .from('breeding_listings')
+    .select('id')
+    .eq('pet_id', id)
+    .eq('status', 'active')
+    .single()
+
+  if (existingListing) {
+    return NextResponse.json(
+      { error: 'Bu pet için zaten aktif bir eşleştirme ilanı var.' },
+      { status: 400 }
+    )
+  }
+
   const { data: listing, error } = await supabase
     .from('breeding_listings')
     .insert({

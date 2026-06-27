@@ -11,6 +11,22 @@ export async function DELETE(
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const supabase = await createServerSupabaseClient()
+
+  // Pet sahipliği doğrulama
+  const { data: ownership } = await supabase
+    .from('pet_owners')
+    .select('profile_id')
+    .eq('pet_id', id)
+    .eq('profile_id', user.id)
+    .single()
+
+  if (!ownership) {
+    return NextResponse.json(
+      { error: 'Bu işlem için yetkiniz yok.' },
+      { status: 403 }
+    )
+  }
+
   const { error } = await supabase
     .from('health_records')
     .delete()

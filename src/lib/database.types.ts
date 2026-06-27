@@ -39,6 +39,52 @@ export type Database = {
   }
   public: {
     Tables: {
+      adoption_applications: {
+        Row: {
+          id: string
+          listing_id: string
+          applicant_id: string
+          message: string | null
+          status: string
+          kvkk_consent: boolean
+          kvkk_consent_at: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          listing_id: string
+          applicant_id: string
+          message?: string | null
+          status?: string
+          kvkk_consent?: boolean
+          kvkk_consent_at?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          listing_id?: string
+          applicant_id?: string
+          message?: string | null
+          status?: string
+          kvkk_consent?: boolean
+          kvkk_consent_at?: string | null
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adoption_applications_listing_id_fkey"
+            columns: ["listing_id"]
+            referencedRelation: "pet_adoptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adoption_applications_applicant_id_fkey"
+            columns: ["applicant_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       breeding_applications: {
         Row: {
           id: string

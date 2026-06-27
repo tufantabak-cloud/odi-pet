@@ -7,9 +7,11 @@ import { AdoptionFeedCard } from './AdoptionFeedCard'
 import { BreedingFeedCard } from './BreedingFeedCard'
 import { LostFeedCard } from './LostFeedCard'
 import { BreedingApplicationsManager } from './BreedingApplicationsManager'
+import { AdoptionApplicationsManager } from './AdoptionApplicationsManager'
 import { CreateListingPetSelectorModal } from './CreateListingPetSelectorModal'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import citiesData from '@/lib/cities.json'
+import { TURKIYE_ILLER } from '@/lib/utils/turkiyeIller'
 import dynamic from 'next/dynamic'
 
 const LostMapView = dynamic(() => import('./LostMapView'), { ssr: false, loading: () => <div className="w-full h-[500px] bg-bg-main animate-pulse rounded-2xl flex items-center justify-center font-normal text-text-secondary">Harita Yükleniyor...</div> })
@@ -62,8 +64,14 @@ export function SocialTabs({
   const [matches, setMatches] = useState<any[]>(initialMatches || [])
   const [loadingMatches, setLoadingMatches] = useState(false)
   const [myListings, setMyListings] = useState<any[]>([])
+  const [myAdoptionListings, setMyAdoptionListings] = useState<any[]>([])
+  const [currentUserId, setCurrentUserId] = useState<string>('')
   const [userApplications, setUserApplications] = useState<any[]>([])
   const [estrusOnly, setEstrusOnly] = useState(false)
+  
+  const [adoptionSpeciesFilter, setAdoptionSpeciesFilter] = useState<'all' | 'cat' | 'dog'>('all')
+  const [adoptionCityFilter, setAdoptionCityFilter] = useState<string>('')
+  const [adoptionDateFilter, setAdoptionDateFilter] = useState<'all' | '7days' | '30days'>('all')
   
   const [showCreateModal, setShowCreateModal] = useState(false)
 
@@ -109,6 +117,8 @@ export function SocialTabs({
       fetchUserApplications()
     } else if (activeTab === 'lost') {
       checkMyLostReports()
+    } else if (activeTab === 'adoption') {
+      checkMyAdoptionListing()
     }
   }, [activeTab])
 
@@ -122,6 +132,23 @@ export function SocialTabs({
       setUserCity('')
     }
   }, [myListings])
+
+  const checkMyAdoptionListing = async () => {
+    const supabase = createBrowserSupabaseClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
+    setCurrentUserId(session.user.id)
+
+    const { data } = await supabase
+      .from('pet_adoptions')
+      .select('*, pets(id, name, avatar_url, species, breed, gender, birth_date, city)')
+      .eq('user_id', session.user.id)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+
+    if (data) setMyAdoptionListings(data)
+    else setMyAdoptionListings([])
+  }
 
   const checkMyListing = async () => {
     const supabase = createBrowserSupabaseClient()
@@ -299,22 +326,142 @@ export function SocialTabs({
       </div>
 
       {/* Adoption Tab Content */}
-      {activeTab === 'adoption' && (
-        <div className="flex flex-col gap-4 animate-fadeIn">
-          {adoptions.length === 0 ? (
-            <div className="card-base bg-white border border-border-main p-10 text-center flex flex-col items-center gap-3">
-              <span className="text-[36px]">🏠</span>
-              <p className="text-[14px] text-text-secondary font-normal">Şu an için aktif bir sahiplendirme ilanı bulunmuyor.</p>
+      {activeTab === 'adoption' && (() => {
+        const filteredAdoptions = adoptions.filter(adoption => {
+          // Tür filtresi
+          if (adoptionSpeciesFilter !== 'all') {
+            const species = adoption.pet?.species?.toLowerCase()
+            if (adoptionSpeciesFilter === 'cat' && 
+                species !== 'cat' && species !== 'kedi') 
+              return false
+            if (adoptionSpeciesFilter === 'dog' && 
+                species !== 'dog' && species !== 'köpek') 
+              return false
+          }
+          // Şehir filtresi
+          if (adoptionCityFilter) {
+            const city = (adoption.pet?.city || '').toLowerCase()
+            if (!city.includes(adoptionCityFilter.toLowerCase())) 
+              return false
+          }
+          // Tarih filtresi
+          if (adoptionDateFilter !== 'all') {
+            if (!adoption.created_at) return false
+            const days = Math.floor(
+              (Date.now() - new Date(adoption.created_at).getTime()) 
+              / (1000 * 60 * 60 * 24)
+            )
+            if (adoptionDateFilter === '7days' && days > 7) 
+              return false
+            if (adoptionDateFilter === '30days' && days > 30) 
+              return false
+          }
+          return true
+        })
+
+        return (
+          <div className="flex flex-col gap-4 animate-fadeIn">
+            {myAdoptionListings.length > 0 && (
+              <div className="mb-2 flex flex-col gap-4">
+                {myAdoptionListings.map(listing => {
+                  const pet = listing.pets
+                  const speciesIcon = pet?.species === 'Kedi' || pet?.species === 'cat' ? '🐱' : pet?.species === 'Köpek' || pet?.species === 'dog' ? '🐶' : '🐾'
+                  
+                  return (
+                    <div key={listing.id} className="flex flex-col gap-3">
+                      <div className="card-base bg-white border-2 border-violet-200 p-5 rounded-2xl shadow-sm relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-violet-50 to-transparent rounded-bl-full opacity-50 -z-10 animate-pulse" />
+                        
+                        <div className="flex justify-between items-start mb-3">
+                          <span className="inline-flex items-center gap-1 bg-violet-50 text-violet-700 border border-violet-100 text-[10px] font-black px-2 py-0.5 rounded-md">
+                            📢 AKTİF SAHİPLENDİRME İLANINIZ
+                          </span>
+                        </div>
+
+                        <div className="flex gap-4 items-center">
+                          <div className="w-14 h-14 rounded-xl bg-bg-main overflow-hidden relative shrink-0">
+                            {pet?.avatar_url ? (
+                              <Image src={pet.avatar_url} alt={pet?.name || 'Pet'} fill sizes="56px" className="object-cover" />
+                            ) : (
+                              <span className="flex items-center justify-center w-full h-full text-2xl">🐾</span>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-black text-text-primary text-[16px] truncate">{pet?.name}</h4>
+                            <p className="text-[12px] text-text-secondary font-normal truncate flex items-center gap-1">
+                              <span>{speciesIcon}</span>
+                              {pet?.breed ? `• ${pet.breed}` : ''} {pet?.city ? `• ${pet.city}` : ''}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2 mt-4 pt-4 border-t border-violet-100">
+                          <Link href={`/owner/pets/${listing.pet_id}/adoption`} className="w-full text-center py-2.5 text-[13px] font-bold text-white bg-violet-600 rounded-xl hover:bg-violet-700 transition-colors shadow-sm shadow-violet-600/20">
+                            İlanı Yönet & Düzenle →
+                          </Link>
+                        </div>
+                      </div>
+
+                      <h3 className="font-black text-text-primary text-[15px] flex items-center gap-2 px-1">
+                        <span>📋</span> Başvurular Yönetimi ({pet?.name})
+                      </h3>
+                      <AdoptionApplicationsManager listingId={listing.id} petId={listing.pet_id} />
+                      
+                      <div className="h-px bg-border-main my-4 w-full max-w-[200px] mx-auto" />
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            <div className="flex flex-wrap gap-2 mb-4">
+              <select 
+                value={adoptionSpeciesFilter}
+                onChange={e => setAdoptionSpeciesFilter(e.target.value as any)}
+                className="input-base text-[13px] py-2"
+              >
+                <option value="all">Tüm Türler</option>
+                <option value="cat">🐱 Kedi</option>
+                <option value="dog">🐶 Köpek</option>
+              </select>
+
+              <select
+                value={adoptionCityFilter}
+                onChange={e => setAdoptionCityFilter(e.target.value)}
+                className="input-base text-[13px] py-2"
+              >
+                <option value="">Tüm Şehirler</option>
+                {Object.keys(TURKIYE_ILLER).sort().map(city => (
+                  <option key={city} value={city}>{city}</option>
+                ))}
+              </select>
+
+              <select
+                value={adoptionDateFilter}
+                onChange={e => setAdoptionDateFilter(e.target.value as any)}
+                className="input-base text-[13px] py-2"
+              >
+                <option value="all">Tüm Zamanlar</option>
+                <option value="7days">Son 7 Gün</option>
+                <option value="30days">Son 30 Gün</option>
+              </select>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {adoptions.map(adoption => (
-                <AdoptionFeedCard key={adoption.id} adoption={adoption} />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+
+            {filteredAdoptions.length === 0 ? (
+              <div className="card-base bg-white border border-border-main p-10 text-center flex flex-col items-center gap-3">
+                <span className="text-[36px]">🏠</span>
+                <p className="text-[14px] text-text-secondary font-normal">Şu an için aktif bir sahiplendirme ilanı bulunmuyor.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredAdoptions.map(adoption => (
+                  <AdoptionFeedCard key={adoption.id} adoption={adoption} currentUserId={currentUserId} />
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })()}
 
       {/* Lost Pets Tab Content */}
       {activeTab === 'lost' && (() => {
