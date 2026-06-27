@@ -60,6 +60,21 @@ export default function QuickJournalWidget({ pets }: QuickJournalWidgetProps) {
       if (insertError) throw insertError
 
       setSuccess(true)
+
+      // Onboarding adımını tamamla
+      try {
+        await fetch('/api/onboarding', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            action: 'complete_step', 
+            stepId: 'onb_journal' 
+          })
+        })
+      } catch {
+        // Onboarding hatası ana akışı engellemesin
+      }
+
       setAppetite('')
       setMood('')
       setNotes('')
