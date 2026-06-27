@@ -7,6 +7,7 @@ import { useWebPush } from "@/hooks/useWebPush";
 export default function PwaEnforcer() {
   const [isMounted, setIsMounted] = useState(false);
   const [shouldShow, setShouldShow] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
   const [enforceType, setEnforceType] = useState<"pwa" | "notification">("pwa");
   const [os, setOs] = useState<"ios" | "android" | "other">("other");
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -29,6 +30,21 @@ export default function PwaEnforcer() {
     setIsMounted(true);
 
     if (typeof window === "undefined") return;
+
+    const dismissedAt = localStorage.getItem('pwa_enforcer_dismissed');
+    if (dismissedAt) {
+      const daysPassed = (Date.now() - Number(dismissedAt)) / (1000 * 60 * 60 * 24);
+      if (daysPassed < 7) {
+        setDismissed(true);
+        setShouldShow(false);
+        return;
+      }
+    }
+
+    if (dismissed) {
+      setShouldShow(false);
+      return;
+    }
 
     // 1. Bypass check
     const hostname = window.location.hostname;
@@ -67,7 +83,7 @@ export default function PwaEnforcer() {
     const hasNotificationPermission = pushPermission === 'granted';
 
     if (!isStandalone) {
-      // PWA is completely enforced, no dismiss logic anymore
+      // PWA is enforced if not dismissed
       setEnforceType("pwa");
       setShouldShow(true);
     } else if (pushPermission === 'unsupported') {
@@ -79,7 +95,7 @@ export default function PwaEnforcer() {
     } else {
       setShouldShow(false);
     }
-  }, [pushPermission]);
+  }, [pushPermission, dismissed]);
 
   // Prevent scroll if visible
   useEffect(() => {
@@ -129,7 +145,7 @@ export default function PwaEnforcer() {
 
 
 
-  if (!isMounted || !shouldShow) return null;
+  if (!isMounted || !shouldShow || dismissed) return null;
 
   // ── ENFORCE NOTIFICATION ─────────────────────────────────────────
   if (enforceType === "notification") {
@@ -189,6 +205,19 @@ export default function PwaEnforcer() {
               Bildirimleri Etkinleştir
             </button>
           )}
+
+          <button
+            onClick={() => {
+              localStorage.setItem(
+                'pwa_enforcer_dismissed',
+                Date.now().toString()
+              )
+              setDismissed(true)
+            }}
+            className="text-[13px] text-white/60 underline mt-4 py-2 px-4"
+          >
+            Şimdilik Atla
+          </button>
 
           <div className="mt-8 pt-6 border-t border-white/[0.06] w-full text-center">
             <p className="text-[11px] text-zinc-500 leading-relaxed">
@@ -282,6 +311,19 @@ export default function PwaEnforcer() {
             )}
           </>
         )}
+
+        <button
+          onClick={() => {
+            localStorage.setItem(
+              'pwa_enforcer_dismissed',
+              Date.now().toString()
+            )
+            setDismissed(true)
+          }}
+          className="text-[13px] text-white/60 underline mt-4 py-2 px-4"
+        >
+          Şimdilik Atla
+        </button>
 
       </div>
     </div>

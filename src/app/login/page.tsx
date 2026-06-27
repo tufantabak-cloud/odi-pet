@@ -135,7 +135,8 @@ function LoginForm() {
         return
       }
       setSuccess(true)
-      setTimeout(() => { router.refresh(); router.replace('/') }, 1200)
+      router.refresh()
+      router.replace('/')
     } catch {
       setError('Sunucu bağlantı hatası. Lütfen tekrar deneyin.')
     } finally {

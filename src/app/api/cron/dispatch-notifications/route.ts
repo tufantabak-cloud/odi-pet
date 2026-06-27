@@ -76,7 +76,7 @@ export async function GET(req: Request) {
       .select('*')
       .eq('status', 'pending')
       .lte('scheduled_for', now)
-      .limit(50);
+      .limit(20);
 
     if (fetchError) throw fetchError;
     

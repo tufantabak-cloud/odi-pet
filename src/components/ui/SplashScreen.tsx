@@ -28,15 +28,15 @@ export default function SplashScreen() {
       sessionStorage.setItem("odi_splash_played", "true");
     }
 
-    // Faz 1 → Faz 2 geçişi: 2 saniye sonra
+    // Faz 1 → Faz 2 geçişi: 800ms sonra
     const phase2Timer = setTimeout(() => {
       setPhase(2);
-    }, 2000);
+    }, 800);
 
-    // Toplam süre: 5 saniye sonra kapat
+    // Toplam süre: 1.5 saniye (1500ms) sonra kapat
     const endTimer = setTimeout(() => {
       setIsVisible(false);
-    }, 5000);
+    }, 1500);
 
     return () => {
       clearTimeout(phase2Timer);
@@ -68,7 +68,7 @@ export default function SplashScreen() {
     <div className="fixed inset-0 z-[99999] bg-black">
       {/* Faz 2 — splash2.jpg (altta başlar, faz 2'de tam görünür) */}
       <div
-        className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+        className={`absolute inset-0 transition-opacity duration-300 ease-in-out ${
           phase === 2 ? "opacity-100" : "opacity-0"
         }`}
       >
@@ -83,7 +83,7 @@ export default function SplashScreen() {
 
       {/* Faz 1 — splash1.jpg (üstte başlar, faz 2'de kaybolur) */}
       <div
-        className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+        className={`absolute inset-0 transition-opacity duration-300 ease-in-out ${
           phase === 1 ? "opacity-100" : "opacity-0"
         }`}
       >
