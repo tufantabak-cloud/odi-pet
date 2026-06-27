@@ -59,10 +59,27 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     }
   }
 
-  const payload: PetUpdate = {}
+  // Cover Upload
+  let coverUrl = (pet as any).cover_url
+  const coverFile = fd.get('cover') as File | null
+  if (coverFile && coverFile.size > 0) {
+    const ext = coverFile.name.split('.').pop() || 'jpg'
+    const path = `covers/${user.id}/${Date.now()}.${ext}`
+    const { error: uploadError } = await supabase.storage
+      .from('pet-avatars')
+      .upload(path, coverFile, { contentType: coverFile.type, upsert: false })
+
+    if (!uploadError) {
+      const { data: urlData } = supabase.storage.from('pet-avatars').getPublicUrl(path)
+      coverUrl = urlData.publicUrl
+    }
+  }
+
+  const payload: any = {}
   if (fd.has('name')) payload.name = str(fd, 'name')
   if (fd.has('breed')) payload.breed = str(fd, 'breed')
   if (avatarUrl !== pet.avatar_url) payload.avatar_url = avatarUrl ?? undefined
+  if (coverUrl !== (pet as any).cover_url) payload.cover_url = coverUrl ?? undefined
   if (fd.has('birth_date')) payload.birth_date = str(fd, 'birth_date')
   if (fd.has('gender')) payload.gender = str(fd, 'gender')
   if (fd.has('color')) payload.color = str(fd, 'color')

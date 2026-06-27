@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 // ── TypeScript Tipleri (T5) ─────────────────────────────────────────────────
 
@@ -28,7 +29,36 @@ type PlanItem = {
   sortDate: number
 }
 
-type JournalItem = JournalEntry | PlanItem
+type GalleryItem = {
+  id: string
+  source: 'gallery'
+  image_url: string
+  category: string
+  caption?: string
+  sortDate: number
+}
+
+type AdoptionItem = {
+  source: 'adoption'
+  id: string
+  status: string
+  story?: string | null
+  created_at: string
+  updated_at?: string | null
+  sortDate: number
+}
+
+type LostItem = {
+  source: 'lost'
+  id: string
+  status: string
+  description?: string | null
+  created_at: string
+  updated_at?: string | null
+  sortDate: number
+}
+
+type JournalItem = JournalEntry | PlanItem | GalleryItem | AdoptionItem | LostItem
 
 // ── Filtre Tanımları (T2) ───────────────────────────────────────────────────
 
@@ -79,6 +109,9 @@ function groupByDate(items: JournalItem[]): { label: string; items: JournalItem[
 // ── İkon & Başlık Yardımcıları ───────────────────────────────────────────────
 
 function getIcon(item: JournalItem): string {
+  if (item.source === 'adoption') return '🏠'
+  if (item.source === 'lost') return '🚨'
+  if (item.source === 'gallery') return '📸'
   if (item.source === 'plan') {
     const p = item as PlanItem
     if (['saglik', 'asi', 'parazit'].includes(p.category)) return '💉'
@@ -98,6 +131,17 @@ function getIcon(item: JournalItem): string {
 }
 
 function getTitle(item: JournalItem): string {
+  if (item.source === 'adoption') {
+    return item.status === 'active' 
+      ? 'Sahiplendirme İlanı Açıldı' 
+      : 'Sahiplendirme İlanı Kapatıldı'
+  }
+  if (item.source === 'lost') {
+    return item.status === 'active'
+      ? 'Kayıp İlanı Oluşturuldu'
+      : 'Kayıp İlanı Kapatıldı'
+  }
+  if (item.source === 'gallery') return 'Yeni Fotoğraf'
   if (item.source === 'plan') {
     const p = item as PlanItem
     const statusText = p.status === 'completed' ? 'Tamamlandı' : p.status === 'cancelled' ? 'İptal' : 'Planlandı'
@@ -115,6 +159,9 @@ function getTitle(item: JournalItem): string {
 }
 
 function getCardStyle(item: JournalItem): string {
+  if (item.source === 'adoption') return 'border-l-4 border-l-violet-500 bg-violet-50'
+  if (item.source === 'lost') return 'border-l-4 border-l-red-500 bg-red-50'
+  if (item.source === 'gallery') return 'border-l-4 border-l-violet-500 bg-violet-50'
   if (item.source === 'plan') {
     const p = item as PlanItem
     if (p.status === 'completed') return 'border-l-4 border-l-success bg-success/5'
@@ -289,10 +336,37 @@ export default function JournalTimelineClient({
                       {item.source === 'plan' && (item as PlanItem).status === 'active' && new Date((item as PlanItem).scheduled_at).getTime() < new Date().getTime() && (
                         <p className="text-[12px] font-bold text-error">⚠️ Gecikmiş Görev</p>
                       )}
-                      {item.note && (
+                      {item.source !== 'gallery' && 'note' in item && item.note && (
                         <p className="text-[13px] text-text-secondary leading-snug mb-1 line-clamp-2">
                           {item.note}
                         </p>
+                      )}
+                      {item.source === 'gallery' && (item as GalleryItem).caption && (
+                        <p className="text-[13px] text-text-secondary leading-snug mb-1 line-clamp-2">
+                          {(item as GalleryItem).caption}
+                        </p>
+                      )}
+                      {item.source === 'gallery' && (
+                         <div className="mt-2 mb-2 w-20 h-20 relative rounded-lg overflow-hidden border border-border-main">
+                            <Image src={(item as GalleryItem).image_url} alt="Timeline photo" fill className="object-cover" />
+                         </div>
+                      )}
+                      {item.source === 'adoption' && (
+                        <div className="mt-1 text-xs text-text-secondary">
+                          {(item as AdoptionItem).story 
+                            ? `"${(item as AdoptionItem).story?.slice(0, 80)}..."` 
+                            : null}
+                          <span className="ml-2 text-violet-500 font-medium">
+                            → İlanı Gör
+                          </span>
+                        </div>
+                      )}
+                      {item.source === 'lost' && (
+                        <div className="mt-1 text-xs text-red-500 font-medium">
+                          {(item as LostItem).status === 'active' 
+                            ? '🔴 Aktif kayıp ilanı' 
+                            : '✅ Bulundu / Kapatıldı'}
+                        </div>
                       )}
                       <p className="text-[11px] font-medium text-text-secondary">
                         {formatTime(item.sortDate)}

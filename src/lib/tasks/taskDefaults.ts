@@ -64,6 +64,7 @@ export const TASK_SUB_CATEGORIES: Record<TaskCategory, SubCategoryItem[]> = {
     { id: 'Tedavi/Pansuman',  label: 'Tedavi & Pansuman' },
     { id: 'Tahlil/Rapor',     label: 'Tahlil & Rapor' },
     { id: 'Kronik Takip',     label: 'Kronik Rahatsızlık Takibi' },
+    { id: 'Alerji',           label: 'Alerji Kaydı' },
   ],
   Beslenme: [
     { id: 'Mama Siparişi', label: 'Mama Siparişi / Stok' },
@@ -139,8 +140,9 @@ export const TASK_DEFAULTS: Record<string, SmartDefault> = {
   'Belirti Takibi':  { frequency: 'weekly',  interval: 1, notification_minutes: 0 },
   'İlaç':            { frequency: 'daily',   interval: 1, notification_minutes: 0 },
   'Tedavi/Pansuman': { frequency: 'daily',   interval: 1, notification_minutes: 0 },
-  'Tahlil/Rapor':    { frequency: 'once',    interval: 1, notification_minutes: 0 },
-  'Kronik Takip':    { frequency: 'monthly', interval: 1, notification_minutes: 0 },
+  'Tahlil/Rapor':    { frequency: 'once',    interval: 1, notification_minutes: 1440 },
+  'Kronik Takip':    { frequency: 'daily',   interval: 1, notification_minutes: 60 },
+  'Alerji':          { frequency: 'once',    interval: 1, notification_minutes: 0 },
 
   // ── Beslenme ─────────────────────────────────────────────────────
   'Mama Siparişi':  { frequency: 'monthly', interval: 1, notification_minutes: 0 },

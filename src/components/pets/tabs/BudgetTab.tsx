@@ -1,11 +1,14 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import { Database } from '@/types'
+
+type PetRow = Database['public']['Tables']['pets']['Row']
 
 const CATEGORIES = [
   { key: 'Mama & Beslenme', icon: '🦴', color: 'from-amber-400 to-orange-500', bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
   { key: 'Sağlık & Veteriner', icon: '🏥', color: 'from-rose-400 to-red-500', bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
-  { key: 'Oyuncak & Aksesuar', icon: '🧸', color: 'from-violet-400 to-purple-500', bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200' },
+  { key: 'Oyuncak & Aksesuar', icon: '🐾', color: 'from-violet-400 to-purple-500', bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200' },
   { key: 'Bakım', icon: '✨', color: 'from-teal-400 to-emerald-500', bg: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-200' },
 ]
 
@@ -18,7 +21,7 @@ interface Expense {
   created_at: string
 }
 
-export default function BudgetTab({ pet }: { pet: any }) {
+export default function BudgetTab({ pet }: { pet: PetRow }) {
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -36,7 +39,10 @@ export default function BudgetTab({ pet }: { pet: any }) {
       const res = await fetch(`/api/pets/${pet.id}/expenses`)
       const data = await res.json()
       if (res.ok) setExpenses(data.expenses ?? [])
-    } catch { /* silent */ } finally { setLoading(false) }
+      else setError('Harcamalar yüklenirken bir hata oluştu.')
+    } catch { 
+      setError('Bağlantı hatası: Harcamalar yüklenemedi.')
+    } finally { setLoading(false) }
   }, [pet.id])
 
   useEffect(() => { fetchExpenses() }, [fetchExpenses])
@@ -63,23 +69,44 @@ export default function BudgetTab({ pet }: { pet: any }) {
   }
 
   // Hesaplamalar
-  const now = new Date()
-  const currentMonth = now.getMonth()
-  const currentYear = now.getFullYear()
-  const monthlyExpenses = expenses.filter(e => {
-    const d = new Date(e.date)
-    return d.getMonth() === currentMonth && d.getFullYear() === currentYear
-  })
-  const total = monthlyExpenses.reduce((sum, e) => sum + Number(e.amount), 0)
-
-  const categoryTotals = CATEGORIES.map(cat => ({
-    ...cat,
-    total: monthlyExpenses.filter(e => e.category === cat.key).reduce((sum, e) => sum + Number(e.amount), 0),
-  }))
+  const { monthlyExpenses, total, categoryTotals, now } = useMemo(() => {
+    const nowObj = new Date()
+    const currentMonth = nowObj.getMonth()
+    const currentYear = nowObj.getFullYear()
+    const filtered = expenses.filter(e => {
+      const d = new Date(e.date)
+      return d.getMonth() === currentMonth && d.getFullYear() === currentYear
+    })
+    const sum = filtered.reduce((sum, e) => sum + Number(e.amount), 0)
+    const catTotals = CATEGORIES.map(cat => ({
+      ...cat,
+      total: filtered.filter(e => e.category === cat.key).reduce((sum, e) => sum + Number(e.amount), 0),
+    }))
+    return { monthlyExpenses: filtered, total: sum, categoryTotals: catTotals, now: nowObj }
+  }, [expenses])
 
   return (
     <div className="flex flex-col gap-5 animate-fadeInUp">
-      {/* Aylık Toplam */}
+      {/* Hata Bildirimi */}
+      {error && !showForm && (
+        <div className="p-3 bg-red-50 text-red-700 text-[13px] font-bold rounded-xl border border-red-200">
+          {error}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="flex flex-col gap-4">
+          <div className="h-[104px] bg-emerald-50/50 rounded-2xl animate-pulse" />
+          <div className="h-[48px] bg-slate-100 rounded-2xl animate-pulse" />
+          <div className="space-y-2 mt-4">
+            <div className="h-[60px] bg-white border border-slate-100 rounded-2xl animate-pulse" />
+            <div className="h-[60px] bg-white border border-slate-100 rounded-2xl animate-pulse" />
+            <div className="h-[60px] bg-white border border-slate-100 rounded-2xl animate-pulse" />
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Aylık Toplam */}
       <div className="card-base p-6 bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 shadow-sm rounded-2xl flex items-center justify-between">
         <div>
           <p className="text-[12px] font-black text-emerald-600 uppercase tracking-widest mb-1">Aylık Harcama</p>
@@ -229,6 +256,8 @@ export default function BudgetTab({ pet }: { pet: any }) {
           <p className="text-[14px] font-bold text-text-secondary">Henüz harcama kaydı yok</p>
           <p className="text-[12px] text-text-secondary mt-1">Yukarıdaki butona tıklayarak ilk harcamanızı ekleyin.</p>
         </div>
+      )}
+        </>
       )}
     </div>
   )

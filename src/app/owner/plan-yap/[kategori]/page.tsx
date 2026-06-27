@@ -76,6 +76,8 @@ export default function WizardOrchestrator() {
         if (planData) initialPlanData = planData;
       }
 
+      const queryPetId = searchParams.get('pet_id');
+
       if (initialPlanData) {
         const scheduleDate = new Date(initialPlanData.scheduled_at);
         const dateStr = scheduleDate.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' });
@@ -112,6 +114,7 @@ export default function WizardOrchestrator() {
         setStepIndex(1);
       } else {
         setStepData({
+          pet_id: queryPetId || undefined,
           date: d.toISOString().split('T')[0],
           time: '12:00',
           frequency: 'once',
@@ -122,12 +125,15 @@ export default function WizardOrchestrator() {
           metadata: {},
           notes: ''
         });
+        if (queryPetId) {
+          setStepIndex(1); // URL'de pet_id varsa pet seçim adımını atla
+        }
       }
 
       const { data, error } = await supabase.from('pets').select('id, name, species, avatar_url');
       if (!error && data) {
         setPets(data.map((p: any) => ({ ...p, type: p.species })));
-        if (data.length === 1 && !initialPlanData) {
+        if (data.length === 1 && !initialPlanData && !queryPetId) {
           setStepData({ pet_id: data[0].id });
         }
       }
@@ -138,7 +144,7 @@ export default function WizardOrchestrator() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryKey, editId]); // reset on category change
 
-  const activePet = pets.find(p => p.id === wizardData.pet_id);
+  const activePet = pets.find(p => p.id === (wizardData.pet_id || searchParams.get('pet_id')));
   const speciesStr = activePet?.type;
 
   // ── Smart Defaults Uygula (Alt Kategori Değişince) ────────────────
@@ -240,6 +246,7 @@ export default function WizardOrchestrator() {
 
   const showMetadata = () => {
     if (subCat === 'Diğer') return true;
+    if (subCat === 'Alerji') return true;
     if (!subCat && categoryKey !== 'asi') return false; // Alt kategori seçilmeden gösterme
     
     if (categoryKey === 'saglik') {
@@ -257,9 +264,12 @@ export default function WizardOrchestrator() {
     steps.push({ key: 'metadata', type: 'metadata_selection', title: 'Detaylar', desc: 'Planla ilgili ekstra detaylar girin.' });
   }
 
-  steps.push({ key: 'datetime', type: 'datetime_selection', title: 'Tarih & Saat', desc: 'İşlem ne zaman gerçekleşecek?' });
-  steps.push({ key: 'recurrence', type: 'recurrence_selection', title: 'Tekrar Sıklığı', desc: 'Bu plan tekrarlanacak mı?' });
-  steps.push({ key: 'notification', type: 'notification_selection', title: 'Bildirim', desc: 'Hatırlatıcı ayarlarınızı tamamlayın.' });
+  // Alerji kaydı için tarih-saat, tekrar ve bildirim adımlarını atlayalım, çünkü bu bir randevu/rutin değil geçmiş veya kalıcı durum kaydıdır.
+  if (subCat !== 'Alerji') {
+    steps.push({ key: 'datetime', type: 'datetime_selection', title: 'Tarih & Saat', desc: 'İşlem ne zaman gerçekleşecek?' });
+    steps.push({ key: 'recurrence', type: 'recurrence_selection', title: 'Tekrar Sıklığı', desc: 'Bu plan tekrarlanacak mı?' });
+    steps.push({ key: 'notification', type: 'notification_selection', title: 'Bildirim', desc: 'Hatırlatıcı ayarlarınızı tamamlayın.' });
+  }
 
   const totalSteps = steps.length;
   // Use a clamped index in case we jump around
@@ -273,6 +283,7 @@ export default function WizardOrchestrator() {
   if (currentStep?.key === 'selectedVaccine' && !wizardData.selectedVaccine) isNextDisabled = true;
   if (currentStep?.key === 'datetime' && !wizardData.date) isNextDisabled = true;
   if (currentStep?.key === 'metadata' && subCat === 'Diğer' && !wizardData.customText?.trim()) isNextDisabled = true;
+  if (currentStep?.key === 'metadata' && subCat === 'Alerji' && !wizardData.metadata?.trigger_name?.trim()) isNextDisabled = true;
   if (currentStep?.key === 'recurrence' && wizardData.frequency !== 'once' && wizardData.endCondition === 'date' && !wizardData.endDate) isNextDisabled = true;
 
   const handleDelete = async () => {
@@ -292,6 +303,34 @@ export default function WizardOrchestrator() {
   // ── API Payload Hazırlama ─────────────────────────────────────────
   const handleSubmit = async () => {
     setIsSubmitting(true);
+    const petId = wizardData.pet_id || (pets.length === 1 ? pets[0].id : null);
+
+    if (subCat === 'Alerji') {
+      try {
+        const res = await fetch(`/api/pets/${petId}/allergies`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            trigger_name: wizardData.metadata?.trigger_name,
+            symptoms: wizardData.metadata?.symptoms || null,
+            treatment: wizardData.metadata?.treatment || null,
+          }),
+        });
+
+        if (res.ok) {
+          setIsSuccess(true);
+        } else {
+          const errData = await res.json();
+          alert(`Hata: ${errData.error || 'Alerji kaydı eklenemedi'}`);
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Beklenmeyen bir hata oluştu.');
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
     
     // Combine Date and Time
     let scheduledAt = wizardData.date;
@@ -307,7 +346,7 @@ export default function WizardOrchestrator() {
     }
 
     const payload = {
-      pet_id: wizardData.pet_id || (pets.length === 1 ? pets[0].id : null),
+      pet_id: petId,
       category: categoryKey,
       sub_type: subCat === 'Diğer' ? (wizardData.customText || 'Diğer') : (subCat || 'Genel'),
       scheduled_at: new Date(scheduledAt).toISOString(),
@@ -421,7 +460,42 @@ export default function WizardOrchestrator() {
               />
             </div>
           )}
-          {categoryKey === 'saglik' && (
+          {subCat === 'Alerji' && (
+            <>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-bold text-slate-700">Alerjen / Tetikleyici Adı <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  value={wizardData.metadata?.trigger_name || ''}
+                  onChange={(e) => setStepData({ metadata: { ...wizardData.metadata, trigger_name: e.target.value } })}
+                  placeholder="Örn: Tavuk eti, polen, aşı vb."
+                  className="w-full p-3 border border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none font-medium"
+                  required
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-bold text-slate-700">Semptomlar / Belirtiler</label>
+                <input
+                  type="text"
+                  value={wizardData.metadata?.symptoms || ''}
+                  onChange={(e) => setStepData({ metadata: { ...wizardData.metadata, symptoms: e.target.value } })}
+                  placeholder="Örn: Kaşıntı, döküntü, kusma..."
+                  className="w-full p-3 border border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none font-medium"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-bold text-slate-700">Tedavi / Müdahale Yöntemi</label>
+                <input
+                  type="text"
+                  value={wizardData.metadata?.treatment || ''}
+                  onChange={(e) => setStepData({ metadata: { ...wizardData.metadata, treatment: e.target.value } })}
+                  placeholder="Örn: Kortizon iğnesi, mama değişimi..."
+                  className="w-full p-3 border border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none font-medium"
+                />
+              </div>
+            </>
+          )}
+          {categoryKey === 'saglik' && ['Tedavi/Pansuman', 'Tahlil/Rapor', 'Kronik Takip', 'İlaç'].includes(wizardData.subCategory || '') && (
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-bold text-slate-700">Veteriner / Klinik Adı</label>
               <input
@@ -715,7 +789,7 @@ export default function WizardOrchestrator() {
 
           {isPastDate && (
              <label className="p-4 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-start gap-3 cursor-pointer group hover:bg-indigo-100/50 transition-colors">
-             <div className="relative flex items-center mt-0.5 shrink-0">
+              <div className="relative flex items-center mt-0.5 shrink-0">
                <input 
                  type="checkbox" 
                  checked={wizardData.markAsDone || false}
@@ -738,6 +812,7 @@ export default function WizardOrchestrator() {
   // ── Başarı Ekranı ─────────────────────────────────────────────────
   if (isSuccess) {
     const petInfo = pets.find(p => p.id === wizardData.pet_id);
+    const isAllergy = subCat === 'Alerji';
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 animate-in fade-in duration-500">
         <div className="max-w-md mx-auto w-full text-center space-y-6">
@@ -745,22 +820,45 @@ export default function WizardOrchestrator() {
             <CheckCircle2 className="w-10 h-10" />
           </div>
           <div>
-            <h2 className="text-2xl font-black text-slate-900">{isEditMode ? 'Rutin Güncellendi!' : 'Rutin Oluşturuldu!'}</h2>
-            <p className="text-slate-500 text-sm mt-1">{petInfo?.name || 'Evcil hayvanınız'} için plan başarıyla {isEditMode ? 'güncellendi' : 'kaydedildi'}.</p>
+            <h2 className="text-2xl font-black text-slate-900">{isAllergy ? 'Alerji Kaydı Oluşturuldu!' : (isEditMode ? 'Rutin Güncellendi!' : 'Rutin Oluşturuldu!')}</h2>
+            <p className="text-slate-500 text-sm mt-1">{petInfo?.name || 'Evcil hayvanınız'} için {isAllergy ? 'alerji kaydı başarıyla oluşturuldu' : (isEditMode ? 'plan başarıyla güncellendi' : 'plan başarıyla kaydedildi')}.</p>
           </div>
           <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 text-left space-y-3">
-             <div className="flex justify-between items-start py-2 border-b border-slate-50">
-               <span className="text-xs font-semibold text-slate-400">Görev</span>
-               <span className="text-xs font-bold text-slate-800 text-right">{wizardData.selectedVaccine ? wizardData.selectedVaccine.name : (wizardData.subCategory === 'Diğer' ? wizardData.customText : wizardData.subCategory)}</span>
-             </div>
-             <div className="flex justify-between items-start py-2 border-b border-slate-50">
-               <span className="text-xs font-semibold text-slate-400">Zaman</span>
-               <span className="text-xs font-bold text-slate-800 text-right">{wizardData.date} {wizardData.time}</span>
-             </div>
-             <div className="flex justify-between items-start py-2">
-               <span className="text-xs font-semibold text-slate-400">Tekrar</span>
-               <span className="text-xs font-bold text-slate-800 text-right">{wizardData.frequency === 'once' ? 'Tek Seferlik' : `Her ${wizardData.interval} ${FREQ_LABEL[wizardData.frequency]}`}</span>
-             </div>
+             {isAllergy ? (
+               <>
+                 <div className="flex justify-between items-start py-2 border-b border-slate-50">
+                   <span className="text-xs font-semibold text-slate-400">Alerjen / Tetikleyici</span>
+                   <span className="text-xs font-bold text-slate-800 text-right">{wizardData.metadata?.trigger_name}</span>
+                 </div>
+                 {wizardData.metadata?.symptoms && (
+                   <div className="flex justify-between items-start py-2 border-b border-slate-50">
+                     <span className="text-xs font-semibold text-slate-400">Semptomlar</span>
+                     <span className="text-xs font-bold text-slate-800 text-right">{wizardData.metadata?.symptoms}</span>
+                   </div>
+                 )}
+                 {wizardData.metadata?.treatment && (
+                   <div className="flex justify-between items-start py-2">
+                     <span className="text-xs font-semibold text-slate-400">Tedavi</span>
+                     <span className="text-xs font-bold text-slate-800 text-right">{wizardData.metadata?.treatment}</span>
+                   </div>
+                 )}
+               </>
+             ) : (
+               <>
+                 <div className="flex justify-between items-start py-2 border-b border-slate-50">
+                   <span className="text-xs font-semibold text-slate-400">Görev</span>
+                   <span className="text-xs font-bold text-slate-800 text-right">{wizardData.selectedVaccine ? wizardData.selectedVaccine.name : (wizardData.subCategory === 'Diğer' ? wizardData.customText : wizardData.subCategory)}</span>
+                 </div>
+                 <div className="flex justify-between items-start py-2 border-b border-slate-50">
+                   <span className="text-xs font-semibold text-slate-400">Zaman</span>
+                   <span className="text-xs font-bold text-slate-800 text-right">{wizardData.date} {wizardData.time}</span>
+                 </div>
+                 <div className="flex justify-between items-start py-2">
+                   <span className="text-xs font-semibold text-slate-400">Tekrar</span>
+                   <span className="text-xs font-bold text-slate-800 text-right">{wizardData.frequency === 'once' ? 'Tek Seferlik' : `Her ${wizardData.interval} ${FREQ_LABEL[wizardData.frequency]}`}</span>
+                 </div>
+               </>
+             )}
           </div>
           <button onClick={() => router.push(`/owner/pets/${wizardData.pet_id}`)} className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-md transition-all active:scale-[0.98]">
             Pet Profiline Dön
@@ -795,6 +893,14 @@ export default function WizardOrchestrator() {
         onSkip={() => {
           setStepData({ selectedVaccine: 'Belirtilmedi' });
           nextStep();
+        }}
+        onBack={() => {
+          const queryPetId = searchParams.get('pet_id');
+          if (queryPetId && stepIndex === 1) {
+            router.push(`/owner/pets/${queryPetId}`);
+          } else {
+            prevStep();
+          }
         }}
         onSubmit={handleSubmit}
         isNextDisabled={isNextDisabled}

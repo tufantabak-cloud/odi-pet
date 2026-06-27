@@ -12,6 +12,7 @@ interface WizardShellProps {
   children: React.ReactNode;
   onNext?: () => void;
   onSkip?: () => void;
+  onBack?: () => void;
   onSubmit?: () => void;
   canSkip?: boolean;
   isNextDisabled?: boolean;
@@ -26,6 +27,7 @@ export function WizardShell({
   children,
   onNext,
   onSkip,
+  onBack,
   onSubmit,
   canSkip = false,
   isNextDisabled = false,
@@ -38,7 +40,9 @@ export function WizardShell({
   const theme = categoryThemes[category];
 
   const handleBack = () => {
-    if (stepIndex > 0) {
+    if (onBack) {
+      onBack();
+    } else if (stepIndex > 0) {
       prevStep();
     } else {
       router.back();

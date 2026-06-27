@@ -275,14 +275,13 @@ export default function FloatingSOS({
         {open && mounted && createPortal(modalContent, document.body)}
         <button
           onClick={() => setOpen(true)}
-          className="relative w-full h-11 rounded-[14px] bg-error flex items-center justify-center gap-2 shadow-md hover:bg-error/90 active:scale-[0.98] transition-all duration-200 focus:outline-none overflow-hidden"
+          className="relative w-full h-9 rounded-[var(--radius-sm)] bg-[#fff0f0] border border-[#ffcccc] flex items-center justify-center gap-2 hover:bg-[#ffe5e5] active:scale-[0.98] transition-all duration-200 focus:outline-none overflow-hidden"
           aria-label="Acil SOS"
         >
-          <span className="absolute inset-0 bg-error/20 animate-pulse rounded-[14px]" />
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="relative z-10">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e04b4b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="relative z-10 text-[#e04b4b]">
             <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6.09 6.09l1.62-1.62a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
           </svg>
-          <span className="relative z-10 text-white text-[13px] font-black tracking-wide">🆘 Acil Durum</span>
+          <span className="relative z-10 text-[#e04b4b] text-[14px] font-bold">Acil Durum</span>
         </button>
       </>
     )

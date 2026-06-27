@@ -70,10 +70,15 @@ export function useOnboarding() {
   }, []);
 
   useEffect(() => {
-    // Global fetch interceptor for api:* triggers
     const originalFetch = window.fetch;
     window.fetch = async (...args) => {
-      const response = await originalFetch(...args);
+      let response;
+      try {
+        response = await originalFetch(...args);
+      } catch (err) {
+        // Ağ hatası veya bağlantı kesintilerinde hatayı aynen dışarı fırlat
+        throw err;
+      }
       
       try {
         const [resource, config] = args;

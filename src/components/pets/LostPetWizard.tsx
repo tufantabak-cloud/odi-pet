@@ -17,6 +17,7 @@ export default function LostPetWizard({ pet, ownerPhone, onComplete, onCancel }:
   const [location, setLocation] = useState('')
   const [selectedCity, setSelectedCity] = useState('')
   const [selectedDistrict, setSelectedDistrict] = useState('')
+  const [latLon, setLatLon] = useState<{lat: number, lon: number} | null>(null)
   const [provinces, setProvinces] = useState<any[]>([])
   
   const [loading, setLoading] = useState(false)
@@ -77,7 +78,9 @@ export default function LostPetWizard({ pet, ownerPhone, onComplete, onCancel }:
           contact_phone: contactPhone,
           last_seen_location: fullLocation,
           city: selectedCity,
-          district: selectedDistrict
+          district: selectedDistrict,
+          latitude: latLon?.lat,
+          longitude: latLon?.lon
         })
       })
 
@@ -101,6 +104,7 @@ export default function LostPetWizard({ pet, ownerPhone, onComplete, onCancel }:
           try {
             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&accept-language=tr`)
             const data = await res.json()
+            setLatLon({ lat, lon })
             if (data && data.address) {
               const addr = data.address
               const provinceName = addr.province || addr.city || addr.state

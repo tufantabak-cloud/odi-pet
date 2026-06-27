@@ -53,24 +53,29 @@ export default function WeightGoalBand({ assessment, currentWeight, compact = fa
   if (compact) {
     return (
       <div 
-        className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 px-4 py-2.5"
+        className="flex items-center justify-between px-4 py-2.5"
         style={{
           background: cfg.bg,
-          borderTop: `0.5px solid ${cfg.border}`,
-          borderBottomLeftRadius: 'var(--radius-lg, 0.5rem)',
-          borderBottomRightRadius: 'var(--radius-lg, 0.5rem)',
+          borderTop: `1px solid ${cfg.border}`,
+          borderBottomLeftRadius: '18px',
+          borderBottomRightRadius: '18px',
         }}
       >
-        <div className="flex items-start sm:items-center gap-2">
-          <i className={`ti ${cfg.icon} mt-[3px] sm:mt-0 shrink-0`} style={{ color: cfg.color, fontSize: '14px' }} />
-          <div className="leading-snug" style={{ color: cfg.color, fontSize: '12px' }}>
-            <span style={{ fontWeight: 600 }}>{cfg.label} </span>
-            <span style={{ opacity: 0.85 }}>{cfg.message(diffKg)}</span>
-          </div>
+        <div className="flex items-center gap-2 text-[12px] font-bold" style={{ color: cfg.color }}>
+          {status === 'ideal' && (
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+          )}
+          {status === 'overweight' && (
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          )}
+          {status === 'underweight' && (
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          )}
+          <span>{cfg.label} <span className="font-medium text-text-secondary">{cfg.message(diffKg)}</span></span>
         </div>
         {isFallback && (
-          <span className="sm:ml-auto text-[10px] text-text-tertiary sm:whitespace-nowrap mt-0.5 sm:mt-0">
-            Genel profil kullanıldı — Irk girerek doğruluğu artır
+          <span className="text-[10px] font-bold text-text-secondary/60">
+            Irk tahmini
           </span>
         )}
       </div>

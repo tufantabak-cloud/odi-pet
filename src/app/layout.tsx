@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import 'leaflet/dist/leaflet.css';
 import OfflineIndicator from "@/components/ui/OfflineIndicator";
 import SplashScreen from "@/components/ui/SplashScreen";
 import PwaEnforcer from "@/components/ui/PwaEnforcer";

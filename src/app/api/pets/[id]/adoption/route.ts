@@ -58,7 +58,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
   }
 
   const body = await req.json()
-  const { action, story } = body // action: 'activate' | 'cancel'
+  const { action, story, requirements } = body // action: 'activate' | 'cancel'
 
   if (action === 'cancel') {
     // Mevcut aktif ilanı iptal et
@@ -85,6 +85,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
       user_id: user.id,
       status: 'active',
       story: story || null,
+      requirements: requirements || [],
     })
     .select()
     .single()

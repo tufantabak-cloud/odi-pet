@@ -1,0 +1,349 @@
+'use client'
+
+import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { Database } from '@/types'
+import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+
+type PetRow = Database['public']['Tables']['pets']['Row']
+
+export default function BreedingListingManager({ pet }: { pet: PetRow }) {
+  const router = useRouter()
+  const [listing, setListing] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+  const [isEditing, setIsEditing] = useState(false)
+  
+  // form state
+  const [title, setTitle] = useState('')
+  const [notes, setNotes] = useState('')
+  const [start, setStart] = useState('')
+  const [end, setEnd] = useState('')
+  const [reqs, setReqs] = useState<string[]>([])
+  
+  const [selectedPhotoUrl, setSelectedPhotoUrl] = useState<string | null>(null)
+  const [estrusNotif, setEstrusNotif] = useState(false)
+  const [activeCycle, setActiveCycle] = useState<any>(null)
+  const [experience, setExperience] = useState('beginner')
+  const [gallery, setGallery] = useState<any[]>([])
+
+  const availableReqs = ['Aşı Kartı Zorunlu', 'Sağlık Belgesi', 'Aynı Irk', 'Veteriner Onaylı', 'Sözleşmeli']
+
+  useEffect(() => {
+    const fetchListing = async () => {
+      const res = await fetch(`/api/breeding-listings`)
+      if (res.ok) {
+        const data = await res.json()
+        const myListing = data.listings?.find((l: any) => l.pet_id === pet.id)
+        if (myListing) {
+          setListing(myListing)
+          if (myListing.photo_url) setSelectedPhotoUrl(myListing.photo_url)
+          if (myListing.estrus_notification_enabled) setEstrusNotif(myListing.estrus_notification_enabled)
+          if (myListing.experience_level) setExperience(myListing.experience_level)
+        }
+      }
+      setLoading(false)
+    }
+    const fetchGallery = async () => {
+      const supabase = createBrowserSupabaseClient()
+      const { data } = await supabase.from('pet_gallery').select('id, image_url').eq('pet_id', pet.id)
+      if (data) setGallery(data)
+    }
+    const fetchEstrusCycle = async () => {
+      const supabase = createBrowserSupabaseClient()
+      const today = new Date().toISOString().split('T')[0]
+      const { data } = await supabase
+        .from('pet_estrus_cycles')
+        .select('id, start_date, end_date, notes')
+        .eq('pet_id', pet.id)
+        .lte('start_date', today)
+        .gte('end_date', today)
+        .order('start_date', { ascending: false })
+        .limit(1)
+      if (data && data.length > 0) {
+        setActiveCycle(data[0])
+      }
+    }
+    fetchGallery()
+    fetchListing()
+    if (pet.gender === 'female') {
+      fetchEstrusCycle()
+    }
+  }, [pet.id, pet.gender])
+
+  if (loading) return <div className="animate-pulse bg-slate-100 h-24 rounded-xl w-full mb-6" />
+
+  if (listing && !isEditing) {
+    const getExperienceBadge = (level: string) => {
+      switch(level) {
+        case 'experienced': return { icon: '⭐', label: 'Deneyimli', color: 'bg-amber-50 text-amber-700 border-amber-200' }
+        case 'expert': return { icon: '🏆', label: 'Çok Deneyimli', color: 'bg-violet-50 text-violet-700 border-violet-200' }
+        case 'beginner':
+        default: return { icon: '🌱', label: 'İlk Deneyim', color: 'bg-green-50 text-green-700 border-green-200' }
+      }
+    }
+    const exp = getExperienceBadge(listing.experience_level)
+
+    return (
+      <div className="mb-8 p-4 bg-rose-50 border border-rose-200 rounded-2xl relative overflow-hidden shadow-sm">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-white to-transparent opacity-50 rounded-bl-[100px] pointer-events-none" />
+        <div className="flex justify-between items-start mb-2 relative z-10">
+          <div>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white text-rose-700 text-[11px] font-black tracking-wide border border-rose-100 shadow-sm mb-3">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-rose-400"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+              </span>
+              AKTİF İLANINIZ
+            </span>
+            <h3 className="font-bold text-[16px] text-slate-800">{listing.title}</h3>
+          </div>
+        </div>
+        {listing.notes && <p className="text-[13px] text-slate-600 mb-3 relative z-10 line-clamp-2">{listing.notes}</p>}
+        <div className="flex flex-wrap gap-1.5 relative z-10 mb-3">
+          {listing.requirements?.map((req: string) => (
+            <span key={req} className="px-2 py-1 bg-white border border-rose-100 text-rose-600 rounded-md text-[10px] font-bold shadow-sm">
+              {req}
+            </span>
+          ))}
+          <span className={`px-2 py-1 rounded-md text-[10px] font-bold shadow-sm border flex items-center gap-1 bg-white ${exp.color}`}>
+            <span>{exp.icon}</span> {exp.label}
+          </span>
+        </div>
+        
+        <div className="flex items-center gap-2 mt-4 pt-3 border-t border-rose-100/50 relative z-10">
+          <button onClick={() => {
+            setTitle(listing.title)
+            setNotes(listing.notes || '')
+            setStart(listing.preferred_date_start || '')
+            setEnd(listing.preferred_date_end || '')
+            setReqs(listing.requirements || [])
+            setSelectedPhotoUrl(listing.photo_url || null)
+            setEstrusNotif(listing.estrus_notification_enabled || false)
+            setExperience(listing.experience_level || 'beginner')
+            setIsEditing(true)
+          }} className="flex-1 bg-white border border-slate-200 text-slate-700 font-bold text-[12px] py-2 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
+            Düzenle
+          </button>
+          <button onClick={async () => {
+            if(!confirm('İlanı kapatmak istediğinize emin misiniz?')) return
+            await fetch(`/api/breeding-listings/${pet.id}`, {
+              method: 'PATCH', body: JSON.stringify({ status: 'closed' })
+            })
+            window.location.reload()
+          }} className="flex-1 bg-white border border-slate-200 text-slate-700 font-bold text-[12px] py-2 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
+            İlanı Kapat
+          </button>
+          <button onClick={async () => {
+            if(!confirm('Bu işlem geri alınamaz. İlanı kalıcı olarak silmek istiyor musunuz?')) return
+            await fetch(`/api/breeding-listings/${pet.id}`, { method: 'DELETE' })
+            window.location.reload()
+          }} className="px-4 bg-red-50 border border-red-200 text-red-600 font-bold text-[12px] py-2 rounded-xl hover:bg-red-100 transition-colors flex items-center justify-center cursor-pointer">
+            🗑 Sil
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (pet.is_neutered) {
+    return (
+      <div className="mb-8 card-base bg-white border border-border-main p-5 text-center flex flex-col items-center gap-3 relative overflow-hidden">
+        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-2xl mb-1 shadow-inner border border-slate-100">
+          ✂️
+        </div>
+        <div>
+          <h3 className="font-bold text-slate-800 text-[15px]">Kısırlaştırılmış Profil</h3>
+          <p className="text-[13px] text-slate-500 mt-1 max-w-[280px]">
+            Petinizin profilinde &apos;Kısırlaştırılmış&apos; seçili olduğundan üreme ilanı oluşturamazsınız. Bu bilgide hata varsa profilinizi güncelleyebilirsiniz.
+          </p>
+        </div>
+        <button onClick={() => router.push(`/owner/pets/${pet.id}/edit`)} className="mt-2 btn-primary bg-slate-800 hover:bg-slate-900 py-2px-6 h-10 text-[13px] px-6 rounded-xl shadow-md transition-all">
+          Profili Güncelle
+        </button>
+      </div>
+    )
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSubmitting(true)
+    setError('')
+    
+    try {
+      const res = await fetch(`/api/breeding-listings/${pet.id}`, {
+        method: listing ? 'PATCH' : 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          title,
+          notes,
+          preferred_date_start: start || null,
+          preferred_date_end: end || null,
+          requirements: reqs,
+          photo_url: selectedPhotoUrl || null,
+          estrus_notification_enabled: estrusNotif,
+          experience_level: experience
+        })
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'İlan oluşturulamadı')
+      }
+      window.location.reload()
+    } catch (err: any) {
+      setError(err.message)
+      setSubmitting(false)
+    }
+  }
+
+  const toggleReq = (req: string) => {
+    if (reqs.includes(req)) {
+      setReqs(prev => prev.filter(r => r !== req))
+    } else {
+      if (reqs.length < 5) {
+        setReqs(prev => [...prev, req])
+      } else {
+        alert('En fazla 5 şart seçebilirsiniz.')
+      }
+    }
+  }
+
+  return (
+    <div className="mb-8 card-base bg-white border border-border-main p-5 rounded-2xl shadow-sm relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-pink-50 to-transparent opacity-70 pointer-events-none -z-0 rounded-bl-full"/>
+      <div className="flex items-center justify-between mb-5 border-b border-slate-100 pb-4 relative z-10">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-pink-50 flex items-center justify-center text-xl shadow-sm border border-pink-100 text-pink-500">❤️</div>
+          <div>
+            <h3 className="font-extrabold text-[16px] text-slate-800">{listing ? 'İlanı Düzenle' : 'Üreme İlanı Oluştur'}</h3>
+            <p className="text-[12px] text-slate-500 font-medium mt-0.5">{listing ? 'İlan bilgilerinizi güncelleyin' : 'Uygun bir eş adayı bulmak için ilan verin'}</p>
+          </div>
+        </div>
+        {listing && (
+          <button onClick={() => setIsEditing(false)} className="text-[12px] font-bold text-slate-500 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 px-3 py-1.5 rounded-lg transition-colors cursor-pointer">
+            İptal
+          </button>
+        )}
+      </div>
+      
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 relative z-10">
+        <div>
+          <label className="block text-[12px] font-bold text-slate-700 mb-1.5">İlan Başlığı *</label>
+          <input required maxLength={100} value={title} onChange={e => setTitle(e.target.value)} className="input-base w-full bg-slate-50 border-slate-200 focus:bg-white focus:border-pink-300 focus:ring-4 focus:ring-pink-50 transition-all placeholder:text-slate-400 text-sm" placeholder="Örn: 2 yaşındaki oğluma eş arıyorum" />
+        </div>
+        
+        <div>
+          <label className="block text-[12px] font-bold text-slate-700 mb-1.5">Açıklama (Opsiyonel)</label>
+          <textarea maxLength={500} rows={2} value={notes} onChange={e => setNotes(e.target.value)} className="input-base w-full bg-slate-50 border-slate-200 focus:bg-white focus:border-pink-300 focus:ring-4 focus:ring-pink-50 transition-all placeholder:text-slate-400 text-sm" placeholder="Aşı durumu, huy, beklentileriniz..." />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-[12px] font-bold text-slate-700 mb-1.5">Başlangıç Tarihi</label>
+            <input type="date" value={start} onChange={e => setStart(e.target.value)} className="input-base h-[42px] w-full text-[13px] bg-slate-50 border-slate-200" />
+          </div>
+          <div>
+            <label className="block text-[12px] font-bold text-slate-700 mb-1.5">Bitiş Tarihi</label>
+            <input type="date" value={end} onChange={e => setEnd(e.target.value)} className="input-base h-[42px] w-full text-[13px] bg-slate-50 border-slate-200" />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-[12px] font-bold text-slate-700 mb-2 mt-1">Özel Şartlar (Max 5)</label>
+          <div className="flex flex-wrap gap-2">
+            {availableReqs.map(req => {
+              const isSelected = reqs.includes(req)
+              return (
+                <button type="button" key={req} onClick={() => toggleReq(req)} 
+                  className={`px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all border shadow-sm ${isSelected ? 'bg-pink-50 border-pink-200 text-pink-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+                  {isSelected ? '✓ ' : ''}{req}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-[12px] font-bold text-slate-700 mb-1.5 mt-2">İlan Fotoğrafı (Opsiyonel)</label>
+          {gallery.length > 0 ? (
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+              {gallery.map((p) => (
+                <div 
+                  key={p.id} 
+                  onClick={() => setSelectedPhotoUrl(p.image_url)}
+                  className={`relative cursor-pointer rounded-xl overflow-hidden border-2 transition-all duration-200 ${selectedPhotoUrl === p.image_url ? 'border-violet-500 ring-2 ring-violet-300 scale-105' : 'border-slate-200 hover:border-violet-300'}`}
+                >
+                  <img src={p.image_url} alt="Gallery" className="w-full h-full object-cover aspect-square" />
+                  {selectedPhotoUrl === p.image_url && (
+                    <div className="absolute top-1 right-1 w-5 h-5 bg-violet-500 rounded-full flex items-center justify-center shadow-sm">
+                      <span className="text-white text-[10px] font-bold">✓</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-[12px] bg-slate-50 border border-slate-200 p-3 rounded-xl text-slate-600">
+              Önce galeriye fotoğraf ekleyin. <a href={`/owner/pets/${pet.id}/gallery`} className="text-violet-600 font-bold hover:underline">Galeriye Git →</a>
+            </div>
+          )}
+          {selectedPhotoUrl && (
+            <p className="text-[11px] text-violet-600 font-bold mt-2 flex items-center gap-1">
+              <span>✓</span> Bu fotoğraf ilanda gösterilecek
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-[12px] font-bold text-slate-700 mb-1.5 mt-2">Üreme Deneyiminiz</label>
+          <div className="flex flex-col gap-2">
+            {[
+              { id: 'beginner', label: '🌱 İlk Deneyim' },
+              { id: 'experienced', label: '⭐ Deneyimliyim' },
+              { id: 'expert', label: '🏆 Çok Deneyimliyim' }
+            ].map(opt => (
+              <label key={opt.id} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${experience === opt.id ? 'bg-violet-50 border-violet-200 text-violet-700' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
+                <input type="radio" name="experience" value={opt.id} checked={experience === opt.id} onChange={(e) => setExperience(e.target.value)} className="w-4 h-4 text-violet-600 focus:ring-violet-500 border-slate-300" />
+                <span className="text-[13px] font-bold">{opt.label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {pet.gender === 'female' && (
+          <div className="p-4 bg-pink-50/50 border border-pink-100 rounded-xl mt-2">
+            {activeCycle ? (
+              <>
+                <h4 className="font-bold text-[13px] text-pink-700 mb-2">🌸 Aktif kızgınlık döngüsü mevcut</h4>
+                <div className="text-[12px] font-medium text-pink-800 mb-3 bg-white p-2 rounded border border-pink-100 inline-block">
+                  Başlangıç: {new Date(activeCycle.start_date).toLocaleDateString('tr-TR')} — Bitiş: {new Date(activeCycle.end_date).toLocaleDateString('tr-TR')}
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer mt-1">
+                  <input type="checkbox" checked={estrusNotif} onChange={e => setEstrusNotif(e.target.checked)} className="w-4 h-4 rounded text-pink-500 focus:ring-pink-500 border-pink-300" />
+                  <span className="text-[13px] font-bold text-pink-900">Bu ilan için bildirim göndermek ister misiniz?</span>
+                </label>
+              </>
+            ) : (
+              <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl">
+                <h4 className="font-bold text-[13px] text-amber-800 mb-1">🌸 Aktif kızgınlık döngüsü bulunamadı.</h4>
+                <p className="text-[12px] text-amber-700 mb-3 leading-relaxed">
+                  Eşleşme bildirimleri için önce Sağlık sekmesinden kızgınlık döngüsü ekleyin.
+                </p>
+                <button type="button" onClick={() => router.push(`/owner/pets/${pet.id}?tab=health`)} className="text-[12px] font-bold bg-white text-amber-700 border border-amber-200 px-3 py-1.5 rounded-lg shadow-sm hover:bg-amber-100 transition-colors cursor-pointer">
+                  Döngü Ekle →
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {error && <div className="text-red-500 text-sm font-medium mt-1">{error}</div>}
+        
+        <button type="submit" disabled={submitting} className="btn-primary w-full h-[46px] bg-pink-500 hover:bg-pink-600 text-[14px] shadow-lg shadow-pink-500/20 mt-2 transition-all">
+          {submitting ? 'Kaydediliyor...' : (listing ? 'Değişiklikleri Kaydet' : 'İlanı Yayınla')}
+        </button>
+      </form>
+    </div>
+  )
+}

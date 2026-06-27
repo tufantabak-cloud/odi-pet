@@ -39,6 +39,146 @@ export type Database = {
   }
   public: {
     Tables: {
+      breeding_applications: {
+        Row: {
+          id: string
+          listing_id: string
+          applicant_pet_id: string
+          applicant_user_id: string
+          owner_user_id: string
+          status: string
+          message: string | null
+          kvkk_consent: boolean
+          kvkk_consent_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          listing_id: string
+          applicant_pet_id: string
+          applicant_user_id: string
+          owner_user_id: string
+          status?: string
+          message?: string | null
+          kvkk_consent?: boolean
+          kvkk_consent_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          listing_id?: string
+          applicant_pet_id?: string
+          applicant_user_id?: string
+          owner_user_id?: string
+          status?: string
+          message?: string | null
+          kvkk_consent?: boolean
+          kvkk_consent_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "breeding_applications_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "breeding_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "breeding_applications_applicant_pet_id_fkey"
+            columns: ["applicant_pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "breeding_applications_applicant_user_id_fkey"
+            columns: ["applicant_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "breeding_applications_owner_user_id_fkey"
+            columns: ["owner_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      breeding_listings: {
+        Row: {
+          id: string
+          pet_id: string
+          user_id: string
+          title: string
+          purpose: string
+          preferred_date_start: string | null
+          preferred_date_end: string | null
+          notes: string | null
+          requirements: string[] | null
+          status: string
+          created_at: string
+          updated_at: string
+          photo_url: string | null
+          estrus_notification_enabled: boolean | null
+          experience_level: string | null
+        }
+        Insert: {
+          id?: string
+          pet_id: string
+          user_id: string
+          title: string
+          purpose?: string
+          preferred_date_start?: string | null
+          preferred_date_end?: string | null
+          notes?: string | null
+          requirements?: string[] | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+          photo_url?: string | null
+          estrus_notification_enabled?: boolean | null
+          experience_level?: string | null
+        }
+        Update: {
+          id?: string
+          pet_id?: string
+          user_id?: string
+          title?: string
+          purpose?: string
+          preferred_date_start?: string | null
+          preferred_date_end?: string | null
+          notes?: string | null
+          requirements?: string[] | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+          photo_url?: string | null
+          estrus_notification_enabled?: boolean | null
+          experience_level?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "breeding_listings_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "breeding_listings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       pet_care_tasks: {
         Row: {
           id: string
@@ -2695,6 +2835,7 @@ export type Database = {
           breed: string | null
           city: string | null
           color: string | null
+          cover_url: string | null
           created_at: string | null
           district: string | null
           gender: string | null
@@ -2724,6 +2865,7 @@ export type Database = {
           breed?: string | null
           city?: string | null
           color?: string | null
+          cover_url?: string | null
           created_at?: string | null
           district?: string | null
           gender?: string | null
@@ -2753,6 +2895,7 @@ export type Database = {
           breed?: string | null
           city?: string | null
           color?: string | null
+          cover_url?: string | null
           created_at?: string | null
           district?: string | null
           gender?: string | null

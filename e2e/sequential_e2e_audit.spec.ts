@@ -1,9 +1,9 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 
 const EMAIL = process.env.TEST_EMAIL;
 const PASSWORD = process.env.TEST_PASSWORD;
 
-async function doLogin(page) {
+async function doLogin(page: Page) {
   await page.goto('/login');
   try {
     await page.waitForSelector('img[alt="Splash 1"]', { state: 'detached', timeout: 5000 });

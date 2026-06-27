@@ -162,6 +162,7 @@ function mapDbToUI(
     else if (subCategory === 'Tedavi/Pansuman') sub = 'Tedavi & Pansuman';
     else if (subCategory === 'Tahlil/Rapor') sub = 'Tahlil & Rapor';
     else if (subCategory === 'Kronik Takip') sub = 'Kronik Rahatsızlık Takibi';
+    else if (subCategory === 'Alerji') sub = 'Alerji Kaydı';
     else if (subCategory) sub = subCategory;
     return { category: 'Saglik', subCategory: sub };
   }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { revalidatePath } from 'next/cache'
 
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
   const { id } = await context.params
   const body = await req.json().catch(() => ({}))
-  const { last_seen_location, contact_phone, last_seen_at, city } = body
+  const { last_seen_location, contact_phone, last_seen_at, city, latitude, longitude } = body
   const supabase = await createServerSupabaseClient()
 
   // Validation
@@ -92,6 +92,8 @@ export async function POST(req: NextRequest, context: RouteContext) {
       last_seen_location: loc,
       contact_phone: phone,
       ...(validLastSeenAt && { last_seen_at: validLastSeenAt }),
+      ...(latitude !== undefined && { latitude }),
+      ...(longitude !== undefined && { longitude }),
       status: 'active'
     })
 
@@ -99,6 +101,55 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
   if (city && typeof city === 'string') {
     await supabase.from('pets').update({ city: city.trim() }).eq('id', id)
+  }
+
+  // Çevresel Bildirim Gönderimi
+  try {
+    const { data: pet } = await supabase.from('pets').select('name, species, city').eq('id', id).single()
+    const lostCity = pet?.city
+    if (lostCity) {
+      const adminSupabase = createAdminSupabaseClient()
+      
+      const { data: nearbyOwners } = await adminSupabase
+        .from('pet_owners')
+        .select('profile_id')
+        .neq('profile_id', user.id)
+        .in(
+          'pet_id',
+          (await adminSupabase
+            .from('pets')
+            .select('id')
+            .eq('city', lostCity)
+            .neq('owner_id', user.id)
+          ).data?.map(p => p.id) ?? []
+        )
+        .limit(50)
+
+      const uniqueProfileIds = [
+        ...new Set(
+          nearbyOwners?.map(o => o.profile_id).filter(Boolean) ?? []
+        )
+      ]
+
+      if (uniqueProfileIds.length > 0) {
+        const speciesText = pet.species === 'cat' || pet.species?.toLowerCase() === 'kedi' ? 'kedi' : 'köpek'
+        await adminSupabase
+          .from('notifications')
+          .insert(
+            uniqueProfileIds.map(profileId => ({
+              profile_id: profileId,
+              pet_id: id,
+              title: '🚨 Yakınında Kayıp Pet Var!',
+              message: `${pet.name} adlı ${speciesText} ${lostCity}'de kaybedildi. Çevrenize dikkat edin!`,
+              type: 'lost_pet_nearby',
+              is_read: false,
+              sent_email: false
+            }))
+          )
+      }
+    }
+  } catch (notifError) {
+    console.error('Çevresel bildirim hatası:', notifError)
   }
 
   revalidatePath(`/owner/pets/${id}`)

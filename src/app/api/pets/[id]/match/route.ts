@@ -61,11 +61,13 @@ export async function GET(req: NextRequest, context: RouteContext) {
   // - Kişinin kendi petlerinden biri olmamalı (owner_id kontrolü, gerçi gender/breed filtresi zaten çok daraltır ama yine de)
   let query = supabase
     .from('pets')
-    .select('id, name, breed, gender, city, avatar_url, birth_date')
+    .select('id, name, breed, gender, city, avatar_url, birth_date, breeding_listings!inner(title, notes, requirements, status)')
     .eq('species', pet.species)
     .eq('gender', oppositeGender)
     .eq('breed', pet.breed)
+    .or('is_neutered.is.null,is_neutered.eq.false')
     .in('city', cities)
+    .eq('breeding_listings.status', 'active')
     .neq('id', id)
     
   if (actedPetIds.length > 0) {
@@ -79,7 +81,13 @@ export async function GET(req: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: 'Adaylar getirilirken hata oluştu.' }, { status: 500 })
   }
 
-  return NextResponse.json({ candidates: candidates || [] })
+  // Candidates array formatını düzenle
+  const formattedCandidates = candidates?.map(c => ({
+    ...c,
+    breeding_listing: Array.isArray(c.breeding_listings) ? c.breeding_listings[0] : c.breeding_listings
+  })) || []
+
+  return NextResponse.json({ candidates: formattedCandidates })
 }
 
 export async function POST(req: NextRequest, context: RouteContext) {

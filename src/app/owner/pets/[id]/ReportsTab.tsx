@@ -1,8 +1,25 @@
-'use client'
-
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { trackEvent } from '@/lib/analytics/track'
+import { Upload, Plus, Trash2, Loader2, FileText, Check } from 'lucide-react'
+import { FirstAidIcon } from '@/components/icons/PetIcons'
+import { Database } from '@/types'
+
+type PaymentRow = Database['public']['Tables']['payments']['Row']
+
+const DOCUMENT_TYPES = [
+  { slug: 'tahlil', label: 'Tahlil Sonucu' },
+  { slug: 'recete', label: 'Reçete' },
+  { slug: 'asi_karti', label: 'Aşı Kartı' },
+  { slug: 'pasaport', label: 'Pasaport' },
+  { slug: 'sigorta', label: 'Sigorta Poliçesi' },
+  { slug: 'secere', label: 'Şecere Belgesi' },
+  { slug: 'operasyon_raporu', label: 'Operasyon / Ameliyat Raporu' },
+  { slug: 'diyet_plani', label: 'Diyet / Beslenme Planı' },
+  { slug: 'mikrocip', label: 'Mikroçip Belgesi' },
+  { slug: 'fatura', label: 'Fatura / Fiş' },
+  { slug: 'diger', label: 'Diğer' }
+]
 
 const REPORT_TYPES = [
   {
@@ -44,13 +61,123 @@ const DATE_RANGES = [
   { value: 'all_time', label: 'Tüm Geçmiş' },
 ]
 
-export default function ReportsTab({ petId, petName, plan, payments }: { petId: string; petName: string; plan: string; payments: any[] }) {
+export default function ReportsTab({ petId, petName, plan, payments }: { petId: string; petName: string; plan: string; payments: PaymentRow[] }) {
+  const [activeTab, setActiveTab] = useState<'reports' | 'vault'>('reports')
   const [selectedType, setSelectedType] = useState('summary')
   const [dateRange, setDateRange] = useState('last_12_months')
   const [generating, setGenerating] = useState(false)
   const [report, setReport] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+
+  // Document Safe States
+  const [records, setRecords] = useState<any[]>([])
+  const [loadingRecords, setLoadingRecords] = useState(false)
+  const [uploadTitle, setUploadTitle] = useState('')
+  const [uploadType, setUploadType] = useState('tahlil')
+  const [isUploading, setIsUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const fetchRecords = async () => {
+    setLoadingRecords(true)
+    try {
+      const res = await fetch(`/api/pets/${petId}/records`)
+      if (res.ok) {
+        const data = await res.json()
+        setRecords(data)
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoadingRecords(false)
+    }
+  }
+
+  useEffect(() => {
+    if (activeTab === 'vault') {
+      fetchRecords()
+    }
+  }, [activeTab, petId])
+
+  useEffect(() => {
+    const handleOpenTab = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail?.section === 'Raporlar & Belgeler' && customEvent.detail?.tab) {
+        setActiveTab(customEvent.detail.tab);
+      }
+    };
+    window.addEventListener('open-pet-section', handleOpenTab);
+    return () => window.removeEventListener('open-pet-section', handleOpenTab);
+  }, [])
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    let titleToUse = uploadTitle
+    if (!titleToUse) {
+      titleToUse = file.name.replace(/\.[^/.]+$/, "")
+      setUploadTitle(titleToUse)
+    }
+
+    setIsUploading(true)
+    setError(null)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      
+      const uploadRes = await fetch('/api/upload/pet-documents', {
+        method: 'POST',
+        body: formData
+      })
+      const uploadData = await uploadRes.json()
+
+      if (!uploadData.success) {
+        throw new Error(uploadData.error || 'Yükleme hatası')
+      }
+
+      const recordRes = await fetch(`/api/pets/${petId}/records`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: titleToUse,
+          type: uploadType,
+          document_path: uploadData.url,
+          date: new Date().toISOString(),
+        })
+      })
+
+      if (recordRes.ok) {
+        setUploadTitle('')
+        if (fileInputRef.current) fileInputRef.current.value = ''
+        fetchRecords()
+      } else {
+        throw new Error('Kayıt oluşturulamadı')
+      }
+    } catch (err: any) {
+      console.error(err)
+      setError(err.message || 'Belge yüklenirken bir hata oluştu.')
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const handleDeleteRecord = async (recordId: string) => {
+    if (!confirm('Bu belgeyi silmek istediğinizden emin misiniz?')) return
+    try {
+      const res = await fetch(`/api/pets/${petId}/records/${recordId}`, {
+        method: 'DELETE'
+      })
+      if (res.ok) {
+        fetchRecords()
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Silme işlemi başarısız.')
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
 
   async function generate() {
     setGenerating(true)
@@ -76,7 +203,6 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
         return
       }
       setReport(data)
-      // Analytics + onboarding progress (fire-and-forget both)
       await Promise.all([
         trackEvent('first_report_generated', { petId, reportType: selectedType }),
         fetch('/api/onboarding', {
@@ -91,9 +217,17 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
   }
 
   function openPrint() {
+    if (!report || !report.shareToken) {
+      setError('Rapor bağlantısı bulunamadı. Lütfen raporu yeniden oluşturun.')
+      return
+    }
     const win = window.open(`/owner/reports/${petId}/print?type=${selectedType}&range=${dateRange}&token=${report.shareToken}`, '_blank')
     win?.focus()
-    setTimeout(() => win?.print(), 800)
+    if (win) {
+      win.onload = () => {
+        win.print();
+      };
+    }
   }
 
   function copyShareLink() {
@@ -108,162 +242,293 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
 
   return (
     <div className="flex flex-col gap-5">
+      
+      {/* Tab Switcher */}
+      <div className="flex bg-slate-100/80 p-1.5 rounded-2xl border border-border-main/50">
+        <button
+          onClick={() => setActiveTab('reports')}
+          className={`flex-1 py-3 text-center text-[13px] font-black rounded-xl transition-all duration-200 ${activeTab === 'reports' ? 'bg-white text-primary shadow-sm scale-[1.02]' : 'text-text-secondary hover:text-text-primary'}`}
+        >
+          ✨ AI Raporları
+        </button>
+        <button
+          onClick={() => setActiveTab('vault')}
+          className={`flex-1 py-3 text-center text-[13px] font-black rounded-xl transition-all duration-200 ${activeTab === 'vault' ? 'bg-white text-primary shadow-sm scale-[1.02]' : 'text-text-secondary hover:text-text-primary'}`}
+        >
+          📂 Belge Kasası
+        </button>
+      </div>
 
-      {/* ── Harcama Özeti ── */}
-      <div className="card-base p-5">
-        <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest mb-4">💰 Harcama Özeti</h3>
-        {payments && payments.length > 0 ? (
+      {activeTab === 'reports' ? (
+        <>
+          {/* ── Harcama Özeti ── */}
+          <div className="card-base p-5">
+            <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest mb-4">💰 Harcama Özeti</h3>
+            {payments && payments.length > 0 ? (
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between p-4 bg-primary-soft rounded-xl border border-primary/20">
+                  <span className="text-[13px] font-black text-text-primary uppercase tracking-wide">Toplam Harcama</span>
+                  <span className="text-[22px] font-black text-primary">
+                    ₺{payments.reduce((sum: number, p: any) => sum + (parseFloat(p.amount) || 0), 0).toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex flex-col divide-y divide-border-main">
+                  {payments.map((p: any) => (
+                    <div key={p.id} className="flex justify-between items-center py-2.5">
+                      <div>
+                        <p className="text-[13px] font-semibold text-text-primary">{p.description || 'Ödeme'}</p>
+                        {p.paid_at && (
+                          <p className="text-[11px] text-text-secondary">{new Date(p.paid_at).toLocaleDateString('tr-TR')}</p>
+                        )}
+                      </div>
+                      <span className="text-[14px] font-bold text-text-primary">₺{parseFloat(p.amount || 0).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-6 text-text-secondary text-[13px]">
+                <p className="text-[32px] mb-2">📭</p>
+                <p>Henüz kayıtlı harcama bulunmuyor.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Report type selector */}
           <div className="flex flex-col gap-3">
-            {/* Toplam */}
-            <div className="flex items-center justify-between p-4 bg-primary-soft rounded-xl border border-primary/20">
-              <span className="text-[13px] font-black text-text-primary uppercase tracking-wide">Toplam Harcama</span>
-              <span className="text-[22px] font-black text-primary">
-                ₺{payments.reduce((sum: number, p: any) => sum + (parseFloat(p.amount) || 0), 0).toFixed(2)}
-              </span>
-            </div>
-            {/* Kalemler */}
-            <div className="flex flex-col divide-y divide-border-main">
-              {payments.map((p: any) => (
-                <div key={p.id} className="flex justify-between items-center py-2.5">
-                  <div>
-                    <p className="text-[13px] font-semibold text-text-primary">{p.description || 'Ödeme'}</p>
-                    {p.paid_at && (
-                      <p className="text-[11px] text-text-secondary">{new Date(p.paid_at).toLocaleDateString('tr-TR')}</p>
+            <h3 className="text-[12px] font-black text-text-secondary uppercase tracking-widest">Rapor Türü</h3>
+            {REPORT_TYPES.map(rt => {
+              const locked = planRank[rt.plan] > userRank
+              return (
+                <button
+                  key={rt.id}
+                  disabled={locked}
+                  onClick={() => setSelectedType(rt.id)}
+                  className={`p-4 rounded-xl border-2 text-left transition-all ${selectedType === rt.id ? 'border-primary bg-primary-soft' : rt.color} ${locked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-[28px]">{rt.icon}</span>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-bold text-text-primary text-[15px]">{rt.label}</p>
+                        <span className={`text-[11px] font-black px-2 py-0.5 rounded-full ${rt.badgeColor}`}>{rt.badge}</span>
+                        {locked && <span className="text-[11px] text-text-secondary">🔒 Kilidi Aç</span>}
+                      </div>
+                      <p className="text-[12px] text-text-secondary mt-0.5">{rt.desc}</p>
+                    </div>
+                    {selectedType === rt.id && !locked && (
+                      <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center shrink-0">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                      </div>
                     )}
                   </div>
-                  <span className="text-[14px] font-bold text-text-primary">₺{parseFloat(p.amount || 0).toFixed(2)}</span>
-                </div>
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Date range */}
+          <div>
+            <label className="text-[12px] font-black text-text-secondary uppercase tracking-widest block mb-2">Tarih Aralığı</label>
+            <div className="flex flex-wrap gap-2">
+              {DATE_RANGES.map(dr => (
+                <button key={dr.value} onClick={() => setDateRange(dr.value)}
+                  className={`px-3 py-1.5 rounded-xl border text-[12px] font-bold transition-all ${dateRange === dr.value ? 'border-primary bg-primary-soft text-primary' : 'border-border-main text-text-secondary hover:border-primary/40'}`}>
+                  {dr.label}
+                </button>
               ))}
             </div>
           </div>
-        ) : (
-          <div className="text-center py-6 text-text-secondary text-[13px]">
-            <p className="text-[32px] mb-2">📭</p>
-            <p>Henüz kayıtlı harcama bulunmuyor.</p>
-          </div>
-        )}
-      </div>
 
-      {/* Report type selector */}
-      <div className="flex flex-col gap-3">
-        <h3 className="text-[12px] font-black text-text-secondary uppercase tracking-widest">Rapor Türü</h3>
-        {REPORT_TYPES.map(rt => {
-          const locked = planRank[rt.plan] > userRank
-          return (
-            <button
-              key={rt.id}
-              disabled={locked}
-              onClick={() => setSelectedType(rt.id)}
-              className={`p-4 rounded-xl border-2 text-left transition-all ${selectedType === rt.id ? 'border-primary bg-primary-soft' : rt.color} ${locked ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-[28px]">{rt.icon}</span>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-bold text-text-primary text-[15px]">{rt.label}</p>
-                    <span className={`text-[11px] font-black px-2 py-0.5 rounded-full ${rt.badgeColor}`}>{rt.badge}</span>
-                    {locked && <span className="text-[11px] text-text-secondary">🔒 Kilidi Aç</span>}
+          {/* Error */}
+          {error && (
+            <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-[13px] font-medium">
+              ⚠️ {error}
+              {error.includes('Pro') || error.includes('AI+') ? (
+                <Link href="/owner/profile/subscription" className="ml-2 underline font-bold">Yükselt →</Link>
+              ) : null}
+            </div>
+          )}
+
+          {/* Generate button */}
+          <button onClick={generate} disabled={generating}
+            className="btn-primary py-3.5 text-[15px] font-bold flex items-center justify-center gap-2">
+            {generating
+              ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/> Rapor Hazırlanıyor...</>
+              : `${REPORT_TYPES.find(r => r.id === selectedType)?.icon} ${petName} için Rapor Oluştur`
+            }
+          </button>
+
+          {/* Report result */}
+          {report && (
+            <div className="card-base overflow-hidden">
+              <div className="h-1 bg-gradient-to-r from-primary to-primary-hover"/>
+              <div className="p-5">
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div>
+                    <p className="font-black text-text-primary text-[16px]">Rapor Hazır ✓</p>
+                    <p className="text-[12px] text-text-secondary mt-0.5">
+                      ID: <span className="font-mono">{report.verificationHash}</span>
+                    </p>
+                    <p className="text-[11px] text-text-secondary">
+                      {new Date(report.generatedAt).toLocaleString('tr-TR')}
+                    </p>
                   </div>
-                  <p className="text-[12px] text-text-secondary mt-0.5">{rt.desc}</p>
+                  <div className="text-right">
+                    <p className="text-[11px] font-bold text-text-secondary uppercase">Uyumluluk</p>
+                    <p className={`text-[28px] font-black ${report.preventiveComplianceScore >= 70 ? 'text-green-600' : report.preventiveComplianceScore >= 40 ? 'text-amber-600' : 'text-red-600'}`}>
+                      {report.preventiveComplianceScore}%
+                    </p>
+                  </div>
                 </div>
-                {selectedType === rt.id && !locked && (
-                  <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center shrink-0">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+
+                {/* Quick stats */}
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  {[
+                    { label: 'Aşı', value: report.annualVaccineCount },
+                    { label: 'Hastalık', value: report.incidentCount },
+                    { label: 'Randevu', value: report.appointments?.length ?? 0 },
+                  ].map(s => (
+                    <div key={s.label} className="p-3 bg-bg-main rounded-xl text-center border border-border-main">
+                      <p className="text-[22px] font-black text-text-primary">{s.value}</p>
+                      <p className="text-[11px] font-bold text-text-secondary uppercase">{s.label}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Actions */}
+                <div className="flex flex-col gap-2">
+                  <button onClick={openPrint}
+                    className="btn-primary py-3 text-[14px] flex items-center justify-center gap-2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
+                    </svg>
+                    PDF Olarak İndir / Yazdır
+                  </button>
+                  <button onClick={copyShareLink}
+                    className={`btn-secondary py-2.5 text-[13px] transition-all ${copied ? 'text-green-600 border-green-300 bg-green-50' : ''}`}>
+                    {copied ? '✓ Bağlantı kopyalandı!' : '🔗 Paylaşım Bağlantısı Oluştur'}
+                  </button>
+                </div>
+
+                <p className="text-[11px] text-text-secondary text-center mt-3">
+                  Doğrulama Hash: <span className="font-mono">{report.verificationHash}</span> • ODI Pet OS tarafından oluşturuldu
+                </p>
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {/* ── Dijital Belge Kasası (Vault UI) ── */}
+          <div className="card-base p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-primary-soft text-primary flex items-center justify-center shrink-0 shadow-inner">
+                <FirstAidIcon width={24} height={24} />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-text-primary text-[15px]">Dijital Belge Kasası</h3>
+                <p className="text-[12px] text-text-secondary">Resmi evraklar, aşı kartı, sigorta ve tahliller</p>
+              </div>
+            </div>
+
+            {/* Error Message if Any */}
+            {error && (
+              <div className="p-4 mb-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-[13px] font-medium">
+                ⚠️ {error}
+              </div>
+            )}
+
+            {/* Document Upload Fields */}
+            <div className="flex flex-col gap-3 mb-4">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="text"
+                  placeholder="Belge adı (Örn: Pasaport Belgesi)"
+                  value={uploadTitle}
+                  onChange={(e) => setUploadTitle(e.target.value)}
+                  className="flex-1 border border-border-main rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary"
+                />
+                <select
+                  value={uploadType}
+                  onChange={(e) => setUploadType(e.target.value)}
+                  className="border border-border-main rounded-lg px-3 py-2.5 text-sm outline-none bg-white focus:border-primary min-w-[200px]"
+                >
+                  {DOCUMENT_TYPES.map(type => (
+                    <option key={type.slug} value={type.slug}>{type.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="relative">
+                <input 
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  accept="image/*,application/pdf"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    fileInputRef.current?.click();
+                  }}
+                  disabled={isUploading}
+                  className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-border-main hover:border-primary/50 text-text-secondary hover:text-primary rounded-xl py-5 transition-all duration-200 hover:scale-[1.02] disabled:opacity-50"
+                >
+                  {isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+                  <span className="text-sm font-semibold">{isUploading ? 'Yükleniyor...' : 'Belge Seç ve Yükle'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Document List */}
+            {loadingRecords ? (
+              <div className="flex justify-center py-6"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+            ) : (
+              <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-border-main">
+                {records.length === 0 ? (
+                  <div className="text-sm text-text-secondary text-center py-6">Kayıtlı belge bulunmuyor.</div>
+                ) : (
+                  <div className="grid gap-2">
+                    {records.map(record => {
+                      const matchedType = DOCUMENT_TYPES.find(t => t.slug === record.type);
+                      return (
+                        <div key={record.id} className="flex items-center justify-between p-3.5 bg-slate-50 rounded-xl border border-border-main/50 transition-all hover:bg-slate-100/50 hover:scale-[1.01]">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-primary shadow-sm border border-slate-100">
+                              <FileText className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="text-sm font-bold text-text-primary line-clamp-1">{record.title}</p>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200/70 text-slate-700">
+                                  {matchedType ? matchedType.label : record.type}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-text-secondary mt-0.5">{new Date(record.date).toLocaleDateString('tr-TR')}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {record.document_path && (
+                              <a href={record.document_path} target="_blank" rel="noopener noreferrer" className="text-[12px] font-semibold text-primary hover:underline px-3 py-1.5 bg-primary-soft rounded-lg">
+                                Görüntüle
+                              </a>
+                            )}
+                            <button 
+                              onClick={() => handleDeleteRecord(record.id)}
+                              className="p-1.5 rounded-lg text-text-secondary hover:text-red-500 hover:bg-red-50 transition-colors"
+                              title="Sil"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
-            </button>
-          )
-        })}
-      </div>
-
-      {/* Date range */}
-      <div>
-        <label className="text-[12px] font-black text-text-secondary uppercase tracking-widest block mb-2">Tarih Aralığı</label>
-        <div className="flex flex-wrap gap-2">
-          {DATE_RANGES.map(dr => (
-            <button key={dr.value} onClick={() => setDateRange(dr.value)}
-              className={`px-3 py-1.5 rounded-xl border text-[12px] font-bold transition-all ${dateRange === dr.value ? 'border-primary bg-primary-soft text-primary' : 'border-border-main text-text-secondary hover:border-primary/40'}`}>
-              {dr.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Error */}
-      {error && (
-        <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-[13px] font-medium">
-          ⚠️ {error}
-          {error.includes('Pro') || error.includes('AI+') ? (
-            <Link href="/owner/profile/subscription" className="ml-2 underline font-bold">Yükselt →</Link>
-          ) : null}
-        </div>
-      )}
-
-      {/* Generate button */}
-      <button onClick={generate} disabled={generating}
-        className="btn-primary py-3.5 text-[15px] font-bold flex items-center justify-center gap-2">
-        {generating
-          ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/> Rapor Hazırlanıyor...</>
-          : `${REPORT_TYPES.find(r => r.id === selectedType)?.icon} ${petName} için Rapor Oluştur`
-        }
-      </button>
-
-      {/* Report result */}
-      {report && (
-        <div className="card-base overflow-hidden">
-          <div className="h-1 bg-gradient-to-r from-primary to-primary-hover"/>
-          <div className="p-5">
-            <div className="flex items-start justify-between gap-3 mb-4">
-              <div>
-                <p className="font-black text-text-primary text-[16px]">Rapor Hazır ✓</p>
-                <p className="text-[12px] text-text-secondary mt-0.5">
-                  ID: <span className="font-mono">{report.verificationHash}</span>
-                </p>
-                <p className="text-[11px] text-text-secondary">
-                  {new Date(report.generatedAt).toLocaleString('tr-TR')}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-[11px] font-bold text-text-secondary uppercase">Uyumluluk</p>
-                <p className={`text-[28px] font-black ${report.preventiveComplianceScore >= 70 ? 'text-green-600' : report.preventiveComplianceScore >= 40 ? 'text-amber-600' : 'text-red-600'}`}>
-                  {report.preventiveComplianceScore}%
-                </p>
-              </div>
-            </div>
-
-            {/* Quick stats */}
-            <div className="grid grid-cols-3 gap-2 mb-4">
-              {[
-                { label: 'Aşı', value: report.annualVaccineCount },
-                { label: 'Hastalık', value: report.incidentCount },
-                { label: 'Randevu', value: report.appointments?.length ?? 0 },
-              ].map(s => (
-                <div key={s.label} className="p-3 bg-bg-main rounded-xl text-center border border-border-main">
-                  <p className="text-[22px] font-black text-text-primary">{s.value}</p>
-                  <p className="text-[11px] font-bold text-text-secondary uppercase">{s.label}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-col gap-2">
-              <button onClick={openPrint}
-                className="btn-primary py-3 text-[14px] flex items-center justify-center gap-2">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
-                </svg>
-                PDF Olarak İndir / Yazdır
-              </button>
-              <button onClick={copyShareLink}
-                className={`btn-secondary py-2.5 text-[13px] transition-all ${copied ? 'text-green-600 border-green-300 bg-green-50' : ''}`}>
-                {copied ? '✓ Bağlantı kopyalandı!' : '🔗 Paylaşım Bağlantısı Oluştur'}
-              </button>
-            </div>
-
-            <p className="text-[11px] text-text-secondary text-center mt-3">
-              Doğrulama Hash: <span className="font-mono">{report.verificationHash}</span> • ODI Pet OS tarafından oluşturuldu
-            </p>
+            )}
           </div>
         </div>
       )}

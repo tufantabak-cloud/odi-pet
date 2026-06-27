@@ -42,10 +42,36 @@ export default async function PetJournalPage(props: PageProps) {
     .order('scheduled_at', { ascending: false })
     .limit(100)
 
+  // Fetch gallery
+  const { data: gallery } = await supabase
+    .from('pet_gallery')
+    .select('*')
+    .eq('pet_id', id)
+    .neq('category', 'document') // Belgeler Timeline'a gelmesin
+    .order('created_at', { ascending: false })
+    .limit(100)
+
+  // Fetch adoptions
+  const { data: adoptions } = await supabase
+    .from('pet_adoptions')
+    .select('id, status, story, created_at')
+    .eq('pet_id', id)
+    .order('created_at', { ascending: false })
+
+  // Fetch lost reports
+  const { data: lostReports } = await supabase
+    .from('lost_reports')
+    .select('id, status, created_at')
+    .eq('pet_id', id)
+    .order('created_at', { ascending: false })
+
   // Merge and sort
   const allTimelineItems = [
     ...(entries || []).map((e: any) => ({ ...e, source: 'journal', sortDate: new Date(e.created_at).getTime() })),
-    ...(plans || []).map((p: any) => ({ ...p, source: 'plan', sortDate: new Date(p.scheduled_at).getTime() }))
+    ...(plans || []).map((p: any) => ({ ...p, source: 'plan', sortDate: new Date(p.scheduled_at).getTime() })),
+    ...(gallery || []).map((g: any) => ({ ...g, source: 'gallery', sortDate: new Date(g.taken_at || g.created_at).getTime() })),
+    ...(adoptions || []).map((a: any) => ({ ...a, source: 'adoption' as const, sortDate: new Date(a.created_at).getTime() })),
+    ...(lostReports || []).map((l: any) => ({ ...l, source: 'lost' as const, sortDate: new Date(l.created_at).getTime() }))
   ].sort((a, b) => b.sortDate - a.sortDate)
 
   return (

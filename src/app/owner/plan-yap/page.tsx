@@ -57,17 +57,18 @@ function PlanYapContent() {
   );
 
   const [selectedPet, setSelectedPet] = useState<string | null>(urlPetId || null);
-  const [pets, setPets] = useState<{ id: string, name: string, type: string }[]>([]);
+  const [pets, setPets] = useState<{ id: string, name: string, type: string, avatar_url?: string }[]>([]);
   const [isLoadingPets, setIsLoadingPets] = useState(true);
 
   useEffect(() => {
     async function loadPets() {
-      const { data } = await supabase.from('pets').select('id, name, species');
+      const { data } = await supabase.from('pets').select('id, name, species, avatar_url');
       if (data && data.length > 0) {
         setPets(data.map(p => ({
           id: p.id,
           name: p.name,
-          type: p.species || 'Evcil Hayvan'
+          type: p.species || 'Evcil Hayvan',
+          avatar_url: p.avatar_url
         })));
         
         if (data.length === 1 && !urlPetId) {
@@ -94,9 +95,10 @@ function PlanYapContent() {
             <div className="flex items-center gap-3 mb-2">
               <button
                 onClick={() => router.back()}
-                className="w-9 h-9 rounded-xl bg-bg-main border border-border-main flex items-center justify-center hover:bg-surface-hover transition-colors"
+                className="w-11 h-11 rounded-xl bg-bg-main border border-border-main flex items-center justify-center hover:bg-surface-hover transition-colors active:scale-95"
+                aria-label="Geri dön"
               >
-                <ArrowLeft size={18} className="text-text-secondary" />
+                <ArrowLeft size={20} className="text-text-secondary" />
               </button>
               <h1 className="text-[22px] font-black text-text-primary">Plan Yap</h1>
             </div>
@@ -121,8 +123,12 @@ function PlanYapContent() {
                   }}
                   className="w-full flex items-center p-5 bg-white border border-gray-100 rounded-3xl shadow-sm hover:shadow-md hover:border-indigo-200 transition-all group focus:outline-none focus:ring-4 focus:ring-indigo-500/30"
                 >
-                  <div className="w-14 h-14 flex items-center justify-center bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-2xl group-hover:scale-110 shadow-inner transition-all">
-                     <Semi3DIcon svgPath={PetIcons.DefaultAvatar} className="w-7 h-7 text-indigo-400" />
+                  <div className="w-14 h-14 shrink-0 flex items-center justify-center bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-2xl group-hover:scale-110 shadow-inner transition-all overflow-hidden border border-indigo-100/50">
+                    {pet.avatar_url ? (
+                      <img src={pet.avatar_url} alt={pet.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <Semi3DIcon svgPath={PetIcons.DefaultAvatar} className="w-7 h-7 text-indigo-400" />
+                    )}
                   </div>
                   <div className="ml-4 flex flex-col items-start">
                     <span className="font-bold text-gray-800 text-lg">{pet.name}</span>
@@ -150,8 +156,12 @@ function PlanYapContent() {
         {/* Active Pet Header */}
         <div className="flex items-center justify-between mb-6 bg-white p-4 rounded-3xl shadow-sm border border-gray-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-500">
-              <Semi3DIcon svgPath={PetIcons.DefaultAvatar} className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-500 overflow-hidden border border-indigo-100/50 shrink-0">
+              {activePetInfo?.avatar_url ? (
+                <img src={activePetInfo.avatar_url} alt={activePetInfo.name} className="w-full h-full object-cover" />
+              ) : (
+                <Semi3DIcon svgPath={PetIcons.DefaultAvatar} className="w-5 h-5" />
+              )}
             </div>
             <div>
               <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Aktif Profil</p>
@@ -180,7 +190,8 @@ function PlanYapContent() {
                 router.push('/owner/dashboard')
               }
             }}
-            className="p-2 bg-white rounded-full shadow-sm text-gray-500 hover:text-gray-700 transition-all active:scale-95"
+            className="w-11 h-11 bg-white rounded-xl shadow-sm text-gray-500 hover:text-gray-700 flex items-center justify-center border border-gray-100 transition-all active:scale-95"
+            aria-label="Geri dön"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>

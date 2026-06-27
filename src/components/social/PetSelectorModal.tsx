@@ -1,0 +1,197 @@
+'use client'
+
+import React, { useState, useEffect } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+
+interface PetSelectorModalProps {
+  isOpen: boolean
+  onClose: () => void
+  listingId: string
+  listingSpecies: string
+  listingGender: string
+}
+
+export function PetSelectorModal({ isOpen, onClose, listingId, listingSpecies, listingGender }: PetSelectorModalProps) {
+  const [pets, setPets] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedPetId, setSelectedPetId] = useState<string | null>(null)
+  const [message, setMessage] = useState('')
+  const [kvkkConsent, setKvkkConsent] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [hasPhone, setHasPhone] = useState(true)
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchData()
+    }
+  }, [isOpen])
+
+  const fetchData = async () => {
+    setLoading(true)
+    setError(null)
+    const supabase = createBrowserSupabaseClient()
+    
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
+    const { data: profile } = await supabase.from('profiles').select('phone').eq('id', session.user.id).single()
+    if (!profile?.phone) {
+      setHasPhone(false)
+    }
+
+    const { data: myPets } = await supabase.from('pets').select('id, name, species, gender, breed, avatar_url, is_neutered').order('created_at', { ascending: false })
+    
+    const targetGender = listingGender === 'male' ? 'female' : 'male'
+    const compatible = myPets?.filter((p: any) => 
+      p.species === listingSpecies && 
+      p.gender === targetGender && 
+      p.is_neutered !== true
+    ) || []
+    
+    setPets(compatible)
+    setLoading(false)
+  }
+
+  const handleSubmit = async () => {
+    if (!selectedPetId) {
+      setError('Lütfen bir pet seçin.')
+      return
+    }
+    if (!kvkkConsent) {
+      setError('KVKK onayını işaretlemeniz gerekmektedir.')
+      return
+    }
+
+    setSubmitting(true)
+    setError(null)
+
+    try {
+      const res = await fetch(`/api/breeding-listings/${listingId}/applications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          applicant_pet_id: selectedPetId,
+          message,
+          kvkk_consent: kvkkConsent
+        })
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Başvuru sırasında bir hata oluştu.')
+        setSubmitting(false)
+        return
+      }
+
+      onClose()
+    } catch (err) {
+      setError('Sistemsel bir hata oluştu.')
+      setSubmitting(false)
+    }
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-0 bg-slate-900/40 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="px-6 py-5 border-b border-border-main flex items-center justify-between bg-slate-50/50">
+          <h2 className="text-[18px] font-black text-text-primary">Eşleşme Başvurusu</h2>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
+          {!hasPhone ? (
+            <div className="bg-rose-50 border border-rose-100 rounded-2xl p-5 text-center flex flex-col items-center gap-3">
+              <span className="text-3xl">📞</span>
+              <p className="text-[14px] text-rose-900 font-medium">Başvuru yapabilmek için profilinize bir telefon numarası eklemeniz gerekmektedir. İlan sahibi başvurunuzu kabul ettiğinde sizinle bu numara üzerinden iletişime geçecektir.</p>
+              <Link href="/owner/profile" className="btn-primary py-2.5 px-6 text-[13px] mt-2">Profili Güncelle</Link>
+            </div>
+          ) : loading ? (
+            <div className="flex justify-center p-10">
+              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : pets.length === 0 ? (
+            <div className="text-center py-8">
+              <span className="text-4xl mb-3 block">🐾</span>
+              <h3 className="text-[16px] font-bold text-text-primary mb-1">Uygun Pet Bulunamadı</h3>
+              <p className="text-[13px] text-text-secondary">Bu ilan için uygun türde, zıt cinsiyette ve kısırlaştırılmamış bir petiniz bulunmuyor.</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              <label className="text-[13px] font-bold text-text-primary">Hangi petiniz için başvuruyorsunuz?</label>
+              <div className="grid gap-3">
+                {pets.map(pet => (
+                  <button
+                    key={pet.id}
+                    onClick={() => setSelectedPetId(pet.id)}
+                    className={`flex items-center gap-3 p-3 rounded-2xl border-2 text-left transition-all ${
+                      selectedPetId === pet.id ? 'border-primary bg-primary-soft/30 shadow-sm' : 'border-slate-100 bg-white hover:border-slate-200'
+                    }`}
+                  >
+                    {pet.avatar_url ? (
+                      <div className="w-12 h-12 rounded-xl overflow-hidden relative shrink-0">
+                        <Image src={pet.avatar_url} alt={pet.name} fill sizes="48px" className="object-cover" />
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-xl shrink-0">🐾</div>
+                    )}
+                    <div className="flex-1">
+                      <div className="font-bold text-[15px] text-text-primary">{pet.name}</div>
+                      <div className="text-[12px] text-text-secondary">{pet.breed || pet.species}</div>
+                    </div>
+                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                      selectedPetId === pet.id ? 'border-primary bg-primary text-white' : 'border-slate-300'
+                    }`}>
+                      {selectedPetId === pet.id && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              <div className="mt-2">
+                <label className="text-[13px] font-bold text-text-primary mb-1.5 block">İlan sahibine notunuz (Opsiyonel)</label>
+                <textarea 
+                  value={message}
+                  onChange={e => setMessage(e.target.value)}
+                  placeholder="Merhaba, petim sizin ilanınız için çok uygun..."
+                  className="input-base w-full min-h-[80px] resize-none text-[13px]"
+                />
+              </div>
+
+              <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl flex gap-3 items-start mt-2 cursor-pointer" onClick={() => setKvkkConsent(!kvkkConsent)}>
+                <div className={`w-5 h-5 rounded flex items-center justify-center shrink-0 border mt-0.5 transition-colors ${kvkkConsent ? 'bg-primary border-primary text-white' : 'bg-white border-slate-300'}`}>
+                  {kvkkConsent && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
+                </div>
+                <p className="text-[12px] text-text-secondary leading-relaxed font-medium select-none">
+                  🔒 İletişim bilgilerimin (telefon numaramın) yalnızca eşleşme amacıyla ve sadece başvurum kabul edildiğinde ilan sahibiyle paylaşılacağını okudum ve onaylıyorum.
+                </p>
+              </div>
+
+              {error && (
+                <div className="p-3 bg-red-50 text-red-600 text-[13px] rounded-xl font-medium flex items-center gap-2">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  {error}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="p-6 border-t border-border-main bg-white">
+          <button
+            onClick={handleSubmit}
+            disabled={!hasPhone || pets.length === 0 || !selectedPetId || !kvkkConsent || submitting}
+            className="btn-primary w-full py-3.5 text-[15px] shadow-sm disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {submitting ? 'Gönderiliyor...' : 'Başvuruyu Gönder'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}

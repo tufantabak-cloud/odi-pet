@@ -4,14 +4,23 @@ import React from 'react'
 import { getBreedHealthInfo } from '@/lib/pets/breed_health_info'
 
 interface Props {
-  petName: string
   breed: string | undefined | null
 }
 
-export default function BreedHealthCard({ petName, breed }: Props) {
+export default function BreedHealthCard({ breed }: Props) {
   const healthInfo = getBreedHealthInfo(breed)
 
-  if (!healthInfo) return null
+  if (!healthInfo) {
+    return (
+      <div className="card-base p-5 border border-dashed border-border-main flex items-center gap-3 bg-slate-50">
+        <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-[20px] text-slate-300 shrink-0">🧬</div>
+        <div>
+          <h3 className="text-[13px] font-black text-text-primary mb-0.5">Irka Özel Sağlık Rehberi</h3>
+          <p className="text-[12px] text-text-secondary leading-tight">Dostunuzun ırkını kaydederek potansiyel sağlık risklerini ve tavsiyeleri görebilirsiniz.</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="card-base p-5 bg-gradient-to-br from-indigo-50/50 to-purple-50/50 border border-indigo-100/50 relative overflow-hidden">

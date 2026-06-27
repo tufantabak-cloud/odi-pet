@@ -1,6 +1,9 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
+import { Database } from '@/types'
+
+type PetRow = Database['public']['Tables']['pets']['Row']
 
 interface Adoption {
   id: string
@@ -8,10 +11,21 @@ interface Adoption {
   user_id: string
   status: 'active' | 'completed' | 'cancelled'
   story: string | null
+  requirements: string[] | null
   created_at: string
 }
 
-export default function AdoptionTab({ pet }: { pet: any }) {
+const AVAILABLE_REQUIREMENTS = [
+  'Bahçeli Ev',
+  'Deneyimli Sahip',
+  'Çocuksuz Aile',
+  'Tek Evcil Hayvan',
+  'Aşı Karnesi Şartı',
+  'Sözleşme Şartı',
+  'Düzenli Veteriner Kontrolü'
+]
+
+export default function AdoptionTab({ pet }: { pet: PetRow }) {
   const [adoption, setAdoption] = useState<Adoption | null>(null)
   const [loading, setLoading] = useState(true)
   const [toggling, setToggling] = useState(false)
@@ -24,10 +38,25 @@ export default function AdoptionTab({ pet }: { pet: any }) {
       const res = await fetch(`/api/pets/${pet.id}/adoption`)
       const data = await res.json()
       if (res.ok) setAdoption(data.adoption ?? null)
-    } catch { /* silent */ } finally { setLoading(false) }
+      else setError('İlan bilgileri yüklenirken bir hata oluştu.')
+    } catch { 
+      setError('Bağlantı hatası: İlan yüklenemedi.')
+    } finally { setLoading(false) }
   }, [pet.id])
 
   useEffect(() => { fetchAdoption() }, [fetchAdoption])
+
+  const [storyInput, setStoryInput] = useState('')
+  const [selectedRequirements, setSelectedRequirements] = useState<string[]>([])
+
+  useEffect(() => {
+    if (adoption?.story) {
+      setStoryInput(adoption.story)
+    }
+    if (adoption?.requirements) {
+      setSelectedRequirements(adoption.requirements)
+    }
+  }, [adoption?.story, adoption?.requirements])
 
   async function handleToggle() {
     setToggling(true)
@@ -36,7 +65,11 @@ export default function AdoptionTab({ pet }: { pet: any }) {
       const res = await fetch(`/api/pets/${pet.id}/adoption`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: isActive ? 'cancel' : 'activate' }),
+        body: JSON.stringify({ 
+          action: isActive ? 'cancel' : 'activate',
+          story: isActive ? null : storyInput,
+          requirements: isActive ? null : selectedRequirements
+        }),
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error); return }
@@ -47,7 +80,7 @@ export default function AdoptionTab({ pet }: { pet: any }) {
   if (loading) {
     return (
       <div className="flex flex-col gap-5 animate-fadeInUp">
-        <div className="card-base p-8 text-center text-text-secondary text-[14px]">Yükleniyor...</div>
+        <div className="h-[200px] w-full bg-slate-100 rounded-2xl animate-pulse" />
       </div>
     )
   }
@@ -76,7 +109,61 @@ export default function AdoptionTab({ pet }: { pet: any }) {
               İlan tarihi: {new Date(adoption.created_at).toLocaleDateString('tr-TR')}
             </p>
           )}
+          {isActive && adoption?.story && (
+            <div className="mt-3 p-3 bg-amber-50/50 rounded-xl border border-amber-100 text-left">
+              <p className="text-[12px] text-text-secondary italic">"{adoption.story}"</p>
+            </div>
+          )}
+          {isActive && adoption?.requirements && adoption.requirements.length > 0 && (
+            <div className="mt-3 flex flex-wrap justify-center gap-1.5">
+              {adoption.requirements.map(req => (
+                <span key={req} className="px-2 py-1 bg-violet-50 text-violet-700 text-[11px] font-bold rounded-lg border border-violet-100/50">
+                  {req}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
+
+        {!isActive && (
+          <div className="w-full text-left mt-2 flex flex-col gap-4">
+            <div>
+              <label className="text-[12px] font-bold text-text-secondary ml-1">İlan Hikayesi (Opsiyonel)</label>
+              <textarea
+                value={storyInput}
+                onChange={(e) => setStoryInput(e.target.value)}
+                placeholder="Sahiplenecek kişi için küçük bir not..."
+                className="input-base w-full min-h-[80px] mt-1.5 resize-none text-[13px]"
+                maxLength={300}
+              />
+            </div>
+            
+            <div>
+              <label className="text-[12px] font-bold text-text-secondary ml-1">Sahiplenme Şartları (Opsiyonel)</label>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {AVAILABLE_REQUIREMENTS.map(req => {
+                  const isSelected = selectedRequirements.includes(req)
+                  return (
+                    <button
+                      key={req}
+                      onClick={() => {
+                        if (isSelected) setSelectedRequirements(prev => prev.filter(r => r !== req))
+                        else setSelectedRequirements(prev => [...prev, req])
+                      }}
+                      className={`px-3 py-1.5 rounded-xl text-[12px] font-medium transition-all ${
+                        isSelected 
+                          ? 'bg-violet-100 text-violet-700 border-violet-200 shadow-inner'
+                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                      } border`}
+                    >
+                      {req}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )}
 
         {error && (
           <div className="w-full p-3 rounded-lg text-[13px] font-medium bg-red-50 text-red-700 border border-red-200">
@@ -96,7 +183,7 @@ export default function AdoptionTab({ pet }: { pet: any }) {
           {toggling
             ? (isActive ? 'Kapatılıyor...' : 'Oluşturuluyor...')
             : (isActive ? 'İlanı Kapat' : 'İlan Oluştur')
-          }
+        }
         </button>
       </div>
     </div>

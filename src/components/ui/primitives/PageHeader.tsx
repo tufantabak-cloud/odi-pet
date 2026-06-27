@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import React from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
@@ -6,16 +6,17 @@ import { ArrowLeft } from 'lucide-react'
 interface PageHeaderProps {
   title: string
   showBack?: boolean
+  backHref?: string
   onBack?: () => void
   trailing?: React.ReactNode
   className?: string
 }
 
 export default function PageHeader({
-  title, showBack = true, onBack, trailing, className = ''
+  title, showBack = true, backHref, onBack, trailing, className = ''
 }: PageHeaderProps) {
   const router = useRouter()
-  const handleBack = onBack ?? (() => router.back())
+  const handleBack = onBack ?? (() => backHref ? router.push(backHref) : router.back())
 
   return (
     <div className={`flex items-center gap-3 px-[var(--space-4)] py-3 ${className}`}>

@@ -3,11 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import FamilyTab from './FamilyTab'
-import ReportsTab from './ReportsTab'
-import GalleryTab from '@/components/pets/tabs/GalleryTab'
-import MatchTab from '@/components/pets/tabs/MatchTab'
-import BudgetTab from '@/components/pets/tabs/BudgetTab'
-import AdoptionTab from '@/components/pets/tabs/AdoptionTab'
+import HealthTab from '@/components/pets/tabs/HealthTab'
 
 import SmartTaskWizard from '@/components/tasks/SmartTaskWizard'
 import { TaskCategory } from '@/lib/tasks/taskDefaults'
@@ -23,7 +19,9 @@ import { SmartScanner } from '@/components/ui/SmartScanner'
 import FloatingSOS from '@/components/FloatingSOS'
 import { HealthTracker } from '@/components/health-tracker/HealthTracker'
 import { EstrusTracker } from '@/components/estrus-tracker/EstrusTracker'
-
+import PetHeroCard from './PetHeroCard'
+import AllergyManager from '@/components/pets/AllergyManager'
+import CareScoreWidget from '@/components/pets/CareScoreWidget'
 function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -253,14 +251,14 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     'ozet': 'Özet', 'saglik': 'Sağlık', 'asi': 'Aşı',
     'bakim': 'Bakım', 'beslenme': 'Beslenme', 'hijyen': 'Hijyen',
     'aktivite': 'Aktivite', 'veteriner': 'Veteriner',
-    'diger': 'Diğer', 'raporlar': 'Raporlar',
+    'diger': 'Diğer', 'raporlar': 'Raporlar & Belgeler',
   }
   // Turkish module.name → url-safe id (div id için)
   const MODULE_ID_MAP: Record<string, string> = {
     'Özet': 'ozet', 'Sağlık': 'saglik', 'Aşı': 'asi',
     'Bakım': 'bakim', 'Beslenme': 'beslenme', 'Hijyen': 'hijyen',
     'Aktivite': 'aktivite', 'Veteriner': 'veteriner',
-    'Diğer': 'diger', 'Raporlar': 'raporlar',
+    'Diğer': 'diger', 'Raporlar & Belgeler': 'raporlar',
   }
 
   const initialSection = SECTION_NAME_MAP[searchParams?.get('tab') ?? ''] ?? null
@@ -278,6 +276,29 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     }, 500)
     return () => clearTimeout(timer)
   }, [])
+
+  // Dinamik bölüm açma ve scroll dinleyicisi
+  useEffect(() => {
+    const handleOpenSection = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const sectionName = customEvent.detail?.section;
+      if (sectionName) {
+        setOpenSections(prev => {
+          const next = new Set(prev);
+          next.add(sectionName);
+          return next;
+        });
+        setTimeout(() => {
+          const el = document.getElementById('section-raporlar');
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 100);
+      }
+    };
+    window.addEventListener('open-pet-section', handleOpenSection);
+    return () => window.removeEventListener('open-pet-section', handleOpenSection);
+  }, [])
   const [quickUpdateConfig, setQuickUpdateConfig] = useState<any>(null)
   const [timelineFilter, setTimelineFilter] = useState('Aşı & Parazit')
   const [enrichOpen, setEnrichOpen] = useState(false)
@@ -289,6 +310,129 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
   const [trackerRefreshKey, setTrackerRefreshKey] = useState(0)
   const timelineScrollRef = useRef<HTMLDivElement>(null)
+  const coverInputRef = useRef<HTMLInputElement>(null)
+
+  const [coverUploading, setCoverUploading] = useState(false)
+  const [coverAdjustingUrl, setCoverAdjustingUrl] = useState<string | null>(null)
+  const [savingAdjust, setSavingAdjust] = useState(false)
+  const [zoom, setZoom] = useState(1.0)
+  const [pan, setPan] = useState({ x: 0, y: 0 })
+  const [dragging, setDragging] = useState(false)
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+
+  const handleDragStart = (e: React.MouseEvent) => {
+    setDragging(true)
+    setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y })
+  }
+
+  const handleDragMove = (e: React.MouseEvent) => {
+    if (!dragging) return
+    setPan({
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y
+    })
+  }
+
+  const handleDragEnd = () => {
+    setDragging(false)
+  }
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      setDragging(true)
+      setDragStart({ 
+        x: e.touches[0].clientX - pan.x, 
+        y: e.touches[0].clientY - pan.y 
+      })
+    }
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!dragging || e.touches.length !== 1) return
+    setPan({
+      x: e.touches[0].clientX - dragStart.x,
+      y: e.touches[0].clientY - dragStart.y
+    })
+  }
+
+  const handleTouchEnd = () => {
+    setDragging(false)
+  }
+
+  const saveCoverAdjustment = async () => {
+    if (!coverAdjustingUrl) return
+    setSavingAdjust(true)
+    try {
+      const supabase = createBrowserSupabaseClient()
+      const { data: userData } = await supabase.auth.getUser()
+      const userId = userData.user?.id
+      if (!userId) throw new Error("Kullanıcı oturumu bulunamadı.")
+
+      const coverPosValue = `scale(${zoom}) translate(${pan.x}px, ${pan.y}px)`
+
+      // Profil & Kapak Kaydet
+      const { error: updateError } = await supabase
+        .from('pets')
+        .update({ 
+          cover_url: coverAdjustingUrl,
+          cover_position: coverPosValue
+        })
+        .eq('id', pet.id)
+      if (updateError) throw updateError
+
+      // Galeriye Ekle
+      const { error: galleryError } = await supabase
+        .from('pet_gallery')
+        .insert({
+          pet_id: pet.id,
+          user_id: userId,
+          image_url: coverAdjustingUrl
+        })
+      if (galleryError) console.error("Galeriye kaydedilemedi:", galleryError)
+
+      setCoverAdjustingUrl(null)
+      router.refresh()
+    } catch (err: any) {
+      alert("Kapak fotoğrafı ayarlanırken hata oluştu: " + err.message)
+    } finally {
+      setSavingAdjust(false)
+    }
+  }
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setCoverUploading(true)
+    try {
+      const supabase = createBrowserSupabaseClient()
+      const { data: userData } = await supabase.auth.getUser()
+      const userId = userData.user?.id
+      if (!userId) throw new Error("Kullanıcı oturumu bulunamadı.")
+
+      const ext = file.name.split('.').pop() || 'jpg'
+      const path = `covers/${userId}/${Date.now()}.${ext}`
+      
+      // 1. Supabase Storage'a Yükle
+      const { error: uploadError } = await supabase.storage
+        .from('pet-avatars')
+        .upload(path, file, { contentType: file.type, upsert: false })
+      if (uploadError) throw uploadError
+
+      const { data: urlData } = supabase.storage.from('pet-avatars').getPublicUrl(path)
+      const publicUrl = urlData.publicUrl
+
+      // 2. Kullanıcıya Yakınlaştırma & Kaydırma Modalı Aç
+      setZoom(0.8)
+      setPan({ x: 0, y: 0 })
+      setCoverAdjustingUrl(publicUrl)
+    } catch (err: any) {
+      alert("Kapak fotoğrafı yüklenirken hata oluştu: " + err.message)
+    } finally {
+      setCoverUploading(false)
+      if (coverInputRef.current) coverInputRef.current.value = ''
+    }
+  }
   
   useEffect(() => {
     if (timelineScrollRef.current) {
@@ -1086,76 +1230,20 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         
         return (
           <div className="flex flex-col gap-5">
-            {/* 1. Pet Hero */}
-            <div className="bg-[var(--color-surface)] rounded-[var(--radius-lg)] overflow-hidden shadow-[var(--shadow-md)] border border-[var(--color-border)] relative">
-              <Link
-                href={`/owner/pets/${pet.id}/edit`}
-                className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-white/20 backdrop-blur-md border border-white/40 flex items-center justify-center text-white hover:bg-white/40 transition-all z-20"
-                title="Profili Düzenle"
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                </svg>
-              </Link>
-              <div className="relative w-full h-[160px] bg-gradient-to-br from-[var(--color-primary-soft)] to-[var(--color-surface-secondary)]">
-                {pet.avatar_url && (
-                  <Image src={pet.avatar_url} alt={pet.name} fill sizes="400px" className="object-cover" priority />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
-                <div className="absolute bottom-[-14px] left-[16px]">
-                  <div className="relative w-[76px] h-[76px]">
-                    <svg width="76" height="76" viewBox="0 0 76 76" className="absolute inset-0">
-                      <circle cx="38" cy="38" r="35" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="3"/>
-                      <circle cx="38" cy="38" r="35" fill="none" stroke={haloColor} strokeWidth="3"
-                        strokeDasharray={`${(score / 100) * 219.9} 219.9`} strokeDashoffset="0" strokeLinecap="round"
-                        style={{ transform: 'rotate(-90deg)', transformOrigin: '38px 38px' }}/>
-                    </svg>
-                    <div className="absolute inset-[5px] rounded-full overflow-hidden border-2 border-white bg-[var(--color-primary-soft)]">
-                      {pet.avatar_url ? (
-                        <Image src={pet.avatar_url} alt={pet.name} fill sizes="66px" className="object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-[24px] font-800 text-[var(--color-primary)] opacity-40">
-                          {pet.name.charAt(0)}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="pt-5 pb-3 pl-[104px] pr-[var(--space-4)]">
-                <p className="text-[10px] font-600 text-[var(--color-text-muted)] uppercase tracking-[0.5px]">{greeting},</p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-[18px] font-800 text-[var(--color-text-primary)]">{pet.name}</span>
-                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-xs)] text-[10px] font-700"
-                    style={{ background: healthStatus.bg, color: healthStatus.color }}>
-                    <div className="w-1.5 h-1.5 rounded-full" style={{ background: healthStatus.color }} />
-                    {healthStatus.label}
-                  </div>
-                </div>
-                <p className="text-[11px] font-500 text-[var(--color-text-secondary)] mt-0.5">
-                  {pet.species}{pet.breed ? ` · ${pet.breed}` : ''} · {age.text}
-                </p>
-              </div>
-              <div className="flex gap-2 px-[var(--space-4)] pb-[var(--space-3)] border-t border-[var(--color-border)] pt-[var(--space-3)]">
-                <Link href={`/owner/pets/${pet.id}/share`}
-                  className="flex-1 h-9 rounded-[var(--radius-sm)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] flex items-center justify-center gap-1.5 text-[11px] font-600 text-[var(--color-text-secondary)] hover:bg-[var(--color-border)] transition-colors">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-                  Paylaş
-                </Link>
-                <div className="flex-1">
-                  <FloatingSOS
-                    petId={pet.id}
-                    petName={pet.name}
-                    vetPhone={pet.vet_phone}
-                    vetName={pet.vet_name}
-                    sosContacts={pet.sos_contacts}
-                    fullWidth={true}
-                    onLostReport={activeLostReport ? undefined : () => setLostWizardOpen(true)}
-                    onMarkFound={activeLostReport ? () => { handleMarkFound(); } : undefined}
-                  />
-                </div>
-              </div>
-            </div>
+            {/* 1. Pet Hero — KİLİTLİ BÖLGE: PetHeroCard.tsx dosyasını düzenle */}
+            <PetHeroCard
+              pet={pet}
+              score={score}
+              age={age}
+              coverInputRef={coverInputRef}
+              activeLostReport={activeLostReport}
+              onLostReport={() => setLostWizardOpen(true)}
+              onMarkFound={handleMarkFound}
+              latestWeight={primaryWeight !== '-' ? primaryWeight : null}
+            />
+
+            {/* ---> GAMIFICATION WIDGET <--- */}
+            <CareScoreWidget petId={pet.id} pet={pet} />
 
             {/* 2. 3 Metrik */}
             <div className="grid grid-cols-3 gap-2">
@@ -1275,7 +1363,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         const completedTasks = totalTasks - enrichTasks.length
         const progress = completedTasks === totalTasks ? 100 : Math.max(15, Math.round((completedTasks / totalTasks) * 100))
         return (
-          <div className="card-base border-l-4 border-l-primary shadow-sm bg-gradient-to-br from-white to-primary/5 overflow-hidden">
+          <div className="flex flex-col gap-2">
+            <div className="card-base border-l-4 border-l-primary shadow-sm bg-gradient-to-br from-white to-primary/5 overflow-hidden">
             <button onClick={() => setEnrichOpen(o => !o)} className="w-full flex items-center justify-between p-5 text-left">
               <h2 className="text-[14px] font-extrabold text-text-primary flex items-center gap-2">
                 Profili Zenginleştir
@@ -1303,8 +1392,10 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               </div>
             )}
           </div>
+          </div>
         )
       })()}
+
 
 
       {/* SmartTaskWizard Modal */}
@@ -1650,9 +1741,11 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           const cta = tabCtaInfo[module.name]
           return (
             <div key={module.name} id={`section-${MODULE_ID_MAP[module.name] ?? module.name}`} className="card-base overflow-hidden border border-border-main/60">
-              <button
+              <div
                 onClick={() => toggleSection(module.name)}
-                className="w-full flex items-center gap-3 p-4 text-left hover:bg-bg-main/50 transition-colors"
+                className="w-full flex items-center gap-3 p-4 text-left hover:bg-bg-main/50 transition-colors cursor-pointer"
+                role="button"
+                tabIndex={0}
               >
                 <div className={`w-10 h-10 rounded-xl ${module.bg} flex items-center justify-center ${module.color} shrink-0`}>
                   {module.icon}
@@ -1706,7 +1799,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                   </button>
                 )}
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={`text-text-secondary shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9"/></svg>
-              </button>
+              </div>
 
               {isOpen && (
                 <div className="border-t border-border-main/40 p-4 flex flex-col gap-5 animate-fade-in">
@@ -1782,16 +1875,16 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                     </div>
                   )}
 
-                  {/* Diğer: SOS ağı ve belge kasası */}
+                  {/* Diğer: SOS ağı */}
                   {module.name === 'Diğer' && (
                     <>
                       <FamilyTab petId={pet.id} petName={pet.name} plan={subscription?.plan ?? 'free'} initialSos={pet.sos_contacts} />
-                      <div className="card-base p-6 flex flex-col items-center text-center">
-                        <div className="w-14 h-14 bg-gradient-to-tr from-blue-100 to-cyan-50 rounded-[20px] flex items-center justify-center text-[28px] mb-3 shadow-sm">🚧</div>
-                        <h3 className="font-extrabold text-text-primary text-[16px] mb-1.5">Dijital Belge Kasası</h3>
-                        <p className="text-[13px] text-text-secondary leading-relaxed max-w-[260px]">Pasaport, aşı karnesi ve lab sonuçları yükleme modülü çok yakında aktif olacak.</p>
-                      </div>
                     </>
+                  )}
+
+                  {/* Sağlık Modülü Özel İçerik (Kilo Takibi & Belge Kasası) */}
+                  {module.name === 'Sağlık' && (
+                    <HealthTab petId={pet.id} petName={pet.name} />
                   )}
 
                   {/* CTA Kartı Kaldırıldı - Artık görev yoksa empty state altında veya module header'da + Ekle olarak gösteriliyor */}
@@ -1810,20 +1903,33 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           {([
             { id: 'Galeri', label: 'Galeri', icon: '📸', gradient: 'from-blue-500 to-indigo-500' },
             { id: 'Eşleştirme', label: 'Eşleştirme', icon: '❤️', gradient: 'from-rose-400 to-pink-500' },
-            { id: 'Bütçe', label: 'Bütçe', icon: '💰', gradient: 'from-emerald-400 to-teal-500' },
+            { id: 'Bütçe', label: 'Bütçe', icon: '🐾', gradient: 'from-emerald-400 to-teal-500' },
             { id: 'Sahiplendir', label: 'Sahiplendir', icon: '🏠', gradient: 'from-amber-400 to-orange-500' },
-            { id: 'Raporlar', label: 'Raporlar', icon: '📊', gradient: 'from-violet-500 to-purple-600' },
-            { id: 'Kayip', label: 'Kayıp İlanı', icon: '🚨', gradient: 'from-red-500 to-rose-600' },
+            { id: 'Raporlar', label: 'Raporlar & Belgeler', icon: '📊', gradient: 'from-violet-500 to-purple-600' },
+            { 
+              id: 'Kayip', 
+              label: activeLostReport ? 'İlan Aktif' : 'Kayıp İlanı', 
+              icon: activeLostReport ? '🆘' : '🚨', 
+              gradient: activeLostReport ? 'from-red-600 to-red-700 animate-pulse' : 'from-red-500 to-rose-600' 
+            },
           ]).map((item) => {
-            const isActive = openSections.has(item.id)
+            const isActive = openSections.has(item.id === 'Raporlar' ? 'Raporlar & Belgeler' : item.id) || (item.id === 'Kayip' && activeLostReport)
             return (
               <button
                 key={item.id}
                 onClick={() => {
                   if (item.id === 'Kayip') {
                     setLostWizardOpen(true)
-                  } else {
-                    toggleSection(item.id)
+                  } else if (item.id === 'Galeri') {
+                    router.push(`/owner/pets/${pet.id}/gallery`)
+                  } else if (item.id === 'Eşleştirme') {
+                    router.push(`/owner/pets/${pet.id}/match`)
+                  } else if (item.id === 'Bütçe') {
+                    router.push(`/owner/pets/${pet.id}/budget`)
+                  } else if (item.id === 'Sahiplendir') {
+                    router.push(`/owner/pets/${pet.id}/adoption`)
+                  } else if (item.id === 'Raporlar') {
+                    router.push(`/owner/pets/${pet.id}/reports`)
                   }
                 }}
                 className={`relative overflow-hidden rounded-[20px] p-4 flex flex-col items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-sm border ${isActive ? 'ring-2 ring-primary border-primary/20 bg-primary/5' : 'border-border-main/50 bg-white hover:bg-slate-50'}`}
@@ -1836,14 +1942,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             )
           })}
         </div>
-        {openSections.has('Galeri') && <div className="animate-fade-in"><GalleryTab pet={pet} /></div>}
-        {openSections.has('Eşleştirme') && <div className="animate-fade-in"><MatchTab pet={pet} /></div>}
-        {openSections.has('Bütçe') && <div className="animate-fade-in"><BudgetTab pet={pet} /></div>}
-        {openSections.has('Sahiplendir') && <div className="animate-fade-in"><AdoptionTab pet={pet} /></div>}
-        {openSections.has('Raporlar') && <div className="animate-fade-in"><ReportsTab petId={pet.id} petName={pet.name} plan={subscription?.plan ?? 'free'} payments={payments ?? []} /></div>}
 
         {/* Veteriner Bilgileri */}
-        {(pet.vet_company || pet.vet_name || pet.vet_phone || pet.vet_email) && (
+        {(pet.vet_company || pet.vet_name || pet.vet_phone || pet.vet_email) ? (
           <div className="card-base p-5">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest">Veteriner Bilgileri</h3>
@@ -1859,20 +1960,23 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               </div>
             </div>
           </div>
-        )}
-
-        {/* Irka Özel Sağlık Rehberi */}
-        <BreedHealthCard petName={pet.name} breed={pet.breed} />
-
-        {/* Alerjiler — sadece veri varsa */}
-        {allergies && allergies.length > 0 && (
-          <div className="card-base p-5">
-            <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest mb-3">Alerjiler</h3>
-            <div className="flex flex-wrap gap-2">
-              {allergies.map((a: any) => <span key={a.id} className="px-3 py-1.5 rounded-full bg-red-50 text-red-700 text-[12px] font-bold border border-red-100">{a.trigger_name}</span>)}
+        ) : (
+          <div className="card-base p-5 border border-dashed border-border-main hover:border-primary/50 transition-colors cursor-pointer group" onClick={handleEditVetInfo}>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-slate-50 group-hover:bg-primary-soft flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors text-[20px] shrink-0">🩺</div>
+              <div>
+                <h3 className="text-[13px] font-black text-text-primary mb-0.5">Veteriner Ekle</h3>
+                <p className="text-[12px] text-text-secondary">Aşı, muayene ve acil durumlar için hekiminizi kaydedin.</p>
+              </div>
             </div>
           </div>
         )}
+
+        {/* Irka Özel Sağlık Rehberi */}
+        <BreedHealthCard breed={pet.breed} />
+
+        {/* Alerjiler */}
+        <AllergyManager petId={pet.id} initialAllergies={allergies || []} />
       </div>
 
 
@@ -1912,6 +2016,68 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
 
 
+
+      {/* Hidden cover input — en dışta, overflow-hidden kap olmadan */}
+      <input
+        type="file"
+        accept="image/*"
+        ref={coverInputRef}
+        onChange={handleCoverUpload}
+        className="hidden"
+      />
+
+      {/* Kapak Fotoğrafı Ayarlama Modalı */}
+      {coverAdjustingUrl && (
+        <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-4">
+          <div className="bg-surface w-full max-w-sm rounded-[28px] overflow-hidden shadow-2xl animate-fade-in">
+            <div className="relative w-full h-[240px] overflow-hidden bg-black cursor-grab active:cursor-grabbing select-none"
+              onMouseDown={handleDragStart}
+              onMouseMove={handleDragMove}
+              onMouseUp={handleDragEnd}
+              onMouseLeave={handleDragEnd}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              <img
+                src={coverAdjustingUrl}
+                alt="Kapak Önizleme"
+                className="absolute top-1/2 left-1/2 pointer-events-none"
+                style={{
+                  width: 'auto',
+                  height: 'auto',
+                  maxWidth: 'none',
+                  maxHeight: 'none',
+                  transformOrigin: 'center',
+                  transform: `translate(-50%, -50%) scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`
+                }}
+              />
+            </div>
+            <div className="p-5 flex flex-col gap-4">
+              <div>
+                <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Yakınlaştır</label>
+                <input
+                  type="range" min={0.3} max={3} step={0.05}
+                  value={zoom}
+                  onChange={e => setZoom(parseFloat(e.target.value))}
+                  className="w-full mt-2"
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setCoverAdjustingUrl(null)}
+                  className="flex-1 py-3 rounded-xl border-2 border-border-main text-text-secondary font-bold text-[14px]"
+                >İptal</button>
+                <button
+                  onClick={saveCoverAdjustment}
+                  disabled={savingAdjust}
+                  className="flex-[2] btn-primary py-3 disabled:opacity-50 text-[14px]"
+                >{savingAdjust ? 'Kaydediliyor...' : 'Kaydet ✓'}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {lostWizardOpen && (
         <LostPetWizard 
