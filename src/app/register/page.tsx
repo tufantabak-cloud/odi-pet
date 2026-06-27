@@ -202,7 +202,7 @@ export default function RegisterPage() {
             </p>
             <button
               onClick={() => router.push('/login')}
-              className="w-full h-[52px] bg-primary text-white rounded-btn font-black text-[15px] shadow-lg shadow-primary/20 hover:bg-primary-hover hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
+              className="btn-primary w-full h-[52px] text-[15px] shadow-lg shadow-primary/20 hover:shadow-primary/40"
             >
               Giriş Sayfasına Git
             </button>
@@ -355,7 +355,7 @@ export default function RegisterPage() {
 
                   {/* İleri */}
                   <button type="button" onClick={handleNextStep}
-                    className="w-full h-[52px] bg-primary text-white rounded-btn font-black text-[15px] mt-1 shadow-lg shadow-primary/20 hover:bg-primary-hover hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                    className="btn-primary w-full h-[52px] mt-1 text-[15px] shadow-lg shadow-primary/20 hover:shadow-primary/40">
                     İleri
                   </button>
 
@@ -440,7 +440,7 @@ export default function RegisterPage() {
 
                   {/* Kayıt Ol */}
                   <button type="submit" disabled={loading || googleLoading || appleLoading}
-                    className="w-full h-[52px] bg-primary text-white rounded-btn font-black text-[15px] mt-1 shadow-lg shadow-primary/20 hover:bg-primary-hover hover:shadow-primary/40 disabled:opacity-60 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center">
+                    className="btn-primary w-full h-[52px] mt-1 text-[15px] shadow-lg shadow-primary/20 hover:shadow-primary/40 flex items-center justify-center">
                     {loading ? (
                       <span className="flex items-center gap-2.5">
                         <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">

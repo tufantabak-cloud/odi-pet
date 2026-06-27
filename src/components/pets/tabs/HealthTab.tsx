@@ -109,7 +109,7 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
             return (
               <div key={m.id} className="group relative flex flex-col items-center flex-1 justify-end h-full">
                 <div 
-                  className="w-full max-w-[24px] bg-primary/20 rounded-t-sm group-hover:bg-primary transition-all duration-200 hover:scale-[1.05] cursor-pointer"
+                  className="w-full max-w-[24px] bg-primary/20 rounded-t-xs group-hover:bg-primary transition-all duration-200 hover:scale-[1.05] cursor-pointer"
                   style={{ height: `${heightPercent}%` }}
                 />
                 <span className="text-[10px] text-text-secondary mt-1">{dateStr}</span>
@@ -131,7 +131,7 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
       {/* ── Kilo Takibi (Weight Chart) ── */}
       <div className="card-base p-5">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center shrink-0 shadow-inner">
+          <div className="w-10 h-10 rounded-xs bg-orange-50 text-orange-500 flex items-center justify-center shrink-0 shadow-inner">
             <RulerIcon width={24} height={24} />
           </div>
           <div>
@@ -147,20 +147,20 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
             value={weightValue}
             onChange={(e) => setWeightValue(e.target.value)}
             placeholder="Kilo (kg)"
-            className="flex-1 border border-border-main rounded-lg px-3 py-2 text-sm outline-none focus:border-primary"
+            className="flex-1 border border-border-main rounded-input px-3 py-2 text-sm outline-none focus:border-primary"
             required
           />
           <input 
             type="date"
             value={weightDate}
             onChange={(e) => setWeightDate(e.target.value)}
-            className="w-36 border border-border-main rounded-lg px-3 py-2 text-sm outline-none focus:border-primary"
+            className="w-36 border border-border-main rounded-input px-3 py-2 text-sm outline-none focus:border-primary"
             required
           />
           <button 
             type="submit"
             disabled={isSubmittingWeight}
-            className="bg-primary text-white px-4 py-2 rounded-lg font-bold hover:bg-primary/90 flex items-center gap-1 disabled:opacity-50"
+            className="bg-primary text-white px-4 py-2 rounded-btn font-bold hover:bg-primary/90 flex items-center gap-1 disabled:opacity-50"
           >
             {isSubmittingWeight ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
             Ekle
@@ -178,7 +178,7 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
       {!hideVaultBanner && (
         <div className="card-base p-5 bg-gradient-to-br from-blue-50/50 to-indigo-50/30 border border-blue-100 relative overflow-hidden">
           <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0 shadow-inner">
+            <div className="w-10 h-10 rounded-xs bg-blue-50 text-blue-500 flex items-center justify-center shrink-0 shadow-inner">
               <FirstAidIcon width={24} height={24} />
             </div>
             <div className="flex-1 pr-6">

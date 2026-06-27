@@ -213,7 +213,7 @@ export default function AdminUsersClient() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Email, ad veya soyad ara…"
-          className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border-main bg-surface text-[13px] text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-primary transition-colors"
+          className="input-base w-full pl-9"
         />
         {search && (
           <button

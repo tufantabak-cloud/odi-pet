@@ -43,12 +43,12 @@ export function BreedingFeedCard({ listing, userApplications = [] }: { listing: 
   const hasApplied = userApplications.some(app => app.listing?.id === listing.id)
 
   return (
-    <div className="card-base bg-white border border-border-main p-5 flex flex-col gap-4 shadow-sm relative overflow-hidden transition-all hover:shadow-md group rounded-2xl">
+    <div className="card-base bg-white border border-border-main p-5 flex flex-col gap-4 shadow-sm relative overflow-hidden transition-all hover:shadow-md group">
       <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-pink-100 to-transparent rounded-bl-full opacity-50 -z-10 transition-transform group-hover:scale-110" />
 
       <div className="flex gap-4 items-center">
         {displayPhoto ? (
-          <div className="relative w-[60px] h-[60px] rounded-2xl overflow-hidden shadow-sm shrink-0">
+          <div className="relative w-[60px] h-[60px] rounded-md overflow-hidden shadow-sm shrink-0">
             <Image
               src={displayPhoto}
               alt={pet.name || 'Pet Avatar'}
@@ -58,7 +58,7 @@ export function BreedingFeedCard({ listing, userApplications = [] }: { listing: 
             />
           </div>
         ) : (
-          <div className="w-[60px] h-[60px] rounded-2xl bg-gradient-to-tr from-pink-100 to-rose-50 flex items-center justify-center shadow-sm shrink-0">
+          <div className="w-[60px] h-[60px] rounded-md bg-gradient-to-tr from-pink-100 to-rose-50 flex items-center justify-center shadow-sm shrink-0">
             <span className="text-2xl">❤️</span>
           </div>
         )}
@@ -79,7 +79,7 @@ export function BreedingFeedCard({ listing, userApplications = [] }: { listing: 
         </div>
       </div>
 
-      <div className="bg-rose-50/80 rounded-xl p-3.5 border border-rose-100/50">
+      <div className="bg-rose-50/80 rounded-sm p-3.5 border border-rose-100/50">
         <h4 className="font-bold text-[14px] text-rose-900 mb-1">{title}</h4>
         {notes && (
           <p className="text-[13px] text-text-primary leading-relaxed line-clamp-2">
@@ -96,7 +96,7 @@ export function BreedingFeedCard({ listing, userApplications = [] }: { listing: 
       {requirements && requirements.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-1">
           {requirements.map((req: string, i: number) => (
-            <span key={i} className="px-2.5 py-1 bg-pink-50 text-pink-700 text-[11px] font-bold rounded-lg border border-pink-100/50 flex items-center gap-1">
+            <span key={i} className="px-2.5 py-1 bg-pink-50 text-pink-700 text-[11px] font-bold rounded-xs border border-pink-100/50 flex items-center gap-1">
               <span className="w-1 h-1 rounded-full bg-pink-400" />
               {req}
             </span>
@@ -116,11 +116,11 @@ export function BreedingFeedCard({ listing, userApplications = [] }: { listing: 
           )}
         </div>
         {hasApplied ? (
-          <button disabled className="btn-primary py-2 px-4 text-[13px] font-bold bg-slate-100 text-slate-500 border border-slate-200 rounded-xl cursor-not-allowed shadow-none">
+          <button disabled className="btn-primary py-2 px-4 text-[13px] font-bold bg-slate-100 text-slate-500 border border-slate-200 rounded-btn cursor-not-allowed shadow-none">
             ✓ Başvuruldu
           </button>
         ) : (
-          <button onClick={() => setIsModalOpen(true)} className="btn-primary py-2 px-4 text-[13px] font-bold bg-pink-500 hover:bg-pink-600 rounded-xl shadow-sm shadow-pink-500/20 active:scale-95 transition-all">
+          <button onClick={() => setIsModalOpen(true)} className="btn-primary py-2 px-4 text-[13px] font-bold bg-pink-500 hover:bg-pink-600 rounded-btn shadow-sm shadow-pink-500/20 active:scale-95 transition-all">
             Eşleşme İste →
           </button>
         )}

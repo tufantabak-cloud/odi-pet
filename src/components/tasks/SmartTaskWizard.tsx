@@ -602,7 +602,7 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
   return (
     <div className="fixed inset-0 z-[10005] bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 pb-12 sm:pb-4" onClick={onClose}>
       <div
-        className="bg-surface w-full max-w-md max-h-[84vh] sm:max-h-[88vh] overflow-y-auto overflow-x-hidden rounded-[28px] p-6 pb-8 shadow-2xl animate-scaleIn flex flex-col gap-2 scrollbar-none"
+        className="bg-surface w-full max-w-md max-h-[84vh] sm:max-h-[88vh] overflow-y-auto overflow-x-hidden rounded-modal p-6 pb-8 shadow-2xl animate-scaleIn flex flex-col gap-2 scrollbar-none"
         onClick={e => e.stopPropagation()}
       >
         {/* ── Header ─────────────────────────────────────────────── */}

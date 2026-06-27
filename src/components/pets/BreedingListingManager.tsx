@@ -123,7 +123,7 @@ export default function BreedingListingManager({ pet }: { pet: PetRow }) {
             setEstrusNotif(listing.estrus_notification_enabled || false)
             setExperience(listing.experience_level || 'beginner')
             setIsEditing(true)
-          }} className="flex-1 bg-white border border-slate-200 text-slate-700 font-bold text-[12px] py-2 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
+          }} className="btn-secondary flex-1 py-2 text-[12px]">
             Düzenle
           </button>
           <button onClick={async () => {
@@ -132,7 +132,7 @@ export default function BreedingListingManager({ pet }: { pet: PetRow }) {
               method: 'PATCH', body: JSON.stringify({ status: 'closed' })
             })
             window.location.reload()
-          }} className="flex-1 bg-white border border-slate-200 text-slate-700 font-bold text-[12px] py-2 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
+          }} className="btn-secondary flex-1 py-2 text-[12px]">
             İlanı Kapat
           </button>
           <button onClick={async () => {

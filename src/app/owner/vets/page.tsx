@@ -489,7 +489,7 @@ export default function VetsPage() {
             <button 
               onClick={requestLocation} 
               disabled={loading} 
-              className="border border-border-main text-text-primary min-h-[50px] flex items-center justify-center bg-surface hover:border-[#34495E]/30 hover:bg-slate-50 transition-all duration-300 rounded-btn px-[24px] cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed" 
+              className="btn-secondary min-h-[50px] flex items-center justify-center px-[24px] disabled:opacity-50 disabled:cursor-not-allowed" 
               title="Konumumu Kullan"
             >
               <svg className="w-5 h-5 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">

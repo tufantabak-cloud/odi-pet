@@ -94,7 +94,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
   return (
     <div className="flex flex-col gap-5">
 
-      <div className="flex items-center justify-between p-4 rounded-xl bg-bg-main border border-border-main">
+      <div className="flex items-center justify-between p-4 rounded-sm bg-bg-main border border-border-main">
         <div>
           <p className="text-[13px] font-bold text-text-primary">
             {members.length} / {limit === 999 ? '∞' : limit} Üye Slotu
@@ -173,12 +173,12 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
       <div className="card-base p-5">
         <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest mb-4">Üye Davet Et</h3>
         {inviteMsg && (
-          <div className={`p-3 rounded-lg text-[13px] font-medium mb-4 ${inviteMsg.type === 'ok' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+          <div className={`p-3 rounded-xs text-[13px] font-medium mb-4 ${inviteMsg.type === 'ok' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
             {inviteMsg.text}
           </div>
         )}
         {inviteLink && (
-          <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 mb-4">
+          <div className="p-3 rounded-xs bg-blue-50 border border-blue-200 mb-4">
             <p className="text-[11px] font-bold text-blue-600 uppercase tracking-wide mb-2">📎 Davet Bağlantısı</p>
             <div className="flex gap-2">
               <input
@@ -192,7 +192,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
               <button
                 type="button"
                 onClick={copyLink}
-                className={`shrink-0 px-3 py-2 rounded-lg text-[12px] font-bold transition-all duration-200 ${
+                className={`shrink-0 px-3 py-2 rounded-btn text-[12px] font-bold transition-all duration-200 ${
                   copied
                     ? 'bg-green-500 text-white'
                     : 'bg-blue-500 hover:bg-blue-600 text-white'
@@ -251,7 +251,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
       )}
 
       {/* Referral Growth Hook */}
-      <div className="p-4 rounded-xl bg-gradient-to-br from-primary/10 to-transparent border border-primary/20 text-center">
+      <div className="p-4 rounded-sm bg-gradient-to-br from-primary/10 to-transparent border border-primary/20 text-center">
         <p className="text-[14px] font-bold text-text-primary mb-1">🎁 Davet Ödülü</p>
         <p className="text-[12px] text-text-secondary">
           Davet ettiğin kişi kabul edince <strong className="text-primary">+50 Care Point</strong> kazanırsın!

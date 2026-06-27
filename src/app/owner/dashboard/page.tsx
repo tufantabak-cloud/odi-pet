@@ -139,14 +139,14 @@ export default async function OwnerDashboard() {
             <div className="flex items-center justify-between px-[var(--space-4)]">
               <p className="text-[11px] font-700 text-[var(--color-text-muted)] uppercase tracking-[0.8px]">Petlerim</p>
               <Link href="/owner/pets/add"
-                className="flex items-center gap-1 px-3.5 h-11 rounded-[var(--radius-xs)] bg-[var(--color-primary)] text-white text-[12px] font-700 hover:bg-[var(--color-primary-dark)] transition-colors">
+                className="flex items-center gap-1 px-3.5 h-11 rounded-xs bg-[var(--color-primary)] text-white text-[12px] font-700 hover:bg-[var(--color-primary-dark)] transition-colors">
                 + Ekle
               </Link>
             </div>
             <div className="flex gap-2 overflow-x-auto px-[var(--space-4)] pb-1 scrollbar-none snap-x">
               {petsWithStats.map((pet: any) => (
                 <Link key={pet.id} href={`/owner/pets/${pet.id}`} data-testid="pet-card"
-                  className="snap-start shrink-0 w-[120px] rounded-[var(--radius-md)] overflow-hidden shadow-[var(--shadow-sm)] border border-[var(--color-border)] bg-[var(--color-surface)]">
+                  className="snap-start shrink-0 w-[120px] rounded-md overflow-hidden shadow-[var(--shadow-sm)] border border-[var(--color-border)] bg-[var(--color-surface)]">
                   <div className="relative w-full h-[80px] bg-[var(--color-primary-soft)]">
                     {pet.avatar_url ? (
                       <Image src={pet.avatar_url} alt={pet.name} fill sizes="120px" className="object-cover" />
@@ -187,8 +187,8 @@ export default async function OwnerDashboard() {
                 { id: 'onb-journal-add', label: 'Gunluk', href: pets.length === 1 ? `/owner/pets/${pets[0].id}/journal` : '/owner/pets', bg: 'var(--color-hygiene-soft)', color: '#0D9488', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> },
               ].map((mod) => (
                 <Link key={(mod as any).id || mod.label} href={mod.href} id={(mod as any).id}
-                  className="flex flex-col items-center gap-2 p-3 rounded-[var(--radius-md)] bg-[var(--color-surface)] border border-[var(--color-border)] hover:shadow-[var(--shadow-sm)] hover:border-[var(--color-primary)]/30 active:scale-[0.97] transition-all duration-200">
-                  <div className="w-9 h-9 rounded-[10px] flex items-center justify-center"
+                  className="flex flex-col items-center gap-2 p-3 rounded-md bg-[var(--color-surface)] border border-[var(--color-border)] hover:shadow-[var(--shadow-sm)] hover:border-[var(--color-primary)]/30 active:scale-[0.97] transition-all duration-200">
+                  <div className="w-9 h-9 rounded-xs flex items-center justify-center"
                     style={{ background: mod.bg, color: mod.color }}>
                     {mod.icon}
                   </div>
@@ -202,8 +202,8 @@ export default async function OwnerDashboard() {
         {/* Davet Et */}
         {pets && pets.length > 0 && (
           <Link id="onb-referral" href="/owner/referral"
-            className="mx-[var(--space-4)] flex items-center gap-2 p-[var(--space-3)] rounded-[var(--radius-lg)] bg-[var(--color-primary-soft)] border border-[var(--color-primary)]/15 hover:border-[var(--color-primary)]/30 active:scale-[0.98] transition-all duration-200 group">
-            <div className="w-9 h-9 rounded-[var(--radius-sm)] bg-[var(--color-primary)]/10 flex items-center justify-center shrink-0">
+            className="mx-[var(--space-4)] flex items-center gap-2 p-[var(--space-3)] rounded-card bg-[var(--color-primary-soft)] border border-[var(--color-primary)]/15 hover:border-[var(--color-primary)]/30 active:scale-[0.98] transition-all duration-200 group">
+            <div className="w-9 h-9 rounded-sm bg-[var(--color-primary)]/10 flex items-center justify-center shrink-0">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--color-primary)]">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
@@ -227,9 +227,9 @@ export default async function OwnerDashboard() {
               {upcomingEvents.map((event: any) => {
                 const eventDate = new Date(event.due_date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })
                 return (
-                  <div key={event.id} className="flex items-center justify-between p-3.5 rounded-[var(--radius-lg)] bg-[var(--color-surface)] border border-[var(--color-border)] shadow-[var(--shadow-sm)] hover:border-[var(--color-primary)]/20 transition-all duration-200">
+                  <div key={event.id} className="flex items-center justify-between p-3.5 rounded-card bg-[var(--color-surface)] border border-[var(--color-border)] shadow-[var(--shadow-sm)] hover:border-[var(--color-primary)]/20 transition-all duration-200">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 rounded-[10px] bg-[var(--color-health-soft)] text-[var(--color-danger)] flex items-center justify-center shrink-0">
+                      <div className="w-9 h-9 rounded-xs bg-[var(--color-health-soft)] text-[var(--color-danger)] flex items-center justify-center shrink-0">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"/><path d="M12 6V12L16 14"/></svg>
                       </div>
                       <div className="min-w-0">
@@ -246,7 +246,7 @@ export default async function OwnerDashboard() {
               })}
             </div>
           ) : (
-            <div className="p-4 rounded-[var(--radius-lg)] bg-[var(--color-surface)] border border-[var(--color-border)] text-center">
+            <div className="p-4 rounded-card bg-[var(--color-surface)] border border-[var(--color-border)] text-center">
               <p className="text-[11px] text-[var(--color-text-muted)] font-600">Yakın zamanda planlanmış bir etkinlik bulunmuyor.</p>
             </div>
           )}
@@ -262,9 +262,9 @@ export default async function OwnerDashboard() {
               {activePlans.slice(0, 3).map((plan: any) => {
                 const planDate = plan.next_run ? new Date(plan.next_run).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }) : 'Belirtilmemiş'
                 return (
-                  <div key={plan.id} className="flex items-center justify-between p-3.5 rounded-[var(--radius-lg)] bg-[var(--color-surface)] border border-[var(--color-border)] shadow-[var(--shadow-sm)] hover:border-[var(--color-primary)]/20 transition-all duration-200">
+                  <div key={plan.id} className="flex items-center justify-between p-3.5 rounded-card bg-[var(--color-surface)] border border-[var(--color-border)] shadow-[var(--shadow-sm)] hover:border-[var(--color-primary)]/20 transition-all duration-200">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 rounded-[10px] bg-[var(--color-primary-soft)] text-[var(--color-primary)] flex items-center justify-center shrink-0">
+                      <div className="w-9 h-9 rounded-xs bg-[var(--color-primary-soft)] text-[var(--color-primary)] flex items-center justify-center shrink-0">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 6v6l4 2"/></svg>
                       </div>
                       <div className="min-w-0">
@@ -281,7 +281,7 @@ export default async function OwnerDashboard() {
               })}
             </div>
           ) : (
-            <div className="p-4 rounded-[var(--radius-lg)] bg-[var(--color-surface)] border border-[var(--color-border)] text-center">
+            <div className="p-4 rounded-card bg-[var(--color-surface)] border border-[var(--color-border)] text-center">
               <p className="text-[11px] text-[var(--color-text-muted)] font-600">Aktif bir bakım veya beslenme planınız bulunmuyor.</p>
             </div>
           )}

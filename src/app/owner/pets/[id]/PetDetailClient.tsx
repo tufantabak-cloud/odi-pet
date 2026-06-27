@@ -63,7 +63,7 @@ function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
 
   return (
     <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-surface w-full max-w-sm rounded-[28px] p-6 shadow-2xl overflow-hidden animate-fade-in" onClick={e => e.stopPropagation()}>
+      <div className="bg-surface w-full max-w-sm rounded-modal p-6 shadow-2xl overflow-hidden animate-fade-in" onClick={e => e.stopPropagation()}>
         <h3 className="text-[17px] font-extrabold text-text-primary mb-1">{config.title}</h3>
         <p className="text-[13px] text-text-secondary mb-5 leading-relaxed">{config.desc}</p>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -77,9 +77,9 @@ function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
                )}
              </div>
           ))}
-          {error && <p className="text-[12px] text-error font-bold p-2 bg-error/10 rounded-lg text-center mt-1">{error}</p>}
+          {error && <p className="text-[12px] text-error font-bold p-2 bg-error/10 rounded-xs text-center mt-1">{error}</p>}
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-3.5 rounded-xl border-2 border-border-main text-text-secondary font-bold text-[14px]">İptal</button>
+            <button type="button" onClick={onClose} className="flex-1 py-3.5 rounded-btn border-2 border-border-main text-text-secondary font-bold text-[14px]">İptal</button>
             <button type="submit" disabled={loading} className="flex-[2] btn-primary py-3.5 disabled:opacity-50 shadow-sm text-[14px]">{loading ? 'Kaydediliyor...' : 'Kaydet ✓'}</button>
           </div>
         </form>
@@ -909,7 +909,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         {title && <h4 className="text-[12px] font-black text-text-secondary uppercase tracking-widest px-1">{title}</h4>}
         {(!list || list.length === 0) ? (
           customEmptyContent ? customEmptyContent : (
-            <div className="py-6 bg-bg-main/50 rounded-[20px] border border-dashed border-border-main text-center flex flex-col items-center gap-2">
+            <div className="py-6 bg-bg-main/50 rounded-card border border-dashed border-border-main text-center flex flex-col items-center gap-2">
               <span className="text-2xl opacity-80">{emptyIcon}</span>
               <p className="text-[13px] font-bold text-text-secondary">{emptyMessage}</p>
             </div>
@@ -924,7 +924,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           const cardStyle = getTaskCardStyle(isOverdue, isCompleted);
 
           return (
-            <div key={item.id} onClick={() => { setTaskToEdit(item); setTaskWizardOpen(true) }} className={`flex items-center justify-between p-4 ${cardStyle.bg} ${cardStyle.hoverBg} rounded-[20px] transition-colors cursor-pointer`}>
+            <div key={item.id} onClick={() => { setTaskToEdit(item); setTaskWizardOpen(true) }} className={`flex items-center justify-between p-4 ${cardStyle.bg} ${cardStyle.hoverBg} rounded-card transition-colors cursor-pointer`}>
               <div className="flex-1 min-w-0 pr-3">
                 <p className={`font-extrabold text-[14px] line-clamp-2 break-words ${cardStyle.textTitle}`}>
                   {item.title || item.vaccines?.name || 'Görev'}
@@ -943,7 +943,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                   </svg>
                 </button>
                 {activeMenuId === item.id && (
-                  <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-2xl shadow-xl border border-border-main/50 py-2 z-[200]">
+                  <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-md shadow-xl border border-border-main/50 py-2 z-[200]">
                     <button onClick={(e) => { e.stopPropagation(); handleMarkCompleted(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-success hover:bg-success/5 flex items-center gap-2 cursor-pointer">✓ Tamamlandı İşaretle</button>
                     <button onClick={(e) => { e.stopPropagation(); handlePostpone(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary-soft flex items-center gap-2 cursor-pointer">📅 1 Gün Ertele</button>
                     <div className="border-t border-border-main/30 mx-2 my-1"/>
@@ -993,7 +993,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     if (filteredPlanned.length === 0 && plannedTimeFilter === 'Bugün + Gecikenler' && upcomingTasks.length > 0) {
       customEmptyContent = (
         <div className="flex flex-col gap-4">
-          <div className="py-6 bg-bg-main/50 rounded-[20px] border border-dashed border-border-main text-center flex flex-col items-center gap-2 px-4">
+          <div className="py-6 bg-bg-main/50 rounded-card border border-dashed border-border-main text-center flex flex-col items-center gap-2 px-4">
             <span className="text-2xl opacity-80">✨</span>
             <p className="text-[13px] font-bold text-text-secondary leading-relaxed">
               Bugün için planlı göreviniz yok. İleri tarihli <span className="text-primary font-black">{upcomingTasks.length}</span> görevinizi görmek için filtreyi &apos;Tüm Zamanlar&apos; olarak değiştirin.
@@ -1038,8 +1038,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     if (!hasAnyTasks) {
       return (
         <div className="flex flex-col gap-4 w-full">
-          <div className="py-8 px-4 bg-bg-main/50 rounded-[20px] border border-dashed border-border-main text-center flex flex-col items-center gap-3">
-            <div className={`w-12 h-12 bg-gradient-to-tr ${cta?.gradient || 'from-slate-200 to-slate-300'} rounded-2xl flex items-center justify-center shadow-sm mb-1`}>
+          <div className="py-8 px-4 bg-bg-main/50 rounded-card border border-dashed border-border-main text-center flex flex-col items-center gap-3">
+            <div className={`w-12 h-12 bg-gradient-to-tr ${cta?.gradient || 'from-slate-200 to-slate-300'} rounded-xs flex items-center justify-center shadow-sm mb-1`}>
               <span className="text-2xl">🗓️</span>
             </div>
             <h3 className="font-extrabold text-text-primary text-[15px]">Henüz görev planlanmamış</h3>
@@ -1047,7 +1047,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             {cta && (
               <button
                 onClick={handleCtaClick}
-                className="btn-primary min-h-[50px] flex items-center justify-center px-6 text-[13px] font-bold rounded-xl"
+                className="btn-primary min-h-[50px] flex items-center justify-center px-6 text-[13px] font-bold rounded-btn"
               >
                 + {cta.btnLabel}
               </button>
@@ -1065,7 +1065,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> Filtrele</h3>
               <button 
                 onClick={() => setFilterSheetType('planned')}
-                className="text-[12px] font-bold text-primary bg-primary-soft px-3 py-1.5 rounded-xl border border-primary/20 flex items-center gap-1.5 hover:bg-primary hover:text-white transition-colors"
+                className="text-[12px] font-bold text-primary bg-primary-soft px-3 py-1.5 rounded-btn border border-primary/20 flex items-center gap-1.5 hover:bg-primary hover:text-white transition-colors"
               >
                 {plannedTimeFilter === 'Tümü' ? 'Tüm Zamanlar' : plannedTimeFilter}
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
@@ -1109,7 +1109,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           <div className="mt-2">
             <button 
               onClick={() => setShowCompleted(!showCompleted)}
-              className="w-full py-3.5 bg-bg-main hover:bg-border-main/40 text-text-secondary font-bold text-[13px] rounded-2xl border border-dashed border-border-main transition-colors flex items-center justify-center gap-2"
+              className="w-full py-3.5 bg-bg-main hover:bg-border-main/40 text-text-secondary font-bold text-[13px] rounded-btn border border-dashed border-border-main transition-colors flex items-center justify-center gap-2"
             >
               {showCompleted ? 'Tamamlanmış Görevleri Gizle' : `Tamamlanmış Görevleri Gör (${filteredCompleted.length})`}
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={`transition-transform ${showCompleted ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9"/></svg>
@@ -1123,7 +1123,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                       <h3 className="text-[13px] font-black text-[#3c6b65] uppercase tracking-widest flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> Filtrele</h3>
                       <button 
                         onClick={() => setFilterSheetType('completed')}
-                        className="text-[12px] font-bold text-[#3c6b65] bg-[#edf7f6] px-3 py-1.5 rounded-xl border border-[#3c6b65]/30 flex items-center gap-1.5 hover:bg-[#3c6b65] hover:text-white transition-colors"
+                        className="text-[12px] font-bold text-[#3c6b65] bg-[#edf7f6] px-3 py-1.5 rounded-btn border border-[#3c6b65]/30 flex items-center gap-1.5 hover:bg-[#3c6b65] hover:text-white transition-colors"
                       >
                         {completedTimeFilter === 'Tümü' ? 'Tüm Zamanlar' : completedTimeFilter}
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
@@ -1162,14 +1162,14 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   return (
     <div className="flex flex-col gap-6 pb-8 pb-safe w-full mx-auto">
       {generalError && (
-        <div role="alert" className="p-3 bg-error/10 text-error text-[13px] font-bold rounded-xl text-center border border-error/20 mx-4 mt-4">
+        <div role="alert" className="p-3 bg-error/10 text-error text-[13px] font-bold rounded-xs text-center border border-error/20 mx-4 mt-4">
           {generalError}
         </div>
       )}
 
       {/* Admin Notice Banner */}
       {isAdminView && (
-        <div className="bg-gradient-to-r from-violet-600 via-indigo-600 to-primary text-white text-[13px] font-bold px-5 py-4 rounded-[24px] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg shadow-indigo-500/15 border border-white/10 animate-fade-in">
+        <div className="bg-gradient-to-r from-violet-600 via-indigo-600 to-primary text-white text-[13px] font-bold px-5 py-4 rounded-sheet flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg shadow-indigo-500/15 border border-white/10 animate-fade-in">
           <div className="flex items-center gap-2">
             <span className="text-lg animate-bounce">🔑</span>
             <span>Yönetici Görünümü: Bu evcil hayvanın bilgilerini görüntülüyorsunuz.</span>
@@ -1177,7 +1177,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           {pet.owner_id && (
             <Link 
               href={`/admin/users/${pet.owner_id}`}
-              className="bg-white/20 hover:bg-white/30 active:scale-[0.98] transition-all px-4 py-2 rounded-xl text-[12px] font-black tracking-tight self-stretch sm:self-auto text-center"
+              className="bg-white/20 hover:bg-white/30 active:scale-[0.98] transition-all px-4 py-2 rounded-btn text-[12px] font-black tracking-tight self-stretch sm:self-auto text-center"
             >
               Sahip Profiline Dön
             </Link>
@@ -1270,7 +1270,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                   subType: overdueCount > 0 ? 'warning' as const : 'neutral' as const,
                 },
               ].map((m) => (
-                <div key={m.label} className="bg-[var(--color-surface)] rounded-[var(--radius-md)] p-3 flex flex-col items-center text-center border border-[var(--color-border)] shadow-[var(--shadow-sm)]">
+                <div key={m.label} className="bg-[var(--color-surface)] rounded-md p-3 flex flex-col items-center text-center border border-[var(--color-border)] shadow-[var(--shadow-sm)]">
                   <div className="flex items-baseline gap-0.5">
                     <span className="text-[18px] font-800 text-[var(--color-text-primary)] leading-none tabular-nums">{m.value}</span>
                     {m.unit && <span className="text-[10px] font-600 text-[var(--color-text-muted)]">{m.unit}</span>}
@@ -1288,7 +1288,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             {/* 3. Bugün */}
             <div className="flex flex-col gap-2">
               <p className="text-[11px] font-700 text-[var(--color-text-muted)] uppercase tracking-[0.8px] px-1">Bugün</p>
-              <div className="bg-[var(--color-surface)] rounded-[var(--radius-lg)] overflow-hidden border border-[var(--color-border)] shadow-[var(--shadow-sm)] divide-y divide-[var(--color-border)]">
+              <div className="bg-[var(--color-surface)] rounded-card overflow-hidden border border-[var(--color-border)] shadow-[var(--shadow-sm)] divide-y divide-[var(--color-border)]">
                 {todaySchedules.length > 0 ? todaySchedules.slice(0, 3).map((plan: any) => {
                   const taskDT = getTaskDateTime(plan);
                   const isOverdue = taskDT < now;
@@ -1326,7 +1326,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                         </p>
                         <p className="text-[10px] text-[var(--color-text-muted)] mt-0.5">{plan.category}</p>
                       </div>
-                      <span className="text-[10px] font-700 px-2 py-1 rounded-[var(--radius-xs)] shrink-0 whitespace-nowrap"
+                      <span className="text-[10px] font-700 px-2 py-1 rounded-xs shrink-0 whitespace-nowrap"
                         style={{ background: badgeBg, color: badgeColor }}>
                         {badge}
                       </span>
@@ -1379,11 +1379,11 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                 <div className="flex flex-wrap gap-2">
                   {enrichTasks.map((t, i) => (
                     t.onClick ? (
-                      <button key={i} onClick={t.onClick} className="text-[12px] font-bold px-3 py-2 rounded-xl border border-border-main bg-white text-text-secondary hover:text-primary hover:border-primary hover:bg-primary/5 transition-all flex items-center gap-1.5 shadow-sm">
+                      <button key={i} onClick={t.onClick} className="text-[12px] font-bold px-3 py-2 rounded-btn border border-border-main bg-white text-text-secondary hover:text-primary hover:border-primary hover:bg-primary/5 transition-all flex items-center gap-1.5 shadow-sm">
                         <span className="text-[14px] text-primary">+</span> {t.label}
                       </button>
                     ) : (
-                      <Link key={i} href={t.link || '#'} className="text-[12px] font-bold px-3 py-2 rounded-xl border border-border-main bg-white text-text-secondary hover:text-primary hover:border-primary hover:bg-primary/5 transition-all flex items-center gap-1.5 shadow-sm">
+                      <Link key={i} href={t.link || '#'} className="text-[12px] font-bold px-3 py-2 rounded-btn border border-border-main bg-white text-text-secondary hover:text-primary hover:border-primary hover:bg-primary/5 transition-all flex items-center gap-1.5 shadow-sm">
                         <span className="text-[14px] text-primary">+</span> {t.label}
                       </Link>
                     )
@@ -1509,7 +1509,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             {localOverdue > 0 && (
               <button
                 onClick={() => setSelectedDate(new Date(new Date().setHours(0,0,0,0)))}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-error/10 text-error hover:bg-error/20 transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-btn bg-error/10 text-error hover:bg-error/20 transition-colors cursor-pointer"
               >
                 <span className="text-[14px]">🚨</span>
                 <span className="text-[12px] font-bold">{localOverdue} Gecikmiş</span>
@@ -1532,7 +1532,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                 return td.getTime() === date.getTime();
               });
               return (
-                <button key={i} data-istoday={isToday} onClick={() => setSelectedDate(date)} className={`snap-center flex-shrink-0 w-[60px] h-[72px] flex flex-col items-center justify-center rounded-2xl transition-all duration-200 border-2 ${isSelected ? 'border-primary bg-primary/5 shadow-sm' : 'border-border-main/50 bg-white hover:border-primary/30'} ${isToday && !isSelected ? 'border-text-secondary/20 bg-bg-main/50' : ''}`}>
+                <button key={i} data-istoday={isToday} onClick={() => setSelectedDate(date)} className={`snap-center flex-shrink-0 w-[60px] h-[72px] flex flex-col items-center justify-center rounded-md transition-all duration-200 border-2 ${isSelected ? 'border-primary bg-primary/5 shadow-sm' : 'border-border-main/50 bg-white hover:border-primary/30'} ${isToday && !isSelected ? 'border-text-secondary/20 bg-bg-main/50' : ''}`}>
                   <span className={`text-[11px] font-bold uppercase tracking-wider mb-1 ${isSelected ? 'text-primary' : 'text-text-secondary'}`}>{isToday ? 'BGN' : date.toLocaleDateString('tr-TR', {weekday: 'short'})}</span>
                   <span className={`text-[18px] font-black leading-none ${isSelected ? 'text-primary' : 'text-text-primary'}`}>{date.getDate()}</span>
                   <div className="flex gap-1 mt-1.5 h-1.5">

@@ -32,7 +32,7 @@ function QuickUpdateModal({ config, onClose, onDone }: any) {
 
   return (
     <div className="fixed inset-0 z-[10000] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-surface w-full max-w-sm rounded-[28px] p-6 shadow-2xl overflow-hidden animate-fade-in" onClick={e => e.stopPropagation()}>
+      <div className="bg-surface w-full max-w-sm rounded-modal p-6 shadow-2xl overflow-hidden animate-fade-in" onClick={e => e.stopPropagation()}>
         <h3 className="text-[17px] font-extrabold text-text-primary mb-1">{config.title}</h3>
         <p className="text-[13px] text-text-secondary mb-5 leading-relaxed">{config.desc}</p>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -48,7 +48,7 @@ function QuickUpdateModal({ config, onClose, onDone }: any) {
           ))}
           {error && <p className="text-[12px] text-error font-bold p-2 bg-error/10 rounded-lg text-center mt-1">{error}</p>}
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-3.5 rounded-xl border-2 border-border-main text-text-secondary font-bold text-[14px]">İptal</button>
+            <button type="button" onClick={onClose} className="flex-1 py-3.5 rounded-btn border-2 border-border-main text-text-secondary font-bold text-[14px]">İptal</button>
             <button type="submit" disabled={loading} className="flex-[2] btn-primary py-3.5 disabled:opacity-50 shadow-sm text-[14px]">{loading ? 'Kaydediliyor...' : 'Kaydet ✓'}</button>
           </div>
         </form>
@@ -342,12 +342,11 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
     return hoursAgo > 48
   }) ?? []
 
-  // EN YÜKSEK ÖNCELİK — ilk 48 saat
   if (urgentLost.length > 0) {
     return (
-      <div className="card-base border-2 border-red-200 bg-red-50/50 p-5 rounded-2xl flex flex-col gap-3 relative overflow-hidden">
+      <div className="card-base border-2 border-red-200 bg-red-50/50 p-5 flex flex-col gap-3 relative overflow-hidden">
         <div className="flex items-center gap-2 mb-1">
-          <span className="animate-pulse text-xl">🚨</span>
+          <span className="animate-pulse text-[20px]">🚨</span>
           <span className="font-black text-red-600 text-[15px]">
             Yakınında Kayıp Pet Var!
           </span>
@@ -360,7 +359,7 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
         <div className="flex">
           <Link
             href="/owner/social?tab=lost"
-            className="inline-flex items-center gap-1 text-[13px] font-bold text-white bg-red-600 hover:bg-red-700 px-4 py-2 rounded-xl transition-all shadow-sm shadow-red-600/10 active:scale-95"
+            className="inline-flex items-center gap-1 text-[13px] font-bold text-white bg-red-600 hover:bg-red-700 px-4 py-2 rounded-btn transition-all shadow-sm shadow-red-600/10 active:scale-95"
           >
             İlanları Gör →
           </Link>
@@ -395,10 +394,10 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
   const accent = cardAccent[activeCard.type] ?? { border: 'border-l-primary', bg: 'bg-primary-soft' }
 
   return (
-    <div className={`relative bg-surface rounded-[20px] border border-border-main/60 border-l-4 ${accent.border} shadow-md overflow-hidden transition-all duration-300`}>
+    <div className={`relative bg-surface rounded-card border border-border-main/60 border-l-4 ${accent.border} shadow-md overflow-hidden transition-all duration-300`}>
       <div className="p-4 flex flex-col gap-4">
         <div className="flex items-start gap-3">
-          <div className={`w-10 h-10 rounded-xl ${accent.bg} flex items-center justify-center shrink-0`}>
+          <div className={`w-10 h-10 rounded-sm ${accent.bg} flex items-center justify-center shrink-0`}>
             {renderIcon(activeCard.type)}
           </div>
           <div className="flex flex-col gap-0.5 flex-1 min-w-0">
@@ -427,7 +426,7 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
           ) : (
             <button
               onClick={() => dismissCard(activeCard.id)}
-              className="px-4 py-2.5 rounded-btn text-[13px] font-semibold text-text-secondary hover:text-text-primary hover:bg-bg-main transition-all border border-border-main"
+              className="px-4 py-2.5 rounded-btn text-[13px] font-bold text-text-secondary hover:text-text-primary hover:bg-bg-main transition-all border border-border-main"
             >
               Sonra
             </button>

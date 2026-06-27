@@ -118,7 +118,7 @@ function PushPermissionCard({ onDismiss }: { onDismiss: () => void }) {
               setResult(result.success ? 'success' : 'denied')
             }}
             disabled={isLoading}
-            className="px-4 py-2 bg-primary text-white font-bold text-[13px] rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-60 flex items-center gap-2"
+            className="btn-primary flex items-center gap-2 text-[13px]"
           >
             {isLoading ? (
               <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -127,7 +127,7 @@ function PushPermissionCard({ onDismiss }: { onDismiss: () => void }) {
           </button>
           <button
             onClick={onDismiss}
-            className="px-4 py-2 text-text-secondary font-bold text-[13px] rounded-xl border border-border-main hover:bg-bg-main transition-colors"
+            className="btn-secondary text-[13px]"
           >
             Şimdi Değil
           </button>

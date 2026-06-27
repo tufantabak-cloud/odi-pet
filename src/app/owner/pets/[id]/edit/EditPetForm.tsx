@@ -271,7 +271,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
         </button>
         <div className="flex flex-col flex-1">
           <h1 className="text-[20px] font-extrabold text-text-primary tracking-tight">{pet.name} Profil Ayarları</h1>
-          <p className="text-[12px] text-text-secondary font-medium">Bilgileri güncelleyip aşağıdan kaydedin.</p>
+          <p className="text-[12px] text-text-secondary font-normal">Bilgileri güncelleyip aşağıdan kaydedin.</p>
         </div>
       </div>
 
@@ -283,7 +283,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
       )}
 
       {submitError && (
-        <div role="alert" aria-live="assertive" className="mb-4 p-3 rounded-[12px] bg-error/10 border border-error/20 text-error text-[13px] font-semibold text-center">
+        <div role="alert" aria-live="assertive" className="mb-4 p-3 rounded-[12px] bg-error/10 border border-error/20 text-error text-[13px] font-bold text-center">
           ⚠️ {submitError}
         </div>
       )}

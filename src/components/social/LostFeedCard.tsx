@@ -76,12 +76,12 @@ export function LostFeedCard({ report }: { report: any }) {
   }
 
   return (
-    <div className="card-base bg-white border border-red-100 p-5 flex flex-col gap-4 shadow-sm relative overflow-hidden group rounded-2xl">
+    <div className="card-base bg-white border border-red-100 p-5 flex flex-col gap-4 shadow-sm relative overflow-hidden group">
       <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-red-50 to-transparent rounded-bl-full opacity-50 -z-10 transition-transform group-hover:scale-110" />
 
       <div className="flex gap-4 items-center">
         {pet.avatar_url ? (
-          <div className="relative w-[60px] h-[60px] rounded-2xl overflow-hidden shadow-sm shrink-0">
+          <div className="relative w-[60px] h-[60px] rounded-md overflow-hidden shadow-sm shrink-0">
             <Image
               src={pet.avatar_url}
               alt={pet.name || 'Pet'}
@@ -91,7 +91,7 @@ export function LostFeedCard({ report }: { report: any }) {
             />
           </div>
         ) : (
-          <div className="w-[60px] h-[60px] rounded-2xl bg-gradient-to-tr from-red-100 to-rose-50 flex items-center justify-center shadow-sm shrink-0">
+          <div className="w-[60px] h-[60px] rounded-md bg-gradient-to-tr from-red-100 to-rose-50 flex items-center justify-center shadow-sm shrink-0">
             <span className="text-2xl">{speciesIcon}</span>
           </div>
         )}
@@ -111,7 +111,7 @@ export function LostFeedCard({ report }: { report: any }) {
         </div>
       </div>
 
-      <div className="bg-slate-50/80 rounded-xl p-3.5 border border-slate-100/50 flex flex-col gap-2">
+      <div className="bg-slate-50/80 rounded-sm p-3.5 border border-slate-100/50 flex flex-col gap-2">
         <p className="text-[13px] text-text-primary">
           <span className="font-bold text-red-600">📍 Son Görülme:</span> {report.last_seen_location}
         </p>
@@ -131,7 +131,7 @@ export function LostFeedCard({ report }: { report: any }) {
         <div className="flex items-center gap-2">
           <button
             onClick={handleShare}
-            className="flex items-center justify-center gap-2 p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-[13px] transition-all active:scale-95 shrink-0"
+            className="flex items-center justify-center gap-2 p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-btn font-bold text-[13px] transition-all active:scale-95 shrink-0"
             title="İlanı Paylaş"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -142,14 +142,14 @@ export function LostFeedCard({ report }: { report: any }) {
           {hasPhone ? (
             <a
               href={`tel:${report.contact_phone}`}
-              className="btn-primary flex-1 justify-center py-2.5 px-4 text-[13px] font-bold bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-sm shadow-red-600/20 active:scale-95 transition-all"
+              className="btn-primary flex-1 justify-center py-2.5 px-4 text-[13px] font-bold bg-red-600 hover:bg-red-700 text-white rounded-btn shadow-sm shadow-red-600/20 active:scale-95 transition-all"
             >
               İletişime Geç →
             </a>
           ) : (
             <button
               disabled
-              className="btn-primary flex-1 justify-center py-2.5 px-4 text-[13px] font-bold bg-slate-100 border border-slate-200 text-slate-400 rounded-xl cursor-not-allowed shadow-none"
+              className="btn-primary flex-1 justify-center py-2.5 px-4 text-[13px] font-bold bg-slate-100 border border-slate-200 text-slate-400 rounded-btn cursor-not-allowed shadow-none"
             >
               İletişim Yok
             </button>

@@ -244,16 +244,16 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
     <div className="flex flex-col gap-5">
       
       {/* Tab Switcher */}
-      <div className="flex bg-slate-100/80 p-1.5 rounded-2xl border border-border-main/50">
+      <div className="flex bg-slate-100/80 p-1.5 rounded-md border border-border-main/50">
         <button
           onClick={() => setActiveTab('reports')}
-          className={`flex-1 py-3 text-center text-[13px] font-black rounded-xl transition-all duration-200 ${activeTab === 'reports' ? 'bg-white text-primary shadow-sm scale-[1.02]' : 'text-text-secondary hover:text-text-primary'}`}
+          className={`flex-1 py-3 text-center text-[13px] font-black rounded-sm transition-all duration-200 ${activeTab === 'reports' ? 'bg-white text-primary shadow-sm scale-[1.02]' : 'text-text-secondary hover:text-text-primary'}`}
         >
           ✨ AI Raporları
         </button>
         <button
           onClick={() => setActiveTab('vault')}
-          className={`flex-1 py-3 text-center text-[13px] font-black rounded-xl transition-all duration-200 ${activeTab === 'vault' ? 'bg-white text-primary shadow-sm scale-[1.02]' : 'text-text-secondary hover:text-text-primary'}`}
+          className={`flex-1 py-3 text-center text-[13px] font-black rounded-sm transition-all duration-200 ${activeTab === 'vault' ? 'bg-white text-primary shadow-sm scale-[1.02]' : 'text-text-secondary hover:text-text-primary'}`}
         >
           📂 Belge Kasası
         </button>
@@ -266,7 +266,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
             <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest mb-4">💰 Harcama Özeti</h3>
             {payments && payments.length > 0 ? (
               <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between p-4 bg-primary-soft rounded-xl border border-primary/20">
+                <div className="flex items-center justify-between p-4 bg-primary-soft rounded-sm border border-primary/20">
                   <span className="text-[13px] font-black text-text-primary uppercase tracking-wide">Toplam Harcama</span>
                   <span className="text-[22px] font-black text-primary">
                     ₺{payments.reduce((sum: number, p: any) => sum + (parseFloat(p.amount) || 0), 0).toFixed(2)}
@@ -304,7 +304,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
                   key={rt.id}
                   disabled={locked}
                   onClick={() => setSelectedType(rt.id)}
-                  className={`p-4 rounded-xl border-2 text-left transition-all ${selectedType === rt.id ? 'border-primary bg-primary-soft' : rt.color} ${locked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`p-4 rounded-sm border-2 text-left transition-all ${selectedType === rt.id ? 'border-primary bg-primary-soft' : rt.color} ${locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-[28px]">{rt.icon}</span>
@@ -333,7 +333,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
             <div className="flex flex-wrap gap-2">
               {DATE_RANGES.map(dr => (
                 <button key={dr.value} onClick={() => setDateRange(dr.value)}
-                  className={`px-3 py-1.5 rounded-xl border text-[12px] font-bold transition-all ${dateRange === dr.value ? 'border-primary bg-primary-soft text-primary' : 'border-border-main text-text-secondary hover:border-primary/40'}`}>
+                  className={`px-3 py-1.5 rounded-sm border text-[12px] font-bold transition-all ${dateRange === dr.value ? 'border-primary bg-primary-soft text-primary' : 'border-border-main text-text-secondary hover:border-primary/40'}`}>
                   {dr.label}
                 </button>
               ))}
@@ -342,7 +342,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
 
           {/* Error */}
           {error && (
-            <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-[13px] font-medium">
+            <div className="p-4 rounded-xs bg-red-50 border border-red-200 text-red-700 text-[13px] font-medium">
               ⚠️ {error}
               {error.includes('Pro') || error.includes('AI+') ? (
                 <Link href="/owner/profile/subscription" className="ml-2 underline font-bold">Yükselt →</Link>
@@ -389,7 +389,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
                     { label: 'Hastalık', value: report.incidentCount },
                     { label: 'Randevu', value: report.appointments?.length ?? 0 },
                   ].map(s => (
-                    <div key={s.label} className="p-3 bg-bg-main rounded-xl text-center border border-border-main">
+                    <div key={s.label} className="p-3 bg-bg-main rounded-sm text-center border border-border-main">
                       <p className="text-[22px] font-black text-text-primary">{s.value}</p>
                       <p className="text-[11px] font-bold text-text-secondary uppercase">{s.label}</p>
                     </div>
@@ -423,7 +423,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
           {/* ── Dijital Belge Kasası (Vault UI) ── */}
           <div className="card-base p-5">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-primary-soft text-primary flex items-center justify-center shrink-0 shadow-inner">
+              <div className="w-10 h-10 rounded-xs bg-primary-soft text-primary flex items-center justify-center shrink-0 shadow-inner">
                 <FirstAidIcon width={24} height={24} />
               </div>
               <div>
@@ -434,7 +434,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
 
             {/* Error Message if Any */}
             {error && (
-              <div className="p-4 mb-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-[13px] font-medium">
+              <div className="p-4 mb-4 rounded-xs bg-red-50 border border-red-200 text-red-700 text-[13px] font-medium">
                 ⚠️ {error}
               </div>
             )}
@@ -447,12 +447,12 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
                   placeholder="Belge adı (Örn: Pasaport Belgesi)"
                   value={uploadTitle}
                   onChange={(e) => setUploadTitle(e.target.value)}
-                  className="flex-1 border border-border-main rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary"
+                  className="flex-1 border border-border-main rounded-input px-3 py-2.5 text-sm outline-none focus:border-primary"
                 />
                 <select
                   value={uploadType}
                   onChange={(e) => setUploadType(e.target.value)}
-                  className="border border-border-main rounded-lg px-3 py-2.5 text-sm outline-none bg-white focus:border-primary min-w-[200px]"
+                  className="border border-border-main rounded-input px-3 py-2.5 text-sm outline-none bg-white focus:border-primary min-w-[200px]"
                 >
                   {DOCUMENT_TYPES.map(type => (
                     <option key={type.slug} value={type.slug}>{type.label}</option>
@@ -473,7 +473,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
                     fileInputRef.current?.click();
                   }}
                   disabled={isUploading}
-                  className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-border-main hover:border-primary/50 text-text-secondary hover:text-primary rounded-xl py-5 transition-all duration-200 hover:scale-[1.02] disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-border-main hover:border-primary/50 text-text-secondary hover:text-primary rounded-btn py-5 transition-all duration-200 hover:scale-[1.02] disabled:opacity-50"
                 >
                   {isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
                   <span className="text-sm font-semibold">{isUploading ? 'Yükleniyor...' : 'Belge Seç ve Yükle'}</span>
@@ -493,9 +493,9 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
                     {records.map(record => {
                       const matchedType = DOCUMENT_TYPES.find(t => t.slug === record.type);
                       return (
-                        <div key={record.id} className="flex items-center justify-between p-3.5 bg-slate-50 rounded-xl border border-border-main/50 transition-all hover:bg-slate-100/50 hover:scale-[1.01]">
+                        <div key={record.id} className="flex items-center justify-between p-3.5 bg-slate-50 rounded-sm border border-border-main/50 transition-all hover:bg-slate-100/50 hover:scale-[1.01]">
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-primary shadow-sm border border-slate-100">
+                            <div className="w-9 h-9 rounded-xs bg-white flex items-center justify-center text-primary shadow-sm border border-slate-100">
                               <FileText className="w-5 h-5" />
                             </div>
                             <div>
@@ -510,13 +510,13 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
                           </div>
                           <div className="flex items-center gap-2">
                             {record.document_path && (
-                              <a href={record.document_path} target="_blank" rel="noopener noreferrer" className="text-[12px] font-semibold text-primary hover:underline px-3 py-1.5 bg-primary-soft rounded-lg">
+                              <a href={record.document_path} target="_blank" rel="noopener noreferrer" className="text-[12px] font-semibold text-primary hover:underline px-3 py-1.5 bg-primary-soft rounded-btn">
                                 Görüntüle
                               </a>
                             )}
                             <button 
                               onClick={() => handleDeleteRecord(record.id)}
-                              className="p-1.5 rounded-lg text-text-secondary hover:text-red-500 hover:bg-red-50 transition-colors"
+                              className="p-1.5 rounded-btn text-text-secondary hover:text-red-500 hover:bg-red-50 transition-colors"
                               title="Sil"
                             >
                               <Trash2 className="w-4 h-4" />

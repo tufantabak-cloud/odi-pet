@@ -113,7 +113,7 @@ export default function RoleChangeForm({ userId, currentRole, actorRole }: Props
         id="role-change-submit"
         type="submit"
         disabled={!canSubmit}
-        className="w-full py-3 rounded-xl bg-primary text-white font-bold text-[14px] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors"
+        className="btn-primary w-full py-3 text-[14px]"
       >
         {loading ? 'Güncelleniyor…' : 'Rolü Güncelle'}
       </button>

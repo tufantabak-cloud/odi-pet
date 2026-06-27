@@ -303,8 +303,8 @@ export function SocialTabs({
         <div className="flex flex-col gap-4 animate-fadeIn">
           {adoptions.length === 0 ? (
             <div className="card-base bg-white border border-border-main p-10 text-center flex flex-col items-center gap-3">
-              <span className="text-4xl">🏠</span>
-              <p className="text-[14px] text-text-secondary font-medium">Şu an için aktif bir sahiplendirme ilanı bulunmuyor.</p>
+              <span className="text-[36px]">🏠</span>
+              <p className="text-[14px] text-text-secondary font-normal">Şu an için aktif bir sahiplendirme ilanı bulunmuyor.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -379,7 +379,7 @@ export function SocialTabs({
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-black text-text-primary text-[16px] truncate">{pet?.name}</h4>
-                          <p className="text-[12px] text-text-secondary font-medium truncate flex items-center gap-1.5 mt-0.5">
+                          <p className="text-[12px] text-text-secondary font-normal truncate flex items-center gap-1.5 mt-0.5">
                             <span>🚨</span> Son Görülme: {report.last_seen_location}
                           </p>
                         </div>
@@ -435,13 +435,13 @@ export function SocialTabs({
             {!myLostReportsLoaded ? (
               <div className="flex flex-col gap-3">
                 {[1, 2, 3].map(i => (
-                  <div key={i} className="h-32 rounded-2xl bg-slate-100 animate-pulse" />
+                  <div key={i} className="h-32 rounded-2xl bg-bg-main animate-pulse" />
                 ))}
               </div>
             ) : filteredLostPets.length === 0 ? (
               <div className="card-base bg-white border border-border-main p-10 text-center flex flex-col items-center gap-3">
-                <span className="text-4xl">🚨</span>
-                <p className="text-[14px] text-text-secondary font-medium">Aranan kriterlere uygun aktif kayıp ilanı bulunmuyor.</p>
+                <span className="text-[36px]">🚨</span>
+                <p className="text-[14px] text-text-secondary font-normal">Aranan kriterlere uygun aktif kayıp ilanı bulunmuyor.</p>
               </div>
             ) : lostViewMode === 'map' ? (
               <LostMapView reports={filteredLostPets} />
@@ -492,7 +492,7 @@ export function SocialTabs({
                             {pet?.gender === 'male' && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-100 shrink-0">♂ Erkek</span>}
                             {pet?.gender === 'female' && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-pink-50 text-pink-600 border border-pink-100 shrink-0">♀ Dişi</span>}
                           </div>
-                          <p className="text-[12px] text-text-secondary font-medium truncate flex items-center gap-1">
+                          <p className="text-[12px] text-text-secondary font-normal truncate flex items-center gap-1">
                             <span>{speciesIcon}</span>
                             {pet?.name} {pet?.breed ? `• ${pet.breed}` : ''} {pet?.birth_date ? `• ${getAge(pet.birth_date)}` : ''} {pet?.city ? `• ${pet.city}` : ''}
                           </p>
@@ -605,14 +605,14 @@ export function SocialTabs({
           <div className="mb-4 rounded-2xl border border-pink-100 bg-pink-50/30 p-4 shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-lg">🔍</span>
+                <span className="text-[17px]">🔍</span>
                 <h3 className="font-bold text-[14px] text-text-primary">
                   Aday Keşfet
                 </h3>
               </div>
               <button
                 onClick={() => setShowDiscover(!showDiscover)}
-                className="text-xs text-pink-500 font-bold hover:text-pink-700 transition-colors"
+                className="text-[12px] text-pink-500 font-bold hover:text-pink-700 transition-colors"
               >
                 {showDiscover ? 'Gizle ▲' : 'Göster ▼'}
               </button>
@@ -629,8 +629,8 @@ export function SocialTabs({
                 ) : mutualMatch ? (
                   <div className="flex flex-col items-center justify-center p-6 text-center bg-white rounded-xl border border-pink-100 animate-fadeInUp">
                     <div className="text-[48px] mb-2">🎉</div>
-                    <h4 className="text-lg font-black text-rose-500 mb-1">Eşleşme Sağlandı!</h4>
-                    <p className="text-text-secondary text-xs mb-4">Sen ve {mutualMatch.name} birbirinizi beğendiniz!</p>
+                    <h4 className="text-[17px] font-black text-rose-500 mb-1">Eşleşme Sağlandı!</h4>
+                    <p className="text-text-secondary text-[12px] mb-4">Sen ve {mutualMatch.name} birbirinizi beğendiniz!</p>
                     <div className="flex items-center gap-3 mb-5">
                       <div className="w-16 h-16 rounded-full bg-rose-50 flex items-center justify-center overflow-hidden border-2 border-rose-200 relative shrink-0">
                         {myListings[0]?.pets?.avatar_url ? (
@@ -639,7 +639,7 @@ export function SocialTabs({
                           <span className="text-xl">🐾</span>
                         )}
                       </div>
-                      <div className="text-xl text-rose-400">❤️</div>
+                      <div className="text-[20px] text-rose-400">❤️</div>
                       <div className="w-16 h-16 rounded-full bg-rose-50 flex items-center justify-center overflow-hidden border-2 border-rose-200 relative shrink-0">
                         {mutualMatch.avatar_url ? (
                           <Image src={mutualMatch.avatar_url} alt={mutualMatch.name} fill className="object-cover" sizes="64px" />
@@ -650,7 +650,7 @@ export function SocialTabs({
                     </div>
                     <button 
                       onClick={() => setMutualMatch(null)} 
-                      className="btn-primary py-2 px-6 text-xs font-bold bg-pink-500 hover:bg-pink-600 text-white rounded-xl"
+                      className="btn-primary py-2 px-6 text-[12px] font-bold bg-pink-500 hover:bg-pink-600 text-white rounded-xl"
                     >
                       Aramaya Devam Et
                     </button>
@@ -704,7 +704,7 @@ export function SocialTabs({
                     </div>
 
                     {discoverError && (
-                      <p className="text-red-500 text-xs font-medium mt-1">{discoverError}</p>
+                      <p className="text-red-500 text-[12px] font-bold mt-1">{discoverError}</p>
                     )}
 
                     {/* Sonuç Listesi / Swipe Kartı */}
@@ -733,7 +733,7 @@ export function SocialTabs({
                                       {candidate.gender === 'male' ? 'Erkek' : 'Dişi'}
                                     </span>
                                   </div>
-                                  <p className="text-[12px] text-text-secondary font-medium">{candidate.breed}</p>
+                                  <p className="text-[12px] text-text-secondary font-normal">{candidate.breed}</p>
                                   <p className="text-[11px] text-text-secondary mt-1 flex items-center gap-1">
                                     📍 {candidate.city}
                                   </p>
@@ -747,13 +747,13 @@ export function SocialTabs({
                                 <div className="flex gap-2 justify-end mt-4">
                                   <button 
                                     onClick={() => handleDiscoverAction('skip')}
-                                    className="px-4 py-2 bg-white border border-slate-200 text-slate-500 font-bold text-xs rounded-xl hover:bg-slate-50 transition-colors"
+                                    className="px-4 py-2 bg-white border border-slate-200 text-slate-500 font-bold text-[12px] rounded-xl hover:bg-slate-50 transition-colors"
                                   >
                                     Geç ✕
                                   </button>
                                   <button 
                                     onClick={() => handleDiscoverAction('like')}
-                                    className="px-5 py-2 bg-pink-500 text-white font-bold text-xs rounded-xl hover:bg-pink-600 shadow-md shadow-pink-500/20 transition-colors"
+                                    className="px-5 py-2 bg-pink-500 text-white font-bold text-[12px] rounded-xl hover:bg-pink-600 shadow-md shadow-pink-500/20 transition-colors"
                                   >
                                     Beğen ❤️
                                   </button>

@@ -90,7 +90,7 @@ export default function BottomNav() {
                 key={item.label}
                 href={item.href}
                 onClick={() => setIsMenuOpen(false)}
-                className="pointer-events-auto bg-[var(--color-surface)] text-[var(--color-text-primary)] px-[var(--space-5)] py-3 rounded-[var(--radius-md)] shadow-[var(--shadow-md)] font-600 text-[14px] flex items-center justify-center transition-all duration-200 animate-in slide-in-from-bottom-4 fade-in hover:bg-[var(--color-surface-secondary)] active:scale-[0.98]"
+                className="pointer-events-auto bg-[var(--color-surface)] text-[var(--color-text-primary)] px-[var(--space-5)] py-3 rounded-[var(--radius-md)] shadow-[var(--shadow-md)] font-bold text-[14px] flex items-center justify-center transition-all duration-200 animate-in slide-in-from-bottom-4 fade-in hover:bg-[var(--color-surface-secondary)] active:scale-[0.98]"
                 style={{ animationDelay: `${(actionMenuItems.length - 1 - index) * 40}ms`, animationFillMode: 'both' }}
               >
                 {item.label}
@@ -141,7 +141,7 @@ export default function BottomNav() {
                   {tab.icon(isActive)}
                 </div>
                 {tab.label && (
-                  <span className={`text-[10px] font-600 tracking-tight transition-colors duration-200 ${isActive ? 'font-700' : ''}`}>
+                  <span className={`text-[10px] font-bold tracking-tight transition-colors duration-200 ${isActive ? 'font-black' : ''}`}>
                     {tab.label}
                   </span>
                 )}

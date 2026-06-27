@@ -35,7 +35,7 @@ function QuickUpdateModal({ petId, config, onClose, onDone }: QuickUpdateModalPr
 
   return (
     <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-surface w-full max-w-sm rounded-[28px] p-6 shadow-2xl overflow-hidden animate-fade-in" onClick={e => e.stopPropagation()}>
+      <div className="bg-surface w-full max-w-sm rounded-modal p-6 shadow-2xl overflow-hidden animate-fade-in" onClick={e => e.stopPropagation()}>
         <h3 className="text-[17px] font-extrabold text-text-primary mb-1">{config.title}</h3>
         <p className="text-[13px] text-text-secondary mb-5 leading-relaxed">{config.desc}</p>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -51,7 +51,7 @@ function QuickUpdateModal({ petId, config, onClose, onDone }: QuickUpdateModalPr
           ))}
           {error && <p className="text-[12px] text-error font-bold p-2 bg-error/10 rounded-lg text-center mt-1">{error}</p>}
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-3.5 rounded-xl border-2 border-border-main text-text-secondary font-bold text-[14px]">İptal</button>
+            <button type="button" onClick={onClose} className="btn-secondary flex-1 py-3.5 text-[14px]">İptal</button>
             <button type="submit" disabled={loading} className="flex-[2] btn-primary py-3.5 disabled:opacity-50 shadow-sm text-[14px]">{loading ? 'Kaydediliyor...' : 'Kaydet ✓'}</button>
           </div>
         </form>
@@ -342,7 +342,7 @@ export default function AIVetPage() {
                     </div>
                     {msg.poweredBy === 'heuristic' && (
                       <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl flex flex-col gap-2">
-                        <p className="text-[11px] font-medium text-amber-800 leading-snug">
+                        <p className="text-[11px] font-normal text-amber-800 leading-snug">
                           <span className="font-bold">⚠️ Sistem Yoğunluğu:</span> Şu an AI sunucularımızda aşırı yoğunluk yaşanıyor. Bu yüzden size yapay zeka ile kişiselleştirilmiş bir yanıt veremedik. Lütfen sorunuzu birazdan tekrar gönderin.
                         </p>
                         <button 
@@ -363,7 +363,7 @@ export default function AIVetPage() {
                 {/* CTA and Disclaimer */}
                 {!isUser && msg.severity && (
                   <div className="mt-4 flex flex-col items-start w-full">
-                    <p className="text-[11px] font-medium text-text-secondary/80 leading-snug mb-6">
+                    <p className="text-[11px] font-normal text-text-secondary/80 leading-snug mb-6">
                       Bu araç genel bilgi amaçlıdır, veteriner kararının yerini tutmaz.
                     </p>
                     
@@ -411,7 +411,7 @@ export default function AIVetPage() {
 
                       <button
                         onClick={() => router.push('/owner/veterinary')}
-                        className="w-full min-h-[50px] flex items-center justify-center gap-2 px-5 rounded-2xl font-black text-[13px] transition-all hover:scale-[1.03] active:scale-[0.98] border-2 border-border-main bg-surface hover:bg-bg-main text-text-secondary hover:text-text-primary shadow-sm"
+                        className="btn-secondary w-full min-h-[50px] flex items-center justify-center gap-2 text-[13px]"
                       >
                         {msg.severity === 'critical' ? (
                           <>
@@ -458,7 +458,7 @@ export default function AIVetPage() {
               <button
                 key={idx}
                 onClick={() => send(p.text)}
-                className="text-[12px] font-semibold text-primary bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5"
+                className="text-[12px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5"
               >
                 <span>{p.icon}</span> {p.text}
               </button>
@@ -473,7 +473,7 @@ export default function AIVetPage() {
               <button
                 key={idx}
                 onClick={() => send(chip)}
-                className="text-[12px] font-semibold text-text-secondary bg-surface hover:bg-primary/10 hover:text-primary border border-border-main px-3 py-1.5 rounded-full transition-colors"
+                className="text-[12px] font-bold text-text-secondary bg-surface hover:bg-primary/10 hover:text-primary border border-border-main px-3 py-1.5 rounded-full transition-colors"
               >
                 {chip}
               </button>

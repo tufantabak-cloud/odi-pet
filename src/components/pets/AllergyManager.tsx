@@ -134,7 +134,7 @@ export default function AllergyManager({ petId, initialAllergies }: AllergyManag
               <button 
                 type="button" 
                 onClick={() => setIsAdding(false)}
-                className="flex-1 py-2.5 rounded-xl border-2 border-border-main text-text-secondary font-bold text-[13px]"
+                className="btn-secondary flex-1 py-2.5 text-[13px]"
               >İptal</button>
               <button 
                 type="submit"

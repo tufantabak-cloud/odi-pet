@@ -313,10 +313,10 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={!hydrated || loading || lockoutUntil !== null}
-                className={`w-full h-[50px] rounded-btn font-black text-[15px] mt-1 transition-all disabled:opacity-60 flex items-center justify-center
+                className={`w-full h-[50px] rounded-btn font-black text-[15px] mt-1 disabled:opacity-60 flex items-center justify-center
                   ${lockoutUntil !== null
-                    ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
-                    : 'bg-primary text-white shadow-lg shadow-primary/20 hover:bg-primary-hover hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.97]'
+                    ? 'bg-slate-200 text-slate-500 cursor-not-allowed transition-all'
+                    : 'btn-primary shadow-lg shadow-primary/20 hover:shadow-primary/40'
                   }`}
               >
                 {loading ? (

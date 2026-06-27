@@ -90,7 +90,7 @@ export default function FloatingSOS({
       onClick={() => setOpen(false)}
     >
       <div
-        className="w-full max-w-sm bg-surface rounded-[28px] p-6 shadow-2xl mb-0 sm:mb-20 animate-fade-in flex flex-col gap-4"
+        className="w-full max-w-sm bg-surface rounded-modal p-6 shadow-2xl mb-0 sm:mb-20 animate-fade-in flex flex-col gap-4"
         onClick={e => e.stopPropagation()}
       >
         {/* Başlık */}
@@ -111,7 +111,7 @@ export default function FloatingSOS({
 
         {/* Kayıp ilanı varsa göster */}
         {lostReport && (
-          <div className="p-3 bg-error/10 border border-error/20 rounded-2xl">
+          <div className="p-3 bg-error/10 border border-error/20 rounded-md">
             <p className="font-extrabold text-error text-[13px] flex items-center gap-1.5 mb-1">
               <span className="animate-pulse">🚨</span> KAYIP İLANI AKTİF
             </p>
@@ -129,7 +129,7 @@ export default function FloatingSOS({
                 href={`https://wa.me/${toIntlPhone(c.phone)}?text=${waMessage(c.name)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 p-3.5 bg-[#25D366]/10 border border-[#25D366]/30 rounded-2xl hover:bg-[#25D366]/20 transition-all active:scale-[0.98]"
+                className="flex items-center gap-3 p-3.5 bg-[#25D366]/10 border border-[#25D366]/30 rounded-md hover:bg-[#25D366]/20 transition-all active:scale-[0.98]"
               >
                 <div className="w-9 h-9 rounded-full bg-[#25D366] flex items-center justify-center shrink-0">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
@@ -153,7 +153,7 @@ export default function FloatingSOS({
           <button
             onClick={handleFindVet}
             disabled={locating}
-            className="flex items-center gap-3 p-3.5 bg-primary/5 border border-primary/20 rounded-2xl hover:bg-primary/10 transition-all active:scale-[0.98] disabled:opacity-60 w-full text-left"
+            className="flex items-center gap-3 p-3.5 bg-primary/5 border border-primary/20 rounded-btn hover:bg-primary/10 transition-all active:scale-[0.98] disabled:opacity-60 w-full text-left"
           >
             <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shrink-0">
               {locating ? (
@@ -175,7 +175,7 @@ export default function FloatingSOS({
           {vetPhone && (
             <a
               href={`tel:${vetPhone}`}
-              className="flex items-center gap-3 p-3.5 bg-error/5 border border-error/20 rounded-2xl hover:bg-error/10 transition-all active:scale-[0.98]"
+              className="flex items-center gap-3 p-3.5 bg-error/5 border border-error/20 rounded-btn hover:bg-error/10 transition-all active:scale-[0.98]"
             >
               <div className="w-9 h-9 rounded-full bg-error flex items-center justify-center shrink-0">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -191,7 +191,7 @@ export default function FloatingSOS({
 
           <a
             href="tel:174"
-            className="flex items-center gap-3 p-3.5 bg-warning/5 border border-warning/20 rounded-2xl hover:bg-warning/10 transition-all active:scale-[0.98]"
+            className="flex items-center gap-3 p-3.5 bg-warning/5 border border-warning/20 rounded-btn hover:bg-warning/10 transition-all active:scale-[0.98]"
           >
             <div className="w-9 h-9 rounded-full bg-warning flex items-center justify-center shrink-0">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -209,7 +209,7 @@ export default function FloatingSOS({
           <a
             href={activePetId ? `/owner/pets/${activePetId}/edit#sos-section` : '/owner/dashboard'}
             onClick={() => setOpen(false)}
-            className="flex items-center gap-3 p-3.5 bg-primary/5 border border-primary/20 rounded-2xl hover:bg-primary/10 transition-all"
+            className="flex items-center gap-3 p-3.5 bg-primary/5 border border-primary/20 rounded-btn hover:bg-primary/10 transition-all"
           >
             <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shrink-0 animate-pulse">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
@@ -229,7 +229,7 @@ export default function FloatingSOS({
             {!lostReport && onLostReport && (
               <button
                 onClick={() => { setOpen(false); onLostReport(); }}
-                className="flex items-center gap-3 p-3.5 bg-error/5 border border-error/20 rounded-2xl hover:bg-error/10 transition-all active:scale-[0.98] w-full text-left"
+                className="flex items-center gap-3 p-3.5 bg-error/5 border border-error/20 rounded-btn hover:bg-error/10 transition-all active:scale-[0.98] w-full text-left"
               >
                 <div className="w-9 h-9 rounded-full bg-error flex items-center justify-center shrink-0">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -246,7 +246,7 @@ export default function FloatingSOS({
             {lostReport && onMarkFound && (
               <button
                 onClick={() => { setOpen(false); onMarkFound(); }}
-                className="flex items-center gap-3 p-3.5 bg-success/5 border border-success/20 rounded-2xl hover:bg-success/10 transition-all active:scale-[0.98] w-full text-left"
+                className="flex items-center gap-3 p-3.5 bg-success/5 border border-success/20 rounded-btn hover:bg-success/10 transition-all active:scale-[0.98] w-full text-left"
               >
                 <div className="w-9 h-9 rounded-full bg-success flex items-center justify-center shrink-0">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -275,7 +275,7 @@ export default function FloatingSOS({
         {open && mounted && createPortal(modalContent, document.body)}
         <button
           onClick={() => setOpen(true)}
-          className="relative w-full h-9 rounded-[var(--radius-sm)] bg-[#fff0f0] border border-[#ffcccc] flex items-center justify-center gap-2 hover:bg-[#ffe5e5] active:scale-[0.98] transition-all duration-200 focus:outline-none overflow-hidden"
+          className="relative w-full h-9 rounded-btn bg-[#fff0f0] border border-[#ffcccc] flex items-center justify-center gap-2 hover:bg-[#ffe5e5] active:scale-[0.98] transition-all duration-200 focus:outline-none overflow-hidden"
           aria-label="Acil SOS"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e04b4b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="relative z-10 text-[#e04b4b]">

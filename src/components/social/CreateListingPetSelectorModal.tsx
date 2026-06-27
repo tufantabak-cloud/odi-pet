@@ -54,7 +54,7 @@ export function CreateListingPetSelectorModal({ isOpen, onClose }: CreateListing
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-0 bg-slate-900/40 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-white w-full max-w-md rounded-t-sheet sm:rounded-modal shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="px-6 py-5 border-b border-border-main flex items-center justify-between bg-slate-50/50">
           <h2 className="text-[18px] font-black text-text-primary">İlan İçin Pet Seçin</h2>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors">
