@@ -3,11 +3,19 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { writeEvent } from '@/lib/agents/orchestrator/eventContract'
 
-webpush.setVapidDetails(
-  'mailto:destek@odi.pet',
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '',
-  process.env.VAPID_PRIVATE_KEY || ''
-);
+// Lazy VAPID init — modül yüklenirken değil, ilk kullanımda çağrılır.
+// Bu sayede Vercel build sırasında env key eksikse crash olmaz.
+let vapidInitialized = false;
+function ensureVapidInitialized() {
+  if (vapidInitialized) return;
+  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const privateKey = process.env.VAPID_PRIVATE_KEY;
+  if (!publicKey || !privateKey) {
+    throw new Error('VAPID anahtarları tanımlı değil. NEXT_PUBLIC_VAPID_PUBLIC_KEY ve VAPID_PRIVATE_KEY env değişkenlerini kontrol edin.');
+  }
+  webpush.setVapidDetails('mailto:destek@odi.pet', publicKey, privateKey);
+  vapidInitialized = true;
+}
 
 export interface PushPayload {
   title: string;
@@ -17,6 +25,7 @@ export interface PushPayload {
 
 export async function sendWebPush(subscription: webpush.PushSubscription, payload: PushPayload) {
   try {
+    ensureVapidInitialized();
     const result = await webpush.sendNotification(
       subscription,
       JSON.stringify(payload)
