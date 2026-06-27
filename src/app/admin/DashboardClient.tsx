@@ -266,7 +266,7 @@ export default function DashboardClient({ initialData }: { initialData: Dashboar
           <h2 className="text-[15px] font-black text-text-primary">Son 5 Kayıt</h2>
           <Link
             href="/admin/users"
-            className="text-[12px] font-semibold text-primary hover:underline"
+            className="text-[12px] font-bold text-primary hover:underline"
           >
             Tüm kullanıcılar →
           </Link>

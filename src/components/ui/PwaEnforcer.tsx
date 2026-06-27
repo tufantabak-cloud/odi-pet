@@ -138,7 +138,7 @@ export default function PwaEnforcer() {
         <div className="absolute top-[-10%] left-[-10%] w-[300px] h-[300px] rounded-full bg-violet-600/20 blur-[80px] pointer-events-none" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[300px] h-[300px] rounded-full bg-pink-600/20 blur-[80px] pointer-events-none" />
 
-        <div className="relative w-full max-w-md bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-300">
+        <div className="relative w-full max-w-md bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-modal p-6 md:p-8 shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-300">
           
           <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-violet-500 to-primary p-4 flex items-center justify-center mb-6 shadow-[0_8px_24px_rgba(108,92,231,0.3)] animate-bounce">
             <svg className="w-full h-full text-white" viewBox="0 0 24 24" fill="currentColor">
@@ -181,7 +181,7 @@ export default function PwaEnforcer() {
             <button
               onClick={handleEnableNotifications}
               disabled={isLoading}
-              className="w-full py-4 bg-primary text-white font-extrabold text-[15px] rounded-2xl shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
+              className="btn-primary w-full py-4 flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <span className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
@@ -206,9 +206,9 @@ export default function PwaEnforcer() {
       <div className="absolute top-[-10%] left-[-10%] w-[300px] h-[300px] rounded-full bg-violet-600/20 blur-[80px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[300px] h-[300px] rounded-full bg-pink-600/20 blur-[80px] pointer-events-none" />
 
-      <div className="relative w-full max-w-md bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col items-center text-center">
+      <div className="relative w-full max-w-md bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-modal p-6 md:p-8 shadow-2xl flex flex-col items-center text-center">
         
-        <div className="w-24 h-24 rounded-3xl mb-6 shadow-[0_8px_32px_rgba(0,0,0,0.5)] animate-in fade-in zoom-in duration-500 flex items-center justify-center bg-white overflow-hidden p-1">
+        <div className="w-24 h-24 rounded-modal mb-6 shadow-[0_8px_32px_rgba(0,0,0,0.5)] animate-in fade-in zoom-in duration-500 flex items-center justify-center bg-white overflow-hidden p-1">
           <Image src="/icon-192.png" alt="Odi.Pet Logo" width={96} height={96} className="w-full h-full object-contain rounded-[20px]" />
         </div>
 
@@ -235,11 +235,11 @@ export default function PwaEnforcer() {
             {showIosGuide && os === 'ios' ? (
               <div className="w-full text-left space-y-4 mb-6 animate-in slide-in-from-top-4 duration-300">
                 <div className="flex items-start gap-4 bg-white/[0.02] border border-white/[0.04] p-4 rounded-2xl">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-violet-600/30 flex items-center justify-center text-violet-400 font-bold text-sm">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-violet-600/30 flex items-center justify-center text-violet-400 font-bold text-[13px]">
                     1
                   </div>
                   <div>
-                    <h3 className="font-semibold text-[15px] text-zinc-100 flex items-center gap-1.5">
+                    <h3 className="font-bold text-[15px] text-zinc-100 flex items-center gap-1.5">
                       Paylaş Menüsünü Açın
                     </h3>
                     <p className="text-[13px] text-zinc-400 mt-1">
@@ -248,11 +248,11 @@ export default function PwaEnforcer() {
                   </div>
                 </div>
                 <div className="flex items-start gap-4 bg-white/[0.02] border border-white/[0.04] p-4 rounded-2xl">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-violet-600/30 flex items-center justify-center text-violet-400 font-bold text-sm">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-violet-600/30 flex items-center justify-center text-violet-400 font-bold text-[13px]">
                     2
                   </div>
                   <div>
-                    <h3 className="font-semibold text-[15px] text-zinc-100">
+                    <h3 className="font-bold text-[15px] text-zinc-100">
                       Ana Ekrana Ekleyin
                     </h3>
                     <p className="text-[13px] text-zinc-400 mt-1">
@@ -267,7 +267,7 @@ export default function PwaEnforcer() {
 
                 <button
                   onClick={() => setShowPostInstallGuide(true)}
-                  className="w-full py-4 bg-primary text-white font-extrabold text-[15px] rounded-2xl shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-[0.98] cursor-pointer"
+                  className="btn-primary w-full py-4"
                 >
                   Ekledim, Devam Et
                 </button>
@@ -275,7 +275,7 @@ export default function PwaEnforcer() {
             ) : (
               <button
                 onClick={handleInstallClick}
-                className="w-full py-4 bg-primary text-white font-extrabold text-[15px] rounded-2xl shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-[0.98] cursor-pointer"
+                className="btn-primary w-full py-4"
               >
                 Hemen Yükle
               </button>

@@ -68,14 +68,14 @@ export function BreedingApplicationsManager({ listingId }: { listingId: string }
   }
 
   if (loading) {
-    return <div className="p-6 text-center text-text-secondary text-sm animate-pulse">Başvurular yükleniyor...</div>
+    return <div className="p-6 text-center text-text-secondary text-[13px] animate-pulse">Başvurular yükleniyor...</div>
   }
 
   if (applications.length === 0) {
     return (
-      <div className="bg-slate-50 border border-slate-100 rounded-2xl p-8 text-center flex flex-col items-center gap-3">
+      <div className="bg-surface border border-border-main rounded-2xl p-8 text-center flex flex-col items-center gap-3">
         <span className="text-3xl grayscale opacity-50">📬</span>
-        <p className="text-[14px] text-slate-500 font-medium">İlanınıza henüz başvuru gelmedi.</p>
+        <p className="text-[14px] text-text-secondary font-normal">İlanınıza henüz başvuru gelmedi.</p>
       </div>
     )
   }
@@ -99,7 +99,7 @@ export function BreedingApplicationsManager({ listingId }: { listingId: string }
         return (
           <div key={app.id} className="bg-white border border-border-main rounded-2xl p-5 shadow-sm flex flex-col gap-4">
             <div className="flex gap-4 items-center">
-              <div className="w-14 h-14 rounded-xl bg-slate-100 overflow-hidden relative shrink-0">
+              <div className="w-14 h-14 rounded-xl bg-bg-main overflow-hidden relative shrink-0">
                 {pet?.avatar_url ? (
                   <Image src={pet.avatar_url} alt={pet?.name || 'Pet'} fill sizes="56px" className="object-cover" />
                 ) : (
@@ -113,7 +113,7 @@ export function BreedingApplicationsManager({ listingId }: { listingId: string }
                   {isRejected && <span className="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded-full">Reddedildi</span>}
                   {isPending && <span className="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full">Bekliyor</span>}
                 </div>
-                <p className="text-[12px] text-text-secondary font-medium">
+                <p className="text-[12px] text-text-secondary font-normal">
                   {pet?.breed || pet?.species} {pet?.birth_date && ` • ${getAge(pet.birth_date)}`}
                 </p>
                 <p className="text-[12px] text-text-secondary">👤 {profile?.full_name || 'İsimsiz Kullanıcı'}</p>
@@ -121,7 +121,7 @@ export function BreedingApplicationsManager({ listingId }: { listingId: string }
             </div>
 
             {app.message && (
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-[13px] text-text-primary italic">
+              <div className="bg-surface p-3 rounded-xl border border-border-main text-[13px] text-text-primary italic">
                 "{app.message}"
               </div>
             )}
@@ -133,16 +133,16 @@ export function BreedingApplicationsManager({ listingId }: { listingId: string }
               <span className="text-[13px] font-bold text-violet-700 flex items-center gap-2">
                 <span>🏥</span> Sağlık Özeti
               </span>
-              <span className="text-violet-500 text-xs">{expandedHealth === app.id ? 'Gizle ▲' : 'Gör ▼'}</span>
+              <span className="text-violet-500 text-[12px]">{expandedHealth === app.id ? 'Gizle ▲' : 'Gör ▼'}</span>
             </button>
 
             {expandedHealth === app.id && (
-              <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 flex flex-col gap-2 animate-fadeIn">
-                <h5 className="text-[12px] font-bold text-text-secondary border-b border-slate-200 pb-1 mb-1">AŞI GEÇMİŞİ</h5>
+              <div className="bg-surface rounded-xl p-3 border border-border-main flex flex-col gap-2 animate-fadeIn">
+                <h5 className="text-[12px] font-bold text-text-secondary border-b border-border-main pb-1 mb-1">AŞI GEÇMİŞİ</h5>
                 {healthLoading ? (
                   <div className="animate-pulse flex flex-col gap-2">
-                    <div className="h-4 bg-slate-200 rounded w-3/4"></div>
-                    <div className="h-4 bg-slate-200 rounded w-1/2"></div>
+                    <div className="h-4 bg-bg-main rounded w-3/4"></div>
+                    <div className="h-4 bg-bg-main rounded w-1/2"></div>
                   </div>
                 ) : healthData && healthData.length > 0 ? (
                   healthData.map((v: any, idx: number) => {
@@ -166,7 +166,7 @@ export function BreedingApplicationsManager({ listingId }: { listingId: string }
                     )
                   })
                 ) : (
-                  <p className="text-[12px] text-slate-500">Bu pet için aşı kaydı bulunmuyor.</p>
+                  <p className="text-[12px] text-text-secondary">Bu pet için aşı kaydı bulunmuyor.</p>
                 )}
               </div>
             )}
@@ -179,13 +179,13 @@ export function BreedingApplicationsManager({ listingId }: { listingId: string }
                     {profile?.phone ? profile.phone : 'Telefon numarası gizli veya yok'}
                   </div>
                   {profile?.phone && (
-                    <a href={`tel:${profile.phone}`} className="btn-primary bg-blue-600 hover:bg-blue-700 py-2 px-4 text-xs">
+                    <a href={`tel:${profile.phone}`} className="btn-primary bg-blue-600 hover:bg-blue-700 py-2 px-4 text-[12px]">
                       Ara
                     </a>
                   )}
                 </div>
                 {!profile?.phone && (
-                  <div className="mt-2 text-xs text-amber-700 bg-amber-50 p-2 rounded-lg border border-amber-100 flex items-center gap-2">
+                  <div className="mt-2 text-[12px] text-amber-700 bg-amber-50 p-2 rounded-lg border border-amber-100 flex items-center gap-2">
                     <span>🔒</span> 
                     <span>Karşı taraf iletişim bilgilerini gizlemiş veya henüz telefon numarası eklememiş. Bu işlem için Premium plana geçmeniz gerekebilir.</span>
                   </div>
@@ -203,7 +203,7 @@ export function BreedingApplicationsManager({ listingId }: { listingId: string }
                   >
                     📄 Eşleşme Sözleşmesi Şablonunu İndir (Çok Yakında)
                   </a>
-                  <p className="text-[10px] text-slate-400 mt-0.5 font-medium">
+                  <p className="text-[10px] text-text-secondary mt-0.5 font-normal">
                     Taraflar arasında imzalanması önerilir.
                   </p>
                 </div>
@@ -211,16 +211,16 @@ export function BreedingApplicationsManager({ listingId }: { listingId: string }
             )}
 
             {isPending && (
-              <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+              <div className="flex items-center gap-2 pt-2 border-t border-border-main">
                 <button 
                   onClick={() => handleUpdateStatus(app.id, 'rejected')}
-                  className="flex-1 py-2.5 rounded-xl border-2 border-slate-200 text-slate-500 font-bold text-[13px] hover:bg-slate-50 transition-colors"
+                  className="flex-1 py-2.5 rounded-xl border-2 border-border-main text-text-secondary font-bold text-[13px] hover:bg-surface transition-colors"
                 >
                   ❌ Reddet
                 </button>
                 <button 
                   onClick={() => handleUpdateStatus(app.id, 'approved')}
-                  className="flex-1 py-2.5 rounded-xl bg-primary text-white font-bold text-[13px] hover:bg-primary/90 transition-colors shadow-sm shadow-primary/20"
+                  className="btn-primary flex-1 py-2.5 rounded-xl font-bold text-[13px] shadow-sm shadow-primary/20"
                 >
                   ✅ Onayla
                 </button>

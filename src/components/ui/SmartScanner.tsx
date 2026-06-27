@@ -303,11 +303,11 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
     const isEditing = editingField === key;
     
     return (
-      <div className={`bg-white p-4 rounded-2xl shadow-sm cursor-pointer border-2 transition-colors ${highlight ? 'border-primary/40 bg-primary/5' : 'border-slate-200 hover:border-slate-300'}`} onClick={() => !isEditing && setEditingField(key)}>
-        <label className={`text-[12px] font-bold mb-1 block flex items-center gap-1 ${highlight ? 'text-primary' : 'text-slate-500'}`}>
+      <div className={`bg-white p-4 rounded-2xl shadow-sm cursor-pointer border-2 transition-colors ${highlight ? 'border-primary/40 bg-primary/5' : 'border-border-main hover:border-border-main'}`} onClick={() => !isEditing && setEditingField(key)}>
+        <label className={`text-[12px] font-bold mb-1 block flex items-center gap-1 ${highlight ? 'text-primary' : 'text-text-secondary'}`}>
           {label} 
           {highlight && <span className="text-[10px] bg-primary text-white px-1.5 py-0.5 rounded-md ml-auto">Kritik</span>}
-          {!isEditing && <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-md ml-auto opacity-70">Düzenle</span>}
+          {!isEditing && <span className="text-[10px] bg-surface text-text-secondary px-1.5 py-0.5 rounded-md ml-auto opacity-70">Düzenle</span>}
         </label>
         
         {isEditing ? (
@@ -317,7 +317,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
               value={value || ""}
               onChange={(e) => setParsedData({ ...parsedData, [key]: e.target.value })}
               onBlur={() => setEditingField(null)}
-              className={`w-full font-extrabold text-[15px] bg-transparent focus:outline-none focus:border-b-2 ${highlight ? 'text-primary border-primary' : 'text-slate-800 border-slate-400'}`}
+              className={`w-full font-extrabold text-[15px] bg-transparent focus:outline-none focus:border-b-2 ${highlight ? 'text-primary border-primary' : 'text-text-primary border-border-main'}`}
             >
               {options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </select>
@@ -329,11 +329,11 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
               onChange={(e) => setParsedData({ ...parsedData, [key]: e.target.value })}
               onBlur={() => setEditingField(null)}
               onKeyDown={(e) => e.key === 'Enter' && setEditingField(null)}
-              className={`w-full font-extrabold text-[15px] bg-transparent focus:outline-none focus:border-b-2 ${highlight ? 'text-primary border-primary' : 'text-slate-800 border-slate-400'}`}
+              className={`w-full font-extrabold text-[15px] bg-transparent focus:outline-none focus:border-b-2 ${highlight ? 'text-primary border-primary' : 'text-text-primary border-border-main'}`}
             />
           )
         ) : (
-          <div className={`w-full font-extrabold text-[15px] truncate ${highlight ? 'text-primary' : 'text-slate-800'}`}>
+          <div className={`w-full font-extrabold text-[15px] truncate ${highlight ? 'text-primary' : 'text-text-primary'}`}>
             {value ? (options ? options.find(o => o.value === value)?.label || value : value) : <span className="opacity-40 italic">Belirtilmemiş</span>}
           </div>
         )}
@@ -347,7 +347,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
         <div className="flex flex-col gap-4 mb-4">
           <div className="bg-yellow-50 text-yellow-800 p-3 rounded-xl border border-yellow-200 flex items-start gap-2 mb-2">
             <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-            <p className="text-[13px] font-medium leading-tight">Bu işlem beslenme profilinizi ve stok bilgilerinizi güncelleyecektir. Paket gramajını doğru seçtiğinizden emin olun.</p>
+            <p className="text-[13px] font-normal leading-tight">Bu işlem beslenme profilinizi ve stok bilgilerinizi güncelleyecektir. Paket gramajını doğru seçtiğinizden emin olun.</p>
           </div>
           
           <div className="flex gap-4">
@@ -390,12 +390,12 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
               const estimatedDateStr = date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
               return (
                 <div className="bg-green-50 text-green-800 p-3 rounded-xl border border-green-200 mt-2 text-center">
-                  <p className="text-[12px] font-medium opacity-80 mb-1">Tahmini Mamanın Bitiş Tarihi</p>
-                  <p className="text-[16px] font-extrabold">{estimatedDateStr} <span className="text-[12px] font-medium opacity-80">({days} gün)</span></p>
+                  <p className="text-[12px] font-normal opacity-80 mb-1">Tahmini Mamanın Bitiş Tarihi</p>
+                  <p className="text-[16px] font-extrabold">{estimatedDateStr} <span className="text-[12px] font-normal opacity-80">({days} gün)</span></p>
                 </div>
               );
             }
-            return <p className="text-[11px] text-slate-400 text-center -mt-2">Günlük tüketim girilirse mama bitiş tarihi otomatik hesaplanır.</p>;
+            return <p className="text-[11px] text-text-secondary text-center -mt-2">Günlük tüketim girilirse mama bitiş tarihi otomatik hesaplanır.</p>;
           })()}
         </div>
       );
@@ -406,7 +406,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
         <div className="flex flex-col gap-4 mb-4">
           <div className="bg-blue-50 text-blue-800 p-3 rounded-xl border border-blue-200 flex items-start gap-2 mb-2">
             <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-            <p className="text-[13px] font-medium leading-tight">Bu bilgiler, taradığınız belgeden otomatik olarak alınmıştır. Gerekirse tıklayarak düzenleyebilirsiniz.</p>
+            <p className="text-[13px] font-normal leading-tight">Bu bilgiler, taradığınız belgeden otomatik olarak alınmıştır. Gerekirse tıklayarak düzenleyebilirsiniz.</p>
           </div>
 
           {renderField('title', 'Aşı Adı', parsedData.title)}
@@ -427,7 +427,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
         <div className="flex flex-col gap-4 mb-4">
           <div className="bg-blue-50 text-blue-800 p-3 rounded-xl border border-blue-200 flex items-start gap-2 mb-2">
             <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-            <p className="text-[13px] font-medium leading-tight">Bu bilgiler, taradığınız belgeden otomatik olarak alınmıştır. Gerekirse tıklayarak düzenleyebilirsiniz.</p>
+            <p className="text-[13px] font-normal leading-tight">Bu bilgiler, taradığınız belgeden otomatik olarak alınmıştır. Gerekirse tıklayarak düzenleyebilirsiniz.</p>
           </div>
 
           {renderField('title', 'İlaç Adı', parsedData.title)}
@@ -442,7 +442,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
         <div className="flex flex-col gap-4 mb-4">
           <div className="bg-blue-50 text-blue-800 p-3 rounded-xl border border-blue-200 flex items-start gap-2 mb-2">
             <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-            <p className="text-[13px] font-medium leading-tight">Bu bilgiler, taradığınız belgeden otomatik olarak alınmıştır. Gerekirse tıklayarak düzenleyebilirsiniz.</p>
+            <p className="text-[13px] font-normal leading-tight">Bu bilgiler, taradığınız belgeden otomatik olarak alınmıştır. Gerekirse tıklayarak düzenleyebilirsiniz.</p>
           </div>
           
           {renderField('title', 'Ürün Adı', parsedData.title)}
@@ -456,8 +456,8 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
     }
 
     return (
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm text-center mb-6">
-        <p className="text-slate-600 font-medium">Bu belge tipi tam anlaşılamadı. Sadece metin içeriğini not olarak kaydedebiliriz veya tekrar deneyebilirsiniz.</p>
+      <div className="bg-white p-6 rounded-2xl border border-border-main shadow-sm text-center mb-6">
+        <p className="text-text-secondary font-normal">Bu belge tipi tam anlaşılamadı. Sadece metin içeriğini not olarak kaydedebiliriz veya tekrar deneyebilirsiniz.</p>
       </div>
     );
   };
@@ -465,10 +465,10 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
   return (
     <div 
       onClick={(e) => e.stopPropagation()}
-      className="fixed inset-0 z-[10010] flex flex-col bg-slate-50/95 backdrop-blur-sm sm:p-6 p-0 overflow-y-auto"
+      className="fixed inset-0 z-[10010] flex flex-col bg-surface/95 backdrop-blur-sm sm:p-6 p-0 overflow-y-auto"
     >
       <div className="flex items-center justify-between p-4 sm:p-0 mb-4 bg-white sm:bg-transparent sticky top-0 z-10 border-b border-border-main sm:border-0 shadow-sm sm:shadow-none">
-        <h2 className="text-xl font-bold text-slate-800">
+        <h2 className="text-xl font-bold text-text-primary">
           {step === "ready" ? "Akıllı Tarama" : 
            step === "camera" ? "Belge Tara" : 
            step === "adjust" ? "Görseli Ayarlayın" : 
@@ -477,7 +477,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
         </h2>
         <button
           onClick={onClose}
-          className="p-2 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
+          className="p-2 rounded-full bg-surface text-text-secondary hover:bg-surface transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
@@ -491,23 +491,23 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
               <Camera className="w-10 h-10" />
             </div>
             
-            <h1 className="text-[26px] font-extrabold text-slate-800 mb-2 text-center">Akıllı Tarama</h1>
-            <p className="text-slate-500 font-medium text-[14px] leading-relaxed mb-6 px-2 text-center">
+            <h1 className="text-[26px] font-extrabold text-text-primary mb-2 text-center">Akıllı Tarama</h1>
+            <p className="text-text-secondary font-normal text-[14px] leading-relaxed mb-6 px-2 text-center">
               Aşı karnesi, mama, ilaç veya parazit ambalajlarını tarayarak bilgileri hızla kaydedin.
             </p>
             
-            <div className="w-full bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col gap-4 mb-8">
+            <div className="w-full bg-white rounded-2xl p-6 shadow-sm border border-border-main flex flex-col gap-4 mb-8">
               <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-sm shrink-0">1</div>
-                <p className="text-slate-600 font-medium">Belgeyi düz bir zemine yerleştirin.</p>
+                <div className="w-6 h-6 rounded-full bg-surface flex items-center justify-center text-text-secondary font-bold text-[13px] shrink-0">1</div>
+                <p className="text-text-secondary font-normal">Belgeyi düz bir zemine yerleştirin.</p>
               </div>
               <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-sm shrink-0">2</div>
-                <p className="text-slate-600 font-medium">Yeterli ışık olduğundan emin olun.</p>
+                <div className="w-6 h-6 rounded-full bg-surface flex items-center justify-center text-text-secondary font-bold text-[13px] shrink-0">2</div>
+                <p className="text-text-secondary font-normal">Yeterli ışık olduğundan emin olun.</p>
               </div>
               <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-sm shrink-0">3</div>
-                <p className="text-slate-600 font-medium">Tüm yazıların kadraja sığdığından emin olun.</p>
+                <div className="w-6 h-6 rounded-full bg-surface flex items-center justify-center text-text-secondary font-bold text-[13px] shrink-0">3</div>
+                <p className="text-text-secondary font-normal">Tüm yazıların kadraja sığdığından emin olun.</p>
               </div>
             </div>
 
@@ -531,14 +531,14 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
               <button 
                 id="onb-scanner-capture"
                 onClick={startCamera}
-                className="flex-1 py-4 bg-primary hover:bg-primary-hover text-white font-bold rounded-2xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all hover:scale-[1.03] active:scale-[0.97] duration-200"
+                className="btn-primary flex-1 py-4 flex gap-2"
               >
                 <Camera className="w-5 h-5" />
                 Fotoğraf Çek
               </button>
               <button 
                 onClick={() => galleryInputRef.current?.click()}
-                className="flex-1 py-4 bg-white hover:bg-slate-50 text-slate-700 font-bold border-2 border-slate-200 rounded-2xl flex items-center justify-center gap-2 transition-all hover:scale-[1.03] active:scale-[0.97] duration-200 hover:border-primary hover:text-primary"
+                className="flex-1 py-4 bg-white hover:bg-surface text-text-secondary font-bold border-2 border-border-main rounded-2xl flex items-center justify-center gap-2 transition-all hover:scale-[1.03] active:scale-[0.97] duration-200 hover:border-primary hover:text-primary"
               >
                 <ImageIcon className="w-5 h-5" />
                 Galeriden Seç
@@ -548,7 +548,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
         )}
 
         {step === "camera" && (
-          <div className="flex flex-col items-center w-full animate-fadeIn relative h-[60vh] max-h-[500px] min-h-[400px] overflow-hidden rounded-[32px] border border-slate-200 bg-black">
+          <div className="flex flex-col items-center w-full animate-fadeIn relative h-[60vh] max-h-[500px] min-h-[400px] overflow-hidden rounded-modal border border-border-main bg-black">
             <video 
               ref={videoRef} 
               autoPlay 
@@ -611,8 +611,8 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
 
         {step === "adjust" && tempImageSrc && (
           <div className="flex flex-col items-center w-full animate-fadeIn select-none">
-            <h3 className="text-slate-800 font-extrabold text-[18px] mb-3 text-center">Görseli Ayarlayın</h3>
-            <p className="text-slate-500 text-[13px] font-medium mb-4 text-center px-4">
+            <h3 className="text-text-primary font-extrabold text-[18px] mb-3 text-center">Görseli Ayarlayın</h3>
+            <p className="text-text-secondary text-[13px] font-normal mb-4 text-center px-4">
               Görseli sürükleyip yakınlaştırarak kılavuz çizgileri arasına hizalayın.
             </p>
             
@@ -625,7 +625,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
               onTouchMove={handleTouchMove}
               onTouchEnd={handleMouseUp}
               style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
-              className="w-full aspect-[3/4] max-h-[300px] overflow-hidden rounded-[24px] border border-slate-200 bg-slate-900 relative shadow-inner mb-4 select-none touch-none"
+              className="w-full aspect-[3/4] max-h-[300px] overflow-hidden rounded-[24px] border border-border-main bg-surface relative shadow-inner mb-4 select-none touch-none"
             >
               {/* Image element with rotation, scale and translation applied */}
               <Image 
@@ -653,7 +653,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
 
             {/* Zoom Slider Control */}
             <div className="w-full px-2 mb-5 flex flex-col gap-1.5">
-              <div className="flex justify-between items-center text-[12px] font-bold text-slate-400">
+              <div className="flex justify-between items-center text-[12px] font-bold text-text-secondary">
                 <span>Yakınlaştır / Uzaklaştır</span>
                 <span className="text-primary font-extrabold">% {Math.round(scale * 100)}</span>
               </div>
@@ -664,7 +664,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
                 step="0.05" 
                 value={scale} 
                 onChange={(e) => setScale(parseFloat(e.target.value))}
-                className="w-full accent-primary h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-primary h-1.5 bg-surface rounded-lg appearance-none cursor-pointer"
               />
             </div>
 
@@ -672,7 +672,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
             <div className="flex justify-center gap-4 w-full mb-6">
               <button 
                 onClick={() => setRotation((prev) => (prev - 90 + 360) % 360)}
-                className="py-2 px-3.5 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl flex items-center gap-2 hover:border-primary hover:text-primary transition-all hover:scale-[1.03]"
+                className="py-2 px-3.5 bg-white border border-border-main text-text-secondary font-bold rounded-xl flex items-center gap-2 hover:border-primary hover:text-primary transition-all hover:scale-[1.03]"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
                 Sola Döndür
@@ -680,7 +680,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
               
               <button 
                 onClick={() => setRotation((prev) => (prev + 90) % 360)}
-                className="py-2 px-3.5 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl flex items-center gap-2 hover:border-primary hover:text-primary transition-all hover:scale-[1.03]"
+                className="py-2 px-3.5 bg-white border border-border-main text-text-secondary font-bold rounded-xl flex items-center gap-2 hover:border-primary hover:text-primary transition-all hover:scale-[1.03]"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M2.5 2v6h6M2.66 15.57a10 10 0 1 0 .57-8.38L2.5 8"/></svg>
                 Sağa Döndür
@@ -694,13 +694,13 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
                   setTempImageSrc(null);
                   setStep("ready");
                 }}
-                className="flex-1 py-4 bg-white hover:bg-slate-50 text-slate-600 font-bold border border-slate-200 rounded-2xl transition-all hover:scale-[1.03] active:scale-[0.97]"
+                className="btn-secondary flex-1 py-4"
               >
                 Yeniden Seç
               </button>
               <button 
                 onClick={applyAdjustmentAndScan}
-                className="flex-1 py-4 bg-primary hover:bg-primary-hover text-white font-bold rounded-2xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all hover:scale-[1.03] active:scale-[0.97]"
+                className="btn-primary flex-1 py-4 flex gap-2"
               >
                 <Check className="w-5 h-5" />
                 Kırp ve Tara
@@ -712,10 +712,10 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
         {(step === "processing" || step === "saving") && (
           <div className="flex flex-col items-center justify-center w-full animate-fadeIn h-64 text-center">
             <Loader2 className="w-12 h-12 text-primary animate-spin mb-6" />
-            <h2 className="text-[22px] font-extrabold text-slate-800 mb-2">
+            <h2 className="text-[22px] font-extrabold text-text-primary mb-2">
               {step === "processing" ? "Odi Fotoğrafı İnceliyor..." : "Verileriniz Kaydediliyor..."}
             </h2>
-            <p className="text-slate-500 font-medium">
+            <p className="text-text-secondary font-normal">
               {step === "processing" ? "Yapay zeka içeriği tespit ediyor, lütfen bekleyin." : "İşlem tamamlanmak üzere."}
             </p>
           </div>
@@ -726,20 +726,20 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
             <div className="w-20 h-20 bg-error/10 rounded-full flex items-center justify-center mb-6 text-error text-3xl">
               🚨
             </div>
-            <h2 className="text-[24px] font-extrabold text-slate-800 mb-3">Belge bulunamadı</h2>
-            <p className="text-slate-600 font-medium mb-8 px-2">
+            <h2 className="text-[24px] font-extrabold text-text-primary mb-3">Belge bulunamadı</h2>
+            <p className="text-text-secondary font-normal mb-8 px-2">
               Kamerayı belgeye doğru tuttuğunuzdan emin olun.
             </p>
             
             <button 
               onClick={() => setStep("ready")}
-              className="w-full py-4 bg-primary hover:bg-primary-hover text-white font-bold rounded-2xl shadow-lg shadow-primary/20 mb-3 transition-all active:scale-95"
+              className="btn-primary w-full py-4 mb-3"
             >
               Tekrar Tara
             </button>
             <button 
               onClick={onClose}
-              className="w-full py-4 bg-white hover:bg-slate-50 text-slate-700 font-bold border border-slate-200 rounded-2xl transition-all"
+              className="btn-secondary w-full py-4"
             >
               Kapat
             </button>
@@ -749,9 +749,9 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
         {step === "confirm" && (
           <div className="flex flex-col w-full animate-fadeIn pb-20">
             
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between mb-6">
+            <div className="bg-white p-4 rounded-2xl border border-border-main shadow-sm flex items-center justify-between mb-6">
               <div>
-                <span className="text-[12px] font-bold text-slate-400 block mb-1">Algılanan Kategori</span>
+                <span className="text-[12px] font-bold text-text-secondary block mb-1">Algılanan Kategori</span>
                 <span className="font-extrabold text-primary text-[15px]">{
                   recordType === 'vaccine_card' ? '💉 Aşı Karnesi' :
                   recordType === 'medicine_packaging' ? '💊 İlaç Ambalajı' :
@@ -764,7 +764,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
             {renderConfirmFields()}
 
             {validationError && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-xl border border-red-200 text-[13px] font-medium mb-4 flex items-start gap-2">
+              <div className="bg-red-50 text-red-600 p-3 rounded-xl border border-red-200 text-[13px] font-normal mb-4 flex items-start gap-2">
                 <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
                 <p>{validationError}</p>
               </div>
@@ -776,7 +776,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
                   onClick={() => {
                     onResult(parsedData);
                   }}
-                  className="w-full py-4 bg-primary hover:bg-primary-hover text-white font-bold rounded-2xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] duration-200 mb-3"
+                  className="btn-primary w-full py-4 mb-3 flex gap-2"
                 >
                   <Check className="w-5 h-5" />
                   Forma Aktar
@@ -784,7 +784,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
               ) : (
                 <button 
                   onClick={handleConfirm}
-                  className="w-full py-4 bg-primary hover:bg-primary-hover text-white font-bold rounded-2xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] duration-200 mb-3"
+                  className="btn-primary w-full py-4 mb-3 flex gap-2"
                 >
                   <Check className="w-5 h-5" />
                   Bilgileri Kaydet
@@ -792,7 +792,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
               )}
               <button 
                 onClick={() => setStep("ready")}
-                className="w-full py-4 bg-white hover:bg-slate-50 text-slate-600 font-bold border border-slate-200 rounded-2xl flex items-center justify-center transition-all hover:scale-[1.02] active:scale-[0.98] duration-200"
+                className="btn-secondary w-full py-4"
               >
                 Yeniden Fotoğraf Çek
               </button>

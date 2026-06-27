@@ -44,7 +44,7 @@ export default function FormModal({
       onClick={onClose}
     >
       <div
-        className="relative bg-surface w-full max-w-sm sm:max-w-md rounded-[28px] shadow-2xl overflow-y-auto max-h-[90dvh] animate-in fade-in zoom-in-95 duration-200"
+        className="relative bg-surface w-full max-w-sm sm:max-w-md rounded-modal shadow-2xl overflow-y-auto max-h-[90dvh] animate-in fade-in zoom-in-95 duration-200"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}

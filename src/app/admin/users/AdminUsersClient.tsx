@@ -273,7 +273,7 @@ export default function AdminUsersClient() {
                         />
                       </td>
                       <td className="p-4">
-                        <div className="font-semibold text-text-primary group-hover:text-primary transition-colors">
+                        <div className="font-bold text-text-primary group-hover:text-primary transition-colors">
                           {[user.first_name, user.last_name].filter(Boolean).join(' ') || '—'}
                         </div>
                         <div className="text-[11px] text-text-secondary mt-0.5 font-mono">
@@ -305,7 +305,7 @@ export default function AdminUsersClient() {
                 <tr>
                   <td colSpan={6} className="p-12 text-center">
                     <div className="text-4xl mb-3">👥</div>
-                    <p className="text-text-secondary font-semibold text-[14px]">
+                    <p className="text-text-secondary font-bold text-[14px]">
                       Bu kritere uygun kullanıcı bulunamadı.
                     </p>
                   </td>
@@ -328,7 +328,7 @@ export default function AdminUsersClient() {
               id="user-page-prev"
               disabled={page <= 1}
               onClick={() => setParam({ page: String(page - 1) })}
-              className="px-4 py-2 rounded-xl border border-border-main bg-surface text-[13px] font-semibold text-text-secondary hover:text-primary hover:border-primary disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              className="px-4 py-2 rounded-xl border border-border-main bg-surface text-[13px] font-bold text-text-secondary hover:text-primary hover:border-primary disabled:opacity-40 disabled:cursor-not-allowed transition-all"
             >
               ← Önceki
             </button>
@@ -336,7 +336,7 @@ export default function AdminUsersClient() {
               id="user-page-next"
               disabled={page >= data.totalPages}
               onClick={() => setParam({ page: String(page + 1) })}
-              className="px-4 py-2 rounded-xl border border-border-main bg-surface text-[13px] font-semibold text-text-secondary hover:text-primary hover:border-primary disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              className="px-4 py-2 rounded-xl border border-border-main bg-surface text-[13px] font-bold text-text-secondary hover:text-primary hover:border-primary disabled:opacity-40 disabled:cursor-not-allowed transition-all"
             >
               Sonraki →
             </button>

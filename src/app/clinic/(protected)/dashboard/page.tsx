@@ -54,7 +54,7 @@ export default async function ClinicDashboard() {
         <h1 className="text-[32px] font-extrabold text-text-primary tracking-tight">
           Günaydın, Dr. {profile?.first_name || 'Kullanıcı'} 👋
         </h1>
-        <p className="text-[16px] font-medium text-text-secondary">
+        <p className="text-[16px] font-normal text-text-secondary">
           Günlük operasyon görünümü. Randevu ve geciken bakımları buradan yönetin.
         </p>
       </div>
@@ -64,22 +64,22 @@ export default async function ClinicDashboard() {
         <div className="card-base p-6 flex flex-col gap-3 border-l-4 border-l-primary">
           <h3 className="text-[12px] font-bold text-text-secondary uppercase tracking-widest">Bugün Toplam</h3>
           <p className="text-[42px] font-black text-text-primary leading-none">{todayAppointments?.length ?? 0}</p>
-          <p className="text-[13px] font-semibold text-text-secondary">randevu</p>
+          <p className="text-[13px] font-bold text-text-secondary">randevu</p>
         </div>
         <div className="card-base p-6 flex flex-col gap-3 border-l-4 border-l-warning">
           <h3 className="text-[12px] font-bold text-text-secondary uppercase tracking-widest">Bekleyen</h3>
           <p className="text-[42px] font-black text-warning leading-none">{pendingCount}</p>
-          <p className="text-[13px] font-semibold text-text-secondary">onay bekliyor</p>
+          <p className="text-[13px] font-bold text-text-secondary">onay bekliyor</p>
         </div>
         <div className="card-base p-6 flex flex-col gap-3 border-l-4 border-l-success">
           <h3 className="text-[12px] font-bold text-text-secondary uppercase tracking-widest">Onaylı</h3>
           <p className="text-[42px] font-black text-success leading-none">{confirmedCount}</p>
-          <p className="text-[13px] font-semibold text-text-secondary">randevu</p>
+          <p className="text-[13px] font-bold text-text-secondary">randevu</p>
         </div>
         <div className="card-base p-6 flex flex-col gap-3 border-l-4 border-l-error">
           <h3 className="text-[12px] font-bold text-text-secondary uppercase tracking-widest">Gecikmiş Bakım</h3>
           <p className="text-[42px] font-black text-error leading-none">{overduePlans?.length ?? 0}</p>
-          <p className="text-[13px] font-semibold text-text-secondary">müdahale gerekli</p>
+          <p className="text-[13px] font-bold text-text-secondary">müdahale gerekli</p>
         </div>
       </div>
 
@@ -100,7 +100,7 @@ export default async function ClinicDashboard() {
 
         {(!todayAppointments || todayAppointments.length === 0) ? (
           <div className="bg-bg-main rounded-[16px] border border-border-main p-10 text-center">
-            <p className="text-text-secondary font-medium">Bugün için planlanmış randevu bulunmuyor.</p>
+            <p className="text-text-secondary font-normal">Bugün için planlanmış randevu bulunmuyor.</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -121,7 +121,7 @@ export default async function ClinicDashboard() {
                   </div>
                   <div className="flex flex-col flex-1 min-w-0">
                     <p className="font-bold text-text-primary text-[16px] truncate">{apt.pets?.name ?? '—'}</p>
-                    <p className="text-[13px] font-medium text-text-secondary">{apt.pets?.species ?? '—'} • {apt.owner_reason || 'Belirtilmedi'}</p>
+                    <p className="text-[13px] font-normal text-text-secondary">{apt.pets?.species ?? '—'} • {apt.owner_reason || 'Belirtilmedi'}</p>
                   </div>
                   <span className={`text-[12px] font-bold px-3 py-1.5 rounded-full shrink-0 ${s.cls}`}>{s.label}</span>
                 </div>
@@ -147,7 +147,7 @@ export default async function ClinicDashboard() {
               <div key={plan.id} className="flex items-center justify-between p-4 rounded-[14px] bg-error/5 border border-error/20">
                 <div>
                   <p className="font-bold text-text-primary">{plan.pets?.name} — {plan.title}</p>
-                  <p className="text-[13px] text-error font-semibold mt-0.5">Vade: {new Date(plan.due_date).toLocaleDateString('tr-TR')}</p>
+                  <p className="text-[13px] text-error font-bold mt-0.5">Vade: {new Date(plan.due_date).toLocaleDateString('tr-TR')}</p>
                 </div>
                 <button className="btn-primary text-[13px] py-2 px-4 bg-error hover:bg-red-700">Aksiyon Al</button>
               </div>

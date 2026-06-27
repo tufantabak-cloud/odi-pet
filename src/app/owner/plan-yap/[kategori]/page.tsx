@@ -431,7 +431,7 @@ export default function WizardOrchestrator() {
                   setStepData({ subCategory: sub.id, selectedVaccine: null });
                   nextStep();
                 }}
-                className={`px-4 py-3 min-h-[50px] rounded-xl text-sm font-bold flex items-center transition-all border text-left ${
+                className={`px-4 py-3 min-h-[50px] rounded-xl text-[13px] font-bold flex items-center transition-all border text-left ${
                   isSelected
                     ? 'bg-indigo-600 text-white border-indigo-600 shadow-md scale-[1.02]'
                     : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-300'
@@ -450,7 +450,7 @@ export default function WizardOrchestrator() {
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
           {subCat === 'Diğer' && (
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-bold text-slate-700">Görev Adı</label>
+              <label className="text-[13px] font-bold text-text-primary">Görev Adı</label>
               <input
                 type="text"
                 value={wizardData.customText || ''}
@@ -474,7 +474,7 @@ export default function WizardOrchestrator() {
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-bold text-slate-700">Semptomlar / Belirtiler</label>
+                <label className="text-[13px] font-bold text-text-primary">Semptomlar / Belirtiler</label>
                 <input
                   type="text"
                   value={wizardData.metadata?.symptoms || ''}
@@ -484,7 +484,7 @@ export default function WizardOrchestrator() {
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-bold text-slate-700">Tedavi / Müdahale Yöntemi</label>
+                <label className="text-[13px] font-bold text-text-primary">Tedavi / Müdahale Yöntemi</label>
                 <input
                   type="text"
                   value={wizardData.metadata?.treatment || ''}
@@ -497,7 +497,7 @@ export default function WizardOrchestrator() {
           )}
           {categoryKey === 'saglik' && ['Tedavi/Pansuman', 'Tahlil/Rapor', 'Kronik Takip', 'İlaç'].includes(wizardData.subCategory || '') && (
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-bold text-slate-700">Veteriner / Klinik Adı</label>
+              <label className="text-[13px] font-bold text-text-primary">Veteriner / Klinik Adı</label>
               <input
                 type="text"
                 value={wizardData.metadata?.professional_name || ''}
@@ -509,7 +509,7 @@ export default function WizardOrchestrator() {
           )}
           {categoryKey === 'beslenme' && (
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-bold text-slate-700">Mama Tipi / Markası</label>
+              <label className="text-[13px] font-bold text-text-primary">Mama Tipi / Markası</label>
               <input
                 type="text"
                 value={wizardData.metadata?.supply_type || ''}
@@ -526,13 +526,13 @@ export default function WizardOrchestrator() {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider">Odi Premium</span>
+                  <span className="bg-surface/20 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider">Odi Premium</span>
                   <h3 className="font-extrabold text-[15px] mt-1">Akıllı Paket Tarama</h3>
-                  <p className="text-[12px] text-white/90 font-medium leading-relaxed mt-0.5">
+                  <p className="text-[12px] text-white/90 font-normal leading-relaxed mt-0.5">
                     Mama paketini okutun, içeriği ve stok planını otomatik dolduralım.
                   </p>
                 </div>
-                <div className="opacity-90 bg-white/20 p-2.5 rounded-xl backdrop-blur-sm shadow-sm">
+                <div className="opacity-90 bg-surface/20 p-2.5 rounded-xl backdrop-blur-sm shadow-sm">
                   <ScanLine className="w-7 h-7 text-white" strokeWidth={2.5} />
                 </div>
               </div>
@@ -590,9 +590,9 @@ export default function WizardOrchestrator() {
 
           <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-1">
             {loadingProducts ? (
-              <p className="text-center text-sm text-slate-500 py-4">Ürünler Yükleniyor...</p>
+              <p className="text-center text-[13px] text-text-secondary py-4">Ürünler Yükleniyor...</p>
             ) : filtered.length === 0 ? (
-              <p className="text-center text-sm text-slate-500 py-4">Eşleşen ürün bulunamadı.</p>
+              <p className="text-center text-[13px] text-text-secondary py-4">Eşleşen ürün bulunamadı.</p>
             ) : (
               <div className="flex flex-col gap-4">
                 {groups.map((g) => (
@@ -630,7 +630,7 @@ export default function WizardOrchestrator() {
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-bold text-sm text-slate-800">{vaccine.name}</h4>
+                              <h4 className="font-bold text-[13px] text-text-primary">{vaccine.name}</h4>
                               {vaccine.nameTr && <p className="text-[11px] text-slate-500 font-medium">{vaccine.nameTr}</p>}
                             </div>
                           </button>
@@ -643,8 +643,8 @@ export default function WizardOrchestrator() {
             )}
           </div>
 
-          <div className="mt-2 pt-4 border-t border-slate-200">
-            <label className="text-sm font-bold text-slate-700">Marka / Ürün Notu (İsteğe Bağlı)</label>
+          <div className="mt-2 pt-4 border-t border-border-main">
+            <label className="text-[13px] font-bold text-text-primary">Marka / Ürün Notu (İsteğe Bağlı)</label>
             <input
               type="text"
               value={wizardData.metadata?.custom_brand || ''}
@@ -661,7 +661,7 @@ export default function WizardOrchestrator() {
       return (
         <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-2">
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-bold text-slate-700">Tarih</label>
+            <label className="text-[13px] font-bold text-text-primary">Tarih</label>
             <input
               type="date"
               value={wizardData.date}
@@ -670,7 +670,7 @@ export default function WizardOrchestrator() {
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-bold text-slate-700">Saat</label>
+            <label className="text-[13px] font-bold text-text-primary">Saat</label>
             <input
               type="time"
               value={wizardData.time}
@@ -687,7 +687,7 @@ export default function WizardOrchestrator() {
       return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-bold text-slate-700">Sıklık Seçimi</label>
+            <label className="text-[13px] font-bold text-text-primary">Sıklık Seçimi</label>
             <div className="grid grid-cols-3 gap-2">
               {([
                 { value: 'once',    label: 'Tek Sefer' },
@@ -699,7 +699,7 @@ export default function WizardOrchestrator() {
                 <button
                   key={opt.value}
                   onClick={() => setStepData({ frequency: opt.value })}
-                  className={`py-3 px-2 min-h-[50px] rounded-xl text-xs font-bold border flex items-center justify-center transition-all text-center ${
+                  className={`py-3 px-2 min-h-[50px] rounded-xl text-[12px] font-bold border flex items-center justify-center transition-all text-center ${
                     wizardData.frequency === opt.value
                       ? 'bg-indigo-600 text-white border-indigo-600 shadow-md scale-[1.02]'
                       : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300'
@@ -712,11 +712,11 @@ export default function WizardOrchestrator() {
           </div>
 
           {isRecurring && (
-            <div className="flex flex-col gap-2 p-4 bg-slate-50 border border-slate-100 rounded-2xl animate-in fade-in">
-              <label className="text-xs font-bold text-slate-600">Tekrar Aralığı</label>
+            <div className="flex flex-col gap-2 p-4 bg-surface border border-border-main rounded-2xl animate-in fade-in">
+              <label className="text-[12px] font-bold text-text-secondary">Tekrar Aralığı</label>
               <div className="flex items-center gap-3">
-                <span className="text-sm text-slate-700 font-medium">Her</span>
-                <div className="flex items-center bg-white border border-slate-200 rounded-lg overflow-hidden shrink-0">
+                <span className="text-[13px] text-text-primary font-normal">Her</span>
+                <div className="flex items-center bg-surface border border-border-main rounded-lg overflow-hidden shrink-0">
                   <button onClick={() => setStepData({ interval: Math.max(1, wizardData.interval - 1) })} className="px-3 py-1 bg-slate-50 hover:bg-slate-100 font-bold">−</button>
                   <input type="number" min="1" value={wizardData.interval} onChange={(e) => setStepData({ interval: parseInt(e.target.value) || 1 })} className="w-12 text-center text-sm font-bold border-x border-slate-200 py-1 outline-none appearance-none" />
                   <button onClick={() => setStepData({ interval: wizardData.interval + 1 })} className="px-3 py-1 bg-slate-50 hover:bg-slate-100 font-bold">+</button>
@@ -724,8 +724,8 @@ export default function WizardOrchestrator() {
                 <span className="text-sm text-slate-700 font-medium">{FREQ_LABEL[wizardData.frequency]} tekrarlanacak</span>
               </div>
 
-              <div className="mt-4 pt-4 border-t border-slate-200 space-y-3">
-                <label className="text-xs font-bold text-slate-600">Bitiş Koşulu</label>
+              <div className="mt-4 pt-4 border-t border-border-main space-y-3">
+                <label className="text-[12px] font-bold text-text-secondary">Bitiş Koşulu</label>
                 <div className="grid grid-cols-3 gap-2">
                   {END_OPTIONS.map(opt => (
                     <button key={opt.value} onClick={() => setStepData({ endCondition: opt.value as any })} className={`py-2 px-1 rounded-lg text-[11px] font-bold border transition-all text-center ${wizardData.endCondition === opt.value ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}>
@@ -739,7 +739,7 @@ export default function WizardOrchestrator() {
                 {wizardData.endCondition === 'occurrences' && (
                   <div className="flex items-center gap-2">
                     <input type="number" min="1" value={wizardData.endOccurrences || 1} onChange={(e) => setStepData({ endOccurrences: parseInt(e.target.value) || 1 })} className="w-20 p-2 border border-slate-200 rounded-lg text-sm text-center" />
-                    <span className="text-xs text-slate-600 font-medium">kez tekrarlandıktan sonra bitir</span>
+                    <span className="text-[12px] text-text-secondary font-normal">kez tekrarlandıktan sonra bitir</span>
                   </div>
                 )}
               </div>
@@ -754,10 +754,10 @@ export default function WizardOrchestrator() {
       
       return (
         <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2">
-          <div className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl">
+          <div className="flex items-center justify-between p-4 bg-surface border border-border-main rounded-2xl">
             <div>
-              <p className="text-sm font-bold text-slate-800">Hatırlatıcı</p>
-              <p className="text-xs text-slate-500 mt-0.5">Görev zamanı yaklaştığında bildirim at</p>
+              <p className="text-[13px] font-bold text-text-primary">Hatırlatıcı</p>
+              <p className="text-[12px] text-text-secondary mt-0.5">Görev zamanı yaklaştığında bildirim at</p>
             </div>
             <div className="flex items-center gap-2">
               {wizardData.notificationEnabled && (
@@ -778,7 +778,7 @@ export default function WizardOrchestrator() {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-bold text-slate-700">Görev Notu</label>
+            <label className="text-[13px] font-bold text-text-primary">Görev Notu</label>
             <textarea
               value={wizardData.notes || ''}
               onChange={(e) => setStepData({ notes: e.target.value })}
@@ -814,7 +814,7 @@ export default function WizardOrchestrator() {
     const petInfo = pets.find(p => p.id === wizardData.pet_id);
     const isAllergy = subCat === 'Alerji';
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 animate-in fade-in duration-500">
+      <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-6 animate-in fade-in duration-500">
         <div className="max-w-md mx-auto w-full text-center space-y-6">
           <div className="w-20 h-20 bg-emerald-50 rounded-[2rem] flex items-center justify-center shadow-inner mx-auto text-emerald-600">
             <CheckCircle2 className="w-10 h-10" />
@@ -823,22 +823,22 @@ export default function WizardOrchestrator() {
             <h2 className="text-2xl font-black text-slate-900">{isAllergy ? 'Alerji Kaydı Oluşturuldu!' : (isEditMode ? 'Rutin Güncellendi!' : 'Rutin Oluşturuldu!')}</h2>
             <p className="text-slate-500 text-sm mt-1">{petInfo?.name || 'Evcil hayvanınız'} için {isAllergy ? 'alerji kaydı başarıyla oluşturuldu' : (isEditMode ? 'plan başarıyla güncellendi' : 'plan başarıyla kaydedildi')}.</p>
           </div>
-          <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 text-left space-y-3">
+          <div className="bg-surface rounded-3xl p-5 shadow-sm border border-border-main text-left space-y-3">
              {isAllergy ? (
                <>
                  <div className="flex justify-between items-start py-2 border-b border-slate-50">
-                   <span className="text-xs font-semibold text-slate-400">Alerjen / Tetikleyici</span>
+                   <span className="text-[12px] font-semibold text-slate-400">Alerjen / Tetikleyici</span>
                    <span className="text-xs font-bold text-slate-800 text-right">{wizardData.metadata?.trigger_name}</span>
                  </div>
                  {wizardData.metadata?.symptoms && (
                    <div className="flex justify-between items-start py-2 border-b border-slate-50">
-                     <span className="text-xs font-semibold text-slate-400">Semptomlar</span>
+                     <span className="text-[12px] font-semibold text-slate-400">Semptomlar</span>
                      <span className="text-xs font-bold text-slate-800 text-right">{wizardData.metadata?.symptoms}</span>
                    </div>
                  )}
                  {wizardData.metadata?.treatment && (
                    <div className="flex justify-between items-start py-2">
-                     <span className="text-xs font-semibold text-slate-400">Tedavi</span>
+                     <span className="text-[12px] font-semibold text-slate-400">Tedavi</span>
                      <span className="text-xs font-bold text-slate-800 text-right">{wizardData.metadata?.treatment}</span>
                    </div>
                  )}
@@ -846,15 +846,15 @@ export default function WizardOrchestrator() {
              ) : (
                <>
                  <div className="flex justify-between items-start py-2 border-b border-slate-50">
-                   <span className="text-xs font-semibold text-slate-400">Görev</span>
+                   <span className="text-[12px] font-semibold text-slate-400">Görev</span>
                    <span className="text-xs font-bold text-slate-800 text-right">{wizardData.selectedVaccine ? wizardData.selectedVaccine.name : (wizardData.subCategory === 'Diğer' ? wizardData.customText : wizardData.subCategory)}</span>
                  </div>
                  <div className="flex justify-between items-start py-2 border-b border-slate-50">
-                   <span className="text-xs font-semibold text-slate-400">Zaman</span>
+                   <span className="text-[12px] font-semibold text-slate-400">Zaman</span>
                    <span className="text-xs font-bold text-slate-800 text-right">{wizardData.date} {wizardData.time}</span>
                  </div>
                  <div className="flex justify-between items-start py-2">
-                   <span className="text-xs font-semibold text-slate-400">Tekrar</span>
+                   <span className="text-[12px] font-semibold text-slate-400">Tekrar</span>
                    <span className="text-xs font-bold text-slate-800 text-right">{wizardData.frequency === 'once' ? 'Tek Seferlik' : `Her ${wizardData.interval} ${FREQ_LABEL[wizardData.frequency]}`}</span>
                  </div>
                </>

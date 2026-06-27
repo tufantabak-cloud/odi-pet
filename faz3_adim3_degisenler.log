@@ -1,0 +1,149 @@
+Toplam Değişen Satır: 37
+
+Satır 434: 
+- ESKİ: className={`px-4 py-3 min-h-[50px] rounded-xl text-sm font-bold flex items-center transition-all border text-left ${
+- YENİ: className={`px-4 py-3 min-h-[50px] rounded-xl text-[13px] font-bold flex items-center transition-all border text-left ${
+
+Satır 453: 
+- ESKİ: <label className="text-sm font-bold text-slate-700">Görev Adı</label>
+- YENİ: <label className="text-[13px] font-bold text-text-primary">Görev Adı</label>
+
+Satır 477: 
+- ESKİ: <label className="text-sm font-bold text-slate-700">Semptomlar / Belirtiler</label>
+- YENİ: <label className="text-[13px] font-bold text-text-primary">Semptomlar / Belirtiler</label>
+
+Satır 487: 
+- ESKİ: <label className="text-sm font-bold text-slate-700">Tedavi / Müdahale Yöntemi</label>
+- YENİ: <label className="text-[13px] font-bold text-text-primary">Tedavi / Müdahale Yöntemi</label>
+
+Satır 500: 
+- ESKİ: <label className="text-sm font-bold text-slate-700">Veteriner / Klinik Adı</label>
+- YENİ: <label className="text-[13px] font-bold text-text-primary">Veteriner / Klinik Adı</label>
+
+Satır 512: 
+- ESKİ: <label className="text-sm font-bold text-slate-700">Mama Tipi / Markası</label>
+- YENİ: <label className="text-[13px] font-bold text-text-primary">Mama Tipi / Markası</label>
+
+Satır 529: 
+- ESKİ: <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider">Odi Premium</span>
+- YENİ: <span className="bg-surface/20 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider">Odi Premium</span>
+
+Satır 531: 
+- ESKİ: <p className="text-[12px] text-white/90 font-medium leading-relaxed mt-0.5">
+- YENİ: <p className="text-[12px] text-white/90 font-normal leading-relaxed mt-0.5">
+
+Satır 535: 
+- ESKİ: <div className="opacity-90 bg-white/20 p-2.5 rounded-xl backdrop-blur-sm shadow-sm">
+- YENİ: <div className="opacity-90 bg-surface/20 p-2.5 rounded-xl backdrop-blur-sm shadow-sm">
+
+Satır 593: 
+- ESKİ: <p className="text-center text-sm text-slate-500 py-4">Ürünler Yükleniyor...</p>
+- YENİ: <p className="text-center text-[13px] text-text-secondary py-4">Ürünler Yükleniyor...</p>
+
+Satır 595: 
+- ESKİ: <p className="text-center text-sm text-slate-500 py-4">Eşleşen ürün bulunamadı.</p>
+- YENİ: <p className="text-center text-[13px] text-text-secondary py-4">Eşleşen ürün bulunamadı.</p>
+
+Satır 633: 
+- ESKİ: <h4 className="font-bold text-sm text-slate-800">{vaccine.name}</h4>
+- YENİ: <h4 className="font-bold text-[13px] text-text-primary">{vaccine.name}</h4>
+
+Satır 646: 
+- ESKİ: <div className="mt-2 pt-4 border-t border-slate-200">
+- YENİ: <div className="mt-2 pt-4 border-t border-border-main">
+
+Satır 647: 
+- ESKİ: <label className="text-sm font-bold text-slate-700">Marka / Ürün Notu (İsteğe Bağlı)</label>
+- YENİ: <label className="text-[13px] font-bold text-text-primary">Marka / Ürün Notu (İsteğe Bağlı)</label>
+
+Satır 664: 
+- ESKİ: <label className="text-sm font-bold text-slate-700">Tarih</label>
+- YENİ: <label className="text-[13px] font-bold text-text-primary">Tarih</label>
+
+Satır 673: 
+- ESKİ: <label className="text-sm font-bold text-slate-700">Saat</label>
+- YENİ: <label className="text-[13px] font-bold text-text-primary">Saat</label>
+
+Satır 690: 
+- ESKİ: <label className="text-sm font-bold text-slate-700">Sıklık Seçimi</label>
+- YENİ: <label className="text-[13px] font-bold text-text-primary">Sıklık Seçimi</label>
+
+Satır 702: 
+- ESKİ: className={`py-3 px-2 min-h-[50px] rounded-xl text-xs font-bold border flex items-center justify-center transition-all text-center ${
+- YENİ: className={`py-3 px-2 min-h-[50px] rounded-xl text-[12px] font-bold border flex items-center justify-center transition-all text-center ${
+
+Satır 715: 
+- ESKİ: <div className="flex flex-col gap-2 p-4 bg-slate-50 border border-slate-100 rounded-2xl animate-in fade-in">
+- YENİ: <div className="flex flex-col gap-2 p-4 bg-surface border border-border-main rounded-2xl animate-in fade-in">
+
+Satır 716: 
+- ESKİ: <label className="text-xs font-bold text-slate-600">Tekrar Aralığı</label>
+- YENİ: <label className="text-[12px] font-bold text-text-secondary">Tekrar Aralığı</label>
+
+Satır 718: 
+- ESKİ: <span className="text-sm text-slate-700 font-medium">Her</span>
+- YENİ: <span className="text-[13px] text-text-primary font-normal">Her</span>
+
+Satır 719: 
+- ESKİ: <div className="flex items-center bg-white border border-slate-200 rounded-lg overflow-hidden shrink-0">
+- YENİ: <div className="flex items-center bg-surface border border-border-main rounded-lg overflow-hidden shrink-0">
+
+Satır 727: 
+- ESKİ: <div className="mt-4 pt-4 border-t border-slate-200 space-y-3">
+- YENİ: <div className="mt-4 pt-4 border-t border-border-main space-y-3">
+
+Satır 728: 
+- ESKİ: <label className="text-xs font-bold text-slate-600">Bitiş Koşulu</label>
+- YENİ: <label className="text-[12px] font-bold text-text-secondary">Bitiş Koşulu</label>
+
+Satır 742: 
+- ESKİ: <span className="text-xs text-slate-600 font-medium">kez tekrarlandıktan sonra bitir</span>
+- YENİ: <span className="text-[12px] text-text-secondary font-normal">kez tekrarlandıktan sonra bitir</span>
+
+Satır 757: 
+- ESKİ: <div className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl">
+- YENİ: <div className="flex items-center justify-between p-4 bg-surface border border-border-main rounded-2xl">
+
+Satır 759: 
+- ESKİ: <p className="text-sm font-bold text-slate-800">Hatırlatıcı</p>
+- YENİ: <p className="text-[13px] font-bold text-text-primary">Hatırlatıcı</p>
+
+Satır 760: 
+- ESKİ: <p className="text-xs text-slate-500 mt-0.5">Görev zamanı yaklaştığında bildirim at</p>
+- YENİ: <p className="text-[12px] text-text-secondary mt-0.5">Görev zamanı yaklaştığında bildirim at</p>
+
+Satır 781: 
+- ESKİ: <label className="text-sm font-bold text-slate-700">Görev Notu</label>
+- YENİ: <label className="text-[13px] font-bold text-text-primary">Görev Notu</label>
+
+Satır 817: 
+- ESKİ: <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 animate-in fade-in duration-500">
+- YENİ: <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-6 animate-in fade-in duration-500">
+
+Satır 826: 
+- ESKİ: <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 text-left space-y-3">
+- YENİ: <div className="bg-surface rounded-3xl p-5 shadow-sm border border-border-main text-left space-y-3">
+
+Satır 830: 
+- ESKİ: <span className="text-xs font-semibold text-slate-400">Alerjen / Tetikleyici</span>
+- YENİ: <span className="text-[12px] font-semibold text-slate-400">Alerjen / Tetikleyici</span>
+
+Satır 835: 
+- ESKİ: <span className="text-xs font-semibold text-slate-400">Semptomlar</span>
+- YENİ: <span className="text-[12px] font-semibold text-slate-400">Semptomlar</span>
+
+Satır 841: 
+- ESKİ: <span className="text-xs font-semibold text-slate-400">Tedavi</span>
+- YENİ: <span className="text-[12px] font-semibold text-slate-400">Tedavi</span>
+
+Satır 849: 
+- ESKİ: <span className="text-xs font-semibold text-slate-400">Görev</span>
+- YENİ: <span className="text-[12px] font-semibold text-slate-400">Görev</span>
+
+Satır 853: 
+- ESKİ: <span className="text-xs font-semibold text-slate-400">Zaman</span>
+- YENİ: <span className="text-[12px] font-semibold text-slate-400">Zaman</span>
+
+Satır 857: 
+- ESKİ: <span className="text-xs font-semibold text-slate-400">Tekrar</span>
+- YENİ: <span className="text-[12px] font-semibold text-slate-400">Tekrar</span>

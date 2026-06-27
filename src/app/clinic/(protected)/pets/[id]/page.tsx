@@ -69,18 +69,18 @@ export default async function ClinicPetDetailPage({ params }: { params: Promise<
           </div>
           <div className="flex flex-col gap-1 flex-1">
             <h1 className="text-[26px] font-extrabold text-text-primary tracking-tight">{pet.name}</h1>
-            <p className="text-text-secondary font-medium">
+            <p className="text-text-secondary font-normal">
               {pet.species}{pet.breed ? ` • ${pet.breed}` : ''}
               {pet.gender ? ` • ${genderLabel[pet.gender] ?? ''}` : ''}
             </p>
             <div className="flex gap-3 mt-2 flex-wrap">
               {pet.birth_date && (
-                <span className="text-[12px] bg-bg-main border border-border-main px-3 py-1 rounded-lg font-semibold text-text-secondary">
+                <span className="text-[12px] bg-bg-main border border-border-main px-3 py-1 rounded-lg font-bold text-text-secondary">
                   🎂 {pet.birth_date}
                 </span>
               )}
               {pet.microchip_no && (
-                <span className="text-[12px] bg-bg-main border border-border-main px-3 py-1 rounded-lg font-semibold text-text-secondary">
+                <span className="text-[12px] bg-bg-main border border-border-main px-3 py-1 rounded-lg font-bold text-text-secondary">
                   📡 {pet.microchip_no}
                 </span>
               )}
@@ -121,7 +121,7 @@ export default async function ClinicPetDetailPage({ params }: { params: Promise<
                         <p className="text-[13px] text-text-secondary mt-1">📋 {apt.owner_reason}</p>
                       )}
                       {apt.vet_notes && (
-                        <p className="text-[13px] text-text-primary mt-1 font-semibold">🩺 {apt.vet_notes}</p>
+                        <p className="text-[13px] text-text-primary mt-1 font-bold">🩺 {apt.vet_notes}</p>
                       )}
                     </div>
                   </div>

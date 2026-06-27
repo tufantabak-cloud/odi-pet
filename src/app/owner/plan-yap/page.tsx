@@ -42,7 +42,7 @@ const CATEGORIES = [
   { key: 'parazit', title: 'Parazit Koruması', desc: 'İç ve dış parazit uygulama rutinleri planlayın.', iconPath: PetIcons.Whistle, color: 'text-teal-500', bg: 'bg-teal-50', border: 'border-teal-100 hover:border-teal-200', gradient: 'from-teal-500 to-emerald-500' },
   { key: 'bakim', title: 'Bakım Rutini', desc: 'Tıraş, banyo, tırnak kesimi ve genel hijyen planlayın.', iconPath: PetIcons.Comb, color: 'text-fuchsia-500', bg: 'bg-fuchsia-50', border: 'border-fuchsia-100 hover:border-fuchsia-200', gradient: 'from-fuchsia-500 to-pink-500' },
   { key: 'beslenme', title: 'Beslenme Planı', desc: 'Günlük kuru/yaş mama ve diyet planları oluşturun.', iconPath: PetIcons.FoodBowl, color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-100 hover:border-amber-200', gradient: 'from-amber-500 to-orange-500' },
-  { key: 'hijyen', title: 'Hijyen Takibi', desc: 'Kum kabı temizliği, diş fırçalama, kulak bakımı planlayın.', iconPath: PetIcons.Bed, color: 'text-slate-600', bg: 'bg-slate-100', border: 'border-slate-200 hover:border-slate-300', gradient: 'from-slate-500 to-slate-700' },
+  { key: 'hijyen', title: 'Hijyen Takibi', desc: 'Kum kabı temizliği, diş fırçalama, kulak bakımı planlayın.', iconPath: PetIcons.Bed, color: 'text-text-secondary', bg: 'bg-bg-main', border: 'border-border-main hover:border-border-main', gradient: 'from-slate-500 to-slate-700' },
   { key: 'aktivite', title: 'Aktivite & Egzersiz', desc: 'Yürüyüş, oyun seansları ve eğitim rutinleri planlayın.', iconPath: PetIcons.Frisbee, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100 hover:border-emerald-200', gradient: 'from-emerald-500 to-green-500' },
 ];
 
@@ -86,7 +86,7 @@ function PlanYapContent() {
   // Step 0: Pet Selection
   if (!selectedPet) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col md:justify-center transition-colors duration-700">
+      <div className="min-h-screen bg-surface flex flex-col md:justify-center transition-colors duration-700">
         <div className="p-6 max-w-md mx-auto w-full animate-in fade-in duration-300 pt-12 md:pt-6">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-3 bg-indigo-100 rounded-2xl">
@@ -103,7 +103,7 @@ function PlanYapContent() {
               <h1 className="text-[22px] font-black text-text-primary">Plan Yap</h1>
             </div>
           </div>
-          <p className="text-gray-500 mb-8 ml-1">Kimin için plan oluşturuyoruz?</p>
+          <p className="text-text-secondary mb-8 ml-1">Kimin için plan oluşturuyoruz?</p>
           
           {isLoadingPets ? (
             <div className="space-y-4 animate-pulse">
@@ -131,15 +131,15 @@ function PlanYapContent() {
                     )}
                   </div>
                   <div className="ml-4 flex flex-col items-start">
-                    <span className="font-bold text-gray-800 text-lg">{pet.name}</span>
-                    <span className="text-sm text-gray-400">{pet.type}</span>
+                    <span className="font-bold text-text-primary text-lg">{pet.name}</span>
+                    <span className="text-[13px] text-text-secondary">{pet.type}</span>
                   </div>
                   <ChevronRight className="ml-auto w-6 h-6 text-gray-300 group-hover:text-indigo-600 transition-colors" aria-hidden="true" />
                 </button>
               ))}
             </div>
           ) : (
-            <div className="p-6 text-center border-2 border-dashed border-gray-200 rounded-3xl text-gray-500">
+            <div className="p-6 text-center border-2 border-dashed border-gray-200 rounded-3xl text-text-secondary">
               Kayıtlı evcil hayvanınız bulunamadı. Lütfen önce profil ekleyin.
             </div>
           )}
@@ -150,7 +150,7 @@ function PlanYapContent() {
 
   // Category Selection
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:justify-center p-6 transition-colors duration-700">
+    <div className="min-h-screen bg-surface flex flex-col md:justify-center p-6 transition-colors duration-700">
       <div className="max-w-md mx-auto w-full flex flex-col animate-in fade-in duration-300">
         
         {/* Active Pet Header */}
@@ -164,8 +164,8 @@ function PlanYapContent() {
               )}
             </div>
             <div>
-              <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Aktif Profil</p>
-              <h2 className="text-sm font-black text-gray-800">{activePetInfo?.name}</h2>
+              <p className="text-[11px] text-text-secondary font-bold uppercase tracking-wider">Aktif Profil</p>
+              <h2 className="text-[13px] font-black text-text-primary">{activePetInfo?.name}</h2>
             </div>
           </div>
           {pets.length > 1 && (
@@ -174,7 +174,7 @@ function PlanYapContent() {
                 setSelectedPet(null);
                 router.push('/owner/plan-yap');
               }}
-              className="text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors px-3 py-1.5 rounded-xl"
+              className="text-[12px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors px-3 py-1.5 rounded-xl"
             >
               Değiştir
             </button>
@@ -190,14 +190,14 @@ function PlanYapContent() {
                 router.push('/owner/dashboard')
               }
             }}
-            className="w-11 h-11 bg-white rounded-xl shadow-sm text-gray-500 hover:text-gray-700 flex items-center justify-center border border-gray-100 transition-all active:scale-95"
+            className="w-11 h-11 bg-white rounded-xl shadow-sm text-text-secondary hover:text-text-primary flex items-center justify-center border border-gray-100 transition-all active:scale-95"
             aria-label="Geri dön"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-2xl font-black text-gray-900">Rutin Planla</h1>
+          <h1 className="text-2xl font-black text-text-primary">Rutin Planla</h1>
         </div>
-        <p className="text-gray-500 text-xs mb-6 ml-1">Lütfen plan oluşturmak istediğiniz kategoriyi seçin.</p>
+        <p className="text-text-secondary text-[12px] mb-6 ml-1">Lütfen plan oluşturmak istediğiniz kategoriyi seçin.</p>
 
         {/* Categories List */}
         <div className="space-y-3" role="list">
@@ -219,10 +219,10 @@ function PlanYapContent() {
                 <Semi3DIcon svgPath={category.iconPath} className="w-6 h-6" />
               </div>
               <div className="ml-4 flex-1">
-                <span className="font-bold text-gray-800 text-sm block">{category.title}</span>
-                <span className="text-[11px] text-gray-400 mt-0.5 block leading-relaxed">{category.desc}</span>
+                <span className="font-bold text-text-primary text-[13px] block">{category.title}</span>
+                <span className="text-[11px] text-text-secondary mt-0.5 block leading-relaxed">{category.desc}</span>
               </div>
-              <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-gray-500 transition-colors self-center ml-2" aria-hidden="true" />
+              <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-text-secondary transition-colors self-center ml-2" aria-hidden="true" />
             </button>
           ))}
         </div>

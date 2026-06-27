@@ -12,7 +12,7 @@ import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import citiesData from '@/lib/cities.json'
 import dynamic from 'next/dynamic'
 
-const LostMapView = dynamic(() => import('./LostMapView'), { ssr: false, loading: () => <div className="w-full h-[500px] bg-slate-100 animate-pulse rounded-2xl flex items-center justify-center font-medium text-slate-400">Harita Yükleniyor...</div> })
+const LostMapView = dynamic(() => import('./LostMapView'), { ssr: false, loading: () => <div className="w-full h-[500px] bg-bg-main animate-pulse rounded-2xl flex items-center justify-center font-normal text-text-secondary">Harita Yükleniyor...</div> })
 
 type Tab = 'adoption' | 'lost' | 'match'
 
@@ -271,7 +271,7 @@ export function SocialTabs({
           className={`flex-1 py-2.5 text-[13px] font-bold rounded-xl transition-all ${
             activeTab === 'adoption' 
               ? 'bg-violet-50 text-violet-700 shadow-sm' 
-              : 'text-text-secondary hover:bg-slate-50'
+              : 'text-text-secondary hover:bg-surface'
           }`}
         >
           🏠 Sahiplendirme
@@ -281,7 +281,7 @@ export function SocialTabs({
           className={`flex-1 py-2.5 text-[13px] font-bold rounded-xl transition-all ${
             activeTab === 'lost' 
               ? 'bg-red-50 text-red-700 shadow-sm' 
-              : 'text-text-secondary hover:bg-slate-50'
+              : 'text-text-secondary hover:bg-surface'
           }`}
         >
           🚨 Kayıp İlanları
@@ -291,7 +291,7 @@ export function SocialTabs({
           className={`flex-1 py-2.5 text-[13px] font-bold rounded-xl transition-all ${
             activeTab === 'match' 
               ? 'bg-pink-50 text-pink-700 shadow-sm' 
-              : 'text-text-secondary hover:bg-slate-50'
+              : 'text-text-secondary hover:bg-surface'
           }`}
         >
           ❤️ Eşleştirme
@@ -370,7 +370,7 @@ export function SocialTabs({
                       </div>
 
                       <div className="flex gap-4 items-center">
-                        <div className="w-14 h-14 rounded-xl bg-slate-100 overflow-hidden relative shrink-0">
+                        <div className="w-14 h-14 rounded-xl bg-bg-main overflow-hidden relative shrink-0">
                           {pet?.avatar_url ? (
                             <Image src={pet.avatar_url} alt={pet?.name || 'Pet'} fill sizes="56px" className="object-cover" />
                           ) : (
@@ -404,7 +404,7 @@ export function SocialTabs({
             <div className="bg-white border border-border-main p-4 rounded-2xl shadow-sm flex flex-col gap-3">
               <div className="flex justify-between items-center">
                 <h4 className="text-[12px] font-bold text-text-secondary uppercase tracking-wider">Kayıp İlanı Filtrele</h4>
-                <div className="flex bg-slate-100 p-1 rounded-lg">
+                <div className="flex bg-bg-main p-1 rounded-lg">
                   <button onClick={() => setLostViewMode('list')} className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${lostViewMode === 'list' ? 'bg-white shadow-sm text-text-primary' : 'text-text-secondary hover:text-text-primary'}`}>Liste</button>
                   <button onClick={() => setLostViewMode('map')} className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${lostViewMode === 'map' ? 'bg-white shadow-sm text-text-primary' : 'text-text-secondary hover:text-text-primary'}`}>🗺️ Harita</button>
                 </div>
@@ -479,7 +479,7 @@ export function SocialTabs({
                       </div>
 
                       <div className="flex gap-4 items-center">
-                        <div className="w-14 h-14 rounded-xl bg-slate-100 overflow-hidden relative shrink-0">
+                        <div className="w-14 h-14 rounded-xl bg-bg-main overflow-hidden relative shrink-0">
                           {pet?.avatar_url ? (
                             <Image src={pet.avatar_url} alt={pet?.name || 'Pet'} fill sizes="56px" className="object-cover" />
                           ) : (
@@ -502,7 +502,7 @@ export function SocialTabs({
                       {listing.requirements && listing.requirements.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 mt-3">
                           {listing.requirements.map((req: string) => (
-                            <span key={req} className="px-2 py-0.5 bg-slate-50 border border-slate-100 text-slate-600 rounded-md text-[9px] font-bold">
+                            <span key={req} className="px-2 py-0.5 bg-surface border border-border-main text-text-secondary rounded-md text-[9px] font-bold">
                               {req}
                             </span>
                           ))}
@@ -572,12 +572,12 @@ export function SocialTabs({
                       statusBadge = <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-red-50 text-red-600 border border-red-200">❌ Reddedildi</span>
                       break
                     default:
-                      statusBadge = <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 border border-slate-200">{app.status}</span>
+                      statusBadge = <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-surface text-text-secondary border border-border-main">{app.status}</span>
                   }
 
                   return (
                     <div key={app.id} className="card-base bg-white border border-border-main p-3.5 rounded-xl shadow-sm flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-slate-100 overflow-hidden relative shrink-0">
+                      <div className="w-10 h-10 rounded-lg bg-bg-main overflow-hidden relative shrink-0">
                         {pet?.avatar_url ? (
                           <Image src={pet.avatar_url} alt={pet?.name || 'Pet'} fill sizes="40px" className="object-cover" />
                         ) : (
@@ -590,7 +590,7 @@ export function SocialTabs({
                           {statusBadge}
                         </div>
                         <p className="text-[11px] text-text-secondary truncate">
-                          İlan: <span className="font-medium text-text-primary">{listingTitle}</span>
+                          İlan: <span className="font-normal text-text-primary">{listingTitle}</span>
                         </p>
                       </div>
                     </div>
@@ -710,7 +710,7 @@ export function SocialTabs({
                     {/* Sonuç Listesi / Swipe Kartı */}
                     {discoverLoading ? (
                       <div className="grid grid-cols-1 gap-3 mt-2 animate-pulse">
-                        <div className="bg-slate-100 h-32 rounded-xl" />
+                        <div className="bg-bg-main h-32 rounded-xl" />
                       </div>
                     ) : candidates.length > 0 && currentIndex < candidates.length ? (
                       (() => {
@@ -718,18 +718,18 @@ export function SocialTabs({
                         return (
                           <div className="mt-3 flex flex-col gap-3 animate-fadeInUp">
                             <div className="bg-white rounded-2xl border border-border-main overflow-hidden shadow-sm flex flex-col sm:flex-row">
-                              <div className="w-full sm:w-[150px] aspect-square relative bg-slate-50 shrink-0">
+                              <div className="w-full sm:w-[150px] aspect-square relative bg-surface shrink-0">
                                 {candidate.avatar_url ? (
                                   <Image src={candidate.avatar_url} alt={candidate.name} fill className="object-cover" sizes="150px" />
                                 ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-3xl bg-slate-100">🐾</div>
+                                  <div className="w-full h-full flex items-center justify-center text-3xl bg-bg-main">🐾</div>
                                 )}
                               </div>
                               <div className="p-4 flex-1 flex flex-col justify-between">
                                 <div>
                                   <div className="flex items-center justify-between mb-1.5">
                                     <h4 className="font-extrabold text-[16px] text-text-primary">{candidate.name}</h4>
-                                    <span className="text-[10px] font-bold px-2 py-0.5 bg-slate-100 rounded-md text-text-secondary">
+                                    <span className="text-[10px] font-bold px-2 py-0.5 bg-bg-main rounded-md text-text-secondary">
                                       {candidate.gender === 'male' ? 'Erkek' : 'Dişi'}
                                     </span>
                                   </div>
@@ -738,7 +738,7 @@ export function SocialTabs({
                                     📍 {candidate.city}
                                   </p>
                                   {candidate.breeding_listing?.notes && (
-                                    <p className="text-[12px] text-text-secondary italic mt-2 line-clamp-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                                    <p className="text-[12px] text-text-secondary italic mt-2 line-clamp-2 bg-surface p-2 rounded-lg border border-border-main">
                                       "{candidate.breeding_listing.notes}"
                                     </p>
                                   )}
@@ -747,7 +747,7 @@ export function SocialTabs({
                                 <div className="flex gap-2 justify-end mt-4">
                                   <button 
                                     onClick={() => handleDiscoverAction('skip')}
-                                    className="px-4 py-2 bg-white border border-slate-200 text-slate-500 font-bold text-[12px] rounded-xl hover:bg-slate-50 transition-colors"
+                                    className="px-4 py-2 bg-white border border-border-main text-text-secondary font-bold text-[12px] rounded-xl hover:bg-surface transition-colors"
                                   >
                                     Geç ✕
                                   </button>
@@ -834,11 +834,11 @@ export function SocialTabs({
           </div>
 
           {loadingMatches ? (
-            <div className="p-10 text-center text-text-secondary text-sm animate-pulse">İlanlar aranıyor...</div>
+            <div className="p-10 text-center text-text-secondary text-[13px] animate-pulse">İlanlar aranıyor...</div>
           ) : matches.length === 0 ? (
             <div className="card-base bg-white border border-border-main p-10 text-center flex flex-col items-center gap-3">
               <span className="text-4xl">❤️</span>
-              <p className="text-[14px] text-text-secondary font-medium">Bu kriterlere uygun aktif üreme ilanı bulunmuyor.</p>
+              <p className="text-[14px] text-text-secondary font-normal">Bu kriterlere uygun aktif üreme ilanı bulunmuyor.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

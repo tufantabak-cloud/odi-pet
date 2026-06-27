@@ -135,7 +135,7 @@ export default function AdminSettingsPage() {
                 <button
                   onClick={() => handleToggle('aiVetAdvancedInsights')}
                   className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${
-                    flags.aiVetAdvancedInsights ? 'bg-primary' : 'bg-slate-200'
+                    flags.aiVetAdvancedInsights ? 'bg-primary' : 'bg-bg-main'
                   }`}
                 >
                   <div
@@ -151,9 +151,9 @@ export default function AdminSettingsPage() {
               </p>
             </div>
             <div className="mt-4 pt-4 border-t border-border-main flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-text-secondary">MODULE: HEALTH & AI</span>
+              <span className="text-[11px] font-bold text-text-secondary">MODULE: HEALTH & AI</span>
               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                flags.aiVetAdvancedInsights ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'
+                flags.aiVetAdvancedInsights ? 'bg-emerald-50 text-emerald-600' : 'bg-bg-main text-text-secondary'
               }`}>
                 {flags.aiVetAdvancedInsights ? 'ACTIVE' : 'INACTIVE'}
               </span>
@@ -168,7 +168,7 @@ export default function AdminSettingsPage() {
                 <button
                   onClick={() => handleToggle('automatedEmailAlerts')}
                   className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${
-                    flags.automatedEmailAlerts ? 'bg-primary' : 'bg-slate-200'
+                    flags.automatedEmailAlerts ? 'bg-primary' : 'bg-bg-main'
                   }`}
                 >
                   <div
@@ -184,9 +184,9 @@ export default function AdminSettingsPage() {
               </p>
             </div>
             <div className="mt-4 pt-4 border-t border-border-main flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-text-secondary">MODULE: NOTIFICATIONS</span>
+              <span className="text-[11px] font-bold text-text-secondary">MODULE: NOTIFICATIONS</span>
               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                flags.automatedEmailAlerts ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'
+                flags.automatedEmailAlerts ? 'bg-emerald-50 text-emerald-600' : 'bg-bg-main text-text-secondary'
               }`}>
                 {flags.automatedEmailAlerts ? 'ACTIVE' : 'INACTIVE'}
               </span>
@@ -201,7 +201,7 @@ export default function AdminSettingsPage() {
                 <button
                   onClick={() => handleToggle('directClinicApprovals')}
                   className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${
-                    flags.directClinicApprovals ? 'bg-primary' : 'bg-slate-200'
+                    flags.directClinicApprovals ? 'bg-primary' : 'bg-bg-main'
                   }`}
                 >
                   <div
@@ -217,9 +217,9 @@ export default function AdminSettingsPage() {
               </p>
             </div>
             <div className="mt-4 pt-4 border-t border-border-main flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-text-secondary">MODULE: CLINIC PIPELINE</span>
+              <span className="text-[11px] font-bold text-text-secondary">MODULE: CLINIC PIPELINE</span>
               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                flags.directClinicApprovals ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'
+                flags.directClinicApprovals ? 'bg-emerald-50 text-emerald-600' : 'bg-bg-main text-text-secondary'
               }`}>
                 {flags.directClinicApprovals ? 'ACTIVE' : 'INACTIVE'}
               </span>
@@ -234,7 +234,7 @@ export default function AdminSettingsPage() {
                 <button
                   onClick={() => handleToggle('maintenanceMode')}
                   className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${
-                    flags.maintenanceMode ? 'bg-primary' : 'bg-slate-200'
+                    flags.maintenanceMode ? 'bg-primary' : 'bg-bg-main'
                   }`}
                 >
                   <div
@@ -250,9 +250,9 @@ export default function AdminSettingsPage() {
               </p>
             </div>
             <div className="mt-4 pt-4 border-t border-border-main flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-text-secondary">MODULE: SYSTEM GATEWAY</span>
+              <span className="text-[11px] font-bold text-text-secondary">MODULE: SYSTEM GATEWAY</span>
               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                flags.maintenanceMode ? 'bg-rose-50 text-rose-600' : 'bg-slate-100 text-slate-500'
+                flags.maintenanceMode ? 'bg-rose-50 text-rose-600' : 'bg-bg-main text-text-secondary'
               }`}>
                 {flags.maintenanceMode ? 'ACTIVE' : 'OFFLINE'}
               </span>
@@ -276,7 +276,7 @@ export default function AdminSettingsPage() {
                 max="50"
                 value={params.dailyFreeAiCap}
                 onChange={e => handleParamChange('dailyFreeAiCap', parseInt(e.target.value))}
-                className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-primary"
+                className="w-full h-2 bg-bg-main rounded-lg appearance-none cursor-pointer accent-primary"
               />
               <p className="text-[11px] text-text-secondary">Maximum number of health analyses a standard user can request in 24 hours.</p>
             </div>
@@ -294,7 +294,7 @@ export default function AdminSettingsPage() {
                 step="0.1"
                 value={params.aiTemperature}
                 onChange={e => handleParamChange('aiTemperature', parseFloat(e.target.value))}
-                className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-primary"
+                className="w-full h-2 bg-bg-main rounded-lg appearance-none cursor-pointer accent-primary"
               />
               <p className="text-[11px] text-text-secondary">Controls creativity: 0.1 is strict & deterministic, 1.0 is highly creative.</p>
             </div>
@@ -311,7 +311,7 @@ export default function AdminSettingsPage() {
                 max="60"
                 value={params.vaccineGracePeriodDays}
                 onChange={e => handleParamChange('vaccineGracePeriodDays', parseInt(e.target.value))}
-                className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-primary"
+                className="w-full h-2 bg-bg-main rounded-lg appearance-none cursor-pointer accent-primary"
               />
               <p className="text-[11px] text-text-secondary">Buffer period before a vaccine is officially flagged as "overdue" instead of "delayed".</p>
             </div>
@@ -328,7 +328,7 @@ export default function AdminSettingsPage() {
                 max="200"
                 value={params.apiRateLimit}
                 onChange={e => handleParamChange('apiRateLimit', parseInt(e.target.value))}
-                className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-primary"
+                className="w-full h-2 bg-bg-main rounded-lg appearance-none cursor-pointer accent-primary"
               />
               <p className="text-[11px] text-text-secondary">Requests allowed per minute per client IP before rate limit blocks are triggered.</p>
             </div>
@@ -338,7 +338,7 @@ export default function AdminSettingsPage() {
 
       {/* Floating Success Toast */}
       {showToast && (
-        <div className="fixed bottom-6 right-6 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-medium flex items-center gap-3 border border-slate-800 animate-scaleIn z-50">
+        <div className="fixed bottom-6 right-6 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-medium flex items-center gap-3 border border-border-main animate-scaleIn z-50">
           <span className="text-[18px]">✨</span>
           <span className="text-[13px] font-bold">System settings and feature flags updated successfully!</span>
         </div>

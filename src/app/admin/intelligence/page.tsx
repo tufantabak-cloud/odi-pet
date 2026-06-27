@@ -123,7 +123,7 @@ function FunnelBar({ steps }: { steps: { label: string; pct: number; threshold: 
         return (
           <div key={s.label} className="flex items-center gap-3">
             <span className="w-6 text-[12px] text-text-secondary text-right">{i + 1}</span>
-            <span className="w-36 text-[13px] font-semibold text-text-primary shrink-0">{s.label}</span>
+            <span className="w-36 text-[13px] font-bold text-text-primary shrink-0">{s.label}</span>
             <div className="flex-1 h-3 bg-bg-main rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-700 ${color === 'text-green-600' ? 'bg-green-500' : color === 'text-amber-500' ? 'bg-amber-400' : 'bg-red-400'}`}
@@ -222,7 +222,7 @@ export default function FounderIntelligencePage() {
         </div>
 
         {error && (
-          <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-600 text-sm font-semibold border border-red-100">
+          <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-600 text-[13px] font-bold border border-red-100">
             {error}
           </div>
         )}
@@ -335,7 +335,7 @@ export default function FounderIntelligencePage() {
               {/* Vaccine Insight Rules */}
               <div className="p-4 rounded-xl bg-violet-50 border border-violet-100 flex flex-col gap-3">
                 <h3 className="text-[12px] font-black text-violet-900 uppercase tracking-widest">🧠 Vaccine OS Insight Rules</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-[13px] font-medium">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-[13px] font-normal">
                   <div className={`p-3 rounded-lg border ${
                     m.vaccine.overdueRatePct > 40 ? 'bg-red-100 text-red-900 border-red-200' : 'bg-white/50 text-violet-800 border-violet-200/50'
                   }`}>
@@ -409,7 +409,7 @@ export default function FounderIntelligencePage() {
                   🧠 Founder Insight Rules
                 </h3>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-[13px] font-medium">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-[13px] font-normal">
                   <div className={`p-3 rounded-lg border ${m.reminders.reminderDismissedPct > 60 ? 'bg-red-100 text-red-900 border-red-200' : 'bg-white/50 text-indigo-800 border-indigo-200/50'}`}>
                     <p className="font-bold mb-1">If Dismiss &gt; 60%</p>
                     <p className="text-[12px]">Low urgency perception or weak value proposition</p>
@@ -446,7 +446,7 @@ export default function FounderIntelligencePage() {
                   🧠 Commerce Insight Rules
                 </h3>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[13px] font-medium">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[13px] font-normal">
                   <div className={`p-3 rounded-lg border ${clickRate > 25 && waitlistClickConversion < 15 ? 'bg-red-100 text-red-900 border-red-200' : 'bg-white/50 text-indigo-800 border-indigo-200/50'}`}>
                     <p className="font-bold mb-1">If Click High + Waitlist Low</p>
                     <p className="text-[12px]">🔴 Curiosity without commitment. CTA is good, but value prop fails to convert.</p>
@@ -555,7 +555,7 @@ export default function FounderIntelligencePage() {
                   🧠 Strategic Commerce Insights
                 </h3>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-[13px] font-medium">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-[13px] font-normal">
                   <div className={`p-3 rounded-lg border ${affiliateCTR >= 20 ? 'bg-green-100 text-green-900 border-green-200' : 'bg-white/50 text-indigo-800 border-indigo-200/50'}`}>
                     <p className="font-bold mb-1">Affiliate CTR &gt; 20%</p>
                     <p className="text-[12px]">🟢 Strong affiliate fit. Users trust partner recommendations.</p>
@@ -630,7 +630,7 @@ export default function FounderIntelligencePage() {
                   <span className="w-8 text-right text-[13px] font-black text-text-primary">{m.marketplace.segments.curious}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="w-20 text-[13px] font-bold text-gray-400">COLD</span>
+                  <span className="w-20 text-[13px] font-bold text-text-secondary">COLD</span>
                   <div className="flex-1 h-3 bg-bg-main rounded-full overflow-hidden">
                     <div className="h-full bg-gray-300 rounded-full" style={{ width: `${Math.min((m.marketplace.segments.cold / (m.marketplace.marketplaceEligible || 1)) * 100, 100)}%` }} />
                   </div>
@@ -644,7 +644,7 @@ export default function FounderIntelligencePage() {
                   🧠 Cohort Insight Rules
                 </h3>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-[13px] font-medium">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-[13px] font-normal">
                   <div className={`p-3 rounded-lg border ${m.marketplace.segments.cold > (m.marketplace.segments.hot + m.marketplace.segments.warm) ? 'bg-red-100 text-red-900 border-red-200' : 'bg-white/50 text-indigo-800 border-indigo-200/50'}`}>
                     <p className="font-bold mb-1">If Cold &gt; Hot + Warm</p>
                     <p className="text-[12px]">🔴 Urgency exists but value proposition not converting. (Seeing but not acting)</p>
@@ -733,7 +733,7 @@ export default function FounderIntelligencePage() {
                 </div>
                 {pipeline.total === 0 && (
                   <div className="mt-3 p-3 rounded-xl bg-amber-50 border border-amber-100">
-                    <p className="text-[12px] text-amber-800 font-semibold">⚠️ Pipeline boş — outreach'e henüz başlanmadı.</p>
+                    <p className="text-[12px] text-amber-800 font-bold">⚠️ Pipeline boş — outreach'e henüz başlanmadı.</p>
                     <Link href="/admin/outreach" className="text-[12px] font-bold text-amber-900 underline">İlk klinik / creator'ı ekle →</Link>
                   </div>
                 )}
@@ -773,7 +773,7 @@ export default function FounderIntelligencePage() {
                   <div key={r.day} className="text-center">
                     <p className="text-[18px]">{r.icon}</p>
                     <p className="font-black text-amber-900">{r.day}</p>
-                    <p className="font-semibold text-amber-800">{r.label}</p>
+                    <p className="font-bold text-amber-800">{r.label}</p>
                     <p className="text-amber-600">{r.detail}</p>
                   </div>
                 ))}

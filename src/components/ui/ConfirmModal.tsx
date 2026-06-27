@@ -65,7 +65,7 @@ export default function ConfirmModal({
       onClick={onCancel}
     >
       <div
-        className="bg-surface w-full max-w-sm rounded-[28px] shadow-2xl overflow-y-auto max-h-[90dvh] animate-in fade-in zoom-in-95 duration-200"
+        className="bg-surface w-full max-w-sm rounded-modal shadow-2xl overflow-y-auto max-h-[90dvh] animate-in fade-in zoom-in-95 duration-200"
         onClick={e => e.stopPropagation()}
       >
         {/* Icon + Header */}
