@@ -13,6 +13,7 @@ import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import citiesData from '@/lib/cities.json'
 import { TURKIYE_ILLER } from '@/lib/utils/turkiyeIller'
 import dynamic from 'next/dynamic'
+import { AlertTriangle, Plus } from 'lucide-react'
 
 const LostMapView = dynamic(() => import('./LostMapView'), { ssr: false, loading: () => <div className="w-full h-[500px] bg-bg-main animate-pulse rounded-2xl flex items-center justify-center font-normal text-text-secondary">Harita Yükleniyor...</div> })
 
@@ -295,33 +296,36 @@ export function SocialTabs({
       <div className="flex bg-white rounded-2xl p-1.5 border border-border-main shadow-sm mb-2">
         <button
           onClick={() => setActiveTab('adoption')}
-          className={`flex-1 py-2.5 text-[13px] font-bold rounded-xl transition-all ${
+          className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 rounded-xl transition-all ${
             activeTab === 'adoption' 
               ? 'bg-violet-50 text-violet-700 shadow-sm' 
               : 'text-text-secondary hover:bg-surface'
           }`}
         >
-          🏠 Sahiplendirme
+          <span className="text-base">🏠</span>
+          <span className="text-[10px] font-medium leading-tight text-center">Sahiplendirme</span>
         </button>
         <button
           onClick={() => setActiveTab('lost')}
-          className={`flex-1 py-2.5 text-[13px] font-bold rounded-xl transition-all ${
+          className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 rounded-xl transition-all ${
             activeTab === 'lost' 
               ? 'bg-red-50 text-red-700 shadow-sm' 
               : 'text-text-secondary hover:bg-surface'
           }`}
         >
-          🚨 Kayıp İlanları
+          <span className="text-base">🚨</span>
+          <span className="text-[10px] font-medium leading-tight text-center">Kayıp İlanları</span>
         </button>
         <button
           onClick={() => setActiveTab('match')}
-          className={`flex-1 py-2.5 text-[13px] font-bold rounded-xl transition-all ${
+          className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 rounded-xl transition-all ${
             activeTab === 'match' 
               ? 'bg-pink-50 text-pink-700 shadow-sm' 
               : 'text-text-secondary hover:bg-surface'
           }`}
         >
-          ❤️ Eşleştirme
+          <span className="text-base">❤️</span>
+          <span className="text-[10px] font-medium leading-tight text-center">Eşleştirme</span>
         </button>
       </div>
 
@@ -414,6 +418,8 @@ export function SocialTabs({
               </div>
             )}
 
+
+
             <div className="flex flex-wrap gap-2 mb-4">
               <select 
                 value={adoptionSpeciesFilter}
@@ -448,9 +454,20 @@ export function SocialTabs({
             </div>
 
             {filteredAdoptions.length === 0 ? (
-              <div className="card-base bg-white border border-border-main p-10 text-center flex flex-col items-center gap-3">
-                <span className="text-[36px]">🏠</span>
-                <p className="text-[14px] text-text-secondary font-normal">Şu an için aktif bir sahiplendirme ilanı bulunmuyor.</p>
+              <div className="flex flex-col items-center justify-center py-12 gap-3">
+                <span className="text-4xl">🏠</span>
+                <p className="text-[14px] font-medium text-text-primary text-center">
+                  Aktif sahiplendirme ilanı yok
+                </p>
+                <p className="text-[12px] text-text-secondary text-center">
+                  Pet detay sayfasından sahiplendirme ilanı verebilirsin
+                </p>
+                <Link
+                  href="/owner/dashboard"
+                  className="text-[12px] text-primary font-medium underline underline-offset-2"
+                >
+                  Petlerime git →
+                </Link>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -547,6 +564,19 @@ export function SocialTabs({
               </div>
             )}
 
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-[15px] font-bold text-text-primary">
+                Kayıp İlanları
+              </h2>
+              <Link
+                href="/owner/lost-report"
+                className="flex items-center gap-1.5 bg-red-500 text-white text-[12px] font-medium px-3 py-1.5 rounded-full"
+              >
+                <AlertTriangle size={13} />
+                Kayıp İlanı Ver
+              </Link>
+            </div>
+
             {/* Filtre Bar */}
             <div className="bg-white border border-border-main p-4 rounded-2xl shadow-sm flex flex-col gap-3">
               <div className="flex justify-between items-center">
@@ -556,7 +586,7 @@ export function SocialTabs({
                   <button onClick={() => setLostViewMode('map')} className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${lostViewMode === 'map' ? 'bg-white shadow-sm text-text-primary' : 'text-text-secondary hover:text-text-primary'}`}>🗺️ Harita</button>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <select className="input-base text-[13px] py-2 bg-white" value={lostSpeciesFilter} onChange={e => setLostSpeciesFilter(e.target.value)}>
                   <option value="Tümü">Tüm Türler</option>
                   <option value="Kedi">🐱 Kedi</option>
