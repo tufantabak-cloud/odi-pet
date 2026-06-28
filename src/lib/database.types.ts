@@ -3912,6 +3912,39 @@ export type Database = {
           },
         ]
       }
+      symptom_templates: {
+        Row: {
+          id: string
+          name: string
+          name_tr: string
+          species: 'cat' | 'dog' | 'both' | null
+          is_critical: boolean | null
+          body_system: string | null
+          is_active: boolean | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          name_tr: string
+          species?: 'cat' | 'dog' | 'both' | null
+          is_critical?: boolean | null
+          body_system?: string | null
+          is_active?: boolean | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          name_tr?: string
+          species?: 'cat' | 'dog' | 'both' | null
+          is_critical?: boolean | null
+          body_system?: string | null
+          is_active?: boolean | null
+          created_at?: string | null
+        }
+        Relationships: []
+      }
       vaccine_templates: {
         Row: {
           category: string

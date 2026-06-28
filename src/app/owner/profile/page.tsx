@@ -267,6 +267,15 @@ export default async function ProfileMenuPage({ searchParams }: { searchParams: 
             </div>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-secondary"><polyline points="9 18 15 12 9 6"/></svg>
           </Link>
+          <Link href="/owner/profile/symptom-settings" className="block p-4 hover:bg-bg-main transition-colors flex justify-between items-center border-t border-border-main">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              </div>
+              Semptom Şablonları
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-secondary"><polyline points="9 18 15 12 9 6"/></svg>
+          </Link>
           <Link href="/owner/profile/feeding-templates" className="block p-4 hover:bg-bg-main transition-colors flex justify-between items-center">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
