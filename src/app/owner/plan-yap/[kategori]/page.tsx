@@ -1134,6 +1134,14 @@ export default function WizardOrchestrator() {
                </>
              )}
           </div>
+          <button
+            onClick={() => {
+              resetWizard()
+              router.push('/owner/plan-yap')
+            }}
+            className="w-full py-3.5 rounded-2xl border border-primary text-primary font-semibold text-[16px] transition-all duration-300 hover:bg-primary/5 mb-3">
+            Planlama Yapmaya Devam Et
+          </button>
           <button onClick={() => router.push(`/owner/pets/${wizardData.pet_id}`)} className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-md transition-all active:scale-[0.98]">
             Pet Profiline Dön
           </button>
