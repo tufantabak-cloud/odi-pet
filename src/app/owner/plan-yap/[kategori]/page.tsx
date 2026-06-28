@@ -11,6 +11,7 @@ import { PetAvatar } from '@/components/ui/PetAvatar';
 import { CheckCircle2, Search, ScanLine, Check } from 'lucide-react';
 import { TaskCategory, getFilteredSubCategories, getSmartDefault } from '@/lib/tasks/taskDefaults';
 import Image from 'next/image';
+import Link from 'next/link';
 import { SmartScanner } from '@/components/ui/SmartScanner';
 
 // ── Eşleştirmeler ──────────────────────────────────────────────────
@@ -60,6 +61,15 @@ export default function WizardOrchestrator() {
   
   // Smart Scanner State
   const [showScanner, setShowScanner] = useState(false);
+
+  // Symptoms State
+  const [symptoms, setSymptoms] = useState<Array<{
+    id: string;
+    name_tr: string;
+    is_critical: boolean;
+  }>>([]);
+  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
+  const [symptomsLoading, setSymptomsLoading] = useState(false);
 
   // Initialize
   useEffect(() => {
@@ -215,6 +225,24 @@ export default function WizardOrchestrator() {
     }
   }, [wizardData.subCategory, categoryKey, speciesStr]);
 
+  // ── Fetch Symptoms (Belirti Takibi ise) ─────────────────────────────
+  useEffect(() => {
+    if (categoryKey !== 'saglik') return;
+    if (wizardData.subCategory !== 'Belirti Takibi') return;
+    
+    setSymptomsLoading(true);
+    const activePetLocal = pets.find(p => p.id === wizardData.pet_id);
+    const species = activePetLocal?.species ?? 'both';
+    
+    fetch(`/api/symptoms/templates?species=${species}`)
+      .then(r => r.json())
+      .then(data => {
+        setSymptoms(Array.isArray(data) ? data : []);
+      })
+      .catch(console.error)
+      .finally(() => setSymptomsLoading(false));
+  }, [categoryKey, wizardData.subCategory, wizardData.pet_id, pets]);
+
   if (loadingPets || loadingEdit) {
     return <div className="min-h-screen bg-slate-50 flex items-center justify-center">Yükleniyor...</div>;
   }
@@ -284,6 +312,7 @@ export default function WizardOrchestrator() {
   if (currentStep?.key === 'datetime' && !wizardData.date) isNextDisabled = true;
   if (currentStep?.key === 'metadata' && subCat === 'Diğer' && !wizardData.customText?.trim()) isNextDisabled = true;
   if (currentStep?.key === 'metadata' && subCat === 'Alerji' && !wizardData.metadata?.trigger_name?.trim()) isNextDisabled = true;
+  if (currentStep?.key === 'metadata' && subCat === 'Belirti Takibi' && selectedSymptoms.length === 0) isNextDisabled = true;
   if (currentStep?.key === 'recurrence' && wizardData.frequency !== 'once' && wizardData.endCondition === 'date' && !wizardData.endDate) isNextDisabled = true;
 
   const handleDelete = async () => {
@@ -458,6 +487,114 @@ export default function WizardOrchestrator() {
                 placeholder="Örn: Kuaför ziyareti..."
                 className="w-full p-3 border border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
               />
+            </div>
+          )}
+          {subCat === 'Belirti Takibi' && (
+            <div className="flex flex-col gap-3">
+              <p className="text-[13px] text-text-secondary">
+                Gözlemlenen belirtileri seçin
+              </p>
+
+              {symptomsLoading ? (
+                <div className="flex justify-center py-6">
+                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {symptoms
+                    .filter(symptom => 
+                      selectedSymptoms.length === 0 || 
+                      selectedSymptoms.includes(symptom.id)
+                    )
+                    .map(symptom => {
+                    const isSelected = selectedSymptoms.includes(symptom.id)
+                    return (
+                      <button
+                        key={symptom.id}
+                        onClick={() => {
+                          const next = isSelected
+                            ? selectedSymptoms.filter(id => id !== symptom.id)
+                            : [...selectedSymptoms, symptom.id]
+                          setSelectedSymptoms(next)
+                          setStepData({
+                            metadata: {
+                              ...wizardData.metadata,
+                              symptoms: next,
+                              symptomNames: symptoms
+                                .filter(s => next.includes(s.id))
+                                .map(s => s.name_tr)
+                            }
+                          })
+                        }}
+                        className={`px-3 py-1.5 rounded-full text-[12px] font-medium border transition-colors ${
+                          isSelected
+                            ? symptom.is_critical
+                              ? 'bg-red-500 text-white border-red-500'
+                              : 'bg-primary text-white border-primary'
+                            : symptom.is_critical
+                              ? 'bg-red-50 text-red-600 border-red-200'
+                              : 'bg-surface-1 text-text-secondary border-border-main'
+                          }`}>
+                        {symptom.is_critical && '⚠️ '}
+                        {symptom.name_tr}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+
+              {selectedSymptoms.length > 0 && (
+                <div className="mt-2 p-3 bg-surface-1 rounded-xl">
+                  <p className="text-[11px] text-text-secondary mb-1">
+                    Seçilen belirtiler:
+                  </p>
+                  <p className="text-[13px] text-text-primary font-medium">
+                    {symptoms
+                      .filter(s => selectedSymptoms.includes(s.id))
+                      .map(s => s.name_tr)
+                      .join(', ')}
+                  </p>
+                </div>
+              )}
+
+              {/* Serbest metin — ek not */}
+              <textarea
+                value={wizardData.metadata?.notes ?? ''}
+                onChange={e => setStepData({
+                  metadata: {
+                    ...wizardData.metadata,
+                    notes: e.target.value
+                  }
+                })}
+                placeholder="Ek notlar (opsiyonel)..."
+                rows={2}
+                className="w-full p-3 rounded-xl border border-border-main text-[13px] resize-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+              />
+
+              {/* AI Vet yönlendirme */}
+              {selectedSymptoms.length > 0 && (
+                <div className="p-3 bg-primary/5 rounded-xl border border-primary/20 flex items-center gap-3">
+                  <span className="text-xl">🤖</span>
+                  <div className="flex-1">
+                    <p className="text-[12px] font-bold text-primary">
+                      AI Vet'e danışmak ister misin?
+                    </p>
+                    <p className="text-[11px] text-text-secondary mt-0.5">
+                      Seçtiğin belirtileri analiz edelim
+                    </p>
+                  </div>
+                  <Link
+                    href={`/owner/ai-vet?symptoms=${
+                      symptoms
+                        .filter(s => selectedSymptoms.includes(s.id))
+                        .map(s => s.name_tr)
+                        .join(',')
+                    }`}
+                    className="text-[11px] text-primary font-bold underline underline-offset-2 flex-shrink-0">
+                    Git →
+                  </Link>
+                </div>
+              )}
             </div>
           )}
           {subCat === 'Alerji' && (
@@ -892,7 +1029,9 @@ export default function WizardOrchestrator() {
       case 'selectedVaccine':
         return wizardData.selectedVaccine ? wizardData.selectedVaccine.name : 'Belirtilmedi';
       case 'metadata':
-        return subCat === 'Alerji' ? wizardData.metadata?.trigger_name : (wizardData.metadata?.symptoms || 'Detay girildi');
+        if (subCat === 'Alerji') return wizardData.metadata?.trigger_name || 'Belirtilmedi';
+        if (subCat === 'Belirti Takibi') return wizardData.metadata?.symptomNames?.join(', ') || 'Belirtilmedi';
+        return 'Detay girildi';
       case 'datetime':
         return wizardData.date ? `${wizardData.date} ${wizardData.time || ''}`.trim() : 'Belirtilmedi';
       case 'recurrence':
