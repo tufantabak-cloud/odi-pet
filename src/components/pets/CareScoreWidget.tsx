@@ -140,7 +140,7 @@ export default function CareScoreWidget({ petId, pet }: { petId: string, pet: Pe
           <div className="mt-1">
             <Link 
               href={scoreData.nextAction.href.startsWith('/') ? scoreData.nextAction.href.replace('[petId]', petId) : `/owner/pets/${petId}/${scoreData.nextAction.href}`}
-              className="text-[12px] text-text-secondary hover:text-violet-600 transition-colors font-medium inline-flex items-center gap-1 group"
+              className="text-[12px] text-text-secondary hover:text-violet-600 transition-colors font-medium flex flex-wrap items-center gap-x-1 gap-y-0 group"
             >
               <span className="text-violet-500 group-hover:translate-x-0.5 transition-transform">→</span> 
               <span className="font-bold underline decoration-violet-200 underline-offset-2">{scoreData.nextAction.label}</span> ekleyerek <span className="text-violet-600 font-bold">+{scoreData.nextAction.points}</span> puan kazan

@@ -777,6 +777,73 @@ export default function EditPetForm({ pet }: { pet: any }) {
           </button>
         </section>
 
+        {(() => {
+          const enrichTasks: { label: string; icon: string }[] = []
+          if (!pet.avatar_url) enrichTasks.push({ label: 'Profil Fotoğrafı Ekle', icon: '📷' })
+          if (!pet.breed) enrichTasks.push({ label: 'Irk Bilgisi Gir', icon: '🐾' })
+          if (!pet.microchip_no) enrichTasks.push({ label: 'Mikroçip Numarası Ekle', icon: '🆔' })
+          if (!pet.vet_name) enrichTasks.push({ label: 'Veteriner Bilgisi Gir', icon: '🩺' })
+          if (!pet.sos_contacts || !(pet.sos_contacts as any)?.[0]?.phone) enrichTasks.push({ label: 'Acil Durum (SOS) Ağı Kur', icon: '🆘' })
+          const totalFields = 5;
+
+          return enrichTasks.length > 0 && (
+            <section 
+              id="enrich-profile-section"
+              className="card-base p-6 
+                flex flex-col gap-4">
+              <div className="flex items-center 
+                justify-between">
+                <h3 className="text-[15px] 
+                  font-bold text-text-primary">
+                  Profili Zenginleştir
+                </h3>
+                <span className="text-[12px] 
+                  text-text-secondary">
+                  % {Math.round(
+                    ((totalFields - enrichTasks.length) 
+                    / totalFields) * 100
+                  )} tamamlandı
+                </span>
+              </div>
+              <div className="w-full bg-surface-1 
+                rounded-full h-1.5">
+                <div
+                  className="bg-gradient-to-r 
+                    from-violet-500 to-pink-400 
+                    h-1.5 rounded-full 
+                    transition-all duration-500"
+                  style={{
+                    width: `${Math.round(
+                      ((totalFields - enrichTasks.length) 
+                      / totalFields) * 100
+                    )}%`
+                  }}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                {enrichTasks.map((task, i) => (
+                  <div key={i}
+                    className="flex items-center 
+                      gap-3 p-3 rounded-xl 
+                      bg-surface-1 border 
+                      border-border">
+                    <span className="text-lg">
+                      {task.icon}
+                    </span>
+                    <div className="flex-1">
+                      <p className="text-[13px] 
+                        font-medium text-text-primary">
+                        {task.label}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )
+        })()}
+
+
         <div className="flex flex-col sm:flex-row justify-end gap-4 pt-2">
           <button type="submit" disabled={loading} className="btn-primary w-full sm:w-auto min-w-[200px] h-[50px] flex items-center justify-center text-[15px] shadow-2xl shadow-primary/40 disabled:opacity-50">
             {loading ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}

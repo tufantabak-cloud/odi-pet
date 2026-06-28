@@ -1365,56 +1365,6 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                   </div>
                 </div>
 
-                {/* ── Profili Zenginleştir Widget ── */}
-                {(() => {
-                  const enrichTasks: { label: string; onClick?: () => void; link?: string }[] = []
-                  if (!pet.avatar_url) enrichTasks.push({ label: 'Fotoğraf Ekle', link: `/owner/pets/${pet.id}/edit#temel-section` })
-                  if (!pet.breed) enrichTasks.push({ label: 'Irk Bilgisi Gir', link: `/owner/pets/${pet.id}/edit#temel-section` })
-                  if (!pet.vet_name) enrichTasks.push({ label: 'Veteriner Bilgisi Gir', link: `/owner/pets/${pet.id}/edit#veteriner-section` })
-                  if (!localSchedules || !localSchedules.some(s => s.category === 'Medikal')) enrichTasks.push({ label: 'İlk Aşısını Gir', onClick: () => openWizardWithCategory('Medikal') })
-                  if (!pet.microchip_no) enrichTasks.push({ label: 'Kimlik & Çip Bilgisi', link: `/owner/pets/${pet.id}/edit#veteriner-section` })
-                  if (!growthRecords || !growthRecords[0]?.weight_kg) enrichTasks.push({ label: 'Kilo & Boy Bilgisi Gir', onClick: () => setQuickUpdateConfig({ title: 'Gelişim Bilgisi', desc: 'Gelişimi takip edebilmek için güncel kilo ve boyunu girin.', endpoint: `/api/pets/${pet.id}/growth`, method: 'POST', fields: [{ name: 'weight_kg', type: 'number', label: 'Kilo (kg)', placeholder: 'Örn: 4.5', required: true }, { name: 'height_cm', type: 'number', label: 'Boy (cm)', placeholder: 'Örn: 35.5', required: false }] }) })
-                  if (!nutritionLogs || nutritionLogs.length === 0) enrichTasks.push({ label: 'Kullandığı Mamayı Ekle', onClick: () => { setOpenSections(prev => new Set(prev).add('Beslenme')); } })
-                  if (!pet.sos_contacts?.[0]?.phone) enrichTasks.push({ label: 'SOS Ağı Kur', link: `/owner/pets/${pet.id}/edit#sos-section` })
-                  if (!hasPasskey) enrichTasks.push({ label: 'Biyometrik Giriş Tanımla', link: '/owner/profile?biometric=true' })
-                  
-                  if (enrichTasks.length === 0) return null
-                  const totalTasks = 9
-                  const completedTasks = totalTasks - enrichTasks.length
-                  const progress = completedTasks === totalTasks ? 100 : Math.max(15, Math.round((completedTasks / totalTasks) * 100))
-                  return (
-                    <div className="flex flex-col gap-2">
-                      <div className="card-base border-l-4 border-l-primary shadow-sm bg-gradient-to-br from-white to-primary/5 overflow-hidden">
-                      <button onClick={() => setEnrichOpen(o => !o)} className="w-full flex items-center justify-between p-5 text-left">
-                        <h2 className="text-[14px] font-extrabold text-text-primary flex items-center gap-2">
-                          Profili Zenginleştir
-                          <span className="text-[11px] font-bold text-primary bg-primary-soft px-2 py-0.5 rounded-full">% {progress}</span>
-                        </h2>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={`text-text-secondary shrink-0 transition-transform duration-300 ${enrichOpen ? 'rotate-180' : 'rotate-0'}`}><polyline points="6 9 12 15 18 9"/></svg>
-                      </button>
-                      <div className="px-5 pb-3"><div className="w-full bg-border-main rounded-full h-1.5 overflow-hidden"><div className="bg-primary h-1.5 rounded-full transition-all duration-1000" style={{ width: `${progress}%` }}/></div></div>
-                      {enrichOpen && (
-                        <div className="px-5 pb-5">
-                          <p className="text-[11px] text-text-secondary mb-4 leading-relaxed">Odi.Pet'in akıllı özelliklerinden tam faydalanmak için aşağıdaki eksik bilgileri tamamlayın.</p>
-                          <div className="flex flex-wrap gap-2">
-                            {enrichTasks.map((t, i) => (
-                              t.onClick ? (
-                                <button key={i} onClick={t.onClick} className="text-[12px] font-bold px-3 py-2 rounded-btn border border-border-main bg-white text-text-secondary hover:text-primary hover:border-primary hover:bg-primary/5 transition-all flex items-center gap-1.5 shadow-sm">
-                                  <span className="text-[14px] text-primary">+</span> {t.label}
-                                </button>
-                              ) : (
-                                <Link key={i} href={t.link || '#'} className="text-[12px] font-bold px-3 py-2 rounded-btn border border-border-main bg-white text-text-secondary hover:text-primary hover:border-primary hover:bg-primary/5 transition-all flex items-center gap-1.5 shadow-sm">
-                                  <span className="text-[14px] text-primary">+</span> {t.label}
-                                </Link>
-                              )
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    </div>
-                  )
-                })()}
 
                 {pet.birth_date && (
                   <HumanAgeCalculator 
