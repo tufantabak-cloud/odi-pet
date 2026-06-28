@@ -73,9 +73,18 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
       const { data: urlData } = supabase.storage.from('pet-avatars').getPublicUrl(path)
       coverUrl = urlData.publicUrl
     }
+  } else if (fd.has('cover_url')) {
+    coverUrl = str(fd, 'cover_url')
   }
 
   const payload: any = {}
+  
+  const cover_position = fd.get('cover_position') as string | null
+  if (cover_position) payload.cover_position = cover_position
+
+  const coverScale = fd.get('cover_scale') as string | null
+  if (coverScale) payload.cover_scale = parseFloat(coverScale)
+
   if (fd.has('name')) payload.name = str(fd, 'name')
   if (fd.has('breed')) payload.breed = str(fd, 'breed')
   if (avatarUrl !== pet.avatar_url) payload.avatar_url = avatarUrl ?? undefined

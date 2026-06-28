@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Share2, Phone } from 'lucide-react'
+import { Share2, Phone, Camera, ImageIcon, FileImage } from 'lucide-react'
 import FamilyTab from './FamilyTab'
 import HealthTab from '@/components/pets/tabs/HealthTab'
 
@@ -268,6 +268,30 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   )
   const [activeTab, setActiveTab] = useState<'ozet'|'saglik'|'bakim'|'takvim'|'ekstra'>('ozet')
 
+  const [showCoverSourceSheet, setShowCoverSourceSheet] = useState(false)
+  const [showPositionModal, setShowPositionModal] = useState(false)
+  const [pendingCoverUrl, setPendingCoverUrl] = useState<string|null>(null)
+  const [selectedPosition, setSelectedPosition] = useState<'top'|'center'|'bottom'>('center')
+  const [selectedScale, setSelectedScale] = useState(1)
+
+  async function handleSavePosition() {
+    const formData = new FormData()
+    formData.append('cover_position', selectedPosition)
+    formData.append('cover_scale', selectedScale.toString())
+    if (pendingCoverUrl) {
+      formData.append('cover_url', pendingCoverUrl)
+    }
+    
+    await fetch(`/api/pets/${pet.id}`, {
+      method: 'PATCH',
+      body: formData
+    })
+    
+    setShowPositionModal(false)
+    setPendingCoverUrl(null)
+    router.refresh()
+  }
+
   // URL'den gelen tab varsa o bölüme scroll et
   useEffect(() => {
     const tabParam = searchParams?.get('tab')
@@ -424,10 +448,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       const { data: urlData } = supabase.storage.from('pet-avatars').getPublicUrl(path)
       const publicUrl = urlData.publicUrl
 
-      // 2. Kullanıcıya Yakınlaştırma & Kaydırma Modalı Aç
-      setZoom(0.8)
-      setPan({ x: 0, y: 0 })
-      setCoverAdjustingUrl(publicUrl)
+      // 2. Kullanıcıya Yakınlaştırma & Kaydırma Modalı Açmak Yerine Basit Pozisyon Modalı Aç
+      setPendingCoverUrl(publicUrl)
+      setShowPositionModal(true)
     } catch (err: any) {
       alert("Kapak fotoğrafı yüklenirken hata oluştu: " + err.message)
     } finally {
@@ -1207,7 +1230,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         const todaySchedules = upcomingSchedules; // Tüm yaklaşan/geciken görevleri ekliyoruz, içeride "Bugün" olanları render edeceğiz.
         
         return (
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col">
             {/* 1. Pet Hero — KİLİTLİ BÖLGE: PetHeroCard.tsx dosyasını düzenle */}
             <PetHeroCard
               pet={pet}
@@ -1218,6 +1241,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               onLostReport={() => setLostWizardOpen(true)}
               onMarkFound={handleMarkFound}
               latestWeight={primaryWeight !== '-' ? primaryWeight : null}
+              onChangeCoverClick={() => setShowCoverSourceSheet(true)}
             />
 
             <div className="sticky top-0 z-20 bg-surface border-b border-border">
@@ -1392,6 +1416,15 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                   )
                 })()}
 
+                {pet.birth_date && (
+                  <HumanAgeCalculator 
+                    species={pet.species} 
+                    birthDate={pet.birth_date} 
+                    weightKg={growthRecords && growthRecords.length > 0 ? growthRecords[0].weight_kg : undefined} 
+                    petName={pet.name} 
+                  />
+                )}
+
                 {/* Paylaş + Acil Durum */}
                 <div className="grid grid-cols-2 gap-3">
                   <button
@@ -1517,7 +1550,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         />
       )}
 
-      {/* ── Layer 2: Görevler & Ajanda (Daima Görünür) ── */}
+      {activeTab === 'takvim' && (
+      <div className="p-4 flex flex-col gap-3">
+      {/* ── Takvim: Görevler & Ajanda ── */}
       <div className="flex flex-col gap-4" id="pet-tasks">
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between px-1">
@@ -1714,49 +1749,31 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         <EstrusTracker petId={pet.id} petSpecies={pet.species} />
       )}
 
-      <MinimalGrowthChart 
-        records={growthRecords} 
-        petSpecies={pet.species as 'cat' | 'dog'}
-        petBreed={pet.breed}
-        petBirthDate={pet.birth_date}
-        petGender={pet.gender as 'male' | 'female' | 'unknown'}
-        isNeutered={pet.is_neutered ?? false}
-        onAddRecord={() => setQuickUpdateConfig({ 
-          title: 'Gelişim Bilgisi', 
-          desc: 'Gelişimi takip edebilmek için güncel kilo ve boyunu girin.', 
-          endpoint: `/api/pets/${pet.id}/growth`, 
-          method: 'POST', 
-          fields: [
-            { name: 'recorded_at', type: 'date', label: 'Tarih', defaultValue: new Date().toISOString().split('T')[0], required: true },
-            { name: 'weight_kg', type: 'number', label: 'Kilo (kg)', placeholder: 'Örn: 4.5', required: true }, 
-            { name: 'height_cm', type: 'number', label: 'Boy (cm)', placeholder: 'Örn: 35.5', required: false }
-          ] 
-        })}
-      />
-
-      {pet.birth_date && (
-        <HumanAgeCalculator 
-          species={pet.species} 
-          birthDate={pet.birth_date} 
-          weightKg={growthRecords && growthRecords.length > 0 ? growthRecords[0].weight_kg : undefined} 
-          petName={pet.name} 
-        />
+      </div>
       )}
 
-      {/* ── Layer 2: Sağlık ve Bakım Accordion ── */}
-      <div className="flex flex-col gap-2">
-        <h2 className="text-[16px] font-black text-text-primary px-1">Sağlık ve Bakım</h2>
-        {([
-          { name: 'Sağlık', icon: <FirstAidIcon width={22} height={22} />, color: 'text-red-500', bg: 'bg-red-50' },
-          { name: 'Aşı', icon: <VaccineIcon width={22} height={22} />, color: 'text-blue-500', bg: 'bg-blue-50' },
-          { name: 'Parazit', icon: <ParasiteIcon width={22} height={22} />, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-          { name: 'Bakım', icon: <ShampooIcon width={22} height={22} />, color: 'text-pink-500', bg: 'bg-pink-50' },
-          { name: 'Beslenme', icon: <BowlIcon width={22} height={22} />, color: 'text-orange-500', bg: 'bg-orange-50' },
-          { name: 'Hijyen', icon: <ScoopIcon width={22} height={22} />, color: 'text-teal-500', bg: 'bg-teal-50' },
-          { name: 'Aktivite', icon: <BoneIcon width={22} height={22} />, color: 'text-green-500', bg: 'bg-green-50' },
-          { name: 'Veteriner', icon: <CarrierIcon width={22} height={22} />, color: 'text-purple-500', bg: 'bg-purple-50' },
-          { name: 'Diğer', icon: <HouseIcon width={22} height={22} />, color: 'text-gray-500', bg: 'bg-gray-50' },
-        ] as Array<{ name: string; icon: React.ReactNode; color: string; bg: string }>).map((module) => {
+      {/* ── Sağlık & Bakım Accordion (Tab Filtrelemeli) ── */}
+      {(activeTab === 'saglik' || activeTab === 'bakim') && (
+      <div className="p-4 flex flex-col gap-3">
+        <div className="flex flex-col gap-2">
+          <h2 className="text-[16px] font-black text-text-primary px-1">
+            {activeTab === 'saglik' ? 'Sağlık ve Bakım' : 'Bakım'}
+          </h2>
+          {([
+            ...(activeTab === 'saglik' ? [
+              { name: 'Sağlık', icon: <FirstAidIcon width={22} height={22} />, color: 'text-red-500', bg: 'bg-red-50' },
+              { name: 'Aşı', icon: <VaccineIcon width={22} height={22} />, color: 'text-blue-500', bg: 'bg-blue-50' },
+              { name: 'Parazit', icon: <ParasiteIcon width={22} height={22} />, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+              { name: 'Beslenme', icon: <BowlIcon width={22} height={22} />, color: 'text-orange-500', bg: 'bg-orange-50' },
+              { name: 'Veteriner', icon: <CarrierIcon width={22} height={22} />, color: 'text-purple-500', bg: 'bg-purple-50' },
+            ] : []),
+            ...(activeTab === 'bakim' ? [
+              { name: 'Bakım', icon: <ShampooIcon width={22} height={22} />, color: 'text-pink-500', bg: 'bg-pink-50' },
+              { name: 'Hijyen', icon: <ScoopIcon width={22} height={22} />, color: 'text-teal-500', bg: 'bg-teal-50' },
+              { name: 'Aktivite', icon: <BoneIcon width={22} height={22} />, color: 'text-green-500', bg: 'bg-green-50' },
+              { name: 'Diğer', icon: <HouseIcon width={22} height={22} />, color: 'text-gray-500', bg: 'bg-gray-50' },
+            ] : []),
+          ] as Array<{ name: string; icon: React.ReactNode; color: string; bg: string }>).map((module) => {
           const isOpen = openSections.has(module.name)
           const pending = getSchedulesForTab(module.name)
           const overdueCount = pending.filter((s: any) => getTaskDateTime(s) < new Date()).length
@@ -1915,10 +1932,39 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               )}
             </div>
           )
-        })}
+          })}
+        </div>
+        {activeTab === 'saglik' && (
+          <>
+            <MinimalGrowthChart 
+              records={growthRecords} 
+              petSpecies={pet.species as 'cat' | 'dog'}
+              petBreed={pet.breed}
+              petBirthDate={pet.birth_date}
+              petGender={pet.gender as 'male' | 'female' | 'unknown'}
+              isNeutered={pet.is_neutered ?? false}
+              onAddRecord={() => setQuickUpdateConfig({ 
+                title: 'Gelişim Bilgisi', 
+                desc: 'Gelişimi takip edebilmek için güncel kilo ve boyunu girin.', 
+                endpoint: `/api/pets/${pet.id}/growth`, 
+                method: 'POST', 
+                fields: [
+                  { name: 'recorded_at', type: 'date', label: 'Tarih', defaultValue: new Date().toISOString().split('T')[0], required: true },
+                  { name: 'weight_kg', type: 'number', label: 'Kilo (kg)', placeholder: 'Örn: 4.5', required: true }, 
+                  { name: 'height_cm', type: 'number', label: 'Boy (cm)', placeholder: 'Örn: 35.5', required: false }
+                ] 
+              })}
+            />
+            <BreedHealthCard breed={pet.breed} />
+          </>
+        )}
       </div>
+      )}
 
-      {/* ── Layer 3: Ek Bilgiler ve Araçlar ── */}
+      {/* ── Ekstra Sekmesi ── */}
+      {activeTab === 'ekstra' && (
+      <div className="p-4 flex flex-col gap-3">
+      {/* ── Ek Bilgiler ve Araçlar ── */}
       <div className="flex flex-col gap-3">
         <h2 className="text-[16px] font-black text-text-primary px-1">Ek Bilgiler ve Araçlar</h2>
         <div className="grid grid-cols-2 gap-3">
@@ -1994,12 +2040,11 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           </div>
         )}
 
-        {/* Irka Özel Sağlık Rehberi */}
-        <BreedHealthCard breed={pet.breed} />
-
         {/* Alerjiler */}
         <AllergyManager petId={pet.id} initialAllergies={allergies || []} />
       </div>
+      </div>
+      )}
 
 
       {/* ── Time Filter Bottom Sheet ── */}
@@ -2041,12 +2086,172 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
       {/* Hidden cover input — en dışta, overflow-hidden kap olmadan */}
       <input
+        ref={coverInputRef}
         type="file"
         accept="image/*"
-        ref={coverInputRef}
-        onChange={handleCoverUpload}
+        capture={undefined}
         className="hidden"
+        onChange={handleCoverUpload}
       />
+
+      {showCoverSourceSheet && (
+        <div className="fixed inset-0 bg-black/60 z-[99999] flex items-end"
+          onClick={() => setShowCoverSourceSheet(false)}>
+          <div className="bg-surface w-full rounded-t-[24px] p-6 pb-[calc(24px+env(safe-area-inset-bottom,0px))]"
+            onClick={e => e.stopPropagation()}>
+            
+            <p className="text-[15px] font-bold text-text-primary mb-4 text-center">
+              Kapak Fotoğrafı
+            </p>
+
+            <div className="flex flex-col gap-2">
+              
+              {/* Kamera */}
+              <button
+                onClick={() => {
+                  setShowCoverSourceSheet(false)
+                  if (coverInputRef.current) {
+                    coverInputRef.current.capture = 'environment'
+                    coverInputRef.current.click()
+                  }
+                }}
+                className="w-full py-3 rounded-xl bg-surface-1 border border-border text-[13px] font-medium text-text-primary flex items-center justify-center gap-2">
+                <Camera size={18} />
+                Fotoğraf Çek
+              </button>
+
+              {/* Galeri */}
+              <button
+                onClick={() => {
+                  setShowCoverSourceSheet(false)
+                  if (coverInputRef.current) {
+                    coverInputRef.current.removeAttribute('capture')
+                    coverInputRef.current.click()
+                  }
+                }}
+                className="w-full py-3 rounded-xl bg-surface-1 border border-border text-[13px] font-medium text-text-primary flex items-center justify-center gap-2">
+                <ImageIcon size={18} />
+                Galeriden Seç
+              </button>
+
+              {/* Dosya */}
+              <button
+                onClick={() => {
+                  setShowCoverSourceSheet(false)
+                  if (coverInputRef.current) {
+                    coverInputRef.current.removeAttribute('capture')
+                    coverInputRef.current.accept = 'image/*'
+                    coverInputRef.current.click()
+                  }
+                }}
+                className="w-full py-3 rounded-xl bg-surface-1 border border-border text-[13px] font-medium text-text-primary flex items-center justify-center gap-2">
+                <FileImage size={18} />
+                Dosyadan Seç
+              </button>
+
+              {/* İptal */}
+              <button
+                onClick={() => setShowCoverSourceSheet(false)}
+                className="w-full py-3 rounded-xl text-[13px] text-text-secondary mt-1">
+                İptal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPositionModal && pendingCoverUrl && (
+        <div className="fixed inset-0 bg-black/60 z-[99999] flex items-end">
+          <div className="bg-surface w-full rounded-t-[24px] p-6 pb-[calc(24px+env(safe-area-inset-bottom,0px))]">
+            
+            {/* Önizleme */}
+            <div className="relative h-[180px] w-full rounded-xl overflow-hidden mb-4" id="position-preview">
+              <Image
+                src={pendingCoverUrl}
+                alt="Önizleme"
+                fill
+                className={`object-cover ${
+                  selectedPosition === 'top'
+                    ? 'object-top'
+                    : selectedPosition === 'bottom'
+                    ? 'object-bottom'
+                    : 'object-center'
+                }`}
+                style={{
+                  transform: `scale(${selectedScale})`,
+                  transformOrigin: 
+                    selectedPosition === 'top' 
+                      ? 'center top'
+                      : selectedPosition === 'bottom'
+                      ? 'center bottom'
+                      : 'center center'
+                }}
+              />
+            </div>
+
+            {/* Pozisyon seçimi */}
+            <p className="text-[13px] text-text-secondary mb-3">
+              Fotoğrafın hangi bölümü görünsün?
+            </p>
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              {(['top','center','bottom'] as const).map(pos => (
+                <button
+                  key={pos}
+                  onClick={() => setSelectedPosition(pos)}
+                  className={`py-2 rounded-xl text-[12px] font-medium border transition-colors ${selectedPosition === pos
+                      ? 'bg-primary text-white border-primary'
+                      : 'bg-surface-1 text-text-secondary border-border'
+                    }`}
+                >
+                  {pos === 'top' ? 'Üst' : pos === 'center' ? 'Orta' : 'Alt'}
+                </button>
+              ))}
+            </div>
+
+            {/* Ölçek slider */}
+            <div className="mt-4 mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <p className="text-[13px] text-text-secondary">
+                  Ölçek
+                </p>
+                <span className="text-[12px] text-text-muted">
+                  {Math.round(selectedScale * 100)}%
+                </span>
+              </div>
+              <input
+                type="range"
+                min={0.8}
+                max={2}
+                step={0.05}
+                value={selectedScale}
+                onChange={e => setSelectedScale(parseFloat(e.target.value))}
+                className="w-full"
+              />
+              <div className="flex justify-between mt-1">
+                <span className="text-[10px] text-text-muted">Uzak</span>
+                <span className="text-[10px] text-text-muted">Yakın</span>
+              </div>
+            </div>
+
+            {/* Butonlar */}
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => {
+                  setShowPositionModal(false)
+                  setPendingCoverUrl(null)
+                }}
+                className="py-3 rounded-xl border border-border text-[13px] text-text-secondary">
+                İptal
+              </button>
+              <button
+                onClick={handleSavePosition}
+                className="py-3 rounded-xl bg-primary text-white text-[13px] font-medium">
+                Kaydet
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Kapak Fotoğrafı Ayarlama Modalı */}
       {coverAdjustingUrl && (

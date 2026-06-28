@@ -2945,6 +2945,8 @@ export type Database = {
           city: string | null
           color: string | null
           cover_url: string | null
+          cover_position: string | null
+          cover_scale: number | null
           created_at: string | null
           district: string | null
           gender: string | null
@@ -2975,6 +2977,8 @@ export type Database = {
           city?: string | null
           color?: string | null
           cover_url?: string | null
+          cover_position?: string | null
+          cover_scale?: number | null
           created_at?: string | null
           district?: string | null
           gender?: string | null
@@ -3005,6 +3009,8 @@ export type Database = {
           city?: string | null
           color?: string | null
           cover_url?: string | null
+          cover_position?: string | null
+          cover_scale?: number | null
           created_at?: string | null
           district?: string | null
           gender?: string | null
