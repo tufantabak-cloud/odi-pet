@@ -3105,6 +3105,51 @@ export type Database = {
           },
         ]
       }
+      product_templates: {
+        Row: {
+          id: string
+          category: 'parasite_external' | 'parasite_internal' | 'parasite_collar' | 'food' | 'supplement'
+          brand_name: string
+          product_name: string | null
+          species: 'cat' | 'dog' | 'both' | null
+          duration_days: number | null
+          is_approved: boolean | null
+          added_by: string | null
+          usage_count: number | null
+          metadata: Json | null
+          is_active: boolean | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          category: 'parasite_external' | 'parasite_internal' | 'parasite_collar' | 'food' | 'supplement'
+          brand_name: string
+          product_name?: string | null
+          species?: 'cat' | 'dog' | 'both' | null
+          duration_days?: number | null
+          is_approved?: boolean | null
+          added_by?: string | null
+          usage_count?: number | null
+          metadata?: Json | null
+          is_active?: boolean | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          category?: 'parasite_external' | 'parasite_internal' | 'parasite_collar' | 'food' | 'supplement'
+          brand_name?: string
+          product_name?: string | null
+          species?: 'cat' | 'dog' | 'both' | null
+          duration_days?: number | null
+          is_approved?: boolean | null
+          added_by?: string | null
+          usage_count?: number | null
+          metadata?: Json | null
+          is_active?: boolean | null
+          created_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           care_points: number | null
