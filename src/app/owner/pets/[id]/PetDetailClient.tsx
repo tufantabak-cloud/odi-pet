@@ -1379,18 +1379,21 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => router.push(`/owner/pets/${pet.id}/share`)}
-                    className="card-base px-4 py-3 flex items-center justify-center gap-2"
+                    className="relative w-full h-9 rounded-btn bg-white border border-border-main flex items-center justify-center gap-2 hover:bg-gray-50 active:scale-[0.98] transition-all duration-200 focus:outline-none"
                   >
-                    <Share2 size={16} className="text-primary" />
-                    <span className="text-[13px] font-medium text-text-primary">Paylaş</span>
+                    <Share2 size={18} className="text-primary" />
+                    <span className="text-[14px] font-bold text-text-primary">Paylaş</span>
                   </button>
-                  <button
-                    onClick={() => setLostWizardOpen(true)}
-                    className="card-base px-4 py-3 flex items-center justify-center gap-2 bg-red-50 border-red-200"
-                  >
-                    <Phone size={16} className="text-red-500" />
-                    <span className="text-[13px] font-medium text-red-500">Acil Durum</span>
-                  </button>
+                  <FloatingSOS
+                    fullWidth={true}
+                    petId={pet.id}
+                    petName={pet.name}
+                    vetPhone={(pet as any).vet_phone ?? undefined}
+                    vetName={pet.vet_name ?? undefined}
+                    sosContacts={pet.sos_contacts}
+                    onLostReport={() => setLostWizardOpen(true)}
+                    onMarkFound={handleMarkFound}
+                  />
                 </div>
               </div>
             )}
