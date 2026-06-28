@@ -58,6 +58,16 @@ export default function WizardOrchestrator() {
   const [dbProducts, setDbProducts] = useState<any[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Parazit/Mama Products State
+  const [products, setProducts] = useState<Array<{
+    id: string
+    brand_name: string
+    product_name: string | null
+    category: string
+    duration_days: number | null
+  }>>([])
+  const [productsLoading, setProductsLoading] = useState(false)
   
   // Smart Scanner State
   const [showScanner, setShowScanner] = useState(false);
@@ -117,6 +127,7 @@ export default function WizardOrchestrator() {
           notes: initialPlanData.note || '',
           metadata: initialPlanData.extra_data?.metadata || {},
           selectedVaccine: initialPlanData.extra_data?.vaccine || null,
+          selectedProduct: initialPlanData.extra_data?.product || null,
           markAsDone: initialPlanData.extra_data?.is_past_done || false,
         });
         setIsEditMode(true);
@@ -133,7 +144,8 @@ export default function WizardOrchestrator() {
           notificationMinutes: 0,
           notificationEnabled: true,
           metadata: {},
-          notes: ''
+          notes: '',
+          selectedProduct: null
         });
         if (queryPetId) {
           setStepIndex(1); // URL'de pet_id varsa pet seçim adımını atla
@@ -224,6 +236,34 @@ export default function WizardOrchestrator() {
       fetchProducts();
     }
   }, [wizardData.subCategory, categoryKey, speciesStr]);
+
+  // ── Fetch Parazit / Mama Products ─────────────────────────────────
+  useEffect(() => {
+    if (categoryKey !== 'parazit') return;
+    if (!wizardData.subCategory) return;
+
+    setProductsLoading(true);
+    
+    const species = speciesStr ?? 'both';
+    
+    // Alt kategoriye göre category belirle
+    const categoryMap: Record<string, string> = {
+      'İç Parazit': 'parasite_internal',
+      'Dış Parazit': 'parasite_external',
+      'Parazit Tasması': 'parasite_collar',
+      'Birleşik Parazit': 'parasite_external',
+    };
+    
+    const category = categoryMap[wizardData.subCategory ?? ''] ?? 'parasite_external';
+
+    fetch(`/api/products/templates?category=${category}&species=${species}`)
+      .then(r => r.json())
+      .then(data => {
+        setProducts(Array.isArray(data) ? data : []);
+      })
+      .finally(() => setProductsLoading(false));
+      
+  }, [categoryKey, wizardData.subCategory, speciesStr]);
 
   // ── Fetch Symptoms (Belirti Takibi ise) ─────────────────────────────
   useEffect(() => {
@@ -680,6 +720,91 @@ export default function WizardOrchestrator() {
     }
 
     if (step.type === 'vaccine_selection') {
+      if (categoryKey === 'parazit') {
+        const selectedProduct = wizardData.selectedProduct;
+        return (
+          <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-2">
+            <button type="button" onClick={() => setShowScanner(true)}
+              className="flex items-center justify-center gap-2 px-4 py-3 min-h-[50px] mb-2 w-full text-[13px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-100 transition-all">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+              </svg>
+              Karneyi / Ambalajı Tara
+            </button>
+            {productsLoading ? (
+              <div className="flex justify-center py-6">
+                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {products
+                  .filter(p => selectedProduct === null || selectedProduct === undefined || selectedProduct?.id === p.id)
+                  .map(product => {
+                    const isSelected = selectedProduct?.id === product.id;
+                    return (
+                      <button
+                        key={product.id}
+                        onClick={() => {
+                          const selected = isSelected ? null : product;
+                          setStepData({ 
+                            selectedProduct: selected,
+                            metadata: {
+                              ...wizardData.metadata,
+                              duration_days: selected?.duration_days
+                            }
+                          });
+                          if (!isSelected) {
+                            setTimeout(() => {
+                              if (currentStepIndex === totalSteps - 1) handleSubmit(); else nextStep();
+                            }, 200);
+                          }
+                        }}
+                        className={`w-full p-3 rounded-xl border text-left transition-colors flex items-center justify-between ${isSelected ? 'bg-primary/10 border-primary' : 'bg-surface-1 border-border'}`}
+                      >
+                        <div>
+                          <p className={`text-[13px] font-medium ${isSelected ? 'text-primary' : 'text-text-primary'}`}>
+                            {product.brand_name} {product.product_name || ''}
+                          </p>
+                          {product.duration_days && (
+                            <p className="text-[11px] text-text-muted mt-0.5">
+                              {product.duration_days} gün etkili
+                            </p>
+                          )}
+                        </div>
+                        {isSelected && (
+                          <Check size={16} className="text-primary flex-shrink-0" />
+                        )}
+                      </button>
+                    );
+                  })
+                }
+            
+                {/* Diğer — manuel giriş */}
+                <button
+                  onClick={() => {
+                    setStepData({ 
+                      selectedProduct: { 
+                        id: 'other',
+                        brand_name: 'Diğer',
+                        product_name: null,
+                        category: 'parasite_external',
+                        duration_days: null
+                      }
+                    });
+                    setTimeout(() => {
+                      if (currentStepIndex === totalSteps - 1) handleSubmit(); else nextStep();
+                    }, 200);
+                  }}
+                  className="w-full p-3 rounded-xl border border-dashed border-border text-text-secondary text-[13px] text-left"
+                >
+                  + Listede yok, kendim gireceğim
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      }
+
       const itemsToFilter = dbProducts;
       const filtered = itemsToFilter.filter((v) => {
         if (!searchQuery.trim()) return true;
@@ -760,7 +885,7 @@ export default function WizardOrchestrator() {
                                 } else {
                                   nextStep();
                                 }
-                              }, 150);
+                              }, 200);
                             }}
                             className={`flex items-start gap-3 p-3 rounded-xl border text-left transition-all ${
                               isSelected ? 'border-indigo-500 bg-indigo-50 shadow-sm scale-[1.02]' : 'border-slate-200 bg-white hover:border-indigo-300'
@@ -1027,6 +1152,11 @@ export default function WizardOrchestrator() {
       case 'subCategory':
         return wizardData.subCategory === 'Diğer' ? wizardData.customText : wizardData.subCategory || 'Belirtilmedi';
       case 'selectedVaccine':
+        if (categoryKey === 'parazit') {
+          return wizardData.selectedProduct
+            ? (wizardData.selectedProduct.product_name || wizardData.selectedProduct.brand_name)
+            : 'Belirtilmedi';
+        }
         return wizardData.selectedVaccine ? wizardData.selectedVaccine.name : 'Belirtilmedi';
       case 'metadata':
         if (subCat === 'Alerji') return wizardData.metadata?.trigger_name || 'Belirtilmedi';
@@ -1059,7 +1189,7 @@ export default function WizardOrchestrator() {
       <WizardShell
         category={categoryKey}
         onNext={currentStepIndex === totalSteps - 1 ? handleSubmit : nextStep}
-        canSkip={steps[currentStepIndex]?.key === 'selectedVaccine'}
+        canSkip={steps[currentStepIndex]?.key === 'selectedVaccine' && categoryKey !== 'parazit'}
         skipText="Belirtmek İstemiyorum"
         onSkip={() => {
           setStepData({ selectedVaccine: null });
