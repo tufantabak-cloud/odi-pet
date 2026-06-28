@@ -2,14 +2,19 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Check, Pencil } from 'lucide-react';
 import { categoryThemes, CategoryKey } from '@/lib/categoryThemes';
 import { useWizardStore } from '@/store/wizardStore';
 
+export interface WizardStepData {
+  title: string;
+  summary?: string;
+  content: React.ReactNode;
+}
+
 interface WizardShellProps {
   category: CategoryKey;
-  totalSteps: number;
-  children: React.ReactNode;
+  steps: WizardStepData[];
   onNext?: () => void;
   onSkip?: () => void;
   onBack?: () => void;
@@ -23,8 +28,7 @@ interface WizardShellProps {
 
 export function WizardShell({
   category,
-  totalSteps,
-  children,
+  steps,
   onNext,
   onSkip,
   onBack,
@@ -32,12 +36,17 @@ export function WizardShell({
   canSkip = false,
   isNextDisabled = false,
   isSubmitting = false,
-  nextText = 'Devam',
+  nextText = 'Devam et',
   skipText = 'Atla',
 }: WizardShellProps) {
   const router = useRouter();
-  const { stepIndex, prevStep } = useWizardStore();
+  const { stepIndex, prevStep, setStepIndex } = useWizardStore();
   const theme = categoryThemes[category];
+
+  const totalSteps = steps.length;
+  const currentStep = Math.min(stepIndex, totalSteps - 1);
+  const progressPercentage = ((currentStep + 1) / totalSteps) * 100;
+  const isLastStep = currentStep === totalSteps - 1;
 
   const handleBack = () => {
     if (onBack) {
@@ -49,15 +58,16 @@ export function WizardShell({
     }
   };
 
-  const progressPercentage = ((stepIndex + 1) / totalSteps) * 100;
-  const isLastStep = stepIndex === totalSteps - 1;
-
-  const handleNextClick = () => {
+  const handleNext = () => {
     if (isLastStep && onSubmit) {
       onSubmit();
     } else if (onNext) {
       onNext();
     }
+  };
+
+  const goToStep = (index: number) => {
+    setStepIndex(index);
   };
 
   return (
@@ -81,7 +91,7 @@ export function WizardShell({
           </button>
           
           <div className="text-[15px] font-semibold text-slate-500 absolute left-1/2 -translate-x-1/2">
-            Adım {stepIndex + 1} / {totalSteps}
+            Adım {currentStep + 1} / {totalSteps}
           </div>
           
           <div className="w-10"></div>
@@ -89,39 +99,77 @@ export function WizardShell({
       </header>
 
       {/* Content Area - Scrollable */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden w-full">
-        <div className="max-w-3xl mx-auto w-full min-h-[calc(100vh-8rem)] flex flex-col pb-32 pb-safe relative">
-          {children}
+      <main className="flex-1 overflow-y-auto overflow-x-hidden w-full pb-[100px]">
+        <div className="max-w-3xl mx-auto w-full flex flex-col px-4 pt-4">
+          {steps.map((step, index) => {
+            // 1. TAMAMLANAN ADIMLAR
+            if (currentStep > index) {
+              return (
+                <div key={index} className="card-base p-3 mb-2 flex items-center gap-3">
+                  <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                    <Check size={13} className="text-green-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[11px] text-text-muted">{step.title}</p>
+                    <p className="text-[13px] font-medium text-text-primary">{step.summary ?? '—'}</p>
+                  </div>
+                  <button onClick={() => goToStep(index)} className="p-1">
+                    <Pencil size={14} className="text-text-muted" />
+                  </button>
+                </div>
+              );
+            }
+
+            // 2. AKTİF ADIM
+            if (currentStep === index) {
+              return (
+                <div key={index} className="card-base p-4 mb-2 border-2" style={{ borderColor: theme.progressColor }}>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: theme.progressColor }}>
+                      <span className="text-[12px] font-medium text-white">{index + 1}</span>
+                    </div>
+                    <p className="text-[14px] font-medium text-text-primary">{step.title}</p>
+                  </div>
+                  
+                  {step.content}
+                  
+                  <button
+                    onClick={handleNext}
+                    disabled={isNextDisabled || isSubmitting}
+                    className={`w-full py-3 rounded-xl font-medium text-[14px] mt-4 transition-all
+                      ${isNextDisabled || isSubmitting 
+                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
+                        : 'text-white hover:opacity-90 active:scale-[0.98]'
+                      }`}
+                    style={{ backgroundColor: (isNextDisabled || isSubmitting) ? undefined : theme.progressColor }}
+                  >
+                    {isSubmitting ? 'Kaydediliyor...' : (isLastStep ? 'Planı Kaydet' : nextText)}
+                  </button>
+
+                  {canSkip && !isLastStep && (
+                    <button
+                      onClick={onSkip}
+                      className="w-full py-3 px-6 mt-2 rounded-xl font-medium text-[14px] text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all active:scale-[0.98]"
+                    >
+                      {skipText}
+                    </button>
+                  )}
+                </div>
+              );
+            }
+
+            // 3. BEKLEYEN ADIMLAR
+            return (
+              <div key={index} className="card-base p-3 mb-2 flex items-center gap-3 opacity-40">
+                <div className="w-6 h-6 rounded-full border-[1.5px] border-border-strong flex items-center justify-center flex-shrink-0">
+                  <span className="text-[12px] text-text-muted">{index + 1}</span>
+                </div>
+                <p className="text-[13px] text-text-secondary">{step.title}</p>
+              </div>
+            );
+          })}
         </div>
       </main>
-
-      {/* Footer / Actions */}
-      <div id="wizard-footer" className="fixed bottom-0 left-0 right-0 z-[99999] bg-white border-t border-slate-200 p-4 pb-[calc(16px+env(safe-area-inset-bottom,0px))] shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
-        <div className="max-w-3xl mx-auto flex flex-col sm:flex-row-reverse gap-3">
-          <button
-            onClick={handleNextClick}
-            disabled={isNextDisabled || isSubmitting}
-            className={`w-full py-3.5 px-6 rounded-2xl font-semibold text-[16px] transition-all duration-300 shadow-sm
-              ${isNextDisabled || isSubmitting 
-                ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
-                : 'text-white hover:opacity-90 active:scale-[0.98]'
-              }
-            `}
-            style={{ backgroundColor: (isNextDisabled || isSubmitting) ? undefined : theme.progressColor }}
-          >
-            {isSubmitting ? 'Kaydediliyor...' : isLastStep ? 'Planı Kaydet' : nextText}
-          </button>
-          
-          {canSkip && !isLastStep && (
-            <button
-              onClick={onSkip}
-              className="w-full py-3.5 px-6 rounded-2xl font-semibold text-[16px] text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all active:scale-[0.98]"
-            >
-              {skipText}
-            </button>
-          )}
-        </div>
-      </div>
     </div>
   );
 }

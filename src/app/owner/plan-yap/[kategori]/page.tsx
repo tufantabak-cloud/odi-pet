@@ -8,7 +8,7 @@ import { useWizardStore } from '@/store/wizardStore';
 import { WizardShell } from '@/components/wizard/WizardShell';
 import { WizardStep } from '@/components/wizard/WizardStep';
 import { PetAvatar } from '@/components/ui/PetAvatar';
-import { CheckCircle2, Search, ScanLine } from 'lucide-react';
+import { CheckCircle2, Search, ScanLine, Check } from 'lucide-react';
 import { TaskCategory, getFilteredSubCategories, getSmartDefault } from '@/lib/tasks/taskDefaults';
 import Image from 'next/image';
 import { SmartScanner } from '@/components/ui/SmartScanner';
@@ -609,7 +609,7 @@ export default function WizardOrchestrator() {
                             onClick={() => {
                               setStepData({ selectedVaccine: vaccine });
                               if (vaccine.protection_duration_days) {
-                                 const d = new Date(wizardData.date);
+                                 const d = new Date(wizardData.date || new Date());
                                  d.setDate(d.getDate() + vaccine.protection_duration_days);
                                  setStepData({ 
                                    frequency: 'once', 
@@ -617,6 +617,13 @@ export default function WizardOrchestrator() {
                                    date: d.toISOString().split('T')[0] 
                                  });
                               }
+                              setTimeout(() => {
+                                if (currentStepIndex === totalSteps - 1) {
+                                  handleSubmit();
+                                } else {
+                                  nextStep();
+                                }
+                              }, 150);
                             }}
                             className={`flex items-start gap-3 p-3 rounded-xl border text-left transition-all ${
                               isSelected ? 'border-indigo-500 bg-indigo-50 shadow-sm scale-[1.02]' : 'border-slate-200 bg-white hover:border-indigo-300'
@@ -633,6 +640,11 @@ export default function WizardOrchestrator() {
                               <h4 className="font-bold text-[13px] text-text-primary">{vaccine.name}</h4>
                               {vaccine.nameTr && <p className="text-[11px] text-slate-500 font-medium">{vaccine.nameTr}</p>}
                             </div>
+                            {isSelected && (
+                              <div className="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center text-white shrink-0 mt-2.5">
+                                <Check size={12} strokeWidth={3} />
+                              </div>
+                            )}
                           </button>
                         );
                       })}
@@ -871,6 +883,27 @@ export default function WizardOrchestrator() {
   // ── Wizard Shell Render ───────────────────────────────────────────
   if (steps.length === 0) return null;
 
+  const getSummaryForStep = (step: any) => {
+    switch (step.key) {
+      case 'pet_id':
+        return pets.find(p => p.id === wizardData.pet_id)?.name || 'Belirtilmedi';
+      case 'subCategory':
+        return wizardData.subCategory === 'Diğer' ? wizardData.customText : wizardData.subCategory || 'Belirtilmedi';
+      case 'selectedVaccine':
+        return wizardData.selectedVaccine ? wizardData.selectedVaccine.name : 'Belirtilmedi';
+      case 'metadata':
+        return subCat === 'Alerji' ? wizardData.metadata?.trigger_name : (wizardData.metadata?.symptoms || 'Detay girildi');
+      case 'datetime':
+        return wizardData.date ? `${wizardData.date} ${wizardData.time || ''}`.trim() : 'Belirtilmedi';
+      case 'recurrence':
+        return wizardData.frequency === 'once' ? 'Tek Seferlik' : `Her ${wizardData.interval || 1} ${FREQ_LABEL[wizardData.frequency] || wizardData.frequency}`;
+      case 'notification':
+        return wizardData.notificationEnabled ? `${wizardData.notificationMinutes} dk önce` : 'Kapalı';
+      default:
+        return 'Tamamlandı';
+    }
+  };
+
   return (
     <>
       {isEditMode && stepIndex < steps.length && (
@@ -886,7 +919,6 @@ export default function WizardOrchestrator() {
       )}
       <WizardShell
         category={categoryKey}
-        totalSteps={totalSteps}
         onNext={currentStepIndex === totalSteps - 1 ? handleSubmit : nextStep}
         canSkip={steps[currentStepIndex]?.key === 'selectedVaccine'}
         skipText="Belirtmek İstemiyorum"
@@ -905,13 +937,12 @@ export default function WizardOrchestrator() {
         onSubmit={handleSubmit}
         isNextDisabled={isNextDisabled}
         isSubmitting={isSubmitting}
-      >
-        {steps.map((step, idx) => (
-          <WizardStep key={step.key} title={step.title} description={step.desc} isActive={idx === currentStepIndex}>
-            {renderStepContent(step)}
-          </WizardStep>
-        ))}
-      </WizardShell>
+        steps={steps.map(step => ({
+          title: step.title,
+          summary: getSummaryForStep(step),
+          content: renderStepContent(step)
+        }))}
+      />
 
       {showScanner && (
         <SmartScanner 
