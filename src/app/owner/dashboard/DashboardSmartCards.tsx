@@ -318,9 +318,9 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
 
   // Kart tipine gore sol bordur ve ikon bg rengi
   const cardAccent: Record<string, { border: string; bg: string }> = {
-    parasite: { border: 'border-l-teal-400',   bg: 'bg-teal-50' },
-    vaccine:  { border: 'border-l-blue-400',   bg: 'bg-blue-50' },
-    appetite: { border: 'border-l-amber-400',  bg: 'bg-amber-50' },
+    parasite: { border: 'border-l-brand-green',   bg: 'bg-brand-green/5' },
+    vaccine:  { border: 'border-l-brand-purple',   bg: 'bg-brand-purple/5' },
+    appetite: { border: 'border-l-brand-orange',  bg: 'bg-brand-orange/8' },
     venues:   { border: 'border-l-primary',    bg: 'bg-primary-soft' },
   }
   const accent = cardAccent[activeCard.type] ?? { border: 'border-l-primary', bg: 'bg-primary-soft' }

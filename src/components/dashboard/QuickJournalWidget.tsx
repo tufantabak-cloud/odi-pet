@@ -91,11 +91,11 @@ export default function QuickJournalWidget({ pets }: QuickJournalWidgetProps) {
   }
 
   return (
-    <div className="mx-4 p-4 rounded-xl bg-white border border-teal-100 shadow-sm flex flex-col gap-4">
+    <div className="mx-4 p-4 rounded-xl bg-surface-2 border border-border shadow-sm flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-lg bg-brand-purple/8 text-brand-purple flex items-center justify-center">
             <Pencil size={15} />
           </div>
           <div>
@@ -132,7 +132,7 @@ export default function QuickJournalWidget({ pets }: QuickJournalWidgetProps) {
                 onClick={() => setAppetite(opt.value)}
                 className={`py-3 min-h-[44px] rounded-lg border text-xs font-bold transition-all ${
                   appetite === opt.value
-                    ? 'border-teal-600 bg-teal-50/50 text-teal-700 font-extrabold scale-[1.03]'
+                    ? 'border-brand-purple bg-brand-purple/8 text-brand-purple font-extrabold scale-[1.03]'
                     : 'border-gray-100 bg-gray-50/30 text-gray-600 hover:bg-gray-50'
                 }`}
               >
@@ -153,7 +153,7 @@ export default function QuickJournalWidget({ pets }: QuickJournalWidgetProps) {
                 onClick={() => setMood(opt.value)}
                 className={`py-3 min-h-[44px] rounded-lg border text-[11px] font-bold transition-all ${
                   mood === opt.value
-                    ? 'border-teal-600 bg-teal-50/50 text-teal-700 font-extrabold scale-[1.03]'
+                    ? 'border-brand-purple bg-brand-purple/8 text-brand-purple font-extrabold scale-[1.03]'
                     : 'border-gray-100 bg-gray-50/30 text-gray-600 hover:bg-gray-50'
                 }`}
               >
@@ -171,20 +171,20 @@ export default function QuickJournalWidget({ pets }: QuickJournalWidgetProps) {
             placeholder="Bugün sıra dışı bir durum oldu mu? (İlaç, kusma vb.)"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="w-full text-xs h-11 border border-gray-100 bg-gray-50/30 rounded-lg p-3 outline-none focus:border-teal-600 transition-colors placeholder:text-gray-400"
+            className="w-full text-xs h-11 border border-gray-100 bg-gray-50/30 rounded-lg p-3 outline-none focus:border-brand-purple transition-colors placeholder:text-gray-400"
           />
         </div>
 
         {/* Butonlar ve Mesajlar */}
-        {error && <p className="text-[10px] text-red-500 font-semibold">{error}</p>}
+        {error && <p className="text-[10px] text-danger font-semibold">{error}</p>}
 
         <button
           type="submit"
           disabled={loading || success || (!appetite && !mood && !notes)}
           className={`w-full h-11 font-extrabold text-xs rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-sm ${
             success
-              ? 'bg-green-600 text-white'
-              : 'bg-teal-600 hover:bg-teal-700 text-white active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none'
+              ? 'bg-brand-green text-white'
+              : 'bg-brand-purple hover:bg-brand-purple/90 text-white active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none'
           }`}
         >
           {loading ? (

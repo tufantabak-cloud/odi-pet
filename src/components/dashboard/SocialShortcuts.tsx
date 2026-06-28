@@ -64,17 +64,17 @@ export default function SocialShortcuts({ lostReportsCount = 0 }: { lostReportsC
   ]
 
   const colorStyles: Record<string, string> = {
-    violet: 'bg-violet-50 text-violet-600 border-violet-100 hover:border-violet-300 hover:bg-violet-100',
-    red: 'bg-red-50 text-red-600 border-red-100 hover:border-red-300 hover:bg-red-100',
-    pink: 'bg-pink-50 text-pink-600 border-pink-100 hover:border-pink-300 hover:bg-pink-100',
-    gray: 'bg-gray-50 text-gray-400 border-gray-100',
+    violet: 'bg-white text-brand-purple border-brand-purple/20 hover:border-brand-purple/40 hover:bg-brand-purple/5',
+    red: 'bg-white text-danger border-danger/20 hover:border-danger/40 hover:bg-danger/5',
+    pink: 'bg-white text-brand-orange border-brand-gold/30 hover:border-brand-gold/40 hover:bg-brand-gold/5',
+    gray: 'bg-white text-text-muted border-border hover:bg-surface-1',
     blue: 'bg-blue-50 text-blue-600 border-blue-100 hover:border-blue-300 hover:bg-blue-100',
     amber: 'bg-amber-50 text-amber-600 border-amber-100 hover:border-amber-300 hover:bg-amber-100',
     emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:border-emerald-300 hover:bg-emerald-100',
   }
 
   const badgeColorStyles: Record<string, string> = {
-    red: 'bg-red-600 text-white',
+    red: 'bg-danger text-white',
     violet: 'bg-violet-600 text-white',
     pink: 'bg-pink-600 text-white',
     gray: 'bg-gray-600 text-white'
