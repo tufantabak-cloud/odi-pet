@@ -360,7 +360,7 @@ export default function WizardOrchestrator() {
         endCondition: wizardData.endCondition,
         endOccurrences: wizardData.endOccurrences,
         metadata: wizardData.metadata,
-        vaccine: wizardData.selectedVaccine ? { code: wizardData.selectedVaccine.code, name: wizardData.selectedVaccine.name } : null,
+        vaccine: wizardData.selectedVaccine ? { code: wizardData.selectedVaccine.code ?? null, name: wizardData.selectedVaccine.name ?? null } : null,
         is_past_done: !!wizardData.markAsDone
       },
     };
@@ -891,7 +891,7 @@ export default function WizardOrchestrator() {
         canSkip={steps[currentStepIndex]?.key === 'selectedVaccine'}
         skipText="Belirtmek İstemiyorum"
         onSkip={() => {
-          setStepData({ selectedVaccine: 'Belirtilmedi' });
+          setStepData({ selectedVaccine: null });
           nextStep();
         }}
         onBack={() => {

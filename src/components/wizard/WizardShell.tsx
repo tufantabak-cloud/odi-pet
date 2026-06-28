@@ -96,7 +96,7 @@ export function WizardShell({
       </main>
 
       {/* Footer / Actions */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 bg-white border-t border-slate-200 p-4 pb-safe-offset-4 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
+      <div id="wizard-footer" className="fixed bottom-0 left-0 right-0 z-[99999] bg-white border-t border-slate-200 p-4 pb-[calc(16px+env(safe-area-inset-bottom,0px))] shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
         <div className="max-w-3xl mx-auto flex flex-col sm:flex-row-reverse gap-3">
           <button
             onClick={handleNextClick}
