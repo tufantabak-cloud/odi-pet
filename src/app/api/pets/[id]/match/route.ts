@@ -21,6 +21,25 @@ export async function GET(req: NextRequest, context: RouteContext) {
 
   const supabase = await createServerSupabaseClient()
 
+  // Premium kontrolü
+  const { data: subscription } = await supabase
+    .from('user_subscriptions')
+    .select('plan, status')
+    .eq('profile_id', user.id)
+    .eq('status', 'active')
+    .single()
+
+  const isPremium = subscription?.plan 
+    && ['premium', 'pro', 'founder']
+      .includes(subscription.plan)
+
+  if (!isPremium) {
+    return NextResponse.json(
+      { error: 'Bu özellik premium üyelere özeldir.' },
+      { status: 403 }
+    )
+  }
+
   // Sahiplik doğrulaması
   const { data: ownerRecord } = await supabase
     .from('pet_owners')
