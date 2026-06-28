@@ -265,7 +265,6 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   const [openSections, setOpenSections] = useState<Set<string>>(
     initialSection ? new Set([initialSection]) : new Set()
   )
-  const [activeTab, setActiveTab] = useState<'ozet'|'saglik'|'bakim'|'takvim'|'ekstra'>('ozet')
 
   // URL'den gelen tab varsa o bölüme scroll et
   useEffect(() => {
