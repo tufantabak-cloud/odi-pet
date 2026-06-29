@@ -1,7 +1,7 @@
 import Link from 'next/link'
 
 interface ShortcutItem {
-  icon: string
+  icon: React.ReactNode
   label: string
   href: string
   badge: number | null
@@ -13,7 +13,7 @@ interface ShortcutItem {
 export default function SocialShortcuts({ lostReportsCount = 0 }: { lostReportsCount: number }) {
   const shortcuts: ShortcutItem[] = [
     {
-      icon: '🏠',
+      icon: <i className="ti ti-home-heart text-[#4726AF]" />,
       label: 'Sahiplendir',
       href: '/owner/social?tab=sahiplendir',
       badge: null,
@@ -21,7 +21,7 @@ export default function SocialShortcuts({ lostReportsCount = 0 }: { lostReportsC
       color: 'violet'
     },
     {
-      icon: '🚨',
+      icon: <i className="ti ti-alert-triangle text-danger" />,
       label: 'Kayıp İlanları',
       href: '/owner/social?tab=lost',
       badge: lostReportsCount > 0 ? lostReportsCount : null,
@@ -30,7 +30,7 @@ export default function SocialShortcuts({ lostReportsCount = 0 }: { lostReportsC
       color: 'red'
     },
     {
-      icon: '❤️',
+      icon: <i className="ti ti-heart text-[#FFC734]" />,
       label: 'Eşleştirme',
       href: '/owner/social?tab=eslestirme',
       badge: null,
@@ -38,7 +38,7 @@ export default function SocialShortcuts({ lostReportsCount = 0 }: { lostReportsC
       color: 'pink'
     },
     {
-      icon: '🐾',
+      icon: <i className="ti ti-paw text-text-muted" />,
       label: 'Playdate',
       href: '#',
       badge: null,
@@ -46,7 +46,7 @@ export default function SocialShortcuts({ lostReportsCount = 0 }: { lostReportsC
       color: 'gray'
     },
     {
-      icon: '💬',
+      icon: <i className="ti ti-messages text-text-muted" />,
       label: 'Forumlar',
       href: '#',
       badge: null,
@@ -54,7 +54,7 @@ export default function SocialShortcuts({ lostReportsCount = 0 }: { lostReportsC
       color: 'gray'
     },
     {
-      icon: '🏆',
+      icon: <i className="ti ti-trophy text-text-muted" />,
       label: 'Etkinlikler',
       href: '#',
       badge: null,

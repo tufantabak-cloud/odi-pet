@@ -186,10 +186,9 @@ export default function RegisterPage() {
   // ── Başarı Ekranı ────────────────────────────────────────────
   if (success) {
     return (
-      <div className="flex min-h-dvh w-full items-center justify-center p-4"
-        style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(79,45,186,0.07) 0%, #F8FAFC 65%)' }}>
-        <div className="w-full max-w-sm bg-white rounded-[32px] shadow-2xl shadow-primary/10 border border-border-main/60 overflow-hidden animate-in zoom-in fade-in duration-300">
-          <div className="h-1.5 w-full bg-gradient-to-r from-primary via-violet-500 to-primary"/>
+      <div className="flex min-h-dvh w-full items-center justify-center p-4 bg-[#FAF8FF] font-montserrat">
+        <div className="bg-white rounded-2xl p-6 shadow-xl border border-border w-full max-w-sm relative overflow-hidden">
+          
           <div className="p-8 flex flex-col items-center text-center">
             <div className="w-20 h-20 rounded-full bg-success/10 flex items-center justify-center mb-5 animate-in zoom-in duration-300">
               <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -202,7 +201,7 @@ export default function RegisterPage() {
             </p>
             <button
               onClick={() => router.push('/login')}
-              className="btn-primary w-full h-[52px] text-[15px] shadow-lg shadow-primary/20 hover:shadow-primary/40"
+              className="w-full bg-[#4726AF] text-white rounded-xl font-medium text-[15px] py-3 mt-1 hover:opacity-90 transition-opacity flex items-center justify-center shadow-md disabled:opacity-60"
             >
               Giriş Sayfasına Git
             </button>
@@ -221,17 +220,16 @@ export default function RegisterPage() {
 
   // ── Ana Form ─────────────────────────────────────────────────
   return (
-    <div className="flex min-h-dvh w-full items-center justify-center p-4"
-      style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(79,45,186,0.07) 0%, #F8FAFC 65%)' }}>
+    <div className="flex min-h-dvh w-full items-center justify-center p-4 bg-[#FAF8FF] font-montserrat">
 
       {/* Referral parametresini pasif olarak yakala */}
       <ReferralCaptureListener />
 
       <div className="w-full max-w-sm">
-        <div className="bg-white rounded-[32px] shadow-2xl shadow-primary/10 border border-border-main/60 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="bg-white rounded-2xl p-6 shadow-xl border border-border w-full relative overflow-hidden">
 
           {/* Mor üst şerit */}
-          <div className="h-1.5 w-full bg-gradient-to-r from-primary via-violet-500 to-primary" />
+          
 
           {/* Step 2: minimal başlık bar */}
           {step === 2 && (
@@ -255,15 +253,10 @@ export default function RegisterPage() {
 
             {/* ── Logo & Başlık (sadece adım 1) ── */}
             {step === 1 && (
-              <div className="flex flex-col items-center gap-3 mb-6">
-                <Link href="/" className="w-[64px] h-[64px] rounded-[18px] overflow-hidden shadow-lg shadow-primary/20 hover:scale-105 transition-transform border border-border-main/40">
-                  <Image src="/logo.webp" alt="Odi.Pet" width={64} height={64} className="w-full h-full object-cover" priority />
-                </Link>
-                <div className="text-center">
-                  <h1 className="text-[22px] font-black text-text-primary tracking-tighter">Yeni Hesap Oluştur</h1>
-                  <p className="text-[10px] font-black text-text-secondary/60 mt-1 uppercase tracking-widest">Odi.Pet Ekosistemine Katılın</p>
-                </div>
-              </div>
+              <div className="flex flex-col items-center mb-6">
+              <Image src="/logo.webp" alt="Odi.Pet" width={72} height={72} className="mb-2" priority />
+              <p className="text-[11px] text-text-muted font-medium">Pet Yaşam Ekosistemi</p>
+            </div>
             )}
 
             {/* ── Adım Göstergesi ── */}
@@ -296,35 +289,44 @@ export default function RegisterPage() {
                 <div className={`flex-col gap-4 ${step === 1 ? 'flex' : 'hidden'}`}>
 
                   {/* Sosyal butonlar */}
-                  <div className="flex flex-col gap-2.5">
-                    <button type="button" onClick={handleGoogleLogin}
-                      disabled={googleLoading || appleLoading || loading}
-                      className="w-full h-[50px] flex items-center justify-center gap-3 bg-white border border-border-main rounded-[14px] font-bold text-[14px] text-text-primary shadow-sm hover:bg-bg-main hover:border-primary/20 hover:scale-[1.01] active:scale-[0.98] transition-all disabled:opacity-60">
-                      {googleLoading
-                        ? <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
-                        : <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
-                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                          </svg>
-                      }
-                      {googleLoading ? 'Yönlendiriliyor…' : 'Google ile devam et'}
-                    </button>
-                    <button type="button" onClick={handleAppleLogin}
-                      disabled={googleLoading || appleLoading || loading}
-                      className="w-full h-[50px] flex items-center justify-center gap-3 bg-[#050505] rounded-[14px] font-bold text-[14px] text-white shadow-sm hover:bg-black/85 hover:scale-[1.01] active:scale-[0.98] transition-all disabled:opacity-60">
-                      {appleLoading
-                        ? <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
-                        : <svg className="w-5 h-5 shrink-0" viewBox="0 0 384 512" fill="currentColor">
-                            <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/>
-                          </svg>
-                      }
-                      {appleLoading ? 'Yönlendiriliyor…' : 'Apple ile devam et'}
-                    </button>
-                  </div>
+                  <div className="flex flex-col gap-3 mb-5">
+              <button
+                type="button"
+                onClick={handleGoogleLogin}
+                disabled={googleLoading || appleLoading || loading}
+                className="w-full flex items-center justify-center gap-2 py-3 border border-border rounded-xl bg-white text-[13px] font-medium text-text-primary active:scale-[0.98] transition-all disabled:opacity-60"
+              >
+                {googleLoading ? (
+                  <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" width="18" height="18">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                  </svg>
+                )}
+                Google ile devam et
+              </button>
 
-                  {/* Ayraç */}
+              <button
+                type="button"
+                onClick={handleAppleLogin}
+                disabled={googleLoading || appleLoading || loading}
+                className="w-full flex items-center justify-center gap-2 py-3 border border-border rounded-xl bg-white text-[13px] font-medium text-text-primary active:scale-[0.98] transition-all disabled:opacity-60"
+              >
+                {appleLoading ? (
+                  <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                    <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09z"/>
+                    <path d="M15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/>
+                  </svg>
+                )}
+                Apple ile devam et
+              </button>
+            </div>
+            {/* Ayraç */}
                   <div className="relative flex items-center">
                     <div className="flex-grow h-px bg-border-main" />
                     <span className="mx-3 px-2 text-[11px] font-black text-text-secondary/50 uppercase tracking-widest bg-white">veya</span>
@@ -355,7 +357,7 @@ export default function RegisterPage() {
 
                   {/* İleri */}
                   <button type="button" onClick={handleNextStep}
-                    className="btn-primary w-full h-[52px] mt-1 text-[15px] shadow-lg shadow-primary/20 hover:shadow-primary/40">
+                    className="w-full bg-[#4726AF] text-white rounded-xl font-medium text-[15px] py-3 mt-1 hover:opacity-90 transition-opacity flex items-center justify-center shadow-md disabled:opacity-60">
                     İleri
                   </button>
 
@@ -440,7 +442,7 @@ export default function RegisterPage() {
 
                   {/* Kayıt Ol */}
                   <button type="submit" disabled={loading || googleLoading || appleLoading}
-                    className="btn-primary w-full h-[52px] mt-1 text-[15px] shadow-lg shadow-primary/20 hover:shadow-primary/40 flex items-center justify-center">
+                    className="w-full bg-[#4726AF] text-white rounded-xl font-medium text-[15px] py-3 mt-1 hover:opacity-90 transition-opacity flex items-center justify-center shadow-md disabled:opacity-60">
                     {loading ? (
                       <span className="flex items-center gap-2.5">
                         <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">

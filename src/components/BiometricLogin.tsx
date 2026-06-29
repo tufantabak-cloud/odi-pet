@@ -40,12 +40,12 @@ export function BiometricLogin() {
       <button
         onClick={handlePasskeyLogin}
         disabled={loading}
-        className="btn-base w-full flex items-center justify-center gap-2 py-3 px-4 rounded-[14px] border border-border-main bg-white text-text-primary font-medium hover:bg-bg-subtle hover:border-primary/20 transition-all active:scale-[0.98]"
+        className="w-full flex items-center justify-center gap-2 py-3 border border-border rounded-xl bg-white text-[13px] font-medium text-text-primary active:scale-[0.98] transition-all disabled:opacity-60"
       >
         {loading ? (
           <Loader2 className="w-5 h-5 animate-spin" />
         ) : (
-          <Fingerprint className="w-5 h-5 text-primary" />
+          <i className="ti ti-fingerprint text-[#4726AF] text-[18px]" />
         )}
         <span>FaceID / TouchID ile Giriş Yap</span>
       </button>

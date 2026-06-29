@@ -57,19 +57,13 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="flex min-h-dvh w-full items-center justify-center p-4 bg-bg-main bg-gradient-to-tr from-primary/5 via-transparent to-primary/5">
-      <div className="w-full max-w-sm bg-white rounded-[32px] shadow-2xl shadow-primary/10 border border-border-main/60 overflow-hidden p-7 sm:p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="flex min-h-dvh w-full items-center justify-center p-4 bg-[#FAF8FF] font-montserrat">
+      <div className="bg-white rounded-2xl p-6 shadow-xl border border-border w-full max-w-sm relative overflow-hidden">
         <div className="text-center mb-10">
-          <Link href="/" className="inline-flex items-center justify-center w-24 h-24 rounded-[24px] overflow-hidden shadow-2xl shadow-primary/20 mb-6 hover:scale-105 transition-transform bg-white p-0.5">
-            <Image 
-              src="/logo.webp" 
-              alt="Odi Logo" 
-              width={96} 
-              height={96}
-              className="w-full h-full object-cover rounded-[22px]"
-              priority
-            />
-          </Link>
+          <div className="flex flex-col items-center mb-6">
+              <Image src="/logo.webp" alt="Odi.Pet" width={72} height={72} className="mb-2" priority />
+              <p className="text-[11px] text-text-muted font-medium">Pet Yaşam Ekosistemi</p>
+            </div>
           <h1 className="text-[28px] font-black text-text-primary tracking-tighter">Şifremi Unuttum</h1>
           <p className="text-[13px] text-text-secondary mt-2">Hesabınıza kayıtlı e-posta adresini girin, size şifre sıfırlama bağlantısı gönderelim.</p>
         </div>
@@ -79,7 +73,7 @@ export default function ResetPasswordPage() {
             <div className="p-4 rounded-2xl bg-success/10 border border-success/20 text-success text-[14px] font-bold mb-6">
               ✅ Sıfırlama bağlantısı gönderildi! Lütfen e-posta kutunuzu (ve gerekiyorsa spam klasörünü) kontrol edin.
             </div>
-            <Link href="/login" className="btn-primary w-full py-4 block shadow-lg shadow-primary/20">
+            <Link href="/login" className="w-full bg-[#4726AF] text-white rounded-xl font-medium text-[15px] py-3 mt-1 hover:opacity-90 transition-opacity flex items-center justify-center shadow-md disabled:opacity-60">
               Giriş Sayfasına Dön
             </Link>
           </div>
@@ -121,7 +115,7 @@ export default function ResetPasswordPage() {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full mt-2 py-4 text-[15px] font-black shadow-xl shadow-primary/20 hover:shadow-primary/40 disabled:opacity-60 transition-all active:scale-[0.98]"
+              className="w-full bg-[#4726AF] text-white rounded-xl font-medium text-[15px] py-3 mt-1 hover:opacity-90 transition-opacity flex items-center justify-center shadow-md disabled:opacity-60"
             >
               {loading ? 'Gönderiliyor...' : 'Bağlantı Gönder'}
             </button>
