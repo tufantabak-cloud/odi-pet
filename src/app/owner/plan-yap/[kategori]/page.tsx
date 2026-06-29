@@ -13,6 +13,7 @@ import { TaskCategory, getFilteredSubCategories, getSmartDefault } from '@/lib/t
 import Image from 'next/image';
 import Link from 'next/link';
 import { SmartScanner } from '@/components/ui/SmartScanner';
+import { normalizeSpecies } from '@/lib/species';
 
 // ── Eşleştirmeler ──────────────────────────────────────────────────
 const categoryMap: Record<string, TaskCategory> = {
@@ -193,8 +194,7 @@ export default function WizardOrchestrator() {
         setLoadingProducts(true);
         try {
           const supabase = createBrowserSupabaseClient();
-          const isCat = speciesStr.toLowerCase() === 'cat' || speciesStr.toLowerCase() === 'kedi';
-          const speciesEng = isCat ? 'cat' : 'dog';
+          const speciesEng = normalizeSpecies(speciesStr);
           const isVaccine = subCat === 'Aşı';
 
           // 1. Templates

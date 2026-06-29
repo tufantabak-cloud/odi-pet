@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { SmartScanner } from '@/components/ui/SmartScanner'
+import { normalizeSpecies } from '@/lib/species';
 
 export default function ScannerClient({ pets }: { pets: any[] }) {
   const router = useRouter()
@@ -95,13 +96,13 @@ export default function ScannerClient({ pets }: { pets: any[] }) {
                 <Image src={pet.avatar_url} alt={pet.name} fill className="object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-xl">
-                  {pet.species === 'Köpek' || pet.species === 'dog' ? '🐶' : '🐱'}
+                  {normalizeSpecies(pet.species) === 'dog' ? '🐶' : '🐱'}
                 </div>
               )}
             </div>
             <div>
               <h3 className="font-extrabold text-slate-800 text-lg">{pet.name}</h3>
-              <p className="text-slate-500 text-sm">{pet.species === 'Köpek' || pet.species === 'dog' ? 'Köpek' : 'Kedi'}</p>
+              <p className="text-slate-500 text-sm">{normalizeSpecies(pet.species) === 'dog' ? 'Köpek' : 'Kedi'}</p>
             </div>
             <div className="ml-auto text-primary">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>

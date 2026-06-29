@@ -14,6 +14,7 @@ import citiesData from '@/lib/cities.json'
 import { TURKIYE_ILLER } from '@/lib/utils/turkiyeIller'
 import dynamic from 'next/dynamic'
 import { AlertTriangle, Plus } from 'lucide-react'
+import { normalizeSpecies, getSpeciesEmoji, getSpeciesLabel } from '@/lib/species';
 
 const LostMapView = dynamic(() => import('./LostMapView'), { ssr: false, loading: () => <div className="w-full h-[500px] bg-bg-main animate-pulse rounded-2xl flex items-center justify-center font-normal text-text-secondary">Harita Yükleniyor...</div> })
 
@@ -336,10 +337,10 @@ export function SocialTabs({
           if (adoptionSpeciesFilter !== 'all') {
             const species = adoption.pet?.species?.toLowerCase()
             if (adoptionSpeciesFilter === 'cat' && 
-                species !== 'cat' && species !== 'kedi') 
+                normalizeSpecies(species) !== 'cat') 
               return false
             if (adoptionSpeciesFilter === 'dog' && 
-                species !== 'dog' && species !== 'köpek') 
+                normalizeSpecies(species) !== 'dog') 
               return false
           }
           // Şehir filtresi
@@ -369,7 +370,7 @@ export function SocialTabs({
               <div className="mb-2 flex flex-col gap-4">
                 {myAdoptionListings.map(listing => {
                   const pet = listing.pets
-                  const speciesIcon = pet?.species === 'Kedi' || pet?.species === 'cat' ? '🐱' : pet?.species === 'Köpek' || pet?.species === 'dog' ? '🐶' : '🐾'
+                  const speciesIcon = getSpeciesEmoji(pet?.species)
                   
                   return (
                     <div key={listing.id} className="flex flex-col gap-3">
@@ -427,8 +428,8 @@ export function SocialTabs({
                 className="input-base text-[13px] py-2"
               >
                 <option value="all">Tüm Türler</option>
-                <option value="cat">🐱 Kedi</option>
-                <option value="dog">🐶 Köpek</option>
+                <option value="cat">{getSpeciesEmoji('cat')} {getSpeciesLabel('cat')}</option>
+                <option value="dog">{getSpeciesEmoji('dog')} {getSpeciesLabel('dog')}</option>
               </select>
 
               <select
@@ -491,9 +492,8 @@ export function SocialTabs({
           if (!pet) return false
 
           if (lostSpeciesFilter !== 'Tümü') {
-            const matchSpecies = lostSpeciesFilter === 'Kedi' ? 'kedi' : 'köpek'
-            const petSpeciesLower = (pet.species || '').toLowerCase()
-            if (petSpeciesLower !== matchSpecies && petSpeciesLower !== (matchSpecies === 'kedi' ? 'cat' : 'dog')) {
+            const matchSpecies = lostSpeciesFilter === 'Kedi' ? 'cat' : 'dog'
+                if (normalizeSpecies(pet.species) !== matchSpecies) {
               return false
             }
           }
@@ -641,7 +641,7 @@ export function SocialTabs({
             <div className="mb-2 flex flex-col gap-4">
               {myListings.map(listing => {
                 const pet = listing.pets
-                const speciesIcon = pet?.species === 'Kedi' || pet?.species === 'cat' ? '🐱' : pet?.species === 'Köpek' || pet?.species === 'dog' ? '🐶' : '🐾'
+                const speciesIcon = getSpeciesEmoji(pet?.species)
                 const exp = getExperienceBadge(listing.experience_level)
                 
                 return (

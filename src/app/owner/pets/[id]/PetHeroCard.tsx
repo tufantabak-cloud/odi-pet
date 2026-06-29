@@ -6,6 +6,7 @@ import FloatingSOS from '@/components/FloatingSOS'
 import { RefObject } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, Pencil, MoreVertical, Camera } from 'lucide-react'
+import { getSpeciesEmoji, getSpeciesLabel } from '@/lib/species';
 
 export interface PetHeroCardProps {
   pet: any
@@ -162,9 +163,7 @@ export default function PetHeroCard({
               <div className="w-full h-full 
                 flex items-center 
                 justify-center text-[28px]">
-                {pet.species === 'cat' || 
-                 pet.species === 'kedi' 
-                 ? '🐱' : '🐶'}
+                {getSpeciesEmoji(pet.species)}
               </div>
             )}
           </div>
