@@ -45,9 +45,9 @@ export function BiometricLogin() {
         {loading ? (
           <Loader2 className="w-5 h-5 animate-spin" />
         ) : (
-          <i className="ti ti-fingerprint text-[#4726AF] text-[18px]" />
+          <i className="ti ti-fingerprint text-[18px] text-[#4726AF]" />
         )}
-        <span>FaceID / TouchID ile Giriş Yap</span>
+        FaceID / TouchID ile Giriş Yap
       </button>
       {error && <p className="text-error text-[12px] font-bold mt-2 text-center" role="alert" aria-live="polite">{error}</p>}
     </div>
