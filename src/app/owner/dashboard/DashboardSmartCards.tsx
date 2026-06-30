@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
-import EmptyState from '@/components/ui/EmptyState'
 import Link from 'next/link'
-import { VaccineIcon, PillIcon, BowlIcon, PawIcon, HouseIcon, FirstAidIcon } from '@/components/icons/PetIcons'
+import { VaccineIcon, PillIcon, BowlIcon, PawIcon, HouseIcon } from '@/components/icons/PetIcons'
+import QuickJournalWidget from '@/components/dashboard/QuickJournalWidget'
 
 // Minimalist Single-Field Modal for Frequency input
 function QuickUpdateModal({ config, onClose, onDone }: any) {
@@ -59,15 +59,18 @@ function QuickUpdateModal({ config, onClose, onDone }: any) {
 
 interface DashboardSmartCardsProps {
   pets: any[]
+  activePetId: string
   upcomingSchedules: any[]
   completedSchedules?: any[]
+  allWeightLogs?: any[]
+  journalEntries?: any[]
 }
 
-export default function DashboardSmartCards({ pets, upcomingSchedules, completedSchedules = [] }: DashboardSmartCardsProps) {
+export default function DashboardSmartCards({ pets, activePetId, upcomingSchedules, completedSchedules = [], allWeightLogs = [], journalEntries = [] }: DashboardSmartCardsProps) {
   const router = useRouter()
-  const [activeCard, setActiveCard] = useState<any>(null)
   const [quickUpdateConfig, setQuickUpdateConfig] = useState<any>(null)
   const [dismissedCards, setDismissedCards] = useState<string[]>([])
+  const [expanded, setExpanded] = useState(false)
 
   useEffect(() => {
     const saved = localStorage.getItem('odi_dismissed_smart_cards')
@@ -168,63 +171,118 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
     }
   }
 
-  useEffect(() => {
-    if (!pets || pets.length === 0) {
-      setActiveCard(null)
-      return
-    }
+  // Collect active cards based on conditions in priority order
+  const activeCards: any[] = []
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+  const highlight = searchParams ? searchParams.get('highlight') : null
 
-    const targetPet = pets[0]
+  if (pets && pets.length > 0) {
+    const targetPet = pets.find(p => p.id === activePetId) || pets[0]
 
-    // ── 0. Check Deep-link Highlight parameter (Highest Priority) ───────────
-    const searchParams = new URLSearchParams(window.location.search)
-    const highlight = searchParams.get('highlight')
-
+    // 1. Highlight Deep-link Card
+    let highlightCard: any = null
     if (highlight) {
-      if (highlight.startsWith('parasite-') || highlight.startsWith('vaccine-')) {
+      if (highlight.startsWith('vaccine-') || highlight.startsWith('parasite-')) {
         const isVaccine = highlight.startsWith('vaccine-')
-        const petId = isVaccine 
-          ? highlight.replace('vaccine-', '') 
-          : highlight.replace('parasite-', '')
+        const petId = isVaccine ? highlight.replace('vaccine-', '') : highlight.replace('parasite-', '')
         const pet = pets.find(p => p.id === petId) || targetPet
-        
+
         if (isVaccine) {
-          setActiveCard({
+          highlightCard = {
             id: highlight,
             type: 'vaccine',
             title: 'Aşı Uygulaması',
-            text: `Bugün ${pet.name}'nın aşı/medikal işlemi var. Takvimden kontrol edebilirsiniz.`,
-            btnLabel: 'Takvime Git',
+            subtitle: `Bugün ${pet.name}'nın aşı/medikal işlemi var. Takvimden kontrol edebilirsiniz.`,
+            ctaLabel: 'Takvime Git',
             action: () => {
               router.push(`/owner/pets/${pet.id}/treatments`)
             }
-          })
+          }
         } else {
           const parasiteTask = getParasiteTask()
           const nextParasiteDateStr = localStorage.getItem(`parasite-next-date-${pet.id}`)
           const cardId = parasiteTask ? `parasite-task-${parasiteTask.id}` : `parasite-local-${pet.id}-${nextParasiteDateStr || 'init'}`
-          setActiveCard({
+          highlightCard = {
             id: highlight,
             type: 'parasite',
             title: 'Dış Parazit Uygulaması',
-            text: `Bugün ${pet.name}'nın dış parazit uygulaması zamanı. Yaptıktan sonra işaretleyin.`,
-            btnLabel: 'Uygulamayı İşaretle',
+            subtitle: `Bugün ${pet.name}'nın dış parazit uygulaması zamanı. Yaptıktan sonra işaretleyin.`,
+            ctaLabel: 'Uygulamayı İşaretle',
             action: () => {
               handleMarkParasiteDone(pet.id, parasiteTask, cardId)
               const url = new URL(window.location.href)
               url.searchParams.delete('highlight')
               window.history.replaceState({}, '', url.toString())
             }
-          })
+          }
         }
-        return
       }
     }
 
-    // ── 2. Check Dış Parazit Card Condition ──────────────────
+    if (highlightCard) {
+      activeCards.push(highlightCard)
+    }
+
+    // Günü Gelmiş/Geçmiş Aşı Kontrolü
+    const todayDate = new Date()
+    todayDate.setHours(0,0,0,0)
+
+    const overdueVaccine = upcomingSchedules?.find((s: any) => {
+      const isVaccineTask = (s.title || '').toLowerCase().includes('aşı') || 
+                            (s.sub_category || '').toLowerCase().includes('aşı') ||
+                            s.vaccines
+      if (!isVaccineTask || s.status === 'done') return false
+      
+      const dueDate = new Date(s.due_date)
+      dueDate.setHours(0,0,0,0)
+      return dueDate <= todayDate
+    })
+
+    if (overdueVaccine) {
+      const vaccineCardId = `vaccine-${overdueVaccine.id}`
+      const isAlreadyHighlighted = highlightCard?.id === highlight && highlight?.startsWith('vaccine-')
+      if (!dismissedCards.includes(vaccineCardId) && highlight !== vaccineCardId && !isAlreadyHighlighted) {
+        const pet = pets.find(p => p.id === overdueVaccine.pet_id) || targetPet
+        activeCards.push({
+          id: vaccineCardId,
+          type: 'vaccine',
+          title: 'Aşı Uygulaması',
+          subtitle: `Bugün ${pet.name}'nın aşı/medikal işlemi var. Takvimden kontrol edebilirsiniz.`,
+          ctaLabel: 'Takvime Git',
+          action: () => {
+            router.push(`/owner/pets/${pet.id}/treatments`)
+          }
+        })
+      }
+    }
+
+    // Calculate weight statistics
+    const lastWeightLog = allWeightLogs?.find(w => w.pet_id === targetPet.id)
+    const daysSinceLastLog = lastWeightLog 
+      ? Math.floor((Date.now() - new Date(lastWeightLog.measured_at).getTime()) / 86400000)
+      : null
+
+    const isFirstEntry = !lastWeightLog
+    const isRoutineDue = lastWeightLog && daysSinceLastLog !== null && daysSinceLastLog >= 30
+
+    // 2. Kilo İlk Giriş (Profil Eksik)
+    const weightFirstCardId = `weight-first-${targetPet.id}`
+    if (isFirstEntry && !dismissedCards.includes(weightFirstCardId) && highlight !== weightFirstCardId) {
+      activeCards.push({
+        id: weightFirstCardId,
+        type: 'weight-first',
+        title: 'Kilo & Boy Bilgisi Eksik',
+        subtitle: `${targetPet.name}'in profilini tamamla`,
+        ctaLabel: 'Gir',
+        action: () => {
+          router.push(`/owner/pets/${targetPet.id}/journal/new/weight`)
+        }
+      })
+    }
+
+    // 3. Dış Parazit Card (Rutin Sağlık)
     const parasiteTask = getParasiteTask()
     const petIdForParasite = parasiteTask ? parasiteTask.pet_id : targetPet.id
-
     const nextParasiteDateStr = localStorage.getItem(`parasite-next-date-${petIdForParasite}`)
     let isParasiteDue = true
     if (nextParasiteDateStr) {
@@ -235,22 +293,21 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
     }
 
     const parasiteCardId = parasiteTask ? `parasite-task-${parasiteTask.id}` : `parasite-local-${petIdForParasite}-${nextParasiteDateStr || 'init'}`
-    const showParasiteCard = isParasiteDue && !dismissedCards.includes(parasiteCardId)
+    const showParasiteCard = isParasiteDue && !dismissedCards.includes(parasiteCardId) && highlight !== parasiteCardId
 
     if (showParasiteCard) {
       const pet = pets.find(p => p.id === petIdForParasite) || targetPet
-      setActiveCard({
+      activeCards.push({
         id: parasiteCardId,
         type: 'parasite',
         title: 'Dış Parazit Uygulaması',
-        text: `Bugün ${pet.name}'nın dış parazit uygulaması zamanı. Yaptıktan sonra işaretleyin.`,
-        btnLabel: 'Uygulamayı İşaretle',
+        subtitle: `Bugün ${pet.name}'nın dış parazit uygulaması zamanı. Yaptıktan sonra işaretleyin.`,
+        ctaLabel: 'İşaretle',
         action: () => handleMarkParasiteDone(pet.id, parasiteTask, parasiteCardId)
       })
-      return
     }
 
-    // ── 3. Check Aşı Sonrası İştah (Appetite) Card Condition ───────────
+    // 4. Aşı Sonrası İştah (Takip)
     const recentVaccine = completedSchedules.find(s => {
       const isCompleted = s.status === 'completed' || s.status === 'done'
       const updatedDate = s.updated_at ? new Date(s.updated_at) : new Date(s.completed_at || s.due_date)
@@ -260,122 +317,281 @@ export default function DashboardSmartCards({ pets, upcomingSchedules, completed
 
     if (recentVaccine) {
       const appetiteCardId = `appetite-${recentVaccine.id}`
-      const showAppetiteCard = !dismissedCards.includes(appetiteCardId)
+      const showAppetiteCard = !dismissedCards.includes(appetiteCardId) && highlight !== appetiteCardId
 
       if (showAppetiteCard) {
         const pet = pets.find(p => p.id === recentVaccine.pet_id) || targetPet
-        setActiveCard({
+        activeCards.push({
           id: appetiteCardId,
           type: 'appetite',
           title: 'Aşı Sonrası Takip',
-          text: `${pet.name}'nın aşısı tamamlandı. Aşı sonrası ilk 24 saat iştah takibi önemlidir. İştahını kaydetmek ister misin?`,
-          btnLabel: 'İştahı Kaydet',
+          subtitle: `${pet.name}'nın aşısı tamamlandı. Aşı sonrası ilk 24 saat iştah takibi önemlidir. İştahını kaydetmek ister misin?`,
+          ctaLabel: 'İştahı Kaydet',
           action: () => {
             router.push(`/owner/pets/${pet.id}/journal/new/appetite`)
           }
         })
-        return
       }
     }
 
+    // 5. Kilo Rutin Zamanı (Aylık)
+    const weightRoutineCardId = `weight-routine-${targetPet.id}`
+    if (isRoutineDue && !dismissedCards.includes(weightRoutineCardId) && highlight !== weightRoutineCardId) {
+      activeCards.push({
+        id: weightRoutineCardId,
+        type: 'weight-routine',
+        title: 'Aylık Kilo Kontrolü',
+        subtitle: `Son ölçüm: ${daysSinceLastLog} gün önce — güncelle`,
+        ctaLabel: 'Güncelle',
+        action: () => {
+          router.push(`/owner/pets/${targetPet.id}/journal/new/weight`)
+        }
+      })
+    }
 
+    // 5.5. Journal Card (Sağlık Günlüğü eksik ise)
+    function getLocalDateStr(date = new Date()) {
+      const offset = date.getTimezoneOffset()
+      const local = new Date(date.getTime() - offset * 60000)
+      return local.toISOString().split('T')[0]
+    }
 
-    // ── 4. Check Pet Dostu Mekanlar Card Condition ───────────
+    const todayStr = getLocalDateStr()
+    const hasTodayEntry = journalEntries?.some(e => {
+      if (e.pet_id !== targetPet.id) return false
+      const entryDateStr = getLocalDateStr(new Date(e.created_at))
+      return entryDateStr === todayStr
+    })
+    const journalCardId = `journal-${targetPet.id}`
+
+    if (!hasTodayEntry && !dismissedCards.includes(journalCardId) && highlight !== journalCardId) {
+      activeCards.push({
+        id: journalCardId,
+        type: 'journal',
+        title: `${targetPet.name} Bugün Nasıl Hissediyor?`,
+        subtitle: `${targetPet.name}'in günlük iştah ve ruh halini kaydet`,
+        ctaLabel: 'Kaydet',
+        action: () => {
+          setQuickUpdateConfig({
+            petId: targetPet.id,
+            type: 'journal',
+            title: 'Sağlık Günlüğü',
+            desc: `${targetPet.name}'in günlük durumunu kaydedin.`
+          })
+        }
+      })
+    }
+
+    // 6. Pet Dostu Mekanlar (Yaşam - Fallback)
     const venueCardId = `venues-${targetPet.id}`
-    const showVenueCard = !dismissedCards.includes(venueCardId)
+    const showVenueCard = !dismissedCards.includes(venueCardId) && highlight !== venueCardId
+    const hasOtherRealCards = activeCards.length > 0
 
-    if (showVenueCard) {
-      setActiveCard({
+    if (showVenueCard && !hasOtherRealCards) {
+      activeCards.push({
         id: venueCardId,
         type: 'venues',
         title: 'Pet Dostu Mekanlar',
-        text: `Yakınınızda ${targetPet.name} ile keyifli vakit geçirebileceğiniz mekanlar bulduk.`,
-        btnLabel: 'Mekanları Keşfet',
+        subtitle: `Yakınınızda ${targetPet.name} ile keyifli vakit geçirebileceğiniz mekanlar bulduk.`,
+        ctaLabel: 'Keşfet',
         action: () => {
           router.push('/owner/services')
         }
       })
-      return
     }
-
-    setActiveCard(null)
-
-  }, [pets, upcomingSchedules, dismissedCards])
-
-  if (!activeCard) {
-    return null
   }
+
+  // Already pushed in exact priority order
+  const sorted = activeCards
+
+  if (sorted.length === 0) {
+    return (
+      <div className="mx-[var(--space-4)] rounded-2xl border border-dashed border-[var(--color-border)] py-4 text-center">
+        <span className="text-[11px] font-600 text-[var(--color-text-muted)]">
+          Bugün için aktif görev yok 🎉
+        </span>
+      </div>
+    )
+  }
+
+  const visibleCards = expanded ? sorted : sorted.slice(0, 2)
 
   const renderIcon = (type: string) => {
     switch (type) {
-      case 'vaccine': return <VaccineIcon width={40} height={40} />
-      case 'parasite': return <PillIcon width={40} height={40} />
-      case 'appetite': return <BowlIcon width={40} height={40} />
-      case 'venues': return <HouseIcon width={40} height={40} />
-      default: return <PawIcon width={40} height={40} />
+      case 'vaccine': return <VaccineIcon width={18} height={18} />
+      case 'parasite': return <PillIcon width={18} height={18} />
+      case 'appetite': return <BowlIcon width={18} height={18} />
+      case 'venues': return <HouseIcon width={18} height={18} />
+      case 'weight-first': return <i className="ti ti-scale text-[18px]" style={{ color: 'var(--color-danger)' }} />
+      case 'weight-routine': return <i className="ti ti-scale text-[18px]" style={{ color: '#0F8F84' }} />
+      case 'journal': return <i className="ti ti-mood-smile text-[18px]" style={{ color: 'var(--color-danger)' }} />
+      default: return <PawIcon width={18} height={18} />
     }
   }
 
-  // Kart tipine gore sol bordur ve ikon bg rengi
-  const cardAccent: Record<string, { border: string; bg: string }> = {
-    parasite: { border: 'border-l-brand-green',   bg: 'bg-brand-green/5' },
-    vaccine:  { border: 'border-l-brand-purple',   bg: 'bg-brand-purple/5' },
-    appetite: { border: 'border-l-brand-orange',  bg: 'bg-brand-orange/8' },
-    venues:   { border: 'border-l-primary',    bg: 'bg-primary-soft' },
+  const getCardStyle = (type: string) => {
+    switch (type) {
+      case 'vaccine':
+        return {
+          accentColor: 'var(--color-primary)',
+          bg: 'rgba(93,63,211,0.04)',
+          iconBg: 'rgba(93,63,211,0.12)',
+          btnBg: 'var(--color-primary)',
+          tagColor: 'var(--color-primary)',
+          tagText: 'Tıbbi · Bugün'
+        }
+      case 'parasite':
+        return {
+          accentColor: 'var(--color-success)',
+          bg: 'rgba(78,205,196,0.04)',
+          iconBg: 'rgba(78,205,196,0.12)',
+          btnBg: 'var(--color-success)',
+          tagColor: '#0F8F84',
+          tagText: 'Rutin Sağlık · Bugün'
+        }
+      case 'appetite':
+        return {
+          accentColor: 'var(--color-danger)',
+          bg: 'rgba(255,107,107,0.04)',
+          iconBg: 'rgba(255,107,107,0.12)',
+          btnBg: 'var(--color-danger)',
+          tagColor: 'var(--color-danger)',
+          tagText: 'Takip · Bugün'
+        }
+      case 'weight-first':
+        return {
+          accentColor: 'var(--color-danger)',
+          bg: 'rgba(255,107,107,0.04)',
+          iconBg: 'rgba(255,107,107,0.12)',
+          btnBg: 'var(--color-danger)',
+          tagColor: 'var(--color-danger)',
+          tagText: 'Profil · Eksik'
+        }
+      case 'weight-routine':
+        return {
+          accentColor: 'var(--color-success)',
+          bg: 'rgba(78,205,196,0.04)',
+          iconBg: 'rgba(78,205,196,0.12)',
+          btnBg: 'var(--color-success)',
+          tagColor: '#0F8F84',
+          tagText: 'Rutin · Aylık'
+        }
+      case 'journal':
+        return {
+          accentColor: 'var(--color-danger)',
+          bg: 'rgba(255,107,107,0.04)',
+          iconBg: 'rgba(255,107,107,0.12)',
+          btnBg: 'var(--color-danger)',
+          tagColor: 'var(--color-danger)',
+          tagText: 'Aktivite · Takip'
+        }
+      case 'venues':
+      default:
+        return {
+          accentColor: 'var(--color-primary)',
+          bg: 'var(--color-primary-soft)',
+          iconBg: 'rgba(93,63,211,0.12)',
+          btnBg: 'var(--color-primary)',
+          tagColor: 'var(--color-primary)',
+          tagText: 'Yaşam · Bilgi'
+        }
+    }
   }
-  const accent = cardAccent[activeCard.type] ?? { border: 'border-l-primary', bg: 'bg-primary-soft' }
 
   return (
-    <div className={`relative bg-surface rounded-card border border-border-main/60 border-l-4 ${accent.border} shadow-md overflow-hidden transition-all duration-300`}>
-      <div className="p-4 flex flex-col gap-4">
-        <div className="flex items-start gap-3">
-          <div className={`w-10 h-10 rounded-sm ${accent.bg} flex items-center justify-center shrink-0`}>
-            {renderIcon(activeCard.type)}
-          </div>
-          <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-            <h3 className="text-[15px] font-extrabold text-text-primary tracking-tight leading-snug">
-              {activeCard.title}
-            </h3>
-            <p className="text-[13px] text-text-secondary font-normal leading-relaxed">
-              {activeCard.text}
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-2.5">
-          <button
-            onClick={activeCard.action}
-            className="btn-primary flex-1 py-2.5 text-[13px] font-bold shadow-sm active:scale-[0.98] transition-all"
-          >
-            {activeCard.btnLabel}
-          </button>
-          {activeCard.secondaryBtnLabel ? (
-            <button
-              onClick={activeCard.secondaryAction}
-              className="flex-1 btn-secondary py-2.5 text-[13px] font-bold"
-            >
-              {activeCard.secondaryBtnLabel}
-            </button>
-          ) : (
-            <button
-              onClick={() => dismissCard(activeCard.id)}
-              className="px-4 py-2.5 rounded-btn text-[13px] font-bold text-text-secondary hover:text-text-primary hover:bg-bg-main transition-all border border-border-main"
-            >
-              Sonra
-            </button>
-          )}
-        </div>
+    <div className="flex flex-col gap-2">
+      {/* Başlık */}
+      <div className="flex items-center gap-2 px-[var(--space-4)] mb-2.5">
+        <p className="text-[11px] font-800 text-[var(--color-text-primary)]">
+          Bugünkü Odak
+        </p>
+        {sorted.length > 0 && (
+          <span className="text-[9px] font-800 bg-[var(--color-surface-2)] text-[var(--color-text-muted)] px-[7px] py-[2px] rounded-full">
+            {Math.min(sorted.length, 2)} / {sorted.length}
+          </span>
+        )}
       </div>
 
-      {quickUpdateConfig && (
+      {/* Kart Listesi */}
+      <div className="flex flex-col gap-2 px-[var(--space-4)]">
+        {visibleCards.map((card: any) => {
+          const style = getCardStyle(card.type)
+          return (
+            <div
+              key={card.id}
+              className="flex items-center gap-2.5 p-3.5 rounded-2xl border border-[var(--color-border)] shadow-sm"
+              style={{ background: style.bg, borderLeft: `3px solid ${style.accentColor}` }}
+            >
+              <div
+                className="w-[38px] h-[38px] rounded-[10px] flex items-center justify-center flex-shrink-0"
+                style={{ background: style.iconBg }}
+              >
+                {renderIcon(card.type)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[9px] font-800 uppercase tracking-wide" style={{ color: style.tagColor }}>
+                  {style.tagText}
+                </p>
+                <p className="text-[12px] font-800 text-[var(--color-text-primary)] truncate">
+                  {card.title}
+                </p>
+                <p className="text-[10px] text-[var(--color-text-muted)] font-500 leading-normal line-clamp-2">
+                  {card.subtitle}
+                </p>
+              </div>
+              <div className="flex flex-col gap-1.5 flex-shrink-0">
+                <button
+                  onClick={card.action}
+                  className="px-3.5 py-1.5 rounded-[10px] text-[11px] font-800 text-white transition-all active:scale-[0.97]"
+                  style={{ background: style.btnBg }}
+                >
+                  {card.ctaLabel}
+                </button>
+                <button
+                  onClick={() => dismissCard(card.id)}
+                  className="px-3.5 py-1 rounded-[10px] text-[10px] font-700 text-[var(--color-text-secondary)] border border-[var(--color-border)] hover:bg-[var(--color-surface)]/20 transition-all text-center"
+                >
+                  Sonra
+                </button>
+              </div>
+            </div>
+          )
+        })}
+
+        {!expanded && sorted.length > 2 && (
+          <button
+            onClick={() => setExpanded(true)}
+            className="flex items-center justify-center gap-1 py-2 text-[11px] font-700 text-[var(--color-primary)] active:scale-[0.98] transition-all"
+          >
+            {sorted.length - 2} görev daha var
+            <i className="ti ti-chevron-down text-[13px]" />
+          </button>
+        )}
+      </div>
+
+      {quickUpdateConfig && quickUpdateConfig.type === 'journal' ? (
+        <div className="fixed inset-0 z-[10000] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-fade-in" onClick={() => setQuickUpdateConfig(null)}>
+          <div className="bg-surface w-full max-w-sm rounded-[24px] p-5 shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+            <QuickJournalWidget
+              pets={pets}
+              activePet={pets.find(p => p.id === quickUpdateConfig.petId)}
+              onSuccess={() => {
+                dismissCard(`journal-${quickUpdateConfig.petId}`)
+                setQuickUpdateConfig(null)
+              }}
+            />
+          </div>
+        </div>
+      ) : quickUpdateConfig ? (
         <QuickUpdateModal
           config={quickUpdateConfig}
           onClose={() => setQuickUpdateConfig(null)}
           onDone={() => {
-            dismissCard(activeCard.id)
+            dismissCard(quickUpdateConfig.petId) // Dismiss the triggering card
             setQuickUpdateConfig(null)
           }}
         />
-      )}
+      ) : null}
     </div>
   )
 }

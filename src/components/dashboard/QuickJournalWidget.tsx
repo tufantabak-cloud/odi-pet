@@ -3,15 +3,18 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
-import { Pencil, Check } from 'lucide-react'
+import Image from 'next/image'
 
 interface Pet {
   id: string
   name: string
+  avatar_url?: string | null
 }
 
 interface QuickJournalWidgetProps {
   pets: Pet[]
+  activePet?: { id: string; name: string; avatar_url?: string | null }
+  onSuccess?: () => void
 }
 
 const APPETITE_OPTIONS = [
@@ -21,17 +24,16 @@ const APPETITE_OPTIONS = [
 ]
 
 const MOOD_OPTIONS = [
-  { value: 'Mutlu', label: '😸 Mutlu' },
-  { value: 'Normal', label: '😐 Normal' },
-  { value: 'Yorgun', label: '😴 Yorgun' },
-  { value: 'Hırçın', label: '😾 Hırçın' }
+  { value: 'Mutlu', label: 'Mutlu 😄' },
+  { value: 'Normal', label: 'Normal 😐' },
+  { value: 'Yorgun', label: 'Yorgun 😴' },
+  { value: 'Hırçın', label: 'Hırçın 😾' }
 ]
 
-export default function QuickJournalWidget({ pets }: QuickJournalWidgetProps) {
+export default function QuickJournalWidget({ pets, activePet, onSuccess }: QuickJournalWidgetProps) {
   const router = useRouter()
   const supabase = createBrowserSupabaseClient()
 
-  const [selectedPetId, setSelectedPetId] = useState(pets[0]?.id || '')
   const [appetite, setAppetite] = useState('')
   const [mood, setMood] = useState('')
   const [notes, setNotes] = useState('')
@@ -43,23 +45,52 @@ export default function QuickJournalWidget({ pets }: QuickJournalWidgetProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedPetId) return
+    if (!activePet?.id) return
 
     setLoading(true)
     setError('')
 
     try {
-      const { error: insertError } = await supabase.from('journal_entries').insert({
-        pet_id: selectedPetId,
-        date: new Date().toISOString().split('T')[0],
-        appetite: appetite || null,
-        mood: mood || null,
-        notes: notes || null
-      })
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        throw new Error('Oturum bulunamadı.')
+      }
+
+      const entriesToInsert = []
+      if (appetite) {
+        entriesToInsert.push({
+          pet_id: activePet.id,
+          user_id: session.user.id,
+          entry_type: 'appetite',
+          data: { level: appetite },
+          note: notes || null
+        })
+      }
+      if (mood) {
+        entriesToInsert.push({
+          pet_id: activePet.id,
+          user_id: session.user.id,
+          entry_type: 'mood',
+          data: { mood: mood },
+          note: appetite ? null : (notes || null)
+        })
+      }
+      if (notes && !appetite && !mood) {
+        entriesToInsert.push({
+          pet_id: activePet.id,
+          user_id: session.user.id,
+          entry_type: 'note',
+          data: {},
+          note: notes
+        })
+      }
+
+      const { error: insertError } = await supabase.from('pet_journal_entries').insert(entriesToInsert)
 
       if (insertError) throw insertError
 
       setSuccess(true)
+      onSuccess?.()
 
       // Onboarding adımını tamamla
       try {
@@ -91,39 +122,37 @@ export default function QuickJournalWidget({ pets }: QuickJournalWidgetProps) {
   }
 
   return (
-    <div className="mx-4 p-4 rounded-xl bg-surface-2 border border-border shadow-sm flex flex-col gap-4">
+    <div className="p-1.5 flex flex-col gap-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-lg bg-brand-purple/8 text-brand-purple flex items-center justify-center">
-            <Pencil size={15} />
-          </div>
-          <div>
-            <h3 className="font-extrabold text-sm text-gray-900 leading-none">Bugünkü Günlük</h3>
-            <span className="text-[10px] text-gray-400 font-semibold mt-0.5 block">Hızlı iştah, ruh hali ve not girişi</span>
-          </div>
+      <div className="flex items-center gap-2.5 pb-3 mb-3 border-b border-[var(--color-border)]">
+        {/* Pet avatar */}
+        <div className="w-[34px] h-[34px] rounded-[10px] overflow-hidden flex-shrink-0"
+             style={{background: 'linear-gradient(160deg,#c7bef7,#5D3FD3)'}}>
+          {activePet?.avatar_url ? (
+            <Image src={activePet.avatar_url} alt={activePet.name}
+                   width={34} height={34} 
+                   className="w-full h-full object-cover" />
+          ) : (
+            <span className="w-full h-full flex items-center justify-center text-[16px] font-black text-white/50">
+              {activePet?.name?.charAt(0) || '?'}
+            </span>
+          )}
         </div>
-
-        {/* Pet Seçici */}
-        {pets.length > 1 && (
-          <select
-            value={selectedPetId}
-            onChange={(e) => setSelectedPetId(e.target.value)}
-            className="text-[11px] font-bold text-gray-700 bg-gray-50 border border-gray-200 rounded-md px-2 py-1.5 outline-none"
-          >
-            {pets.map((pet) => (
-              <option key={pet.id} value={pet.id}>
-                {pet.name}
-              </option>
-            ))}
-          </select>
-        )}
+        <div>
+          <p className="text-[13px] font-800 text-[var(--color-text-primary)]">
+            Sağlık Günlüğü
+          </p>
+          <p className="text-[10px] font-700 text-[var(--color-primary)]">
+            {activePet?.name || 'Pet'} için
+          </p>
+        </div>
+        <i className="ti ti-pencil ml-auto text-[var(--color-text-muted)] text-[15px]" />
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
         {/* İştah Durumu */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">İştah Durumu</label>
+          <label className="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">İştah Durumu</label>
           <div className="grid grid-cols-3 gap-2">
             {APPETITE_OPTIONS.map((opt) => (
               <button
@@ -132,8 +161,8 @@ export default function QuickJournalWidget({ pets }: QuickJournalWidgetProps) {
                 onClick={() => setAppetite(opt.value)}
                 className={`py-3 min-h-[44px] rounded-lg border text-xs font-bold transition-all ${
                   appetite === opt.value
-                    ? 'border-brand-purple bg-brand-purple/8 text-brand-purple font-extrabold scale-[1.03]'
-                    : 'border-gray-100 bg-gray-50/30 text-gray-600 hover:bg-gray-50'
+                    ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)] font-extrabold scale-[1.03]'
+                    : 'border-[var(--color-border)] bg-[var(--color-surface)]/30 text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)]'
                 }`}
               >
                 {opt.label}
@@ -144,7 +173,7 @@ export default function QuickJournalWidget({ pets }: QuickJournalWidgetProps) {
 
         {/* Ruh Hali */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Ruh Hali</label>
+          <label className="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Ruh Hali</label>
           <div className="grid grid-cols-4 gap-1.5">
             {MOOD_OPTIONS.map((opt) => (
               <button
@@ -153,8 +182,8 @@ export default function QuickJournalWidget({ pets }: QuickJournalWidgetProps) {
                 onClick={() => setMood(opt.value)}
                 className={`py-3 min-h-[44px] rounded-lg border text-[11px] font-bold transition-all ${
                   mood === opt.value
-                    ? 'border-brand-purple bg-brand-purple/8 text-brand-purple font-extrabold scale-[1.03]'
-                    : 'border-gray-100 bg-gray-50/30 text-gray-600 hover:bg-gray-50'
+                    ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)] font-extrabold scale-[1.03]'
+                    : 'border-[var(--color-border)] bg-[var(--color-surface)]/30 text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)]'
                 }`}
               >
                 {opt.label}
@@ -165,13 +194,13 @@ export default function QuickJournalWidget({ pets }: QuickJournalWidgetProps) {
 
         {/* Not Alanı */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Kısa Notlar</label>
+          <label className="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Kısa Notlar</label>
           <input
             type="text"
             placeholder="Bugün sıra dışı bir durum oldu mu? (İlaç, kusma vb.)"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="w-full text-xs h-11 border border-gray-100 bg-gray-50/30 rounded-lg p-3 outline-none focus:border-brand-purple transition-colors placeholder:text-gray-400"
+            className="w-full text-xs h-11 border border-[var(--color-border)] bg-[var(--color-surface)]/30 rounded-lg p-3 outline-none focus:border-[var(--color-primary)] transition-colors placeholder:text-[var(--color-text-muted)]"
           />
         </div>
 
@@ -183,18 +212,18 @@ export default function QuickJournalWidget({ pets }: QuickJournalWidgetProps) {
           disabled={loading || success || (!appetite && !mood && !notes)}
           className={`w-full h-11 font-extrabold text-xs rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-sm ${
             success
-              ? 'bg-brand-green text-white'
-              : 'bg-brand-purple hover:bg-brand-purple/90 text-white active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none'
+              ? 'bg-[var(--color-success)] text-white'
+              : 'bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/90 text-white active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none'
           }`}
         >
           {loading ? (
             'Kaydediliyor...'
           ) : success ? (
             <>
-              <Check size={14} /> Kaydedildi!
+              <i className="ti ti-check text-[14px]" /> Kaydedildi!
             </>
           ) : (
-            'Günlüğü Kaydet'
+            `${activePet?.name || 'Pet'}'in günlüğünü kaydet`
           )}
         </button>
       </form>

@@ -15,10 +15,17 @@ import { TURKIYE_ILLER } from '@/lib/utils/turkiyeIller'
 import dynamic from 'next/dynamic'
 import { AlertTriangle, Plus } from 'lucide-react'
 import { normalizeSpecies, getSpeciesEmoji, getSpeciesLabel } from '@/lib/species';
+import { useSearchParams } from 'next/navigation'
 
 const LostMapView = dynamic(() => import('./LostMapView'), { ssr: false, loading: () => <div className="w-full h-[500px] bg-bg-main animate-pulse rounded-2xl flex items-center justify-center font-normal text-text-secondary">Harita Yükleniyor...</div> })
 
 type Tab = 'adoption' | 'lost' | 'match'
+
+const TAB_MAP: Record<string, Tab> = {
+  'sahiplendir': 'adoption',
+  'lost': 'lost',
+  'eslestirme': 'match'
+}
 
 const getAge = (birthDate: string) => {
   const ageInMs = Date.now() - new Date(birthDate).getTime()
@@ -61,7 +68,17 @@ export function SocialTabs({
   lostPets: any[]
   matches: any[] 
 }) {
-  const [activeTab, setActiveTab] = useState<Tab>('adoption')
+  const searchParams = useSearchParams()
+  const urlTab = searchParams.get('tab')
+  const initialTab = (urlTab && TAB_MAP[urlTab]) || 'adoption'
+  
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab)
+
+  useEffect(() => {
+    if (urlTab && TAB_MAP[urlTab]) {
+      setActiveTab(TAB_MAP[urlTab])
+    }
+  }, [urlTab])
 
   const [matches, setMatches] = useState<any[]>(initialMatches || [])
   const [loadingMatches, setLoadingMatches] = useState(false)

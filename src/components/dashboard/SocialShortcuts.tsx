@@ -1,102 +1,112 @@
 import Link from 'next/link'
 
 interface ShortcutItem {
-  icon: React.ReactNode
-  label: string
+  icon: string
+  label: React.ReactNode
   href: string
   badge: number | null
-  badgeColor?: 'red' | 'violet' | 'pink' | 'gray'
   comingSoon: boolean
-  color: 'violet' | 'red' | 'pink' | 'gray' | 'blue' | 'amber' | 'emerald'
+  color: string
+  bgTint: string
+  borderColorClass: string
+  hoverBgClass: string
 }
 
 export default function SocialShortcuts({ lostReportsCount = 0 }: { lostReportsCount: number }) {
   const shortcuts: ShortcutItem[] = [
     {
-      icon: <i className="ti ti-home-heart text-[#4726AF]" />,
-      label: 'Sahiplendir',
+      icon: 'ti-home-heart',
+      label: <>Sahiplendirme<br/>İlanları</>,
       href: '/owner/social?tab=sahiplendir',
       badge: null,
       comingSoon: false,
-      color: 'violet'
+      color: 'var(--color-primary)',
+      bgTint: 'rgba(93, 63, 211, 0.12)',
+      borderColorClass: 'border-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/40',
+      hoverBgClass: 'hover:bg-[var(--color-primary)]/5'
     },
     {
-      icon: <i className="ti ti-alert-triangle text-danger" />,
-      label: 'Kayıp İlanları',
+      icon: 'ti-alert-triangle',
+      label: <>Kayıp<br/>İlanları</>,
       href: '/owner/social?tab=lost',
       badge: lostReportsCount > 0 ? lostReportsCount : null,
-      badgeColor: 'red',
       comingSoon: false,
-      color: 'red'
+      color: 'var(--color-danger)',
+      bgTint: 'rgba(255, 107, 107, 0.12)',
+      borderColorClass: 'border-[var(--color-danger)]/20 hover:border-[var(--color-danger)]/40',
+      hoverBgClass: 'hover:bg-[var(--color-danger)]/5'
     },
     {
-      icon: <i className="ti ti-heart text-[#FFC734]" />,
-      label: 'Eşleştirme',
+      icon: 'ti-heart',
+      label: <>Eşleştirme<br/>İlanları</>,
       href: '/owner/social?tab=eslestirme',
       badge: null,
       comingSoon: false,
-      color: 'pink'
+      color: 'var(--color-success)',
+      bgTint: 'rgba(78, 205, 196, 0.12)',
+      borderColorClass: 'border-[var(--color-success)]/20 hover:border-[var(--color-success)]/40',
+      hoverBgClass: 'hover:bg-[var(--color-success)]/5'
     },
     {
-      icon: <i className="ti ti-paw text-text-muted" />,
+      icon: 'ti-paw',
       label: 'Playdate',
       href: '#',
       badge: null,
       comingSoon: true,
-      color: 'gray'
+      color: '#94a3b8',
+      bgTint: 'rgba(148, 163, 184, 0.12)',
+      borderColorClass: 'border-[var(--color-border)]',
+      hoverBgClass: 'hover:bg-[var(--color-surface)]'
     },
     {
-      icon: <i className="ti ti-messages text-text-muted" />,
+      icon: 'ti-messages',
       label: 'Forumlar',
       href: '#',
       badge: null,
       comingSoon: true,
-      color: 'gray'
+      color: '#94a3b8',
+      bgTint: 'rgba(148, 163, 184, 0.12)',
+      borderColorClass: 'border-[var(--color-border)]',
+      hoverBgClass: 'hover:bg-[var(--color-surface)]'
     },
     {
-      icon: <i className="ti ti-trophy text-text-muted" />,
+      icon: 'ti-trophy',
       label: 'Etkinlikler',
       href: '#',
       badge: null,
       comingSoon: true,
-      color: 'gray'
+      color: '#94a3b8',
+      bgTint: 'rgba(148, 163, 184, 0.12)',
+      borderColorClass: 'border-[var(--color-border)]',
+      hoverBgClass: 'hover:bg-[var(--color-surface)]'
     }
   ]
-
-  const colorStyles: Record<string, string> = {
-    violet: 'bg-white text-brand-purple border-brand-purple/20 hover:border-brand-purple/40 hover:bg-brand-purple/5',
-    red: 'bg-white text-danger border-danger/20 hover:border-danger/40 hover:bg-danger/5',
-    pink: 'bg-white text-brand-orange border-brand-gold/30 hover:border-brand-gold/40 hover:bg-brand-gold/5',
-    gray: 'bg-white text-text-muted border-border hover:bg-surface-1',
-    blue: 'bg-blue-50 text-blue-600 border-blue-100 hover:border-blue-300 hover:bg-blue-100',
-    amber: 'bg-amber-50 text-amber-600 border-amber-100 hover:border-amber-300 hover:bg-amber-100',
-    emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:border-emerald-300 hover:bg-emerald-100',
-  }
-
-  const badgeColorStyles: Record<string, string> = {
-    red: 'bg-danger text-white',
-    violet: 'bg-violet-600 text-white',
-    pink: 'bg-pink-600 text-white',
-    gray: 'bg-gray-600 text-white'
-  }
 
   return (
     <div className="px-[var(--space-4)]">
       <div className="grid grid-cols-3 gap-3">
         {shortcuts.map((s, idx) => {
           const content = (
-            <div className={`relative flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${colorStyles[s.color]} ${!s.comingSoon ? 'active:scale-95 shadow-sm' : 'opacity-80 grayscale-[0.2]'}`}>
+            <div className={`relative flex flex-col items-center justify-center gap-2 p-3 rounded-xl border bg-white transition-all ${s.borderColorClass} ${s.hoverBgClass} ${!s.comingSoon ? 'active:scale-95 shadow-sm' : 'opacity-80 grayscale-[0.2]'}`}>
               {s.badge !== null && (
-                <span className={`absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center text-[10px] font-black rounded-full border-2 border-surface shadow-sm ${s.badgeColor ? badgeColorStyles[s.badgeColor] : 'bg-primary text-white'}`}>
+                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center text-[10px] font-black rounded-full border-2 border-white shadow-sm bg-[var(--color-danger)] text-white">
                   {s.badge > 9 ? '9+' : s.badge}
                 </span>
               )}
-              <span className="text-[24px] leading-none drop-shadow-sm">{s.icon}</span>
-              <span className={`text-[11px] font-extrabold tracking-tight text-center leading-tight ${s.comingSoon ? 'text-gray-400' : 'text-gray-800'}`}>
+              
+              {/* İkon Yuvarlağı (%12 Opaklık Tint) */}
+              <div
+                className="w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0"
+                style={{ background: s.bgTint }}
+              >
+                <i className={`ti ${s.icon} text-[20px]`} style={{ color: s.color }} />
+              </div>
+
+              <span className={`text-[11px] font-extrabold tracking-tight text-center leading-tight ${s.comingSoon ? 'text-[var(--color-text-muted)]' : 'text-[var(--color-text-primary)]'}`}>
                 {s.label}
               </span>
               {s.comingSoon && (
-                <span className="absolute bottom-1 bg-gray-200 text-gray-500 text-[8px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                <span className="absolute bottom-1 bg-[var(--color-surface-2)] text-[var(--color-text-muted)] text-[7px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
                   Yakında
                 </span>
               )}

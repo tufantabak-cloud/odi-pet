@@ -66,17 +66,20 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
       {/* Minimal Header */}
       <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border-main bg-surface/80 backdrop-blur-lg px-5 lg:px-10">
         <Link href="/owner/dashboard" className="flex items-center gap-2.5 hover:scale-[1.02] transition-transform">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl overflow-hidden shadow-sm shadow-primary/20 border border-border-main bg-white p-0.5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl overflow-hidden bg-[var(--color-primary)]">
             <Image 
               src="/logo.webp" 
               alt="Odi Logo" 
               width={40} 
               height={40}
-              className="w-full h-full object-cover rounded-lg"
+              className="w-full h-full object-cover"
               priority
             />
           </div>
           <span className="text-[18px] font-black text-text-primary tracking-tighter hidden sm:block">Odi.Pet</span>
+          <span className="text-[12px] font-bold text-[var(--color-primary)] tracking-tight">
+            Can Dost Yaşam Platformu
+          </span>
         </Link>
 
         <div className="flex items-center gap-3">
@@ -95,7 +98,7 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
         {showNav && <SideNav />}
 
         {/* Main Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-10 pb-10 min-w-0">
+        <main className="flex-1 p-4 sm:p-6 lg:p-10 pb-0 min-w-0">
           {children}
         </main>
       </div>

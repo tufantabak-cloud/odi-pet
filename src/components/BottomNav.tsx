@@ -216,7 +216,7 @@ export default function BottomNav({
       )}
 
       {/* Main Bottom Nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[9989] bg-[var(--color-surface)] border-t border-[var(--color-border)] pt-2 pb-5 px-2 shadow-[0_-2px_12px_rgba(16,24,40,0.06)]">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[9989] bg-[var(--color-surface)] border-t border-[var(--color-border)] pt-2 pb-[max(20px,env(safe-area-inset-bottom))] px-2 shadow-[0_-2px_12px_rgba(16,24,40,0.06)]">
         <div className="flex justify-evenly items-center w-full max-w-lg mx-auto">
           {activeTabs.map((tab: any, idx) => {
             let isActive = false
