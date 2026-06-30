@@ -195,12 +195,12 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
             subtitle: `Bugün ${pet.name}'nın aşı/medikal işlemi var. Takvimden kontrol edebilirsiniz.`,
             ctaLabel: 'Takvime Git',
             action: () => {
-              router.push(`/owner/pets/${pet.id}/treatments`)
+              router.push(`/owner/pets/${pet.id}/vaccines`)
             }
           }
         } else {
           const parasiteTask = getParasiteTask()
-          const nextParasiteDateStr = localStorage.getItem(`parasite-next-date-${pet.id}`)
+          const nextParasiteDateStr = typeof window !== 'undefined' ? localStorage.getItem(`parasite-next-date-${pet.id}`) : null
           const cardId = parasiteTask ? `parasite-task-${parasiteTask.id}` : `parasite-local-${pet.id}-${nextParasiteDateStr || 'init'}`
           highlightCard = {
             id: highlight,
@@ -250,7 +250,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
           subtitle: `Bugün ${pet.name}'nın aşı/medikal işlemi var. Takvimden kontrol edebilirsiniz.`,
           ctaLabel: 'Takvime Git',
           action: () => {
-            router.push(`/owner/pets/${pet.id}/treatments`)
+            router.push(`/owner/pets/${pet.id}/vaccines`)
           }
         })
       }
@@ -283,12 +283,15 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
     // 3. Dış Parazit Card (Rutin Sağlık)
     const parasiteTask = getParasiteTask()
     const petIdForParasite = parasiteTask ? parasiteTask.pet_id : targetPet.id
-    const nextParasiteDateStr = localStorage.getItem(`parasite-next-date-${petIdForParasite}`)
-    let isParasiteDue = true
-    if (nextParasiteDateStr) {
+    const nextParasiteDateStr = typeof window !== 'undefined' ? localStorage.getItem(`parasite-next-date-${petIdForParasite}`) : null
+    let isParasiteDue = false
+    
+    if (parasiteTask) {
+      isParasiteDue = true
+    } else if (nextParasiteDateStr) {
       const nextDate = new Date(nextParasiteDateStr)
-      if (nextDate > new Date()) {
-        isParasiteDue = false
+      if (nextDate <= new Date()) {
+        isParasiteDue = true
       }
     }
 

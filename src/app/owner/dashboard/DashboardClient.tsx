@@ -117,6 +117,24 @@ export default function DashboardClient({
             </Link>
 
           </div>
+
+          {/* Masaüstü için Plan Yap Butonu */}
+          <Link href="/owner/plan-yap"
+            className="hidden md:flex items-center gap-3.5 p-4 mt-2 mx-[var(--space-4)] rounded-2xl cursor-pointer bg-[var(--color-primary-soft)] hover:bg-[var(--color-primary-soft)]/80 transition-all border border-[var(--color-primary)]/10 shadow-[var(--shadow-sm)] active:scale-[0.99]">
+            <div className="w-[38px] h-[38px] rounded-[10px] bg-white flex items-center justify-center flex-shrink-0 shadow-inner">
+              <i className="ti ti-calendar-plus text-[var(--color-primary)] text-[20px]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[13px] font-800 text-[var(--color-text-primary)] leading-tight">
+                Plan Yap
+              </div>
+              <div className="text-[10px] text-[var(--color-text-secondary)] font-600 mt-0.5 leading-tight truncate">
+                Aşı, parazit, beslenme ve daha fazlası için yeni plan oluştur
+              </div>
+            </div>
+            <i className="ti ti-chevron-right text-[var(--color-text-muted)] text-[16px] ml-auto" />
+          </Link>
+
         </div>
       )}
 

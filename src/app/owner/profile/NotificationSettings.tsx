@@ -46,7 +46,7 @@ export default function NotificationSettings() {
         </div>
 
         <div className="p-4 bg-bg-main/50 flex justify-between items-center text-[13px] font-semibold">
-          <span className="text-text-secondary">Durum: <span className="text-primary">{isLoading ? 'Güncelleniyor...' : isSubscribed ? 'Aktif' : 'Pasif'}</span></span>
+          <span className="text-text-secondary">Tarayıcı Bildirimleri: <span className="text-primary">{isLoading ? 'Güncelleniyor...' : isSubscribed ? 'Aktif' : 'Pasif'}</span></span>
           <span className="text-text-secondary">Kanal: <span className="text-primary">Push & Email</span></span>
         </div>
       </div>

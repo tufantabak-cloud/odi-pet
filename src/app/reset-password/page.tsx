@@ -62,7 +62,7 @@ export default function ResetPasswordPage() {
         <div className="text-center mb-10">
           <div className="flex flex-col items-center mb-6">
               <Image src="/logo.webp" alt="Odi.Pet" width={72} height={72} className="mb-2" priority />
-              <p className="text-[11px] text-text-muted font-medium">Pet Yaşam Platformu</p>
+              <p className="text-[11px] text-text-muted font-medium">Can Dost Yaşam Platformu</p>
             </div>
           <h1 className="text-[28px] font-black text-text-primary tracking-tighter">Şifremi Unuttum</h1>
           <p className="text-[13px] text-text-secondary mt-2">Hesabınıza kayıtlı e-posta adresini girin, size şifre sıfırlama bağlantısı gönderelim.</p>

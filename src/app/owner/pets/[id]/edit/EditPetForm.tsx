@@ -70,7 +70,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
     }
     
     const now = new Date()
-    now.setDate(1)
+    const todayDay = now.getDate()
     
     let targetYear = now.getFullYear() - years
     let targetMonth = now.getMonth() - months
@@ -80,7 +80,11 @@ export default function EditPetForm({ pet }: { pet: any }) {
       targetYear -= 1
     }
     
-    const targetDate = new Date(targetYear, targetMonth, 1)
+    // Target ayın maksimum gün sayısını bulup bugünün gün değeriyle sınırla
+    const maxDaysInTarget = new Date(targetYear, targetMonth + 1, 0).getDate()
+    const targetDay = Math.min(todayDay, maxDaysInTarget)
+    
+    const targetDate = new Date(targetYear, targetMonth, targetDay)
     setBirthDate(targetDate.toISOString().split('T')[0])
   }
 

@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useWebPush } from '@/hooks/useWebPush'
+import { getTurkishGenitiveSuffix } from '@/lib/pets/utils'
 
 type Notification = {
   id: string
@@ -30,10 +31,15 @@ function iconFor(type: string) {
 }
 
 // ── Web Push Smart Card (Progressive Profiling) ─────────────────
-function PushPermissionCard({ onDismiss }: { onDismiss: () => void }) {
+function PushPermissionCard({ onDismiss, pets = [] }: { onDismiss: () => void, pets?: { id: string, name: string }[] }) {
   const { permission, isSubscribed, isLoading, subscribe } = useWebPush()
   const [result, setResult] = useState<'idle' | 'success' | 'denied'>('idle')
   const [testSending, setTestSending] = useState(false)
+
+  const firstPet = pets && pets.length > 0 ? pets[0] : null
+  const displayName = firstPet 
+    ? `${firstPet.name}'${getTurkishGenitiveSuffix(firstPet.name)}`
+    : 'Can dostunuzun'
 
   const triggerLocalTestNotification = async () => {
     if (!('serviceWorker' in navigator)) return;
@@ -79,7 +85,7 @@ function PushPermissionCard({ onDismiss }: { onDismiss: () => void }) {
       <div className="flex-1 min-w-0">
         <p className="font-extrabold text-[15px] text-success">Bildirimleriniz Aktif!</p>
         <p className="text-[13px] text-text-secondary mt-1 leading-relaxed">
-          Mia'nın aşı, ilaç ve beslenme hatırlatmaları artık telefonunuza anında gelecek.
+          {firstPet ? `${displayName} aşı, ilaç ve beslenme hatırlatmaları artık telefonunuza anında gelecek.` : 'Can dostunuzun aşı, ilaç ve beslenme hatırlatmaları artık telefonunuza anında gelecek.'}
         </p>
         <div className="flex gap-2 mt-3">
           <button
@@ -108,7 +114,7 @@ function PushPermissionCard({ onDismiss }: { onDismiss: () => void }) {
       <div className="flex-1 min-w-0">
         <p className="font-extrabold text-[15px] text-text-primary">Aşı hatırlatmaları almak ister misin?</p>
         <p className="text-[13px] text-text-secondary mt-1 leading-relaxed">
-          "Mia'nın Kuduz aşısına 3 gün kaldı" gibi bildirimleri tarayıcıya gönderelim.
+          {firstPet ? `"${displayName} Kuduz aşısına 3 gün kaldı" gibi bildirimleri tarayıcıya gönderelim.` : '"Can dostunuzun Kuduz aşısına 3 gün kaldı" gibi bildirimleri tarayıcıya gönderelim.'}
         </p>
         <div className="flex gap-2 mt-3 flex-wrap">
           <button
@@ -140,8 +146,10 @@ function PushPermissionCard({ onDismiss }: { onDismiss: () => void }) {
 // ── Main Notifications Client ───────────────────────────────────
 export default function NotificationsClient({
   initialNotifications,
+  pets = []
 }: {
   initialNotifications: Notification[]
+  pets?: { id: string, name: string }[]
 }) {
   const router = useRouter()
   const [list, setList] = useState(initialNotifications)
@@ -190,7 +198,7 @@ export default function NotificationsClient({
 
       {/* Progressive Profiling: Push Notification Smart Card */}
       {showPushCard && (
-        <PushPermissionCard onDismiss={() => setShowPushCard(false)} />
+        <PushPermissionCard onDismiss={() => setShowPushCard(false)} pets={pets} />
       )}
 
       {/* Notification List */}
@@ -216,10 +224,21 @@ export default function NotificationsClient({
                     await markOneRead(notif.id)
                   }
                   if (notif.pet_id) {
-                    if (notif.type.includes('vaccine')) {
+                    const titleLower = notif.title.toLowerCase()
+                    const msgLower = notif.message.toLowerCase()
+
+                    if (notif.type.includes('vaccine') || titleLower.includes('aşı')) {
                       router.push(`/owner/dashboard?highlight=vaccine-${notif.pet_id}`)
-                    } else {
+                    } else if (titleLower.includes('parazit')) {
                       router.push(`/owner/dashboard?highlight=parasite-${notif.pet_id}`)
+                    } else if (titleLower.includes('bakım') || msgLower.includes('(bakım)')) {
+                      router.push(`/owner/pets/${notif.pet_id}/care`)
+                    } else if (titleLower.includes('beslenme') || msgLower.includes('(beslenme)')) {
+                      router.push(`/owner/pets/${notif.pet_id}/nutrition`)
+                    } else if (titleLower.includes('sağlık') || msgLower.includes('(sağlık)') || titleLower.includes('veteriner') || msgLower.includes('(veteriner)')) {
+                      router.push(`/owner/pets/${notif.pet_id}/treatments`)
+                    } else {
+                      router.push(`/owner/pets/${notif.pet_id}`)
                     }
                   } else {
                     router.push('/owner/dashboard')

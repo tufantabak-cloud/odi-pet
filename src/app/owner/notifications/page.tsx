@@ -15,5 +15,10 @@ export default async function NotificationsPage() {
     .order('created_at', { ascending: false })
     .limit(50)
 
-  return <NotificationsClient initialNotifications={notifications ?? []} />
+  const { data: pets } = await supabase
+    .from('pets')
+    .select('id, name')
+    .eq('owner_id', user?.id)
+
+  return <NotificationsClient initialNotifications={notifications ?? []} pets={pets ?? []} />
 }

@@ -48,6 +48,8 @@ export default function VetsPage() {
   
   const [selectedCity, setSelectedCity] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
+  const [cityQuery, setCityQuery] = useState('');
+  const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
 
   // New States
   const [gpsDenied, setGpsDenied] = useState(false);
@@ -86,6 +88,21 @@ export default function VetsPage() {
    
   }, []);
 
+  // Click outside city dropdown to close it
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      const container = document.getElementById('city-select-container');
+      if (container && !container.contains(e.target as Node)) {
+        setIsCityDropdownOpen(false);
+        // Reset query input to match the selected city if they clicked away
+        setCityQuery(selectedCity);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [selectedCity]);
+
   // Monitor online status
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -104,6 +121,7 @@ export default function VetsPage() {
 
   const handleCityChange = (val: string) => {
     setSelectedCity(val);
+    setCityQuery(val);
     setSelectedDistrict('');
     setGpsDenied(false); // Hide GPS card when manually searching
   };
@@ -452,17 +470,59 @@ export default function VetsPage() {
 
         {/* Search Controls */}
         <div className="card-base p-[24px] mb-[48px] flex flex-col md:flex-row gap-[16px] items-end animate-scaleIn">
-          <div className="flex-1 w-full space-y-2">
+          <div id="city-select-container" className="flex-1 w-full space-y-2 relative">
             <label htmlFor="city-select" className="text-sm font-bold text-text-secondary ml-1">Şehir</label>
-            <select 
-              id="city-select"
-              className="input-base w-full"
-              value={selectedCity}
-              onChange={(e) => handleCityChange(e.target.value)}
-            >
-              <option value="">Şehir Seçin</option>
-              {citiesData.map(c => <option key={c.code} value={c.name}>{c.name}</option>)}
-            </select>
+            <div className="relative">
+              <input
+                id="city-select"
+                type="text"
+                placeholder="Şehir Ara (Örn: İstanbul)"
+                className="input-base w-full pr-10"
+                value={cityQuery}
+                onFocus={() => setIsCityDropdownOpen(true)}
+                onChange={(e) => {
+                  setCityQuery(e.target.value);
+                  setIsCityDropdownOpen(true);
+                  if (!e.target.value) {
+                    setSelectedCity('');
+                    setSelectedDistrict('');
+                  }
+                }}
+              />
+              <div 
+                className="absolute inset-y-0 right-4 flex items-center text-text-secondary cursor-pointer"
+                onClick={() => setIsCityDropdownOpen(!isCityDropdownOpen)}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </div>
+
+              {isCityDropdownOpen && (
+                <div className="absolute z-50 w-full mt-1 bg-white border border-border-main rounded-xl max-h-60 overflow-y-auto shadow-lg animate-scaleIn">
+                  {citiesData
+                    .filter(c => c.name.toLocaleLowerCase('tr-TR').includes(cityQuery.toLocaleLowerCase('tr-TR')))
+                    .map(c => (
+                      <button
+                        key={c.code}
+                        type="button"
+                        className="w-full px-4 py-3 text-left text-sm font-semibold hover:bg-primary-soft/30 hover:text-primary transition-colors border-b border-border-main/50 last:border-0 cursor-pointer"
+                        onClick={() => {
+                          handleCityChange(c.name);
+                          setIsCityDropdownOpen(false);
+                        }}
+                      >
+                        {c.name}
+                      </button>
+                    ))}
+                  {citiesData.filter(c => c.name.toLocaleLowerCase('tr-TR').includes(cityQuery.toLocaleLowerCase('tr-TR'))).length === 0 && (
+                    <div className="px-4 py-3 text-sm text-text-secondary text-center">
+                      Sonuç bulunamadı
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
           
           <div className="flex-1 w-full space-y-2">

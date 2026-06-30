@@ -69,3 +69,30 @@ export function calcAge(birthDate: string | null) {
   return { text, label }
 }
 
+export function getTurkishGenitiveSuffix(name: string) {
+  if (!name) return 'nin';
+  const vowels = 'aıoueiöü';
+  const lastChar = name.slice(-1).toLowerCase();
+  const isVowel = vowels.includes(lastChar);
+  
+  let lastVowel = 'e';
+  for (let i = name.length - 1; i >= 0; i--) {
+    const char = name[i].toLowerCase();
+    if (vowels.includes(char)) {
+      lastVowel = char;
+      break;
+    }
+  }
+  
+  const isBack = 'aıou'.includes(lastVowel);
+  const isRounded = 'ouöü'.includes(lastVowel);
+  
+  if (isVowel) {
+    if (isBack) return isRounded ? 'nun' : 'nın';
+    return isRounded ? 'nün' : 'nin';
+  } else {
+    if (isBack) return isRounded ? 'un' : 'ın';
+    return isRounded ? 'ün' : 'in';
+  }
+}
+

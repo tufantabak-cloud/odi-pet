@@ -138,28 +138,34 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
 
           const { data: upcoming, error: upcomingError } = await supabase
             .from('health_schedules')
-            .select('*, pets(name)')
+            .select('*')
             .in('pet_id', petIdList)
             .neq('status', 'done')
-
+ 
           if (upcomingError) {
             console.error('[dashboard] upcoming schedules fetch failed:', upcomingError.message)
           } else if (upcoming) {
-            upcomingSchedules = upcoming as DashboardSchedule[]
+            upcomingSchedules = (upcoming as any[]).map(item => ({
+              ...item,
+              pets: { name: pets.find(p => p.id === item.pet_id)?.name || '' }
+            })) as DashboardSchedule[]
           }
-
+ 
           const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
           const { data: completed, error: completedError } = await supabase
             .from('health_schedules')
-            .select('*, pets(name)')
+            .select('*')
             .in('pet_id', petIdList)
             .in('status', ['completed', 'done'])
             .gte('updated_at', yesterday)
-
+ 
           if (completedError) {
             console.error('[dashboard] completed schedules fetch failed:', completedError.message)
           } else if (completed) {
-            completedSchedules = completed as DashboardSchedule[]
+            completedSchedules = (completed as any[]).map(item => ({
+              ...item,
+              pets: { name: pets.find(p => p.id === item.pet_id)?.name || '' }
+            })) as DashboardSchedule[]
           }
         }
 
