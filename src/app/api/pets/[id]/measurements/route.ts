@@ -20,7 +20,7 @@ export async function GET(
 
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
-    .from('health_measurements')
+    .from('weight_logs')
     .select('*')
     .eq('pet_id', id)
     .order('measured_at', { ascending: false })
@@ -29,7 +29,16 @@ export async function GET(
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json(data)
+  // Map to measurement format for HealthTab
+  const mappedData = data.map(log => ({
+    id: log.id,
+    measurement_type: 'weight',
+    value: log.weight_kg,
+    unit: 'kg',
+    measured_at: log.measured_at
+  }))
+
+  return NextResponse.json(mappedData)
 }
 
 export async function POST(
@@ -48,15 +57,15 @@ export async function POST(
   }
 
   const supabase = await createServerSupabaseClient()
+  
+  const measuredAt = result.data.measured_at || new Date().toISOString()
 
   const { data: measurement, error } = await supabase
-    .from('health_measurements')
+    .from('weight_logs')
     .insert({
       pet_id: id,
-      measurement_type: result.data.measurement_type,
-      value: result.data.value,
-      unit: result.data.unit,
-      measured_at: result.data.measured_at || new Date().toISOString(),
+      weight_kg: result.data.measurement_type === 'weight' ? result.data.value : null,
+      measured_at: measuredAt,
     })
     .select()
     .single()
@@ -65,5 +74,35 @@ export async function POST(
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ success: true, measurement })
+  // ─── Otomatik Kilo & Boy Hatırlatıcısı Güncelleme ──────────────
+  await supabase
+    .from('plans')
+    .update({ status: 'completed' })
+    .eq('pet_id', id)
+    .eq('category', 'saglik')
+    .eq('sub_type', 'Kilo & Boy Ölçümü')
+    .eq('status', 'active');
+    
+  const logDate = new Date(measuredAt);
+  logDate.setMonth(logDate.getMonth() + 1);
+  
+  await supabase
+    .from('plans')
+    .insert({
+      user_id: user.id,
+      pet_id: id,
+      category: 'saglik',
+      sub_type: 'Kilo & Boy Ölçümü',
+      scheduled_at: logDate.toISOString(),
+      status: 'active',
+      extra_data: { source: 'system', auto_generated: true }
+    });
+
+  return NextResponse.json({ success: true, measurement: {
+    id: measurement.id,
+    measurement_type: 'weight',
+    value: measurement.weight_kg,
+    unit: 'kg',
+    measured_at: measurement.measured_at
+  }})
 }

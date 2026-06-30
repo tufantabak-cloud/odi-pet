@@ -262,11 +262,21 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     'Diğer': 'diger', 'Raporlar & Belgeler': 'raporlar',
   }
 
-  const initialSection = SECTION_NAME_MAP[searchParams?.get('tab') ?? ''] ?? null
+  const tabParam = searchParams?.get('tab')
+  const initialTab = (tabParam === 'saglik' || tabParam === 'asi' || tabParam === 'parazit' || tabParam === 'beslenme' || tabParam === 'veteriner')
+    ? 'saglik'
+    : (tabParam === 'bakim' || tabParam === 'hijyen' || tabParam === 'aktivite' || tabParam === 'diger')
+      ? 'bakim'
+      : (tabParam === 'takvim' || tabParam === 'ekstra')
+        ? tabParam
+        : 'ozet'
+
+  const [activeTab, setActiveTab] = useState<'ozet'|'saglik'|'bakim'|'takvim'|'ekstra'>(initialTab)
+
+  const initialSection = SECTION_NAME_MAP[tabParam ?? ''] ?? null
   const [openSections, setOpenSections] = useState<Set<string>>(
     initialSection ? new Set([initialSection]) : new Set()
   )
-  const [activeTab, setActiveTab] = useState<'ozet'|'saglik'|'bakim'|'takvim'|'ekstra'>('ozet')
 
   const [showCoverSourceSheet, setShowCoverSourceSheet] = useState(false)
   const [showPositionModal, setShowPositionModal] = useState(false)
@@ -1313,55 +1323,66 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                 <div className="flex flex-col gap-2">
                   <p className="text-[11px] font-700 text-[var(--color-text-muted)] uppercase tracking-[0.8px] px-1">Bugün</p>
                   <div className="bg-[var(--color-surface)] rounded-card overflow-hidden border border-[var(--color-border)] shadow-[var(--shadow-sm)] divide-y divide-[var(--color-border)]">
-                    {todaySchedules.length > 0 ? todaySchedules.slice(0, 3).map((plan: any) => {
-                      const taskDT = getTaskDateTime(plan);
-                      const isOverdue = taskDT < now;
-                      
-                      const today = new Date(now); today.setHours(0,0,0,0);
-                      const target = new Date(taskDT); target.setHours(0,0,0,0);
-                      const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000);
+                    {(() => {
+                      const filteredToday = todaySchedules.filter((plan: any) => {
+                        const taskDT = getTaskDateTime(plan);
+                        const isOverdue = taskDT < now;
+                        const today = new Date(now); today.setHours(0,0,0,0);
+                        const target = new Date(taskDT); target.setHours(0,0,0,0);
+                        const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000);
+                        return diffDays <= 1 || isOverdue;
+                      });
 
-                      // Sadece bugün, gecikmişler veya yarınki görevleri göster
-                      if (diffDays > 1 && !isOverdue) return null;
-
-                      const timeStr = plan.due_time ? plan.due_time.slice(0, 5) : '';
-
-                      let badge = ''; let dotColor = ''; let badgeBg = ''; let badgeColor = '';
-                      if (isOverdue) {
-                        const dm = Math.floor((now.getTime() - taskDT.getTime()) / 60000)
-                        badge = dm < 60 ? `${Math.max(1,dm)} dk gecikti` : `${Math.floor(dm/60)} sa gecikti`
-                        dotColor = 'var(--color-danger)'; badgeBg = 'var(--color-danger-soft)'; badgeColor = 'var(--color-danger)'
-                      } else if (diffDays === 0) {
-                        badge = `Bugün${timeStr ? ' '+timeStr : ''}`
-                        dotColor = 'var(--color-warning)'; badgeBg = 'var(--color-warning-soft)'; badgeColor = 'var(--color-warning)'
-                      } else if (diffDays === 1) {
-                        badge = 'Yarın'
-                        dotColor = 'var(--color-primary)'; badgeBg = 'var(--color-primary-soft)'; badgeColor = 'var(--color-primary)'
+                      if (filteredToday.length === 0) {
+                        return (
+                          <div className="flex flex-col items-center justify-center py-6 px-4 text-center gap-2">
+                            <p className="text-[13px] font-600 text-[var(--color-text-secondary)]">Bugün planlı bakım yok</p>
+                            <p className="text-[11px] text-[var(--color-text-muted)]">{pet.name} ile güzel bir gün geçirin!</p>
+                          </div>
+                        );
                       }
 
-                      return (
-                        <Link key={plan.id} href={`#pet-tasks`}
-                          className="flex items-center gap-3 px-[var(--space-4)] py-3 hover:bg-[var(--color-surface-secondary)] transition-colors group">
-                          <span className="text-[11px] font-700 text-[var(--color-text-muted)] w-10 shrink-0 tabular-nums">{timeStr || '-'}</span>
-                          <div className="w-2 h-2 rounded-full shrink-0" style={{ background: dotColor }} />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[13px] font-600 text-[var(--color-text-primary)] truncate group-hover:text-[var(--color-primary)] transition-colors">
-                              {plan.title || (plan as any).vaccines?.name || 'Sağlık İşlemi'}
-                            </p>
-                            <p className="text-[10px] text-[var(--color-text-muted)] mt-0.5">{plan.category}</p>
-                          </div>
-                          <span className="text-[10px] font-700 px-2 py-1 rounded-xs shrink-0 whitespace-nowrap"
-                            style={{ background: badgeBg, color: badgeColor }}>
-                            {badge}
-                          </span>
-                        </Link>
-                      )
-                    }) : (
-                      <div className="flex flex-col items-center justify-center py-6 px-4 text-center gap-2">
-                        <p className="text-[13px] font-600 text-[var(--color-text-secondary)]">Bugün planlı bakım yok</p>
-                        <p className="text-[11px] text-[var(--color-text-muted)]">{pet.name} ile güzel bir gün geçirin!</p>
-                      </div>
-                    )}
+                      return filteredToday.map((plan: any) => {
+                        const taskDT = getTaskDateTime(plan);
+                        const isOverdue = taskDT < now;
+                        const timeStr = plan.due_time ? plan.due_time.slice(0, 5) : '';
+                        
+                        let badge = ''; let dotColor = ''; let badgeBg = ''; let badgeColor = '';
+                        const today = new Date(now); today.setHours(0,0,0,0);
+                        const target = new Date(taskDT); target.setHours(0,0,0,0);
+                        const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000);
+
+                        if (isOverdue) {
+                          const dm = Math.floor((now.getTime() - taskDT.getTime()) / 60000)
+                          badge = dm < 60 ? `${Math.max(1,dm)} dk gecikti` : `${Math.floor(dm/60)} sa gecikti`
+                          dotColor = 'var(--color-danger)'; badgeBg = 'var(--color-danger-soft)'; badgeColor = 'var(--color-danger)'
+                        } else if (diffDays === 0) {
+                          badge = `Bugün${timeStr ? ' '+timeStr : ''}`
+                          dotColor = 'var(--color-warning)'; badgeBg = 'var(--color-warning-soft)'; badgeColor = 'var(--color-warning)'
+                        } else if (diffDays === 1) {
+                          badge = 'Yarın'
+                          dotColor = 'var(--color-primary)'; badgeBg = 'var(--color-primary-soft)'; badgeColor = 'var(--color-primary)'
+                        }
+
+                        return (
+                          <Link key={plan.id} href={`#pet-tasks`}
+                            className="flex items-center gap-3 px-[var(--space-4)] py-3 hover:bg-[var(--color-surface-secondary)] transition-colors group">
+                            <span className="text-[11px] font-700 text-[var(--color-text-muted)] w-10 shrink-0 tabular-nums">{timeStr || '-'}</span>
+                            <div className="w-2 h-2 rounded-full shrink-0" style={{ background: dotColor }} />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[13px] font-600 text-[var(--color-text-primary)] truncate group-hover:text-[var(--color-primary)] transition-colors">
+                                {plan.title || (plan as any).vaccines?.name || 'Sağlık İşlemi'}
+                              </p>
+                              <p className="text-[10px] text-[var(--color-text-muted)] mt-0.5">{plan.category}</p>
+                            </div>
+                            <span className="text-[10px] font-700 px-2 py-1 rounded-xs shrink-0 whitespace-nowrap"
+                              style={{ background: badgeBg, color: badgeColor }}>
+                              {badge}
+                            </span>
+                          </Link>
+                        );
+                      });
+                    })()}
                   </div>
                 </div>
 
@@ -1732,7 +1753,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           const overdueCount = pending.filter((s: any) => getTaskDateTime(s) < new Date()).length
           const cta = tabCtaInfo[module.name]
           return (
-            <div key={module.name} id={`section-${MODULE_ID_MAP[module.name] ?? module.name}`} className="card-base overflow-hidden border border-border-main/60">
+            <div key={module.name} id={`section-${MODULE_ID_MAP[module.name] ?? module.name}`} className={`card-base overflow-hidden border border-border-main/60 scroll-mt-24 ${initialSection === module.name ? 'animate-pulseHighlight' : ''}`}>
               <div
                 onClick={() => toggleSection(module.name)}
                 className="w-full flex items-center gap-3 p-4 text-left hover:bg-bg-main/50 transition-colors cursor-pointer"

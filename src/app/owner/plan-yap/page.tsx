@@ -100,7 +100,7 @@ function PlanYapContent() {
               >
                 <ArrowLeft size={20} className="text-text-secondary" />
               </button>
-              <h1 className="text-[22px] font-black text-text-primary">Plan Yap</h1>
+              <h1 className="text-[22px] font-black text-text-primary">Rutin Planla</h1>
             </div>
           </div>
           <p className="text-text-secondary mb-8 ml-1">Kimin için plan oluşturuyoruz?</p>

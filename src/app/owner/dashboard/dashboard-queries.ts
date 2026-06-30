@@ -188,7 +188,19 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
               saglik: 'Saglik', asi: 'Medikal', parazit: 'Medikal',
               bakim: 'Bakım', beslenme: 'Beslenme', hijyen: 'Hijyen', aktivite: 'Aktiviteler'
             }
-            
+
+            // Dedup: health_schedules'dan gelen plan_id ve sub_category+due_date setleri
+            const existingSchedulePlanIds = new Set(
+              upcomingSchedules.concat(completedSchedules)
+                .map((s: any) => s.plan_id)
+                .filter(Boolean)
+            )
+            const existingScheduleKeys = new Set(
+              upcomingSchedules.concat(completedSchedules)
+                .filter((s: any) => s.sub_category && s.due_date)
+                .map((s: any) => `${s.sub_category}__${s.due_date}`)
+            )
+
             for (const p of plansRes as any[]) {
               let dueDate = p.scheduled_at?.split('T')[0]
               let dueTime = null
@@ -223,7 +235,12 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
                 notes: p.note,
                 updated_at: p.updated_at,
               } as any
-              
+
+              // Mükerrer kayıt kontrolü: plan_id veya sub_category+due_date eşleşmesi varsa atla
+              if (existingSchedulePlanIds.has(p.id)) continue
+              const compositeKey = `${p.sub_type}__${dueDate}`
+              if (p.sub_type && dueDate && existingScheduleKeys.has(compositeKey)) continue
+
               if (asSchedule.status === 'done') {
                 completedSchedules.push(asSchedule)
               } else {

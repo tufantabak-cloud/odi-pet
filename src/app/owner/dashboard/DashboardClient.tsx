@@ -126,7 +126,7 @@ export default function DashboardClient({
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-[13px] font-800 text-[var(--color-text-primary)] leading-tight">
-                Plan Yap
+                Rutin Planla
               </div>
               <div className="text-[10px] text-[var(--color-text-secondary)] font-600 mt-0.5 leading-tight truncate">
                 Aşı, parazit, beslenme ve daha fazlası için yeni plan oluştur

@@ -78,9 +78,13 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
       if (res.ok) {
         setWeightValue('');
         fetchData();
+      } else {
+        const errorData = await res.json();
+        alert(`Kayıt hatası: ${errorData.error || 'Bilinmeyen hata'}`);
       }
     } catch (err) {
       console.error(err);
+      alert('Bağlantı hatası oluştu. Lütfen tekrar deneyin.');
     } finally {
       setIsSubmittingWeight(false);
     }

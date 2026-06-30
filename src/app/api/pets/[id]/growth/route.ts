@@ -51,6 +51,32 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
   if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
 
+  // ─── Otomatik Kilo & Boy Hatırlatıcısı Güncelleme ──────────────
+  // 1. Varsa eski hatırlatıcıyı tamamlandı olarak işaretle
+  await supabase
+    .from('plans')
+    .update({ status: 'completed' })
+    .eq('pet_id', id)
+    .eq('category', 'saglik')
+    .eq('sub_type', 'Kilo & Boy Ölçümü')
+    .eq('status', 'active');
+    
+  // 2. Yeni ölçüm tarihi + 1 ay sonrasına yeni hatırlatıcı kur
+  const logDate = measured_at ? new Date(measured_at) : new Date();
+  logDate.setMonth(logDate.getMonth() + 1);
+  
+  await supabase
+    .from('plans')
+    .insert({
+      user_id: user.id,
+      pet_id: id,
+      category: 'saglik',
+      sub_type: 'Kilo & Boy Ölçümü',
+      scheduled_at: logDate.toISOString(),
+      status: 'active',
+      extra_data: { source: 'system', auto_generated: true }
+    });
+
   revalidatePath('/owner/dashboard')
   // @ts-expect-error
   revalidateTag('dashboard')

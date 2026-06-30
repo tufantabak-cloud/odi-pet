@@ -147,6 +147,24 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // ─── Otomatik Kilo & Boy Hatırlatıcısı (1 ay sonrası) ──────────────
+  const nextMonth = new Date();
+  nextMonth.setMonth(nextMonth.getMonth() + 1);
+  
+  const { error: autoPlanError } = await supabase
+    .from('plans')
+    .insert({
+      user_id: user.id,
+      pet_id: data.id,
+      category: 'saglik',
+      sub_type: 'Kilo & Boy Ölçümü',
+      scheduled_at: nextMonth.toISOString(),
+      status: 'active',
+      extra_data: { source: 'system', auto_generated: true }
+    });
+  
+  if (autoPlanError) console.error('[API/Pets] Auto plan error:', autoPlanError);
+
   revalidatePath('/owner/dashboard')
   // @ts-expect-error
     revalidateTag('dashboard')

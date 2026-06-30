@@ -58,7 +58,6 @@ export const TASK_SUB_CATEGORIES: Record<TaskCategory, SubCategoryItem[]> = {
     { id: 'Takip',   label: 'Takip Randevusu' },
   ],
   Saglik: [
-    { id: 'Kilo Takibi',      label: 'Kilo Ölçümü' },
     { id: 'Belirti Takibi',   label: 'Semptom & Belirti Takibi' },
     { id: 'İlaç',             label: 'İlaç Kullanımı' },
     { id: 'Tedavi/Pansuman',  label: 'Tedavi & Pansuman' },

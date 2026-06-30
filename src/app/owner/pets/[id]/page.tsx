@@ -105,8 +105,29 @@ export default async function PetDetailPage(props: PageProps) {
     }
   })
 
-  // Merge: health_schedules + plans (duplicate'leri önle — plan_id eşleşmesi)
-  const allSchedules = [...(schedules ?? []), ...plansAsSchedules]
+  // Merge: health_schedules + plans (duplicate'leri önle)
+  // Strateji 1: plan_id eşleşmesi (health_schedule, plans tablosundaki bir plan'ı bağladıysa)
+  const existingPlanIds = new Set(
+    (schedules ?? [])
+      .map((s: any) => s.plan_id)
+      .filter(Boolean)
+  )
+
+  // Strateji 2: sub_category + due_date bileşik anahtarı (plan_id bağlantısı olmayan standalone kayıtlar için)
+  const existingSubCategoryDateKeys = new Set(
+    (schedules ?? [])
+      .filter((s: any) => s.sub_category && s.due_date)
+      .map((s: any) => `${s.sub_category}__${s.due_date}`)
+  )
+
+  const uniquePlansAsSchedules = plansAsSchedules.filter((plan: any) => {
+    if (existingPlanIds.has(plan._plan_id)) return false
+    const compositeKey = `${plan.sub_category}__${plan.due_date}`
+    if (plan.sub_category && plan.due_date && existingSubCategoryDateKeys.has(compositeKey)) return false
+    return true
+  })
+
+  const allSchedules = [...(schedules ?? []), ...uniquePlansAsSchedules]
 
   const age = calcAge(pet.birth_date)
   

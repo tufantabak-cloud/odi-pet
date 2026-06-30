@@ -256,6 +256,40 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
       }
     }
 
+    // Bugün vadesi gelmiş/geçmiş sağlık görevleri (aşı/parazit harici ve aktif pet'e ait)
+    const todayHealthTasks = upcomingSchedules?.filter((s: any) => {
+      if (s.pet_id !== targetPet.id) return false
+      if (s.status === 'done') return false
+      const isHealth = s.category === 'saglik' || s.category === 'Saglik'
+      if (!isHealth) return false
+      if (!s.due_date) return false
+      const dueDate = new Date(s.due_date)
+      dueDate.setHours(0,0,0,0)
+      return dueDate <= todayDate
+    })
+
+    if (todayHealthTasks && todayHealthTasks.length > 0) {
+      const healthCardId = `health-tasks-${targetPet.id}-${todayDate.toISOString().split('T')[0]}`
+      if (!dismissedCards.includes(healthCardId) && highlight !== healthCardId) {
+        const pet = pets.find(p => p.id === todayHealthTasks[0].pet_id) || targetPet
+        const taskCount = todayHealthTasks.length
+        const firstTask = todayHealthTasks[0]
+        const taskTitle = firstTask.title || firstTask.sub_category || 'Sağlık Görevi'
+        activeCards.push({
+          id: healthCardId,
+          type: 'health-task',
+          title: taskCount === 1 ? taskTitle : `${taskCount} Sağlık Görevi Bekliyor`,
+          subtitle: taskCount === 1
+            ? `${pet.name}'nın bugün için planlanmış ${taskTitle} görevi var.`
+            : `${pet.name}'nın bugün için ${todayHealthTasks.map((t: any) => t.title || t.sub_category).slice(0, 3).join(', ')} ve daha fazlası planlandı.`,
+          ctaLabel: 'Görüntüle',
+          action: () => {
+            router.push(`/owner/pets/${pet.id}?tab=saglik#section-saglik`)
+          }
+        })
+      }
+    }
+
     // Calculate weight statistics
     const lastWeightLog = allWeightLogs?.find(w => w.pet_id === targetPet.id)
     const daysSinceLastLog = lastWeightLog 
@@ -428,6 +462,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
       case 'weight-first': return <i className="ti ti-scale text-[18px]" style={{ color: 'var(--color-danger)' }} />
       case 'weight-routine': return <i className="ti ti-scale text-[18px]" style={{ color: '#0F8F84' }} />
       case 'journal': return <i className="ti ti-mood-smile text-[18px]" style={{ color: 'var(--color-danger)' }} />
+      case 'health-task': return <i className="ti ti-heart-rate-monitor text-[18px]" style={{ color: '#E05C97' }} />
       default: return <PawIcon width={18} height={18} />
     }
   }
@@ -487,6 +522,15 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
           btnBg: 'var(--color-danger)',
           tagColor: 'var(--color-danger)',
           tagText: 'Aktivite · Takip'
+        }
+      case 'health-task':
+        return {
+          accentColor: '#E05C97',
+          bg: 'rgba(224,92,151,0.04)',
+          iconBg: 'rgba(224,92,151,0.12)',
+          btnBg: '#E05C97',
+          tagColor: '#E05C97',
+          tagText: 'Sağlık · Bugün'
         }
       case 'venues':
       default:

@@ -24,7 +24,7 @@ type BottomNavProps = {
 }
 
 const fallbackActionMenuItems = [
-  { label: 'Plan Yap',     href: '/owner/plan-yap' },
+  { label: 'Rutin Planla',     href: '/owner/plan-yap' },
   { label: 'Sağlık Kaydı/Aşı',   href: '/owner/pets' },
   { label: 'Akıllı Tarama',    href: '/owner/scanner' },
   { label: 'Durum Kaydet',  href: '/owner/pets' },
