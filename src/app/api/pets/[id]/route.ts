@@ -132,23 +132,24 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
   // ─── Regenerate Vaccination Plan if birth_date changed ────────────────
   const newBirthDate = payload.birth_date
   if (newBirthDate && newBirthDate !== pet.birth_date) {
-    // Delete existing vaccination plans (simplistic check by title keywords)
-    // In a real app, we'd have a 'type' or 'is_auto' flag.
+    // Sadece eski otomatik oluşturulmuş planları sil
     await supabase
-      .from('care_plans')
+      .from('plans')
       .delete()
       .eq('pet_id', id)
-      .or('title.ilike.%Karma%,title.ilike.%Kuduz%,title.ilike.%Corona%,title.ilike.%Lösemi%')
+      .eq('extra_data->>auto_generated', 'true')
 
-    const plans = await generateVaccinationPlan(newBirthDate, pet.species, supabase)
-    if (plans.length > 0) {
-      const carePlansPayload = plans.map(p => ({
+    const generatedTasks = await generateVaccinationPlan(newBirthDate, pet.species, supabase)
+    if (generatedTasks.length > 0) {
+      const plansPayload = generatedTasks.map(t => ({
+        user_id: user.id,
         pet_id: id,
-        title: p.title,
-        description: p.description,
-        due_date: p.due_date
+        category: t.category,
+        sub_type: t.sub_type,
+        scheduled_at: t.scheduled_at,
+        extra_data: t.extra_data
       }))
-      await supabase.from('care_plans').insert(carePlansPayload)
+      await supabase.from('plans').insert(plansPayload)
     }
   }
 

@@ -226,6 +226,13 @@ export default function VaccineSettingsPage() {
             <form className="flex flex-col gap-4" onSubmit={async (e) => {
               e.preventDefault();
               const fd = new FormData(e.currentTarget);
+              const doseCount = Number(fd.get('dose_count'));
+              const recurrenceDays = Number(fd.get('recurrence_days')) || null;
+              // Validasyon: çok dozlu ama tekrar günü boş bırakılmış
+              if (doseCount > 1 && !recurrenceDays) {
+                alert('Toplam Doz 1\'den büyük olduğunda "Tekrar (Gün)" alanı zorunludur. Lütfen doz aralığını (örn: 21) girin.');
+                return;
+              }
               const payload = {
                 vaccine_name: fd.get('vaccine_name'),
                 vaccine_code: fd.get('vaccine_code'),
@@ -233,8 +240,8 @@ export default function VaccineSettingsPage() {
                 category: fd.get('category'),
                 mandatory_level: fd.get('mandatory_level'),
                 first_dose_week: Number(fd.get('first_dose_week')),
-                dose_count: Number(fd.get('dose_count')),
-                recurrence_days: Number(fd.get('recurrence_days')) || null,
+                dose_count: doseCount,
+                recurrence_days: recurrenceDays,
                 has_annual_booster: fd.get('has_annual_booster') === 'on',
                 is_active: fd.get('is_active') === 'on',
               };
@@ -290,13 +297,16 @@ export default function VaccineSettingsPage() {
                 </div>
                 <div>
                   <label className="text-[12px] font-bold text-text-secondary mb-1.5 block">Toplam Doz</label>
-                  <input type="number" required name="dose_count" defaultValue={editingTemplate?.dose_count ?? 1} className="w-full bg-bg-main border border-border-main rounded-xl px-4 py-3 text-[14px] font-bold outline-none focus:border-primary transition-all" />
+                  <input type="number" required min={1} name="dose_count" defaultValue={editingTemplate?.dose_count ?? 1} className="w-full bg-bg-main border border-border-main rounded-xl px-4 py-3 text-[14px] font-bold outline-none focus:border-primary transition-all" />
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <label className="text-[12px] font-bold text-text-secondary mb-1.5 block">Tekrar (Gün)</label>
-                  <input type="number" name="recurrence_days" defaultValue={editingTemplate?.recurrence_days || ''} placeholder="Örn: 30" className="w-full bg-bg-main border border-border-main rounded-xl px-4 py-3 text-[14px] font-bold outline-none focus:border-primary transition-all" />
+                  <label className="text-[12px] font-bold text-text-secondary mb-1.5 block">
+                    Tekrar (Gün)
+                    <span className="ml-1 text-[11px] font-medium text-text-secondary">(Toplam Doz &gt; 1 ise zorunlu)</span>
+                  </label>
+                  <input type="number" name="recurrence_days" defaultValue={editingTemplate?.recurrence_days || ''} placeholder="Örn: 21" className="w-full bg-bg-main border border-border-main rounded-xl px-4 py-3 text-[14px] font-bold outline-none focus:border-primary transition-all" />
                 </div>
               </div>
               

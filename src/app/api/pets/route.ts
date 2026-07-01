@@ -130,20 +130,22 @@ export async function POST(req: NextRequest) {
   // ─── Generate Vaccination Plan ────────────────────────────────
   const birthDate = str(fd, 'birth_date')
   if (birthDate) {
-    const plans = await generateVaccinationPlan(birthDate, species, supabase)
-    if (plans.length > 0) {
-      const carePlansPayload = plans.map(p => ({
+    const generatedTasks = await generateVaccinationPlan(birthDate, species, supabase)
+    if (generatedTasks.length > 0) {
+      const plansPayload = generatedTasks.map(t => ({
+        user_id: user.id,
         pet_id: data.id,
-        title: p.title,
-        description: p.description,
-        due_date: p.due_date
+        category: t.category,
+        sub_type: t.sub_type,
+        scheduled_at: t.scheduled_at,
+        extra_data: t.extra_data
       }))
       
       const { error: planError } = await supabase
-        .from('care_plans')
-        .insert(carePlansPayload)
+        .from('plans')
+        .insert(plansPayload)
       
-      if (planError) console.error('[API/Pets] Care plan generation error:', planError)
+      if (planError) console.error('[API/Pets] Plan generation error:', planError)
     }
   }
 
