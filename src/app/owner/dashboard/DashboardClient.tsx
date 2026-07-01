@@ -147,6 +147,30 @@ export default function DashboardClient({
         </div>
       )}
 
+      {/* 4. Sağlık Geçmişi Sihirbazı Hatırlatıcısı */}
+      {pets && pets.filter((p: any) => {
+        if (!p.birth_date || (p.health_history_status !== 'pending' && p.health_history_status !== 'skipped' && p.health_history_status !== null)) return false;
+        const born = new Date(p.birth_date);
+        const now = new Date();
+        const ageInMonths = (now.getFullYear() - born.getFullYear()) * 12 + (now.getMonth() - born.getMonth());
+        return ageInMonths >= 6;
+      }).map((pet: any) => (
+        <div key={`health-wizard-${pet.id}`} className="px-[var(--space-4)] pt-3 pb-1">
+          <Link href={`/owner/pets/${pet.id}/health-history`} className="block w-full bg-[var(--color-surface-1)] border border-[var(--color-border)] rounded-[12px] p-4 text-left hover:bg-[var(--color-surface-2)] transition-colors shadow-sm">
+            <div className="flex items-start gap-3">
+              <i className="ti ti-clock text-[20px] text-[var(--color-primary)] mt-0.5 shrink-0" />
+              <div>
+                <p className="text-[14px] font-bold text-[var(--color-text-primary)]">{pet.name} için sağlık geçmişini ekle</p>
+                <p className="text-[12px] text-[var(--color-text-secondary)] mt-1 leading-relaxed">
+                  Daha önceki aşılarını sisteme tanıtarak hatırlatıcıların doğru çalışmasını sağlayın. <strong>Sadece 2 dakika sürer.</strong>
+                </p>
+                <p className="text-[12px] font-bold text-[var(--color-primary)] mt-2">Şimdi Ekle →</p>
+              </div>
+            </div>
+          </Link>
+        </div>
+      ))}
+
       {/* 5. Smart Cards */}
       {pets && pets.length > 0 && (
         <div className="px-[var(--space-4)] pt-2">

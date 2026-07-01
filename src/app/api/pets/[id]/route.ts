@@ -139,8 +139,13 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
       .eq('pet_id', id)
       .eq('extra_data->>auto_generated', 'true')
 
-    const generatedTasks = await generateVaccinationPlan(newBirthDate, pet.species, supabase)
-    if (generatedTasks.length > 0) {
+    const born = new Date(newBirthDate)
+    const now = new Date()
+    const ageInMonths = (now.getFullYear() - born.getFullYear()) * 12 + (now.getMonth() - born.getMonth())
+
+    if (ageInMonths < 6) {
+      const generatedTasks = await generateVaccinationPlan(newBirthDate, pet.species, supabase)
+      if (generatedTasks.length > 0) {
       const plansPayload = generatedTasks.map(t => ({
         user_id: user.id,
         pet_id: id,
@@ -150,6 +155,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
         extra_data: t.extra_data
       }))
       await supabase.from('plans').insert(plansPayload)
+      }
     }
   }
 

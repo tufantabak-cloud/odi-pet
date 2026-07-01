@@ -66,7 +66,7 @@ export async function generateVaccinationPlan(
         scheduledDate.setDate(firstDoseDate.getDate() + occurrence * recurrenceDays)
         tasks.push({
           category: mappedCategory,
-          sub_type: t.vaccine_name,
+          sub_type: occurrence > 0 ? `${t.vaccine_name} — ${occurrence + 1}. Uygulama` : t.vaccine_name,
           scheduled_at: scheduledDate.toISOString(),
           extra_data: baseExtraData,
         })
@@ -122,7 +122,7 @@ export async function generateVaccinationPlan(
 
       tasks.push({
         category: mappedCategory,
-        sub_type: t.vaccine_name,
+        sub_type: doseCount > 1 ? `${t.vaccine_name} — ${i}. Doz` : t.vaccine_name,
         scheduled_at: scheduledDate.toISOString(),
         extra_data: baseExtraData,
       })

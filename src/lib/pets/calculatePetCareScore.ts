@@ -104,8 +104,13 @@ export function calculatePetCareScore({
     total += 15
   }
 
-  // Sınırlandırma (maks 135)
-  const MAX_SCORE = 135
+  // 9. Sağlık Geçmişi Sihirbazı Tamamlandı (+50)
+  if (pet.health_history_status === 'completed') {
+    total += 50
+  }
+
+  // Sınırlandırma (maks 135 + 50 = 185)
+  const MAX_SCORE = 185
   if (total > MAX_SCORE) total = MAX_SCORE
 
   // Eksik maddeyi bul ve nextAction oluştur

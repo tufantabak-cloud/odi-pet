@@ -2951,6 +2951,7 @@ export type Database = {
           district: string | null
           gender: string | null
           health_score: number | null
+          health_history_status: string | null
           id: string
           is_demo: boolean | null
           is_neutered: boolean | null
@@ -2983,6 +2984,7 @@ export type Database = {
           district?: string | null
           gender?: string | null
           health_score?: number | null
+          health_history_status?: string | null
           id?: string
           is_demo?: boolean | null
           is_neutered?: boolean | null
@@ -3015,6 +3017,7 @@ export type Database = {
           district?: string | null
           gender?: string | null
           health_score?: number | null
+          health_history_status?: string | null
           id?: string
           is_demo?: boolean | null
           is_neutered?: boolean | null

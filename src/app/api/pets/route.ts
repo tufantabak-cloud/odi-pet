@@ -127,11 +127,17 @@ export async function POST(req: NextRequest) {
     if (weightError) console.error('[API/Pets] Weight log error:', weightError)
   }
 
-  // ─── Generate Vaccination Plan ────────────────────────────────
+  // ─── Generate Vaccination Plan (Sadece Yavrular İçin) ─────────
   const birthDate = str(fd, 'birth_date')
   if (birthDate) {
-    const generatedTasks = await generateVaccinationPlan(birthDate, species, supabase)
-    if (generatedTasks.length > 0) {
+    const born = new Date(birthDate)
+    const now = new Date()
+    const ageInMonths = (now.getFullYear() - born.getFullYear()) * 12 + (now.getMonth() - born.getMonth())
+    
+    // Sadece 6 aydan küçük yavrular için otomatik plan üret
+    if (ageInMonths < 6) {
+      const generatedTasks = await generateVaccinationPlan(birthDate, species, supabase)
+      if (generatedTasks.length > 0) {
       const plansPayload = generatedTasks.map(t => ({
         user_id: user.id,
         pet_id: data.id,
@@ -146,6 +152,7 @@ export async function POST(req: NextRequest) {
         .insert(plansPayload)
       
       if (planError) console.error('[API/Pets] Plan generation error:', planError)
+      }
     }
   }
 

@@ -1,8 +1,9 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Suspense, useState } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useWebPush } from '@/hooks/useWebPush'
+import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 
 function SuccessContent() {
   const router = useRouter()
@@ -10,14 +11,29 @@ function SuccessContent() {
   const { isSubscribed, isLoading, subscribe } = useWebPush()
   const [errorMsg, setErrorMsg] = useState('')
   const [justSubscribed, setJustSubscribed] = useState(false)
+  
+  const [pet, setPet] = useState<any>(null)
+  const supabase = createBrowserSupabaseClient()
 
   const petId   = params.get('id')   ?? ''
   const petName = params.get('name') ?? 'Dostunuz'
 
-  if (!petId) {
-    router.replace('/owner/pets/add')
-    return null
-  }
+  useEffect(() => {
+    if (!petId) {
+      router.replace('/owner/pets/add')
+      return
+    }
+    
+    const fetchPet = async () => {
+      const { data } = await supabase
+        .from('pets')
+        .select('birth_date, health_history_status, species')
+        .eq('id', petId)
+        .single()
+      if (data) setPet(data)
+    }
+    fetchPet()
+  }, [petId, router, supabase])
 
   const handleSubscribe = async () => {
     setErrorMsg('')
@@ -40,6 +56,25 @@ function SuccessContent() {
   }
 
   const isAlreadyActive = isSubscribed || justSubscribed
+
+  const handleSkip = async () => {
+    if (showHealthHistoryCard) {
+      // Eğer sağlık geçmişi kartı görünüyor ve kullanıcı atlıyorsa, skipped olarak işaretle
+      await supabase.from('pets').update({ health_history_status: 'skipped' }).eq('id', petId)
+    }
+    router.push(`/owner/pets/${petId}`)
+  }
+
+  let ageInMonths = 0
+  if (pet?.birth_date) {
+    const born = new Date(pet.birth_date)
+    const now = new Date()
+    ageInMonths = (now.getFullYear() - born.getFullYear()) * 12 + (now.getMonth() - born.getMonth())
+  }
+  
+  const showHealthHistoryCard = ageInMonths >= 6 && (!pet?.health_history_status || pet?.health_history_status === 'pending')
+
+  if (!petId) return null
 
   return (
     <div className="card-base p-8 sm:p-10 flex flex-col items-center gap-6 animate-fadeInUp mt-10 max-w-md mx-auto border border-primary/10 text-center">
@@ -87,18 +122,53 @@ function SuccessContent() {
         )}
       </div>
 
+      {showHealthHistoryCard && (
+        <div className="w-full bg-surface-1 border border-border rounded-[10px] p-4 mb-2 text-left animate-scaleIn">
+          <div className="flex items-start gap-2.5 mb-3">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary mt-0.5 shrink-0">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <div>
+              <p className="text-[14px] font-bold text-text-primary">Sağlık geçmişini ekle</p>
+              <p className="text-[12px] text-text-secondary mt-1">
+                Yaklaşık 2 dakika sürer. <strong className="text-text-primary">Sadece bir kez yapılır</strong> — bundan sonrası otomatik.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5 mb-4 pb-4 border-b border-border">
+            <div className="flex items-center gap-2 text-[12px] text-text-secondary">
+              <span className="text-success text-[14px]">✓</span> Geçmiş aşıları sisteme tanıtırsınız
+            </div>
+            <div className="flex items-center gap-2 text-[12px] text-text-secondary">
+              <span className="text-success text-[14px]">✓</span> Gelecek hatırlatıcılar doğru tarihlere planlanır
+            </div>
+            <div className="flex items-center gap-2 text-[12px] text-text-secondary">
+              <span className="text-success text-[14px]">✓</span> Bir daha sormayız — sistem otomatik takip eder
+            </div>
+          </div>
+          
+          <button
+            onClick={() => router.push(`/owner/pets/${petId}/health-history`)}
+            className="w-full bg-primary text-white border-none rounded-xl py-3 text-[14px] font-bold cursor-pointer hover:bg-primary-hover transition-colors shadow-md"
+          >
+            Şimdi ekle (2 dk) →
+          </button>
+        </div>
+      )}
+
       {errorMsg && (
         <div className="p-3 bg-error/10 text-error text-[13px] font-bold rounded-xl border border-error/20 w-full animate-scaleIn">
           ⚠️ {errorMsg}
         </div>
       )}
 
-      <div className="flex flex-col w-full gap-3 mt-4 relative">
+      <div className="flex flex-col w-full gap-3 mt-2 relative">
         {isAlreadyActive ? (
           <button
             id="btn-goto-profile"
             onClick={() => router.push(`/owner/pets/${petId}`)}
-            className="btn-primary w-full py-4 text-[15px] font-black shadow-xl shadow-primary/20 flex items-center justify-center gap-2 hover:scale-[1.03] transition-all rounded-[14px]"
+            className="btn-secondary w-full py-3.5 text-[14px] font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-surface-1 transition-all rounded-[12px]"
           >
             Profile Git →
           </button>
@@ -107,7 +177,7 @@ function SuccessContent() {
             <button
               onClick={handleSubscribe}
               disabled={isLoading}
-              className="btn-primary w-full py-4 text-[15px] font-black shadow-xl shadow-primary/20 flex items-center justify-center gap-2 hover:scale-[1.03] transition-all rounded-[14px]"
+              className="btn-secondary border-primary/20 bg-primary/5 text-primary w-full py-3.5 text-[14px] font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-primary/10 transition-all rounded-[12px]"
             >
               {isLoading ? (
                 <span className="flex items-center gap-2 justify-center">
@@ -120,11 +190,11 @@ function SuccessContent() {
             </button>
             
             <button
-              onClick={() => router.push(`/owner/pets/${petId}`)}
+              onClick={handleSkip}
               disabled={isLoading}
-              className="text-[13px] font-bold text-text-secondary hover:text-text-primary py-2 hover:underline transition-colors"
+              className="text-[13px] font-bold text-text-secondary hover:text-text-primary py-2 hover:underline transition-colors mt-2"
             >
-              Şimdi Değil, Profile Git
+              Daha Sonra Profile Git
             </button>
           </>
         )}
