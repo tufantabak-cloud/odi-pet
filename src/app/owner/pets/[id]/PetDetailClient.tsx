@@ -23,6 +23,7 @@ import { EstrusTracker } from '@/components/estrus-tracker/EstrusTracker'
 import PetHeroCard from './PetHeroCard'
 import AllergyManager from '@/components/pets/AllergyManager'
 import CareScoreWidget from '@/components/pets/CareScoreWidget'
+import { getPlanDisplayCategory } from '@/lib/plans/utils'
 function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -1373,7 +1374,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                               <p className="text-[13px] font-600 text-[var(--color-text-primary)] truncate group-hover:text-[var(--color-primary)] transition-colors">
                                 {plan.title || (plan as any).vaccines?.name || 'Sağlık İşlemi'}
                               </p>
-                              <p className="text-[10px] text-[var(--color-text-muted)] mt-0.5">{plan.category}</p>
+                              <p className="text-[10px] text-[var(--color-text-muted)] mt-0.5">{getPlanDisplayCategory(plan.category, plan.sub_category)}</p>
                             </div>
                             <span className="text-[10px] font-700 px-2 py-1 rounded-xs shrink-0 whitespace-nowrap"
                               style={{ background: badgeBg, color: badgeColor }}>

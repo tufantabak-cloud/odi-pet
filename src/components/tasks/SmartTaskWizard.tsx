@@ -8,6 +8,7 @@ import VaccineSelectorSheet, { VaccineOption } from './VaccineSelectorSheet';
 import { TaskCategory, TASK_CATEGORIES, getSmartDefault } from '@/lib/tasks/taskDefaults';
 import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 import { SmartScanner } from '@/components/ui/SmartScanner';
+import { getPlanDisplayTitle } from '@/lib/plans/utils';
 
 interface SmartTaskWizardProps {
   petId: string;
@@ -376,7 +377,7 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
             _plan_id: updatedPlan.id,
             _source: 'plans',
             pet_id: updatedPlan.pet_id,
-            title: updatedPlan.sub_type || updatedPlan.extra_data?.vaccine?.name || 'Plan',
+            title: getPlanDisplayTitle(updatedPlan),
             due_date: formData.date,
             due_time: formData.time + ':00',
             status: updatedPlan.status === 'completed' ? 'done' : updatedPlan.status === 'cancelled' ? 'done' : 'upcoming',

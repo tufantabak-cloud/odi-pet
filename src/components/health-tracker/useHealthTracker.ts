@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 import { ComputedStatus, CategoryGroup, TaskRow, PetCareTask, PetCareEvent, ComputedEvent } from './types';
+import { getPlanDisplayTitle } from '@/lib/plans/utils';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Veri Kaynağı Notu:
@@ -399,7 +400,7 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
             _plan_id: p.id,
             _source: 'plans',
             pet_id: p.pet_id,
-            title: p.sub_type || p.extra_data?.vaccine?.name || 'Plan',
+            title: getPlanDisplayTitle(p),
             due_date: dueDateStr,
             due_time: dueTimeStr,
             status: p.status === 'completed' ? 'done' : p.status === 'cancelled' ? 'done' : 'upcoming',

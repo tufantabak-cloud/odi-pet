@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { calcAge } from '@/lib/pets/utils'
 import { getNowTR } from '@/lib/utils'
 import PetDetailClient from './PetDetailClient'
+import { getPlanDisplayTitle } from '@/lib/plans/utils'
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -89,7 +90,7 @@ export default async function PetDetailPage(props: PageProps) {
       _plan_id: p.id,
       _source: 'plans',
       pet_id: p.pet_id,
-      title: p.sub_type || p.extra_data?.vaccine?.name || 'Plan',
+      title: getPlanDisplayTitle(p),
       due_date: dueDate,
       due_time: dueTime,
       status: p.status === 'completed' ? 'done' : p.status === 'cancelled' ? 'done' : 'upcoming',

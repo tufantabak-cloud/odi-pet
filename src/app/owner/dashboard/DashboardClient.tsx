@@ -7,6 +7,7 @@ import { PetSlider } from '@/components/dashboard/PetSlider'
 import DashboardSmartCards from './DashboardSmartCards'
 import SmartQuestionCard from '@/components/profiling/SmartQuestionCard'
 import SmartInsightCard from '@/components/profiling/SmartInsightCard'
+import { getPlanDisplayTitle } from '@/lib/plans/utils'
 
 export default function DashboardClient({
   greeting,
@@ -202,7 +203,7 @@ export default function DashboardClient({
                       <i className="ti ti-refresh" style={{fontSize: '17px', color: 'var(--color-primary)'}} />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[13px] font-700 text-[var(--color-text-primary)] truncate">{plan.sub_type || plan.category || 'Plan'}</p>
+                      <p className="text-[13px] font-700 text-[var(--color-text-primary)] truncate">{getPlanDisplayTitle(plan)}</p>
                       <p className="text-[10px] text-[var(--color-text-secondary)] font-600 truncate">{plan.pets?.name || 'Pet'}</p>
                     </div>
                   </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { createBrowserClient } from '@supabase/ssr';
+import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 import { 
   ChevronRight,
   Loader2,
@@ -51,10 +51,7 @@ function PlanYapContent() {
   const router = useRouter();
   const urlPetId = searchParams.get('pet_id');
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = createBrowserSupabaseClient();
 
   const [selectedPet, setSelectedPet] = useState<string | null>(urlPetId || null);
   const [pets, setPets] = useState<{ id: string, name: string, type: string, avatar_url?: string }[]>([]);
@@ -64,7 +61,7 @@ function PlanYapContent() {
     async function loadPets() {
       const { data } = await supabase.from('pets').select('id, name, species, avatar_url');
       if (data && data.length > 0) {
-        setPets(data.map(p => ({
+        setPets(data.map((p: any) => ({
           id: p.id,
           name: p.name,
           type: p.species || 'Evcil Hayvan',

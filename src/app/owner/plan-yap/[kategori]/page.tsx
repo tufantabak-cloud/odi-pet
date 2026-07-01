@@ -430,6 +430,13 @@ export default function WizardOrchestrator() {
         endOccurrences: wizardData.endOccurrences,
         metadata: wizardData.metadata,
         vaccine: wizardData.selectedVaccine ? { code: wizardData.selectedVaccine.code ?? null, name: wizardData.selectedVaccine.name ?? null } : null,
+        product: wizardData.selectedProduct ? {
+          id: wizardData.selectedProduct.id,
+          brand_name: wizardData.selectedProduct.brand_name ?? null,
+          product_name: wizardData.selectedProduct.product_name ?? null,
+          category: wizardData.selectedProduct.category ?? null,
+          duration_days: wizardData.selectedProduct.duration_days ?? null
+        } : null,
         is_past_done: !!wizardData.markAsDone
       },
     };

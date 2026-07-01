@@ -2,6 +2,7 @@ import { unstable_cache } from 'next/cache'
 import { createAdminSupabaseClient } from '@/lib/supabase/server'
 import { getDailyQuestion, SmartQuestion } from '@/lib/profiling-engine'
 import { detectAnomalies, SmartInsight } from '@/lib/insight-engine'
+import { getPlanDisplayTitle } from '@/lib/plans/utils'
 
 /* ── Dashboard veri sözleşmesi ────────────────────────────── */
 
@@ -224,7 +225,7 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
                 _plan_id: p.id,
                 _source: 'plans',
                 pet_id: p.pet_id,
-                title: p.sub_type || p.extra_data?.vaccine?.name || 'Plan',
+                title: getPlanDisplayTitle(p),
                 due_date: dueDate,
                 due_time: dueTime,
                 status: p.status === 'completed' ? 'done' : p.status === 'cancelled' ? 'done' : 'upcoming',
