@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS public.referrals (
 );
 
 CREATE INDEX IF NOT EXISTS idx_referrals_code ON public.referrals (referral_code);
-CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON public.referrals (referrer_id, status);
+CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON public.referrals (referrer_id);
 
 -- 3. Abonelik ve AI Kredi Güncellemeleri
 ALTER TABLE public.user_subscriptions

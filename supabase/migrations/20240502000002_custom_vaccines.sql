@@ -12,12 +12,12 @@ ALTER TABLE public.vaccine_templates
 
 -- Drop the old unique constraint
 ALTER TABLE public.vaccine_templates
-  DROP CONSTRAINT IF EXISTS vaccine_templates_vaccine_code_dose_number_species_key;
-DROP INDEX IF EXISTS idx_vaccine_templates_code_dose_species;
+  DROP CONSTRAINT IF EXISTS vaccine_templates_vaccine_code_dose_count_species_key;
+DROP INDEX IF EXISTS idx_vaccine_templates_code_species;
 
 -- Create the new unique constraint that considers profile_id
-CREATE UNIQUE INDEX IF NOT EXISTS idx_vaccine_templates_code_dose_species_profile
-  ON public.vaccine_templates(vaccine_code, dose_number, species, COALESCE(profile_id, '00000000-0000-0000-0000-000000000000'::uuid));
+CREATE UNIQUE INDEX IF NOT EXISTS idx_vaccine_templates_code_species_profile
+  ON public.vaccine_templates(vaccine_code, dose_count, species, COALESCE(profile_id, '00000000-0000-0000-0000-000000000000'::uuid));
 
 -- Update RLS policies
 DROP POLICY IF EXISTS "Anyone can read vaccine templates" ON public.vaccine_templates;

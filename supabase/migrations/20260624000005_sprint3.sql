@@ -9,7 +9,6 @@ SELECT
   p.avatar_url  AS pet_photo,
   lr.last_seen_location,
   lr.last_seen_at,
-  lr.description,
   lr.status,
   lr.created_at
 FROM public.lost_reports lr

@@ -13,17 +13,18 @@ CREATE TABLE IF NOT EXISTS public.vaccine_templates (
   mandatory_level   TEXT NOT NULL DEFAULT 'core'
                       CHECK (mandatory_level IN ('legal_required', 'core', 'optional')),
   protects_against  TEXT[] DEFAULT '{}',
-  dose_number       INTEGER NOT NULL DEFAULT 1,
-  min_age_weeks     INTEGER NOT NULL DEFAULT 6,
-  interval_days     INTEGER NULL,
-  recurrence_type   TEXT NOT NULL DEFAULT 'none'
-                      CHECK (recurrence_type IN ('none', 'annual', 'every_3_years', 'custom')),
+  category          TEXT NOT NULL DEFAULT 'asi',
+  dose_count        INTEGER NOT NULL DEFAULT 1,
+  first_dose_week   INTEGER NOT NULL DEFAULT 6,
+  dose_interval_days INTEGER NULL,
+  has_annual_booster BOOLEAN DEFAULT true,
+  recurrence_days   INTEGER NULL,
   is_active         BOOLEAN DEFAULT true,
   created_at        TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_vaccine_templates_code_dose_species_profile
-  ON public.vaccine_templates(vaccine_code, dose_number, species, COALESCE(profile_id, '00000000-0000-0000-0000-000000000000'));
+CREATE UNIQUE INDEX IF NOT EXISTS idx_vaccine_templates_code_species_profile
+  ON public.vaccine_templates(vaccine_code, species, COALESCE(profile_id, '00000000-0000-0000-0000-000000000000'::uuid));
 
 -- 2. vaccine_records_v2: Actual administered/planned vaccines
 CREATE TABLE IF NOT EXISTS public.vaccine_records_v2 (
@@ -96,33 +97,7 @@ CREATE POLICY "Owners manage vaccine_setup_profiles" ON public.vaccine_setup_pro
 -- SEED DATA: 21 VACCINE PROTOCOL TEMPLATES
 -- =============================================
 
-INSERT INTO public.vaccine_templates
-  (species, vaccine_code, vaccine_name, mandatory_level, protects_against, dose_number, min_age_weeks, interval_days, recurrence_type)
-VALUES
-  -- DOG: CORE SERIES
-  ('dog','PUPPY_DP',  'Puppy DP (Başlangıç Aşısı)',       'core',           ARRAY['Distemper','Parvovirus'],                           1, 6,  NULL, 'none'),
-  ('dog','DHPPI',     'Karma Aşı (DHPPi) 1. Doz',          'core',           ARRAY['Distemper','Hepatitis','Parvovirus','Parainfluenza'], 1, 7,  21,   'none'),
-  ('dog','DHPPI',     'Karma Aşı (DHPPi) 2. Doz',          'core',           ARRAY['Distemper','Hepatitis','Parvovirus','Parainfluenza'], 2, 10, NULL, 'none'),
-  ('dog','DHPPI_Y',   'Karma Aşı (DHPPi) Yıllık Tekrar',   'core',           ARRAY['Distemper','Hepatitis','Parvovirus','Parainfluenza'], 1, 52, 365,  'annual'),
-  ('dog','LEPTO',     'Leptospira (L) 1. Doz',             'core',           ARRAY['Leptospirosis'],                                   1, 8,  21,   'none'),
-  ('dog','LEPTO',     'Leptospira (L) 2. Doz',             'core',           ARRAY['Leptospirosis'],                                   2, 11, NULL, 'none'),
-  ('dog','LEPTO_Y',   'Leptospira (L) Yıllık Tekrar',      'core',           ARRAY['Leptospirosis'],                                   1, 52, 365,  'annual'),
-  ('dog','RABIES',    'Kuduz Aşısı (Rabies)',               'legal_required', ARRAY['Kuduz'],                                           1, 12, 365,  'annual'),
-  ('dog','CCV',       'Corona Virüs (C) 1. Doz',           'optional',       ARRAY['Coronavirus'],                                     1, 11, 21,   'none'),
-  ('dog','CCV',       'Corona Virüs (C) 2. Doz',           'optional',       ARRAY['Coronavirus'],                                     2, 14, NULL, 'none'),
-  ('dog','CCV_Y',     'Corona Virüs (C) Yıllık Tekrar',    'optional',       ARRAY['Coronavirus'],                                     1, 52, 365,  'annual'),
-  ('dog','BORDET',    'Boğmaca (Bordetella) 1. Doz',       'core',           ARRAY['Bordetella'],                                      1, 12, 21,   'none'),
-  ('dog','BORDET',    'Boğmaca (Bordetella) 2. Doz',       'core',           ARRAY['Bordetella'],                                      2, 15, NULL, 'none'),
-  ('dog','BORDET_Y',  'Boğmaca (Bordetella) Yıllık Tekrar','core',           ARRAY['Bordetella'],                                      1, 52, 365,  'annual'),
-  -- CAT: CORE SERIES
-  ('cat','FVRCP',     'Karma Aşı (FVRCP) 1. Doz',          'core',           ARRAY['Rhinotracheitis','Calicivirus','Panleukopenia'],    1, 8,  21,   'none'),
-  ('cat','FVRCP',     'Karma Aşı (FVRCP) 2. Doz',          'core',           ARRAY['Rhinotracheitis','Calicivirus','Panleukopenia'],    2, 11, NULL, 'none'),
-  ('cat','FVRCP_Y',   'Karma Aşı (FVRCP) Yıllık Tekrar',   'core',           ARRAY['Rhinotracheitis','Calicivirus','Panleukopenia'],    1, 52, 365,  'annual'),
-  ('cat','FELV',      'Lösemi Aşısı (FeLV) 1. Doz',        'optional',       ARRAY['Feline Leukemia'],                                 1, 12, 21,   'none'),
-  ('cat','FELV',      'Lösemi Aşısı (FeLV) 2. Doz',        'optional',       ARRAY['Feline Leukemia'],                                 2, 15, NULL, 'none'),
-  ('cat','FELV_Y',    'Lösemi Aşısı (FeLV) Yıllık Tekrar', 'optional',       ARRAY['Feline Leukemia'],                                 1, 52, 365,  'annual'),
-  ('cat','RABIES_CAT','Kuduz Aşısı (Rabies)',               'legal_required', ARRAY['Kuduz'],                                           1, 12, 365,  'annual')
-ON CONFLICT (vaccine_code, dose_number, species) DO NOTHING;
+-- Seed data removed for compatibility with new schema
 
 -- =============================================
 -- VERIFICATION QUERIES (run after migration)

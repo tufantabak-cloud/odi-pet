@@ -156,7 +156,7 @@ CREATE TABLE IF NOT EXISTS public.referrals (
 );
 
 CREATE INDEX IF NOT EXISTS idx_referrals_code ON public.referrals (referral_code);
-CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON public.referrals (referrer_id, status);
+CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON public.referrals (referrer_id);
 
 -- RLS Policies
 ALTER TABLE public.subscription_plans ENABLE ROW LEVEL SECURITY;
