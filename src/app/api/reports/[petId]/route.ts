@@ -80,22 +80,16 @@ export async function POST(req: NextRequest, context: RouteContext) {
     }
 
     // 4. Fetch actual pet health statistics
-    // 4a. Vaccines Count (from both vaccine_records_v2 and vaccine_records fallback)
+    // 4a. Vaccines Count (from vaccine_records_v2)
+    const since12m = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()
     const { data: v2Data } = await supabase
       .from('vaccine_records_v2')
       .select('id')
       .eq('pet_id', petId)
       .eq('status', 'completed')
+      .gte('administered_at', since12m)
 
-    let vaccineCount = v2Data?.length || 0
-
-    if (vaccineCount === 0) {
-      const { data: v1Data } = await supabase
-        .from('vaccine_records')
-        .select('id')
-        .eq('pet_id', petId)
-      vaccineCount = v1Data?.length || 0
-    }
+    const vaccineCount = v2Data?.length || 0
 
     // 4b. Incident/Illness Count (from health_diseases)
     const { data: diseases } = await supabase

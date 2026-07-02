@@ -54,8 +54,7 @@ export default async function PrintReportPage({
     return <div className="p-10 text-center font-bold text-lg">Pet bulunamadı.</div>
   }
 
-  // Fetch completed vaccines from vaccine_records_v2
-  const { data: v2Vaccines } = await supabase
+  let vaccineQuery = supabase
     .from('vaccine_records_v2')
     .select('*')
     .eq('pet_id', params.id)
@@ -63,29 +62,18 @@ export default async function PrintReportPage({
     .order('administered_at', { ascending: false })
     .limit(5)
 
+  if (searchParams.range === 'last_12_months') {
+    const since12m = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()
+    vaccineQuery = vaccineQuery.gte('administered_at', since12m)
+  }
+
+  const { data: v2Vaccines } = await vaccineQuery
+
   let displayVaccines = (v2Vaccines || []).map((v: any) => ({
     id: v.id,
     vaccine_name: v.vaccine_name,
     administered_at: v.administered_at || v.due_at,
   }))
-
-  // Fallback to legacy vaccine_records if v2 is empty
-  if (displayVaccines.length === 0) {
-    const { data: oldVaccines } = await supabase
-      .from('vaccine_records')
-      .select('*, vaccines(name)')
-      .eq('pet_id', params.id)
-      .order('applied_date', { ascending: false })
-      .limit(5)
-    
-    if (oldVaccines) {
-      displayVaccines = oldVaccines.map((v: any) => ({
-        id: v.id,
-        vaccine_name: v.vaccines?.name || 'Aşı',
-        administered_at: v.applied_date,
-      }))
-    }
-  }
 
   // Fetch illnesses/incidents from health_diseases
   const { data: incidents } = await supabase

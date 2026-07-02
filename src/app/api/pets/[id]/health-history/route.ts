@@ -10,16 +10,40 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
 
     const supabase = await createServerSupabaseClient()
 
-    // Sahiplik kontrolü
-    const { data: ownership } = await supabase
-      .from('pet_owners')
-      .select('pet_id')
-      .eq('pet_id', id)
-      .eq('profile_id', profile.id)
+    // Pet ve Species bilgisini al
+    const { data: pet, error: petError } = await supabase
+      .from('pets')
+      .select('species')
+      .eq('id', id)
       .single()
 
-    if (!ownership && profile.role !== 'admin' && profile.role !== 'founder') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (petError || !pet) {
+      return NextResponse.json({ error: 'Pet not found' }, { status: 404 })
+    }
+
+    // Sahiplik kontrolü
+    if (profile.role !== 'admin' && profile.role !== 'founder') {
+      const { data: ownership } = await supabase
+        .from('pet_owners')
+        .select('pet_id')
+        .eq('pet_id', id)
+        .eq('profile_id', profile.id)
+        .single()
+
+      if (!ownership) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+    }
+
+    // Şablonları veritabanından çek (böylece sadece kod gönderilse bile eşleşir)
+    const { data: templates } = await supabase
+      .from('vaccine_templates')
+      .select('*')
+      .eq('species', pet.species)
+
+    const templateMap = new Map<string, any>()
+    if (templates) {
+      templates.forEach(t => templateMap.set(t.vaccine_code, t))
     }
 
     const body = await request.json()
@@ -32,17 +56,21 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     const tasks: any[] = []
 
     for (const item of vaccine_answers) {
-      const { 
-        vaccine_code, 
-        vaccine_name, 
-        category, 
-        dose_count, 
-        recurrence_days, 
-        has_annual_booster, 
-        answer, 
-        user_date, 
-        is_approximate 
-      } = item
+      const vCode = item.vaccine_code
+      const dbTemplate = templateMap.get(vCode) || {}
+
+      // Payload'da yoksa DB şablonundan fallback yap
+      const vaccine_code = vCode
+      const vaccine_name = item.vaccine_name || dbTemplate.vaccine_name || vCode
+      const category = item.category || dbTemplate.category
+      const dose_count = item.dose_count !== undefined ? item.dose_count : dbTemplate.dose_count
+      const recurrence_days = item.recurrence_days !== undefined ? item.recurrence_days : dbTemplate.recurrence_days
+      const has_annual_booster = item.has_annual_booster !== undefined ? item.has_annual_booster : dbTemplate.has_annual_booster
+
+      // answered ve last_date fallback'leri
+      const answer = item.answer || item.answered
+      const user_date = item.user_date || item.last_date
+      const is_approximate = item.is_approximate || false
 
       const mappedCategory = category === 'parasite' ? 'parazit' : 'asi'
       const baseExtraData = {
@@ -182,7 +210,8 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
 
     // Görevleri plans tablosuna yaz
     if (tasks.length > 0) {
-      const { error: insertError } = await supabase.from('plans').insert(tasks)
+      const tasksWithUserId = tasks.map(t => ({ ...t, user_id: profile.id }))
+      const { error: insertError } = await supabase.from('plans').insert(tasksWithUserId)
       if (insertError) throw insertError
     }
 

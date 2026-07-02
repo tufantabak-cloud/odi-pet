@@ -65,9 +65,10 @@ export async function GET() {
   // ── Overdue vaccines ─────────────────────────────────────────
   const now = new Date().toISOString()
   const { count: overdueVaccines } = await supabase
-    .from('vaccine_records')
+    .from('vaccine_records_v2')
     .select('id', { count: 'exact', head: true })
-    .lte('next_due_date', now)
+    .lte('due_at', now)
+    .not('status', 'in', '(completed,skipped,invalid)')
 
   // ── Last 5 registered users ──────────────────────────────────
   const { data: recentUsers } = await supabase

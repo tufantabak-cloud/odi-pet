@@ -32,8 +32,10 @@ export function getPlanDisplayTitle(plan: PlanLike): string {
   const displayName = vaccineName || productName;
 
   if (displayName) {
-    // Parazit ise alt kategori ile birlikte göster: İç Parazit (Caniverm Tablet) gibi
     if (category === 'parazit' || subType.toLowerCase().includes('parazit')) {
+      if (subType.toLowerCase().trim() === displayName.toLowerCase().trim()) {
+        return subType;
+      }
       return `${subType} (${displayName})`;
     }
     // Aşı ise doğrudan aşı adını göster

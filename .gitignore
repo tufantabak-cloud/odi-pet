@@ -42,3 +42,17 @@ import.env
 .vercel
 
 scratch/
+
+# Scratch/verify files (local testing only)
+verify.js
+verify.sql
+verify_pg.js
+test_print_page.js
+append.js
+backup_legacy_vaccines.js
+*.backup.json
+
+# Supabase temp/local folders
+supabase/.branches/
+supabase/.temp/
+

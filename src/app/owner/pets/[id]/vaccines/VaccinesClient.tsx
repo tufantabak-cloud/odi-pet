@@ -40,10 +40,10 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
           vaccine_name: vaccineName.trim(),
           vaccine_code: vaccineCode.trim() || 'CUSTOM',
           administered_at: adminDate,
-          status: 'done',
+          status: 'completed',
           notes: notes.trim() || null,
-          confidence_level: 'high',
-          source: 'manual',
+          confidence_level: 'verified',
+          source: 'user_detailed',
         })
 
         if (error) throw error

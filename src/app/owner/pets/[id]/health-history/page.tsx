@@ -56,10 +56,10 @@ export default async function HealthHistoryPage(props: { params: Promise<{ id: s
     .eq('is_active', true)
     .eq('mandatory_level', 'core')
     .neq('category', 'parasite')
-    .order('sort_order', { ascending: true })
+    .order('vaccine_name', { ascending: true })
 
   if (templateError || !templates) {
-    console.error('Vaccine templates fetch error:', templateError)
+    console.error('Vaccine templates fetch error:', JSON.stringify(templateError))
   }
 
   return (
@@ -67,12 +67,12 @@ export default async function HealthHistoryPage(props: { params: Promise<{ id: s
       {/* Header */}
       <div className="bg-[var(--color-surface-2)] border-b border-[var(--color-border)] sticky top-0 z-40">
         <div className="max-w-[520px] mx-auto px-4 h-14 flex items-center gap-3">
-          <button 
-            onClick={() => {/* Client tarafında handle edilebilir ama Next.js 14 back() için client component lazım, burada sadece <a> kullanabiliriz */}}
+          <a 
+            href={`/owner/pets/${id}`}
             className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[var(--color-surface-1)] text-[var(--color-text-secondary)] transition-colors"
           >
-            <a href={`/owner/pets/${id}`}><i className="ti ti-arrow-left text-[22px]" /></a>
-          </button>
+            <i className="ti ti-arrow-left text-[22px]" />
+          </a>
           <div className="flex-1">
             <h1 className="text-[16px] font-900 text-[var(--color-text-primary)] leading-tight">
               Sağlık Geçmişi

@@ -1352,10 +1352,16 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                         const today = new Date(now); today.setHours(0,0,0,0);
                         const target = new Date(taskDT); target.setHours(0,0,0,0);
                         const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000);
-
                         if (isOverdue) {
                           const dm = Math.floor((now.getTime() - taskDT.getTime()) / 60000)
-                          badge = dm < 60 ? `${Math.max(1,dm)} dk gecikti` : `${Math.floor(dm/60)} sa gecikti`
+                          const hours = Math.floor(dm / 60)
+                          if (dm < 60) {
+                            badge = `${Math.max(1, dm)} dk gecikti`
+                          } else if (hours < 24) {
+                            badge = `${hours} sa gecikti`
+                          } else {
+                            badge = `${Math.floor(hours / 24)} gün gecikti`
+                          }
                           dotColor = 'var(--color-danger)'; badgeBg = 'var(--color-danger-soft)'; badgeColor = 'var(--color-danger)'
                         } else if (diffDays === 0) {
                           badge = `Bugün${timeStr ? ' '+timeStr : ''}`

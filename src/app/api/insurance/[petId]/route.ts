@@ -4,11 +4,11 @@ import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { computeInsuranceEligibility } from '@/lib/insurance/eligibility-engine'
 import { Database } from '@/lib/database.types'
 
-type VaccineRow = Database['public']['Tables']['vaccines']['Row']
+
 type DiseaseRecordRow = Database['public']['Tables']['health_diseases']['Row']
 type DailyScoreRow = Database['public']['Tables']['daily_scores']['Row']
 
-type VaccineRecordWithRelations = { vaccines: Pick<VaccineRow, 'name'> | null }
+
 
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ petId: string }> }) {
@@ -50,7 +50,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ petI
     { data: insight },
   ] = await Promise.all([
     supabase.from('pets').select('name, species, breed, birth_date, microchip_no').eq('id', petId).single(),
-    supabase.from('vaccine_records').select('applied_date, vaccines(name)').eq('pet_id', petId).gte('applied_date', since12m),
+    supabase.from('vaccine_records_v2').select('administered_at, vaccine_name').eq('pet_id', petId).eq('status', 'completed').gte('administered_at', since12m),
     supabase.from('health_diseases').select('is_resolved').eq('pet_id', petId),
     supabase.from('health_diseases').select('id, is_resolved').eq('pet_id', petId).gte('diagnosis_date', since6m),
     supabase.from('health_diseases').select('is_resolved').eq('pet_id', petId).gte('diagnosis_date', since30d),
@@ -61,8 +61,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ petI
   if (!pet) return NextResponse.json({ error: 'Pet bulunamadı' }, { status: 404 })
 
   // ── Derive input signals ────────────────────────────────
-  const hasRabiesVaccine = (vaccines ?? []).some((v: unknown) =>
-    (v as VaccineRecordWithRelations).vaccines?.name?.toLowerCase().match(/kuduz|rabies/)
+  const hasRabiesVaccine = (vaccines ?? []).some((v: any) =>
+    v.vaccine_name?.toLowerCase().match(/kuduz|rabies/)
   )
   const ageKnown = !!pet.birth_date
   const profileComplete = !!(pet.name && pet.species && pet.breed && pet.birth_date)
