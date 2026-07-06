@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import SpotlightTour from '@/components/onboarding/SpotlightTour'
 import DashboardPendingReferral from '@/components/DashboardPendingReferral'
+import FloatingHelp from '@/components/FloatingHelp'
 
 export default async function OwnerLayout({ children }: { children: ReactNode }) {
   const profile = await requireRole(['owner', 'admin', 'founder'])
@@ -114,6 +115,7 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
 
       <SpotlightTour />
       <DashboardPendingReferral />
+      <FloatingHelp />
     </div>
   )
 }

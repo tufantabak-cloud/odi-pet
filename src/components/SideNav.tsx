@@ -91,6 +91,11 @@ const shortcutItems = [
     label: 'Profilim',
     icon: <i className="ti ti-user text-[18px]" />,
   },
+  {
+    href: '/help.html',
+    label: 'Yardım',
+    icon: <i className="ti ti-help-circle text-[18px]" />,
+  },
 ]
 
 function NavLink({ href, label, icon }: { href: string; label: string; icon: React.ReactNode }) {

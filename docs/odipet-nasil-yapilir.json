@@ -1,0 +1,275 @@
+{
+  "version": "1.0",
+  "updated": "2026-07-06",
+  "sections": [
+    {
+      "id": "dashboard",
+      "title": "Pati paneli",
+      "icon": "ti-layout-dashboard",
+      "mod": "db",
+      "status": "active",
+      "sub": "Dashboard kartları, durum takipleri ve progressive profiling yönlendirmeleri",
+      "items": [
+        {
+          "id": "dashboard-meaning",
+          "q": "Pati panelindeki renkli kartlar ne anlama geliyor?",
+          "tags": ["kart", "renk", "durum", "anlam"],
+          "steps": [
+            "Yaklaşan aşı, parazit veya bakım görevi olduğunda en üstte renkli kartlar belirir.",
+            "Kart renkleri durum aciliyetini gösterir: Yeşil tamamlanmış, Sarı yaklaşan, Kırmızı ise gecikmiş görevlerdir.",
+            "Karta dokunarak ilgili sağlık veya bakım detay ekranına hızlıca gidebilirsiniz."
+          ],
+          "note": "Aşı serisi tamamlandıktan 24-52 hafta sonra 6 aylık genel sağlık değerlendirme kartı otomatik olarak karşınıza çıkar.",
+          "noteType": "info"
+        },
+        {
+          "id": "smart-card-why",
+          "q": "Smart Card yönlendirmeleri neden çıkıyor?",
+          "tags": ["smart card", "veri toplama", "profil"],
+          "steps": [
+            "Evcil hayvanınızın profilinde eksik bilgi (kilo, mikroçip, yaşam biçimi vb.) olduğunda sistem bunları tamamlamanızı önerir.",
+            "Profil verileri tamamlandıkça bu akıllı kartlar otomatik olarak ekrandan kaybolur.",
+            "Bu sayede tek seferde uzun formlar doldurmak yerine aşama aşama profili güçlendirirsiniz."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vaccines",
+      "title": "Aşı modülü",
+      "icon": "ti-shield-check",
+      "mod": "vac",
+      "status": "active",
+      "sub": "Aşı takvimi, aşı geçmişi ekleme, reaksiyon takibi ve karne paylaşımı",
+      "items": [
+        {
+          "id": "vaccine-setup",
+          "q": "Yeni bir evcil hayvan için aşı planını nasıl kurarım?",
+          "tags": ["aşı planı", "kurulum", "takvim"],
+          "steps": [
+            "Sağlık sekmesinden 'Aşı Planını Başlat' butonuna dokunun.",
+            "Doğum tarihi, aşı geçmişi ve aşı karnesi fotoğrafı varlık durumunu belirtin.",
+            "Evcil hayvanınızın yaşam biçimi risklerini seçerek (kırsal alan, diğer köpeklerle temas vb.) adımları tamamlayın.",
+            "Sistem, girdiğiniz bilgilere göre yasal zorunlulukları ve WSAVA standartlarını harmanlayarak kişisel takvim oluşturur."
+          ]
+        },
+        {
+          "id": "vaccine-record",
+          "q": "Yapılan bir aşıyı sisteme nasıl kaydederim?",
+          "tags": ["aşı ekle", "aşı kaydı", "karne"],
+          "steps": [
+            "Aşı planındaki ilgili aşı kartından 'Aşı Yapıldı' seçeneğini seçin.",
+            "Dilerseniz aşı etiketini/karnesini kamerayla taratarak bilgileri otomatik doldurun.",
+            "Hızlı kayıt için aşı adı, tarih ve uygulayan kliniği girerek onaylayın."
+          ],
+          "note": "Sonraki dozların hatırlatma tarihleri, planlanan tarih üzerinden değil, aşının gerçekte vurulduğu tarih üzerinden yeniden hesaplanır.",
+          "noteType": "warning"
+        },
+        {
+          "id": "vaccine-reaction",
+          "q": "Aşı sonrası yan etki veya reaksiyon görülürse ne yapmalıyım?",
+          "tags": ["reaksiyon", "alerji", "yan etki", "acil"],
+          "steps": [
+            "Aşı kaydından sonraki reaksiyon kontrol bildirimine dokunun veya aşı detayından reaksiyon formunu açın.",
+            "Gözlenen durumun ciddiyetini belirtin (Normal, Hafif, Dikkat, Acil).",
+            "Eğer yüzde şişme, solunum güçlüğü veya baygınlık gibi 'Acil' semptomlar varsa, sistem formu kapatıp sizi en yakın nöbetçi klinik haritasına yönlendirir."
+          ],
+          "note": "Aşılama sonrası ilk 1 saat alerjik reaksiyon riski en yüksektir. Mümkünse aşı sonrası 30 dakika klinikten ayrılmayın.",
+          "noteType": "warning"
+        },
+        {
+          "id": "vaccine-wsava-tr",
+          "q": "WSAVA standartları ile yerel kurallar arasındaki fark nedir?",
+          "tags": ["wsava", "booster", "yasal"],
+          "steps": [
+            "Dünya Küçük Hayvan Veteriner Hekimleri Birliği (WSAVA), bazı temel aşıların 3 yılda bir tekrarlanmasını önerir.",
+            "Türkiye'deki yasal mevzuat, seyahat kuralları ve pansiyon kabulleri ise bu aşıların her yıl tekrarlanmasını zorunlu kılar.",
+            "OdiPet varsayılan olarak Türkiye'deki yasal takvimi (yıllık tekrarı) esas alır, detay modunda ise iki kuralı da gösterir."
+          ],
+          "note": "Kuduz aşısı yasa gereği her yıl düzenli olarak tekrarlanmak zorundadır.",
+          "noteType": "info"
+        }
+      ]
+    },
+    {
+      "id": "parasite",
+      "title": "Parazit modülü",
+      "icon": "ti-bug",
+      "mod": "par",
+      "status": "active",
+      "sub": "İç ve dış parazit uygulamaları, tasma takibi ve koruma periyotları",
+      "items": [
+        {
+          "id": "parasite-record",
+          "q": "Parazit ilacı veya uygulamasını nasıl kaydederim?",
+          "tags": ["parazit", "ense damlası", "hap", "tasma"],
+          "steps": [
+            "Sağlık sekmesinden 'Parazit Koruma' bölümüne girip yeni kayıt ekle deyin.",
+            "Uygulama türünü seçin (Ense damlası, tablet, tasma vb.).",
+            "Uygulamayı veteriner hekim yaptıysa 'Veteriner Onaylı', evde kendiniz uyguladıysanız 'Kullanıcı Beyanı' olarak kaydedin.",
+            "Seçtiğiniz ilacın markasına göre (NexGard, Bravecto vb.) sistem otomatik olarak sonraki doza kadar olan koruma süresini başlatır."
+          ]
+        },
+        {
+          "id": "parasite-collar",
+          "q": "Parazit tasması kullanırken nelere dikkat etmeliyim?",
+          "tags": ["tasma", "koruma", "yaş kısıtlaması"],
+          "steps": [
+            "Tasma kullanmadan önce evcil hayvanınızın yaş sınırına uygunluğunu kontrol edin (Örn. Seresto için minimum 7 hafta).",
+            "Tasmayı taktıktan sonraki ilk 48 saat boyunca boyun bölgesinde kızarıklık veya tüy dökülmesi kontrolü yapın.",
+            "Tasmanın koruyuculuk süresini azaltmamak için banyo veya yüzme gibi yoğun su temaslarından kaçının."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scanner",
+      "title": "Akıllı tarayıcı",
+      "icon": "ti-scan",
+      "mod": "scn",
+      "status": "active",
+      "sub": "OCR kamera ile aşı karneleri, mama paketleri ve ilaç kutularını tarama",
+      "items": [
+        {
+          "id": "scanner-use",
+          "q": "Akıllı tarayıcıyı nasıl kullanırım?",
+          "tags": ["tarayıcı", "ocr", "kamera", "okuma"],
+          "steps": [
+            "Ana menü veya pati panelindeki 'Tara' butonuna dokunun.",
+            "Taramak istediğiniz evcil hayvanı seçin.",
+            "Taranacak nesneyi (Aşı karnesi, Mama paketi, İlaç kutusu) kameraya hizalayıp fotoğrafını çekin.",
+            "Yapay zeka verileri analiz ettikten sonra ekranda gösterilen bilgileri onaylayarak doğrudan pati kaydına ekleyin."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "aivet",
+      "title": "AI Veteriner",
+      "icon": "ti-stethoscope",
+      "mod": "vet",
+      "status": "active",
+      "sub": "Yapay zeka tabanlı semptom sorgulama ve ön bilgilendirme asistanı",
+      "items": [
+        {
+          "id": "aivet-limits",
+          "q": "AI Veteriner asistanına neler danışabilirim?",
+          "tags": ["ai", "yapay zeka", "soru", "danışma"],
+          "steps": [
+            "Evcil hayvanınızda fark ettiğiniz olağandışı durumları veya davranış değişikliklerini yazın.",
+            "Asistan, evcil hayvanınızın yaşına, türüne ve aşı geçmişine göre olası nedenler hakkında sizi bilgilendirir.",
+            "Ciddi veya acil durumlarda asistan sizi doğrudan en yakın klinik haritasına yönlendirir."
+          ],
+          "note": "AI Veteriner yalnızca ön bilgilendirme amaçlıdır. Asla kesin tanı koymaz, ilaç reçete etmez.",
+          "noteType": "warning"
+        }
+      ]
+    },
+    {
+      "id": "lost",
+      "title": "Kayıp ihbarı",
+      "icon": "ti-map-pin-search",
+      "mod": "lst",
+      "status": "active",
+      "sub": "Kayıp ilanları oluşturma, çevreye duyurma ve bildirim yönetimi",
+      "items": [
+        {
+          "id": "lost-create",
+          "q": "Evcil hayvanım kayboldu, nasıl ilan oluşturabilirim?",
+          "tags": ["kayıp", "ilan", "ihbar", "kayıp pet"],
+          "steps": [
+            "Menüden 'Kayıp İhbarı' sayfasına gidin.",
+            "Kaybolan evcil hayvanınızı seçin, kaybolduğu son konum, tarih ve saati haritadan işaretleyin.",
+            "Varsa belirgin fiziksel özelliklerini ve tasma durumunu girip ilanı yayınlayın.",
+            "İlan yayına girdiğinde, o bölgedeki diğer OdiPet kullanıcılarına anlık kayıp bildirimi gönderilir."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "match",
+      "title": "Eşleştirme",
+      "icon": "ti-heart",
+      "mod": "mat",
+      "status": "active",
+      "sub": "Sağlıklı çiftleştirme ilanları oluşturma ve uygun adayları bulma",
+      "items": [
+        {
+          "id": "match-post",
+          "q": "Nasıl eşleştirme ilanı açabilirim?",
+          "tags": ["çiftleşme", "ilan", "eş bulma"],
+          "steps": [
+            "Evcil hayvanınızın detay sayfasına gidin ve 'Eşleştirme' sekmesini açın.",
+            "Evcil hayvanınızın karakterini, aşı ve sağlık durumunu onaylayıp ilanı oluşturun.",
+            "Sosyal sekmesindeki Eşleştirme alanında diğer kullanıcılar ilanınızı inceleyebilir ve size başvuru gönderebilir."
+          ],
+          "note": "Aşı takvimi güncel ve profili tam olan can dostlarının ilanları aramalarda daha üst sıralarda gösterilir.",
+          "noteType": "info"
+        }
+      ]
+    },
+    {
+      "id": "adoption",
+      "title": "Sahiplendirme",
+      "icon": "ti-home-heart",
+      "mod": "ado",
+      "status": "active",
+      "sub": "Evcil hayvanlar için güvenli yuva bulma ilanları",
+      "items": [
+        {
+          "id": "adopt-post",
+          "q": "Sahiplendirme ilanı nasıl oluşturabilirim?",
+          "tags": ["sahiplendir", "yuva bulma", "ilan"],
+          "steps": [
+            "Evcil hayvan detay ekranından 'Sahiplendir' sekmesine dokunun.",
+            "Sahiplendirme nedenini, sahiplenecek ailede aradığınız koşulları ve can dostunuzun alışkanlıklarını yazın.",
+            "İlanı onaylayıp yayınladıktan sonra gelen başvuruları profil üzerinden değerlendirip sohbete başlayabilirsiniz."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vets",
+      "title": "Veteriner rehberi",
+      "icon": "ti-building-hospital",
+      "mod": "vts",
+      "status": "active",
+      "sub": "En yakın veteriner klinikleri, nöbetçiler ve çalışma saatleri",
+      "items": [
+        {
+          "id": "find-vet",
+          "q": "En yakın açık veteriner kliniğini nasıl bulurum?",
+          "tags": ["veteriner bul", "en yakın", "nöbetçi", "klinik"],
+          "steps": [
+            "Veteriner Rehberi sayfasına gidin.",
+            "Uygulamaya konum izni verin; bu sayede en yakındaki aktif klinikler mesafeye göre listelenir.",
+            "Harita veya liste görünümünden klinik detayını seçip çalışma saatlerini ve yol tarifini görün."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "plan",
+      "title": "Bakım planı",
+      "icon": "ti-calendar-check",
+      "mod": "pln",
+      "status": "partial",
+      "sub": "Mama, tarama, banyo, egzersiz ve ilaç rutin takvimleri oluşturma",
+      "items": [
+        {
+          "id": "plan-routine",
+          "q": "Tekrarlayan bir bakım rutini nasıl oluştururum?",
+          "tags": ["rutin", "bakım planı", "görev", "hatırlatıcı"],
+          "steps": [
+            "Pati panelinden veya menüden 'Plan Yap' sayfasına gidin.",
+            "Uygulamak istediğiniz kategoriye (Bakım, Beslenme, Oyun, Egzersiz vb.) dokunun.",
+            "Tekrarlama sıklığını (Günlük, Haftalık, Aylık) ve saatleri seçerek kaydedin.",
+            "Görevler otomatik olarak takviminize işlenir ve zamanı geldiğinde telefonunuza bildirim gönderilir."
+          ],
+          "note": "Bakım planı modülü kısmen aktiftir, yeni periyot ve özelleştirilmiş görev geliştirme süreçleri devam etmektedir.",
+          "noteType": "warning"
+        }
+      ]
+    }
+  ]
+}
