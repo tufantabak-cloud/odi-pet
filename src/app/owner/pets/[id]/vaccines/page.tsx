@@ -30,7 +30,7 @@ export default async function PetVaccinesPage(props: PageProps) {
   // Fetch pet
   const { data: pet } = await supabase
     .from('pets')
-    .select('id, name, species, avatar_url')
+    .select('id, name, species, avatar_url, birth_date, birth_date_precision')
     .eq('id', id)
     .single()
 
@@ -38,11 +38,10 @@ export default async function PetVaccinesPage(props: PageProps) {
 
   // Fetch plans (upcoming vaccines)
   const { data: plans } = await supabase
-    .from('plans')
+    .from('vaccination_upcoming_tasks')
     .select('*')
     .eq('pet_id', id)
-    .eq('category', 'asi')
-    .order('scheduled_at')
+    .order('due_date')
 
   // Fetch vaccine records v2 (completed vaccine history)
   const { data: records } = await supabase

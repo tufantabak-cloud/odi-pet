@@ -1,5 +1,5 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "updated": "2026-07-06",
   "sections": [
     {
@@ -43,14 +43,16 @@
       "sub": "Aşı takvimi, aşı geçmişi ekleme, reaksiyon takibi ve karne paylaşımı",
       "items": [
         {
-          "id": "vaccine-setup",
+          "id": "vax-1",
           "q": "Yeni bir evcil hayvan için aşı planını nasıl kurarım?",
           "tags": ["aşı planı", "kurulum", "takvim"],
           "steps": [
-            "Sağlık sekmesinden 'Aşı Planını Başlat' butonuna dokunun.",
-            "Doğum tarihi, aşı geçmişi ve aşı karnesi fotoğrafı varlık durumunu belirtin.",
-            "Evcil hayvanınızın yaşam biçimi risklerini seçerek (kırsal alan, diğer köpeklerle temas vb.) adımları tamamlayın.",
-            "Sistem, girdiğiniz bilgilere göre yasal zorunlulukları ve WSAVA standartlarını harmanlayarak kişisel takvim oluşturur."
+            "Sağlık sekmesi → Aşı planını başlat",
+            "Doğum tarihi pet profilinden otomatik gelir — eksikse bu adımda girilir",
+            "Aşı geçmişi: Hiç yapılmadı / bazıları / düzenli / bilmiyorum",
+            "Kayıt durumu: Karne, fotoğraf veya yok",
+            "Yaşam biçimi: Park, temas, kırsal — risk aşıları buradan belirlenir",
+            "Kullanım tercihi: OdiPet öneri / veteriner planı / yalnızca hatırlatma"
           ]
         },
         {
