@@ -10,6 +10,25 @@ function str(fd: FormData, key: string): string | null {
   return v?.trim() || null
 }
 
+export async function GET(req: NextRequest) {
+  const user = await getSessionUser()
+  if (!user) {
+    return NextResponse.json({ error: 'Oturum açmanız gerekiyor.' }, { status: 401 })
+  }
+
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase
+    .from('pets')
+    .select('id, name, sos_contacts')
+    .eq('owner_id', user.id)
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  return NextResponse.json({ pets: data })
+}
+
 export async function POST(req: NextRequest) {
   const user = await getSessionUser()
   if (!user) {
@@ -89,6 +108,7 @@ export async function POST(req: NextRequest) {
     city:          str(fd, 'city')          || null,
     district:      str(fd, 'district')      || null,
     is_neutered:   str(fd, 'is_neutered') === 'true',
+    lifestyle:     str(fd, 'lifestyle')     || null,
   }
 
 
@@ -136,7 +156,8 @@ export async function POST(req: NextRequest) {
     
     // Sadece 6 aydan küçük yavrular için otomatik plan üret
     if (ageInMonths < 6) {
-      const generatedTasks = await generateVaccinationPlan(birthDate, species, supabase)
+      const isOutdoor = str(fd, 'lifestyle') === 'outdoor'
+      const generatedTasks = await generateVaccinationPlan(birthDate, species, supabase, { isOutdoor })
       if (generatedTasks.length > 0) {
       const plansPayload = generatedTasks.map(t => ({
         user_id: user.id,

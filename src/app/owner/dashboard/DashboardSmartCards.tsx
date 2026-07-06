@@ -6,6 +6,7 @@ import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { VaccineIcon, PillIcon, BowlIcon, PawIcon, HouseIcon } from '@/components/icons/PetIcons'
 import QuickJournalWidget from '@/components/dashboard/QuickJournalWidget'
+import OnboardingProgressCard from '@/components/OnboardingProgressCard'
 
 // Minimalist Single-Field Modal for Frequency input
 function QuickUpdateModal({ config, onClose, onDone }: any) {
@@ -68,6 +69,10 @@ interface DashboardSmartCardsProps {
 
 export default function DashboardSmartCards({ pets, activePetId, upcomingSchedules, completedSchedules = [], allWeightLogs = [], journalEntries = [] }: DashboardSmartCardsProps) {
   const router = useRouter()
+  const supabase = createBrowserSupabaseClient()
+  const petIds = pets.map(p => p.id)
+  const { alerts, dismissAlert } = useSixMonthAssessments(supabase, petIds)
+
   const [quickUpdateConfig, setQuickUpdateConfig] = useState<any>(null)
   const [dismissedCards, setDismissedCards] = useState<string[]>([])
   const [expanded, setExpanded] = useState(false)
@@ -547,6 +552,9 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
 
   return (
     <div className="flex flex-col gap-2">
+      {/* Akıllı Kurulum Rehberi - Pasif veya Snoozed durumda olanlar smart card'lar arasında görünür */}
+      <OnboardingProgressCard petId={activePetId} petName={pets.find(p => p.id === activePetId)?.name || ''} forcePasif={true} />
+
       {/* Başlık */}
       <div className="flex items-center gap-2 px-[var(--space-4)] mb-2.5">
         <p className="text-[11px] font-800 text-[var(--color-text-primary)]">
@@ -614,6 +622,15 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
             <i className="ti ti-chevron-down text-[13px]" />
           </button>
         )}
+
+        {/* 6 aylık temel aşı değerlendirmesi alerts */}
+        {alerts.map((alert: any) => (
+          <SixMonthDashboardCard
+            key={alert.petId}
+            alert={alert}
+            onDismiss={dismissAlert}
+          />
+        ))}
       </div>
 
       {quickUpdateConfig && quickUpdateConfig.type === 'journal' ? (
@@ -641,4 +658,110 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
       ) : null}
     </div>
   )
+}
+
+// ============================================================
+// 6 AYLIK TEMEL AŞI DEĞERLENDİRMESİ BİLEŞENLERİ (Madde 3)
+// ============================================================
+
+function useSixMonthAssessments(supabase: any, petIds: string[]) {
+  const [alerts, setAlerts] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!petIds.length) return;
+
+    supabase
+      .from('vaccine_records_v2')
+      .select('pet_id, vaccine_code, administered_at, dose_number, pets!inner(id, name, species)')
+      .in('pet_id', petIds)
+      .in('vaccine_code', ['DOG_DHPPI','DOG_CDV','DOG_CPV','DOG_CAV','CAT_FPV','CAT_FHV1','CAT_FCV'])
+      .eq('status', 'completed')
+      .order('administered_at', { ascending: false })
+      .then(({ data }: any) => {
+        if (!data) return;
+        const latestByPet = new Map();
+        for (const r of data) {
+          if (!latestByPet.has(r.pet_id)) latestByPet.set(r.pet_id, r);
+        }
+        const now = Date.now();
+        const result = [];
+        for (const [petId, record] of latestByPet) {
+          const weeks = Math.floor((now - new Date(record.administered_at).getTime()) / (1000*60*60*24*7));
+          if (weeks < 24 || weeks > 52) continue;
+          const key = `odipet_assessment_dismissed_${petId}`;
+          if (localStorage.getItem(key)) continue;
+          result.push({
+            petId,
+            petName: record.pets.name,
+            petSpecies: record.pets.species,
+            weeksSinceLastDose: weeks,
+          });
+        }
+        setAlerts(result);
+      });
+  }, [petIds.join(',')]);
+
+  function dismissAlert(petId: string) {
+    localStorage.setItem(`odipet_assessment_dismissed_${petId}`, new Date().toISOString());
+    setAlerts(prev => prev.filter(a => a.petId !== petId));
+  }
+
+  return { alerts, dismissAlert };
+}
+
+interface SixMonthDashboardCardProps {
+  alert: {
+    petId: string;
+    petName: string;
+    weeksSinceLastDose: number;
+  };
+  onDismiss: (petId: string) => void;
+}
+
+export function SixMonthDashboardCard({ alert, onDismiss }: SixMonthDashboardCardProps) {
+  const router = useRouter();
+  
+  return (
+    <div
+      className="relative p-4 rounded-2xl border border-[var(--color-border)] shadow-sm flex flex-col gap-3"
+      style={{
+        background: 'var(--color-primary-soft, rgba(93,63,211,0.04))',
+        borderLeft: '3px solid var(--color-primary, #5D3FD3)',
+      }}
+    >
+      <button
+        onClick={() => onDismiss(alert.petId)}
+        aria-label="Kapat"
+        className="absolute top-3 right-3 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors text-[14px]"
+      >
+        ✕
+      </button>
+
+      <div className="flex flex-col gap-1 pr-6">
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="text-[13px] font-800 text-[var(--color-text-primary)]">
+            {alert.petName} · 6 aylık aşı değerlendirmesi
+          </p>
+          <span className="text-[9px] font-800 bg-[rgba(93,63,211,0.12)] text-[var(--color-primary, #5D3FD3)] px-2 py-0.5 rounded-full">
+            WSAVA 2024 önerisi
+          </span>
+        </div>
+        <p className="text-[11px] text-[var(--color-text-secondary)] leading-relaxed">
+          Son yavru dozu {alert.weeksSinceLastDose} hafta önce yapıldı. Kullanılan ürüne göre veterineriniz ek doz gerekip gerekmediğini değerlendirebilir.
+        </p>
+      </div>
+
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
+        <button
+          onClick={() => router.push(`/owner/pets/${alert.petId}/vaccines`)}
+          className="self-start px-4 py-2 rounded-xl text-[11px] font-800 text-white bg-[var(--color-primary, #5D3FD3)] hover:opacity-90 transition-all active:scale-[0.97]"
+        >
+          Aşı sayfasına git →
+        </button>
+        <p className="text-[9px] text-[var(--color-text-muted)] italic leading-tight">
+          Veteriner kararının yerine geçmez. Türkiye&apos;de standart protokol değildir.
+        </p>
+      </div>
+    </div>
+  );
 }

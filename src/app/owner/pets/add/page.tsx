@@ -165,6 +165,8 @@ function PetForm({
   const breeds = species === 'cat' ? CAT_BREEDS : DOG_BREEDS
   const AvatarHeader = species === 'cat' ? <DefaultCatAvatar width={36} height={36} /> : <DefaultDogAvatar width={36} height={36} />
 
+  const isFormValid = !!petName.trim() && !!selectedBreed && !!gender && !!birthDate && !!weight
+
   return (
     <div className="flex flex-col w-full mx-auto pb-10 animate-fadeIn">
       {/* Header */}
@@ -200,9 +202,9 @@ function PetForm({
             <label htmlFor="name" className="text-[13px] font-bold text-text-primary">İsim *</label>
             <input id="name" type="text"
               autoFocus
-              value={petName} onChange={e => setPetName(e.target.value)}
-              placeholder={species === 'cat' ? 'Örn: Mia, Boncuk' : 'Örn: Max, Karamel'}
-              className="input-base" required/>
+              value={petName} onChange={e => setPetName(e.target.value.toLocaleUpperCase('tr-TR'))}
+              placeholder={species === 'cat' ? 'ÖRN: MİA, BONCUK' : 'ÖRN: MAX, KARAMEL'}
+              className="input-base uppercase" required/>
           </div>
 
           {/* Irk */}
@@ -353,19 +355,48 @@ function PetForm({
 
           {/* Kilo */}
           <div className="flex flex-col gap-2">
-            <label htmlFor="weight" className="text-[13px] font-bold text-text-primary">Kilo (Opsiyonel)</label>
+            <label htmlFor="weight" className="text-[13px] font-bold text-text-primary">Kilo *</label>
             <div className="relative flex items-center">
               <input id="weight" type="number" step="0.1" min="0" max="150"
                 value={weight} onChange={e => setWeight(e.target.value)}
                 placeholder="Örn: 4.5"
-                className="input-base w-full pr-12 text-[15px]"/>
-              <span className="absolute right-4 text-[13px] font-bold text-text-secondary">kg</span>
+                className="input-base w-full px-12 text-center text-[15px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" required/>
+              <button 
+                type="button"
+                onClick={() => {
+                  const val = parseFloat(weight) || 0
+                  if (val > 0) {
+                    // Decrement by 0.5, format to 1 decimal place, remove trailing .0 if present
+                    const newVal = Math.max(0, val - 0.5);
+                    setWeight(newVal % 1 === 0 ? newVal.toString() : newVal.toFixed(1));
+                  }
+                }}
+                className="absolute left-2 z-10 w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-250 text-text-secondary hover:text-text-primary flex items-center justify-center font-bold text-[16px] transition-colors select-none"
+              >
+                −
+              </button>
+              <span className="absolute right-12 z-10 text-[13px] font-bold text-text-secondary select-none">kg</span>
+              <button 
+                type="button"
+                onClick={() => {
+                  const val = parseFloat(weight) || 0
+                  const newVal = val + 0.5;
+                  setWeight(newVal % 1 === 0 ? newVal.toString() : newVal.toFixed(1));
+                }}
+                className="absolute right-2 z-10 w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-250 text-text-secondary hover:text-text-primary flex items-center justify-center font-bold text-[16px] transition-colors select-none"
+              >
+                +
+              </button>
             </div>
           </div>
         </div>
 
         <div className="flex justify-end mt-4 pt-6 border-t border-border-main">
-          <button type="submit" className="btn-primary min-w-[200px] py-3.5 text-[15px] shadow-lg shadow-primary/20 hover:-translate-y-0.5 transition-transform flex items-center justify-center gap-2">
+          <button 
+            type="submit" 
+            disabled={!isFormValid}
+            className="btn-primary min-w-[200px] py-3.5 text-[15px] shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+          >
             <span>Devam Et →</span>
           </button>
         </div>
@@ -499,7 +530,7 @@ function PetPhotoStep({
         <div className="w-full border border-primary/10 bg-primary-soft/20 rounded-2xl p-4 flex gap-3 text-left">
           <span className="text-[20px] shrink-0">✨</span>
           <p className="text-[12px] text-text-secondary leading-relaxed">
-            Dostunuzun fotoğrafı ana panelde, aşı bildirimlerinde ve raporlarda yer alacaktır. Şimdi eklemek istemiyorsanız daha sonra profil ayarlarından da güncelleyebilirsiniz.
+            Dostunuzun fotoğrafı ana panelde, aşı bildirimlerinde ve raporlarda yer alacaktır. Profil kurulumuna devam etmek için lütfen bir fotoğraf seçin.
           </p>
         </div>
 
@@ -516,8 +547,8 @@ function PetPhotoStep({
           <button 
             type="button" 
             onClick={onSubmit} 
-            disabled={loading} 
-            className="btn-primary min-w-[200px] py-3.5 text-[15px] shadow-lg shadow-primary/20 disabled:opacity-50 hover:-translate-y-0.5 transition-transform w-full sm:w-auto order-1 sm:order-2"
+            disabled={loading || !photoPreview} 
+            className="btn-primary min-w-[200px] py-3.5 text-[15px] shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none hover:-translate-y-0.5 transition-transform w-full sm:w-auto order-1 sm:order-2"
           >
             {loading ? (
               <span className="flex items-center gap-2 justify-center">
@@ -526,7 +557,7 @@ function PetPhotoStep({
               </span>
             ) : (
               <span className="flex items-center justify-center gap-2">
-                Profili Oluştur →
+                Devam Et →
               </span>
             )}
           </button>
@@ -556,13 +587,56 @@ function PetSOSStep({
   loading,
   submitError
 }: PetSOSStepProps) {
+  const [availableContacts, setAvailableContacts] = useState<{ name: string; phone: string; relation: string }[]>([])
+
+  useEffect(() => {
+    async function loadContacts() {
+      try {
+        const res = await fetch('/api/pets')
+        if (res.ok) {
+          const data = await res.json()
+          if (data.pets) {
+            const list: { name: string; phone: string; relation: string }[] = []
+            const seen = new Set<string>()
+            for (const pet of data.pets) {
+              const contacts = pet.sos_contacts
+              if (Array.isArray(contacts)) {
+                for (const c of contacts) {
+                  if (c && c.name && c.phone) {
+                    const key = `${c.name.trim().toLowerCase()}-${c.phone.trim()}`
+                    if (!seen.has(key)) {
+                      seen.add(key)
+                      list.push({
+                        name: c.name,
+                        phone: c.phone,
+                        relation: c.relation || 'Diğer'
+                      })
+                    }
+                  }
+                }
+              }
+            }
+            setAvailableContacts(list)
+          }
+        }
+      } catch (err) {
+        console.error('Kişileri yükleme hatası:', err)
+      }
+    }
+    loadContacts()
+  }, [])
+
+  const isPerson1Valid = !!sosContacts[0]?.name?.trim() && 
+                         !!sosContacts[0]?.phone?.trim() && 
+                         !!sosContacts[0]?.relation?.trim();
+
   return (
     <div className="flex flex-col w-full mx-auto pb-10 animate-fadeIn">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6 border-b border-border-main pb-4">
         <div className="flex flex-col flex-1">
           <h1 className="text-[20px] font-extrabold text-text-primary tracking-tight">Acil Durum Ağı 🆘</h1>
-          <p className="text-[12px] text-text-secondary font-medium">Evcil dostunuza bir şey olursa kiminle iletişime geçelim? (İsteğe bağlı)</p>
+          <p className="text-[12px] text-text-secondary font-medium">Evcil dostunuza bir şey olursa kiminle iletişime geçelim? (Birincil kişi zorunludur)</p>
         </div>
       </div>
 
@@ -575,33 +649,62 @@ function PetSOSStep({
 
         <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-3 p-5 bg-error/[0.02] rounded-2xl border border-error/10 hover:border-error/30 transition-colors">
-            <p className="text-[11px] font-black text-error uppercase tracking-widest">Kişi 1 (Birincil)</p>
+            <div className="flex justify-between items-center flex-wrap gap-2 mb-1">
+              <p className="text-[11px] font-black text-error uppercase tracking-widest">Kişi 1 (Birincil) *</p>
+              
+              {availableContacts.length > 0 && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-bold text-primary">Kişilerimden Seç:</span>
+                  <select 
+                    onChange={(e) => {
+                      const idx = parseInt(e.target.value)
+                      if (!isNaN(idx) && availableContacts[idx]) {
+                        const selected = availableContacts[idx]
+                        const nc = [...sosContacts]
+                        nc[0] = { name: selected.name, phone: selected.phone, relation: selected.relation }
+                        setSosContacts(nc)
+                      }
+                    }}
+                    className="text-[11px] font-bold py-1 px-2 border border-primary/20 rounded-lg bg-primary-soft/30 text-primary focus:outline-none cursor-pointer"
+                    defaultValue=""
+                  >
+                    <option value="" disabled>Seçiniz</option>
+                    {availableContacts.map((c, i) => (
+                      <option key={i} value={i}>{c.name} ({c.relation})</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-bold text-text-secondary">Ad Soyad</label>
+              <label className="text-[12px] font-bold text-text-secondary">Ad Soyad *</label>
               <input 
                 type="text" 
                 className="input-base text-[14px] py-3 px-4 bg-white" 
                 placeholder="Örn: Ali Yılmaz" 
                 value={sosContacts[0]?.name || ''} 
                 onChange={e => { const nc = [...sosContacts]; nc[0] = { ...nc[0], name: e.target.value }; setSosContacts(nc); }} 
+                required
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-bold text-text-secondary">Telefon</label>
+              <label className="text-[12px] font-bold text-text-secondary">Telefon *</label>
               <input 
                 type="tel" 
                 className="input-base text-[14px] py-3 px-4 bg-white" 
                 placeholder="Örn: 0555 123 4567" 
                 value={sosContacts[0]?.phone || ''} 
                 onChange={e => { const nc = [...sosContacts]; nc[0] = { ...nc[0], phone: e.target.value }; setSosContacts(nc); }} 
+                required
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-bold text-text-secondary">Yakınlık</label>
+              <label className="text-[12px] font-bold text-text-secondary">Yakınlık *</label>
               <select 
                 className="input-base text-[14px] py-3 px-4 bg-white" 
                 value={sosContacts[0]?.relation || ''} 
                 onChange={e => { const nc = [...sosContacts]; nc[0] = { ...nc[0], relation: e.target.value }; setSosContacts(nc); }}
+                required
               >
                 <option value="" disabled>Seçiniz</option>
                 <option value="Sahibi">Sahibi</option>
@@ -612,15 +715,38 @@ function PetSOSStep({
                 <option value="Evcil Hayvan Bakıcısı">Evcil Hayvan Bakıcısı</option>
                 <option value="Veteriner Hekim">Veteriner Hekim</option>
                 <option value="Diğer">Diğer</option>
-                {sosContacts[0]?.relation && !['Sahibi', 'Aile Üyesi', 'Eşi / Partneri', 'Komşu', 'Arkadaş / Yakın', 'Evcil Hayvan Bakıcısı', 'Veteriner Hekim', 'Diğer'].includes(sosContacts[0].relation) && (
-                  <option value={sosContacts[0].relation}>{sosContacts[0].relation}</option>
-                )}
               </select>
             </div>
           </div>
 
           <div className="flex flex-col gap-3 p-5 bg-bg-main rounded-2xl border border-border-main hover:border-text-secondary/30 transition-colors">
-            <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest">Kişi 2 (Yedek Bağlantı)</p>
+            <div className="flex justify-between items-center flex-wrap gap-2 mb-1">
+              <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest">Kişi 2 (Yedek Bağlantı)</p>
+              
+              {availableContacts.length > 0 && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-bold text-primary">Kişilerimden Seç:</span>
+                  <select 
+                    onChange={(e) => {
+                      const idx = parseInt(e.target.value)
+                      if (!isNaN(idx) && availableContacts[idx]) {
+                        const selected = availableContacts[idx]
+                        const nc = [...sosContacts]
+                        nc[1] = { name: selected.name, phone: selected.phone, relation: selected.relation }
+                        setSosContacts(nc)
+                      }
+                    }}
+                    className="text-[11px] font-bold py-1 px-2 border border-primary/20 rounded-lg bg-primary-soft/30 text-primary focus:outline-none cursor-pointer"
+                    defaultValue=""
+                  >
+                    <option value="" disabled>Seçiniz</option>
+                    {availableContacts.map((c, i) => (
+                      <option key={i} value={i}>{c.name} ({c.relation})</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-[12px] font-bold text-text-secondary">Ad Soyad</label>
               <input 
@@ -669,8 +795,8 @@ function PetSOSStep({
           <button
             type="button"
             onClick={onSubmit}
-            disabled={loading}
-            className="btn-primary min-w-[200px] w-full sm:w-auto py-3.5 text-[15px] shadow-lg shadow-primary/20 disabled:opacity-50"
+            disabled={loading || !isPerson1Valid}
+            className="btn-primary min-w-[200px] w-full sm:w-auto py-3.5 text-[15px] shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
           >
             {loading ? (
               <span className="flex items-center gap-2 justify-center">
@@ -682,14 +808,6 @@ function PetSOSStep({
                 Kaydet ve Tamamla ✓
               </span>
             )}
-          </button>
-          
-          <button 
-            type="button" 
-            onClick={onSkip}
-            className="text-[13px] text-text-secondary underline mt-3 py-2 w-full text-center"
-          >
-            Şimdilik Atla
           </button>
         </div>
       </div>

@@ -153,6 +153,19 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
         setUploadTitle('')
         if (fileInputRef.current) fileInputRef.current.value = ''
         fetchRecords()
+
+        // Belge ve karne yüklendiğinde onboarding adımını true olarak işaretle
+        try {
+          const { createBrowserSupabaseClient } = await import('@/lib/supabase/client')
+          const supabase = createBrowserSupabaseClient()
+          await supabase.rpc('update_onboarding_step', {
+            p_pet_id: petId,
+            p_step: 'documents',
+            p_value: true,
+          })
+        } catch (opErr) {
+          console.error('Onboarding step documents could not be marked:', opErr)
+        }
       } else {
         throw new Error('Kayıt oluşturulamadı')
       }

@@ -27,7 +27,7 @@ function SuccessContent() {
     const fetchPet = async () => {
       const { data } = await supabase
         .from('pets')
-        .select('birth_date, health_history_status, species')
+        .select('birth_date, health_history_status, species, onboarding_progress')
         .eq('id', petId)
         .single()
       if (data) setPet(data)
@@ -72,7 +72,9 @@ function SuccessContent() {
     ageInMonths = (now.getFullYear() - born.getFullYear()) * 12 + (now.getMonth() - born.getMonth())
   }
   
-  const showHealthHistoryCard = ageInMonths >= 6 && (!pet?.health_history_status || pet?.health_history_status === 'pending')
+  const op = pet?.onboarding_progress as any
+  const isDone = pet?.health_history_status === 'completed' || pet?.health_history_status === 'skipped' || op?.vaccine_plan === true
+  const showHealthHistoryCard = ageInMonths >= 6 && !isDone
 
   if (!petId) return null
 
@@ -149,7 +151,7 @@ function SuccessContent() {
           </div>
           
           <button
-            onClick={() => router.push(`/owner/pets/${petId}/health-history`)}
+            onClick={() => router.push(`/owner/pets/${petId}/vaccines`)}
             className="w-full bg-primary text-white border-none rounded-xl py-3 text-[14px] font-bold cursor-pointer hover:bg-primary-hover transition-colors shadow-md"
           >
             Şimdi ekle (2 dk) →

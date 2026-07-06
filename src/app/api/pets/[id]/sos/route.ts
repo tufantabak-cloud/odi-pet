@@ -28,6 +28,17 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
   if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
 
+  // Acil durum kişisi başarıyla eklendiğinde onboarding adımını true olarak işaretle
+  try {
+    await supabase.rpc('update_onboarding_step', {
+      p_pet_id: id,
+      p_step: 'emergency_contact',
+      p_value: true,
+    })
+  } catch (opErr) {
+    console.error('Onboarding step emergency_contact could not be marked:', opErr)
+  }
+
   revalidatePath(`/owner/pets/${id}`)
   
   return NextResponse.json({ success: true, message: 'Acil durum ağı başarıyla güncellendi.' })

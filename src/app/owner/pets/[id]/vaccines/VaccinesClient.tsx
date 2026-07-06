@@ -1,22 +1,22 @@
 'use client';
 
 // ============================================================
-// OdiPet â€” VaccinesClient.tsx v3
-// Mockup v2 dÃ¼zeltmeleri tam entegrasyon:
+// OdiPet — VaccinesClient.tsx v3
+// Mockup v2 düzeltmeleri tam entegrasyon:
 //
-// MOD SÄ°STEMÄ°
-//   simple: yalnÄ±zca tarih + hatÄ±rlatma
-//   detailed: gÃ¼ven rozeti + reaksiyon takibi + insight kartÄ±
+// MOD SİSTEMİ
+//   simple: yalnızca tarih + hatırlatma
+//   detailed: güven rozeti + reaksiyon takibi + insight kartı
 //
-// DÃœZELTÄ°LMÄ°Å BÄ°LEÅENLER
-//   1. "KayÄ±tlara gÃ¶re tamamlandÄ±" + gÃ¼ven rozeti
-//   2. Doz numarasÄ± dinamik hesaplama aÃ§Ä±klamasÄ±
-//   3. "AÅŸÄ± yapÄ±ldÄ±" â†’ kayÄ±t yÃ¶ntemi seÃ§imi
-//   4. AnlÄ±k ciddi reaksiyon uyarÄ±sÄ± (kayÄ±t anÄ±nda)
+// DÜZELTİLMİÅ BİLEÅENLER
+//   1. "Kayıtlara göre tamamlandı" + güven rozeti
+//   2. Doz numarası dinamik hesaplama açıklaması
+//   3. "Aşı yapıldı" → kayıt yöntemi seçimi
+//   4. Anlık ciddi reaksiyon uyarısı (kayıt anında)
 //   5. Reaksiyon 4 seviye: normal / hafif / dikkat / acil
-//   6. Acil dili eyleme dÃ¶nÃ¼k
-//   7. "6 aylÄ±k temel aÅŸÄ± deÄŸerlendirmesi" (26. hafta)
-//   8. Risk bazlÄ± aÅŸÄ± dili dÃ¼zeltmesi
+//   6. Acil dili eyleme dönük
+//   7. "6 aylık temel aşı değerlendirmesi" (26. hafta)
+//   8. Risk bazlı aşı dili düzeltmesi
 // ============================================================
 
 import { useState, useEffect, useCallback } from 'react';
@@ -25,7 +25,7 @@ import { useRouter } from 'next/navigation';
 import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 import type { AdministrationRoute } from '@/lib/database.types';
 
-// â”€â”€ TÄ°PLER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── TİPLER ──────────────────────────────────────────────────
 
 export type VaccineMode = 'simple' | 'detailed';
 
@@ -39,7 +39,7 @@ export type VerificationLevel =
 
 export type RecordMethod = 'scan' | 'quick' | 'detailed';
 
-// DÃ¼zeltme 5: 4 seviye reaksiyon
+// Düzeltme 5: 4 seviye reaksiyon
 export type ReactionLevel = 'normal' | 'mild' | 'caution' | 'emergency';
 
 export interface ReactionSymptom {
@@ -54,9 +54,9 @@ export interface VaccinePlanItem {
   due_date: string;
   status: string;
   antigen_code: string;
-  is_risk_based: boolean; // DÃ¼zeltme 8
+  is_risk_based: boolean; // Düzeltme 8
   dose_number: number;
-  dose_basis: string; // DÃ¼zeltme 2: aÃ§Ä±klama metni
+  dose_basis: string; // Düzeltme 2: açıklama metni
   extra_data: {
     vaccine: { code: string; name: string };
     booster_ui_label?: string;
@@ -66,7 +66,7 @@ export interface VaccinePlanItem {
   };
 }
 
-// â”€â”€ MOD YÃ–NETÄ°CÄ°SÄ° â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── MOD YÖNETİCİSİ ──────────────────────────────────────────
 
 const MODE_KEY = 'odipet_vaccine_mode';
 
@@ -88,7 +88,7 @@ export function useVaccineMode(): [VaccineMode, (m: VaccineMode) => void] {
   return [mode, setMode];
 }
 
-// â”€â”€ MOD TOGGLE BÄ°LEÅENÄ° â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── MOD TOGGLE BİLEÅENİ ─────────────────────────────────────
 
 interface ModeSwitcherProps {
   mode: VaccineMode;
@@ -111,12 +111,12 @@ export function ModeSwitcher({ mode, onChange }: ModeSwitcherProps) {
     >
       <div>
         <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', margin: 0 }}>
-          {mode === 'simple' ? 'Basit mod' : 'DetaylÄ± mod'}
+          {mode === 'simple' ? 'Basit mod' : 'Detaylı mod'}
         </p>
         <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '2px 0 0' }}>
           {mode === 'simple'
-            ? 'Tarih ve hatÄ±rlatma â€” reaksiyon takibi yok'
-            : 'GÃ¼ven rozeti, reaksiyon takibi, insight kartlarÄ±'}
+            ? 'Tarih ve hatırlatma — reaksiyon takibi yok'
+            : 'Güven rozeti, reaksiyon takibi, insight kartları'}
         </p>
       </div>
       <div style={{ display: 'flex', gap: 4 }}>
@@ -136,7 +136,7 @@ export function ModeSwitcher({ mode, onChange }: ModeSwitcherProps) {
               fontWeight: mode === m ? 500 : 400,
             }}
           >
-            {m === 'simple' ? 'Basit' : 'DetaylÄ±'}
+            {m === 'simple' ? 'Basit' : 'Detaylı'}
           </button>
         ))}
       </div>
@@ -144,14 +144,14 @@ export function ModeSwitcher({ mode, onChange }: ModeSwitcherProps) {
   );
 }
 
-// â”€â”€ DÃœZELTME 1: GÃœVENÄ°LÄ°RLÄ°K ROZETÄ° â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── DÜZELTME 1: GÜVENİLİRLİK ROZETİ ────────────────────────
 
 const VERIFICATION_LABELS: Record<VerificationLevel, string> = {
-  user_reported: 'KullanÄ±cÄ± beyanÄ±',
-  document_uploaded: 'Belge yÃ¼klendi',
-  document_matched: 'Belgeyle eÅŸleÅŸti',
-  clinic_verified: 'Veteriner onaylÄ±',
-  official_verified: 'ResmÃ® doÄŸrulama',
+  user_reported: 'Kullanıcı beyanı',
+  document_uploaded: 'Belge yüklendi',
+  document_matched: 'Belgeyle eşleşti',
+  clinic_verified: 'Veteriner onaylı',
+  official_verified: 'ResmÃ® doğrulama',
   estimated: 'Tahmini bilgi',
 };
 
@@ -217,7 +217,7 @@ export function VerificationBadge({ level }: VerificationBadgeProps) {
   );
 }
 
-// DÃ¼zeltme 1: "KayÄ±tlara gÃ¶re tamamlandÄ±" â€” kesin ifade kullanÄ±lmÄ±yor
+// Düzeltme 1: "Kayıtlara göre tamamlandı" — kesin ifade kullanılmıyor
 interface SeriesStatusCardProps {
   petName: string;
   verificationLevel: VerificationLevel;
@@ -247,18 +247,18 @@ export function SeriesStatusCard({
         }}
       >
         <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', margin: 0 }}>
-          Yavru serisi kayÄ±tlara gÃ¶re tamamlandÄ±
+          Yavru serisi kayıtlara göre tamamlandı
         </p>
         <VerificationBadge level={verificationLevel} />
       </div>
       <p style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.5, margin: 0 }}>
         {verificationLevel === 'user_reported' &&
-          'GÃ¼ven seviyesini artÄ±rmak iÃ§in belge yÃ¼kleyebilir veya veteriner onayÄ± alabilirsin.'}
+          'Güven seviyesini artırmak için belge yükleyebilir veya veteriner onayı alabilirsin.'}
         {verificationLevel === 'document_matched' &&
-          'Belgeyle eÅŸleÅŸtirildi. Veteriner onayÄ±yla resmÃ® doÄŸrulamaya geÃ§ebilirsin.'}
+          'Belgeyle eşleştirildi. Veteriner onayıyla resmÃ® doğrulamaya geçebilirsin.'}
         {(verificationLevel === 'clinic_verified' ||
           verificationLevel === 'official_verified') &&
-          'DoÄŸrulama tamamlandÄ±.'}
+          'Doğrulama tamamlandı.'}
       </p>
       {verificationLevel === 'user_reported' && (
         <button
@@ -273,14 +273,14 @@ export function SeriesStatusCard({
             padding: 0,
           }}
         >
-          Belge yÃ¼kle â†’
+          Belge yükle →
         </button>
       )}
     </div>
   );
 }
 
-// â”€â”€ DÃœZELTME 2: DÄ°NAMÄ°K DOZ AÃ‡IKLAMASI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── DÜZELTME 2: DİNAMİK DOZ AÇIKLAMASI ─────────────────────
 
 interface PlanItemCardProps {
   item: VaccinePlanItem;
@@ -295,7 +295,7 @@ export function PlanItemCard({
   onBookAppointment,
   mode,
 }: PlanItemCardProps) {
-  // DÃ¼zeltme 8: Risk bazlÄ± aÅŸÄ± dili
+  // Düzeltme 8: Risk bazlı aşı dili
   if (item.is_risk_based) {
     return (
       <div
@@ -328,12 +328,12 @@ export function PlanItemCard({
               border: '0.5px solid var(--border-warning)',
             }}
           >
-            Risk bazlÄ±
+            Risk bazlı
           </span>
         </div>
-        {/* DÃ¼zeltme 8: kesin dil yok */}
+        {/* Düzeltme 8: kesin dil yok */}
         <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
-          YaÅŸam biÃ§imine gÃ¶re deÄŸerlendirilmesi Ã¶neriliyor. Veterinerinize danÄ±ÅŸÄ±n.
+          Yaşam biçimine göre değerlendirilmesi öneriliyor. Veterinerinize danışın.
         </p>
       </div>
     );
@@ -358,10 +358,10 @@ export function PlanItemCard({
       >
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', margin: 0 }}>
-            {/* DÃ¼zeltme 2: doz numarasÄ± dinamik */}
-            {item.extra_data.vaccine.name} â€” {item.dose_number}. doz
+            {/* Düzeltme 2: doz numarası dinamik */}
+            {item.extra_data.vaccine.name} — {item.dose_number}. doz
           </p>
-          {/* DÃ¼zeltme 2: hesaplama aÃ§Ä±klamasÄ± */}
+          {/* Düzeltme 2: hesaplama açıklaması */}
           {item.dose_basis && (
             <p style={{ fontSize: 10, color: 'var(--text-muted)', margin: '2px 0 0' }}>
               {item.dose_basis}
@@ -388,7 +388,7 @@ export function PlanItemCard({
         </span>
       </div>
 
-      {/* A2 Booster banner â€” yalnÄ±zca detaylÄ± modda */}
+      {/* A2 Booster banner — yalnızca detaylı modda */}
       {mode === 'detailed' &&
         item.extra_data.clinical_booster_days &&
         item.extra_data.legal_booster_days &&
@@ -414,7 +414,7 @@ export function PlanItemCard({
                   border: '0.5px solid var(--border-accent)',
                 }}
               >
-                WSAVA: {Math.round(item.extra_data.clinical_booster_days / 365)} yÄ±l
+                WSAVA: {Math.round(item.extra_data.clinical_booster_days / 365)} yıl
               </span>
               <span
                 style={{
@@ -427,7 +427,7 @@ export function PlanItemCard({
                   border: '0.5px solid var(--border-danger)',
                 }}
               >
-                TR yasal: 1 yÄ±l
+                TR yasal: 1 yıl
               </span>
             </div>
             {item.extra_data.booster_ui_label && (
@@ -454,7 +454,7 @@ export function PlanItemCard({
         >
           Randevu kur
         </button>
-        {/* DÃ¼zeltme 3: "AÅŸÄ± yapÄ±ldÄ±" â†’ yÃ¶ntem seÃ§imi */}
+        {/* Düzeltme 3: "Aşı yapıldı" → yöntem seçimi */}
         <button
           onClick={onVaccineDone}
           style={{
@@ -469,14 +469,14 @@ export function PlanItemCard({
             cursor: 'pointer',
           }}
         >
-          AÅŸÄ± yapÄ±ldÄ±
+          Aşı yapıldı
         </button>
       </div>
     </div>
   );
 }
 
-// â”€â”€ DÃœZELTME 3: KAYIT YÃ–NTEMÄ° SEÃ‡Ä°MÄ° â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── DÜZELTME 3: KAYIT YÖNTEMİ SEÇİMİ ───────────────────────
 
 interface RecordMethodSheetProps {
   vaccineName: string;
@@ -495,15 +495,15 @@ export function RecordMethodSheet({
     title: string;
     sub: string;
   }[] = [
-    { id: 'scan', icon: 'ğŸ“·', title: 'Belgeyi tara', sub: 'En hÄ±zlÄ± yÃ¶ntem â€” OCR otomatik okur' },
-    { id: 'quick', icon: 'âœï¸', title: 'HÄ±zlÄ± kayÄ±t', sub: 'AÅŸÄ± adÄ±, tarih ve klinik' },
-    { id: 'detailed', icon: 'ğŸ“‹', title: 'AyrÄ±ntÄ±lÄ± kayÄ±t', sub: 'Lot, Ã¼rÃ¼n ve diÄŸer bilgiler' },
+    { id: 'scan', icon: 'ğŸ“·', title: 'Belgeyi tara', sub: 'En hızlı yöntem — OCR otomatik okur' },
+    { id: 'quick', icon: 'âœï¸', title: 'Hızlı kayıt', sub: 'Aşı adı, tarih ve klinik' },
+    { id: 'detailed', icon: 'ğŸ“‹', title: 'Ayrıntılı kayıt', sub: 'Lot, ürün ve diğer bilgiler' },
   ];
 
   return (
     <div>
       <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 8 }}>
-        {vaccineName} â€” kaydÄ± nasÄ±l eklemek istersin?
+        {vaccineName} — kaydı nasıl eklemek istersin?
       </p>
       {methods.map((m) => (
         <div
@@ -560,13 +560,13 @@ export function RecordMethodSheet({
           cursor: 'pointer',
         }}
       >
-        Ä°ptal
+        İptal
       </button>
     </div>
   );
 }
 
-// â”€â”€ DÃœZELTME 4 + 6: KAYIT SONRASI UYARILAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── DÜZELTME 4 + 6: KAYIT SONRASI UYARILAR ──────────────────
 
 interface PostRecordWarningsProps {
   vaccineName: string;
@@ -581,7 +581,7 @@ export function PostRecordWarnings({
 }: PostRecordWarningsProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {/* DÃ¼zeltme 4 + 6: AnlÄ±k ciddi reaksiyon uyarÄ±sÄ± â€” eyleme dÃ¶nÃ¼k dil */}
+      {/* Düzeltme 4 + 6: Anlık ciddi reaksiyon uyarısı — eyleme dönük dil */}
       <div
         role="alert"
         style={{
@@ -599,16 +599,16 @@ export function PostRecordWarnings({
             margin: '0 0 3px',
           }}
         >
-          Ciddi belirti gÃ¶rÃ¼lÃ¼rse
+          Ciddi belirti görülürse
         </p>
         <p style={{ fontSize: 11, color: 'var(--text-primary)', lineHeight: 1.55, margin: 0 }}>
-          Ä°lk saatlerde yÃ¼z ÅŸiÅŸmesi, nefes gÃ¼Ã§lÃ¼ÄŸÃ¼, tekrarlayan kusma veya Ã§Ã¶kme gÃ¶rÃ¼lÃ¼rse{' '}
-          <strong>bu belirtiler acil veteriner deÄŸerlendirmesi gerektirir.</strong>{' '}
-          En yakÄ±n veteriner kliniÄŸiyle hemen iletiÅŸime geÃ§in.
+          İlk saatlerde yüz şişmesi, nefes güçlüğü, tekrarlayan kusma veya çökme görülürse{' '}
+          <strong>bu belirtiler acil veteriner değerlendirmesi gerektirir.</strong>{' '}
+          En yakın veteriner kliniğiyle hemen iletişime geçin.
         </p>
       </div>
 
-      {/* GÃ¶zetim uyarÄ±sÄ± */}
+      {/* Gözetim uyarısı */}
       <div
         style={{
           background: 'var(--bg-warning)',
@@ -632,8 +632,8 @@ export function PostRecordWarnings({
             {vaccineName} kaydedildi
           </p>
           <p style={{ fontSize: 11, color: 'var(--text-primary)', lineHeight: 1.55, margin: 0 }}>
-            Alerjik reaksiyonlar genellikle <strong>ilk 1 saat</strong> iÃ§inde geliÅŸir.
-            Klinik yakÄ±nÄ±nda <strong>30â€“45 dakika</strong> kalÄ±n.
+            Alerjik reaksiyonlar genellikle <strong>ilk 1 saat</strong> içinde gelişir.
+            Klinik yakınında <strong>30â€“45 dakika</strong> kalın.
           </p>
         </div>
         <button
@@ -653,27 +653,27 @@ export function PostRecordWarnings({
         </button>
       </div>
 
-      {/* DetaylÄ± modda: kontrol bildirimleri */}
+      {/* Detaylı modda: kontrol bildirimleri */}
       {mode === 'detailed' && (
         <p style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', margin: 0 }}>
-          6 saat Â· 24 saat Â· belirti varsa 72 saat sonra kontrol bildirimi gÃ¶nderilecek.
+          6 saat Â· 24 saat Â· belirti varsa 72 saat sonra kontrol bildirimi gönderilecek.
         </p>
       )}
     </div>
   );
 }
 
-// â”€â”€ DÃœZELTME 5: 4 SEVÄ°YE REAKSÄ°YON FORMU â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── DÜZELTME 5: 4 SEVİYE REAKSİYON FORMU ───────────────────
 
 const REACTION_SYMPTOMS: ReactionSymptom[] = [
-  { id: 'normal', label: 'Normal gÃ¶rÃ¼nÃ¼yor', level: 'normal' },
-  { id: 'lethargy', label: 'Biraz halsiz veya iÅŸtahsÄ±z', level: 'mild' },
+  { id: 'normal', label: 'Normal görünüyor', level: 'normal' },
+  { id: 'lethargy', label: 'Biraz halsiz veya iştahsız', level: 'mild' },
   { id: 'injection_site', label: 'Enjeksiyon yerinde hassasiyet', level: 'mild' },
   { id: 'vomiting_once', label: 'Bir kez hafif kusma / ishal', level: 'mild' },
   { id: 'vomiting_repeat', label: 'Tekrarlayan kusma / ishal', level: 'caution' },
-  { id: 'face_swelling', label: 'YÃ¼zde ÅŸiÅŸme / nefes gÃ¼Ã§lÃ¼ÄŸÃ¼', level: 'emergency' },
-  { id: 'collapse', label: 'Ã‡Ã¶kme / bayÄ±lma / ÅŸok belirtisi', level: 'emergency' },
-  { id: 'other', label: 'BaÅŸka bir belirti var', level: 'mild' },
+  { id: 'face_swelling', label: 'Yüzde şişme / nefes güçlüğü', level: 'emergency' },
+  { id: 'collapse', label: 'Çökme / bayılma / şok belirtisi', level: 'emergency' },
+  { id: 'other', label: 'Başka bir belirti var', level: 'mild' },
 ];
 
 const LEVEL_STYLE = {
@@ -704,7 +704,7 @@ export function ReactionCheckForm({
 
   function handleSelect(s: ReactionSymptom) {
     if (s.level === 'emergency') {
-      // DÃ¼zeltme 5: acil â†’ formu durdur
+      // Düzeltme 5: acil → formu durdur
       onEmergency(s.id);
       return;
     }
@@ -716,7 +716,7 @@ export function ReactionCheckForm({
       <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 8, lineHeight: 1.5 }}>
         {checkLabels[checkTime]} kontrol Â· {vaccineName}
         <br />
-        {petName} bugÃ¼n nasÄ±l gÃ¶rÃ¼nÃ¼yor?
+        {petName} bugün nasıl görünüyor?
       </p>
 
       {REACTION_SYMPTOMS.map((s) => {
@@ -769,7 +769,7 @@ export function ReactionCheckForm({
       })}
 
       <p style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 6, lineHeight: 1.4 }}>
-        KÄ±rmÄ±zÄ± seÃ§enekler doÄŸrudan acil yÃ¶nlendirme ekranÄ±nÄ± aÃ§ar.
+        Kırmızı seçenekler doğrudan acil yönlendirme ekranını açar.
       </p>
 
       {selected && (
@@ -798,7 +798,7 @@ export function ReactionCheckForm({
   );
 }
 
-// â”€â”€ DÃœZELTME 6: ACÄ°L EKRANI â€” eyleme dÃ¶nÃ¼k dil â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── DÜZELTME 6: ACİL EKRANI — eyleme dönük dil ──────────────
 
 interface EmergencyVetScreenProps {
   petName: string;
@@ -820,7 +820,7 @@ export function EmergencyVetScreen({
     <div
       role="alertdialog"
       aria-modal="true"
-      aria-label="Acil veteriner yÃ¶nlendirmesi"
+      aria-label="Acil veteriner yönlendirmesi"
       style={{
         background: 'var(--surface-2)',
         border: '1.5px solid var(--border-danger)',
@@ -846,15 +846,15 @@ export function EmergencyVetScreen({
         </div>
         <div>
           <p style={{ fontWeight: 500, fontSize: 15, color: 'var(--text-danger)', margin: 0 }}>
-            Acil veteriner deÄŸerlendirmesi
+            Acil veteriner değerlendirmesi
           </p>
           <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '2px 0 0' }}>
-            {petName} iÃ§in
+            {petName} için
           </p>
         </div>
       </div>
 
-      {/* DÃ¼zeltme 6: kesin ve eyleme dÃ¶nÃ¼k dil */}
+      {/* Düzeltme 6: kesin ve eyleme dönük dil */}
       <div
         style={{
           background: 'var(--bg-danger)',
@@ -868,8 +868,8 @@ export function EmergencyVetScreen({
           {symptomLabel}
         </p>
         <p style={{ fontSize: 12, color: 'var(--text-primary)', lineHeight: 1.55, margin: 0 }}>
-          Bu belirtiler acil veteriner deÄŸerlendirmesi gerektirir. En yakÄ±n
-          veteriner kliniÄŸiyle <strong>hemen iletiÅŸime geÃ§in.</strong>
+          Bu belirtiler acil veteriner değerlendirmesi gerektirir. En yakın
+          veteriner kliniğiyle <strong>hemen iletişime geçin.</strong>
         </p>
       </div>
 
@@ -890,7 +890,7 @@ export function EmergencyVetScreen({
             textDecoration: 'none',
           }}
         >
-          En yakÄ±n kliniÄŸi gÃ¶ster
+          En yakın kliniği göster
         </a>
         <a
           href={`/owner/pets/${petId}/share?context=emergency`}
@@ -906,7 +906,7 @@ export function EmergencyVetScreen({
             border: '0.5px solid var(--border)',
           }}
         >
-          Pet bilgilerini paylaÅŸ
+          Pet bilgilerini paylaş
         </a>
       </div>
 
@@ -923,13 +923,13 @@ export function EmergencyVetScreen({
           cursor: 'pointer',
         }}
       >
-        Reaksiyonu geÃ§ti, geri dÃ¶n
+        Reaksiyonu geçti, geri dön
       </button>
     </div>
   );
 }
 
-// â”€â”€ DÃœZELTME 7: 6 AYLIK DEÄERLENDÄ°RME KARTI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── DÜZELTME 7: 6 AYLIK DEÄERLENDİRME KARTI ────────────────
 
 interface SixMonthAssessmentCardProps {
   petName: string;
@@ -956,7 +956,7 @@ export function SixMonthAssessmentCard({
         marginBottom: 12,
       }}
       role="note"
-      aria-label="6 aylÄ±k temel aÅŸÄ± deÄŸerlendirme Ã¶nerisi"
+      aria-label="6 aylık temel aşı değerlendirme önerisi"
     >
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
         <div
@@ -975,9 +975,9 @@ export function SixMonthAssessmentCard({
           ğŸ”¬
         </div>
         <div style={{ flex: 1 }}>
-          {/* DÃ¼zeltme 7: yeniden adlandÄ±rÄ±ldÄ± */}
+          {/* Düzeltme 7: yeniden adlandırıldı */}
           <p style={{ fontWeight: 500, fontSize: 13, color: 'var(--text-primary)', margin: 0 }}>
-            6 aylÄ±k temel aÅŸÄ± deÄŸerlendirmesi
+            6 aylık temel aşı değerlendirmesi
           </p>
           <span
             style={{
@@ -992,12 +992,12 @@ export function SixMonthAssessmentCard({
               border: '0.5px solid var(--border-accent)',
             }}
           >
-            WSAVA 2024 Ã¶nerisi
+            WSAVA 2024 önerisi
           </span>
         </div>
         <button
           onClick={onDismiss}
-          aria-label="KartÄ± kapat"
+          aria-label="Kartı kapat"
           style={{
             background: 'none',
             border: 'none',
@@ -1012,11 +1012,11 @@ export function SixMonthAssessmentCard({
         </button>
       </div>
 
-      {/* DÃ¼zeltme 7: "tÃ¼m Ã¼rÃ¼nler iÃ§in zorunlu deÄŸil" notu */}
+      {/* Düzeltme 7: "tüm ürünler için zorunlu değil" notu */}
       <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.55, margin: '0 0 12px' }}>
-        Ã–nceki aÅŸÄ± kayÄ±tlarÄ± ve kullanÄ±lan Ã¼rÃ¼ne gÃ¶re veterineriniz ek doz
-        gerekip gerekmediÄŸini deÄŸerlendirebilir. Bu tÃ¼m Ã¼rÃ¼nler iÃ§in zorunlu
-        deÄŸildir.
+        Önceki aşı kayıtları ve kullanılan ürüne göre veterineriniz ek doz
+        gerekip gerekmediğini değerlendirebilir. Bu tüm ürünler için zorunlu
+        değildir.
       </p>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7 }}>
@@ -1033,7 +1033,7 @@ export function SixMonthAssessmentCard({
             cursor: 'pointer',
           }}
         >
-          Titre testi yaptÄ±r
+          Titre testi yaptır
         </button>
         <button
           onClick={onAddBoosterDose}
@@ -1052,13 +1052,13 @@ export function SixMonthAssessmentCard({
       </div>
 
       <p style={{ fontSize: 10, color: 'var(--text-muted)', margin: '10px 0 0', lineHeight: 1.4 }}>
-        Veteriner kararÄ±nÄ±n yerine geÃ§mez. TÃ¼rkiye'de standart protokol deÄŸildir.
+        Veteriner kararının yerine geçmez. Türkiye'de standart protokol değildir.
       </p>
     </div>
   );
 }
 
-// â”€â”€ ANA HOOK â€” VaccinesClient.tsx iÃ§inde kullan â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── ANA HOOK — VaccinesClient.tsx içinde kullan ─────────────
 
 export function useVaccineFlow() {
   const [mode, setMode] = useVaccineMode();
@@ -1080,11 +1080,11 @@ export function useVaccineFlow() {
     setShowRecordSheet(false);
     setShowPostRecord(true);
     setShowGuidanceBanner(true);
-    // DetaylÄ± modda 6 saat sonra reaksiyon formu
+    // Detaylı modda 6 saat sonra reaksiyon formu
     if (mode === 'detailed') {
-      // Backend notification scheduling â€” gerÃ§ek implementasyonda
+      // Backend notification scheduling — gerçek implementasyonda
       // pg_cron veya notification service ile T+6h, T+24h, T+72h
-      console.log('[VaccineFlow] T+6h reaksiyon bildirimi planlandÄ±');
+      console.log('[VaccineFlow] T+6h reaksiyon bildirimi planlandı');
     }
   }
 
@@ -1095,7 +1095,7 @@ export function useVaccineFlow() {
     setShowReactionForm(false);
   }
 
-  // 16. hafta tamamlanÄ±nca assessment kartÄ±nÄ± gÃ¶ster
+  // 16. hafta tamamlanınca assessment kartını göster
   function handleLastJuvenileDoseCompleted() {
     if (mode === 'detailed') {
       setShowAssessmentCard(true);

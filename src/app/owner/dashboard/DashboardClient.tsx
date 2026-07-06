@@ -8,6 +8,7 @@ import DashboardSmartCards from './DashboardSmartCards'
 import SmartQuestionCard from '@/components/profiling/SmartQuestionCard'
 import SmartInsightCard from '@/components/profiling/SmartInsightCard'
 import { getPlanDisplayTitle } from '@/lib/plans/utils'
+import OnboardingProgressCard from '@/components/OnboardingProgressCard'
 
 export default function DashboardClient({
   greeting,
@@ -51,6 +52,13 @@ export default function DashboardClient({
       {/* 2. Petlerim (Overlap Tasarım) */}
       {petsWithStats && petsWithStats.length > 0 && (
         <div className="flex flex-col gap-3 pt-2">
+          {/* Aktif Onboarding Kartı (ilk 7 gün, snooze edilmemişse) en üstte görünür */}
+          {activePetId && (
+            <div className="px-[var(--space-4)] pt-1">
+              <OnboardingProgressCard petId={activePetId} petName={activePet?.name || ''} />
+            </div>
+          )}
+
           <div className="flex items-center justify-between px-[var(--space-4)]">
             <p className="text-[11px] font-800 text-[var(--color-text-muted)] uppercase tracking-[1.2px]">Petlerim</p>
             <Link href="/owner/pets/add" className="text-[12px] font-800 text-[var(--color-primary)]">
@@ -149,14 +157,16 @@ export default function DashboardClient({
 
       {/* 4. Sağlık Geçmişi Sihirbazı Hatırlatıcısı */}
       {pets && pets.filter((p: any) => {
-        if (!p.birth_date || (p.health_history_status !== 'pending' && p.health_history_status !== 'skipped' && p.health_history_status !== null)) return false;
+        const op = p.onboarding_progress as any;
+        const isDone = p.health_history_status === 'completed' || p.health_history_status === 'skipped' || op?.vaccine_plan === true;
+        if (!p.birth_date || isDone) return false;
         const born = new Date(p.birth_date);
         const now = new Date();
         const ageInMonths = (now.getFullYear() - born.getFullYear()) * 12 + (now.getMonth() - born.getMonth());
         return ageInMonths >= 6;
       }).map((pet: any) => (
         <div key={`health-wizard-${pet.id}`} className="px-[var(--space-4)] pt-3 pb-1">
-          <Link href={`/owner/pets/${pet.id}/health-history`} className="block w-full bg-[var(--color-surface-1)] border border-[var(--color-border)] rounded-[12px] p-4 text-left hover:bg-[var(--color-surface-2)] transition-colors shadow-sm">
+          <Link href={`/owner/pets/${pet.id}/vaccines`} className="block w-full bg-[var(--color-surface-1)] border border-[var(--color-border)] rounded-[12px] p-4 text-left hover:bg-[var(--color-surface-2)] transition-colors shadow-sm">
             <div className="flex items-start gap-3">
               <i className="ti ti-clock text-[20px] text-[var(--color-primary)] mt-0.5 shrink-0" />
               <div>

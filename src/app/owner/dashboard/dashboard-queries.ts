@@ -179,10 +179,63 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
             .select('*, pets(name)')
             .in('pet_id', petIdList)
 
+          const { data: vpiRes, error: vpiError } = await supabase
+            .from('vaccination_upcoming_tasks')
+            .select('*')
+            .in('pet_id', petIdList)
+
+          const { data: ppiRes, error: ppiError } = await supabase
+            .from('parasite_upcoming_tasks')
+            .select('*')
+            .in('pet_id', petIdList)
+
           if (plansError) {
             console.error('[dashboard] plans fetch failed:', plansError.message)
-          } else if (plansRes) {
-            userPlans = plansRes as DashboardPlan[]
+          }
+          if (vpiError) {
+            console.error('[dashboard] vaccination_upcoming_tasks fetch failed:', vpiError.message)
+          }
+          if (ppiError) {
+            console.error('[dashboard] parasite_upcoming_tasks fetch failed:', ppiError.message)
+          }
+
+          const combinedPlans = [...(plansRes || [])]
+          if (vpiRes) {
+            for (const v of vpiRes) {
+              combinedPlans.push({
+                id: v.id,
+                pet_id: v.pet_id,
+                category: 'asi',
+                sub_type: v.extra_data?.vaccine?.name || v.antigen_code,
+                scheduled_at: v.due_date ? `${v.due_date}T00:00:00Z` : null,
+                status: v.status,
+                extra_data: v.extra_data,
+                note: null,
+                updated_at: new Date().toISOString(),
+                pets: { name: v.pet_name }
+              })
+            }
+          }
+
+          if (ppiRes) {
+            for (const p of ppiRes) {
+              combinedPlans.push({
+                id: p.id,
+                pet_id: p.pet_id,
+                category: 'parazit',
+                sub_type: p.product_name || (p.parasite_type === 'internal' ? 'İç Parazit' : p.parasite_type === 'external' ? 'Dış Parazit' : 'Kombine Parazit'),
+                scheduled_at: p.due_date ? `${p.due_date}T00:00:00Z` : null,
+                status: p.status,
+                extra_data: p.extra_data,
+                note: null,
+                updated_at: new Date().toISOString(),
+                pets: { name: p.pet_name }
+              })
+            }
+          }
+
+          if (combinedPlans.length > 0) {
+            userPlans = combinedPlans as DashboardPlan[]
             
             // Plans'ı health_schedules formatına dönüştür ve merge et
             const PLAN_CAT_MAP: Record<string, string> = {

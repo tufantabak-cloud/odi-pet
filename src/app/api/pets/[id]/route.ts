@@ -90,6 +90,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
   if (avatarUrl !== pet.avatar_url) payload.avatar_url = avatarUrl ?? undefined
   if (coverUrl !== (pet as any).cover_url) payload.cover_url = coverUrl ?? undefined
   if (fd.has('birth_date')) payload.birth_date = str(fd, 'birth_date')
+  if (fd.has('birth_date_precision')) payload.birth_date_precision = str(fd, 'birth_date_precision')
   if (fd.has('gender')) payload.gender = str(fd, 'gender')
   if (fd.has('color')) payload.color = str(fd, 'color')
   if (fd.has('microchip_no')) payload.microchip_no = str(fd, 'microchip_no')

@@ -141,7 +141,7 @@ VALUES
   'yearly', 365, '{"type":"indefinite"}',
   'Yasal zorunluluk. 16. haftadan itibaren uygulanır, yıllık tekrar edilir.'),
 
-('dog', 'DOG_LEPTO_C', false, 'Leptospirosis Protokolü',
+('dog', 'DOG_LEPTO_C', true, 'Leptospirosis Protokolü',
   '[
     {"dose_number":1,"trigger":"birth","days_offset":56,"label":"1. Doz (8. Hafta)"},
     {"dose_number":2,"trigger":"prev_dose","days_offset":21,"label":"2. Doz (3 Hafta Sonra)"},

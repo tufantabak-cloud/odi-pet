@@ -295,7 +295,8 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
       }
     } catch (err: unknown) {
       console.error("Kayıt hatası:", err);
-      setStep("error");
+      setValidationError(err instanceof Error ? err.message : String(err));
+      setStep("confirm");
     }
   };
 

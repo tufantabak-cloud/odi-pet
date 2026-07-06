@@ -105,7 +105,8 @@ export function calculatePetCareScore({
   }
 
   // 9. Sağlık Geçmişi Sihirbazı Tamamlandı (+50)
-  if (pet.health_history_status === 'completed') {
+  const op = (pet as any).onboarding_progress
+  if (pet.health_history_status === 'completed' || op?.vaccine_plan === true) {
     total += 50
   }
 

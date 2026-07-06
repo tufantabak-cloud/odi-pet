@@ -2040,6 +2040,8 @@ export type Database = {
           status: string
           suggested_by: string | null
           type: string
+          covers_ear_mites: boolean
+          min_age_weeks: number | null
         }
         Insert: {
           active_ingredient?: string | null
@@ -2058,6 +2060,8 @@ export type Database = {
           status?: string
           suggested_by?: string | null
           type: string
+          covers_ear_mites?: boolean
+          min_age_weeks?: number | null
         }
         Update: {
           active_ingredient?: string | null
@@ -2076,6 +2080,8 @@ export type Database = {
           status?: string
           suggested_by?: string | null
           type?: string
+          covers_ear_mites?: boolean
+          min_age_weeks?: number | null
         }
         Relationships: [
           {
@@ -2941,6 +2947,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           birth_date: string | null
+          birth_date_precision: string | null
           breed: string | null
           city: string | null
           color: string | null
@@ -2974,6 +2981,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           birth_date?: string | null
+          birth_date_precision?: string | null
           breed?: string | null
           city?: string | null
           color?: string | null
@@ -3007,6 +3015,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           birth_date?: string | null
+          birth_date_precision?: string | null
           breed?: string | null
           city?: string | null
           color?: string | null
@@ -3561,6 +3570,8 @@ export type Database = {
           status: string
           suggested_by: string | null
           vaccine_code: string
+          is_live_vaccine: boolean
+          administration_route: string
         }
         Insert: {
           admin_note?: string | null
@@ -3576,6 +3587,8 @@ export type Database = {
           status?: string
           suggested_by?: string | null
           vaccine_code: string
+          is_live_vaccine?: boolean
+          administration_route?: string
         }
         Update: {
           admin_note?: string | null
@@ -3591,6 +3604,8 @@ export type Database = {
           status?: string
           suggested_by?: string | null
           vaccine_code?: string
+          is_live_vaccine?: boolean
+          administration_route?: string
         }
         Relationships: [
           {
@@ -3819,7 +3834,9 @@ export type Database = {
           created_at: string | null
           dose_number: number | null
           due_at: string | null
+          expiration_date: string | null
           id: string
+          lot_number: string | null
           notes: string | null
           pet_id: string
           source: string
@@ -3834,7 +3851,9 @@ export type Database = {
           created_at?: string | null
           dose_number?: number | null
           due_at?: string | null
+          expiration_date?: string | null
           id?: string
+          lot_number?: string | null
           notes?: string | null
           pet_id: string
           source?: string
@@ -3849,7 +3868,9 @@ export type Database = {
           created_at?: string | null
           dose_number?: number | null
           due_at?: string | null
+          expiration_date?: string | null
           id?: string
+          lot_number?: string | null
           notes?: string | null
           pet_id?: string
           source?: string
@@ -3958,6 +3979,164 @@ export type Database = {
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      vaccination_plan_items: {
+        Row: {
+          id: string
+          pet_id: string
+          antigen_code: string
+          brand_id: string | null
+          dose_number: number
+          recommended_start: string | null
+          recommended_end: string | null
+          scheduled_date: string | null
+          status: string
+          plan_origin: string
+          administration_route: string | null
+          completed_record_id: string | null
+          plans_mirror_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          pet_id: string
+          antigen_code: string
+          brand_id?: string | null
+          dose_number?: number
+          recommended_start?: string | null
+          recommended_end?: string | null
+          scheduled_date?: string | null
+          status?: string
+          plan_origin?: string
+          administration_route?: string | null
+          completed_record_id?: string | null
+          plans_mirror_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          pet_id?: string
+          antigen_code?: string
+          brand_id?: string | null
+          dose_number?: number
+          recommended_start?: string | null
+          recommended_end?: string | null
+          scheduled_date?: string | null
+          status?: string
+          plan_origin?: string
+          administration_route?: string | null
+          completed_record_id?: string | null
+          plans_mirror_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vaccination_plan_items_pet_id_fkey"
+            columns: ["pet_id"]
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vaccination_plan_items_brand_id_fkey"
+            columns: ["brand_id"]
+            referencedRelation: "vaccine_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vaccination_plan_items_completed_record_id_fkey"
+            columns: ["completed_record_id"]
+            referencedRelation: "vaccine_records_v2"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vaccination_plan_items_plans_mirror_id_fkey"
+            columns: ["plans_mirror_id"]
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      parasite_plan_items: {
+        Row: {
+          id: string
+          pet_id: string
+          product_id: string | null
+          parasite_type: string
+          application_method: string
+          dose_number: number
+          recommended_start: string | null
+          recommended_end: string | null
+          scheduled_date: string | null
+          status: string
+          plan_origin: string
+          applied_by: string | null
+          completed_record_id: string | null
+          plans_mirror_id: string | null
+          extra_data: Json | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          pet_id: string
+          product_id?: string | null
+          parasite_type: string
+          application_method: string
+          dose_number?: number
+          recommended_start?: string | null
+          recommended_end?: string | null
+          scheduled_date?: string | null
+          status?: string
+          plan_origin?: string
+          applied_by?: string | null
+          completed_record_id?: string | null
+          plans_mirror_id?: string | null
+          extra_data?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          pet_id?: string
+          product_id?: string | null
+          parasite_type?: string
+          application_method?: string
+          dose_number?: number
+          recommended_start?: string | null
+          recommended_end?: string | null
+          scheduled_date?: string | null
+          status?: string
+          plan_origin?: string
+          applied_by?: string | null
+          completed_record_id?: string | null
+          plans_mirror_id?: string | null
+          extra_data?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parasite_plan_items_pet_id_fkey"
+            columns: ["pet_id"]
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parasite_plan_items_product_id_fkey"
+            columns: ["product_id"]
+            referencedRelation: "parasite_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parasite_plan_items_plans_mirror_id_fkey"
+            columns: ["plans_mirror_id"]
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          }
         ]
       }
       symptom_templates: {
@@ -4367,6 +4546,43 @@ export type Database = {
       }
     }
     Views: {
+      parasite_upcoming_tasks: {
+        Row: {
+          id: string
+          pet_id: string
+          parasite_type: string
+          application_method: string
+          dose_number: number
+          due_date: string | null
+          recommended_end: string | null
+          status: string
+          applied_by: string | null
+          extra_data: Json | null
+          product_name: string | null
+          protection_duration_days: number | null
+          covers_ear_mites: boolean | null
+          pet_name: string | null
+          species: string | null
+        }
+        Relationships: []
+      }
+      vaccination_upcoming_tasks: {
+        Row: {
+          id: string
+          pet_id: string
+          antigen_code: string
+          dose_number: number
+          due_date: string | null
+          recommended_end: string | null
+          status: string
+          administration_route: string | null
+          extra_data: Json | null
+          brand_name: string | null
+          pet_name: string | null
+          species: string | null
+        }
+        Relationships: []
+      }
       daily_user_metrics: {
         Row: {
           completed_tasks: number | null
@@ -4643,3 +4859,53 @@ export const Constants = {
     },
   },
 } as const
+
+// ============================================================
+// OdiPet — database.types.ts güncellemesi
+// Faz 2: vaccine_brands tablosu yeni alanları
+// ============================================================
+
+export type AdministrationRoute =
+  | 'intranasal'
+  | 'oral'
+  | 'parenteral_sc'
+  | 'parenteral_im';
+
+// --- Kural motoru için yardımcı sabitler ---
+
+export const SINGLE_DOSE_ROUTES: AdministrationRoute[] = [
+  'intranasal',
+  'oral',
+];
+
+export const DOUBLE_DOSE_ROUTES: AdministrationRoute[] = [
+  'parenteral_sc',
+  'parenteral_im',
+];
+
+// A5: Bordetella rota kontrolü
+export function getBordetellaDoseCount(route: AdministrationRoute): number {
+  return SINGLE_DOSE_ROUTES.includes(route) ? 1 : 2;
+}
+
+// A5: Bordetella doz aralığı (gün)
+export function getBordetellaIntervalDays(route: AdministrationRoute): number {
+  return SINGLE_DOSE_ROUTES.includes(route) ? 0 : 21;
+}
+
+// A4: Yetişkin başlangıç dozu (MLV vs inaktive)
+export function getAdultInitialDoseCount(
+  isLiveVaccine: boolean,
+  antigenCode: string
+): number {
+  // MLV → 1 doz (yetişkin, geçmişi bilinmeyen)
+  if (isLiveVaccine) return 1;
+
+  // İnaktive → 2 doz (tüm rotalar)
+  // Leptospiroz her durumda 2 doz (B2 kararı uyarınca)
+  return 2;
+}
+
+// A4: İnaktive doz aralığı (gün)
+export const INACTIVE_VACCINE_INTERVAL_DAYS = 21; // 2–4 hafta, TR pratiğinde 21 gün standart
+

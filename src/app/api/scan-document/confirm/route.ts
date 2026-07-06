@@ -3,6 +3,9 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 
 
+import { detectRouteConflict } from '@/features/pets/vaccination-algorithm'
+import type { AdministrationRoute } from '@/lib/database.types'
+
 export async function POST(req: Request) {
   try {
     const supabase = await createServerSupabaseClient()
@@ -18,6 +21,25 @@ export async function POST(req: Request) {
 
     if (!pet_id || !record_type || !parsed_data) {
       return NextResponse.json({ error: 'Eksik parametreler' }, { status: 400 })
+    }
+
+    // A5: OCR Rota Çakışması Kontrolü
+    if (record_type === 'vaccine_card' && parsed_data?.brand) {
+      const { data: brand } = await supabase
+        .from('vaccine_brands')
+        .select('administration_route')
+        .eq('brand_name', parsed_data.brand)
+        .maybeSingle()
+
+      if (brand?.administration_route) {
+        const expectedRoute = brand.administration_route as AdministrationRoute
+        const recordedRoute = (parsed_data.administration_route || 'parenteral_sc') as AdministrationRoute
+        const conflict = detectRouteConflict(expectedRoute, recordedRoute)
+        
+        if (conflict.hasConflict && expectedRoute === 'intranasal') {
+          return NextResponse.json({ error: conflict.message }, { status: 400 })
+        }
+      }
     }
 
     // Çağrılacak RPC fonksiyonu: process_smart_scan_results
