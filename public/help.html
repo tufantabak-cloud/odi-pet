@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OdiPet — Nasıl Yapılır?</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+:root {
+  --purple: #534AB7;
+  --purple-light: #EEEDFE;
+  --purple-text: #3C3489;
+  --green: #3B6D11;
+  --green-light: #EAF3DE;
+  --amber: #854F0B;
+  --amber-light: #FAEEDA;
+  --red: #A32D2D;
+  --red-light: #FCEBEB;
+  --blue: #185FA5;
+  --blue-light: #E6F1FB;
+  --gray: #888780;
+  --gray-light: #F5F5F3;
+  --border: rgba(0,0,0,0.1);
+  --text: #1A1A1A;
+  --text-muted: #888780;
+  --text-secondary: #444441;
+  --surface: #ffffff;
+  --surface-1: #F8F8F6;
+  --radius: 8px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--surface-1);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.layout { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: 260px;
+  background: var(--surface);
+  border-right: 0.5px solid var(--border);
+  padding: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.sidebar-header {
+  padding: 20px 18px 16px;
+  border-bottom: 0.5px solid var(--border);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.logo-text {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--purple);
+}
+
+.logo-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.search-box {
+  margin: 12px 14px;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  border: 0.5px solid var(--border);
+  background: var(--surface-1);
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+}
+
+.search-box input:focus {
+  border-color: var(--purple);
+}
+
+.nav-section {
+  padding: 4px 0;
+}
+
+.nav-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: .06em;
+  padding: 8px 18px 4px;
+  text-transform: uppercase;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 18px;
+  cursor: pointer;
+  border-radius: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  transition: background .15s;
+  border-left: 2px solid transparent;
+}
+
+.nav-item:hover { background: var(--surface-1); }
+
+.nav-item.active {
+  background: var(--purple-light);
+  color: var(--purple-text);
+  border-left-color: var(--purple);
+  font-weight: 500;
+}
+
+.nav-item .ti { font-size: 16px; }
+
+.nav-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  margin-left: auto;
+}
+
+.badge-active { background: var(--green-light); color: var(--green); }
+.badge-partial { background: var(--amber-light); color: var(--amber); }
+.badge-planned { background: var(--gray-light); color: var(--gray); }
+
+.main {
+  flex: 1;
+  padding: 28px 32px;
+  max-width: 800px;
+}
+
+.main-header {
+  margin-bottom: 24px;
+}
+
+.main-title {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.main-sub {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.items-list { display: flex; flex-direction: column; gap: 6px; }
+
+.item {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.item-q {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  cursor: pointer;
+  transition: background .15s;
+}
+
+.item-q:hover { background: var(--surface-1); }
+
+.item-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.item-text {
+  flex: 1;
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.item-chev {
+  font-size: 16px;
+  color: var(--text-muted);
+  transition: transform .2s;
+  flex-shrink: 0;
+}
+
+.item-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .3s ease;
+}
+
+.item-body.open { max-height: 600px; }
+
+.item-content {
+  padding: 12px 16px 14px;
+  border-top: 0.5px solid var(--border);
+  background: var(--surface-1);
+}
+
+.step {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 9px;
+  align-items: flex-start;
+}
+
+.step-n {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--purple);
+  color: white;
+  font-size: 10px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-t {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.55;
+}
+
+.note {
+  border-radius: 6px;
+  padding: 8px 11px;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 10px;
+}
+
+.note-warning { background: var(--amber-light); color: #412402; border: 0.5px solid #FAC775; }
+.note-info { background: var(--blue-light); color: #042C53; border: 0.5px solid #85B7EB; }
+
+.empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.empty .ti { font-size: 28px; display: block; margin-bottom: 8px; }
+
+.version-tag {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 0.5px solid var(--border);
+}
+
+.all-results .section-header {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  padding: 0 0 8px;
+  margin-top: 20px;
+  margin-bottom: 4px;
+  border-bottom: 0.5px solid var(--border);
+  letter-spacing: .04em;
+}
+
+.all-results .section-header:first-child { margin-top: 0; }
+
+@media (max-width: 640px) {
+  .sidebar { display: none; }
+  .main { padding: 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <i class="ti ti-paw" style="font-size:20px;color:var(--purple)"></i>
+        <span class="logo-text">OdiPet</span>
+      </div>
+      <div class="logo-sub">Nasıl yapılır? — Yardım merkezi</div>
+    </div>
+
+    <div class="search-box">
+      <input type="text" id="sidebar-search" placeholder="Ara..." aria-label="Yardım merkezinde ara">
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Genel</div>
+      <div class="nav-item active" data-section="all">
+        <i class="ti ti-layout-grid"></i>
+        Tümü
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Aktif modüller</div>
+      <div class="nav-item" data-section="dashboard">
+        <i class="ti ti-layout-dashboard"></i>
+        Pati paneli
+        <span class="nav-badge badge-active">aktif</span>
+      </div>
+      <div class="nav-item" data-section="vaccines">
+        <i class="ti ti-shield-check"></i>
+        Aşı modülü
+        <span class="nav-badge badge-active">aktif</span>
+      </div>
+      <div class="nav-item" data-section="parasite">
+        <i class="ti ti-bug"></i>
+        Parazit modülü
+        <span class="nav-badge badge-active">aktif</span>
+      </div>
+      <div class="nav-item" data-section="scanner">
+        <i class="ti ti-scan"></i>
+        Akıllı tarayıcı
+        <span class="nav-badge badge-active">aktif</span>
+      </div>
+      <div class="nav-item" data-section="aivet">
+        <i class="ti ti-stethoscope"></i>
+        AI Veteriner
+        <span class="nav-badge badge-active">aktif</span>
+      </div>
+      <div class="nav-item" data-section="lost">
+        <i class="ti ti-map-pin-search"></i>
+        Kayıp ihbarı
+        <span class="nav-badge badge-active">aktif</span>
+      </div>
+      <div class="nav-item" data-section="match">
+        <i class="ti ti-heart"></i>
+        Eşleştirme
+        <span class="nav-badge badge-active">aktif</span>
+      </div>
+      <div class="nav-item" data-section="adoption">
+        <i class="ti ti-home-heart"></i>
+        Sahiplendirme
+        <span class="nav-badge badge-active">aktif</span>
+      </div>
+      <div class="nav-item" data-section="vets">
+        <i class="ti ti-building-hospital"></i>
+        Veteriner rehberi
+        <span class="nav-badge badge-active">aktif</span>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Geliştirilmekte</div>
+      <div class="nav-item" data-section="plan">
+        <i class="ti ti-calendar-check"></i>
+        Bakım planı
+        <span class="nav-badge badge-partial">kısmi</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main" id="main-content">
+    <div class="main-header">
+      <h1 class="main-title" id="section-title">Tüm konular</h1>
+      <p class="main-sub" id="section-sub">OdiPet'te her şeyi nasıl yapacağını öğren</p>
+    </div>
+    <div class="items-list" id="items-container"></div>
+    <div class="version-tag" id="version-tag">OdiPet Yardım Merkezi v1.0 — 6 Temmuz 2026 — Aşı + Parazit modülleri</div>
+  </main>
+</div>
+
+<script>
+const DATA = {
+  sections: [
+    {
+      id: "dashboard", title: "Pati paneli", icon: "ti-layout-dashboard",
+      iconBg: "#EEEDFE", iconColor: "#534AB7",
+      sub: "Dashboard kartları ve yönlendirmeler",
+      items: [
+        {
+          q: "Dashboard'daki kartlar ne anlama geliyor?",
+          tags: ["kart","durum","renk"],
+          steps: [
+            "Yaklaşan aşı veya parazit görevi varsa üstte renkli görev kartı çıkar",
+            "Yeşil: tamamlandı — Sarı: yaklaşıyor — Kırmızı: gecikmiş",
+            "Kartlara tıklayınca ilgili modüle yönlendirilirsin"
+          ],
+          note: "6 aylık değerlendirme kartı yavru aşı serisi bittikten 24–52 hafta sonra otomatik çıkar.",
+          noteType: "info"
+        },
+        {
+          q: "Smart Card yönlendirmeleri neden çıkıyor?",
+          tags: ["smart card","eksik bilgi"],
+          steps: [
+            "Evcil hayvanının profili eksik bilgi içeriyorsa sistem seni tamamlamaya yönlendirir",
+            "Kilo, aşı geçmişi, yaşam biçimi gibi bilgiler tamamlandıkça kartlar kaybolur",
+            "Bu kartlar daha doğru plan oluşturmak için var"
+          ]
+        }
+      ]
+    },
+    {
+      id: "vaccines", title: "Aşı modülü", icon: "ti-shield-check",
+      iconBg: "#EEEDFE", iconColor: "#534AB7",
+      sub: "Aşı planı, kayıt, takvim ve veteriner paylaşımı",
+      items: [
+        {
+          q: "Yeni evcil hayvan için aşı planı nasıl kurulur?",
+          tags: ["plan","kurulum","yeni"],
+          steps: [
+            "Sağlık sekmesi → Aşı planını başlat → 5 adım kurulum",
+            "1. Doğum tarihi: Tam tarih, yaklaşık veya bilinmiyor",
+            "2. Aşı geçmişi: Hiç yapılmadı / bazıları / düzenli / bilmiyorum",
+            "3. Kayıt durumu: Karne, fotoğraf veya yok",
+            "4. Yaşam biçimi: Park, temas, kırsal — risk aşıları buradan belirlenir",
+            "5. Kullanım tercihi: OdiPet öneri / veteriner planı / yalnızca hatırlatma"
+          ],
+          note: "Risk bazlı aşılar (leptospira, bordetella) otomatik takvime girmez — değerlendirilmesi öneriliyor olarak ayrı gösterilir.",
+          noteType: "info"
+        },
+        {
+          q: "Aşı yapıldı — nasıl kaydederim?",
+          tags: ["kayıt","belge","tarama"],
+          steps: [
+            "Aşı planı kartı → Aşı yapıldı → Yöntem seç",
+            "Belgeyi tara: OCR otomatik okur, onayladıktan sonra kayıt oluşur",
+            "Hızlı kayıt: Aşı adı + tarih + klinik",
+            "Ayrıntılı kayıt: Lot, veteriner, ücret dahil tüm bilgiler"
+          ],
+          note: "Sonraki doz gerçek uygulama tarihinden hesaplanır — planlanan tarihten değil.",
+          noteType: "warning"
+        },
+        {
+          q: "Aşı sonrası reaksiyon görüldü — ne yapmalıyım?",
+          tags: ["reaksiyon","acil","yan etki"],
+          steps: [
+            "6 saat sonra sistem reaksiyon kontrolü bildirimi gönderir",
+            "Formda 4 seviye: Normal / Hafif / Dikkat / Acil",
+            "Acil seçenekler (yüzde şişme, nefes güçlüğü, çökme) → form durur → acil harita açılır",
+            "Dikkat seviyesi (tekrarlayan kusma) → uyarı gösterilir, devam edilebilir"
+          ],
+          note: "İlk 1 saatte anafilaksi riski var. Klinik yakınında 30–45 dakika kalın.",
+          noteType: "warning"
+        },
+        {
+          q: "WSAVA 3 yıl diyor ama Türkiye'de yıllık aşı isteniyor — hangisi doğru?",
+          tags: ["wsava","türkiye","yasal","booster"],
+          steps: [
+            "İkisi de doğru: WSAVA karma aşının biyolojik koruyuculuğunun 3 yıl sürdüğünü söylüyor",
+            "Türkiye yasal: Pansiyon, seyahat ve PETVET sistemi yıllık aşı istiyor",
+            "OdiPet takvimi her zaman yasal olanı (1 yıl) esas alır",
+            "Detaylı modda her iki kural da gösterilir"
+          ],
+          note: "Kuduz aşısı Türkiye'de 5996 Sayılı Kanun gereği yıllık zorunlu.",
+          noteType: "info"
+        },
+        {
+          q: "Basit mod ve detaylı mod farkı nedir?",
+          tags: ["mod","basit","detaylı"],
+          steps: [
+            "Basit mod: Yalnızca tarih ve hatırlatma — reaksiyon formu ve insight kartlar yok",
+            "Detaylı mod: Güven rozeti, WSAVA/TR booster ayrımı, reaksiyon takibi, insight kartları",
+            "Sayfa üstündeki toggle'dan her zaman değiştirilebilir"
+          ]
+        },
+        {
+          q: "Aşı karnesini veterinerimle nasıl paylaşırım?",
+          tags: ["paylaşım","veteriner","pdf","qr"],
+          steps: [
+            "Aşı Karnesi sayfası → Veterinerle Paylaş",
+            "PDF Oluştur: İndirip iletebilirsin",
+            "QR Göster: Veteriner QR okutarak erişir",
+            "Süreli Bağlantı: WhatsApp veya e-posta ile gönder"
+          ],
+          note: "Paylaşım linkleri güvenli ve süreli. İstediğin zaman iptal edebilirsin.",
+          noteType: "info"
+        }
+      ]
+    },
+    {
+      id: "parasite", title: "Parazit modülü", icon: "ti-bug",
+      iconBg: "#EAF3DE", iconColor: "#3B6D11",
+      sub: "İç ve dış parazit kayıt, tasma ve takip",
+      items: [
+        {
+          q: "Parazit ilacı nasıl kaydederim?",
+          tags: ["ilaç","kayıt","damla"],
+          steps: [
+            "Sağlık sekmesi → Parazit koruma → Kayıt yöntemi seç",
+            "Klinik uygulaması: Veteriner yaptı → güven seviyesi otomatik Veteriner onaylı",
+            "Ev uygulaması: Sen yaptın (ense damlası, tablet) → Kullanıcı beyanı",
+            "Tasma taktım: Ayrı akış — yaş kısıtı otomatik kontrol edilir"
+          ],
+          note: "Sistem ürün koruma süresine göre sonraki dozu otomatik takvime ekler. NexGard 30 gün, Bravecto 84 gün, Seresto 240 gün.",
+          noteType: "info"
+        },
+        {
+          q: "Tasma takarken nelere dikkat etmeliyim?",
+          tags: ["tasma","seresto","scalibor","yaş"],
+          steps: [
+            "Yaş kısıtı: Seresto 7 haftadan küçükte, Scalibor 12 haftadan küçükte kullanılamaz — sistem kaydı engeller",
+            "Aynı gün ense damlası + tasma: Sistem uyarır, onaylayarak devam edebilirsin",
+            "İlk 48 saat: Boyun bölgesinde kızarıklık ve tüy dökülmesi kontrol et",
+            "Su teması (yüzme, banyo) Seresto etki süresini kısaltır"
+          ]
+        },
+        {
+          q: "Ense damlası uyguladım — sonra ne yapmalıyım?",
+          tags: ["ense damlası","spot-on","uygulama"],
+          steps: [
+            "24 saat: Uygulama bölgesine dokunmayın, yalatmayın",
+            "48 saat: Banyo yaptırmayın, suyla temas ettirmeyin",
+            "Birden fazla evcil hayvan varsa uygulamadan sonra ayırın"
+          ],
+          note: "Bu uyarılar yalnızca ev uygulamasında gösterilir.",
+          noteType: "warning"
+        },
+        {
+          q: "Kombine ürün (NexGard Spectra, Broadline) kaydedince ne olur?",
+          tags: ["kombine","nexgard","broadline"],
+          steps: [
+            "Sistem etken maddeyi otomatik analiz eder",
+            "Hem iç hem dış parazit koruyucuysa iki kategori birden kapatılır",
+            "Koruma periyodunda tekrar kayıt girişi → 'Dostunuz zaten koruma altında' uyarısı"
+          ],
+          noteType: "warning",
+          note: "Koruma süresi dolmadan tekrar kayıt girişi engellenebilir."
+        },
+        {
+          q: "Yavru için parazit takvimi nasıl işler?",
+          tags: ["yavru","protokol","takvim"],
+          steps: [
+            "15. günden itibaren iç parazit başlar",
+            "2 aya kadar: 2 haftada bir",
+            "2–6 ay arası: Ayda bir",
+            "6 aydan sonra: 3 ayda bir (yılda 4 kez)"
+          ],
+          note: "Doğum tarihi yaklaşık girilmişse veteriner değerlendirmesi bayrağı koyulur.",
+          noteType: "warning"
+        }
+      ]
+    },
+    {
+      id: "scanner", title: "Akıllı tarayıcı", icon: "ti-scan",
+      iconBg: "#E6F1FB", iconColor: "#185FA5",
+      sub: "OCR ile belge, karne ve paket tarama",
+      items: [
+        {
+          q: "Akıllı tarayıcı ne tarayabilir?",
+          tags: ["ocr","kamera","belge","tarama"],
+          steps: [
+            "Aşı karnesi ve etiketleri — aşı adı, tarih, lot numarası otomatik okunur",
+            "Mama paketi — ürün adı, besin değerleri, porsiyon bilgisi",
+            "İlaç kutusu — ilaç adı, dozaj, son kullanma tarihi"
+          ],
+          note: "OCR onaylamadan hiçbir kayıt oluşmaz. Her alan güven seviyesiyle gösterilir: Okundu / Kontrol edin.",
+          noteType: "info"
+        }
+      ]
+    },
+    {
+      id: "aivet", title: "AI Veteriner", icon: "ti-stethoscope",
+      iconBg: "#EEEDFE", iconColor: "#534AB7",
+      sub: "Yapay zeka destekli semptom sorgulama",
+      items: [
+        {
+          q: "AI Veteriner ne yapabilir, ne yapamaz?",
+          tags: ["ai","yapay zeka","semptom","soru"],
+          steps: [
+            "Evcil hayvanının semptomlarını ve sağlık durumunu sorgulayabilirsin",
+            "Genel bilgi verir — tanı koymaz, reçete yazmaz",
+            "Ciddi semptomlarda mutlaka gerçek veterinere yönlendirir"
+          ],
+          note: "AI Veteriner bir asistan. Teşhis ve tedavi kararları için veteriner hekiminize başvurun.",
+          noteType: "warning"
+        }
+      ]
+    },
+    {
+      id: "lost", title: "Kayıp ihbarı", icon: "ti-map-pin-search",
+      iconBg: "#FCEBEB", iconColor: "#A32D2D",
+      sub: "Kayıp ilan oluşturma ve takip",
+      items: [
+        {
+          q: "Kayıp ilanı nasıl oluştururum?",
+          tags: ["kayıp","ilan","ihbar"],
+          steps: [
+            "Kayıp İhbarı menüsü → İlan oluştur",
+            "Fotoğraf, kaybolduğu yer ve tarihi gir",
+            "İlan yayınlanınca yakın konumdaki kullanıcılara bildirim gider",
+            "Bulunan kişi uygulama içinden sana ulaşabilir"
+          ]
+        }
+      ]
+    },
+    {
+      id: "match", title: "Eşleştirme", icon: "ti-heart",
+      iconBg: "#FBEAF0", iconColor: "#993556",
+      sub: "Çiftleştirme ilanı oluşturma ve keşfetme",
+      items: [
+        {
+          q: "Eşleştirme ilanı nasıl oluştururum?",
+          tags: ["eşleştirme","çiftleştirme","ilan"],
+          steps: [
+            "Pet Detay → Eşleştirme sekmesi",
+            "Yaş, sağlık durumu ve tercihlerini doldur",
+            "İlan yayınlanınca uygun eşler önerilir"
+          ],
+          note: "Aşı ve sağlık bilgileri dolu profiller eşleştirmede öncelikli gösterilir.",
+          noteType: "info"
+        }
+      ]
+    },
+    {
+      id: "adoption", title: "Sahiplendirme", icon: "ti-home-heart",
+      iconBg: "#EAF3DE", iconColor: "#3B6D11",
+      sub: "Sahiplendirme ilanı oluşturma",
+      items: [
+        {
+          q: "Sahiplendirme ilanı nasıl oluştururum?",
+          tags: ["sahiplendirme","ilan","yuva"],
+          steps: [
+            "Pet Detay → Sahiplendirme sekmesi",
+            "Fotoğraf, karakter bilgileri ve koşullarını gir",
+            "İlan yayınlanır, başvuranlar uygulama içinden ulaşır"
+          ]
+        }
+      ]
+    },
+    {
+      id: "vets", title: "Veteriner rehberi", icon: "ti-building-hospital",
+      iconBg: "#E6F1FB", iconColor: "#185FA5",
+      sub: "Yakın klinik bulma ve yol tarifi",
+      items: [
+        {
+          q: "Yakınımdaki veterineri nasıl bulurum?",
+          tags: ["veteriner","harita","yakın","klinik"],
+          steps: [
+            "Veteriner Rehberi menüsüne gir",
+            "Konum izni ver — en yakın klinikler mesafeye göre sıralanır",
+            "İl/ilçe filtresi ile arama yapabilirsin",
+            "Klinik kartına tıklayınca çalışma saatleri ve yol tarifi açılır"
+          ]
+        }
+      ]
+    },
+    {
+      id: "plan", title: "Akıllı bakım planı", icon: "ti-calendar-check",
+      iconBg: "#FAEEDA", iconColor: "#854F0B",
+      sub: "Rutin görev ve takvim oluşturma",
+      items: [
+        {
+          q: "Bakım planı ve rutin görev nasıl oluştururum?",
+          tags: ["plan","rutin","görev","takvim"],
+          steps: [
+            "Plan Yap menüsüne gir",
+            "Görev türünü seç: bakım, beslenme, oyun, egzersiz",
+            "Periyot belirle: günlük, haftalık, aylık",
+            "Görev takvime eklenir, zamanı gelince bildirim alırsın"
+          ],
+          note: "Bu modül geliştirilmeye devam ediyor — bazı özellikler henüz eksik.",
+          noteType: "warning"
+        }
+      ]
+    }
+  ]
+};
+
+let currentSection = 'all';
+let searchTerm = '';
+let openItems = new Set();
+
+function getIconBg(sectionId) {
+  const s = DATA.sections.find(x => x.id === sectionId);
+  return s ? s.iconBg : '#F5F5F3';
+}
+function getIconColor(sectionId) {
+  const s = DATA.sections.find(x => x.id === sectionId);
+  return s ? s.iconColor : '#888';
+}
+function getIcon(sectionId) {
+  const s = DATA.sections.find(x => x.id === sectionId);
+  return s ? s.icon : 'ti-help';
+}
+
+function renderItems() {
+  const container = document.getElementById('items-container');
+  const titleEl = document.getElementById('section-title');
+  const subEl = document.getElementById('section-sub');
+  container.innerHTML = '';
+
+  let sections = DATA.sections;
+  if (currentSection !== 'all') {
+    sections = sections.filter(s => s.id === currentSection);
+  }
+
+  if (currentSection !== 'all' && sections.length) {
+    titleEl.textContent = sections[0].title;
+    subEl.textContent = sections[0].sub;
+  } else {
+    titleEl.textContent = searchTerm ? `"${searchTerm}" için sonuçlar` : 'Tüm konular';
+    subEl.textContent = searchTerm ? '' : 'OdiPet\'te her şeyi nasıl yapacağını öğren';
+  }
+
+  let totalItems = 0;
+  const allResults = document.createElement('div');
+  allResults.className = 'all-results';
+
+  sections.forEach(section => {
+    const filtered = section.items.filter(item =>
+      !searchTerm ||
+      item.q.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.tags || []).some(t => t.includes(searchTerm.toLowerCase())) ||
+      item.steps.some(s => s.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+    if (!filtered.length) return;
+    totalItems += filtered.length;
+
+    if (currentSection === 'all') {
+      const hdr = document.createElement('div');
+      hdr.className = 'section-header';
+      hdr.innerHTML = `<i class="ti ${section.icon}" style="font-size:13px;vertical-align:-1px;margin-right:5px;color:${section.iconColor}"></i>${section.title}`;
+      allResults.appendChild(hdr);
+    }
+
+    filtered.forEach(item => {
+      const key = section.id + ':' + item.q;
+      const el = document.createElement('div');
+      el.className = 'item';
+      const isOpen = openItems.has(key);
+
+      el.innerHTML = `
+        <div class="item-q" role="button" tabindex="0" aria-expanded="${isOpen}">
+          <div class="item-icon" style="background:${section.iconBg}">
+            <i class="ti ${section.icon}" style="color:${section.iconColor}"></i>
+          </div>
+          <span class="item-text">${item.q}</span>
+          <i class="ti ti-chevron-down item-chev" style="transform:${isOpen?'rotate(180deg)':''}"></i>
+        </div>
+        <div class="item-body ${isOpen?'open':''}">
+          <div class="item-content">
+            ${item.steps.map((s,i) => `<div class="step"><div class="step-n">${i+1}</div><div class="step-t">${s}</div></div>`).join('')}
+            ${item.note ? `<div class="note note-${item.noteType||'info'}">${item.note}</div>` : ''}
+          </div>
+        </div>
+      `;
+
+      const q = el.querySelector('.item-q');
+      const body = el.querySelector('.item-body');
+      const chev = el.querySelector('.item-chev');
+
+      function toggle() {
+        if (openItems.has(key)) {
+          openItems.delete(key);
+          body.classList.remove('open');
+          chev.style.transform = '';
+          q.setAttribute('aria-expanded','false');
+        } else {
+          openItems.add(key);
+          body.classList.add('open');
+          chev.style.transform = 'rotate(180deg)';
+          q.setAttribute('aria-expanded','true');
+        }
+      }
+      q.addEventListener('click', toggle);
+      q.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle();} });
+      allResults.appendChild(el);
+    });
+  });
+
+  if (!totalItems) {
+    allResults.innerHTML = `<div class="empty"><i class="ti ti-search"></i>Sonuç bulunamadı — farklı bir kelime dene.</div>`;
+  }
+
+  container.appendChild(allResults);
+}
+
+document.querySelectorAll('.nav-item').forEach(nav => {
+  nav.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    nav.classList.add('active');
+    currentSection = nav.dataset.section;
+    searchTerm = '';
+    document.getElementById('sidebar-search').value = '';
+    openItems.clear();
+    renderItems();
+  });
+});
+
+document.getElementById('sidebar-search').addEventListener('input', e => {
+  searchTerm = e.target.value.trim().toLowerCase();
+  currentSection = 'all';
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelector('[data-section="all"]').classList.add('active');
+  renderItems();
+});
+
+renderItems();
+</script>
+</body>
+</html>
