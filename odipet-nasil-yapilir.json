@@ -1,7 +1,54 @@
 {
-  "version": "1.1",
+  "version": "1.2",
   "updated": "2026-07-06",
   "sections": [
+    {
+      "id": "pets",
+      "title": "Dostumun Profili",
+      "icon": "ti-paw",
+      "mod": "pet",
+      "status": "active",
+      "sub": "Yeni evcil hayvan ekleme, profil bilgilerini güncelleme ve onboarding adımları",
+      "items": [
+        {
+          "id": "pet-create",
+          "q": "Yeni bir can dostu profili (pet kartı) nasıl oluştururum?",
+          "tags": ["pet ekle", "yeni kayıt", "kayıt", "onboarding"],
+          "steps": [
+            "Pati panelinden (Dashboard) veya Hızlı Ekle menüsünden 'Yeni Evcil Hayvan Ekle' butonuna dokunun.",
+            "1. Adım: Dostunuzun türünü seçin (Kedi, Köpek vb.).",
+            "2. Adım: İsim, cinsiyet, kısırlaştırma durumu, doğum tarihi ve ırk bilgilerini girin.",
+            "3. Adım: Dilerseniz profil fotoğrafı yükleyin.",
+            "4. Adım: Acil durum durumlarında aranacak kişileri belirleyip kaydı tamamlayın."
+          ],
+          "note": "İlk onboarding sürecinde yorulmamanız için sadece temel bilgileri isteriz, ayrıntılı detayları sistem zamanla soracaktır.",
+          "noteType": "info"
+        },
+        {
+          "id": "pet-edit",
+          "q": "Mevcut evcil hayvanımın bilgilerini ve fotoğrafını nasıl güncellerim?",
+          "tags": ["düzenle", "profil güncelleme", "avatar", "fotoğraf"],
+          "steps": [
+            "Pati detay sayfasına gidin ve sağ üstteki 'Düzenle' simgesine dokunun.",
+            "Evcil hayvanınızın adını, ırkını, kilosunu veya doğum tarihini güncelleyin.",
+            "Fotoğrafı değiştirmek için profil resminin üstündeki kamera simgesine dokunup yeni görsel seçin.",
+            "Kaydet butonuna basarak bilgileri güncelleyin."
+          ],
+          "note": "Kilitli Pet Hero ve Kapak Fotoğrafı alanları haricindeki tüm bilgileri dilediğiniz an güncelleyebilirsiniz.",
+          "noteType": "info"
+        },
+        {
+          "id": "pet-onboarding-progress",
+          "q": "Profil tamamlama adımlarını ve aşı/sağlık önerilerini nasıl takip ederim?",
+          "tags": ["onboarding", "tamamlama", "aşı planı", "öneri"],
+          "steps": [
+            "Profilinizdeki eksik adımları izlemek için ekranın üst kısmında beliren bilgi çubuklarını kontrol edin.",
+            "Örneğin 'Aşı Planı Kurulumu' tamamlandığında bu adım otomatik olarak 'Tamamlandı' işaretlenir.",
+            "Eksik adımları (aşı planı, kilo kaydı vb.) tamamladıkça dostunuza özel sağlık önerileri ve hatırlatıcılar aktif hale gelir."
+          ]
+        }
+      ]
+    },
     {
       "id": "dashboard",
       "title": "Pati paneli",

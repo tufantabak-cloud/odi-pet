@@ -325,6 +325,11 @@ body {
 
     <div class="nav-section">
       <div class="nav-label">Aktif modüller</div>
+      <div class="nav-item" data-section="pets">
+        <i class="ti ti-paw"></i>
+        Dostumun Profili
+        <span class="nav-badge badge-active">aktif</span>
+      </div>
       <div class="nav-item" data-section="dashboard">
         <i class="ti ti-layout-dashboard"></i>
         Pati paneli
@@ -388,13 +393,54 @@ body {
       <p class="main-sub" id="section-sub">OdiPet'te her şeyi nasıl yapacağını öğren</p>
     </div>
     <div class="items-list" id="items-container"></div>
-    <div class="version-tag" id="version-tag">OdiPet Yardım Merkezi v1.0 — 6 Temmuz 2026 — Aşı + Parazit modülleri</div>
+    <div class="version-tag" id="version-tag">OdiPet Yardım Merkezi v1.2 — 6 Temmuz 2026</div>
   </main>
 </div>
 
 <script>
 const DATA = {
   sections: [
+    {
+      id: "pets", title: "Dostumun Profili", icon: "ti-paw",
+      iconBg: "#EEEDFE", iconColor: "#534AB7",
+      sub: "Yeni evcil hayvan ekleme, profil bilgilerini güncelleme ve onboarding adımları",
+      items: [
+        {
+          q: "Yeni bir can dostu profili (pet kartı) nasıl oluştururum?",
+          tags: ["pet ekle", "yeni kayıt", "kayıt", "onboarding"],
+          steps: [
+            "Pati panelinden (Dashboard) veya Hızlı Ekle menüsünden 'Yeni Evcil Hayvan Ekle' butonuna dokunun.",
+            "1. Adım: Dostunuzun türünü seçin (Kedi, Köpek vb.).",
+            "2. Adım: İsim, cinsiyet, kısırlaştırma durumu, doğum tarihi ve ırk bilgilerini girin.",
+            "3. Adım: Dilerseniz profil fotoğrafı yükleyin.",
+            "4. Adım: Acil durum durumlarında aranacak kişileri belirleyip kaydı tamamlayın."
+          ],
+          note: "İlk onboarding sürecinde yorulmamanız için sadece temel bilgileri isteriz, ayrıntılı detayları sistem zamanla soracaktır.",
+          noteType: "info"
+        },
+        {
+          q: "Mevcut evcil hayvanımın bilgilerini ve fotoğrafını nasıl güncellerim?",
+          tags: ["düzenle", "profil güncelleme", "avatar", "fotoğraf"],
+          steps: [
+            "Pati detay sayfasına gidin ve sağ üstteki 'Düzenle' simgesine dokunun.",
+            "Evcil hayvanınızın adını, ırkını, kilosunu veya doğum tarihini güncelleyin.",
+            "Fotoğrafı değiştirmek için profil resminin üstündeki kamera simgesine dokunup yeni görsel seçin.",
+            "Kaydet butonuna basarak bilgileri güncelleyin."
+          ],
+          note: "Kilitli Pet Hero ve Kapak Fotoğrafı alanları haricindeki tüm bilgileri dilediğiniz an güncelleyebilirsiniz.",
+          noteType: "info"
+        },
+        {
+          q: "Profil tamamlama adımlarını ve aşı/sağlık önerilerini nasıl takip ederim?",
+          tags: ["onboarding", "tamamlama", "aşı planı", "öneri"],
+          steps: [
+            "Profilinizdeki eksik adımları izlemek için ekranın üst kısmında beliren bilgi çubuklarını kontrol edin.",
+            "Örneğin 'Aşı Planı Kurulumu' tamamlandığında bu adım otomatik olarak 'Tamamlandı' işaretlenir.",
+            "Eksik adımları (aşı planı, kilo kaydı vb.) tamamladıkça dostunuza özel sağlık önerileri ve hatırlatıcılar aktif hale gelir."
+          ]
+        }
+      ]
+    },
     {
       id: "dashboard", title: "Pati paneli", icon: "ti-layout-dashboard",
       iconBg: "#EEEDFE", iconColor: "#534AB7",
