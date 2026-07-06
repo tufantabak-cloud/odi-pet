@@ -325,6 +325,11 @@ body {
 
     <div class="nav-section">
       <div class="nav-label">Aktif modüller</div>
+      <div class="nav-item" data-section="onboarding">
+        <i class="ti ti-list-check"></i>
+        Kurulum rehberi
+        <span class="nav-badge badge-active">aktif</span>
+      </div>
       <div class="nav-item" data-section="pets">
         <i class="ti ti-paw"></i>
         Dostumun Profili
@@ -393,13 +398,40 @@ body {
       <p class="main-sub" id="section-sub">OdiPet'te her şeyi nasıl yapacağını öğren</p>
     </div>
     <div class="items-list" id="items-container"></div>
-    <div class="version-tag" id="version-tag">OdiPet Yardım Merkezi v1.2 — 6 Temmuz 2026</div>
+    <div class="version-tag" id="version-tag">OdiPet Yardım Merkezi v1.3 — 6 Temmuz 2026</div>
   </main>
 </div>
 
 <script>
 const DATA = {
   sections: [
+    {
+      id: "onboarding", title: "Kurulum rehberi", icon: "ti-list-check",
+      iconBg: "#EEEDFE", iconColor: "#534AB7",
+      sub: "Profil tamamlama adımları ve ilerleme takibi",
+      items: [
+        {
+          q: "Kurulum rehberi neden çıkıyor?",
+          tags: ["kurulum","rehber","profil","tamamlama"],
+          steps: [
+            "Evcil hayvan kaydı sonrası OdiPet sağlıklı bir profil oluşturman için seni adım adım yönlendirir",
+            "5 adım var: pet kaydı, aşı planı, parazit koruması, acil durum kişisi, belgeler",
+            "Her adım tamamlandıkça ilerleme çubuğu güncellenir"
+          ],
+          note: "Tüm adımlar tamamlanınca kart kaybolur ve kutlama mesajı gösterilir.",
+          noteType: "info"
+        },
+        {
+          q: "Kurulum rehberini şimdi kapatabilir miyim?",
+          tags: ["kapat","ertele","snooze"],
+          steps: [
+            "'Daha sonra hatırlat' butonuna bas — kart bugün için gizlenir",
+            "Ertesi gün tekrar görünür, tamamlanana kadar devam eder",
+            "7 gün sonra kart küçülür ve Smart Cards arasına taşınır — zorlamaz ama hatırlatır"
+          ]
+        }
+      ]
+    },
     {
       id: "pets", title: "Dostumun Profili", icon: "ti-paw",
       iconBg: "#EEEDFE", iconColor: "#534AB7",

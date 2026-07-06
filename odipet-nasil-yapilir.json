@@ -1,7 +1,39 @@
 {
-  "version": "1.2",
+  "version": "1.3",
   "updated": "2026-07-06",
   "sections": [
+    {
+      "id": "onboarding",
+      "title": "Kurulum rehberi",
+      "icon": "ti-list-check",
+      "mod": "onboarding",
+      "status": "active",
+      "sub": "Profil tamamlama adımları ve ilerleme takibi",
+      "items": [
+        {
+          "id": "onboard-1",
+          "q": "Kurulum rehberi neden çıkıyor?",
+          "tags": ["kurulum","rehber","profil","tamamlama"],
+          "steps": [
+            "Evcil hayvan kaydı sonrası OdiPet sağlıklı bir profil oluşturman için seni adım adım yönlendirir",
+            "5 adım var: pet kaydı, aşı planı, parazit koruması, acil durum kişisi, belgeler",
+            "Her adım tamamlandıkça ilerleme çubuğu güncellenir"
+          ],
+          "note": "Tüm adımlar tamamlanınca kart kaybolur ve kutlama mesajı gösterilir.",
+          "noteType": "info"
+        },
+        {
+          "id": "onboard-2",
+          "q": "Kurulum rehberini şimdi kapatabilir miyim?",
+          "tags": ["kapat","ertele","snooze"],
+          "steps": [
+            "'Daha sonra hatırlat' butonuna bas — kart bugün için gizlenir",
+            "Ertesi gün tekrar görünür, tamamlanana kadar devam eder",
+            "7 gün sonra kart küçülür ve Smart Cards arasına taşınır — zorlamaz ama hatırlatır"
+          ]
+        }
+      ]
+    },
     {
       "id": "pets",
       "title": "Dostumun Profili",
