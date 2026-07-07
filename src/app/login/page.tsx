@@ -257,6 +257,7 @@ function LoginForm() {
                   {...register('email')}
                   autoComplete="email"
                   aria-invalid={!!errors.email}
+                  data-testid="login-email-input"
                   className={`input-base h-[50px] text-[15px] ${errors.email ? 'border-error/50 focus:border-error focus:ring-error/20' : ''}`}
                 />
                 {errors.email && <span role="alert" className="text-error text-[11px] font-bold">{errors.email.message}</span>}
@@ -274,6 +275,7 @@ function LoginForm() {
                     {...register('password')}
                     autoComplete="current-password"
                     aria-invalid={!!errors.password}
+                    data-testid="login-password-input"
                     className={`input-base h-[50px] text-[15px] pr-11 w-full ${errors.password ? 'border-error/50 focus:border-error focus:ring-error/20' : ''}`}
                   />
                   <button
@@ -305,6 +307,7 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={!hydrated || loading || lockoutUntil !== null}
+                data-testid="login-submit-button"
                 className={`w-full bg-[#4726AF] text-white rounded-xl font-medium text-[15px] py-3 mt-1 hover:opacity-90 transition-opacity flex items-center justify-center disabled:opacity-60 ${lockoutUntil !== null ? 'cursor-not-allowed bg-slate-300 text-slate-500' : ''}`}
               >
                 {loading ? (
@@ -331,7 +334,7 @@ function LoginForm() {
             {/* ── Kayıt linki ── */}
             <p className="text-center text-[14px] text-text-secondary font-medium mt-6">
               Hesabınız yok mu?{' '}
-              <Link href="/register" className="font-black text-primary hover:underline">
+              <Link href="/register" data-testid="register-link" className="font-black text-primary hover:underline">
                 Kayıt Ol
               </Link>
             </p>

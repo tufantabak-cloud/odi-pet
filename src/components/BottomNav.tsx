@@ -253,6 +253,7 @@ export default function BottomNav({
                 key={tab.id || tab.href || idx}
                 href={tab.href}
                 onClick={(e) => handleNavClick(e, tab)}
+                data-testid={tab.href === '/owner/services' ? 'services-module-button' : undefined}
                 className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 px-1 transition-all duration-200 select-none cursor-pointer ${
                   isActive
                     ? 'text-[var(--color-primary)]'

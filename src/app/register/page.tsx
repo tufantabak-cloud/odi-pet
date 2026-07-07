@@ -220,13 +220,13 @@ export default function RegisterPage() {
 
   // ── Ana Form ─────────────────────────────────────────────────
   return (
-    <div className="flex min-h-dvh w-full items-center justify-center p-4 bg-[#FAF8FF] font-montserrat">
+    <div className="flex min-h-dvh w-full items-start justify-center p-4 overflow-y-auto bg-[#FAF8FF] font-montserrat">
 
       {/* Referral parametresini pasif olarak yakala */}
       <ReferralCaptureListener />
 
       <div className="w-full max-w-sm">
-        <div className="bg-white rounded-2xl p-6 shadow-xl border border-border w-full relative overflow-hidden">
+        <div className="bg-white rounded-2xl p-6 shadow-xl border border-border w-full relative overflow-y-auto">
 
           {/* Mor üst şerit */}
           
@@ -340,6 +340,7 @@ export default function RegisterPage() {
                       {...register('name')}
                       onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleNextStep() } }}
                       aria-invalid={!!errors.name}
+                      data-testid="register-name-input"
                       className={`input-base py-3 text-[15px] ${errors.name ? 'border-error/50 focus:border-error focus:ring-error/20' : ''}`} />
                     {errors.name && <span role="alert" className="text-error text-[11px] font-bold">{errors.name.message}</span>}
                   </div>
@@ -351,6 +352,7 @@ export default function RegisterPage() {
                       {...register('email')}
                       onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleNextStep() } }}
                       aria-invalid={!!errors.email}
+                      data-testid="register-email-input"
                       className={`input-base py-3 text-[15px] ${errors.email ? 'border-error/50 focus:border-error focus:ring-error/20' : ''}`} />
                     {errors.email && <span role="alert" className="text-error text-[11px] font-bold">{errors.email.message}</span>}
                   </div>
@@ -378,6 +380,7 @@ export default function RegisterPage() {
                       <input id="password" type={showPassword ? 'text' : 'password'} placeholder="••••••••"
                         {...register('password')}
                         aria-invalid={!!errors.password}
+                        data-testid="register-password-input"
                         className={`input-base py-3 text-[15px] pr-11 w-full ${errors.password ? 'border-error/50 focus:border-error focus:ring-error/20' : ''}`} />
                       <button type="button" onClick={() => setShowPassword(!showPassword)}
                         aria-label={showPassword ? 'Şifreyi gizle' : 'Şifreyi göster'}
@@ -417,6 +420,7 @@ export default function RegisterPage() {
                       <input id="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} placeholder="••••••••"
                         {...register('confirmPassword')}
                         aria-invalid={!!errors.confirmPassword}
+                        data-testid="register-password-confirm-input"
                         className={`input-base py-3 text-[15px] pr-11 w-full ${errors.confirmPassword ? 'border-error/50 focus:border-error focus:ring-error/20' : ''}`} />
                       <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         aria-label={showConfirmPassword ? 'Şifreyi gizle' : 'Şifreyi göster'}
@@ -431,6 +435,7 @@ export default function RegisterPage() {
                   <div className="flex flex-col gap-1">
                     <div className="flex items-start gap-3">
                       <input type="checkbox" id="terms" {...register('terms')}
+                        data-testid="register-terms-checkbox"
                         className="mt-0.5 w-4 h-4 rounded border-border-main text-primary focus:ring-primary shrink-0 cursor-pointer" />
                       <label htmlFor="terms" className="text-[12px] text-text-secondary leading-snug cursor-pointer">
                         <Link href="/legal/terms" target="_blank" className="font-bold text-primary hover:underline">Kullanım Koşullarını</Link>{' '}ve{' '}
@@ -442,6 +447,7 @@ export default function RegisterPage() {
 
                   {/* Kayıt Ol */}
                   <button type="submit" disabled={loading || googleLoading || appleLoading}
+                    data-testid="register-submit-button"
                     className="w-full bg-[#4726AF] text-white rounded-xl font-medium text-[15px] py-3 mt-1 hover:opacity-90 transition-opacity flex items-center justify-center shadow-md disabled:opacity-60">
                     {loading ? (
                       <span className="flex items-center gap-2.5">

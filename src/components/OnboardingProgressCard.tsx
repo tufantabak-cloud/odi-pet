@@ -63,6 +63,7 @@ export default function OnboardingProgressCard({
         <div 
           className="bg-white border border-[#E2E0FA] rounded-2xl p-5 mb-4 shadow-sm"
           style={{ fontFamily: 'inherit' }}
+          data-testid="next-step-card"
         >
           {/* Header */}
           <div className="flex justify-between items-start mb-3">
@@ -129,6 +130,7 @@ export default function OnboardingProgressCard({
             {nextStep && (
               <button
                 onClick={() => router.push(nextStep.route)}
+                data-testid="next-step-primary-button"
                 className="flex-1 py-2.5 px-4 rounded-xl bg-[#534AB7] text-xs font-semibold text-white hover:bg-[#443C9E] transition-colors"
               >
                 Sıradaki Adım
@@ -146,6 +148,7 @@ export default function OnboardingProgressCard({
     <>
       <div 
         onClick={() => setIsExpanded(!isExpanded)}
+        data-testid="next-step-card"
         className="bg-white border border-[#E2E0FA] rounded-xl p-3 mb-3 cursor-pointer shadow-sm hover:border-[#534AB7] transition-all"
         style={{ fontFamily: 'inherit' }}
       >

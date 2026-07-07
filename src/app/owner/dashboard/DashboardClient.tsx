@@ -61,7 +61,7 @@ export default function DashboardClient({
 
           <div className="flex items-center justify-between px-[var(--space-4)]">
             <p className="text-[11px] font-800 text-[var(--color-text-muted)] uppercase tracking-[1.2px]">Petlerim</p>
-            <Link href="/owner/pets/add" className="text-[12px] font-800 text-[var(--color-primary)]">
+            <Link href="/owner/pets/add" data-testid="add-first-pet-button" className="text-[12px] font-800 text-[var(--color-primary)]">
               + Ekle
             </Link>
           </div>

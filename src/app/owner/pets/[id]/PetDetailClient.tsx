@@ -1740,6 +1740,27 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           <h2 className="text-[16px] font-black text-text-primary px-1">
             {activeTab === 'saglik' ? 'Sağlık ve Bakım' : 'Bakım'}
           </h2>
+          {activeTab === 'saglik' && (
+            <MinimalGrowthChart 
+              records={growthRecords} 
+              petSpecies={pet.species as 'cat' | 'dog'}
+              petBreed={pet.breed}
+              petBirthDate={pet.birth_date}
+              petGender={pet.gender as 'male' | 'female' | 'unknown'}
+              isNeutered={pet.is_neutered ?? false}
+              onAddRecord={() => setQuickUpdateConfig({ 
+                title: 'Gelişim Bilgisi', 
+                desc: 'Gelişimi takip edebilmek için güncel kilo ve boyunu girin.', 
+                endpoint: `/api/pets/${pet.id}/growth`, 
+                method: 'POST', 
+                fields: [
+                  { name: 'recorded_at', type: 'date', label: 'Tarih', defaultValue: new Date().toISOString().split('T')[0], required: true },
+                  { name: 'weight_kg', type: 'number', label: 'Kilo (kg)', placeholder: 'Örn: 4.5', required: true }, 
+                  { name: 'height_cm', type: 'number', label: 'Boy (cm)', placeholder: 'Örn: 35.5', required: false }
+                ] 
+              })}
+            />
+          )}
           {([
             ...(activeTab === 'saglik' ? [
               { name: 'Sağlık', icon: <FirstAidIcon width={22} height={22} />, color: 'text-red-500', bg: 'bg-red-50' },
@@ -1763,6 +1784,12 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             <div key={module.name} id={`section-${MODULE_ID_MAP[module.name] ?? module.name}`} className={`card-base overflow-hidden border border-border-main/60 scroll-mt-24 ${initialSection === module.name ? 'animate-pulseHighlight' : ''}`}>
               <div
                 onClick={() => toggleSection(module.name)}
+                data-testid={
+                  module.name === 'Aşı' ? 'vaccine-module-button' :
+                  module.name === 'Parazit' ? 'parasite-module-button' :
+                  module.name === 'Beslenme' ? 'nutrition-module-button' :
+                  module.name === 'Veteriner' ? 'services-module-button' : undefined
+                }
                 className="w-full flex items-center gap-3 p-4 text-left hover:bg-bg-main/50 transition-colors cursor-pointer"
                 role="button"
                 tabIndex={0}
@@ -1902,10 +1929,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                     </>
                   )}
 
-                  {/* Sağlık Modülü Özel İçerik (Kilo Takibi & Belge Kasası) */}
-                  {module.name === 'Sağlık' && (
-                    <HealthTab petId={pet.id} petName={pet.name} />
-                  )}
+                  {/* Sağlık Modülü Özel İçerik (Accordion Dışına Taşındı) */}
 
                   {/* CTA Kartı Kaldırıldı - Artık görev yoksa empty state altında veya module header'da + Ekle olarak gösteriliyor */}
                   {renderTabFiltersAndTasks(module.name)}
@@ -1917,26 +1941,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         </div>
         {activeTab === 'saglik' && (
           <>
-            <MinimalGrowthChart 
-              records={growthRecords} 
-              petSpecies={pet.species as 'cat' | 'dog'}
-              petBreed={pet.breed}
-              petBirthDate={pet.birth_date}
-              petGender={pet.gender as 'male' | 'female' | 'unknown'}
-              isNeutered={pet.is_neutered ?? false}
-              onAddRecord={() => setQuickUpdateConfig({ 
-                title: 'Gelişim Bilgisi', 
-                desc: 'Gelişimi takip edebilmek için güncel kilo ve boyunu girin.', 
-                endpoint: `/api/pets/${pet.id}/growth`, 
-                method: 'POST', 
-                fields: [
-                  { name: 'recorded_at', type: 'date', label: 'Tarih', defaultValue: new Date().toISOString().split('T')[0], required: true },
-                  { name: 'weight_kg', type: 'number', label: 'Kilo (kg)', placeholder: 'Örn: 4.5', required: true }, 
-                  { name: 'height_cm', type: 'number', label: 'Boy (cm)', placeholder: 'Örn: 35.5', required: false }
-                ] 
-              })}
-            />
             <BreedHealthCard breed={pet.breed} />
+            <HealthTab petId={pet.id} petName={pet.name} />
           </>
         )}
       </div>
@@ -1981,6 +1987,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                     router.push(`/owner/pets/${pet.id}/reports`)
                   }
                 }}
+                data-testid={item.id === 'Bütçe' ? 'budget-module-button' : item.id === 'Raporlar' ? 'health-card-button' : undefined}
                 className={`relative overflow-hidden rounded-[20px] p-4 flex flex-col items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-sm border ${isActive ? 'ring-2 ring-primary border-primary/20 bg-primary/5' : 'border-border-main/50 bg-white hover:bg-slate-50'}`}
               >
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center text-[24px] bg-gradient-to-br ${item.gradient} text-white shadow-inner`}>

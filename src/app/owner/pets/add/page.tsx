@@ -65,6 +65,7 @@ function SpeciesSelector({ onSelect, onBack }: { onSelect: (s: Species) => void,
           <button
             key={species}
             onClick={() => onSelect(species)}
+            data-testid={species === 'cat' ? 'pet-species-cat-button' : 'pet-species-dog-button'}
             className={`flex flex-col items-center gap-4 p-6 sm:p-8 rounded-[24px] border-2 border-border-main bg-gradient-to-br ${gradient} ${border} hover:shadow-medium transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] group cursor-pointer`}
           >
             <div className="flex items-center justify-center w-[90px] h-[90px] filter drop-shadow-md group-hover:scale-105 transition-transform duration-300">
@@ -204,6 +205,7 @@ function PetForm({
               autoFocus
               value={petName} onChange={e => setPetName(e.target.value.toLocaleUpperCase('tr-TR'))}
               placeholder={species === 'cat' ? 'ÖRN: MİA, BONCUK' : 'ÖRN: MAX, KARAMEL'}
+              data-testid="pet-name-input"
               className="input-base uppercase" required/>
           </div>
 
@@ -211,7 +213,7 @@ function PetForm({
           <div className="flex flex-col gap-2">
             <label htmlFor="breed" className="text-[13px] font-bold text-text-primary">Irk *</label>
             <div className="relative">
-              <select id="breed" value={selectedBreed} onChange={e => setSelectedBreed(e.target.value)} className="input-base w-full appearance-none cursor-pointer" required>
+              <select id="breed" value={selectedBreed} onChange={e => setSelectedBreed(e.target.value)} data-testid="pet-breed-select" className="input-base w-full appearance-none cursor-pointer" required>
                 <option value="" disabled>Yazmaya başlayın veya seçin</option>
                 {breeds.map(b => <option key={b} value={b}>{b}</option>)}
               </select>
@@ -291,6 +293,7 @@ function PetForm({
                   type="date"
                   value={birthDate}
                   max={new Date().toISOString().split('T')[0]}
+                  data-testid="pet-birthdate-input"
                   className="input-base w-full animate-scaleIn"
                   onChange={e => setBirthDate(e.target.value)}
                 />
@@ -395,6 +398,7 @@ function PetForm({
           <button 
             type="submit" 
             disabled={!isFormValid}
+            data-testid="pet-save-button"
             className="btn-primary min-w-[200px] py-3.5 text-[15px] shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
           >
             <span>Devam Et →</span>
@@ -652,29 +656,34 @@ function PetSOSStep({
             <div className="flex justify-between items-center flex-wrap gap-2 mb-1">
               <p className="text-[11px] font-black text-error uppercase tracking-widest">Kişi 1 (Birincil) *</p>
               
-              {availableContacts.length > 0 && (
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-bold text-primary">Kişilerimden Seç:</span>
-                  <select 
-                    onChange={(e) => {
-                      const idx = parseInt(e.target.value)
-                      if (!isNaN(idx) && availableContacts[idx]) {
-                        const selected = availableContacts[idx]
-                        const nc = [...sosContacts]
-                        nc[0] = { name: selected.name, phone: selected.phone, relation: selected.relation }
-                        setSosContacts(nc)
-                      }
-                    }}
-                    className="text-[11px] font-bold py-1 px-2 border border-primary/20 rounded-lg bg-primary-soft/30 text-primary focus:outline-none cursor-pointer"
-                    defaultValue=""
-                  >
-                    <option value="" disabled>Seçiniz</option>
-                    {availableContacts.map((c, i) => (
-                      <option key={i} value={i}>{c.name} ({c.relation})</option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-bold text-primary">Kişilerimden Seç:</span>
+                <select 
+                  onChange={(e) => {
+                    const idx = parseInt(e.target.value)
+                    if (!isNaN(idx) && availableContacts[idx]) {
+                      const selected = availableContacts[idx]
+                      const nc = [...sosContacts]
+                      nc[0] = { name: selected.name, phone: selected.phone, relation: selected.relation }
+                      setSosContacts(nc)
+                    }
+                  }}
+                  className="text-[11px] font-bold py-1 px-2 border border-primary/20 rounded-lg bg-primary-soft/30 text-primary focus:outline-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                  defaultValue=""
+                  disabled={availableContacts.length === 0}
+                >
+                  {availableContacts.length === 0 ? (
+                    <option value="" disabled>Kayıtlı kişi yok</option>
+                  ) : (
+                    <>
+                      <option value="" disabled>Seçiniz</option>
+                      {availableContacts.map((c, i) => (
+                        <option key={i} value={i}>{c.name} ({c.relation})</option>
+                      ))}
+                    </>
+                  )}
+                </select>
+              </div>
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-[12px] font-bold text-text-secondary">Ad Soyad *</label>
@@ -723,29 +732,34 @@ function PetSOSStep({
             <div className="flex justify-between items-center flex-wrap gap-2 mb-1">
               <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest">Kişi 2 (Yedek Bağlantı)</p>
               
-              {availableContacts.length > 0 && (
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-bold text-primary">Kişilerimden Seç:</span>
-                  <select 
-                    onChange={(e) => {
-                      const idx = parseInt(e.target.value)
-                      if (!isNaN(idx) && availableContacts[idx]) {
-                        const selected = availableContacts[idx]
-                        const nc = [...sosContacts]
-                        nc[1] = { name: selected.name, phone: selected.phone, relation: selected.relation }
-                        setSosContacts(nc)
-                      }
-                    }}
-                    className="text-[11px] font-bold py-1 px-2 border border-primary/20 rounded-lg bg-primary-soft/30 text-primary focus:outline-none cursor-pointer"
-                    defaultValue=""
-                  >
-                    <option value="" disabled>Seçiniz</option>
-                    {availableContacts.map((c, i) => (
-                      <option key={i} value={i}>{c.name} ({c.relation})</option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-bold text-primary">Kişilerimden Seç:</span>
+                <select 
+                  onChange={(e) => {
+                    const idx = parseInt(e.target.value)
+                    if (!isNaN(idx) && availableContacts[idx]) {
+                      const selected = availableContacts[idx]
+                      const nc = [...sosContacts]
+                      nc[1] = { name: selected.name, phone: selected.phone, relation: selected.relation }
+                      setSosContacts(nc)
+                    }
+                  }}
+                  className="text-[11px] font-bold py-1 px-2 border border-primary/20 rounded-lg bg-primary-soft/30 text-primary focus:outline-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                  defaultValue=""
+                  disabled={availableContacts.length === 0}
+                >
+                  {availableContacts.length === 0 ? (
+                    <option value="" disabled>Kayıtlı kişi yok</option>
+                  ) : (
+                    <>
+                      <option value="" disabled>Seçiniz</option>
+                      {availableContacts.map((c, i) => (
+                        <option key={i} value={i}>{c.name} ({c.relation})</option>
+                      ))}
+                    </>
+                  )}
+                </select>
+              </div>
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-[12px] font-bold text-text-secondary">Ad Soyad</label>
@@ -862,10 +876,38 @@ export default function AddPetPage() {
   const handleStep2Next = (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitError('')
-    if (!petName.trim() || !selectedBreed) {
-      setSubmitError('Lütfen İsim ve Irk alanlarını doldurun.')
+    
+    // Geçici console.log("submit tetiklendi", formData) eklendi
+    console.log("submit tetiklendi", {
+      name: petName,
+      breed: selectedBreed,
+      gender,
+      birthDate,
+      weight,
+      isNeutered
+    })
+
+    if (!petName.trim()) {
+      setSubmitError('Lütfen can dostunuzun ismini girin.')
       return
     }
+    if (!selectedBreed) {
+      setSubmitError('Lütfen can dostunuzun ırkını seçin.')
+      return
+    }
+    if (!gender) {
+      setSubmitError('Lütfen can dostunuzun cinsiyetini seçin.')
+      return
+    }
+    if (!birthDate) {
+      setSubmitError('Lütfen can dostunuzun doğum tarihini veya yaklaşık yaşını belirtin.')
+      return
+    }
+    if (!weight) {
+      setSubmitError('Lütfen can dostunuzun kilosunu girin.')
+      return
+    }
+
     setStep(3)
   }
 
