@@ -46,23 +46,42 @@ function calculateDoseDates(
   historyStatus: string
 ): Date[] {
   const today = new Date();
+  today.setHours(0, 0, 0, 0); // Saat karşılaştırmasını kaldır
+
   const dates: Date[] = [];
 
   for (const dose of doses) {
     let dueDate: Date;
 
     if (dose.trigger === 'birth') {
-      const calc = addDays(birthDate, dose.days_offset);
-      // Geçmiş tarihse: hiç aşı yapılmamışsa bugün, değilse atla
-      if (calc < today) {
-        dueDate = historyStatus === 'none_known' ? today : calc;
+      // Doğum tarihinden hesapla
+      const calculated = addDays(birthDate, dose.days_offset);
+
+      if (calculated <= today) {
+        // Hesaplanan tarih geçmişte veya bugün
+        if (historyStatus === 'none_known') {
+          // Hiç aşı yapılmamış → bugün yap
+          dueDate = new Date(today);
+        } else {
+          // Geçmişte yapılmış sayılabilir → hesaplanan tarihi koru
+          // (kullanıcı sonra "Yapıldı" olarak işaretler)
+          dueDate = calculated;
+        }
       } else {
-        dueDate = calc;
+        // Gelecekte → hesaplanan tarihi kullan
+        dueDate = calculated;
       }
+
     } else {
       // prev_dose: bir önceki dozun tarihine ekle
-      const prev = dates[dates.length - 1] ?? today;
-      dueDate = addDays(prev, dose.days_offset);
+      const prev = dates[dates.length - 1];
+      if (!prev) {
+        // Önceki doz yoksa (ilk doz prev_dose ise — hatalı protokol)
+        // Güvenli fallback: bugün
+        dueDate = new Date(today);
+      } else {
+        dueDate = addDays(prev, dose.days_offset);
+      }
     }
 
     dates.push(dueDate);

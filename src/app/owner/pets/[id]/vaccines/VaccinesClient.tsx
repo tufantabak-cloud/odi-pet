@@ -14,6 +14,22 @@
 //   3. "Aşı yapıldı" → kayıt yöntemi seçimi
 //   4. Anlık ciddi reaksiyon uyarısı (kayıt anında)
 //   5. Reaksiyon 4 seviye: normal / hafif / dikkat / acil
+'use client';
+
+// ============================================================
+// OdiPet — VaccinesClient.tsx v3
+// Mockup v2 düzeltmeleri tam entegrasyon:
+//
+// MOD SİSTEMİ
+//   simple: yalnızca tarih + hatırlatma
+//   detailed: güven rozeti + reaksiyon takibi + insight kartı
+//
+// DÜZELTİLMİÅž BİLEÅžENLER
+//   1. "Kayıtlara göre tamamlandı" + güven rozeti
+//   2. Doz numarası dinamik hesaplama açıklaması
+//   3. "Aşı yapıldı" → kayıt yöntemi seçimi
+//   4. Anlık ciddi reaksiyon uyarısı (kayıt anında)
+//   5. Reaksiyon 4 seviye: normal / hafif / dikkat / acil
 //   6. Acil dili eyleme dönük
 //   7. "6 aylık temel aşı değerlendirmesi" (26. hafta)
 //   8. Risk bazlı aşı dili düzeltmesi
@@ -24,6 +40,43 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 import type { AdministrationRoute } from '@/lib/database.types';
+import { SmartScanner } from '@/components/ui/SmartScanner';
+
+// ─── Rozet yardımcısı — komponentin dışına veya üstüne ekle ──────────────
+
+const CONFIDENCE_BADGE: Record<string, { label: string; className: string }> = {
+  user_reported: {
+    label: 'Kullanıcı beyanı',
+    className: 'bg-gray-100 text-gray-600',
+  },
+  verified: {
+    label: 'Doğrulandı',
+    className: 'bg-green-100 text-green-700',
+  },
+  estimated: {
+    label: 'Tahmini',
+    className: 'bg-yellow-100 text-yellow-700',
+  },
+  needs_review: {
+    label: 'Kontrol gerekli',
+    className: 'bg-orange-100 text-orange-700',
+  },
+};
+
+function ConfidenceBadge({ level }: { level: string }) {
+  const badge = CONFIDENCE_BADGE[level] ?? CONFIDENCE_BADGE['user_reported'];
+  return (
+    <span
+      className={[
+        'inline-flex items-center rounded-full px-2 py-0.5',
+        'text-xs font-medium',
+        badge.className,
+      ].join(' ')}
+    >
+      {badge.label}
+    </span>
+  );
+}
 
 // ── TİPLER ──────────────────────────────────────────────────
 
@@ -88,7 +141,7 @@ export function useVaccineMode(): [VaccineMode, (m: VaccineMode) => void] {
   return [mode, setMode];
 }
 
-// ── MOD TOGGLE BİLEÅENİ ─────────────────────────────────────
+// ── MOD TOGGLE BİLEÅžENİ ─────────────────────────────────────
 
 interface ModeSwitcherProps {
   mode: VaccineMode;
@@ -498,7 +551,7 @@ export function RecordMethodSheet({
     sub: string;
   }[] = [
     { id: 'scan', icon: 'ğŸ“·', title: 'Belgeyi tara', sub: 'En hızlı yöntem — OCR otomatik okur' },
-    { id: 'quick', icon: 'âœï¸', title: 'Hızlı kayıt', sub: 'Aşı adı, tarih ve klinik' },
+    { id: 'quick', icon: 'âœ ï¸ ', title: 'Hızlı kayıt', sub: 'Aşı adı, tarih ve klinik' },
     { id: 'detailed', icon: 'ğŸ“‹', title: 'Ayrıntılı kayıt', sub: 'Lot, ürün ve diğer bilgiler' },
   ];
 
@@ -931,7 +984,7 @@ export function EmergencyVetScreen({
   );
 }
 
-// ── DÜZELTME 7: 6 AYLIK DEÄERLENDİRME KARTI ────────────────
+// ── DÜZELTME 7: 6 AYLIK DEÄžERLENDİRME KARTI ────────────────
 
 interface SixMonthAssessmentCardProps {
   petName: string;
@@ -1131,6 +1184,7 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'takvim' | 'kayitlar'>('takvim');
   const [showManualModal, setShowManualModal] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
   const flow = useVaccineFlow();
 
   const [formData, setFormData] = useState({
@@ -1690,7 +1744,7 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
                   setFormData(p => ({ ...p, vaccineName: flow.lastVaccineName }));
                   flow.setShowRecordSheet(false);
                 } else if(method === 'scan') {
-                  router.push(`/owner/pets/${pet.id}/document-scan`);
+                  setScannerOpen(true);
                 }
               }}
               onCancel={() => flow.setShowRecordSheet(false)}
@@ -1799,6 +1853,34 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
             </form>
           </div>
         </div>
+      )}
+
+      {scannerOpen && (
+        <SmartScanner
+          petId={pet.id}
+          onClose={() => setScannerOpen(false)}
+          onResult={(parsedData) => {
+            // 1. Scanner'ı kapat
+            setScannerOpen(false);
+
+            // 2. Detaylı mod formunu aç
+            flow.setMode('detailed');
+            setShowManualModal(true);
+            flow.setShowRecordSheet(false);
+
+            // 3. OCR'dan gelen veriyi form alanlarına bas
+            setFormData(prev => ({
+              ...prev,
+              vaccineName:      parsedData.title      ?? prev.vaccineName,
+              administeredDate: parsedData.date
+                ? new Date(parsedData.date).toISOString().split('T')[0]
+                : prev.administeredDate,
+              nextDueDate:      parsedData.next_date
+                ? new Date(parsedData.next_date).toISOString().split('T')[0]
+                : prev.nextDueDate,
+            }));
+          }}
+        />
       )}
     </div>
   );

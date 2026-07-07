@@ -1483,49 +1483,60 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           petId={pet.id}
           onClose={() => setIsSmartScannerOpen(false)}
           onSave={async (data: any) => {
-            const { record_type, parsed } = data
+            // SmartScanner onSave'e doğrudan parsedData geçiyor,
+            // { record_type, parsed } yapısı yok.
+            // Alan varlığına göre tipi çıkar:
+            const inferredType: string =
+              data.food_brand || data.food_product
+                ? 'food_packaging'
+                : data.active_ingredient || data.product_name
+                ? 'medicine_packaging'
+                : 'vaccine_card'; // varsayılan: aşı karnesi
+
             try {
-              if (record_type === 'vaccine_card') {
+              if (inferredType === 'vaccine_card') {
                 await fetch(`/api/pets/${pet.id}/treatments`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    disease_name: parsed.title || parsed.vaccine_name || 'Aşı Kaydı',
-                    category: 'Aşı Uygulaması',
-                    status: 'Tamamlandı',
-                    start_date: parsed.date || new Date().toISOString().split('T')[0],
-                    clinic_name: parsed.vet_name || '',
-                    notes: parsed.lot_number ? 'Lot: ' + parsed.lot_number : '',
+                    disease_name: data.title || data.vaccine_name || 'Aşı Kaydı',
+                    category:     'Aşı Uygulaması',
+                    status:       'Tamamlandı',
+                    start_date:   data.date || new Date().toISOString().split('T')[0],
+                    clinic_name:  data.vet_name   || '',
+                    notes:        data.lot_number ? 'Lot: ' + data.lot_number : '',
                   }),
-                })
-              } else if (record_type === 'food_packaging') {
+                });
+              } else if (inferredType === 'food_packaging') {
                 await fetch(`/api/pets/${pet.id}/nutrition/profile`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    food_brand: parsed.food_brand,
-                    food_product: parsed.food_product,
-                    food_type: parsed.food_type,
+                    food_brand:   data.food_brand,
+                    food_product: data.food_product,
+                    food_type:    data.food_type,
                   }),
-                })
-              } else if (record_type === 'medicine_packaging' || record_type === 'parasite_product') {
+                });
+              } else if (inferredType === 'medicine_packaging') {
                 await fetch(`/api/pets/${pet.id}/treatments`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    disease_name: parsed.title || parsed.product_name || 'Tedavi Kaydı',
-                    category: record_type === 'parasite_product' ? 'İç/Dış Parazit Uygulaması' : 'İlaç Tedavisi',
-                    status: 'Tamamlandı',
-                    start_date: new Date().toISOString().split('T')[0],
-                    notes: parsed.active_ingredient || '',
+                    disease_name: data.title || data.product_name || 'Tedavi Kaydı',
+                    category:     data.active_ingredient
+                                    ? 'İlaç Tedavisi'
+                                    : 'İç/Dış Parazit Uygulaması',
+                    status:       'Tamamlandı',
+                    start_date:   new Date().toISOString().split('T')[0],
+                    notes:        data.active_ingredient || '',
                   }),
-                })
+                });
               }
             } catch (err) {
-              console.error('Tarama kaydedilemedi:', err)
+              console.error('[PetDetailClient] SmartScanner onSave error:', err);
             } finally {
-              setIsSmartScannerOpen(false)
-              router.refresh()
+              setIsSmartScannerOpen(false);
+              router.refresh();
             }
           }}
         />
