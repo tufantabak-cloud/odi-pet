@@ -1182,13 +1182,15 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
         }).eq('id', pet.id);
       }
       
+      const formData = new FormData();
+      formData.append('birth_date', wizardBirthDate || pet.birth_date || '');
+      if (wizardBirthPrecision || pet.birth_date_precision) {
+        formData.append('birth_date_precision', wizardBirthPrecision || pet.birth_date_precision || '');
+      }
+
       await fetch(`/api/pets/${pet.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          birth_date: wizardBirthDate || pet.birth_date,
-          birth_date_precision: wizardBirthPrecision || pet.birth_date_precision
-        })
+        body: formData
       });
       
       setShowWizard(false);
