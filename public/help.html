@@ -398,7 +398,7 @@ body {
       <p class="main-sub" id="section-sub">OdiPet'te her şeyi nasıl yapacağını öğren</p>
     </div>
     <div class="items-list" id="items-container"></div>
-    <div class="version-tag" id="version-tag">OdiPet Yardım Merkezi v1.3 — 6 Temmuz 2026</div>
+    <div class="version-tag" id="version-tag">OdiPet Yardım Merkezi v1.4 — 7 Temmuz 2026</div>
   </main>
 </div>
 
@@ -509,15 +509,14 @@ const DATA = {
           q: "Yeni evcil hayvan için aşı planı nasıl kurulur?",
           tags: ["plan","kurulum","yeni"],
           steps: [
-            "Sağlık sekmesi → Aşı planını başlat → 5 adım kurulum",
-            "1. Doğum tarihi: Tam tarih, yaklaşık veya bilinmiyor",
-            "2. Aşı geçmişi: Hiç yapılmadı / bazıları / düzenli / bilmiyorum",
-            "3. Kayıt durumu: Karne, fotoğraf veya yok",
-            "4. Yaşam biçimi: Park, temas, kırsal — risk aşıları buradan belirlenir",
-            "5. Kullanım tercihi: OdiPet öneri / veteriner planı / yalnızca hatırlatma"
-          ],
-          note: "Risk bazlı aşılar (leptospira, bordetella) otomatik takvime girmez — değerlendirilmesi öneriliyor olarak ayrı gösterilir.",
-          noteType: "info"
+            "Sağlık sekmesi → Aşı planını başlat",
+            "Doğum tarihi pet profilinden otomatik gelir — eksikse bu adımda girilir",
+            "Aşı geçmişi: Hiç yapılmadı / bazıları / düzenli / bilmiyorum",
+            "Kayıt durumu: Karne, fotoğraf veya yok",
+            "Yaşam biçimi: Park, temas, kırsal — risk aşıları buradan belirlenir",
+            "Kullanım tercihi: OdiPet öneri / veteriner planı / yalnızca hatırlatma",
+            "Pet kaydı sonrası 'Şimdi ekle' butonuna basınca direkt aşı modülüne yönlendirilirsin — ayrı bir adım gerekmez"
+          ]
         },
         {
           q: "Aşı yapıldı — nasıl kaydederim?",
