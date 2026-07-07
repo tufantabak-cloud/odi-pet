@@ -126,6 +126,8 @@ export function ModeSwitcher({ mode, onChange }: ModeSwitcherProps) {
             onClick={() => onChange(m)}
             style={{
               fontSize: 12,
+              minHeight: '44px',
+              minWidth: '72px',
               padding: '5px 12px',
               borderRadius: 6,
               border: '0.5px solid',
@@ -1131,10 +1133,19 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
   const [showManualModal, setShowManualModal] = useState(false);
   const flow = useVaccineFlow();
 
-  const [vaccineName, setVaccineName] = useState('');
-  const [vaccineCode, setVaccineCode] = useState('');
-  const [adminDate, setAdminDate] = useState(new Date().toISOString().split('T')[0]);
-  const [notes, setNotes] = useState('');
+  const [formData, setFormData] = useState({
+    vaccineName:      '',
+    vaccineCode:      '',
+    administeredDate: new Date().toISOString().split('T')[0],
+    vetName:          '',
+    clinicName:       '',
+    manufacturer:     '',
+    lotNumber:        '',
+    nextDueDate:      '',
+    reactionObserved: false,
+    notes:            '',
+    documentImage:    null as File | null,
+  });
   const [errorMsg, setErrorMsg] = useState('');
 
   // Wizard States
@@ -1148,6 +1159,12 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
   const [wizardLifestyle, setWizardLifestyle] = useState<string[]>([]);
   const [wizardPreference, setWizardPreference] = useState('');
   const [wizardIsSubmitting, setWizardIsSubmitting] = useState(false);
+  const [planSummary, setPlanSummary] = useState<{
+    generatedSchedules: number;
+    vetReviewRequired:  boolean;
+    nextDueVaccines: Array<{ code: string; displayName: string; dueDate: string }>;
+  } | null>(null);
+  const [setupError, setSetupError] = useState<string | null>(null);
 
   const hasBirthDate = pet.birth_date && pet.birth_date_precision && pet.birth_date_precision !== 'unknown';
 
@@ -1217,7 +1234,7 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
   const handleAddManual = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
-    if (!vaccineName.trim()) {
+    if (!formData.vaccineName.trim()) {
       setErrorMsg('Aşı adı zorunludur.');
       return;
     }
@@ -1226,11 +1243,11 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
       const supabase = createBrowserSupabaseClient();
       const { error } = await supabase.from('vaccine_records_v2').insert({
         pet_id: pet.id,
-        vaccine_name: vaccineName.trim(),
-        vaccine_code: vaccineCode.trim() || 'CUSTOM',
-        administered_at: adminDate,
+        vaccine_name: formData.vaccineName.trim(),
+        vaccine_code: formData.vaccineCode.trim() || 'CUSTOM',
+        administered_at: formData.administeredDate,
         status: 'completed',
-        notes: notes.trim() || null,
+        notes: formData.notes.trim() || null,
         confidence_level: 'user_reported',
         source: 'user_detailed',
       });
@@ -1238,11 +1255,21 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
       if (error) throw error;
 
       setShowManualModal(false);
-      setVaccineName('');
-      setVaccineCode('');
-      setNotes('');
+      setFormData(prev => ({
+        ...prev,
+        vaccineName: '',
+        vaccineCode: '',
+        notes: '',
+        vetName: '',
+        clinicName: '',
+        manufacturer: '',
+        lotNumber: '',
+        nextDueDate: '',
+        reactionObserved: false,
+        documentImage: null
+      }));
       
-      flow.handleVaccineDone(vaccineName.trim());
+      flow.handleVaccineDone(formData.vaccineName.trim());
       flow.handleRecordComplete();
       router.refresh();
     } catch (err: any) {
@@ -1322,7 +1349,7 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
                   setHasCustomBirthDate(true);
                   setWizardStep(1);
                 }}
-                style={{ marginLeft: 'auto', fontSize: 12, color: '#534AB7', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
+                style={{ marginLeft: 'auto', minHeight: '44px', paddingInline: '8px', fontSize: 12, color: '#534AB7', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
               >
                 Değiştir
               </button>
@@ -1660,7 +1687,7 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
               onSelect={(method) => {
                 if(method === 'quick') {
                   setShowManualModal(true);
-                  setVaccineName(flow.lastVaccineName);
+                  setFormData(p => ({ ...p, vaccineName: flow.lastVaccineName }));
                   flow.setShowRecordSheet(false);
                 } else if(method === 'scan') {
                   router.push(`/owner/pets/${pet.id}/document-scan`);
@@ -1688,12 +1715,83 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
             <form onSubmit={handleAddManual} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="text-[12px] font-bold text-text-primary">Aşı Adı *</label>
-                <input type="text" value={vaccineName} onChange={e => setVaccineName(e.target.value)} className="input-base" required />
+                <input type="text" value={formData.vaccineName} onChange={e => setFormData(p => ({ ...p, vaccineName: e.target.value }))} className="input-base" required />
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-[12px] font-bold text-text-primary">Tarih</label>
-                <input type="date" value={adminDate} onChange={e => setAdminDate(e.target.value)} className="input-base" required />
+                <input type="date" value={formData.administeredDate} onChange={e => setFormData(p => ({ ...p, administeredDate: e.target.value }))} className="input-base" required />
               </div>
+              
+              {flow.mode === 'detailed' && (
+                <div className="space-y-3 pt-2 border-t border-gray-100">
+                  <input
+                    type="text"
+                    placeholder="Veteriner adı"
+                    value={formData.vetName}
+                    onChange={e => setFormData(p => ({ ...p, vetName: e.target.value }))}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Klinik adı"
+                    value={formData.clinicName}
+                    onChange={e => setFormData(p => ({ ...p, clinicName: e.target.value }))}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Marka / Üretici"
+                    value={formData.manufacturer}
+                    onChange={e => setFormData(p => ({ ...p, manufacturer: e.target.value }))}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Lot / Seri no"
+                    value={formData.lotNumber}
+                    onChange={e => setFormData(p => ({ ...p, lotNumber: e.target.value }))}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                  />
+                  <div>
+                    <label className="mb-1 block text-xs text-gray-500">Sonraki doz tarihi</label>
+                    <input
+                      type="date"
+                      value={formData.nextDueDate}
+                      onChange={e => setFormData(p => ({ ...p, nextDueDate: e.target.value }))}
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                    />
+                  </div>
+                  <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.reactionObserved}
+                      onChange={e => setFormData(p => ({ ...p, reactionObserved: e.target.checked }))}
+                      className="rounded"
+                    />
+                    Reaksiyon gözlemlendi
+                  </label>
+                  <textarea
+                    placeholder="Not (opsiyonel)"
+                    value={formData.notes}
+                    onChange={e => setFormData(p => ({ ...p, notes: e.target.value }))}
+                    rows={2}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm resize-none"
+                  />
+                  <div>
+                    <label className="mb-1 block text-xs text-gray-500">Belge / Fotoğraf</label>
+                    <input
+                      type="file"
+                      accept="image/*,application/pdf"
+                      onChange={e => setFormData(p => ({
+                        ...p,
+                        documentImage: e.target.files?.[0] ?? null
+                      }))}
+                      className="w-full text-sm text-gray-500"
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-3 mt-2">
                 <button type="button" onClick={() => setShowManualModal(false)} className="flex-1 min-h-[50px] border-2 border-border-main rounded-xl">İptal</button>
                 <button type="submit" className="flex-1 min-h-[50px] bg-primary text-white rounded-xl">Kaydet</button>
