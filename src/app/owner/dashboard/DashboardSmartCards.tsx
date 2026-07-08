@@ -8,6 +8,7 @@ import { VaccineIcon, PillIcon, BowlIcon, PawIcon, HouseIcon } from '@/component
 import QuickJournalWidget from '@/components/dashboard/QuickJournalWidget'
 import { buildPetMicroTasks } from '@/lib/microTasks/petMicroTasks'
 import { PetMicroTaskCard } from '@/components/micro-tasks/PetMicroTaskCard'
+import { useDismissedMicroTasks } from '@/hooks/useDismissedMicroTasks'
 
 
 
@@ -79,7 +80,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
   const [quickUpdateConfig, setQuickUpdateConfig] = useState<any>(null)
   const [dismissedCards, setDismissedCards] = useState<string[]>([])
   const [expanded, setExpanded] = useState(false)
-  const [dismissedMicroTasks, setDismissedMicroTasks] = useState<Set<string>>(new Set())
+  const { filterVisibleTasks, dismissTask } = useDismissedMicroTasks()
 
 
   useEffect(() => {
@@ -470,16 +471,18 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
     }
 
     dashboardMicroTasks = targetPet
-      ? buildPetMicroTasks({
-          pet:          targetPet,
-          vaccinePlans: null, // Dashboard'da sorgulanmıyor — false positive engellemek için null
-          parasitePlans: null, // Dashboard'da sorgulanmıyor — false positive engellemek için null
-          latestWeight:  allWeightLogs?.find(w => w.pet_id === activePetId) ?? null,
-          nutritionProfile: null, // Dashboard'da yok — kart üretilmez
-        }).filter(t =>
-          !dismissedMicroTasks.has(t.id) &&
-          // Acil kişi kartı zaten varsa tekrar üretme
-          t.type !== 'missing_emergency_contact'
+      ? filterVisibleTasks(
+          activePetId,
+          buildPetMicroTasks({
+            pet:          targetPet,
+            vaccinePlans: null, // Dashboard'da sorgulanmıyor — false positive engellemek için null
+            parasitePlans: null, // Dashboard'da sorgulanmıyor — false positive engellemek için null
+            latestWeight:  allWeightLogs?.find(w => w.pet_id === activePetId) ?? null,
+            nutritionProfile: null, // Dashboard'da yok — kart üretilmez
+          }).filter(t =>
+            // Acil kişi kartı zaten varsa tekrar üretme
+            t.type !== 'missing_emergency_contact'
+          )
         )
       : []
   }
@@ -666,9 +669,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
           <PetMicroTaskCard
             task={dashboardMicroTasks[0]}
             petId={activePetId}
-            onDismiss={(id) =>
-              setDismissedMicroTasks(prev => new Set([...prev, id]))
-            }
+            onDismiss={(id) => dismissTask(activePetId, id)}
           />
         )}
 

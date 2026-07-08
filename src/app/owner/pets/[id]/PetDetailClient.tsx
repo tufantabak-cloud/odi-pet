@@ -25,6 +25,7 @@ import PetHeroCard from './PetHeroCard'
 import AllergyManager from '@/components/pets/AllergyManager'
 import { buildPetMicroTasks } from '@/lib/microTasks/petMicroTasks'
 import { PetMicroTaskCard } from '@/components/micro-tasks/PetMicroTaskCard'
+import { useDismissedMicroTasks } from '@/hooks/useDismissedMicroTasks'
 
 import { getPlanDisplayCategory } from '@/lib/plans/utils'
 function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
@@ -276,7 +277,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         : 'ozet'
 
   const [activeTab, setActiveTab] = useState<'ozet'|'saglik'|'bakim'|'takvim'|'ekstra'>(initialTab)
-  const [dismissedMicroTasks, setDismissedMicroTasks] = useState<Set<string>>(new Set())
+  const { filterVisibleTasks, dismissTask } = useDismissedMicroTasks()
 
 
   const initialSection = SECTION_NAME_MAP[tabParam ?? ''] ?? null
@@ -1176,17 +1177,20 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     );
   }
 
-  const microTasks = buildPetMicroTasks({
-    pet,
-    vaccinePlans: schedules?.filter(
-      (s: any) => (s.sub_category || '').includes('Aşı') || (s.title || '').toLowerCase().includes('aşı')
-    ) ?? [],
-    parasitePlans: schedules?.filter(
-      (s: any) => (s.sub_category || '').includes('Parazit') || (s.title || '').toLowerCase().includes('parazit')
-    ) ?? [],
-    latestWeight: growthRecords?.[0] ?? null,
-    nutritionProfile: nutritionLogs?.[0] ?? null,
-  }).filter(t => !dismissedMicroTasks.has(t.id))
+  const microTasks = filterVisibleTasks(
+    pet.id,
+    buildPetMicroTasks({
+      pet,
+      vaccinePlans: schedules?.filter(
+        (s: any) => (s.sub_category || '').includes('Aşı') || (s.title || '').toLowerCase().includes('aşı')
+      ) ?? [],
+      parasitePlans: schedules?.filter(
+        (s: any) => (s.sub_category || '').includes('Parazit') || (s.title || '').toLowerCase().includes('parazit')
+      ) ?? [],
+      latestWeight: growthRecords?.[0] ?? null,
+      nutritionProfile: nutritionLogs?.[0] ?? null,
+    })
+  )
 
   return (
     <div className="flex flex-col gap-6 pb-[100px] pb-safe w-full mx-auto">
@@ -1307,9 +1311,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                         key={task.id}
                         task={task}
                         petId={pet.id}
-                        onDismiss={(id) =>
-                          setDismissedMicroTasks(prev => new Set([...prev, id]))
-                        }
+                        onDismiss={(id) => dismissTask(pet.id, id)}
                       />
                     ))}
                   </div>

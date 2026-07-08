@@ -27,3 +27,15 @@
 - [x] **RBAC & Veritabanı:** Admin rolleri yönetimi, Supabase RPC fonksiyonları ve RLS korumaları.
 - [x] **CI/CD & DevOps:** Vercel üzerine hatasız dağıtım (Next.js konfigürasyonları).
 - [x] **Tasarım Sistemi:** Yeni marka kimliği, premium arayüz ve pürüzsüz UX.
+
+## 🗂 Backlog
+
+### Sprint 4.3B — Confidence Level Normalization
+**Amaç:** `confidence_level` yazım değerlerini tekilleştirmek. (Sprint 4.3A'da mimariye dokunulmadı, bilinçli olarak ertelendi — bkz. [ODIPET_AUDIT_CURRENT.md](ODIPET_AUDIT_CURRENT.md) Sprint 4.3 analizi.)
+
+İlk işler:
+1. Ortak `CONFIDENCE_LEVELS` sabiti oluştur.
+2. `'high'` değerini geçerli bir değere çevir ([src/app/api/pets/[id]/vaccines/route.ts](src/app/api/pets/[id]/vaccines/route.ts)).
+3. `ConfidenceBadge` gerçekten kullanılacak mı karar ver (şu an [VaccinesClient.tsx](src/app/owner/pets/[id]/vaccines/VaccinesClient.tsx) içinde tanımlı ama hiç render edilmiyor).
+4. `vaccine_records_v2` yeni kayıtlarında sadece izinli değerler yazılsın.
+5. DB check constraint sonraki aşamada değerlendirilsin.
