@@ -363,6 +363,7 @@ function PetForm({
               <input id="weight" type="number" step="0.1" min="0" max="150"
                 value={weight} onChange={e => setWeight(e.target.value)}
                 placeholder="Örn: 4.5"
+                data-testid="pet-weight-input"
                 className="input-base w-full px-12 text-center text-[15px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" required/>
               <button 
                 type="button"
@@ -528,6 +529,32 @@ function PetPhotoStep({
               </button>
             )}
           </div>
+
+          <p className="text-center text-sm text-gray-500 mt-4 mb-2">
+            Fotoğrafı şimdi eklemek zorunda değilsin.
+            İstersen varsayılan görselle devam edebilir,
+            daha sonra değiştirebilirsin.
+          </p>
+
+          <button
+            type="button"
+            data-testid="pet-photo-default-avatar-button"
+            onClick={() => {
+              onSubmit();
+            }}
+            className="w-full py-3 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+          >
+            Varsayılan Görselle Devam Et
+          </button>
+
+          <button
+            type="button"
+            data-testid="pet-photo-skip-button"
+            onClick={() => onSubmit()}
+            className="w-full mt-1 py-2 text-sm text-gray-400 underline underline-offset-2"
+          >
+            Daha Sonra Ekle
+          </button>
         </div>
 
         {/* Dynamic Tip Card for Premium Aesthetics */}
@@ -551,7 +578,8 @@ function PetPhotoStep({
           <button 
             type="button" 
             onClick={onSubmit} 
-            disabled={loading || !photoPreview} 
+            disabled={loading} 
+            data-testid="pet-profile-create-button"
             className="btn-primary min-w-[200px] py-3.5 text-[15px] shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none hover:-translate-y-0.5 transition-transform w-full sm:w-auto order-1 sm:order-2"
           >
             {loading ? (
@@ -645,6 +673,11 @@ function PetSOSStep({
       </div>
 
       <div className="card-base p-6 sm:p-8 flex flex-col gap-6">
+        <p className="text-sm text-gray-500 mb-4">
+          Acil durumda aranacak kişiyi şimdi eklemek zorunda değilsin.
+          Bu bilgiyi daha sonra sağlık güvenliği kartından tamamlayabilirsin.
+        </p>
+
         {submitError && (
           <div role="alert" aria-live="assertive" className="p-3 bg-error/10 text-error text-[13px] font-bold rounded-xl border border-error/20">
             ⚠️ {submitError}
@@ -692,6 +725,7 @@ function PetSOSStep({
                 className="input-base text-[14px] py-3 px-4 bg-white" 
                 placeholder="Örn: Ali Yılmaz" 
                 value={sosContacts[0]?.name || ''} 
+                data-testid="emergency-contact-name-input"
                 onChange={e => { const nc = [...sosContacts]; nc[0] = { ...nc[0], name: e.target.value }; setSosContacts(nc); }} 
                 required
               />
@@ -703,6 +737,7 @@ function PetSOSStep({
                 className="input-base text-[14px] py-3 px-4 bg-white" 
                 placeholder="Örn: 0555 123 4567" 
                 value={sosContacts[0]?.phone || ''} 
+                data-testid="emergency-contact-phone-input"
                 onChange={e => { const nc = [...sosContacts]; nc[0] = { ...nc[0], phone: e.target.value }; setSosContacts(nc); }} 
                 required
               />
@@ -712,6 +747,7 @@ function PetSOSStep({
               <select 
                 className="input-base text-[14px] py-3 px-4 bg-white" 
                 value={sosContacts[0]?.relation || ''} 
+                data-testid="emergency-contact-relation-select"
                 onChange={e => { const nc = [...sosContacts]; nc[0] = { ...nc[0], relation: e.target.value }; setSosContacts(nc); }}
                 required
               >
@@ -809,7 +845,8 @@ function PetSOSStep({
           <button
             type="button"
             onClick={onSubmit}
-            disabled={loading || !isPerson1Valid}
+            disabled={loading}
+            data-testid="emergency-contact-save-button"
             className="btn-primary min-w-[200px] w-full sm:w-auto py-3.5 text-[15px] shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
           >
             {loading ? (
@@ -822,6 +859,15 @@ function PetSOSStep({
                 Kaydet ve Tamamla ✓
               </span>
             )}
+          </button>
+
+          <button
+            type="button"
+            data-testid="emergency-contact-skip-button"
+            onClick={() => onSkip()}
+            className="w-full mt-2 py-2 text-sm text-gray-400 underline underline-offset-2"
+          >
+            Daha Sonra Ekle
           </button>
         </div>
       </div>
@@ -958,7 +1004,7 @@ export default function AddPetPage() {
 
   return (
     <div className="flex flex-col gap-6 w-full max-w-2xl mx-auto pb-8">
-      <div className="flex items-center justify-center gap-2 sm:gap-4 mb-2 mt-2 flex-wrap">
+      <div data-testid="wizard-step-indicator" className="flex items-center justify-center gap-2 sm:gap-4 mb-2 mt-2 flex-wrap">
         {WIZARD_STEPS.map((s) => {
           const isCurrent = step === s.id
           const isCompleted = step > s.id

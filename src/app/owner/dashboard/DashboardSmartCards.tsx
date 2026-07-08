@@ -319,6 +319,24 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
       })
     }
 
+    // 2.5. Acil Durum Kişisi Eksikliği Alert
+    const emergencyContactCardId = `emergency-contact-${targetPet.id}`
+    const hasEmergencyContact = targetPet?.sos_contacts && Array.isArray(targetPet.sos_contacts) && targetPet.sos_contacts.length > 0
+    const hasCriticalHealthTask = !!overdueVaccine || (todayHealthTasks && todayHealthTasks.length > 0)
+
+    if (!hasEmergencyContact && !hasCriticalHealthTask && !dismissedCards.includes(emergencyContactCardId) && highlight !== emergencyContactCardId) {
+      activeCards.push({
+        id: emergencyContactCardId,
+        type: 'emergency-contact',
+        title: 'Acil Durum Kişisi Eksik',
+        subtitle: `Beklenmeyen durumlar için acil durumda ulaşılacak kişiyi ekleyin.`,
+        ctaLabel: 'Şimdi Ekle',
+        action: () => {
+          router.push(`/owner/pets/${targetPet.id}/edit`)
+        }
+      })
+    }
+
     // 3. Dış Parazit Card (Rutin Sağlık)
     const parasiteTask = getParasiteTask()
     const petIdForParasite = parasiteTask ? parasiteTask.pet_id : targetPet.id
@@ -468,12 +486,22 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
       case 'weight-routine': return <i className="ti ti-scale text-[18px]" style={{ color: '#0F8F84' }} />
       case 'journal': return <i className="ti ti-mood-smile text-[18px]" style={{ color: 'var(--color-danger)' }} />
       case 'health-task': return <i className="ti ti-heart-rate-monitor text-[18px]" style={{ color: '#E05C97' }} />
+      case 'emergency-contact': return <i className="ti ti-alert-circle text-[18px]" style={{ color: '#F59E0B' }} />
       default: return <PawIcon width={18} height={18} />
     }
   }
 
   const getCardStyle = (type: string) => {
     switch (type) {
+      case 'emergency-contact':
+        return {
+          accentColor: '#F59E0B',
+          bg: 'rgba(245,158,11,0.04)',
+          iconBg: 'rgba(245,158,11,0.12)',
+          btnBg: '#F59E0B',
+          tagColor: '#D97706',
+          tagText: 'Güvenlik · Eksik'
+        }
       case 'vaccine':
         return {
           accentColor: 'var(--color-primary)',
