@@ -157,6 +157,7 @@ export default function BottomNav({
               <Link
                 key={item.label}
                 href={item.href}
+                prefetch={['/owner/scanner', '/owner/ai-vet', '/owner/social', '/owner/services', '/owner/plan-yap'].includes(item.href) ? false : undefined}
                 onClick={() => setIsMenuOpen(false)}
                 className="pointer-events-auto bg-[var(--color-surface)] text-[var(--color-text-primary)] px-[var(--space-5)] py-3 rounded-[var(--radius-md)] shadow-[var(--shadow-md)] font-bold text-[14px] flex items-center justify-center transition-all duration-200 animate-in slide-in-from-bottom-4 fade-in hover:bg-[var(--color-surface-secondary)] active:scale-[0.98]"
                 style={{ animationDelay: `${(activeActionMenuItems.length - 1 - index) * 40}ms`, animationFillMode: 'both' }}
@@ -192,6 +193,7 @@ export default function BottomNav({
                     <Link
                       key={item.id}
                       href={item.href}
+                      prefetch={['/owner/scanner', '/owner/ai-vet', '/owner/social', '/owner/services', '/owner/plan-yap'].includes(item.href) ? false : undefined}
                       onClick={() => setIsDrawerOpen(false)}
                       className="flex flex-col items-center gap-2 text-center group"
                     >
@@ -238,7 +240,7 @@ export default function BottomNav({
                     id="nav-action-btn"
                     aria-label="Yeni kayıt ekle"
                     onClick={(e) => handleNavClick(e, tab)}
-                    className="flex flex-col items-center justify-center gap-1.5 py-1 px-1 transition-all duration-200 select-none cursor-pointer focus:outline-none z-[9990]"
+                    className="flex flex-col items-center justify-center gap-1.5 py-1 px-1 transition-all duration-200 select-none cursor-pointer focus:outline-none z-[9990] min-h-[44px] min-w-[44px]"
                   >
                     <div className="flex items-center justify-center w-6 h-6">
                       {tab.icon ? tab.icon(isActive, isMenuOpen) : null}
@@ -252,9 +254,10 @@ export default function BottomNav({
               <Link
                 key={tab.id || tab.href || idx}
                 href={tab.href}
+                prefetch={['/owner/scanner', '/owner/ai-vet', '/owner/social', '/owner/services', '/owner/plan-yap'].includes(tab.href) ? false : undefined}
                 onClick={(e) => handleNavClick(e, tab)}
                 data-testid={tab.href === '/owner/services' ? 'services-module-button' : undefined}
-                className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 px-1 transition-all duration-200 select-none cursor-pointer ${
+                className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 px-1 transition-all duration-200 select-none cursor-pointer min-h-[44px] min-w-[44px] ${
                   isActive
                     ? 'text-[var(--color-primary)]'
                     : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'

@@ -1205,6 +1205,7 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
 
   // Wizard States
   const [showWizard, setShowWizard] = useState(false);
+  const [showBirthDatePrompt, setShowBirthDatePrompt] = useState(false);
   const [wizardStep, setWizardStep] = useState<number>(2); // 1 = Birth Date, 2 = History, 3 = Document, 4 = Lifestyle, 5 = Preference
   const [hasCustomBirthDate, setHasCustomBirthDate] = useState(false);
   const [wizardBirthDate, setWizardBirthDate] = useState(pet.birth_date || '');
@@ -1244,6 +1245,12 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
 
   const handleWizardSubmit = async () => {
     setWizardIsSubmitting(true);
+    if (!wizardBirthDate && !pet.birth_date) {
+      setShowBirthDatePrompt(true);
+      setWizardIsSubmitting(false);
+      setShowWizard(false);
+      return;
+    }
     try {
       const supabase = createBrowserSupabaseClient();
       
@@ -1379,6 +1386,27 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
           Manuel İşlem
         </button>
       </div>
+
+      {showBirthDatePrompt && (
+        <div className="rounded-xl border border-amber-250 bg-amber-50/50 p-4.5 space-y-3">
+          <p className="font-bold text-amber-900 text-[14px]">Doğum Tarihi Gerekiyor</p>
+          <p className="text-[13px] text-amber-800 font-500 leading-normal">
+            Aşı planını doğru oluşturmak için doğum tarihi veya yaklaşık yaş bilgisine ihtiyacımız var.
+          </p>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => router.push(`/owner/pets/${pet.id}/edit?highlight=birthDate`)}
+              className="w-full rounded-xl bg-amber-600 py-3 text-sm font-bold text-white transition-all active:scale-[0.98]">
+              Doğum Tarihi Ekle
+            </button>
+            <button
+              onClick={() => setShowBirthDatePrompt(false)}
+              className="w-full rounded-xl border border-amber-250 bg-white py-3 text-sm font-bold text-amber-800 transition-all active:scale-[0.98]">
+              Daha Sonra
+            </button>
+          </div>
+        </div>
+      )}
 
       {showWizard ? (
         <div className="card-base p-6 bg-white rounded-2xl border border-border-main flex flex-col gap-4 animate-fadeIn">

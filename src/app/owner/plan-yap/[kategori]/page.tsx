@@ -132,8 +132,6 @@ export default function WizardOrchestrator() {
           markAsDone: initialPlanData.extra_data?.is_past_done || false,
         });
         setIsEditMode(true);
-        // Doğrudan Adım 2'ye geç (Pet seçimini atla)
-        setStepIndex(1);
       } else {
         setStepData({
           pet_id: queryPetId || undefined,
@@ -148,18 +146,25 @@ export default function WizardOrchestrator() {
           notes: '',
           selectedProduct: null
         });
-        if (queryPetId) {
-          setStepIndex(1); // URL'de pet_id varsa pet seçim adımını atla
-        }
       }
 
       const { data, error } = await supabase.from('pets').select('id, name, species, avatar_url');
+      let petCount = 0;
       if (!error && data) {
+        petCount = data.length;
         setPets(data.map((p: any) => ({ ...p, type: p.species })));
         if (data.length === 1 && !initialPlanData && !queryPetId) {
           setStepData({ pet_id: data[0].id });
         }
       }
+
+      if (initialPlanData) {
+        // Düzenleme modunda veya URL'de pet_id varsa, pet seçimi adımı listede yer alıyorsa (petCount > 1) 1. index'ten başla, yoksa 0'dan başla
+        setStepIndex(petCount > 1 ? 1 : 0);
+      } else if (queryPetId) {
+        setStepIndex(petCount > 1 ? 1 : 0);
+      }
+
       setLoadingPets(false);
       if (editId) setLoadingEdit(false);
     };
