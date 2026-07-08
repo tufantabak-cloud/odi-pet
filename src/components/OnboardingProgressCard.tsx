@@ -123,7 +123,7 @@ export default function OnboardingProgressCard({
           <div className="flex gap-2">
             <button
               onClick={handleSnooze}
-              className="flex-1 py-2.5 px-4 rounded-xl border border-[#D5D2F2] text-xs font-semibold text-[#534AB7] hover:bg-[#EEEDFE] transition-colors"
+              className="flex-1 py-2.5 px-4 rounded-xl border border-[#D5D2F2] text-xs font-semibold text-[#534AB7] hover:bg-[#EEEDFE] transition-colors min-h-[44px]"
             >
               Daha sonra hatırlat
             </button>
@@ -131,7 +131,7 @@ export default function OnboardingProgressCard({
               <button
                 onClick={() => router.push(nextStep.route)}
                 data-testid="next-step-primary-button"
-                className="flex-1 py-2.5 px-4 rounded-xl bg-[#534AB7] text-xs font-semibold text-white hover:bg-[#443C9E] transition-colors"
+                className="flex-1 py-2.5 px-4 rounded-xl bg-[#534AB7] text-xs font-semibold text-white hover:bg-[#443C9E] transition-colors min-h-[44px]"
               >
                 Sıradaki Adım
               </button>
