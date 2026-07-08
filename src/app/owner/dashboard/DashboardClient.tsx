@@ -78,7 +78,7 @@ export default function DashboardClient({
           <div className="grid grid-cols-3 gap-2 px-[var(--space-4)]">
             
             {/* AI Vet — Primary */}
-            <Link href="/owner/ai-vet"
+            <Link href="/owner/ai-vet" prefetch={false}
               className="flex flex-col items-center justify-center gap-2.5 p-4 rounded-2xl min-h-[90px] cursor-pointer bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] transition-colors">
               <div className="w-[38px] h-[38px] rounded-[10px] bg-white/20 flex items-center justify-center">
                 <i className="ti ti-robot text-white text-[20px]" />
@@ -110,7 +110,7 @@ export default function DashboardClient({
             </Link>
 
             {/* Akıllı Tarama — Tertiary */}
-            <Link href="/owner/scanner"
+            <Link href="/owner/scanner" prefetch={false}
               className="flex flex-col items-center justify-center gap-2.5 p-4 rounded-2xl min-h-[90px] cursor-pointer bg-white border-[1.5px] border-[#e8e4f8] hover:border-[var(--color-primary)]/30 transition-colors">
               <div className="w-[38px] h-[38px] rounded-[10px] bg-[var(--color-success)]/10 flex items-center justify-center">
                 <i className="ti ti-scan text-[20px] text-[var(--color-success)]" />
@@ -128,7 +128,7 @@ export default function DashboardClient({
           </div>
 
           {/* Masaüstü için Plan Yap Butonu */}
-          <Link href="/owner/plan-yap"
+          <Link href="/owner/plan-yap" prefetch={false}
             className="hidden md:flex items-center gap-3.5 p-4 mt-2 mx-[var(--space-4)] rounded-2xl cursor-pointer bg-[var(--color-primary-soft)] hover:bg-[var(--color-primary-soft)]/80 transition-all border border-[var(--color-primary)]/10 shadow-[var(--shadow-sm)] active:scale-[0.99]">
             <div className="w-[38px] h-[38px] rounded-[10px] bg-white flex items-center justify-center flex-shrink-0 shadow-inner">
               <i className="ti ti-calendar-plus text-[var(--color-primary)] text-[20px]" />

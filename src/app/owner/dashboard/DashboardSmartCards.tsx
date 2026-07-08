@@ -625,14 +625,14 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
               <div className="flex flex-col gap-1.5 flex-shrink-0">
                 <button
                   onClick={card.action}
-                  className="px-3.5 py-1.5 rounded-[10px] text-[11px] font-800 text-white transition-all active:scale-[0.97]"
+                  className="px-3.5 py-1.5 rounded-[10px] text-[11px] font-800 text-white transition-all active:scale-[0.97] min-h-[44px]"
                   style={{ background: style.btnBg }}
                 >
                   {card.ctaLabel}
                 </button>
                 <button
                   onClick={() => dismissCard(card.id)}
-                  className="px-3.5 py-1 rounded-[10px] text-[10px] font-700 text-[var(--color-text-secondary)] border border-[var(--color-border)] hover:bg-[var(--color-surface)]/20 transition-all text-center"
+                  className="px-3.5 py-1 rounded-[10px] text-[10px] font-700 text-[var(--color-text-secondary)] border border-[var(--color-border)] hover:bg-[var(--color-surface)]/20 transition-all text-center min-h-[44px]"
                 >
                   Sonra
                 </button>

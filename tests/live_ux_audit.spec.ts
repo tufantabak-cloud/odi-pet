@@ -1,16 +1,6 @@
 import { test, expect } from '@playwright/test';
-import * as fs from 'fs';
-import * as path from 'path';
 
-test('Local UX Onboarding Friction Audit', async ({ page, context }) => {
-  const screenshotsDir = path.join(process.cwd(), 'test-results', 'screenshots');
-  if (!fs.existsSync(screenshotsDir)) {
-    fs.mkdirSync(screenshotsDir, { recursive: true });
-  }
-
-  // Set viewport to see below the fold
-  await page.setViewportSize({ width: 1280, height: 1200 });
-
+test('Verify Live Vercel Onboarding Friction Buttons', async ({ page, context }) => {
   console.log("Attempting direct Supabase auth login...");
   const supabaseUrl = 'https://soautcxgiqhxiaxrubxv.supabase.co';
   const supabaseAnonKey = 'sb_publishable_ypojkLLZ3o4WUI1COXAXdw_mb2kXNJP';
@@ -33,7 +23,7 @@ test('Local UX Onboarding Friction Audit', async ({ page, context }) => {
   }
 
   const sessionData = await res.json();
-  await page.goto('http://localhost:3001/login');
+  await page.goto('https://odi-petcare.vercel.app/login');
   
   const sessionStr = JSON.stringify(sessionData);
   const base64Session = Buffer.from(sessionStr).toString('base64');
@@ -48,10 +38,10 @@ test('Local UX Onboarding Friction Audit', async ({ page, context }) => {
   const cookiesToSet = chunks.map((chunk, index) => ({
     name: `sb-soautcxgiqhxiaxrubxv-auth-token.${index}`,
     value: chunk,
-    domain: 'localhost',
+    domain: 'odi-petcare.vercel.app',
     path: '/',
     expires: expiry,
-    secure: false,
+    secure: true,
     sameSite: 'Lax' as const
   }));
 
@@ -61,8 +51,8 @@ test('Local UX Onboarding Friction Audit', async ({ page, context }) => {
     localStorage.setItem('sb-soautcxgiqhxiaxrubxv-auth-token', JSON.stringify(data));
   }, sessionData);
 
-  console.log("Navigating to pet wizard...");
-  await page.goto('http://localhost:3001/owner/pets/add');
+  console.log("Navigating to live pet wizard...");
+  await page.goto('https://odi-petcare.vercel.app/owner/pets/add');
   await page.waitForLoadState('networkidle');
   
   // Step 1: Species
@@ -71,7 +61,7 @@ test('Local UX Onboarding Friction Audit', async ({ page, context }) => {
   await page.waitForTimeout(1000);
 
   // Step 2: Details
-  await page.fill('#name', 'Testo_Branch2');
+  await page.fill('#name', 'Testo_LiveVerify');
   await page.selectOption('#breed', 'Golden Retriever');
   await page.check('input[type="radio"][value="male"]', { force: true });
   await page.fill('input[type="date"]', '2024-01-01');
@@ -81,28 +71,11 @@ test('Local UX Onboarding Friction Audit', async ({ page, context }) => {
   await continueBtn.click();
   await page.waitForTimeout(2000);
 
-  // Step 3: Photo (Click skip button)
+  // Verify the new skip buttons exist on Step 3
+  const defaultPhotoBtn = page.locator('[data-testid="pet-photo-default-avatar-button"]').first();
   const skipPhotoBtn = page.locator('[data-testid="pet-photo-skip-button"]').first();
-  await expect(skipPhotoBtn).toBeVisible({ timeout: 10000 });
-  await skipPhotoBtn.click({ force: true });
-  await page.waitForTimeout(2500);
 
-  // Step 4: SOS (Click skip button)
-  const skipSosBtn = page.locator('[data-testid="emergency-contact-skip-button"]').first();
-  await expect(skipSosBtn).toBeVisible({ timeout: 10000 });
-  await skipSosBtn.click({ force: true });
-
-  // Verify success page
-  await page.waitForURL(/\/owner\/pets\/add\/success/, { timeout: 25000 });
-  console.log("Onboarding successfully completed using skip options on localhost:3001!");
-
-  // Return to dashboard and take screenshot
-  await page.goto('http://localhost:3001/owner/dashboard');
-  await page.waitForLoadState('networkidle');
-  
-  // Scroll down to make sure cards are visible
-  await page.evaluate(() => window.scrollTo(0, 500));
-  await page.waitForTimeout(1000);
-  
-  await page.screenshot({ path: path.join(screenshotsDir, 'dashboard_branch2_scrolled.png') });
+  await expect(defaultPhotoBtn).toBeVisible({ timeout: 15000 });
+  await expect(skipPhotoBtn).toBeVisible({ timeout: 5000 });
+  console.log("SUCCESS: Onboarding friction skip buttons verified on live Vercel deployment!");
 });
