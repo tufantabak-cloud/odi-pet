@@ -370,7 +370,7 @@ export function PlanItemCard({
           }}
         >
           <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', margin: 0 }}>
-            {item.extra_data.vaccine.name}
+            {item.extra_data?.vaccine?.name || (item as any).sub_type}
           </p>
           <span
             style={{
@@ -414,7 +414,7 @@ export function PlanItemCard({
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', margin: 0 }}>
             {/* Düzeltme 2: doz numarası dinamik */}
-            {item.extra_data.vaccine.name} — {item.dose_number}. doz
+            {item.extra_data?.vaccine?.name || (item as any).sub_type} — {item.extra_data?.dose_number || item.dose_number}. doz
           </p>
           {/* Düzeltme 2: hesaplama açıklaması */}
           {item.dose_basis && (
@@ -436,7 +436,7 @@ export function PlanItemCard({
             marginLeft: 8,
           }}
         >
-          {new Date(item.due_date).toLocaleDateString('tr-TR', {
+          {new Date((item as any).scheduled_at || item.due_date).toLocaleDateString('tr-TR', {
             day: 'numeric',
             month: 'short',
           })}
