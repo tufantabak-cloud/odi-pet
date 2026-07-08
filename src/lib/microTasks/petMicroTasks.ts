@@ -1,6 +1,6 @@
 export interface PetMicroTask {
   id: string;
-  type: 'missing_photo' | 'missing_vaccine_plan' | 'missing_parasite_plan' | 'missing_weight' | 'missing_emergency_contact' | 'missing_nutrition' | 'missing_neutered';
+  type: 'missing_birth_date' | 'missing_photo' | 'missing_vaccine_plan' | 'missing_parasite_plan' | 'missing_weight' | 'missing_emergency_contact' | 'missing_nutrition' | 'missing_neutered';
   title: string;
   description: string;
   actionText: string;
@@ -16,6 +16,8 @@ interface BuildMicroTasksArgs {
     is_neutered?: boolean | null;
     breed?: string | null;
     sos_contacts?: any[] | null;
+    birth_date?: string | null;
+    birth_date_precision?: string | null;
   };
   vaccinePlans: any[];
   parasitePlans: any[];
@@ -32,16 +34,16 @@ export function buildPetMicroTasks({
 }: BuildMicroTasksArgs): PetMicroTask[] {
   const tasks: PetMicroTask[] = [];
 
-  // 1. Profil Fotoğrafı Eksikliği
-  if (!pet.avatar_url) {
+  // 1. Doğum Tarihi Eksikliği
+  if (!pet.birth_date || pet.birth_date_precision === 'unknown') {
     tasks.push({
-      id: `missing_photo_${pet.id}`,
-      type: 'missing_photo',
-      title: 'Profil Fotoğrafı Ekle',
-      description: `${pet.name} için bir profil fotoğrafı ekleyerek ana ekranı kişiselleştirin.`,
-      actionText: 'Ekle',
-      route: `/owner/pets/${pet.id}/edit?highlight=photo`,
-      icon: 'ti ti-camera'
+      id: `missing_birth_date_${pet.id}`,
+      type: 'missing_birth_date',
+      title: `${pet.name} için yaş bilgisini tamamlayalım`,
+      description: 'Aşı ve bakım önerilerini doğru hesaplamak için doğum tarihi veya yaklaşık yaş bilgisi gerekli.',
+      actionText: 'Şimdi Ekle',
+      route: `/owner/pets/${pet.id}/edit?highlight=birthDate`,
+      icon: 'ti ti-cake'
     });
   }
 
@@ -110,7 +112,20 @@ export function buildPetMicroTasks({
     });
   }
 
-  // 7. Kısırlaştırma Bilgisi Eksikliği
+  // 7. Profil Fotoğrafı Eksikliği
+  if (!pet.avatar_url) {
+    tasks.push({
+      id: `missing_photo_${pet.id}`,
+      type: 'missing_photo',
+      title: 'Profil Fotoğrafı Ekle',
+      description: `${pet.name} için bir profil fotoğrafı ekleyerek ana ekranı kişiselleştirin.`,
+      actionText: 'Ekle',
+      route: `/owner/pets/${pet.id}/edit?highlight=photo`,
+      icon: 'ti ti-camera'
+    });
+  }
+
+  // 8. Kısırlaştırma Bilgisi Eksikliği
   if (pet.is_neutered === null || pet.is_neutered === undefined) {
     tasks.push({
       id: `missing_neutered_${pet.id}`,
