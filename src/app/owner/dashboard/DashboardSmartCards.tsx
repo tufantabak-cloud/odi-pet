@@ -6,7 +6,10 @@ import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { VaccineIcon, PillIcon, BowlIcon, PawIcon, HouseIcon } from '@/components/icons/PetIcons'
 import QuickJournalWidget from '@/components/dashboard/QuickJournalWidget'
-import OnboardingProgressCard from '@/components/OnboardingProgressCard'
+import { buildPetMicroTasks } from '@/lib/microTasks/petMicroTasks'
+import { PetMicroTaskCard } from '@/components/micro-tasks/PetMicroTaskCard'
+
+
 
 // Minimalist Single-Field Modal for Frequency input
 function QuickUpdateModal({ config, onClose, onDone }: any) {
@@ -76,6 +79,8 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
   const [quickUpdateConfig, setQuickUpdateConfig] = useState<any>(null)
   const [dismissedCards, setDismissedCards] = useState<string[]>([])
   const [expanded, setExpanded] = useState(false)
+  const [dismissedMicroTasks, setDismissedMicroTasks] = useState<Set<string>>(new Set())
+
 
   useEffect(() => {
     const saved = localStorage.getItem('odi_dismissed_smart_cards')
@@ -181,8 +186,12 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
   const highlight = searchParams ? searchParams.get('highlight') : null
 
+  let hasCriticalHealthTask = false
+  let dashboardMicroTasks: any[] = []
+
   if (pets && pets.length > 0) {
     const targetPet = pets.find(p => p.id === activePetId) || pets[0]
+
 
     // 1. Highlight Deep-link Card
     let highlightCard: any = null
@@ -322,7 +331,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
     // 2.5. Acil Durum Kişisi Eksikliği Alert
     const emergencyContactCardId = `emergency-contact-${targetPet.id}`
     const hasEmergencyContact = targetPet?.sos_contacts && Array.isArray(targetPet.sos_contacts) && targetPet.sos_contacts.length > 0
-    const hasCriticalHealthTask = !!overdueVaccine || (todayHealthTasks && todayHealthTasks.length > 0)
+    hasCriticalHealthTask = !!overdueVaccine || (todayHealthTasks && todayHealthTasks.length > 0)
 
     if (!hasEmergencyContact && !hasCriticalHealthTask && !dismissedCards.includes(emergencyContactCardId) && highlight !== emergencyContactCardId) {
       activeCards.push({
@@ -459,12 +468,29 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
         }
       })
     }
+
+    const activePet = pets.find(p => p.id === activePetId)
+    dashboardMicroTasks = activePet
+      ? buildPetMicroTasks({
+          pet:          activePet,
+          vaccinePlans: upcomingSchedules?.filter(
+            s => s.category === 'asi' || s.extra_data?.record_type === 'vaccine_schedule'
+          ) ?? [],
+          parasitePlans: [], // Dashboard'da yok — kart üretilmez
+          latestWeight:  allWeightLogs?.find(w => w.pet_id === activePetId) ?? null,
+          nutritionProfile: null, // Dashboard'da yok — kart üretilmez
+        }).filter(t =>
+          !dismissedMicroTasks.has(t.id) &&
+          // Acil kişi kartı zaten varsa tekrar üretme
+          t.type !== 'missing_emergency_contact'
+        )
+      : []
   }
 
   // Already pushed in exact priority order
   const sorted = activeCards
 
-  if (sorted.length === 0) {
+  if (sorted.length === 0 && dashboardMicroTasks.length === 0) {
     return (
       <div className="mx-[var(--space-4)] rounded-2xl border border-dashed border-[var(--color-border)] py-4 text-center">
         <span className="text-[11px] font-600 text-[var(--color-text-muted)]">
@@ -580,10 +606,8 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
 
   return (
     <div className="flex flex-col gap-2">
-      {/* Akıllı Kurulum Rehberi - Pasif veya Snoozed durumda olanlar smart card'lar arasında görünür */}
-      <OnboardingProgressCard petId={activePetId} petName={pets.find(p => p.id === activePetId)?.name || ''} forcePasif={true} />
-
       {/* Başlık */}
+
       <div className="flex items-center gap-2 px-[var(--space-4)] mb-2.5">
         <p className="text-[11px] font-800 text-[var(--color-text-primary)]">
           Bugünkü Odak
@@ -640,6 +664,17 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
             </div>
           )
         })}
+
+        {dashboardMicroTasks.length > 0 && !hasCriticalHealthTask && (
+          <PetMicroTaskCard
+            task={dashboardMicroTasks[0]}
+            petId={activePetId}
+            onDismiss={(id) =>
+              setDismissedMicroTasks(prev => new Set([...prev, id]))
+            }
+          />
+        )}
+
 
         {!expanded && sorted.length > 2 && (
           <button

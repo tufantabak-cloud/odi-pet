@@ -28,6 +28,18 @@ const DOG_COLORS = ['Siyah', 'Beyaz', 'Kahverengi', 'Altın Sarısı', 'Krem', '
 export default function EditPetForm({ pet }: { pet: any }) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const highlight = searchParams ? searchParams.get('highlight') : null
+  const isHighlighted = (field: string) => highlight === field
+
+  useEffect(() => {
+    if (!highlight) return
+    const timer = setTimeout(() => {
+      const el = document.querySelector(`[data-highlight="${highlight}"]`)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [highlight])
+
   const [loading, setLoading] = useState(false)
   const [showDocScanner, setShowDocScanner] = useState(false)
   const [birthDateMode, setBirthDateMode] = useState<'exact' | 'approximate'>('exact')
@@ -298,8 +310,16 @@ export default function EditPetForm({ pet }: { pet: any }) {
         <section id="temel-section" className="card-base p-6 sm:p-8 flex flex-col gap-6">
           <h2 className="text-[15px] font-black text-text-primary border-b border-border-main pb-3">1. Temel Kimlik ve Fotoğraf</h2>
           
-          <div className="flex flex-col items-center gap-4 mb-2">
+          <div 
+            data-highlight="photo"
+            className={`flex flex-col items-center gap-4 mb-2 ${
+              isHighlighted('photo')
+                ? 'ring-2 ring-purple-400 bg-purple-50 rounded-xl p-3 transition-all'
+                : ''
+            }`}
+          >
             <div className="relative w-[120px] h-[120px] rounded-[28px] bg-gradient-to-br from-primary-soft to-white border-2 border-dashed border-primary/30 flex items-center justify-center overflow-hidden shadow-sm">
+
               {photoPreview ? (
                 photoPreview.startsWith('http') ? (
                   <Image src={photoPreview} alt="Önizleme" fill={true} className="object-cover" sizes="120px" />
@@ -325,7 +345,16 @@ export default function EditPetForm({ pet }: { pet: any }) {
               <label className="text-[13px] font-bold text-text-primary">İsim *</label>
               <input id="name" autoFocus value={petName} onChange={e => setPetName(e.target.value)} className="input-base" required/>
             </div>
-            <div id="breed-input" className="flex flex-col gap-2">
+            <div 
+              id="breed-input" 
+              data-highlight="breed"
+              className={`flex flex-col gap-2 ${
+                isHighlighted('breed')
+                  ? 'ring-2 ring-purple-400 bg-purple-50 rounded-xl p-3 transition-all'
+                  : ''
+              }`}
+            >
+
               <label className="text-[13px] font-bold text-text-primary">Irk *</label>
               <select value={selectedBreed} onChange={e => setSelectedBreed(e.target.value)} className="input-base" required>
                 <option value="" disabled>Irk seçin</option>
@@ -343,8 +372,16 @@ export default function EditPetForm({ pet }: { pet: any }) {
                 ))}
               </div>
             </div>
-             <div className="flex flex-col gap-3">
+             <div 
+               data-highlight="birthDate"
+               className={`flex flex-col gap-3 ${
+                 isHighlighted('birthDate')
+                   ? 'ring-2 ring-purple-400 bg-purple-50 rounded-xl p-3 transition-all'
+                   : ''
+               }`}
+             >
                <div className="flex flex-col gap-0.5">
+
                  <label className="text-[13px] font-bold text-text-primary">Doğum Tarihi / Yaş</label>
                  <p className="text-[11px] text-text-secondary">Tam doğum tarihini seçebilir veya yaklaşık yaşını girebilirsiniz.</p>
                </div>
@@ -606,7 +643,15 @@ export default function EditPetForm({ pet }: { pet: any }) {
                 ))}
               </select>
             </div>
-            <div className="flex flex-col gap-2">
+            <div 
+              data-highlight="neutered"
+              className={`flex flex-col gap-2 ${
+                isHighlighted('neutered')
+                  ? 'ring-2 ring-purple-400 bg-purple-50 rounded-xl p-3 transition-all'
+                  : ''
+              }`}
+            >
+
               <label className="text-[13px] font-bold text-text-primary">Kısırlaştırma Durumu</label>
               <div className="flex gap-2">
                 {[[true, '✂️ Kısırlaştırıldı'], [false, '❤️ Kısırlaştırılmadı']].map(([v, l]) => (
@@ -721,7 +766,16 @@ export default function EditPetForm({ pet }: { pet: any }) {
           </div>
         </section>
 
-        <section id="sos-section" className="card-base p-6 sm:p-8 flex flex-col gap-6">
+        <section 
+          id="sos-section" 
+          data-highlight="emergencyContact"
+          className={`card-base p-6 sm:p-8 flex flex-col gap-6 ${
+            isHighlighted('emergencyContact')
+              ? 'ring-2 ring-purple-400 bg-purple-50 rounded-xl p-3 transition-all'
+              : ''
+          }`}
+        >
+
           <h2 className="text-[15px] font-black text-text-primary border-b border-border-main pb-3">4. Acil Durum Ağı</h2>
           <p className="text-[12px] text-text-secondary">Evcil dostunuza bir şey olursa aranacak kişiler.</p>
 
