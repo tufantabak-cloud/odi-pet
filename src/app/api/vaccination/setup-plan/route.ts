@@ -205,26 +205,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // ── plans (tek kayıt per doz) ────────────────────────────────────────
-  const planRecords = generatedSchedules.map(schedule => ({
-    pet_id:      petId,
-    user_id:     userId,
-    category:    'asi',
-    sub_type:    schedule.vaccine_name,
-    scheduled_at: schedule.due_at,
-    status:      'active',
-    extra_data: {
-      record_type:       'vaccine_schedule',
-      vaccine_code:      schedule.vaccine_code,
-      dose_number:       schedule.dose_number,
-      series_total:      schedule.series_total,
-      confidence_level:  'estimated',
-      source:            'system_generated',
-      history_status:    vaccineHistoryStatus,
-      lifestyle,
-    },
-  }));
-
   let insertClient = supabase;
   if (authHeader === 'Bearer TEST_TOKEN') {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -232,10 +212,51 @@ export async function POST(req: NextRequest) {
     insertClient = createAdminSupabaseClient();
   }
 
-  const { data: insertedPlans, error: planError } = await insertClient
-    .from('plans')
-    .insert(planRecords)
-    .select();
+  // ── plans (tek kayıt per doz) - Pre-check ile Duplicate Önleme ────────────────
+  const recordsToInsert = [];
+
+  for (const schedule of generatedSchedules) {
+    const { data: existing, error: checkError } = await insertClient
+      .from('plans')
+      .select('id')
+      .eq('pet_id', petId)
+      .eq('category', 'asi')
+      .eq('status', 'active')
+      .eq('extra_data->>vaccine_code', schedule.vaccine_code)
+      .eq('extra_data->>dose_number', String(schedule.dose_number))
+      .eq('scheduled_at', schedule.due_at)
+      .limit(1);
+
+    if (checkError) {
+      console.error('[setup-plan] duplicate check error:', checkError.message);
+      continue;
+    }
+
+    if (!existing || existing.length === 0) {
+      recordsToInsert.push({
+        pet_id:      petId,
+        user_id:     userId,
+        category:    'asi',
+        sub_type:    schedule.vaccine_name,
+        scheduled_at: schedule.due_at,
+        status:      'active',
+        extra_data: {
+          record_type:       'vaccine_schedule',
+          vaccine_code:      schedule.vaccine_code,
+          dose_number:       schedule.dose_number,
+          series_total:      schedule.series_total,
+          confidence_level:  'estimated',
+          source:            'system_generated',
+          history_status:    vaccineHistoryStatus,
+          lifestyle,
+        },
+      });
+    }
+  }
+
+  const { data: insertedPlans, error: planError } = recordsToInsert.length > 0
+    ? await insertClient.from('plans').insert(recordsToInsert).select()
+    : { data: [], error: null };
 
   if (planError) {
     console.error('[setup-plan] plans insert error:', planError.message);
@@ -293,7 +314,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     success:            true,
     planCreated:        true,
-    generatedSchedules: planRecords.length,
+    generatedSchedules: recordsToInsert.length,
     vetReviewRequired,
     nextDueVaccines,
   });

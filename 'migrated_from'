@@ -1,0 +1,1 @@
+{"_tag":"Error","error":{"code":"LegacyDbQueryUnexpectedStatusError","message":"unexpected status 400: {\"message\":\"Failed to run sql query: ERROR:  42601: syntax error at end of input\\nLINE 0: \\n        ^\\n\"}"}}

@@ -1,0 +1,83 @@
+{
+  "site": "https://odi-petcare.vercel.app/",
+  "account_type": "test_account",
+  "login_result": {
+    "status": "pass",
+    "duration_seconds": 2.127,
+    "error": ""
+  },
+  "modules": [
+    {
+      "module": "dashboard",
+      "status": "pass",
+      "duration_seconds": 2.032,
+      "issue": "",
+      "screenshot_path": ""
+    },
+    {
+      "module": "pet_detail_or_pet_add",
+      "status": "pass",
+      "duration_seconds": 0.076,
+      "issue": "",
+      "screenshot_path": ""
+    },
+    {
+      "module": "next_step_card",
+      "status": "pass",
+      "duration_seconds": 3.117,
+      "issue": "",
+      "screenshot_path": ""
+    },
+    {
+      "module": "vaccine",
+      "status": "pass",
+      "duration_seconds": 3.1,
+      "issue": "",
+      "screenshot_path": ""
+    },
+    {
+      "module": "parasite",
+      "status": "pass",
+      "duration_seconds": 2.815,
+      "issue": "",
+      "screenshot_path": ""
+    },
+    {
+      "module": "nutrition",
+      "status": "pass",
+      "duration_seconds": 3.071,
+      "issue": "",
+      "screenshot_path": ""
+    },
+    {
+      "module": "budget",
+      "status": "pass",
+      "duration_seconds": 2.939,
+      "issue": "",
+      "screenshot_path": ""
+    },
+    {
+      "module": "health_card",
+      "status": "pass",
+      "duration_seconds": 2.776,
+      "issue": "",
+      "screenshot_path": ""
+    },
+    {
+      "module": "services",
+      "status": "pass",
+      "duration_seconds": 2.947,
+      "issue": "",
+      "screenshot_path": ""
+    }
+  ],
+  "summary": {
+    "passed_modules": 9,
+    "failed_modules": 0,
+    "skipped_modules": 0,
+    "blocker_issues": [],
+    "major_issues": [],
+    "minor_issues": [],
+    "recommended_actions": []
+  }
+}
