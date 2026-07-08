@@ -20,9 +20,12 @@ import { SmartScanner } from '@/components/ui/SmartScanner'
 import FloatingSOS from '@/components/FloatingSOS'
 import { HealthTracker } from '@/components/health-tracker/HealthTracker'
 import { EstrusTracker } from '@/components/estrus-tracker/EstrusTracker'
+import CareScoreWidget from '@/components/pets/CareScoreWidget'
 import PetHeroCard from './PetHeroCard'
 import AllergyManager from '@/components/pets/AllergyManager'
-import CareScoreWidget from '@/components/pets/CareScoreWidget'
+import { buildPetMicroTasks } from '@/lib/microTasks/petMicroTasks'
+import { PetMicroTaskCard } from '@/components/micro-tasks/PetMicroTaskCard'
+
 import { getPlanDisplayCategory } from '@/lib/plans/utils'
 function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
   const [loading, setLoading] = useState(false)
@@ -273,6 +276,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         : 'ozet'
 
   const [activeTab, setActiveTab] = useState<'ozet'|'saglik'|'bakim'|'takvim'|'ekstra'>(initialTab)
+  const [dismissedMicroTasks, setDismissedMicroTasks] = useState<Set<string>>(new Set())
+
 
   const initialSection = SECTION_NAME_MAP[tabParam ?? ''] ?? null
   const [openSections, setOpenSections] = useState<Set<string>>(
@@ -1171,6 +1176,18 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     );
   }
 
+  const microTasks = buildPetMicroTasks({
+    pet,
+    vaccinePlans: schedules?.filter(
+      (s: any) => (s.sub_category || '').includes('Aşı') || (s.title || '').toLowerCase().includes('aşı')
+    ) ?? [],
+    parasitePlans: schedules?.filter(
+      (s: any) => (s.sub_category || '').includes('Parazit') || (s.title || '').toLowerCase().includes('parazit')
+    ) ?? [],
+    latestWeight: growthRecords?.[0] ?? null,
+    nutritionProfile: nutritionLogs?.[0] ?? null,
+  }).filter(t => !dismissedMicroTasks.has(t.id))
+
   return (
     <div className="flex flex-col gap-6 pb-[100px] pb-safe w-full mx-auto">
       {generalError && (
@@ -1279,6 +1296,24 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               <div className="p-4 flex flex-col gap-3">
                 {/* ---> GAMIFICATION WIDGET <--- */}
                 <CareScoreWidget petId={pet.id} pet={pet} />
+
+                {microTasks.length > 0 && (
+                  <div className="mt-4 space-y-3">
+                    <p className="text-[11px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide px-1">
+                      Profilini güçlendir
+                    </p>
+                    {microTasks.slice(0, 3).map(task => (
+                      <PetMicroTaskCard
+                        key={task.id}
+                        task={task}
+                        petId={pet.id}
+                        onDismiss={(id) =>
+                          setDismissedMicroTasks(prev => new Set([...prev, id]))
+                        }
+                      />
+                    ))}
+                  </div>
+                )}
 
                 {/* 2. 3 Metrik */}
                 <div className="grid grid-cols-3 gap-2">

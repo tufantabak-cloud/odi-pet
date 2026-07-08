@@ -52,12 +52,7 @@ export default function DashboardClient({
       {/* 2. Petlerim (Overlap Tasarım) */}
       {petsWithStats && petsWithStats.length > 0 && (
         <div className="flex flex-col gap-3 pt-2">
-          {/* Aktif Onboarding Kartı (ilk 7 gün, snooze edilmemişse) en üstte görünür */}
-          {activePetId && (
-            <div className="px-[var(--space-4)] pt-1">
-              <OnboardingProgressCard petId={activePetId} petName={activePet?.name || ''} />
-            </div>
-          )}
+
 
           <div className="flex items-center justify-between px-[var(--space-4)]">
             <p className="text-[11px] font-800 text-[var(--color-text-muted)] uppercase tracking-[1.2px]">Petlerim</p>
@@ -146,6 +141,14 @@ export default function DashboardClient({
 
         </div>
       )}
+
+      {/* Kurulum Rehberi */}
+      {activePetId && (
+        <div className="px-[var(--space-4)] pt-1">
+          <OnboardingProgressCard petId={activePetId} petName={activePet?.name || ''} />
+        </div>
+      )}
+
 
       {/* 3. Profiling Engine Questions & Insights */}
       {((activeQuestion && activeQuestion.type !== 'weight') || activeInsight) && (
