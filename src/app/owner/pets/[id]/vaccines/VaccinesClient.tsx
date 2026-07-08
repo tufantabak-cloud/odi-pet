@@ -445,9 +445,9 @@ export function PlanItemCard({
 
       {/* A2 Booster banner — yalnızca detaylı modda */}
       {mode === 'detailed' &&
-        item.extra_data.clinical_booster_days &&
-        item.extra_data.legal_booster_days &&
-        item.extra_data.clinical_booster_days !== item.extra_data.legal_booster_days && (
+        item.extra_data?.clinical_booster_days &&
+        item.extra_data?.legal_booster_days &&
+        item.extra_data?.clinical_booster_days !== item.extra_data?.legal_booster_days && (
           <div
             style={{
               background: 'var(--bg-warning)',
@@ -469,7 +469,7 @@ export function PlanItemCard({
                   border: '0.5px solid var(--border-accent)',
                 }}
               >
-                WSAVA: {Math.round(item.extra_data.clinical_booster_days / 365)} yıl
+                WSAVA: {Math.round((item.extra_data?.clinical_booster_days || 0) / 365)} yıl
               </span>
               <span
                 style={{
@@ -485,9 +485,9 @@ export function PlanItemCard({
                 TR yasal: 1 yıl
               </span>
             </div>
-            {item.extra_data.booster_ui_label && (
+            {item.extra_data?.booster_ui_label && (
               <p style={{ fontSize: 11, color: 'var(--text-primary)', lineHeight: 1.5, margin: 0 }}>
-                {item.extra_data.booster_ui_label}
+                {item.extra_data?.booster_ui_label}
               </p>
             )}
           </div>
