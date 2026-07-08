@@ -72,7 +72,7 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
         notes: notes || null,
         administered_by: administered_by || null,
         status: 'done',
-        confidence_level: 'high',
+        confidence_level: 'user_reported',
         source: 'manual',
         vaccine_code: 'CUSTOM'
       })

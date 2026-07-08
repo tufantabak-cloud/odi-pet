@@ -87,6 +87,7 @@ export type VerificationLevel =
   | 'user_reported'
   | 'document_uploaded'
   | 'document_matched'
+  | 'partially_verified'
   | 'clinic_verified'
   | 'official_verified'
   | 'estimated';
@@ -206,6 +207,7 @@ const VERIFICATION_LABELS: Record<VerificationLevel, string> = {
   user_reported: 'Kullanıcı beyanı',
   document_uploaded: 'Belge yüklendi',
   document_matched: 'Belgeyle eşleşti',
+  partially_verified: 'Kısmen doğrulandı',
   clinic_verified: 'Veteriner onaylı',
   official_verified: 'ResmÃ® doğrulama',
   estimated: 'Tahmini bilgi',
@@ -229,6 +231,11 @@ const VERIFICATION_COLORS: Record<
     bg: 'var(--bg-success)',
     text: 'var(--text-success)',
     border: 'var(--border-success)',
+  },
+  partially_verified: {
+    bg: 'var(--bg-warning)',
+    text: 'var(--text-warning)',
+    border: 'var(--border-warning)',
   },
   clinic_verified: {
     bg: 'var(--bg-success)',
@@ -273,6 +280,20 @@ export function VerificationBadge({ level }: VerificationBadgeProps) {
   );
 }
 
+// Sprint 4.3 Öncelik 3: kayıtların confidence_level dağılımından dinamik doğrulama seviyesi
+export function computeVerificationLevel(
+  records: { confidence_level?: string | null }[]
+): VerificationLevel {
+  const withConfidence = records.filter(r => !!r.confidence_level);
+  if (withConfidence.length === 0) return 'user_reported';
+
+  const verifiedCount = withConfidence.filter(r => r.confidence_level === 'verified').length;
+
+  if (verifiedCount === withConfidence.length) return 'document_matched';
+  if (verifiedCount === 0) return 'user_reported';
+  return 'partially_verified';
+}
+
 // Düzeltme 1: "Kayıtlara göre tamamlandı" — kesin ifade kullanılmıyor
 interface SeriesStatusCardProps {
   petName: string;
@@ -312,11 +333,13 @@ export function SeriesStatusCard({
           'Güven seviyesini artırmak için belge yükleyebilir veya veteriner onayı alabilirsin.'}
         {verificationLevel === 'document_matched' &&
           'Belgeyle eşleştirildi. Veteriner onayıyla resmÃ® doğrulamaya geçebilirsin.'}
+        {verificationLevel === 'partially_verified' &&
+          'Kayıtların bir kısmı doğrulanmış. Kalan kayıtlar için belge yükleyebilir veya veteriner onayı alabilirsin.'}
         {(verificationLevel === 'clinic_verified' ||
           verificationLevel === 'official_verified') &&
           'Doğrulama tamamlandı.'}
       </p>
-      {verificationLevel === 'user_reported' && (
+      {(verificationLevel === 'user_reported' || verificationLevel === 'partially_verified') && (
         <button
           onClick={onUpgradeVerification}
           style={{
@@ -1268,13 +1291,6 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
     try {
       const supabase = createBrowserSupabaseClient();
       
-      if (showBirthStep && wizardBirthDate) {
-        await supabase.from('pets').update({
-          birth_date: wizardBirthDate,
-          birth_date_precision: wizardBirthPrecision
-        }).eq('id', pet.id);
-      }
-      
       const formData = new FormData();
       formData.append('birth_date', wizardBirthDate || pet.birth_date || '');
       if (wizardBirthPrecision || pet.birth_date_precision) {
@@ -1796,9 +1812,9 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
                     ) : (
                       <div className="grid grid-cols-1 gap-3">
                         {flow.mode === 'detailed' && (
-                          <SeriesStatusCard 
+                          <SeriesStatusCard
                             petName={pet.name}
-                            verificationLevel="document_matched"
+                            verificationLevel={computeVerificationLevel(initialRecords)}
                             onUpgradeVerification={() => router.push(`/owner/pets/${pet.id}/vaccines/upload`)}
                           />
                         )}
@@ -1813,7 +1829,10 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
                                 </p>
                               </div>
                             </div>
-                            {rec.notes && <span className="text-[11px] bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg font-medium">{rec.notes}</span>}
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              {rec.confidence_level && <ConfidenceBadge level={rec.confidence_level} />}
+                              {rec.notes && <span className="text-[11px] bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg font-medium">{rec.notes}</span>}
+                            </div>
                           </div>
                         ))}
                       </div>
