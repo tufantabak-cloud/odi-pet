@@ -1,6 +1,6 @@
 {
-  "version": "1.4",
-  "updated": "2026-07-06",
+  "version": "1.5",
+  "updated": "2026-07-08",
   "sections": [
     {
       "id": "onboarding",
@@ -170,6 +170,30 @@
           ],
           "note": "Kuduz aşısı yasa gereği her yıl düzenli olarak tekrarlanmak zorundadır.",
           "noteType": "info"
+        },
+        {
+          "id": "vaccine-notification",
+          "q": "Yaklaşan aşılar için hatırlatma bildirimleri (T-14 ve T-7) ne zaman ve nasıl gönderilir?",
+          "tags": ["hatırlatma", "bildirim", "aşı takvimi", "t-14", "t-7"],
+          "steps": [
+            "Aşı planı kurulduğunda, sistem arka planda her aşı dozu için otomatik hatırlatma kayıtları oluşturur.",
+            "İlk bildirim aşı gününden 14 gün önce (T-14) aktifleşir ve hazırlık yapmanızı önerir.",
+            "İkinci bildirim aşı gününden 7 gün önce (T-7) gönderilerek randevu almanızı hatırlatır.",
+            "Zamanlanmış görevler (cron jobs), 'plans' tablosundaki bu bildirimleri otomatik işleyip telefonunuza anlık olarak ulaştırır."
+          ]
+        },
+        {
+          "id": "vaccine-admin-crud",
+          "q": "Yönetici olarak aşı protokollerini nasıl ekler veya güncellerim?",
+          "tags": ["admin", "protokol", "yönetim", "düzenle", "aşı ekle"],
+          "steps": [
+            "Yönetici paneli üzerinden '/admin/vaccines' sayfasına giriş yapın.",
+            "Aşı protokollerini türüne (kedi, köpek, her ikisi) ve kategorisine (temel, risk bazlı, yasal, opsiyonel) göre listeleyin.",
+            "'Yeni Protokol' butonuyla aşı kodunu, protokol ismini, kaç dozdan oluştuğunu ve dozlar arası gün farkını tanımlayın.",
+            "Yıllık tekrar sürelerini belirterek kaydedin. Yeni kurallar RLS ve veritabanı güvenliği altında anında tüm kullanıcılarda aktif olur."
+          ],
+          "note": "Aşı protokollerinde yapılan değişiklikler mevcut tamamlanmış aşı kayıtlarını bozmaz, sadece yeni kurulacak planları etkiler.",
+          "noteType": "warning"
         }
       ]
     },
