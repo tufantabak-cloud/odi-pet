@@ -1186,6 +1186,7 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
   const [showManualModal, setShowManualModal] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const flow = useVaccineFlow();
+  const [activePlan, setActivePlan] = useState<any>(null);
 
   const [formData, setFormData] = useState({
     vaccineName:      '',
@@ -1308,6 +1309,12 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
 
       if (error) throw error;
 
+      if (activePlan) {
+        try {
+          await supabase.from('plans').update({ status: 'done' }).eq('id', activePlan.id);
+        } catch { /* sessiz geç */ }
+      }
+
       setShowManualModal(false);
       setFormData(prev => ({
         ...prev,
@@ -1322,6 +1329,7 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
         reactionObserved: false,
         documentImage: null
       }));
+      setActivePlan(null);
       
       flow.handleVaccineDone(formData.vaccineName.trim());
       flow.handleRecordComplete();
@@ -1694,33 +1702,81 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
                 </div>
               )
             ) : (
-              initialRecords.length === 0 ? (
-                <div className="text-[14px] text-text-secondary p-8 text-center bg-white rounded-2xl border border-border-main border-dashed">
-                  Henüz aşı kaydı bulunmuyor.
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-3">
-                  {flow.mode === 'detailed' && (
-                    <SeriesStatusCard 
-                      petName={pet.name}
-                      verificationLevel="document_matched"
-                      onUpgradeVerification={() => router.push(`/owner/pets/${pet.id}/vaccines/upload`)}
-                    />
-                  )}
-                  {initialRecords.map((rec: any) => (
-                    <div key={rec.id} className="card-base p-4 flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center font-bold text-lg">✓</div>
-                        <div>
-                          <h4 className="font-bold text-text-primary text-[15px]">{rec.vaccine_name}</h4>
-                          <p className="text-[11px] text-text-secondary font-medium"><b>Uygulanma:</b> {rec.administered_at ? new Date(rec.administered_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Bilinmiyor'}</p>
-                        </div>
+                <div className="flex flex-col gap-6">
+                  {/* Yapılmış Aşılar */}
+                  <section>
+                    <h3 className="font-bold text-text-primary text-[15px] mb-3">Yapılmış Aşılar</h3>
+                    {initialRecords.length === 0 ? (
+                      <p className="text-sm text-text-secondary border border-dashed border-border-main p-4 rounded-xl text-center">Henüz kayıt yok.</p>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-3">
+                        {flow.mode === 'detailed' && (
+                          <SeriesStatusCard 
+                            petName={pet.name}
+                            verificationLevel="document_matched"
+                            onUpgradeVerification={() => router.push(`/owner/pets/${pet.id}/vaccines/upload`)}
+                          />
+                        )}
+                        {initialRecords.map((rec: any) => (
+                          <div key={rec.id} className="card-base p-4 flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center font-bold text-lg">✓</div>
+                              <div>
+                                <h4 className="font-bold text-text-primary text-[15px]">{rec.vaccine_name}</h4>
+                                <p className="text-[11px] text-text-secondary font-medium">
+                                  {new Date(rec.administered_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                </p>
+                              </div>
+                            </div>
+                            {rec.notes && <span className="text-[11px] bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg font-medium">{rec.notes}</span>}
+                          </div>
+                        ))}
                       </div>
-                      {rec.notes && <span className="text-[11px] bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg font-medium">{rec.notes}</span>}
-                    </div>
-                  ))}
+                    )}
+                  </section>
+
+                  {/* Planlanan Aşılar */}
+                  <section>
+                    <h3 className="font-bold text-text-primary text-[15px] mb-3">Planlanan Aşılar</h3>
+                    {initialPlans.length === 0 ? (
+                      <p className="text-sm text-text-secondary border border-dashed border-border-main p-4 rounded-xl text-center">Plan yok.</p>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-3">
+                        {initialPlans.map((p: any) => (
+                          <div key={p.id} className="card-base p-4 flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg">📅</div>
+                              <div>
+                                <h4 className="font-bold text-text-primary text-[15px]">{p.sub_type}</h4>
+                                <p className="text-[11px] text-text-secondary font-medium">
+                                  {new Date(p.scheduled_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <button 
+                                onClick={() => {
+                                  flow.setMode('detailed');
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    vaccineName: p.sub_type,
+                                    vaccineCode: p.extra_data?.vaccine_code || '',
+                                    administeredDate: new Date().toISOString().split('T')[0],
+                                  }));
+                                  setActivePlan(p);
+                                  setShowManualModal(true);
+                                }} 
+                                className="btn-primary text-xs px-3 py-1.5 rounded-lg"
+                              >
+                                Yaptırdım
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </section>
                 </div>
-              )
             )}
           </div>
         </>

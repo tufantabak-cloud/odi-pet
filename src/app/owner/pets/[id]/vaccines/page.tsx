@@ -38,16 +38,21 @@ export default async function PetVaccinesPage(props: PageProps) {
 
   // Fetch plans (upcoming vaccines)
   const { data: plans } = await supabase
-    .from('vaccination_upcoming_tasks')
+    .from('plans')
     .select('*')
     .eq('pet_id', id)
-    .order('due_date')
+    .eq('category', 'asi')
+    .eq('status', 'active')
+    .eq('extra_data->>record_type', 'vaccine_schedule')
+    .order('scheduled_at', { ascending: true })
 
   // Fetch vaccine records v2 (completed vaccine history)
   const { data: records } = await supabase
     .from('vaccine_records_v2')
     .select('*')
     .eq('pet_id', id)
+    .not('administered_at', 'is', null)
+    .neq('status', 'migrated_to_plan')
     .order('administered_at', { ascending: false })
 
   return (

@@ -178,8 +178,8 @@ export async function POST(req: NextRequest) {
   // ── Geçmişi bilinmeyen → vet_review_required ─────────────────────────
   const vetReviewRequired = vaccineHistoryStatus === 'unknown';
 
-  // ── Her protokol için vaccine_records_v2 kayıtları oluştur ──────────
-  const records: any[] = [];
+  // ── Her protokol için plans kayıtları oluştur ──────────
+  const generatedSchedules: any[] = [];
 
   for (const proto of protocols as Protocol[]) {
     const doses: DoseRule[] = proto.doses ?? [];
@@ -188,30 +188,43 @@ export async function POST(req: NextRequest) {
     const doseDates = calculateDoseDates(doses, birthDate, vaccineHistoryStatus);
 
     doseDates.forEach((dueDate, idx) => {
-      records.push({
-        pet_id:           petId,
-        vaccine_code:     proto.vaccine_code,
-        vaccine_name:     proto.protocol_name,
-        dose_number:      idx + 1,
-        status:           'scheduled',
-        due_at:           toISO(dueDate),
-        source:           'system_generated',
-        confidence_level: vetReviewRequired ? 'user_reported' : 'user_reported',
-        notes:            vetReviewRequired
-                            ? 'Geçmiş belirsiz — veteriner değerlendirmesi önerilir.'
-                            : null,
+      generatedSchedules.push({
+        vaccine_code: proto.vaccine_code,
+        vaccine_name: proto.protocol_name,
+        dose_number:  idx + 1,
+        series_total: doses.length,
+        due_at:       toISO(dueDate),
       });
     });
   }
 
-  if (records.length === 0) {
+  if (generatedSchedules.length === 0) {
     return NextResponse.json(
       { success: false, planCreated: false, error: 'Hesaplanacak doz bulunamadı.' },
       { status: 422 }
     );
   }
 
-  // ── DB'ye yaz ────────────────────────────────────────────────────────
+  // ── plans (tek kayıt per doz) ────────────────────────────────────────
+  const planRecords = generatedSchedules.map(schedule => ({
+    pet_id:      petId,
+    user_id:     userId,
+    category:    'asi',
+    sub_type:    schedule.vaccine_name,
+    scheduled_at: schedule.due_at,
+    status:      'active',
+    extra_data: {
+      record_type:       'vaccine_schedule',
+      vaccine_code:      schedule.vaccine_code,
+      dose_number:       schedule.dose_number,
+      series_total:      schedule.series_total,
+      confidence_level:  'estimated',
+      source:            'system_generated',
+      history_status:    vaccineHistoryStatus,
+      lifestyle,
+    },
+  }));
+
   let insertClient = supabase;
   if (authHeader === 'Bearer TEST_TOKEN') {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -219,80 +232,55 @@ export async function POST(req: NextRequest) {
     insertClient = createAdminSupabaseClient();
   }
 
-  const { data: inserted, error: insertError } = await insertClient
-    .from('vaccine_records_v2')
-    .insert(records)
-    .select('id, vaccine_code, vaccine_name, dose_number, due_at, status');
+  const { data: insertedPlans, error: planError } = await insertClient
+    .from('plans')
+    .insert(planRecords)
+    .select();
 
-  if (insertError) {
-    console.error('[setup-plan] insert error:', insertError);
-    return NextResponse.json({ error: insertError.message }, { status: 500 });
+  if (planError) {
+    console.error('[setup-plan] plans insert error:', planError.message);
+    return NextResponse.json({ success: false, error: planError.message }, { status: 500 });
   }
 
-  // ─── Her doz için plans tablosuna bildirim kayıtları oluştur ────────────
-  // T-14 ve T-7 olmak üzere her doz başına 2 plan kaydı
-  // generate_schedule_notifications RPC bunları otomatik okur
+  // ── notifications (T-14/T-7/T-2/T+0/T+1) ─────────────────────────────
+  const OFFSETS = [14, 7, 2, 0, -1]; // -1 = T+1
 
-  const planRecords: any[] = [];
-  const schedules = inserted ?? [];
-
-  for (const schedule of schedules) {
-    // Sadece 1. dozlar için bildirim kur (ara dozlar için de istersen kaldır)
-    // Tüm dozlar için bildirim istiyorsan bu filtreyi sil
-    if (schedule.dose_number !== 1) continue;
-
-    const dueDate = new Date(schedule.due_at);
-
-    // T-14: 14 gün öncesi hatırlatma
-    planRecords.push({
+  const notifRows = (insertedPlans ?? []).flatMap(plan =>
+    OFFSETS.map(offset => ({
+      profile_id:   userId,
       pet_id:       petId,
-      user_id:      userId,
-      category:     'asi',
-      sub_type:     schedule.vaccine_name,
-      scheduled_at: dueDate.toISOString(),
-      notif_before: 14,
-      notif_unit:   'day',
-      status:       'active',
+      type:         'vaccine_reminder',
+      title:        `${plan.sub_type} hatırlatması`,
+      message:      offset > 0
+                      ? `${plan.sub_type} için ${offset} gün kaldı.`
+                      : offset === 0
+                      ? `Bugün ${plan.sub_type} günü.`
+                      : `${plan.sub_type} yapıldı mı?`,
+      is_read:      false,
+      sent_email:   false,
+      open_delay_minutes: offset >= 0
+                      ? offset * 24 * 60                    // gün → dakika
+                      : Math.abs(offset) * 24 * 60,         // T+1
       extra_data: {
-        vaccine_code:      schedule.vaccine_code,
-        vaccine_record_id: schedule.id,
-        notification_type: 'vaccine_reminder_14d',
+        plan_id:              plan.id,
+        vaccine_code:         plan.extra_data?.vaccine_code,
+        notification_offset:  offset,
       },
-    });
+    }))
+  );
 
-    // T-7: 7 gün öncesi hatırlatma
-    planRecords.push({
-      pet_id:       petId,
-      user_id:      userId,
-      category:     'asi',
-      sub_type:     schedule.vaccine_name,
-      scheduled_at: dueDate.toISOString(),
-      notif_before: 7,
-      notif_unit:   'day',
-      status:       'active',
-      extra_data: {
-        vaccine_code:      schedule.vaccine_code,
-        vaccine_record_id: schedule.id,
-        notification_type: 'vaccine_reminder_7d',
-      },
-    });
-  }
+  const { error: notifError } = await insertClient
+    .from('notifications')
+    .insert(notifRows);
 
-  // plans tablosuna toplu insert
-  if (planRecords.length > 0) {
-    const { error: planError } = await insertClient
-      .from('plans')
-      .insert(planRecords);
-
-    if (planError) {
-      // Bildirim hatası plan oluşturmayı durdurmamalı — sadece logla
-      console.error('[setup-plan] plans insert error:', planError.message);
-    }
+  if (notifError) {
+    // Bildirim hatası plan oluşturmayı durdurmasın
+    console.error('[setup-plan] notifications insert error:', notifError.message);
   }
 
   // ── Response ─────────────────────────────────────────────────────────
   // Frontend özet ekranı için: sadece 1. dozları, ilk 3'ü göster
-  const nextDueVaccines = (inserted ?? [])
+  const nextDueVaccines = generatedSchedules
     .filter(r => r.dose_number === 1)
     .sort((a, b) => a.due_at.localeCompare(b.due_at))
     .slice(0, 3)
@@ -305,7 +293,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     success:            true,
     planCreated:        true,
-    generatedSchedules: inserted?.length ?? records.length,
+    generatedSchedules: planRecords.length,
     vetReviewRequired,
     nextDueVaccines,
   });
