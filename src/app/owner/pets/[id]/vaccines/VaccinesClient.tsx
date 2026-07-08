@@ -41,6 +41,7 @@ import { useRouter } from 'next/navigation';
 import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 import type { AdministrationRoute } from '@/lib/database.types';
 import { SmartScanner } from '@/components/ui/SmartScanner';
+import { VaccineEntryScreen } from '@/components/vaccines/VaccineEntryScreen';
 
 // ─── Rozet yardımcısı — komponentin dışına veya üstüne ekle ──────────────
 
@@ -1178,10 +1179,17 @@ type VaccinesClientProps = {
   pet: any
   initialPlans: any[]
   initialRecords: any[]
+  initialSetupProfile: {
+    id: string;
+    pet_id: string;
+    setup_mode: 'smart_start' | 'historical_import' | 'fresh_start';
+    created_at: string;
+  } | null;
 }
 
-export default function VaccinesClient({ pet, initialPlans, initialRecords }: VaccinesClientProps) {
+export default function VaccinesClient({ pet, initialPlans, initialRecords, initialSetupProfile }: VaccinesClientProps) {
   const router = useRouter();
+  const [setupProfile, setSetupProfile] = useState(initialSetupProfile);
   const [activeTab, setActiveTab] = useState<'takvim' | 'kayitlar'>('takvim');
   const [showManualModal, setShowManualModal] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -1221,6 +1229,12 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
     nextDueVaccines: Array<{ code: string; displayName: string; dueDate: string }>;
   } | null>(null);
   const [setupError, setSetupError] = useState<string | null>(null);
+
+  // Yönlendirme ekranı gösterilecek mi?
+  const showEntryScreen =
+    !setupProfile &&
+    initialPlans.length === 0 &&
+    initialRecords.length === 0;
 
   const hasBirthDate = pet.birth_date && pet.birth_date_precision && pet.birth_date_precision !== 'unknown';
 
@@ -1379,15 +1393,58 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
             <p className="text-[14px] text-text-secondary font-medium">{pet.name} için aşı geçmişi ve takvimi</p>
           </div>
         </div>
-        <button 
-          onClick={() => setShowManualModal(true)}
-          className="btn-primary min-h-[50px] flex items-center justify-center px-4 text-[13px] font-bold shadow-sm"
-        >
-          Manuel İşlem
-        </button>
+        {!showEntryScreen && (
+          <button 
+            onClick={() => setShowManualModal(true)}
+            className="btn-primary min-h-[50px] flex items-center justify-center px-4 text-[13px] font-bold shadow-sm"
+          >
+            Manuel İşlem
+          </button>
+        )}
       </div>
 
-      {showBirthDatePrompt && (
+      {errorMsg && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600 font-medium">
+          {errorMsg}
+        </div>
+      )}
+
+      {showEntryScreen ? (
+        <VaccineEntryScreen
+          petId={pet.id}
+          petName={pet.name}
+          onSelect={async (mode) => {
+            setErrorMsg('');
+            try {
+              const res = await fetch(`/api/pets/${pet.id}/vaccine-setup-profile`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ setup_mode: mode }),
+              });
+              if (!res.ok) {
+                const data = await res.json();
+                setErrorMsg(data.error || 'Kurulum seçeneği kaydedilemedi.');
+                return;
+              }
+              const savedProfile = await res.json();
+              setSetupProfile(savedProfile);
+
+              // Mode'a göre aksiyon
+              if (mode === 'smart_start') {
+                setShowWizard(true);
+              } else if (mode === 'historical_import') {
+                setScannerOpen(true);
+              } else {
+                setShowManualModal(true);
+              }
+            } catch (err: any) {
+              setErrorMsg('Bağlantı hatası: ' + err.message);
+            }
+          }}
+        />
+      ) : (
+        <>
+          {showBirthDatePrompt && (
         <div className="rounded-xl border border-amber-250 bg-amber-50/50 p-4.5 space-y-3">
           <p className="font-bold text-amber-900 text-[14px]">Doğum Tarihi Gerekiyor</p>
           <p className="text-[13px] text-amber-800 font-500 leading-normal">
@@ -1808,6 +1865,8 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords }: Va
             )}
           </div>
         </>
+      )}
+      </>
       )}
 
       {flow.showRecordSheet && (

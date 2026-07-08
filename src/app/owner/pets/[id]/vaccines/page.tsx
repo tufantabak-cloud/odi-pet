@@ -55,11 +55,19 @@ export default async function PetVaccinesPage(props: PageProps) {
     .neq('status', 'migrated_to_plan')
     .order('administered_at', { ascending: false })
 
+  // Fetch setup profile
+  const { data: setupProfile } = await supabase
+    .from('vaccine_setup_profiles')
+    .select('*')
+    .eq('pet_id', id)
+    .maybeSingle()
+
   return (
     <VaccinesClient 
       pet={pet} 
       initialPlans={plans || []} 
       initialRecords={records || []} 
+      initialSetupProfile={setupProfile ?? null}
     />
   )
 }
