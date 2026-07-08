@@ -469,14 +469,11 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
       })
     }
 
-    const activePet = pets.find(p => p.id === activePetId)
-    dashboardMicroTasks = activePet
+    dashboardMicroTasks = targetPet
       ? buildPetMicroTasks({
-          pet:          activePet,
-          vaccinePlans: upcomingSchedules?.filter(
-            s => s.category === 'asi' || s.extra_data?.record_type === 'vaccine_schedule'
-          ) ?? [],
-          parasitePlans: [], // Dashboard'da yok — kart üretilmez
+          pet:          targetPet,
+          vaccinePlans: null, // Dashboard'da sorgulanmıyor — false positive engellemek için null
+          parasitePlans: null, // Dashboard'da sorgulanmıyor — false positive engellemek için null
           latestWeight:  allWeightLogs?.find(w => w.pet_id === activePetId) ?? null,
           nutritionProfile: null, // Dashboard'da yok — kart üretilmez
         }).filter(t =>

@@ -1,6 +1,6 @@
 export interface PetMicroTask {
   id: string;
-  type: 'missing_birth_date' | 'missing_photo' | 'missing_vaccine_plan' | 'missing_parasite_plan' | 'missing_weight' | 'missing_emergency_contact' | 'missing_nutrition' | 'missing_neutered';
+  type: 'missing_birth_date' | 'missing_vaccine_plan' | 'missing_parasite_plan' | 'missing_weight' | 'missing_emergency_contact' | 'missing_nutrition' | 'missing_photo' | 'missing_neutered';
   title: string;
   description: string;
   actionText: string;
@@ -19,8 +19,8 @@ interface BuildMicroTasksArgs {
     birth_date?: string | null;
     birth_date_precision?: string | null;
   };
-  vaccinePlans: any[];
-  parasitePlans: any[];
+  vaccinePlans: any[] | null;
+  parasitePlans: any[] | null;
   latestWeight?: { weight_kg?: number | null } | null;
   nutritionProfile?: any | null;
 }
@@ -48,7 +48,7 @@ export function buildPetMicroTasks({
   }
 
   // 2. Aşı Planı Eksikliği
-  if (!vaccinePlans || vaccinePlans.length === 0) {
+  if (vaccinePlans !== null && vaccinePlans.length === 0) {
     tasks.push({
       id: `missing_vaccine_plan_${pet.id}`,
       type: 'missing_vaccine_plan',
@@ -61,7 +61,7 @@ export function buildPetMicroTasks({
   }
 
   // 3. Parazit Planı Eksikliği
-  if (!parasitePlans || parasitePlans.length === 0) {
+  if (parasitePlans !== null && parasitePlans.length === 0) {
     tasks.push({
       id: `missing_parasite_plan_${pet.id}`,
       type: 'missing_parasite_plan',
@@ -87,7 +87,10 @@ export function buildPetMicroTasks({
   }
 
   // 5. Acil Durum Kişisi Eksikliği
-  if (!pet.sos_contacts || !Array.isArray(pet.sos_contacts) || pet.sos_contacts.length === 0) {
+  const hasValidContact = Array.isArray(pet.sos_contacts) && 
+    pet.sos_contacts.some(c => c && typeof c.name === 'string' && c.name.trim() && typeof c.phone === 'string' && c.phone.trim());
+
+  if (!hasValidContact) {
     tasks.push({
       id: `missing_emergency_contact_${pet.id}`,
       type: 'missing_emergency_contact',
@@ -140,3 +143,4 @@ export function buildPetMicroTasks({
 
   return tasks;
 }
+
