@@ -7,9 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run",
+    "test": "playwright test tests/ux-persona-flow.spec.ts",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "test:ux": "playwright test tests/ux-persona-flow.spec.ts --headed",
+    "test:ux:report": "playwright show-report",
     "test:all": "npm run test && npm run test:e2e"
   },
   "dependencies": {

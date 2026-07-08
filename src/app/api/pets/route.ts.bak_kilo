@@ -1,0 +1,203 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { getSessionUser } from '@/lib/auth/get-current-profile'
+import { revalidatePath, revalidateTag } from 'next/cache'
+import { generateVaccinationPlan } from '@/features/pets/vaccination-algorithm'
+import { logOnboardingEvent } from '@/lib/agents/dataQualityAgent'
+
+function str(fd: FormData, key: string): string | null {
+  const v = fd.get(key) as string | null
+  return v?.trim() || null
+}
+
+export async function GET(req: NextRequest) {
+  const user = await getSessionUser()
+  if (!user) {
+    return NextResponse.json({ error: 'Oturum açmanız gerekiyor.' }, { status: 401 })
+  }
+
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase
+    .from('pets')
+    .select('id, name, sos_contacts')
+    .eq('owner_id', user.id)
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  return NextResponse.json({ pets: data })
+}
+
+export async function POST(req: NextRequest) {
+  const user = await getSessionUser()
+  if (!user) {
+    console.error('[API/Pets] No session user — 401')
+    return NextResponse.json({ error: 'Oturum açmanız gerekiyor. Lütfen tekrar giriş yapın.' }, { status: 401 })
+  }
+
+  const fd = await req.formData()
+  const supabase = await createServerSupabaseClient()
+
+  // Diagnostic Log
+  console.log('[API/Pets/POST] FormData keys:', Array.from(fd.keys()))
+  console.log('[API/Pets/POST] species field:', fd.get('species'), 'type:', typeof fd.get('species'))
+
+  // ─── Profiles kaydının var olduğundan emin ol ─────────────────
+  await supabase
+    .from('profiles')
+    .upsert({ id: user.id }, { onConflict: 'id', ignoreDuplicates: true })
+
+  const species = str(fd, 'species')
+  if (!species || !['cat', 'dog'].includes(species)) {
+    console.error('[API/Pets/POST] Rejected due to invalid species:', species)
+    await logOnboardingEvent(user.id, 'pet_species_selected', 'validation_rejected', { error: `Geçersiz tür: ${species}` })
+    return NextResponse.json({ error: `Geçersiz tür: ${species || 'belirtilmemiş'}.` }, { status: 400 })
+  }
+  await logOnboardingEvent(user.id, 'pet_species_selected')
+
+  const name = str(fd, 'name')
+  if (!name) {
+    await logOnboardingEvent(user.id, 'pet_name_entered', 'validation_rejected', { error: 'İsim eksik' })
+    return NextResponse.json({ error: 'Can dostunun adı belirtilmelidir.' }, { status: 400 })
+  }
+  await logOnboardingEvent(user.id, 'pet_name_entered')
+
+  const breed = str(fd, 'breed')
+  if (!breed) return NextResponse.json({ error: 'Irk seçimi zorunludur.' }, { status: 400 })
+
+  // ─── Avatar Yükleme (opsiyonel) ────────────────────────────────
+  let avatarUrl: string | null = null
+  const avatarFile = fd.get('avatar') as File | null
+
+  if (avatarFile && avatarFile.size > 0) {
+    const ext = avatarFile.name.split('.').pop() || 'jpg'
+    const path = `${user.id}/${Date.now()}.${ext}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('pet-avatars')
+      .upload(path, avatarFile, { contentType: avatarFile.type, upsert: false })
+
+    if (uploadError) {
+      console.error('[API/Pets] Avatar upload error:', uploadError)
+      // Fotoğraf hatası kaydı durdurmaz — devam et
+    } else {
+      const { data: urlData } = supabase.storage
+        .from('pet-avatars')
+        .getPublicUrl(path)
+      avatarUrl = urlData.publicUrl
+    }
+  }
+
+  const payload = {
+    owner_id:      user.id,
+    name,
+    species,
+    breed,
+    avatar_url:    avatarUrl,
+    birth_date:    str(fd, 'birth_date') || null,
+    gender:        str(fd, 'gender')     || null,
+    color:         str(fd, 'color')      || null,
+    microchip_no:  str(fd, 'microchip_no')  || null,
+    passport_no:   str(fd, 'passport_no')   || null,
+    tattoo_no:     str(fd, 'tattoo_no')     || null,
+    pedigree_sire: str(fd, 'pedigree_sire') || null,
+    pedigree_dam:  str(fd, 'pedigree_dam')  || null,
+    vet_name:      str(fd, 'vet_name')      || null,
+    vet_phone:     str(fd, 'vet_phone')     || null,
+    city:          str(fd, 'city')          || null,
+    district:      str(fd, 'district')      || null,
+    is_neutered:   str(fd, 'is_neutered') === 'true',
+    lifestyle:     str(fd, 'lifestyle')     || null,
+  }
+
+
+
+  const { data, error } = await supabase
+    .from('pets')
+    .insert(payload)
+    .select('id, name')
+    .single()
+
+  if (error) {
+    console.error('[API/Pets] INSERT error:', JSON.stringify(error))
+    return NextResponse.json(
+      { error: `Kayıt hatası: ${(error as any)?.message || (error instanceof Error ? error.message : String(error))} (kodu: ${(error as any)?.code || 'Bilinmiyor'})` },
+      { status: 500 }
+    )
+  }
+
+
+
+  // ─── Add Owner to pet_owners table ───────────────────────────
+  await supabase
+    .from('pet_owners')
+    .insert({ pet_id: data.id, profile_id: user.id, role: 'owner' })
+
+  // ─── Katman 1: İlk Kilo Kaydının Alınması ──────────────────────
+  const weightVal = str(fd, 'weight')
+  if (weightVal && !isNaN(parseFloat(weightVal))) {
+    const { error: weightError } = await supabase
+      .from('weight_logs')
+      .insert({ 
+        pet_id: data.id, 
+        weight_kg: parseFloat(weightVal), 
+        measured_at: new Date().toISOString()
+      })
+    if (weightError) console.error('[API/Pets] Weight log error:', weightError)
+  }
+
+  // ─── Generate Vaccination Plan (Sadece Yavrular İçin) ─────────
+  const birthDate = str(fd, 'birth_date')
+  if (birthDate) {
+    const born = new Date(birthDate)
+    const now = new Date()
+    const ageInMonths = (now.getFullYear() - born.getFullYear()) * 12 + (now.getMonth() - born.getMonth())
+    
+    // Sadece 6 aydan küçük yavrular için otomatik plan üret
+    if (ageInMonths < 6) {
+      const isOutdoor = str(fd, 'lifestyle') === 'outdoor'
+      const generatedTasks = await generateVaccinationPlan(birthDate, species, supabase, { isOutdoor })
+      if (generatedTasks.length > 0) {
+      const plansPayload = generatedTasks.map(t => ({
+        user_id: user.id,
+        pet_id: data.id,
+        category: t.category,
+        sub_type: t.sub_type,
+        scheduled_at: t.scheduled_at,
+        extra_data: t.extra_data
+      }))
+      
+      const { error: planError } = await supabase
+        .from('plans')
+        .insert(plansPayload)
+      
+      if (planError) console.error('[API/Pets] Plan generation error:', planError)
+      }
+    }
+  }
+
+  // ─── Otomatik Kilo & Boy Hatırlatıcısı (1 ay sonrası) ──────────────
+  const nextMonth = new Date();
+  nextMonth.setMonth(nextMonth.getMonth() + 1);
+  
+  const { error: autoPlanError } = await supabase
+    .from('plans')
+    .insert({
+      user_id: user.id,
+      pet_id: data.id,
+      category: 'saglik',
+      sub_type: 'Kilo & Boy Ölçümü',
+      scheduled_at: nextMonth.toISOString(),
+      status: 'active',
+      extra_data: { source: 'system', auto_generated: true }
+    });
+  
+  if (autoPlanError) console.error('[API/Pets] Auto plan error:', autoPlanError);
+
+  revalidatePath('/owner/dashboard')
+  // @ts-expect-error
+    revalidateTag('dashboard')
+  revalidatePath('/owner/pets')
+  return NextResponse.json({ success: true, pet: data })
+}

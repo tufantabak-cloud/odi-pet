@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
   const authHeader = req.headers.get('Authorization');
   let userId = null;
   if (authHeader === 'Bearer TEST_TOKEN') {
-    userId = 'test-user-id';
+    userId = 'a58dab4d-be95-4ed1-beca-75e79177548a';
   } else {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
@@ -227,6 +227,67 @@ export async function POST(req: NextRequest) {
   if (insertError) {
     console.error('[setup-plan] insert error:', insertError);
     return NextResponse.json({ error: insertError.message }, { status: 500 });
+  }
+
+  // ─── Her doz için plans tablosuna bildirim kayıtları oluştur ────────────
+  // T-14 ve T-7 olmak üzere her doz başına 2 plan kaydı
+  // generate_schedule_notifications RPC bunları otomatik okur
+
+  const planRecords: any[] = [];
+  const schedules = inserted ?? [];
+
+  for (const schedule of schedules) {
+    // Sadece 1. dozlar için bildirim kur (ara dozlar için de istersen kaldır)
+    // Tüm dozlar için bildirim istiyorsan bu filtreyi sil
+    if (schedule.dose_number !== 1) continue;
+
+    const dueDate = new Date(schedule.due_at);
+
+    // T-14: 14 gün öncesi hatırlatma
+    planRecords.push({
+      pet_id:       petId,
+      user_id:      userId,
+      category:     'asi',
+      sub_type:     schedule.vaccine_name,
+      scheduled_at: dueDate.toISOString(),
+      notif_before: 14,
+      notif_unit:   'day',
+      status:       'active',
+      extra_data: {
+        vaccine_code:      schedule.vaccine_code,
+        vaccine_record_id: schedule.id,
+        notification_type: 'vaccine_reminder_14d',
+      },
+    });
+
+    // T-7: 7 gün öncesi hatırlatma
+    planRecords.push({
+      pet_id:       petId,
+      user_id:      userId,
+      category:     'asi',
+      sub_type:     schedule.vaccine_name,
+      scheduled_at: dueDate.toISOString(),
+      notif_before: 7,
+      notif_unit:   'day',
+      status:       'active',
+      extra_data: {
+        vaccine_code:      schedule.vaccine_code,
+        vaccine_record_id: schedule.id,
+        notification_type: 'vaccine_reminder_7d',
+      },
+    });
+  }
+
+  // plans tablosuna toplu insert
+  if (planRecords.length > 0) {
+    const { error: planError } = await insertClient
+      .from('plans')
+      .insert(planRecords);
+
+    if (planError) {
+      // Bildirim hatası plan oluşturmayı durdurmamalı — sadece logla
+      console.error('[setup-plan] plans insert error:', planError.message);
+    }
   }
 
   // ── Response ─────────────────────────────────────────────────────────
