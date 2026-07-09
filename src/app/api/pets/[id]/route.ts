@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { revalidatePath, revalidateTag } from 'next/cache'
 import { generateVaccinationPlan } from '@/features/pets/vaccination-algorithm'
+import { createVaccineNotifications } from '@/lib/notifications/createVaccineNotifications'
 import { Database } from '@/lib/database.types'
 
 type PetUpdate = Database['public']['Tables']['pets']['Update']
@@ -168,36 +169,18 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
           console.error('[PATCH pet] plans insert error:', insertErr.message);
         } else {
           console.log('[PATCH pet] plans inserted successfully. count:', plansPayload.length);
-          
-          // Generate notifications
-          const OFFSETS = [14, 7, 2, 0, -1];
-          const notifRows = (insertedPlans ?? []).flatMap(plan =>
-            OFFSETS.map(offset => ({
-              profile_id: user.id,
-              pet_id: id,
-              type: 'vaccine_reminder',
-              title: `${plan.sub_type} hatırlatması`,
-              message: offset > 0
-                ? `${plan.sub_type} için ${offset} gün kaldı.`
-                : offset === 0
-                ? `Bugün ${plan.sub_type} günü.`
-                : `${plan.sub_type} yapıldı mı?`,
-              is_read: false,
-              sent_email: false,
-              open_delay_minutes: offset >= 0
-                ? offset * 24 * 60
-                : Math.abs(offset) * 24 * 60,
-            }))
+
+          const { count: notifCount, error: notifError } = await createVaccineNotifications(
+            user.id,
+            id,
+            insertedPlans ?? [],
+            supabase
           );
 
-          const { error: notifError } = await supabase
-            .from('notifications')
-            .insert(notifRows);
-
           if (notifError) {
-            console.error('[PATCH pet] notifications insert error:', notifError.message);
+            console.error('[PATCH pet] notifications insert error:', notifError);
           } else {
-            console.log('[PATCH pet] notifications inserted successfully. count:', notifRows.length);
+            console.log('[PATCH pet] notifications inserted successfully. count:', notifCount);
           }
         }
       }

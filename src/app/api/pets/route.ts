@@ -4,6 +4,7 @@ import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { revalidatePath, revalidateTag } from 'next/cache'
 import { generateVaccinationPlan } from '@/features/pets/vaccination-algorithm'
 import { logOnboardingEvent } from '@/lib/agents/dataQualityAgent'
+import { createVaccineNotifications } from '@/lib/notifications/createVaccineNotifications'
 
 function str(fd: FormData, key: string): string | null {
   const v = fd.get(key) as string | null
@@ -167,12 +168,24 @@ export async function POST(req: NextRequest) {
         scheduled_at: t.scheduled_at,
         extra_data: t.extra_data
       }))
-      
-      const { error: planError } = await supabase
+
+      const { data: insertedPlans, error: planError } = await supabase
         .from('plans')
         .insert(plansPayload)
-      
-      if (planError) console.error('[API/Pets] Plan generation error:', planError)
+        .select()
+
+      if (planError) {
+        console.error('[API/Pets] Plan generation error:', planError)
+      } else {
+        const { count: notifCount, error: notifError } = await createVaccineNotifications(
+          user.id,
+          data.id,
+          insertedPlans ?? [],
+          supabase
+        )
+        if (notifError) console.error('[API/Pets] Notifications insert error:', notifError)
+        else console.log('[API/Pets] Notifications inserted successfully. count:', notifCount)
+      }
       }
     }
   }
