@@ -143,19 +143,63 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     const born = new Date(newBirthDate)
     const now = new Date()
     const ageInMonths = (now.getFullYear() - born.getFullYear()) * 12 + (now.getMonth() - born.getMonth())
-
+    console.log('[PATCH pet] birth_date changed. newBirthDate:', newBirthDate, 'ageInMonths:', ageInMonths);
     if (ageInMonths < 6) {
       const generatedTasks = await generateVaccinationPlan(newBirthDate, pet.species, supabase)
+      console.log('[PATCH pet] generatedTasks count:', generatedTasks.length);
       if (generatedTasks.length > 0) {
-      const plansPayload = generatedTasks.map(t => ({
-        user_id: user.id,
-        pet_id: id,
-        category: t.category,
-        sub_type: t.sub_type,
-        scheduled_at: t.scheduled_at,
-        extra_data: t.extra_data
-      }))
-      await supabase.from('plans').insert(plansPayload)
+        const plansPayload = generatedTasks.map(t => ({
+          user_id: user.id,
+          pet_id: id,
+          category: t.category,
+          sub_type: t.sub_type,
+          scheduled_at: t.scheduled_at,
+          extra_data: {
+            ...t.extra_data,
+            record_type: 'vaccine_schedule'
+          }
+        }))
+        const { data: insertedPlans, error: insertErr } = await supabase
+          .from('plans')
+          .insert(plansPayload)
+          .select()
+
+        if (insertErr) {
+          console.error('[PATCH pet] plans insert error:', insertErr.message);
+        } else {
+          console.log('[PATCH pet] plans inserted successfully. count:', plansPayload.length);
+          
+          // Generate notifications
+          const OFFSETS = [14, 7, 2, 0, -1];
+          const notifRows = (insertedPlans ?? []).flatMap(plan =>
+            OFFSETS.map(offset => ({
+              profile_id: user.id,
+              pet_id: id,
+              type: 'vaccine_reminder',
+              title: `${plan.sub_type} hatırlatması`,
+              message: offset > 0
+                ? `${plan.sub_type} için ${offset} gün kaldı.`
+                : offset === 0
+                ? `Bugün ${plan.sub_type} günü.`
+                : `${plan.sub_type} yapıldı mı?`,
+              is_read: false,
+              sent_email: false,
+              open_delay_minutes: offset >= 0
+                ? offset * 24 * 60
+                : Math.abs(offset) * 24 * 60,
+            }))
+          );
+
+          const { error: notifError } = await supabase
+            .from('notifications')
+            .insert(notifRows);
+
+          if (notifError) {
+            console.error('[PATCH pet] notifications insert error:', notifError.message);
+          } else {
+            console.log('[PATCH pet] notifications inserted successfully. count:', notifRows.length);
+          }
+        }
       }
     }
   }

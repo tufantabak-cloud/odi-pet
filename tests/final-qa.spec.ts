@@ -44,6 +44,16 @@ test.describe('Vaccination Module Final QA Suite', () => {
     test.setTimeout(120000);
     await page.setViewportSize({ width: 375, height: 812 });
 
+    // Console and Network logging
+    page.on('console', msg => console.log('BROWSER LOG:', msg.text()));
+    page.on('pageerror', err => console.error('BROWSER ERROR:', err.message));
+    page.on('requestfailed', request => console.log('REQUEST FAILED:', request.url(), request.failure()?.errorText));
+    page.on('response', response => {
+      if (response.status() >= 400) {
+        console.log('BAD RESPONSE:', response.status(), response.url());
+      }
+    });
+
     // Session Setup
     await page.goto('http://localhost:3000/login');
     const sessionStr = JSON.stringify(sessionData);
@@ -122,31 +132,33 @@ test.describe('Vaccination Module Final QA Suite', () => {
 
     // Wizard step 1: Doğum Tarihi
     console.log("Wizard Step 1: Enter birth date...");
-    await page.locator('input[type="date"]').fill('2026-01-08');
+    await page.locator('input[type="date"]').fill('2026-03-08');
     await page.locator('button:has-text("İleri")').click();
 
     // Wizard step 2: Aşı Geçmişi -> "Hiç aşı yapılmadı"
     console.log("Wizard Step 2: Select history...");
-    await page.locator('text=Hiç aşı yapılmadı').click();
+    await page.locator('button:has-text("Hiç aşı yapılmadı")').click();
     await page.locator('button:has-text("İleri")').click();
 
     // Wizard step 3: Karne Belgesi -> "Hiçbir belge yok"
     console.log("Wizard Step 3: Select document...");
-    await page.locator('text=Hiçbir belge yok').click();
+    await page.locator('button:has-text("Hiçbir belge yok")').click();
     await page.locator('button:has-text("İleri")').click();
 
     // Wizard step 4: Yaşam Biçimi -> "Ev / Şehir İçi Parklar"
     console.log("Wizard Step 4: Select lifestyle...");
-    await page.locator('text=Ev / Şehir İçi Parklar').click();
+    await page.locator('button:has-text("Ev / Şehir İçi Parklar")').click();
     await page.locator('button:has-text("İleri")').click();
 
     // Wizard step 5: Kullanım Tercihi -> "Otomatik Takvim"
     console.log("Wizard Step 5: Select preference...");
-    await page.locator('text=Otomatik Takvim').click();
+    await page.locator('button:has-text("Otomatik Takvim")').click();
 
     // Complete setup
     console.log("Completing setup...");
-    await page.locator('button:has-text("Planı Tamamla")').click();
+    const submitBtn = page.locator('button:has-text("Planı Tamamla")');
+    await expect(submitBtn).toBeEnabled();
+    await submitBtn.click();
     
     // Wait for page refresh/wizard to close
     await expect(page.locator('text=Aşı Planı Kurulumu')).not.toBeVisible({ timeout: 20000 });
@@ -154,6 +166,39 @@ test.describe('Vaccination Module Final QA Suite', () => {
     // ─── Step 3: Database Verification ────────────────────────────────
     console.log("Verifying Database counts...");
     
+    // Fetch pet row to verify update
+    const ptRes = await fetch(`${supabaseUrl}/rest/v1/pets?id=eq.${testPetId}`, {
+      headers: {
+        'apikey': supabaseAnonKey,
+        'Authorization': `Bearer ${sessionData.access_token}`
+      }
+    });
+    const ptData = await ptRes.json();
+    console.log("PET IN DB AFTER PATCH:", JSON.stringify(ptData, null, 2));
+
+    // Wait a brief moment for database writes to propagate
+    await page.waitForTimeout(3000);
+
+    let generatedPlans: any[] = [];
+    // Retry database query up to 5 times
+    for (let attempt = 1; attempt <= 5; attempt++) {
+      const plRes = await fetch(`${supabaseUrl}/rest/v1/plans?pet_id=eq.${testPetId}`, {
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${sessionData.access_token}`
+        }
+      });
+      generatedPlans = await plRes.json();
+      if (generatedPlans && generatedPlans.length > 0) {
+        break;
+      }
+      console.log(`Plans not found in DB yet, retrying in 2s (Attempt ${attempt}/5)...`);
+      await page.waitForTimeout(2000);
+    }
+
+    console.log(`Generated ${generatedPlans?.length} plans.`);
+    expect(generatedPlans && generatedPlans.length).toBeGreaterThan(0);
+
     // Fetch vaccine_records_v2
     const vrRes = await fetch(`${supabaseUrl}/rest/v1/vaccine_records_v2?pet_id=eq.${testPetId}`, {
       headers: {
@@ -165,17 +210,6 @@ test.describe('Vaccination Module Final QA Suite', () => {
     const recordCount = vrData.length;
     console.log("vaccine_records_v2 count (expected 0):", recordCount);
     expect(recordCount).toBe(0);
-
-    // Fetch plans
-    const plRes = await fetch(`${supabaseUrl}/rest/v1/plans?pet_id=eq.${testPetId}`, {
-      headers: {
-        'apikey': supabaseAnonKey,
-        'Authorization': `Bearer ${sessionData.access_token}`
-      }
-    });
-    const generatedPlans = await plRes.json();
-    console.log(`Generated ${generatedPlans?.length} plans.`);
-    expect(generatedPlans && generatedPlans.length).toBeGreaterThan(0);
 
     // Fetch notifications
     const ntRes = await fetch(`${supabaseUrl}/rest/v1/notifications?pet_id=eq.${testPetId}`, {
@@ -203,23 +237,27 @@ test.describe('Vaccination Module Final QA Suite', () => {
     }
 
     // Since setupProfile already exists, we will just delete setupProfile to simulate another complete setup run
-    await fetch(`${supabaseUrl}/rest/v1/vaccine_setup_profiles?pet_id=eq.${testPetId}`, {
+    const delRes = await fetch(`${supabaseUrl}/rest/v1/vaccine_setup_profiles?pet_id=eq.${testPetId}`, {
       method: 'DELETE',
       headers: {
         'apikey': supabaseAnonKey,
         'Authorization': `Bearer ${sessionData.access_token}`
       }
     });
+    console.log("DELETE RESPONSE:", delRes.status, await delRes.text());
     await page.goto(`http://localhost:3000/owner/pets/${testPetId}/vaccines`);
     await page.waitForLoadState('networkidle');
     await page.locator('[data-testid="vaccine-entry-smart-start-button"]').click();
-    await page.locator('text=Hiç aşı yapılmadı').click();
+    const dateInput2 = page.locator('input[type="date"]');
+    await dateInput2.waitFor({ state: 'visible', timeout: 5000 });
     await page.locator('button:has-text("İleri")').click();
-    await page.locator('text=Hiçbir belge yok').click();
+    await page.locator('button:has-text("Hiç aşı yapılmadı")').click();
     await page.locator('button:has-text("İleri")').click();
-    await page.locator('text=Ev / Şehir İçi Parklar').click();
+    await page.locator('button:has-text("Hiçbir belge yok")').click();
     await page.locator('button:has-text("İleri")').click();
-    await page.locator('text=Otomatik Takvim').click();
+    await page.locator('button:has-text("Ev / Şehir İçi Parklar")').click();
+    await page.locator('button:has-text("İleri")').click();
+    await page.locator('button:has-text("Otomatik Takvim")').click();
     await page.locator('button:has-text("Planı Tamamla")').click();
     await expect(page.locator('text=Aşı Planı Kurulumu')).not.toBeVisible({ timeout: 20000 });
 

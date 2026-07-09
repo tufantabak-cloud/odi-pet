@@ -261,11 +261,6 @@ export async function POST(req: NextRequest) {
       open_delay_minutes: offset >= 0
                       ? offset * 24 * 60                    // gün → dakika
                       : Math.abs(offset) * 24 * 60,         // T+1
-      extra_data: {
-        plan_id:              plan.id,
-        vaccine_code:         plan.extra_data?.vaccine_code,
-        notification_offset:  offset,
-      },
     }))
   );
 

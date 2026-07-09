@@ -373,39 +373,46 @@ export async function generateVaccinationPlan(
   const ageInDays = Math.floor((now.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24));
   const isAdult = ageInDays >= 365;
 
-  // vaccine_brands tablosundan is_live_vaccine ve administration_route JOIN ile çekilir
+  // Query vaccine_protocols instead of dropped vaccine_templates
   let query = supabase
-    .from('vaccine_templates')
-    .select(`
-      vaccine_code,
-      vaccine_name,
-      category,
-      species,
-      is_active,
-      mandatory_level,
-      first_dose_week,
-      dose_count,
-      recurrence_days,
-      has_annual_booster,
-      vaccine_brands (
-        is_live_vaccine,
-        administration_route
-      )
-    `)
+    .from('vaccine_protocols')
+    .select('*')
     .eq('is_active', true)
-    .eq('species', species);
+    .in('species', [species, 'both']);
 
-  if (species === 'cat' && options?.isOutdoor) {
-    query = query.or('mandatory_level.eq.core,vaccine_code.eq.CAT_FELV');
-  } else {
-    query = query.eq('mandatory_level', 'core');
-  }
-
-  const { data: templates, error } = await query;
-  if (error || !templates) {
+  const { data: protocols, error } = await query;
+  if (error || !protocols) {
     console.error('[vaccination-algorithm] Fetch error:', error);
     return [];
   }
+
+  // Map vaccine_protocols schema to VaccineTemplate compatible structure
+  const templates = protocols.map((p: any) => {
+    const doses = p.doses || [];
+    const firstBirthDose = doses.find((d: any) => d.trigger === 'birth');
+    const firstDoseWeek = firstBirthDose ? Math.round(firstBirthDose.days_offset / 7) : 8;
+    return {
+      vaccine_code: p.vaccine_code,
+      vaccine_name: p.protocol_name,
+      category: p.category || 'vaccine',
+      species: p.species,
+      is_active: p.is_active,
+      is_core: p.is_core,
+      first_dose_week: firstDoseWeek,
+      dose_count: doses.length || 1,
+      recurrence_days: p.repeat_interval_days || 21,
+      has_annual_booster: p.repeat_frequency === 'yearly',
+      vaccine_brands: {
+        is_live_vaccine: false,
+        administration_route: 'parenteral_sc'
+      }
+    };
+  }).filter((t: any) => {
+    if (species === 'cat' && options?.isOutdoor) {
+      return t.is_core || t.vaccine_code === 'CAT_FELV';
+    }
+    return t.is_core;
+  });
 
   // existingRecords ve lastRecordMap hazırlanması
   let existingRecords: { vaccine_code: string; status: string }[] = [];
