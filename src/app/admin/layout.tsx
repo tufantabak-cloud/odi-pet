@@ -58,6 +58,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Link href="/admin/ai-vet" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
               <span>🤖</span> AI-Vet Analiz
             </Link>
+            <Link href="/admin/vaccines" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
+              <span>💉</span> Aşı Protokolleri
+            </Link>
+            <Link href="/admin/parasite-products" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
+              <span>🦟</span> Parazit Ürünleri
+            </Link>
 
           </div>
 
