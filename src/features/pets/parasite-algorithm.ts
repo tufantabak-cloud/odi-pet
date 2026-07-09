@@ -104,66 +104,6 @@ export function calculateParasiteInterval(
 }
 
 /**
- * P4: Yavru için tam protokol planı üret.
- * İlk uygulama 15. günden önce yapılmamalı.
- */
-export function generateJuvenileParasitePlan(
-  petBirthDate: string,
-  species: 'dog' | 'cat',
-  planStartDate: string
-): Array<{
-  dose_number: number;
-  recommended_start: string;
-  recommended_end: string;
-  parasite_type: 'internal';
-  plan_origin: 'system_rule';
-  extra_data: { phase: string; interval_days: number };
-}> {
-  const birth = new Date(petBirthDate);
-  const start = new Date(planStartDate);
-  const MIN_START_DAYS = 15;
-
-  // Minimum başlangıç tarihi kontrolü
-  const minStartDate = new Date(birth);
-  minStartDate.setDate(minStartDate.getDate() + MIN_START_DAYS);
-  const actualStart = start < minStartDate ? minStartDate : start;
-
-  const plans = [];
-  let currentDate = actualStart;
-  let doseNumber = 1;
-
-  // 6 aya (180 gün) kadar plan oluştur
-  const sixMonthsFromBirth = new Date(birth);
-  sixMonthsFromBirth.setDate(sixMonthsFromBirth.getDate() + 180);
-
-  while (currentDate < sixMonthsFromBirth) {
-    const ageInDays = Math.floor(
-      (currentDate.getTime() - birth.getTime()) / (1000 * 60 * 60 * 24)
-    );
-
-    const { intervalDays, phase } = calculateParasiteInterval(
-      ageInDays, currentDate.toISOString(), species, 'outdoor', 'exact'
-    );
-
-    const endDate = addDays(currentDate.toISOString(), 7); // 1 haftalık pencere
-
-    plans.push({
-      dose_number: doseNumber,
-      recommended_start: currentDate.toISOString().split('T')[0],
-      recommended_end: endDate.split('T')[0],
-      parasite_type: 'internal' as const,
-      plan_origin: 'system_rule' as const,
-      extra_data: { phase, interval_days: intervalDays },
-    });
-
-    currentDate = new Date(addDays(currentDate.toISOString(), intervalDays));
-    doseNumber++;
-  }
-
-  return plans;
-}
-
-/**
  * P5: Ürünün kapsadığı parazit tiplerini döner.
  * active_ingredient üzerinden iç/dış/kombine belirlenir.
  */
