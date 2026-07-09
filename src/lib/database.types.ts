@@ -3830,7 +3830,7 @@ export type Database = {
       vaccine_records_v2: {
         Row: {
           administered_at: string | null
-          confidence_level: string
+          confidence_level: 'verified' | 'user_reported' | 'estimated'
           created_at: string | null
           dose_number: number | null
           due_at: string | null
@@ -3847,7 +3847,7 @@ export type Database = {
         }
         Insert: {
           administered_at?: string | null
-          confidence_level?: string
+          confidence_level?: 'verified' | 'user_reported' | 'estimated'
           created_at?: string | null
           dose_number?: number | null
           due_at?: string | null
@@ -3864,7 +3864,7 @@ export type Database = {
         }
         Update: {
           administered_at?: string | null
-          confidence_level?: string
+          confidence_level?: 'verified' | 'user_reported' | 'estimated'
           created_at?: string | null
           dose_number?: number | null
           due_at?: string | null

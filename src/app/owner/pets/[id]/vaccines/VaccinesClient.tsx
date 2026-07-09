@@ -58,10 +58,6 @@ const CONFIDENCE_BADGE: Record<string, { label: string; className: string }> = {
     label: 'Tahmini',
     className: 'bg-yellow-100 text-yellow-700',
   },
-  needs_review: {
-    label: 'Kontrol gerekli',
-    className: 'bg-orange-100 text-orange-700',
-  },
 };
 
 function ConfidenceBadge({ level }: { level: string }) {
