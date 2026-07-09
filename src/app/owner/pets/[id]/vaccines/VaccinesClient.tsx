@@ -1344,8 +1344,38 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
 
       if (activePlan) {
         try {
-          await supabase.from('plans').update({ status: 'done' }).eq('id', activePlan.id);
+          await supabase.from('plans').update({ status: 'completed'}).eq('id', activePlan.id);
         } catch { /* sessiz geç */ }
+      } else {
+        // activePlan yoksa (standalone "Manuel İşlem"): vaccine_code üzerinden eşleşen
+        // aktif planı bul ve otomatik 'done' yap. 'CUSTOM' asla eşleştirilmez.
+        const matchedCode = formData.vaccineCode.trim();
+        if (matchedCode && matchedCode !== 'CUSTOM') {
+          try {
+            const { data: candidatePlans } = await supabase
+              .from('plans')
+              .select('id, scheduled_at, extra_data')
+              .eq('pet_id', pet.id)
+              .eq('category', 'asi')
+              .eq('status', 'active');
+
+            const matches = (candidatePlans ?? []).filter((p: any) => {
+              const code = p.extra_data?.vaccine?.code ?? p.extra_data?.vaccine_code;
+              return code === matchedCode;
+            });
+
+            if (matches.length > 0) {
+              const administeredTime = new Date(formData.administeredDate).getTime();
+              const closest = matches.reduce((a: any, b: any) =>
+                Math.abs(new Date(a.scheduled_at).getTime() - administeredTime) <=
+                Math.abs(new Date(b.scheduled_at).getTime() - administeredTime)
+                  ? a
+                  : b
+              );
+              await supabase.from('plans').update({ status: 'completed'}).eq('id', closest.id);
+            }
+          } catch { /* sessiz geç */ }
+        }
       }
 
       setShowManualModal(false);
@@ -1860,7 +1890,7 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
                                   setFormData(prev => ({
                                     ...prev,
                                     vaccineName: p.sub_type,
-                                    vaccineCode: p.extra_data?.vaccine_code || '',
+                                    vaccineCode: p.extra_data?.vaccine?.code ?? p.extra_data?.vaccine_code ?? '',
                                     administeredDate: new Date().toISOString().split('T')[0],
                                   }));
                                   setActivePlan(p);
