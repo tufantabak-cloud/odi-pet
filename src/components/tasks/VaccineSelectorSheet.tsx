@@ -457,6 +457,11 @@ export default function VaccineSelectorSheet({
           )}
 
           <p className="text-[12px] font-black text-text-secondary uppercase tracking-widest">Yeni Ürün Öner</p>
+          {pickerType === 'parasite' && (
+            <p className="text-[12px] font-bold text-amber-700 bg-amber-50 border border-amber-200 p-2.5 rounded-xl">
+              ⚠️ Parazit ürünü önerme özelliği şu anda aktif değil. Bu formu şimdilik gönderemezsiniz, ürün önerinizi destek ekibimizle paylaşabilirsiniz.
+            </p>
+          )}
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1">
               <label className="text-[11px] font-bold text-text-secondary">Marka Adı *</label>
@@ -503,17 +508,22 @@ export default function VaccineSelectorSheet({
                 placeholder="Örn: 30" />
             </div>
           </div>
+          {addError && (
+            <p className="text-[12px] font-bold text-red-600 bg-red-50 p-2 rounded-xl">
+              {addError}
+            </p>
+          )}
           {addSuccess && (
             <p className="text-[12px] font-bold text-green-600 bg-green-50 p-2 rounded-xl">
               ✓ Öneriniz incelemeye alındı. Onaylandıktan sonra listede görünecek.
             </p>
           )}
           <div className="flex gap-2 mt-1">
-            <button type="button" onClick={() => { setShowAddForm(false); setAddSuccess(false); }}
+            <button type="button" onClick={() => { setShowAddForm(false); setAddSuccess(false); setAddError(''); }}
               className="flex-1 py-2 text-[13px] font-bold text-text-secondary border border-border-main rounded-xl hover:bg-bg-main transition-all">
               Vazgeç
             </button>
-            <button type="button" onClick={handleAddSubmit} disabled={addLoading}
+            <button type="button" onClick={handleAddSubmit} disabled={addLoading || pickerType === 'parasite'}
               className="flex-1 py-2 text-[13px] font-bold text-white bg-primary rounded-xl hover:bg-primary-hover transition-all disabled:opacity-50">
               {addLoading ? 'Gönderiliyor...' : 'Gönder'}
             </button>

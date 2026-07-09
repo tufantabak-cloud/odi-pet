@@ -1345,7 +1345,10 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
       if (activePlan) {
         try {
           await supabase.from('plans').update({ status: 'completed'}).eq('id', activePlan.id);
-        } catch { /* sessiz geç */ }
+        } catch (planErr) {
+          console.error('Plan güncellenemedi:', planErr);
+          setErrorMsg('Aşı kaydı eklendi ancak ilgili plan güncellenemedi. Takvim sekmesinden elle işaretleyebilirsiniz.');
+        }
       } else {
         // activePlan yoksa (standalone "Manuel İşlem"): vaccine_code üzerinden eşleşen
         // aktif planı bul ve otomatik 'done' yap. 'CUSTOM' asla eşleştirilmez.
@@ -1374,7 +1377,10 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
               );
               await supabase.from('plans').update({ status: 'completed'}).eq('id', closest.id);
             }
-          } catch { /* sessiz geç */ }
+          } catch (planErr) {
+            console.error('Otomatik plan eşleştirme başarısız:', planErr);
+            setErrorMsg('Aşı kaydı eklendi ancak ilgili plan otomatik güncellenemedi. Takvim sekmesinden elle işaretleyebilirsiniz.');
+          }
         }
       }
 
