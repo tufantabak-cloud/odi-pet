@@ -28,7 +28,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
   // Verify ownership
   const { data: pet, error: fetchError } = await supabase
     .from('pets')
-    .select('id, avatar_url, birth_date, species')
+    .select('id, avatar_url, birth_date, species, lifestyle')
     .eq('id', id)
     .single()
 
@@ -146,7 +146,9 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     const ageInMonths = (now.getFullYear() - born.getFullYear()) * 12 + (now.getMonth() - born.getMonth())
     console.log('[PATCH pet] birth_date changed. newBirthDate:', newBirthDate, 'ageInMonths:', ageInMonths);
     if (ageInMonths < 6) {
-      const generatedTasks = await generateVaccinationPlan(newBirthDate, pet.species, supabase)
+      const generatedTasks = await generateVaccinationPlan(newBirthDate, pet.species, supabase, {
+        isOutdoor: pet.lifestyle === 'outdoor'
+      })
       console.log('[PATCH pet] generatedTasks count:', generatedTasks.length);
       if (generatedTasks.length > 0) {
         const plansPayload = generatedTasks.map(t => ({
