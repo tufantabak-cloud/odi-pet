@@ -168,7 +168,7 @@ export default function ParasiteClient({ pet }: { pet: any }) {
     async function loadData() {
       try {
         const [prodRes, clinicRes] = await Promise.all([
-          supabase.from('parasite_products').select('*').order('name'),
+          supabase.from('parasite_products').select('*').in('species', [pet.species, 'both']).order('name'),
           supabase.from('clinics').select('id, name').order('name')
         ]);
         if (prodRes.data) setProducts(prodRes.data);
@@ -180,7 +180,7 @@ export default function ParasiteClient({ pet }: { pet: any }) {
       }
     }
     loadData();
-  }, [supabase]);
+  }, [supabase, pet.species]);
 
   // Mode loader from localStorage
   useEffect(() => {
