@@ -46,7 +46,7 @@
 - Mobile UX validation
 - vaccine_code string matching → vaccine_protocol_id FK (gelecek sprint)
 
-### Sprint B — Aşı Karnesi Tarama Entegrasyonu
+### Sprint B — Aşı Karnesi Tarama Entegrasyonu — Tamamlandı ✅
 **Amaç:** Akıllı Tarama (OCR, `/api/scan-document`, Gemini Vision — çalışıyor) şu an `vaccine_card` sonuçlarını `vaccine_records_v2` yerine `health_treatments` tablosuna yazıyor ([ScannerClient.tsx](src/app/owner/scanner/ScannerClient.tsx)). Bu, P0/P1'de kurulan aşı mimarisinden (brand_id, vaccine_protocols trigger'ı, plan eşleştirme) tamamen kopuk. Not: Akıllı Tarama'nın kendisi (OCR) çalışıyor ve "yakında" değil — sadece kayıt hedefi yanlış tabloya gidiyor.
 
 İlk işler:
@@ -54,6 +54,15 @@
 2. OCR'dan gelen `brand` alanını `vaccine_brands`'te ara; bulunamazsa `brand_free_text`'e yaz.
 3. `vaccine_code` OCR'dan çıkmıyorsa `CUSTOM` fallback'i kullan.
 4. P0-2 trigger'ının (brand/vaccine_code uyumu) bu yeni akışı da kapsadığını test et.
+
+### Sprint B.1 — Taranan Aşı Belgesi Saklama
+- Taranan görüntüyü vaccine-documents bucket'ına yükle
+- document_storage_path alanına yaz
+- Kayıt silinince belge yaşam döngüsünü yönet
+- Yalnızca pet sahibi erişimi (RLS)
+- Yükleme başarısız olunca kayıt politikası
+
+**Teknik Not:** vaccine_protocols'ta category kolonu yok — ileride farklı protokol türleri eklenirse VaccineSelectorSheet picker'ı gereğinden fazla kayıt gösterebilir.
 
 ### Sprint C — Ortak Aşı Kayıt Servisi
 **Amaç:** Şu an 3 ayrı, birbirinden habersiz aşı yazma yolu var: `VaccinesClient.tsx` (manuel form), `SmartTaskWizard.tsx` (plan akışı), `ScannerClient.tsx` (OCR, Sprint B sonrası). Her biri kendi brand normalizasyonu / plan eşleştirme mantığını ayrı ayrı tekrarlıyor.
