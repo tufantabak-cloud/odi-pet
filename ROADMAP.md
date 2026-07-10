@@ -79,6 +79,24 @@
 2. Üç çağıran noktayı da bu servise yönlendir.
 3. Tekrarlanan mantığı sil, tek kaynak kalsın.
 
+### Sprint C.4 — Gerçek Aşı Doz Takvimi Üretimi — Tamamlandı ✅
+`vaccine_protocols.doses` JSON'undaki birth/prev_dose zincirini gerçek anlamda okuyan saf bir fonksiyon (`build-vaccination-schedule.ts`) ve bunu kullanan `create-plan` endpoint'i. Yavru/yetişkin ayrımı, mevcut kayda göre kaldığı yerden devam etme, çok dozlu protokoller için toplu/atomik plan insert'i.
+
+### Sprint C.4.1 — Geçmiş Tarihli Dozlar için Overdue Durumu — Tamamlandı ✅
+Yavru pet'lerde `birth_date + days_offset` geçmişte kalan ilk doz `active` yerine `overdue` olarak işaretleniyor artık. `plans.status` CHECK kısıtlaması `'overdue'` değerini kabul edecek şekilde genişletildi; duplicate kontrolü ve "aktif plan var" göstergeleri `overdue` durumunu da kapsıyor.
+
+### Sprint C.4.2 — Kısmen Tamamlanmış Seri Düzeltmesi — Tamamlandı ✅
+Bir protokolün ilk dozu tamamlanmış ama serinin geri kalanı bitmemişken "Hemen Plan Oluştur" tetiklenince doğrudan yıllık booster'a atlanıyordu. Artık tamamlanan en yüksek `dose_number` protokolün toplam doz sayısıyla karşılaştırılıp seri bitmemişse yalnızca bir sonraki doz üretiliyor.
+
+## Sprint C.5 — Aktif Planların Otomatik Overdue Geçişi
+- scheduled_at geçen active planları overdue'ya çevir
+- Vercel cron job: günlük çalışır
+- Hedef: plans tablosunda scheduled_at < now() AND status='active'
+  → status='overdue' UPDATE
+- Bildirim üret: kullanıcıya gecikmiş aşı uyarısı
+- Sadece 'asi' kategorisi değil, tüm plan kategorileri için
+- Dry-run modu (prod'da test için)
+
 ### Sprint 4.3B — Confidence Level Normalization
 **Amaç:** `confidence_level` yazım değerlerini tekilleştirmek. (Sprint 4.3A'da mimariye dokunulmadı, bilinçli olarak ertelendi — bkz. [ODIPET_AUDIT_CURRENT.md](ODIPET_AUDIT_CURRENT.md) Sprint 4.3 analizi.)
 
