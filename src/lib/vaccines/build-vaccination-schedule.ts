@@ -39,6 +39,7 @@ export type ScheduleExistingRecord = {
   vaccine_code: string
   administered_at: string | null
   status: string
+  dose_number: number | null
 }
 
 const BOOSTER_LABEL_RE = /booster|tekrar/i
@@ -76,6 +77,37 @@ export function buildVaccinationSchedule(params: {
     )
     const lastAdministeredAt = new Date(lastRecord.administered_at as string)
 
+    // Hangi doza kadar tamamlandığını belirle. dose_number kaydedilmemişse
+    // (ör. eski/manuel girişler) tamamlanan kayıt sayısını yaklaşık dose
+    // sayısı olarak kabul et.
+    const recordedDoseNumbers = completed
+      .map((r) => r.dose_number)
+      .filter((n): n is number => typeof n === 'number' && n > 0)
+    const highestCompletedDose =
+      recordedDoseNumbers.length > 0 ? Math.max(...recordedDoseNumbers) : completed.length
+
+    // ── Seri henüz bitmedi → sıradaki tek dozu üret (booster'a atlama) ──
+    if (highestCompletedDose < doses.length) {
+      const nextDose = doses.find((d) => d.dose_number === highestCompletedDose + 1)
+        ?? doses[Math.min(highestCompletedDose, doses.length - 1)]
+
+      const scheduledAt = addDays(lastAdministeredAt, nextDose.days_offset)
+
+      return [
+        {
+          vaccineCode: protocol.vaccine_code,
+          vaccineName: protocol.protocol_name,
+          doseNumber: nextDose.dose_number,
+          label: nextDose.label,
+          scheduledAt,
+          isBooster: BOOSTER_LABEL_RE.test(nextDose.label),
+          trigger: 'last_record',
+          daysOffset: nextDose.days_offset,
+        },
+      ]
+    }
+
+    // ── Seri tamamlandı → repeat_frequency'ye göre bir sonraki booster ──
     if (protocol.repeat_frequency === 'none' || !protocol.repeat_frequency) {
       // Protokol tamamlandı, tekrar gerekmiyor.
       return []

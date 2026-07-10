@@ -69,7 +69,7 @@ export async function POST(req: Request, props: { params: Promise<{ id: string; 
     // Bu pet + aşı için tamamlanmış kayıtları çek (booster mı, ilk seri mi belirlenecek)
     const { data: completedRecords, error: recordsError } = await supabase
       .from('vaccine_records_v2')
-      .select('vaccine_code, administered_at, status')
+      .select('vaccine_code, administered_at, status, dose_number')
       .eq('pet_id', petId)
       .eq('vaccine_code', vaccineCode)
       .eq('status', 'completed')
