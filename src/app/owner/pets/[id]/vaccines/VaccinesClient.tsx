@@ -1528,6 +1528,40 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
     }
   };
 
+  const [deletingRecordId, setDeletingRecordId] = useState<string | null>(null);
+
+  const handleDeleteRecord = async (rec: any) => {
+    if (!window.confirm(`"${rec.vaccine_name}" kaydını silmek istediğinize emin misiniz?`)) return;
+
+    setDeletingRecordId(rec.id);
+    setErrorMsg('');
+    try {
+      const supabase = createBrowserSupabaseClient();
+
+      // Önce belge varsa storage'dan sil — yetim dosya bırakmamak için DB kaydından önce yapılıyor.
+      // Storage silme başarısız olsa bile DB kaydının silinmesini engellemiyoruz (kullanıcı kaydı
+      // silmek istiyor, arka planda kalan bir dosya bunu bloklamamalı).
+      if (rec.document_storage_path) {
+        const { error: storageError } = await supabase.storage
+          .from('vaccine-documents')
+          .remove([rec.document_storage_path]);
+        if (storageError) {
+          console.error('Belge storage’dan silinemedi:', storageError);
+        }
+      }
+
+      const { error } = await supabase.from('vaccine_records_v2').delete().eq('id', rec.id);
+      if (error) throw error;
+
+      router.refresh();
+    } catch (err: any) {
+      console.error('Kayıt silinemedi:', err);
+      setErrorMsg('Kayıt silinemedi: ' + (err.message || 'Bilinmeyen hata.'));
+    } finally {
+      setDeletingRecordId(null);
+    }
+  };
+
   const handleReactionSave = async (symptomId: string, level: string) => {
     try {
       const supabase = createBrowserSupabaseClient();
@@ -2000,6 +2034,14 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
                                   Belgeyi Görüntüle
                                 </button>
                               )}
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteRecord(rec)}
+                                disabled={deletingRecordId === rec.id}
+                                className="text-[11px] text-red-500 font-bold underline disabled:opacity-50"
+                              >
+                                {deletingRecordId === rec.id ? 'Siliniyor…' : 'Sil'}
+                              </button>
                             </div>
                           </div>
                         ))}
