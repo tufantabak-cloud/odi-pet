@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json()
-    const { pet_id, record_type, parsed_data } = body
+    const { pet_id, record_type, parsed_data, document_storage_path } = body
 
     if (!pet_id || !record_type || !parsed_data) {
       return NextResponse.json({ error: 'Eksik parametreler' }, { status: 400 })
@@ -24,6 +24,16 @@ export async function POST(req: Request) {
 
     if (record_type !== 'vaccine_card') {
       return NextResponse.json({ error: 'Desteklenmeyen belge tipi' }, { status: 400 })
+    }
+
+    // document_storage_path opsiyonel — verildiyse {userId}/ ile başlamalı
+    // (başka bir kullanıcının klasörüne işaret eden bir path kabul edilmez).
+    let documentStoragePath: string | null = null
+    if (document_storage_path) {
+      if (typeof document_storage_path !== 'string' || !document_storage_path.startsWith(`${session.user.id}/`)) {
+        return NextResponse.json({ error: 'Geçersiz belge yolu' }, { status: 400 })
+      }
+      documentStoragePath = document_storage_path
     }
 
     // Pet sahipliği + tür bilgisi
@@ -118,6 +128,7 @@ export async function POST(req: Request) {
         source: 'imported_history',
         administration_route: parsed_data.administration_route || null,
         notes: parsed_data.vet_company ? `Klinik: ${parsed_data.vet_company}` : null,
+        document_storage_path: documentStoragePath,
       })
       .select()
       .single()

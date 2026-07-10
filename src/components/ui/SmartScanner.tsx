@@ -45,6 +45,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
   const [recordType, setRecordType] = useState<string>("unknown");
   const [validationError, setValidationError] = useState("");
   const [brandCandidates, setBrandCandidates] = useState<{ id: string; vaccine_code: string; brand_name: string; manufacturer: string }[]>([]);
+  const [documentStoragePath, setDocumentStoragePath] = useState<string | null>(null);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   
@@ -248,6 +249,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
 
       setRecordType(data.data.record_type);
       setParsedData(data.data.parsed || {});
+      setDocumentStoragePath(data.data.document_storage_path || null);
       setEditingField(null);
       setStep("confirm");
 
@@ -281,7 +283,8 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
           pet_id: petId,
           record_type: recordType,
           category: 'Medikal',
-          parsed_data: parsedData
+          parsed_data: parsedData,
+          document_storage_path: documentStoragePath
         })
       });
 

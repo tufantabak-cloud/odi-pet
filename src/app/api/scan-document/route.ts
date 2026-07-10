@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
+import { randomUUID } from 'crypto'
 import { getIP, scanDocRateLimit } from '@/lib/auth-security'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
-
-
+import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
 
 const SYSTEM_PROMPT = `
 Sen bir evcil hayvan bakım uygulaması için akıllı belge tarama asistanısın.
-Gönderilen fotoğrafı analiz et ve aşağıdaki JSON formatında, eksiksiz ve yapılandırılmış olarak yanıt ver. 
+Gönderilen fotoğrafı analiz et ve aşağıdaki JSON formatında, eksiksiz ve yapılandırılmış olarak yanıt ver.
 Markdown kullanma, sadece saf JSON döndür.
 
 Zorunlu JSON Şeması:
@@ -43,7 +43,22 @@ Zorunlu JSON Şeması:
 Lütfen verileri olabildiğince eksiksiz doldur. Tespit edemediğin alanları null yap.
 `;
 
+function extensionFromFile(file: File): string {
+  const nameExt = file.name?.split('.').pop()?.toLowerCase()
+  if (nameExt && /^[a-z0-9]{2,4}$/.test(nameExt)) return nameExt
+  const mimeMap: Record<string, string> = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+    'application/pdf': 'pdf',
+  }
+  return mimeMap[file.type] || 'jpg'
+}
+
 export async function POST(req: Request) {
+  let uploadedPath: string | null = null
+  let adminSupabase: ReturnType<typeof createAdminSupabaseClient> | null = null
+
   try {
     // Auth kontrolü
     const user = await getSessionUser()
@@ -57,10 +72,42 @@ export async function POST(req: Request) {
 
     const formData = await req.formData()
     const image = formData.get('image') as File
+    const petId = formData.get('pet_id') as string | null
 
     if (!image) {
       return NextResponse.json({ error: 'Eksik parametreler (image)' }, { status: 400 })
     }
+    if (!petId) {
+      return NextResponse.json({ error: 'Eksik parametreler (pet_id)' }, { status: 400 })
+    }
+
+    // Pet sahipliği doğrulaması
+    const supabase = await createServerSupabaseClient()
+    const { data: ownership } = await supabase
+      .from('pet_owners')
+      .select('pet_id')
+      .eq('pet_id', petId)
+      .eq('profile_id', user.id)
+      .maybeSingle()
+
+    if (!ownership) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    // ── OCR öncesi: belgeyi private storage'a yükle ─────────────
+    adminSupabase = createAdminSupabaseClient()
+    const ext = extensionFromFile(image)
+    const path = `${user.id}/${petId}/${randomUUID()}.${ext}`
+
+    const { error: uploadError } = await adminSupabase.storage
+      .from('vaccine-documents')
+      .upload(path, image, { contentType: image.type || 'image/jpeg', upsert: false })
+
+    if (uploadError) {
+      console.error('Storage upload error:', uploadError)
+      return NextResponse.json({ error: 'Belge yüklenirken bir hata oluştu.' }, { status: 500 })
+    }
+    uploadedPath = path
 
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) {
@@ -75,7 +122,8 @@ export async function POST(req: Request) {
             brand: 'Nobivac',
             date: new Date().toISOString().split('T')[0],
             next_date: null
-          }
+          },
+          document_storage_path: uploadedPath
         }
       });
     }
@@ -120,6 +168,7 @@ export async function POST(req: Request) {
     const responseText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text
 
     if (!responseText) {
+      await cleanupUpload(adminSupabase, uploadedPath)
       return NextResponse.json({ error: 'Metin anlaşılamadı.' }, { status: 422 })
     }
 
@@ -128,6 +177,7 @@ export async function POST(req: Request) {
       parsedResult = JSON.parse(responseText);
     } catch (e) {
       console.error("JSON parse error:", responseText);
+      await cleanupUpload(adminSupabase, uploadedPath)
       return NextResponse.json({ error: 'AI geçersiz bir yanıt döndürdü.' }, { status: 422 })
     }
 
@@ -135,12 +185,24 @@ export async function POST(req: Request) {
       success: true,
       data: {
         record_type: parsedResult.document_type,
-        parsed: parsedResult.extracted_fields
+        parsed: parsedResult.extracted_fields,
+        document_storage_path: uploadedPath
       }
     })
 
   } catch (error: unknown) {
     console.error('OCR Error:', error)
+    if (adminSupabase && uploadedPath) {
+      await cleanupUpload(adminSupabase, uploadedPath)
+    }
     return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) || 'Internal server error' }, { status: 500 })
+  }
+}
+
+async function cleanupUpload(admin: ReturnType<typeof createAdminSupabaseClient>, path: string) {
+  try {
+    await admin.storage.from('vaccine-documents').remove([path])
+  } catch (err) {
+    console.error('Belge temizleme (best-effort) başarısız:', err)
   }
 }
