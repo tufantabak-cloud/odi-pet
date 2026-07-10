@@ -240,13 +240,14 @@ export default function VaccineSettingsClient({ pets }: { pets: Pet[] }) {
                 </span>
                 <button
                   type="button"
-                  disabled={!enabled || hasActivePlan || isBusy}
-                  onClick={() => handleCreatePlan(protocol.vaccine_code)}
-                  className="text-[12px] font-bold text-primary disabled:text-text-secondary disabled:opacity-50 px-3 py-1.5 rounded-lg border border-primary disabled:border-border-main"
+                  disabled
+                  title="Doz takvimi özelliği hazırlanıyor"
+                  className="text-[12px] font-bold text-text-secondary opacity-50 px-3 py-1.5 rounded-lg border border-border-main cursor-not-allowed"
                 >
-                  Hemen Plan Oluştur
+                  Plan Oluşturma (Yakında)
                 </button>
               </div>
+              <p className="text-[10px] text-text-secondary -mt-1">Doz takvimi özelliği hazırlanıyor.</p>
             </div>
           )
         })}
