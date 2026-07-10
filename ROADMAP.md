@@ -30,6 +30,22 @@
 
 ## 🗂 Backlog
 
+## Vaccine Record Architecture Refactor — P0 Completed ✅
+
+- Brand/protocol separation (vaccine_name = protocol, brand_id = product)
+- Private vaccine-documents bucket (signed URLs, RLS protected)
+- DB-level brand validation trigger (brand must match vaccine_code)
+- administration_route structured dropdown
+- valid_until date capture
+- Normalized brand input (brand_id OR free_text, never both)
+
+### Remaining (P1):
+- UI click-through test (4 scenarios)
+- Edit/update akışı yeni alanlarla test edilmeli
+- Delete → Storage dosyası da silinmeli
+- Mobile UX validation
+- vaccine_code string matching → vaccine_protocol_id FK (gelecek sprint)
+
 ### Sprint 4.3B — Confidence Level Normalization
 **Amaç:** `confidence_level` yazım değerlerini tekilleştirmek. (Sprint 4.3A'da mimariye dokunulmadı, bilinçli olarak ertelendi — bkz. [ODIPET_AUDIT_CURRENT.md](ODIPET_AUDIT_CURRENT.md) Sprint 4.3 analizi.)
 
