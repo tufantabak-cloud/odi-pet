@@ -26,11 +26,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Desteklenmeyen belge tipi' }, { status: 400 })
     }
 
-    // document_storage_path opsiyonel — verildiyse {userId}/ ile başlamalı
-    // (başka bir kullanıcının klasörüne işaret eden bir path kabul edilmez).
+    // document_storage_path opsiyonel — verildiyse {userId}/{pet_id}/ ile başlamalı
+    // (başka bir kullanıcıya veya başka bir pet'e ait klasör kabul edilmez).
     let documentStoragePath: string | null = null
     if (document_storage_path) {
-      if (typeof document_storage_path !== 'string' || !document_storage_path.startsWith(`${session.user.id}/`)) {
+      const expectedPrefix = `${session.user.id}/${pet_id}/`
+      if (typeof document_storage_path !== 'string' || !document_storage_path.startsWith(expectedPrefix)) {
         return NextResponse.json({ error: 'Geçersiz belge yolu' }, { status: 400 })
       }
       documentStoragePath = document_storage_path

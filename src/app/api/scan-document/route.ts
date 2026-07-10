@@ -43,17 +43,16 @@ Zorunlu JSON Şeması:
 Lütfen verileri olabildiğince eksiksiz doldur. Tespit edemediğin alanları null yap.
 `;
 
-function extensionFromFile(file: File): string {
-  const nameExt = file.name?.split('.').pop()?.toLowerCase()
-  if (nameExt && /^[a-z0-9]{2,4}$/.test(nameExt)) return nameExt
-  const mimeMap: Record<string, string> = {
-    'image/jpeg': 'jpg',
-    'image/png': 'png',
-    'image/webp': 'webp',
-    'application/pdf': 'pdf',
-  }
-  return mimeMap[file.type] || 'jpg'
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+const ALLOWED_MIME_TO_EXT: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'application/pdf': 'pdf',
 }
+
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10MB
 
 export async function POST(req: Request) {
   let uploadedPath: string | null = null
@@ -77,8 +76,17 @@ export async function POST(req: Request) {
     if (!image) {
       return NextResponse.json({ error: 'Eksik parametreler (image)' }, { status: 400 })
     }
-    if (!petId) {
-      return NextResponse.json({ error: 'Eksik parametreler (pet_id)' }, { status: 400 })
+    if (!petId || !UUID_RE.test(petId)) {
+      return NextResponse.json({ error: 'Geçersiz pet_id' }, { status: 400 })
+    }
+
+    const ext = ALLOWED_MIME_TO_EXT[image.type]
+    if (!ext) {
+      return NextResponse.json({ error: 'Desteklenmeyen dosya türü. İzin verilenler: JPEG, PNG, WEBP, PDF.' }, { status: 400 })
+    }
+
+    if (image.size > MAX_FILE_SIZE_BYTES) {
+      return NextResponse.json({ error: 'Dosya boyutu 10MB sınırını aşıyor.' }, { status: 400 })
     }
 
     // Pet sahipliği doğrulaması
@@ -96,12 +104,11 @@ export async function POST(req: Request) {
 
     // ── OCR öncesi: belgeyi private storage'a yükle ─────────────
     adminSupabase = createAdminSupabaseClient()
-    const ext = extensionFromFile(image)
     const path = `${user.id}/${petId}/${randomUUID()}.${ext}`
 
     const { error: uploadError } = await adminSupabase.storage
       .from('vaccine-documents')
-      .upload(path, image, { contentType: image.type || 'image/jpeg', upsert: false })
+      .upload(path, image, { contentType: image.type, upsert: false })
 
     if (uploadError) {
       console.error('Storage upload error:', uploadError)
@@ -144,7 +151,7 @@ export async function POST(req: Request) {
               { text: SYSTEM_PROMPT },
               {
                 inline_data: {
-                  mime_type: image.type || 'image/jpeg',
+                  mime_type: image.type,
                   data: base64Image
                 }
               }
