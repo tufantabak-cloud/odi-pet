@@ -1,24 +1,11 @@
-import { writeEvent } from '@/lib/agents/orchestrator/eventContract'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 export async function runBatchQualityScan() {
-  // Mock Data Quality Scanner
-  
-    // Test 3: Type Safety Kontrolü (Hatalı Alan)
-    await writeEvent(null, null, 'data_quality_scored', {
-      score: 100,
-      breakdown: {},
-      missing_fields: [],
-      has_any_pet: true,
-      weakest_pet_id: null,
-      // @ts-expect-error - TypeScript should catch this
-      olmayan_bir_alan: "bunun_hata_vermesi_gerek" 
-    })
-  
+  // Gerçek data quality motoru henüz implemente edilmedi
   return {
-    processed: 10,
-    errors: 0,
-    summary: { high: 2, medium: 5, low: 3 }
+    status: 'disabled',
+    processed: 0,
+    reason: 'not_implemented'
   }
 }
 

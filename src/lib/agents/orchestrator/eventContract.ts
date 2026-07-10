@@ -1,5 +1,7 @@
 // lib/agents/orchestrator/eventContract.ts
 
+import type { SupabaseClient } from '@supabase/supabase-js'
+
 export type OdiEventType =
   // Data Quality Agent
   | 'data_quality_scored'
@@ -105,14 +107,19 @@ export interface EventMetadataMap {
 
 // Type-safe event yazma fonksiyonu
 export async function writeEvent<T extends OdiEventType>(
-  supabase: any, // ReturnType<typeof import('@/lib/supabase/server').createClient> type karmaşası yapmasın diye any
+  supabase: SupabaseClient | null,
   profile_id: string | null,
   event_type: T,
   metadata: EventMetadataMap[T]
-) {
-  return supabase.from('event_stream').insert({
+): Promise<{ error: { message: string } | null }> {
+  if (!supabase) {
+    console.error('writeEvent: supabase client is null, event not written', { event_type })
+    return { error: null }
+  }
+  const { error } = await supabase.from('event_stream').insert({
     profile_id,
     event_type,
     metadata,
   })
+  return { error }
 }

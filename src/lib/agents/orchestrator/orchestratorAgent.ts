@@ -13,6 +13,7 @@ export interface OrchestratorRunResult {
   duration_ms: number
   agents_succeeded: string[]
   agents_failed: string[]
+  agents_skipped: string[]
   total_users_processed: number
 }
 
@@ -36,6 +37,7 @@ export async function runOrchestratedPipeline(
 
   const agents_succeeded: string[] = []
   const agents_failed: string[] = []
+  const agents_skipped: string[] = []
   let total_users_processed = 0
 
   await writeEvent(supabase, null, 'orchestrator_run_started', {
@@ -47,8 +49,12 @@ export async function runOrchestratedPipeline(
   // ADIM 1 — Data Quality
   try {
     const dqResult = await runBatchQualityScan()
-    total_users_processed = dqResult.processed
-    agents_succeeded.push('data_quality')
+    if (dqResult.status === 'disabled') {
+      agents_skipped.push('data_quality')
+    } else {
+      total_users_processed = dqResult.processed
+      agents_succeeded.push('data_quality')
+    }
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err)
     agents_failed.push('data_quality')
@@ -56,7 +62,7 @@ export async function runOrchestratedPipeline(
       run_id,
       agent: 'data_quality',
       error,
-      downstream_skipped: ['user_health'],
+      downstream_skipped: [],
     })
   }
 
@@ -76,20 +82,18 @@ export async function runOrchestratedPipeline(
   }
 
   // ADIM 3 — User Health
-  if (!agents_failed.includes('data_quality')) {
-    try {
-      await runUserHealthScan()
-      agents_succeeded.push('user_health')
-    } catch (err) {
-      const error = err instanceof Error ? err.message : String(err)
-      agents_failed.push('user_health')
-      await writeEvent(supabase, null, 'orchestrator_agent_failed', {
-        run_id,
-        agent: 'user_health',
-        error,
-        downstream_skipped: ['notification — churn_risk_detected event üretilmedi'],
-      })
-    }
+  try {
+    await runUserHealthScan()
+    agents_succeeded.push('user_health')
+  } catch (err) {
+    const error = err instanceof Error ? err.message : String(err)
+    agents_failed.push('user_health')
+    await writeEvent(supabase, null, 'orchestrator_agent_failed', {
+      run_id,
+      agent: 'user_health',
+      error,
+      downstream_skipped: ['notification — churn_risk_detected event üretilmedi'],
+    })
   }
 
   // ADIM 4 — Overdue Plans (scheduled_at geçmiş 'active' planları 'overdue' yapar)
@@ -119,5 +123,5 @@ export async function runOrchestratedPipeline(
     total_users_processed,
   })
 
-  return { run_id, duration_ms, agents_succeeded, agents_failed, total_users_processed }
+  return { run_id, duration_ms, agents_succeeded, agents_failed, agents_skipped, total_users_processed }
 }
