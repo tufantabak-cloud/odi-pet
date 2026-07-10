@@ -1292,6 +1292,138 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
     return () => { cancelled = true; };
   }, [initialRecords]);
 
+  // ── Kayıt düzenleme (edit) modalı ──────────────────────────────────
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<any>(null);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editErrorMsg, setEditErrorMsg] = useState('');
+  const [editFormData, setEditFormData] = useState({
+    administeredDate: '',
+    brandId: '',
+    brandFreeText: '',
+    manufacturer: '',
+    administrationRoute: '' as '' | 'subcutaneous' | 'intramuscular' | 'intranasal' | 'oral' | 'other' | 'unknown',
+    validUntil: '',
+    lotNumber: '',
+    vetName: '',
+    notes: '',
+    reactionObserved: false,
+    newDocument: null as File | null,
+  });
+  const [editBrandOptions, setEditBrandOptions] = useState<{ id: string; brand_name: string; manufacturer: string }[]>([]);
+  const [editBrandMode, setEditBrandMode] = useState<'select' | 'manual'>('manual');
+
+  const openEditModal = (rec: any) => {
+    setEditingRecord(rec);
+    setEditErrorMsg('');
+    setEditFormData({
+      administeredDate: rec.administered_at ? rec.administered_at.split('T')[0] : '',
+      brandId: rec.brand_id ?? '',
+      brandFreeText: rec.brand_free_text ?? '',
+      manufacturer: rec.manufacturer_free_text ?? '',
+      administrationRoute: rec.administration_route ?? '',
+      validUntil: rec.valid_until ? rec.valid_until.split('T')[0] : '',
+      lotNumber: rec.lot_number ?? '',
+      vetName: rec.vet_name ?? '',
+      notes: rec.notes ?? '',
+      reactionObserved: rec.reaction_observed === 'gözlemlendi',
+      newDocument: null,
+    });
+    setEditBrandMode(rec.brand_id ? 'select' : 'manual');
+    setEditModalOpen(true);
+  };
+
+  // Düzenlenen kaydın vaccine_code'una ait onaylı markaları getir
+  useEffect(() => {
+    let cancelled = false;
+    async function loadEditBrands() {
+      const code = editingRecord?.vaccine_code;
+      if (!editModalOpen || !code || code === 'CUSTOM') {
+        setEditBrandOptions([]);
+        return;
+      }
+      const supabase = createBrowserSupabaseClient();
+      const { data } = await supabase
+        .from('vaccine_brands')
+        .select('id, brand_name, manufacturer')
+        .eq('vaccine_code', code)
+        .eq('is_active', true)
+        .eq('status', 'approved')
+        .order('brand_name');
+      if (!cancelled) setEditBrandOptions(data ?? []);
+    }
+    loadEditBrands();
+    return () => { cancelled = true; };
+  }, [editModalOpen, editingRecord?.vaccine_code]);
+
+  const handleUpdateRecord = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingRecord) return;
+    setEditSaving(true);
+    setEditErrorMsg('');
+
+    try {
+      const supabase = createBrowserSupabaseClient();
+
+      // Yeni belge yüklendiyse: önce eskisini storage'dan sil, sonra yenisini yükle.
+      let documentStoragePath: string | null = editingRecord.document_storage_path ?? null;
+      if (editFormData.newDocument) {
+        const { data: userData } = await supabase.auth.getUser();
+        const userId = userData?.user?.id;
+        if (userId) {
+          if (editingRecord.document_storage_path) {
+            const { error: removeError } = await supabase.storage
+              .from('vaccine-documents')
+              .remove([editingRecord.document_storage_path]);
+            if (removeError) console.error('Eski belge silinemedi:', removeError);
+          }
+          const safeFileName = editFormData.newDocument.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+          const path = `${userId}/${pet.id}/${Date.now()}_${safeFileName}`;
+          const { error: uploadError } = await supabase.storage
+            .from('vaccine-documents')
+            .upload(path, editFormData.newDocument, { contentType: editFormData.newDocument.type, upsert: false });
+          if (uploadError) {
+            console.error('Yeni belge yüklenemedi:', uploadError);
+            setEditErrorMsg('Yeni belge yüklenemedi, diğer değişiklikler kaydediliyor.');
+          } else {
+            documentStoragePath = path;
+          }
+        }
+      }
+
+      // Normalizasyon: brand_id VE brand_free_text/manufacturer_free_text aynı anda dolu olmasın.
+      const isBrandSelected = editBrandMode === 'select' && !!editFormData.brandId;
+      const normalizedBrandId = isBrandSelected ? editFormData.brandId : null;
+      const normalizedBrandFreeText = isBrandSelected ? null : (editFormData.brandFreeText.trim() || null);
+      const normalizedManufacturerFreeText = isBrandSelected ? null : (editFormData.manufacturer.trim() || null);
+
+      const { error } = await supabase.from('vaccine_records_v2').update({
+        administered_at: editFormData.administeredDate,
+        brand_id: normalizedBrandId,
+        brand_free_text: normalizedBrandFreeText,
+        manufacturer_free_text: normalizedManufacturerFreeText,
+        administration_route: editFormData.administrationRoute || null,
+        valid_until: editFormData.validUntil || null,
+        lot_number: editFormData.lotNumber.trim() || null,
+        vet_name: editFormData.vetName.trim() || null,
+        notes: editFormData.notes.trim() || null,
+        reaction_observed: editFormData.reactionObserved ? 'gözlemlendi' : null,
+        document_storage_path: documentStoragePath,
+      }).eq('id', editingRecord.id);
+
+      if (error) throw error;
+
+      setEditModalOpen(false);
+      setEditingRecord(null);
+      router.refresh();
+    } catch (err: any) {
+      console.error('Kayıt güncellenemedi:', err);
+      setEditErrorMsg('Kayıt güncellenemedi: ' + (err.message || 'Bilinmeyen hata.'));
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
   // Wizard States
   const [showWizard, setShowWizard] = useState(false);
   const [showBirthDatePrompt, setShowBirthDatePrompt] = useState(false);
@@ -2036,6 +2168,13 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
                               )}
                               <button
                                 type="button"
+                                onClick={() => openEditModal(rec)}
+                                className="text-[11px] text-primary font-bold underline"
+                              >
+                                Düzenle
+                              </button>
+                              <button
+                                type="button"
                                 onClick={() => handleDeleteRecord(rec)}
                                 disabled={deletingRecordId === rec.id}
                                 className="text-[11px] text-red-500 font-bold underline disabled:opacity-50"
@@ -2281,6 +2420,183 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
               <div className="flex gap-3 mt-2">
                 <button type="button" onClick={() => setShowManualModal(false)} className="flex-1 min-h-[50px] border-2 border-border-main rounded-xl">İptal</button>
                 <button type="submit" className="flex-1 min-h-[50px] bg-primary text-white rounded-xl">Kaydet</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {editModalOpen && editingRecord && (
+        <div
+          role="dialog"
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setEditModalOpen(false)}
+        >
+          <div
+            className="bg-surface w-full max-w-md rounded-[28px] p-6 relative flex flex-col gap-4 animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
+            onClick={e => e.stopPropagation()}
+          >
+            <div>
+              <h3 className="text-[18px] font-black text-text-primary">Aşı Kaydını Düzenle</h3>
+            </div>
+            <form onSubmit={handleUpdateRecord} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[12px] font-bold text-text-primary">Aşı Adı</label>
+                <input
+                  type="text"
+                  value={editingRecord.vaccine_name}
+                  readOnly
+                  disabled
+                  className="input-base bg-gray-100 text-gray-500 cursor-not-allowed"
+                />
+                <p className="text-[10px] text-text-secondary">Protokol adı değiştirilemez.</p>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[12px] font-bold text-text-primary">Tarih *</label>
+                <input
+                  type="date"
+                  value={editFormData.administeredDate}
+                  onChange={e => setEditFormData(p => ({ ...p, administeredDate: e.target.value }))}
+                  className="input-base"
+                  required
+                />
+              </div>
+
+              {editBrandOptions.length > 0 && (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-gray-500">Marka</label>
+                  <select
+                    value={editBrandMode === 'select' ? editFormData.brandId : '__manual__'}
+                    onChange={e => {
+                      if (e.target.value === '__manual__') {
+                        setEditBrandMode('manual');
+                        setEditFormData(p => ({ ...p, brandId: '' }));
+                      } else {
+                        setEditBrandMode('select');
+                        setEditFormData(p => ({ ...p, brandId: e.target.value }));
+                      }
+                    }}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                  >
+                    <option value="">Marka seçin (opsiyonel)</option>
+                    {editBrandOptions.map(b => (
+                      <option key={b.id} value={b.id}>{b.brand_name} — {b.manufacturer}</option>
+                    ))}
+                    <option value="__manual__">Elle gir…</option>
+                  </select>
+                </div>
+              )}
+              {editBrandMode === 'manual' && (
+                <>
+                  <input
+                    type="text"
+                    placeholder="Marka Adı"
+                    value={editFormData.brandFreeText}
+                    onChange={e => setEditFormData(p => ({ ...p, brandFreeText: e.target.value }))}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Üretici"
+                    value={editFormData.manufacturer}
+                    onChange={e => setEditFormData(p => ({ ...p, manufacturer: e.target.value }))}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                  />
+                </>
+              )}
+
+              <div>
+                <label className="mb-1 block text-xs text-gray-500">Uygulama Yolu</label>
+                <select
+                  value={editFormData.administrationRoute}
+                  onChange={e => setEditFormData(p => ({ ...p, administrationRoute: e.target.value as typeof p.administrationRoute }))}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                >
+                  <option value="">Seçiniz</option>
+                  <option value="subcutaneous">SC Enjeksiyon</option>
+                  <option value="intramuscular">IM Enjeksiyon</option>
+                  <option value="intranasal">İntranazal</option>
+                  <option value="oral">Oral</option>
+                  <option value="other">Diğer</option>
+                  <option value="unknown">Bilinmiyor</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs text-gray-500">Geçerlilik Tarihi (özellikle kuduz için önemli)</label>
+                <input
+                  type="date"
+                  value={editFormData.validUntil}
+                  onChange={e => setEditFormData(p => ({ ...p, validUntil: e.target.value }))}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                />
+              </div>
+
+              <input
+                type="text"
+                placeholder="Veteriner adı"
+                value={editFormData.vetName}
+                onChange={e => setEditFormData(p => ({ ...p, vetName: e.target.value }))}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+              />
+              <input
+                type="text"
+                placeholder="Lot / Seri no"
+                value={editFormData.lotNumber}
+                onChange={e => setEditFormData(p => ({ ...p, lotNumber: e.target.value }))}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+              />
+              <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={editFormData.reactionObserved}
+                  onChange={e => setEditFormData(p => ({ ...p, reactionObserved: e.target.checked }))}
+                  className="rounded"
+                />
+                Reaksiyon gözlemlendi
+              </label>
+              <textarea
+                placeholder="Not (opsiyonel)"
+                value={editFormData.notes}
+                onChange={e => setEditFormData(p => ({ ...p, notes: e.target.value }))}
+                rows={2}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm resize-none"
+              />
+
+              <div>
+                <label className="mb-1 block text-xs text-gray-500">Belge / Fotoğraf</label>
+                {editingRecord.document_storage_path && !editFormData.newDocument && (
+                  <div className="flex items-center gap-2 mb-2">
+                    <button
+                      type="button"
+                      onClick={() => handleViewDocument(editingRecord.document_storage_path)}
+                      className="text-[11px] text-primary font-bold underline"
+                    >
+                      Mevcut belgeyi görüntüle
+                    </button>
+                    <span className="text-[10px] text-text-secondary">(yeni dosya seçerseniz bunun yerine geçer)</span>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  onChange={e => setEditFormData(p => ({ ...p, newDocument: e.target.files?.[0] ?? null }))}
+                  className="w-full text-sm text-gray-500"
+                />
+              </div>
+
+              {editErrorMsg && (
+                <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-600 font-medium">
+                  {editErrorMsg}
+                </div>
+              )}
+
+              <div className="flex gap-3 mt-2">
+                <button type="button" onClick={() => setEditModalOpen(false)} className="flex-1 min-h-[50px] border-2 border-border-main rounded-xl">İptal</button>
+                <button type="submit" disabled={editSaving} className="flex-1 min-h-[50px] bg-primary text-white rounded-xl disabled:opacity-50">
+                  {editSaving ? 'Kaydediliyor…' : 'Kaydet'}
+                </button>
               </div>
             </form>
           </div>
