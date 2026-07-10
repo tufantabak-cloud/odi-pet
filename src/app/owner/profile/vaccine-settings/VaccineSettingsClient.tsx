@@ -120,7 +120,7 @@ export default function VaccineSettingsClient({ pets }: { pets: Pet[] }) {
       .update({ status: 'cancelled' })
       .eq('pet_id', selectedPetId)
       .eq('category', 'asi')
-      .eq('status', 'active')
+      .in('status', ['active', 'overdue'])
       .contains('extra_data', { vaccine: { code } })
     setActivePlansByCode(prev => ({ ...prev, [code]: false }))
   }

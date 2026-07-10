@@ -13,6 +13,8 @@ export type ScheduleItem = {
   isBooster: boolean
   trigger: ScheduleTrigger
   daysOffset: number
+  /** scheduledAt bugünden (referenceDate) önceki bir takvim günündeyse true — plans.status'u 'overdue' yapmak için. */
+  isPast: boolean
 }
 
 export type ProtocolDose = {
@@ -52,6 +54,14 @@ function addDays(date: Date, days: number): Date {
 
 function sortedDoses(doses: ProtocolDose[]): ProtocolDose[] {
   return [...doses].sort((a, b) => a.dose_number - b.dose_number)
+}
+
+// Takvim günü karşılaştırması — "bugün" hiçbir zaman overdue sayılmaz,
+// saat farkları yüzünden yanlış pozitif üretmez.
+function isPastDate(date: Date, reference: Date): boolean {
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  const r = new Date(reference.getFullYear(), reference.getMonth(), reference.getDate())
+  return d.getTime() < r.getTime()
 }
 
 export function buildVaccinationSchedule(params: {
@@ -103,6 +113,7 @@ export function buildVaccinationSchedule(params: {
           isBooster: BOOSTER_LABEL_RE.test(nextDose.label),
           trigger: 'last_record',
           daysOffset: nextDose.days_offset,
+          isPast: isPastDate(scheduledAt, referenceDate),
         },
       ]
     }
@@ -134,6 +145,7 @@ export function buildVaccinationSchedule(params: {
         isBooster: true,
         trigger: 'last_record',
         daysOffset: intervalDays,
+        isPast: isPastDate(scheduledAt, referenceDate),
       },
     ]
   }
@@ -174,6 +186,7 @@ export function buildVaccinationSchedule(params: {
         isBooster: BOOSTER_LABEL_RE.test(dose.label),
         trigger: dose.trigger,
         daysOffset: dose.days_offset,
+        isPast: isPastDate(scheduledAt, referenceDate),
       })
     }
 
@@ -213,6 +226,7 @@ export function buildVaccinationSchedule(params: {
       isBooster,
       trigger,
       daysOffset,
+      isPast: isPastDate(scheduledAt, referenceDate),
     })
   })
 

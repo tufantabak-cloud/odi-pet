@@ -93,13 +93,13 @@ export async function POST(req: Request, props: { params: Promise<{ id: string; 
       return NextResponse.json({ error: 'Bu aşı için üretilecek yeni bir doz bulunamadı (protokol tamamlanmış olabilir).' }, { status: 400 })
     }
 
-    // Doz bazlı duplicate kontrolü — herhangi bir doz için zaten aktif plan varsa engelle
+    // Doz bazlı duplicate kontrolü — herhangi bir doz için zaten aktif/overdue plan varsa engelle
     const { data: existingPlans, error: existingPlansError } = await supabase
       .from('plans')
       .select('id, extra_data')
       .eq('pet_id', petId)
       .eq('category', 'asi')
-      .eq('status', 'active')
+      .in('status', ['active', 'overdue'])
 
     if (existingPlansError) {
       return NextResponse.json({ error: existingPlansError.message }, { status: 500 })
@@ -123,7 +123,7 @@ export async function POST(req: Request, props: { params: Promise<{ id: string; 
       category: 'asi',
       sub_type: `${protocol.protocol_name} — ${item.label}`,
       scheduled_at: item.scheduledAt.toISOString(),
-      status: 'active',
+      status: item.isPast ? 'overdue' : 'active',
       extra_data: {
         vaccine: { code: item.vaccineCode, name: item.vaccineName },
         vaccine_code: item.vaccineCode,
@@ -135,6 +135,7 @@ export async function POST(req: Request, props: { params: Promise<{ id: string; 
         schedule_trigger: item.trigger,
         days_offset: item.daysOffset,
         is_booster: item.isBooster,
+        is_past: item.isPast,
       },
     }))
 

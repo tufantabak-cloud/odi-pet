@@ -67,7 +67,7 @@ export async function GET(req: Request, props: { params: Promise<{ id: string }>
         .select('extra_data')
         .eq('pet_id', petId)
         .eq('category', 'asi')
-        .eq('status', 'active')
+        .in('status', ['active', 'overdue'])
 
       for (const plan of activePlans ?? []) {
         const code = (plan as any).extra_data?.vaccine?.code ?? (plan as any).extra_data?.vaccine_code
