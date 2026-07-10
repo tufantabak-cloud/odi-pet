@@ -42,6 +42,8 @@ import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 import type { AdministrationRoute } from '@/lib/database.types';
 import { SmartScanner } from '@/components/ui/SmartScanner';
 import { VaccineEntryScreen } from '@/components/vaccines/VaccineEntryScreen';
+import VaccineSelectorSheet, { VaccineOption } from '@/components/tasks/VaccineSelectorSheet';
+import { normalizeSpecies } from '@/lib/species';
 
 // ─── Rozet yardımcısı — komponentin dışına veya üstüne ekle ──────────────
 
@@ -1211,6 +1213,7 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
   const [setupProfile, setSetupProfile] = useState(initialSetupProfile);
   const [activeTab, setActiveTab] = useState<'takvim' | 'kayitlar'>('takvim');
   const [showManualModal, setShowManualModal] = useState(false);
+  const [showVaccinePicker, setShowVaccinePicker] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const flow = useVaccineFlow();
   const [activePlan, setActivePlan] = useState<any>(null);
@@ -1231,8 +1234,24 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
     brandFreeText:    '',
     administrationRoute: '' as '' | 'subcutaneous' | 'intramuscular' | 'intranasal' | 'oral' | 'other' | 'unknown',
     validUntil:       '',
+    suggestBrand:     false,
   });
   const [errorMsg, setErrorMsg] = useState('');
+
+  const handleVaccinePickerSelect = (vaccine: VaccineOption) => {
+    setFormData(prev => ({
+      ...prev,
+      vaccineName: vaccine.name,
+      vaccineCode: vaccine.code,
+      // Protokol değişince önceki marka seçimi temizlenir — yeni protokole
+      // ait marka listesi formData.vaccineCode useEffect'i ile yeniden yüklenir.
+      brandId: vaccine.brandId ?? '',
+      brandFreeText: '',
+      manufacturer: '',
+      suggestBrand: false,
+    }));
+    setShowVaccinePicker(false);
+  };
 
   // vaccine_code biliniyorsa (plan üzerinden "Yaptırdım"), o protokole ait
   // onaylı markaları vaccine_brands'ten getir — dropdown'da göster.
@@ -1576,6 +1595,28 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
 
       if (error) throw error;
 
+      // "Sisteme öner" işaretliyse — VaccineSelectorSheet'teki mevcut öneri
+      // akışıyla aynı şekilde admin onayı bekleyen pending bir marka kaydı aç.
+      if (brandMode === 'manual' && formData.suggestBrand && formData.brandFreeText.trim()) {
+        try {
+          const { data: userData } = await supabase.auth.getUser();
+          if (userData?.user) {
+            await supabase.from('vaccine_brands').insert({
+              vaccine_code: formData.vaccineCode.trim() || 'CUSTOM',
+              species: normalizeSpecies(pet.species),
+              brand_name: formData.brandFreeText.trim(),
+              manufacturer: formData.manufacturer.trim() || formData.brandFreeText.trim(),
+              is_core: false,
+              is_active: false,
+              status: 'pending',
+              suggested_by: userData.user.id,
+            });
+          }
+        } catch (suggestErr) {
+          console.error('Marka önerisi gönderilemedi:', suggestErr);
+        }
+      }
+
       if (activePlan) {
         try {
           await supabase.from('plans').update({ status: 'completed'}).eq('id', activePlan.id);
@@ -1619,6 +1660,7 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
       }
 
       setShowManualModal(false);
+      setShowVaccinePicker(false);
       setFormData(prev => ({
         ...prev,
         vaccineName: '',
@@ -2268,19 +2310,42 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
         <div 
           role="dialog" 
           className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
-          onClick={() => setShowManualModal(false)}
+          onClick={() => { setShowManualModal(false); setShowVaccinePicker(false); }}
         >
-          <div 
-            className="bg-surface w-full max-w-md rounded-[28px] p-6 relative flex flex-col gap-4 animate-in zoom-in-95 duration-200"
+          <div
+            className="bg-surface w-full max-w-md rounded-[28px] p-6 relative flex flex-col gap-4 animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
             onClick={e => e.stopPropagation()}
           >
+            {showVaccinePicker ? (
+              <VaccineSelectorSheet
+                pickerType="vaccine"
+                subCategory="Aşı"
+                species={normalizeSpecies(pet.species)}
+                selectedVaccineCode={formData.vaccineCode || null}
+                onSelect={handleVaccinePickerSelect}
+                onBack={() => setShowVaccinePicker(false)}
+              />
+            ) : (
+            <>
              <div>
               <h3 className="text-[18px] font-black text-text-primary">Aşı Kaydı Ekle</h3>
             </div>
             <form onSubmit={handleAddManual} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-[12px] font-bold text-text-primary">Aşı Adı *</label>
-                <input type="text" value={formData.vaccineName} onChange={e => setFormData(p => ({ ...p, vaccineName: e.target.value }))} className="input-base" required />
+                <div className="flex items-center justify-between">
+                  <label className="text-[12px] font-bold text-text-primary">Aşı Adı / Protokolü *</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowVaccinePicker(true)}
+                    className="text-[11px] font-bold text-primary underline"
+                  >
+                    Listeden Seç
+                  </button>
+                </div>
+                <input type="text" value={formData.vaccineName} onChange={e => setFormData(p => ({ ...p, vaccineName: e.target.value, vaccineCode: '' }))} className="input-base" required />
+                {formData.vaccineCode && formData.vaccineCode !== 'CUSTOM' && (
+                  <span className="text-[11px] text-text-secondary">Seçilen protokol kodu: {formData.vaccineCode}</span>
+                )}
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-[12px] font-bold text-text-primary">Tarih</label>
@@ -2343,6 +2408,16 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
                         onChange={e => setFormData(p => ({ ...p, manufacturer: e.target.value }))}
                         className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
                       />
+                      {formData.brandFreeText.trim() && (
+                        <label className="flex items-center gap-2 text-[11px] text-gray-500">
+                          <input
+                            type="checkbox"
+                            checked={formData.suggestBrand}
+                            onChange={e => setFormData(p => ({ ...p, suggestBrand: e.target.checked }))}
+                          />
+                          Bu markayı sisteme öner (admin onayına gönderilir)
+                        </label>
+                      )}
                     </>
                   )}
                   <input
@@ -2418,10 +2493,12 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
               )}
 
               <div className="flex gap-3 mt-2">
-                <button type="button" onClick={() => setShowManualModal(false)} className="flex-1 min-h-[50px] border-2 border-border-main rounded-xl">İptal</button>
+                <button type="button" onClick={() => { setShowManualModal(false); setShowVaccinePicker(false); }} className="flex-1 min-h-[50px] border-2 border-border-main rounded-xl">İptal</button>
                 <button type="submit" className="flex-1 min-h-[50px] bg-primary text-white rounded-xl">Kaydet</button>
               </div>
             </form>
+            </>
+            )}
           </div>
         </div>
       )}
