@@ -1227,8 +1227,70 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
     reactionObserved: false,
     notes:            '',
     documentImage:    null as File | null,
+    brandId:          '',
+    brandFreeText:    '',
+    administrationRoute: '' as '' | 'subcutaneous' | 'intramuscular' | 'intranasal' | 'oral' | 'other' | 'unknown',
+    validUntil:       '',
   });
   const [errorMsg, setErrorMsg] = useState('');
+
+  // vaccine_code biliniyorsa (plan üzerinden "Yaptırdım"), o protokole ait
+  // onaylı markaları vaccine_brands'ten getir — dropdown'da göster.
+  const [brandOptions, setBrandOptions] = useState<{ id: string; brand_name: string; manufacturer: string }[]>([]);
+  const [brandMode, setBrandMode] = useState<'select' | 'manual'>('manual');
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadBrands() {
+      if (!formData.vaccineCode || formData.vaccineCode === 'CUSTOM') {
+        setBrandOptions([]);
+        setBrandMode('manual');
+        return;
+      }
+      const supabase = createBrowserSupabaseClient();
+      const { data } = await supabase
+        .from('vaccine_brands')
+        .select('id, brand_name, manufacturer')
+        .eq('vaccine_code', formData.vaccineCode)
+        .eq('is_active', true)
+        .eq('status', 'approved')
+        .order('brand_name');
+      if (!cancelled) {
+        setBrandOptions(data ?? []);
+        setBrandMode(data && data.length > 0 ? 'select' : 'manual');
+      }
+    }
+    loadBrands();
+    return () => { cancelled = true; };
+  }, [formData.vaccineCode]);
+
+  // Kayıt listesinde marka göstermek için: initialRecords'taki brand_id'leri topluca çek
+  const [brandById, setBrandById] = useState<Record<string, { brand_name: string; manufacturer: string }>>({});
+
+  useEffect(() => {
+    const brandIds = Array.from(
+      new Set(initialRecords.map((r: any) => r.brand_id).filter(Boolean))
+    );
+    if (brandIds.length === 0) {
+      setBrandById({});
+      return;
+    }
+    let cancelled = false;
+    async function loadRecordBrands() {
+      const supabase = createBrowserSupabaseClient();
+      const { data } = await supabase
+        .from('vaccine_brands')
+        .select('id, brand_name, manufacturer')
+        .in('id', brandIds);
+      if (!cancelled && data) {
+        const map: Record<string, { brand_name: string; manufacturer: string }> = {};
+        for (const b of data) map[b.id] = { brand_name: b.brand_name, manufacturer: b.manufacturer };
+        setBrandById(map);
+      }
+    }
+    loadRecordBrands();
+    return () => { cancelled = true; };
+  }, [initialRecords]);
 
   // Wizard States
   const [showWizard, setShowWizard] = useState(false);
@@ -1329,6 +1391,36 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
 
     try {
       const supabase = createBrowserSupabaseClient();
+
+      // Belge/fotoğraf varsa private vaccine-documents bucket'ına yükle.
+      // Public URL yazılmaz — sadece storage path saklanır, görüntüleme signed URL ile yapılır.
+      let documentStoragePath: string | null = null;
+      if (formData.documentImage) {
+        const { data: userData } = await supabase.auth.getUser();
+        const userId = userData?.user?.id;
+        if (userId) {
+          const safeFileName = formData.documentImage.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+          const path = `${userId}/${pet.id}/${Date.now()}_${safeFileName}`;
+          const { error: uploadError } = await supabase.storage
+            .from('vaccine-documents')
+            .upload(path, formData.documentImage, { contentType: formData.documentImage.type, upsert: false });
+          if (!uploadError) {
+            documentStoragePath = path;
+          } else {
+            console.error('Belge yüklenemedi:', uploadError);
+            setErrorMsg('Belge yüklenemedi, kayıt belge olmadan devam ediyor.');
+          }
+        }
+      }
+
+      // Normalizasyon: brand_id VE brand_free_text/manufacturer_free_text aynı kayıtta
+      // birlikte olmasın. Listeden seçildiyse sadece brand_id, elle girildiyse sadece
+      // serbest metin alanları dolu olmalı.
+      const isBrandSelected = brandMode === 'select' && !!formData.brandId;
+      const normalizedBrandId = isBrandSelected ? formData.brandId : null;
+      const normalizedBrandFreeText = isBrandSelected ? null : (formData.brandFreeText.trim() || null);
+      const normalizedManufacturerFreeText = isBrandSelected ? null : (formData.manufacturer.trim() || null);
+
       const { error } = await supabase.from('vaccine_records_v2').insert({
         pet_id: pet.id,
         vaccine_name: formData.vaccineName.trim(),
@@ -1338,6 +1430,16 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
         notes: formData.notes.trim() || null,
         confidence_level: 'user_reported',
         source: 'user_detailed',
+        brand_id: normalizedBrandId,
+        brand_free_text: normalizedBrandFreeText,
+        manufacturer_free_text: normalizedManufacturerFreeText,
+        vet_name: formData.vetName.trim() || null,
+        lot_number: formData.lotNumber.trim() || null,
+        next_due_at: formData.nextDueDate || null,
+        valid_until: formData.validUntil || null,
+        reaction_observed: formData.reactionObserved ? 'gözlemlendi' : null,
+        document_storage_path: documentStoragePath,
+        administration_route: formData.administrationRoute || null,
       });
 
       if (error) throw error;
@@ -1396,7 +1498,11 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
         lotNumber: '',
         nextDueDate: '',
         reactionObserved: false,
-        documentImage: null
+        documentImage: null,
+        brandId: '',
+        brandFreeText: '',
+        administrationRoute: '',
+        validUntil: '',
       }));
       setActivePlan(null);
       
@@ -1405,6 +1511,20 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
       router.refresh();
     } catch (err: any) {
       setErrorMsg('Hata: ' + (err.message || 'Aşı kaydı eklenemedi.'));
+    }
+  };
+
+  const handleViewDocument = async (storagePath: string) => {
+    try {
+      const supabase = createBrowserSupabaseClient();
+      const { data, error } = await supabase.storage
+        .from('vaccine-documents')
+        .createSignedUrl(storagePath, 3600); // 1 saat geçerli
+      if (error || !data) throw error;
+      window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+    } catch (err) {
+      console.error('Belge görüntülenemedi:', err);
+      setErrorMsg('Belge görüntülenemedi.');
     }
   };
 
@@ -1859,11 +1979,27 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
                                 <p className="text-[11px] text-text-secondary font-medium">
                                   {new Date(rec.administered_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
                                 </p>
+                                <p className="text-[11px] text-text-secondary/80 font-medium mt-0.5">
+                                  {rec.brand_id && brandById[rec.brand_id]
+                                    ? `${brandById[rec.brand_id].brand_name} — ${brandById[rec.brand_id].manufacturer}`
+                                    : rec.brand_free_text
+                                    ? `Elle girilen: ${rec.brand_free_text}`
+                                    : 'Marka belirtilmemiş'}
+                                </p>
                               </div>
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0">
                               {rec.confidence_level && <ConfidenceBadge level={rec.confidence_level} />}
                               {rec.notes && <span className="text-[11px] bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg font-medium">{rec.notes}</span>}
+                              {rec.document_storage_path && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleViewDocument(rec.document_storage_path)}
+                                  className="text-[11px] text-primary font-bold underline"
+                                >
+                                  Belgeyi Görüntüle
+                                </button>
+                              )}
                             </div>
                           </div>
                         ))}
@@ -1986,13 +2122,48 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
                     onChange={e => setFormData(p => ({ ...p, clinicName: e.target.value }))}
                     className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
                   />
-                  <input
-                    type="text"
-                    placeholder="Marka / Üretici"
-                    value={formData.manufacturer}
-                    onChange={e => setFormData(p => ({ ...p, manufacturer: e.target.value }))}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
-                  />
+                  {brandOptions.length > 0 && (
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-gray-500">Marka</label>
+                      <select
+                        value={brandMode === 'select' ? formData.brandId : '__manual__'}
+                        onChange={e => {
+                          if (e.target.value === '__manual__') {
+                            setBrandMode('manual');
+                            setFormData(p => ({ ...p, brandId: '' }));
+                          } else {
+                            setBrandMode('select');
+                            setFormData(p => ({ ...p, brandId: e.target.value }));
+                          }
+                        }}
+                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                      >
+                        <option value="">Marka seçin (opsiyonel)</option>
+                        {brandOptions.map(b => (
+                          <option key={b.id} value={b.id}>{b.brand_name} — {b.manufacturer}</option>
+                        ))}
+                        <option value="__manual__">Elle gir…</option>
+                      </select>
+                    </div>
+                  )}
+                  {brandMode === 'manual' && (
+                    <>
+                      <input
+                        type="text"
+                        placeholder="Marka Adı"
+                        value={formData.brandFreeText}
+                        onChange={e => setFormData(p => ({ ...p, brandFreeText: e.target.value }))}
+                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Üretici"
+                        value={formData.manufacturer}
+                        onChange={e => setFormData(p => ({ ...p, manufacturer: e.target.value }))}
+                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                      />
+                    </>
+                  )}
                   <input
                     type="text"
                     placeholder="Lot / Seri no"
@@ -2008,6 +2179,31 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
                       onChange={e => setFormData(p => ({ ...p, nextDueDate: e.target.value }))}
                       className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
                     />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-gray-500">Geçerlilik Tarihi (özellikle kuduz için önemli)</label>
+                    <input
+                      type="date"
+                      value={formData.validUntil}
+                      onChange={e => setFormData(p => ({ ...p, validUntil: e.target.value }))}
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-gray-500">Uygulama Yolu</label>
+                    <select
+                      value={formData.administrationRoute}
+                      onChange={e => setFormData(p => ({ ...p, administrationRoute: e.target.value as typeof p.administrationRoute }))}
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                    >
+                      <option value="">Seçiniz</option>
+                      <option value="subcutaneous">SC Enjeksiyon</option>
+                      <option value="intramuscular">IM Enjeksiyon</option>
+                      <option value="intranasal">İntranazal</option>
+                      <option value="oral">Oral</option>
+                      <option value="other">Diğer</option>
+                      <option value="unknown">Bilinmiyor</option>
+                    </select>
                   </div>
                   <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
                     <input

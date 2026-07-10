@@ -559,6 +559,16 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
 
       // Eğer seçilen işlem bir Aşı ise, geçmiş onay verilirse (done olanlar için) vaccine_records_v2 tablosuna da ekle
       if (isPastDate && selectedVaccine) {
+        // vaccine_name'e marka adı değil protokol adı yazılmalı — marka bilgisi brand_id'de tutulur.
+        // Fallback marka adına DEĞİL, vaccine_code'a düşer (protokol bulunamazsa bile marka adı sızmasın).
+        const { data: protocol } = await supabase
+          .from('vaccine_protocols')
+          .select('protocol_name')
+          .eq('vaccine_code', selectedVaccine.code)
+          .eq('is_active', true)
+          .maybeSingle();
+        const protocolName = protocol?.protocol_name ?? selectedVaccine.code;
+
         const doneInserts = insertedSchedules.filter((s: any) => s.status === 'done');
         for (const s of doneInserts) {
            const { error: vrError } = await supabase
@@ -566,7 +576,8 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
             .insert({
               pet_id: petId,
               vaccine_code: selectedVaccine.code,
-              vaccine_name: selectedVaccine.name,
+              vaccine_name: protocolName,
+              brand_id: selectedVaccine.brandId ?? null,
               administered_at: s.due_date,
               status: 'completed',
               confidence_level: 'verified',

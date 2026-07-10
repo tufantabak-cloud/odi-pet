@@ -15,6 +15,8 @@ export type VaccineOption = VaccineCatalogItem & {
   application_method?: string;
   active_ingredient?: string;
   brand?: string;
+  /** vaccine_brands.id — aşı markası seçildiyse dolu, protokolü kendi yazdıysa boş */
+  brandId?: string;
 };
 
 interface VaccineSelectorSheetProps {
@@ -216,6 +218,7 @@ export default function VaccineSelectorSheet({
               image_url: d.image_url ? String(d.image_url) : undefined,
               description: d.description ? String(d.description) : undefined,
               brand: String(d.manufacturer),
+              brandId: String(d.id),
               isParasite: false,
              }));
            }
