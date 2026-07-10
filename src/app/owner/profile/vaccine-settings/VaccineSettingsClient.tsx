@@ -44,6 +44,13 @@ export default function VaccineSettingsClient({ pets }: { pets: Pet[] }) {
   const [error, setError] = useState('')
   const [busyCode, setBusyCode] = useState<string | null>(null)
   const [confirmDisableCode, setConfirmDisableCode] = useState<string | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(null), 4000)
+    return () => clearTimeout(t)
+  }, [toast])
 
   const loadData = async (petId: string) => {
     setLoading(true)
@@ -122,11 +129,14 @@ export default function VaccineSettingsClient({ pets }: { pets: Pet[] }) {
     if (!selectedPetId) return
     setBusyCode(code)
     setError('')
+    setToast(null)
     try {
       const res = await fetch(`/api/pets/${selectedPetId}/vaccine-preferences/${code}/create-plan`, { method: 'POST' })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Plan oluşturulamadı.')
       setActivePlansByCode(prev => ({ ...prev, [code]: true }))
+      const doseCount = data?.data?.doseCount ?? 0
+      setToast(`${doseCount} dozluk plan oluşturuldu`)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Bir hata oluştu.')
     } finally {
@@ -176,6 +186,10 @@ export default function VaccineSettingsClient({ pets }: { pets: Pet[] }) {
 
       {error && (
         <div className="bg-red-50 text-red-600 p-3 rounded-xl border border-red-200 text-[13px] font-normal mb-4">{error}</div>
+      )}
+
+      {toast && (
+        <div className="bg-emerald-50 text-emerald-700 p-3 rounded-xl border border-emerald-200 text-[13px] font-bold mb-4">{toast}</div>
       )}
 
       {selectedPetId && loading && (
@@ -240,14 +254,13 @@ export default function VaccineSettingsClient({ pets }: { pets: Pet[] }) {
                 </span>
                 <button
                   type="button"
-                  disabled
-                  title="Doz takvimi özelliği hazırlanıyor"
-                  className="text-[12px] font-bold text-text-secondary opacity-50 px-3 py-1.5 rounded-lg border border-border-main cursor-not-allowed"
+                  disabled={!enabled || hasActivePlan || isBusy}
+                  onClick={() => handleCreatePlan(protocol.vaccine_code)}
+                  className="text-[12px] font-bold text-primary disabled:text-text-secondary disabled:opacity-50 px-3 py-1.5 rounded-lg border border-primary disabled:border-border-main"
                 >
-                  Plan Oluşturma (Yakında)
+                  Hemen Plan Oluştur
                 </button>
               </div>
-              <p className="text-[10px] text-text-secondary -mt-1">Doz takvimi özelliği hazırlanıyor.</p>
             </div>
           )
         })}

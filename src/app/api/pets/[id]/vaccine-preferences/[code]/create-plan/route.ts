@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { normalizeSpecies } from '@/lib/species'
+import { buildVaccinationSchedule, type ProtocolDose } from '@/lib/vaccines/build-vaccination-schedule'
 
 export async function POST(req: Request, props: { params: Promise<{ id: string; code: string }> }) {
   try {
@@ -25,7 +26,7 @@ export async function POST(req: Request, props: { params: Promise<{ id: string; 
 
     const { data: pet, error: petError } = await supabase
       .from('pets')
-      .select('id, species')
+      .select('id, species, birth_date')
       .eq('id', petId)
       .single()
 
@@ -65,60 +66,95 @@ export async function POST(req: Request, props: { params: Promise<{ id: string; 
       return NextResponse.json({ error: 'Protokol bulunamadı veya bu tür için geçerli değil' }, { status: 404 })
     }
 
-    // Aynı vaccine_code için aktif plan var mı?
-    const { data: existingPlans } = await supabase
+    // Bu pet + aşı için tamamlanmış kayıtları çek (booster mı, ilk seri mi belirlenecek)
+    const { data: completedRecords, error: recordsError } = await supabase
+      .from('vaccine_records_v2')
+      .select('vaccine_code, administered_at, status')
+      .eq('pet_id', petId)
+      .eq('vaccine_code', vaccineCode)
+      .eq('status', 'completed')
+
+    if (recordsError) {
+      return NextResponse.json({ error: recordsError.message }, { status: 500 })
+    }
+
+    const schedule = buildVaccinationSchedule({
+      pet: { id: pet.id, birth_date: pet.birth_date, species: petSpecies },
+      protocol: {
+        vaccine_code: protocol.vaccine_code,
+        protocol_name: protocol.protocol_name,
+        doses: (protocol.doses ?? []) as ProtocolDose[],
+        repeat_frequency: protocol.repeat_frequency as any,
+      },
+      existingRecords: completedRecords ?? [],
+    })
+
+    if (schedule.length === 0) {
+      return NextResponse.json({ error: 'Bu aşı için üretilecek yeni bir doz bulunamadı (protokol tamamlanmış olabilir).' }, { status: 400 })
+    }
+
+    // Doz bazlı duplicate kontrolü — herhangi bir doz için zaten aktif plan varsa engelle
+    const { data: existingPlans, error: existingPlansError } = await supabase
       .from('plans')
       .select('id, extra_data')
       .eq('pet_id', petId)
       .eq('category', 'asi')
       .eq('status', 'active')
 
-    const hasActivePlan = (existingPlans ?? []).some((p: any) => {
-      const code = p.extra_data?.vaccine?.code ?? p.extra_data?.vaccine_code
-      return code === vaccineCode
-    })
+    if (existingPlansError) {
+      return NextResponse.json({ error: existingPlansError.message }, { status: 500 })
+    }
 
-    if (hasActivePlan) {
+    const existingDoseKeys = new Set(
+      (existingPlans ?? [])
+        .filter((p: any) => (p.extra_data?.vaccine_code ?? p.extra_data?.vaccine?.code) === vaccineCode)
+        .map((p: any) => `${p.extra_data?.dose_number}`)
+    )
+
+    const hasDuplicate = schedule.some((item) => existingDoseKeys.has(`${item.doseNumber}`))
+    if (hasDuplicate) {
       return NextResponse.json({ error: 'Bu aşı için zaten aktif bir plan mevcut' }, { status: 409 })
     }
 
-    // Tek protokol için plan üret — "hemen" semantiğiyle bugüne planlanır,
-    // kullanıcı Plan Yap/Takvim ekranından tarihi düzenleyebilir.
-    const scheduledAt = new Date()
-    scheduledAt.setHours(9, 0, 0, 0)
+    // Tüm dozları tek toplu insert ile yaz — tek insert çağrısı atomik davranır.
+    const plansPayload = schedule.map((item) => ({
+      pet_id: petId,
+      user_id: user.id,
+      category: 'asi',
+      sub_type: `${protocol.protocol_name} — ${item.label}`,
+      scheduled_at: item.scheduledAt.toISOString(),
+      status: 'active',
+      extra_data: {
+        vaccine: { code: item.vaccineCode, name: item.vaccineName },
+        vaccine_code: item.vaccineCode,
+        dose_number: item.doseNumber,
+        dose_label: item.label,
+        preference_id: preference.id,
+        source: 'vaccine_settings',
+        auto_generated: true,
+        schedule_trigger: item.trigger,
+        days_offset: item.daysOffset,
+        is_booster: item.isBooster,
+      },
+    }))
 
-    const { data: plan, error: insertError } = await supabase
+    const { data: insertedPlans, error: insertError } = await supabase
       .from('plans')
-      .insert({
-        pet_id: petId,
-        user_id: user.id,
-        category: 'asi',
-        sub_type: protocol.protocol_name,
-        scheduled_at: scheduledAt.toISOString(),
-        repeat_rule: protocol.repeat_frequency && protocol.repeat_frequency !== 'none' ? protocol.repeat_frequency : null,
-        status: 'active',
-        extra_data: {
-          vaccine: { code: protocol.vaccine_code, name: protocol.protocol_name },
-          preference_id: preference.id,
-          auto_generated: false,
-          source: 'vaccine_settings',
-        },
-      } as any)
+      .insert(plansPayload as any)
       .select()
-      .single()
 
     if (insertError) {
       console.error('create-plan insert error:', insertError)
       return NextResponse.json({ error: insertError.message }, { status: 500 })
     }
 
-    // preference'ı oluşan planla geri bağla
+    // preference'ı geri bağla
     await supabase
       .from('pet_vaccine_preferences')
       .update({ updated_at: new Date().toISOString() })
       .eq('id', preference.id)
 
-    return NextResponse.json({ data: { plan } })
+    return NextResponse.json({ data: { plans: insertedPlans, doseCount: insertedPlans?.length ?? 0 } })
   } catch (error: unknown) {
     console.error('create-plan POST error:', error)
     return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) || 'Internal server error' }, { status: 500 })
