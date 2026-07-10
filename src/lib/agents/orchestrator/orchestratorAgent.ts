@@ -3,6 +3,8 @@ import { cookies } from 'next/headers'
 import { runBatchQualityScan } from '@/lib/agents/dataQualityAgent'
 import { emitVaccineDueEvents } from '@/lib/agents/petProfileAgent'
 import { runUserHealthScan } from '@/lib/agents/userHealthAgent'
+import { markOverduePlans } from '@/lib/plans/mark-overdue-plans'
+import { createAdminSupabaseClient } from '@/lib/supabase/server'
 import { writeEvent } from './eventContract'
 import { randomUUID } from 'crypto'
 
@@ -39,7 +41,7 @@ export async function runOrchestratedPipeline(
   await writeEvent(supabase, null, 'orchestrator_run_started', {
     run_id,
     triggered_by,
-    agents_planned: ['data_quality', 'vaccine_check', 'user_health'],
+    agents_planned: ['data_quality', 'vaccine_check', 'user_health', 'overdue_plans'],
   })
 
   // ADIM 1 — Data Quality
@@ -88,6 +90,23 @@ export async function runOrchestratedPipeline(
         downstream_skipped: ['notification — churn_risk_detected event üretilmedi'],
       })
     }
+  }
+
+  // ADIM 4 — Overdue Plans (scheduled_at geçmiş 'active' planları 'overdue' yapar)
+  try {
+    const adminSupabase = createAdminSupabaseClient()
+    const result = await markOverduePlans(adminSupabase)
+    console.log('Overdue plans marked:', result.updated)
+    agents_succeeded.push('overdue_plans')
+  } catch (err) {
+    const error = err instanceof Error ? err.message : String(err)
+    agents_failed.push('overdue_plans')
+    await writeEvent(supabase, null, 'orchestrator_agent_failed', {
+      run_id,
+      agent: 'overdue_plans',
+      error,
+      downstream_skipped: [],
+    })
   }
 
   const duration_ms = Date.now() - started_at

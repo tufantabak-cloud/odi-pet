@@ -97,6 +97,14 @@ Bir protokolün ilk dozu tamamlanmış ama serinin geri kalanı bitmemişken "He
 - Sadece 'asi' kategorisi değil, tüm plan kategorileri için
 - Dry-run modu (prod'da test için)
 
+**Durum:** Çekirdek geçiş mantığı (`markOverduePlans`, Europe/Istanbul takvim günü baz alınarak, tüm kategoriler — sadece 'asi' değil) `orchestratorAgent.ts`'e eklendi ve günlük 03:00 orchestrator cron'u üzerinden çalışıyor; gerçek veri üzerinde doğrulandı (9 gerçekten geçmiş tarihli 'active' plan doğru şekilde 'overdue'ya çevrildi). **Kalan işler:** gecikmiş aşı bildirimi üretimi, ayrı dry-run modu.
+
+**Cron Güvenlik Borcu (kayıt, bu sprintte düzeltilmedi):**
+- `weekly-report` cron route'u (`vercel.json`'da gerçekten zamanlanmış) hiçbir auth kontrolü yapmıyor, üstelik admin client yerine cookie tabanlı anon client kullanıyor — muhtemelen yarım kalmış.
+- `expire-cards` cron route'unda auth kontrolü kodda var ama yorum satırına alınmış — route şu an tamamen herkese açık.
+- Ayrıca `plans`, `anomaly-detector`, `process-events`, `user-health`, `data-quality`, `subscription-reminders`, `dispatch-notifications` route'ları `vercel.json`'da hiç zamanlanmamış — ölü/bağlanmamış kod.
+- Öneri: tüm cron route'ları tek bir `CRON_SECRET` (Bearer/query-token) pattern'ine geçirilmeli, kullanılmayanlar silinmeli veya orchestrator'a taşınmalı.
+
 ### Sprint 4.3B — Confidence Level Normalization
 **Amaç:** `confidence_level` yazım değerlerini tekilleştirmek. (Sprint 4.3A'da mimariye dokunulmadı, bilinçli olarak ertelendi — bkz. [ODIPET_AUDIT_CURRENT.md](ODIPET_AUDIT_CURRENT.md) Sprint 4.3 analizi.)
 
