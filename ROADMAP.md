@@ -46,6 +46,23 @@
 - Mobile UX validation
 - vaccine_code string matching → vaccine_protocol_id FK (gelecek sprint)
 
+### Sprint B — Aşı Karnesi Tarama Entegrasyonu
+**Amaç:** Akıllı Tarama (OCR, `/api/scan-document`, Gemini Vision — çalışıyor) şu an `vaccine_card` sonuçlarını `vaccine_records_v2` yerine `health_treatments` tablosuna yazıyor ([ScannerClient.tsx](src/app/owner/scanner/ScannerClient.tsx)). Bu, P0/P1'de kurulan aşı mimarisinden (brand_id, vaccine_protocols trigger'ı, plan eşleştirme) tamamen kopuk. Not: Akıllı Tarama'nın kendisi (OCR) çalışıyor ve "yakında" değil — sadece kayıt hedefi yanlış tabloya gidiyor.
+
+İlk işler:
+1. `ScannerClient.tsx`'teki `record_type === 'vaccine_card'` dalını `/api/pets/{id}/treatments` yerine `vaccine_records_v2` insert'ine yönlendir.
+2. OCR'dan gelen `brand` alanını `vaccine_brands`'te ara; bulunamazsa `brand_free_text`'e yaz.
+3. `vaccine_code` OCR'dan çıkmıyorsa `CUSTOM` fallback'i kullan.
+4. P0-2 trigger'ının (brand/vaccine_code uyumu) bu yeni akışı da kapsadığını test et.
+
+### Sprint C — Ortak Aşı Kayıt Servisi
+**Amaç:** Şu an 3 ayrı, birbirinden habersiz aşı yazma yolu var: `VaccinesClient.tsx` (manuel form), `SmartTaskWizard.tsx` (plan akışı), `ScannerClient.tsx` (OCR, Sprint B sonrası). Her biri kendi brand normalizasyonu / plan eşleştirme mantığını ayrı ayrı tekrarlıyor.
+
+İlk işler:
+1. Ortak bir `createVaccineRecord()` servis fonksiyonu çıkar (brand_id/free_text normalizasyonu, plan eşleştirme, insert tek yerde).
+2. Üç çağıran noktayı da bu servise yönlendir.
+3. Tekrarlanan mantığı sil, tek kaynak kalsın.
+
 ### Sprint 4.3B — Confidence Level Normalization
 **Amaç:** `confidence_level` yazım değerlerini tekilleştirmek. (Sprint 4.3A'da mimariye dokunulmadı, bilinçli olarak ertelendi — bkz. [ODIPET_AUDIT_CURRENT.md](ODIPET_AUDIT_CURRENT.md) Sprint 4.3 analizi.)
 

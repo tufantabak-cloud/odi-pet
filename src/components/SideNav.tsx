@@ -124,7 +124,13 @@ function NavLink({ href, label, icon }: { href: string; label: string; icon: Rea
 
 export default function SideNav({ actionMenuItems }: SideNavProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  
+  const [toastMsg, setToastMsg] = useState<string | null>(null)
+
+  const showToast = (message: string) => {
+    setToastMsg(message)
+    setTimeout(() => setToastMsg(null), 3000)
+  }
+
   const activeActionMenuItems = actionMenuItems && actionMenuItems.length > 0
     ? actionMenuItems
     : fallbackActionMenuItems
@@ -145,17 +151,35 @@ export default function SideNav({ actionMenuItems }: SideNavProps) {
           <>
             <div className="fixed inset-0 z-[9990]" onClick={() => setIsMenuOpen(false)} />
             <div className="absolute left-0 right-0 mt-2 bg-surface border border-border-main rounded-[14px] shadow-xl p-2 z-[9991] flex flex-col gap-1 animate-in fade-in slide-in-from-top-2 duration-150">
-              {activeActionMenuItems.map((item) => (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-[10px] text-[13px] font-semibold text-text-primary hover:bg-bg-main hover:text-[#5D3FD3] transition-colors"
-                >
-                  {item.icon && <span className="text-text-secondary">{getIcon(item.icon, 16)}</span>}
-                  {item.label}
-                </Link>
-              ))}
+              {activeActionMenuItems.map((item) => {
+                if (item.label === 'Durum Kaydet') {
+                  return (
+                    <button
+                      key={item.label}
+                      type="button"
+                      aria-disabled="true"
+                      onClick={() => {
+                        showToast('Günlük pet gözlem kaydı yakında kullanıma açılacak.')
+                      }}
+                      className="flex items-center gap-2 px-3 py-2 rounded-[10px] text-[13px] font-semibold text-text-secondary/60 cursor-not-allowed text-left"
+                    >
+                      {item.icon && <span className="text-text-secondary/40">{getIcon(item.icon, 16)}</span>}
+                      Durum Kaydet (Yakında)
+                    </button>
+                  )
+                }
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-[10px] text-[13px] font-semibold text-text-primary hover:bg-bg-main hover:text-[#5D3FD3] transition-colors"
+                  >
+                    {item.icon && <span className="text-text-secondary">{getIcon(item.icon, 16)}</span>}
+                    {item.label}
+                  </Link>
+                )
+              })}
             </div>
           </>
         )}
@@ -174,6 +198,12 @@ export default function SideNav({ actionMenuItems }: SideNavProps) {
       {shortcutItems.map((item) => (
         <NavLink key={item.href} {...item} />
       ))}
+
+      {toastMsg && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] bg-[#0c1424] text-white text-[13px] font-semibold px-4 py-2.5 rounded-full shadow-lg animate-in fade-in slide-in-from-bottom-2">
+          {toastMsg}
+        </div>
+      )}
     </aside>
   )
 }

@@ -96,6 +96,12 @@ export default function BottomNav({
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [toastMsg, setToastMsg] = useState<string | null>(null)
+
+  const showToast = (message: string) => {
+    setToastMsg(message)
+    setTimeout(() => setToastMsg(null), 3000)
+  }
 
   useEffect(() => { setMounted(true) }, [])
 
@@ -153,19 +159,40 @@ export default function BottomNav({
             onClick={() => setIsMenuOpen(false)}
           />
           <div className="relative z-[9991] w-full max-w-lg mx-auto px-[var(--space-4)] pb-[100px] flex flex-col items-end gap-2 pointer-events-none">
-            {activeActionMenuItems.map((item: any, index) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                prefetch={['/owner/scanner', '/owner/ai-vet', '/owner/social', '/owner/services', '/owner/plan-yap'].includes(item.href) ? false : undefined}
-                onClick={() => setIsMenuOpen(false)}
-                className="pointer-events-auto bg-[var(--color-surface)] text-[var(--color-text-primary)] px-[var(--space-5)] py-3 rounded-[var(--radius-md)] shadow-[var(--shadow-md)] font-bold text-[14px] flex items-center justify-center transition-all duration-200 animate-in slide-in-from-bottom-4 fade-in hover:bg-[var(--color-surface-secondary)] active:scale-[0.98]"
-                style={{ animationDelay: `${(activeActionMenuItems.length - 1 - index) * 40}ms`, animationFillMode: 'both' }}
-              >
-                {item.icon && <span className="mr-2">{getIcon(item.icon, 18)}</span>}
-                {item.label}
-              </Link>
-            ))}
+            {activeActionMenuItems.map((item: any, index) => {
+              const isStatusLog = item.label === 'Durum Kaydet'
+              if (isStatusLog) {
+                return (
+                  <button
+                    key={item.label}
+                    type="button"
+                    aria-disabled="true"
+                    onClick={() => {
+                      setIsMenuOpen(false)
+                      showToast('Günlük pet gözlem kaydı yakında kullanıma açılacak.')
+                    }}
+                    className="pointer-events-auto bg-[var(--color-surface)] text-[var(--color-text-secondary)]/60 px-[var(--space-5)] py-3 rounded-[var(--radius-md)] shadow-[var(--shadow-md)] font-bold text-[14px] flex items-center justify-center transition-all duration-200 animate-in slide-in-from-bottom-4 fade-in cursor-not-allowed"
+                    style={{ animationDelay: `${(activeActionMenuItems.length - 1 - index) * 40}ms`, animationFillMode: 'both' }}
+                  >
+                    {item.icon && <span className="mr-2 opacity-40">{getIcon(item.icon, 18)}</span>}
+                    Durum Kaydet (Yakında)
+                  </button>
+                )
+              }
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  prefetch={['/owner/scanner', '/owner/ai-vet', '/owner/social', '/owner/services', '/owner/plan-yap'].includes(item.href) ? false : undefined}
+                  onClick={() => setIsMenuOpen(false)}
+                  className="pointer-events-auto bg-[var(--color-surface)] text-[var(--color-text-primary)] px-[var(--space-5)] py-3 rounded-[var(--radius-md)] shadow-[var(--shadow-md)] font-bold text-[14px] flex items-center justify-center transition-all duration-200 animate-in slide-in-from-bottom-4 fade-in hover:bg-[var(--color-surface-secondary)] active:scale-[0.98]"
+                  style={{ animationDelay: `${(activeActionMenuItems.length - 1 - index) * 40}ms`, animationFillMode: 'both' }}
+                >
+                  {item.icon && <span className="mr-2">{getIcon(item.icon, 18)}</span>}
+                  {item.label}
+                </Link>
+              )
+            })}
           </div>
         </div>,
         document.body
@@ -276,6 +303,13 @@ export default function BottomNav({
           })}
         </div>
       </nav>
+
+      {mounted && toastMsg && createPortal(
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[9999] bg-[#0c1424] text-white text-[13px] font-semibold px-4 py-2.5 rounded-full shadow-lg animate-in fade-in slide-in-from-bottom-2 max-w-[90vw] text-center">
+          {toastMsg}
+        </div>,
+        document.body
+      )}
     </>
   )
 }
