@@ -203,29 +203,24 @@ export default function WizardOrchestrator() {
           const isVaccine = subCat === 'Aşı';
 
           // 1. Templates
-          const { data: templates } = await supabase.from('vaccine_templates')
-            .select('*').eq('species', speciesEng).eq('is_active', true);
-            
+          // vaccine_templates dropped — vaccine_protocols kullanılıyor (bkz. vaccination-algorithm.ts).
+          // vaccine_protocols yalnızca aşı protokolleri içerir, hiç parazit kategorisi yok — parazit
+          // ürünleri zaten aşağıdaki ayrı useEffect'te parasite_products'tan çekiliyor. Bu kaynak
+          // sadece isVaccine=true iken kullanılır; parazit sekmesinde bu tablodan hiç ürün gelmez
+          // (INT/EXT prefix ayrımına gerek yok — kaynağın kendisinde parazit satırı bulunmuyor).
+          const { data: templates } = await supabase.from('vaccine_protocols')
+            .select('*').in('species', [speciesEng, 'both']).eq('is_active', true);
+
           let templateOptions: any[] = [];
-          if (templates) {
+          if (templates && isVaccine) {
             templateOptions = templates
-              .filter((t: any) => {
-                if (isVaccine) return t.category === 'vaccine';
-                if (t.category !== 'parasite') return false;
-                
-                const c = String(t.vaccine_code).toUpperCase();
-                if (subCat === 'İç Parazit' && c.includes('EXT')) return false;
-                if ((subCat === 'Dış Parazit' || subCat === 'Parazit Tasması') && c.includes('INT')) return false;
-                
-                return true;
-              })
               .map((t: any) => ({
                 code: t.vaccine_code,
-                name: t.vaccine_name,
-                nameTr: t.vaccine_name,
-                group: (t.mandatory_level === 'core' || t.mandatory_level === 'mandatory') ? 'core' : 'optional',
+                name: t.protocol_name,
+                nameTr: t.protocol_name,
+                group: t.is_core === true ? 'core' : 'optional',
                 isParasite: !isVaccine,
-                protection_duration_days: t.recurrence_days,
+                protection_duration_days: t.repeat_interval_days,
                 isTemplate: true,
               }));
           }

@@ -36,14 +36,27 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     }
 
     // Şablonları veritabanından çek (böylece sadece kod gönderilse bile eşleşir)
-    const { data: templates } = await supabase
-      .from('vaccine_templates')
+    // vaccine_templates dropped — vaccine_protocols kullanılıyor (bkz. vaccination-algorithm.ts)
+    const { data: protocols } = await supabase
+      .from('vaccine_protocols')
       .select('*')
-      .eq('species', pet.species)
+      .in('species', [pet.species, 'both'])
+      .eq('is_active', true)
 
     const templateMap = new Map<string, any>()
-    if (templates) {
-      templates.forEach(t => templateMap.set(t.vaccine_code, t))
+    if (protocols) {
+      protocols.forEach(p => {
+        const doses = p.doses || []
+        templateMap.set(p.vaccine_code, {
+          vaccine_name: p.protocol_name,
+          // vaccine_protocols yalnızca aşı protokolleri içerir — parazit verisi parasite_products'ta ayrı tutulur.
+          category: 'vaccine',
+          is_core: p.is_core,
+          dose_count: doses.length || 1,
+          recurrence_days: p.repeat_interval_days,
+          has_annual_booster: p.repeat_frequency === 'yearly',
+        })
+      })
     }
 
     const body = await request.json()

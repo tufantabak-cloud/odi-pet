@@ -5,15 +5,15 @@ import { getPlanDisplayTitle } from '@/lib/plans/utils';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Veri Kaynağı Notu:
-// Aşı ve parazit sınıflandırması için tek kaynak gerçek: vaccine_templates tablosu.
-// mandatory_level alanı:
-//   'legal_required' → Zorunlu Aşılar (legal)
-//   'core'           → Zorunlu Aşılar
-//   'optional'       → Opsiyonel Aşılar
+// Aşı sınıflandırması için tek kaynak gerçek: vaccine_protocols tablosu
+// (vaccine_templates dropped — bkz. vaccination-algorithm.ts).
+// is_core alanı:
+//   true  → Zorunlu Aşılar
+//   false → Opsiyonel Aşılar
 // Statik vaccineCatalog.ts bu hook içinde KULLANILMAZ.
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** vaccine_templates tablosundan yüklenen lookup map türü */
+/** vaccine_protocols tablosundan yüklenen lookup map türü */
 type VaccineTemplateEntry = {
   group: 'core' | 'optional';
   recurrence_days: number | null;
@@ -21,9 +21,9 @@ type VaccineTemplateEntry = {
 };
 type VaccineTemplateMap = Map<string, VaccineTemplateEntry>;
 
-/** mandatory_level → UI grubu */
-function mandatoryLevelToGroup(level: string): 'core' | 'optional' {
-  return (level === 'core' || level === 'legal_required') ? 'core' : 'optional';
+/** vaccine_protocols.is_core → UI grubu */
+function mandatoryLevelToGroup(isCore: boolean): 'core' | 'optional' {
+  return isCore ? 'core' : 'optional';
 }
 
 /** Template map'ten recurrence_days al */
@@ -49,7 +49,7 @@ function getTemplateRecurrenceDays(
 }
 
 /**
- * vaccine_templates map'ine bakarak vaccine_code veya vaccine_name üzerinden
+ * vaccine_protocols map'ine bakarak vaccine_code veya vaccine_name üzerinden
  * zorunlu/opsiyonel grubunu belirler.
  * Map yoksa (henüz yüklenmemişse) null döner → fallback: is_core DB flag'ı.
  */
@@ -280,43 +280,43 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
   const supabase = createBrowserSupabaseClient();
 
   /**
-   * vaccine_templates tablosundan yüklenen lookup map.
-   * Key: vaccine_code (BÜYÜK HARF) veya vaccine_name (küçük harf normalize)
+   * vaccine_protocols tablosundan yüklenen lookup map.
+   * Key: vaccine_code (BÜYÜK HARF) veya protocol_name (küçük harf normalize)
    * Value: 'core' | 'optional'
    */
   const [vaccineTemplateMap, setVaccineTemplateMap] = useState<VaccineTemplateMap>(new Map());
 
-  // ── vaccine_templates'i yükle (her iki tür için, species filtresi yok — en kapsamlı) ──
+  // ── vaccine_protocols'i yükle (species filtresi yok — en kapsamlı) ──
   useEffect(() => {
     async function loadTemplates() {
       try {
         const { data, error } = await supabase
-          .from('vaccine_templates')
-          .select('vaccine_code, vaccine_name, mandatory_level, category, recurrence_days, has_annual_booster')
+          .from('vaccine_protocols')
+          .select('vaccine_code, protocol_name, is_core, repeat_interval_days, repeat_frequency')
           .eq('is_active', true);
 
         if (error) {
-          console.error('[useHealthTracker] vaccine_templates load error:', error);
+          console.error('[useHealthTracker] vaccine_protocols load error:', error);
           return;
         }
 
         const map = new Map<string, VaccineTemplateEntry>();
         (data || []).forEach((t: any) => {
-          const group = mandatoryLevelToGroup(t.mandatory_level);
+          const group = mandatoryLevelToGroup(t.is_core === true);
           const entry: VaccineTemplateEntry = {
             group,
-            recurrence_days: t.recurrence_days ?? null,
-            has_annual_booster: t.has_annual_booster ?? false,
+            recurrence_days: t.repeat_interval_days ?? null,
+            has_annual_booster: t.repeat_frequency === 'yearly',
           };
           // vaccine_code ile kayıt (büyük harf key)
           if (t.vaccine_code) map.set(t.vaccine_code.toUpperCase(), entry);
-          // vaccine_name ile kayıt (küçük harf key — fuzzy match için)
-          if (t.vaccine_name) map.set(t.vaccine_name.toLocaleLowerCase('tr-TR').trim(), entry);
+          // protocol_name ile kayıt (küçük harf key — fuzzy match için)
+          if (t.protocol_name) map.set(t.protocol_name.toLocaleLowerCase('tr-TR').trim(), entry);
         });
 
         setVaccineTemplateMap(map);
       } catch (err) {
-        console.error('[useHealthTracker] vaccine_templates exception:', err);
+        console.error('[useHealthTracker] vaccine_protocols exception:', err);
       }
     }
 
@@ -472,7 +472,7 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
         task.category,
         event.sub_category || null,
         task.title,
-        vaccineTemplateMap,  // ← vaccine_templates tek kaynak
+        vaccineTemplateMap,  // ← vaccine_protocols tek kaynak
         vaccineCode,
         isCoreFlag,
       );
@@ -491,7 +491,7 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
         : `${mapped.category}::${mapped.subCategory}`;
 
       if (!taskMap.has(groupKey)) {
-        // Frekans gün sayısını vaccine_templates'tan al
+        // Frekans gün sayısını vaccine_protocols'tan al
         const templateRecurrenceDays = getTemplateRecurrenceDays(
           vaccineTemplateMap,
           vaccineCode,
