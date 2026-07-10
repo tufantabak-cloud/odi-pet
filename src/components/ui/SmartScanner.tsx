@@ -44,6 +44,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
   const [parsedData, setParsedData] = useState<ParsedScannerData>({});
   const [recordType, setRecordType] = useState<string>("unknown");
   const [validationError, setValidationError] = useState("");
+  const [brandCandidates, setBrandCandidates] = useState<{ id: string; vaccine_code: string; brand_name: string; manufacturer: string }[]>([]);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   
@@ -286,7 +287,18 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
 
       const data = await res.json();
 
-      if (!res.ok || !data.success) {
+      if (!res.ok) {
+        throw new Error(data.error || "Kaydedilirken bir hata oluştu.");
+      }
+
+      if (!data.success && data.needs_selection) {
+        setBrandCandidates(data.candidates || []);
+        setValidationError("Bu markaya ait birden fazla aşı protokolü bulundu. Lütfen doğru olanı seçin.");
+        setStep("confirm");
+        return;
+      }
+
+      if (!data.success) {
         throw new Error(data.error || "Kaydedilirken bir hata oluştu.");
       }
 
@@ -419,6 +431,48 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
               {renderField('next_date', 'Sonraki Doz', parsedData.next_date, 'date', true)}
             </div>
           </div>
+          {renderField('brand', 'Marka', parsedData.brand)}
+          {renderField('lot_number', 'Lot Numarası', parsedData.lot_number)}
+          {renderField('vet_name', 'Veteriner Hekim', parsedData.vet_name)}
+          {renderField('administration_route', 'Uygulama Yolu', parsedData.administration_route, 'select', false, [
+            { value: '', label: 'Belirtilmemiş' },
+            { value: 'parenteral_sc', label: 'Deri Altı (SC)' },
+            { value: 'parenteral_im', label: 'Kas İçi (IM)' },
+            { value: 'intranasal', label: 'Burun İçi (İntranazal)' },
+            { value: 'oral', label: 'Ağızdan (Oral)' },
+          ])}
+
+          {brandCandidates.length > 0 && (
+            <div className="bg-amber-50 p-4 rounded-2xl border-2 border-amber-300">
+              <label className="text-[12px] font-bold text-amber-800 mb-2 block">
+                Bu markaya ait birden fazla protokol bulundu — lütfen doğru olanı seçin
+              </label>
+              <select
+                value={parsedData.vaccine_code || ''}
+                onChange={(e) => {
+                  const chosen = brandCandidates.find(c => c.id === e.target.value);
+                  setParsedData({
+                    ...parsedData,
+                    brand_id: chosen?.id,
+                    vaccine_code: chosen?.vaccine_code,
+                  });
+                }}
+                className="w-full font-extrabold text-[15px] bg-white border border-amber-300 rounded-xl p-2 focus:outline-none"
+              >
+                <option value="">Seçiniz</option>
+                {brandCandidates.map(c => (
+                  <option key={c.id} value={c.id}>{c.brand_name} ({c.manufacturer})</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => setParsedData({ ...parsedData, vaccine_code: 'CUSTOM', brand_id: undefined })}
+                className="text-[12px] text-amber-700 font-bold mt-2 underline"
+              >
+                Hiçbiri değil, genel kayıt olarak devam et
+              </button>
+            </div>
+          )}
         </div>
       );
     }

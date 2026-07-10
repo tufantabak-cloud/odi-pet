@@ -18,18 +18,9 @@ export default function ScannerClient({ pets }: { pets: any[] }) {
 
     try {
       if (record_type === 'vaccine_card') {
-        await fetch(`/api/pets/${selectedPetId}/treatments`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            disease_name: parsed.title || parsed.vaccine_name || 'Aşı Kaydı',
-            category: 'Aşı Uygulaması',
-            status: 'Tamamlandı',
-            start_date: parsed.date || new Date().toISOString().split('T')[0],
-            clinic_name: parsed.vet_name || '',
-            notes: parsed.lot_number ? `Lot: ${parsed.lot_number}` : '',
-          }),
-        })
+        // vaccine_records_v2 yazımı SmartScanner.handleConfirm içinde
+        // /api/scan-document/confirm çağrısıyla zaten tamamlandı — burada
+        // tekrar yazma yapılmaz.
       } else if (record_type === 'food_packaging') {
         await fetch(`/api/pets/${selectedPetId}/nutrition/profile`, {
           method: 'POST',

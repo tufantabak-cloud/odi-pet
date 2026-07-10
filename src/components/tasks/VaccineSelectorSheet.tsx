@@ -172,30 +172,29 @@ export default function VaccineSelectorSheet({
         const speciesTr = (species.toLowerCase() === 'cat' || species.toLowerCase() === 'kedi') ? 'Kedi' : 'Köpek';
         const speciesEng = speciesTr === 'Kedi' ? 'cat' : 'dog';
         
-        // 1. Sistem Şablonlarını Getir (vaccine_templates)
-        const { data: templates } = await supabase
-          .from('vaccine_templates')
-          .select('*')
-          .eq('species', speciesEng)
-          .eq('is_active', true);
-          
+        // 1. Sistem Şablonlarını Getir (vaccine_protocols — vaccine_templates dropped edildi)
+        // Not: vaccine_protocols yalnızca aşı protokollerini tutar; parazit ürünleri
+        // ayrı parasite_products tablosundan (aşağıda) geliyor.
         let templateOptions: VaccineOption[] = [];
-        if (templates) {
-           templateOptions = templates
-            .filter((t: any) => {
-               if (pickerType === 'vaccine') return t.category === 'vaccine';
-               return t.category === 'parasite';
-            })
-            .map((t: any) => ({
-              code: t.vaccine_code,
-              name: t.vaccine_name,
-              nameTr: t.vaccine_name,
+        if (pickerType === 'vaccine') {
+          const { data: protocols } = await supabase
+            .from('vaccine_protocols')
+            .select('*')
+            .eq('species', speciesEng)
+            .eq('is_active', true);
+
+          if (protocols) {
+            templateOptions = protocols.map((p: any) => ({
+              code: p.vaccine_code,
+              name: p.protocol_name,
+              nameTr: p.protocol_name,
               species: speciesEng,
-              group: (t.mandatory_level === 'core' || t.mandatory_level === 'mandatory') ? 'core' : 'optional',
-              isParasite: pickerType === 'parasite',
-              protection_duration_days: t.recurrence_days || undefined,
+              group: (p.is_core ? 'core' : 'optional') as 'core' | 'optional',
+              isParasite: false,
+              protection_duration_days: p.repeat_interval_days || undefined,
               isTemplate: true,
             }));
+          }
         }
 
         // 2. Kullanıcı Önerilerini/Markaları Getir
