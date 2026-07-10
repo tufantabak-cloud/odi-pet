@@ -55,7 +55,7 @@
 3. `vaccine_code` OCR'dan çıkmıyorsa `CUSTOM` fallback'i kullan.
 4. P0-2 trigger'ının (brand/vaccine_code uyumu) bu yeni akışı da kapsadığını test et.
 
-### Sprint B.1 — Taranan Aşı Belgesi Saklama
+### Sprint B.1 — Taranan Aşı Belgesi Saklama — Tamamlandı ✅
 - Taranan görüntüyü vaccine-documents bucket'ına yükle
 - document_storage_path alanına yaz
 - Kayıt silinince belge yaşam döngüsünü yönet
@@ -63,6 +63,13 @@
 - Yükleme başarısız olunca kayıt politikası
 
 **Teknik Not:** vaccine_protocols'ta category kolonu yok — ileride farklı protokol türleri eklenirse VaccineSelectorSheet picker'ı gereğinden fazla kayıt gösterebilir.
+
+## Sprint B.2 — Orphan Scanner Document Cleanup
+- 24 saatten eski + vaccine_records_v2'de referansı olmayan
+  vaccine-documents dosyalarını temizle
+- Vercel cron job veya Supabase scheduled function
+- Cleanup logu (kaç dosya silindi, toplam boyut)
+- Prod'da run etmeden önce dry-run modu
 
 ### Sprint C — Ortak Aşı Kayıt Servisi
 **Amaç:** Şu an 3 ayrı, birbirinden habersiz aşı yazma yolu var: `VaccinesClient.tsx` (manuel form), `SmartTaskWizard.tsx` (plan akışı), `ScannerClient.tsx` (OCR, Sprint B sonrası). Her biri kendi brand normalizasyonu / plan eşleştirme mantığını ayrı ayrı tekrarlıyor.
