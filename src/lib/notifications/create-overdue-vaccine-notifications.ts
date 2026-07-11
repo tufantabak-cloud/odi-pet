@@ -4,7 +4,9 @@ import type { AdminSupabaseClient, OverduePlan } from '@/lib/plans/mark-overdue-
  * markOverduePlans() tarafından 'overdue'ya çevrilen planlardan sadece
  * 'asi' kategorisindekiler için tek seferlik "aşı zamanı geçti" bildirimi
  * üretir. plan_id + type üzerindeki partial unique index sayesinde aynı
- * plan için ikinci bir vaccine_overdue bildirimi asla oluşmaz.
+ * plan için ikinci bir vaccine_overdue bildirimi asla oluşmaz — bu index
+ * Postgres/Supabase upsert'in ON CONFLICT hedefi olarak eşleştiremediği bir
+ * partial index olduğu için toplu upsert yerine satır satır insert kullanılır.
  */
 export async function createOverdueVaccineNotifications(
   supabase: AdminSupabaseClient,
@@ -12,7 +14,7 @@ export async function createOverdueVaccineNotifications(
 ): Promise<{ notified: number; skipped: number }> {
   const vaccinePlans = plans.filter((p) => p.category === 'asi')
 
-  let skipped = 0
+  let invalidCount = 0
   const rows: {
     plan_id: string
     pet_id: string
@@ -27,7 +29,7 @@ export async function createOverdueVaccineNotifications(
 
   for (const plan of vaccinePlans) {
     if (!plan.id || !plan.pet_id || !plan.user_id) {
-      skipped++
+      invalidCount++
       continue
     }
     rows.push({
@@ -43,36 +45,27 @@ export async function createOverdueVaccineNotifications(
     })
   }
 
-  if (rows.length === 0) {
-    return { notified: 0, skipped }
-  }
+  let created = 0
+  let skipped = 0
 
-  // Toplu upsert dene — partial unique index (plan_id, type) WHERE ... nedeniyle
-  // Supabase/Postgres bu conflict target'ı düz kolon listesiyle eşleştiremeyebilir.
-  const { data, error } = await supabase
-    .from('notifications')
-    .upsert(rows, { onConflict: 'plan_id,type', ignoreDuplicates: true })
-    .select('id')
-
-  if (!error) {
-    const notified = data?.length ?? 0
-    return { notified, skipped: skipped + (rows.length - notified) }
-  }
-
-  console.error('[createOverdueVaccineNotifications] upsert failed, falling back to per-row insert:', error.message)
-
-  let notified = 0
   for (const row of rows) {
-    const { error: insertError } = await supabase.from('notifications').insert(row)
-    if (insertError) {
-      if (insertError.code !== '23505') {
-        console.error('[createOverdueVaccineNotifications] insert error:', insertError.message)
-      }
+    const { error } = await supabase
+      .from('notifications')
+      .insert(row)
+
+    if (error?.code === '23505') {
       skipped++
-    } else {
-      notified++
+      continue
     }
+
+    if (error) throw error
+
+    created++
   }
 
-  return { notified, skipped }
+  console.log(
+    `Overdue vaccine notifications: candidates=${rows.length} created=${created} duplicates=${skipped} skipped_invalid=${invalidCount} failed=0`
+  )
+
+  return { notified: created, skipped: skipped + invalidCount }
 }
