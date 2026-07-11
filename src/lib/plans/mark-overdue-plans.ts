@@ -2,6 +2,17 @@ import { createAdminSupabaseClient } from '@/lib/supabase/server'
 
 export type AdminSupabaseClient = ReturnType<typeof createAdminSupabaseClient>
 
+export type OverduePlan = {
+  id: string
+  pet_id: string
+  user_id: string
+  category: string
+  sub_type: string | null
+  scheduled_at: string
+}
+
+export type MarkOverdueResult = { updated: number; plans: OverduePlan[] }
+
 /**
  * scheduled_at'ı bugünden (Europe/Istanbul takvim günü) önce olan ve hâlâ
  * 'active' durumda kalmış planları 'overdue'ya çevirir. Saf servis
@@ -9,7 +20,7 @@ export type AdminSupabaseClient = ReturnType<typeof createAdminSupabaseClient>
  */
 export async function markOverduePlans(
   supabase: AdminSupabaseClient
-): Promise<{ updated: number }> {
+): Promise<MarkOverdueResult> {
   const now = new Date()
   const todayStartIstanbul = new Date(
     now.toLocaleDateString('sv-SE', { timeZone: 'Europe/Istanbul' })
@@ -20,11 +31,12 @@ export async function markOverduePlans(
     .update({ status: 'overdue' })
     .lt('scheduled_at', todayStartIstanbul.toISOString())
     .eq('status', 'active')
-    .select('id')
+    .select('id, pet_id, user_id, category, sub_type, scheduled_at')
 
   if (error) {
     throw error
   }
 
-  return { updated: data?.length ?? 0 }
+  const plans = (data ?? []) as OverduePlan[]
+  return { updated: plans.length, plans }
 }

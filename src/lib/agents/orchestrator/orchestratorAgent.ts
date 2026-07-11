@@ -4,6 +4,7 @@ import { runBatchQualityScan } from '@/lib/agents/dataQualityAgent'
 import { emitVaccineDueEvents } from '@/lib/agents/petProfileAgent'
 import { runUserHealthScan } from '@/lib/agents/userHealthAgent'
 import { markOverduePlans } from '@/lib/plans/mark-overdue-plans'
+import { createOverdueVaccineNotifications } from '@/lib/notifications/create-overdue-vaccine-notifications'
 import { expireSharedPetCards } from '@/lib/cron/expire-shared-pet-cards'
 import { createAdminSupabaseClient } from '@/lib/supabase/server'
 import { writeEvent } from './eventContract'
@@ -100,8 +101,12 @@ export async function runOrchestratedPipeline(
   // ADIM 4 — Overdue Plans (scheduled_at geçmiş 'active' planları 'overdue' yapar)
   try {
     const adminSupabase = createAdminSupabaseClient()
-    const result = await markOverduePlans(adminSupabase)
-    console.log('Overdue plans marked:', result.updated)
+    const overdueResult = await markOverduePlans(adminSupabase)
+    console.log('Overdue plans marked:', overdueResult.updated)
+
+    const notifResult = await createOverdueVaccineNotifications(adminSupabase, overdueResult.plans)
+    console.log('Overdue notifications:', notifResult.notified, 'skipped:', notifResult.skipped)
+
     agents_succeeded.push('overdue_plans')
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err)
