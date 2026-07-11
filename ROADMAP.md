@@ -97,11 +97,24 @@ Bir protokolün ilk dozu tamamlanmış ama serinin geri kalanı bitmemişken "He
 ### Sprint C.5.2 — Cron Güvenlik Borcu Temizliği (weekly-report, expire-cards) — Tamamlandı ✅
 `weekly-report` cron'u (auth'suz + işlevsiz stub) hem `vercel.json`'dan hem gerçek işlevinden emekliye ayrıldı — artık sadece fail-closed auth'lu bir `disabled` yanıtı dönüyor. `expire-cards`'ın gerçek işi (`shared_pet_cards.is_active` pasifleştirme) `expireSharedPetCards()` servisine taşınıp orchestrator'a 5. adım olarak eklendi; eski route fail-closed auth'la `disabled, reason:'moved_to_orchestrator'` dönüyor.
 
+### C.5 Overdue Aşı Bildirimi — Tamamlandı ✅
+`markOverduePlans` artık etkilenen planların tam kaydını (`pet_id`, `user_id`, `category`, `sub_type`, `scheduled_at`) döndürüyor. `createOverdueVaccineNotifications` bunlardan sadece `category='asi'` olanlar için `notifications` tablosuna `type='vaccine_overdue'` kaydı açıyor — `notifications.plan_id` kolonu ve `(plan_id, type)` üzerindeki partial unique index sayesinde aynı plan için ikinci bir bildirim asla oluşmuyor (Postgres bu partial index'i upsert'in ON CONFLICT hedefi olarak kabul etmediği için satır-satır insert + `23505` skip pattern'i kullanılıyor). Orchestrator'ın "Overdue Plans" adımına bağlandı, gerçek veri üzerinde doğrulandı (doğru `plan_id`, `asi` dışı kategoriler için bildirim üretilmiyor, ikinci çalıştırmada duplicate yok).
+
 ## Cron Teknik Borç (Devam)
 - 7 ölü cron route temizliği (vaccine-check, plans, anomaly-detector vb.)
 - Data Quality Agent gerçek implementasyonu
-- C.5 bildirim üretimi (overdue geçişinde kullanıcıya uyarı)
 - C.5 dry-run modu
+
+### C.5.3 — Overdue Bildirim Recovery
+*(Not: İstenen başlık "C.5.1" idi ama bu numara zaten Data Quality Mock İzolasyonu için kullanılmış olduğundan çakışmayı önlemek için C.5.3 olarak eklendi.)*
+- overdue status'ta ama notifications.plan_id kaydı olmayan planları bul
+- Sonraki orchestrator çalışmasında telafi et
+- Sorgu:
+  ```sql
+  SELECT pl.* FROM plans pl
+  LEFT JOIN notifications n ON n.plan_id = pl.id AND n.type = 'vaccine_overdue'
+  WHERE pl.status = 'overdue' AND pl.category = 'asi' AND n.id IS NULL
+  ```
 
 ### Sprint 4.3B — Confidence Level Normalization
 **Amaç:** `confidence_level` yazım değerlerini tekilleştirmek. (Sprint 4.3A'da mimariye dokunulmadı, bilinçli olarak ertelendi — bkz. [ODIPET_AUDIT_CURRENT.md](ODIPET_AUDIT_CURRENT.md) Sprint 4.3 analizi.)
