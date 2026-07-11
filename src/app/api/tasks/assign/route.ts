@@ -137,7 +137,7 @@ export async function GET(req: NextRequest) {
 
   const query = supabase
     .from('health_schedules')
-    .select('*, vaccines(name), pets(name), profiles!health_schedules_assigned_to_fkey(first_name, last_name)')
+    .select('*, pets(name), profiles!health_schedules_assigned_to_fkey(first_name, last_name)')
     .eq('assigned_to', user.id)
     .neq('assignment_status', 'completed')
     .order('due_date')

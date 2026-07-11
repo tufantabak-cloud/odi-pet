@@ -4,13 +4,10 @@ import { Database } from '@/lib/database.types'
 
 type PetRow = Database['public']['Tables']['pets']['Row']
 type HealthScheduleRow = Database['public']['Tables']['health_schedules']['Row']
-type VaccineRow = Database['public']['Tables']['vaccines']['Row']
 type AppointmentRow = Database['public']['Tables']['appointments']['Row']
 type ClinicRow = Database['public']['Tables']['clinics']['Row']
 
-type ScheduleWithRelations = Pick<HealthScheduleRow, 'id' | 'pet_id' | 'title' | 'due_date' | 'plan_type' | 'priority' | 'status' | 'escalation_level' | 'assigned_to'> & {
-  vaccines: Pick<VaccineRow, 'name'> | null;
-}
+type ScheduleWithRelations = Pick<HealthScheduleRow, 'id' | 'pet_id' | 'title' | 'due_date' | 'plan_type' | 'priority' | 'status' | 'escalation_level' | 'assigned_to'>
 
 type AppointmentWithRelations = Pick<AppointmentRow, 'id' | 'pet_id' | 'scheduled_at' | 'status'> & {
   clinics: Pick<ClinicRow, 'name'> | null;
@@ -129,7 +126,7 @@ export async function GET(
   // Build schedule query
   let schedQ = supabase
     .from('health_schedules')
-    .select('id, pet_id, title, due_date, plan_type, priority, status, escalation_level, assigned_to, vaccines(name)')
+    .select('id, pet_id, title, due_date, plan_type, priority, status, escalation_level, assigned_to')
     .in('pet_id', allPetIds)
     .neq('status', 'done')
     .gte('due_date', from)
@@ -165,7 +162,7 @@ export async function GET(
     const petName = s.pet_id ? (petsMap[s.pet_id] ?? 'Pet') : 'Pet'
     const icon = TYPE_ICONS[s.plan_type ?? 'task'] ?? '📋'
     const sTyped = s as unknown as ScheduleWithRelations
-    const title = sTyped.title || sTyped.vaccines?.name || 'Bakım Görevi'
+    const title = sTyped.title || 'Bakım Görevi'
     const esc = s.escalation_level !== 'none' ? ` [${s.escalation_level?.toUpperCase()}]` : ''
 
     events.push(buildEvent({

@@ -46,7 +46,7 @@ export default async function PetDetailPage(props: PageProps) {
     { data: payments },
     { data: activeLostReport },
   ] = await Promise.all([
-    supabase.from('health_schedules').select('*, vaccines(name)').eq('pet_id', id).order('due_date').limit(100),
+    supabase.from('health_schedules').select('*').eq('pet_id', id).order('due_date').limit(100),
     supabase.from('plans').select('*').eq('pet_id', id).order('scheduled_at').limit(100),
     supabase.from('health_diseases').select('*').eq('pet_id', id).order('diagnosis_date', { ascending: false }).limit(5),
     supabase.from('health_allergies').select('*').eq('pet_id', id).limit(5),

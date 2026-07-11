@@ -417,7 +417,9 @@ export default function WizardOrchestrator() {
     const payload = {
       pet_id: petId,
       category: categoryKey,
-      sub_type: subCat === 'Diğer' ? (wizardData.customText || 'Diğer') : (subCat || 'Genel'),
+      sub_type: (categoryKey === 'asi' && wizardData.selectedVaccine?.name)
+        ? wizardData.selectedVaccine.name
+        : subCat === 'Diğer' ? (wizardData.customText || 'Diğer') : (subCat || 'Genel'),
       scheduled_at: new Date(scheduledAt).toISOString(),
       repeat_rule: wizardData.frequency === 'once' ? null : wizardData.frequency,
       ends_at: endsAt ? new Date(endsAt).toISOString() : null,
@@ -430,6 +432,9 @@ export default function WizardOrchestrator() {
         endOccurrences: wizardData.endOccurrences,
         metadata: wizardData.metadata,
         vaccine: wizardData.selectedVaccine ? { code: wizardData.selectedVaccine.code ?? null, name: wizardData.selectedVaccine.name ?? null } : null,
+        vaccine_code: wizardData.selectedVaccine?.code ?? null,
+        record_type: categoryKey === 'asi' ? 'vaccine_schedule' : null,
+        source: 'plan_yap',
         product: wizardData.selectedProduct ? {
           id: wizardData.selectedProduct.id,
           brand_name: wizardData.selectedProduct.brand_name ?? null,

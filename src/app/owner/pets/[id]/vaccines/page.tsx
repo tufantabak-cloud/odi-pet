@@ -36,14 +36,13 @@ export default async function PetVaccinesPage(props: PageProps) {
 
   if (!pet) notFound()
 
-  // Fetch plans (upcoming vaccines)
+  // Fetch plans (upcoming + overdue vaccines)
   const { data: plans } = await supabase
     .from('plans')
     .select('*')
     .eq('pet_id', id)
     .eq('category', 'asi')
-    .eq('status', 'active')
-    .eq('extra_data->>record_type', 'vaccine_schedule')
+    .in('status', ['active', 'overdue'])
     .order('scheduled_at', { ascending: true })
 
   // Fetch vaccine records v2 (completed vaccine history)

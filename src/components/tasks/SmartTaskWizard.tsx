@@ -454,7 +454,7 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
             },
           })
           .eq('id', taskToEdit.id)
-          .select('*, vaccines(name)');
+          .select('*');
 
         if (updateError) throw updateError;
         
@@ -551,7 +551,7 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
       const { data: insertedSchedules, error: scheduleError } = await supabase
         .from('health_schedules')
         .insert(inserts)
-        .select('*, vaccines(name)');
+        .select('*');
 
       if (scheduleError) throw scheduleError;
 

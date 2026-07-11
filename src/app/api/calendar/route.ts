@@ -5,13 +5,11 @@ import { Database } from '@/lib/database.types'
 
 type PetRow = Database['public']['Tables']['pets']['Row']
 type HealthScheduleRow = Database['public']['Tables']['health_schedules']['Row']
-type VaccineRow = Database['public']['Tables']['vaccines']['Row']
 type ProfileRow = Database['public']['Tables']['profiles']['Row']
 type AppointmentRow = Database['public']['Tables']['appointments']['Row']
 type ClinicRow = Database['public']['Tables']['clinics']['Row']
 
 type ScheduleWithRelations = Pick<HealthScheduleRow, 'id' | 'pet_id' | 'title' | 'due_date' | 'status' | 'plan_type' | 'priority' | 'escalation_level' | 'assignment_status' | 'assigned_to'> & {
-  vaccines: Pick<VaccineRow, 'name'> | null;
   profiles: Pick<ProfileRow, 'first_name' | 'last_name'> | null;
 }
 
@@ -62,7 +60,7 @@ export async function GET(req: NextRequest) {
   // Build queries
   let schedulesQ = supabase
     .from('health_schedules')
-    .select('id, pet_id, title, due_date, status, plan_type, priority, escalation_level, assignment_status, assigned_to, vaccines(name), profiles!health_schedules_assigned_to_fkey(first_name, last_name)')
+    .select('id, pet_id, title, due_date, status, plan_type, priority, escalation_level, assignment_status, assigned_to, profiles!health_schedules_assigned_to_fkey(first_name, last_name)')
     .in('pet_id', petId ? [petId] : allPetIds)
     .gte('due_date', from)
     .lte('due_date', to)
@@ -89,7 +87,7 @@ export async function GET(req: NextRequest) {
       id: typedS.id,
       type: 'task',
       plan_type: typedS.plan_type,
-      title: typedS.title || typedS.vaccines?.name || 'Bakım Görevi',
+      title: typedS.title || 'Bakım Görevi',
       date: typedS.due_date,
       pet_id: typedS.pet_id,
       pet_name: petsMap[typedS.pet_id ?? '']?.name ?? '',

@@ -347,7 +347,7 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
       const [schedulesRes, plansRes] = await Promise.all([
         usePlansOnly ? Promise.resolve({ data: [], error: null }) : supabase
           .from('health_schedules')
-          .select('*, vaccines(is_core, code, name)')
+          .select('*')
           .eq('pet_id', petId)
           .gte('due_date', past30Str)
           .lte('due_date', future365Str),
