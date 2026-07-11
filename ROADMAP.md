@@ -88,22 +88,20 @@ Yavru pet'lerde `birth_date + days_offset` geçmişte kalan ilk doz `active` yer
 ### Sprint C.4.2 — Kısmen Tamamlanmış Seri Düzeltmesi — Tamamlandı ✅
 Bir protokolün ilk dozu tamamlanmış ama serinin geri kalanı bitmemişken "Hemen Plan Oluştur" tetiklenince doğrudan yıllık booster'a atlanıyordu. Artık tamamlanan en yüksek `dose_number` protokolün toplam doz sayısıyla karşılaştırılıp seri bitmemişse yalnızca bir sonraki doz üretiliyor.
 
-## Sprint C.5 — Aktif Planların Otomatik Overdue Geçişi
-- scheduled_at geçen active planları overdue'ya çevir
-- Vercel cron job: günlük çalışır
-- Hedef: plans tablosunda scheduled_at < now() AND status='active'
-  → status='overdue' UPDATE
-- Bildirim üret: kullanıcıya gecikmiş aşı uyarısı
-- Sadece 'asi' kategorisi değil, tüm plan kategorileri için
-- Dry-run modu (prod'da test için)
+## Sprint C.5 — Aktif Planların Otomatik Overdue Geçişi — Tamamlandı ✅
+`markOverduePlans` (Europe/Istanbul takvim günü baz alınarak, tüm plan kategorileri — sadece 'asi' değil) `orchestratorAgent.ts`'e eklendi, günlük 03:00 orchestrator cron'u üzerinden çalışıyor. Orchestrator endpoint'i fail-closed auth'a çevrildi: `CRON_SECRET` tanımlı değilse 500, yanlış token'da 401. Gerçek veri üzerinde doğrulandı (9 gerçekten geçmiş tarihli 'active' plan doğru şekilde 'overdue'ya çevrildi).
 
-**Durum:** Çekirdek geçiş mantığı (`markOverduePlans`, Europe/Istanbul takvim günü baz alınarak, tüm kategoriler — sadece 'asi' değil) `orchestratorAgent.ts`'e eklendi ve günlük 03:00 orchestrator cron'u üzerinden çalışıyor; gerçek veri üzerinde doğrulandı (9 gerçekten geçmiş tarihli 'active' plan doğru şekilde 'overdue'ya çevrildi). **Kalan işler:** gecikmiş aşı bildirimi üretimi, ayrı dry-run modu.
+### Sprint C.5.1 — Data Quality Mock İzolasyonu — Tamamlandı ✅
+`dataQualityAgent.ts`'teki `runBatchQualityScan`, `writeEvent(null, ...)` çağrısı yüzünden her çalıştığında çöken test/mock kodu içeriyordu — bu da `user_health` adımını da bloke ediyordu. Mock kod kaldırılıp `{status:'disabled', reason:'not_implemented'}` döndüren dürüst bir stub'a çevrildi; orchestrator artık bunu `agents_failed` değil `agents_skipped` olarak işaretliyor. `user_health`'in `data_quality`'e bağımlılığı kaldırıldı — artık her zaman çalışıyor. `writeEvent` tipi `supabase: any`'den `SupabaseClient | null`'a sıkılaştırıldı, `null` gelirse çökmeden erken dönüyor.
 
-**Cron Güvenlik Borcu (kayıt, bu sprintte düzeltilmedi):**
-- `weekly-report` cron route'u (`vercel.json`'da gerçekten zamanlanmış) hiçbir auth kontrolü yapmıyor, üstelik admin client yerine cookie tabanlı anon client kullanıyor — muhtemelen yarım kalmış.
-- `expire-cards` cron route'unda auth kontrolü kodda var ama yorum satırına alınmış — route şu an tamamen herkese açık.
-- Ayrıca `plans`, `anomaly-detector`, `process-events`, `user-health`, `data-quality`, `subscription-reminders`, `dispatch-notifications` route'ları `vercel.json`'da hiç zamanlanmamış — ölü/bağlanmamış kod.
-- Öneri: tüm cron route'ları tek bir `CRON_SECRET` (Bearer/query-token) pattern'ine geçirilmeli, kullanılmayanlar silinmeli veya orchestrator'a taşınmalı.
+### Sprint C.5.2 — Cron Güvenlik Borcu Temizliği (weekly-report, expire-cards) — Tamamlandı ✅
+`weekly-report` cron'u (auth'suz + işlevsiz stub) hem `vercel.json`'dan hem gerçek işlevinden emekliye ayrıldı — artık sadece fail-closed auth'lu bir `disabled` yanıtı dönüyor. `expire-cards`'ın gerçek işi (`shared_pet_cards.is_active` pasifleştirme) `expireSharedPetCards()` servisine taşınıp orchestrator'a 5. adım olarak eklendi; eski route fail-closed auth'la `disabled, reason:'moved_to_orchestrator'` dönüyor.
+
+## Cron Teknik Borç (Devam)
+- 7 ölü cron route temizliği (vaccine-check, plans, anomaly-detector vb.)
+- Data Quality Agent gerçek implementasyonu
+- C.5 bildirim üretimi (overdue geçişinde kullanıcıya uyarı)
+- C.5 dry-run modu
 
 ### Sprint 4.3B — Confidence Level Normalization
 **Amaç:** `confidence_level` yazım değerlerini tekilleştirmek. (Sprint 4.3A'da mimariye dokunulmadı, bilinçli olarak ertelendi — bkz. [ODIPET_AUDIT_CURRENT.md](ODIPET_AUDIT_CURRENT.md) Sprint 4.3 analizi.)
