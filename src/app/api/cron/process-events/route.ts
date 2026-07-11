@@ -1,34 +1,30 @@
-import { NextResponse } from 'next/server';
-import { processHealthEvents } from '@/lib/agents/notificationAgent';
+import { NextResponse } from 'next/server'
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic'
 
-export async function GET(request: Request) {
-  try {
-    const authHeader = request.headers.get('authorization');
-    if (
-      process.env.CRON_SECRET && 
-      authHeader !== `Bearer ${process.env.CRON_SECRET}` &&
-      new URL(request.url).searchParams.get('token') !== process.env.CRON_SECRET
-    ) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+export async function GET(req: Request) {
+  const cronSecret = process.env.CRON_SECRET
 
-    // Health event'lerini toplayıp (işleyip) bildirimleri fırlatır
-    const result = await processHealthEvents();
-
-    if (!result.success) {
-      throw new Error('Failed to process health events');
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: 'Events processed and notifications pushed',
-      processed: result.processed
-    });
-
-  } catch (error: any) {
-    console.error('Process Events Cron Error:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  if (!cronSecret) {
+    console.error('CRON_SECRET not configured')
+    return NextResponse.json(
+      { error: 'Server misconfiguration' },
+      { status: 500 }
+    )
   }
+
+  const authHeader = req.headers.get('authorization')
+  const queryToken = new URL(req.url).searchParams.get('token')
+
+  if (
+    authHeader !== `Bearer ${cronSecret}` &&
+    queryToken !== cronSecret
+  ) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  return NextResponse.json({
+    status: 'disabled',
+    reason: 'use_orchestrator'
+  })
 }

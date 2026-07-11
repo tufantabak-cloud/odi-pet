@@ -1,9 +1,30 @@
-import { NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-export async function GET() {
-  const cookieStore = await cookies();
-  const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { cookies: { getAll() { return cookieStore.getAll(); } } });
-  const { data } = await supabase.from('user_subscriptions').select('*').limit(1);
-  return NextResponse.json({ success: true, processed: data?.length });
+import { NextResponse } from 'next/server'
+
+export const dynamic = 'force-dynamic'
+
+export async function GET(req: Request) {
+  const cronSecret = process.env.CRON_SECRET
+
+  if (!cronSecret) {
+    console.error('CRON_SECRET not configured')
+    return NextResponse.json(
+      { error: 'Server misconfiguration' },
+      { status: 500 }
+    )
+  }
+
+  const authHeader = req.headers.get('authorization')
+  const queryToken = new URL(req.url).searchParams.get('token')
+
+  if (
+    authHeader !== `Bearer ${cronSecret}` &&
+    queryToken !== cronSecret
+  ) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  return NextResponse.json({
+    status: 'disabled',
+    reason: 'use_orchestrator'
+  })
 }

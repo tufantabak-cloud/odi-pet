@@ -24,8 +24,9 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const result = await runOrchestratedPipeline('cron')
-  
+  const dryRun = new URL(req.url).searchParams.get('dry_run') === 'true'
+  const result = await runOrchestratedPipeline('cron', { dryRun })
+
   const status = result.agents_failed.length === 0 ? 200 : 207
   return NextResponse.json(result, { status })
 }

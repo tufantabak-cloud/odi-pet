@@ -1,28 +1,30 @@
-import { emitVaccineDueEvents } from '@/lib/agents/petProfileAgent'
 import { NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: Request) {
-  try {
-    const authHeader = req.headers.get('authorization')
-    if (
-      process.env.CRON_SECRET &&
-      authHeader !== `Bearer ${process.env.CRON_SECRET}` &&
-      new URL(req.url).searchParams.get('token') !== process.env.CRON_SECRET
-    ) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  const cronSecret = process.env.CRON_SECRET
 
-    const emitted = await emitVaccineDueEvents()
-    
-    return NextResponse.json({
-      success: true,
-      message: 'Vaccine checks completed',
-      emitted
-    })
-  } catch (error: any) {
-    console.error('Vaccine Check Cron Error:', error)
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+  if (!cronSecret) {
+    console.error('CRON_SECRET not configured')
+    return NextResponse.json(
+      { error: 'Server misconfiguration' },
+      { status: 500 }
+    )
   }
+
+  const authHeader = req.headers.get('authorization')
+  const queryToken = new URL(req.url).searchParams.get('token')
+
+  if (
+    authHeader !== `Bearer ${cronSecret}` &&
+    queryToken !== cronSecret
+  ) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  return NextResponse.json({
+    status: 'disabled',
+    reason: 'use_orchestrator'
+  })
 }

@@ -1,23 +1,30 @@
-import { runBatchQualityScan } from '@/lib/agents/dataQualityAgent'
 import { NextResponse } from 'next/server'
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic'
 
 export async function GET(req: Request) {
+  const cronSecret = process.env.CRON_SECRET
+
+  if (!cronSecret) {
+    console.error('CRON_SECRET not configured')
+    return NextResponse.json(
+      { error: 'Server misconfiguration' },
+      { status: 500 }
+    )
+  }
+
   const authHeader = req.headers.get('authorization')
+  const queryToken = new URL(req.url).searchParams.get('token')
+
   if (
-      process.env.CRON_SECRET && 
-      authHeader !== `Bearer ${process.env.CRON_SECRET}` &&
-      new URL(req.url).searchParams.get('token') !== process.env.CRON_SECRET
+    authHeader !== `Bearer ${cronSecret}` &&
+    queryToken !== cronSecret
   ) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  try {
-    const result = await runBatchQualityScan()
-    return NextResponse.json({ success: true, ...result })
-  } catch (error: any) {
-    console.error('Data Quality Cron Error:', error)
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
-  }
+  return NextResponse.json({
+    status: 'disabled',
+    reason: 'use_orchestrator'
+  })
 }

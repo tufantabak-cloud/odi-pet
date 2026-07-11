@@ -1,11 +1,31 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import type { AdminSupabaseClient } from '@/lib/plans/mark-overdue-plans'
 
-export async function runBatchQualityScan() {
-  // Gerçek data quality motoru henüz implemente edilmedi
+export async function runBatchQualityScan(supabase: AdminSupabaseClient) {
+  const [r1, r2, r3] = await Promise.all([
+    supabase.from('vaccine_records_v2')
+      .select('id', { count: 'exact', head: true })
+      .is('confidence_level', null),
+    supabase.from('plans')
+      .select('id', { count: 'exact', head: true })
+      .is('pet_id', null),
+    supabase.from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .is('profile_id', null)
+  ])
+
+  if (r1.error) throw r1.error
+  if (r2.error) throw r2.error
+  if (r3.error) throw r3.error
+
   return {
-    status: 'disabled',
-    processed: 0,
-    reason: 'not_implemented'
+    status: 'ok',
+    processed: 3,
+    checks: {
+      null_confidence_records: r1.count ?? 0,
+      orphan_plans: r2.count ?? 0,
+      notifications_no_profile: r3.count ?? 0
+    }
   }
 }
 
