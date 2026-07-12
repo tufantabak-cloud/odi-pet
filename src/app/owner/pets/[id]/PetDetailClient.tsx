@@ -1978,7 +1978,17 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             pending.some((s: any) => s.id === activeMenuId) ||
             completed.some((s: any) => s.id === activeMenuId)
           )
-          const overdueCount = pending.filter((s: any) => getTaskDateTime(s) < new Date()).length
+          const overdueCount = pending.filter((s: any) => getTaskDateTime(s) < new Date(now)).length
+          // Başlık sayaçları, aktif filtre ile uyumlu olmalı — listede görünmeyen gelecek görevler sayılmaz
+          const filteredPendingForHeader = pending.filter((s: any) => {
+            const taskDate = getTaskDateTime(s)
+            // "Bugün + Gecikenler" (varsayılan): bugün gece yarısına kadar olanlar
+            const today = new Date()
+            today.setHours(23, 59, 59, 999)
+            return taskDate <= today
+          })
+          const headerOverdueCount = filteredPendingForHeader.filter((s: any) => getTaskDateTime(s) < new Date(now)).length
+          const headerPlannedCount = filteredPendingForHeader.length - headerOverdueCount
           const cta = tabCtaInfo[module.name]
           return (
             <div key={module.name} id={`section-${MODULE_ID_MAP[module.name] ?? module.name}`} className={`card-base border border-border-main/60 scroll-mt-24 ${isMenuOpenInModule ? 'relative z-[100]' : ''} ${initialSection === module.name ? 'animate-pulseHighlight' : ''}`}>
@@ -1999,10 +2009,10 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                 </div>
                 <div className="flex-1 min-w-0">
                   <span className="text-[15px] font-extrabold text-text-primary">{module.name}</span>
-                  {pending.length > 0 && (
+                  {(headerOverdueCount > 0 || headerPlannedCount > 0) && (
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      {overdueCount > 0 && <span className="text-[11px] font-bold text-error bg-error/10 px-2 py-0.5 rounded-full">{overdueCount} gecikmiş</span>}
-                      {(pending.length - overdueCount) > 0 && <span className="text-[11px] font-bold text-primary bg-primary-soft px-2 py-0.5 rounded-full">{pending.length - overdueCount} planlandı</span>}
+                      {headerOverdueCount > 0 && <span className="text-[11px] font-bold text-error bg-error/10 px-2 py-0.5 rounded-full">{headerOverdueCount} gecikmiş</span>}
+                      {headerPlannedCount > 0 && <span className="text-[11px] font-bold text-primary bg-primary-soft px-2 py-0.5 rounded-full">{headerPlannedCount} planlandı</span>}
                     </div>
                   )}
                 </div>
