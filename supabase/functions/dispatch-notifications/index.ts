@@ -290,7 +290,7 @@ serve(async (_req: Request) => {
     // 3b. Send push for notification_jobs
     const { data: pendingJobs } = await supabase
       .from("notification_jobs")
-      .select("id, fire_at, plan_id, plans(user_id, pet_id, category, sub_type)")
+      .select("id, fire_at, plan_id, plans(user_id, pet_id, category, sub_type, repeat_rule, ends_at, status, notif_before, notif_unit, scheduled_at)")
       .eq("sent", false)
       .lte("fire_at", new Date().toISOString())
 
@@ -349,6 +349,67 @@ serve(async (_req: Request) => {
             }
           }
         }
+
+        // Insert in-app notification (bell icon) so it populates the in-app list
+        const { error: inAppError } = await supabase
+          .from("notifications")
+          .insert({
+            profile_id: profileId,
+            pet_id: plan.pet_id,
+            title: title,
+            message: body,
+            type: "general",
+            sent_email: false
+          });
+
+        if (inAppError) {
+          console.error(`[dispatch-notifications] In-app notification insert error for ${profileId}:`, inAppError);
+        }
+
+        // Auto-reschedule next occurrence for active repeating plans (daily/weekly)
+        if (plan.repeat_rule && plan.status === 'active') {
+          let intervalDays = 0;
+          if (plan.repeat_rule === 'daily') {
+            intervalDays = 1;
+          } else if (plan.repeat_rule === 'weekly') {
+            intervalDays = 7;
+          }
+
+          if (intervalDays > 0) {
+            const currentFireAt = new Date(job.fire_at);
+            const nextFireAtDate = new Date(currentFireAt.getTime() + intervalDays * 24 * 60 * 60 * 1000);
+            const nextFireAt = nextFireAtDate.toISOString();
+
+            const notifBeforeMin = plan.notif_before ?? 0;
+            const notifBeforeMs = plan.notif_unit === 'hour' 
+              ? notifBeforeMin * 60 * 60 * 1000 
+              : plan.notif_unit === 'day' 
+              ? notifBeforeMin * 24 * 60 * 60 * 1000 
+              : notifBeforeMin * 60 * 1000;
+            
+            const nextScheduledAtDate = new Date(nextFireAtDate.getTime() + notifBeforeMs);
+            const isWithinEndsAt = !plan.ends_at || nextScheduledAtDate <= new Date(plan.ends_at);
+
+            if (isWithinEndsAt) {
+              const { data: existingJobs } = await supabase
+                .from("notification_jobs")
+                .select("id")
+                .eq("plan_id", job.plan_id)
+                .neq("id", job.id)
+                .eq("sent", false);
+
+              if (!existingJobs || existingJobs.length === 0) {
+                await supabase
+                  .from("notification_jobs")
+                  .insert({
+                    plan_id: job.plan_id,
+                    fire_at: nextFireAt
+                  });
+              }
+            }
+          }
+        }
+
         sentJobIds.push(job.id)
       }
 
