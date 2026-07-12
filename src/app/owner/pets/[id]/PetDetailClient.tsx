@@ -280,6 +280,12 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   const [activeTab, setActiveTab] = useState<'ozet'|'saglik'|'bakim'|'takvim'|'ekstra'>(initialTab)
   const { filterVisibleTasks, dismissTask } = useDismissedMicroTasks()
 
+  // Canlı saat — her dakika yenilenerek gecikme etiketlerini ve overdue sayısını günceller
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const tick = setInterval(() => setNow(Date.now()), 60_000)
+    return () => clearInterval(tick)
+  }, [])
 
   const initialSection = SECTION_NAME_MAP[tabParam ?? ''] ?? null
   const [openSections, setOpenSections] = useState<Set<string>>(
@@ -578,7 +584,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     }
   }, [pet.id, router])
 
-  const localOverdue = (localSchedules ?? []).filter((s: any) => s.status !== 'done' && getTaskDateTime(s) < new Date()).length
+  const localOverdue = (localSchedules ?? []).filter((s: any) => s.status !== 'done' && getTaskDateTime(s) < new Date(now)).length
 
   const openWizardWithCategory = (cat: TaskCategory) => {
     setWizardInitialCategory(cat)
@@ -805,17 +811,17 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         )
       }
       
-      const now = new Date()
+      const nowDate = new Date(now)
       const dateOnlyStr = dueDateStr.includes('T') ? dueDateStr.split('T')[0] : dueDateStr
       const timeStr = dueTimeStr || '12:00:00'
       const taskDateTime = new Date(`${dateOnlyStr}T${timeStr}`)
       
-      const isOverdue = taskDateTime < now
+      const isOverdue = taskDateTime < nowDate
       
       let badge = null;
       
       if (isOverdue) {
-        const diffMs = now.getTime() - taskDateTime.getTime()
+        const diffMs = nowDate.getTime() - taskDateTime.getTime()
         const diffMins = Math.floor(diffMs / (1000 * 60))
         
         if (diffMins < 60) {

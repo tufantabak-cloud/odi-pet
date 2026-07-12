@@ -14,8 +14,8 @@ type Notification = {
   pet_id: string | null
 }
 
-function timeAgo(dateStr: string) {
-  const mins = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000)
+function timeAgo(dateStr: string, now: number) {
+  const mins = Math.floor((now - new Date(dateStr).getTime()) / 60000)
   if (mins < 1) return 'az önce'
   if (mins < 60) return `${mins} dk önce`
   if (mins < 1440) return `${Math.floor(mins / 60)} saat önce`
@@ -26,6 +26,7 @@ export default function NotificationBell({ initialCount }: { initialCount: numbe
   const [count, setCount] = useState(initialCount)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [isOpen, setIsOpen] = useState(false)
+  const [now, setNow] = useState(() => Date.now())
   const dropdownRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
@@ -42,11 +43,15 @@ export default function NotificationBell({ initialCount }: { initialCount: numbe
     }
   }
 
-  // Poll every 60s for new notifications
+  // Poll every 60s for new notifications + update relative timestamps every minute
   useEffect(() => {
     fetchNotifications()
-    const interval = setInterval(fetchNotifications, 60_000)
-    return () => clearInterval(interval)
+    const notifInterval = setInterval(fetchNotifications, 60_000)
+    const tickInterval = setInterval(() => setNow(Date.now()), 60_000)
+    return () => {
+      clearInterval(notifInterval)
+      clearInterval(tickInterval)
+    }
   }, [])
 
   // Update when page becomes visible again
@@ -177,7 +182,7 @@ export default function NotificationBell({ initialCount }: { initialCount: numbe
                       {notif.message}
                     </p>
                     <span className="text-[10px] text-text-secondary/60 font-semibold mt-1.5 block">
-                      {timeAgo(notif.created_at)}
+                      {timeAgo(notif.created_at, now)}
                     </span>
                   </div>
                   {!notif.is_read && (
