@@ -1967,10 +1967,15 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           ] as Array<{ name: string; icon: React.ReactNode; color: string; bg: string }>).map((module) => {
           const isOpen = openSections.has(module.name)
           const pending = getSchedulesForTab(module.name)
+          const completed = getCompletedSchedulesForTab(module.name)
+          const isMenuOpenInModule = activeMenuId && (
+            pending.some((s: any) => s.id === activeMenuId) ||
+            completed.some((s: any) => s.id === activeMenuId)
+          )
           const overdueCount = pending.filter((s: any) => getTaskDateTime(s) < new Date()).length
           const cta = tabCtaInfo[module.name]
           return (
-            <div key={module.name} id={`section-${MODULE_ID_MAP[module.name] ?? module.name}`} className={`card-base border border-border-main/60 scroll-mt-24 ${initialSection === module.name ? 'animate-pulseHighlight' : ''}`}>
+            <div key={module.name} id={`section-${MODULE_ID_MAP[module.name] ?? module.name}`} className={`card-base border border-border-main/60 scroll-mt-24 ${isMenuOpenInModule ? 'relative z-[100]' : ''} ${initialSection === module.name ? 'animate-pulseHighlight' : ''}`}>
               <div
                 onClick={() => toggleSection(module.name)}
                 data-testid={
