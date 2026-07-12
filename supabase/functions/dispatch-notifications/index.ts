@@ -137,22 +137,18 @@ serve(async (_req: Request) => {
     }
 
     // 1d. Quiet Hours Protection (22:00 - 08:00 Istanbul time)
-    // Avoid sending emails or push notifications during these hours to protect user's peace.
+    // Avoid sending general emails or push notifications during these hours to protect user's peace.
     const istanbulTime = new Date().toLocaleString("en-US", { timeZone: "Europe/Istanbul" })
     const istanbulHour = new Date(istanbulTime).getHours()
+    const isQuietHours = istanbulHour >= 22 || istanbulHour < 8
     
-    if (istanbulHour >= 22 || istanbulHour < 8) {
-      console.log(`[dispatch-notifications] Quiet hours active (Istanbul hour: ${istanbulHour}). Skipping email/push dispatch.`)
-      return new Response(
-        JSON.stringify({
-          status: "skipped_quiet_hours",
-          istanbul_hour: istanbulHour,
-          in_app_notifications_created: bdayCount + scheduleCount,
-          message: "Dispatches skipped during quiet hours to avoid disturbance."
-        }),
-        { headers: { "Content-Type": "application/json" } }
-      )
-    }
+    let emailsSent = 0
+    let pushesSent = 0
+    const sentIds: string[] = []
+
+    if (isQuietHours) {
+      console.log(`[dispatch-notifications] Quiet hours active (Istanbul hour: ${istanbulHour}). Skipping general email/push dispatch.`)
+    } else {
 
     // 2. Fetch unsent email notifications (created in last 24h, email not sent)
     const { data: unsent, error: fetchErr } = await supabase
@@ -219,9 +215,7 @@ serve(async (_req: Request) => {
       subsByProfile.get(sub.profile_id)!.push(sub)
     }
 
-    let emailsSent = 0
-    let pushesSent = 0
-    const sentIds: string[] = []
+    // emailsSent, pushesSent, sentIds are declared above to bypass quiet hours block scope
 
     // 4. Send notifications
     for (const [profileId, { email, notifs }] of byProfile) {
@@ -285,6 +279,7 @@ serve(async (_req: Request) => {
           }
         }
       }
+    }
     }
 
     // 3b. Send push for notification_jobs
