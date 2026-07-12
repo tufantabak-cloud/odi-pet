@@ -1970,7 +1970,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           const overdueCount = pending.filter((s: any) => getTaskDateTime(s) < new Date()).length
           const cta = tabCtaInfo[module.name]
           return (
-            <div key={module.name} id={`section-${MODULE_ID_MAP[module.name] ?? module.name}`} className={`card-base overflow-hidden border border-border-main/60 scroll-mt-24 ${initialSection === module.name ? 'animate-pulseHighlight' : ''}`}>
+            <div key={module.name} id={`section-${MODULE_ID_MAP[module.name] ?? module.name}`} className={`card-base border border-border-main/60 scroll-mt-24 ${initialSection === module.name ? 'animate-pulseHighlight' : ''}`}>
               <div
                 onClick={() => toggleSection(module.name)}
                 data-testid={
@@ -1979,7 +1979,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                   module.name === 'Beslenme' ? 'nutrition-module-button' :
                   module.name === 'Veteriner' ? 'services-module-button' : undefined
                 }
-                className="w-full flex items-center gap-3 p-4 text-left hover:bg-bg-main/50 transition-colors cursor-pointer"
+                className="w-full flex items-center gap-3 p-4 text-left hover:bg-bg-main/50 transition-colors cursor-pointer rounded-t-[20px]"
                 role="button"
                 tabIndex={0}
               >
