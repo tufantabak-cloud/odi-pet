@@ -23,6 +23,7 @@ import { EstrusTracker } from '@/components/estrus-tracker/EstrusTracker'
 import CareScoreWidget from '@/components/pets/CareScoreWidget'
 import PetHeroCard from './PetHeroCard'
 import AllergyManager from '@/components/pets/AllergyManager'
+import MedicationManager from '@/components/pets/MedicationManager'
 import { buildPetMicroTasks } from '@/lib/microTasks/petMicroTasks'
 import { PetMicroTaskCard } from '@/components/micro-tasks/PetMicroTaskCard'
 import { useDismissedMicroTasks } from '@/hooks/useDismissedMicroTasks'
@@ -351,6 +352,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   const [wizardInitialCategory, setWizardInitialCategory] = useState<TaskCategory | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date>(() => { const d = new Date(); d.setHours(0,0,0,0); return d; })
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
+  const [medicationActionTask, setMedicationActionTask] = useState<any>(null)
+  const [medicationNote, setMedicationNote] = useState('')
+  const [showNoteInput, setShowNoteInput] = useState(false)
   const [trackerRefreshKey, setTrackerRefreshKey] = useState(0)
   const timelineScrollRef = useRef<HTMLDivElement>(null)
   const coverInputRef = useRef<HTMLInputElement>(null)
@@ -582,6 +586,115 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     setTaskWizardOpen(true)
   }
 
+  const handleEditTask = (item: any) => {
+    if (item.extra_data?.record_type === 'medication') {
+      router.push(`/owner/plan-yap/saglik?pet_id=${pet.id}&subCat=İlaç&edit_id=${getRealPlanId(item.id)}`);
+    } else {
+      setTaskToEdit(item);
+      setTaskWizardOpen(true);
+    }
+  }
+
+  const handleTaskClick = (item: any) => {
+    if (item.extra_data?.record_type === 'medication' && item.status !== 'done') {
+      setMedicationActionTask(item);
+      setMedicationNote('');
+      setShowNoteInput(false);
+    } else {
+      setTaskToEdit(item);
+      setTaskWizardOpen(true);
+    }
+  }
+
+  const handleMedicationConfirm = async (task: any, noteText: string) => {
+    setLocalSchedules(prev => prev.map(s => s.id === task.id ? { ...s, status: 'done', notes: noteText || s.notes } : s));
+    if (!task.id.toString().startsWith('mock-')) {
+      try {
+        const planId = getRealPlanId(task.id);
+        let payload: any = { status: 'completed' };
+        if (noteText) payload.note = noteText;
+        
+        if (task.extra_data?.record_type === 'medication' && task.extra_data?.medication) {
+          const currentStock = task.extra_data.medication.stock ?? 0;
+          const nextStock = Math.max(0, currentStock - 1);
+          payload.extra_data = {
+            ...task.extra_data,
+            medication: {
+              ...task.extra_data.medication,
+              stock: nextStock
+            }
+          };
+        }
+
+        await fetch(`/api/plans/${planId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch {}
+    }
+    setMedicationActionTask(null);
+    setMedicationNote('');
+    setShowNoteInput(false);
+    setTrackerRefreshKey(prev => prev + 1);
+    router.refresh();
+  };
+
+  const handleMedicationSnooze = async (task: any) => {
+    setLocalSchedules(prev => prev.map(s => {
+      if (s.id !== task.id) return s;
+      const d = new Date(s.due_date + 'T' + s.due_time);
+      d.setMinutes(d.getMinutes() + 30);
+      
+      const dueDate = d.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' });
+      const dueTime = d.toLocaleTimeString('tr-TR', { 
+        timeZone: 'Europe/Istanbul', 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit',
+        hour12: false 
+      });
+      return { ...s, due_date: dueDate, due_time: dueTime };
+    }));
+    
+    if (!task.id.toString().startsWith('mock-')) {
+      const d = new Date(task.due_date + 'T' + task.due_time);
+      d.setMinutes(d.getMinutes() + 30);
+      try {
+        const planId = getRealPlanId(task.id);
+        await fetch(`/api/plans/${planId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ scheduled_at: d.toISOString() })
+        });
+      } catch {}
+    }
+    setMedicationActionTask(null);
+    setMedicationNote('');
+    setShowNoteInput(false);
+    setTrackerRefreshKey(prev => prev + 1);
+    router.refresh();
+  };
+
+  const handleMedicationSkip = async (task: any) => {
+    setLocalSchedules(prev => prev.map(s => s.id === task.id ? { ...s, status: 'done' } : s));
+    if (!task.id.toString().startsWith('mock-')) {
+      try {
+        const planId = getRealPlanId(task.id);
+        await fetch(`/api/plans/${planId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'cancelled' })
+        });
+      } catch {}
+    }
+    setMedicationActionTask(null);
+    setMedicationNote('');
+    setShowNoteInput(false);
+    setTrackerRefreshKey(prev => prev + 1);
+    router.refresh();
+  };
+
   const handlePlanla = (tabName: string) => {
     if (tabName === 'Beslenme') {
       router.push(`/owner/pets/${pet.id}/nutrition`)
@@ -609,6 +722,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     if (!dbCat) return []
     return localSchedules.filter((s: any) => {
       if (s.category !== dbCat) return false;
+      if (tabName === 'Sağlık') {
+        if (s.sub_type === 'Kilo & Boy Ölçümü' || (s.title && s.title.includes('Kilo & Boy'))) return false;
+      }
       if (tabName === 'Aşı') {
         return (s.sub_category || '').includes('Aşı') || !(s.sub_category || '').includes('Parazit');
       }
@@ -624,6 +740,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     if (!dbCat) return []
     return localSchedules.filter((s: any) => {
       if (s.category !== dbCat) return false;
+      if (tabName === 'Sağlık') {
+        if (s.sub_type === 'Kilo & Boy Ölçümü' || (s.title && s.title.includes('Kilo & Boy'))) return false;
+      }
       if (tabName === 'Aşı') {
         return (s.sub_category || '').includes('Aşı') || !(s.sub_category || '').includes('Parazit');
       }
@@ -764,10 +883,25 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       if (!id.toString().startsWith('mock-')) {
         try {
           if (isPlanSource(id)) {
-            await fetch(`/api/plans/${getRealPlanId(id)}`, {
+            const planId = getRealPlanId(id);
+            let payload: any = { status: 'completed' };
+
+            if (item.extra_data?.record_type === 'medication' && item.extra_data?.medication) {
+              const currentStock = item.extra_data.medication.stock ?? 0;
+              const nextStock = Math.max(0, currentStock - 1);
+              payload.extra_data = {
+                ...item.extra_data,
+                medication: {
+                  ...item.extra_data.medication,
+                  stock: nextStock
+                }
+              };
+            }
+
+            await fetch(`/api/plans/${planId}`, {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ status: 'completed' })
+              body: JSON.stringify(payload)
             })
           } else {
             await createBrowserSupabaseClient().from('health_schedules').update({ status: 'completed' }).eq('id', id);
@@ -942,7 +1076,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           const cardStyle = getTaskCardStyle(isOverdue, isCompleted);
 
           return (
-            <div key={item.id} onClick={() => { setTaskToEdit(item); setTaskWizardOpen(true) }} className={`flex items-center justify-between p-4 ${cardStyle.bg} ${cardStyle.hoverBg} rounded-card transition-colors cursor-pointer`}>
+            <div key={item.id} onClick={() => handleTaskClick(item)} className={`flex items-center justify-between p-4 ${cardStyle.bg} ${cardStyle.hoverBg} rounded-card transition-colors cursor-pointer`}>
               <div className="flex-1 min-w-0 pr-3">
                 <p className={`font-extrabold text-[14px] line-clamp-2 break-words ${cardStyle.textTitle}`}>
                   {item.title || item.vaccines?.name || 'Görev'}
@@ -950,7 +1084,13 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                     <span className="font-normal opacity-80 ml-1">/ {formatFrequency(item.vaccines?.frequency_days, item.vaccines?.frequency_label || item.frequency_label)}</span>
                   )}
                 </p>
-                {item.sub_category && item.sub_category !== (item.title || item.vaccines?.name) && <p className={`text-[11px] font-semibold ${cardStyle.textSub}`}>{item.sub_category}</p>}
+                {item.sub_category && item.sub_category !== (item.title || item.vaccines?.name) && (
+                  <p className={`text-[11px] font-semibold ${cardStyle.textSub}`}>
+                    {item.extra_data?.record_type === 'medication' && item.extra_data?.medication?.dosage_string
+                      ? item.extra_data.medication.dosage_string
+                      : item.sub_category}
+                  </p>
+                )}
                 <div className={`text-[11px] font-semibold mt-1.5 ${cardStyle.textDate}`}>{formatTaskDate(item.due_date, item.due_time, isCompleted)}</div>
               </div>
               <div className="relative shrink-0">
@@ -965,7 +1105,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                     <button onClick={(e) => { e.stopPropagation(); handleMarkCompleted(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-success hover:bg-success/5 flex items-center gap-2 cursor-pointer">✓ Tamamlandı İşaretle</button>
                     <button onClick={(e) => { e.stopPropagation(); handlePostpone(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary-soft flex items-center gap-2 cursor-pointer">📅 1 Gün Ertele</button>
                     <div className="border-t border-border-main/30 mx-2 my-1"/>
-                    <button onClick={(e) => { e.stopPropagation(); setTaskToEdit(item); setActiveMenuId(null); setTaskWizardOpen(true) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
+                    <button onClick={(e) => { e.stopPropagation(); handleEditTask(item); setActiveMenuId(null); }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
                     <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer">❌ Sil</button>
                   </div>
                 )}
@@ -1665,7 +1805,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                       {overdueTasks.map((t: any) => {
                         const title = t.title || t.vaccines?.name || t.category;
                         return (
-                          <div key={t.id} onClick={() => { setTaskToEdit(t); setTaskWizardOpen(true) }} className="flex items-start justify-between group bg-error/5 p-3.5 rounded-2xl border border-error/10 hover:bg-error/10 transition-colors cursor-pointer">
+                          <div key={t.id} onClick={() => handleTaskClick(t)} className="flex items-start justify-between group bg-error/5 p-3.5 rounded-2xl border border-error/10 hover:bg-error/10 transition-colors cursor-pointer">
                             <div className="flex items-start gap-3">
                               <button onClick={(e) => { e.stopPropagation(); handleMarkCompleted(t.id); }} className="mt-0.5 w-6 h-6 flex items-center justify-center rounded-full border-2 border-error/40 hover:bg-error hover:border-error text-transparent hover:text-white transition-colors flex-shrink-0">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -1696,7 +1836,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                                 <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-2xl shadow-xl border border-border-main/50 py-2 z-[200]">
                                   <button onClick={(e) => { e.stopPropagation(); handleMarkCompleted(t.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-success hover:bg-success/5 flex items-center gap-2 cursor-pointer">✓ Tamamla</button>
                                   <div className="border-t border-border-main/30 mx-2 my-1"/>
-                                  <button onClick={(e) => { e.stopPropagation(); setTaskToEdit(t); setActiveMenuId(null); setTaskWizardOpen(true) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
+                                  <button onClick={(e) => { e.stopPropagation(); handleEditTask(t); setActiveMenuId(null); }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
                                   <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(t.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer">❌ Sil</button>
                                 </div>
                               )}
@@ -1720,7 +1860,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                         const isDone = t.status === 'done';
                         const title = t.title || t.vaccines?.name || t.category;
                         return (
-                          <div key={t.id} onClick={() => { if(!isDone) { setTaskToEdit(t); setTaskWizardOpen(true); } }} className={`flex items-start justify-between group p-3.5 rounded-2xl border transition-colors ${isDone ? 'bg-text-secondary/5 border-transparent' : 'cursor-pointer bg-white border-border-main/50 hover:border-primary/30 hover:bg-primary/5'}`}>
+                          <div key={t.id} onClick={() => { if(!isDone) handleTaskClick(t); }} className={`flex items-start justify-between group p-3.5 rounded-2xl border transition-colors ${isDone ? 'bg-text-secondary/5 border-transparent' : 'cursor-pointer bg-white border-border-main/50 hover:border-primary/30 hover:bg-primary/5'}`}>
                             <div className="flex items-start gap-3 flex-1 min-w-0 pr-2">
                               <button onClick={(e) => { e.stopPropagation(); if(!isDone) handleMarkCompleted(t.id); }} className={`mt-0.5 w-6 h-6 flex items-center justify-center rounded-full border-2 transition-colors flex-shrink-0 ${isDone ? 'bg-text-secondary/20 border-text-secondary/20 text-text-secondary' : 'border-primary/40 hover:bg-primary hover:border-primary text-transparent hover:text-white'}`}>
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -1746,7 +1886,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                                   <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-2xl shadow-xl border border-border-main/50 py-2 z-[200]">
                                     <button onClick={(e) => { e.stopPropagation(); handleMarkCompleted(t.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-success hover:bg-success/5 flex items-center gap-2 cursor-pointer">✓ Tamamla</button>
                                     <div className="border-t border-border-main/30 mx-2 my-1"/>
-                                    <button onClick={(e) => { e.stopPropagation(); setTaskToEdit(t); setActiveMenuId(null); setTaskWizardOpen(true) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
+                                    <button onClick={(e) => { e.stopPropagation(); handleEditTask(t); setActiveMenuId(null); }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
                                     <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(t.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer">❌ Sil</button>
                                   </div>
                                 )}
@@ -1771,7 +1911,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         <h3 className="text-[15px] font-bold text-text-primary mb-3">
           Görev Takibi
         </h3>
-        <HealthTracker refreshTrigger={trackerRefreshKey} petId={pet.id} onEditTask={(t) => { setTaskToEdit(t); setTaskWizardOpen(true); }} />
+        <HealthTracker refreshTrigger={trackerRefreshKey} petId={pet.id} onEditTask={(t) => handleEditTask(t)} />
       </div>
 
       {pet.gender === 'female' && !pet.is_neutered && (
@@ -1789,13 +1929,14 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             {activeTab === 'saglik' ? 'Sağlık ve Bakım' : 'Bakım'}
           </h2>
           {activeTab === 'saglik' && (
-            <MinimalGrowthChart 
+              <MinimalGrowthChart 
               records={growthRecords} 
               petSpecies={pet.species as 'cat' | 'dog'}
               petBreed={pet.breed}
               petBirthDate={pet.birth_date}
               petGender={pet.gender as 'male' | 'female' | 'unknown'}
               isNeutered={pet.is_neutered ?? false}
+              upcomingTask={localSchedules.find(s => (s.sub_type === 'Kilo & Boy Ölçümü' || (s.title && s.title.includes('Kilo & Boy'))) && s.status !== 'done')}
               onAddRecord={() => setQuickUpdateConfig({ 
                 title: 'Gelişim Bilgisi', 
                 desc: 'Gelişimi takip edebilmek için güncel kilo ve boyunu girin.', 
@@ -2076,6 +2217,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           </div>
         )}
 
+        {/* İlaçlar */}
+        <MedicationManager petId={pet.id} initialMedications={medications || []} />
+
         {/* Alerjiler */}
         <AllergyManager petId={pet.id} initialAllergies={allergies || []} />
       </div>
@@ -2337,6 +2481,83 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                   className="flex-[2] btn-primary py-3 disabled:opacity-50 text-[14px]"
                 >{savingAdjust ? 'Kaydediliyor...' : 'Kaydet ✓'}</button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {medicationActionTask && (
+        <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex justify-center items-end" onClick={() => setMedicationActionTask(null)}>
+          <div className="bg-[#FAF6F2] w-full max-w-md rounded-t-[32px] p-6 shadow-2xl animate-fade-in relative flex flex-col gap-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <button onClick={() => setMedicationActionTask(null)} className="w-8 h-8 rounded-full bg-slate-200/50 hover:bg-slate-200/80 flex items-center justify-center text-slate-700 transition-colors">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+              <h3 className="text-[17px] font-black text-slate-800">İlaç</h3>
+              <div className="w-8" />
+            </div>
+
+            <div className="flex flex-col items-center gap-4 text-center mt-2">
+              {medicationActionTask.extra_data?.medication?.stock_enabled && (
+                <div className="text-[12px] font-bold text-slate-500 bg-slate-200/40 px-3 py-1 rounded-full">
+                  {medicationActionTask.extra_data.medication.stock} {medicationActionTask.extra_data.medication.unit} kaldı
+                </div>
+              )}
+              
+              <div className="w-16 h-16 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-3xl shadow-inner animate-pulse">
+                💊
+              </div>
+
+              <div>
+                <h4 className="text-[20px] font-black text-slate-800">{medicationActionTask.title}</h4>
+                <div className="flex items-center justify-center gap-2 mt-2">
+                  <span className="text-[13px] font-extrabold px-3 py-1 bg-white border border-slate-200 text-slate-700 rounded-full shadow-sm">
+                     {medicationActionTask.extra_data?.medication?.dosage_string || medicationActionTask.extra_data?.medication?.dose || '1 Doz'}
+                  </span>
+                  <button 
+                    onClick={() => setShowNoteInput(prev => !prev)}
+                    className="text-[13px] font-extrabold px-3 py-1 bg-white border border-slate-200 border-dashed text-slate-600 rounded-full hover:bg-slate-50 transition-all flex items-center gap-1"
+                  >
+                    <span>+ Not</span>
+                  </button>
+                </div>
+              </div>
+
+              {showNoteInput && (
+                <input
+                  type="text"
+                  placeholder="Görevin notu..."
+                  value={medicationNote}
+                  onChange={e => setMedicationNote(e.target.value)}
+                  className="w-full mt-2 p-3 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400"
+                />
+              )}
+
+              <div className="w-full flex justify-between items-center bg-white/50 border border-slate-200/50 rounded-2xl p-4 mt-2">
+                <span className="text-sm font-bold text-slate-600">Saat</span>
+                <span className="text-base font-black text-slate-800">{medicationActionTask.due_time?.slice(0, 5) || '12:00'}</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 mt-4">
+              <button
+                onClick={() => handleMedicationSkip(medicationActionTask)}
+                className="py-3.5 bg-red-50 hover:bg-red-100 text-red-700 font-extrabold text-[14px] rounded-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
+              >
+                <span>❌ Atla</span>
+              </button>
+              <button
+                onClick={() => handleMedicationSnooze(medicationActionTask)}
+                className="py-3.5 bg-[#FAF1E6] hover:bg-[#F3E5D4] text-[#8C6239] font-extrabold text-[14px] rounded-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
+              >
+                <span>🔔 Ertele</span>
+              </button>
+              <button
+                onClick={() => handleMedicationConfirm(medicationActionTask, medicationNote)}
+                className="py-3.5 bg-[#10B981] hover:bg-[#059669] text-white font-extrabold text-[14px] rounded-2xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
+              >
+                <span>✓ Onayla</span>
+              </button>
             </div>
           </div>
         </div>

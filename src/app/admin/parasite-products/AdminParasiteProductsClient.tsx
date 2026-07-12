@@ -515,11 +515,11 @@ export default function AdminParasiteProductsClient() {
                     <label className="block text-xs font-medium text-gray-500 mb-1">
                       Koruma (Gün) <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="number"
+                    <StepperInput
+                      min={0} step={1}
                       value={form.protection_duration_days}
                       onChange={e => setForm(f => ({ ...f, protection_duration_days: parseInt(e.target.value) || 0 }))}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                      className="w-full"
                       placeholder="30"
                     />
                   </div>
@@ -538,11 +538,11 @@ export default function AdminParasiteProductsClient() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-500 mb-1">Min. Yaş (Hafta)</label>
-                    <input
-                      type="number"
+                    <StepperInput
+                      min={0} step={1}
                       value={form.min_age_weeks}
                       onChange={e => setForm(f => ({ ...f, min_age_weeks: e.target.value }))}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                      className="w-full"
                       placeholder="Opsiyonel"
                     />
                   </div>

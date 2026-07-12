@@ -13,6 +13,7 @@ import { TaskCategory, getFilteredSubCategories, getSmartDefault } from '@/lib/t
 import Image from 'next/image';
 import Link from 'next/link';
 import { SmartScanner } from '@/components/ui/SmartScanner';
+import { StepperInput } from '@/components/ui/StepperInput';
 import { normalizeSpecies } from '@/lib/species';
 
 // ── Eşleştirmeler ──────────────────────────────────────────────────
@@ -180,11 +181,21 @@ export default function WizardOrchestrator() {
     const subCat = categoryKey === 'asi' ? 'Aşı' : wizardData.subCategory;
     if (subCat && subCat !== 'Diğer') {
       const defaults = getSmartDefault(subCat);
-      setStepData({
+      const updateData: any = {
         frequency: defaults.frequency,
         interval: defaults.interval,
         notificationMinutes: defaults.notification_minutes,
-      });
+      };
+
+      if (subCat === 'İlaç') {
+        updateData.medication_dose = 1;
+        updateData.medication_days = 7;
+        updateData.medication_stock_count = 30;
+        updateData.medication_alert_count = 10;
+        updateData.medication_duration = 'days'; // default duration type
+      }
+
+      setStepData(updateData);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wizardData.subCategory, categoryKey]);
@@ -312,31 +323,39 @@ export default function WizardOrchestrator() {
     steps.push({ key: 'selectedVaccine', type: 'vaccine_selection', title: dynamicTitle, desc: `${subCat} için uygulanan veya planlanan ürünü seçin.` });
   }
 
-  const showMetadata = () => {
-    if (subCat === 'Diğer') return true;
-    if (subCat === 'Alerji') return true;
-    if (!subCat && categoryKey !== 'asi') return false; // Alt kategori seçilmeden gösterme
-    
-    if (categoryKey === 'saglik') {
-      const excluded = ['Kilo Takibi', 'İlaç'];
-      return !excluded.includes(subCat);
-    }
-    if (categoryKey === 'beslenme') {
-      const excluded = ['Su Tazeleme', 'Öğün'];
-      return !excluded.includes(subCat);
-    }
-    return false;
-  };
+  if (subCat === 'İlaç') {
+    steps.push({ key: 'medication_info', type: 'medication_info', title: 'Hangi ilacı ekliyorsunuz?', desc: 'İlaç adını ve formunu belirtin.' });
+    steps.push({ key: 'medication_purpose', type: 'medication_purpose', title: 'Kullanım Amacı', desc: 'Bunu ne için kullanıyorsunuz?' });
+    steps.push({ key: 'medication_frequency', type: 'medication_frequency', title: 'Kullanım Sıklığı', desc: 'İlacı ne sıklıkla veriyorsunuz?' });
+    steps.push({ key: 'medication_datetime', type: 'medication_datetime', title: 'Tarih & Doz', desc: 'İlk dozu ne zaman vereceksiniz?' });
+    steps.push({ key: 'medication_stock', type: 'medication_stock', title: 'Stok Takibi', desc: 'İlaç bitmeden hatırlatalım mı?' });
+  } else {
+    const showMetadata = () => {
+      if (subCat === 'Diğer') return true;
+      if (subCat === 'Alerji') return true;
+      if (!subCat && categoryKey !== 'asi') return false; // Alt kategori seçilmeden gösterme
+      
+      if (categoryKey === 'saglik') {
+        const excluded = ['Kilo Takibi'];
+        return !excluded.includes(subCat);
+      }
+      if (categoryKey === 'beslenme') {
+        const excluded = ['Su Tazeleme', 'Öğün'];
+        return !excluded.includes(subCat);
+      }
+      return false;
+    };
 
-  if (showMetadata()) {
-    steps.push({ key: 'metadata', type: 'metadata_selection', title: 'Detaylar', desc: 'Planla ilgili ekstra detaylar girin.' });
-  }
+    if (showMetadata()) {
+      steps.push({ key: 'metadata', type: 'metadata_selection', title: 'Detaylar', desc: 'Planla ilgili ekstra detaylar girin.' });
+    }
 
-  // Alerji kaydı için tarih-saat, tekrar ve bildirim adımlarını atlayalım, çünkü bu bir randevu/rutin değil geçmiş veya kalıcı durum kaydıdır.
-  if (subCat !== 'Alerji') {
-    steps.push({ key: 'datetime', type: 'datetime_selection', title: 'Tarih & Saat', desc: 'İşlem ne zaman gerçekleşecek?' });
-    steps.push({ key: 'recurrence', type: 'recurrence_selection', title: 'Tekrar Sıklığı', desc: 'Bu plan tekrarlanacak mı?' });
-    steps.push({ key: 'notification', type: 'notification_selection', title: 'Bildirim', desc: 'Hatırlatıcı ayarlarınızı tamamlayın.' });
+    // Alerji kaydı için tarih-saat, tekrar ve bildirim adımlarını atlayalım
+    if (subCat !== 'Alerji') {
+      steps.push({ key: 'datetime', type: 'datetime_selection', title: 'Tarih & Saat', desc: 'İşlem ne zaman gerçekleşecek?' });
+      steps.push({ key: 'recurrence', type: 'recurrence_selection', title: 'Tekrar Sıklığı', desc: 'Bu plan tekrarlanacak mı?' });
+      steps.push({ key: 'notification', type: 'notification_selection', title: 'Bildirim', desc: 'Hatırlatıcı ayarlarınızı tamamlayın.' });
+    }
   }
 
   const totalSteps = steps.length;
@@ -354,6 +373,11 @@ export default function WizardOrchestrator() {
   if (currentStep?.key === 'metadata' && subCat === 'Alerji' && !wizardData.metadata?.trigger_name?.trim()) isNextDisabled = true;
   if (currentStep?.key === 'metadata' && subCat === 'Belirti Takibi' && selectedSymptoms.length === 0) isNextDisabled = true;
   if (currentStep?.key === 'recurrence' && wizardData.frequency !== 'once' && wizardData.endCondition === 'date' && !wizardData.endDate) isNextDisabled = true;
+
+  // Medication validation
+  if (currentStep?.key === 'medication_info' && (!wizardData.medication_name || !wizardData.medication_unit)) isNextDisabled = true;
+  if (currentStep?.key === 'medication_frequency' && !wizardData.medication_freq_type) isNextDisabled = true;
+  if (currentStep?.key === 'medication_datetime' && (!wizardData.date || !wizardData.time || !wizardData.medication_dose)) isNextDisabled = true;
 
   const handleDelete = async () => {
     if (!window.confirm('Bu planı silmek istediğinize emin misiniz?')) return;
@@ -399,6 +423,80 @@ export default function WizardOrchestrator() {
         setIsSubmitting(false);
       }
       return;
+    }
+
+    if (subCat === 'İlaç') {
+       let repeat_rule = null;
+       let scheduledAt = `${wizardData.date || new Date().toISOString().split('T')[0]}T${wizardData.time || '09:00'}:00`;
+       
+       if (wizardData.medication_freq_type === 'once_daily') {
+          repeat_rule = 'daily';
+          wizardData.interval = 1;
+       } else if (wizardData.medication_freq_type === 'once_weekly') {
+          repeat_rule = 'weekly';
+          wizardData.interval = 1;
+       } else if (wizardData.medication_freq_type === 'as_needed') {
+          repeat_rule = null;
+          scheduledAt = new Date().toISOString(); 
+       }
+       
+       let endsAt = null;
+       if (wizardData.medication_duration === 'days' && wizardData.medication_days) {
+          const d = new Date(scheduledAt);
+          d.setDate(d.getDate() + wizardData.medication_days);
+          endsAt = d.toISOString();
+       }
+       
+       const extra_data = {
+         record_type: 'medication',
+         source: 'plan_yap',
+         medication: {
+           name: wizardData.medication_name,
+           unit: wizardData.medication_unit,
+           dose: wizardData.medication_dose,
+           dosage_string: `${wizardData.medication_dose} ${wizardData.medication_unit}`,
+           photo_url: wizardData.medication_photo_url || null,
+           purpose: wizardData.medication_purpose || null,
+           freq_type: wizardData.medication_freq_type,
+           stock_enabled: wizardData.medication_stock_enabled,
+           stock: wizardData.medication_stock_enabled ? (wizardData.medication_stock_count || 30) : null,
+           alert_threshold: wizardData.medication_stock_enabled ? (wizardData.medication_alert_count || 10) : null
+         }
+       };
+       
+       const medPayload = {
+         pet_id: petId,
+         category: categoryKey,
+         sub_type: 'İlaç Kullanımı',
+         scheduled_at: new Date(scheduledAt).toISOString(),
+         repeat_rule: repeat_rule,
+         ends_at: endsAt,
+         notif_before: wizardData.medication_freq_type === 'as_needed' ? null : 0, 
+         notif_unit: 'minute',
+         note: wizardData.notes || null,
+         extra_data: extra_data
+       };
+       
+       try {
+         const res = await fetch('/api/plans' + (editId ? `/${editId}` : ''), {
+           method: editId ? 'PATCH' : 'POST',
+           headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify(medPayload),
+         });
+
+         if (res.ok) {
+           setIsSuccess(true);
+         } else {
+           const errData = await res.json();
+           alert(`Hata: ${errData.error || 'İlaç kaydedilemedi'}`);
+         }
+       } catch (err) {
+         console.error(err);
+         alert('Beklenmeyen bir hata oluştu.');
+       } finally {
+         setIsSubmitting(false);
+       }
+       return;
     }
     
     // Combine Date and Time
@@ -1002,11 +1100,11 @@ export default function WizardOrchestrator() {
               <label className="text-[12px] font-bold text-text-secondary">Tekrar Aralığı</label>
               <div className="flex items-center gap-3">
                 <span className="text-[13px] text-text-primary font-normal">Her</span>
-                <div className="flex items-center bg-surface border border-border-main rounded-lg overflow-hidden shrink-0">
-                  <button onClick={() => setStepData({ interval: Math.max(1, wizardData.interval - 1) })} className="px-3 py-1 bg-slate-50 hover:bg-slate-100 font-bold">−</button>
-                  <input type="number" min="1" value={wizardData.interval} onChange={(e) => setStepData({ interval: parseInt(e.target.value) || 1 })} className="w-12 text-center text-sm font-bold border-x border-slate-200 py-1 outline-none appearance-none" />
-                  <button onClick={() => setStepData({ interval: wizardData.interval + 1 })} className="px-3 py-1 bg-slate-50 hover:bg-slate-100 font-bold">+</button>
-                </div>
+                <StepperInput
+                  min={1} step={1}
+                  value={wizardData.interval}
+                  onChange={(e) => setStepData({ interval: parseInt(e.target.value) || 1 })}
+                />
                 <span className="text-sm text-slate-700 font-medium">{FREQ_LABEL[wizardData.frequency]} tekrarlanacak</span>
               </div>
 
@@ -1023,8 +1121,12 @@ export default function WizardOrchestrator() {
                   <input type="date" min={wizardData.date} value={wizardData.endDate || ''} onChange={(e) => setStepData({ endDate: e.target.value })} className="w-full p-2 border border-slate-200 rounded-lg text-sm" />
                 )}
                 {wizardData.endCondition === 'occurrences' && (
-                  <div className="flex items-center gap-2">
-                    <input type="number" min="1" value={wizardData.endOccurrences || 1} onChange={(e) => setStepData({ endOccurrences: parseInt(e.target.value) || 1 })} className="w-20 p-2 border border-slate-200 rounded-lg text-sm text-center" />
+                  <div className="flex items-center gap-2 mt-2">
+                    <StepperInput
+                      min={1} step={1}
+                      value={wizardData.endOccurrences || 1}
+                      onChange={(e) => setStepData({ endOccurrences: parseInt(e.target.value) || 1 })}
+                    />
                     <span className="text-[12px] text-text-secondary font-normal">kez tekrarlandıktan sonra bitir</span>
                   </div>
                 )}
@@ -1033,6 +1135,212 @@ export default function WizardOrchestrator() {
           )}
         </div>
       );
+    }
+
+    if (step.type === 'medication_info') {
+      const units = ['Tablet', 'Damla', 'Şurup (ml)', 'Kapsül', 'Merhem', 'Enjeksiyon'];
+      return (
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[13px] font-bold text-text-primary">İlaç Adı</label>
+            <input
+              type="text"
+              value={wizardData.medication_name || ''}
+              onChange={(e) => {
+                const val = e.target.value;
+                const capitalized = val.split(' ').map(word => 
+                  word.charAt(0).toLocaleUpperCase('tr-TR') + word.slice(1).toLocaleLowerCase('tr-TR')
+                ).join(' ');
+                setStepData({ medication_name: capitalized });
+              }}
+              placeholder="Örn: Synulox, Nexgard..."
+              className="w-full p-3 border border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none font-medium"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[13px] font-bold text-text-primary">Birim / Form</label>
+            <div className="grid grid-cols-3 gap-2">
+              {units.map(u => (
+                <button
+                  key={u}
+                  onClick={() => setStepData({ medication_unit: u })}
+                  className={`py-2 px-1 rounded-lg text-[12px] font-bold border transition-all text-center ${wizardData.medication_unit === u ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+                >
+                  {u}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5 pt-2">
+             <label className="text-[13px] font-bold text-text-primary flex items-center justify-between">
+                İlaç Fotoğrafı <span className="text-[10px] text-text-tertiary font-normal px-2 py-0.5 bg-slate-100 rounded">Opsiyonel</span>
+             </label>
+             <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-50 transition-colors"
+                  onClick={() => document.getElementById('medPhoto')?.click()}>
+               {wizardData.medication_photo_url ? (
+                 <div className="flex flex-col items-center">
+                    <img src={wizardData.medication_photo_url} alt="İlaç" className="w-16 h-16 object-cover rounded-lg mb-2 shadow-sm" />
+                    <span className="text-indigo-600 font-bold text-[11px]">Fotoğraf Değiştir</span>
+                 </div>
+               ) : (
+                 <>
+                   <div className="w-10 h-10 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mb-2 shadow-sm">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                   </div>
+                   <p className="text-[11px] font-medium text-text-secondary">Paket fotoğrafı yüklemek için dokunun</p>
+                 </>
+               )}
+               <input id="medPhoto" type="file" accept="image/*" className="hidden" 
+                 onChange={async (e) => {
+                   const file = e.target.files?.[0];
+                   if (!file) return;
+                   const supabase = createBrowserSupabaseClient();
+                   const ext = file.name.split('.').pop();
+                   const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+                   setStepData({ uploadingPhoto: true });
+                   const { data, error } = await supabase.storage.from('medical_records').upload(`medications/${fileName}`, file);
+                   setStepData({ uploadingPhoto: false });
+                   if (!error && data) {
+                     const { data: { publicUrl } } = supabase.storage.from('medical_records').getPublicUrl(data.path);
+                     setStepData({ medication_photo_url: publicUrl });
+                   } else {
+                     alert("Fotoğraf yüklenemedi. Lütfen tekrar deneyin.");
+                   }
+                 }}
+               />
+             </div>
+             {wizardData.uploadingPhoto && <p className="text-[10px] font-bold text-indigo-500 text-center animate-pulse mt-1">Görsel yükleniyor, lütfen bekleyin...</p>}
+          </div>
+        </div>
+      )
+    }
+
+    if (step.type === 'medication_purpose') {
+      return (
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[13px] font-bold text-text-primary flex items-center justify-between">
+                Kullanım Amacı <span className="text-[10px] text-text-tertiary font-normal px-2 py-0.5 bg-slate-100 rounded">Opsiyonel</span>
+            </label>
+            <input
+              type="text"
+              value={wizardData.medication_purpose || ''}
+              onChange={(e) => setStepData({ medication_purpose: e.target.value })}
+              placeholder="Örn: Enfeksiyon, Eklem desteği..."
+              className="w-full p-3 border border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none font-medium"
+            />
+          </div>
+        </div>
+      )
+    }
+
+    if (step.type === 'medication_frequency') {
+      const freqOptions = [
+        { id: 'once_daily', label: 'Günde 1 kez' },
+        { id: 'once_weekly', label: 'Haftada 1 kez' },
+        { id: 'as_needed', label: 'Sadece gerektiğinde', desc: 'Hatırlatma kurulmaz, listeden manuel verilir.' }
+      ];
+      return (
+        <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2">
+          {freqOptions.map(opt => (
+            <button
+              key={opt.id}
+              onClick={() => setStepData({ medication_freq_type: opt.id })}
+              className={`w-full text-left p-4 rounded-xl border transition-all shadow-sm ${wizardData.medication_freq_type === opt.id ? 'border-indigo-500 bg-indigo-50 scale-[1.02]' : 'border-slate-200 bg-surface hover:bg-slate-50'}`}
+            >
+              <p className={`text-[14px] font-extrabold ${wizardData.medication_freq_type === opt.id ? 'text-indigo-900' : 'text-text-primary'}`}>{opt.label}</p>
+              {opt.desc && <p className="text-[11px] font-medium text-text-secondary mt-1">{opt.desc}</p>}
+            </button>
+          ))}
+        </div>
+      )
+    }
+
+    if (step.type === 'medication_datetime') {
+      return (
+        <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2">
+          <div className="grid grid-cols-2 gap-3">
+             <div className="flex flex-col gap-1.5">
+               <label className="text-[12px] font-bold text-text-primary">İlk Doz Tarihi</label>
+               <input type="date" value={wizardData.date || new Date().toISOString().split('T')[0]} onChange={e => setStepData({ date: e.target.value })} className="w-full p-2.5 border border-slate-200 rounded-xl outline-none font-medium text-sm shadow-sm" />
+             </div>
+             <div className="flex flex-col gap-1.5">
+               <label className="text-[12px] font-bold text-text-primary">Saat</label>
+               <input type="time" value={wizardData.time || '09:00'} onChange={e => setStepData({ time: e.target.value })} className="w-full p-2.5 border border-slate-200 rounded-xl outline-none font-bold text-sm shadow-sm" />
+             </div>
+          </div>
+          
+          <div className="flex flex-col gap-1.5 pt-1">
+             <label className="text-[12px] font-bold text-text-primary">Doz Miktarı</label>
+             <div className="flex items-center gap-3">
+                <StepperInput
+                  min={0.1} step={0.1} unit={wizardData.medication_unit || 'Birim'}
+                  value={wizardData.medication_dose || 1}
+                  onChange={e => setStepData({ medication_dose: parseFloat(e.target.value) || 1 })}
+                  className="w-full sm:w-fit border-indigo-200 focus-within:border-indigo-400"
+                />
+             </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5 pt-2">
+             <label className="text-[12px] font-bold text-text-primary">Tedavi Süresi</label>
+             <div className="flex items-center gap-3">
+                <button onClick={() => setStepData({ medication_duration: 'continuous' })} className={`flex-1 py-2.5 rounded-xl text-xs font-bold border transition-colors shadow-sm ${wizardData.medication_duration === 'continuous' || !wizardData.medication_duration ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-surface text-slate-600 border-slate-200'}`}>Sürekli</button>
+                <button onClick={() => setStepData({ medication_duration: 'days' })} className={`flex-1 py-2.5 rounded-xl text-xs font-bold border transition-colors shadow-sm ${wizardData.medication_duration === 'days' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-surface text-slate-600 border-slate-200'}`}>Belirli Gün</button>
+             </div>
+             {wizardData.medication_duration === 'days' && (
+                <div className="flex items-center gap-3 mt-3 animate-in slide-in-from-top-1 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                   <StepperInput
+                      min={1} step={1} unit="Gün"
+                      value={wizardData.medication_days || 7}
+                      onChange={e => setStepData({ medication_days: parseInt(e.target.value) })}
+                   />
+                </div>
+             )}
+          </div>
+        </div>
+      )
+    }
+
+    if (step.type === 'medication_stock') {
+      return (
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+           <div className="flex items-center justify-between p-4 bg-surface border border-border-main rounded-2xl shadow-sm">
+            <div>
+              <p className="text-[14px] font-extrabold text-text-primary">Stok Takibi</p>
+              <p className="text-[11px] font-medium text-text-secondary mt-0.5">İlaç bitmeden size haber verelim</p>
+            </div>
+            <button onClick={() => setStepData({ medication_stock_enabled: !wizardData.medication_stock_enabled })} className={`w-12 h-7 rounded-full p-1 transition-colors ${wizardData.medication_stock_enabled ? 'bg-indigo-500' : 'bg-slate-300'}`}>
+              <div className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${wizardData.medication_stock_enabled ? 'translate-x-5' : 'translate-x-0'}`} />
+            </button>
+          </div>
+          
+          {wizardData.medication_stock_enabled && (
+             <div className="p-4 bg-indigo-50/70 border border-indigo-100 rounded-2xl space-y-4 animate-in slide-in-from-top-2">
+                <div className="flex items-center justify-between">
+                   <label className="text-[13px] font-extrabold text-indigo-900">Geçerli Stok</label>
+                   <div className="flex items-center gap-2">
+                      <StepperInput
+                        min={1} step={1} unit={wizardData.medication_unit}
+                        value={wizardData.medication_stock_count || 30}
+                        onChange={e => setStepData({ medication_stock_count: parseInt(e.target.value) || 30 })}
+                      />
+                   </div>
+                </div>
+                <div className="flex items-center justify-between pt-4 border-t border-indigo-100">
+                   <label className="text-[12px] font-bold text-slate-600 w-2/3">Kalan miktar şu seviyeye düşünce beni uyar:</label>
+                   <div className="flex items-center gap-2">
+                      <StepperInput
+                        min={1} step={1} unit={wizardData.medication_unit}
+                        value={wizardData.medication_alert_count || 10}
+                        onChange={e => setStepData({ medication_alert_count: parseInt(e.target.value) || 10 })}
+                      />
+                   </div>
+                </div>
+             </div>
+          )}
+        </div>
+      )
     }
 
     if (step.type === 'notification_selection') {
@@ -1129,7 +1437,28 @@ export default function WizardOrchestrator() {
                    </div>
                  )}
                </>
-             ) : (
+             ) : subCat === 'İlaç' ? (
+                <>
+                  <div className="flex justify-between items-start py-2 border-b border-slate-50">
+                    <span className="text-[12px] font-semibold text-slate-400">Görev</span>
+                    <span className="text-xs font-bold text-slate-800 text-right">{wizardData.medication_name}</span>
+                  </div>
+                  <div className="flex justify-between items-start py-2 border-b border-slate-50">
+                    <span className="text-[12px] font-semibold text-slate-400">Zaman</span>
+                    <span className="text-xs font-bold text-slate-800 text-right">{wizardData.date} {wizardData.time}</span>
+                  </div>
+                  <div className="flex justify-between items-start py-2">
+                    <span className="text-[12px] font-semibold text-slate-400">Tekrar</span>
+                    <span className="text-xs font-bold text-slate-800 text-right">
+                      {wizardData.medication_freq_type === 'once_daily' ? 'Günde 1 kez' :
+                       wizardData.medication_freq_type === 'twice_daily' ? 'Günde 2 kez' :
+                       wizardData.medication_freq_type === 'thrice_daily' ? 'Günde 3 kez' :
+                       wizardData.medication_freq_type === 'four_times_daily' ? 'Günde 4 kez' :
+                       wizardData.medication_freq_type === 'as_needed' ? 'Sadece gerektiğinde' : wizardData.medication_freq_type}
+                    </span>
+                  </div>
+                </>
+              ) : (
                <>
                  <div className="flex justify-between items-start py-2 border-b border-slate-50">
                    <span className="text-[12px] font-semibold text-slate-400">Görev</span>
@@ -1186,6 +1515,20 @@ export default function WizardOrchestrator() {
         return wizardData.date ? `${wizardData.date} ${wizardData.time || ''}`.trim() : 'Belirtilmedi';
       case 'recurrence':
         return wizardData.frequency === 'once' ? 'Tek Seferlik' : `Her ${wizardData.interval || 1} ${FREQ_LABEL[wizardData.frequency] || wizardData.frequency}`;
+      case 'medication_info':
+        return wizardData.medication_name ? `${wizardData.medication_name} (${wizardData.medication_unit})` : 'Belirtilmedi';
+      case 'medication_purpose':
+        return wizardData.medication_purpose || 'Belirtilmedi';
+      case 'medication_frequency':
+        return wizardData.medication_freq_type === 'once_daily' ? 'Günde 1 kez' :
+               wizardData.medication_freq_type === 'twice_daily' ? 'Günde 2 kez' :
+               wizardData.medication_freq_type === 'thrice_daily' ? 'Günde 3 kez' :
+               wizardData.medication_freq_type === 'four_times_daily' ? 'Günde 4 kez' :
+               wizardData.medication_freq_type === 'as_needed' ? 'Sadece gerektiğinde' : 'Belirtilmedi';
+      case 'medication_datetime':
+        return wizardData.date ? `${wizardData.date} ${wizardData.time || ''}`.trim() : 'Belirtilmedi';
+      case 'medication_stock':
+        return wizardData.medication_stock_enabled ? `Aktif (${wizardData.medication_stock_count} adet)` : 'Kapalı';
       case 'notification':
         return wizardData.notificationEnabled ? `${wizardData.notificationMinutes} dk önce` : 'Kapalı';
       default:

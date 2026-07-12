@@ -15,7 +15,7 @@ export const createPlanSchema = z.object({
   scheduled_at: z.string().datetime({ message: 'Geçersiz tarih/saat formatı' }),
   repeat_rule: repeatRuleSchema,
   ends_at: z.string().datetime().nullable().optional(),
-  notif_before: z.number().int().min(0).default(10),
+  notif_before: z.number().int().min(0).nullable().default(10),
   notif_unit: notifUnitSchema.default('minute'),
   note: z.string().nullable().optional(),
   extra_data: z.record(z.string(), z.any()).default({}),

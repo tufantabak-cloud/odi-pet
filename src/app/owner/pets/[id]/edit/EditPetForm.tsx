@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { calcAge } from '@/lib/pets/utils'
 import { SmartScanner } from '@/components/ui/SmartScanner'
+import { StepperInput } from '@/components/ui/StepperInput'
 
 const CAT_BREEDS = [
   'British Shorthair', 'Scottish Fold', 'Scottish Straight',
@@ -452,36 +453,22 @@ export default function EditPetForm({ pet }: { pet: any }) {
                ) : (
                  <div className="flex flex-col gap-3.5 animate-scaleIn">
                    {/* Yaş Girişi */}
-                   <div className="relative">
-                     <input
-                       type="number"
-                       min="0"
-                       max="30"
-                       placeholder="Yaş (Örn: 1)"
-                       value={approxYears}
-                       onChange={e => handleApproxChange(e.target.value, approxMonths)}
-                       className="w-full px-5 py-4 bg-surface border border-primary/20 rounded-[16px] text-[15px] font-medium placeholder-text-secondary/60 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all text-text-primary"
-                     />
-                     {approxYears && (
-                       <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[13px] font-bold text-text-secondary animate-scaleIn">Yaş</span>
-                     )}
-                   </div>
+                   <StepperInput
+                     min={0} max={30} step={1} unit="Yaş"
+                     placeholder="Yaş (Örn: 1)"
+                     value={approxYears}
+                     onChange={e => handleApproxChange(e.target.value, approxMonths)}
+                     className="w-full h-14 !rounded-[16px] border-primary/20 bg-surface"
+                   />
 
                    {/* Ay Girişi */}
-                   <div className="relative">
-                     <input
-                       type="number"
-                       min="0"
-                       max="11"
-                       placeholder="Ay (Örn: 4)"
-                       value={approxMonths}
-                       onChange={e => handleApproxChange(approxYears, e.target.value)}
-                       className="w-full px-5 py-4 bg-surface border border-primary/20 rounded-[16px] text-[15px] font-medium placeholder-text-secondary/60 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all text-text-primary"
-                     />
-                     {approxMonths && (
-                       <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[13px] font-bold text-text-secondary animate-scaleIn">Ay</span>
-                     )}
-                   </div>
+                   <StepperInput
+                     min={0} max={11} step={1} unit="Ay"
+                     placeholder="Ay (Örn: 4)"
+                     value={approxMonths}
+                     onChange={e => handleApproxChange(approxYears, e.target.value)}
+                     className="w-full h-14 !rounded-[16px] border-primary/20 bg-surface"
+                   />
                  </div>
                )}
 
@@ -494,68 +481,26 @@ export default function EditPetForm({ pet }: { pet: any }) {
              </div>
 
             <div id="weight-input" className="flex flex-col gap-2">
-              <label className="text-[13px] font-bold text-text-primary">Kilo (kg) *</label>
-              <div className="relative flex items-center h-[54px] w-full border-2 border-primary/40 focus-within:border-primary rounded-[16px] overflow-hidden bg-white transition-all">
-                <button
-                  type="button"
-                  onClick={() => handleStep('weight', 'dec')}
-                  className="w-14 h-full flex items-center justify-center text-primary hover:bg-primary-soft/30 active:scale-95 transition-all border-r border-border-main font-bold text-xl select-none"
-                >
-                  —
-                </button>
-                <div className="flex-1 flex items-center justify-center relative h-full">
-                  <input 
-                    id="weight"
-                    type="number" 
-                    step="0.01" 
-                    min="0.01" 
-                    value={weightKg} 
-                    onChange={e => setWeightKg(e.target.value)} 
-                    placeholder="Örn: 4.5" 
-                    className="w-full h-full text-center bg-transparent border-0 focus:outline-none focus:ring-0 text-[15px] font-extrabold text-text-primary pr-8" 
-                    required 
-                  />
-                  <span className="absolute right-4 pointer-events-none text-[12px] font-bold text-text-secondary">kg</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleStep('weight', 'inc')}
-                  className="w-14 h-full flex items-center justify-center text-primary hover:bg-primary-soft/30 active:scale-95 transition-all border-l border-border-main font-bold text-xl select-none"
-                >
-                  +
-                </button>
-              </div>
+              <label className="text-[13px] font-bold text-text-primary">Kilo *</label>
+              <StepperInput
+                id="weight"
+                min={0} max={150} step={0.5} unit="kg"
+                placeholder="Örn: 4.5"
+                value={weightKg}
+                onChange={e => setWeightKg(e.target.value)}
+                className="w-full h-[54px] !rounded-[16px] border-2 border-primary/40 focus-within:border-primary"
+                required
+              />
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-[13px] font-bold text-text-primary">Boy (cm)</label>
-              <div className="relative flex items-center h-[54px] w-full border-2 border-primary/40 focus-within:border-primary rounded-[16px] overflow-hidden bg-white transition-all">
-                <button
-                  type="button"
-                  onClick={() => handleStep('height', 'dec')}
-                  className="w-14 h-full flex items-center justify-center text-primary hover:bg-primary-soft/30 active:scale-95 transition-all border-r border-border-main font-bold text-xl select-none"
-                >
-                  —
-                </button>
-                <div className="flex-1 flex items-center justify-center relative h-full">
-                  <input 
-                    type="number" 
-                    step="0.1" 
-                    min="1" 
-                    value={heightCm} 
-                    onChange={e => setHeightCm(e.target.value)} 
-                    placeholder="Örn: 35" 
-                    className="w-full h-full text-center bg-transparent border-0 focus:outline-none focus:ring-0 text-[15px] font-extrabold text-text-primary pr-8" 
-                  />
-                  <span className="absolute right-4 pointer-events-none text-[12px] font-bold text-text-secondary">cm</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleStep('height', 'inc')}
-                  className="w-14 h-full flex items-center justify-center text-primary hover:bg-primary-soft/30 active:scale-95 transition-all border-l border-border-main font-bold text-xl select-none"
-                >
-                  +
-                </button>
-              </div>
+              <StepperInput
+                min={1} max={150} step={0.5} unit="cm"
+                placeholder="Örn: 35"
+                value={heightCm}
+                onChange={e => setHeightCm(e.target.value)}
+                className="w-full h-[54px] !rounded-[16px] border-2 border-primary/40 focus-within:border-primary"
+              />
             </div>
 
             <div className="flex flex-col gap-2 col-span-1 sm:col-span-2 mt-2">

@@ -95,7 +95,7 @@ export default async function PetDetailPage(props: PageProps) {
       due_time: dueTime,
       status: p.status === 'completed' ? 'done' : p.status === 'cancelled' ? 'done' : 'upcoming',
       category: PLAN_CATEGORY_MAP[p.category] || p.category,
-      sub_category: p.sub_type,
+      sub_category: p.extra_data?.record_type === 'medication' ? 'İlaç Kullanımı' : p.sub_type,
       plan_type: p.repeat_rule || 'once',
       notes: p.note,
       vaccines: p.extra_data?.vaccine ? { name: p.extra_data.vaccine.name } : null,
@@ -130,6 +130,32 @@ export default async function PetDetailPage(props: PageProps) {
 
   const allSchedules = [...(schedules ?? []), ...uniquePlansAsSchedules]
 
+  const medicationPlans = (plans ?? [])
+    .filter((p: any) => p.extra_data?.record_type === 'medication' && p.extra_data?.medication)
+    .map((p: any) => {
+      const med = p.extra_data.medication;
+      return {
+        id: `plan_${p.id}`,
+        _plan_id: p.id,
+        _source: 'plans',
+        pet_id: p.pet_id,
+        medication_name: med.name,
+        dose: med.dosage_string || `${med.dose} ${med.unit}`,
+        usage_duration: p.ends_at ? `${new Date(p.ends_at).toLocaleDateString('tr-TR')} tarihine kadar` : 'Sürekli',
+        is_active: p.status !== 'completed' && p.status !== 'cancelled',
+        photo_url: med.photo_url,
+        purpose: med.purpose,
+        freq_type: med.freq_type,
+        stock_enabled: med.stock_enabled,
+        stock: med.stock,
+        alert_threshold: med.alert_threshold,
+        extra_data: p.extra_data,
+        created_at: p.created_at
+      };
+    });
+
+  const allMedications = [...(medications ?? []), ...medicationPlans];
+
   const age = calcAge(pet.birth_date)
   
   const now = getNowTR()
@@ -155,7 +181,7 @@ export default async function PetDetailPage(props: PageProps) {
         schedules={allSchedules}
         diseases={diseases ?? []}
         allergies={allergies ?? []}
-        medications={medications ?? []}
+        medications={allMedications}
         growthRecords={growthRecords ?? []}
         appointments={appointments ?? []}
         nutritionLogs={nutritionProfile ? [nutritionProfile] : []}

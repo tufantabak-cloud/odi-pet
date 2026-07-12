@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { calcAge } from '@/lib/pets/utils'
 import { DefaultCatAvatar, DefaultDogAvatar } from '@/components/icons/PetIcons'
+import { StepperInput } from '@/components/ui/StepperInput'
 // ── Irk Listeleri ──────────────────────────────────────────────
 const CAT_BREEDS = [
   'British Shorthair', 'Scottish Fold', 'Scottish Straight',
@@ -301,36 +302,22 @@ function PetForm({
             ) : (
               <div className="flex flex-col gap-3.5 animate-scaleIn">
                 {/* Yaş Girişi */}
-                <div className="relative">
-                  <input
-                    type="number"
-                    min="0"
-                    max="30"
-                    placeholder="Yaş (Örn: 1)"
-                    value={approxYears}
-                    onChange={e => handleApproxChange(e.target.value, approxMonths)}
-                    className="w-full px-5 py-4 bg-surface border border-primary/20 rounded-[16px] text-[15px] font-medium placeholder-text-secondary/60 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all text-text-primary"
-                  />
-                  {approxYears && (
-                    <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[13px] font-bold text-text-secondary animate-scaleIn">Yaş</span>
-                  )}
-                </div>
+                <StepperInput
+                  min={0} max={30} step={1} unit="Yaş"
+                  placeholder="Yaş (Örn: 1)"
+                  value={approxYears}
+                  onChange={e => handleApproxChange(e.target.value, approxMonths)}
+                  className="w-full h-14 !rounded-[16px] border-primary/20 bg-surface"
+                />
 
                 {/* Ay Girişi */}
-                <div className="relative">
-                  <input
-                    type="number"
-                    min="0"
-                    max="11"
-                    placeholder="Ay (Örn: 4)"
-                    value={approxMonths}
-                    onChange={e => handleApproxChange(approxYears, e.target.value)}
-                    className="w-full px-5 py-4 bg-surface border border-primary/20 rounded-[16px] text-[15px] font-medium placeholder-text-secondary/60 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all text-text-primary"
-                  />
-                  {approxMonths && (
-                    <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[13px] font-bold text-text-secondary animate-scaleIn">Ay</span>
-                  )}
-                </div>
+                <StepperInput
+                  min={0} max={11} step={1} unit="Ay"
+                  placeholder="Ay (Örn: 4)"
+                  value={approxMonths}
+                  onChange={e => handleApproxChange(approxYears, e.target.value)}
+                  className="w-full h-14 !rounded-[16px] border-primary/20 bg-surface"
+                />
               </div>
             )}
 
@@ -359,39 +346,13 @@ function PetForm({
           {/* Kilo */}
           <div className="flex flex-col gap-2">
             <label htmlFor="weight" className="text-[13px] font-bold text-text-primary">Kilo *</label>
-            <div className="relative flex items-center">
-              <input id="weight" type="number" step="0.1" min="0" max="150"
-                value={weight} onChange={e => setWeight(e.target.value)}
-                placeholder="Örn: 4.5"
-                data-testid="pet-weight-input"
-                className="input-base w-full px-12 text-center text-[15px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" required/>
-              <button 
-                type="button"
-                onClick={() => {
-                  const val = parseFloat(weight) || 0
-                  if (val > 0) {
-                    // Decrement by 0.5, format to 1 decimal place, remove trailing .0 if present
-                    const newVal = Math.max(0, val - 0.5);
-                    setWeight(newVal % 1 === 0 ? newVal.toString() : newVal.toFixed(1));
-                  }
-                }}
-                className="absolute left-2 z-10 w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-250 text-text-secondary hover:text-text-primary flex items-center justify-center font-bold text-[16px] transition-colors select-none"
-              >
-                −
-              </button>
-              <span className="absolute right-12 z-10 text-[13px] font-bold text-text-secondary select-none">kg</span>
-              <button 
-                type="button"
-                onClick={() => {
-                  const val = parseFloat(weight) || 0
-                  const newVal = val + 0.5;
-                  setWeight(newVal % 1 === 0 ? newVal.toString() : newVal.toFixed(1));
-                }}
-                className="absolute right-2 z-10 w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-250 text-text-secondary hover:text-text-primary flex items-center justify-center font-bold text-[16px] transition-colors select-none"
-              >
-                +
-              </button>
-            </div>
+            <StepperInput 
+              id="weight" min={0} max={150} step={0.5} unit="kg"
+              value={weight} onChange={e => setWeight(e.target.value)}
+              placeholder="Örn: 4.5"
+              className="w-full h-14"
+              required
+            />
           </div>
         </div>
 

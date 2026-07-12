@@ -30,6 +30,10 @@ export function getPlanDisplayTitle(plan: PlanLike): string {
   }
 
   const displayName = vaccineName || productName;
+  
+  if (plan.extra_data?.record_type === 'medication' && plan.extra_data?.medication?.name) {
+    return plan.extra_data.medication.name;
+  }
 
   if (displayName) {
     if (category === 'parazit' || subType.toLowerCase().includes('parazit')) {

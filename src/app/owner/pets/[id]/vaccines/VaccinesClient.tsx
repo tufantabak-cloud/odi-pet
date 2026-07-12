@@ -1811,7 +1811,7 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
               } else if (mode === 'historical_import') {
                 setScannerOpen(true);
               } else {
-                setShowManualModal(true);
+                router.push(`/owner/plan-yap/asi?pet_id=${pet.id}`);
               }
             } catch (err: any) {
               setErrorMsg('Bağlantı hatası: ' + err.message);

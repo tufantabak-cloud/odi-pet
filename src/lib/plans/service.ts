@@ -1,7 +1,8 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { CreatePlanInput, UpdatePlanInput } from './schema';
 
-export function calculateFireAt(scheduledAt: string, notifBefore: number, notifUnit: string): string {
+export function calculateFireAt(scheduledAt: string, notifBefore: number | null, notifUnit: string): string | null {
+  if (notifBefore === null) return null;
   const date = new Date(scheduledAt);
   if (notifUnit === 'minute') {
     date.setMinutes(date.getMinutes() - notifBefore);
@@ -54,14 +55,16 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
 
   if (planError) throw new Error(planError.message);
 
-  const { error: notifError } = await supabase
-    .from('notification_jobs')
-    .insert({
-      plan_id: plan.id,
-      fire_at: fireAt,
-    });
-    
-  if (notifError) throw new Error(notifError.message);
+  if (fireAt) {
+    const { error: notifError } = await supabase
+      .from('notification_jobs')
+      .insert({
+        plan_id: plan.id,
+        fire_at: fireAt,
+      });
+      
+    if (notifError) throw new Error(notifError.message);
+  }
 
   return plan;
 }
@@ -104,15 +107,34 @@ export async function updatePlan(userId: string, planId: string, input: UpdatePl
     
     const newFireAt = calculateFireAt(newScheduledAt, newNotifBefore, newNotifUnit);
     
-    // Attempt to update existing pending job
-    const { error: updateNotifError } = await supabase
-      .from('notification_jobs')
-      .update({ fire_at: newFireAt })
-      .eq('plan_id', planId)
-      .eq('sent', false);
-      
-    if (updateNotifError) {
-      console.error('Bildirim güncellenirken hata oluştu:', updateNotifError.message);
+    if (newFireAt === null) {
+      await supabase
+        .from('notification_jobs')
+        .delete()
+        .eq('plan_id', planId)
+        .eq('sent', false);
+    } else {
+      // Attempt to update existing pending job
+      const { data: updatedJobs, error: updateNotifError } = await supabase
+        .from('notification_jobs')
+        .update({ fire_at: newFireAt })
+        .eq('plan_id', planId)
+        .eq('sent', false)
+        .select();
+        
+      if (!updateNotifError && (!updatedJobs || updatedJobs.length === 0)) {
+        // Insert a new job if it didn't exist (e.g. transitioning from no notifications)
+        await supabase
+          .from('notification_jobs')
+          .insert({
+            plan_id: planId,
+            fire_at: newFireAt,
+          });
+      }
+        
+      if (updateNotifError) {
+        console.error('Bildirim güncellenirken hata oluştu:', updateNotifError.message);
+      }
     }
   }
 

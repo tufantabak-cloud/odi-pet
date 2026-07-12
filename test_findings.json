@@ -1,0 +1,74 @@
+[
+  {
+    "step": 1,
+    "msg": "Navigating to http://localhost:3000/login"
+  },
+  {
+    "step": 1,
+    "msg": "Attempting to login"
+  },
+  {
+    "step": 1,
+    "msg": "Login with 123456 failed or still on login, trying password \"test1234\""
+  },
+  {
+    "step": 1,
+    "msg": "Login with test1234 failed or still on login, trying password \"password\""
+  },
+  {
+    "step": 1,
+    "msg": "Current URL after login phase: http://localhost:3000/login"
+  },
+  {
+    "step": 2,
+    "msg": "Looking for pet \"Odi\" or direct navigation to 11b747b8-b719-4fe3-a782-7cd4cad70bc7"
+  },
+  {
+    "step": 2,
+    "msg": "Navigated to pet profile: http://localhost:3000/login"
+  },
+  {
+    "step": 3,
+    "msg": "Looking for \"Plan Yap\" or \"+ Ekle\" button"
+  },
+  {
+    "step": 3,
+    "msg": "Plan Yap button not visible, checking for floating action button or others"
+  },
+  {
+    "step": 3,
+    "msg": "Available buttons: Google ile Giriş Yap, Apple ile Giriş Yap, , Giriş Yap, FaceID / TouchID ile Giriş Yap, "
+  },
+  {
+    "step": 3,
+    "msg": "Could not initiate plan creation, skipping form filling"
+  },
+  {
+    "step": 4,
+    "msg": "Navigating to vaccines page"
+  },
+  {
+    "step": 4,
+    "msg": "Vaccines page URL: http://localhost:3000/login"
+  },
+  {
+    "step": 4,
+    "msg": "Is \"Kuduz\" visible on page? false"
+  },
+  {
+    "step": 5,
+    "msg": "Refreshing the vaccines page"
+  },
+  {
+    "step": 5,
+    "msg": "Response status after refresh: 200"
+  },
+  {
+    "step": 5,
+    "msg": "Is \"Kuduz\" visible after refresh? false"
+  },
+  {
+    "step": 5,
+    "msg": "Did we find any error indicators? false"
+  }
+]

@@ -1,6 +1,9 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import { VACCINE_CORE_TYPE_LABELS, VaccineCoreType } from '@/lib/pets/vaccines'
+import { StepperInput } from '@/components/ui/StepperInput'
 
 // ─── Tipler ──────────────────────────────────────────────────────────────────
 
@@ -442,11 +445,11 @@ export default function AdminVaccinesClient() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-500 mb-1">Tekrar Günü</label>
-                    <input
-                      type="number"
+                    <StepperInput
+                      min={0} step={1} unit="Gün"
                       value={form.repeat_interval_days ?? ''}
                       onChange={e => setForm(f => ({ ...f, repeat_interval_days: parseInt(e.target.value)||0 }))}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                      className="w-full"
                       placeholder="365"
                     />
                   </div>
@@ -455,11 +458,11 @@ export default function AdminVaccinesClient() {
                 {/* Sıra */}
                 <div>
                   <label className="block text-xs font-medium text-gray-500 mb-1">Sıra (sort_order)</label>
-                  <input
-                    type="number"
+                  <StepperInput
+                    min={0} step={1}
                     value={form.sort_order}
                     onChange={e => setForm(f => ({ ...f, sort_order: parseInt(e.target.value)||100 }))}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                    className="w-full"
                   />
                 </div>
 

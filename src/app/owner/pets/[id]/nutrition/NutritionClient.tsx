@@ -8,6 +8,7 @@ import { calculateRefillRisk } from '@/lib/nutrition/refill-engine'
 import CoachMark from '@/components/ui/CoachMark'
 import { SmartScanner } from '@/components/ui/SmartScanner'
 import SmartCardBanner from '@/components/profiling/SmartCardBanner'
+import { StepperInput } from '@/components/ui/StepperInput'
 
 // Tabs
 const TABS = ['Mama & Stok', 'Öğünler & Hatırlatıcı', 'Kilo Takibi'] as const
@@ -235,9 +236,10 @@ export default function NutritionClient({
                   <option value="raw">Çiğ / BARF</option>
                 </select>
               </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-[12px] font-bold text-text-secondary">Günlük Tüketim (Gram)</label>
-                <input name="daily_grams" type="number" defaultValue={profile?.daily_grams || ''} className="input-base" placeholder="Örn: 50" required/>
+              <div className="flex flex-col gap-2 relative">
+                <label className="text-[13px] font-bold text-text-primary">Günlük Tüketim (Ortalama)</label>
+                <StepperInput name="daily_grams" min={1} step={10} unit="gram" defaultValue={profile?.daily_grams || ''} placeholder="Örn: 50" required className="w-full sm:w-fit" />
+                <CoachMark id="nutrition_daily" title="Günlük Tüketim Önemli" message="Köpeğinizin yaşına ve kilosuna göre günlük gramajı belirlemek sağlıklı gelişim için kritiktir." position="top" />
               </div>
             </div>
 
@@ -262,13 +264,13 @@ export default function NutritionClient({
             <h3 className="font-extrabold text-[15px] text-text-primary mb-4">Öğün Kaydet</h3>
             <div className="flex flex-col gap-4">
               <div className="flex gap-4">
-                <div className="flex-1 flex flex-col gap-2">
-                  <label className="text-[12px] font-bold text-text-secondary">Yenilen Miktar (g)</label>
-                  <input name="amount_grams" type="number" className="input-base" placeholder="Örn: 25" required/>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[13px] font-bold text-text-primary">Miktar</label>
+                  <StepperInput name="amount_grams" min={1} step={5} unit="gram" placeholder="Örn: 25" required className="w-full" />
                 </div>
-                <div className="flex-1 flex flex-col gap-2">
-                  <label className="text-[12px] font-bold text-text-secondary">İştah Skoru (1-5)</label>
-                  <input name="appetite_score" type="number" min="1" max="5" defaultValue="5" className="input-base" required/>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[13px] font-bold text-text-primary">İştah Skoru</label>
+                  <StepperInput name="appetite_score" min={1} max={5} step={1} defaultValue="5" required className="w-full" />
                 </div>
               </div>
               <button type="submit" disabled={loading} className="btn-primary w-full min-h-[50px] flex items-center justify-center">Kaydet</button>
@@ -307,9 +309,9 @@ export default function NutritionClient({
           <form onSubmit={handleAddWeight} className="card-base p-6">
             <h3 className="font-extrabold text-[15px] text-text-primary mb-4">Yeni Kilo Kaydı</h3>
             <div className="flex gap-4 items-end">
-              <div className="flex-1 flex flex-col gap-2">
-                <label className="text-[12px] font-bold text-text-secondary">Kilo (kg)</label>
-                <input name="weight_kg" type="number" step="any" className="input-base" placeholder="Örn: 4.5" required/>
+              <div className="flex flex-col gap-2">
+                <label className="text-[13px] font-bold text-text-primary">Kilo *</label>
+                <StepperInput name="weight_kg" step={0.1} unit="kg" placeholder="Örn: 4.5" required className="w-full sm:w-fit" />
               </div>
               <button type="submit" disabled={loading} className="btn-primary px-8 min-h-[50px] flex items-center justify-center">Ekle</button>
             </div>
