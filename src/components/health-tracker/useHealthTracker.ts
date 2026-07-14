@@ -332,12 +332,12 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
       setLoading(true);
 
       const now = new Date();
-      const past30 = new Date();
-      past30.setDate(now.getDate() - 30);
+      const pastYear = new Date();
+      pastYear.setDate(now.getDate() - 365); // Geçmiş 1 yılı ajandada gösterebilmek için 365 gün yapıldı
       const future365 = new Date();
       future365.setDate(now.getDate() + 365);
       
-      const past30Str = past30.toISOString().split('T')[0];
+      const pastYearStr = pastYear.toISOString().split('T')[0];
       const future365Str = future365.toISOString().split('T')[0];
 
       const usePlansOnly = process.env.NEXT_PUBLIC_USE_PLANS_ONLY === 'true';
@@ -349,19 +349,19 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
           .from('health_schedules')
           .select('*')
           .eq('pet_id', petId)
-          .gte('due_date', past30Str)
+          .gte('due_date', pastYearStr)
           .lte('due_date', future365Str),
         supabase
           .from('plans')
           .select('*')
           .eq('pet_id', petId)
-          .gte('scheduled_at', past30Str)
+          .gte('scheduled_at', pastYearStr)
           .lte('scheduled_at', future365Str),
         supabase
           .from('parasite_plan_items')
           .select('*, parasite_products(name)')
           .eq('pet_id', petId)
-          .gte('recommended_start', past30Str)
+          .gte('recommended_start', pastYearStr)
           .lte('recommended_start', future365Str)
       ]);
 
