@@ -481,12 +481,14 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
       if (mapped.category === 'Veteriner' || mapped.category === 'Diger') return;
 
       // Aşı → 3 seviye (category::subCategory::vaccineName) → aşı ismi ayrı satır
+      // İlaç Kullanımı → 3 seviye (category::subCategory::medicationName) → ilaç ismi ayrı satır
       // Parazit → 2 seviye (category::subCategory) → alt başlık tek bir satır
       // Diğer → 2 seviye (category::subCategory)
       const isVaccine = mapped.category === 'Asi';
+      const isMedication = mapped.subCategory === 'İlaç Kullanımı';
       const productName = task.title || event.sub_category || 'Aşı';
 
-      const groupKey = isVaccine
+      const groupKey = (isVaccine || isMedication)
         ? `${mapped.category}::${mapped.subCategory}::${productName}`
         : `${mapped.category}::${mapped.subCategory}`;
 
@@ -500,7 +502,7 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
         taskMap.set(groupKey, {
           task: {
             ...task,
-            title: isVaccine ? productName : mapped.subCategory,
+            title: (isVaccine || isMedication) ? productName : mapped.subCategory,
             category: mapped.category,
             frequency_days: templateRecurrenceDays ?? task.frequency_days ?? 0,
             frequency_label: isVaccine ? mapped.subCategory : (task.frequency_label || null),
