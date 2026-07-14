@@ -47,6 +47,17 @@ export default function WizardOrchestrator() {
   const searchParams = useSearchParams();
   const editId = searchParams.get('editId');
   const categoryKey = params.kategori as CategoryKey;
+
+  // URL'den gelen alt kategori (subCat): geçerliyse alt kategori adımı atlanır (create modunda)
+  const querySubCat = searchParams.get('subCat');
+  const initialSubCat = (() => {
+    if (!querySubCat || editId) return null;
+    const tcForParam = categoryMap[categoryKey];
+    if (!tcForParam) return null;
+    let subs = getFilteredSubCategories(tcForParam, null);
+    if (categoryKey === 'parazit') subs = subs.filter(s => s.id.includes('Parazit'));
+    return subs.some(s => s.id === querySubCat) ? querySubCat : null;
+  })();
   
   const { stepIndex, wizardData, setStepData, setStepIndex, nextStep, prevStep, resetWizard } = useWizardStore();
   const [pets, setPets] = useState<any[]>([]);
@@ -137,6 +148,7 @@ export default function WizardOrchestrator() {
       } else {
         setStepData({
           pet_id: queryPetId || undefined,
+          subCategory: initialSubCat || undefined,
           date: d.toISOString().split('T')[0],
           time: '12:00',
           frequency: 'once',
@@ -312,7 +324,7 @@ export default function WizardOrchestrator() {
     steps.push({ key: 'pet_id', type: 'pet_selection', title: 'Kimin için planlıyoruz?', desc: 'Evcil hayvan profilinizi seçin.' });
   }
 
-  if (categoryKey !== 'asi') {
+  if (categoryKey !== 'asi' && !initialSubCat) {
     steps.push({ key: 'subCategory', type: 'subcategory_selection', title: 'Alt Kategori', desc: 'Ne planlamak istiyorsunuz?' });
   }
 

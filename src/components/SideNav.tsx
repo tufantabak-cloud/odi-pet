@@ -22,6 +22,7 @@ type SideNavProps = {
 
 const fallbackActionMenuItems = [
   { label: 'Rutin Planla',     href: '/owner/plan-yap', icon: 'calendar-plus' },
+  { label: 'Kayıt Ekle',       href: '/owner/plan-yap', icon: 'clipboard-plus' },
   { label: 'Sağlık Kaydı/Aşı',   href: '/owner/pets', icon: 'first-aid-kit' },
   { label: 'Akıllı Tarama',    href: '/owner/scanner', icon: 'scan' },
   { label: 'Durum Kaydet',  href: '/owner/pets', icon: 'notebook' },

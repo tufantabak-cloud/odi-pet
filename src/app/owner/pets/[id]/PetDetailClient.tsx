@@ -355,7 +355,6 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   const [taskWizardOpen, setTaskWizardOpen] = useState(false)
   const [isSmartScannerOpen, setIsSmartScannerOpen] = useState(false)
   const [taskToEdit, setTaskToEdit] = useState<any>(null)
-  const [wizardInitialCategory, setWizardInitialCategory] = useState<TaskCategory | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date>(() => { const d = new Date(); d.setHours(0,0,0,0); return d; })
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
   const [medicationActionTask, setMedicationActionTask] = useState<any>(null)
@@ -499,7 +498,6 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   
   const [lostWizardOpen, setLostWizardOpen] = useState(false)
   const [markFoundLoading, setMarkFoundLoading] = useState(false)
-  const [fabOpen, setFabOpen] = useState(false)
   const [generalError, setGeneralError] = useState<string | null>(null)
 
 
@@ -586,16 +584,11 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
   const localOverdue = (localSchedules ?? []).filter((s: any) => s.status !== 'done' && getTaskDateTime(s) < new Date(now)).length
 
-  const openWizardWithCategory = (cat: TaskCategory) => {
-    setWizardInitialCategory(cat)
-    setTaskToEdit(null)
-    setTaskWizardOpen(true)
-  }
-
   const handleEditTask = (item: any) => {
-    if (item.extra_data?.record_type === 'medication') {
-      router.push(`/owner/plan-yap/saglik?pet_id=${pet.id}&subCat=İlaç&edit_id=${getRealPlanId(item.id)}`);
+    if (isPlanSource(item.id)) {
+      router.push(`/owner/plan-yap/edit/${getRealPlanId(item.id)}`);
     } else {
+      // health_schedules kaynaklı kayıtlar için edit sayfası desteği yok; modal fallback
       setTaskToEdit(item);
       setTaskWizardOpen(true);
     }
@@ -606,6 +599,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       setMedicationActionTask(item);
       setMedicationNote('');
       setShowNoteInput(false);
+    } else if (isPlanSource(item.id)) {
+      router.push(`/owner/plan-yap/edit/${getRealPlanId(item.id)}`);
     } else {
       setTaskToEdit(item);
       setTaskWizardOpen(true);
@@ -1617,8 +1612,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           petId={pet.id}
           petSpecies={pet.species}
           taskToEdit={taskToEdit}
-          initialCategory={wizardInitialCategory}
-          onClose={() => { setTaskWizardOpen(false); setTaskToEdit(null); setWizardInitialCategory(null) }}
+          onClose={() => { setTaskWizardOpen(false); setTaskToEdit(null) }}
           onDone={(newTask?: any) => {
             if (newTask) {
               const newTasksArray = Array.isArray(newTask) ? newTask : [newTask];
@@ -1640,7 +1634,6 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             router.refresh();
             setTaskWizardOpen(false);
             setTaskToEdit(null);
-            setWizardInitialCategory(null);
           }}
         />
       )}

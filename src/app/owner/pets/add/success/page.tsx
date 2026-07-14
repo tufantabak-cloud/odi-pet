@@ -75,6 +75,8 @@ function SuccessContent() {
   const op = pet?.onboarding_progress as any
   const isDone = pet?.health_history_status === 'completed' || pet?.health_history_status === 'skipped' || op?.vaccine_plan === true
   const showHealthHistoryCard = ageInMonths >= 6 && !isDone
+  // Yavru petlerde (sağlık geçmişi kartı yokken) aşı planı oluşturmaya yönlendir
+  const showVaccinePlanCard = !!pet && !showHealthHistoryCard && op?.vaccine_plan !== true
 
   if (!petId) return null
 
@@ -155,6 +157,29 @@ function SuccessContent() {
             className="w-full bg-primary text-white border-none rounded-xl py-3 text-[14px] font-bold cursor-pointer hover:bg-primary-hover transition-colors shadow-md"
           >
             Şimdi ekle (2 dk) →
+          </button>
+        </div>
+      )}
+
+      {showVaccinePlanCard && (
+        <div className="w-full bg-surface-1 border border-border rounded-[10px] p-4 mb-2 text-left animate-scaleIn">
+          <div className="flex items-start gap-2.5 mb-3">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary mt-0.5 shrink-0">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              <polyline points="9 12 11 14 15 10"></polyline>
+            </svg>
+            <div>
+              <p className="text-[14px] font-bold text-text-primary">Aşı takibini başlat</p>
+              <p className="text-[12px] text-text-secondary mt-1">
+                {petName} için aşı planı oluşturun; zamanı gelince <strong className="text-text-primary">biz hatırlatalım</strong>.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => router.push(`/owner/plan-yap/asi?pet_id=${petId}`)}
+            className="w-full bg-primary text-white border-none rounded-xl py-3 text-[14px] font-bold cursor-pointer hover:bg-primary-hover transition-colors shadow-md"
+          >
+            Aşı planı oluştur →
           </button>
         </div>
       )}

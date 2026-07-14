@@ -4,7 +4,7 @@ import {
   ShoppingBag, FileText, MapPin,
   User, Gift, Scan, Plus,
   HeartPulse, PenLine, MoreHorizontal,
-  CalendarPlus
+  CalendarPlus, ClipboardPlus
 } from 'lucide-react'
 import { LucideIcon } from 'lucide-react'
 import React from 'react'
@@ -28,6 +28,7 @@ export const ICON_MAP: Record<string, LucideIcon> = {
   'ti-pencil': PenLine,
   'ti-dots': MoreHorizontal,
   'ti-calendar-plus': CalendarPlus || Calendar,
+  'ti-clipboard-plus': ClipboardPlus || Plus,
 }
 
 export function getIcon(
