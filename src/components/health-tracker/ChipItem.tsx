@@ -105,7 +105,7 @@ export function ChipItem({ event, onMarkDone, onPostpone, onEdit, onDelete }: Ch
         className={`
           flex flex-col items-center justify-center
           rounded-xl transition-all duration-200
-          px-3 py-2 min-w-[76px] h-[52px]
+          px-3 py-2 w-[114px] h-[48px]
           ${chipClasses}
           hover:scale-105 active:scale-95
         `}

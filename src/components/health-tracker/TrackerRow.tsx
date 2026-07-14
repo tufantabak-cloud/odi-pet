@@ -85,7 +85,7 @@ export function TrackerRow({ taskRow, frequencyLabel, onMarkDone, onPostpone, on
         style={{ scrollBehavior: isDragging ? 'auto' : 'smooth' }}
       >
         {/* Geçmiş Etkinlikler Bölümü: Sağa yaslı ve sabit minimum genişlikte. */}
-        <div className="flex items-center justify-end min-w-[100px] shrink-0">
+        <div className="flex items-center justify-end min-w-[120px] shrink-0">
           {hiddenPastCount > 0 ? (
             <div className="shrink-0 px-2 flex items-center justify-center cursor-pointer hover:bg-bg-main rounded-xl transition-colors py-1 mr-1" onClick={() => setIsExpanded(true)}>
               <span className="text-[10px] font-bold text-text-secondary/60">+{hiddenPastCount}</span>
