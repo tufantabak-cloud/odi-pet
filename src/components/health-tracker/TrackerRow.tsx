@@ -84,63 +84,70 @@ export function TrackerRow({ taskRow, frequencyLabel, onMarkDone, onPostpone, on
         className={`flex items-center overflow-x-auto pr-4 scrollbar-none select-none flex-1 relative ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         style={{ scrollBehavior: isDragging ? 'auto' : 'smooth' }}
       >
-        {hiddenPastCount > 0 ? (
-          <div className="shrink-0 px-2 flex items-center justify-center cursor-pointer hover:bg-bg-main rounded-xl transition-colors py-1" onClick={() => setIsExpanded(true)}>
-            <span className="text-[10px] font-bold text-text-secondary/60">+{hiddenPastCount} geçmiş</span>
-            <div className="w-2 h-px bg-border-main ml-2" />
-          </div>
-        ) : isExpanded && pastEvents.length > 1 ? (
-          <div className="shrink-0 px-2 flex items-center justify-center cursor-pointer hover:bg-bg-main rounded-xl transition-colors py-1" onClick={() => setIsExpanded(false)}>
-            <span className="text-[10px] font-bold text-text-secondary/60">Geçmişi Daralt</span>
-            <div className="w-2 h-px bg-border-main ml-2" />
-          </div>
-        ) : null}
-
-        {displayPastEvents.map((event, i) => (
-          <React.Fragment key={event.id}>
-            {i > 0 && <div className="w-4 h-px bg-border-main shrink-0" />}
-            <div className="shrink-0">
-              <ChipItem
-                event={event}
-                onMarkDone={onMarkDone}
-                onPostpone={onPostpone}
-                onEdit={onEdit}
-                onDelete={onDelete}
-              />
+        {/* Geçmiş Etkinlikler Bölümü: Sağa yaslı ve sabit minimum genişlikte. */}
+        <div className="flex items-center justify-end min-w-[100px] shrink-0">
+          {hiddenPastCount > 0 ? (
+            <div className="shrink-0 px-2 flex items-center justify-center cursor-pointer hover:bg-bg-main rounded-xl transition-colors py-1 mr-1" onClick={() => setIsExpanded(true)}>
+              <span className="text-[10px] font-bold text-text-secondary/60">+{hiddenPastCount}</span>
             </div>
-          </React.Fragment>
-        ))}
+          ) : isExpanded && pastEvents.length > 1 ? (
+            <div className="shrink-0 px-2 flex items-center justify-center cursor-pointer hover:bg-bg-main rounded-xl transition-colors py-1 mr-1" onClick={() => setIsExpanded(false)}>
+              <span className="text-[10px] font-bold text-text-secondary/60">Daralt</span>
+            </div>
+          ) : null}
 
-        {displayPastEvents.length > 0 && <div className="w-4 h-px bg-border-main shrink-0" />}
+          {displayPastEvents.map((event, i) => (
+            <React.Fragment key={event.id}>
+              {i > 0 && <div className="w-3 h-px bg-border-main shrink-0" />}
+              <div className="shrink-0">
+                <ChipItem
+                  event={event}
+                  onMarkDone={onMarkDone}
+                  onPostpone={onPostpone}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                />
+              </div>
+            </React.Fragment>
+          ))}
+        </div>
+
+        {/* Geçmiş -> Bugün Bağlantısı */}
+        <div className="w-3 h-px bg-border-main shrink-0" />
+
+        {/* Bugün Çizgisi (Dikey Kahverengi Bar) */}
         <TodayMarker />
-        {displayFutureEvents.length > 0 && <div className="w-4 h-px bg-border-main shrink-0" />}
 
-        {displayFutureEvents.map((event, i) => (
-          <React.Fragment key={event.id}>
-            {i > 0 && <div className="w-4 h-px bg-border-main shrink-0" />}
-            <div className="shrink-0">
-              <ChipItem
-                event={event}
-                onMarkDone={onMarkDone}
-                onPostpone={onPostpone}
-                onEdit={onEdit}
-                onDelete={onDelete}
-              />
+        {/* Bugün -> Gelecek Bağlantısı */}
+        <div className="w-3 h-px bg-border-main shrink-0" />
+
+        {/* Gelecek Etkinlikler Bölümü: Sola yaslı. */}
+        <div className="flex items-center justify-start min-w-[280px] shrink-0">
+          {displayFutureEvents.map((event, i) => (
+            <React.Fragment key={event.id}>
+              {i > 0 && <div className="w-3 h-px bg-border-main shrink-0" />}
+              <div className="shrink-0">
+                <ChipItem
+                  event={event}
+                  onMarkDone={onMarkDone}
+                  onPostpone={onPostpone}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                />
+              </div>
+            </React.Fragment>
+          ))}
+
+          {hiddenFutureCount > 0 ? (
+            <div className="shrink-0 px-2 flex items-center justify-center cursor-pointer hover:bg-bg-main rounded-xl transition-colors py-1 ml-1" onClick={() => setIsExpanded(true)}>
+              <span className="text-[10px] font-bold text-text-secondary/60">+{hiddenFutureCount}</span>
             </div>
-          </React.Fragment>
-        ))}
-
-        {hiddenFutureCount > 0 ? (
-          <div className="shrink-0 px-2 flex items-center justify-center cursor-pointer hover:bg-bg-main rounded-xl transition-colors py-1" onClick={() => setIsExpanded(true)}>
-            <div className="w-2 h-px bg-border-main mr-2" />
-            <span className="text-[10px] font-bold text-text-secondary/60">+{hiddenFutureCount} sonraki</span>
-          </div>
-        ) : isExpanded && todayAndFuture.length > 3 ? (
-          <div className="shrink-0 px-2 flex items-center justify-center cursor-pointer hover:bg-bg-main rounded-xl transition-colors py-1" onClick={() => setIsExpanded(false)}>
-            <div className="w-2 h-px bg-border-main mr-2" />
-            <span className="text-[10px] font-bold text-text-secondary/60">Daralt</span>
-          </div>
-        ) : null}
+          ) : isExpanded && todayAndFuture.length > 3 ? (
+            <div className="shrink-0 px-2 flex items-center justify-center cursor-pointer hover:bg-bg-main rounded-xl transition-colors py-1 ml-1" onClick={() => setIsExpanded(false)}>
+              <span className="text-[10px] font-bold text-text-secondary/60">Daralt</span>
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );
