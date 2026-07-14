@@ -54,22 +54,19 @@ export function ChipItem({ event, onMarkDone, onPostpone, onEdit, onDelete }: Ch
     !event.scheduled_at.includes('T00:00:00');
 
   let topText = dateStr;
-  let bottomText: string | null = statusLabel(computedStatus);
+  let bottomText: string | null = null; // Bütünlüğü korumak için durum/alt etiketleri gösterilmeyecek
 
   if (isYearly) {
-    topText = targetDate.getFullYear().toString();
-    bottomText = `${day} ${formattedMonth}`;
-    if (computedStatus === 'done') bottomText += ' ✓';
-    else bottomText += `\n${statusLabel(computedStatus)}`; // Just to show status, or maybe just "8 Haz" for future
+    topText = `${day} ${formattedMonth} ${targetDate.getFullYear()}`;
   } else if (hasSpecificTime) {
     const timeStr = event.scheduled_at.split('T')[1].slice(0, 5);
     topText = `${day} ${formattedMonth} ${timeStr}`;
-    if (computedStatus === 'done') {
-      topText += ' ✓';
-      bottomText = null;
-    } else {
-      bottomText = null;
-    }
+  } else {
+    topText = `${day} ${formattedMonth}`;
+  }
+
+  if (computedStatus === 'done') {
+    topText += ' ✓';
   }
 
   // Durum bazlı stiller — referans mockup'a birebir uyumlu
