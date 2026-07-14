@@ -344,7 +344,7 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
 
       // vaccines join: is_core + code (template eşleştirme için)
       // vaccines tablosunda alan adı: code (vaccine_code değil)
-      const [schedulesRes, plansRes] = await Promise.all([
+      const [schedulesRes, plansRes, parasiteRes] = await Promise.all([
         usePlansOnly ? Promise.resolve({ data: [], error: null }) : supabase
           .from('health_schedules')
           .select('*')
@@ -356,11 +356,18 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
           .select('*')
           .eq('pet_id', petId)
           .gte('scheduled_at', past30Str)
-          .lte('scheduled_at', future365Str)
+          .lte('scheduled_at', future365Str),
+        supabase
+          .from('parasite_plan_items')
+          .select('*, parasite_products(name)')
+          .eq('pet_id', petId)
+          .gte('recommended_start', past30Str)
+          .lte('recommended_start', future365Str)
       ]);
 
       if (schedulesRes.error) throw schedulesRes.error;
       if (plansRes.error) throw plansRes.error;
+      if (parasiteRes.error) throw parasiteRes.error;
       
       const PLAN_CAT_MAP: Record<string, string> = {
         saglik: 'Saglik', asi: 'Asi', parazit: 'Asi',
@@ -412,6 +419,27 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
             frequency_days: freqDays,
             frequency_label: freqLabel,
           };
+        }),
+        ...(parasiteRes.data || []).map((item: any) => {
+          const typeLabel = item.parasite_type === 'internal' ? 'İç Parazit' : item.parasite_type === 'external' ? 'Dış Parazit' : 'Karma Parazit';
+          const productName = item.parasite_products?.name || (item.parasite_type === 'internal' ? 'İç Parazit Uygulaması' : 'Dış Parazit Uygulaması');
+          return {
+            id: `parasite_${item.id}`,
+            _plan_id: item.id,
+            _source: 'parasite',
+            pet_id: item.pet_id,
+            title: productName,
+            due_date: item.recommended_start,
+            due_time: '12:00:00',
+            status: item.status === 'completed' ? 'done' : 'upcoming',
+            category: 'Asi',
+            sub_category: typeLabel,
+            vaccines: null,
+            notes: item.notes || '',
+            updated_at: item.updated_at,
+            frequency_days: item.extra_data?.product_protection_days || 30,
+            frequency_label: typeLabel,
+          };
         })
       ].sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
 
@@ -450,9 +478,19 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
       )
       .subscribe();
 
+    const channel3 = supabase
+      .channel('parasite_changes_tracker')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'parasite_plan_items', filter: `pet_id=eq.${petId}` },
+        () => { fetchEvents(); }
+      )
+      .subscribe();
+
     return () => { 
       if (channel1) supabase.removeChannel(channel1); 
       supabase.removeChannel(channel2); 
+      supabase.removeChannel(channel3); 
     };
   }, [fetchEvents, petId, supabase, refreshTrigger]);
 
