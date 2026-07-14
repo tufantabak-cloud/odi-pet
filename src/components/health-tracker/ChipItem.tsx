@@ -105,7 +105,7 @@ export function ChipItem({ event, onMarkDone, onPostpone, onEdit, onDelete }: Ch
         className={`
           flex flex-col items-center justify-center
           rounded-xl transition-all duration-200
-          px-3 py-2 w-[114px] h-[48px]
+          px-3 py-2 w-[120px] h-[48px]
           ${chipClasses}
           hover:scale-105 active:scale-95
         `}
@@ -113,7 +113,7 @@ export function ChipItem({ event, onMarkDone, onPostpone, onEdit, onDelete }: Ch
         <span className="absolute top-1 right-1.5 opacity-40 text-[10px] tracking-tighter">···</span>
         
         {/* Üst satır: Tarih */}
-        <span className="text-[13px] font-bold leading-tight text-center relative z-10">
+        <span className="text-[12.5px] font-bold leading-tight text-center whitespace-nowrap relative z-10">
           {topText}
         </span>
         {/* Alt satır: Durum etiketi */}
