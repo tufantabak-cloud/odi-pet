@@ -38,10 +38,30 @@ export interface TaskRow {
   subGroupLabel?: string;
 }
 
+/**
+ * Akış kartı — ComputedEvent'e ek olarak hangi görev/ürüne ait olduğunu taşır.
+ * taskKey aynı ise (örn. aynı aşı adı, aynı parazit ürünü), koruma çubuğu
+ * (coverage bar) bu iki event arasında çizilebilir; farklı taskKey'ler
+ * arasında (örn. Kuduz Aşısı → Karma Aşı) çizilmez.
+ */
+export interface FlowEvent extends ComputedEvent {
+  taskKey: string;
+  taskTitle: string;
+}
+
+/** Bir kategori veya alt grup için: bugüne göre geçmiş / bugün / gelecek akışı */
+export interface FlowBucket {
+  before: FlowEvent[];
+  anchor: FlowEvent | null;
+  after: FlowEvent[];
+}
+
 /** Alt grup (örneğin: Zorunlu Aşılar, Opsiyonel Aşılar) */
 export interface SubCategoryGroup {
   label: string;
   taskRows: TaskRow[];
+  /** Akış-tabanlı timeline için: alt grup genelinde kronolojik kova */
+  flow?: FlowBucket;
 }
 
 /** Kategori grubu — altında düz satırlar veya alt gruplar olabilir */
@@ -52,4 +72,6 @@ export interface CategoryGroup {
   taskRows: TaskRow[];
   /** Varsa alt gruplar (Aşı kategorisi için kullanılır) */
   subGroups?: SubCategoryGroup[];
+  /** Akış-tabanlı timeline için: kategori genelinde kronolojik kova */
+  flow?: FlowBucket;
 }

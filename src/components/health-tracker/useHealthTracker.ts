@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createBrowserSupabaseClient } from '@/lib/supabase/client';
-import { ComputedStatus, CategoryGroup, TaskRow, PetCareTask, PetCareEvent, ComputedEvent } from './types';
+import { ComputedStatus, CategoryGroup, TaskRow, PetCareTask, PetCareEvent, ComputedEvent, FlowBucket, FlowEvent } from './types';
 import { getPlanDisplayTitle } from '@/lib/plans/utils';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -257,6 +257,45 @@ function computeStatus(schedule: any): ComputedStatus {
   if (diffDays === 0) return 'today';
   if (diffDays <= 3) return 'upcoming';
   return 'future';
+}
+
+/** Bir event'in sıralamada kullanılacak tarihini (due_date öncelikli) döndürür */
+function getEventSortDate(e: ComputedEvent): number {
+  const raw = (e as any).due_date || e.scheduled_at;
+  const d = new Date(raw);
+  return isNaN(d.getTime()) ? 0 : d.getTime();
+}
+
+/**
+ * Bir kategorinin tüm taskRows'unu düz, kronolojik bir akışa çevirir ve
+ * "bugün" ekseninde before/anchor/after kovalarına ayırır. Grid tabanlı
+ * 46 günlük sabit tarih ızgarası yerine kullanılır (flow-based timeline).
+ */
+function buildFlowBucket(taskRows: TaskRow[]): FlowBucket {
+  const flat: FlowEvent[] = [];
+  taskRows.forEach(row => {
+    row.events.forEach(event => {
+      flat.push({ ...event, taskKey: row.task.title, taskTitle: row.task.title });
+    });
+  });
+  flat.sort((a, b) => getEventSortDate(a) - getEventSortDate(b));
+
+  // Anchor: bugüne denk gelen event, yoksa en yakın gelecek event
+  let anchorIndex = flat.findIndex(e => e.computedStatus === 'today');
+  if (anchorIndex === -1) {
+    anchorIndex = flat.findIndex(e => e.computedStatus === 'upcoming' || e.computedStatus === 'future');
+  }
+
+  if (anchorIndex === -1) {
+    // Gelecekte planlanmış hiçbir şey yok — hepsi geçmişte kalır
+    return { before: flat, anchor: null, after: [] };
+  }
+
+  return {
+    before: flat.slice(0, anchorIndex),
+    anchor: flat[anchorIndex],
+    after: flat.slice(anchorIndex + 1),
+  };
 }
 
 /**
@@ -744,6 +783,13 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
         });
         group.subGroups = []; // subGroups yok → HealthTracker düz liste render eder
       }
+
+      // Akış-tabanlı timeline: kategori genelinde before/anchor/after
+      group.flow = buildFlowBucket(group.taskRows);
+      // Alt grubu olan kategorilerde (Aşı) her alt grup kendi akışını da alır
+      group.subGroups?.forEach(sub => {
+        sub.flow = buildFlowBucket(sub.taskRows);
+      });
     });
 
     // Sabit sıralama
