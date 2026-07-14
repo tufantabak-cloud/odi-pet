@@ -32,23 +32,25 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
 
   const todayStr = formatDateKey(new Date());
 
-  // Center "Today" scroll columns on mount using absolute mathematical calculation
+  // Center "Today" in viewport using mathematical calculation
   React.useEffect(() => {
     const centerToday = () => {
       const scrollContainers = document.querySelectorAll('.timeline-scroll-container');
       
-      // Index of Today is 15 (since i starts at -15)
-      // Cell width is 136px, gap-2 is 8px. Total column step = 144px
-      // 15 * 144px = 2160px. Align Today with 16px left padding = 2144px
-      const scrollTarget = 2144;
+      // Index of Today is 15 (i starts at -15)
+      // Cell width = 136px, gap = 8px → column step = 144px
+      const todayCellStart = 15 * 144; // = 2160px
+      const todayCellCenter = todayCellStart + 68; // 136/2 = 68
 
       scrollContainers.forEach(container => {
-        container.scrollLeft = scrollTarget;
+        const viewportWidth = (container as HTMLElement).clientWidth || 300;
+        // Bugünü ekranın ortasına yerleştir
+        const scrollTarget = todayCellCenter - viewportWidth / 2;
+        container.scrollLeft = Math.max(0, scrollTarget);
       });
     };
 
     if (!loading) {
-      // Execute scroll immediately and also after a tiny timeout to handle page paints
       centerToday();
       const timer = setTimeout(centerToday, 100);
       return () => clearTimeout(timer);
