@@ -32,23 +32,41 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
 
   const todayStr = formatDateKey(new Date());
 
-  // Center "Today" scroll columns on mount
+  // Center "Today" scroll columns on mount with robust retry
   React.useEffect(() => {
-    const timer = setTimeout(() => {
+    let attempts = 0;
+    const centerToday = () => {
       const scrollContainers = document.querySelectorAll('.timeline-scroll-container');
       const todayCell = document.querySelector('[data-is-today="true"]');
+      
       if (todayCell && scrollContainers.length > 0) {
         const cellLeft = (todayCell as HTMLElement).offsetLeft;
         const cellWidth = (todayCell as HTMLElement).offsetWidth;
         
+        // If layout hasn't fully settled (offsetLeft is abnormally 0), retry
+        if (cellLeft === 0 && attempts < 15) {
+          attempts++;
+          setTimeout(centerToday, 80);
+          return;
+        }
+
         scrollContainers.forEach(container => {
           const containerWidth = container.clientWidth;
-          const scrollTarget = cellLeft - (containerWidth / 2) + (cellWidth / 2);
-          container.scrollLeft = scrollTarget;
+          if (containerWidth > 0) {
+            const scrollTarget = cellLeft - (containerWidth / 2) + (cellWidth / 2);
+            container.scrollLeft = scrollTarget;
+          }
         });
+      } else if (attempts < 15) {
+        attempts++;
+        setTimeout(centerToday, 80);
       }
-    }, 150);
-    return () => clearTimeout(timer);
+    };
+
+    if (!loading) {
+      // Small initial delay to let React finish rendering the elements
+      setTimeout(centerToday, 100);
+    }
   }, [loading, categoryGroups]);
 
   if (loading) {
