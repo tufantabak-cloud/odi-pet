@@ -361,18 +361,27 @@ serve(async (_req: Request) => {
           console.error(`[dispatch-notifications] In-app notification insert error for ${profileId}:`, inAppError);
         }
 
-        // Auto-reschedule next occurrence for active repeating plans (daily/weekly)
+        // Auto-reschedule next occurrence for active repeating plans (daily/weekly/monthly/yearly)
         if (plan.repeat_rule && plan.status === 'active') {
-          let intervalDays = 0;
+          const currentFireAt = new Date(job.fire_at);
+          let nextFireAtDate = new Date(currentFireAt);
+          let hasValidInterval = false;
+
           if (plan.repeat_rule === 'daily') {
-            intervalDays = 1;
+            nextFireAtDate.setDate(nextFireAtDate.getDate() + 1);
+            hasValidInterval = true;
           } else if (plan.repeat_rule === 'weekly') {
-            intervalDays = 7;
+            nextFireAtDate.setDate(nextFireAtDate.getDate() + 7);
+            hasValidInterval = true;
+          } else if (plan.repeat_rule === 'monthly') {
+            nextFireAtDate.setMonth(nextFireAtDate.getMonth() + 1);
+            hasValidInterval = true;
+          } else if (plan.repeat_rule === 'yearly') {
+            nextFireAtDate.setFullYear(nextFireAtDate.getFullYear() + 1);
+            hasValidInterval = true;
           }
 
-          if (intervalDays > 0) {
-            const currentFireAt = new Date(job.fire_at);
-            const nextFireAtDate = new Date(currentFireAt.getTime() + intervalDays * 24 * 60 * 60 * 1000);
+          if (hasValidInterval) {
             const nextFireAt = nextFireAtDate.toISOString();
 
             const notifBeforeMin = plan.notif_before ?? 0;
