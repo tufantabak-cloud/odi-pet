@@ -13,6 +13,44 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
   const { categoryGroups, loading, markEventStatus, postponeEvent, deleteEvent, formatFrequency } = useHealthTracker(petId, refreshTrigger);
   const [onlyShowMissed, setOnlyShowMissed] = useState(false);
 
+  // Generate date range: past 15 days to future 30 days
+  const dateRange = React.useMemo(() => {
+    const dates = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    for (let i = -15; i <= 30; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      dates.push(d);
+    }
+    return dates;
+  }, []);
+
+  const formatDateKey = (date: Date) => {
+    return date.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' });
+  };
+
+  const todayStr = formatDateKey(new Date());
+
+  // Center "Today" scroll columns on mount
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      const scrollContainers = document.querySelectorAll('.timeline-scroll-container');
+      const todayCell = document.querySelector('[data-is-today="true"]');
+      if (todayCell && scrollContainers.length > 0) {
+        const cellLeft = (todayCell as HTMLElement).offsetLeft;
+        const cellWidth = (todayCell as HTMLElement).offsetWidth;
+        
+        scrollContainers.forEach(container => {
+          const containerWidth = container.clientWidth;
+          const scrollTarget = cellLeft - (containerWidth / 2) + (cellWidth / 2);
+          container.scrollLeft = scrollTarget;
+        });
+      }
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [loading, categoryGroups]);
+
   if (loading) {
     return (
       <div className="py-4 bg-white rounded-3xl border border-border-main shadow-sm animate-pulse">
@@ -88,6 +126,43 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
         </button>
       </div>
 
+      {/* Scrollable Date Header */}
+      <div className="flex items-center border-b border-border-main/30 pb-3">
+        {/* Placeholder for left title column */}
+        <div className="shrink-0 w-[120px] pl-4">
+          <span className="text-[10px] font-black text-text-secondary uppercase tracking-wider">Takvim</span>
+        </div>
+        
+        {/* Scrollable strip */}
+        <div className="timeline-scroll-container flex items-center gap-2 overflow-x-auto pr-4 scrollbar-none select-none flex-1">
+          {dateRange.map((date) => {
+            const dateKey = formatDateKey(date);
+            const isToday = dateKey === todayStr;
+            const dayName = date.toLocaleDateString('tr-TR', { weekday: 'short' }).toUpperCase();
+            const dayNum = date.getDate();
+            
+            return (
+              <div
+                key={dateKey}
+                data-is-today={isToday ? "true" : "false"}
+                className={`flex flex-col items-center justify-center shrink-0 w-[136px] h-[64px] rounded-2xl border transition-all ${
+                  isToday
+                    ? 'bg-primary border-primary text-white shadow-xs scale-102 font-bold'
+                    : 'bg-[#f6f8fb] border-border-main/50 text-text-primary'
+                }`}
+              >
+                <span className={`text-[10px] font-black tracking-wider ${isToday ? 'text-white/80' : 'text-text-secondary/70'}`}>
+                  {dayName}
+                </span>
+                <span className="text-[16px] font-black mt-0.5">
+                  {dayNum}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {filteredGroups.length === 0 ? (
         <div className="py-8 px-4 text-center text-text-secondary bg-[#fdfaf5] rounded-3xl m-4 border border-dashed border-[#e69b24]/40">
           <p className="text-[13px] font-bold">Filtreye uygun gecikmiş görev bulunmuyor.</p>
@@ -120,6 +195,8 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
                         <TrackerRow
                           key={`${taskRow.task.id}-${taskRow.task.title}`}
                           taskRow={taskRow}
+                          dateRange={dateRange}
+                          formatDateKey={formatDateKey}
                           frequencyLabel={formatFrequency(taskRow.task.frequency_days, taskRow.task.frequency_label)}
                           onMarkDone={(id) => markEventStatus(id, 'done')}
                           onPostpone={(id) => postponeEvent(id, 1)}
@@ -138,6 +215,8 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
                   <TrackerRow
                     key={`${taskRow.task.id}-${taskRow.task.title}`}
                     taskRow={taskRow}
+                    dateRange={dateRange}
+                    formatDateKey={formatDateKey}
                     frequencyLabel={formatFrequency(taskRow.task.frequency_days, taskRow.task.frequency_label)}
                     onMarkDone={(id) => markEventStatus(id, 'done')}
                     onPostpone={(id) => postponeEvent(id, 1)}
