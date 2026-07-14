@@ -298,6 +298,48 @@ function buildFlowBucket(taskRows: TaskRow[]): FlowBucket {
   };
 }
 
+const COVERAGE_WARN_DAYS = 7;
+
+/**
+ * Sadece Aşı/Parazit gibi "koruma süresi" olan kategoriler için: her taskKey
+ * grubu içinde ardışık iki event'i eşleştirir. Önceki event 'done' ise,
+ * koruma penceresinin (bir sonraki dozun tarihine, yoksa frequency_days'e
+ * göre) hâlâ geçerli olup olmadığını hesaplar ve event.coverage'a yazar.
+ */
+function computeCoverage(flow: FlowBucket): void {
+  const all = [...flow.before, ...(flow.anchor ? [flow.anchor] : []), ...flow.after];
+  const byTaskKey = new Map<string, FlowEvent[]>();
+  all.forEach(e => {
+    if (!byTaskKey.has(e.taskKey)) byTaskKey.set(e.taskKey, []);
+    byTaskKey.get(e.taskKey)!.push(e);
+  });
+
+  const nowMs = Date.now();
+  const warnMs = COVERAGE_WARN_DAYS * 24 * 60 * 60 * 1000;
+
+  byTaskKey.forEach(taskEvents => {
+    for (let i = 0; i < taskEvents.length; i++) {
+      const curr = taskEvents[i];
+      if (curr.computedStatus !== 'done') continue;
+
+      const next = taskEvents[i + 1];
+      const startMs = getEventSortDate(curr);
+      let endMs: number | null = null;
+      if (next) {
+        endMs = getEventSortDate(next);
+      } else {
+        const freqDays = curr.pet_care_tasks?.frequency_days || 0;
+        if (freqDays > 0) endMs = startMs + freqDays * 24 * 60 * 60 * 1000;
+      }
+      if (endMs === null) continue; // koruma süresi bilinmiyor — çubuk gösterilmez
+
+      if (nowMs >= endMs) curr.coverage = 'expired';
+      else if (endMs - nowMs <= warnMs) curr.coverage = 'expiring';
+      else curr.coverage = 'protected';
+    }
+  });
+}
+
 /**
  * Tekrarlayan planları timeline görünür aralığı (-15 → +30 gün) boyunca
  * sanal event'lere genişletir. Böylece her tekrar tarihinde chip görünür.
@@ -790,6 +832,14 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
       group.subGroups?.forEach(sub => {
         sub.flow = buildFlowBucket(sub.taskRows);
       });
+
+      // Koruma çubuğu: sadece Aşı ve Parazit için anlamlı
+      if (group.category === 'Asi' || group.category === 'Parazit') {
+        if (group.flow) computeCoverage(group.flow);
+        group.subGroups?.forEach(sub => {
+          if (sub.flow) computeCoverage(sub.flow);
+        });
+      }
     });
 
     // Sabit sıralama

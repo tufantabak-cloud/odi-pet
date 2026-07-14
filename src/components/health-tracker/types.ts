@@ -47,6 +47,11 @@ export interface TaskRow {
 export interface FlowEvent extends ComputedEvent {
   taskKey: string;
   taskTitle: string;
+  /**
+   * Sadece 'done' event'lerde: bu uygulamanın koruma süresi hâlâ geçerli mi?
+   * Yalnızca Aşı/Parazit kategorilerinde hesaplanır (bkz. computeCoverage).
+   */
+  coverage?: 'protected' | 'expiring' | 'expired';
 }
 
 /** Bir kategori veya alt grup için: bugüne göre geçmiş / bugün / gelecek akışı */

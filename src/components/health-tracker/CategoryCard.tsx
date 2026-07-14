@@ -122,6 +122,26 @@ export function CategoryCard({ event, categoryKey, onMarkDone, onPostpone, onEdi
             </svg>
           </div>
         )}
+
+        {/* Koruma çubuğu: bu doz hâlâ koruma sağlıyor mu (yalnızca Aşı/Parazit) */}
+        {event.coverage && (
+          <div
+            className={`absolute bottom-0 left-0 right-0 h-[3px] ${
+              event.coverage === 'protected'
+                ? 'bg-white/70'
+                : event.coverage === 'expiring'
+                ? 'bg-amber-300'
+                : 'bg-red-300'
+            }`}
+            title={
+              event.coverage === 'protected'
+                ? 'Koruma devam ediyor'
+                : event.coverage === 'expiring'
+                ? 'Koruma süresi yakında doluyor'
+                : 'Koruma süresi doldu'
+            }
+          />
+        )}
       </button>
 
       {showMenu && (
