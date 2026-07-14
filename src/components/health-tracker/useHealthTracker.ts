@@ -552,6 +552,7 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
             updated_at: p.updated_at,
             frequency_days: freqDays,
             frequency_label: freqLabel,
+            repeat_rule: p.repeat_rule || null, // ← expandRecurringForTimeline için gerekli
           };
         }),
         ...(parasiteRes.data || []).map((item: any) => {
