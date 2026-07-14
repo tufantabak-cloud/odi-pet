@@ -32,40 +32,26 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
 
   const todayStr = formatDateKey(new Date());
 
-  // Center "Today" scroll columns on mount with robust retry
+  // Center "Today" scroll columns on mount using absolute mathematical calculation
   React.useEffect(() => {
-    let attempts = 0;
     const centerToday = () => {
       const scrollContainers = document.querySelectorAll('.timeline-scroll-container');
-      const todayCell = document.querySelector('[data-is-today="true"]');
       
-      if (todayCell && scrollContainers.length > 0) {
-        const cellLeft = (todayCell as HTMLElement).offsetLeft;
-        const cellWidth = (todayCell as HTMLElement).offsetWidth;
-        
-        // If layout hasn't fully settled (offsetLeft is abnormally 0), retry
-        if (cellLeft === 0 && attempts < 15) {
-          attempts++;
-          setTimeout(centerToday, 80);
-          return;
-        }
+      // Index of Today is 15 (since i starts at -15)
+      // Cell width is 136px, gap-2 is 8px. Total column step = 144px
+      // 15 * 144px = 2160px. Align Today with 16px left padding = 2144px
+      const scrollTarget = 2144;
 
-        scrollContainers.forEach(container => {
-          const containerWidth = container.clientWidth;
-          if (containerWidth > 0) {
-            const scrollTarget = cellLeft - (containerWidth / 2) + (cellWidth / 2);
-            container.scrollLeft = scrollTarget;
-          }
-        });
-      } else if (attempts < 15) {
-        attempts++;
-        setTimeout(centerToday, 80);
-      }
+      scrollContainers.forEach(container => {
+        container.scrollLeft = scrollTarget;
+      });
     };
 
     if (!loading) {
-      // Small initial delay to let React finish rendering the elements
-      setTimeout(centerToday, 100);
+      // Execute scroll immediately and also after a tiny timeout to handle page paints
+      centerToday();
+      const timer = setTimeout(centerToday, 100);
+      return () => clearTimeout(timer);
     }
   }, [loading, categoryGroups]);
 
