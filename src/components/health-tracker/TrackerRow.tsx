@@ -6,6 +6,8 @@ import { TodayMarker } from './TodayMarker';
 
 interface TrackerRowProps {
   taskRow: TaskRowType;
+  dateRange: Date[];
+  formatDateKey: (date: Date) => string;
   frequencyLabel: string;
   onMarkDone: (id: string) => void;
   onPostpone: (id: string) => void;
@@ -13,12 +15,20 @@ interface TrackerRowProps {
   onDelete: (id: string) => void;
 }
 
-export function TrackerRow({ taskRow, frequencyLabel, onMarkDone, onPostpone, onEdit, onDelete }: TrackerRowProps) {
+export function TrackerRow({ 
+  taskRow, 
+  dateRange, 
+  formatDateKey, 
+  frequencyLabel, 
+  onMarkDone, 
+  onPostpone, 
+  onEdit, 
+  onDelete 
+}: TrackerRowProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeftVal, setScrollLeftVal] = useState(0);
-  const [isExpanded, setIsExpanded] = useState(false);
 
   const handleMouseDown = (e: ReactMouseEvent<HTMLDivElement>) => {
     if (!scrollRef.current) return;
@@ -38,31 +48,11 @@ export function TrackerRow({ taskRow, frequencyLabel, onMarkDone, onPostpone, on
 
   if (taskRow.events.length === 0) return null;
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const pastEvents = taskRow.events.filter(e => {
-    const d = new Date(e.scheduled_at);
-    d.setHours(0, 0, 0, 0);
-    return d.getTime() < today.getTime();
-  });
-  const todayAndFuture = taskRow.events.filter(e => {
-    const d = new Date(e.scheduled_at);
-    d.setHours(0, 0, 0, 0);
-    return d.getTime() >= today.getTime();
-  });
-
   const displayFreq = frequencyLabel === taskRow.task.title ? null : frequencyLabel;
-
-  const displayPastEvents = isExpanded ? pastEvents : pastEvents.slice(-1); // son 1 geçmiş veya hepsi
-  const hiddenPastCount = isExpanded ? 0 : pastEvents.length - displayPastEvents.length;
-
-  const displayFutureEvents = isExpanded ? todayAndFuture : todayAndFuture.slice(0, 3); // ilk 3 gelecek (bugün dahil) veya hepsi
-  const hiddenFutureCount = isExpanded ? 0 : todayAndFuture.length - displayFutureEvents.length;
 
   return (
     <div className="flex items-center py-3 border-b border-border-main/50 last:border-0 relative">
-      {/* Sol Kolon: Görev adı + frekans (alt alta, daha iyi sığması için) */}
+      {/* Sol Kolon: Görev adı + frekans */}
       <div className="shrink-0 w-[120px] flex flex-col justify-center pl-4 pr-2">
         <p className="text-[13px] font-bold text-text-primary leading-tight truncate">
           {taskRow.task.title}
@@ -81,72 +71,56 @@ export function TrackerRow({ taskRow, frequencyLabel, onMarkDone, onPostpone, on
         onMouseLeave={handleMouseLeave}
         onMouseUp={handleMouseUp}
         onMouseMove={handleMouseMove}
-        className={`flex items-center overflow-x-auto pr-4 scrollbar-none select-none flex-1 relative ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        className={`timeline-scroll-container flex items-center overflow-x-auto pr-4 scrollbar-none select-none flex-1 relative ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         style={{ scrollBehavior: isDragging ? 'auto' : 'smooth' }}
       >
-        {/* Geçmiş Etkinlikler Bölümü: Sağa yaslı ve sabit minimum genişlikte. */}
-        <div className="flex items-center justify-end min-w-[126px] shrink-0">
-          {hiddenPastCount > 0 ? (
-            <div className="shrink-0 px-2 flex items-center justify-center cursor-pointer hover:bg-bg-main rounded-xl transition-colors py-1 mr-1" onClick={() => setIsExpanded(true)}>
-              <span className="text-[10px] font-bold text-text-secondary/60">+{hiddenPastCount}</span>
-            </div>
-          ) : isExpanded && pastEvents.length > 1 ? (
-            <div className="shrink-0 px-2 flex items-center justify-center cursor-pointer hover:bg-bg-main rounded-xl transition-colors py-1 mr-1" onClick={() => setIsExpanded(false)}>
-              <span className="text-[10px] font-bold text-text-secondary/60">Daralt</span>
-            </div>
-          ) : null}
+        {/* Yatay Arka Plan Çizgisi (Tüm hücreleri bağlar) */}
+        <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[2px] bg-border-main/30 -z-10" />
 
-          {displayPastEvents.map((event, i) => (
-            <React.Fragment key={event.id}>
-              {i > 0 && <div className="w-3 h-px bg-border-main shrink-0" />}
-              <div className="shrink-0">
-                <ChipItem
-                  event={event}
-                  onMarkDone={onMarkDone}
-                  onPostpone={onPostpone}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                />
+        {/* 46 adet Tarih Kolonu */}
+        <div className="flex items-center gap-2 relative">
+          {dateRange.map((date) => {
+            const dateKey = formatDateKey(date);
+            // Tarihe denk gelen etkinlikleri bul — çoklu format desteği ile
+            const matchedEvent = taskRow.events.find(e => {
+              // 1) due_date ile doğrudan eşleştir (normalize)
+              if (e.due_date) {
+                const normalized = e.due_date.includes('T') ? e.due_date.split('T')[0] : e.due_date;
+                if (normalized === dateKey) return true;
+              }
+              // 2) scheduled_at üzerinden fallback
+              if (e.scheduled_at) {
+                try {
+                  const d = new Date(e.scheduled_at);
+                  const eventDateKey = d.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' });
+                  if (eventDateKey === dateKey) return true;
+                } catch { /* skip */ }
+              }
+              return false;
+            });
+
+            return (
+              <div 
+                key={dateKey} 
+                className="shrink-0 w-[136px] h-[48px] flex items-center justify-center"
+              >
+                {matchedEvent ? (
+                  <div className="bg-white px-2 py-0.5 rounded-2xl">
+                    <ChipItem
+                      event={matchedEvent}
+                      onMarkDone={onMarkDone}
+                      onPostpone={onPostpone}
+                      onEdit={onEdit}
+                      onDelete={onDelete}
+                    />
+                  </div>
+                ) : (
+                  // Boş hücre: Arkadaki çizgi görünecek
+                  <div className="w-full h-full" />
+                )}
               </div>
-            </React.Fragment>
-          ))}
-        </div>
-
-        {/* Geçmiş -> Bugün Bağlantısı */}
-        <div className="w-3 h-px bg-border-main shrink-0" />
-
-        {/* Bugün Çizgisi (Dikey Kahverengi Bar) */}
-        <TodayMarker />
-
-        {/* Bugün -> Gelecek Bağlantısı */}
-        <div className="w-3 h-px bg-border-main shrink-0" />
-
-        {/* Gelecek Etkinlikler Bölümü: Sola yaslı. */}
-        <div className="flex items-center justify-start min-w-[280px] shrink-0">
-          {displayFutureEvents.map((event, i) => (
-            <React.Fragment key={event.id}>
-              {i > 0 && <div className="w-3 h-px bg-border-main shrink-0" />}
-              <div className="shrink-0">
-                <ChipItem
-                  event={event}
-                  onMarkDone={onMarkDone}
-                  onPostpone={onPostpone}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                />
-              </div>
-            </React.Fragment>
-          ))}
-
-          {hiddenFutureCount > 0 ? (
-            <div className="shrink-0 px-2 flex items-center justify-center cursor-pointer hover:bg-bg-main rounded-xl transition-colors py-1 ml-1" onClick={() => setIsExpanded(true)}>
-              <span className="text-[10px] font-bold text-text-secondary/60">+{hiddenFutureCount}</span>
-            </div>
-          ) : isExpanded && todayAndFuture.length > 3 ? (
-            <div className="shrink-0 px-2 flex items-center justify-center cursor-pointer hover:bg-bg-main rounded-xl transition-colors py-1 ml-1" onClick={() => setIsExpanded(false)}>
-              <span className="text-[10px] font-bold text-text-secondary/60">Daralt</span>
-            </div>
-          ) : null}
+            );
+          })}
         </div>
       </div>
     </div>

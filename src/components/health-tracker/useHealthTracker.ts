@@ -248,22 +248,156 @@ function computeStatus(schedule: any): ComputedStatus {
   return 'future';
 }
 
+/**
+ * Tekrarlayan planları timeline görünür aralığı (-15 → +30 gün) boyunca
+ * sanal event'lere genişletir. Böylece her tekrar tarihinde chip görünür.
+ */
+function expandRecurringForTimeline(events: any[]): any[] {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const rangeStart = new Date(today);
+  rangeStart.setDate(today.getDate() - 15);
+  const rangeEnd = new Date(today);
+  rangeEnd.setDate(today.getDate() + 30);
+
+  const fmtDate = (d: Date): string =>
+    d.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' });
+
+  const rangeStartStr = fmtDate(rangeStart);
+  const rangeEndStr = fmtDate(rangeEnd);
+
+  // Mevcut event'lerin due_date'lerini plan bazında kaydet (duplicate engeli)
+  const existingDatesByKey = new Map<string, Set<string>>();
+  events.forEach(e => {
+    // _source + _plan_id ya da title+category çiftini birleştirerek unique key oluştur
+    const key = e._plan_id
+      ? `${e._source || 'plan'}_${e._plan_id}`
+      : `${e.category}_${e.title || e.sub_category}`;
+    if (!existingDatesByKey.has(key)) existingDatesByKey.set(key, new Set());
+    const dd = (e.due_date || '').includes('T') ? e.due_date.split('T')[0] : (e.due_date || '');
+    if (dd) existingDatesByKey.get(key)!.add(dd);
+  });
+
+  const virtualEvents: any[] = [];
+  const processedPlanKeys = new Set<string>();
+
+  events.forEach(e => {
+    const repeatRule = e.repeat_rule;
+    if (!repeatRule || repeatRule === 'none') return;
+
+    const key = e._plan_id
+      ? `${e._source || 'plan'}_${e._plan_id}`
+      : `${e.category}_${e.title || e.sub_category}`;
+    if (processedPlanKeys.has(key)) return;
+    processedPlanKeys.add(key);
+
+    const existingDates = existingDatesByKey.get(key) || new Set();
+    const rawDueDate = (e.due_date || '').includes('T') ? e.due_date.split('T')[0] : (e.due_date || '');
+    if (!rawDueDate) return;
+
+    const anchor = new Date(rawDueDate + 'T00:00:00');
+    if (isNaN(anchor.getTime())) return;
+
+    // Her bir tekrar tarihini üret
+    const addVirtual = (dateStr: string) => {
+      if (existingDates.has(dateStr)) return;
+      existingDates.add(dateStr); // Tekrar eklemeyi engelle
+      virtualEvents.push({
+        ...e,
+        id: `virtual_${key}_${dateStr}`,
+        _is_virtual: true,
+        due_date: dateStr,
+        due_time: e.due_time || '12:00:00',
+        status: 'upcoming', // computeStatus daha sonra doğru statüyü belirler
+      });
+    };
+
+    // İleri yönde genişlet
+    const nextDate = (current: Date): Date | null => {
+      const d = new Date(current);
+      switch (repeatRule) {
+        case 'daily': d.setDate(d.getDate() + 1); break;
+        case 'weekly': d.setDate(d.getDate() + 7); break;
+        case 'monthly': d.setMonth(d.getMonth() + 1); break;
+        case 'yearly': d.setFullYear(d.getFullYear() + 1); break;
+        default: return null;
+      }
+      return d;
+    };
+
+    // Geri yönde genişlet
+    const prevDate = (current: Date): Date | null => {
+      const d = new Date(current);
+      switch (repeatRule) {
+        case 'daily': d.setDate(d.getDate() - 1); break;
+        case 'weekly': d.setDate(d.getDate() - 7); break;
+        case 'monthly': d.setMonth(d.getMonth() - 1); break;
+        case 'yearly': d.setFullYear(d.getFullYear() - 1); break;
+        default: return null;
+      }
+      return d;
+    };
+
+    // İleri: anchor → rangeEnd
+    let cursor: Date | null = new Date(anchor);
+    let guard = 0;
+    while (cursor && guard < 500) {
+      const ds = fmtDate(cursor);
+      if (ds > rangeEndStr) break;
+      if (ds >= rangeStartStr) addVirtual(ds);
+      cursor = nextDate(cursor);
+      guard++;
+    }
+
+    // Geri: anchor - 1 step → rangeStart
+    cursor = prevDate(new Date(anchor));
+    guard = 0;
+    while (cursor && guard < 500) {
+      const ds = fmtDate(cursor);
+      if (ds < rangeStartStr) break;
+      addVirtual(ds);
+      cursor = prevDate(cursor);
+      guard++;
+    }
+  });
+
+  return [...events, ...virtualEvents].sort(
+    (a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
+  );
+}
+
 /** health_schedules kaydını ComputedEvent'e dönüştür */
 function toComputedEvent(s: any): ComputedEvent {
   const computedStatus = computeStatus(s);
+
+  // due_date'i normalize et — her zaman YYYY-MM-DD formatında olmalı
+  let normalizedDueDate: string = s.due_date || '';
+  if (normalizedDueDate.includes('T')) {
+    normalizedDueDate = normalizedDueDate.split('T')[0];
+  }
+  // due_date boş veya geçersizse scheduled_at'ten çıkar
+  if (!normalizedDueDate && s.scheduled_at) {
+    try {
+      const d = new Date(s.scheduled_at);
+      normalizedDueDate = d.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' });
+    } catch { /* fallback bırak */ }
+  }
+
   return {
     ...s,
     id: s.id,
-    task_id: s.plan_id || s.id,
+    task_id: s.plan_id || s._plan_id || s.id,
     pet_id: s.pet_id,
-    scheduled_at: s.due_date + (s.due_time ? `T${s.due_time}` : 'T12:00:00'),
+    due_date: normalizedDueDate, // ← açıkça set et, hiçbir zaman kaybolmasın
+    scheduled_at: (normalizedDueDate || s.due_date) + (s.due_time ? `T${s.due_time}` : 'T12:00:00'),
     completed_at: s.status === 'done' ? (s.created_at || new Date().toISOString()) : null,
     status: s.status || 'scheduled',
     notes: s.notes,
     created_at: s.created_at,
     vaccines: s.vaccines,
     pet_care_tasks: {
-      id: s.plan_id || s.id,
+      id: s.plan_id || s._plan_id || s.id,
       pet_id: s.pet_id,
       title: s.title || s.plan_type || 'Görev',
       category: s.category || 'Diger',
@@ -443,7 +577,10 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
         })
       ].sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
 
-      const computed = mergedEvents.map(toComputedEvent);
+      // ── Tekrarlayan planları genişlet: görünür aralıktaki tüm tekrar tarihlerine sanal event üret ──
+      const expandedEvents = expandRecurringForTimeline(mergedEvents);
+
+      const computed = expandedEvents.map(toComputedEvent);
       setEvents(computed);
     } catch (err) {
       console.error('Error fetching health tracker events:', err);
