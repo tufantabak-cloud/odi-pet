@@ -392,6 +392,17 @@ export default function WizardOrchestrator() {
   if (currentStep?.key === 'medication_frequency' && !wizardData.medication_freq_type) isNextDisabled = true;
   if (currentStep?.key === 'medication_datetime' && (!wizardData.date || !wizardData.time || !wizardData.medication_dose)) isNextDisabled = true;
 
+  // Düzenleme (tek sayfa form) modunda tüm alanların toplu validasyonu
+  const stepKeys = steps.map(s => s.key);
+  const isEditSaveDisabled =
+    (stepKeys.includes('pet_id') && !wizardData.pet_id) ||
+    (stepKeys.includes('subCategory') && !wizardData.subCategory) ||
+    (stepKeys.includes('datetime') && !wizardData.date) ||
+    (stepKeys.includes('metadata') && subCat === 'Diğer' && !wizardData.customText?.trim()) ||
+    (stepKeys.includes('metadata') && subCat === 'Alerji' && !wizardData.metadata?.trigger_name?.trim()) ||
+    (stepKeys.includes('recurrence') && wizardData.frequency !== 'once' && wizardData.endCondition === 'date' && !wizardData.endDate) ||
+    (subCat === 'İlaç' && (!wizardData.medication_name || !wizardData.medication_unit || !wizardData.date || !wizardData.time || !wizardData.medication_dose || !wizardData.medication_freq_type));
+
   const handleDelete = async () => {
     if (!window.confirm('Bu planı silmek istediğinize emin misiniz?')) return;
     setIsDeleting(true);
@@ -1551,7 +1562,7 @@ export default function WizardOrchestrator() {
 
   return (
     <>
-      {isEditMode && stepIndex < steps.length && (
+      {isEditMode && (
         <div className="max-w-3xl mx-auto w-full px-4 mb-4 mt-4 flex justify-end relative z-10">
           <button 
             onClick={handleDelete}
@@ -1580,8 +1591,9 @@ export default function WizardOrchestrator() {
           }
         }}
         onSubmit={handleSubmit}
-        isNextDisabled={isNextDisabled}
+        isNextDisabled={isEditMode ? isEditSaveDisabled : isNextDisabled}
         isSubmitting={isSubmitting}
+        editAll={isEditMode}
         steps={steps.map(step => ({
           title: step.title,
           summary: getSummaryForStep(step),

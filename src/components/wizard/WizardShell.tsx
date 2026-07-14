@@ -24,6 +24,8 @@ interface WizardShellProps {
   isSubmitting?: boolean;
   nextText?: string;
   skipText?: string;
+  /** Düzenleme modu: tüm adımlar tek sayfada açık form olarak gösterilir */
+  editAll?: boolean;
 }
 
 export function WizardShell({
@@ -38,6 +40,7 @@ export function WizardShell({
   isSubmitting = false,
   nextText = 'Devam et',
   skipText = 'Atla',
+  editAll = false,
 }: WizardShellProps) {
   const router = useRouter();
   const { stepIndex, prevStep, setStepIndex } = useWizardStore();
@@ -70,6 +73,61 @@ export function WizardShell({
     setStepIndex(index);
   };
 
+  if (editAll) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col relative overflow-hidden">
+        <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-slate-200">
+          <div className="flex items-center justify-between px-4 h-14 max-w-3xl mx-auto w-full">
+            <button
+              onClick={() => router.back()}
+              className="w-11 h-11 flex items-center justify-center -ml-2 rounded-full hover:bg-slate-100 transition-colors"
+            >
+              <ChevronLeft className="w-6 h-6 text-slate-700" />
+            </button>
+            <div className="text-[15px] font-semibold text-slate-700 absolute left-1/2 -translate-x-1/2">
+              Planı Düzenle
+            </div>
+            <div className="w-10"></div>
+          </div>
+        </header>
+
+        <main className="flex-1 overflow-y-auto overflow-x-hidden w-full pb-[110px]">
+          <div className="max-w-3xl mx-auto w-full flex flex-col px-4 pt-4">
+            {steps.map((step, index) => (
+              <div key={index} className="card-base p-4 mb-3">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: theme.progressColor }}>
+                    <span className="text-[12px] font-medium text-white">{index + 1}</span>
+                  </div>
+                  <p className="text-[14px] font-medium text-text-primary">{step.title}</p>
+                </div>
+                {step.content}
+              </div>
+            ))}
+          </div>
+        </main>
+
+        {/* Sabit Kaydet Butonu */}
+        <div className="fixed bottom-0 left-0 right-0 z-30 bg-white/90 backdrop-blur-md border-t border-slate-200 px-4 py-3">
+          <div className="max-w-3xl mx-auto w-full">
+            <button
+              onClick={onSubmit}
+              disabled={isNextDisabled || isSubmitting}
+              className={`w-full py-3.5 rounded-xl font-bold text-[15px] transition-all
+                ${isNextDisabled || isSubmitting
+                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                  : 'text-white hover:opacity-90 active:scale-[0.98] shadow-md'
+                }`}
+              style={{ backgroundColor: (isNextDisabled || isSubmitting) ? undefined : theme.progressColor }}
+            >
+              {isSubmitting ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col relative overflow-hidden">
       {/* Header */}
@@ -81,19 +139,19 @@ export function WizardShell({
             style={{ width: `${progressPercentage}%`, backgroundColor: theme.progressColor }}
           />
         </div>
-        
+
         <div className="flex items-center justify-between px-4 h-14 max-w-3xl mx-auto w-full">
-          <button 
-            onClick={handleBack} 
+          <button
+            onClick={handleBack}
             className="w-11 h-11 flex items-center justify-center -ml-2 rounded-full hover:bg-slate-100 transition-colors"
           >
             <ChevronLeft className="w-6 h-6 text-slate-700" />
           </button>
-          
+
           <div className="text-[15px] font-semibold text-slate-500 absolute left-1/2 -translate-x-1/2">
             Adım {currentStep + 1} / {totalSteps}
           </div>
-          
+
           <div className="w-10"></div>
         </div>
       </header>
