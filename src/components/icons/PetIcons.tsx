@@ -882,4 +882,34 @@ export const PetIcons: Record<CategoryKey, {
     ),
     subIcons: {}
   },
+
+  kontrol: {
+    icon: ({ size = 48 }) => (
+      <svg width={size} height={size} viewBox="0 0 48 48">
+        <defs>
+          <linearGradient id="konGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#7209B7"/>
+            <stop offset="100%" stopColor="#3F37C9"/>
+          </linearGradient>
+          <filter id="konShadow">
+            <feDropShadow dx="0" dy="2"
+              stdDeviation="2" floodOpacity="0.2"/>
+          </filter>
+        </defs>
+        {/* Taşıma kafesi gövdesi */}
+        <rect x="8" y="14" width="32" height="26" rx="5"
+          fill="url(#konGrad)" filter="url(#konShadow)"/>
+        {/* Tutma sapı */}
+        <path d="M17 14V9C17 7.3 18.3 6 20 6H28C29.7 6 31 7.3 31 9V14"
+          stroke="#5B21B6" strokeWidth="3" strokeLinecap="round" fill="none"/>
+        {/* Kapı ızgarası */}
+        <rect x="13" y="18" width="18" height="16" rx="2" fill="#FEE440" fillOpacity="0.9"/>
+        <line x1="16" y1="18" x2="16" y2="34" stroke="#4F3800" strokeWidth="1.2" strokeOpacity="0.3"/>
+        <line x1="20" y1="18" x2="20" y2="34" stroke="#4F3800" strokeWidth="1.2" strokeOpacity="0.3"/>
+        <line x1="24" y1="18" x2="24" y2="34" stroke="#4F3800" strokeWidth="1.2" strokeOpacity="0.3"/>
+        <line x1="28" y1="18" x2="28" y2="34" stroke="#4F3800" strokeWidth="1.2" strokeOpacity="0.3"/>
+      </svg>
+    ),
+    subIcons: {}
+  },
 }

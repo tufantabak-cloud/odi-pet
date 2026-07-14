@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const planCategorySchema = z.enum([
-  'saglik', 'asi', 'parazit', 'bakim', 'beslenme', 'hijyen', 'aktivite'
+  'saglik', 'asi', 'parazit', 'bakim', 'beslenme', 'hijyen', 'aktivite', 'kontrol'
 ]);
 
 export const repeatRuleSchema = z.enum(['daily', 'weekly', 'monthly', 'yearly']).nullable().optional();

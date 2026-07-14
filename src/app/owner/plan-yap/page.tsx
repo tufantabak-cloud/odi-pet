@@ -32,12 +32,14 @@ const PetIcons = {
   Comb: <path d="M8 4V20M12 4V20M16 4V20M4 4H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="currentColor" fillOpacity="0.2"/>,
   Bed: <path d="M4 12H20M4 12V8C4 6.89543 4.89543 6 6 6H18C19.1046 6 20 6.89543 20 8V12M4 12V18M20 12V18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="currentColor" fillOpacity="0.2"/>,
   GroupPets: <path d="M12 14C14.2091 14 16 12.2091 16 10C16 7.79086 14.2091 6 12 6C9.79086 6 8 7.79086 8 10C8 12.2091 9.79086 14 12 14ZM5 20V18C5 15.7909 6.79086 14 9 14H15C17.2091 14 19 15.7909 19 18V20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="currentColor" fillOpacity="0.2"/>,
-  DefaultAvatar: <path d="M12 12C14.2091 12 16 10.2091 16 8C16 5.79086 14.2091 4 12 4C9.79086 4 8 5.79086 8 8C8 10.2091 9.79086 12 12 12ZM4 20C4 16.6863 6.68629 14 10 14H14C17.3137 14 20 16.6863 20 20" stroke="currentColor" strokeWidth="2" fill="currentColor" fillOpacity="0.2"/>
+  DefaultAvatar: <path d="M12 12C14.2091 12 16 10.2091 16 8C16 5.79086 14.2091 4 12 4C9.79086 4 8 5.79086 8 8C8 10.2091 9.79086 12 12 12ZM4 20C4 16.6863 6.68629 14 10 14H14C17.3137 14 20 16.6863 20 20" stroke="currentColor" strokeWidth="2" fill="currentColor" fillOpacity="0.2"/>,
+  Carrier: <path d="M9 8V6C9 4.89543 9.89543 4 11 4H13C14.1046 4 15 4.89543 15 6V8M4 10C4 8.89543 4.89543 8 6 8H18C19.1046 8 20 8.89543 20 10V18C20 19.1046 19.1046 20 18 20H6C4.89543 20 4 19.1046 4 18V10ZM8 12V16M12 12V16M16 12V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="currentColor" fillOpacity="0.2"/>
 };
 
-// 7 Gerçek Kategori (API Uyumlu)
+// 8 Gerçek Kategori (API Uyumlu)
 const CATEGORIES = [
   { key: 'saglik', title: 'Sağlık Takibi', desc: 'Kilo ölçümü, semptom takibi, ilaç kullanımı planlayın.', iconPath: PetIcons.DefaultAvatar, color: 'text-rose-500', bg: 'bg-rose-50', border: 'border-rose-100 hover:border-rose-200', gradient: 'from-rose-500 to-red-500' },
+  { key: 'kontrol', title: 'Kontroller & Randevular', desc: 'Genel kontrol, acil durum ve takip randevularını planlayın.', iconPath: PetIcons.Carrier, color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-100 hover:border-violet-200', gradient: 'from-violet-600 to-indigo-600' },
   { key: 'asi', title: 'Aşı Takibi', desc: 'Aşı ve bağışıklık hatırlatmaları oluşturun.', iconPath: PetIcons.Syringe, color: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-100 hover:border-blue-200', gradient: 'from-blue-500 to-cyan-500' },
   { key: 'parazit', title: 'Parazit Koruması', desc: 'İç ve dış parazit uygulama rutinleri planlayın.', iconPath: PetIcons.Whistle, color: 'text-teal-500', bg: 'bg-teal-50', border: 'border-teal-100 hover:border-teal-200', gradient: 'from-teal-500 to-emerald-500' },
   { key: 'bakim', title: 'Bakım Rutini', desc: 'Tıraş, banyo, tırnak kesimi ve genel hijyen planlayın.', iconPath: PetIcons.Comb, color: 'text-fuchsia-500', bg: 'bg-fuchsia-50', border: 'border-fuchsia-100 hover:border-fuchsia-200', gradient: 'from-fuchsia-500 to-pink-500' },

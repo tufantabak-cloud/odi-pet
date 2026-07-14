@@ -116,6 +116,7 @@ export function formatFrequency(days: number | null | undefined, label?: string 
 /** DB category → UI kategori eşleştirmesi */
 const DB_CATEGORY_TO_UI: Record<string, { category: string; label: string; icon: string; order: number }> = {
   'Saglik':   { category: 'Saglik',   label: 'Sağlık',   icon: '❤️',  order: 0 },
+  'Kontrol':  { category: 'Kontrol',  label: 'Kontroller & Randevular', icon: '🩺', order: 0.5 },
   'Asi':      { category: 'Asi',      label: 'Aşı',      icon: '💉',  order: 1 },
   'Parazit':  { category: 'Parazit',  label: 'Parazit',  icon: '🦠',  order: 2 },
   'Bakım':    { category: 'Bakım',    label: 'Bakım',    icon: '🧼',  order: 3 },
@@ -152,6 +153,16 @@ function mapDbToUI(
     else if (subCatLower.includes('dış parazit') || titleLower.includes('dış parazit') || titleLower.includes('dis parazit')) sub = 'Dış Parazit Uygulaması';
     else if (subCatLower.includes('tasma') || titleLower.includes('tasma')) sub = 'Parazit Tasması';
     return { category: 'Parazit', subCategory: sub };
+  }
+
+  // ── 0. Kontroller & Randevular (Veteriner) ──────────────────────────────────
+  if (dbCat === 'Veteriner' || dbCat === 'kontrol') {
+    let sub = 'Kontrol';
+    if (subCategory === 'Kontrol') sub = 'Genel Kontrol';
+    else if (subCategory === 'Acil') sub = 'Acil Durum';
+    else if (subCategory === 'Takip') sub = 'Takip Randevusu';
+    else if (subCategory) sub = subCategory;
+    return { category: 'Kontrol', subCategory: sub };
   }
 
   // ── 1. Sağlık ──────────────────────────────────────────────────────────────

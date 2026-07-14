@@ -1,6 +1,6 @@
 export type CategoryKey =
   | 'asi' | 'parazit' | 'bakim'
-  | 'beslenme' | 'hijyen' | 'aktivite' | 'saglik'
+  | 'beslenme' | 'hijyen' | 'aktivite' | 'saglik' | 'kontrol'
 
 export const categoryThemes: Record<CategoryKey, {
   label: string
@@ -57,5 +57,12 @@ export const categoryThemes: Record<CategoryKey, {
     progressColor: '#EF4444',
     bgLight: '#FEECEC',
     textColor: '#8B1A1A',
+  },
+  kontrol: {
+    label: 'Kontroller & Randevular',
+    gradient: 'from-violet-600 to-indigo-600',
+    progressColor: '#7209B7',
+    bgLight: '#F3EBFF',
+    textColor: '#4A1D7A',
   },
 }

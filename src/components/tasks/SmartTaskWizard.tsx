@@ -278,6 +278,7 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
             'Beslenme': 'beslenme',
             'Hijyen': 'hijyen',
             'Aktiviteler': 'aktivite',
+            'Veteriner': 'kontrol',
           };
           let planCategory = PLAN_CAT_MAP_REV[category] || category.toLowerCase();
           if (planCategory === 'asi' && subCategory && (subCategory.includes('Parazit') || subCategory.includes('Tasma') || subCategory.includes('Birleşik'))) {

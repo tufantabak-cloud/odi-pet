@@ -24,7 +24,8 @@ const categoryMap: Record<string, TaskCategory> = {
   bakim: 'Bakım',
   beslenme: 'Beslenme',
   hijyen: 'Hijyen',
-  aktivite: 'Aktiviteler'
+  aktivite: 'Aktiviteler',
+  kontrol: 'Veteriner'
 };
 
 const FREQ_LABEL: Record<string, string> = {
