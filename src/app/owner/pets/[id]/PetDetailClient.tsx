@@ -350,18 +350,15 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     return () => window.removeEventListener('open-pet-section', handleOpenSection);
   }, [])
   const [quickUpdateConfig, setQuickUpdateConfig] = useState<any>(null)
-  const [timelineFilter, setTimelineFilter] = useState('Aşı & Parazit')
   const [enrichOpen, setEnrichOpen] = useState(false)
   const [taskWizardOpen, setTaskWizardOpen] = useState(false)
   const [isSmartScannerOpen, setIsSmartScannerOpen] = useState(false)
   const [taskToEdit, setTaskToEdit] = useState<any>(null)
-  const [selectedDate, setSelectedDate] = useState<Date>(() => { const d = new Date(); d.setHours(0,0,0,0); return d; })
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
   const [medicationActionTask, setMedicationActionTask] = useState<any>(null)
   const [medicationNote, setMedicationNote] = useState('')
   const [showNoteInput, setShowNoteInput] = useState(false)
   const [trackerRefreshKey, setTrackerRefreshKey] = useState(0)
-  const timelineScrollRef = useRef<HTMLDivElement>(null)
   const coverInputRef = useRef<HTMLInputElement>(null)
 
   const [coverUploading, setCoverUploading] = useState(false)
@@ -485,17 +482,6 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     }
   }
   
-  useEffect(() => {
-    if (timelineScrollRef.current) {
-      const todayElement = timelineScrollRef.current.querySelector('[data-istoday="true"]');
-      if (todayElement) {
-        setTimeout(() => {
-          todayElement.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-        }, 100);
-      }
-    }
-  }, []);
-  
   const [lostWizardOpen, setLostWizardOpen] = useState(false)
   const [markFoundLoading, setMarkFoundLoading] = useState(false)
   const [generalError, setGeneralError] = useState<string | null>(null)
@@ -581,8 +567,6 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       supabase.removeChannel(channel)
     }
   }, [pet.id, router])
-
-  const localOverdue = (localSchedules ?? []).filter((s: any) => s.status !== 'done' && getTaskDateTime(s) < new Date(now)).length
 
   const handleEditTask = (item: any) => {
     if (isPlanSource(item.id)) {
@@ -992,14 +976,6 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       } catch {}
     }
     setTrackerRefreshKey(prev => prev + 1)
-  }
-
-  const scrollToTasks = () => {
-    setTimelineFilter('Aşı & Parazit')
-    const tasksElement = document.getElementById('pet-tasks')
-    if (tasksElement) {
-      tasksElement.scrollIntoView({ behavior: 'smooth' })
-    }
   }
 
   const toggleSection = (name: string) => {
@@ -1549,22 +1525,46 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                           dotColor = 'var(--color-primary)'; badgeBg = 'var(--color-primary-soft)'; badgeColor = 'var(--color-primary)'
                         }
 
+                        const isActionsOpen = activeMenuId === plan.id;
                         return (
-                          <Link key={plan.id} href={`#pet-tasks`}
-                            className="flex items-center gap-3 px-[var(--space-4)] py-3 hover:bg-[var(--color-surface-secondary)] transition-colors group">
-                            <span className="text-[11px] font-700 text-[var(--color-text-muted)] w-10 shrink-0 tabular-nums">{timeStr || '-'}</span>
-                            <div className="w-2 h-2 rounded-full shrink-0" style={{ background: dotColor }} />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-[13px] font-600 text-[var(--color-text-primary)] truncate group-hover:text-[var(--color-primary)] transition-colors">
-                                {plan.title || (plan as any).vaccines?.name || 'Sağlık İşlemi'}
-                              </p>
-                              <p className="text-[10px] text-[var(--color-text-muted)] mt-0.5">{getPlanDisplayCategory(plan.category, plan.sub_category)}</p>
-                            </div>
-                            <span className="text-[10px] font-700 px-2 py-1 rounded-xs shrink-0 whitespace-nowrap"
-                              style={{ background: badgeBg, color: badgeColor }}>
-                              {badge}
-                            </span>
-                          </Link>
+                          <div key={plan.id}>
+                            <button type="button"
+                              onClick={() => setActiveMenuId(prev => prev === plan.id ? null : plan.id)}
+                              className="w-full text-left flex items-center gap-3 px-[var(--space-4)] py-3 hover:bg-[var(--color-surface-secondary)] transition-colors group">
+                              <span className="text-[11px] font-700 text-[var(--color-text-muted)] w-10 shrink-0 tabular-nums">{timeStr || '-'}</span>
+                              <div className="w-2 h-2 rounded-full shrink-0" style={{ background: dotColor }} />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[13px] font-600 text-[var(--color-text-primary)] truncate group-hover:text-[var(--color-primary)] transition-colors">
+                                  {plan.title || (plan as any).vaccines?.name || 'Sağlık İşlemi'}
+                                </p>
+                                <p className="text-[10px] text-[var(--color-text-muted)] mt-0.5">{getPlanDisplayCategory(plan.category, plan.sub_category)}</p>
+                              </div>
+                              <span className="text-[10px] font-700 px-2 py-1 rounded-xs shrink-0 whitespace-nowrap"
+                                style={{ background: badgeBg, color: badgeColor }}>
+                                {badge}
+                              </span>
+                            </button>
+                            {isActionsOpen && (
+                              <div className="flex items-center gap-1.5 px-[var(--space-4)] pb-3 pt-0.5 animate-in fade-in slide-in-from-top-1">
+                                <button onClick={() => handleMarkCompleted(plan.id)}
+                                  className="flex-1 px-2 py-2 text-[11px] font-bold text-success bg-success/10 hover:bg-success/20 rounded-lg transition-colors whitespace-nowrap">
+                                  ✓ Tamamlandı
+                                </button>
+                                <button onClick={() => handlePostpone(plan.id)}
+                                  className="flex-1 px-2 py-2 text-[11px] font-bold text-text-secondary bg-text-secondary/10 hover:bg-text-secondary/20 rounded-lg transition-colors whitespace-nowrap">
+                                  📅 +1 Gün
+                                </button>
+                                <button onClick={() => { setActiveMenuId(null); handleEditTask(plan); }}
+                                  className="flex-1 px-2 py-2 text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors whitespace-nowrap">
+                                  ✏️ Düzenle
+                                </button>
+                                <button onClick={() => handleDeleteTask(plan.id)}
+                                  className="flex-1 px-2 py-2 text-[11px] font-bold text-error bg-error/10 hover:bg-error/20 rounded-lg transition-colors whitespace-nowrap">
+                                  ❌ Sil
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         );
                       });
                     })()}
@@ -1720,191 +1720,6 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
       {activeTab === 'takvim' && (
       <div className="p-4 flex flex-col gap-3">
-      {/* ── Takvim: Görevler & Ajanda ── */}
-      <div className="flex flex-col gap-4" id="pet-tasks">
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between px-1">
-            <h2 className="text-[16px] font-black text-text-primary">Görevler & Ajanda</h2>
-            {localOverdue > 0 && (
-              <button
-                onClick={() => setSelectedDate(new Date(new Date().setHours(0,0,0,0)))}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-btn bg-error/10 text-error hover:bg-error/20 transition-colors cursor-pointer"
-              >
-                <span className="text-[14px]">🚨</span>
-                <span className="text-[12px] font-bold">{localOverdue} Gecikmiş</span>
-              </button>
-            )}
-          </div>
-
-          {/* Weekly Timeline Strip */}
-          <div ref={timelineScrollRef} className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x mt-1">
-            {Array.from({length: 61}).map((_, idx) => {
-              const i = idx - 30;
-              const date = new Date();
-              date.setHours(0,0,0,0);
-              date.setDate(date.getDate() + i);
-              const isToday = i === 0;
-              const isSelected = selectedDate.getTime() === date.getTime();
-              const daysTasks = localSchedules.filter((s: any) => {
-                const td = getTaskDateTime(s);
-                td.setHours(0,0,0,0);
-                return td.getTime() === date.getTime();
-              });
-              return (
-                <button key={i} data-istoday={isToday} onClick={() => setSelectedDate(date)} className={`snap-center flex-shrink-0 w-[60px] h-[72px] flex flex-col items-center justify-center rounded-md transition-all duration-200 border-2 ${isSelected ? 'border-primary bg-primary/5 shadow-sm' : 'border-border-main/50 bg-white hover:border-primary/30'} ${isToday && !isSelected ? 'border-text-secondary/20 bg-bg-main/50' : ''}`}>
-                  <span className={`text-[11px] font-bold uppercase tracking-wider mb-1 ${isSelected ? 'text-primary' : 'text-text-secondary'}`}>{isToday ? 'BGN' : date.toLocaleDateString('tr-TR', {weekday: 'short'})}</span>
-                  <span className={`text-[18px] font-black leading-none ${isSelected ? 'text-primary' : 'text-text-primary'}`}>{date.getDate()}</span>
-                  <div className="flex gap-1 mt-1.5 h-1.5">
-                    {daysTasks.slice(0,3).map((t: any, idx) => {
-                      const isDone = t.status === 'done';
-                      return <div key={idx} className={`w-1.5 h-1.5 rounded-full ${isDone ? 'bg-text-secondary/40' : 'bg-primary'}`} />
-                    })}
-                    {daysTasks.length > 3 && <div className="w-1.5 h-1.5 rounded-full bg-border-main" />}
-                  </div>
-                </button>
-              )
-            })}
-          </div>
-
-          {/* Selected Day Tasks */}
-          <div className="bg-white rounded-3xl border border-border-main/60 p-5 shadow-sm min-h-[140px] flex flex-col gap-4">
-            {(() => {
-              const isToday = selectedDate.getTime() === new Date(new Date().setHours(0,0,0,0)).getTime();
-              const dayPrefix = isToday ? 'Bugün' : selectedDate.toLocaleDateString('tr-TR', {weekday: 'long'});
-              const now = new Date();
-              const overdueTasks = isToday ? localSchedules.filter((s: any) => s.status !== 'done' && getTaskDateTime(s) < now).sort((a,b) => getTaskDateTime(a).getTime() - getTaskDateTime(b).getTime()) : [];
-              const dayTasks = localSchedules.filter((s: any) => {
-                const td = new Date(getTaskDateTime(s));
-                td.setHours(0,0,0,0);
-                const isThisDate = td.getTime() === selectedDate.getTime();
-                if (!isThisDate) return false;
-                if (isToday) return getTaskDateTime(s) >= now || s.status === 'done';
-                return true;
-              }).sort((a,b) => getTaskDateTime(a).getTime() - getTaskDateTime(b).getTime());
-
-              if (dayTasks.length === 0 && overdueTasks.length === 0) {
-                return (
-                  <div className="h-full flex flex-col items-center justify-center text-center py-8 gap-3 opacity-60">
-                    <span className="text-4xl">✨</span>
-                    <p className="text-[14px] font-bold text-text-secondary">
-                      {isToday ? 'Bugün için planlı görev yok. Harika!' : `${dayPrefix} günü için planlı görev yok.`}
-                    </p>
-                  </div>
-                );
-              }
-
-              return (
-                <div className="flex flex-col gap-4">
-                  {overdueTasks.length > 0 && (
-                    <div className="flex flex-col gap-3">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="w-2 h-2 rounded-full bg-error animate-pulse" />
-                        <h3 className="text-[12px] font-black text-error uppercase tracking-widest">Gecikmiş Görevler</h3>
-                      </div>
-                      {overdueTasks.map((t: any) => {
-                        const title = t.title || t.vaccines?.name || t.category;
-                        return (
-                          <div key={t.id} onClick={() => handleTaskClick(t)} className="flex items-start justify-between group bg-error/5 p-3.5 rounded-2xl border border-error/10 hover:bg-error/10 transition-colors cursor-pointer">
-                            <div className="flex items-start gap-3">
-                              <button onClick={(e) => { e.stopPropagation(); handleMarkCompleted(t.id); }} className="mt-0.5 w-6 h-6 flex items-center justify-center rounded-full border-2 border-error/40 hover:bg-error hover:border-error text-transparent hover:text-white transition-colors flex-shrink-0">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                              </button>
-                              <div className="flex flex-col gap-1 flex-1 min-w-0 pr-2">
-                                <span className="text-[14px] font-bold text-error line-clamp-2 break-words">
-                                  {title}
-                                  {t.sub_category === 'Zorunlu Aşılar' && (
-                                    <span className="font-normal opacity-80 ml-1">/ {formatFrequency(t.vaccines?.frequency_days, t.vaccines?.frequency_label || t.frequency_label)}</span>
-                                  )}
-                                </span>
-                                <span className="text-[11px] font-bold text-error/70 flex items-center gap-1">
-                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                                  {formatTaskDate(t.due_date, t.due_time, false)}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1.5 relative" onClick={(e) => e.stopPropagation()}>
-                              <button onClick={(e) => { e.stopPropagation(); handlePostpone(t.id); }} className="px-2 py-1.5 bg-white/60 hover:bg-white text-error font-bold text-[11px] rounded-lg border border-error/20 transition-colors shadow-sm whitespace-nowrap">
-                                📅 +1 Gün
-                              </button>
-                              <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(prev => prev === t.id ? null : t.id) }} className="p-1 text-error/50 hover:text-error transition-colors focus:outline-none rounded-lg hover:bg-white/50">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                  <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
-                                </svg>
-                              </button>
-                              {activeMenuId === t.id && (
-                                <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-2xl shadow-xl border border-border-main/50 py-2 z-[200]">
-                                  <button onClick={(e) => { e.stopPropagation(); handleMarkCompleted(t.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-success hover:bg-success/5 flex items-center gap-2 cursor-pointer">✓ Tamamla</button>
-                                  <div className="border-t border-border-main/30 mx-2 my-1"/>
-                                  <button onClick={(e) => { e.stopPropagation(); handleEditTask(t); setActiveMenuId(null); }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
-                                  <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(t.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer">❌ Sil</button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* Regular Tasks Section */}
-                  {dayTasks.length > 0 && (
-                    <div className="flex flex-col gap-3">
-                      {overdueTasks.length > 0 && (
-                        <div className="flex items-center gap-2 mb-1 mt-2">
-                          <span className="w-2 h-2 rounded-full bg-primary" />
-                          <h3 className="text-[12px] font-black text-primary uppercase tracking-widest">{dayPrefix}</h3>
-                        </div>
-                      )}
-                      {dayTasks.map((t: any) => {
-                        const isDone = t.status === 'done';
-                        const title = t.title || t.vaccines?.name || t.category;
-                        return (
-                          <div key={t.id} onClick={() => { if(!isDone) handleTaskClick(t); }} className={`flex items-start justify-between group p-3.5 rounded-2xl border transition-colors ${isDone ? 'bg-text-secondary/5 border-transparent' : 'cursor-pointer bg-white border-border-main/50 hover:border-primary/30 hover:bg-primary/5'}`}>
-                            <div className="flex items-start gap-3 flex-1 min-w-0 pr-2">
-                              <button onClick={(e) => { e.stopPropagation(); if(!isDone) handleMarkCompleted(t.id); }} className={`mt-0.5 w-6 h-6 flex items-center justify-center rounded-full border-2 transition-colors flex-shrink-0 ${isDone ? 'bg-text-secondary/20 border-text-secondary/20 text-text-secondary' : 'border-primary/40 hover:bg-primary hover:border-primary text-transparent hover:text-white'}`}>
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                              </button>
-                              <span className={`text-[14px] font-bold line-clamp-2 break-words ${isDone ? 'text-text-secondary/60 line-through' : 'text-text-primary'}`}>
-                                {title}
-                                {t.sub_category === 'Zorunlu Aşılar' && (
-                                  <span className="font-normal opacity-80 ml-1">/ {formatFrequency(t.vaccines?.frequency_days, t.vaccines?.frequency_label || t.frequency_label)}</span>
-                                )}
-                              </span>
-                            </div>
-                            {!isDone && (
-                              <div className="flex items-center gap-1.5 relative" onClick={(e) => e.stopPropagation()}>
-                                <button onClick={(e) => { e.stopPropagation(); handlePostpone(t.id); }} className="px-2 py-1.5 bg-text-secondary/5 hover:bg-text-secondary/10 text-text-secondary font-bold text-[11px] rounded-lg border border-transparent hover:border-border-main transition-colors whitespace-nowrap">
-                                  📅 +1 Gün
-                                </button>
-                                <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(prev => prev === t.id ? null : t.id) }} className="p-1 text-text-secondary/50 hover:text-text-secondary transition-colors focus:outline-none rounded-lg hover:bg-bg-main">
-                                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
-                                  </svg>
-                                </button>
-                                {activeMenuId === t.id && (
-                                  <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-2xl shadow-xl border border-border-main/50 py-2 z-[200]">
-                                    <button onClick={(e) => { e.stopPropagation(); handleMarkCompleted(t.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-success hover:bg-success/5 flex items-center gap-2 cursor-pointer">✓ Tamamla</button>
-                                    <div className="border-t border-border-main/30 mx-2 my-1"/>
-                                    <button onClick={(e) => { e.stopPropagation(); handleEditTask(t); setActiveMenuId(null); }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
-                                    <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(t.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer">❌ Sil</button>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              )
-            })()}
-          </div>
-        </div>
-      </div>
-
-
-
       {/* Timeline - Görev Takibi */}
       <div className="mt-4">
         <h3 className="text-[15px] font-bold text-text-primary mb-3">
