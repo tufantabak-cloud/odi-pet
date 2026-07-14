@@ -87,6 +87,87 @@ export async function updatePlan(userId: string, planId: string, input: UpdatePl
     throw new Error('Plan bulunamadı.');
   }
 
+  if (input.status === 'completed' && currentPlan.repeat_rule) {
+    // 1. Create a completed static copy of the plan for history
+    const completedPlanData = {
+      pet_id: currentPlan.pet_id,
+      user_id: currentPlan.user_id,
+      category: currentPlan.category,
+      sub_type: currentPlan.sub_type,
+      scheduled_at: currentPlan.scheduled_at,
+      repeat_rule: null,
+      ends_at: null,
+      notif_before: 0,
+      notif_unit: 'minute',
+      note: input.note !== undefined ? input.note : currentPlan.note,
+      extra_data: { ...currentPlan.extra_data, is_past_done: true },
+      status: 'completed',
+    };
+
+    await supabase.from('plans').insert(completedPlanData);
+
+    // 2. Calculate the next occurrence date
+    const currentScheduledAt = new Date(currentPlan.scheduled_at);
+    let nextScheduledAtDate = new Date(currentScheduledAt);
+
+    if (currentPlan.repeat_rule === 'daily') {
+      nextScheduledAtDate.setDate(nextScheduledAtDate.getDate() + 1);
+    } else if (currentPlan.repeat_rule === 'weekly') {
+      nextScheduledAtDate.setDate(nextScheduledAtDate.getDate() + 7);
+    } else if (currentPlan.repeat_rule === 'monthly') {
+      nextScheduledAtDate.setMonth(nextScheduledAtDate.getMonth() + 1);
+    } else if (currentPlan.repeat_rule === 'yearly') {
+      nextScheduledAtDate.setFullYear(nextScheduledAtDate.getFullYear() + 1);
+    }
+
+    const nextScheduledAt = nextScheduledAtDate.toISOString();
+
+    // 3. Roll original plan forward
+    const { data: plan, error: planError } = await supabase
+      .from('plans')
+      .update({
+        scheduled_at: nextScheduledAt,
+        note: input.note !== undefined ? input.note : currentPlan.note,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', planId)
+      .select()
+      .single();
+
+    if (planError) throw new Error(planError.message);
+
+    // Update notification job for the next occurrence
+    const newNotifBefore = plan.notif_before;
+    const newNotifUnit = plan.notif_unit;
+    const newFireAt = calculateFireAt(nextScheduledAt, newNotifBefore, newNotifUnit);
+
+    if (newFireAt !== null) {
+      const { data: updatedJobs } = await supabase
+        .from('notification_jobs')
+        .update({ fire_at: newFireAt })
+        .eq('plan_id', planId)
+        .eq('sent', false)
+        .select();
+
+      if (!updatedJobs || updatedJobs.length === 0) {
+        await supabase
+          .from('notification_jobs')
+          .insert({
+            plan_id: planId,
+            fire_at: newFireAt,
+          });
+      }
+    } else {
+      await supabase
+        .from('notification_jobs')
+        .delete()
+        .eq('plan_id', planId)
+        .eq('sent', false);
+    }
+
+    return plan;
+  }
+
   const { data: plan, error: planError } = await supabase
     .from('plans')
     .update({
