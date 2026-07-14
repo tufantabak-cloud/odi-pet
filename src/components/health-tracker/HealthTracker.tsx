@@ -160,11 +160,11 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
 
       {/* Renk Lejandı */}
       <div className="flex items-center gap-4 px-4 pt-4 pb-2 mt-2 border-t border-border-main/30 flex-wrap">
-        <LegendDot color="bg-gradient-to-br from-[#33c08c] to-[#1f9d6c]" label="Yapıldı" />
-        <LegendDot color="bg-gradient-to-br from-[#5b86ff] to-[#3358e0]" label="Bugün" />
-        <LegendDot color="bg-gradient-to-br from-[#8fb2ff] to-[#5b86ff]" label="Yaklaşıyor" />
-        <LegendDot color="bg-gradient-to-br from-[#3a4256] to-[#2b3140]" label="Planlandı" />
-        <LegendDot color="bg-gradient-to-br from-[#ff6c6c] to-[#d43a3a]" label="Kaçırıldı" />
+        <LegendDot color="bg-gradient-to-br from-[#3ecf95] to-[#20a06f]" label="Yapıldı" />
+        <LegendDot color="bg-gradient-to-br from-[#5b86ff] to-[#3f68e8]" label="Bugün" />
+        <LegendDot color="bg-gradient-to-br from-[#a9c3ff] to-[#7fa0f2]" label="Yaklaşıyor" />
+        <LegendDot color="bg-[#eef1f6] border border-[#dfe4ec]" label="Planlandı" />
+        <LegendDot color="bg-gradient-to-br from-[#f3897d] to-[#dd5f54]" label="Kaçırıldı" />
       </div>
     </div>
   );

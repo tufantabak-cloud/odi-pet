@@ -65,22 +65,26 @@ export function CategoryCard({ event, categoryKey, onMarkDone, onPostpone, onEdi
   }
 
   let cardClasses = '';
+  let iconBadgeClasses = 'bg-white/20';
+  let dateClasses = 'opacity-80';
   switch (computedStatus) {
     case 'done':
-      cardClasses = 'bg-gradient-to-br from-[#33c08c] to-[#1f9d6c] text-white';
+      cardClasses = 'bg-gradient-to-br from-[#3ecf95] to-[#20a06f] text-white';
       break;
     case 'missed':
-      cardClasses = 'bg-gradient-to-br from-[#ff6c6c] to-[#d43a3a] text-white';
+      cardClasses = 'bg-gradient-to-br from-[#f3897d] to-[#dd5f54] text-white';
       break;
     case 'today':
-      cardClasses = 'bg-gradient-to-br from-[#5b86ff] to-[#3358e0] text-white shadow-lg shadow-blue-500/25';
+      cardClasses = 'bg-gradient-to-br from-[#5b86ff] to-[#3f68e8] text-white shadow-md shadow-blue-500/20';
       break;
     case 'upcoming':
-      cardClasses = 'bg-gradient-to-br from-[#8fb2ff] to-[#5b86ff] text-white';
+      cardClasses = 'bg-gradient-to-br from-[#a9c3ff] to-[#7fa0f2] text-white';
       break;
     case 'future':
     default:
-      cardClasses = 'bg-gradient-to-br from-[#3a4256] to-[#2b3140] text-[#c7cce0] border border-[#454e64]';
+      cardClasses = 'bg-[#eef1f6] text-[#556174] border border-[#dfe4ec]';
+      iconBadgeClasses = 'bg-[#556174]/10';
+      dateClasses = 'text-[#8891a1]';
       break;
   }
 
@@ -92,22 +96,22 @@ export function CategoryCard({ event, categoryKey, onMarkDone, onPostpone, onEdi
         onClick={() => setShowMenu(!showMenu)}
         data-status={computedStatus}
         className={`
-          flex flex-col items-start text-left
+          flex flex-col items-start text-left overflow-hidden
           rounded-2xl transition-all duration-200
           w-[100px] h-[100px] p-2.5
           ${cardClasses}
           hover:scale-[1.05] active:scale-95
         `}
       >
-        <div className="w-5 h-5 shrink-0 rounded-md bg-white/20 flex items-center justify-center overflow-hidden mb-1.5">
+        <div className={`w-5 h-5 shrink-0 rounded-md flex items-center justify-center overflow-hidden mb-1.5 ${iconBadgeClasses}`}>
           {icon ? icon({ size: 14 }) : null}
         </div>
 
-        <span className="text-[11.5px] font-extrabold leading-tight line-clamp-2 flex-1">
+        <span className="w-full text-[11px] font-extrabold leading-[13px] h-[26px] line-clamp-2 overflow-hidden">
           {event.pet_care_tasks?.title || event.title || 'Görev'}
         </span>
 
-        <span className="text-[9.5px] font-semibold opacity-85 mt-auto">
+        <span className={`text-[9px] font-semibold mt-auto ${dateClasses}`}>
           {dateText}
         </span>
 
