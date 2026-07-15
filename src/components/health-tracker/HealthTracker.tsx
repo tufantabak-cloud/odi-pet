@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useHealthTracker, toDateKey, formatFrequency } from './useHealthTracker';
 import { CategoryCard, toCategoryKey } from './CategoryCard';
@@ -13,7 +13,7 @@ interface HealthTrackerProps {
   refreshTrigger?: number;
 }
 
-/** Tarih kolonlarının ortak genişliği — başlık ve tüm hücreler aynı ölçüyü kullanır */
+/** Tarih kolonlarının ortak genişliği — her satırın kendi grid'i aynı ölçüyü kullanır */
 const DATE_COL_WIDTH = 108;
 
 /** 'YYYY-MM-DD' tarih anahtarını kısa Türkçe metne çevirir (örn. "13 Tem") */
@@ -37,30 +37,65 @@ function groupEventsByDate(events: FlowEvent[], visibleKeys: string[]): Map<stri
   return map;
 }
 
+/**
+ * Fare ile bir kaydırma alanını sürükleyerek yatay gezinme (touch zaten
+ * tarayıcı tarafından native destekleniyor). Sürükleme sırasında oluşan
+ * "click" olayını bastırır ki kart menüsü yanlışlıkla açılmasın.
+ */
+function useDragScroll(ref: React.RefObject<HTMLDivElement | null>) {
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    let isDown = false;
+    let startX = 0;
+    let startScroll = 0;
+    let moved = false;
+
+    const onMouseDown = (e: MouseEvent) => {
+      isDown = true;
+      moved = false;
+      startX = e.pageX;
+      startScroll = el.scrollLeft;
+    };
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isDown) return;
+      const dx = e.pageX - startX;
+      if (Math.abs(dx) > 4) moved = true;
+      el.scrollLeft = startScroll - dx;
+    };
+    const endDrag = () => { isDown = false; };
+    const onClickCapture = (e: MouseEvent) => {
+      if (moved) {
+        e.stopPropagation();
+        e.preventDefault();
+        moved = false;
+      }
+    };
+
+    el.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', endDrag);
+    el.addEventListener('click', onClickCapture, true);
+    return () => {
+      el.removeEventListener('mousedown', onMouseDown);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', endDrag);
+      el.removeEventListener('click', onClickCapture, true);
+    };
+  }, [ref]);
+}
+
 export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrackerProps) {
   const {
     categoryGroups, loading, markEventStatus, postponeEvent, deleteEvent,
-    visibleDates, shiftRange, goToToday,
+    visibleDates,
   } = useHealthTracker(petId, refreshTrigger);
-  const [onlyShowMissed, setOnlyShowMissed] = React.useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [onlyShowMissed, setOnlyShowMissed] = useState(false);
+  // Artırıldığında tüm satırlar bağımsız olarak "bugün"e geri kayar
+  const [resetToken, setResetToken] = useState(0);
 
   const todayKey = toDateKey(new Date());
   const visibleKeys = visibleDates.map(toDateKey);
-  const todayIndex = visibleKeys.indexOf(todayKey);
-  const gridWidth = visibleDates.length * DATE_COL_WIDTH;
-
-  // İlk açılışta (mobilde) bugün kolonunu görünür alana ortala — her render'da değil
-  const didAutoScroll = useRef(false);
-  useEffect(() => {
-    if (loading || didAutoScroll.current || todayIndex < 0) return;
-    const el = scrollRef.current;
-    if (!el || el.clientWidth >= gridWidth) { didAutoScroll.current = true; return; }
-    el.scrollTo({
-      left: Math.max(0, todayIndex * DATE_COL_WIDTH - el.clientWidth / 2 + DATE_COL_WIDTH / 2),
-    });
-    didAutoScroll.current = true;
-  }, [loading, todayIndex, gridWidth]);
 
   if (loading) {
     return (
@@ -94,7 +129,7 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
     onDelete: deleteEvent,
   };
 
-  /** Bir grup/alt grubun görünür penceredeki (ve filtre sonrası) event'leri */
+  /** Bir grup/alt grubun (filtre sonrası) event'leri */
   const visibleEventsOf = (flowEvents?: FlowEvent[]): FlowEvent[] => {
     let list = flowEvents || [];
     if (onlyShowMissed) list = list.filter(e => e.computedStatus === 'missed');
@@ -102,9 +137,9 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
   };
 
   /**
-   * Her görev (taskRow) kendi satırında: görev adı + frekansı solda sticky,
-   * event'leri kendi tarih kolonlarında. flowEvents kullanılır (coverage taşır),
-   * taskKey ile görev bazında ayrıştırılır.
+   * Her görev (taskRow) kendi başlığı + kendi bağımsız sürüklenebilir
+   * tarih satırıyla render edilir. Satırlar birbirinden bağımsız kayar;
+   * ortak olan yalnızca tarih dizisidir (visibleKeys), scroll konumu değil.
    */
   const renderTaskRows = (
     flowEvents: FlowEvent[] | undefined,
@@ -119,26 +154,25 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
       const hasVisible = Array.from(byDate.values()).some(l => l.length > 0);
       if (onlyShowMissed && !hasVisible) return null;
 
-      // Koruma aralığı: onlyShowMissed filtresinden bağımsız, görevin TÜM
-      // event'lerinden (görünür pencere dışındakiler dahil) hesaplanır —
-      // "8 aylık koruma" gibi uzun aralıklar tek bir olaydan doğar.
+      // Koruma aralığı: görevin TÜM event'lerinden hesaplanır — "8 aylık
+      // koruma" gibi uzun aralıklar tek bir uygulama kaydından doğabilsin.
       const allRowEvents = (flowEvents || []).filter(e => e.taskKey === row.task.title);
       const coverageIntervals = onlyShowMissed ? [] : buildCoverageIntervals(allRowEvents);
 
       return (
-        <div key={`${row.task.category}-${row.task.title}`} className="border-b border-border-main/20 last:border-b-0">
-          <div className="pt-1.5">
-            <div className="sticky left-0 inline-flex items-baseline gap-2 px-4 max-w-full">
-              <span className="text-[11px] font-extrabold text-text-primary">{row.task.title}</span>
-              <span className="text-[9.5px] font-semibold text-text-secondary/70">
-                {/* Aşıda frequency_label alt grup adıdır — orada gün bazlı frekansı göster */}
-                {formatFrequency(row.task.frequency_days, row.subGroupLabel ? null : row.task.frequency_label)}
-              </span>
-            </div>
+        <div key={`${row.task.category}-${row.task.title}`} className="border-b border-border-main/20 last:border-b-0 py-1.5">
+          <div className="px-4 flex items-baseline gap-2">
+            <span className="text-[11px] font-extrabold text-text-primary">{row.task.title}</span>
+            <span className="text-[9.5px] font-semibold text-text-secondary/70">
+              {/* Aşıda frequency_label alt grup adıdır — orada gün bazlı frekansı göster */}
+              {formatFrequency(row.task.frequency_days, row.subGroupLabel ? null : row.task.frequency_label)}
+            </span>
           </div>
           <TimelineRow
-            eventsByDate={byDate}
             visibleKeys={visibleKeys}
+            todayKey={todayKey}
+            resetToken={resetToken}
+            eventsByDate={byDate}
             categoryKey={categoryKey}
             coverageIntervals={coverageIntervals}
             getCreateHref={onlyShowMissed ? undefined : (dateKey) => buildPlanYapHref(petId, group, row, dateKey)}
@@ -149,30 +183,26 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
     });
   };
 
-  // Filtre aktifken görünür pencerede hiç kaçırılmış görev var mı?
-  const anyVisibleMissed = !onlyShowMissed || categoryGroups.some(group => {
+  // Filtre aktifken herhangi bir kaçırılmış görev var mı?
+  const anyMissed = !onlyShowMissed || categoryGroups.some(group => {
     const lists = group.subGroups && group.subGroups.length > 0
       ? group.subGroups.map(s => s.flowEvents || [])
       : [group.flowEvents || []];
-    return lists.some(list =>
-      list.some(e => e.computedStatus === 'missed' && visibleKeys.includes(((e as any).due_date || '').split('T')[0]))
-    );
+    return lists.some(list => list.some(e => e.computedStatus === 'missed'));
   });
 
   return (
     <div className="py-2 bg-white flex flex-col gap-1">
-      {/* Mini Filter Toolbar + tarih gezinmesi */}
+      {/* Mini Filter Toolbar */}
       <div className="flex items-center justify-between gap-2 px-4 pb-2 border-b border-border-main/30 flex-wrap">
         <span className="text-[12px] font-bold text-text-secondary">Ajanda Akışı</span>
         <div className="flex items-center gap-2">
-          {todayIndex < 0 && (
-            <button
-              onClick={goToToday}
-              className="px-3 py-1.5 rounded-full text-[11px] font-black border bg-[#eef3ff] border-[#5b86ff]/40 text-[#3358e0] transition-all active:scale-95"
-            >
-              Bugüne Dön
-            </button>
-          )}
+          <button
+            onClick={() => setResetToken(t => t + 1)}
+            className="px-3 py-1.5 rounded-full text-[11px] font-black border bg-[#eef3ff] border-[#5b86ff]/40 text-[#3358e0] transition-all active:scale-95"
+          >
+            Bugüne Dön
+          </button>
           <button
             onClick={() => setOnlyShowMissed(!onlyShowMissed)}
             className={`px-3 py-1.5 rounded-full text-[11px] font-black border transition-all active:scale-95 ${
@@ -186,63 +216,38 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
         </div>
       </div>
 
-      {/* Tarih gezinme okları + yatay kaydırılabilir ortak grid */}
-      <div className="relative flex items-stretch">
-        <NavArrow direction="left" onClick={() => shiftRange(-3)} />
+      <p className="px-4 text-[10px] text-text-secondary/60 font-semibold -mt-0.5">
+        Her satırı geçmiş veya ileri tarihlere sürükleyerek gezinebilirsiniz
+      </p>
 
-        <div ref={scrollRef} className="flex-1 overflow-x-auto overscroll-x-contain scrollbar-none">
-          <div className="relative" style={{ minWidth: gridWidth }}>
-            {/* Bugün çizgisi: sayfa merkezine değil, bugünün gerçek kolonuna bağlı */}
-            {todayIndex >= 0 && (
-              <div
-                className="absolute top-0 bottom-0 w-[2px] bg-gradient-to-b from-[#5b86ff] via-[#5b86ff]/40 to-transparent z-0 pointer-events-none"
-                style={{ left: todayIndex * DATE_COL_WIDTH + DATE_COL_WIDTH / 2 - 1 }}
-              />
-            )}
+      {!anyMissed ? (
+        <div className="py-8 px-4 text-center text-text-secondary bg-[#fdfaf5] rounded-3xl m-4 border border-dashed border-[#e69b24]/40">
+          <p className="text-[13px] font-bold">Filtreye uygun gecikmiş görev bulunmuyor.</p>
+        </div>
+      ) : (
+        categoryGroups.map(group => (
+          <div key={group.category}>
+            <CategoryHeader group={group} />
 
-            {/* Tarih başlığı — kolonlar hücrelerle aynı grid ölçüsünde */}
-            <div
-              className="grid pb-3 border-b border-border-main/30"
-              style={{ gridTemplateColumns: `repeat(${visibleDates.length}, ${DATE_COL_WIDTH}px)` }}
-            >
-              {visibleDates.map((d, i) => (
-                <DateHeaderCell key={visibleKeys[i]} date={d} isToday={visibleKeys[i] === todayKey} />
-              ))}
-            </div>
-
-            {!anyVisibleMissed ? (
-              <div className="py-8 px-4 text-center text-text-secondary bg-[#fdfaf5] rounded-3xl m-4 border border-dashed border-[#e69b24]/40 relative z-10">
-                <p className="text-[13px] font-bold">Filtreye uygun gecikmiş görev bulunmuyor.</p>
-              </div>
+            {group.subGroups && group.subGroups.length > 0 ? (
+              group.subGroups.map(sub => {
+                const rows = renderTaskRows(sub.flowEvents, sub.taskRows, toCategoryKey(group.category), group);
+                if (onlyShowMissed && rows.every(r => r === null)) return null;
+                return (
+                  <div key={sub.label} className="mb-1">
+                    <div className="pt-1 pb-0.5 px-4 bg-[#faf9ff]">
+                      <span className="text-[10px] font-bold text-primary/80">{sub.label}</span>
+                    </div>
+                    {rows}
+                  </div>
+                );
+              })
             ) : (
-              categoryGroups.map(group => (
-                <div key={group.category} className="relative z-10">
-                  <CategoryHeader group={group} />
-
-                  {group.subGroups && group.subGroups.length > 0 ? (
-                    group.subGroups.map(sub => {
-                      const rows = renderTaskRows(sub.flowEvents, sub.taskRows, toCategoryKey(group.category), group);
-                      if (onlyShowMissed && rows.every(r => r === null)) return null;
-                      return (
-                        <div key={sub.label} className="mb-1">
-                          <div className="pt-1 pb-0.5 bg-[#faf9ff]">
-                            <span className="sticky left-0 inline-block px-4 py-0.5 text-[10px] font-bold text-primary/80">{sub.label}</span>
-                          </div>
-                          {rows}
-                        </div>
-                      );
-                    })
-                  ) : (
-                    renderTaskRows(group.flowEvents, group.taskRows, toCategoryKey(group.category), group)
-                  )}
-                </div>
-              ))
+              renderTaskRows(group.flowEvents, group.taskRows, toCategoryKey(group.category), group)
             )}
           </div>
-        </div>
-
-        <NavArrow direction="right" onClick={() => shiftRange(3)} />
-      </div>
+        ))
+      )}
 
       {/* Renk Lejandı */}
       <div className="flex items-center gap-4 px-4 pt-4 pb-2 mt-2 border-t border-border-main/30 flex-wrap">
@@ -262,12 +267,20 @@ function isDateCovered(key: string, intervals: CoverageInterval[]): boolean {
   return intervals.some(iv => key > iv.startDateKey && key < iv.endDateKey);
 }
 
-/** Tek satır: her görünür tarih kolonunda o güne ait kartlar; boşsa "kayıt ekle" ipucu ya da koruma aralığı rengi */
+/**
+ * Tek satır: kendi başına yatay sürüklenebilir/kaydırılabilir tarih ekseni.
+ * Diğer satırlardan bağımsız — kendi scroll konumunu tutar, kendi "bugün"
+ * çizgisini kendi içinde taşır.
+ */
 function TimelineRow({
-  eventsByDate, visibleKeys, categoryKey, coverageIntervals, getCreateHref, onMarkDone, onPostpone, onEdit, onDelete,
+  visibleKeys, todayKey, resetToken, eventsByDate, categoryKey, coverageIntervals, getCreateHref,
+  onMarkDone, onPostpone, onEdit, onDelete,
 }: {
-  eventsByDate: Map<string, FlowEvent[]>;
   visibleKeys: string[];
+  todayKey: string;
+  /** Değiştiğinde satır "bugün"e geri kayar */
+  resetToken: number;
+  eventsByDate: Map<string, FlowEvent[]>;
   categoryKey: ReturnType<typeof toCategoryKey>;
   /** Görevin "uygulandı" tarihinden koruma bitişine kadar süren aralıkları — bu günler yeşil boyanır */
   coverageIntervals?: CoverageInterval[];
@@ -279,74 +292,107 @@ function TimelineRow({
   onDelete: (id: string) => void;
 }) {
   const router = useRouter();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useDragScroll(scrollRef);
+
+  const todayIndex = visibleKeys.indexOf(todayKey);
+  const gridWidth = visibleKeys.length * DATE_COL_WIDTH;
+
+  // Mount'ta ve "Bugüne Dön" tetiklendiğinde (resetToken değişince) bugüne kaydır
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || todayIndex < 0) return;
+    el.scrollTo({
+      left: Math.max(0, todayIndex * DATE_COL_WIDTH - el.clientWidth / 2 + DATE_COL_WIDTH / 2),
+    });
+  }, [resetToken, todayIndex]);
 
   return (
     <div
-      className="grid items-start py-2"
-      style={{ gridTemplateColumns: `repeat(${visibleKeys.length}, ${DATE_COL_WIDTH}px)` }}
+      ref={scrollRef}
+      className="overflow-x-auto overscroll-x-contain scrollbar-none cursor-grab active:cursor-grabbing select-none"
     >
-      {visibleKeys.map(key => {
-        const cellEvents = eventsByDate.get(key) || [];
-        if (cellEvents.length === 0) {
-          const href = getCreateHref?.(key) ?? null;
-          const covered = isDateCovered(key, coverageIntervals || []);
-          return (
-            <div key={key} className="flex items-center justify-center min-h-[64px]">
-              {href ? (
-                <button
-                  type="button"
-                  onClick={() => router.push(href)}
-                  aria-label={covered ? `${formatShortDate(key)} — koruma sürüyor` : `${formatShortDate(key)} için kayıt ekle`}
-                  title={covered ? `${formatShortDate(key)} — koruma sürüyor` : `${formatShortDate(key)} için kayıt ekle`}
-                  className={
-                    covered
-                      ? 'w-[92px] min-h-[64px] rounded-2xl border border-[#86efac] bg-[#f0fdf4] text-[#166534] hover:bg-[#e2fbe8] flex flex-col items-center justify-center gap-1 transition-colors'
-                      : 'w-[92px] min-h-[64px] rounded-2xl border border-dashed border-border-main text-text-secondary/40 hover:text-primary hover:border-primary/50 hover:bg-primary/5 flex flex-col items-center justify-center gap-1 transition-colors'
-                  }
-                >
-                  {covered ? (
-                    <>
+      <div className="relative" style={{ minWidth: gridWidth }}>
+        {todayIndex >= 0 && (
+          <div
+            className="absolute top-0 bottom-0 w-[2px] bg-gradient-to-b from-[#5b86ff] via-[#5b86ff]/40 to-transparent z-0 pointer-events-none"
+            style={{ left: todayIndex * DATE_COL_WIDTH + DATE_COL_WIDTH / 2 - 1 }}
+          />
+        )}
+        <div
+          className="grid items-start py-2 relative z-10"
+          style={{ gridTemplateColumns: `repeat(${visibleKeys.length}, ${DATE_COL_WIDTH}px)` }}
+        >
+          {visibleKeys.map(key => {
+            const cellEvents = eventsByDate.get(key) || [];
+            const isToday = key === todayKey;
+            if (cellEvents.length === 0) {
+              const href = getCreateHref?.(key) ?? null;
+              const covered = isDateCovered(key, coverageIntervals || []);
+              return (
+                <div key={key} className="flex items-center justify-center min-h-[64px]">
+                  {href ? (
+                    <button
+                      type="button"
+                      onClick={() => router.push(href)}
+                      aria-label={covered ? `${formatShortDate(key)} — koruma sürüyor` : `${formatShortDate(key)} için kayıt ekle`}
+                      title={covered ? `${formatShortDate(key)} — koruma sürüyor` : `${formatShortDate(key)} için kayıt ekle`}
+                      className={
+                        covered
+                          ? 'w-[92px] min-h-[64px] rounded-2xl border border-[#86efac] bg-[#f0fdf4] text-[#166534] hover:bg-[#e2fbe8] flex flex-col items-center justify-center gap-1 transition-colors'
+                          : `w-[92px] min-h-[64px] rounded-2xl border border-dashed flex flex-col items-center justify-center gap-1 transition-colors ${
+                              isToday
+                                ? 'border-[#5b86ff]/50 text-[#3358e0] hover:bg-[#eef3ff]'
+                                : 'border-border-main text-text-secondary/40 hover:text-primary hover:border-primary/50 hover:bg-primary/5'
+                            }`
+                      }
+                    >
+                      {covered ? (
+                        <>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M20 6 9 17l-5-5" />
+                          </svg>
+                          <span className="text-[8.5px] font-bold uppercase tracking-wide">Korumada</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                            <path d="M12 5v14M5 12h14" />
+                          </svg>
+                          <span className="text-[9.5px] font-bold">{formatShortDate(key)}</span>
+                          {isToday && <span className="text-[7.5px] font-black uppercase tracking-wide">Bugün</span>}
+                        </>
+                      )}
+                    </button>
+                  ) : covered ? (
+                    <div className="w-[92px] min-h-[64px] rounded-2xl border border-[#86efac] bg-[#f0fdf4] text-[#166534] flex flex-col items-center justify-center gap-1">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M20 6 9 17l-5-5" />
                       </svg>
                       <span className="text-[8.5px] font-bold uppercase tracking-wide">Korumada</span>
-                    </>
-                  ) : (
-                    <>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                        <path d="M12 5v14M5 12h14" />
-                      </svg>
-                      <span className="text-[9.5px] font-bold">{formatShortDate(key)}</span>
-                    </>
-                  )}
-                </button>
-              ) : covered ? (
-                <div className="w-[92px] min-h-[64px] rounded-2xl border border-[#86efac] bg-[#f0fdf4] text-[#166534] flex flex-col items-center justify-center gap-1">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 6 9 17l-5-5" />
-                  </svg>
-                  <span className="text-[8.5px] font-bold uppercase tracking-wide">Korumada</span>
+                    </div>
+                  ) : null}
                 </div>
-              ) : null}
-            </div>
-          );
-        }
-        return (
-          <div key={key} className="flex flex-col items-center gap-2 min-h-[24px]">
-            {cellEvents.map(event => (
-              <CategoryCard
-                key={event.id}
-                event={event}
-                categoryKey={categoryKey}
-                onMarkDone={onMarkDone}
-                onPostpone={onPostpone}
-                onEdit={onEdit}
-                onDelete={onDelete}
-              />
-            ))}
-          </div>
-        );
-      })}
+              );
+            }
+            return (
+              <div key={key} className="flex flex-col items-center gap-2 min-h-[24px]">
+                {cellEvents.map(event => (
+                  <CategoryCard
+                    key={event.id}
+                    event={event}
+                    categoryKey={categoryKey}
+                    onMarkDone={onMarkDone}
+                    onPostpone={onPostpone}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                  />
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
@@ -358,58 +404,10 @@ function CategoryHeader({ group }: { group: CategoryGroup }) {
     : (group.flowEvents?.length || 0);
 
   return (
-    <div className="bg-[#f6f8fb] border-y border-border-main/40 mb-2 py-2">
-      {/* Yatay scroll'da görünür kalması için başlık içeriği sticky */}
-      <div className="sticky left-0 inline-flex items-center gap-2 px-4 max-w-full">
-        <h3 className="text-[11px] font-black text-[#556987] uppercase tracking-wider">{group.label}</h3>
-        <span className="text-[10.5px] font-bold text-text-secondary/60 ml-2">{count} kayıt</span>
-      </div>
+    <div className="bg-[#f6f8fb] border-y border-border-main/40 mb-2 py-2 px-4 flex items-center gap-2">
+      <h3 className="text-[11px] font-black text-[#556987] uppercase tracking-wider">{group.label}</h3>
+      <span className="text-[10.5px] font-bold text-text-secondary/60 ml-2">{count} kayıt</span>
     </div>
-  );
-}
-
-/** Tarih başlığı hücresi — altındaki kolonla aynı dikey eksende */
-function DateHeaderCell({ date, isToday }: { date: Date; isToday: boolean }) {
-  const dayName = date.toLocaleDateString('tr-TR', { weekday: 'short' }).toUpperCase();
-  const dayNum = date.getDate();
-  const monthName = date.toLocaleDateString('tr-TR', { month: 'short' });
-
-  return (
-    <div className="flex flex-col items-center gap-1 pt-1 relative z-10">
-      <div
-        className={`flex flex-col items-center justify-center shrink-0 w-[48px] h-[56px] rounded-xl border transition-all ${
-          isToday
-            ? 'bg-gradient-to-br from-[#5b86ff] to-[#3358e0] border-transparent text-white shadow-sm'
-            : 'bg-[#f6f8fb] border-border-main/50 text-text-primary'
-        }`}
-      >
-        <span className={`text-[8.5px] font-black tracking-wider ${isToday ? 'text-white/80' : 'text-text-secondary/70'}`}>
-          {dayName}
-        </span>
-        <span className="text-[14px] font-black mt-0.5">{dayNum}</span>
-        <span className={`text-[8px] font-bold ${isToday ? 'text-white/70' : 'text-text-secondary/60'}`}>
-          {monthName}
-        </span>
-      </div>
-      {isToday && (
-        <span className="text-[9px] font-black text-[#3358e0] uppercase tracking-wider">Bugün</span>
-      )}
-    </div>
-  );
-}
-
-/** Tarih penceresini kaydıran ok butonu */
-function NavArrow({ direction, onClick }: { direction: 'left' | 'right'; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      aria-label={direction === 'left' ? 'Önceki günler' : 'Sonraki günler'}
-      className="shrink-0 w-7 flex items-center justify-center text-text-secondary hover:text-primary hover:bg-bg-main/60 transition-colors rounded-lg my-1"
-    >
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-        {direction === 'left' ? <path d="M15 18l-6-6 6-6" /> : <path d="M9 18l6-6-6-6" />}
-      </svg>
-    </button>
   );
 }
 

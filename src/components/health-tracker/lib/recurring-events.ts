@@ -1,9 +1,13 @@
 /**
- * Timeline'ın görünür tarih aralığı — HealthTracker'daki referans tarih
- * şeridi (bugün -2 → +3 gün) ile sanal tekrar üretimi aynı kaynağı kullanır.
+ * Timeline'ın görünür tarih aralığı — her görev satırının bağımsız olarak
+ * sürükleyip gezebileceği ortak, sabit pencere. Sanal (tekrarlayan) event
+ * üretimi de aynı aralıkla sınırlıdır (bkz. expandRecurringForTimeline).
+ * Bu pencere dışına (örn. 8 ay süren bir koruma penceresinin sonuna)
+ * gerçek DB kayıtları yine de düşebilir; yalnızca SANAL tekrarlar bu
+ * aralıkla sınırlıdır.
  */
-export const TIMELINE_VISIBLE_PAST_DAYS = 2;
-export const TIMELINE_VISIBLE_FUTURE_DAYS = 3;
+export const TIMELINE_VISIBLE_PAST_DAYS = 60;
+export const TIMELINE_VISIBLE_FUTURE_DAYS = 240;
 /** Görünür kolon sayısı (bugün dahil) */
 export const TIMELINE_VISIBLE_DAY_COUNT =
   TIMELINE_VISIBLE_PAST_DAYS + 1 + TIMELINE_VISIBLE_FUTURE_DAYS;

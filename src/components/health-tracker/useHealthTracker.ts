@@ -16,6 +16,7 @@ import {
   expandRecurringForTimeline,
 } from './lib/recurring-events';
 import { buildCategoryGroups } from './lib/group-events';
+import { fetchEstrusVirtualEvents } from '@/lib/estrus/virtual-events';
 
 // Grid bileşenlerinin kullandığı ortak sabit ve yardımcılar tek noktadan
 export {
@@ -32,12 +33,14 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
   const [loading, setLoading] = useState(true);
   const supabase = createBrowserSupabaseClient();
 
-  // ── Görünür tarih aralığı (gezinilebilir pencere) ──────────────────────────
-  // rangeStartOffset: pencerenin ilk gününün bugüne göre gün farkı (varsayılan -2)
-  const [rangeStartOffset, setRangeStartOffset] = useState(-TIMELINE_VISIBLE_PAST_DAYS);
-  const rangeEndOffset = rangeStartOffset + TIMELINE_VISIBLE_DAY_COUNT - 1;
+  // ── Görünür tarih aralığı ────────────────────────────────────────────────
+  // Sabit ve geniş bir pencere: her görev satırı bu ortak tarih dizisi içinde
+  // kendi başına (bağımsız) sürüklenip gezinebilir — pencere kaydırma yok,
+  // her satır kendi scroll konumunu tutar.
+  const rangeStartOffset = -TIMELINE_VISIBLE_PAST_DAYS;
+  const rangeEndOffset = TIMELINE_VISIBLE_FUTURE_DAYS;
 
-  /** Tarih başlığı ve tüm grid hücrelerinin tek tarih kaynağı */
+  /** Tarih dizisi — tüm satırların sürüklenebileceği ortak (ama bağımsız kaydırılan) kaynak */
   const visibleDates = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -46,21 +49,12 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
       d.setDate(today.getDate() + rangeStartOffset + i);
       return d;
     });
-  }, [rangeStartOffset]);
-
-  const shiftRange = useCallback((deltaDays: number) => {
-    setRangeStartOffset(prev => prev + deltaDays);
   }, []);
 
-  const goToToday = useCallback(() => {
-    setRangeStartOffset(-TIMELINE_VISIBLE_PAST_DAYS);
-  }, []);
-
-  // Sanal tekrarlar görünür pencereye göre üretilir; pencere kayınca yeniden hesaplanır
   const events: ComputedEvent[] = useMemo(() => {
     const expanded = expandRecurringForTimeline(rawEvents, rangeStartOffset, rangeEndOffset);
     return expanded.map(toComputedEvent);
-  }, [rawEvents, rangeStartOffset, rangeEndOffset]);
+  }, [rawEvents]);
 
   /**
    * vaccine_protocols tablosundan yüklenen lookup map.
@@ -126,7 +120,7 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
 
       // vaccines join: is_core + code (template eşleştirme için)
       // vaccines tablosunda alan adı: code (vaccine_code değil)
-      const [schedulesRes, plansRes, parasiteRes] = await Promise.all([
+      const [schedulesRes, plansRes, parasiteRes, petRes] = await Promise.all([
         usePlansOnly ? Promise.resolve({ data: [], error: null }) : supabase
           .from('health_schedules')
           .select('*')
@@ -144,13 +138,19 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
           .select('*, parasite_products(name)')
           .eq('pet_id', petId)
           .gte('recommended_start', pastYearStr)
-          .lte('recommended_start', future365Str)
+          .lte('recommended_start', future365Str),
+        supabase
+          .from('pets')
+          .select('id, name, species, gender, is_neutered')
+          .eq('id', petId)
+          .single()
       ]);
 
       if (schedulesRes.error) throw schedulesRes.error;
       if (plansRes.error) throw plansRes.error;
       if (parasiteRes.error) throw parasiteRes.error;
-
+      // Note: we don't throw for petRes.error as it's non-critical for backward compatibility
+      
       const PLAN_CAT_MAP: Record<string, string> = {
         saglik: 'Saglik', asi: 'Asi', parazit: 'Asi',
         bakim: 'Bakım', beslenme: 'Beslenme', hijyen: 'Hijyen', aktivite: 'Aktivite'
@@ -224,7 +224,17 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
             frequency_label: typeLabel,
           };
         })
-      ].sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
+      ];
+
+      // Inject virtual estrus forecast events
+      if (petRes.data) {
+        const estrusEvents = await fetchEstrusVirtualEvents(supabase, [petRes.data], pastYear, future365);
+        if (estrusEvents && estrusEvents.length > 0) {
+          mergedEvents.push(...estrusEvents);
+        }
+      }
+
+      mergedEvents.sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
 
       // Genişletme ve status hesabı görünür pencereye bağlı memo'da yapılır
       setRawEvents(mergedEvents);
@@ -383,7 +393,5 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
     formatFrequency,
     // Tarih-grid timeline
     visibleDates,
-    shiftRange,
-    goToToday,
   };
 }
