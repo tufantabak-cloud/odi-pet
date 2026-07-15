@@ -1,5 +1,6 @@
 import { FlowEvent, TaskRow } from '../types';
 import { getEventSortDate } from './normalize-events';
+import { toDateKey } from './recurring-events';
 
 /**
  * Bir kategorinin tüm taskRows'unu düz, kronolojik bir akışa çevirir.
@@ -17,6 +18,13 @@ export function buildFlowEvents(taskRows: TaskRow[]): FlowEvent[] {
 }
 
 const COVERAGE_WARN_DAYS = 7;
+
+/** 'YYYY-MM-DD' tarih anahtarına gün ekler/çıkarır, sonucu yine 'YYYY-MM-DD' döner */
+function addDaysToDateKey(dateKey: string, days: number): string {
+  const d = new Date(dateKey + 'T00:00:00');
+  d.setDate(d.getDate() + days);
+  return toDateKey(d);
+}
 
 /**
  * Sadece Aşı/Parazit gibi "koruma süresi" olan kategoriler için: her taskKey
@@ -41,23 +49,46 @@ export function computeCoverage(flowEvents: FlowEvent[]): void {
 
       const next = taskEvents[i + 1];
       const startMs = getEventSortDate(curr);
+      const startDateKey: string = (curr as any).due_date || '';
       let endMs: number | null = null;
+      let endDateKey: string | null = null;
       if (next) {
         endMs = getEventSortDate(next);
+        endDateKey = (next as any).due_date || null;
       } else {
         const freqDays = curr.pet_care_tasks?.frequency_days || 0;
-        if (freqDays > 0) endMs = startMs + freqDays * 24 * 60 * 60 * 1000;
+        if (freqDays > 0) {
+          endMs = startMs + freqDays * 24 * 60 * 60 * 1000;
+          endDateKey = startDateKey ? addDaysToDateKey(startDateKey, freqDays) : null;
+        }
       }
-      if (endMs === null) continue; // koruma süresi bilinmiyor — çubuk gösterilmez
+      if (endMs === null || !startDateKey || !endDateKey) continue; // koruma süresi bilinmiyor — çubuk gösterilmez
 
       const dayMs = 24 * 60 * 60 * 1000;
       const daysRemaining = Math.max(0, Math.ceil((endMs - nowMs) / dayMs));
       const totalMs = Math.max(endMs - startMs, dayMs);
       const percent = Math.max(0, Math.min(100, Math.round(((endMs - nowMs) / totalMs) * 100)));
 
-      if (nowMs >= endMs) curr.coverage = { status: 'expired', daysRemaining: 0, percent: 0 };
-      else if (endMs - nowMs <= warnMs) curr.coverage = { status: 'expiring', daysRemaining, percent };
-      else curr.coverage = { status: 'protected', daysRemaining, percent };
+      if (nowMs >= endMs) curr.coverage = { status: 'expired', daysRemaining: 0, percent: 0, startDateKey, endDateKey };
+      else if (endMs - nowMs <= warnMs) curr.coverage = { status: 'expiring', daysRemaining, percent, startDateKey, endDateKey };
+      else curr.coverage = { status: 'protected', daysRemaining, percent, startDateKey, endDateKey };
     }
   });
+}
+
+export interface CoverageInterval {
+  startDateKey: string;
+  endDateKey: string;
+}
+
+/**
+ * computeCoverage tarafından işaretlenmiş event'lerden, timeline grid'inde
+ * "koruma sürüyor" olarak boyanacak tarih aralıklarını çıkarır. Uygulama
+ * gününün kendisi zaten kendi kartıyla gösteriliyor; bu aralıklar yalnızca
+ * arasındaki (kayıtsız) günleri boyamak için kullanılır.
+ */
+export function buildCoverageIntervals(events: FlowEvent[]): CoverageInterval[] {
+  return events
+    .filter((e): e is FlowEvent & { coverage: NonNullable<FlowEvent['coverage']> } => !!e.coverage)
+    .map(e => ({ startDateKey: e.coverage.startDateKey, endDateKey: e.coverage.endDateKey }));
 }

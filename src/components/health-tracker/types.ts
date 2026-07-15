@@ -65,6 +65,10 @@ export interface FlowEvent extends ComputedEvent {
     daysRemaining: number;
     /** Kalan koruma yüzdesi 0-100 (çubuk genişliği) */
     percent: number;
+    /** Koruma penceresinin başladığı gün (bu event'in kendi tarihi), 'YYYY-MM-DD' */
+    startDateKey: string;
+    /** Koruma penceresinin bittiği gün (sonraki doz veya frequency_days), 'YYYY-MM-DD' */
+    endDateKey: string;
   };
 }
 

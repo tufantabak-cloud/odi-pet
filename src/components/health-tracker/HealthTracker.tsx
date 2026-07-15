@@ -5,6 +5,7 @@ import { useHealthTracker, toDateKey, formatFrequency } from './useHealthTracker
 import { CategoryCard, toCategoryKey } from './CategoryCard';
 import { CategoryGroup, FlowEvent, TaskRow } from './types';
 import { buildPlanYapHref } from './lib/plan-link';
+import { buildCoverageIntervals, CoverageInterval } from './lib/coverage';
 
 interface HealthTrackerProps {
   petId: string;
@@ -117,6 +118,13 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
       const byDate = groupEventsByDate(rowEvents, visibleKeys);
       const hasVisible = Array.from(byDate.values()).some(l => l.length > 0);
       if (onlyShowMissed && !hasVisible) return null;
+
+      // Koruma aralığı: onlyShowMissed filtresinden bağımsız, görevin TÜM
+      // event'lerinden (görünür pencere dışındakiler dahil) hesaplanır —
+      // "8 aylık koruma" gibi uzun aralıklar tek bir olaydan doğar.
+      const allRowEvents = (flowEvents || []).filter(e => e.taskKey === row.task.title);
+      const coverageIntervals = onlyShowMissed ? [] : buildCoverageIntervals(allRowEvents);
+
       return (
         <div key={`${row.task.category}-${row.task.title}`} className="border-b border-border-main/20 last:border-b-0">
           <div className="pt-1.5">
@@ -132,6 +140,7 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
             eventsByDate={byDate}
             visibleKeys={visibleKeys}
             categoryKey={categoryKey}
+            coverageIntervals={coverageIntervals}
             getCreateHref={onlyShowMissed ? undefined : (dateKey) => buildPlanYapHref(petId, group, row, dateKey)}
             {...cardProps}
           />
@@ -242,18 +251,26 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
         <LegendDot color="bg-[#f5f8ff] border border-[#a9c3ff]" label="Yaklaşıyor" />
         <LegendDot color="bg-white border border-[#dde3ec]" label="Planlandı" />
         <LegendDot color="bg-[#fef2f2] border border-[#fca5a5]" label="Kaçırıldı" />
+        <LegendDot color="bg-[#f0fdf4] border border-[#86efac]" label="Korumada" />
       </div>
     </div>
   );
 }
 
-/** Tek satır: her görünür tarih kolonunda o güne ait kartlar, boşsa "kayıt ekle" ipucu */
+/** Bir tarih anahtarı, koruma aralıklarından herhangi birinin (başlangıç, bitiş) arasında mı? */
+function isDateCovered(key: string, intervals: CoverageInterval[]): boolean {
+  return intervals.some(iv => key > iv.startDateKey && key < iv.endDateKey);
+}
+
+/** Tek satır: her görünür tarih kolonunda o güne ait kartlar; boşsa "kayıt ekle" ipucu ya da koruma aralığı rengi */
 function TimelineRow({
-  eventsByDate, visibleKeys, categoryKey, getCreateHref, onMarkDone, onPostpone, onEdit, onDelete,
+  eventsByDate, visibleKeys, categoryKey, coverageIntervals, getCreateHref, onMarkDone, onPostpone, onEdit, onDelete,
 }: {
   eventsByDate: Map<string, FlowEvent[]>;
   visibleKeys: string[];
   categoryKey: ReturnType<typeof toCategoryKey>;
+  /** Görevin "uygulandı" tarihinden koruma bitişine kadar süren aralıkları — bu günler yeşil boyanır */
+  coverageIntervals?: CoverageInterval[];
   /** Boş hücre için "plan yap" sayfasına deep-link üretir; null dönerse hücre pasif kalır */
   getCreateHref?: (dateKey: string) => string | null;
   onMarkDone: (id: string) => void;
@@ -272,22 +289,45 @@ function TimelineRow({
         const cellEvents = eventsByDate.get(key) || [];
         if (cellEvents.length === 0) {
           const href = getCreateHref?.(key) ?? null;
+          const covered = isDateCovered(key, coverageIntervals || []);
           return (
             <div key={key} className="flex items-center justify-center min-h-[64px]">
-              {href && (
+              {href ? (
                 <button
                   type="button"
                   onClick={() => router.push(href)}
-                  aria-label={`${formatShortDate(key)} için kayıt ekle`}
-                  title={`${formatShortDate(key)} için kayıt ekle`}
-                  className="w-[92px] min-h-[64px] rounded-2xl border border-dashed border-border-main text-text-secondary/40 hover:text-primary hover:border-primary/50 hover:bg-primary/5 flex flex-col items-center justify-center gap-1 transition-colors"
+                  aria-label={covered ? `${formatShortDate(key)} — koruma sürüyor` : `${formatShortDate(key)} için kayıt ekle`}
+                  title={covered ? `${formatShortDate(key)} — koruma sürüyor` : `${formatShortDate(key)} için kayıt ekle`}
+                  className={
+                    covered
+                      ? 'w-[92px] min-h-[64px] rounded-2xl border border-[#86efac] bg-[#f0fdf4] text-[#166534] hover:bg-[#e2fbe8] flex flex-col items-center justify-center gap-1 transition-colors'
+                      : 'w-[92px] min-h-[64px] rounded-2xl border border-dashed border-border-main text-text-secondary/40 hover:text-primary hover:border-primary/50 hover:bg-primary/5 flex flex-col items-center justify-center gap-1 transition-colors'
+                  }
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                    <path d="M12 5v14M5 12h14" />
-                  </svg>
-                  <span className="text-[9.5px] font-bold">{formatShortDate(key)}</span>
+                  {covered ? (
+                    <>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20 6 9 17l-5-5" />
+                      </svg>
+                      <span className="text-[8.5px] font-bold uppercase tracking-wide">Korumada</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <path d="M12 5v14M5 12h14" />
+                      </svg>
+                      <span className="text-[9.5px] font-bold">{formatShortDate(key)}</span>
+                    </>
+                  )}
                 </button>
-              )}
+              ) : covered ? (
+                <div className="w-[92px] min-h-[64px] rounded-2xl border border-[#86efac] bg-[#f0fdf4] text-[#166534] flex flex-col items-center justify-center gap-1">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                  <span className="text-[8.5px] font-bold uppercase tracking-wide">Korumada</span>
+                </div>
+              ) : null}
             </div>
           );
         }
