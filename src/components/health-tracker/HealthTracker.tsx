@@ -15,6 +15,15 @@ interface HealthTrackerProps {
 /** Tarih kolonlarının ortak genişliği — başlık ve tüm hücreler aynı ölçüyü kullanır */
 const DATE_COL_WIDTH = 108;
 
+/** 'YYYY-MM-DD' tarih anahtarını kısa Türkçe metne çevirir (örn. "13 Tem") */
+function formatShortDate(dateKey: string): string {
+  const d = new Date(dateKey + 'T00:00:00');
+  if (isNaN(d.getTime())) return dateKey;
+  const month = d.toLocaleDateString('tr-TR', { month: 'short' });
+  const formattedMonth = month.charAt(0).toUpperCase() + month.slice(1);
+  return `${d.getDate()} ${formattedMonth}`;
+}
+
 /** Görünür aralıktaki event'leri tarih anahtarına göre gruplar */
 function groupEventsByDate(events: FlowEvent[], visibleKeys: string[]): Map<string, FlowEvent[]> {
   const map = new Map<string, FlowEvent[]>();
@@ -269,13 +278,14 @@ function TimelineRow({
                 <button
                   type="button"
                   onClick={() => router.push(href)}
-                  aria-label="Bu tarih için kayıt ekle"
-                  title="Bu tarih için kayıt ekle"
-                  className="w-[76px] h-[44px] rounded-xl border border-dashed border-border-main text-text-secondary/30 hover:text-primary hover:border-primary/50 hover:bg-primary/5 flex items-center justify-center transition-colors"
+                  aria-label={`${formatShortDate(key)} için kayıt ekle`}
+                  title={`${formatShortDate(key)} için kayıt ekle`}
+                  className="w-[92px] min-h-[64px] rounded-2xl border border-dashed border-border-main text-text-secondary/40 hover:text-primary hover:border-primary/50 hover:bg-primary/5 flex flex-col items-center justify-center gap-1 transition-colors"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                     <path d="M12 5v14M5 12h14" />
                   </svg>
+                  <span className="text-[9.5px] font-bold">{formatShortDate(key)}</span>
                 </button>
               )}
             </div>
