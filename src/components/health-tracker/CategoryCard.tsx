@@ -2,7 +2,6 @@
 import React, { useRef, useState } from 'react';
 import { FlowEvent } from './types';
 import { ActionSheet } from './ActionSheet';
-import { PetIcons } from '@/components/icons/PetIcons';
 import { CategoryKey } from '@/lib/categoryThemes';
 
 interface CategoryCardProps {
@@ -125,9 +124,10 @@ export function CategoryCard({ event, categoryKey, onMarkDone, onMarkUndone, onP
 
   const theme = STATUS_THEME[computedStatus] ?? STATUS_THEME.future;
   const title = event.pet_care_tasks?.title || event.title || 'Görev';
-  const icon = PetIcons[categoryKey]?.icon;
   const coverageTheme = event.coverage ? COVERAGE_THEME[event.coverage.status] : null;
 
+  // Kart her zaman kendi görev satırının içinde render edilir; satır başlığı
+  // görev adını zaten gösteriyor, kartta tekrar etmiyoruz.
   return (
     <div className="relative shrink-0" ref={containerRef}>
       <button
@@ -137,29 +137,22 @@ export function CategoryCard({ event, categoryKey, onMarkDone, onMarkUndone, onP
         className={`
           flex flex-col items-start text-left overflow-hidden
           rounded-2xl border transition-all duration-200
-          w-[100px] min-h-[100px] p-2.5
+          w-[100px] min-h-[64px] p-2.5
           ${theme.card}
           hover:scale-[1.05] active:scale-95
         `}
       >
-        <div className="w-full flex items-start justify-between mb-1.5">
-          <div className="w-5 h-5 shrink-0 rounded-md flex items-center justify-center overflow-hidden bg-black/5">
-            {icon ? icon({ size: 14 }) : null}
-          </div>
-          <div className={`w-4 h-4 shrink-0 rounded-full flex items-center justify-center ${theme.badge}`}>
+        <div className="w-full flex items-center justify-between">
+          <div className={`w-5 h-5 shrink-0 rounded-full flex items-center justify-center ${theme.badge}`}>
             {theme.icon}
           </div>
+          <span className="text-[8.5px] font-bold uppercase tracking-wide opacity-70">
+            {theme.label}
+          </span>
         </div>
 
-        <span className="w-full text-[11px] font-extrabold leading-[13px] line-clamp-2 overflow-hidden">
-          {title}
-        </span>
-
-        <span className="text-[9px] font-semibold mt-auto pt-1 opacity-80">
+        <span className="text-[10.5px] font-extrabold mt-auto pt-1.5">
           {dateText}
-        </span>
-        <span className="text-[8.5px] font-bold uppercase tracking-wide opacity-70">
-          {theme.label}
         </span>
 
         {/* Koruma durumu: çubuk + metin (yalnızca Aşı/Parazit 'done' kartlarında) */}
