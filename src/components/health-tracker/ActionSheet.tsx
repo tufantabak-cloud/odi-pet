@@ -7,14 +7,12 @@ interface ActionSheetProps {
   anchorRef: React.RefObject<HTMLDivElement | null>;
   onClose: () => void;
   onMarkDone: (id: string) => void;
-  /** Tamamlanmış event'i geri alır (status → active) */
-  onMarkUndone?: (id: string) => void;
   onPostpone: (id: string) => void;
   onEdit: (event: ComputedEvent) => void;
   onDelete: (id: string) => void;
 }
 
-export function ActionSheet({ event, anchorRef, onClose, onMarkDone, onMarkUndone, onPostpone, onEdit, onDelete }: ActionSheetProps) {
+export function ActionSheet({ event, anchorRef, onClose, onMarkDone, onPostpone, onEdit, onDelete }: ActionSheetProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const [coords, setCoords] = useState({ top: 0, left: 0 });
 
@@ -86,16 +84,8 @@ export function ActionSheet({ event, anchorRef, onClose, onMarkDone, onMarkUndon
       className="absolute bg-white border border-border-main/50 rounded-xl shadow-xl z-[9999] overflow-hidden text-sm"
       style={{ top: coords.top, left: Math.max(8, coords.left), width: '192px' }}
     >
-      {event.computedStatus === 'done' ? (
-        onMarkUndone && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onMarkUndone(event.id); onClose(); }}
-            className="w-full text-left px-4 py-3 hover:bg-bg-main text-text-primary transition-colors font-medium border-b border-border-main/30"
-          >
-            ↩ Tamamlanmadı Yap
-          </button>
-        )
-      ) : (
+      {/* Tamamlanmış kayıt geri alınamaz (veri bütünlüğü) — yalnızca Düzenle/Sil kalır */}
+      {event.computedStatus !== 'done' && (
         <>
           <button
             onClick={(e) => { e.stopPropagation(); onMarkDone(event.id); onClose(); }}

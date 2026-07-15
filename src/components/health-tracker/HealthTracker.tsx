@@ -77,7 +77,6 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
 
   const cardProps = {
     onMarkDone: (id: string) => markEventStatus(id, 'done'),
-    onMarkUndone: (id: string) => markEventStatus(id, 'active'),
     onPostpone: (id: string) => postponeEvent(id, 1),
     onEdit: onEditTask || (() => {}),
     onDelete: deleteEvent,
@@ -237,13 +236,12 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
 
 /** Tek satır: her görünür tarih kolonunda o güne ait kartlar alt alta */
 function TimelineRow({
-  eventsByDate, visibleKeys, categoryKey, onMarkDone, onMarkUndone, onPostpone, onEdit, onDelete,
+  eventsByDate, visibleKeys, categoryKey, onMarkDone, onPostpone, onEdit, onDelete,
 }: {
   eventsByDate: Map<string, FlowEvent[]>;
   visibleKeys: string[];
   categoryKey: ReturnType<typeof toCategoryKey>;
   onMarkDone: (id: string) => void;
-  onMarkUndone?: (id: string) => void;
   onPostpone: (id: string) => void;
   onEdit: (event: FlowEvent) => void;
   onDelete: (id: string) => void;
@@ -265,7 +263,6 @@ function TimelineRow({
                 event={event}
                 categoryKey={categoryKey}
                 onMarkDone={onMarkDone}
-                onMarkUndone={onMarkUndone}
                 onPostpone={onPostpone}
                 onEdit={onEdit}
                 onDelete={onDelete}

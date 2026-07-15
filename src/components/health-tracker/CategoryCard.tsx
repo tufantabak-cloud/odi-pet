@@ -8,7 +8,6 @@ interface CategoryCardProps {
   event: FlowEvent;
   categoryKey: CategoryKey;
   onMarkDone: (id: string) => void;
-  onMarkUndone?: (id: string) => void;
   onPostpone: (id: string) => void;
   onEdit: (event: FlowEvent) => void;
   onDelete: (id: string) => void;
@@ -88,7 +87,7 @@ function coverageLabel(coverage: NonNullable<FlowEvent['coverage']>): string {
 }
 
 /** Tarih-grid akış kartı — açık zemin, durum ikonu + etiketi, esnek yükseklik */
-export function CategoryCard({ event, categoryKey, onMarkDone, onMarkUndone, onPostpone, onEdit, onDelete }: CategoryCardProps) {
+export function CategoryCard({ event, categoryKey, onMarkDone, onPostpone, onEdit, onDelete }: CategoryCardProps) {
   const [showMenu, setShowMenu] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const { computedStatus } = event;
@@ -174,7 +173,6 @@ export function CategoryCard({ event, categoryKey, onMarkDone, onMarkUndone, onP
           anchorRef={containerRef}
           onClose={() => setShowMenu(false)}
           onMarkDone={onMarkDone}
-          onMarkUndone={onMarkUndone}
           onPostpone={onPostpone}
           onEdit={(e) => onEdit(e as FlowEvent)}
           onDelete={onDelete}
