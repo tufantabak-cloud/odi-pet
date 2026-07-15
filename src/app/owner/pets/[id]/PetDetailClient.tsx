@@ -568,8 +568,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   }, [pet.id, router])
 
   const handleEditTask = (item: any) => {
-    if (isPlanSource(item.id)) {
-      router.push(`/owner/plan-yap/edit/${getRealPlanId(item.id)}`);
+    const realPlanId = resolveRealPlanId(item);
+    if (realPlanId) {
+      router.push(`/owner/plan-yap/edit/${realPlanId}`);
     } else {
       // health_schedules kaynaklı kayıtlar için edit sayfası desteği yok; modal fallback
       setTaskToEdit(item);
@@ -582,8 +583,11 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       setMedicationActionTask(item);
       setMedicationNote('');
       setShowNoteInput(false);
-    } else if (isPlanSource(item.id)) {
-      router.push(`/owner/plan-yap/edit/${getRealPlanId(item.id)}`);
+      return;
+    }
+    const realPlanId = resolveRealPlanId(item);
+    if (realPlanId) {
+      router.push(`/owner/plan-yap/edit/${realPlanId}`);
     } else {
       setTaskToEdit(item);
       setTaskWizardOpen(true);
@@ -840,6 +844,18 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   /** plans tablosundan gelen kayıtları tespit et */
   const isPlanSource = (id: string) => id.toString().startsWith('plan_')
   const getRealPlanId = (id: string) => id.replace('plan_', '')
+
+  /**
+   * Bir kaydın gerçek plan id'sini bulur — gerçek plan (plan_xxx) veya
+   * tekrarlayan planın sanal bir occurrence'ı (virtual_..., _plan_id taşır)
+   * için çalışır. Sanal event'lerin kendi id'si DB'de yoktur; düzenleme
+   * her zaman kaynak plana yönlendirilmelidir.
+   */
+  const resolveRealPlanId = (item: any): string | null => {
+    if (isPlanSource(item.id)) return getRealPlanId(item.id)
+    if (item._is_virtual && item._source === 'plans' && item._plan_id) return item._plan_id
+    return null
+  }
 
   const handleDeleteTask = async (id: string) => {
     setLocalSchedules(prev => prev.filter(s => s.id !== id))
@@ -1414,6 +1430,27 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
             {activeTab === 'ozet' && (
               <div className="p-4 flex flex-col gap-3">
+                {/* Paylaş + Acil Durum */}
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => router.push(`/owner/pets/${pet.id}/share`)}
+                    className="relative w-full h-9 rounded-btn bg-white border border-border-main flex items-center justify-center gap-2 hover:bg-gray-50 active:scale-[0.98] transition-all duration-200 focus:outline-none"
+                  >
+                    <Share2 size={18} className="text-primary" />
+                    <span className="text-[14px] font-bold text-text-primary">Paylaş</span>
+                  </button>
+                  <FloatingSOS
+                    fullWidth={true}
+                    petId={pet.id}
+                    petName={pet.name}
+                    vetPhone={(pet as any).vet_phone ?? undefined}
+                    vetName={pet.vet_name ?? undefined}
+                    sosContacts={pet.sos_contacts}
+                    onLostReport={() => setLostWizardOpen(true)}
+                    onMarkFound={handleMarkFound}
+                  />
+                </div>
+
                 {microTasks.length > 0 && (
                   <div className="mt-4 space-y-3">
                     <p className="text-[11px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide px-1">
@@ -1577,26 +1614,6 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                   />
                 )}
 
-                {/* Paylaş + Acil Durum */}
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => router.push(`/owner/pets/${pet.id}/share`)}
-                    className="relative w-full h-9 rounded-btn bg-white border border-border-main flex items-center justify-center gap-2 hover:bg-gray-50 active:scale-[0.98] transition-all duration-200 focus:outline-none"
-                  >
-                    <Share2 size={18} className="text-primary" />
-                    <span className="text-[14px] font-bold text-text-primary">Paylaş</span>
-                  </button>
-                  <FloatingSOS
-                    fullWidth={true}
-                    petId={pet.id}
-                    petName={pet.name}
-                    vetPhone={(pet as any).vet_phone ?? undefined}
-                    vetName={pet.vet_name ?? undefined}
-                    sosContacts={pet.sos_contacts}
-                    onLostReport={() => setLostWizardOpen(true)}
-                    onMarkFound={handleMarkFound}
-                  />
-                </div>
               </div>
             )}
           </div>

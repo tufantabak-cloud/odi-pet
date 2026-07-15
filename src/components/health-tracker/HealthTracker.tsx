@@ -262,9 +262,9 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
   );
 }
 
-/** Bir tarih anahtarı, koruma aralıklarından herhangi birinin (başlangıç, bitiş) arasında mı? */
-function isDateCovered(key: string, intervals: CoverageInterval[]): boolean {
-  return intervals.some(iv => key > iv.startDateKey && key < iv.endDateKey);
+/** Bir tarih anahtarını kapsayan koruma aralığını (varsa) döndürür */
+function findCoveringInterval(key: string, intervals: CoverageInterval[]): CoverageInterval | undefined {
+  return intervals.find(iv => key > iv.startDateKey && key < iv.endDateKey);
 }
 
 /**
@@ -327,51 +327,50 @@ function TimelineRow({
             const cellEvents = eventsByDate.get(key) || [];
             const isToday = key === todayKey;
             if (cellEvents.length === 0) {
-              const href = getCreateHref?.(key) ?? null;
-              const covered = isDateCovered(key, coverageIntervals || []);
-              return (
-                <div key={key} className="flex items-center justify-center min-h-[64px]">
-                  {href ? (
+              const coveringInterval = findCoveringInterval(key, coverageIntervals || []);
+              // Koruma sürüyorsa: bu tarih bir "boşluk" değil, gerçek bir kaydın devamı —
+              // tıklanınca YENİ kayıt açmak yerine o kaydın kendisi düzenlemeye açılır.
+              if (coveringInterval) {
+                return (
+                  <div key={key} className="flex items-center justify-center min-h-[64px]">
                     <button
                       type="button"
-                      onClick={() => router.push(href)}
-                      aria-label={covered ? `${formatShortDate(key)} — koruma sürüyor` : `${formatShortDate(key)} için kayıt ekle`}
-                      title={covered ? `${formatShortDate(key)} — koruma sürüyor` : `${formatShortDate(key)} için kayıt ekle`}
-                      className={
-                        covered
-                          ? 'w-[92px] min-h-[64px] rounded-2xl border border-[#86efac] bg-[#f0fdf4] text-[#166534] hover:bg-[#e2fbe8] flex flex-col items-center justify-center gap-1 transition-colors'
-                          : `w-[92px] min-h-[64px] rounded-2xl border border-dashed flex flex-col items-center justify-center gap-1 transition-colors ${
-                              isToday
-                                ? 'border-[#5b86ff]/50 text-[#3358e0] hover:bg-[#eef3ff]'
-                                : 'border-border-main text-text-secondary/40 hover:text-primary hover:border-primary/50 hover:bg-primary/5'
-                            }`
-                      }
+                      onClick={() => onEdit(coveringInterval.sourceEvent)}
+                      aria-label={`${formatShortDate(key)} — koruma sürüyor, kaydı düzenle`}
+                      title={`${formatShortDate(key)} — koruma sürüyor, kaydı düzenle`}
+                      className="w-[92px] min-h-[64px] rounded-2xl border border-[#86efac] bg-[#f0fdf4] text-[#166534] hover:bg-[#e2fbe8] flex flex-col items-center justify-center gap-1 transition-colors"
                     >
-                      {covered ? (
-                        <>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M20 6 9 17l-5-5" />
-                          </svg>
-                          <span className="text-[8.5px] font-bold uppercase tracking-wide">Korumada</span>
-                        </>
-                      ) : (
-                        <>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                            <path d="M12 5v14M5 12h14" />
-                          </svg>
-                          <span className="text-[9.5px] font-bold">{formatShortDate(key)}</span>
-                          {isToday && <span className="text-[7.5px] font-black uppercase tracking-wide">Bugün</span>}
-                        </>
-                      )}
-                    </button>
-                  ) : covered ? (
-                    <div className="w-[92px] min-h-[64px] rounded-2xl border border-[#86efac] bg-[#f0fdf4] text-[#166534] flex flex-col items-center justify-center gap-1">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M20 6 9 17l-5-5" />
                       </svg>
                       <span className="text-[8.5px] font-bold uppercase tracking-wide">Korumada</span>
-                    </div>
-                  ) : null}
+                    </button>
+                  </div>
+                );
+              }
+
+              const href = getCreateHref?.(key) ?? null;
+              return (
+                <div key={key} className="flex items-center justify-center min-h-[64px]">
+                  {href && (
+                    <button
+                      type="button"
+                      onClick={() => router.push(href)}
+                      aria-label={`${formatShortDate(key)} için kayıt ekle`}
+                      title={`${formatShortDate(key)} için kayıt ekle`}
+                      className={`w-[92px] min-h-[64px] rounded-2xl border border-dashed flex flex-col items-center justify-center gap-1 transition-colors ${
+                        isToday
+                          ? 'border-[#5b86ff]/50 text-[#3358e0] hover:bg-[#eef3ff]'
+                          : 'border-border-main text-text-secondary/40 hover:text-primary hover:border-primary/50 hover:bg-primary/5'
+                      }`}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <path d="M12 5v14M5 12h14" />
+                      </svg>
+                      <span className="text-[9.5px] font-bold">{formatShortDate(key)}</span>
+                      {isToday && <span className="text-[7.5px] font-black uppercase tracking-wide">Bugün</span>}
+                    </button>
+                  )}
                 </div>
               );
             }

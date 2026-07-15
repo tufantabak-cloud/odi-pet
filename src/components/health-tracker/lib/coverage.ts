@@ -79,6 +79,12 @@ export function computeCoverage(flowEvents: FlowEvent[]): void {
 export interface CoverageInterval {
   startDateKey: string;
   endDateKey: string;
+  /**
+   * Bu koruma penceresini üreten gerçek kayıt (uygulama günü). Aralık
+   * içindeki boş günlere tıklanınca YENİ kayıt açmak yerine bu kaydın
+   * kendisi düzenlemeye açılmalı — koruma "bir kayda ait" olduğu için.
+   */
+  sourceEvent: FlowEvent;
 }
 
 /**
@@ -90,5 +96,5 @@ export interface CoverageInterval {
 export function buildCoverageIntervals(events: FlowEvent[]): CoverageInterval[] {
   return events
     .filter((e): e is FlowEvent & { coverage: NonNullable<FlowEvent['coverage']> } => !!e.coverage)
-    .map(e => ({ startDateKey: e.coverage.startDateKey, endDateKey: e.coverage.endDateKey }));
+    .map(e => ({ startDateKey: e.coverage.startDateKey, endDateKey: e.coverage.endDateKey, sourceEvent: e }));
 }
