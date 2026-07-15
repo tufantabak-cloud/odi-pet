@@ -1,11 +1,8 @@
 'use client';
-import React, { useState } from 'react';
-import { useHealthTracker } from './useHealthTracker';
-import { CategoryFlowRow } from './CategoryFlowRow';
-import { toCategoryKey } from './CategoryCard';
-import { CategoryGroup, FlowBucket } from './types';
-import { PetIcons } from '@/components/icons/PetIcons';
-import { categoryThemes } from '@/lib/categoryThemes';
+import React, { useEffect, useRef } from 'react';
+import { useHealthTracker, toDateKey } from './useHealthTracker';
+import { CategoryCard, toCategoryKey } from './CategoryCard';
+import { CategoryGroup, FlowEvent } from './types';
 
 interface HealthTrackerProps {
   petId: string;
@@ -13,30 +10,45 @@ interface HealthTrackerProps {
   refreshTrigger?: number;
 }
 
-/** Sadece 'missed' event'leri bırakan bir FlowBucket türet */
-function filterFlowMissed(flow?: FlowBucket): FlowBucket {
-  if (!flow) return { before: [], anchor: null, after: [] };
-  const before = flow.before.filter(e => e.computedStatus === 'missed');
-  const after = flow.after.filter(e => e.computedStatus === 'missed');
-  const anchor = flow.anchor && flow.anchor.computedStatus === 'missed' ? flow.anchor : null;
-  return { before, anchor, after };
-}
+/** Tarih kolonlarının ortak genişliği — başlık ve tüm hücreler aynı ölçüyü kullanır */
+const DATE_COL_WIDTH = 108;
 
-function flowCount(flow?: FlowBucket): number {
-  if (!flow) return 0;
-  return flow.before.length + (flow.anchor ? 1 : 0) + flow.after.length;
+/** Görünür aralıktaki event'leri tarih anahtarına göre gruplar */
+function groupEventsByDate(events: FlowEvent[], visibleKeys: string[]): Map<string, FlowEvent[]> {
+  const map = new Map<string, FlowEvent[]>();
+  visibleKeys.forEach(k => map.set(k, []));
+  events.forEach(e => {
+    const raw = (e as any).due_date || e.scheduled_at || '';
+    const key = raw.includes('T') ? raw.split('T')[0] : raw;
+    if (map.has(key)) map.get(key)!.push(e);
+  });
+  return map;
 }
 
 export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrackerProps) {
-  const { categoryGroups, loading, markEventStatus, postponeEvent, deleteEvent } = useHealthTracker(petId, refreshTrigger);
-  const [onlyShowMissed, setOnlyShowMissed] = useState(false);
+  const {
+    categoryGroups, loading, markEventStatus, postponeEvent, deleteEvent,
+    visibleDates, shiftRange, goToToday,
+  } = useHealthTracker(petId, refreshTrigger);
+  const [onlyShowMissed, setOnlyShowMissed] = React.useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const today = new Date();
-  const refDays = [-2, -1, 0, 1, 2, 3].map(offset => {
-    const d = new Date(today);
-    d.setDate(today.getDate() + offset);
-    return d;
-  });
+  const todayKey = toDateKey(new Date());
+  const visibleKeys = visibleDates.map(toDateKey);
+  const todayIndex = visibleKeys.indexOf(todayKey);
+  const gridWidth = visibleDates.length * DATE_COL_WIDTH;
+
+  // İlk açılışta (mobilde) bugün kolonunu görünür alana ortala — her render'da değil
+  const didAutoScroll = useRef(false);
+  useEffect(() => {
+    if (loading || didAutoScroll.current || todayIndex < 0) return;
+    const el = scrollRef.current;
+    if (!el || el.clientWidth >= gridWidth) { didAutoScroll.current = true; return; }
+    el.scrollTo({
+      left: Math.max(0, todayIndex * DATE_COL_WIDTH - el.clientWidth / 2 + DATE_COL_WIDTH / 2),
+    });
+    didAutoScroll.current = true;
+  }, [loading, todayIndex, gridWidth]);
 
   if (loading) {
     return (
@@ -63,155 +75,247 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
     );
   }
 
-  // onlyShowMissed aktifken her grubun flow'unu (ve varsa subGroups'unu) filtrele
-  const filteredGroups: CategoryGroup[] = categoryGroups.map(group => {
-    if (!onlyShowMissed) return group;
-    return {
-      ...group,
-      flow: filterFlowMissed(group.flow),
-      subGroups: group.subGroups?.map(sub => ({ ...sub, flow: filterFlowMissed(sub.flow) })),
-    };
-  }).filter(group => {
-    if (!onlyShowMissed) return true;
-    const hasSubGroups = group.subGroups && group.subGroups.length > 0;
-    if (hasSubGroups) return group.subGroups!.some(sub => flowCount(sub.flow) > 0);
-    return flowCount(group.flow) > 0;
+  const cardProps = {
+    onMarkDone: (id: string) => markEventStatus(id, 'done'),
+    onMarkUndone: (id: string) => markEventStatus(id, 'active'),
+    onPostpone: (id: string) => postponeEvent(id, 1),
+    onEdit: onEditTask || (() => {}),
+    onDelete: deleteEvent,
+  };
+
+  /** Bir grup/alt grubun görünür penceredeki (ve filtre sonrası) event'leri */
+  const visibleEventsOf = (flowEvents?: FlowEvent[]): FlowEvent[] => {
+    let list = flowEvents || [];
+    if (onlyShowMissed) list = list.filter(e => e.computedStatus === 'missed');
+    return list;
+  };
+
+  // Filtre aktifken görünür pencerede hiç kaçırılmış görev var mı?
+  const anyVisibleMissed = !onlyShowMissed || categoryGroups.some(group => {
+    const lists = group.subGroups && group.subGroups.length > 0
+      ? group.subGroups.map(s => s.flowEvents || [])
+      : [group.flowEvents || []];
+    return lists.some(list =>
+      list.some(e => e.computedStatus === 'missed' && visibleKeys.includes(((e as any).due_date || '').split('T')[0]))
+    );
   });
 
   return (
     <div className="py-2 bg-white flex flex-col gap-1">
-      {/* Mini Filter Toolbar */}
-      <div className="flex items-center justify-between px-4 pb-2 border-b border-border-main/30">
+      {/* Mini Filter Toolbar + tarih gezinmesi */}
+      <div className="flex items-center justify-between gap-2 px-4 pb-2 border-b border-border-main/30 flex-wrap">
         <span className="text-[12px] font-bold text-text-secondary">Ajanda Akışı</span>
-        <button
-          onClick={() => setOnlyShowMissed(!onlyShowMissed)}
-          className={`px-3 py-1.5 rounded-full text-[11px] font-black border transition-all active:scale-95 ${
-            onlyShowMissed
-              ? 'bg-[#e25353] border-[#e25353] text-white shadow-xs'
-              : 'bg-white border-border-main text-text-secondary hover:text-primary hover:border-primary/40'
-          }`}
-        >
-          {onlyShowMissed ? '🚨 Gecikenleri Gizle' : '🚨 Gecikenleri Filtrele'}
-        </button>
+        <div className="flex items-center gap-2">
+          {todayIndex < 0 && (
+            <button
+              onClick={goToToday}
+              className="px-3 py-1.5 rounded-full text-[11px] font-black border bg-[#eef3ff] border-[#5b86ff]/40 text-[#3358e0] transition-all active:scale-95"
+            >
+              Bugüne Dön
+            </button>
+          )}
+          <button
+            onClick={() => setOnlyShowMissed(!onlyShowMissed)}
+            className={`px-3 py-1.5 rounded-full text-[11px] font-black border transition-all active:scale-95 ${
+              onlyShowMissed
+                ? 'bg-[#e25353] border-[#e25353] text-white shadow-xs'
+                : 'bg-white border-border-main text-text-secondary hover:text-primary hover:border-primary/40'
+            }`}
+          >
+            {onlyShowMissed ? '🚨 Gecikenleri Gizle' : '🚨 Gecikenleri Filtrele'}
+          </button>
+        </div>
       </div>
 
-      {/* Bugün eksenini gösteren referans tarih şeridi + dikey çizgi başlangıcı */}
-      <div className="relative">
-        <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[2px] bg-gradient-to-b from-[#5b86ff] via-[#5b86ff]/40 to-transparent z-0 pointer-events-none" />
+      {/* Tarih gezinme okları + yatay kaydırılabilir ortak grid */}
+      <div className="relative flex items-stretch">
+        <NavArrow direction="left" onClick={() => shiftRange(-3)} />
 
-        <div className="grid grid-cols-[minmax(0,1fr)_116px_minmax(0,1fr)] items-start pb-3 border-b border-border-main/30">
-          <div className="flex justify-end gap-1.5 pr-3 pt-1">
-            {refDays.slice(0, 2).map(d => (
-              <RefDatePill key={d.toISOString()} date={d} />
-            ))}
-          </div>
-          <div className="flex flex-col items-center gap-1 relative z-10">
-            <RefDatePill date={today} isToday />
-            <span className="text-[9px] font-black text-[#3358e0] uppercase tracking-wider">Bugün</span>
-          </div>
-          <div className="flex justify-start gap-1.5 pl-3 pt-1">
-            {refDays.slice(3, 6).map(d => (
-              <RefDatePill key={d.toISOString()} date={d} />
-            ))}
+        <div ref={scrollRef} className="flex-1 overflow-x-auto overscroll-x-contain scrollbar-none">
+          <div className="relative" style={{ minWidth: gridWidth }}>
+            {/* Bugün çizgisi: sayfa merkezine değil, bugünün gerçek kolonuna bağlı */}
+            {todayIndex >= 0 && (
+              <div
+                className="absolute top-0 bottom-0 w-[2px] bg-gradient-to-b from-[#5b86ff] via-[#5b86ff]/40 to-transparent z-0 pointer-events-none"
+                style={{ left: todayIndex * DATE_COL_WIDTH + DATE_COL_WIDTH / 2 - 1 }}
+              />
+            )}
+
+            {/* Tarih başlığı — kolonlar hücrelerle aynı grid ölçüsünde */}
+            <div
+              className="grid pb-3 border-b border-border-main/30"
+              style={{ gridTemplateColumns: `repeat(${visibleDates.length}, ${DATE_COL_WIDTH}px)` }}
+            >
+              {visibleDates.map((d, i) => (
+                <DateHeaderCell key={visibleKeys[i]} date={d} isToday={visibleKeys[i] === todayKey} />
+              ))}
+            </div>
+
+            {!anyVisibleMissed ? (
+              <div className="py-8 px-4 text-center text-text-secondary bg-[#fdfaf5] rounded-3xl m-4 border border-dashed border-[#e69b24]/40 relative z-10">
+                <p className="text-[13px] font-bold">Filtreye uygun gecikmiş görev bulunmuyor.</p>
+              </div>
+            ) : (
+              categoryGroups.map(group => (
+                <div key={group.category} className="relative z-10">
+                  <CategoryHeader group={group} />
+
+                  {group.subGroups && group.subGroups.length > 0 ? (
+                    group.subGroups.map(sub => {
+                      const events = visibleEventsOf(sub.flowEvents);
+                      const byDate = groupEventsByDate(events, visibleKeys);
+                      const hasVisible = Array.from(byDate.values()).some(l => l.length > 0);
+                      if (onlyShowMissed && !hasVisible) return null;
+                      return (
+                        <div key={sub.label} className="mb-1">
+                          <div className="pt-1 pb-0.5">
+                            <span className="sticky left-0 inline-block px-4 text-[10px] font-bold text-text-secondary/80">{sub.label}</span>
+                          </div>
+                          <TimelineRow
+                            eventsByDate={byDate}
+                            visibleKeys={visibleKeys}
+                            categoryKey={toCategoryKey(group.category)}
+                            {...cardProps}
+                          />
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <TimelineRow
+                      eventsByDate={groupEventsByDate(visibleEventsOf(group.flowEvents), visibleKeys)}
+                      visibleKeys={visibleKeys}
+                      categoryKey={toCategoryKey(group.category)}
+                      {...cardProps}
+                    />
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </div>
 
-        {filteredGroups.length === 0 ? (
-          <div className="py-8 px-4 text-center text-text-secondary bg-[#fdfaf5] rounded-3xl m-4 border border-dashed border-[#e69b24]/40 relative z-10">
-            <p className="text-[13px] font-bold">Filtreye uygun gecikmiş görev bulunmuyor.</p>
-          </div>
-        ) : (
-          filteredGroups.map(group => (
-            <div key={group.category} className="relative z-10">
-              <CategoryHeader group={group} />
-
-              {group.subGroups && group.subGroups.length > 0 ? (
-                group.subGroups.map(sub => (
-                  flowCount(sub.flow) > 0 ? (
-                    <div key={sub.label} className="mb-1">
-                      <div className="px-4 pt-1 pb-0.5">
-                        <span className="text-[10px] font-bold text-text-secondary/80">{sub.label}</span>
-                      </div>
-                      <CategoryFlowRow
-                        flow={sub.flow!}
-                        categoryKey={toCategoryKey(group.category)}
-                        onMarkDone={(id) => markEventStatus(id, 'done')}
-                        onPostpone={(id) => postponeEvent(id, 1)}
-                        onEdit={onEditTask || (() => {})}
-                        onDelete={deleteEvent}
-                      />
-                    </div>
-                  ) : null
-                ))
-              ) : (
-                <CategoryFlowRow
-                  flow={group.flow!}
-                  categoryKey={toCategoryKey(group.category)}
-                  onMarkDone={(id) => markEventStatus(id, 'done')}
-                  onPostpone={(id) => postponeEvent(id, 1)}
-                  onEdit={onEditTask || (() => {})}
-                  onDelete={deleteEvent}
-                />
-              )}
-            </div>
-          ))
-        )}
+        <NavArrow direction="right" onClick={() => shiftRange(3)} />
       </div>
 
       {/* Renk Lejandı */}
       <div className="flex items-center gap-4 px-4 pt-4 pb-2 mt-2 border-t border-border-main/30 flex-wrap">
-        <LegendDot color="bg-gradient-to-br from-[#3ecf95] to-[#20a06f]" label="Yapıldı" />
-        <LegendDot color="bg-gradient-to-br from-[#5b86ff] to-[#3f68e8]" label="Bugün" />
-        <LegendDot color="bg-gradient-to-br from-[#a9c3ff] to-[#7fa0f2]" label="Yaklaşıyor" />
-        <LegendDot color="bg-[#eef1f6] border border-[#dfe4ec]" label="Planlandı" />
-        <LegendDot color="bg-gradient-to-br from-[#f3897d] to-[#dd5f54]" label="Kaçırıldı" />
+        <LegendDot color="bg-[#f0fdf4] border border-[#86efac]" label="Yapıldı" />
+        <LegendDot color="bg-[#eff6ff] border border-[#3b82f6]" label="Bugün" />
+        <LegendDot color="bg-[#f5f8ff] border border-[#a9c3ff]" label="Yaklaşıyor" />
+        <LegendDot color="bg-white border border-[#dde3ec]" label="Planlandı" />
+        <LegendDot color="bg-[#fef2f2] border border-[#fca5a5]" label="Kaçırıldı" />
       </div>
     </div>
   );
 }
 
-/** Kategori başlığı: gradyanlı ikon rozeti + etiket + kayıt sayısı (global filtreyi tetiklemez) */
-function CategoryHeader({ group }: { group: CategoryGroup }) {
-  const key = toCategoryKey(group.category);
-  const theme = categoryThemes[key];
-  const icon = PetIcons[key]?.icon;
-  const count = (group.subGroups && group.subGroups.length > 0)
-    ? group.subGroups.reduce((sum, s) => sum + flowCount(s.flow), 0)
-    : flowCount(group.flow);
+/** Tek satır: her görünür tarih kolonunda o güne ait kartlar alt alta */
+function TimelineRow({
+  eventsByDate, visibleKeys, categoryKey, onMarkDone, onMarkUndone, onPostpone, onEdit, onDelete,
+}: {
+  eventsByDate: Map<string, FlowEvent[]>;
+  visibleKeys: string[];
+  categoryKey: ReturnType<typeof toCategoryKey>;
+  onMarkDone: (id: string) => void;
+  onMarkUndone?: (id: string) => void;
+  onPostpone: (id: string) => void;
+  onEdit: (event: FlowEvent) => void;
+  onDelete: (id: string) => void;
+}) {
+  const hasAny = Array.from(eventsByDate.values()).some(l => l.length > 0);
 
-  return (
-    <div className="flex items-center gap-2 px-4 py-1.5 bg-[#f6f8fb] border-y border-border-main/40 mb-2">
-      <div
-        className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 overflow-hidden"
-        style={{ background: theme ? `linear-gradient(135deg, ${theme.progressColor}, ${theme.textColor})` : undefined }}
-      >
-        {icon ? icon({ size: 18 }) : null}
-      </div>
-      <h3 className="text-[11px] font-black text-[#556987] uppercase tracking-wider">{group.label}</h3>
-      <span className="ml-auto text-[10.5px] font-bold text-text-secondary/70">{count} kayıt</span>
-    </div>
-  );
-}
-
-/** Referans tarih şeridindeki tekil gün rozeti — sadece bağlam için, kartlarla hizalı değil */
-function RefDatePill({ date, isToday = false }: { date: Date; isToday?: boolean }) {
-  const dayName = date.toLocaleDateString('tr-TR', { weekday: 'short' }).toUpperCase();
-  const dayNum = date.getDate();
   return (
     <div
-      className={`flex flex-col items-center justify-center shrink-0 w-[40px] h-[48px] rounded-xl border transition-all ${
-        isToday
-          ? 'bg-gradient-to-br from-[#5b86ff] to-[#3358e0] border-transparent text-white shadow-sm'
-          : 'bg-[#f6f8fb] border-border-main/50 text-text-primary'
-      }`}
+      className="grid items-start py-2"
+      style={{ gridTemplateColumns: `repeat(${visibleKeys.length}, ${DATE_COL_WIDTH}px)` }}
     >
-      <span className={`text-[8.5px] font-black tracking-wider ${isToday ? 'text-white/80' : 'text-text-secondary/70'}`}>
-        {dayName}
-      </span>
-      <span className="text-[13px] font-black mt-0.5">
-        {dayNum}
-      </span>
+      {visibleKeys.map(key => {
+        const cellEvents = eventsByDate.get(key) || [];
+        return (
+          <div key={key} className="flex flex-col items-center gap-2 min-h-[24px]">
+            {cellEvents.map(event => (
+              <CategoryCard
+                key={event.id}
+                event={event}
+                categoryKey={categoryKey}
+                onMarkDone={onMarkDone}
+                onMarkUndone={onMarkUndone}
+                onPostpone={onPostpone}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            ))}
+          </div>
+        );
+      })}
+      {!hasAny && (
+        <div className="col-span-full py-1">
+          <span className="sticky left-0 inline-block px-4 text-[10px] text-text-secondary/50 font-semibold">Bu aralıkta kayıt yok</span>
+        </div>
+      )}
     </div>
+  );
+}
+
+/** Kategori başlığı: etiket + toplam kayıt sayısı */
+function CategoryHeader({ group }: { group: CategoryGroup }) {
+  const count = (group.subGroups && group.subGroups.length > 0)
+    ? group.subGroups.reduce((sum, s) => sum + (s.flowEvents?.length || 0), 0)
+    : (group.flowEvents?.length || 0);
+
+  return (
+    <div className="bg-[#f6f8fb] border-y border-border-main/40 mb-2 py-2">
+      {/* Yatay scroll'da görünür kalması için başlık içeriği sticky */}
+      <div className="sticky left-0 inline-flex items-center gap-2 px-4 max-w-full">
+        <h3 className="text-[11px] font-black text-[#556987] uppercase tracking-wider">{group.label}</h3>
+        <span className="text-[10.5px] font-bold text-text-secondary/60 ml-2">{count} kayıt</span>
+      </div>
+    </div>
+  );
+}
+
+/** Tarih başlığı hücresi — altındaki kolonla aynı dikey eksende */
+function DateHeaderCell({ date, isToday }: { date: Date; isToday: boolean }) {
+  const dayName = date.toLocaleDateString('tr-TR', { weekday: 'short' }).toUpperCase();
+  const dayNum = date.getDate();
+  const monthName = date.toLocaleDateString('tr-TR', { month: 'short' });
+
+  return (
+    <div className="flex flex-col items-center gap-1 pt-1 relative z-10">
+      <div
+        className={`flex flex-col items-center justify-center shrink-0 w-[48px] h-[56px] rounded-xl border transition-all ${
+          isToday
+            ? 'bg-gradient-to-br from-[#5b86ff] to-[#3358e0] border-transparent text-white shadow-sm'
+            : 'bg-[#f6f8fb] border-border-main/50 text-text-primary'
+        }`}
+      >
+        <span className={`text-[8.5px] font-black tracking-wider ${isToday ? 'text-white/80' : 'text-text-secondary/70'}`}>
+          {dayName}
+        </span>
+        <span className="text-[14px] font-black mt-0.5">{dayNum}</span>
+        <span className={`text-[8px] font-bold ${isToday ? 'text-white/70' : 'text-text-secondary/60'}`}>
+          {monthName}
+        </span>
+      </div>
+      {isToday && (
+        <span className="text-[9px] font-black text-[#3358e0] uppercase tracking-wider">Bugün</span>
+      )}
+    </div>
+  );
+}
+
+/** Tarih penceresini kaydıran ok butonu */
+function NavArrow({ direction, onClick }: { direction: 'left' | 'right'; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label={direction === 'left' ? 'Önceki günler' : 'Sonraki günler'}
+      className="shrink-0 w-7 flex items-center justify-center text-text-secondary hover:text-primary hover:bg-bg-main/60 transition-colors rounded-lg my-1"
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        {direction === 'left' ? <path d="M15 18l-6-6 6-6" /> : <path d="M9 18l6-6-6-6" />}
+      </svg>
+    </button>
   );
 }
 

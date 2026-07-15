@@ -9,6 +9,7 @@ interface CategoryCardProps {
   event: FlowEvent;
   categoryKey: CategoryKey;
   onMarkDone: (id: string) => void;
+  onMarkUndone?: (id: string) => void;
   onPostpone: (id: string) => void;
   onEdit: (event: FlowEvent) => void;
   onDelete: (id: string) => void;
@@ -29,8 +30,66 @@ export function toCategoryKey(uiCategory: string): CategoryKey {
   return map[uiCategory] ?? 'saglik';
 }
 
-/** Sabit boyutlu akış kartı — mockup kurallarına göre: ikon + isim + tarih, sağ üstte tik rozeti */
-export function CategoryCard({ event, categoryKey, onMarkDone, onPostpone, onEdit, onDelete }: CategoryCardProps) {
+/** Durum başına açık zeminli tema: renk tek başına değil, ikon + etiketle birlikte anlatılır */
+const STATUS_THEME = {
+  done: {
+    card: 'bg-[#f0fdf4] border-[#86efac] text-[#166534]',
+    label: 'Yapıldı',
+    icon: (
+      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 6 9 17l-5-5" />
+      </svg>
+    ),
+    badge: 'bg-[#22c55e] text-white',
+  },
+  today: {
+    card: 'bg-[#eff6ff] border-[#3b82f6] text-[#1d4ed8] shadow-md shadow-blue-500/10',
+    label: 'Bugün',
+    icon: <span className="block w-[7px] h-[7px] rounded-full bg-current" />,
+    badge: 'bg-[#3b82f6] text-white',
+  },
+  upcoming: {
+    card: 'bg-[#f5f8ff] border-[#a9c3ff] text-[#3559a8]',
+    label: 'Yaklaşıyor',
+    icon: (
+      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
+      </svg>
+    ),
+    badge: 'bg-[#7fa0f2] text-white',
+  },
+  future: {
+    card: 'bg-white border-[#dde3ec] text-[#475569]',
+    label: 'Planlandı',
+    icon: (
+      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+        <circle cx="12" cy="12" r="8" />
+      </svg>
+    ),
+    badge: 'bg-[#94a3b8] text-white',
+  },
+  missed: {
+    card: 'bg-[#fef2f2] border-[#fca5a5] text-[#b91c1c]',
+    label: 'Kaçırıldı',
+    icon: <span className="block text-[9px] font-black leading-none">!</span>,
+    badge: 'bg-[#ef4444] text-white',
+  },
+} as const;
+
+const COVERAGE_THEME = {
+  protected: { bar: 'bg-[#22c55e]', text: 'text-[#166534]' },
+  expiring: { bar: 'bg-amber-400', text: 'text-amber-700' },
+  expired: { bar: 'bg-red-400', text: 'text-red-700' },
+} as const;
+
+function coverageLabel(coverage: NonNullable<FlowEvent['coverage']>): string {
+  if (coverage.status === 'expired') return 'Koruma doldu';
+  if (coverage.status === 'expiring') return `${coverage.daysRemaining} gün içinde bitiyor`;
+  return `Koruma sürüyor · ${coverage.daysRemaining} gün`;
+}
+
+/** Tarih-grid akış kartı — açık zemin, durum ikonu + etiketi, esnek yükseklik */
+export function CategoryCard({ event, categoryKey, onMarkDone, onMarkUndone, onPostpone, onEdit, onDelete }: CategoryCardProps) {
   const [showMenu, setShowMenu] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const { computedStatus } = event;
@@ -64,83 +123,55 @@ export function CategoryCard({ event, categoryKey, onMarkDone, onPostpone, onEdi
     dateText = `${day} ${formattedMonth}, ${timeStr}`;
   }
 
-  let cardClasses = '';
-  let iconBadgeClasses = 'bg-white/20';
-  let dateClasses = 'opacity-80';
-  switch (computedStatus) {
-    case 'done':
-      cardClasses = 'bg-gradient-to-br from-[#3ecf95] to-[#20a06f] text-white';
-      break;
-    case 'missed':
-      cardClasses = 'bg-gradient-to-br from-[#f3897d] to-[#dd5f54] text-white';
-      break;
-    case 'today':
-      cardClasses = 'bg-gradient-to-br from-[#5b86ff] to-[#3f68e8] text-white shadow-md shadow-blue-500/20';
-      break;
-    case 'upcoming':
-      cardClasses = 'bg-gradient-to-br from-[#a9c3ff] to-[#7fa0f2] text-white';
-      break;
-    case 'future':
-    default:
-      cardClasses = 'bg-[#eef1f6] text-[#556174] border border-[#dfe4ec]';
-      iconBadgeClasses = 'bg-[#556174]/10';
-      dateClasses = 'text-[#8891a1]';
-      break;
-  }
-
+  const theme = STATUS_THEME[computedStatus] ?? STATUS_THEME.future;
+  const title = event.pet_care_tasks?.title || event.title || 'Görev';
   const icon = PetIcons[categoryKey]?.icon;
+  const coverageTheme = event.coverage ? COVERAGE_THEME[event.coverage.status] : null;
 
   return (
     <div className="relative shrink-0" ref={containerRef}>
       <button
         onClick={() => setShowMenu(!showMenu)}
         data-status={computedStatus}
+        aria-label={`${title}, ${theme.label}, ${dateText}`}
         className={`
           flex flex-col items-start text-left overflow-hidden
-          rounded-2xl transition-all duration-200
-          w-[100px] h-[100px] p-2.5
-          ${cardClasses}
+          rounded-2xl border transition-all duration-200
+          w-[100px] min-h-[100px] p-2.5
+          ${theme.card}
           hover:scale-[1.05] active:scale-95
         `}
       >
-        <div className={`w-5 h-5 shrink-0 rounded-md flex items-center justify-center overflow-hidden mb-1.5 ${iconBadgeClasses}`}>
-          {icon ? icon({ size: 14 }) : null}
+        <div className="w-full flex items-start justify-between mb-1.5">
+          <div className="w-5 h-5 shrink-0 rounded-md flex items-center justify-center overflow-hidden bg-black/5">
+            {icon ? icon({ size: 14 }) : null}
+          </div>
+          <div className={`w-4 h-4 shrink-0 rounded-full flex items-center justify-center ${theme.badge}`}>
+            {theme.icon}
+          </div>
         </div>
 
-        <span className="w-full text-[11px] font-extrabold leading-[13px] h-[26px] line-clamp-2 overflow-hidden">
-          {event.pet_care_tasks?.title || event.title || 'Görev'}
+        <span className="w-full text-[11px] font-extrabold leading-[13px] line-clamp-2 overflow-hidden">
+          {title}
         </span>
 
-        <span className={`text-[9px] font-semibold mt-auto ${dateClasses}`}>
+        <span className="text-[9px] font-semibold mt-auto pt-1 opacity-80">
           {dateText}
         </span>
+        <span className="text-[8.5px] font-bold uppercase tracking-wide opacity-70">
+          {theme.label}
+        </span>
 
-        {computedStatus === 'done' && (
-          <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-white/25 flex items-center justify-center">
-            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 6 9 17l-5-5" />
-            </svg>
+        {/* Koruma durumu: çubuk + metin (yalnızca Aşı/Parazit 'done' kartlarında) */}
+        {event.coverage && coverageTheme && (
+          <div className="w-full mt-1">
+            <div className="h-[3px] rounded-full bg-black/10 overflow-hidden">
+              <div className={`h-full rounded-full ${coverageTheme.bar}`} style={{ width: `${event.coverage.percent}%` }} />
+            </div>
+            <p className={`mt-0.5 text-[8px] font-bold leading-tight ${coverageTheme.text}`}>
+              {coverageLabel(event.coverage)}
+            </p>
           </div>
-        )}
-
-        {/* Koruma çubuğu: bu doz hâlâ koruma sağlıyor mu (yalnızca Aşı/Parazit) */}
-        {event.coverage && (
-          <div
-            className={`absolute bottom-0 left-0 right-0 h-[3px] ${
-              event.coverage === 'protected'
-                ? 'bg-white/70'
-                : event.coverage === 'expiring'
-                ? 'bg-amber-300'
-                : 'bg-red-300'
-            }`}
-            title={
-              event.coverage === 'protected'
-                ? 'Koruma devam ediyor'
-                : event.coverage === 'expiring'
-                ? 'Koruma süresi yakında doluyor'
-                : 'Koruma süresi doldu'
-            }
-          />
         )}
       </button>
 
@@ -150,6 +181,7 @@ export function CategoryCard({ event, categoryKey, onMarkDone, onPostpone, onEdi
           anchorRef={containerRef}
           onClose={() => setShowMenu(false)}
           onMarkDone={onMarkDone}
+          onMarkUndone={onMarkUndone}
           onPostpone={onPostpone}
           onEdit={(e) => onEdit(e as FlowEvent)}
           onDelete={onDelete}

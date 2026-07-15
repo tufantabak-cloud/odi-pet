@@ -23,6 +23,8 @@ export interface PetCareEvent {
   created_at?: string;
   pet_care_tasks?: PetCareTask; // Joined data
   vaccines?: any;
+  /** Tekrarlayan plandan üretilmiş, DB'de karşılığı olmayan sanal occurrence */
+  _is_virtual?: boolean;
   [key: string]: any;
 }
 
@@ -51,22 +53,21 @@ export interface FlowEvent extends ComputedEvent {
    * Sadece 'done' event'lerde: bu uygulamanın koruma süresi hâlâ geçerli mi?
    * Yalnızca Aşı/Parazit kategorilerinde hesaplanır (bkz. computeCoverage).
    */
-  coverage?: 'protected' | 'expiring' | 'expired';
-}
-
-/** Bir kategori veya alt grup için: bugüne göre geçmiş / bugün / gelecek akışı */
-export interface FlowBucket {
-  before: FlowEvent[];
-  anchor: FlowEvent | null;
-  after: FlowEvent[];
+  coverage?: {
+    status: 'protected' | 'expiring' | 'expired';
+    /** Koruma bitişine kalan gün (expired ise 0) */
+    daysRemaining: number;
+    /** Kalan koruma yüzdesi 0-100 (çubuk genişliği) */
+    percent: number;
+  };
 }
 
 /** Alt grup (örneğin: Zorunlu Aşılar, Opsiyonel Aşılar) */
 export interface SubCategoryGroup {
   label: string;
   taskRows: TaskRow[];
-  /** Akış-tabanlı timeline için: alt grup genelinde kronolojik kova */
-  flow?: FlowBucket;
+  /** Tarih-grid timeline için: alt grup genelinde kronolojik düz akış */
+  flowEvents?: FlowEvent[];
 }
 
 /** Kategori grubu — altında düz satırlar veya alt gruplar olabilir */
@@ -77,6 +78,6 @@ export interface CategoryGroup {
   taskRows: TaskRow[];
   /** Varsa alt gruplar (Aşı kategorisi için kullanılır) */
   subGroups?: SubCategoryGroup[];
-  /** Akış-tabanlı timeline için: kategori genelinde kronolojik kova */
-  flow?: FlowBucket;
+  /** Tarih-grid timeline için: kategori genelinde kronolojik düz akış */
+  flowEvents?: FlowEvent[];
 }
