@@ -133,13 +133,6 @@ export async function POST(req: NextRequest) {
             title: 'Karma Aşı Hatırlatma', plan_type: 'vaccine',
             due_date: past(-7), status: 'upcoming', priority: 'high',
           }),
-          // Daily score (care score)
-          supabase.from('daily_scores').insert(
-            Array.from({ length: 7 }, (_, i) => ({
-              pet_id: demoPet.id, owner_id: user.id,
-              date: past(i), score: 65 + Math.floor(Math.random() * 20),
-            }))
-          ),
           // Nutrition log
           supabase.from('nutrition_logs').insert(
             Array.from({ length: 5 }, (_, i) => ({

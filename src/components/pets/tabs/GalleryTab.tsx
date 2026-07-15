@@ -244,10 +244,7 @@ export default function GalleryTab({ pet }: { pet: PetWithCover }) {
             🎁
           </div>
           <h4 className="text-[15px] font-black text-violet-700">İlk Fotoğrafı Yükle!</h4>
-          <p className="text-[13px] text-violet-600/80 leading-tight">Patili dostunun ilk fotoğrafını yükle ve <strong className="text-violet-600">+20 Bakım Skoru</strong> kazan!</p>
-          <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-violet-100 text-violet-700 text-xs font-black rounded-lg">
-            <span>⭐</span> +20 Puan
-          </div>
+          <p className="text-[13px] text-violet-600/80 leading-tight">Patili dostunun en güzel anlarını burada biriktirmeye başla.</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">

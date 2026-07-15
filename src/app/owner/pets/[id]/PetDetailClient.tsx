@@ -20,7 +20,6 @@ import { SmartScanner } from '@/components/ui/SmartScanner'
 import FloatingSOS from '@/components/FloatingSOS'
 import { HealthTracker } from '@/components/health-tracker/HealthTracker'
 import { EstrusTracker } from '@/components/estrus-tracker/EstrusTracker'
-import CareScoreWidget from '@/components/pets/CareScoreWidget'
 import PetHeroCard from './PetHeroCard'
 import AllergyManager from '@/components/pets/AllergyManager'
 import MedicationManager from '@/components/pets/MedicationManager'
@@ -1415,9 +1414,6 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
             {activeTab === 'ozet' && (
               <div className="p-4 flex flex-col gap-3">
-                {/* ---> GAMIFICATION WIDGET <--- */}
-                <CareScoreWidget petId={pet.id} pet={pet} />
-
                 {microTasks.length > 0 && (
                   <div className="mt-4 space-y-3">
                     <p className="text-[11px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide px-1">

@@ -9,8 +9,8 @@ type NutritionLogRow = Database['public']['Tables']['nutrition_logs']['Row']
 type HealthScheduleRow = Database['public']['Tables']['health_schedules']['Row']
 
 const generateReason = (metrics: {
-  overdueCount: number, postponeCount: number, inactiveDays: number,
-  lowScoreDays: number, waterLowDays: number, nutritionMissedDays: number,
+  overdueCount: number, postponeCount: number,
+  waterLowDays: number, nutritionMissedDays: number,
   // Household signals
   unassignedCritical: number, acceptanceRate: number,
   declineRate: number, reassignmentCount: number, overloadedMember: boolean
@@ -87,22 +87,6 @@ const generateReason = (metrics: {
         message: 'Görevler sürekli erteleniyor. Rutin bozuluyor.',
         action: 'review_tasks', priority: 85
       })
-    },
-    {
-      check: () => metrics.inactiveDays >= 2,
-      output: () => ({
-        reasonCode: 'INACTIVITY',
-        message: `${metrics.inactiveDays} gündür işlem yok. Bakım aksıyor olabilir.`,
-        action: 'open_dashboard', priority: 80
-      })
-    },
-    {
-      check: () => metrics.lowScoreDays >= 2,
-      output: () => ({
-        reasonCode: 'LOW_SCORE_TREND',
-        message: 'Bakım puanı son günlerde düşük. İyileştirme gerekli.',
-        action: 'improve_care', priority: 70
-      })
     }
   ]
 
@@ -164,17 +148,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ petI
     }
   }
 
-  // 2. VERİ ÇEK (Schedules & Scores & Nutrition & Assignment)
+  // 2. VERİ ÇEK (Schedules & Nutrition & Assignment)
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-  const [schedulesRes, scoresRes, nutritionRes, assignmentRes] = await Promise.all([
+  const [schedulesRes, nutritionRes, assignmentRes] = await Promise.all([
     supabase.from('health_schedules').select('due_date, status, postpone_count, assignment_status, escalation_level, priority, assigned_to').eq('pet_id', petId).neq('status', 'done'),
-    supabase.from('daily_scores').select('score, date, created_at').eq('pet_id', petId).order('date', { ascending: false }).limit(7),
     supabase.from('nutrition_logs').select('food_logged, water_logged').eq('pet_id', petId).gte('date', sevenDaysAgo),
     supabase.from('health_schedules').select('assignment_status, assigned_to').eq('pet_id', petId).not('assignment_status', 'eq', 'unassigned').gte('assigned_at', sevenDaysAgo)
   ])
 
   const schedules = schedulesRes.data || []
-  const scores = scoresRes.data || []
   const nutritionLogs = nutritionRes.data || []
   const assignments = assignmentRes.data || []
 
@@ -186,14 +168,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ petI
     if (s.due_date < todayStr) overdueCount++
     if (s.postpone_count) postponeCount += s.postpone_count
   }
-
-  let lowScoreDays = 0
-  for (const s of scores) { if (s.score < 50) lowScoreDays++ }
-
-  let inactiveDays = 0
-  if (scores.length > 0) {
-    inactiveDays = Math.floor((Date.now() - new Date(scores[0].created_at).getTime()) / 86400000)
-  } else { inactiveDays = 3 }
 
   let nutritionMissedDays = 7 - nutritionLogs.filter((l: Partial<NutritionLogRow>) => l.food_logged).length
   let waterLowDays = 7 - nutritionLogs.filter((l: Partial<NutritionLogRow>) => l.water_logged).length
@@ -239,8 +213,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ petI
   const riskScore = Math.min(150,
     (overdueCount * 25) +
     (postponeCount * 8) +
-    (lowScoreDays * 5) +
-    (inactiveDays * 15) +
     (nutritionMissedDays * 10) +
     (waterLowDays * 8) +
     (unassignedCritical * 25) +
@@ -257,7 +229,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ petI
 
   // 6. REASON ÜRET (household signals dahil)
   const reasonObj = generateReason({
-    overdueCount, postponeCount, inactiveDays, lowScoreDays, waterLowDays, nutritionMissedDays,
+    overdueCount, postponeCount, waterLowDays, nutritionMissedDays,
     unassignedCritical, acceptanceRate, declineRate, reassignmentCount: reassigned, overloadedMember
   })
 

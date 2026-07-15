@@ -40,11 +40,6 @@ export async function POST(req: NextRequest) {
       }
       break;
 
-    case "INACTIVITY":
-      // 2 gün hiçbir log yok
-      await supabase.from('daily_scores').delete().eq('pet_id', petId)
-      break;
-
     case "POSTPONE_LOOP":
       // aynı task 3 kez ertelenmiş
       const { data: loopTasks } = await supabase.from('health_schedules').select('id').eq('pet_id', petId).limit(1)
@@ -56,7 +51,6 @@ export async function POST(req: NextRequest) {
     case "PERFECT_DAY":
       // tüm görevler tamam
       await supabase.from('health_schedules').update({ status: 'done' }).eq('pet_id', petId)
-      await supabase.from('daily_scores').upsert({ pet_id: petId, date: today.toISOString().split('T')[0], score: 100 })
       break;
 
     case "CACHE_TEST":

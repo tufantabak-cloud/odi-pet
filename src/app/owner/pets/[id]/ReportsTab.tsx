@@ -28,7 +28,7 @@ const REPORT_TYPES = [
     id: 'summary',
     icon: '📋',
     label: 'Hızlı Özet',
-    desc: 'Pet profili, bakım skoru, aktif uyarılar ve yaklaşan görevler',
+    desc: 'Pet profili, aktif uyarılar ve yaklaşan görevler',
     plan: 'free',
     color: 'border-green-200 hover:border-green-400',
     badge: 'Ücretsiz',
@@ -387,12 +387,6 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
                     </p>
                     <p className="text-[11px] text-text-secondary">
                       {new Date(report.generatedAt).toLocaleString('tr-TR')}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[11px] font-bold text-text-secondary uppercase">Uyumluluk</p>
-                    <p className={`text-[28px] font-black ${report.preventiveComplianceScore >= 70 ? 'text-green-600' : report.preventiveComplianceScore >= 40 ? 'text-amber-600' : 'text-red-600'}`}>
-                      {report.preventiveComplianceScore}%
                     </p>
                   </div>
                 </div>

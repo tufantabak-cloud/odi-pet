@@ -6,7 +6,6 @@ import { Database } from '@/lib/database.types'
 
 
 type DiseaseRecordRow = Database['public']['Tables']['health_diseases']['Row']
-type DailyScoreRow = Database['public']['Tables']['daily_scores']['Row']
 
 
 
@@ -46,7 +45,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ petI
     { data: diseases },
     { data: diseases6m },
     { data: diseases30d },
-    { data: scores },
     { data: insight },
   ] = await Promise.all([
     supabase.from('pets').select('name, species, breed, birth_date, microchip_no').eq('id', petId).single(),
@@ -54,7 +52,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ petI
     supabase.from('health_diseases').select('is_resolved').eq('pet_id', petId),
     supabase.from('health_diseases').select('id, is_resolved').eq('pet_id', petId).gte('diagnosis_date', since6m),
     supabase.from('health_diseases').select('is_resolved').eq('pet_id', petId).gte('diagnosis_date', since30d),
-    supabase.from('daily_scores').select('score').eq('pet_id', petId).order('date', { ascending: false }).limit(30),
     supabase.from('predictive_insights').select('risk_score').eq('pet_id', petId).order('created_at', { ascending: false }).limit(1).single(),
   ])
 
@@ -72,10 +69,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ petI
   const recentCriticalIncident = (diseases30d ?? []).some((d: Partial<DiseaseRecordRow>) => d.is_resolved === false)
   const missingVaccineHistory = (vaccines?.length ?? 0) === 0
 
-  // Care consistency: avg of last 30 daily scores
-  const avgScore = scores && scores.length > 0
-    ? Math.round(scores.reduce((s: number, r: Pick<DailyScoreRow, 'score'>) => s + (r.score ?? 0), 0) / scores.length)
-    : 50
+  // Bakım skoru süreci kaldırıldı — engine girdisi nötr varsayılanda sabit
+  const avgScore = 50
 
   // Preventive compliance: vaccinations vs expected
   const totalEvents = (vaccines?.length ?? 0) + incidentCount

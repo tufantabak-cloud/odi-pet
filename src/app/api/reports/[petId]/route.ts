@@ -106,17 +106,6 @@ export async function POST(req: NextRequest, context: RouteContext) {
       .eq('pet_id', petId)
       .order('scheduled_at', { ascending: true })
 
-    // 4d. Care Compliance Score (from daily_scores or fallback)
-    const todayStr = new Date().toISOString().split('T')[0]
-    const { data: scoreData } = await supabase
-      .from('daily_scores')
-      .select('score')
-      .eq('pet_id', petId)
-      .eq('date', todayStr)
-      .single()
-
-    const preventiveComplianceScore = scoreData?.score ?? 75
-
     // 5. Generate validation hash & persist report record in database
     const verificationHash = Math.random().toString(36).substring(2, 10).toUpperCase()
 
@@ -141,7 +130,6 @@ export async function POST(req: NextRequest, context: RouteContext) {
     const reportResponse = {
       verificationHash: reportRow.verification_hash,
       generatedAt: reportRow.created_at,
-      preventiveComplianceScore,
       annualVaccineCount: vaccineCount,
       incidentCount,
       appointments: appointments || [],

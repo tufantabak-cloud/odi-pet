@@ -979,45 +979,6 @@ export type Database = {
         }
         Relationships: []
       }
-      daily_scores: {
-        Row: {
-          created_at: string | null
-          date: string
-          id: string
-          pet_id: string | null
-          score: number
-        }
-        Insert: {
-          created_at?: string | null
-          date?: string
-          id?: string
-          pet_id?: string | null
-          score?: number
-        }
-        Update: {
-          created_at?: string | null
-          date?: string
-          id?: string
-          pet_id?: string | null
-          score?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "daily_scores_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "daily_scores_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "pets"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       devices: {
         Row: {
           created_at: string | null
