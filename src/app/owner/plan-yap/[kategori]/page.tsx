@@ -29,6 +29,7 @@ const categoryMap: Record<string, TaskCategory> = {
 };
 
 const FREQ_LABEL: Record<string, string> = {
+  hour: 'saat',
   daily: 'gün',
   weekly: 'hafta',
   monthly: 'ay',
@@ -68,7 +69,21 @@ export default function WizardOrchestrator() {
   const [pets, setPets] = useState<any[]>([]);
   const [loadingPets, setLoadingPets] = useState(true);
   const [loadingEdit, setLoadingEdit] = useState(!!editId);
-  const [isEditMode, setIsEditMode] = useState(!!editId);
+  /**
+   * isEditMode ARTIK doğrudan bu state'ten türetiliyor (aşağıda), ayrı bir
+   * useState olarak TUTULMUYOR. Neden: Next.js App Router aynı [kategori]
+   * segmentine (örn. önce boş bir tarih hücresinden 'oluştur' linkiyle,
+   * sonra bir kaydın 'Düzenle'siyle) art arda client-side navigasyonlarda
+   * bileşeni YENİDEN MOUNT ETMEZ — yalnızca yeniden render eder. Eski
+   * kod `useState(!!editId)` kullanıyordu ve 'else' dalı (plan bulunamadı/
+   * create modu) bunu asla false'a çevirmiyordu; bu da önceki bir CREATE
+   * navigasyonundan kalan `false` değerinin, editId artık dolu olsa bile
+   * plan verisi her nasılsa yüklenemediğinde (RLS/hata) YANLIŞLIKLA
+   * step-by-step sihirbazın (editAll=false) gösterilmesine yol açabiliyordu.
+   * Reaktif türetim bu sınıf hatayı tamamen ortadan kaldırır.
+   */
+  const [loadedPlan, setLoadedPlan] = useState<any>(null);
+  const isEditMode = !!editId && !!loadedPlan;
   // Düzenlemede planın orijinal extra_data'sı; kayıtta üzerine yazılmayan alanlar (dose_number, migrated_from vb.) korunur
   const [initialExtraData, setInitialExtraData] = useState<Record<string, any> | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -113,10 +128,14 @@ export default function WizardOrchestrator() {
       
       let initialPlanData: any = null;
       if (editId) {
-        const { data: planData } = await supabase.from('plans').select('*').eq('id', editId).single();
+        const { data: planData, error: planError } = await supabase.from('plans').select('*').eq('id', editId).single();
         if (planData) {
           initialPlanData = planData;
           setInitialExtraData(planData.extra_data || {});
+        } else if (planError) {
+          // Sessizce create moduna düşmek yerine görünür kılıyoruz — RLS/izin
+          // sorunları veya artık var olmayan bir plan burada yakalanır.
+          console.error('[plan-yap] editId ile plan yüklenemedi:', editId, planError);
         }
       }
 
@@ -134,10 +153,29 @@ export default function WizardOrchestrator() {
         }
 
         const isDiğer = initialPlanData.sub_type === 'Diğer' || initialPlanData.sub_type === 'Genel';
+        // İlaç Kullanımı sub_type'ı → wizard'da 'İlaç' olarak tanınmalı
+        const isMedication = initialPlanData.extra_data?.record_type === 'medication' || initialPlanData.sub_type === 'İlaç Kullanımı';
+        const resolvedSubCategory = isMedication ? 'İlaç' : (isDiğer ? 'Diğer' : initialPlanData.sub_type);
         
+        const med = initialPlanData.extra_data?.medication;
+        let resolvedProduct = initialPlanData.extra_data?.product || null;
+        if (typeof resolvedProduct === 'string') {
+          resolvedProduct = {
+            id: 'other',
+            brand_name: resolvedProduct,
+            product_name: null,
+            category: 'parasite_external',
+            duration_days: initialPlanData.extra_data?.duration_days ?? null
+          };
+        } else if (resolvedProduct && typeof resolvedProduct === 'object') {
+          if (resolvedProduct.duration_days == null) {
+            resolvedProduct.duration_days = initialPlanData.extra_data?.duration_days ?? initialPlanData.extra_data?.metadata?.duration_days ?? null;
+          }
+        }
+
         setStepData({
           pet_id: initialPlanData.pet_id,
-          subCategory: isDiğer ? 'Diğer' : initialPlanData.sub_type,
+          subCategory: resolvedSubCategory,
           customText: isDiğer ? (initialPlanData.extra_data?.customText || initialPlanData.sub_type) : '',
           date: dateStr,
           time: timeStr,
@@ -151,11 +189,28 @@ export default function WizardOrchestrator() {
           notes: initialPlanData.note || '',
           metadata: initialPlanData.extra_data?.metadata || {},
           selectedVaccine: initialPlanData.extra_data?.vaccine || null,
-          selectedProduct: initialPlanData.extra_data?.product || null,
+          selectedProduct: resolvedProduct,
           markAsDone: initialPlanData.extra_data?.is_past_done || false,
+          // İlaç düzenleme: mevcut ilaç verilerini wizard'a yükle
+          ...(isMedication && med ? {
+            medication_name: med.name || '',
+            medication_unit: med.unit || 'Tablet',
+            medication_dose: med.dose || 1,
+            medication_purpose: med.purpose || '',
+            medication_freq_type: med.freq_type || 'once_daily',
+            medication_photo_url: med.photo_url || null,
+            medication_stock_enabled: med.stock_enabled || false,
+            medication_stock_count: med.stock ?? 30,
+            medication_alert_count: med.alert_threshold ?? 10,
+          } : {}),
         });
-        setIsEditMode(true);
+        setLoadedPlan(initialPlanData);
       } else {
+        // Önceki bir DÜZENLEME navigasyonundan kalan loadedPlan'ı temizle —
+        // aksi halde aynı [kategori] segmentinde CREATE moduna geçildiğinde
+        // (bileşen yeniden mount edilmediği için) isEditMode yanlışlıkla
+        // true kalabilir.
+        setLoadedPlan(null);
         setStepData({
           pet_id: queryPetId || undefined,
           subCategory: initialSubCat || undefined,
@@ -415,7 +470,7 @@ export default function WizardOrchestrator() {
   let isNextDisabled = false;
   if (currentStep?.key === 'pet_id' && !wizardData.pet_id) isNextDisabled = true;
   if (currentStep?.key === 'subCategory' && !wizardData.subCategory) isNextDisabled = true;
-  if (currentStep?.key === 'selectedVaccine' && !wizardData.selectedVaccine) isNextDisabled = true;
+  if (currentStep?.key === 'selectedVaccine' && (categoryKey === 'parazit' ? !wizardData.selectedProduct : !wizardData.selectedVaccine)) isNextDisabled = true;
   if (currentStep?.key === 'datetime' && !wizardData.date) isNextDisabled = true;
   if (currentStep?.key === 'metadata' && subCat === 'Diğer' && !wizardData.customText?.trim()) isNextDisabled = true;
   if (currentStep?.key === 'metadata' && subCat === 'Alerji' && !wizardData.metadata?.trigger_name?.trim()) isNextDisabled = true;
@@ -484,7 +539,7 @@ export default function WizardOrchestrator() {
       return;
     }
 
-    if (subCat === 'İlaç') {
+    if (subCat === 'İlaç' || subCat === 'İlaç Kullanımı') {
        let repeat_rule = null;
        let scheduledAt = `${wizardData.date || new Date().toISOString().split('T')[0]}T${wizardData.time || '09:00'}:00`;
        
@@ -935,70 +990,105 @@ export default function WizardOrchestrator() {
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                {products
-                  .filter(p => selectedProduct === null || selectedProduct === undefined || selectedProduct?.id === p.id)
-                  .map(product => {
-                    const isSelected = selectedProduct?.id === product.id;
-                    return (
-                      <button
-                        key={product.id}
-                        onClick={() => {
-                          const selected = isSelected ? null : product;
-                          setStepData({ 
-                            selectedProduct: selected,
-                            metadata: {
-                              ...wizardData.metadata,
-                              duration_days: selected?.duration_days
+                {(() => {
+                  const displayProducts = [...products];
+                  if (selectedProduct && selectedProduct.id !== 'other' && !products.some(p => p.id === selectedProduct.id)) {
+                    displayProducts.unshift({
+                      id: selectedProduct.id,
+                      brand_name: selectedProduct.brand_name || 'Bilinmeyen Ürün',
+                      product_name: selectedProduct.product_name || null,
+                      category: selectedProduct.category || '',
+                      duration_days: selectedProduct.duration_days ?? null
+                    });
+                  }
+                  return displayProducts
+                    .filter(p => selectedProduct === null || selectedProduct === undefined || selectedProduct?.id === p.id)
+                    .map(product => {
+                      const isSelected = selectedProduct?.id === product.id;
+                      return (
+                        <button
+                          key={product.id}
+                          type="button"
+                          onClick={() => {
+                            if (isSelected) {
+                              // Seçimi kaldır
+                              setStepData({ 
+                                selectedProduct: null,
+                                metadata: {
+                                  ...wizardData.metadata,
+                                  duration_days: undefined
+                                }
+                              });
+                            } else {
+                              // Ürünü seç — otomatik ilerleme yok, kullanıcı koruma süresini düzenleyebilsin
+                              setStepData({ 
+                                selectedProduct: product,
+                                metadata: {
+                                  ...wizardData.metadata,
+                                  duration_days: product.duration_days ?? null
+                                }
+                              });
                             }
-                          });
-                          if (!isSelected) {
-                            setTimeout(() => {
-                              if (currentStepIndex === totalSteps - 1) handleSubmit(); else nextStep();
-                            }, 200);
-                          }
-                        }}
-                        className={`w-full p-3 rounded-xl border text-left transition-colors flex items-center justify-between ${isSelected ? 'bg-primary/10 border-primary' : 'bg-surface-1 border-border'}`}
-                      >
-                        <div>
-                          <p className={`text-[13px] font-medium ${isSelected ? 'text-primary' : 'text-text-primary'}`}>
-                            {product.brand_name} {product.product_name || ''}
-                          </p>
-                          {product.duration_days && (
-                            <p className="text-[11px] text-text-muted mt-0.5">
-                              {product.duration_days} gün etkili
+                          }}
+                          className={`w-full p-3 rounded-xl border text-left transition-colors flex items-center justify-between ${isSelected ? 'bg-primary/10 border-primary' : 'bg-surface-1 border-border'}`}
+                        >
+                          <div>
+                            <p className={`text-[13px] font-medium ${isSelected ? 'text-primary' : 'text-text-primary'}`}>
+                              {product.brand_name} {product.product_name || ''}
                             </p>
+                            {product.duration_days && !isSelected && (
+                              <p className="text-[11px] text-text-muted mt-0.5">
+                                {product.duration_days} gün etkili
+                              </p>
+                            )}
+                          </div>
+                          {isSelected && (
+                            <Check size={16} className="text-primary flex-shrink-0" />
                           )}
-                        </div>
-                        {isSelected && (
-                          <Check size={16} className="text-primary flex-shrink-0" />
-                        )}
-                      </button>
-                    );
-                  })
-                }
+                        </button>
+                      );
+                    });
+                })()}
             
                 {/* Diğer — manuel giriş */}
-                <button
-                  onClick={() => {
-                    setStepData({ 
-                      selectedProduct: { 
-                        id: 'other',
-                        brand_name: 'Diğer',
-                        product_name: null,
-                        category: 'parasite_external',
-                        duration_days: null
+                {(!selectedProduct || selectedProduct?.id === 'other') && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (selectedProduct?.id === 'other') {
+                        setStepData({ 
+                          selectedProduct: null,
+                          metadata: { ...wizardData.metadata, duration_days: undefined }
+                        });
+                      } else {
+                        setStepData({ 
+                          selectedProduct: { 
+                            id: 'other',
+                            brand_name: 'Diğer',
+                            product_name: null,
+                            category: 'parasite_external',
+                            duration_days: null
+                          },
+                          metadata: { ...wizardData.metadata, duration_days: null }
+                        });
                       }
-                    });
-                    setTimeout(() => {
-                      if (currentStepIndex === totalSteps - 1) handleSubmit(); else nextStep();
-                    }, 200);
-                  }}
-                  className="w-full p-3 rounded-xl border border-dashed border-border text-text-secondary text-[13px] text-left"
-                >
-                  + Listede yok, kendim gireceğim
-                </button>
+                    }}
+                    className={`w-full p-3 rounded-xl border text-left transition-colors ${selectedProduct?.id === 'other' ? 'bg-primary/10 border-primary' : 'border-dashed border-border text-text-secondary'} text-[13px]`}
+                  >
+                    {selectedProduct?.id === 'other' ? (
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-primary">Diğer (Manuel)</span>
+                        <Check size={16} className="text-primary flex-shrink-0" />
+                      </div>
+                    ) : (
+                      '+ Listede yok, kendim gireceğim'
+                    )}
+                  </button>
+                )}
               </div>
             )}
+
+
           </div>
         );
       }
@@ -1156,57 +1246,148 @@ export default function WizardOrchestrator() {
 
     if (step.type === 'recurrence_selection') {
       const isRecurring = wizardData.frequency !== 'once';
+      
+      const getRecurrenceText = () => {
+        const val = wizardData.interval || 1;
+        const freq = wizardData.frequency;
+        if (freq === 'once') return 'Bu plan yalnızca bir kez gerçekleştirilecek.';
+        
+        const suffixMap: Record<string, string> = {
+          hour: 'saatte',
+          daily: 'günde',
+          weekly: 'haftada',
+          monthly: 'ayda',
+          yearly: 'yılda'
+        };
+        
+        const unitLabel = suffixMap[freq] || '';
+        if (val === 1) {
+          const singleLabel: Record<string, string> = {
+            hour: 'saatlik (her saat)',
+            daily: 'günlük (her gün)',
+            weekly: 'haftalık (her hafta)',
+            monthly: 'aylık (her ay)',
+            yearly: 'yıllık (her yıl)'
+          };
+          return `Bu plan periyodik olarak ${singleLabel[freq] || unitLabel} tekrarlanacak.`;
+        }
+        return `Bu plan periyodik olarak her ${val} ${unitLabel} bir tekrarlanacak.`;
+      };
+
+      const unitOptions = [
+        { value: 'hour', label: 'Saat' },
+        { value: 'daily', label: 'Gün' },
+        { value: 'weekly', label: 'Hft' },
+        { value: 'monthly', label: 'Ay' },
+        { value: 'yearly', label: 'Yıl' }
+      ] as const;
+
       return (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+        <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2">
+          {/* Plan Tipi Seçimi */}
           <div className="flex flex-col gap-2">
-            <label className="text-[13px] font-bold text-text-primary">Sıklık Seçimi</label>
-            <div className="grid grid-cols-3 gap-2">
-              {([
-                { value: 'once',    label: 'Tek Sefer' },
-                { value: 'daily',   label: 'Günlük'    },
-                { value: 'weekly',  label: 'Haftalık'  },
-                { value: 'monthly', label: 'Aylık'     },
-                { value: 'yearly',  label: 'Yıllık'    },
-              ] as const).map(opt => (
-                <button
-                  key={opt.value}
-                  onClick={() => setStepData({ frequency: opt.value })}
-                  className={`py-3 px-2 min-h-[50px] rounded-xl text-[12px] font-bold border flex items-center justify-center transition-all text-center ${
-                    wizardData.frequency === opt.value
-                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-md scale-[1.02]'
-                      : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300'
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
+            <label className="text-[13px] font-bold text-text-primary">Plan Tipi</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setStepData({ frequency: 'once' })}
+                className={`py-3 px-4 rounded-xl text-[13px] font-bold border transition-all text-center ${
+                  wizardData.frequency === 'once'
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-md scale-[1.02]'
+                    : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300'
+                }`}
+              >
+                Tek Seferlik
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (wizardData.frequency === 'once') {
+                    setStepData({ frequency: 'daily', interval: 1 });
+                  }
+                }}
+                className={`py-3 px-4 rounded-xl text-[13px] font-bold border transition-all text-center ${
+                  wizardData.frequency !== 'once'
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-md scale-[1.02]'
+                    : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300'
+                }`}
+              >
+                Tekrarlı Plan
+              </button>
             </div>
           </div>
 
           {isRecurring && (
-            <div className="flex flex-col gap-2 p-4 bg-surface border border-border-main rounded-2xl animate-in fade-in">
-              <label className="text-[12px] font-bold text-text-secondary">Tekrar Aralığı</label>
-              <div className="flex items-center gap-3">
-                <span className="text-[13px] text-text-primary font-normal">Her</span>
-                <StepperInput
-                  min={1} step={1}
-                  value={wizardData.interval}
-                  onChange={(e) => setStepData({ interval: parseInt(e.target.value) || 1 })}
-                />
-                <span className="text-sm text-slate-700 font-medium">{FREQ_LABEL[wizardData.frequency]} tekrarlanacak</span>
+            <div className="flex flex-col gap-4 p-4 bg-surface border border-border-main rounded-2xl animate-in fade-in">
+              {/* Stepper + Unit Seçimi */}
+              <div className="space-y-2">
+                <label className="text-[12px] font-bold text-text-secondary">Tekrar Sıklığı</label>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <StepperInput
+                    min={1} step={1}
+                    value={wizardData.interval || 1}
+                    onChange={(e) => setStepData({ interval: parseInt(e.target.value) || 1 })}
+                    className="w-full sm:w-fit"
+                  />
+                  <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-[16px] w-full sm:w-auto">
+                    {unitOptions.map(opt => {
+                      const isSelected = wizardData.frequency === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setStepData({ frequency: opt.value })}
+                          className={`flex-1 sm:flex-none px-3.5 py-2 rounded-[12px] text-[12px] font-bold transition-all ${
+                            isSelected 
+                              ? 'bg-white text-slate-900 shadow-sm' 
+                              : 'text-slate-500 hover:text-slate-800'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
 
-              <div className="mt-4 pt-4 border-t border-border-main space-y-3">
+              {/* Bilgi Metni */}
+              <div className="bg-indigo-50 border border-indigo-100/50 rounded-xl p-3 flex items-start gap-2.5">
+                <svg className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-[12px] font-medium text-indigo-700 leading-relaxed">
+                  {getRecurrenceText()}
+                </span>
+              </div>
+
+              {/* Bitiş Koşulu */}
+              <div className="pt-4 border-t border-border-main space-y-3">
                 <label className="text-[12px] font-bold text-text-secondary">Bitiş Koşulu</label>
                 <div className="grid grid-cols-3 gap-2">
                   {END_OPTIONS.map(opt => (
-                    <button key={opt.value} onClick={() => setStepData({ endCondition: opt.value as any })} className={`py-2 px-1 rounded-lg text-[11px] font-bold border transition-all text-center ${wizardData.endCondition === opt.value ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}>
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setStepData({ endCondition: opt.value as any })}
+                      className={`py-2 px-1 rounded-lg text-[11px] font-bold border transition-all text-center ${
+                        wizardData.endCondition === opt.value
+                          ? 'bg-slate-800 text-white border-slate-800 shadow-sm'
+                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
                       {opt.label}
                     </button>
                   ))}
                 </div>
                 {wizardData.endCondition === 'date' && (
-                  <input type="date" min={wizardData.date} value={wizardData.endDate || ''} onChange={(e) => setStepData({ endDate: e.target.value })} className="w-full p-2 border border-slate-200 rounded-lg text-sm" />
+                  <input
+                    type="date"
+                    min={wizardData.date}
+                    value={wizardData.endDate || ''}
+                    onChange={(e) => setStepData({ endDate: e.target.value })}
+                    className="w-full p-2 border border-slate-200 rounded-lg text-sm"
+                  />
                 )}
                 {wizardData.endCondition === 'occurrences' && (
                   <div className="flex items-center gap-2 mt-2">
@@ -1214,6 +1395,7 @@ export default function WizardOrchestrator() {
                       min={1} step={1}
                       value={wizardData.endOccurrences || 1}
                       onChange={(e) => setStepData({ endOccurrences: parseInt(e.target.value) || 1 })}
+                      className="w-full sm:w-fit"
                     />
                     <span className="text-[12px] text-text-secondary font-normal">kez tekrarlandıktan sonra bitir</span>
                   </div>
