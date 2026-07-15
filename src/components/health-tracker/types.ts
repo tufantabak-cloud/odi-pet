@@ -38,6 +38,12 @@ export interface TaskRow {
   events: ComputedEvent[];
   /** Aşı kategorisinde alt grup etiketi (Zorunlu Aşılar / Opsiyonel Aşılar) */
   subGroupLabel?: string;
+  /**
+   * mapDbToUI çıktısındaki UI alt kategori etiketi (örn. "İlaç Kullanımı",
+   * "Banyo"). Boş tarih hücresinden "plan yap" sayfasına deep-link
+   * oluştururken wizard'ın ham subCategory id'sine çevrilir.
+   */
+  uiSubCategory?: string;
 }
 
 /**

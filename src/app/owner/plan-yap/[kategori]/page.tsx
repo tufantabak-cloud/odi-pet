@@ -48,6 +48,11 @@ export default function WizardOrchestrator() {
   const editId = searchParams.get('editId');
   const categoryKey = params.kategori as CategoryKey;
 
+  // Timeline'daki boş bir tarih hücresine tıklanınca gelen ön-doldurma parametreleri
+  const queryDate = searchParams.get('date');
+  const queryMedName = searchParams.get('medName');
+  const queryVaccineName = searchParams.get('vaccineName');
+
   // URL'den gelen alt kategori (subCat): geçerliyse alt kategori adımı atlanır (create modunda)
   const querySubCat = searchParams.get('subCat');
   const initialSubCat = (() => {
@@ -64,6 +69,8 @@ export default function WizardOrchestrator() {
   const [loadingPets, setLoadingPets] = useState(true);
   const [loadingEdit, setLoadingEdit] = useState(!!editId);
   const [isEditMode, setIsEditMode] = useState(!!editId);
+  // Düzenlemede planın orijinal extra_data'sı; kayıtta üzerine yazılmayan alanlar (dose_number, migrated_from vb.) korunur
+  const [initialExtraData, setInitialExtraData] = useState<Record<string, any> | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -107,7 +114,10 @@ export default function WizardOrchestrator() {
       let initialPlanData: any = null;
       if (editId) {
         const { data: planData } = await supabase.from('plans').select('*').eq('id', editId).single();
-        if (planData) initialPlanData = planData;
+        if (planData) {
+          initialPlanData = planData;
+          setInitialExtraData(planData.extra_data || {});
+        }
       }
 
       const queryPetId = searchParams.get('pet_id');
@@ -149,7 +159,7 @@ export default function WizardOrchestrator() {
         setStepData({
           pet_id: queryPetId || undefined,
           subCategory: initialSubCat || undefined,
-          date: d.toISOString().split('T')[0],
+          date: queryDate || d.toISOString().split('T')[0],
           time: '12:00',
           frequency: 'once',
           interval: 1,
@@ -158,7 +168,9 @@ export default function WizardOrchestrator() {
           notificationEnabled: true,
           metadata: {},
           notes: '',
-          selectedProduct: null
+          selectedProduct: null,
+          // Timeline'daki ilgili kayıt satırından geldiyse ilaç adını ön doldur
+          medication_name: queryMedName || undefined,
         });
       }
 
@@ -191,6 +203,8 @@ export default function WizardOrchestrator() {
 
   // ── Smart Defaults Uygula (Alt Kategori Değişince) ────────────────
   useEffect(() => {
+    // Düzenleme modunda plandan yüklenen değerleri (sıklık, bildirim vb.) varsayılanlarla ezme
+    if (editId) return;
     const subCat = categoryKey === 'asi' ? 'Aşı' : wizardData.subCategory;
     if (subCat && subCat !== 'Diğer') {
       const defaults = getSmartDefault(subCat);
@@ -261,6 +275,15 @@ export default function WizardOrchestrator() {
     }
   }, [wizardData.subCategory, categoryKey, speciesStr]);
 
+  // ── Timeline'dan gelen aşı adını otomatik seç (yalnızca oluşturma modunda) ──
+  useEffect(() => {
+    if (editId || !queryVaccineName || wizardData.selectedVaccine || dbProducts.length === 0) return;
+    const target = queryVaccineName.toLocaleLowerCase('tr-TR').trim();
+    const match = dbProducts.find(p => (p.name || p.nameTr || '').toLocaleLowerCase('tr-TR').trim() === target)
+      ?? dbProducts.find(p => (p.name || p.nameTr || '').toLocaleLowerCase('tr-TR').includes(target));
+    if (match) setStepData({ selectedVaccine: match });
+  }, [dbProducts, editId, queryVaccineName]);
+
   // ── Fetch Parazit / Mama Products ─────────────────────────────────
   useEffect(() => {
     if (categoryKey !== 'parazit') return;
@@ -286,8 +309,17 @@ export default function WizardOrchestrator() {
         setProducts(Array.isArray(data) ? data : []);
       })
       .finally(() => setProductsLoading(false));
-      
+
   }, [categoryKey, wizardData.subCategory, speciesStr]);
+
+  // ── Timeline'dan gelen parazit ürün adını otomatik seç (yalnızca oluşturma modunda) ──
+  useEffect(() => {
+    if (editId || !queryVaccineName || wizardData.selectedProduct || products.length === 0) return;
+    const target = queryVaccineName.toLocaleLowerCase('tr-TR').trim();
+    const match = products.find(p => (p.product_name || p.brand_name || '').toLocaleLowerCase('tr-TR').trim() === target)
+      ?? products.find(p => (p.product_name || p.brand_name || '').toLocaleLowerCase('tr-TR').includes(target));
+    if (match) setStepData({ selectedProduct: match });
+  }, [products, editId, queryVaccineName]);
 
   // ── Fetch Symptoms (Belirti Takibi ise) ─────────────────────────────
   useEffect(() => {
@@ -320,7 +352,8 @@ export default function WizardOrchestrator() {
   const needsPetSelection = pets.length > 1;
   const steps: any[] = [];
   
-  if (needsPetSelection) {
+  // Düzenlemede pet zaten belli; pet seçim adımı yalnızca yeni plan oluştururken gösterilir
+  if (needsPetSelection && !isEditMode) {
     steps.push({ key: 'pet_id', type: 'pet_selection', title: 'Kimin için planlıyoruz?', desc: 'Evcil hayvan profilinizi seçin.' });
   }
 
@@ -344,6 +377,8 @@ export default function WizardOrchestrator() {
     steps.push({ key: 'medication_stock', type: 'medication_stock', title: 'Stok Takibi', desc: 'İlaç bitmeden hatırlatalım mı?' });
   } else {
     const showMetadata = () => {
+      // Düzenleme modunda her plan için Detaylar kartı göster (özel alan yoksa not alanı fallback'i devreye girer)
+      if (isEditMode) return true;
       if (subCat === 'Diğer') return true;
       if (subCat === 'Alerji') return true;
       if (!subCat && categoryKey !== 'asi') return false; // Alt kategori seçilmeden gösterme
@@ -472,8 +507,10 @@ export default function WizardOrchestrator() {
        }
        
        const extra_data = {
+         // Düzenlemede orijinal extra_data'daki ek alanlar korunur
+         ...(initialExtraData || {}),
          record_type: 'medication',
-         source: 'plan_yap',
+         source: initialExtraData?.source ?? 'plan_yap',
          medication: {
            name: wizardData.medication_name,
            unit: wizardData.medication_unit,
@@ -539,8 +576,9 @@ export default function WizardOrchestrator() {
     const payload = {
       pet_id: petId,
       category: categoryKey,
-      sub_type: (categoryKey === 'asi' && wizardData.selectedVaccine?.name)
-        ? wizardData.selectedVaccine.name
+      sub_type: categoryKey === 'asi'
+        // Aşı seçilmediyse mevcut planın adını (subCategory'ye yüklenen sub_type) koru; 'Aşı' ile ezme
+        ? (wizardData.selectedVaccine?.name || wizardData.subCategory || 'Aşı')
         : subCat === 'Diğer' ? (wizardData.customText || 'Diğer') : (subCat || 'Genel'),
       scheduled_at: new Date(scheduledAt).toISOString(),
       repeat_rule: wizardData.frequency === 'once' ? null : wizardData.frequency,
@@ -549,21 +587,26 @@ export default function WizardOrchestrator() {
       notif_unit: 'minute',
       note: wizardData.notes || null,
       extra_data: {
+        // Düzenlemede orijinal extra_data korunur (dose_number, migrated_from, confidence_level vb.);
+        // formdan gelen alanlar aşağıda üzerine yazılır
+        ...(initialExtraData || {}),
         interval: wizardData.interval,
         endCondition: wizardData.endCondition,
         endOccurrences: wizardData.endOccurrences,
         metadata: wizardData.metadata,
-        vaccine: wizardData.selectedVaccine ? { code: wizardData.selectedVaccine.code ?? null, name: wizardData.selectedVaccine.name ?? null } : null,
-        vaccine_code: wizardData.selectedVaccine?.code ?? null,
-        record_type: categoryKey === 'asi' ? 'vaccine_schedule' : null,
-        source: 'plan_yap',
+        vaccine: wizardData.selectedVaccine
+          ? { code: wizardData.selectedVaccine.code ?? null, name: wizardData.selectedVaccine.name ?? null }
+          : (initialExtraData?.vaccine ?? null),
+        vaccine_code: wizardData.selectedVaccine?.code ?? initialExtraData?.vaccine_code ?? null,
+        record_type: categoryKey === 'asi' ? 'vaccine_schedule' : (initialExtraData?.record_type ?? null),
+        source: initialExtraData?.source ?? 'plan_yap',
         product: wizardData.selectedProduct ? {
           id: wizardData.selectedProduct.id,
           brand_name: wizardData.selectedProduct.brand_name ?? null,
           product_name: wizardData.selectedProduct.product_name ?? null,
           category: wizardData.selectedProduct.category ?? null,
           duration_days: wizardData.selectedProduct.duration_days ?? null
-        } : null,
+        } : (initialExtraData?.product ?? null),
         is_past_done: !!wizardData.markAsDone
       },
     };
@@ -649,8 +692,29 @@ export default function WizardOrchestrator() {
     }
 
     if (step.type === 'metadata_selection') {
+      // Alt kategoriye özel alanı olmayan kombinasyonlarda kart boş kalmasın:
+      // genel bir not alanı fallback olarak gösterilir (wizardData.notes → plans.note)
+      const hasSpecificFields =
+        subCat === 'Diğer' ||
+        subCat === 'Belirti Takibi' ||
+        subCat === 'Alerji' ||
+        (categoryKey === 'saglik' && ['Tedavi/Pansuman', 'Tahlil/Rapor', 'Kronik Takip', 'İlaç'].includes(wizardData.subCategory || '')) ||
+        categoryKey === 'beslenme';
+
       return (
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+          {!hasSpecificFields && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-bold text-text-primary">Not / Detay</label>
+              <textarea
+                value={wizardData.notes || ''}
+                onChange={(e) => setStepData({ notes: e.target.value })}
+                placeholder="Planla ilgili eklemek istediğiniz detaylar (opsiyonel)..."
+                rows={3}
+                className="w-full p-3 border border-slate-200 rounded-xl text-[13px] resize-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+              />
+            </div>
+          )}
           {subCat === 'Diğer' && (
             <div className="flex flex-col gap-1.5">
               <label className="text-[13px] font-bold text-text-primary">Görev Adı</label>

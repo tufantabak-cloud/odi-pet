@@ -1,8 +1,10 @@
 'use client';
 import React, { useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useHealthTracker, toDateKey, formatFrequency } from './useHealthTracker';
 import { CategoryCard, toCategoryKey } from './CategoryCard';
 import { CategoryGroup, FlowEvent, TaskRow } from './types';
+import { buildPlanYapHref } from './lib/plan-link';
 
 interface HealthTrackerProps {
   petId: string;
@@ -98,6 +100,7 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
     flowEvents: FlowEvent[] | undefined,
     taskRows: TaskRow[],
     categoryKey: ReturnType<typeof toCategoryKey>,
+    group: CategoryGroup,
   ) => {
     const filtered = visibleEventsOf(flowEvents);
     return taskRows.map(row => {
@@ -120,6 +123,7 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
             eventsByDate={byDate}
             visibleKeys={visibleKeys}
             categoryKey={categoryKey}
+            getCreateHref={onlyShowMissed ? undefined : (dateKey) => buildPlanYapHref(petId, group, row, dateKey)}
             {...cardProps}
           />
         </div>
@@ -199,7 +203,7 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
 
                   {group.subGroups && group.subGroups.length > 0 ? (
                     group.subGroups.map(sub => {
-                      const rows = renderTaskRows(sub.flowEvents, sub.taskRows, toCategoryKey(group.category));
+                      const rows = renderTaskRows(sub.flowEvents, sub.taskRows, toCategoryKey(group.category), group);
                       if (onlyShowMissed && rows.every(r => r === null)) return null;
                       return (
                         <div key={sub.label} className="mb-1">
@@ -211,7 +215,7 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
                       );
                     })
                   ) : (
-                    renderTaskRows(group.flowEvents, group.taskRows, toCategoryKey(group.category))
+                    renderTaskRows(group.flowEvents, group.taskRows, toCategoryKey(group.category), group)
                   )}
                 </div>
               ))
@@ -234,19 +238,21 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
   );
 }
 
-/** Tek satır: her görünür tarih kolonunda o güne ait kartlar alt alta */
+/** Tek satır: her görünür tarih kolonunda o güne ait kartlar, boşsa "kayıt ekle" ipucu */
 function TimelineRow({
-  eventsByDate, visibleKeys, categoryKey, onMarkDone, onPostpone, onEdit, onDelete,
+  eventsByDate, visibleKeys, categoryKey, getCreateHref, onMarkDone, onPostpone, onEdit, onDelete,
 }: {
   eventsByDate: Map<string, FlowEvent[]>;
   visibleKeys: string[];
   categoryKey: ReturnType<typeof toCategoryKey>;
+  /** Boş hücre için "plan yap" sayfasına deep-link üretir; null dönerse hücre pasif kalır */
+  getCreateHref?: (dateKey: string) => string | null;
   onMarkDone: (id: string) => void;
   onPostpone: (id: string) => void;
   onEdit: (event: FlowEvent) => void;
   onDelete: (id: string) => void;
 }) {
-  const hasAny = Array.from(eventsByDate.values()).some(l => l.length > 0);
+  const router = useRouter();
 
   return (
     <div
@@ -255,6 +261,26 @@ function TimelineRow({
     >
       {visibleKeys.map(key => {
         const cellEvents = eventsByDate.get(key) || [];
+        if (cellEvents.length === 0) {
+          const href = getCreateHref?.(key) ?? null;
+          return (
+            <div key={key} className="flex items-center justify-center min-h-[64px]">
+              {href && (
+                <button
+                  type="button"
+                  onClick={() => router.push(href)}
+                  aria-label="Bu tarih için kayıt ekle"
+                  title="Bu tarih için kayıt ekle"
+                  className="w-[76px] h-[44px] rounded-xl border border-dashed border-border-main text-text-secondary/30 hover:text-primary hover:border-primary/50 hover:bg-primary/5 flex items-center justify-center transition-colors"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          );
+        }
         return (
           <div key={key} className="flex flex-col items-center gap-2 min-h-[24px]">
             {cellEvents.map(event => (
@@ -271,11 +297,6 @@ function TimelineRow({
           </div>
         );
       })}
-      {!hasAny && (
-        <div className="col-span-full py-0.5">
-          <span className="sticky left-0 inline-block px-4 text-[9px] text-text-secondary/40 font-semibold">Bu aralıkta kayıt yok — oklarla gezin</span>
-        </div>
-      )}
     </div>
   );
 }

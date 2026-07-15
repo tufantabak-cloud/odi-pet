@@ -62,6 +62,7 @@ export function buildCategoryGroups(
         },
         events: [],
         subGroupLabel: isVaccine ? mapped.subCategory : undefined,
+        uiSubCategory: mapped.subCategory,
       });
     }
     taskMap.get(groupKey)!.events.push(event);
