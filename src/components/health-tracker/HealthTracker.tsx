@@ -1,8 +1,8 @@
 'use client';
 import React, { useEffect, useRef } from 'react';
-import { useHealthTracker, toDateKey } from './useHealthTracker';
+import { useHealthTracker, toDateKey, formatFrequency } from './useHealthTracker';
 import { CategoryCard, toCategoryKey } from './CategoryCard';
-import { CategoryGroup, FlowEvent } from './types';
+import { CategoryGroup, FlowEvent, TaskRow } from './types';
 
 interface HealthTrackerProps {
   petId: string;
@@ -90,6 +90,44 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
     return list;
   };
 
+  /**
+   * Her görev (taskRow) kendi satırında: görev adı + frekansı solda sticky,
+   * event'leri kendi tarih kolonlarında. flowEvents kullanılır (coverage taşır),
+   * taskKey ile görev bazında ayrıştırılır.
+   */
+  const renderTaskRows = (
+    flowEvents: FlowEvent[] | undefined,
+    taskRows: TaskRow[],
+    categoryKey: ReturnType<typeof toCategoryKey>,
+  ) => {
+    const filtered = visibleEventsOf(flowEvents);
+    return taskRows.map(row => {
+      const rowEvents = filtered.filter(e => e.taskKey === row.task.title);
+      const byDate = groupEventsByDate(rowEvents, visibleKeys);
+      const hasVisible = Array.from(byDate.values()).some(l => l.length > 0);
+      if (onlyShowMissed && !hasVisible) return null;
+      return (
+        <div key={`${row.task.category}-${row.task.title}`} className="border-b border-border-main/20 last:border-b-0">
+          <div className="pt-1.5">
+            <div className="sticky left-0 inline-flex items-baseline gap-2 px-4 max-w-full">
+              <span className="text-[11px] font-extrabold text-text-primary">{row.task.title}</span>
+              <span className="text-[9.5px] font-semibold text-text-secondary/70">
+                {/* Aşıda frequency_label alt grup adıdır — orada gün bazlı frekansı göster */}
+                {formatFrequency(row.task.frequency_days, row.subGroupLabel ? null : row.task.frequency_label)}
+              </span>
+            </div>
+          </div>
+          <TimelineRow
+            eventsByDate={byDate}
+            visibleKeys={visibleKeys}
+            categoryKey={categoryKey}
+            {...cardProps}
+          />
+        </div>
+      );
+    });
+  };
+
   // Filtre aktifken görünür pencerede hiç kaçırılmış görev var mı?
   const anyVisibleMissed = !onlyShowMissed || categoryGroups.some(group => {
     const lists = group.subGroups && group.subGroups.length > 0
@@ -162,31 +200,19 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
 
                   {group.subGroups && group.subGroups.length > 0 ? (
                     group.subGroups.map(sub => {
-                      const events = visibleEventsOf(sub.flowEvents);
-                      const byDate = groupEventsByDate(events, visibleKeys);
-                      const hasVisible = Array.from(byDate.values()).some(l => l.length > 0);
-                      if (onlyShowMissed && !hasVisible) return null;
+                      const rows = renderTaskRows(sub.flowEvents, sub.taskRows, toCategoryKey(group.category));
+                      if (onlyShowMissed && rows.every(r => r === null)) return null;
                       return (
                         <div key={sub.label} className="mb-1">
-                          <div className="pt-1 pb-0.5">
-                            <span className="sticky left-0 inline-block px-4 text-[10px] font-bold text-text-secondary/80">{sub.label}</span>
+                          <div className="pt-1 pb-0.5 bg-[#faf9ff]">
+                            <span className="sticky left-0 inline-block px-4 py-0.5 text-[10px] font-bold text-primary/80">{sub.label}</span>
                           </div>
-                          <TimelineRow
-                            eventsByDate={byDate}
-                            visibleKeys={visibleKeys}
-                            categoryKey={toCategoryKey(group.category)}
-                            {...cardProps}
-                          />
+                          {rows}
                         </div>
                       );
                     })
                   ) : (
-                    <TimelineRow
-                      eventsByDate={groupEventsByDate(visibleEventsOf(group.flowEvents), visibleKeys)}
-                      visibleKeys={visibleKeys}
-                      categoryKey={toCategoryKey(group.category)}
-                      {...cardProps}
-                    />
+                    renderTaskRows(group.flowEvents, group.taskRows, toCategoryKey(group.category))
                   )}
                 </div>
               ))
@@ -249,8 +275,8 @@ function TimelineRow({
         );
       })}
       {!hasAny && (
-        <div className="col-span-full py-1">
-          <span className="sticky left-0 inline-block px-4 text-[10px] text-text-secondary/50 font-semibold">Bu aralıkta kayıt yok</span>
+        <div className="col-span-full py-0.5">
+          <span className="sticky left-0 inline-block px-4 text-[9px] text-text-secondary/40 font-semibold">Bu aralıkta kayıt yok — oklarla gezin</span>
         </div>
       )}
     </div>
