@@ -160,6 +160,17 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
       const coverageIntervals = onlyShowMissed ? [] : buildCoverageIntervals(allRowEvents);
       const missedIntervals = onlyShowMissed ? [] : buildMissedIntervals(allRowEvents);
 
+      // Son geçerlilik tarihi: en son done event'teki coverage.endDateKey (dd.mm.yy)
+      const lastDoneWithCoverage = [...allRowEvents]
+        .reverse()
+        .find(e => e.status === 'done' && e.coverage?.endDateKey);
+      const expiryDateLabel = lastDoneWithCoverage?.coverage?.endDateKey
+        ? (() => {
+            const [y, m, d] = lastDoneWithCoverage.coverage!.endDateKey.split('-');
+            return `${d}.${m}.${y.slice(2)}`;
+          })()
+        : null;
+
       return (
         <div key={`${row.task.category}-${row.task.title}`} className="border-b border-border-main/20 last:border-b-0 py-1.5">
           <div className="px-4 flex items-baseline gap-2">
@@ -168,6 +179,11 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
               {/* Aşıda frequency_label alt grup adıdır — orada gün bazlı frekansı göster */}
               {formatFrequency(row.task.frequency_days, row.subGroupLabel ? null : row.task.frequency_label)}
             </span>
+            {expiryDateLabel && (
+              <span className="text-[9px] font-semibold text-text-secondary/50">
+                Son: {expiryDateLabel}
+              </span>
+            )}
           </div>
           <TimelineRow
             visibleKeys={visibleKeys}
