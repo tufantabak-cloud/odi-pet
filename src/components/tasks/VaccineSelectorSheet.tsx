@@ -56,6 +56,7 @@ export default function VaccineSelectorSheet({
   const [showScanner, setShowScanner] = useState(false);
   const [scanLoading, setScanLoading] = useState(false);
   const [addForm, setAddForm] = useState({ brand: '', name: '', type: 'internal', method: 'oral', active_ingredient: '', duration: '' });
+  const [addDurationUnit, setAddDurationUnit] = useState<'hour' | 'day' | 'week' | 'month' | 'year'>('day');
   const [addLoading, setAddLoading] = useState(false);
   const [addSuccess, setAddSuccess] = useState(false);
   const [addError, setAddError] = useState('');
@@ -68,6 +69,9 @@ export default function VaccineSelectorSheet({
 
     // Parazit ambalajı için
     if (parsed.title || parsed.brand || parsed.parasite_type) {
+      if (parsed.duration_days || parsed.duration_months) {
+        setAddDurationUnit('day');
+      }
       setAddForm(prev => ({
         ...prev,
         name: parsed.title || parsed.product_name || prev.name,
@@ -126,6 +130,29 @@ export default function VaccineSelectorSheet({
         });
         if (error) throw error;
       } else {
+        let durationDays = parseInt(addForm.duration, 10);
+        if (isNaN(durationDays) || durationDays <= 0) {
+          durationDays = 0;
+        } else {
+          switch (addDurationUnit) {
+            case 'hour':
+              durationDays = Number((durationDays / 24).toFixed(4));
+              break;
+            case 'week':
+              durationDays = durationDays * 7;
+              break;
+            case 'month':
+              durationDays = durationDays * 30;
+              break;
+            case 'year':
+              durationDays = durationDays * 365;
+              break;
+            case 'day':
+            default:
+              break;
+          }
+        }
+
         const { error } = await supabase.from('parasite_products').insert({
           species: speciesEng,
           name: addForm.name,
@@ -133,7 +160,7 @@ export default function VaccineSelectorSheet({
           type: addForm.type,
           application_method: addForm.method,
           active_ingredient: addForm.active_ingredient,
-          protection_duration_days: parseInt(addForm.duration, 10),
+          protection_duration_days: durationDays,
           is_active: false,
           status: 'pending',
           suggested_by: user.id
@@ -146,6 +173,7 @@ export default function VaccineSelectorSheet({
         setShowAddForm(false);
         setAddSuccess(false);
         setAddForm({ brand: '', name: '', type: 'internal', method: 'oral', active_ingredient: '', duration: '' });
+        setAddDurationUnit('day');
       }, 3000);
 
     } catch (err: unknown) {
@@ -222,32 +250,34 @@ export default function VaccineSelectorSheet({
              }));
            }
         } else if (pickerType === 'parasite') {
-           let typeFilter: string[] = ['internal', 'external', 'combined'];
-           if (subCategory === 'İç Parazit') typeFilter = ['internal', 'combined'];
-           if (subCategory === 'Dış Parazit' || subCategory === 'Parazit Tasması') typeFilter = ['external', 'combined'];
+            let typeFilter: string[] = ['internal', 'external', 'combined', 'collar'];
+            if (subCategory === 'İç Parazit') typeFilter = ['internal', 'combined'];
+            if (subCategory === 'Dış Parazit') typeFilter = ['external', 'combined'];
+            if (subCategory === 'Birleşik Parazit') typeFilter = ['combined'];
+            if (subCategory === 'Parazit Tasması') typeFilter = ['collar'];
 
-           const { data: products } = await supabase
-             .from('parasite_products')
+           const { data: protocols } = await supabase
+             .from('parasite_protocols')
              .select('*')
              .or(`species.eq.both,species.eq.${speciesEng}`)
              .eq('is_active', true)
-             .in('type', typeFilter);
+             .in('parasite_type', typeFilter);
              
-           if (products) {
-             customOptions = products.map((d: any) => ({
+           if (protocols) {
+             customOptions = protocols.map((d: any) => ({
               code: String(d.id),
               species: speciesEng,
-              name: `${d.brand} - ${d.name}`,
-              nameTr: `${d.active_ingredient} (${d.application_method})`,
+              name: d.protocol_name,
+              nameTr: `${d.parasite_code} (${d.default_application_method})`,
               group: 'optional' as 'core' | 'optional',
               isParasite: true,
-              protection_duration_days: Number(d.protection_duration_days) || undefined,
-              image_url: d.image_url ? String(d.image_url) : undefined,
-              description: d.description ? String(d.description) : undefined,
-              type: d.type ? String(d.type) : undefined,
-              application_method: d.application_method ? String(d.application_method) : undefined,
-              active_ingredient: d.active_ingredient ? String(d.active_ingredient) : undefined,
-              brand: d.brand ? String(d.brand) : undefined
+              protection_duration_days: Number(d.default_protection_duration_days) || undefined,
+              image_url: undefined,
+              description: undefined,
+              type: d.parasite_type ? String(d.parasite_type) : undefined,
+              application_method: d.default_application_method ? String(d.default_application_method) : undefined,
+              active_ingredient: d.parasite_code ? String(d.parasite_code) : undefined,
+              brand: undefined
              }));
            }
         }
@@ -402,13 +432,15 @@ export default function VaccineSelectorSheet({
                       {/* Card Bottom: Type Badge */}
                       {vaccine.type && (
                         <div className="mt-1">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold inline-block
+                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold inline-block
                             ${vaccine.type === 'internal' ? 'bg-blue-50 text-blue-600' : 
                               vaccine.type === 'external' ? 'bg-green-50 text-green-600' : 
+                              vaccine.type === 'collar' ? 'bg-indigo-50 text-indigo-600' :
                               'bg-purple-50 text-purple-600'}
                           `}>
                             {vaccine.type === 'internal' ? 'İç Parazit' : 
                              vaccine.type === 'external' ? 'Dış Parazit' : 
+                             vaccine.type === 'collar' ? 'Parazit Tasması' : 
                              'İç + Dış Parazit'}
                           </span>
                         </div>
@@ -503,11 +535,56 @@ export default function VaccineSelectorSheet({
                 value={addForm.active_ingredient} onChange={e => setAddForm({...addForm, active_ingredient: e.target.value})}
                 placeholder="Opsiyonel" />
             </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-[11px] font-bold text-text-secondary">Koruma (Gün) *</label>
-              <input type="number" className="input-base text-[13px] py-2" min="1"
-                value={addForm.duration} onChange={e => setAddForm({...addForm, duration: e.target.value})}
-                placeholder="Örn: 30" />
+            <div className="flex flex-col gap-1 col-span-2">
+              <label className="text-[11px] font-bold text-text-secondary">Koruma Süresi *</label>
+              <div className="flex items-center gap-2 mt-1">
+                <input 
+                  type="number" 
+                  className="w-20 input-base text-[13px] py-2" 
+                  min="0"
+                  value={addForm.duration} 
+                  onChange={e => setAddForm({...addForm, duration: e.target.value})}
+                  placeholder="Örn: 3" 
+                />
+                
+                <div className="flex items-center bg-bg-main p-1 rounded-xl border border-border-main grow justify-between">
+                  {(['hour', 'day', 'week', 'month', 'year'] as const).map((u) => {
+                    const labels: Record<string, string> = {
+                      hour: 'Saat',
+                      day: 'Gün',
+                      week: 'Hft',
+                      month: 'Ay',
+                      year: 'Yıl'
+                    };
+                    const isActive = addDurationUnit === u;
+                    return (
+                      <button
+                        key={u}
+                        type="button"
+                        onClick={() => setAddDurationUnit(u)}
+                        className={`px-2 py-1 text-[11px] font-bold rounded-lg transition-all ${
+                          isActive
+                            ? 'bg-primary text-white shadow-sm'
+                            : 'text-text-secondary hover:bg-border-main/50'
+                        }`}
+                      >
+                        {labels[u]}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              {parseInt(addForm.duration, 10) > 0 && (
+                <span className="text-[11px] text-text-muted mt-1 block">
+                  Veritabanına {
+                    addDurationUnit === 'hour' ? `${(parseInt(addForm.duration, 10) / 24).toFixed(4)} gün` :
+                    addDurationUnit === 'week' ? `${parseInt(addForm.duration, 10) * 7} gün` :
+                    addDurationUnit === 'month' ? `${parseInt(addForm.duration, 10) * 30} gün` :
+                    addDurationUnit === 'year' ? `${parseInt(addForm.duration, 10) * 365} gün` :
+                    `${parseInt(addForm.duration, 10)} gün`
+                  } koruma olarak kaydedilecektir.
+                </span>
+              )}
             </div>
           </div>
           {addError && (

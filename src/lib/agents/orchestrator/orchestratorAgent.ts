@@ -7,6 +7,7 @@ import { markOverduePlans } from '@/lib/plans/mark-overdue-plans'
 import { createOverdueVaccineNotifications } from '@/lib/notifications/create-overdue-vaccine-notifications'
 import { expireSharedPetCards } from '@/lib/cron/expire-shared-pet-cards'
 import { createAdminSupabaseClient } from '@/lib/supabase/server'
+import { createEstrusNotifications } from '@/services/estrus/createEstrusNotifications'
 import { writeEvent } from './eventContract'
 import { randomUUID } from 'crypto'
 
@@ -49,7 +50,7 @@ export async function runOrchestratedPipeline(
   await writeEvent(supabase, null, 'orchestrator_run_started', {
     run_id,
     triggered_by,
-    agents_planned: ['data_quality', 'vaccine_check', 'user_health', 'overdue_plans', 'expire_cards'],
+    agents_planned: ['data_quality', 'vaccine_check', 'user_health', 'overdue_plans', 'estrus_notifications', 'expire_cards'],
   })
 
   // ADIM 1 — Data Quality
@@ -159,7 +160,24 @@ export async function runOrchestratedPipeline(
     })
   }
 
-  // ADIM 5 — Expire Shared Pet Cards (süresi geçmiş paylaşım kartlarını pasifleştirir)
+  // ADIM 5 — Estrus Notifications
+  try {
+    const adminSupabase = createAdminSupabaseClient()
+    const result = await createEstrusNotifications(adminSupabase, { dryRun })
+    console.log('Estrus notifications:', result.created, 'skipped:', result.skipped, 'errors:', result.errors, dryRun ? `(dry-run)` : '')
+    agents_succeeded.push('estrus_notifications')
+  } catch (err) {
+    const error = err instanceof Error ? err.message : String(err)
+    agents_failed.push('estrus_notifications')
+    await writeEvent(supabase, null, 'orchestrator_agent_failed', {
+      run_id,
+      agent: 'estrus_notifications',
+      error,
+      downstream_skipped: [],
+    })
+  }
+
+  // ADIM 6 — Expire Shared Pet Cards (süresi geçmiş paylaşım kartlarını pasifleştirir)
   try {
     const adminSupabase = createAdminSupabaseClient()
     const result = await expireSharedPetCards(adminSupabase, { dryRun })

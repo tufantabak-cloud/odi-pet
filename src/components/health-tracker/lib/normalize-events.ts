@@ -53,9 +53,9 @@ export function mapDbToUI(
 
   if (isParasite || dbCat === 'Parazit') {
     let sub = 'Parazit Uygulamaları';
-    if (subCatLower.includes('iç parazit') || titleLower.includes('iç parazit') || titleLower.includes('ic parazit')) sub = 'İç Parazit Uygulaması';
+    if (subCatLower.includes('tasma') || titleLower.includes('tasma')) sub = 'Parazit Tasması';
+    else if (subCatLower.includes('iç parazit') || titleLower.includes('iç parazit') || titleLower.includes('ic parazit')) sub = 'İç Parazit Uygulaması';
     else if (subCatLower.includes('dış parazit') || titleLower.includes('dış parazit') || titleLower.includes('dis parazit')) sub = 'Dış Parazit Uygulaması';
-    else if (subCatLower.includes('tasma') || titleLower.includes('tasma')) sub = 'Parazit Tasması';
     return { category: 'Parazit', subCategory: sub };
   }
 

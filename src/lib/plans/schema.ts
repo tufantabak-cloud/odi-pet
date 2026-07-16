@@ -4,7 +4,7 @@ export const planCategorySchema = z.enum([
   'saglik', 'asi', 'parazit', 'bakim', 'beslenme', 'hijyen', 'aktivite', 'kontrol'
 ]);
 
-export const repeatRuleSchema = z.enum(['daily', 'weekly', 'monthly', 'yearly']).nullable().optional();
+export const repeatRuleSchema = z.enum(['hour', 'hourly', 'daily', 'weekly', 'monthly', 'yearly']).nullable().optional();
 export const notifUnitSchema = z.enum(['minute', 'hour', 'day']);
 export const planStatusSchema = z.enum(['active', 'completed', 'cancelled']);
 
@@ -22,7 +22,14 @@ export const createPlanSchema = z.object({
 });
 
 export const updatePlanSchema = createPlanSchema.partial().extend({
-  status: planStatusSchema.optional()
+  status: planStatusSchema.optional(),
+  administered_at: z.string().optional(),
+  brand_free_text: z.string().nullable().optional(),
+  product_free_text: z.string().nullable().optional(),
+  application_method: z.string().optional(),
+  protection_duration_days: z.number().int().positive().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  document_storage_path: z.string().nullable().optional()
 });
 
 export type CreatePlanInput = z.infer<typeof createPlanSchema>;

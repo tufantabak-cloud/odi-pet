@@ -31,8 +31,11 @@ export function getPlanDisplayTitle(plan: PlanLike): string {
 
   const displayName = vaccineName || productName;
   
-  if (plan.extra_data?.record_type === 'medication' && plan.extra_data?.medication?.name) {
-    return plan.extra_data.medication.name;
+  // İlaç kaydı: medication.name varsa göster, yoksa anlamlı fallback
+  const isMedicationPlan = plan.extra_data?.record_type === 'medication' || subType === 'İlaç Kullanımı';
+  if (isMedicationPlan) {
+    const medName = plan.extra_data?.medication?.name?.trim();
+    return medName || 'Belirtilmemiş İlaç';
   }
 
   if (displayName) {

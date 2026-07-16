@@ -10,6 +10,36 @@ export default function ProductSettingsPage() {
   const [categoryFilter, setCategoryFilter] = useState<'parasite_external' | 'parasite_internal' | 'parasite_collar' | 'food' | 'supplement' | 'all'>('all');
   const [wizardOpen, setWizardOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<any>(null);
+  const [durationVal, setDurationVal] = useState<number>(0);
+  const [durationUnit, setDurationUnit] = useState<'hour' | 'day' | 'week' | 'month' | 'year'>('day');
+
+  useEffect(() => {
+    if (wizardOpen) {
+      const days = editingTemplate?.duration_days;
+      if (days == null || isNaN(days) || days <= 0) {
+        setDurationVal(0);
+        setDurationUnit('day');
+      } else if (days % 365 === 0) {
+        setDurationVal(days / 365);
+        setDurationUnit('year');
+      } else if (days % 30 === 0) {
+        setDurationVal(days / 30);
+        setDurationUnit('month');
+      } else if (days % 7 === 0) {
+        setDurationVal(days / 7);
+        setDurationUnit('week');
+      } else {
+        const hours = days * 24;
+        if (hours < 24 && Number.isInteger(hours)) {
+          setDurationVal(hours);
+          setDurationUnit('hour');
+        } else {
+          setDurationVal(days);
+          setDurationUnit('day');
+        }
+      }
+    }
+  }, [wizardOpen, editingTemplate]);
 
   const fetchTemplates = async () => {
     try {
@@ -231,16 +261,38 @@ export default function ProductSettingsPage() {
               </button>
             </div>
             
-            <form className="flex flex-col gap-4" onSubmit={async (e) => {
+             <form className="flex flex-col gap-4" onSubmit={async (e) => {
               e.preventDefault();
               const fd = new FormData(e.currentTarget);
-              const durationDays = fd.get('duration_days');
+              
+              let finalDays: number | null = null;
+              if (durationVal > 0) {
+                switch (durationUnit) {
+                  case 'hour':
+                    finalDays = Number((durationVal / 24).toFixed(4));
+                    break;
+                  case 'week':
+                    finalDays = durationVal * 7;
+                    break;
+                  case 'month':
+                    finalDays = durationVal * 30;
+                    break;
+                  case 'year':
+                    finalDays = durationVal * 365;
+                    break;
+                  case 'day':
+                  default:
+                    finalDays = durationVal;
+                    break;
+                }
+              }
+
               const payload = {
                 category: fd.get('category'),
                 brand_name: fd.get('brand_name'),
                 product_name: fd.get('product_name') || null,
                 species: fd.get('species'),
-                duration_days: durationDays ? parseInt(durationDays as string) : null,
+                duration_days: finalDays,
                 is_active: fd.get('is_active') === 'on',
               };
               try {
@@ -275,7 +327,8 @@ export default function ProductSettingsPage() {
                   <input type="text" name="product_name" defaultValue={editingTemplate?.product_name || ''} placeholder="Örn: Plus" className="w-full px-3 py-2.5 bg-bg-main border border-border-main rounded-xl focus:border-primary focus:ring-1 focus:ring-primary outline-none text-[14px]" />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              
+              <div className="flex flex-col gap-4">
                 <div>
                   <label className="block text-[12px] font-bold text-text-secondary mb-1">Tür</label>
                   <select name="species" defaultValue={editingTemplate?.species || 'both'} className="w-full px-3 py-2.5 bg-bg-main border border-border-main rounded-xl focus:border-primary focus:ring-1 focus:ring-primary outline-none text-[14px]">
@@ -284,9 +337,57 @@ export default function ProductSettingsPage() {
                     <option value="dog">Sadece Köpek</option>
                   </select>
                 </div>
+                
                 <div>
-                  <label className="block text-[12px] font-bold text-text-secondary mb-1">Etki Süresi (Gün)</label>
-                  <input type="number" min="1" name="duration_days" defaultValue={editingTemplate?.duration_days || ''} placeholder="Örn: 90" className="w-full px-3 py-2.5 bg-bg-main border border-border-main rounded-xl focus:border-primary focus:ring-1 focus:ring-primary outline-none text-[14px]" />
+                  <label className="block text-[12px] font-bold text-text-secondary mb-1">Etki / Koruma Süresi</label>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <input
+                      type="number"
+                      min="0"
+                      value={durationVal || ''}
+                      onChange={(e) => setDurationVal(parseInt(e.target.value, 10) || 0)}
+                      placeholder="Örn: 3"
+                      className="w-20 px-3 py-2.5 bg-bg-main border border-border-main rounded-xl focus:border-primary focus:ring-1 focus:ring-primary outline-none text-[14px]"
+                    />
+                    
+                    <div className="flex items-center bg-bg-main p-1 rounded-xl border border-border-main grow justify-between">
+                      {(['hour', 'day', 'week', 'month', 'year'] as const).map((u) => {
+                        const labels: Record<string, string> = {
+                          hour: 'Saat',
+                          day: 'Gün',
+                          week: 'Hft',
+                          month: 'Ay',
+                          year: 'Yıl'
+                        };
+                        const isActive = durationUnit === u;
+                        return (
+                          <button
+                            key={u}
+                            type="button"
+                            onClick={() => setDurationUnit(u)}
+                            className={`px-2 py-1 text-[11px] font-bold rounded-lg transition-all ${
+                              isActive
+                                ? 'bg-primary text-white shadow-sm'
+                                : 'text-text-secondary hover:bg-border-main/50'
+                            }`}
+                          >
+                            {labels[u]}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  {durationVal > 0 && (
+                    <span className="text-[11px] text-text-muted mt-1 block">
+                      Veritabanına {
+                        durationUnit === 'hour' ? `${(durationVal / 24).toFixed(4)} gün` :
+                        durationUnit === 'week' ? `${durationVal * 7} gün` :
+                        durationUnit === 'month' ? `${durationVal * 30} gün` :
+                        durationUnit === 'year' ? `${durationVal * 365} gün` :
+                        `${durationVal} gün`
+                      } olarak kaydedilecektir.
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="flex gap-4 p-4 bg-bg-main rounded-xl border border-border-main mt-2">

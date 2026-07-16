@@ -239,7 +239,7 @@ export default function NutritionClient({
               <div className="flex flex-col gap-2 relative">
                 <label className="text-[13px] font-bold text-text-primary">Günlük Tüketim (Ortalama)</label>
                 <StepperInput name="daily_grams" min={1} step={10} unit="gram" defaultValue={profile?.daily_grams || ''} placeholder="Örn: 50" required className="w-full sm:w-fit" />
-                <CoachMark id="nutrition_daily" title="Günlük Tüketim Önemli" message="Köpeğinizin yaşına ve kilosuna göre günlük gramajı belirlemek sağlıklı gelişim için kritiktir." position="top" />
+                <CoachMark hintKey="nutrition_daily" title="Günlük Tüketim Önemli" message="Köpeğinizin yaşına ve kilosuna göre günlük gramajı belirlemek sağlıklı gelişim için kritiktir." icon="🥣" position="top" />
               </div>
             </div>
 

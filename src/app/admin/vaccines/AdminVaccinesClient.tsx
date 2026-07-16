@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { VACCINE_CORE_TYPE_LABELS, VaccineCoreType } from '@/lib/pets/vaccines'
 import { StepperInput } from '@/components/ui/StepperInput'
 
 // ─── Tipler ──────────────────────────────────────────────────────────────────

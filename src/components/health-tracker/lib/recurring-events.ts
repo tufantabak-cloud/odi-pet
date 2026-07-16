@@ -38,16 +38,14 @@ export function expandRecurringForTimeline(
   const rangeStartStr = toDateKey(rangeStart);
   const rangeEndStr = toDateKey(rangeEnd);
 
-  // Mevcut event'lerin due_date'lerini plan bazında kaydet (duplicate engeli)
+  // Mevcut event'lerin due_date'lerini task bazında kaydet (duplicate engeli)
   const existingDatesByKey = new Map<string, Set<string>>();
   events.forEach(e => {
-    // _source + _plan_id ya da title+category çiftini birleştirerek unique key oluştur
-    const key = e._plan_id
-      ? `${e._source || 'plan'}_${e._plan_id}`
-      : `${e.category}_${e.title || e.sub_category}`;
-    if (!existingDatesByKey.has(key)) existingDatesByKey.set(key, new Set());
+    // Görevi tanımlayan unique key: category + title/sub_category
+    const taskKey = `${e.category}_${e.title || e.sub_category}`;
+    if (!existingDatesByKey.has(taskKey)) existingDatesByKey.set(taskKey, new Set());
     const dd = (e.due_date || '').includes('T') ? e.due_date.split('T')[0] : (e.due_date || '');
-    if (dd) existingDatesByKey.get(key)!.add(dd);
+    if (dd) existingDatesByKey.get(taskKey)!.add(dd);
   });
 
   const virtualEvents: any[] = [];
@@ -63,7 +61,8 @@ export function expandRecurringForTimeline(
     if (processedPlanKeys.has(key)) return;
     processedPlanKeys.add(key);
 
-    const existingDates = existingDatesByKey.get(key) || new Set();
+    const taskKey = `${e.category}_${e.title || e.sub_category}`;
+    const existingDates = existingDatesByKey.get(taskKey) || new Set();
     const rawDueDate = (e.due_date || '').includes('T') ? e.due_date.split('T')[0] : (e.due_date || '');
     if (!rawDueDate) return;
 
@@ -84,14 +83,18 @@ export function expandRecurringForTimeline(
       });
     };
 
+    const interval = Number(e.extra_data?.interval) || 1;
+
     // İleri yönde genişlet
     const nextDate = (current: Date): Date | null => {
       const d = new Date(current);
       switch (repeatRule) {
-        case 'daily': d.setDate(d.getDate() + 1); break;
-        case 'weekly': d.setDate(d.getDate() + 7); break;
-        case 'monthly': d.setMonth(d.getMonth() + 1); break;
-        case 'yearly': d.setFullYear(d.getFullYear() + 1); break;
+        case 'hour':
+        case 'hourly': d.setHours(d.getHours() + interval); break;
+        case 'daily': d.setDate(d.getDate() + interval); break;
+        case 'weekly': d.setDate(d.getDate() + (interval * 7)); break;
+        case 'monthly': d.setMonth(d.getMonth() + interval); break;
+        case 'yearly': d.setFullYear(d.getFullYear() + interval); break;
         default: return null;
       }
       return d;
@@ -101,10 +104,12 @@ export function expandRecurringForTimeline(
     const prevDate = (current: Date): Date | null => {
       const d = new Date(current);
       switch (repeatRule) {
-        case 'daily': d.setDate(d.getDate() - 1); break;
-        case 'weekly': d.setDate(d.getDate() - 7); break;
-        case 'monthly': d.setMonth(d.getMonth() - 1); break;
-        case 'yearly': d.setFullYear(d.getFullYear() - 1); break;
+        case 'hour':
+        case 'hourly': d.setHours(d.getHours() - interval); break;
+        case 'daily': d.setDate(d.getDate() - interval); break;
+        case 'weekly': d.setDate(d.getDate() - (interval * 7)); break;
+        case 'monthly': d.setMonth(d.getMonth() - interval); break;
+        case 'yearly': d.setFullYear(d.getFullYear() - interval); break;
         default: return null;
       }
       return d;

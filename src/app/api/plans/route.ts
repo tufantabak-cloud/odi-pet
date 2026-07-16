@@ -77,9 +77,33 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Eksik veya hatalı veri gönderildi.', details: error.format() }, { status: 400 });
     }
     
+    // Database unique constraint violation error or error code 23505
+    if (error && typeof error === 'object' && ('code' in error && (error as any).code === '23505')) {
+      return NextResponse.json({ error: 'DUPLICATE_ACTIVE_VACCINE_PLAN' }, { status: 409 });
+    }
+
     const message = error instanceof Error ? error.message : 'Plan oluşturulurken bir hata oluştu.';
-    const status = message.includes('yetkiniz yok') ? 403 : 500;
     
+    if (message.startsWith('DUPLICATE_ACTIVE_VACCINE_PLAN:')) {
+      const existingId = message.split(':')[1];
+      return NextResponse.json({ error: 'DUPLICATE_ACTIVE_VACCINE_PLAN', plan_id: existingId }, { status: 409 });
+    }
+
+    const knownErrors = [
+      'VACCINE_PREFERENCE_DISABLED',
+      'PARASITE_PREFERENCE_DISABLED',
+      'PROTOCOL_NOT_FOUND',
+      'INACTIVE_PROTOCOL',
+      'PROTOCOL_SPECIES_MISMATCH',
+      'PROTOCOL_TYPE_MISMATCH',
+      'FORBIDDEN'
+    ];
+    if (knownErrors.includes(message)) {
+      const status = message === 'FORBIDDEN' ? 403 : 400;
+      return NextResponse.json({ error: message }, { status });
+    }
+    
+    const status = message.includes('yetkiniz yok') ? 403 : 500;
     return NextResponse.json({ error: message }, { status });
   }
 }

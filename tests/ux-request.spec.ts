@@ -1,9 +1,14 @@
 import { test, expect } from '@playwright/test';
 import * as fs from 'fs';
 
+interface LogFinding {
+  step: number | string;
+  msg: string;
+}
+
 test('User Request Flow', async ({ page }) => {
-  const logFindings = [];
-  const log = (step, msg) => {
+  const logFindings: LogFinding[] = [];
+  const log = (step: number | string, msg: string): void => {
     console.log(`[STEP ${step}] ${msg}`);
     logFindings.push({ step, msg });
   };
@@ -159,7 +164,8 @@ test('User Request Flow', async ({ page }) => {
     await page.screenshot({ path: 'step5_after_refresh.png' });
     
   } catch (error) {
-    log('ERROR', error.toString());
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    log('ERROR', errorMessage);
   }
 
   fs.writeFileSync('test_findings.json', JSON.stringify(logFindings, null, 2));

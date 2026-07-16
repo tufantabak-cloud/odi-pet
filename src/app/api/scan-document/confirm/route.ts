@@ -3,7 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { normalizeSpecies } from '@/lib/species'
 
 import { detectRouteConflict } from '@/features/pets/vaccination-algorithm'
-import type { AdministrationRoute } from '@/lib/database.types'
+import type { AdministrationRoute } from '@/lib/vaccines/vaccination-rules'
 
 export async function POST(req: Request) {
   try {

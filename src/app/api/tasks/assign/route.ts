@@ -17,6 +17,10 @@ export async function POST(req: NextRequest) {
   const { schedule_id, assigned_to, pet_id } = await req.json()
   if (!schedule_id || !pet_id) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
 
+  if (schedule_id.startsWith('virtual_')) {
+    return NextResponse.json({ error: 'Sanal takvim olayı değiştirilemez.' }, { status: 400 })
+  }
+
   const supabase = await createServerSupabaseClient()
 
   // Permission: must be owner or admin
@@ -73,6 +77,10 @@ export async function PATCH(req: NextRequest) {
   const { schedule_id, action, decline_reason } = await req.json()
   if (!schedule_id || !['accept', 'decline', 'complete'].includes(action)) {
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
+  }
+
+  if (schedule_id.startsWith('virtual_')) {
+    return NextResponse.json({ error: 'Sanal takvim olayı değiştirilemez.' }, { status: 400 })
   }
 
   const supabase = await createServerSupabaseClient()

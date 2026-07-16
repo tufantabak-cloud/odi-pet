@@ -172,27 +172,16 @@ export function BreedingApplicationsManager({ listingId }: { listingId: string }
             )}
 
             {isApproved && (
-              <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-blue-900 font-bold text-[14px]">
-                    <span className="text-lg">📱</span> 
-                    {profile?.phone ? profile.phone : 'Telefon numarası gizli veya yok'}
-                  </div>
-                  {profile?.phone && (
-                    <a href={`tel:${profile.phone}`} className="btn-primary bg-blue-600 hover:bg-blue-700 py-2 px-4 text-[12px]">
-                      Ara
-                    </a>
-                  )}
+              <div className="bg-green-50/50 border border-green-100 rounded-xl p-4 flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-green-800 font-bold text-[14px]">
+                  <span className="text-lg">✅</span> 
+                  Başvuru onaylandı
                 </div>
-                {!profile?.phone && (
-                  <div className="mt-2 text-[12px] text-amber-700 bg-amber-50 p-2 rounded-lg border border-amber-100 flex items-center gap-2">
-                    <span>🔒</span> 
-                    <span>Karşı taraf iletişim bilgilerini gizlemiş veya henüz telefon numarası eklememiş. Bu işlem için Premium plana geçmeniz gerekebilir.</span>
-                  </div>
-                )}
-                <p className="text-[10px] text-blue-600/70 text-center mt-1">Bu iletişim bilgisi yalnızca eşleşme amacıyla paylaşılmaktadır.</p>
+                <p className="text-[12px] text-green-700 leading-relaxed">
+                  Güvenli iletişim özelliği sonraki aşamada açılacaktır. Çift taraflı onay sistemi hazır olduğunda karşılıklı iletişim kurabileceksiniz.
+                </p>
                 
-                <div className="mt-2 pt-2 border-t border-blue-100/50">
+                <div className="mt-2 pt-2 border-t border-green-100/50">
                   <a
                     href="#"
                     onClick={(e) => {

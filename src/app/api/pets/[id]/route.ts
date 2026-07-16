@@ -131,63 +131,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     }
   }
 
-  // ─── Regenerate Vaccination Plan if birth_date changed ────────────────
-  const newBirthDate = payload.birth_date
-  if (newBirthDate && newBirthDate !== pet.birth_date) {
-    // Sadece eski otomatik oluşturulmuş planları sil
-    await supabase
-      .from('plans')
-      .delete()
-      .eq('pet_id', id)
-      .eq('extra_data->>auto_generated', 'true')
-
-    const born = new Date(newBirthDate)
-    const now = new Date()
-    const ageInMonths = (now.getFullYear() - born.getFullYear()) * 12 + (now.getMonth() - born.getMonth())
-    console.log('[PATCH pet] birth_date changed. newBirthDate:', newBirthDate, 'ageInMonths:', ageInMonths);
-    if (ageInMonths < 6) {
-      const generatedTasks = await generateVaccinationPlan(newBirthDate, pet.species, supabase, {
-        isOutdoor: pet.lifestyle === 'outdoor'
-      })
-      console.log('[PATCH pet] generatedTasks count:', generatedTasks.length);
-      if (generatedTasks.length > 0) {
-        const plansPayload = generatedTasks.map(t => ({
-          user_id: user.id,
-          pet_id: id,
-          category: t.category,
-          sub_type: t.sub_type,
-          scheduled_at: t.scheduled_at,
-          extra_data: {
-            ...t.extra_data,
-            record_type: 'vaccine_schedule'
-          }
-        }))
-        const { data: insertedPlans, error: insertErr } = await supabase
-          .from('plans')
-          .insert(plansPayload)
-          .select()
-
-        if (insertErr) {
-          console.error('[PATCH pet] plans insert error:', insertErr.message);
-        } else {
-          console.log('[PATCH pet] plans inserted successfully. count:', plansPayload.length);
-
-          const { count: notifCount, error: notifError } = await createVaccineNotifications(
-            user.id,
-            id,
-            insertedPlans ?? [],
-            supabase
-          );
-
-          if (notifError) {
-            console.error('[PATCH pet] notifications insert error:', notifError);
-          } else {
-            console.log('[PATCH pet] notifications inserted successfully. count:', notifCount);
-          }
-        }
-      }
-    }
-  }
+  // Removed plan regeneration on birth_date change to isolate logic to /plan-yap/asi
 
   revalidatePath('/owner/dashboard')
   revalidateTag('dashboard', 'default')

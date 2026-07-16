@@ -110,10 +110,13 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
       const now = new Date();
       const pastYear = new Date();
       pastYear.setDate(now.getDate() - 365); // Geçmiş 1 yılı ajandada gösterebilmek için 365 gün yapıldı
+      const pastThreeYears = new Date();
+      pastThreeYears.setDate(now.getDate() - 1095); // Aşı/koruma geçerlilik sürelerini yakalamak için geçmiş 3 yıl sorgulanır
       const future365 = new Date();
       future365.setDate(now.getDate() + 365);
 
       const pastYearStr = pastYear.toISOString().split('T')[0];
+      const pastThreeYearsStr = pastThreeYears.toISOString().split('T')[0];
       const future365Str = future365.toISOString().split('T')[0];
 
       const usePlansOnly = process.env.NEXT_PUBLIC_USE_PLANS_ONLY === 'true';
@@ -125,20 +128,20 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
           .from('health_schedules')
           .select('*')
           .eq('pet_id', petId)
-          .gte('due_date', pastYearStr)
+          .gte('due_date', pastThreeYearsStr)
           .lte('due_date', future365Str),
         supabase
           .from('plans')
           .select('*')
           .eq('pet_id', petId)
-          .gte('scheduled_at', pastYearStr)
+          .gte('scheduled_at', pastThreeYearsStr)
           .lte('scheduled_at', future365Str),
         supabase
-          .from('parasite_plan_items')
-          .select('*, parasite_products(name)')
+          .from('parasite_records')
+          .select('*')
           .eq('pet_id', petId)
-          .gte('recommended_start', pastYearStr)
-          .lte('recommended_start', future365Str),
+          .gte('administered_at', pastThreeYearsStr)
+          .lte('administered_at', future365Str),
         supabase
           .from('pets')
           .select('id, name, species, gender, is_neutered')
@@ -156,71 +159,105 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
         bakim: 'Bakım', beslenme: 'Beslenme', hijyen: 'Hijyen', aktivite: 'Aktivite'
       };
 
+      const completedPlanIdsInParasiteRecords = new Set(
+        (parasiteRes.data || []).map((item: any) => item.plan_id).filter(Boolean)
+      );
+
       const mergedEvents = [
         ...(schedulesRes.data || []),
-        ...(plansRes.data || []).map((p: any) => {
-          let dueDateStr = p.scheduled_at?.split('T')[0];
-          let dueTimeStr = '12:00:00';
-          if (p.scheduled_at) {
-            try {
-              const d = new Date(p.scheduled_at);
-              dueDateStr = d.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' });
-              dueTimeStr = d.toLocaleTimeString('tr-TR', {
-                timeZone: 'Europe/Istanbul',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false
-              });
-            } catch(e) {}
-          }
-          let freqDays = p.extra_data?.frequency_days || 0;
-          let freqLabel = p.extra_data?.frequency_label || '';
+        ...(plansRes.data || [])
+          .filter((p: any) => !(p.category === 'parazit' && p.status === 'completed' && completedPlanIdsInParasiteRecords.has(p.id)))
+          .map((p: any) => {
+            let dueDateStr = p.scheduled_at?.split('T')[0];
+            let dueTimeStr = '12:00:00';
+            if (p.scheduled_at) {
+              try {
+                const d = new Date(p.scheduled_at);
+                dueDateStr = d.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' });
+                dueTimeStr = d.toLocaleTimeString('tr-TR', {
+                  timeZone: 'Europe/Istanbul',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                  hour12: false
+                });
+              } catch(e) {}
+            }
+            let freqDays = p.extra_data?.frequency_days || 
+                           p.extra_data?.product?.duration_days || 
+                           p.extra_data?.metadata?.duration_days || 
+                           p.extra_data?.protection_duration_days || 
+                           0;
+            let freqLabel = p.extra_data?.frequency_label || '';
 
-          if (p.repeat_rule) {
-            if (p.repeat_rule === 'daily') { freqDays = 1; freqLabel = 'Her gün'; }
-            else if (p.repeat_rule === 'weekly') { freqDays = 7; freqLabel = 'Haftalık'; }
-            else if (p.repeat_rule === 'monthly') { freqDays = 30; freqLabel = 'Aylık'; }
-            else if (p.repeat_rule === 'yearly') { freqDays = 365; freqLabel = 'Yıllık'; }
-          }
+            if (p.repeat_rule) {
+              const interval = Number(p.extra_data?.interval) || 1;
+              if (p.repeat_rule === 'hour' || p.repeat_rule === 'hourly') {
+                freqDays = Number((interval / 24).toFixed(4));
+                freqLabel = interval === 1 ? 'Saatlik' : `Her ${interval} saatte bir`;
+              } else if (p.repeat_rule === 'daily') {
+                freqDays = interval;
+                freqLabel = interval === 1 ? 'Her gün' : `Her ${interval} günde bir`;
+              } else if (p.repeat_rule === 'weekly') {
+                freqDays = interval * 7;
+                freqLabel = interval === 1 ? 'Haftalık' : `Her ${interval} haftada bir`;
+              } else if (p.repeat_rule === 'monthly') {
+                freqDays = interval * 30;
+                freqLabel = interval === 1 ? 'Aylık' : `Her ${interval} ayda bir`;
+              } else if (p.repeat_rule === 'yearly') {
+                freqDays = interval * 365;
+                freqLabel = interval === 1 ? 'Yıllık' : `Her ${interval} yılda bir`;
+              }
+            }
 
-          return {
-            id: `plan_${p.id}`,
-            _plan_id: p.id,
-            _source: 'plans',
-            pet_id: p.pet_id,
-            title: getPlanDisplayTitle(p),
-            due_date: dueDateStr,
-            due_time: dueTimeStr,
-            status: p.status === 'completed' ? 'done' : p.status === 'cancelled' ? 'done' : 'upcoming',
-            category: PLAN_CAT_MAP[p.category] || p.category,
-            sub_category: p.sub_type,
-            vaccines: p.extra_data?.vaccine ? { name: p.extra_data.vaccine.name } : null,
-            notes: p.note,
-            updated_at: p.updated_at,
-            frequency_days: freqDays,
-            frequency_label: freqLabel,
-            repeat_rule: p.repeat_rule || null, // ← expandRecurringForTimeline için gerekli
-          };
-        }),
+            return {
+              id: `plan_${p.id}`,
+              _plan_id: p.id,
+              _source: 'plans',
+              _plan_category: p.category,
+              pet_id: p.pet_id,
+              title: getPlanDisplayTitle(p),
+              due_date: dueDateStr,
+              due_time: dueTimeStr,
+              status: p.status === 'completed' ? 'done' : p.status === 'cancelled' ? 'done' : 'upcoming',
+              category: PLAN_CAT_MAP[p.category] || p.category,
+              sub_category: p.sub_type,
+              vaccines: p.extra_data?.vaccine ? { name: p.extra_data.vaccine.name } : null,
+              notes: p.note,
+              updated_at: p.updated_at,
+              frequency_days: freqDays,
+              frequency_label: freqLabel,
+              repeat_rule: p.repeat_rule || null, // ← expandRecurringForTimeline için gerekli
+              extra_data: p.extra_data,
+            };
+          }),
         ...(parasiteRes.data || []).map((item: any) => {
-          const typeLabel = item.parasite_type === 'internal' ? 'İç Parazit' : item.parasite_type === 'external' ? 'Dış Parazit' : 'Karma Parazit';
-          const productName = item.parasite_products?.name || (item.parasite_type === 'internal' ? 'İç Parazit Uygulaması' : 'Dış Parazit Uygulaması');
+          const typeLabel = 
+            item.parasite_type === 'internal' ? 'İç Parazit' : 
+            item.parasite_type === 'external' ? 'Dış Parazit' : 
+            item.parasite_type === 'collar' ? 'Parazit Tasması' : 
+            'Karma Parazit';
+          const productName = item.product_free_text || item.brand_free_text || (
+            item.parasite_type === 'internal' ? 'İç Parazit Uygulaması' :
+            item.parasite_type === 'external' ? 'Dış Parazit Uygulaması' :
+            item.parasite_type === 'collar' ? 'Parazit Tasması' :
+            'Karma Parazit Uygulaması'
+          );
           return {
             id: `parasite_${item.id}`,
             _plan_id: item.id,
-            _source: 'parasite',
+            _source: 'parasite_records',
             pet_id: item.pet_id,
             title: productName,
-            due_date: item.recommended_start,
+            due_date: item.administered_at,
             due_time: '12:00:00',
-            status: item.status === 'completed' ? 'done' : 'upcoming',
+            status: 'done',
             category: 'Asi',
             sub_category: typeLabel,
             vaccines: null,
             notes: item.notes || '',
-            updated_at: item.updated_at,
-            frequency_days: item.extra_data?.product_protection_days || 30,
+            updated_at: item.created_at,
+            frequency_days: item.protection_duration_days || 30,
             frequency_label: typeLabel,
           };
         })

@@ -3,6 +3,7 @@ import { createAdminSupabaseClient } from '@/lib/supabase/server'
 import { getDailyQuestion, SmartQuestion } from '@/lib/profiling-engine'
 import { detectAnomalies, SmartInsight } from '@/lib/insight-engine'
 import { getPlanDisplayTitle } from '@/lib/plans/utils'
+import { fetchEstrusVirtualEvents } from '@/lib/estrus/virtual-events'
 
 /* ── Dashboard veri sözleşmesi ────────────────────────────── */
 
@@ -168,6 +169,12 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
               pets: { name: pets.find(p => p.id === item.pet_id)?.name || '' }
             })) as DashboardSchedule[]
           }
+
+          // Inject virtual estrus forecast events as upcoming schedules
+          const virtualEstrusEvents = await fetchEstrusVirtualEvents(supabase, pets)
+          if (virtualEstrusEvents && virtualEstrusEvents.length > 0) {
+            upcomingSchedules = [...upcomingSchedules, ...virtualEstrusEvents]
+          }
         }
 
         /* ── Plans tablosundan veri çek ve merge et ───────── */
@@ -223,7 +230,12 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
                 id: p.id,
                 pet_id: p.pet_id,
                 category: 'parazit',
-                sub_type: p.product_name || (p.parasite_type === 'internal' ? 'İç Parazit' : p.parasite_type === 'external' ? 'Dış Parazit' : 'Kombine Parazit'),
+                sub_type: p.product_name || (
+                  p.parasite_type === 'internal' ? 'İç Parazit' :
+                  p.parasite_type === 'external' ? 'Dış Parazit' :
+                  p.parasite_type === 'collar' ? 'Parazit Tasması' :
+                  'Kombine Parazit'
+                ),
                 scheduled_at: p.due_date ? `${p.due_date}T00:00:00Z` : null,
                 status: p.status,
                 extra_data: p.extra_data,
@@ -277,6 +289,7 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
                 id: `plan_${p.id}`,
                 _plan_id: p.id,
                 _source: 'plans',
+                _plan_category: p.category,
                 pet_id: p.pet_id,
                 title: getPlanDisplayTitle(p),
                 due_date: dueDate,

@@ -1,39 +1,11 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/lib/database.types';
 
+type PlanInsert = Database['public']['Tables']['plans']['Insert'];
+
 // parasite-algorithm.ts
 
-// ── SABITLER ────────────────────────────────────────────────
-
-// Yavru protokol yaş eşikleri (gün)
-const PUPPY_KITTEN_PHASE1_END_DAYS = 60;  // 2 ay — her 2 haftada bir
-const PUPPY_KITTEN_PHASE2_END_DAYS = 180; // 6 ay — ayda bir
-// 180 gün sonrası yetişkin — 3 ayda bir
-
-const INTERVAL_PHASE1_DAYS = 14;  // 2 haftada bir
-const INTERVAL_PHASE2_DAYS = 30;  // ayda bir
-const INTERVAL_ADULT_DAYS  = 90;  // 3 ayda bir (varsayılan)
-
-// ── KOMBINE ÜRÜN SABITLER ───────────────────────────────────
-
-// Bu etken maddeler hem iç hem dış paraziti kapsar
-const COMBINED_INTERNAL_INGREDIENTS = [
-  'Milbemisin Oksim',
-  'Moksidektin',
-  'Pirantel',
-  'Prazikuantel',
-];
-
-const COMBINED_EXTERNAL_INGREDIENTS = [
-  'Afoxolaner',
-  'Fluralaner',
-  'Sarolaner',
-  'Selamektin',
-  'İmidakloprid',
-  'Permetrin',
-];
-
-// ── TİPLER ──────────────────────────────────────────────────
+const INTERVAL_ADULT_DAYS  = 90;
 
 export type ParasiteIntervalResult = {
   intervalDays: number;
@@ -43,13 +15,6 @@ export type ParasiteIntervalResult = {
   vetReviewReason?: string;
 };
 
-// ── FONKSİYONLAR ────────────────────────────────────────────
-
-/**
- * P4: Yaşa göre dinamik parazit uygulama aralığı hesapla.
- * Doğum tarihi kesinliği 'approximate' veya 'unknown' ise
- * veteriner değerlendirmesi işaretle.
- */
 export function calculateParasiteInterval(
   petAgeInDays: number,
   lastApplicationDate: string | null,
@@ -57,8 +22,6 @@ export function calculateParasiteInterval(
   lifestyle: 'indoor' | 'outdoor' | 'mixed',
   birthDatePrecision: 'exact' | 'month_known' | 'approximate' | 'unknown'
 ): ParasiteIntervalResult {
-
-  // Doğum tarihi bilinmiyorsa veteriner değerlendirmesi
   if (birthDatePrecision === 'unknown') {
     return {
       intervalDays: INTERVAL_ADULT_DAYS,
@@ -69,24 +32,17 @@ export function calculateParasiteInterval(
     };
   }
 
-  // Yaklaşık yaş — taslak plan oluştur, uyarı ekle
   const requiresVetReview = birthDatePrecision === 'approximate';
+  let intervalDays = INTERVAL_ADULT_DAYS;
+  let phase: ParasiteIntervalResult['phase'] = 'adult';
 
-  let intervalDays: number;
-  let phase: ParasiteIntervalResult['phase'];
-
-  if (petAgeInDays < PUPPY_KITTEN_PHASE1_END_DAYS) {
-    // Faz 1: 15. günden 2 aya kadar — 2 haftada bir
-    intervalDays = INTERVAL_PHASE1_DAYS;
+  if (petAgeInDays < 60) {
+    intervalDays = 14;
     phase = 'puppy_phase1';
-  } else if (petAgeInDays < PUPPY_KITTEN_PHASE2_END_DAYS) {
-    // Faz 2: 2 aydan 6 aya kadar — ayda bir
-    intervalDays = INTERVAL_PHASE2_DAYS;
+  } else if (petAgeInDays < 180) {
+    intervalDays = 30;
     phase = 'puppy_phase2';
   } else {
-    // Yetişkin: 6 aydan sonra — 3 ayda bir
-    // Evden çıkmayan kedi: veteriner kararıyla 4-6 aya esnetilebilir
-    // Sistem güvenli varsayılan olan 3 ayı kullanır
     intervalDays = INTERVAL_ADULT_DAYS;
     phase = 'adult';
   }
@@ -103,22 +59,11 @@ export function calculateParasiteInterval(
   };
 }
 
-/**
- * P5: Ürünün kapsadığı parazit tiplerini döner.
- * active_ingredient üzerinden iç/dış/kombine belirlenir.
- */
 export function detectParasiteTypeCoverage(
-  activeIngredient: string
+  parasiteType: string
 ): { coversInternal: boolean; coversExternal: boolean; isCombined: boolean } {
-  const ingredient = activeIngredient.toLowerCase();
-
-  const coversInternal = COMBINED_INTERNAL_INGREDIENTS.some(i =>
-    ingredient.includes(i.toLowerCase())
-  );
-  const coversExternal = COMBINED_EXTERNAL_INGREDIENTS.some(i =>
-    ingredient.includes(i.toLowerCase())
-  );
-
+  const coversInternal = parasiteType === 'internal' || parasiteType === 'combined';
+  const coversExternal = parasiteType === 'external' || parasiteType === 'combined';
   return {
     coversInternal,
     coversExternal,
@@ -126,27 +71,22 @@ export function detectParasiteTypeCoverage(
   };
 }
 
-/**
- * P5: Kombine ürün kaydedilince ilgili planları kapat.
- * iç + dış parazit planlarını 'completed' yapar.
- */
 export async function closeCombinedParasitePlans(
   petId: string,
-  productId: string,
+  protocolId: string,
   recordedAt: string,
   supabase: SupabaseClient<Database>
 ): Promise<void> {
-  const { data: product } = await supabase
-    .from('parasite_products')
-    .select('active_ingredient, protection_duration_days')
-    .eq('id', productId)
+  const { data: proto } = await supabase
+    .from('parasite_protocols')
+    .select('parasite_type')
+    .eq('id', protocolId)
     .single();
 
-  if (!product) return;
+  if (!proto) return;
 
-  const { coversInternal, coversExternal } = detectParasiteTypeCoverage(
-    product.active_ingredient || ''
-  );
+  const coversInternal = proto.parasite_type === 'internal' || proto.parasite_type === 'combined';
+  const coversExternal = proto.parasite_type === 'external' || proto.parasite_type === 'combined';
 
   const typesToClose: string[] = [];
   if (coversInternal) typesToClose.push('internal');
@@ -155,54 +95,34 @@ export async function closeCombinedParasitePlans(
 
   if (!typesToClose.length) return;
 
-  const { error } = await (supabase as any)
-    .from('parasite_plan_items')
-    .update({
-      status: 'completed',
-      completed_record_id: null,
-      updated_at: new Date().toISOString(),
-    } as any)
+  const { data: activePlans } = await supabase
+    .from('plans')
+    .select('*')
     .eq('pet_id', petId)
-    .in('parasite_type', typesToClose)
-    .in('status', ['upcoming', 'due', 'overdue']);
+    .eq('category', 'parazit')
+    .eq('status', 'active');
 
-  if (error) {
-    console.error('[P5] Kombine plan kapatma hatası:', error);
-    return;
-  }
-
-  const nextDueDate = addDays(recordedAt, product.protection_duration_days);
-
-  for (const parasiteType of typesToClose) {
-    await (supabase as any).from('parasite_plan_items').insert({
-      pet_id: petId,
-      product_id: productId,
-      parasite_type: parasiteType as 'internal' | 'external' | 'combined',
-      application_method: 'spot_on',
-      dose_number: 1,
-      recommended_start: nextDueDate,
-      recommended_end: addDays(nextDueDate, 7),
-      status: 'upcoming',
-      plan_origin: 'system_rule',
-      extra_data: {
-        auto_generated_by: 'combined_product_close',
-        product_protection_days: product.protection_duration_days,
-      },
-    } as any);
+  if (activePlans) {
+    for (const plan of activePlans) {
+      const extraData = plan.extra_data as Record<string, unknown> | null;
+      const planType = extraData?.parasite_type as string | undefined;
+      if (planType && typesToClose.includes(planType)) {
+        await supabase
+          .from('plans')
+          .update({ status: 'completed', updated_at: new Date().toISOString() })
+          .eq('id', plan.id);
+      }
+    }
   }
 }
 
-// Cyrillic spelling alias to avoid typos breaking code
 export const closeCombinedParaсиtePlans = closeCombinedParasitePlans;
 
-// Yardımcı fonksiyon
 function addDays(isoDate: string, days: number): string {
   const d = new Date(isoDate);
   d.setDate(d.getDate() + days);
   return d.toISOString().split('T')[0];
 }
-
-// ── ÇAKIŞMA DEDEKTÖRÜ ───────────────────────────────────────
 
 export type ConflictCheckResult =
   | { hasConflict: false }
@@ -213,28 +133,22 @@ export type ConflictCheckResult =
       message: string;
     };
 
-/**
- * P6: Koruma periyodunda tekrar kayıt girişini kontrol eder.
- * Aynı parazit tipini kapsayan aktif kayıt varsa çakışma döner.
- */
 export async function checkParasiteConflict(
   petId: string,
-  newProductId: string,
+  newProtocolId: string,
   newApplicationDate: string,
   supabase: SupabaseClient<Database>
 ): Promise<ConflictCheckResult> {
-  // Yeni ürünün kapsamını belirle
-  const { data: newProduct } = await supabase
-    .from('parasite_products')
-    .select('active_ingredient, protection_duration_days, name')
-    .eq('id', newProductId)
+  const { data: newProto } = await supabase
+    .from('parasite_protocols')
+    .select('parasite_type, protocol_name')
+    .eq('id', newProtocolId)
     .single();
 
-  if (!newProduct) return { hasConflict: false };
+  if (!newProto) return { hasConflict: false };
 
-  const { coversInternal, coversExternal } = detectParasiteTypeCoverage(
-    newProduct.active_ingredient || ''
-  );
+  const coversInternal = newProto.parasite_type === 'internal' || newProto.parasite_type === 'combined';
+  const coversExternal = newProto.parasite_type === 'external' || newProto.parasite_type === 'combined';
 
   const typesToCheck: string[] = [];
   if (coversInternal) typesToCheck.push('internal', 'combined');
@@ -242,25 +156,22 @@ export async function checkParasiteConflict(
 
   if (!typesToCheck.length) return { hasConflict: false };
 
-  // Son 180 gün içindeki tamamlanmış kayıtlara bak
   const windowStart = addDays(newApplicationDate, -180);
 
-  const { data: recentRecords } = await (supabase as any)
-    .from('parasite_plan_items')
-    .select('product_id, updated_at, parasite_type, extra_data')
+  const { data: recentRecords } = await supabase
+    .from('parasite_records')
+    .select('*')
     .eq('pet_id', petId)
-    .eq('status', 'completed')
     .in('parasite_type', [...new Set(typesToCheck)])
-    .gte('updated_at', windowStart)
-    .order('updated_at', { ascending: false })
+    .gte('administered_at', windowStart)
+    .order('administered_at', { ascending: false })
     .limit(1);
 
   if (!recentRecords?.length) return { hasConflict: false };
 
   const lastRecord = recentRecords[0];
-  const protectionDays =
-    lastRecord.extra_data?.product_protection_days ?? 30;
-  const lastApplied = new Date(lastRecord.updated_at);
+  const protectionDays = lastRecord.protection_duration_days ?? 30;
+  const lastApplied = new Date(lastRecord.administered_at);
   const protectionEnds = new Date(lastApplied);
   protectionEnds.setDate(protectionEnds.getDate() + protectionDays);
   const newDate = new Date(newApplicationDate);
@@ -270,15 +181,14 @@ export async function checkParasiteConflict(
       (protectionEnds.getTime() - newDate.getTime()) / (1000 * 60 * 60 * 24)
     );
 
-    // Önceki ürünün adını al
-    let prevProductName = 'önceki ürün';
-    if (lastRecord.product_id) {
-      const { data: prevProduct } = await supabase
-        .from('parasite_products')
-        .select('name')
-        .eq('id', lastRecord.product_id)
+    let prevProductName = lastRecord.product_free_text || lastRecord.brand_free_text || 'önceki uygulama';
+    if (lastRecord.parasite_protocol_id) {
+      const { data: prevProto } = await supabase
+        .from('parasite_protocols')
+        .select('protocol_name')
+        .eq('id', lastRecord.parasite_protocol_id)
         .single();
-      if (prevProduct) prevProductName = prevProduct.name;
+      if (prevProto) prevProductName = prevProto.protocol_name;
     }
 
     return {
@@ -292,8 +202,6 @@ export async function checkParasiteConflict(
   return { hasConflict: false };
 }
 
-// ── TASMA YAŞ KISIT MOTORU ──────────────────────────────────
-
 export type CollarAgeCheckResult =
   | { allowed: true }
   | {
@@ -303,32 +211,23 @@ export type CollarAgeCheckResult =
       message: string;
     };
 
-/**
- * P7: Tasma ürünü için pet yaşını kontrol eder.
- * min_age_weeks kısıtına uymayan kayıt engellenir.
- */
 export async function checkCollarAgeRestriction(
   petBirthDate: string,
-  productId: string,
+  protocolId: string,
   applicationDate: string,
   supabase: SupabaseClient<Database>
 ): Promise<CollarAgeCheckResult> {
-  // Ürünün yaş kısıtını al
-  const { data: product } = await supabase
-    .from('parasite_products')
-    .select('name, min_age_weeks, application_method')
-    .eq('id', productId)
+  const { data: proto } = await supabase
+    .from('parasite_protocols')
+    .select('protocol_name, min_age_weeks, default_application_method')
+    .eq('id', protocolId)
     .single();
 
-  if (!product) return { allowed: true };
+  if (!proto) return { allowed: true };
 
-  // Tasma değilse kısıt yok
-  if (product.application_method !== 'collar') return { allowed: true };
+  if (proto.default_application_method !== 'collar') return { allowed: true };
+  if (!proto.min_age_weeks) return { allowed: true };
 
-  // min_age_weeks tanımlı değilse kısıt yok
-  if (!product.min_age_weeks) return { allowed: true };
-
-  // Pet yaşını hesapla (uygulama tarihinde)
   const birth = new Date(petBirthDate);
   const applied = new Date(applicationDate);
   const ageInDays = Math.floor(
@@ -336,19 +235,17 @@ export async function checkCollarAgeRestriction(
   );
   const ageInWeeks = Math.floor(ageInDays / 7);
 
-  if (ageInWeeks < product.min_age_weeks) {
+  if (ageInWeeks < proto.min_age_weeks) {
     return {
       allowed: false,
-      minAgeWeeks: product.min_age_weeks,
+      minAgeWeeks: proto.min_age_weeks,
       petAgeWeeks: ageInWeeks,
-      message: `${product.name} yalnızca ${product.min_age_weeks} haftadan büyük hayvanlarda kullanılabilir. Dostunuz şu an ${ageInWeeks} haftalık.`,
+      message: `${proto.protocol_name} yalnızca ${proto.min_age_weeks} haftadan büyük hayvanlarda kullanılabilir. Dostunuz şu an ${ageInWeeks} haftalık.`,
     };
   }
 
   return { allowed: true };
 }
-
-// ── TASMA + DAMLA AYNI GÜN ÇAKIŞMA ─────────────────────────
 
 export type CollarSpotOnConflictResult =
   | { hasConflict: false }
@@ -359,51 +256,41 @@ export type CollarSpotOnConflictResult =
       message: string;
     };
 
-/**
- * P8: Aynı gün hem tasma hem damla kaydı girilirse uyarı üret.
- * Engel değil — uyarı. Kullanıcı onaylarsa kayıt devam eder.
- */
 export async function checkCollarSpotOnSameDayConflict(
   petId: string,
   newApplicationMethod: string,
   applicationDate: string,
   supabase: SupabaseClient<Database>
 ): Promise<CollarSpotOnConflictResult> {
-  // Yalnızca tasma veya damla için kontrol yap
   const relevantMethods = ['collar', 'spot_on'];
   if (!relevantMethods.includes(newApplicationMethod)) {
     return { hasConflict: false };
   }
 
-  // Aynı gün diğer dış parazit yöntemi var mı?
-  const conflictMethod =
-    newApplicationMethod === 'collar' ? 'spot_on' : 'collar';
-
+  const conflictMethod = newApplicationMethod === 'collar' ? 'spot_on' : 'collar';
   const dayStart = applicationDate.split('T')[0] + 'T00:00:00.000Z';
   const dayEnd   = applicationDate.split('T')[0] + 'T23:59:59.999Z';
 
-  const { data: sameDay } = await (supabase as any)
-    .from('parasite_plan_items')
-    .select('application_method, product_id')
+  const { data: sameDay } = await supabase
+    .from('parasite_records')
+    .select('application_method, parasite_protocol_id, product_free_text, brand_free_text')
     .eq('pet_id', petId)
     .eq('application_method', conflictMethod)
-    .eq('status', 'completed')
-    .gte('updated_at', dayStart)
-    .lte('updated_at', dayEnd)
+    .gte('administered_at', dayStart.split('T')[0])
+    .lte('administered_at', dayEnd.split('T')[0])
     .limit(1);
 
   if (!sameDay?.length) return { hasConflict: false };
 
-  // Çakışan ürün adını al
-  let existingProductName = 'dış parazit ürünü';
   const existingRecord = sameDay[0];
-  if (existingRecord.product_id) {
-    const { data: prod } = await supabase
-      .from('parasite_products')
-      .select('name')
-      .eq('id', existingRecord.product_id)
+  let existingProductName = existingRecord.product_free_text || existingRecord.brand_free_text || 'dış parazit uygulaması';
+  if (existingRecord.parasite_protocol_id) {
+    const { data: proto } = await supabase
+      .from('parasite_protocols')
+      .select('protocol_name')
+      .eq('id', existingRecord.parasite_protocol_id)
       .single();
-    if (prod) existingProductName = prod.name;
+    if (proto) existingProductName = proto.protocol_name;
   }
 
   const methodLabel: Record<string, string> = {
@@ -419,8 +306,6 @@ export async function checkCollarSpotOnSameDayConflict(
   };
 }
 
-// ── KULAK UYUZU KAPSAM TESPİTİ ─────────────────────────────
-
 export type EarMiteInsightResult =
   | { coversEarMites: false }
   | {
@@ -429,108 +314,117 @@ export type EarMiteInsightResult =
       insightLevel: 'info';
     };
 
-/**
- * P9: Kaydedilen ürün kulak uyuzunu kapsıyorsa insight rozeti üret.
- * covers_ear_mites alanı P2'de set edildi — doğrudan okur.
- * Yalnızca detaylı modda kullanıcıya gösterilir.
- */
 export async function checkEarMiteCoverage(
-  productId: string,
+  protocolId: string,
   supabase: SupabaseClient<Database>
 ): Promise<EarMiteInsightResult> {
-  const { data: product } = await (supabase as any)
-    .from('parasite_products')
-    .select('name, covers_ear_mites, active_ingredient')
-    .eq('id', productId)
+  const { data: proto } = await supabase
+    .from('parasite_protocols')
+    .select('protocol_name, parasite_code')
+    .eq('id', protocolId)
     .single();
 
-  if (!product || !product.covers_ear_mites) {
+  if (!proto) return { coversEarMites: false };
+
+  const covers = proto.parasite_code?.toLowerCase().includes('combined') || proto.protocol_name?.toLowerCase().includes('karma');
+
+  if (!covers) {
     return { coversEarMites: false };
   }
 
   return {
     coversEarMites: true,
     insightLevel: 'info',
-    message: `${product.name} aynı zamanda kulak uyuzuna (Otodectes cynotis) karşı da koruma sağlar. Kulak kontrolü için veterinerinize danışabilirsiniz.`,
+    message: `${proto.protocol_name} aynı zamanda kulak uyuzuna karşı da koruma sağlar.`,
   };
 }
-
-// ── ÜRÜN BAZLI DİNAMİK TEKRAR HESABI ───────────────────────
 
 export type NextParasiteDueDateResult = {
   nextDueDate: string;
   protectionDays: number;
   productName: string;
-  nextDueDateWindowEnd: string; // 7 günlük uygulama penceresi
+  nextDueDateWindowEnd: string;
 };
 
-/**
- * P10: Son uygulama tarihinden sonraki dozu hesaplar.
- * Sabit 30/90 gün yerine protection_duration_days esas alınır.
- * Bravecto: 84 gün, Seresto: 240 gün, spot-on: 30 gün vb.
- */
 export async function calculateNextParasiteDueDate(
-  productId: string,
+  protocolId: string,
   lastApplicationDate: string,
   supabase: SupabaseClient<Database>
 ): Promise<NextParasiteDueDateResult | null> {
-  const { data: product } = await supabase
-    .from('parasite_products')
-    .select('name, protection_duration_days')
-    .eq('id', productId)
+  const { data: proto } = await supabase
+    .from('parasite_protocols')
+    .select('protocol_name, default_protection_duration_days')
+    .eq('id', protocolId)
     .single();
 
-  if (!product) return null;
+  if (!proto) return null;
 
-  const nextDueDate = addDays(lastApplicationDate, product.protection_duration_days);
+  const nextDueDate = addDays(lastApplicationDate, proto.default_protection_duration_days);
   const nextDueDateWindowEnd = addDays(nextDueDate, 7);
 
   return {
     nextDueDate,
-    protectionDays: product.protection_duration_days,
-    productName: product.name,
+    protectionDays: proto.default_protection_duration_days,
+    productName: proto.protocol_name,
     nextDueDateWindowEnd,
   };
 }
 
-/**
- * P10: Kayıt tamamlandığında parasite_plan_items'a
- * sonraki dozu otomatik ekler.
- */
 export async function scheduleNextParasiteDose(
   petId: string,
-  productId: string,
+  protocolId: string,
   lastApplicationDate: string,
   parasiteType: 'internal' | 'external' | 'combined',
   applicationMethod: string,
   supabase: SupabaseClient<Database>
 ): Promise<void> {
   const next = await calculateNextParasiteDueDate(
-    productId,
+    protocolId,
     lastApplicationDate,
     supabase
   );
 
   if (!next) return;
 
-  const { error } = await (supabase as any)
-    .from('parasite_plan_items')
-    .insert({
-      pet_id: petId,
-      product_id: productId,
-      parasite_type: parasiteType,
-      application_method: applicationMethod,
-      dose_number: 1,
-      recommended_start: next.nextDueDate,
-      recommended_end: next.nextDueDateWindowEnd,
-      status: 'upcoming',
-      plan_origin: 'system_rule',
-      extra_data: {
-        auto_generated_by: 'schedule_next_dose',
-        product_protection_days: next.protectionDays,
-        product_name: next.productName,
-      },
-    } as any);
+  const { data: proto } = await supabase
+    .from('parasite_protocols')
+    .select('*')
+    .eq('id', protocolId)
+    .single();
+
+  if (!proto) return;
+
+  // Resolve the user_id from the active session (required by plans schema)
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user?.id) {
+    console.warn('[P10] No authenticated user — skipping next-dose scheduling');
+    return;
+  }
+
+  const subType = 
+    proto.parasite_type === 'internal' ? 'İç Parazit' : 
+    proto.parasite_type === 'external' ? 'Dış Parazit' : 
+    proto.parasite_type === 'collar' ? 'Parazit Tasması' : 
+    'Karma Parazit';
+
+  const payload: PlanInsert = {
+    pet_id: petId,
+    user_id: user.id,
+    category: 'parazit',
+    sub_type: subType,
+    scheduled_at: new Date(next.nextDueDate).toISOString(),
+    status: 'active',
+    extra_data: {
+      protocol_name: proto.protocol_name,
+      parasite_protocol_id: proto.id,
+      parasite_code: proto.parasite_code,
+      parasite_type: proto.parasite_type,
+      default_application_method: proto.default_application_method,
+      protection_duration_days: proto.default_protection_duration_days,
+    } satisfies Record<string, unknown>,
+  };
+
+  const { error } = await supabase.from('plans').insert(payload);
 
   if (error) {
     console.error('[P10] Sonraki doz planlama hatası:', error);

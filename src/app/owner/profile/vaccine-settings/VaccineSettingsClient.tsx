@@ -3,17 +3,35 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { normalizeSpecies } from '@/lib/species'
 
 type Pet = { id: string; name: string; species: string | null; avatar_url: string | null }
 
-type Protocol = {
+type VaccineProtocol = {
   vaccine_code: string
   protocol_name: string
-  category: string | null
-  risk_group: string | null
-  notes: string | null
+  species: string
+  category: string
+  enabled: boolean
+  locked: boolean
+  is_default: boolean
+  has_active_plan: boolean
+}
+
+type ParasiteProtocol = {
+  id: string
+  parasite_code: string
+  protocol_name: string
+  parasite_type: string
+  species: string
+  default_protection_duration_days: number
+  allowed_application_methods: string[]
+  default_application_method: string
+  min_age_weeks: number
+  enabled: boolean
+  is_default: boolean
 }
 
 type Preference = {
@@ -25,19 +43,58 @@ type Preference = {
 }
 
 const CATEGORY_LABEL: Record<string, string> = {
+  legal: 'Yasal',
+  core: 'Temel',
   risk_based: 'Risk Bazlı',
   optional: 'Opsiyonel',
 }
 
-const RISK_GROUP_LABEL: Record<string, string> = {
-  outdoor: 'Dış Ortam',
-  rural: 'Kırsal',
-  kennel: 'Pansiyon/Kennel',
+const PARASITE_TYPE_LABEL: Record<string, string> = {
+  internal: 'İç Parazit',
+  external: 'Dış Parazit',
+  combined: 'Kombine',
+  collar: 'Tasma',
+}
+
+const METHOD_LABEL: Record<string, string> = {
+  spot_on: 'Damlama',
+  oral: 'Oral/Ağızdan',
+  collar: 'Tasma',
+  injection: 'Enjeksiyon',
+}
+
+function translateError(errorMsg: string): string {
+  if (errorMsg.includes('LOCKED_VACCINE_PREFERENCE')) {
+    return 'Yasal ve temel aşılar kapatılamaz.'
+  }
+  if (errorMsg.includes('INACTIVE_PROTOCOL') || errorMsg.includes('INACTIVE_VACCINE_PROTOCOL')) {
+    return 'Bu protokol yönetici tarafından pasife alınmış.'
+  }
+  if (errorMsg.includes('VACCINE_PREFERENCE_DISABLED')) {
+    return 'Bu aşı için tercih devre dışı bırakılmış.'
+  }
+  if (errorMsg.includes('PROTOCOL_SPECIES_MISMATCH') || errorMsg.includes('VACCINE_SPECIES_MISMATCH')) {
+    return 'Protokol evcil hayvan türü ile uyuşmuyor.'
+  }
+  return 'Bir hata oluştu. Lütfen tekrar deneyin.'
+}
+
+function SkeletonCard() {
+  return (
+    <div className="bg-white p-4 rounded-2xl border border-border-main shadow-sm animate-pulse flex flex-col gap-3">
+      <div className="h-4 bg-slate-200 rounded w-2/3" />
+      <div className="h-3 bg-slate-200 rounded w-1/3" />
+      <div className="h-10 bg-slate-100 rounded w-full" />
+    </div>
+  )
 }
 
 export default function VaccineSettingsClient({ pets }: { pets: Pet[] }) {
-  const [selectedPetId, setSelectedPetId] = useState<string | null>(pets.length === 1 ? pets[0].id : null)
-  const [protocols, setProtocols] = useState<Protocol[]>([])
+  const router = useRouter()
+  const [selectedPetId, setSelectedPetId] = useState<string | null>(pets.length > 0 ? pets[0].id : null)
+  const [activeTab, setActiveTab] = useState<'vaccines' | 'parasites'>('vaccines')
+  const [protocols, setProtocols] = useState<VaccineProtocol[]>([])
+  const [parasiteProtocols, setParasiteProtocols] = useState<ParasiteProtocol[]>([])
   const [preferences, setPreferences] = useState<Preference[]>([])
   const [activePlansByCode, setActivePlansByCode] = useState<Record<string, boolean>>({})
   const [loading, setLoading] = useState(false)
@@ -56,14 +113,21 @@ export default function VaccineSettingsClient({ pets }: { pets: Pet[] }) {
     setLoading(true)
     setError('')
     try {
-      const res = await fetch(`/api/pets/${petId}/vaccine-preferences`)
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Yüklenemedi.')
-      setProtocols(data.protocols || [])
-      setPreferences(data.preferences || [])
-      setActivePlansByCode(data.activePlansByCode || {})
+      const vacRes = await fetch(`/api/pets/${petId}/vaccine-preferences`)
+      const vacData = await vacRes.json()
+      if (!vacRes.ok) throw new Error(vacData.error || 'Aşı verileri yüklenemedi.')
+
+      const parRes = await fetch(`/api/pets/${petId}/parasite-preferences`)
+      const parData = await parRes.json()
+      if (!parRes.ok) throw new Error(parData.error || 'Parazit verileri yüklenemedi.')
+
+      setProtocols(vacData.protocols || [])
+      setPreferences(vacData.preferences || [])
+      setActivePlansByCode(vacData.activePlansByCode || {})
+      setParasiteProtocols(parData || [])
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Bir hata oluştu.')
+      const errMessage = err instanceof Error ? err.message : String(err)
+      setError(translateError(errMessage))
     } finally {
       setLoading(false)
     }
@@ -75,41 +139,88 @@ export default function VaccineSettingsClient({ pets }: { pets: Pet[] }) {
 
   const prefFor = (code: string) => preferences.find(p => p.vaccine_code === code) || null
 
-  const updatePreference = async (code: string, patch: { enabled?: boolean; vet_recommended?: boolean }) => {
+  const updateVaccinePreference = async (code: string, nextEnabled: boolean) => {
     if (!selectedPetId) return
-    const current = prefFor(code)
     setBusyCode(code)
     setError('')
+    setToast(null)
+
+    const previousProtocols = [...protocols]
+    setProtocols(prev =>
+      prev.map(p => (p.vaccine_code === code ? { ...p, enabled: nextEnabled } : p))
+    )
+
     try {
+      const current = prefFor(code)
       const res = await fetch(`/api/pets/${selectedPetId}/vaccine-preferences`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           vaccine_code: code,
-          enabled: patch.enabled ?? current?.enabled ?? false,
-          vet_recommended: patch.vet_recommended ?? current?.vet_recommended ?? false,
+          enabled: nextEnabled,
+          vet_recommended: current?.vet_recommended ?? false,
           risk_reason: current?.risk_reason ?? null,
         }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Güncellenemedi.')
-      setPreferences(prev => {
-        const others = prev.filter(p => p.vaccine_code !== code)
-        return [...others, data.data]
-      })
+      if (!res.ok) throw new Error(data.error || 'Aşı tercihi güncellenemedi.')
+      setToast('Aşı tercihi başarıyla güncellendi.')
+      await loadData(selectedPetId)
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Bir hata oluştu.')
+      setProtocols(previousProtocols)
+      const errMessage = err instanceof Error ? err.message : String(err)
+      setError(translateError(errMessage))
     } finally {
       setBusyCode(null)
     }
   }
 
-  const handleToggle = (code: string, nextEnabled: boolean) => {
+  const updateParasitePreference = async (protocolId: string, nextEnabled: boolean) => {
+    if (!selectedPetId) return
+    setBusyCode(protocolId)
+    setError('')
+    setToast(null)
+
+    const previousParasites = [...parasiteProtocols]
+    setParasiteProtocols(prev =>
+      prev.map(p => (p.id === protocolId ? { ...p, enabled: nextEnabled } : p))
+    )
+
+    try {
+      const res = await fetch(`/api/pets/${selectedPetId}/parasite-preferences`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          parasite_protocol_id: protocolId,
+          enabled: nextEnabled,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Parazit tercihi güncellenemedi.')
+      setToast('Parazit tercihi başarıyla güncellendi.')
+      await loadData(selectedPetId)
+    } catch (err: unknown) {
+      setParasiteProtocols(previousParasites)
+      const errMessage = err instanceof Error ? err.message : String(err)
+      setError(translateError(errMessage))
+    } finally {
+      setBusyCode(null)
+    }
+  }
+
+  const handleVaccineToggle = (code: string, currentEnabled: boolean) => {
+    if (busyCode) return
+    const nextEnabled = !currentEnabled
     if (!nextEnabled && activePlansByCode[code]) {
       setConfirmDisableCode(code)
       return
     }
-    updatePreference(code, { enabled: nextEnabled })
+    updateVaccinePreference(code, nextEnabled)
+  }
+
+  const handleParasiteToggle = (protocolId: string, currentEnabled: boolean) => {
+    if (busyCode) return
+    updateParasitePreference(protocolId, !currentEnabled)
   }
 
   const cancelActivePlans = async (code: string) => {
@@ -127,144 +238,273 @@ export default function VaccineSettingsClient({ pets }: { pets: Pet[] }) {
 
   const handleCreatePlan = async (code: string) => {
     if (!selectedPetId) return
-    setBusyCode(code)
-    setError('')
-    setToast(null)
+    router.push(`/owner/plan-yap/asi?pet_id=${selectedPetId}&vaccine_code=${code}`)
+  }
+
+  const updateVetRecommended = async (code: string, checked: boolean) => {
+    if (!selectedPetId) return
+    const current = prefFor(code)
     try {
-      const res = await fetch(`/api/pets/${selectedPetId}/vaccine-preferences/${code}/create-plan`, { method: 'POST' })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Plan oluşturulamadı.')
-      setActivePlansByCode(prev => ({ ...prev, [code]: true }))
-      const doseCount = data?.data?.doseCount ?? 0
-      setToast(`${doseCount} dozluk plan oluşturuldu`)
+      const res = await fetch(`/api/pets/${selectedPetId}/vaccine-preferences`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vaccine_code: code,
+          enabled: current?.enabled ?? true,
+          vet_recommended: checked,
+          risk_reason: current?.risk_reason ?? null,
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Güncellenemedi.')
+      }
+      await loadData(selectedPetId)
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Bir hata oluştu.')
-    } finally {
-      setBusyCode(null)
+      const errMessage = err instanceof Error ? err.message : String(err)
+      setError(translateError(errMessage))
     }
   }
 
   return (
     <div className="min-h-screen bg-bg-main pb-24 pt-6 px-4 max-w-lg mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-[20px] font-black text-text-primary">Opsiyonel Aşı Tercihleri</h1>
+        <h1 className="text-[20px] font-black text-text-primary">Sağlık Planı Ayarları</h1>
         <Link href="/owner/profile" className="text-[13px] font-bold text-text-secondary">Geri</Link>
       </div>
 
       {pets.length === 0 && (
-        <p className="text-text-secondary text-[13px]">Henüz kayıtlı bir evcil hayvanınız yok.</p>
-      )}
-
-      {pets.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
-          {pets.map(pet => (
-            <button
-              key={pet.id}
-              onClick={() => setSelectedPetId(pet.id)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-2xl border-2 shrink-0 transition-colors ${
-                selectedPetId === pet.id ? 'border-primary bg-primary/10 text-primary' : 'border-border-main text-text-secondary'
-              }`}
-            >
-              <div className="w-7 h-7 rounded-full bg-slate-100 overflow-hidden relative shrink-0">
-                {pet.avatar_url ? (
-                  <Image src={pet.avatar_url} alt={pet.name} fill className="object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-sm">
-                    {normalizeSpecies(pet.species) === 'dog' ? '🐶' : '🐱'}
-                  </div>
-                )}
-              </div>
-              <span className="text-[13px] font-bold">{pet.name}</span>
-            </button>
-          ))}
+        <div className="bg-white p-6 rounded-2xl border border-border-main text-center shadow-sm">
+          <p className="text-text-secondary text-[13px] font-bold">Önce bir pet eklemelisiniz.</p>
         </div>
       )}
 
-      <p className="text-[11px] text-text-secondary mb-4">
-        Zorunlu ve temel aşılar bu ekranda gösterilmez — onlar için Aşı Takibi sayfasını kullanın. Burada yalnızca risk bazlı ve opsiyonel aşılar için tercihinizi ayarlarsınız.
-      </p>
+      {pets.length > 0 && (
+        <>
+          {/* Pet Seçimi */}
+          <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-none">
+            {pets.map(pet => (
+              <button
+                key={pet.id}
+                onClick={() => setSelectedPetId(pet.id)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-2xl border-2 shrink-0 transition-all ${
+                  selectedPetId === pet.id ? 'border-primary bg-primary/10 text-primary' : 'border-border-main text-text-secondary bg-white'
+                }`}
+              >
+                <div className="w-7 h-7 rounded-full bg-slate-100 overflow-hidden relative shrink-0">
+                  {pet.avatar_url ? (
+                    <Image src={pet.avatar_url} alt={pet.name} fill className="object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-sm">
+                      {normalizeSpecies(pet.species) === 'dog' ? '🐶' : '🐱'}
+                    </div>
+                  )}
+                </div>
+                <span className="text-[13px] font-bold">{pet.name}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Sekme Seçimi */}
+          <div className="flex border-b border-border-main mb-6">
+            <button
+              type="button"
+              onClick={() => setActiveTab('vaccines')}
+              className={`flex-1 py-3 text-center text-[15px] font-bold transition-all relative ${
+                activeTab === 'vaccines' ? 'text-primary' : 'text-text-secondary'
+              }`}
+            >
+              Aşılar
+              {activeTab === 'vaccines' && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full" />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('parasites')}
+              className={`flex-1 py-3 text-center text-[15px] font-bold transition-all relative ${
+                activeTab === 'parasites' ? 'text-primary' : 'text-text-secondary'
+              }`}
+            >
+              Parazitler
+              {activeTab === 'parasites' && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full" />
+              )}
+            </button>
+          </div>
+        </>
+      )}
 
       {error && (
-        <div className="bg-red-50 text-red-600 p-3 rounded-xl border border-red-200 text-[13px] font-normal mb-4">{error}</div>
+        <div className="bg-red-50 text-red-600 p-3 rounded-xl border border-red-200 text-[13px] font-normal mb-4">
+          {error}
+        </div>
       )}
 
       {toast && (
-        <div className="bg-emerald-50 text-emerald-700 p-3 rounded-xl border border-emerald-200 text-[13px] font-bold mb-4">{toast}</div>
+        <div className="bg-emerald-50 text-emerald-700 p-3 rounded-xl border border-emerald-200 text-[13px] font-bold mb-4">
+          {toast}
+        </div>
       )}
 
       {selectedPetId && loading && (
-        <p className="text-text-secondary text-[13px]">Yükleniyor…</p>
+        <div className="flex flex-col gap-3">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
       )}
 
-      {selectedPetId && !loading && protocols.length === 0 && (
-        <p className="text-text-secondary text-[13px]">Bu tür için opsiyonel/risk bazlı aşı protokolü bulunamadı.</p>
-      )}
-
-      <div className="flex flex-col gap-3">
-        {selectedPetId && !loading && protocols.map(protocol => {
-          const pref = prefFor(protocol.vaccine_code)
-          const enabled = pref?.enabled ?? false
-          const hasActivePlan = !!activePlansByCode[protocol.vaccine_code]
-          const isBusy = busyCode === protocol.vaccine_code
-
-          return (
-            <div key={protocol.vaccine_code} className="bg-white p-4 rounded-2xl border border-border-main shadow-sm flex flex-col gap-3">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="font-extrabold text-text-primary text-[15px]">{protocol.protocol_name}</h3>
-                  <div className="flex gap-1.5 mt-1 flex-wrap">
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-text-secondary">
-                      {CATEGORY_LABEL[protocol.category ?? ''] || protocol.category}
-                    </span>
-                    {protocol.risk_group && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-700">
-                        {RISK_GROUP_LABEL[protocol.risk_group] || protocol.risk_group}
-                      </span>
-                    )}
-                  </div>
-                  {protocol.notes && (
-                    <p className="text-[12px] text-text-secondary mt-2 leading-relaxed">{protocol.notes}</p>
-                  )}
+      {selectedPetId && !loading && (
+        <>
+          {/* AŞILAR SEKME İÇERİĞİ */}
+          {activeTab === 'vaccines' && (
+            <div className="flex flex-col gap-3">
+              {protocols.length === 0 && (
+                <div className="bg-white p-6 rounded-2xl border border-border-main text-center shadow-sm">
+                  <p className="text-text-secondary text-[13px]">Bu evcil hayvan için aşı protokolü bulunamadı.</p>
                 </div>
-                <button
-                  type="button"
-                  disabled={isBusy}
-                  onClick={() => handleToggle(protocol.vaccine_code, !enabled)}
-                  className={`shrink-0 w-12 h-7 rounded-full transition-colors relative ${enabled ? 'bg-primary' : 'bg-slate-200'} disabled:opacity-50`}
-                >
-                  <span className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform ${enabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
-                </button>
-              </div>
-
-              {enabled && (
-                <label className="flex items-center gap-2 text-[12px] font-bold text-text-secondary">
-                  <input
-                    type="checkbox"
-                    checked={pref?.vet_recommended ?? false}
-                    disabled={isBusy}
-                    onChange={(e) => updatePreference(protocol.vaccine_code, { vet_recommended: e.target.checked })}
-                  />
-                  Veterinerim önerdi
-                </label>
               )}
+              {protocols.map(protocol => {
+                const enabled = protocol.enabled
+                const locked = protocol.locked
+                const hasActivePlan = protocol.has_active_plan
+                const isBusy = busyCode === protocol.vaccine_code
+                const pref = prefFor(protocol.vaccine_code)
 
-              <div className="flex items-center justify-between pt-2 border-t border-border-main">
-                <span className={`text-[12px] font-bold ${hasActivePlan ? 'text-emerald-600' : 'text-text-secondary'}`}>
-                  {hasActivePlan ? '✓ Aktif plan var' : 'Plan oluşturulmadı'}
-                </span>
-                <button
-                  type="button"
-                  disabled={!enabled || hasActivePlan || isBusy}
-                  onClick={() => handleCreatePlan(protocol.vaccine_code)}
-                  className="text-[12px] font-bold text-primary disabled:text-text-secondary disabled:opacity-50 px-3 py-1.5 rounded-lg border border-primary disabled:border-border-main"
-                >
-                  Hemen Plan Oluştur
-                </button>
-              </div>
+                return (
+                  <div
+                    key={protocol.vaccine_code}
+                    className={`bg-white p-4 rounded-2xl border shadow-sm flex flex-col gap-3 relative overflow-hidden transition-all ${
+                      locked ? 'border-primary/30 ring-1 ring-primary/5' : 'border-border-main'
+                    }`}
+                  >
+                    {locked && (
+                      <div className="absolute top-0 right-0 bg-primary text-white text-[9px] font-black px-2 py-0.5 rounded-bl-lg flex items-center gap-1">
+                        <span>🔒</span> ZORUNLU
+                      </div>
+                    )}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <h3 className="font-extrabold text-text-primary text-[15px]">{protocol.protocol_name}</h3>
+                        <div className="flex gap-1.5 mt-1 flex-wrap">
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                            locked ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-text-secondary'
+                          }`}>
+                            {CATEGORY_LABEL[protocol.category] || protocol.category}
+                          </span>
+                        </div>
+                        {locked ? (
+                          <p className="text-[12px] text-primary font-bold mt-2 flex items-center gap-1">
+                            <span>💡</span> Zorunlu olarak aktif
+                          </p>
+                        ) : (
+                          <p className="text-[12px] text-text-secondary mt-2 leading-relaxed">
+                            Bu aşının yapılması için tercihinizi ayarlayabilirsiniz.
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex items-center min-h-[44px]">
+                        {locked ? (
+                          <div className="w-12 h-7 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs">
+                            🔒
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={isBusy}
+                            onClick={() => handleVaccineToggle(protocol.vaccine_code, enabled)}
+                            className={`shrink-0 w-12 h-7 rounded-full transition-colors relative ${enabled ? 'bg-primary' : 'bg-slate-200'} disabled:opacity-50`}
+                          >
+                            <span className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform ${enabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {!locked && enabled && (
+                      <label className="flex items-center gap-2 text-[12px] font-bold text-text-secondary cursor-pointer min-h-[36px]">
+                        <input
+                          type="checkbox"
+                          checked={pref?.vet_recommended ?? false}
+                          disabled={isBusy}
+                          onChange={(e) => updateVetRecommended(protocol.vaccine_code, e.target.checked)}
+                          className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                        />
+                        Veterinerim önerdi
+                      </label>
+                    )}
+
+                    <div className="flex items-center justify-between pt-2 border-t border-border-main">
+                      <span className={`text-[12px] font-bold ${hasActivePlan ? 'text-emerald-600' : 'text-text-secondary'}`}>
+                        {hasActivePlan ? '✓ Aktif plan var' : 'Plan oluşturulmadı'}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={!enabled || hasActivePlan || isBusy}
+                        onClick={() => handleCreatePlan(protocol.vaccine_code)}
+                        className="text-[12px] font-bold text-primary disabled:text-text-secondary disabled:opacity-50 px-3 py-1.5 rounded-lg border border-primary disabled:border-border-main"
+                      >
+                        Hemen Plan Oluştur
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
-          )
-        })}
-      </div>
+          )}
+
+          {/* PARAZİTLER SEKME İÇERİĞİ */}
+          {activeTab === 'parasites' && (
+            <div className="flex flex-col gap-3">
+              {parasiteProtocols.length === 0 && (
+                <div className="bg-white p-6 rounded-2xl border border-border-main text-center shadow-sm">
+                  <p className="text-text-secondary text-[13px]">Bu evcil hayvan için parazit protokolü bulunamadı.</p>
+                </div>
+              )}
+              {parasiteProtocols.map(protocol => {
+                const enabled = protocol.enabled
+                const isBusy = busyCode === protocol.id
+
+                return (
+                  <div
+                    key={protocol.id}
+                    className="bg-white p-4 rounded-2xl border border-border-main shadow-sm flex flex-col gap-3"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <h3 className="font-extrabold text-text-primary text-[15px]">{protocol.protocol_name}</h3>
+                        <div className="flex gap-1.5 mt-1.5 flex-wrap">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-text-secondary">
+                            {PARASITE_TYPE_LABEL[protocol.parasite_type] || protocol.parasite_type}
+                          </span>
+                        </div>
+                        <div className="mt-2 text-[12px] text-text-secondary flex flex-col gap-0.5">
+                          <span>⏱ Koruma Süresi: {protocol.default_protection_duration_days} gün</span>
+                          <span>👶 Min. Yaş: {protocol.min_age_weeks} haftalık</span>
+                          <span>⚙️ Yöntemler: {protocol.allowed_application_methods.map(m => METHOD_LABEL[m] || m).join(', ')}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center min-h-[44px]">
+                        <button
+                          type="button"
+                          disabled={isBusy}
+                          onClick={() => handleParasiteToggle(protocol.id, enabled)}
+                          className={`shrink-0 w-12 h-7 rounded-full transition-colors relative ${enabled ? 'bg-primary' : 'bg-slate-200'} disabled:opacity-50`}
+                        >
+                          <span className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform ${enabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </>
+      )}
 
       {confirmDisableCode && (
         <div
@@ -277,30 +517,30 @@ export default function VaccineSettingsClient({ pets }: { pets: Pet[] }) {
             <p className="text-[13px] text-text-secondary">Tercihi kapatmak istediğinize emin misiniz? Mevcut planı korumayı veya iptal etmeyi seçebilirsiniz.</p>
             <button
               type="button"
-              className="btn-secondary py-3"
+              className="w-full py-3 rounded-xl border border-border-main text-text-primary font-bold text-sm"
               onClick={async () => {
                 const code = confirmDisableCode
                 setConfirmDisableCode(null)
-                await updatePreference(code, { enabled: false })
+                await updateVaccinePreference(code, false)
               }}
             >
               Tercihi kapat, planları koru
             </button>
             <button
               type="button"
-              className="py-3 rounded-xl bg-red-50 text-red-600 font-bold"
+              className="w-full py-3 rounded-xl bg-red-50 text-red-600 font-bold text-sm"
               onClick={async () => {
                 const code = confirmDisableCode
                 setConfirmDisableCode(null)
                 await cancelActivePlans(code)
-                await updatePreference(code, { enabled: false })
+                await updateVaccinePreference(code, false)
               }}
             >
               Tercihi kapat ve planları iptal et
             </button>
             <button
               type="button"
-              className="py-3 text-text-secondary font-bold"
+              className="w-full py-3 text-text-secondary font-bold text-sm"
               onClick={() => setConfirmDisableCode(null)}
             >
               Vazgeç

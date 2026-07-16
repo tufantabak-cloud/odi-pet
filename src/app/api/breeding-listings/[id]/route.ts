@@ -22,18 +22,36 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
   if (!ownerRecord) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const body = await req.json()
+  const { title, purpose = 'breeding', preferred_date_start, preferred_date_end, notes, requirements, photo_url, estrus_notification_enabled, experience_level = 'beginner' } = body
+
   const { data: pet } = await supabase
     .from('pets')
     .select('is_neutered')
     .eq('id', id)
     .single()
 
-  if (pet?.is_neutered) {
-    return NextResponse.json({ error: 'NEUTERED_PET', message: 'Kısırlaştırılmış petler için üreme ilanı açılamaz.' }, { status: 400 })
-  }
+  let currentAdvisories: any[] = [];
 
-  const body = await req.json()
-  const { title, purpose = 'breeding', preferred_date_start, preferred_date_end, notes, requirements, photo_url, estrus_notification_enabled, experience_level = 'beginner' } = body
+  if (purpose === 'breeding') {
+    if (pet?.is_neutered) {
+      return NextResponse.json({ error: 'NEUTERED_PET', message: 'Kısırlaştırılmış petler için üreme ilanı açılamaz.' }, { status: 400 })
+    }
+
+    const { evaluateBreedingEligibility } = await import('@/services/breeding/evaluateBreedingEligibility')
+    const eligibility = await evaluateBreedingEligibility(id)
+    currentAdvisories = eligibility.advisories;
+    
+    if (eligibility.status !== 'eligible') {
+      return NextResponse.json({
+        error: "Pet henüz üreme ilanı açmaya uygun değil.",
+        code: "BREEDING_ELIGIBILITY_REQUIRED",
+        eligibility_status: eligibility.status,
+        blocking_reasons: eligibility.blockingReasons,
+        advisories: eligibility.advisories
+      }, { status: 409 })
+    }
+  }
 
   if (!title) {
     return NextResponse.json({ error: 'Title zorunludur' }, { status: 400 })

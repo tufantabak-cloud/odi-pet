@@ -1,145 +1,229 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { StepperInput } from '@/components/ui/StepperInput'
 
 // ─── Tipler ──────────────────────────────────────────────────────────────────
 
-interface ParasiteProduct {
-  id:                        string
-  species:                   string
-  name:                      string
-  brand:                     string
-  type:                      string
-  application_method:        string
-  active_ingredient:         string | null
-  protection_duration_days:  number
-  notes:                     string | null
-  is_active:                 boolean
-  status:                    string
-  suggested_by:              string | null
-  admin_note:                string | null
-  description:                string | null
-  image_url:                  string | null
-  covers_ear_mites:           boolean
-  min_age_weeks:              number | null
+interface ParasiteProtocol {
+  id: string
+  parasite_code: string
+  protocol_name: string
+  parasite_type: 'internal' | 'external' | 'combined' | 'collar'
+  species: 'cat' | 'dog'
+  default_protection_duration_days: number
+  allowed_application_methods: string[]
+  default_application_method: string
+  min_age_weeks: number | null
+  is_active: boolean
+  sort_order: number
+  created_at: string
+  updated_at: string
 }
 
-type FilterSpecies = 'all' | 'dog' | 'cat' | 'both'
-type FilterType     = 'all' | 'internal' | 'external' | 'combined'
-type FilterStatus   = 'all' | 'pending' | 'approved' | 'rejected'
+type FilterSpecies = 'all' | 'dog' | 'cat'
+type FilterType = 'all' | 'internal' | 'external' | 'combined' | 'collar'
+type FilterActive = 'all' | 'true' | 'false'
 
-const SPECIES_LABEL: Record<string, string> = { dog: '🐕 Köpek', cat: '🐈 Kedi', both: '🐾 Her İkisi' }
+const SPECIES_LABEL: Record<string, string> = { dog: '🐕 Köpek', cat: '🐈 Kedi' }
 const TYPE_LABEL: Record<string, string> = {
-  internal: '💊 İç Parazit', external: '🛡️ Dış Parazit', combined: '⚡ Kombine'
+  internal: '💊 İç Parazit',
+  external: '🛡️ Dış Parazit',
+  combined: '⚡ Kombine Parazit',
+  collar: '🎗️ Parazit Tasması',
 }
 const TYPE_COLOR: Record<string, string> = {
-  internal: 'bg-blue-100 text-blue-700',
-  external: 'bg-orange-100 text-orange-700',
-  combined: 'bg-purple-100 text-purple-700',
-}
-const STATUS_LABEL: Record<string, string> = {
-  pending: '⏳ Bekliyor', approved: '✓ Onaylı', rejected: '✕ Reddedildi'
-}
-const STATUS_COLOR: Record<string, string> = {
-  pending:  'bg-amber-100 text-amber-700',
-  approved: 'bg-green-100 text-green-700',
-  rejected: 'bg-red-100 text-red-500',
+  internal: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  external: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+  combined: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+  collar: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',
 }
 const METHOD_LABEL: Record<string, string> = {
-  oral: 'Oral', 'spot-on': 'Spot-on', collar: 'Tasma', spray: 'Sprey', injection: 'Enjeksiyon'
+  spot_on: 'Damla',
+  oral: 'Ağızdan/Tablet',
+  collar: 'Tasma',
+  injection: 'Enjeksiyon',
+  spray: 'Sprey',
+  shampoo: 'Şampuan',
+  other: 'Diğer',
+}
+
+interface FormState {
+  parasite_code: string
+  protocol_name: string
+  parasite_type: 'internal' | 'external' | 'combined' | 'collar'
+  species: 'cat' | 'dog'
+  default_protection_duration_days: number
+  allowed_application_methods: string[]
+  default_application_method: string
+  min_age_weeks: string
+  is_active: boolean
+  sort_order: number
 }
 
 // ─── Boş form ────────────────────────────────────────────────────────────────
 
-const EMPTY_FORM = {
-  species:                   'dog',
-  name:                      '',
-  brand:                     '',
-  type:                      'external',
-  application_method:        'spot-on',
-  active_ingredient:         '',
-  protection_duration_days:  30,
-  notes:                     '',
-  description:               '',
-  min_age_weeks:             '',
-  covers_ear_mites:          false,
-  is_active:                 true,
+const EMPTY_FORM: FormState = {
+  parasite_code: '',
+  protocol_name: '',
+  parasite_type: 'internal',
+  species: 'dog',
+  default_protection_duration_days: 30,
+  allowed_application_methods: [],
+  default_application_method: '',
+  min_age_weeks: '',
+  is_active: true,
+  sort_order: 100,
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function AdminParasiteProductsClient() {
-  const [products,     setProducts]     = useState<ParasiteProduct[]>([])
-  const [loading,      setLoading]      = useState(true)
-  const [error,        setError]        = useState<string | null>(null)
-  const [total,        setTotal]        = useState(0)
-  const [page,         setPage]         = useState(1)
+  const [protocols, setProtocols] = useState<ParasiteProtocol[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const [filterSpecies, setFilterSpecies] = useState<FilterSpecies>('all')
-  const [filterType,    setFilterType]    = useState<FilterType>('all')
-  const [filterStatus,  setFilterStatus]  = useState<FilterStatus>('all')
+  const [filterType, setFilterType] = useState<FilterType>('all')
+  const [filterActive, setFilterActive] = useState<FilterActive>('all')
 
-  const [modalOpen,   setModalOpen]   = useState(false)
-  const [editTarget,  setEditTarget]  = useState<ParasiteProduct | null>(null)
-  const [form,        setForm]        = useState(EMPTY_FORM)
-  const [saving,      setSaving]      = useState(false)
-  const [formError,   setFormError]   = useState<string | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [editTarget, setEditTarget] = useState<ParasiteProtocol | null>(null)
+  const [form, setForm] = useState<FormState>(EMPTY_FORM)
+  const [saving, setSaving] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
+  
+  const [durationVal, setDurationVal] = useState<number>(30)
+  const [durationUnit, setDurationUnit] = useState<'hour' | 'day' | 'week' | 'month' | 'year'>('day')
 
-  const [deleteTarget, setDeleteTarget] = useState<ParasiteProduct | null>(null)
-  const [deleting,     setDeleting]     = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<ParasiteProtocol | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
-  const [reviewLoadingId, setReviewLoadingId] = useState<string | null>(null)
+  // Hata kodlarını Türkçe mesajlara çevirme
+  const translateError = (errKey: string, detailMsg?: string): string => {
+    switch (errKey) {
+      case 'UNAUTHORIZED':
+        return 'Oturum açmanız gerekiyor. Lütfen giriş yapın.'
+      case 'FORBIDDEN':
+        return 'Bu işlemi yapmak için yetkiniz yok.'
+      case 'PROTOCOL_NOT_FOUND':
+        return 'Protokol bulunamadı.'
+      case 'DUPLICATE_PROTOCOL':
+        return 'Bu parazit kodu bu hayvan türü için zaten kayıtlı.'
+      case 'INVALID_PROTOCOL_DATA':
+        return `Geçersiz veri: ${detailMsg || 'Lütfen girdilerinizi kontrol edin.'}`
+      default:
+        return detailMsg || 'Bir hata oluştu.'
+    }
+  }
 
   // ── Veri çekme ─────────────────────────────────────────────────────────────
-  const fetchProducts = useCallback(async () => {
+  const fetchProtocols = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const params = new URLSearchParams({ page: String(page) })
+      const params = new URLSearchParams()
       if (filterSpecies !== 'all') params.set('species', filterSpecies)
-      if (filterType    !== 'all') params.set('type',    filterType)
-      if (filterStatus  !== 'all') params.set('status',  filterStatus)
+      if (filterType !== 'all') params.set('parasite_type', filterType)
+      if (filterActive !== 'all') params.set('is_active', filterActive)
 
-      const res  = await fetch(`/api/admin/parasite-products?${params}`)
+      const res = await fetch(`/api/admin/parasite-protocols?${params}`)
       const json = await res.json()
-      if (!res.ok) throw new Error(json.error ?? 'Hata')
-      setProducts(json.data ?? [])
-      setTotal(json.pagination?.total ?? 0)
+      if (!res.ok) {
+        throw new Error(translateError(json.error, json.message))
+      }
+      setProtocols(json ?? [])
     } catch (e: any) {
       setError(e.message)
     } finally {
       setLoading(false)
     }
-  }, [page, filterSpecies, filterType, filterStatus])
+  }, [filterSpecies, filterType, filterActive])
 
-  useEffect(() => { fetchProducts() }, [fetchProducts])
+  useEffect(() => {
+    fetchProtocols()
+  }, [fetchProtocols])
 
   // ── Modal aç/kapat ─────────────────────────────────────────────────────────
   const openNew = () => {
     setEditTarget(null)
     setForm(EMPTY_FORM)
+    setDurationVal(30)
+    setAddDurationUnitFromDays(30)
     setFormError(null)
     setModalOpen(true)
   }
 
-  const openEdit = (p: ParasiteProduct) => {
+  const setAddDurationUnitFromDays = (days: number) => {
+    if (days == null || isNaN(days) || days <= 0) {
+      setDurationVal(0)
+      setDurationUnit('day')
+    } else if (days % 365 === 0) {
+      setDurationVal(days / 365)
+      setDurationUnit('year')
+    } else if (days % 30 === 0) {
+      setDurationVal(days / 30)
+      setDurationUnit('month')
+    } else if (days % 7 === 0) {
+      setDurationVal(days / 7)
+      setDurationUnit('week')
+    } else {
+      const hours = days * 24
+      if (hours < 24 && Number.isInteger(hours)) {
+        setDurationVal(hours)
+        setDurationUnit('hour')
+      } else {
+        setDurationVal(days)
+        setDurationUnit('day')
+      }
+    }
+  }
+
+  const openEdit = (p: ParasiteProtocol) => {
     setEditTarget(p)
     setForm({
-      species:                   p.species,
-      name:                      p.name,
-      brand:                     p.brand,
-      type:                      p.type,
-      application_method:        p.application_method,
-      active_ingredient:         p.active_ingredient ?? '',
-      protection_duration_days:  p.protection_duration_days,
-      notes:                     p.notes ?? '',
-      description:               p.description ?? '',
-      min_age_weeks:             p.min_age_weeks !== null ? String(p.min_age_weeks) : '',
-      covers_ear_mites:          p.covers_ear_mites,
-      is_active:                 p.is_active,
+      parasite_code: p.parasite_code,
+      protocol_name: p.protocol_name,
+      parasite_type: p.parasite_type,
+      species: p.species,
+      default_protection_duration_days: p.default_protection_duration_days,
+      allowed_application_methods: p.allowed_application_methods,
+      default_application_method: p.default_application_method,
+      min_age_weeks: p.min_age_weeks !== null ? String(p.min_age_weeks) : '',
+      is_active: p.is_active,
+      sort_order: p.sort_order,
     })
+    setAddDurationUnitFromDays(p.default_protection_duration_days)
     setFormError(null)
     setModalOpen(true)
+  }
+
+  // Yöntem checkbox değişimi yönetimi
+  const handleMethodCheckboxChange = (method: string, checked: boolean) => {
+    setForm(prev => {
+      let nextMethods = [...prev.allowed_application_methods]
+      if (checked) {
+        if (!nextMethods.includes(method)) {
+          nextMethods.push(method)
+        }
+      } else {
+        nextMethods = nextMethods.filter(m => m !== method)
+      }
+
+      // Default yöntemin geçerliliğini koru
+      let nextDefault = prev.default_application_method
+      if (!nextMethods.includes(nextDefault)) {
+        nextDefault = nextMethods.length > 0 ? nextMethods[0] : ''
+      } else if (!nextDefault && nextMethods.length > 0) {
+        nextDefault = nextMethods[0]
+      }
+
+      return {
+        ...prev,
+        allowed_application_methods: nextMethods,
+        default_application_method: nextDefault,
+      }
+    })
   }
 
   // ── Kaydet ─────────────────────────────────────────────────────────────────
@@ -147,35 +231,79 @@ export default function AdminParasiteProductsClient() {
     setSaving(true)
     setFormError(null)
 
-    if (!form.name.trim() || !form.brand.trim()) {
-      setFormError('Ürün adı ve marka zorunlu.')
+    // Form validasyonu
+    if (!form.parasite_code.trim()) {
+      setFormError('Parazit kodu zorunludur (Büyük harf, sayı ve alt tire).')
+      setSaving(false)
+      return
+    }
+    if (!form.protocol_name.trim()) {
+      setFormError('Protokol adı zorunludur.')
+      setSaving(false)
+      return
+    }
+    if (form.allowed_application_methods.length === 0) {
+      setFormError('En az bir uygulama yöntemi seçilmelidir.')
+      setSaving(false)
+      return
+    }
+    if (!form.default_application_method) {
+      setFormError('Varsayılan uygulama yöntemi seçilmelidir.')
       setSaving(false)
       return
     }
 
+    let finalDays = durationVal
+    if (durationVal > 0) {
+      switch (durationUnit) {
+        case 'hour':
+          finalDays = Number((durationVal / 24).toFixed(4))
+          break;
+        case 'week':
+          finalDays = durationVal * 7
+          break;
+        case 'month':
+          finalDays = durationVal * 30
+          break;
+        case 'year':
+          finalDays = durationVal * 365
+          break;
+        case 'day':
+        default:
+          break;
+      }
+    }
+
     const payload = {
-      ...form,
-      active_ingredient: form.active_ingredient || null,
-      notes:             form.notes             || null,
-      description:       form.description       || null,
-      min_age_weeks:      form.min_age_weeks ? parseInt(form.min_age_weeks, 10) : null,
+      parasite_code: form.parasite_code.toUpperCase().trim(),
+      protocol_name: form.protocol_name.trim(),
+      parasite_type: form.parasite_type,
+      species: form.species,
+      default_protection_duration_days: finalDays,
+      allowed_application_methods: form.allowed_application_methods,
+      default_application_method: form.default_application_method,
+      min_age_weeks: form.min_age_weeks !== '' ? parseInt(form.min_age_weeks, 10) : null,
+      is_active: form.is_active,
+      sort_order: Number(form.sort_order) || 100,
     }
 
     try {
-      const url    = editTarget
-        ? `/api/admin/parasite-products/${editTarget.id}`
-        : '/api/admin/parasite-products'
+      const url = editTarget
+        ? `/api/admin/parasite-protocols/${editTarget.id}`
+        : '/api/admin/parasite-protocols'
       const method = editTarget ? 'PATCH' : 'POST'
 
-      const res  = await fetch(url, {
+      const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
       const json = await res.json()
-      if (!res.ok) throw new Error(json.error ?? 'Kayıt hatası')
+      if (!res.ok) {
+        throw new Error(translateError(json.error, json.message))
+      }
       setModalOpen(false)
-      fetchProducts()
+      fetchProtocols()
     } catch (e: any) {
       setFormError(e.message)
     } finally {
@@ -188,12 +316,15 @@ export default function AdminParasiteProductsClient() {
     if (!deleteTarget) return
     setDeleting(true)
     try {
-      const res = await fetch(`/api/admin/parasite-products/${deleteTarget.id}`, {
-        method: 'DELETE'
+      const res = await fetch(`/api/admin/parasite-protocols/${deleteTarget.id}`, {
+        method: 'DELETE',
       })
-      if (!res.ok) throw new Error('Silme hatası')
+      const json = await res.json()
+      if (!res.ok) {
+        throw new Error(translateError(json.error, json.message))
+      }
       setDeleteTarget(null)
-      fetchProducts()
+      fetchProtocols()
     } catch (e: any) {
       alert(e.message)
     } finally {
@@ -201,345 +332,419 @@ export default function AdminParasiteProductsClient() {
     }
   }
 
-  // ── Onayla / Reddet (yalnızca status='pending' satırlar için) ──────────────
-  const handleReview = async (p: ParasiteProduct, decision: 'approved' | 'rejected') => {
-    setReviewLoadingId(p.id)
-    try {
-      const res = await fetch(`/api/admin/parasite-products/${p.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          status:    decision,
-          is_active: decision === 'approved',
-        }),
-      })
-      if (!res.ok) {
-        const json = await res.json().catch(() => null)
-        throw new Error(json?.error ?? 'İşlem hatası')
-      }
-      fetchProducts()
-    } catch (e: any) {
-      alert(e.message)
-    } finally {
-      setReviewLoadingId(null)
-    }
-  }
-
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
       {/* Başlık */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">🦟 Parazit Ürünleri</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {total} ürün · parasite_products tablosu
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Parazit Protokolleri</h1>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">
+            {protocols.length} protokol listeleniyor · parasite_protocols tablosu
           </p>
         </div>
         <button
           onClick={openNew}
-          className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-purple-700 transition-colors"
+          className="bg-purple-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-purple-700 transition-colors shadow-sm self-start sm:self-auto"
         >
-          + Yeni Ürün
+          + Yeni Protokol
         </button>
       </div>
 
       {/* Filtreler */}
-      <div className="flex gap-2 mb-4 flex-wrap">
-        {(['all','dog','cat','both'] as FilterSpecies[]).map(s => (
-          <button
-            key={s}
-            onClick={() => { setFilterSpecies(s); setPage(1) }}
-            className={[
-              'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
-              filterSpecies === s
-                ? 'bg-purple-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            ].join(' ')}
-          >
-            {s === 'all' ? '🐾 Tümü' : SPECIES_LABEL[s]}
-          </button>
-        ))}
-        <div className="w-px bg-gray-200 mx-1" />
-        {(['all','internal','external','combined'] as FilterType[]).map(t => (
-          <button
-            key={t}
-            onClick={() => { setFilterType(t); setPage(1) }}
-            className={[
-              'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
-              filterType === t
-                ? 'bg-purple-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            ].join(' ')}
-          >
-            {t === 'all' ? 'Tüm Tipler' : TYPE_LABEL[t]}
-          </button>
-        ))}
-        <div className="w-px bg-gray-200 mx-1" />
-        {(['all','pending','approved','rejected'] as FilterStatus[]).map(st => (
-          <button
-            key={st}
-            onClick={() => { setFilterStatus(st); setPage(1) }}
-            className={[
-              'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
-              filterStatus === st
-                ? 'bg-purple-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            ].join(' ')}
-          >
-            {st === 'all' ? 'Tüm Durumlar' : STATUS_LABEL[st]}
-          </button>
-        ))}
+      <div className="flex flex-col gap-3 mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
+        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Filtreler</span>
+        <div className="flex flex-wrap gap-2">
+          {/* Tür Filtresi */}
+          <div className="flex rounded-xl bg-white p-1 border border-gray-200">
+            {(['all', 'dog', 'cat'] as FilterSpecies[]).map(s => (
+              <button
+                key={s}
+                onClick={() => { setFilterSpecies(s) }}
+                className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${
+                  filterSpecies === s
+                    ? 'bg-purple-600 text-white shadow-sm'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                {s === 'all' ? '🐾 Tümü' : SPECIES_LABEL[s]}
+              </button>
+            ))}
+          </div>
+
+          {/* Tip Filtresi */}
+          <div className="flex rounded-xl bg-white p-1 border border-gray-200">
+            {(['all', 'internal', 'external', 'combined', 'collar'] as FilterType[]).map(t => (
+              <button
+                key={t}
+                onClick={() => { setFilterType(t) }}
+                className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${
+                  filterType === t
+                    ? 'bg-purple-600 text-white shadow-sm'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                {t === 'all' ? 'Tip: Tümü' : TYPE_LABEL[t]?.split(' ')[1] || t}
+              </button>
+            ))}
+          </div>
+
+          {/* Aktif/Pasif Filtresi */}
+          <div className="flex rounded-xl bg-white p-1 border border-gray-200">
+            {(['all', 'true', 'false'] as FilterActive[]).map(act => (
+              <button
+                key={act}
+                onClick={() => { setFilterActive(act) }}
+                className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${
+                  filterActive === act
+                    ? 'bg-purple-600 text-white shadow-sm'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                {act === 'all' ? 'Durum: Tümü' : act === 'true' ? '✓ Aktif' : '✕ Pasif'}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Hata */}
+      {/* Hata Mesajı */}
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 shadow-sm">
           {error}
         </div>
       )}
 
-      {/* Tablo */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      {/* Protokol Listesi (Mobil Kartlar & Desktop Tablo) */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
         {loading ? (
           <div className="p-8 text-center text-gray-400 text-sm">Yükleniyor…</div>
-        ) : products.length === 0 ? (
-          <div className="p-8 text-center text-gray-400 text-sm">Ürün bulunamadı.</div>
+        ) : protocols.length === 0 ? (
+          <div className="p-8 text-center text-gray-400 text-sm">Protokol bulunamadı.</div>
         ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="text-left px-4 py-3 font-medium text-gray-500">Ürün Adı</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500">Marka</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500">Tür</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500">Tip</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500">Uygulama</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500">Koruma</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500">Min. Yaş</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500">Durum</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500">Aktif</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-500">İşlem</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {products.map(p => (
-                <tr key={p.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 font-medium text-gray-900">{p.name}</td>
-                  <td className="px-4 py-3 text-gray-600">{p.brand}</td>
-                  <td className="px-4 py-3 text-gray-600">
-                    {SPECIES_LABEL[p.species] ?? p.species}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={[
-                      'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
-                      TYPE_COLOR[p.type] ?? 'bg-gray-100 text-gray-600'
-                    ].join(' ')}>
-                      {TYPE_LABEL[p.type] ?? p.type}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">
-                    {METHOD_LABEL[p.application_method] ?? p.application_method}
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">{p.protection_duration_days} gün</td>
-                  <td className="px-4 py-3 text-gray-600">
-                    {p.min_age_weeks !== null ? `${p.min_age_weeks} hafta` : '—'}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={[
-                      'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
-                      STATUS_COLOR[p.status] ?? 'bg-gray-100 text-gray-600'
-                    ].join(' ')}>
-                      {STATUS_LABEL[p.status] ?? p.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={[
-                      'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
-                      p.is_active
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-gray-100 text-gray-400'
-                    ].join(' ')}>
-                      {p.is_active ? '✓ Aktif' : '— Pasif'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-2 flex-wrap">
-                      {p.status === 'pending' && (
-                        <>
+          <>
+            {/* Desktop Görünüm */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-500">Kod / Protokol Adı</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-500">Tür</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-500">Parazit Tipi</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-500">Koruma Süresi</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-500">Yöntemler (Varsayılan)</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-500">Min. Yaş</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-500">Durum</th>
+                    <th className="text-right px-4 py-3 font-semibold text-gray-500">İşlem</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {protocols.map(p => (
+                    <tr key={p.id} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-4 py-3">
+                        <div className="font-semibold text-gray-900">{p.protocol_name}</div>
+                        <div className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">{p.parasite_code}</div>
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">
+                        {SPECIES_LABEL[p.species] ?? p.species}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${TYPE_COLOR[p.parasite_type]}`}>
+                          {TYPE_LABEL[p.parasite_type] ?? p.parasite_type}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">{p.default_protection_duration_days} gün</td>
+                      <td className="px-4 py-3 text-gray-600">
+                        <div className="text-xs">
+                          {p.allowed_application_methods.map(m => METHOD_LABEL[m] || m).join(', ')}
+                        </div>
+                        <div className="text-[10px] text-purple-600 font-medium mt-0.5">
+                          Varsayılan: {METHOD_LABEL[p.default_application_method] || p.default_application_method}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">
+                        {p.min_age_weeks !== null ? `${p.min_age_weeks} hafta` : '—'}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                          p.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'
+                        }`}>
+                          {p.is_active ? '✓ Aktif' : '— Pasif'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-3">
                           <button
-                            onClick={() => handleReview(p, 'approved')}
-                            disabled={reviewLoadingId === p.id}
-                            className="text-xs text-green-600 hover:text-green-800 font-medium disabled:opacity-50"
+                            onClick={() => openEdit(p)}
+                            className="text-xs text-purple-600 hover:text-purple-800 font-semibold transition-colors"
                           >
-                            Onayla
+                            Düzenle
                           </button>
-                          <button
-                            onClick={() => handleReview(p, 'rejected')}
-                            disabled={reviewLoadingId === p.id}
-                            className="text-xs text-red-500 hover:text-red-700 font-medium disabled:opacity-50"
-                          >
-                            Reddet
-                          </button>
-                        </>
-                      )}
-                      <button
-                        onClick={() => openEdit(p)}
-                        className="text-xs text-purple-600 hover:text-purple-800 font-medium"
-                      >
-                        Düzenle
-                      </button>
-                      {p.is_active && (
-                        <button
-                          onClick={() => setDeleteTarget(p)}
-                          className="text-xs text-red-400 hover:text-red-600 font-medium"
-                        >
-                          Pasife Al
-                        </button>
-                      )}
+                          {p.is_active && (
+                            <button
+                              onClick={() => setDeleteTarget(p)}
+                              className="text-xs text-red-500 hover:text-red-700 font-semibold transition-colors"
+                            >
+                              Pasife Al
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Görünüm (Cards) */}
+            <div className="md:hidden divide-y divide-gray-100">
+              {protocols.map(p => (
+                <div key={p.id} className="p-4 space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-semibold text-gray-900 text-sm">{p.protocol_name}</div>
+                      <div className="text-[9px] font-mono text-gray-400 uppercase tracking-wider">{p.parasite_code}</div>
                     </div>
-                  </td>
-                </tr>
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                      p.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'
+                    }`}>
+                      {p.is_active ? 'Aktif' : 'Pasif'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-gray-400 block text-[10px] uppercase">Tür</span>
+                      <span className="font-medium text-gray-700">{SPECIES_LABEL[p.species] ?? p.species}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block text-[10px] uppercase">Tip</span>
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${TYPE_COLOR[p.parasite_type]}`}>
+                        {TYPE_LABEL[p.parasite_type] ?? p.parasite_type}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block text-[10px] uppercase">Süre</span>
+                      <span className="font-medium text-gray-700">{p.default_protection_duration_days} gün</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block text-[10px] uppercase">Min. Yaş</span>
+                      <span className="font-medium text-gray-700">{p.min_age_weeks !== null ? `${p.min_age_weeks} hafta` : '—'}</span>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-gray-400 block text-[10px] uppercase">Yöntemler</span>
+                      <span className="font-medium text-gray-700 text-xs">
+                        {p.allowed_application_methods.map(m => METHOD_LABEL[m] || m).join(', ')}
+                        <span className="text-[10px] text-purple-600 block mt-0.5">
+                          Varsayılan: {METHOD_LABEL[p.default_application_method] || p.default_application_method}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 justify-end pt-2 border-t border-gray-50">
+                    <button
+                      onClick={() => openEdit(p)}
+                      className="px-3 py-1.5 text-xs text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-lg font-semibold transition-colors"
+                    >
+                      Düzenle
+                    </button>
+                    {p.is_active && (
+                      <button
+                        onClick={() => setDeleteTarget(p)}
+                        className="px-3 py-1.5 text-xs text-red-600 bg-red-50 hover:bg-red-100 rounded-lg font-semibold transition-colors"
+                      >
+                        Pasife Al
+                      </button>
+                    )}
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </>
         )}
       </div>
 
-      {/* Sayfalama */}
-      {total > 20 && (
-        <div className="flex items-center justify-between mt-4">
-          <p className="text-sm text-gray-500">
-            {(page - 1) * 20 + 1}–{Math.min(page * 20, total)} / {total}
-          </p>
-          <div className="flex gap-2">
-            <button
-              disabled={page === 1}
-              onClick={() => setPage(p => p - 1)}
-              className="px-3 py-1.5 text-sm rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50"
-            >
-              ← Önceki
-            </button>
-            <button
-              disabled={page * 20 >= total}
-              onClick={() => setPage(p => p + 1)}
-              className="px-3 py-1.5 text-sm rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50"
-            >
-              Sonraki →
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Ekle/Düzenle Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="p-5 sm:p-6">
               <h2 className="text-lg font-bold text-gray-900 mb-4">
-                {editTarget ? 'Ürünü Düzenle' : 'Yeni Ürün'}
+                {editTarget ? 'Protokolü Düzenle' : 'Yeni Protokol'}
               </h2>
 
-              <div className="space-y-3">
-                {/* Ad + Marka */}
-                <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-4">
+                {/* Kod + İsim */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">
-                      Ürün Adı <span className="text-red-500">*</span>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">
+                      Parazit Kodu <span className="text-red-500">*</span>
                     </label>
                     <input
-                      value={form.name}
-                      onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                      placeholder="Simparica"
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                      value={form.parasite_code}
+                      onChange={e => setForm(f => ({ ...f, parasite_code: e.target.value }))}
+                      disabled={!!editTarget}
+                      placeholder="Örn: HEARTWORM"
+                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 disabled:opacity-50"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">
-                      Marka <span className="text-red-500">*</span>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">
+                      Protokol Adı <span className="text-red-500">*</span>
                     </label>
                     <input
-                      value={form.brand}
-                      onChange={e => setForm(f => ({ ...f, brand: e.target.value }))}
-                      placeholder="Zoetis"
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                      value={form.protocol_name}
+                      onChange={e => setForm(f => ({ ...f, protocol_name: e.target.value }))}
+                      placeholder="Örn: Kalp Kurdu Koruma Protokolü"
+                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
                     />
                   </div>
                 </div>
 
                 {/* Tür + Tip */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Tür</label>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">Tür</label>
                     <select
                       value={form.species}
-                      onChange={e => setForm(f => ({ ...f, species: e.target.value }))}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                      onChange={e => setForm(f => ({ ...f, species: e.target.value as 'cat' | 'dog' }))}
+                      disabled={!!editTarget}
+                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 disabled:opacity-50"
                     >
                       <option value="dog">🐕 Köpek</option>
                       <option value="cat">🐈 Kedi</option>
-                      <option value="both">🐾 Her İkisi</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Tip</label>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">Parazit Tipi</label>
                     <select
-                      value={form.type}
-                      onChange={e => setForm(f => ({ ...f, type: e.target.value }))}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                      value={form.parasite_type}
+                      onChange={e => setForm(f => ({ ...f, parasite_type: e.target.value as any }))}
+                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
                     >
                       <option value="internal">💊 İç Parazit</option>
                       <option value="external">🛡️ Dış Parazit</option>
-                      <option value="combined">⚡ Kombine</option>
+                      <option value="combined">⚡ Kombine Parazit</option>
+                      <option value="collar">🎗️ Parazit Tasması</option>
                     </select>
                   </div>
                 </div>
 
-                {/* Uygulama yöntemi + Koruma süresi */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Uygulama Yöntemi</label>
-                    <select
-                      value={form.application_method}
-                      onChange={e => setForm(f => ({ ...f, application_method: e.target.value }))}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
-                    >
-                      <option value="oral">Oral</option>
-                      <option value="spot-on">Spot-on</option>
-                      <option value="collar">Tasma</option>
-                      <option value="spray">Sprey</option>
-                      <option value="injection">Enjeksiyon</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">
-                      Koruma (Gün) <span className="text-red-500">*</span>
-                    </label>
-                    <StepperInput
-                      min={0} step={1}
-                      value={form.protection_duration_days}
-                      onChange={e => setForm(f => ({ ...f, protection_duration_days: parseInt(e.target.value) || 0 }))}
-                      className="w-full"
-                      placeholder="30"
-                    />
-                  </div>
-                </div>
-
-                {/* Etken madde + Min yaş */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Etken Madde</label>
+                {/* Koruma Süresi */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">
+                    Varsayılan Koruma Süresi <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex items-center gap-2">
                     <input
-                      value={form.active_ingredient}
-                      onChange={e => setForm(f => ({ ...f, active_ingredient: e.target.value }))}
-                      placeholder="Sarolaner"
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                      type="number"
+                      min="1"
+                      value={durationVal || ''}
+                      onChange={(e) => setDurationVal(parseInt(e.target.value, 10) || 0)}
+                      placeholder="Değer"
+                      className="w-24 rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                    />
+                    
+                    <div className="flex bg-gray-50 p-1 rounded-xl border border-gray-200 grow justify-between">
+                      {(['hour', 'day', 'week', 'month', 'year'] as const).map((u) => {
+                        const labels: Record<string, string> = {
+                          hour: 'Saat',
+                          day: 'Gün',
+                          week: 'Hft',
+                          month: 'Ay',
+                          year: 'Yıl'
+                        }
+                        const isActive = durationUnit === u
+                        return (
+                          <button
+                            key={u}
+                            type="button"
+                            onClick={() => setDurationUnit(u)}
+                            className={`px-2 py-1 text-[10px] font-bold rounded-lg transition-all ${
+                              isActive
+                                ? 'bg-purple-600 text-white shadow-sm'
+                                : 'text-gray-600 hover:bg-gray-100'
+                            }`}
+                          >
+                            {labels[u]}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                  {durationVal > 0 && (
+                    <span className="text-[10px] text-gray-400 mt-1 block">
+                      Veritabanına {
+                        durationUnit === 'hour' ? `${(durationVal / 24).toFixed(4)} gün` :
+                        durationUnit === 'week' ? `${durationVal * 7} gün` :
+                        durationUnit === 'month' ? `${durationVal * 30} gün` :
+                        durationUnit === 'year' ? `${durationVal * 365} gün` :
+                        `${durationVal} gün`
+                      } olarak kaydedilecektir.
+                    </span>
+                  )}
+                </div>
+
+                {/* İzin Verilen Yöntemler (Çoklu Seçim) */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1.5">
+                    İzin Verilen Yöntemler <span className="text-red-500">*</span>
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    {Object.entries(METHOD_LABEL).map(([val, label]) => {
+                      const checked = form.allowed_application_methods.includes(val)
+                      return (
+                        <label key={val} className="flex items-center gap-2 cursor-pointer text-xs text-gray-700">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={e => handleMethodCheckboxChange(val, e.target.checked)}
+                            className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                          />
+                          <span>{label}</span>
+                        </label>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Varsayılan Yöntem (İçinden Seçim) */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">
+                    Varsayılan Uygulama Yöntemi <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={form.default_application_method}
+                    onChange={e => setForm(f => ({ ...f, default_application_method: e.target.value }))}
+                    disabled={form.allowed_application_methods.length === 0}
+                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 disabled:opacity-50"
+                  >
+                    <option value="">{form.allowed_application_methods.length === 0 ? 'Önce yöntem seçin' : 'Seçiniz'}</option>
+                    {form.allowed_application_methods.map((method) => (
+                      <option key={method} value={method}>
+                        {METHOD_LABEL[method] || method}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Sıralama ve Minimum Yaş */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">Sıralama Önceliği</label>
+                    <input
+                      type="number"
+                      value={form.sort_order}
+                      onChange={e => setForm(f => ({ ...f, sort_order: parseInt(e.target.value, 10) || 100 }))}
+                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Min. Yaş (Hafta)</label>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">Min. Yaş (Hafta)</label>
                     <StepperInput
-                      min={0} step={1}
+                      min={0}
+                      step={1}
                       value={form.min_age_weeks}
                       onChange={e => setForm(f => ({ ...f, min_age_weeks: e.target.value }))}
                       className="w-full"
@@ -548,54 +753,23 @@ export default function AdminParasiteProductsClient() {
                   </div>
                 </div>
 
-                {/* Açıklama */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Açıklama</label>
-                  <textarea
-                    value={form.description}
-                    onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                    rows={2}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm resize-none"
-                  />
-                </div>
-
-                {/* Not */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Not</label>
-                  <textarea
-                    value={form.notes}
-                    onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                    rows={2}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm resize-none"
-                  />
-                </div>
-
-                {/* Toggle'lar */}
-                <div className="flex items-center gap-5">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={form.covers_ear_mites}
-                      onChange={e => setForm(f => ({ ...f, covers_ear_mites: e.target.checked }))}
-                      className="rounded"
-                    />
-                    <span className="text-sm text-gray-700">Kulak uyuzu kapsıyor</span>
-                  </label>
+                {/* Toggle Aktif */}
+                <div className="flex items-center gap-2 pt-2">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={form.is_active}
                       onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))}
-                      className="rounded"
+                      className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
                     />
-                    <span className="text-sm text-gray-700">Aktif (listede görünür)</span>
+                    <span className="text-sm font-medium text-gray-700">Aktif Protokol (listede önerilir)</span>
                   </label>
                 </div>
               </div>
 
-              {/* Form hata */}
+              {/* Form Hata Mesajı */}
               {formError && (
-                <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 shadow-sm">
                   {formError}
                 </div>
               )}
@@ -604,14 +778,15 @@ export default function AdminParasiteProductsClient() {
               <div className="flex gap-3 mt-5">
                 <button
                   onClick={() => setModalOpen(false)}
-                  className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+                  disabled={saving}
+                  className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
                 >
                   İptal
                 </button>
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="flex-1 rounded-xl bg-purple-600 py-2.5 text-sm font-semibold text-white hover:bg-purple-700 disabled:opacity-60"
+                  className="flex-1 rounded-xl bg-purple-600 py-2.5 text-sm font-semibold text-white hover:bg-purple-700 transition-colors disabled:opacity-60 flex items-center justify-center gap-1.5"
                 >
                   {saving ? 'Kaydediliyor…' : editTarget ? 'Güncelle' : 'Ekle'}
                 </button>
@@ -621,26 +796,27 @@ export default function AdminParasiteProductsClient() {
         </div>
       )}
 
-      {/* Pasife Al Onay Modal */}
+      {/* Pasife Al Onay Modalı */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
             <h2 className="text-base font-bold text-gray-900 mb-2">Pasife Al</h2>
             <p className="text-sm text-gray-600 mb-5">
-              <strong>{deleteTarget.name}</strong> ürünü pasife alınacak.
+              <strong>{deleteTarget.protocol_name}</strong> protokolü pasife alınacak.
               Mevcut kayıtlar etkilenmez, yeni önerilerde/listelerde görünmez.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteTarget(null)}
-                className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-medium text-gray-600"
+                disabled={deleting}
+                className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
                 Vazgeç
               </button>
               <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className="flex-1 rounded-xl bg-red-500 py-2.5 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-60"
+                className="flex-1 rounded-xl bg-red-500 py-2.5 text-sm font-semibold text-white hover:bg-red-600 transition-colors disabled:opacity-60 flex items-center justify-center"
               >
                 {deleting ? 'İşleniyor…' : 'Pasife Al'}
               </button>
@@ -648,7 +824,6 @@ export default function AdminParasiteProductsClient() {
           </div>
         </div>
       )}
-
     </div>
   )
 }

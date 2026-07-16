@@ -50,19 +50,12 @@ export async function PATCH(
     : application.breeding_listings?.title
 
   if (status === 'approved') {
-    const { data: ownerProfile } = await supabase
-      .from('profiles')
-      .select('phone')
-      .eq('id', user.id)
-      .single()
-
     await supabase.from('notification_jobs').insert({
       user_id: application.applicant_user_id,
       pet_id: application.applicant_pet_id,
       job_type: 'application_approved',
       payload: { 
-        listing_title: listingTitle || 'İlanınız',
-        owner_phone: ownerProfile?.phone || null
+        listing_title: listingTitle || 'İlanınız'
       },
       scheduled_for: new Date().toISOString()
     })
@@ -72,7 +65,7 @@ export async function PATCH(
       pet_id: application.applicant_pet_id,
       user_id: application.applicant_user_id,
       entry_type: 'note',
-      note: `Eşleşme Onaylandı 🎉\n"${listingTitle || 'Eşleşme'}" ilanıyla eşleşme gerçekleşti.`,
+      note: `Eşleştirme Başvurusu Onaylandı ✅\n"${listingTitle || 'İlan'}" başvurunuz kabul edildi.`,
       data: {}
     })
 
@@ -86,7 +79,7 @@ export async function PATCH(
         pet_id: listingPetId,
         user_id: user.id,
         entry_type: 'note',
-        note: `Eşleşme Onaylandı 🎉\nBaşvuru kabul edildi, eşleşme gerçekleşti.`,
+        note: `Eşleştirme Başvurusu Onaylandı ✅\nİlanınıza gelen bir başvuruyu kabul ettiniz.`,
         data: {}
       })
     }

@@ -81,25 +81,27 @@ export async function GET(req: NextRequest) {
 
   // Build unified event list
   const events = [
-    ...(schedules ?? []).map((s: unknown) => {
-      const typedS = s as ScheduleWithRelations;
-      return {
-      id: typedS.id,
-      type: 'task',
-      plan_type: typedS.plan_type,
-      title: typedS.title || 'Bakım Görevi',
-      date: typedS.due_date,
-      pet_id: typedS.pet_id,
-      pet_name: petsMap[typedS.pet_id ?? '']?.name ?? '',
-      pet_species: petsMap[typedS.pet_id ?? '']?.species ?? '',
-      status: typedS.status,
-      assignment_status: typedS.assignment_status,
-      escalation_level: typedS.escalation_level ?? 'none',
-      priority: typedS.priority ?? 'normal',
-      assigned_to: typedS.assigned_to,
-      assignee_name: typedS.profiles ? `${typedS.profiles.first_name ?? ''} ${typedS.profiles.last_name ?? ''}`.trim() : null,
-      }
-    }),
+    ...(schedules ?? [])
+      .map((s: unknown) => s as ScheduleWithRelations)
+      .filter((s): s is ScheduleWithRelations & { due_date: string } => s.due_date !== null)
+      .map((typedS) => {
+        return {
+          id: typedS.id,
+          type: 'task',
+          plan_type: typedS.plan_type,
+          title: typedS.title || 'Bakım Görevi',
+          date: typedS.due_date,
+          pet_id: typedS.pet_id,
+          pet_name: petsMap[typedS.pet_id ?? '']?.name ?? '',
+          pet_species: petsMap[typedS.pet_id ?? '']?.species ?? '',
+          status: typedS.status,
+          assignment_status: typedS.assignment_status,
+          escalation_level: typedS.escalation_level ?? 'none',
+          priority: typedS.priority ?? 'normal',
+          assigned_to: typedS.assigned_to,
+          assignee_name: typedS.profiles ? `${typedS.profiles.first_name ?? ''} ${typedS.profiles.last_name ?? ''}`.trim() : null,
+        }
+      }),
     ...(appointments ?? []).map((a: unknown) => {
       const typedA = a as AppointmentWithRelations;
       return {

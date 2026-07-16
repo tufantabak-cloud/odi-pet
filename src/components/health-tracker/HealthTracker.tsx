@@ -158,6 +158,7 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
       // koruma" gibi uzun aralıklar tek bir uygulama kaydından doğabilsin.
       const allRowEvents = (flowEvents || []).filter(e => e.taskKey === row.task.title);
       const coverageIntervals = onlyShowMissed ? [] : buildCoverageIntervals(allRowEvents);
+      const missedIntervals = onlyShowMissed ? [] : buildMissedIntervals(allRowEvents);
 
       return (
         <div key={`${row.task.category}-${row.task.title}`} className="border-b border-border-main/20 last:border-b-0 py-1.5">
@@ -175,6 +176,7 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
             eventsByDate={byDate}
             categoryKey={categoryKey}
             coverageIntervals={coverageIntervals}
+            missedIntervals={missedIntervals}
             getCreateHref={onlyShowMissed ? undefined : (dateKey) => buildPlanYapHref(petId, group, row, dateKey)}
             {...cardProps}
           />
@@ -267,13 +269,56 @@ function findCoveringInterval(key: string, intervals: CoverageInterval[]): Cover
   return intervals.find(iv => key > iv.startDateKey && key < iv.endDateKey);
 }
 
+interface MissedInterval {
+  startDateKey: string;
+  endDateKey: string;
+  sourceEvent: FlowEvent;
+}
+
+function buildMissedIntervals(events: FlowEvent[]): MissedInterval[] {
+  const sorted = [...events].sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
+  const intervals: MissedInterval[] = [];
+
+  for (let i = 0; i < sorted.length; i++) {
+    const curr = sorted[i];
+    if (curr.computedStatus === 'missed') {
+      // Find the next done event after this missed event
+      const nextDone = sorted.slice(i + 1).find(e => e.status === 'done' || e.status === 'completed' || e.computedStatus === 'done');
+      
+      const start = new Date(curr.due_date);
+      start.setDate(start.getDate() + 1); // Day after missed event
+      const startDateKey = toDateKey(start);
+
+      let endDateKey = '9999-12-31';
+      if (nextDone) {
+        const end = new Date(nextDone.due_date);
+        end.setDate(end.getDate() - 1); // Day before next done event
+        endDateKey = toDateKey(end);
+      }
+
+      if (startDateKey <= endDateKey) {
+        intervals.push({
+          startDateKey,
+          endDateKey,
+          sourceEvent: curr
+        });
+      }
+    }
+  }
+  return intervals;
+}
+
+function findCoveringMissedInterval(key: string, intervals: MissedInterval[]): MissedInterval | undefined {
+  return intervals.find(iv => key >= iv.startDateKey && key <= iv.endDateKey);
+}
+
 /**
  * Tek satır: kendi başına yatay sürüklenebilir/kaydırılabilir tarih ekseni.
  * Diğer satırlardan bağımsız — kendi scroll konumunu tutar, kendi "bugün"
  * çizgisini kendi içinde taşır.
  */
 function TimelineRow({
-  visibleKeys, todayKey, resetToken, eventsByDate, categoryKey, coverageIntervals, getCreateHref,
+  visibleKeys, todayKey, resetToken, eventsByDate, categoryKey, coverageIntervals, missedIntervals, getCreateHref,
   onMarkDone, onPostpone, onEdit, onDelete,
 }: {
   visibleKeys: string[];
@@ -284,6 +329,7 @@ function TimelineRow({
   categoryKey: ReturnType<typeof toCategoryKey>;
   /** Görevin "uygulandı" tarihinden koruma bitişine kadar süren aralıkları — bu günler yeşil boyanır */
   coverageIntervals?: CoverageInterval[];
+  missedIntervals?: MissedInterval[];
   /** Boş hücre için "plan yap" sayfasına deep-link üretir; null dönerse hücre pasif kalır */
   getCreateHref?: (dateKey: string) => string | null;
   onMarkDone: (id: string) => void;
@@ -338,12 +384,48 @@ function TimelineRow({
                       onClick={() => onEdit(coveringInterval.sourceEvent)}
                       aria-label={`${formatShortDate(key)} — koruma sürüyor, kaydı düzenle`}
                       title={`${formatShortDate(key)} — koruma sürüyor, kaydı düzenle`}
-                      className="w-[92px] min-h-[64px] rounded-2xl border border-[#86efac] bg-[#f0fdf4] text-[#166534] hover:bg-[#e2fbe8] flex flex-col items-center justify-center gap-1 transition-colors"
+                      className="w-[100px] min-h-[64px] rounded-2xl border border-[#86efac] bg-[#f0fdf4] text-[#166534] hover:bg-[#e2fbe8] hover:scale-[1.05] active:scale-95 flex flex-col items-start text-left overflow-hidden p-2.5 transition-all duration-200"
                     >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M20 6 9 17l-5-5" />
-                      </svg>
-                      <span className="text-[8.5px] font-bold uppercase tracking-wide">Korumada</span>
+                      <div className="w-full flex items-center justify-between">
+                        <div className="w-5 h-5 shrink-0 rounded-full flex items-center justify-center bg-[#22c55e] text-white">
+                          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M20 6 9 17l-5-5" />
+                          </svg>
+                        </div>
+                        <span className="text-[8.5px] font-bold uppercase tracking-wide opacity-70">
+                          Korumada
+                        </span>
+                      </div>
+                      <span className="text-[10.5px] font-extrabold mt-auto pt-1.5">
+                        {formatShortDate(key)}
+                      </span>
+                    </button>
+                  </div>
+                );
+              }
+
+              const coveringMissedInterval = findCoveringMissedInterval(key, missedIntervals || []);
+              if (coveringMissedInterval) {
+                return (
+                  <div key={key} className="flex items-center justify-center min-h-[64px]">
+                    <button
+                      type="button"
+                      onClick={() => onEdit(coveringMissedInterval.sourceEvent)}
+                      aria-label={`${formatShortDate(key)} — görev gecikti, kaydı düzenle`}
+                      title={`${formatShortDate(key)} — görev gecikti, kaydı düzenle`}
+                      className="w-[100px] min-h-[64px] rounded-2xl border border-[#fca5a5] bg-[#fef2f2] text-[#b91c1c] hover:bg-[#fee2e2] hover:scale-[1.05] active:scale-95 flex flex-col items-start text-left overflow-hidden p-2.5 transition-all duration-200"
+                    >
+                      <div className="w-full flex items-center justify-between">
+                        <div className="w-5 h-5 shrink-0 rounded-full flex items-center justify-center bg-[#ef4444] text-white">
+                          <span className="block text-[9px] font-black leading-none">!</span>
+                        </div>
+                        <span className="text-[8.5px] font-bold uppercase tracking-wide opacity-70">
+                          Kaçırıldı
+                        </span>
+                      </div>
+                      <span className="text-[10.5px] font-extrabold mt-auto pt-1.5">
+                        {formatShortDate(key)}
+                      </span>
                     </button>
                   </div>
                 );
@@ -360,8 +442,8 @@ function TimelineRow({
                       title={`${formatShortDate(key)} için kayıt ekle`}
                       className={`w-[92px] min-h-[64px] rounded-2xl border border-dashed flex flex-col items-center justify-center gap-1 transition-colors ${
                         isToday
-                          ? 'border-[#5b86ff]/50 text-[#3358e0] hover:bg-[#eef3ff]'
-                          : 'border-border-main text-text-secondary/40 hover:text-primary hover:border-primary/50 hover:bg-primary/5'
+                           ? 'border-[#5b86ff]/50 text-[#3358e0] hover:bg-[#eef3ff]'
+                           : 'border-border-main text-text-secondary/40 hover:text-primary hover:border-primary/50 hover:bg-primary/5'
                       }`}
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">

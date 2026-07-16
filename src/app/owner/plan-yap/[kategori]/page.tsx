@@ -53,6 +53,7 @@ export default function WizardOrchestrator() {
   const queryDate = searchParams.get('date');
   const queryMedName = searchParams.get('medName');
   const queryVaccineName = searchParams.get('vaccineName');
+  const queryVaccineCode = searchParams.get('vaccine_code');
 
   // URL'den gelen alt kategori (subCat): geçerliyse alt kategori adımı atlanır (create modunda)
   const querySubCat = searchParams.get('subCat');
@@ -287,39 +288,31 @@ export default function WizardOrchestrator() {
     const subCat = categoryKey === 'asi' ? 'Aşı' : wizardData.subCategory;
     const isVaccineOrParasite = subCat === 'Aşı' || subCat === 'İç Parazit' || subCat === 'Dış Parazit' || subCat === 'Parazit Tasması' || subCat === 'Birleşik Parazit';
     
-    if (isVaccineOrParasite && speciesStr) {
+    if (isVaccineOrParasite && speciesStr && wizardData.pet_id) {
       const fetchProducts = async () => {
         setLoadingProducts(true);
         try {
-          const supabase = createBrowserSupabaseClient();
-          const speciesEng = normalizeSpecies(speciesStr);
           const isVaccine = subCat === 'Aşı';
 
-          // 1. Templates
-          // vaccine_templates dropped — vaccine_protocols kullanılıyor (bkz. vaccination-algorithm.ts).
-          // vaccine_protocols yalnızca aşı protokolleri içerir, hiç parazit kategorisi yok — parazit
-          // ürünleri zaten aşağıdaki ayrı useEffect'te parasite_products'tan çekiliyor. Bu kaynak
-          // sadece isVaccine=true iken kullanılır; parazit sekmesinde bu tablodan hiç ürün gelmez
-          // (INT/EXT prefix ayrımına gerek yok — kaynağın kendisinde parazit satırı bulunmuyor).
-          const { data: templates } = await supabase.from('vaccine_protocols')
-            .select('*').in('species', [speciesEng, 'both']).eq('is_active', true);
+          if (isVaccine) {
+            const res = await fetch(`/api/pets/${wizardData.pet_id}/vaccine-preferences`);
+            const data = await res.json();
+            const protocols = data.protocols || [];
+            
+            // Filter by enabled === true
+            const enabledProtocols = protocols.filter((p: any) => p.enabled === true);
 
-          let templateOptions: any[] = [];
-          if (templates && isVaccine) {
-            templateOptions = templates
-              .map((t: any) => ({
-                code: t.vaccine_code,
-                name: t.protocol_name,
-                nameTr: t.protocol_name,
-                group: t.is_core === true ? 'core' : 'optional',
-                isParasite: !isVaccine,
-                protection_duration_days: t.repeat_interval_days,
-                isTemplate: true,
-              }));
+            const templateOptions = enabledProtocols.map((t: any) => ({
+              code: t.vaccine_code,
+              name: t.protocol_name,
+              nameTr: t.protocol_name,
+              group: t.category === 'legal' || t.category === 'core' ? 'core' : 'optional',
+              isParasite: false,
+              isTemplate: true,
+            }));
+
+            setDbProducts(templateOptions);
           }
-
-          // 2. Marka bilgileri artık kullanıcıdan manuel alınacak (Custom Brands kaldırıldı)
-          setDbProducts(templateOptions);
         } catch (e) {
           console.error(e);
         } finally {
@@ -328,44 +321,71 @@ export default function WizardOrchestrator() {
       };
       fetchProducts();
     }
-  }, [wizardData.subCategory, categoryKey, speciesStr]);
+  }, [wizardData.subCategory, categoryKey, speciesStr, wizardData.pet_id]);
 
-  // ── Timeline'dan gelen aşı adını otomatik seç (yalnızca oluşturma modunda) ──
+  // ── Timeline'dan gelen aşı adını veya kodunu otomatik seç (yalnızca oluşturma modunda) ──
   useEffect(() => {
-    if (editId || !queryVaccineName || wizardData.selectedVaccine || dbProducts.length === 0) return;
-    const target = queryVaccineName.toLocaleLowerCase('tr-TR').trim();
-    const match = dbProducts.find(p => (p.name || p.nameTr || '').toLocaleLowerCase('tr-TR').trim() === target)
-      ?? dbProducts.find(p => (p.name || p.nameTr || '').toLocaleLowerCase('tr-TR').includes(target));
-    if (match) setStepData({ selectedVaccine: match });
-  }, [dbProducts, editId, queryVaccineName]);
+    if (editId || wizardData.selectedVaccine || dbProducts.length === 0) return;
+    if (queryVaccineCode) {
+      const match = dbProducts.find(p => p.code === queryVaccineCode);
+      if (match) {
+        setStepData({ selectedVaccine: match });
+        return;
+      }
+    }
+    if (queryVaccineName) {
+      const target = queryVaccineName.toLocaleLowerCase('tr-TR').trim();
+      const match = dbProducts.find(p => (p.name || p.nameTr || '').toLocaleLowerCase('tr-TR').trim() === target)
+        ?? dbProducts.find(p => (p.name || p.nameTr || '').toLocaleLowerCase('tr-TR').includes(target));
+      if (match) setStepData({ selectedVaccine: match });
+    }
+  }, [dbProducts, editId, queryVaccineName, queryVaccineCode]);
 
   // ── Fetch Parazit / Mama Products ─────────────────────────────────
   useEffect(() => {
     if (categoryKey !== 'parazit') return;
-    if (!wizardData.subCategory) return;
+    if (!wizardData.subCategory || !wizardData.pet_id) return;
 
     setProductsLoading(true);
     
-    const species = speciesStr ?? 'both';
-    
-    // Alt kategoriye göre category belirle
-    const categoryMap: Record<string, string> = {
-      'İç Parazit': 'parasite_internal',
-      'Dış Parazit': 'parasite_external',
-      'Parazit Tasması': 'parasite_collar',
-      'Birleşik Parazit': 'parasite_external',
-    };
-    
-    const category = categoryMap[wizardData.subCategory ?? ''] ?? 'parasite_external';
-
-    fetch(`/api/products/templates?category=${category}&species=${species}`)
+    fetch(`/api/pets/${wizardData.pet_id}/parasite-preferences`)
       .then(r => r.json())
       .then(data => {
-        setProducts(Array.isArray(data) ? data : []);
+        const protocols = Array.isArray(data) ? data : [];
+        const enabledProtocols = protocols.filter((p: any) => p.enabled === true);
+        
+        const subCat = wizardData.subCategory;
+        const filtered = enabledProtocols.filter((p: any) => {
+          if (subCat === 'İç Parazit') {
+            return p.parasite_type === 'internal' || p.parasite_type === 'combined';
+          }
+          if (subCat === 'Dış Parazit') {
+            return p.parasite_type === 'external' || p.parasite_type === 'combined';
+          }
+          if (subCat === 'Birleşik Parazit') {
+            return p.parasite_type === 'combined';
+          }
+          if (subCat === 'Parazit Tasması') {
+            return p.parasite_type === 'collar';
+          }
+          return false;
+        });
+
+        const mapped = filtered.map((p: any) => ({
+          id: p.id,
+          brand_name: p.protocol_name,
+          product_name: null,
+          category: p.parasite_type,
+          duration_days: p.default_protection_duration_days,
+          parasite_code: p.parasite_code
+        }));
+
+        setProducts(mapped);
       })
+      .catch(console.error)
       .finally(() => setProductsLoading(false));
 
-  }, [categoryKey, wizardData.subCategory, speciesStr]);
+  }, [categoryKey, wizardData.subCategory, wizardData.pet_id]);
 
   // ── Timeline'dan gelen parazit ürün adını otomatik seç (yalnızca oluşturma modunda) ──
   useEffect(() => {
@@ -988,6 +1008,8 @@ export default function WizardOrchestrator() {
               <div className="flex justify-center py-6">
                 <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
               </div>
+            ) : products.length === 0 ? (
+              <p className="text-center text-[13px] text-text-secondary py-4">Bu pet için planlanabilir aktif protokol bulunmuyor.</p>
             ) : (
               <div className="flex flex-col gap-2">
                 {(() => {
@@ -1142,7 +1164,7 @@ export default function WizardOrchestrator() {
             {loadingProducts ? (
               <p className="text-center text-[13px] text-text-secondary py-4">Ürünler Yükleniyor...</p>
             ) : filtered.length === 0 ? (
-              <p className="text-center text-[13px] text-text-secondary py-4">Eşleşen ürün bulunamadı.</p>
+              <p className="text-center text-[13px] text-text-secondary py-4">Bu pet için planlanabilir aktif protokol bulunmuyor.</p>
             ) : (
               <div className="flex flex-col gap-4">
                 {groups.map((g) => (

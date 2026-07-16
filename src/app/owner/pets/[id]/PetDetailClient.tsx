@@ -26,6 +26,7 @@ import MedicationManager from '@/components/pets/MedicationManager'
 import { buildPetMicroTasks } from '@/lib/microTasks/petMicroTasks'
 import { PetMicroTaskCard } from '@/components/micro-tasks/PetMicroTaskCard'
 import { useDismissedMicroTasks } from '@/hooks/useDismissedMicroTasks'
+import ParasitePlanCompletionModal from '@/components/pets/ParasitePlanCompletionModal'
 
 import { getPlanDisplayCategory } from '@/lib/plans/utils'
 function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
@@ -254,14 +255,14 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   }
   // url-param → Turkish module.name (openSections için)
   const SECTION_NAME_MAP: Record<string, string> = {
-    'ozet': 'Özet', 'saglik': 'Sağlık', 'asi': 'Aşı',
+    'ozet': 'Özet', 'saglik': 'Sağlık', 'asi': 'Aşı', 'parazit': 'Parazit',
     'bakim': 'Bakım', 'beslenme': 'Beslenme', 'hijyen': 'Hijyen',
     'aktivite': 'Aktivite', 'veteriner': 'Veteriner',
     'diger': 'Diğer', 'raporlar': 'Raporlar & Belgeler',
   }
   // Turkish module.name → url-safe id (div id için)
   const MODULE_ID_MAP: Record<string, string> = {
-    'Özet': 'ozet', 'Sağlık': 'saglik', 'Aşı': 'asi',
+    'Özet': 'ozet', 'Sağlık': 'saglik', 'Aşı': 'asi', 'Parazit': 'parazit',
     'Bakım': 'bakim', 'Beslenme': 'beslenme', 'Hijyen': 'hijyen',
     'Aktivite': 'aktivite', 'Veteriner': 'veteriner',
     'Diğer': 'diger', 'Raporlar & Belgeler': 'raporlar',
@@ -349,6 +350,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     return () => window.removeEventListener('open-pet-section', handleOpenSection);
   }, [])
   const [quickUpdateConfig, setQuickUpdateConfig] = useState<any>(null)
+  const [parasiteCompletionTask, setParasiteCompletionTask] = useState<any>(null)
   const [enrichOpen, setEnrichOpen] = useState(false)
   const [taskWizardOpen, setTaskWizardOpen] = useState(false)
   const [isSmartScannerOpen, setIsSmartScannerOpen] = useState(false)
@@ -877,6 +879,11 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     setActiveMenuId(null);
     const item = localSchedules.find(s => s.id === id);
     if (!item) return;
+
+    if (item._source === 'plans' && item._plan_category === 'parazit') {
+      setParasiteCompletionTask(item);
+      return;
+    }
 
     const completeTaskInDb = async () => {
       setLocalSchedules(prev => prev.map(s => s.id === id ? { ...s, status: 'done' } : s));
@@ -1663,6 +1670,21 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             }
             setQuickUpdateConfig(null)
           }} 
+        />
+      )}
+
+      {/* Parasite Plan Completion Modal */}
+      {parasiteCompletionTask && (
+        <ParasitePlanCompletionModal
+          planId={parasiteCompletionTask._plan_id}
+          petId={pet.id}
+          onClose={() => setParasiteCompletionTask(null)}
+          onSuccess={(brandOrNotes) => {
+            setLocalSchedules(prev => prev.map(s => s.id === parasiteCompletionTask.id ? { ...s, status: 'done', notes: brandOrNotes || s.notes } : s));
+            setTrackerRefreshKey(prev => prev + 1);
+            router.refresh();
+            setParasiteCompletionTask(null);
+          }}
         />
       )}
 

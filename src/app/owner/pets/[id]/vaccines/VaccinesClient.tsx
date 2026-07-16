@@ -39,7 +39,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createBrowserSupabaseClient } from '@/lib/supabase/client';
-import type { AdministrationRoute } from '@/lib/database.types';
+import type { AdministrationRoute } from '@/lib/vaccines/vaccination-rules';
 import { SmartScanner } from '@/components/ui/SmartScanner';
 import { VaccineEntryScreen } from '@/components/vaccines/VaccineEntryScreen';
 import VaccineSelectorSheet, { VaccineOption } from '@/components/tasks/VaccineSelectorSheet';
@@ -1512,7 +1512,7 @@ export default function VaccinesClient({ pet, initialPlans, initialRecords, init
       });
       
       setShowWizard(false);
-      router.refresh();
+      router.push(`/owner/plan-yap/asi?pet_id=${pet.id}&source=smart_start`);
     } catch (err) {
       console.error(err);
     } finally {

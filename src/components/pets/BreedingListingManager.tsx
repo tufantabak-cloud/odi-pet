@@ -22,6 +22,11 @@ export default function BreedingListingManager({ pet }: { pet: PetRow }) {
   const [end, setEnd] = useState('')
   const [reqs, setReqs] = useState<string[]>([])
   
+  // eligibility state
+  const [eligibilityData, setEligibilityData] = useState<any>(null)
+  const [isCheckingEligibility, setIsCheckingEligibility] = useState(false)
+  const [eligibilityError, setEligibilityError] = useState(false)
+  
   const [selectedPhotoUrl, setSelectedPhotoUrl] = useState<string | null>(null)
   const [estrusNotif, setEstrusNotif] = useState(false)
   const [activeCycle, setActiveCycle] = useState<any>(null)
@@ -58,7 +63,7 @@ export default function BreedingListingManager({ pet }: { pet: PetRow }) {
         .select('id, start_date, end_date, notes')
         .eq('pet_id', pet.id)
         .lte('start_date', today)
-        .gte('end_date', today)
+        .is('end_date', null)
         .order('start_date', { ascending: false })
         .limit(1)
       if (data && data.length > 0) {
@@ -71,6 +76,30 @@ export default function BreedingListingManager({ pet }: { pet: PetRow }) {
       fetchEstrusCycle()
     }
   }, [pet.id, pet.gender])
+
+  useEffect(() => {
+    // Sadece ilan oluşturulurken veya düzenlenirken kontrol et (zaten bu component Breeding amaçlıdır)
+    const checkEligibility = async () => {
+      setIsCheckingEligibility(true)
+      setEligibilityError(false)
+      try {
+        const res = await fetch(`/api/pets/${pet.id}/breeding-eligibility/evaluate`, { method: 'POST' })
+        if (res.ok) {
+          const data = await res.json()
+          setEligibilityData(data)
+        } else {
+          setEligibilityError(true)
+        }
+      } catch (e) {
+        setEligibilityError(true)
+      }
+      setIsCheckingEligibility(false)
+    }
+
+    if (!listing || isEditing) {
+      checkEligibility()
+    }
+  }, [pet.id, isEditing, listing])
 
   if (loading) return <div className="animate-pulse bg-bg-main h-24 rounded-xl w-full mb-6" />
 
@@ -226,6 +255,80 @@ export default function BreedingListingManager({ pet }: { pet: PetRow }) {
           </button>
         )}
       </div>
+
+      {isCheckingEligibility && (
+        <div className="p-4 mb-5 bg-blue-50 border border-blue-100 rounded-xl flex items-center gap-3 relative z-10">
+          <span className="relative flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-blue-400"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+          </span>
+          <span className="text-[13px] font-bold text-blue-800">Üreme uygunluğu kontrol ediliyor…</span>
+        </div>
+      )}
+
+      {eligibilityError && !isCheckingEligibility && (
+        <div className="p-4 mb-5 bg-red-50 border border-red-100 rounded-xl relative z-10">
+          <p className="text-[13px] font-bold text-red-800 mb-2">Uygunluk kontrolü şu anda tamamlanamadı. Lütfen tekrar deneyin.</p>
+          <button type="button" onClick={() => {
+            setIsCheckingEligibility(true)
+            fetch(`/api/pets/${pet.id}/breeding-eligibility/evaluate`, { method: 'POST' })
+              .then(res => res.json())
+              .then(data => { setEligibilityData(data); setEligibilityError(false) })
+              .catch(() => setEligibilityError(true))
+              .finally(() => setIsCheckingEligibility(false))
+          }} className="px-4 py-2 bg-white text-red-700 text-[12px] font-bold rounded-lg border border-red-200 hover:bg-red-50">Tekrar Dene</button>
+        </div>
+      )}
+
+      {!isCheckingEligibility && !eligibilityError && eligibilityData && (
+        <>
+          {eligibilityData.status !== 'eligible' && eligibilityData.blocking_reasons?.length > 0 && (
+            <div className="p-4 mb-4 bg-red-50/50 border border-red-200 rounded-xl relative z-10">
+              <h4 className="font-bold text-[14px] text-red-800 mb-2 flex items-center gap-2">
+                <span>🛑</span> İlan açmadan önce tamamlanması gerekenler
+              </h4>
+              <ul className="flex flex-col gap-2">
+                {eligibilityData.blocking_reasons.map((r: any, i: number) => {
+                  let msg = r.message;
+                  if (r.code === 'PET_NEUTERED') msg = 'Kısırlaştırılmış petler için üreme ilanı oluşturulamaz.';
+                  if (r.code === 'UNSUPPORTED_SPECIES') msg = 'Üreme ilanı yalnızca kedi ve köpekler için kullanılabilir.';
+                  if (r.code === 'SEX_REQUIRED') msg = 'Petinizin cinsiyet bilgisini tamamlayın.';
+                  if (r.code === 'BIRTH_DATE_REQUIRED') msg = 'Petinizin doğum tarihini tamamlayın.';
+                  
+                  return (
+                    <li key={i} className="text-[13px] text-red-700 bg-white px-3 py-2 rounded-lg border border-red-100 shadow-sm flex items-start gap-2">
+                      <span className="mt-0.5">•</span>
+                      <span>{msg}</span>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          )}
+
+          {eligibilityData.advisories?.length > 0 && (
+            <div className="p-4 mb-5 bg-sky-50/50 border border-sky-200 rounded-xl relative z-10">
+              <h4 className="font-bold text-[14px] text-sky-800 mb-2 flex items-center gap-2">
+                <span>💡</span> İlanınızı daha güvenilir hâle getirin
+              </h4>
+              <ul className="flex flex-col gap-2">
+                {eligibilityData.advisories.map((a: any, i: number) => {
+                  let msg = a.message;
+                  if (a.code === 'VETERINARY_CLEARANCE_OPTIONAL') msg = 'Veteriner kontrolü ekleyerek ilanınızda güven rozeti kullanabilirsiniz.';
+                  if (a.code === 'AGE_RULE_NOT_CONFIGURED') msg = 'Yaş uygunluğu kuralları henüz değerlendirme kapsamına alınmamıştır.';
+                  
+                  return (
+                    <li key={i} className="text-[13px] text-sky-700 bg-white px-3 py-2 rounded-lg border border-sky-100 shadow-sm flex items-start gap-2">
+                      <span className="mt-0.5">•</span>
+                      <span>{msg}</span>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          )}
+        </>
+      )}
       
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 relative z-10">
         <div>
@@ -340,7 +443,17 @@ export default function BreedingListingManager({ pet }: { pet: PetRow }) {
 
         {error && <div className="text-red-500 text-[13px] font-bold mt-1">{error}</div>}
         
-        <button type="submit" disabled={submitting} className="btn-primary w-full h-[46px] bg-pink-500 hover:bg-pink-600 text-[14px] shadow-lg shadow-pink-500/20 mt-2 transition-all">
+        {(!eligibilityData || eligibilityData.status !== 'eligible' || eligibilityError) && !isCheckingEligibility && (
+          <div className="text-center text-[12px] text-text-secondary mt-1 mb-1 font-medium">
+            Yukarıdaki zorunlu bilgileri tamamladıktan sonra ilan oluşturabilirsiniz.
+          </div>
+        )}
+
+        <button 
+          type="submit" 
+          disabled={submitting || isCheckingEligibility || eligibilityError || (eligibilityData && eligibilityData.status !== 'eligible')} 
+          className="btn-primary w-full h-[46px] bg-pink-500 hover:bg-pink-600 disabled:opacity-50 disabled:cursor-not-allowed text-[14px] shadow-lg shadow-pink-500/20 mt-2 transition-all"
+        >
           {submitting ? 'Kaydediliyor...' : (listing ? 'Değişiklikleri Kaydet' : 'İlanı Yayınla')}
         </button>
       </form>

@@ -1,6 +1,6 @@
 export type PlanCategory = 'saglik' | 'asi' | 'parazit' | 'bakim' | 'beslenme' | 'hijyen' | 'aktivite' | 'kontrol';
 export type PlanStatus = 'active' | 'completed' | 'cancelled';
-export type RepeatRule = 'daily' | 'weekly' | 'monthly' | 'yearly';
+export type RepeatRule = 'hour' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly';
 export type NotifUnit = 'minute' | 'hour' | 'day';
 
 export interface Plan {

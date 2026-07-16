@@ -56,3 +56,17 @@ backup_legacy_vaccines.js
 supabase/.branches/
 supabase/.temp/
 
+
+# Temp / secret / local test files
+.tmp.driveupload/
+db_proof.mjs
+query.mjs
+openapi_proof.mjs
+openapi_test.mjs
+db_proof_output.json
+apply-migration*.js
+check-*.js
+test-db.js
+test-estrus-db.js
+check_types.ts
+test_*.ts

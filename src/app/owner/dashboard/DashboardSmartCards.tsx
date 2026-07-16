@@ -9,6 +9,7 @@ import QuickJournalWidget from '@/components/dashboard/QuickJournalWidget'
 import { buildPetMicroTasks } from '@/lib/microTasks/petMicroTasks'
 import { PetMicroTaskCard } from '@/components/micro-tasks/PetMicroTaskCard'
 import { useDismissedMicroTasks } from '@/hooks/useDismissedMicroTasks'
+import ParasitePlanCompletionModal from '@/components/pets/ParasitePlanCompletionModal'
 
 
 
@@ -78,6 +79,8 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
   const { alerts, dismissAlert } = useSixMonthAssessments(supabase, petIds)
 
   const [quickUpdateConfig, setQuickUpdateConfig] = useState<any>(null)
+  const [parasiteCompletionTask, setParasiteCompletionTask] = useState<any>(null)
+  const [parasiteCompletionCardId, setParasiteCompletionCardId] = useState<string | null>(null)
   const [dismissedCards, setDismissedCards] = useState<string[]>([])
   const [expanded, setExpanded] = useState(false)
   const { filterVisibleTasks, dismissTask } = useDismissedMicroTasks()
@@ -130,7 +133,18 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
   }
 
   const markTaskCompleteInDB = async (taskId: string) => {
+    if (taskId.startsWith('virtual_')) {
+      console.warn('Sanal takvim olayı değiştirilemez.');
+      return;
+    }
     try {
+      const task = upcomingSchedules?.find((s: any) => s.id === taskId);
+      if (task && task._source === 'plans' && task._plan_category === 'parazit') {
+        setParasiteCompletionTask(task);
+        setParasiteCompletionCardId(`parasite-task-${task.id}`);
+        return;
+      }
+
       if (taskId.startsWith('plan_')) {
         const realId = taskId.replace('plan_', '')
         await fetch(`/api/plans/${realId}`, {
@@ -717,6 +731,25 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
           }}
         />
       ) : null}
+
+      {parasiteCompletionTask && (
+        <ParasitePlanCompletionModal
+          planId={parasiteCompletionTask._plan_id}
+          petId={parasiteCompletionTask.pet_id}
+          onClose={() => {
+            setParasiteCompletionTask(null);
+            setParasiteCompletionCardId(null);
+          }}
+          onSuccess={() => {
+            if (parasiteCompletionCardId) {
+              dismissCard(parasiteCompletionCardId);
+            }
+            router.refresh();
+            setParasiteCompletionTask(null);
+            setParasiteCompletionCardId(null);
+          }}
+        />
+      )}
     </div>
   )
 }

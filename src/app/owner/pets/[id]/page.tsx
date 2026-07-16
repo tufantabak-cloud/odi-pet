@@ -89,6 +89,7 @@ export default async function PetDetailPage(props: PageProps) {
       id: `plan_${p.id}`,
       _plan_id: p.id,
       _source: 'plans',
+      _plan_category: p.category,
       pet_id: p.pet_id,
       title: getPlanDisplayTitle(p),
       due_date: dueDate,
