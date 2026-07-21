@@ -33,9 +33,14 @@ function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
-  
+  // setLoading asenkron olduğu için hızlı ardışık tıklamalarda ikinci gönderim
+  // butona disabled yansımadan geçebilir; ref ile senkron kilit sağlanır.
+  const submittingRef = useRef(false)
+
   async function handleSubmit(e: any) {
     e.preventDefault()
+    if (submittingRef.current) return // çift gönderimi engelle
+    submittingRef.current = true
     setLoading(true)
     setError('')
     const fd = new FormData(e.target)
@@ -48,6 +53,7 @@ function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
       } catch (err: any) {
         setError(err.message);
         setLoading(false);
+        submittingRef.current = false;
       }
       return;
     }
@@ -65,6 +71,7 @@ function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
     } catch(err: any) {
       setError(err.message)
       setLoading(false)
+      submittingRef.current = false
     }
   }
 
@@ -1419,9 +1426,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               <div className="flex overflow-x-auto [&::-webkit-scrollbar]:hidden">
                 {([
                   {id:'ozet', label:'Özet'},
+                  {id:'takvim', label:'Takvim'},
                   {id:'saglik', label:'Sağlık'},
                   {id:'bakim', label:'Bakım'},
-                  {id:'takvim', label:'Takvim'},
                   {id:'ekstra', label:'Ekstra'},
                 ] as const).map(tab => (
                   <button

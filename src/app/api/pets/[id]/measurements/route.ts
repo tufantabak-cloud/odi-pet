@@ -57,14 +57,36 @@ export async function POST(
   }
 
   const supabase = await createServerSupabaseClient()
-  
+
   const measuredAt = result.data.measured_at || new Date().toISOString()
+  const weightValue = result.data.measurement_type === 'weight' ? result.data.value : null
+
+  // ─── Tekilleştirme (çift gönderim koruması) ─────────────────────────
+  // Aynı gün + aynı kilo değeri zaten varsa yeni ölçüm/plan oluşturma.
+  if (weightValue !== null) {
+    const dayStart = new Date(measuredAt); dayStart.setHours(0, 0, 0, 0)
+    const dayEnd = new Date(measuredAt); dayEnd.setHours(23, 59, 59, 999)
+    const { data: dupes } = await supabase
+      .from('weight_logs')
+      .select('id, measured_at')
+      .eq('pet_id', id)
+      .eq('weight_kg', weightValue)
+      .gte('measured_at', dayStart.toISOString())
+      .lte('measured_at', dayEnd.toISOString())
+      .limit(1)
+
+    if (dupes && dupes.length > 0) {
+      return NextResponse.json({ success: true, idempotent: true, measurement: {
+        id: dupes[0].id, measurement_type: 'weight', value: weightValue, unit: 'kg', measured_at: dupes[0].measured_at
+      }})
+    }
+  }
 
   const { data: measurement, error } = await supabase
     .from('weight_logs')
     .insert({
       pet_id: id,
-      weight_kg: result.data.measurement_type === 'weight' ? result.data.value : null,
+      weight_kg: weightValue,
       measured_at: measuredAt,
     })
     .select()
@@ -82,10 +104,10 @@ export async function POST(
     .eq('category', 'saglik')
     .eq('sub_type', 'Kilo & Boy Ölçümü')
     .eq('status', 'active');
-    
+
   const logDate = new Date(measuredAt);
   logDate.setMonth(logDate.getMonth() + 1);
-  
+
   await supabase
     .from('plans')
     .insert({

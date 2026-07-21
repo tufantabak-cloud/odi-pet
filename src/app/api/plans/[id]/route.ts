@@ -59,13 +59,19 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: 'PROTOCOL_NOT_FOUND' }, { status: 400 });
     }
 
+    // Planlarken katalogdan bir ürün seçildiyse (extra_data.planned_product),
+    // tamamlama formu markayı/ürün adını ve gerçek süreyi ön-doldurabilsin diye
+    // döndürülür. Protokol varsayılanı ayrı alanda korunur (fallback).
+    const plannedProduct = plan.extra_data?.planned_product ?? null;
+
     return NextResponse.json({
       plan_id: plan.id,
       category: 'parazit',
       protocol_name: proto.protocol_name,
       allowed_application_methods: proto.allowed_application_methods,
       default_application_method: proto.default_application_method,
-      default_protection_duration_days: proto.default_protection_duration_days
+      default_protection_duration_days: proto.default_protection_duration_days,
+      planned_product: plannedProduct
     });
   } catch (error) {
     console.error('[API/Plans GET] Error:', error);

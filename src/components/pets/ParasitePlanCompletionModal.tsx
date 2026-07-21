@@ -17,6 +17,13 @@ interface CompletionContext {
   allowed_application_methods: string[];
   default_application_method: string;
   default_protection_duration_days: number;
+  // Planlarken katalogdan seçilmiş ürün (varsa). Süre/marka/ürün adını ön-doldurur.
+  planned_product?: {
+    parasite_product_id: string;
+    brand: string | null;
+    name: string | null;
+    protection_duration_days: number | null;
+  } | null;
 }
 
 const METHOD_LABELS: Record<string, string> = {
@@ -81,9 +88,18 @@ export default function ParasitePlanCompletionModal({
         }
         const data: CompletionContext = await res.json();
         setContext(data);
-        
-        // Set default values
-        setProtectionDuration(String(data.default_protection_duration_days || 30));
+
+        // Set default values — planlarken katalogdan ürün seçildiyse onu tercih et.
+        const pp = data.planned_product;
+        if (pp && pp.protection_duration_days && pp.protection_duration_days > 0) {
+          setProtectionDuration(String(pp.protection_duration_days));
+        } else {
+          setProtectionDuration(String(data.default_protection_duration_days || 30));
+        }
+        // Marka ve ürün adını da ön-doldur (kullanıcı yine düzenleyebilir)
+        if (pp?.brand) setBrand(pp.brand);
+        if (pp?.name) setProductName(pp.name);
+
         if (data.allowed_application_methods?.length === 1) {
           setApplicationMethod(data.allowed_application_methods[0]);
         } else {
@@ -290,6 +306,12 @@ export default function ParasitePlanCompletionModal({
               <div className="bg-primary/5 rounded-xl p-3 border border-primary/10 mb-1">
                 <p className="text-[12px] font-black text-primary uppercase tracking-wide">Aktif Protokol</p>
                 <p className="text-[14px] font-bold text-text-primary mt-0.5">{context.protocol_name}</p>
+                {context.planned_product && (context.planned_product.brand || context.planned_product.name) && (
+                  <p className="text-[12px] text-text-secondary mt-1">
+                    Planlanan ürün: <span className="font-semibold text-text-primary">{[context.planned_product.brand, context.planned_product.name].filter(Boolean).join(' ')}</span>
+                    {context.planned_product.protection_duration_days ? ` • ${context.planned_product.protection_duration_days} gün` : ''}
+                  </p>
+                )}
               </div>
             )}
 

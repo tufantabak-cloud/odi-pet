@@ -103,7 +103,7 @@ export function buildCategoryGroups(
     }
     // Parazit için subGroups boş kalır, taskRows düz sıralanır
     if (group.category === 'Parazit') {
-      const PARASITE_ORDER = ['İç Parazit Uygulaması', 'Dış Parazit Uygulaması', 'Parazit Tasması'];
+      const PARASITE_ORDER = ['İç Parazit Uygulaması', 'Dış Parazit Uygulaması', 'Kombine Parazit Uygulaması', 'Parazit Tasması'];
       group.taskRows.sort((a, b) => {
         const ai = PARASITE_ORDER.indexOf(a.task.title);
         const bi = PARASITE_ORDER.indexOf(b.task.title);

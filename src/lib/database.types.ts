@@ -2955,7 +2955,6 @@ export type Database = {
       parasite_products: {
         Row: {
           active_ingredient: string | null
-          admin_note: string | null
           application_method: string
           brand: string
           covers_ear_mites: boolean
@@ -2969,13 +2968,10 @@ export type Database = {
           notes: string | null
           protection_duration_days: number
           species: string
-          status: string
-          suggested_by: string | null
           type: string
         }
         Insert: {
           active_ingredient?: string | null
-          admin_note?: string | null
           application_method: string
           brand: string
           covers_ear_mites?: boolean
@@ -2989,13 +2985,10 @@ export type Database = {
           notes?: string | null
           protection_duration_days: number
           species: string
-          status?: string
-          suggested_by?: string | null
           type: string
         }
         Update: {
           active_ingredient?: string | null
-          admin_note?: string | null
           application_method?: string
           brand?: string
           covers_ear_mites?: boolean
@@ -3009,23 +3002,92 @@ export type Database = {
           notes?: string | null
           protection_duration_days?: number
           species?: string
-          status?: string
-          suggested_by?: string | null
           type?: string
+        }
+        Relationships: []
+      }
+      parasite_product_suggestions: {
+        Row: {
+          admin_note: string | null
+          application_method: string
+          approved_product_id: string | null
+          brand: string | null
+          created_at: string
+          id: string
+          merged_into_product_id: string | null
+          name_suggested: string
+          parasite_type: string
+          protection_duration_days: number
+          reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          species: string
+          status: string
+          suggested_by: string
+        }
+        Insert: {
+          admin_note?: string | null
+          application_method: string
+          approved_product_id?: string | null
+          brand?: string | null
+          created_at?: string
+          id?: string
+          merged_into_product_id?: string | null
+          name_suggested: string
+          parasite_type: string
+          protection_duration_days: number
+          reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          species: string
+          status?: string
+          suggested_by: string
+        }
+        Update: {
+          admin_note?: string | null
+          application_method?: string
+          approved_product_id?: string | null
+          brand?: string | null
+          created_at?: string
+          id?: string
+          merged_into_product_id?: string | null
+          name_suggested?: string
+          parasite_type?: string
+          protection_duration_days?: number
+          reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          species?: string
+          status?: string
+          suggested_by?: string
         }
         Relationships: [
           {
-            foreignKeyName: "parasite_products_suggested_by_fkey"
-            columns: ["suggested_by"]
+            foreignKeyName: "parasite_product_suggestions_approved_product_id_fkey"
+            columns: ["approved_product_id"]
+            isOneToOne: false
+            referencedRelation: "parasite_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parasite_product_suggestions_merged_into_product_id_fkey"
+            columns: ["merged_into_product_id"]
+            isOneToOne: false
+            referencedRelation: "parasite_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parasite_product_suggestions_reviewed_by_fkey"
+            columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "parasite_products_suggested_by_fkey"
+            foreignKeyName: "parasite_product_suggestions_suggested_by_fkey"
             columns: ["suggested_by"]
             isOneToOne: false
-            referencedRelation: "users"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -3089,6 +3151,7 @@ export type Database = {
           id: string
           notes: string | null
           parasite_code: string
+          parasite_product_id: string | null
           parasite_protocol_id: string | null
           parasite_type: string
           pet_id: string
@@ -3109,6 +3172,7 @@ export type Database = {
           id?: string
           notes?: string | null
           parasite_code: string
+          parasite_product_id?: string | null
           parasite_protocol_id?: string | null
           parasite_type: string
           pet_id: string
@@ -3129,6 +3193,7 @@ export type Database = {
           id?: string
           notes?: string | null
           parasite_code?: string
+          parasite_product_id?: string | null
           parasite_protocol_id?: string | null
           parasite_type?: string
           pet_id?: string
@@ -3152,6 +3217,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parasite_records_parasite_product_id_fkey"
+            columns: ["parasite_product_id"]
+            isOneToOne: false
+            referencedRelation: "parasite_products"
             referencedColumns: ["id"]
           },
           {

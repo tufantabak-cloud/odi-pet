@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { StepperInput } from '@/components/ui/StepperInput'
+import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+import ProductCatalogPanel from './ProductCatalogPanel'
 
 // ─── Tipler ──────────────────────────────────────────────────────────────────
 
@@ -143,6 +145,69 @@ export default function AdminParasiteProductsClient() {
   useEffect(() => {
     fetchProtocols()
   }, [fetchProtocols])
+
+  // ── Ürün önerisi kuyruğu (P2) ──────────────────────────────────────────────
+  const [supabase] = useState(() => createBrowserSupabaseClient())
+  const [view, setView] = useState<'protocols' | 'products' | 'suggestions'>('protocols')
+  const [suggestions, setSuggestions] = useState<any[]>([])
+  const [sugLoading, setSugLoading] = useState(false)
+  const [sugError, setSugError] = useState<string | null>(null)
+  const [sugProcessing, setSugProcessing] = useState<string | null>(null)
+  const [mergeTarget, setMergeTarget] = useState<any | null>(null)
+  const [mergeProducts, setMergeProducts] = useState<any[]>([])
+  const [mergeProductId, setMergeProductId] = useState('')
+
+  const fetchSuggestions = useCallback(async () => {
+    setSugLoading(true)
+    setSugError(null)
+    try {
+      const res = await fetch('/api/admin/parasite-suggestions?status=pending')
+      const json = await res.json()
+      if (!res.ok) throw new Error(translateError(json.error, json.message))
+      setSuggestions(json.data ?? [])
+    } catch (e: any) {
+      setSugError(e.message)
+    } finally {
+      setSugLoading(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    fetchSuggestions()
+  }, [fetchSuggestions])
+
+  const reviewSuggestion = async (id: string, body: Record<string, unknown>) => {
+    setSugProcessing(id)
+    try {
+      const res = await fetch(`/api/admin/parasite-suggestions/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.message || json.error || 'İşlem başarısız.')
+      setMergeTarget(null)
+      setMergeProductId('')
+      await fetchSuggestions()
+    } catch (e: any) {
+      alert(e.message)
+    } finally {
+      setSugProcessing(null)
+    }
+  }
+
+  const openMerge = async (sug: any) => {
+    setMergeTarget(sug)
+    setMergeProductId('')
+    const { data } = await supabase
+      .from('parasite_products')
+      .select('id, name, brand, species')
+      .eq('is_active', true)
+      .in('species', [sug.species, 'both'])
+      .order('name')
+    setMergeProducts(data || [])
+  }
 
   // ── Modal aç/kapat ─────────────────────────────────────────────────────────
   const openNew = () => {
@@ -338,19 +403,114 @@ export default function AdminParasiteProductsClient() {
       {/* Başlık */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Parazit Protokolleri</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Parazit Yönetimi</h1>
           <p className="text-xs sm:text-sm text-gray-500 mt-1">
-            {protocols.length} protokol listeleniyor · parasite_protocols tablosu
+            {view === 'protocols'
+              ? `${protocols.length} protokol · parasite_protocols`
+              : view === 'products'
+                ? 'Ürün kataloğu · parasite_products'
+                : `${suggestions.length} bekleyen öneri · parasite_product_suggestions`}
           </p>
         </div>
+        {view === 'protocols' && (
+          <button
+            onClick={openNew}
+            className="bg-purple-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-purple-700 transition-colors shadow-sm self-start sm:self-auto"
+          >
+            + Yeni Protokol
+          </button>
+        )}
+      </div>
+
+      {/* Görünüm: Protokoller | Bekleyen Öneriler */}
+      <div className="flex rounded-xl bg-white p-1 border border-gray-200 mb-4 w-fit">
         <button
-          onClick={openNew}
-          className="bg-purple-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-purple-700 transition-colors shadow-sm self-start sm:self-auto"
+          onClick={() => setView('protocols')}
+          className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+            view === 'protocols' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'
+          }`}
         >
-          + Yeni Protokol
+          Protokoller
+        </button>
+        <button
+          onClick={() => setView('products')}
+          className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+            view === 'products' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'
+          }`}
+        >
+          Ürünler
+        </button>
+        <button
+          onClick={() => setView('suggestions')}
+          className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+            view === 'suggestions' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'
+          }`}
+        >
+          Bekleyen Öneriler{suggestions.length > 0 ? ` (${suggestions.length})` : ''}
         </button>
       </div>
 
+      {view === 'products' && <ProductCatalogPanel />}
+
+      {view === 'suggestions' && (
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm mb-6">
+          {sugError && (
+            <div className="m-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{sugError}</div>
+          )}
+          {sugLoading ? (
+            <div className="p-8 text-center text-gray-400 text-sm">Yükleniyor…</div>
+          ) : suggestions.length === 0 ? (
+            <div className="p-8 text-center text-gray-400 text-sm">Bekleyen ürün önerisi yok. 🎉</div>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {suggestions.map(s => (
+                <div key={s.id} className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-gray-900 text-sm">
+                      {s.brand ? `${s.brand} — ` : ''}{s.name_suggested}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-0.5">
+                      {SPECIES_LABEL[s.species] ?? s.species} · {TYPE_LABEL[s.parasite_type] ?? s.parasite_type} · {METHOD_LABEL[s.application_method] ?? s.application_method} · {s.protection_duration_days} gün
+                    </div>
+                    <div className="text-[11px] text-gray-400 mt-0.5">
+                      Öneren: {s.profiles?.full_name || s.profiles?.email || '—'} · {s.created_at ? new Date(s.created_at).toLocaleDateString('tr-TR') : ''}
+                    </div>
+                    {s.reason && <div className="text-[11px] text-gray-500 italic mt-1">&ldquo;{s.reason}&rdquo;</div>}
+                  </div>
+                  <div className="flex gap-2 shrink-0 flex-wrap">
+                    <button
+                      disabled={sugProcessing === s.id}
+                      onClick={() => reviewSuggestion(s.id, { action: 'approve' })}
+                      className="px-3 py-1.5 text-xs text-green-700 bg-green-50 hover:bg-green-100 rounded-lg font-semibold transition-colors disabled:opacity-50"
+                    >
+                      Onayla
+                    </button>
+                    <button
+                      disabled={sugProcessing === s.id}
+                      onClick={() => openMerge(s)}
+                      className="px-3 py-1.5 text-xs text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-lg font-semibold transition-colors disabled:opacity-50"
+                    >
+                      Birleştir
+                    </button>
+                    <button
+                      disabled={sugProcessing === s.id}
+                      onClick={() => {
+                        const note = window.prompt('Reddetme notu (opsiyonel):') ?? undefined
+                        reviewSuggestion(s.id, { action: 'reject', ...(note && note.trim() ? { admin_note: note.trim() } : {}) })
+                      }}
+                      className="px-3 py-1.5 text-xs text-red-600 bg-red-50 hover:bg-red-100 rounded-lg font-semibold transition-colors disabled:opacity-50"
+                    >
+                      Reddet
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {view === 'protocols' && (<>
       {/* Filtreler */}
       <div className="flex flex-col gap-3 mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
         <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Filtreler</span>
@@ -564,6 +724,8 @@ export default function AdminParasiteProductsClient() {
           </>
         )}
       </div>
+
+      </>)}
 
       {/* Ekle/Düzenle Modal */}
       {modalOpen && (
@@ -819,6 +981,44 @@ export default function AdminParasiteProductsClient() {
                 className="flex-1 rounded-xl bg-red-500 py-2.5 text-sm font-semibold text-white hover:bg-red-600 transition-colors disabled:opacity-60 flex items-center justify-center"
               >
                 {deleting ? 'İşleniyor…' : 'Pasife Al'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Öneriyi Mevcut Ürünle Birleştir Modalı */}
+      {mergeTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+            <h2 className="text-base font-bold text-gray-900 mb-2">Mevcut Ürünle Birleştir</h2>
+            <p className="text-sm text-gray-600 mb-3">
+              <strong>{mergeTarget.name_suggested}</strong> önerisi seçilen katalog ürünüyle eşleştirilecek; yeni ürün oluşturulmaz.
+            </p>
+            <select
+              value={mergeProductId}
+              onChange={e => setMergeProductId(e.target.value)}
+              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+            >
+              <option value="">-- Ürün Seçin --</option>
+              {mergeProducts.map(p => (
+                <option key={p.id} value={p.id}>{p.brand} {p.name}</option>
+              ))}
+            </select>
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setMergeTarget(null); setMergeProductId('') }}
+                disabled={sugProcessing === mergeTarget.id}
+                className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                Vazgeç
+              </button>
+              <button
+                onClick={() => reviewSuggestion(mergeTarget.id, { action: 'merge', merged_into_product_id: mergeProductId })}
+                disabled={!mergeProductId || sugProcessing === mergeTarget.id}
+                className="flex-1 rounded-xl bg-purple-600 py-2.5 text-sm font-semibold text-white hover:bg-purple-700 transition-colors disabled:opacity-60"
+              >
+                {sugProcessing === mergeTarget.id ? 'İşleniyor…' : 'Birleştir'}
               </button>
             </div>
           </div>

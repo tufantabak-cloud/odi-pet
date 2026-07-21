@@ -1,10 +1,15 @@
 import { ComputedStatus, ComputedEvent } from '../types';
 import { VaccineTemplateMap, resolveVaccineGroup } from './vaccine-templates';
 
-/** Frekans gün sayısından okunabilir Türkçe etiket üret */
-export function formatFrequency(days: number | null | undefined, label?: string | null): string {
+/**
+ * Frekans gün sayısından okunabilir Türkçe etiket üret.
+ * zeroLabel: gün sayısı 0/null olduğunda dönülecek metin. Aşılarda varsayılan
+ * 'Her Yıl' (yıllık booster varsayımı); aşı olmayan/tek-seferlik görevlerde
+ * çağıran taraf 'Tek seferlik' geçer.
+ */
+export function formatFrequency(days: number | null | undefined, label?: string | null, zeroLabel: string = 'Her Yıl'): string {
   if (label) return label;
-  if (!days || days === 0) return 'Her Yıl'; // null veya 0 → has_annual_booster fallback
+  if (!days || days === 0) return zeroLabel;
   if (days === 1) return 'Her gün';
   if (days <= 3) return `${days} günde 1`;
   if (days === 7) return 'Haftada 1';
@@ -14,6 +19,13 @@ export function formatFrequency(days: number | null | undefined, label?: string 
   if (days === 90) return '3 ayda 1';
   if (days === 180) return '6 ayda 1';
   if (days === 365) return 'Her yıl';
+  // Tam bölünen değerler net etiket alır (yıl → ay → hafta önceliğiyle)
+  if (days % 365 === 0) return `${days / 365} yılda 1`;
+  if (days % 30 === 0) return `${days / 30} ayda 1`;
+  if (days % 7 === 0) return `${days / 7} haftada 1`;
+  // Tam bölünmeyen ürün süreleri (84, 210, 240…) için en yakın ay/hafta yaklaşımı
+  if (days >= 60) return `≈${Math.round(days / 30)} ayda 1`;   // örn. 84→≈3 ay, 210→≈7 ay, 240→≈8 ay
+  if (days >= 14) return `≈${Math.round(days / 7)} haftada 1`; // örn. 28→≈4 hafta, 35→≈5 hafta
   return `${days} günde 1`;
 }
 
@@ -53,9 +65,15 @@ export function mapDbToUI(
 
   if (isParasite || dbCat === 'Parazit') {
     let sub = 'Parazit Uygulamaları';
+    const isCombined =
+      subCatLower.includes('kombine') || titleLower.includes('kombine') ||
+      subCatLower.includes('birleşik') || titleLower.includes('birleşik') ||
+      subCatLower.includes('birlesik') || titleLower.includes('birlesik') ||
+      subCatLower.includes('karma') || titleLower.includes('karma');
     if (subCatLower.includes('tasma') || titleLower.includes('tasma')) sub = 'Parazit Tasması';
     else if (subCatLower.includes('iç parazit') || titleLower.includes('iç parazit') || titleLower.includes('ic parazit')) sub = 'İç Parazit Uygulaması';
     else if (subCatLower.includes('dış parazit') || titleLower.includes('dış parazit') || titleLower.includes('dis parazit')) sub = 'Dış Parazit Uygulaması';
+    else if (isCombined) sub = 'Kombine Parazit Uygulaması';
     return { category: 'Parazit', subCategory: sub };
   }
 

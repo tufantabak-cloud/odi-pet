@@ -29,20 +29,42 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
   const weight_kg = fd.get('weight_kg')?.toString().replace(',', '.')
   const height_cm = fd.get('height_cm')?.toString().replace(',', '.')
-  const measured_at = fd.get('measured_at')?.toString()
-  
+  // Form alanı 'recorded_at' gönderiyor; eski 'measured_at' da desteklenir (geriye uyumlu)
+  const measured_at = (fd.get('measured_at') || fd.get('recorded_at'))?.toString()
+
   if (!weight_kg) {
     return NextResponse.json({ error: 'Kilo bilgisi zorunludur.' }, { status: 400 })
   }
 
-  const insertData: WeightLogInsert = {
-    pet_id: id,
-    weight_kg: Number(weight_kg),
-    height_cm: height_cm ? Number(height_cm) : null
+  const weightValue = Number(weight_kg)
+  const measuredAtIso = measured_at ? new Date(measured_at).toISOString() : new Date().toISOString()
+
+  // ─── Tekilleştirme (çift gönderim koruması) ─────────────────────────
+  // Aynı gün + aynı kilo değeri zaten kayıtlıysa, yeni ölçüm/plan oluşturma.
+  // Kullanıcının yanlışlıkla iki kez göndermesi durumunda mükerrer kayıt
+  // ve sahte "tamamlandı" hatırlatıcı planı oluşmasını engeller.
+  const dayStart = new Date(measuredAtIso); dayStart.setHours(0, 0, 0, 0)
+  const dayEnd = new Date(measuredAtIso); dayEnd.setHours(23, 59, 59, 999)
+  const { data: dupes } = await supabase
+    .from('weight_logs')
+    .select('id')
+    .eq('pet_id', id)
+    .eq('weight_kg', weightValue)
+    .gte('measured_at', dayStart.toISOString())
+    .lte('measured_at', dayEnd.toISOString())
+    .limit(1)
+
+  if (dupes && dupes.length > 0) {
+    // Idempotent: aynı gün aynı kilo zaten var — sessizce başarı dön
+    revalidatePath(`/owner/pets/${id}`)
+    return NextResponse.json({ success: true, idempotent: true })
   }
 
-  if (measured_at) {
-    insertData.measured_at = new Date(measured_at).toISOString()
+  const insertData: WeightLogInsert = {
+    pet_id: id,
+    weight_kg: weightValue,
+    height_cm: height_cm ? Number(height_cm) : null,
+    measured_at: measuredAtIso,
   }
 
   const { error } = await supabase
@@ -62,7 +84,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     .eq('status', 'active');
     
   // 2. Yeni ölçüm tarihi + 1 ay sonrasına yeni hatırlatıcı kur
-  const logDate = measured_at ? new Date(measured_at) : new Date();
+  const logDate = new Date(measuredAtIso);
   logDate.setMonth(logDate.getMonth() + 1);
   
   await supabase

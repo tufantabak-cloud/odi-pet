@@ -225,4 +225,165 @@ describe('Manual Parasite Record API Tests', () => {
     expect(json.length).toBeGreaterThan(0)
     expect(json[0].protocol_name).toBe('Dog Manual Proto')
   })
+
+  // ── P1: Katalog ürünü bağlantısı ─────────────────────────────
+  // parasite_records.parasite_product_id kolonu canlı DB'de yoksa
+  // (Migration B henüz uygulanmadıysa) bu blok kendini atlar;
+  // uygulandıktan sonra ürün yollarını uçtan uca doğrular.
+  describe('Product link (P1)', () => {
+    let productColumnExists = false
+    let dogOralProductId = ''
+    let dogInactiveProductId = ''
+    let dogSpotOnProductId = ''
+    let dogTreatmentProductId = ''
+    let catProductId = ''
+
+    beforeAll(async () => {
+      const probe = await adminClient.from('parasite_records').select('parasite_product_id').limit(1)
+      productColumnExists = !probe.error
+      if (!productColumnExists) {
+        console.warn('Product link suite skipped: parasite_records.parasite_product_id yok (Migration B bekleniyor).')
+        return
+      }
+
+      const { data: created, error: createErr } = await adminClient.from('parasite_products').insert([
+        { species: 'dog', name: 'Test Oral 90', brand: 'TestBrand', type: 'internal', application_method: 'oral', protection_duration_days: 90, is_active: true },
+        { species: 'dog', name: 'Test Inactive', brand: 'TestBrand', type: 'internal', application_method: 'oral', protection_duration_days: 90, is_active: false },
+        { species: 'dog', name: 'Test SpotOn', brand: 'TestBrand', type: 'internal', application_method: 'spot-on', protection_duration_days: 30, is_active: true },
+        { species: 'dog', name: 'Test Treatment 0', brand: 'TestBrand', type: 'internal', application_method: 'oral', protection_duration_days: 0, is_active: true },
+        { species: 'cat', name: 'Test CatProd', brand: 'TestBrand', type: 'internal', application_method: 'oral', protection_duration_days: 30, is_active: true },
+      ]).select()
+
+      if (createErr || !created || created.length !== 5) {
+        console.warn('Product link suite skipped: test ürünleri oluşturulamadı.', createErr)
+        productColumnExists = false
+        return
+      }
+      dogOralProductId = created.find(p => p.name === 'Test Oral 90')!.id
+      dogInactiveProductId = created.find(p => p.name === 'Test Inactive')!.id
+      dogSpotOnProductId = created.find(p => p.name === 'Test SpotOn')!.id
+      dogTreatmentProductId = created.find(p => p.name === 'Test Treatment 0')!.id
+      catProductId = created.find(p => p.name === 'Test CatProd')!.id
+    })
+
+    afterAll(async () => {
+      const ids = [dogOralProductId, dogInactiveProductId, dogSpotOnProductId, dogTreatmentProductId, catProductId].filter(Boolean)
+      if (ids.length > 0) {
+        // FK ON DELETE SET NULL: ürün silinse de kayıtlar (parent afterAll temizler) bozulmaz
+        await adminClient.from('parasite_products').delete().in('id', ids)
+      }
+    })
+
+    it('POST with catalog product snapshots product duration and copies name/brand', async (ctx) => {
+      if (!productColumnExists) return ctx.skip()
+      mockSessionUser({ id: testUserId })
+      const req = createNextRequest({
+        parasite_protocol_id: dogProtoId,
+        administered_at: '2026-07-16',
+        application_method: 'oral',
+        parasite_product_id: dogOralProductId,
+      })
+      const res = await POST(req, { params: Promise.resolve({ id: testPetIdOwned }) })
+      expect(res.status).toBe(201)
+      const json = await res.json()
+      expect(json.record.parasite_product_id).toBe(dogOralProductId)
+      expect(json.record.protection_duration_days).toBe(90)
+      expect(json.record.product_free_text).toBe('Test Oral 90')
+      expect(json.record.brand_free_text).toBe('TestBrand')
+    })
+
+    it('user-provided duration overrides product duration', async (ctx) => {
+      if (!productColumnExists) return ctx.skip()
+      mockSessionUser({ id: testUserId })
+      const req = createNextRequest({
+        parasite_protocol_id: dogProtoId,
+        administered_at: '2026-07-16',
+        application_method: 'oral',
+        parasite_product_id: dogOralProductId,
+        protection_duration_days: 45,
+      })
+      const res = await POST(req, { params: Promise.resolve({ id: testPetIdOwned }) })
+      expect(res.status).toBe(201)
+      const json = await res.json()
+      expect(json.record.protection_duration_days).toBe(45)
+    })
+
+    it('treatment product (0 days) falls back to protocol default duration', async (ctx) => {
+      if (!productColumnExists) return ctx.skip()
+      mockSessionUser({ id: testUserId })
+      const req = createNextRequest({
+        parasite_protocol_id: dogProtoId,
+        administered_at: '2026-07-16',
+        application_method: 'oral',
+        parasite_product_id: dogTreatmentProductId,
+      })
+      const res = await POST(req, { params: Promise.resolve({ id: testPetIdOwned }) })
+      expect(res.status).toBe(201)
+      const json = await res.json()
+      expect(json.record.parasite_product_id).toBe(dogTreatmentProductId)
+      // Ürün süresi 0 (tedavi) → kayıt süresi protokol varsayılanından (30) gelir
+      expect(json.record.protection_duration_days).toBe(30)
+      expect(json.record.product_free_text).toBe('Test Treatment 0')
+    })
+
+    it('rejects species-mismatched product', async (ctx) => {
+      if (!productColumnExists) return ctx.skip()
+      mockSessionUser({ id: testUserId })
+      const req = createNextRequest({
+        parasite_protocol_id: dogProtoId,
+        administered_at: '2026-07-16',
+        application_method: 'oral',
+        parasite_product_id: catProductId,
+      })
+      const res = await POST(req, { params: Promise.resolve({ id: testPetIdOwned }) })
+      expect(res.status).toBe(400)
+      const json = await res.json()
+      expect(json.error).toBe('PRODUCT_SPECIES_MISMATCH')
+    })
+
+    it('rejects inactive product with 409', async (ctx) => {
+      if (!productColumnExists) return ctx.skip()
+      mockSessionUser({ id: testUserId })
+      const req = createNextRequest({
+        parasite_protocol_id: dogProtoId,
+        administered_at: '2026-07-16',
+        application_method: 'oral',
+        parasite_product_id: dogInactiveProductId,
+      })
+      const res = await POST(req, { params: Promise.resolve({ id: testPetIdOwned }) })
+      expect(res.status).toBe(409)
+      const json = await res.json()
+      expect(json.error).toBe('PRODUCT_INACTIVE')
+    })
+
+    it('rejects product whose method the protocol does not allow', async (ctx) => {
+      if (!productColumnExists) return ctx.skip()
+      mockSessionUser({ id: testUserId })
+      const req = createNextRequest({
+        parasite_protocol_id: dogProtoId,
+        administered_at: '2026-07-16',
+        application_method: 'oral',
+        parasite_product_id: dogSpotOnProductId,
+      })
+      const res = await POST(req, { params: Promise.resolve({ id: testPetIdOwned }) })
+      expect(res.status).toBe(400)
+      const json = await res.json()
+      expect(json.error).toBe('PRODUCT_METHOD_NOT_ALLOWED')
+    })
+
+    it('unknown product id returns 404', async (ctx) => {
+      if (!productColumnExists) return ctx.skip()
+      mockSessionUser({ id: testUserId })
+      const req = createNextRequest({
+        parasite_protocol_id: dogProtoId,
+        administered_at: '2026-07-16',
+        application_method: 'oral',
+        parasite_product_id: '00000000-0000-0000-0000-000000000000',
+      })
+      const res = await POST(req, { params: Promise.resolve({ id: testPetIdOwned }) })
+      expect(res.status).toBe(404)
+      const json = await res.json()
+      expect(json.error).toBe('PRODUCT_NOT_FOUND')
+    })
+  })
 })

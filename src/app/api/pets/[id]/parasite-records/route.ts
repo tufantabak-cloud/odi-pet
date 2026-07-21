@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { createAdminSupabaseClient } from '@/lib/supabase/server';
 import { getSessionUser } from '@/lib/auth/get-current-profile';
 import { validatePetDocumentPath } from '@/lib/storage/pet-document-path';
+import { validateProductForRecord } from '@/features/pets/parasite-product-compat';
 
 function isValidDate(dateStr: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false;
@@ -26,6 +27,7 @@ function isValidDate(dateStr: string): boolean {
 
 const parasiteRecordCreateSchema = z.object({
   parasite_protocol_id: z.string().uuid(),
+  parasite_product_id: z.string().uuid().nullable().optional(),
   administered_at: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   application_method: z.string(),
   brand_free_text: z.string().max(255).nullable().optional(),
@@ -143,7 +145,52 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
       return NextResponse.json({ error: 'INVALID_APPLICATION_METHOD' }, { status: 400 });
     }
 
-    const protectionDuration = data.protection_duration_days ?? protocol.default_protection_duration_days;
+    // Katalog ürünü seçildiyse sunucu tarafında doğrula. Enum eşlemesi
+    // (spot-on↔spot_on, both, collar) bilinçli olarak app katmanındadır.
+    let product: {
+      id: string;
+      name: string;
+      brand: string;
+      species: string;
+      type: string;
+      application_method: string;
+      protection_duration_days: number;
+      is_active: boolean;
+    } | null = null;
+
+    if (data.parasite_product_id) {
+      const { data: productData } = await adminClient
+        .from('parasite_products')
+        .select('id, name, brand, species, type, application_method, protection_duration_days, is_active')
+        .eq('id', data.parasite_product_id)
+        .single();
+
+      if (!productData) return NextResponse.json({ error: 'PRODUCT_NOT_FOUND' }, { status: 404 });
+
+      const compatFailure = validateProductForRecord({
+        product: productData,
+        petSpecies: pet.species,
+        protocolParasiteType: protocol.parasite_type,
+        protocolAllowedMethods: allowedMethods,
+        recordApplicationMethod: data.application_method,
+      });
+      if (compatFailure) {
+        return NextResponse.json(
+          { error: compatFailure },
+          { status: compatFailure === 'PRODUCT_INACTIVE' ? 409 : 400 }
+        );
+      }
+      product = productData;
+    }
+
+    // Süre önceliği: kullanıcının doğruladığı süre → ürünün gerçek süresi →
+    // protokol varsayılanı. Nihai değer kayda snapshot olarak yazılır.
+    // Not: süre=0 olan ürünler TEDAVİ ürünüdür (kalıcı koruma yok) — bu
+    // durumda süre protokol varsayılanından gelir (kayıt CHECK'i > 0 ister).
+    const productDuration =
+      product && product.protection_duration_days > 0 ? product.protection_duration_days : undefined;
+    const protectionDuration =
+      data.protection_duration_days ?? productDuration ?? protocol.default_protection_duration_days;
 
     const normalizeText = (text?: string | null) => {
       if (typeof text !== 'string') return null;
@@ -168,14 +215,17 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
         administered_at: data.administered_at,
         application_method: data.application_method,
         protection_duration_days: protectionDuration,
-        brand_free_text: normalizeText(data.brand_free_text),
-        product_free_text: normalizeText(data.product_free_text),
+        brand_free_text: normalizeText(data.brand_free_text) ?? product?.brand ?? null,
+        product_free_text: normalizeText(data.product_free_text) ?? product?.name ?? null,
         notes: normalizeText(data.notes),
         document_storage_path: data.document_storage_path || null,
         source: 'user_manual',
         created_by: user.id,
         plan_id: null,
-        source_plan_item_id: null
+        source_plan_item_id: null,
+        // Alan yalnızca ürün seçildiğinde gönderilir; Migration B canlıya
+        // uygulanana kadar ürünsüz kayıt akışı aynen çalışmaya devam eder.
+        ...(product ? { parasite_product_id: product.id } : {})
       })
       .select()
       .single();

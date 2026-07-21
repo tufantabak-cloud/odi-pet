@@ -36,11 +36,18 @@ export default async function MatchPage(props: PageProps) {
 
   if (!pet) notFound()
 
+  const { data: initialListing } = await supabase
+    .from('breeding_listings')
+    .select('*')
+    .eq('pet_id', id)
+    .eq('status', 'active')
+    .maybeSingle()
+
   return (
     <div className="bg-bg-main min-h-screen pb-[120px]">
       <PageHeader title="Eşleştirme" backHref={`/owner/pets/${id}`} />
       <div className="p-4 pt-6 max-w-lg mx-auto">
-        <BreedingListingManager pet={pet} />
+        <BreedingListingManager pet={pet} initialListing={initialListing !== undefined ? initialListing : null} />
         
         <div className="mt-4 rounded-2xl border-2 border-dashed border-violet-200 bg-violet-50/50 p-6 text-center animate-fadeInUp">
           <div className="w-12 h-12 bg-violet-100 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">

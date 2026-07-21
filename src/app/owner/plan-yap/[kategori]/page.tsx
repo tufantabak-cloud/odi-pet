@@ -15,6 +15,11 @@ import Link from 'next/link';
 import { SmartScanner } from '@/components/ui/SmartScanner';
 import { StepperInput } from '@/components/ui/StepperInput';
 import { normalizeSpecies } from '@/lib/species';
+import {
+  isProductSpeciesCompatible,
+  isProductTypeCompatibleWithProtocol,
+  normalizeProductMethod,
+} from '@/features/pets/parasite-product-compat';
 
 // ── Eşleştirmeler ──────────────────────────────────────────────────
 const categoryMap: Record<string, TaskCategory> = {
@@ -105,7 +110,21 @@ export default function WizardOrchestrator() {
     duration_days: number | null
   }>>([])
   const [productsLoading, setProductsLoading] = useState(false)
-  
+
+  // Katalog Ürünü Seçimi State (seçili protokole uyumlu gerçek SKU'lar —
+  // extra_data.product.id'nin (protokol UUID'si) SEMANTİĞİNE dokunmaz; bkz.
+  // complete_parasite_plan RPC'si (20260716090000). Tamamen eklemeli.
+  const [catalogProducts, setCatalogProducts] = useState<Array<{
+    id: string
+    name: string
+    brand: string
+    species: string
+    type: string
+    application_method: string
+    protection_duration_days: number
+  }>>([])
+  const [catalogProductsLoading, setCatalogProductsLoading] = useState(false)
+
   // Smart Scanner State
   const [showScanner, setShowScanner] = useState(false);
 
@@ -191,6 +210,14 @@ export default function WizardOrchestrator() {
           metadata: initialPlanData.extra_data?.metadata || {},
           selectedVaccine: initialPlanData.extra_data?.vaccine || null,
           selectedProduct: resolvedProduct,
+          plannedProduct: initialPlanData.extra_data?.planned_product
+            ? {
+                id: initialPlanData.extra_data.planned_product.parasite_product_id,
+                brand: initialPlanData.extra_data.planned_product.brand,
+                name: initialPlanData.extra_data.planned_product.name,
+                protection_duration_days: initialPlanData.extra_data.planned_product.protection_duration_days,
+              }
+            : null,
           markAsDone: initialPlanData.extra_data?.is_past_done || false,
           // İlaç düzenleme: mevcut ilaç verilerini wizard'a yükle
           ...(isMedication && med ? {
@@ -225,6 +252,7 @@ export default function WizardOrchestrator() {
           metadata: {},
           notes: '',
           selectedProduct: null,
+          plannedProduct: null,
           // Timeline'daki ilgili kayıt satırından geldiyse ilaç adını ön doldur
           medication_name: queryMedName || undefined,
         });
@@ -377,7 +405,9 @@ export default function WizardOrchestrator() {
           product_name: null,
           category: p.parasite_type,
           duration_days: p.default_protection_duration_days,
-          parasite_code: p.parasite_code
+          parasite_code: p.parasite_code,
+          // Katalog ürünü uyum filtresi için (bkz. yeni catalogProducts effect'i)
+          allowed_application_methods: p.allowed_application_methods || [],
         }));
 
         setProducts(mapped);
@@ -386,6 +416,45 @@ export default function WizardOrchestrator() {
       .finally(() => setProductsLoading(false));
 
   }, [categoryKey, wizardData.subCategory, wizardData.pet_id]);
+
+  // ── Seçili protokole uyumlu katalog ürünlerini getir (P1 kataloğu) ─────
+  // extra_data.product.id (protokol UUID'si) semantiğine dokunmaz — yalnızca
+  // gösterim + süre ön-doldurma için ayrı, eklemeli bir listedir.
+  useEffect(() => {
+    if (categoryKey !== 'parazit') { setCatalogProducts([]); return; }
+    const protocol = wizardData.selectedProduct;
+    if (!protocol || protocol.id === 'other' || !speciesStr) { setCatalogProducts([]); return; }
+
+    let cancelled = false;
+    setCatalogProductsLoading(true);
+    const fetchCatalog = async () => {
+      const supabase = createBrowserSupabaseClient();
+      const { data } = await supabase
+        .from('parasite_products')
+        .select('id, name, brand, species, type, application_method, protection_duration_days, is_active')
+        .eq('is_active', true)
+        .in('species', [speciesStr, 'both']);
+      if (cancelled) return;
+
+      const allowedMethods: string[] = protocol.allowed_application_methods || [];
+      const compatible = (data || []).filter((p: { species: string; type: string; application_method: string }) =>
+        isProductSpeciesCompatible(p.species, speciesStr) &&
+        isProductTypeCompatibleWithProtocol(p, protocol.category) &&
+        allowedMethods.includes(normalizeProductMethod(p.application_method))
+      );
+      setCatalogProducts(compatible);
+
+      // Protokol değiştiğinde, artık uyumlu olmayan eski katalog seçimi varsa temizle.
+      // 'manual' (listede yok, elle girilen ürün) seçimi korunur.
+      if (wizardData.plannedProduct && wizardData.plannedProduct.id !== 'manual' && !compatible.some((c: { id: string }) => c.id === wizardData.plannedProduct.id)) {
+        setStepData({ plannedProduct: null });
+      }
+    };
+    fetchCatalog().finally(() => { if (!cancelled) setCatalogProductsLoading(false); });
+
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categoryKey, wizardData.selectedProduct?.id, speciesStr]);
 
   // ── Timeline'dan gelen parazit ürün adını otomatik seç (yalnızca oluşturma modunda) ──
   useEffect(() => {
@@ -682,6 +751,22 @@ export default function WizardOrchestrator() {
           category: wizardData.selectedProduct.category ?? null,
           duration_days: wizardData.selectedProduct.duration_days ?? null
         } : (initialExtraData?.product ?? null),
+        // Katalogdan seçilen gerçek SKU VEYA elle girilen ürün (opsiyonel, salt
+        // gösterim/süre-önerisi içindir). "product" alanındaki protokol UUID'sinin
+        // YERİNE geçmez. Elle giriş (id='manual') → parasite_product_id null.
+        planned_product: (() => {
+          const pp = wizardData.selectedProduct?.id === 'other' ? null : wizardData.plannedProduct;
+          if (!pp) return (initialExtraData?.planned_product ?? null);
+          const brand = (pp.brand ?? '').trim() || null;
+          const name = (pp.name ?? '').trim() || null;
+          if (pp.id === 'manual' && !brand && !name) return null; // boş elle giriş
+          return {
+            parasite_product_id: pp.id === 'manual' ? null : pp.id,
+            brand,
+            name,
+            protection_duration_days: pp.protection_duration_days ?? null,
+          };
+        })(),
         is_past_done: !!wizardData.markAsDone
       },
     };
@@ -1034,17 +1119,20 @@ export default function WizardOrchestrator() {
                           onClick={() => {
                             if (isSelected) {
                               // Seçimi kaldır
-                              setStepData({ 
+                              setStepData({
                                 selectedProduct: null,
+                                plannedProduct: null,
                                 metadata: {
                                   ...wizardData.metadata,
                                   duration_days: undefined
                                 }
                               });
                             } else {
-                              // Ürünü seç — otomatik ilerleme yok, kullanıcı koruma süresini düzenleyebilsin
-                              setStepData({ 
+                              // Ürünü seç — otomatik ilerleme yok, kullanıcı koruma süresini düzenleyebilsin.
+                              // plannedProduct sıfırlanır: farklı protokole geçince eski katalog ürünü seçimi düşer.
+                              setStepData({
                                 selectedProduct: product,
+                                plannedProduct: null,
                                 metadata: {
                                   ...wizardData.metadata,
                                   duration_days: product.duration_days ?? null
@@ -1072,45 +1160,140 @@ export default function WizardOrchestrator() {
                     });
                 })()}
             
-                {/* Diğer — manuel giriş */}
-                {(!selectedProduct || selectedProduct?.id === 'other') && (
+                {/* Diğer (Manuel): yalnızca DÜZENLEMEDE önceden kaydedilmiş eski
+                    manuel seçim gösterilir. Yeni planda protokol EKLENEMEZ (protokoller
+                    admin tarafından yönetilir); listede olmayan ÜRÜN, protokol seçildikten
+                    sonra aşağıdaki "Kullanılacak Ürün" bölümünden girilir. */}
+                {selectedProduct?.id === 'other' && (
                   <button
                     type="button"
-                    onClick={() => {
-                      if (selectedProduct?.id === 'other') {
-                        setStepData({ 
-                          selectedProduct: null,
-                          metadata: { ...wizardData.metadata, duration_days: undefined }
-                        });
-                      } else {
-                        setStepData({ 
-                          selectedProduct: { 
-                            id: 'other',
-                            brand_name: 'Diğer',
-                            product_name: null,
-                            category: 'parasite_external',
-                            duration_days: null
-                          },
-                          metadata: { ...wizardData.metadata, duration_days: null }
-                        });
-                      }
-                    }}
-                    className={`w-full p-3 rounded-xl border text-left transition-colors ${selectedProduct?.id === 'other' ? 'bg-primary/10 border-primary' : 'border-dashed border-border text-text-secondary'} text-[13px]`}
+                    onClick={() => setStepData({
+                      selectedProduct: null,
+                      plannedProduct: null,
+                      metadata: { ...wizardData.metadata, duration_days: undefined }
+                    })}
+                    className="w-full p-3 rounded-xl border bg-primary/10 border-primary text-[13px]"
                   >
-                    {selectedProduct?.id === 'other' ? (
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-primary">Diğer (Manuel)</span>
-                        <Check size={16} className="text-primary flex-shrink-0" />
-                      </div>
-                    ) : (
-                      '+ Listede yok, kendim gireceğim'
-                    )}
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-primary">Diğer (Manuel)</span>
+                      <Check size={16} className="text-primary flex-shrink-0" />
+                    </div>
                   </button>
                 )}
               </div>
             )}
 
+            {/* Katalog ürünü seçici — seçili protokole uyumlu gerçek SKU'lar (opsiyonel).
+                Protokol seçimini (extra_data.product.id) DEĞİŞTİRMEZ; yalnızca gösterim
+                ve süre ön-doldurma için extra_data.planned_product'a snapshot yazılır. */}
+            {selectedProduct && selectedProduct.id !== 'other' && (
+              <div className="mt-1 pt-3 border-t border-border">
+                <p className="text-[12px] font-black text-text-secondary uppercase tracking-wide mb-2">
+                  Kullanılacak Ürün (Opsiyonel)
+                </p>
+                {catalogProductsLoading ? (
+                  <div className="flex justify-center py-4">
+                    <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {catalogProducts.length === 0 ? (
+                      <p className="text-[12px] text-text-secondary py-1">
+                        Bu protokole uygun katalog ürünü bulunamadı — aşağıdan elle girebilirsiniz.
+                      </p>
+                    ) : (
+                      catalogProducts.map(cp => {
+                        const isSel = wizardData.plannedProduct?.id === cp.id;
+                        return (
+                          <button
+                            key={cp.id}
+                            type="button"
+                            onClick={() => {
+                              if (isSel) {
+                                setStepData({
+                                  plannedProduct: null,
+                                  metadata: { ...wizardData.metadata, duration_days: selectedProduct.duration_days ?? null }
+                                });
+                              } else {
+                                setStepData({
+                                  plannedProduct: cp,
+                                  metadata: {
+                                    ...wizardData.metadata,
+                                    duration_days: cp.protection_duration_days > 0 ? cp.protection_duration_days : (selectedProduct.duration_days ?? null)
+                                  }
+                                });
+                              }
+                            }}
+                            className={`w-full p-3 rounded-xl border text-left transition-colors flex items-center justify-between ${isSel ? 'bg-primary/10 border-primary' : 'bg-surface-1 border-border'}`}
+                          >
+                            <div>
+                              <p className={`text-[13px] font-medium ${isSel ? 'text-primary' : 'text-text-primary'}`}>
+                                {cp.brand} {cp.name}
+                              </p>
+                              <p className="text-[11px] text-text-muted mt-0.5">
+                                {cp.protection_duration_days > 0 ? `${cp.protection_duration_days} gün etkili` : 'Tedavi ürünü'}
+                              </p>
+                            </div>
+                            {isSel && <Check size={16} className="text-primary flex-shrink-0" />}
+                          </button>
+                        );
+                      })
+                    )}
 
+                    {/* Ürünüm listede yok — elle marka/ürün girişi (protokol seviyesinde
+                        DEĞİL, ürün seviyesinde). parasite_product_id null olarak kaydedilir. */}
+                    {(() => {
+                      const isManual = wizardData.plannedProduct?.id === 'manual';
+                      return (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (isManual) {
+                                setStepData({ plannedProduct: null, metadata: { ...wizardData.metadata, duration_days: selectedProduct.duration_days ?? null } });
+                              } else {
+                                setStepData({ plannedProduct: { id: 'manual', brand: '', name: '', protection_duration_days: null }, metadata: { ...wizardData.metadata, duration_days: selectedProduct.duration_days ?? null } });
+                              }
+                            }}
+                            className={`w-full p-3 rounded-xl border text-left transition-colors text-[13px] ${isManual ? 'bg-primary/10 border-primary' : 'border-dashed border-border text-text-secondary'}`}
+                          >
+                            {isManual ? (
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium text-primary">Ürünüm listede yok (elle giriş)</span>
+                                <Check size={16} className="text-primary flex-shrink-0" />
+                              </div>
+                            ) : (
+                              '+ Ürünüm listede yok, kendim gireceğim'
+                            )}
+                          </button>
+                          {isManual && (
+                            <div className="flex flex-col gap-2 mt-1">
+                              <input
+                                type="text"
+                                placeholder="Marka (örn: Drontal)"
+                                value={wizardData.plannedProduct?.brand || ''}
+                                onChange={e => setStepData({ plannedProduct: { ...wizardData.plannedProduct, brand: e.target.value } })}
+                                className="w-full p-3 border border-slate-200 rounded-xl text-[13px] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                              />
+                              <input
+                                type="text"
+                                placeholder="Ürün adı (örn: Dog Tasty 10 kg)"
+                                value={wizardData.plannedProduct?.name || ''}
+                                onChange={e => setStepData({ plannedProduct: { ...wizardData.plannedProduct, name: e.target.value } })}
+                                className="w-full p-3 border border-slate-200 rounded-xl text-[13px] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                              />
+                              <p className="text-[11px] text-text-muted">
+                                Bu ürün ortak kataloğa admin onayından sonra eklenebilir; kaydınız hemen oluşur.
+                              </p>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         );
       }
@@ -1794,9 +1977,11 @@ export default function WizardOrchestrator() {
         return wizardData.subCategory === 'Diğer' ? wizardData.customText : wizardData.subCategory || 'Belirtilmedi';
       case 'selectedVaccine':
         if (categoryKey === 'parazit') {
-          return wizardData.selectedProduct
-            ? (wizardData.selectedProduct.product_name || wizardData.selectedProduct.brand_name)
-            : 'Belirtilmedi';
+          if (!wizardData.selectedProduct) return 'Belirtilmedi';
+          const protoLabel = wizardData.selectedProduct.product_name || wizardData.selectedProduct.brand_name;
+          const pp = wizardData.plannedProduct;
+          const ppText = pp ? [pp.brand, pp.name].filter((s: string) => s && s.trim()).join(' ') : '';
+          return ppText ? `${protoLabel} • ${ppText}` : protoLabel;
         }
         return wizardData.selectedVaccine ? wizardData.selectedVaccine.name : 'Belirtilmedi';
       case 'metadata':

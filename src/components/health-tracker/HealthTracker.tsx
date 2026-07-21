@@ -176,8 +176,14 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
           <div className="px-4 flex items-baseline gap-2">
             <span className="text-[11px] font-extrabold text-text-primary">{row.task.title}</span>
             <span className="text-[9.5px] font-semibold text-text-secondary/70">
-              {/* Aşıda frequency_label alt grup adıdır — orada gün bazlı frekansı göster */}
-              {formatFrequency(row.task.frequency_days, row.subGroupLabel ? null : row.task.frequency_label)}
+              {/* Aşıda frequency_label alt grup adıdır — orada gün bazlı frekansı göster.
+                  Aşı satırında bilinmeyen frekans → 'Her Yıl' (booster); aşı olmayan
+                  tek-seferlik görevde → 'Tek seferlik'. */}
+              {formatFrequency(
+                row.task.frequency_days,
+                row.subGroupLabel ? null : row.task.frequency_label,
+                row.subGroupLabel ? 'Her Yıl' : 'Tek seferlik'
+              )}
             </span>
             {expiryDateLabel && (
               <span className="text-[9px] font-semibold text-text-secondary/50">
@@ -294,22 +300,28 @@ interface MissedInterval {
 function buildMissedIntervals(events: FlowEvent[]): MissedInterval[] {
   const sorted = [...events].sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
   const intervals: MissedInterval[] = [];
+  // Kaçırılmış (kırmızı) aralık en fazla BUGÜNE kadar sürer — gelecekteki günler
+  // "kaçırılmış" değil, henüz planlanabilir günlerdir. Sonrası done olmayan bir
+  // kaçırılmış görev artık geleceği kırmızıya boyamaz.
+  const todayKey = toDateKey(new Date());
 
   for (let i = 0; i < sorted.length; i++) {
     const curr = sorted[i];
     if (curr.computedStatus === 'missed') {
       // Find the next done event after this missed event
       const nextDone = sorted.slice(i + 1).find(e => e.status === 'done' || e.status === 'completed' || e.computedStatus === 'done');
-      
+
       const start = new Date(curr.due_date);
       start.setDate(start.getDate() + 1); // Day after missed event
       const startDateKey = toDateKey(start);
 
-      let endDateKey = '9999-12-31';
+      // Varsayılan bitiş: bugün. Sonraki done daha erkense onun bir gün öncesi.
+      let endDateKey = todayKey;
       if (nextDone) {
         const end = new Date(nextDone.due_date);
         end.setDate(end.getDate() - 1); // Day before next done event
-        endDateKey = toDateKey(end);
+        const nextDoneEnd = toDateKey(end);
+        if (nextDoneEnd < endDateKey) endDateKey = nextDoneEnd;
       }
 
       if (startDateKey <= endDateKey) {
@@ -494,11 +506,15 @@ function TimelineRow({
   );
 }
 
-/** Kategori başlığı: etiket + toplam kayıt sayısı */
+/** Kategori başlığı: etiket + toplam GERÇEK kayıt sayısı.
+ *  flowEvents timeline için tekrarlayan görevlerin sanal (virtual) occurrence'larını
+ *  da içerir; "kayıt" sayısı yalnızca DB'deki gerçek kayıtları saymalıdır — aksi
+ *  halde haftalık/aylık tekrarlar sayacı şişirir (örn. 5 yerine 95). */
 function CategoryHeader({ group }: { group: CategoryGroup }) {
+  const countReal = (list?: FlowEvent[]) => (list || []).filter(e => !e._is_virtual).length;
   const count = (group.subGroups && group.subGroups.length > 0)
-    ? group.subGroups.reduce((sum, s) => sum + (s.flowEvents?.length || 0), 0)
-    : (group.flowEvents?.length || 0);
+    ? group.subGroups.reduce((sum, s) => sum + countReal(s.flowEvents), 0)
+    : countReal(group.flowEvents);
 
   return (
     <div className="bg-[#f6f8fb] border-y border-border-main/40 mb-2 py-2 px-4 flex items-center gap-2">

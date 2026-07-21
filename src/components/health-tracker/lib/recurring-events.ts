@@ -49,21 +49,38 @@ export function expandRecurringForTimeline(
   });
 
   const virtualEvents: any[] = [];
-  const processedPlanKeys = new Set<string>();
 
+  // Genişletilecek tekrar kurallarını seç:
+  //  1. Tamamlanmış/iptal (status='done') tekrarlar genişletilmez — bunlar tek
+  //     bir anchor kartıyla kalır; fantom geçmiş/gelecek occurrence üretmez.
+  //  2. Aynı taskKey'de birden fazla AKTİF tekrar kuralı varsa yalnızca en
+  //     güncel anchor'a sahip olan genişletilir (çakışan haftalık+aylık gibi
+  //     akışların aynı satırda üst üste binmesini önler).
+  const dueKeyOf = (e: any): string =>
+    (e.due_date || '').includes('T') ? e.due_date.split('T')[0] : (e.due_date || '');
+  const expandCandidates = new Map<string, any>();
   events.forEach(e => {
     const repeatRule = e.repeat_rule;
     if (!repeatRule || repeatRule === 'none') return;
+    if (e.status === 'done') return;
+    const rawDueDate = dueKeyOf(e);
+    if (!rawDueDate) return;
+    const taskKey = `${e.category}_${e.title || e.sub_category}`;
+    const existing = expandCandidates.get(taskKey);
+    if (!existing || rawDueDate > dueKeyOf(existing)) {
+      expandCandidates.set(taskKey, e);
+    }
+  });
 
+  expandCandidates.forEach(e => {
+    const repeatRule = e.repeat_rule;
     const key = e._plan_id
       ? `${e._source || 'plan'}_${e._plan_id}`
       : `${e.category}_${e.title || e.sub_category}`;
-    if (processedPlanKeys.has(key)) return;
-    processedPlanKeys.add(key);
 
     const taskKey = `${e.category}_${e.title || e.sub_category}`;
     const existingDates = existingDatesByKey.get(taskKey) || new Set();
-    const rawDueDate = (e.due_date || '').includes('T') ? e.due_date.split('T')[0] : (e.due_date || '');
+    const rawDueDate = dueKeyOf(e);
     if (!rawDueDate) return;
 
     const anchor = new Date(rawDueDate + 'T00:00:00');

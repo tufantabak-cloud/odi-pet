@@ -12,7 +12,11 @@ import {
   checkEarMiteCoverage
 } from '@/features/pets/parasite-algorithm';
 import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
-import { ParasiteManualRecordForm } from '@/components/pets/ParasiteManualRecordForm';
+import {
+  isProductSpeciesCompatible,
+  isProductTypeCompatibleWithProtocol,
+  normalizeProductMethod,
+} from '@/features/pets/parasite-product-compat';
 import { Database } from '@/lib/database.types';
 
 // ─────────────────────────────────────────────────────
@@ -96,9 +100,28 @@ function methodLabel(m: string) {
     collar: 'Tasma',
     oral: 'Oral Tablet',
     injection: 'Enjeksiyon',
+    spray: 'Sprey',
+    shampoo: 'Şampuan',
+    other: 'Diğer',
     topical: 'Topikal',
   };
   return map[m] || m;
+}
+
+// Sunucu hata kodlarını kullanıcı diline çevirir
+function recordErrorLabel(code?: string): string | null {
+  const map: Record<string, string> = {
+    PRODUCT_NOT_FOUND: 'Seçilen ürün bulunamadı.',
+    PRODUCT_INACTIVE: 'Seçilen ürün artık aktif değil — listeden başka ürün seçin.',
+    PRODUCT_SPECIES_MISMATCH: 'Seçilen ürün bu evcil hayvan türüne uygun değil.',
+    PRODUCT_TYPE_MISMATCH: 'Seçilen ürün bu protokol tipine uygun değil.',
+    PRODUCT_METHOD_NOT_ALLOWED: 'Ürünün uygulama yöntemi bu protokolde izinli değil.',
+    PRODUCT_METHOD_MISMATCH: 'Uygulama yöntemi seçilen ürünle uyuşmuyor.',
+    INVALID_APPLICATION_METHOD: 'Bu uygulama yöntemi seçilen protokole uygun değil.',
+    INVALID_PARASITE_RECORD_DATA: 'Form bilgilerini kontrol edin.',
+    INACTIVE_PROTOCOL: 'Seçilen protokol artık aktif değil.',
+  };
+  return code ? map[code] || code : null;
 }
 
 // ─────────────────────────────────────────────────────
@@ -116,10 +139,19 @@ export default function ParasiteClient({ pet }: { pet: any }) {
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Manuel kayıt formu görünürlüğü
-  const [showManualForm, setShowManualForm] = useState(false);
+  // Katalog ürünleri (P1: kayıt ↔ ürün bağlantısı)
+  const [products, setProducts] = useState<any[]>([]);
+  const [productMode, setProductMode] = useState<'catalog' | 'notfound' | 'unknown'>('catalog');
+  const [productId, setProductId] = useState<string>('');
+  const [brandFreeText, setBrandFreeText] = useState('');
+  const [productFreeText, setProductFreeText] = useState('');
+  const [protectionDuration, setProtectionDuration] = useState<number | ''>('');
+  const [notes, setNotes] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [suggestToCatalog, setSuggestToCatalog] = useState(false);
+  const [suggestionNotice, setSuggestionNotice] = useState<string | null>(null);
 
-  // Eski form alanları (plan tamamlama için kullanılmaya devam ediyor)
+  // Form alanları
   const [appliedBy, setAppliedBy] = useState<'owner' | 'clinic'>('owner');
   const [applicationMethod, setApplicationMethod] = useState<string>('spot_on');
   const [protocolId, setProtocolId] = useState<string>('');
@@ -151,7 +183,7 @@ export default function ParasiteClient({ pet }: { pet: any }) {
   useEffect(() => {
     async function loadData() {
       try {
-        const [protoRes, clinicRes] = await Promise.all([
+        const [protoRes, clinicRes, productRes] = await Promise.all([
           supabase
             .from('parasite_protocols')
             .select('id, protocol_name, parasite_type, parasite_code, default_application_method, allowed_application_methods, default_protection_duration_days, min_age_weeks')
@@ -159,9 +191,16 @@ export default function ParasiteClient({ pet }: { pet: any }) {
             .eq('is_active', true)
             .order('protocol_name'),
           supabase.from('clinics').select('id, name').order('name'),
+          supabase
+            .from('parasite_products')
+            .select('id, name, brand, species, type, application_method, protection_duration_days, is_active')
+            .eq('is_active', true)
+            .in('species', [pet.species, 'both'])
+            .order('name'),
         ]);
         if (protoRes.data) setProtocols(protoRes.data);
         if (clinicRes.data) setClinics(clinicRes.data);
+        if (productRes.data) setProducts(productRes.data);
         await loadHistory();
       } catch (err) {
         console.error(err);
@@ -202,9 +241,71 @@ export default function ParasiteClient({ pet }: { pet: any }) {
   const parasiteType: 'internal' | 'external' | 'combined' =
     (selectedProtocol?.parasite_type as 'internal' | 'external' | 'combined') ?? 'combined';
 
+  // Seçili protokole uygun katalog ürünleri (tür/tip/yöntem eşlemesi app katmanında)
+  const compatibleProducts = selectedProtocol
+    ? products.filter(p =>
+        isProductSpeciesCompatible(p.species, pet.species) &&
+        isProductTypeCompatibleWithProtocol(p, selectedProtocol.parasite_type) &&
+        (selectedProtocol.allowed_application_methods || []).includes(normalizeProductMethod(p.application_method))
+      )
+    : [];
+  const selectedProduct = compatibleProducts.find(p => p.id === productId) || null;
+
+  // Protokol değişince: ürün seçimi sıfırlanır, süre protokol varsayılanına döner.
+  // (Yöntem hizalaması ayrı effect'te — aksi halde ürün seçimi yöntemi
+  // değiştirdiğinde bu effect yeniden koşup ürünü silerdi.)
+  useEffect(() => {
+    setProductId('');
+    const proto = protocols.find(p => p.id === protocolId);
+    setProtectionDuration(proto ? (proto.default_protection_duration_days || 30) : '');
+  }, [protocolId, protocols]);
+
+  // Yöntem, protokolün izin listesinde değilse geçerli bir yönteme hizalanır
+  useEffect(() => {
+    const proto = protocols.find(p => p.id === protocolId);
+    if (!proto) return;
+    const allowed: string[] = proto.allowed_application_methods || [];
+    if (applicationMethod !== 'collar' && allowed.length > 0 && !allowed.includes(applicationMethod)) {
+      const fallback = allowed.find(m => m !== 'collar') || proto.default_application_method;
+      if (fallback) setApplicationMethod(fallback);
+    }
+  }, [protocolId, protocols, applicationMethod]);
+
+  // Katalog ürünü seçilince: yöntem ve süre üründen gelir (süre düzenlenebilir kalır).
+  // Süre=0 ürünler TEDAVİ ürünüdür — süre protokol varsayılanında kalır.
+  useEffect(() => {
+    const prod = products.find(p => p.id === productId);
+    if (prod) {
+      setApplicationMethod(normalizeProductMethod(prod.application_method));
+      if (prod.protection_duration_days > 0) {
+        setProtectionDuration(prod.protection_duration_days);
+      } else {
+        const proto = protocols.find(p => p.id === protocolId);
+        setProtectionDuration(proto ? (proto.default_protection_duration_days || 30) : '');
+      }
+    }
+  }, [productId, products, protocols, protocolId]);
+
+  const changeProductMode = (m: 'catalog' | 'notfound' | 'unknown') => {
+    setProductMode(m);
+    setProductId('');
+    if (m !== 'notfound') {
+      setBrandFreeText('');
+      setProductFreeText('');
+    }
+    const proto = protocols.find(p => p.id === protocolId);
+    if (proto) setProtectionDuration(proto.default_protection_duration_days || 30);
+  };
+
   // ── Form submit (eski akış — protokol bazlı) ──────────────
   const handleSubmit = async (bypassWarnings = false) => {
     setError(null);
+
+    if (protectionDuration !== '' && (!Number.isInteger(Number(protectionDuration)) || Number(protectionDuration) <= 0)) {
+      setError('Koruma süresi pozitif bir tam sayı olmalıdır.');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -238,21 +339,84 @@ export default function ParasiteClient({ pet }: { pet: any }) {
         }
       }
 
-      // 4. Kayıt oluştur — yeni API kullan
-      const payload = {
+      // 4a. Belge seçildiyse önce yükle (kayıt başarısız olursa temizlenir)
+      let uploadedPath: string | null = null;
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        const uploadRes = await fetch('/api/upload/pet-documents', { method: 'POST', body: formData });
+        const uploadData = await uploadRes.json().catch(() => ({} as any));
+        if (!uploadRes.ok || !uploadData.success || !uploadData.path) {
+          throw new Error(uploadData.error || 'Belge yüklenemedi.');
+        }
+        uploadedPath = uploadData.path;
+      }
+
+      // 4b. Kayıt oluştur — süre önceliği: kullanıcı süresi → ürün süresi →
+      // protokol varsayılanı (sunucu tarafında uygulanır, snapshot yazılır)
+      const clinicNote = appliedBy === 'clinic' ? `Klinik uygulaması${vetName ? ` — ${vetName}` : ''}` : '';
+      const combinedNotes = [clinicNote, notes.trim()].filter(Boolean).join(' • ') || null;
+
+      const payload: Record<string, unknown> = {
         parasite_protocol_id: protocolId,
         administered_at: applicationDate,
         application_method: applicationMethod,
-        notes: appliedBy === 'clinic' ? `Klinik uygulaması${vetName ? ` — ${vetName}` : ''}` : null,
+        protection_duration_days: protectionDuration !== '' ? Number(protectionDuration) : null,
+        brand_free_text: productMode === 'notfound' ? (brandFreeText.trim() || null) : null,
+        product_free_text: productMode === 'notfound' ? (productFreeText.trim() || null) : null,
+        notes: combinedNotes,
+        document_storage_path: uploadedPath,
       };
+      if (productMode === 'catalog' && selectedProduct) {
+        payload.parasite_product_id = selectedProduct.id;
+      }
+
       const createRes = await fetch(`/api/pets/${pet.id}/parasite-records`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
       if (!createRes.ok) {
-        const errData = await createRes.json();
-        throw new Error(errData.error || 'Kayıt oluşturulamadı.');
+        if (uploadedPath) {
+          try {
+            await fetch('/api/upload/pet-documents', {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ path: uploadedPath, pet_id: pet.id }),
+            });
+          } catch {}
+        }
+        const errData = await createRes.json().catch(() => ({} as any));
+        throw new Error(recordErrorLabel(errData.error) || 'Kayıt oluşturulamadı.');
+      }
+
+      // 4c. (Opsiyonel) Katalog önerisi — KAYITTAN SONRA ve best-effort:
+      // öneri başarısız olsa bile sağlık kaydı asla geri alınmaz.
+      setSuggestionNotice(null);
+      if (productMode === 'notfound' && suggestToCatalog && productFreeText.trim()) {
+        try {
+          const sugRes = await fetch('/api/parasite-suggestions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              species: pet.species,
+              name_suggested: productFreeText.trim(),
+              brand: brandFreeText.trim() || null,
+              parasite_type: selectedProtocol?.parasite_type,
+              application_method: applicationMethod,
+              protection_duration_days: protectionDuration !== '' ? Number(protectionDuration) : (selectedProtocol?.default_protection_duration_days || 30),
+            }),
+          });
+          if (sugRes.ok) {
+            setSuggestionNotice('Ürün öneriniz katalog incelemesine gönderildi. ✓');
+          } else {
+            const sugErr = await sugRes.json().catch(() => ({} as any));
+            if (sugErr.error === 'DUPLICATE_PRODUCT') setSuggestionNotice('Bu ürün katalogda zaten mevcut.');
+            else if (sugErr.error === 'DUPLICATE_SUGGESTION') setSuggestionNotice('Bu ürün için zaten bekleyen bir öneri var.');
+          }
+        } catch {
+          // Öneri iletilemedi — kayıt etkilenmez, sessizce devam
+        }
       }
 
       // 5. Kombine protokolse planları kapat
@@ -355,16 +519,19 @@ export default function ParasiteClient({ pet }: { pet: any }) {
       {success ? (
         <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: 8, padding: 16, textAlign: 'center', marginBottom: 16 }}>
           <p style={{ color: '#065f46', fontWeight: 'bold', margin: '0 0 8px' }}>Kayıt Başarıyla Oluşturuldu!</p>
+          {suggestionNotice && (
+            <p style={{ fontSize: 12, color: '#047857', margin: '0 0 8px' }}>{suggestionNotice}</p>
+          )}
 
           {appliedBy === 'owner' && applicationMethod === 'spot_on' && !isBannerDismissed && (
             <SpotOnPostRecordBanner
-              productName={selectedProtocol?.protocol_name || 'Uygulama'}
+              productName={selectedProduct ? `${selectedProduct.brand} ${selectedProduct.name}` : (selectedProtocol?.protocol_name || 'Uygulama')}
               onDismiss={() => { localStorage.setItem(dismissKey, 'true'); setIsBannerDismissed(true); }}
             />
           )}
           {applicationMethod === 'collar' && !isCollarBannerDismissed && (
             <CollarFollowUpBanner
-              productName={selectedProtocol?.protocol_name || 'Tasma'}
+              productName={selectedProduct ? `${selectedProduct.brand} ${selectedProduct.name}` : (selectedProtocol?.protocol_name || 'Tasma')}
               onDismiss={() => { localStorage.setItem(collarDismissKey, 'true'); setIsCollarBannerDismissed(true); }}
             />
           )}
@@ -377,7 +544,7 @@ export default function ParasiteClient({ pet }: { pet: any }) {
           )}
 
           <button
-            onClick={() => { setSuccess(false); setEarMiteInsight(null); setShowPostRecordWarning(false); setProtocolId(''); }}
+            onClick={() => { setSuccess(false); setEarMiteInsight(null); setShowPostRecordWarning(false); setProtocolId(''); setProductId(''); setProductMode('catalog'); setBrandFreeText(''); setProductFreeText(''); setProtectionDuration(''); setNotes(''); setSelectedFile(null); setSuggestToCatalog(false); setSuggestionNotice(null); }}
             style={{ marginTop: 12, padding: '8px 16px', background: '#534AB7', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}
           >
             Yeni Kayıt Ekle
@@ -442,15 +609,79 @@ export default function ParasiteClient({ pet }: { pet: any }) {
             </select>
           </div>
 
-          {/* Uygulama yöntemi (damla/tablet) */}
+          {/* Kullanılan ürün (katalog / listede yok / bilinmiyor) */}
+          {selectedProtocol && (
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 'bold', marginBottom: 6 }}>Kullanılan Ürün</label>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+                {([['catalog', 'Katalogdan Seç'], ['notfound', 'Listede Yok'], ['unknown', 'Bilinmiyor']] as const).map(([m, label]) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => changeProductMode(m)}
+                    style={{ flex: 1, minWidth: 90, padding: '7px 8px', borderRadius: 6, border: '1px solid', borderColor: productMode === m ? '#534AB7' : '#e5e7eb', background: productMode === m ? '#eff6ff' : '#fff', color: '#111827', cursor: 'pointer', fontSize: 12, fontWeight: productMode === m ? 600 : 400 }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {productMode === 'catalog' && (
+                compatibleProducts.length > 0 ? (
+                  <select
+                    id="product-select"
+                    value={productId}
+                    onChange={e => setProductId(e.target.value)}
+                    style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ccc' }}
+                  >
+                    <option value="">-- Ürün Seçin (isteğe bağlı) --</option>
+                    {compatibleProducts.map(p => (
+                      <option key={p.id} value={p.id}>
+                        {p.brand} {p.name} • {p.protection_duration_days > 0 ? `${p.protection_duration_days} gün` : 'tedavi ürünü'}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
+                    Bu protokole uygun katalog ürünü bulunamadı — &quot;Listede Yok&quot; ile ürünü elle girebilirsiniz.
+                  </p>
+                )
+              )}
+
+              {productMode === 'notfound' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <input id="brand-input" type="text" placeholder="Marka — örn: Bravecto" value={brandFreeText} onChange={e => setBrandFreeText(e.target.value)} style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ccc', boxSizing: 'border-box' }} />
+                  <input id="product-input" type="text" placeholder="Ürün adı — örn: Bravecto Large Dog" value={productFreeText} onChange={e => setProductFreeText(e.target.value)} style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ccc', boxSizing: 'border-box' }} />
+                  {productFreeText.trim() && (
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#374151', cursor: 'pointer' }}>
+                      <input type="checkbox" checked={suggestToCatalog} onChange={e => setSuggestToCatalog(e.target.checked)} />
+                      Bu ürünü ortak kataloğa öner (admin incelemesine gönderilir)
+                    </label>
+                  )}
+                </div>
+              )}
+
+              {productMode === 'unknown' && (
+                <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>Ürün bilgisi olmadan protokolün varsayılan koruma süresi kullanılır.</p>
+              )}
+            </div>
+          )}
+
+          {/* Uygulama yöntemi (protokolün izin verdiği yöntemler) */}
           {appliedBy !== 'clinic' && applicationMethod !== 'collar' && (
             <div style={{ marginBottom: 12 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 'bold', marginBottom: 6 }}>Uygulama Yöntemi</label>
-              <select value={applicationMethod} onChange={e => setApplicationMethod(e.target.value)} style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ccc' }}>
-                <option value="spot_on">Ense Damlası (Spot-on)</option>
-                <option value="oral">Oral Tablet</option>
-                <option value="injection">Enjeksiyon</option>
-                <option value="topical">Topikal</option>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 'bold', marginBottom: 6 }}>
+                Uygulama Yöntemi{selectedProduct ? ' (üründen otomatik)' : ''}
+              </label>
+              <select
+                value={applicationMethod}
+                onChange={e => setApplicationMethod(e.target.value)}
+                disabled={!!selectedProduct}
+                style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ccc', background: selectedProduct ? '#f3f4f6' : '#fff' }}
+              >
+                {(selectedProtocol?.allowed_application_methods?.filter((m: string) => m !== 'collar') || ['spot_on', 'oral', 'injection']).map((m: string) => (
+                  <option key={m} value={m}>{methodLabel(m)}</option>
+                ))}
               </select>
             </div>
           )}
@@ -459,6 +690,60 @@ export default function ParasiteClient({ pet }: { pet: any }) {
           <div style={{ marginBottom: 12 }}>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 'bold', marginBottom: 6 }}>Uygulama Tarihi</label>
             <input type="date" value={applicationDate} onChange={e => setApplicationDate(e.target.value)} style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ccc' }} required />
+          </div>
+
+          {/* Koruma süresi (kayda snapshot yazılır) */}
+          {selectedProtocol && (
+            <div style={{ marginBottom: 12 }}>
+              <label htmlFor="duration-input" style={{ display: 'block', fontSize: 13, fontWeight: 'bold', marginBottom: 6 }}>Koruma Süresi (Gün)</label>
+              <input
+                id="duration-input"
+                type="number"
+                min={1}
+                max={1095}
+                value={protectionDuration}
+                onChange={e => setProtectionDuration(e.target.value ? Number(e.target.value) : '')}
+                style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ccc', boxSizing: 'border-box' }}
+              />
+              {selectedProduct && (
+                <p style={{ fontSize: 11, color: '#6b7280', margin: '4px 0 0' }}>
+                  {selectedProduct.protection_duration_days > 0
+                    ? `Üründen önerildi: ${selectedProduct.protection_duration_days} gün — gerekirse değiştirebilirsiniz.`
+                    : 'Bu bir tedavi ürünüdür (kalıcı koruma süresi yok) — süre protokol varsayılanından alındı.'}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Notlar */}
+          <div style={{ marginBottom: 12 }}>
+            <label htmlFor="notes-input" style={{ display: 'block', fontSize: 13, fontWeight: 'bold', marginBottom: 6 }}>Notlar (İsteğe Bağlı)</label>
+            <textarea
+              id="notes-input"
+              placeholder="Uygulama detayları, reaksiyonlar vb."
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ccc', minHeight: 52, boxSizing: 'border-box', fontFamily: 'inherit', fontSize: 13 }}
+            />
+          </div>
+
+          {/* Belge / fotoğraf */}
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 'bold', marginBottom: 6 }}>Belge veya Fotoğraf (İsteğe Bağlı)</label>
+            {!selectedFile ? (
+              <input
+                id="document-file"
+                type="file"
+                accept="image/*,application/pdf"
+                onChange={e => { const f = e.target.files?.[0]; if (f) setSelectedFile(f); }}
+                style={{ width: '100%', fontSize: 12 }}
+              />
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, border: '1px solid #e5e7eb', borderRadius: 6, padding: '8px 10px' }}>
+                <span style={{ fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>📎 {selectedFile.name}</span>
+                <button type="button" onClick={() => setSelectedFile(null)} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Kaldır</button>
+              </div>
+            )}
           </div>
 
           {/* Klinik bilgileri */}
@@ -483,30 +768,6 @@ export default function ParasiteClient({ pet }: { pet: any }) {
           </button>
         </div>
       )}
-
-      {/* ──── MANUEL KAYIT FORMU ──── */}
-      <div style={{ marginBottom: 16 }}>
-        {!showManualForm ? (
-          <button
-            id="add-manual-record-btn"
-            type="button"
-            onClick={() => setShowManualForm(true)}
-            style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1.5px dashed #534AB7', background: '#f8f7ff', color: '#534AB7', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}
-          >
-            + Uygulama Kaydı Ekle
-          </button>
-        ) : (
-          <ParasiteManualRecordForm
-            petId={pet.id}
-            protocols={protocols}
-            onComplete={async () => {
-              setShowManualForm(false);
-              await loadHistory();
-            }}
-            onCancel={() => setShowManualForm(false)}
-          />
-        )}
-      </div>
 
       {/* ──── GEÇMİŞ UYGULAMALAR ──── */}
       <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, padding: 16 }}>

@@ -7,10 +7,10 @@ import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 
 type PetRow = Database['public']['Tables']['pets']['Row']
 
-export default function BreedingListingManager({ pet }: { pet: PetRow }) {
+export default function BreedingListingManager({ pet, initialListing }: { pet: PetRow; initialListing?: any }) {
   const router = useRouter()
-  const [listing, setListing] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const [listing, setListing] = useState<any>(initialListing !== undefined ? initialListing : null)
+  const [loading, setLoading] = useState(initialListing === undefined)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [isEditing, setIsEditing] = useState(false)
@@ -27,28 +27,31 @@ export default function BreedingListingManager({ pet }: { pet: PetRow }) {
   const [isCheckingEligibility, setIsCheckingEligibility] = useState(false)
   const [eligibilityError, setEligibilityError] = useState(false)
   
-  const [selectedPhotoUrl, setSelectedPhotoUrl] = useState<string | null>(null)
-  const [estrusNotif, setEstrusNotif] = useState(false)
+  const [selectedPhotoUrl, setSelectedPhotoUrl] = useState<string | null>(initialListing?.photo_url || null)
+  const [estrusNotif, setEstrusNotif] = useState(initialListing?.estrus_notification_enabled || false)
   const [activeCycle, setActiveCycle] = useState<any>(null)
-  const [experience, setExperience] = useState('beginner')
+  const [experience, setExperience] = useState(initialListing?.experience_level || 'beginner')
   const [gallery, setGallery] = useState<any[]>([])
 
   const availableReqs = ['Aşı Kartı Zorunlu', 'Sağlık Belgesi', 'Aynı Irk', 'Veteriner Onaylı', 'Sözleşmeli']
 
   useEffect(() => {
-    const fetchListing = async () => {
-      const res = await fetch(`/api/breeding-listings`)
-      if (res.ok) {
-        const data = await res.json()
-        const myListing = data.listings?.find((l: any) => l.pet_id === pet.id)
-        if (myListing) {
-          setListing(myListing)
-          if (myListing.photo_url) setSelectedPhotoUrl(myListing.photo_url)
-          if (myListing.estrus_notification_enabled) setEstrusNotif(myListing.estrus_notification_enabled)
-          if (myListing.experience_level) setExperience(myListing.experience_level)
+    if (initialListing === undefined) {
+      const fetchListing = async () => {
+        const res = await fetch(`/api/breeding-listings`)
+        if (res.ok) {
+          const data = await res.json()
+          const myListing = data.listings?.find((l: any) => l.pet_id === pet.id)
+          if (myListing) {
+            setListing(myListing)
+            if (myListing.photo_url) setSelectedPhotoUrl(myListing.photo_url)
+            if (myListing.estrus_notification_enabled) setEstrusNotif(myListing.estrus_notification_enabled)
+            if (myListing.experience_level) setExperience(myListing.experience_level)
+          }
         }
+        setLoading(false)
       }
-      setLoading(false)
+      fetchListing()
     }
     const fetchGallery = async () => {
       const supabase = createBrowserSupabaseClient()
@@ -71,11 +74,10 @@ export default function BreedingListingManager({ pet }: { pet: PetRow }) {
       }
     }
     fetchGallery()
-    fetchListing()
     if (pet.gender === 'female') {
       fetchEstrusCycle()
     }
-  }, [pet.id, pet.gender])
+  }, [pet.id, pet.gender, initialListing])
 
   useEffect(() => {
     // Sadece ilan oluşturulurken veya düzenlenirken kontrol et (zaten bu component Breeding amaçlıdır)
@@ -101,7 +103,24 @@ export default function BreedingListingManager({ pet }: { pet: PetRow }) {
     }
   }, [pet.id, isEditing, listing])
 
-  if (loading) return <div className="animate-pulse bg-bg-main h-24 rounded-xl w-full mb-6" />
+  if (loading) {
+    return (
+      <div className="mb-8 card-base bg-white border border-border-main p-5 rounded-2xl shadow-sm min-h-[320px] animate-pulse flex flex-col justify-between">
+        <div className="flex items-center gap-3 mb-5 border-b border-border-main pb-4">
+          <div className="w-10 h-10 rounded-xl bg-slate-100" />
+          <div className="flex-1 space-y-2">
+            <div className="h-4 bg-slate-100 rounded w-1/3" />
+            <div className="h-3 bg-slate-100 rounded w-2/3" />
+          </div>
+        </div>
+        <div className="space-y-4 flex-1">
+          <div className="h-10 bg-slate-100 rounded-xl w-full" />
+          <div className="h-20 bg-slate-100 rounded-xl w-full" />
+          <div className="h-10 bg-slate-100 rounded-xl w-full" />
+        </div>
+      </div>
+    )
+  }
 
   if (listing && !isEditing) {
     const getExperienceBadge = (level: string) => {
