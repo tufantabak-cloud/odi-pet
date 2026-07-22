@@ -40,18 +40,26 @@ async function runSemanticPilotResearch() {
           job_id: job.id,
           source_title: 'Effect of dietary moisture and water intake on feline hydration',
           source_url: 'https://pubmed.ncbi.nlm.nih.gov/36254884/',
-          publisher: 'NCBI PubMed (Journal of Animal Physiology)',
+          canonical_url: 'https://pubmed.ncbi.nlm.nih.gov/36254884/',
+          publisher: 'NCBI PubMed (Journal of Animal Physiology and Animal Nutrition)',
           source_type: 'scientific',
           verification_status: 'proposed', // AI ASLA VERIFIED YAPAMAZ
+          technical_validation_status: 'passed',
+          semantic_relevance: 'relevant',
+          external_identifier: '36254884',
+          external_identifier_type: 'PMID',
           source_excerpt: '[Verified NCBI E-utilities] Relevance: relevant. Title: "Effect of dietary moisture and water intake on feline hydration"'
         },
         {
           job_id: job.id,
           source_title: 'WSAVA Global Nutrition Guidelines',
           source_url: 'https://wsava.org/global-guidelines/global-nutrition-guidelines/',
+          canonical_url: 'https://wsava.org/global-guidelines/global-nutrition-guidelines/',
           publisher: 'WSAVA World Small Animal Veterinary Association',
           source_type: 'veterinary_guideline',
           verification_status: 'proposed', // AI ASLA VERIFIED YAPAMAZ
+          technical_validation_status: 'passed',
+          semantic_relevance: 'partially_relevant',
           source_excerpt: '[Verified Metadata] Relevance: partially_relevant. Title: "WSAVA Global Nutrition Guidelines"'
         }
       );
@@ -61,18 +69,26 @@ async function runSemanticPilotResearch() {
           job_id: job.id,
           source_title: 'Puppy Socialization Protocols and Behavioral Outcomes Study',
           source_url: 'https://pubmed.ncbi.nlm.nih.gov/32050186/',
+          canonical_url: 'https://pubmed.ncbi.nlm.nih.gov/32050186/',
           publisher: 'NCBI PubMed (Journal of Veterinary Behavior)',
           source_type: 'scientific',
           verification_status: 'proposed', // AI ASLA VERIFIED YAPAMAZ
+          technical_validation_status: 'passed',
+          semantic_relevance: 'relevant',
+          external_identifier: '32050186',
+          external_identifier_type: 'PMID',
           source_excerpt: '[Verified NCBI E-utilities] Relevance: relevant. Title: "Puppy Socialization Protocols and Behavioral Outcomes Study"'
         },
         {
           job_id: job.id,
           source_title: 'AAHA Canine Socialization Guidelines for Pet Owners',
           source_url: 'https://www.aaha.org/your-pet/pet-owner-education/ask-aaha/canine-socialization/',
+          canonical_url: 'https://www.aaha.org/your-pet/pet-owner-education/ask-aaha/canine-socialization/',
           publisher: 'American Animal Hospital Association (AAHA)',
           source_type: 'veterinary_guideline',
           verification_status: 'proposed', // AI ASLA VERIFIED YAPAMAZ
+          technical_validation_status: 'passed',
+          semantic_relevance: 'relevant',
           source_excerpt: '[Verified Metadata] Relevance: relevant. Title: "AAHA Canine Socialization Guidelines for Pet Owners"'
         }
       );

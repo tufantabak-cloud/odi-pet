@@ -17,7 +17,7 @@ const pilotTopics = [
 ];
 
 async function cleanMismatchedData() {
-  console.log('--- Cleaning Topic Mismatched Pilot Sources & 404 URLs ---');
+  console.log('--- Step 1: Cleaning Mismatched Pilot Sources & Resetting Jobs ---');
 
   const { data: jobs } = await supabase
     .from('content_generation_jobs')
@@ -55,7 +55,7 @@ async function cleanMismatchedData() {
     .in('job_id', jobIds)
     .ilike('source_url', '%aaha.org%');
 
-  // 3. WSAVA kaynağını partially_relevant yap
+  // 3. WSAVA kaynağını partially_relevant yap ve gerçek adını sakla
   await supabase
     .from('content_generation_job_sources')
     .update({
@@ -75,15 +75,22 @@ async function cleanMismatchedData() {
     })
     .in('id', jobIds);
 
-  console.log('Reset 2 pilot jobs to "research_required".');
+  console.log('Successfully reset 2 pilot jobs to "research_required".');
 
-  // 5. Canlı DB Verified Kaynak Sayısını Doğrula
+  // 5. Canlı DB Verified Kaynak Sayısı Kontrolü
   const { count: verifiedCount } = await supabase
     .from('content_generation_job_sources')
     .select('id', { count: 'exact', head: true })
     .eq('verification_status', 'verified');
 
+  // 6. Articles Tablosu Pilot Aktarım Kontrolü
+  const { count: articlesCount } = await supabase
+    .from('articles')
+    .select('id', { count: 'exact', head: true })
+    .in('title', pilotTopics);
+
   console.log(`\nCanlı DB Verified Kaynak Sayısı: ${verifiedCount || 0}`);
+  console.log(`Canlı DB Articles Pilot Kayıt Sayısı: ${articlesCount || 0}`);
 }
 
 cleanMismatchedData().catch(console.error);

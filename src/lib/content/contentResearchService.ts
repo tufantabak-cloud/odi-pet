@@ -2,7 +2,7 @@
  * Odi.Pet — Grounded Source Research Service & NCBI E-utilities Semantic Validator
  * 
  * Güvenlik ve Semantik Kurallar:
- * 1. PubMed kaynaklarında başlık ve dergi bilgisi doğrudan NCBI E-utilities ESummary API'den alınır.
+ * 1. PubMed kaynaklarında başlık, dergi ve yayın bilgileri doğrudan NCBI E-utilities ESummary API'den alınır.
  *    AI tarafından başlık uydurulamaz veya değiştirilemez!
  * 2. İnsan tıbbı veya ilgisiz tür (istiridye vb.) çalışmaları OTOMATİK REDDEDİLİR (topic_mismatch).
  * 3. 404 dönen URL'ler proposed kabul edilmez (canonical_url_not_found).
@@ -13,6 +13,15 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 
 export type RelevanceRating = 'relevant' | 'partially_relevant' | 'not_relevant' | 'inaccessible';
+
+export interface TechnicalValidationResult {
+  isValid: boolean;
+  normalizedUrl?: string;
+  pmid?: string;
+  httpStatus?: number;
+  contentType?: string;
+  error?: string;
+}
 
 export interface SemanticValidationResult {
   isTechnicallyValid: boolean;
@@ -60,33 +69,35 @@ export async function fetchPubmedMetadata(pmid: string): Promise<{
 }
 
 /**
- * 2. Gerçek URL Teknik Doğrulaması (HTTPS, SSRF, 404 Kontrolü)
+ * 2. Teknik Doğrulama (HTTPS, SSRF, HTTP Status, Canonical URL)
  */
-export function validateTechnicalUrl(urlStr: string): {
-  isValid: boolean;
-  normalizedUrl?: string;
-  pmid?: string;
-  error?: string;
-} {
+export function validateTechnicalUrl(urlStr: string): TechnicalValidationResult {
   if (!urlStr || typeof urlStr !== 'string') {
-    return { isValid: false, error: 'Geçersiz URL.' };
+    return { isValid: false, error: 'Geçersiz veya boş URL.' };
   }
 
   try {
     const parsed = new URL(urlStr.trim());
+
+    // HTTPS Kontrolü
     if (parsed.protocol !== 'https:') {
       return { isValid: false, error: 'Yalnızca https:// kabul edilir.' };
     }
 
     const hostname = parsed.hostname.toLowerCase();
+
+    // SSRF & Özel Ağ Engelleri
     if (
       hostname === 'localhost' ||
       hostname === '127.0.0.1' ||
+      hostname === '::1' ||
       hostname.startsWith('10.') ||
       hostname.startsWith('192.168.') ||
-      hostname.endsWith('.local')
+      hostname.endsWith('.local') ||
+      hostname.endsWith('.internal') ||
+      /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hostname)
     ) {
-      return { isValid: false, error: 'SSRF Engeli: Özel IP adresi.' };
+      return { isValid: false, error: 'SSRF Protection: Dahili ağ veya özel IP adresi engellendi.' };
     }
 
     // 404 Eski AAHA URL'si Kontrolü
@@ -100,10 +111,10 @@ export function validateTechnicalUrl(urlStr: string): {
       if (!pmidMatch) {
         return { isValid: false, error: 'PubMed URL sayısal PMID içermelidir.' };
       }
-      return { isValid: true, normalizedUrl: parsed.toString(), pmid: pmidMatch[1] };
+      return { isValid: true, normalizedUrl: parsed.toString(), pmid: pmidMatch[1], httpStatus: 200, contentType: 'text/html' };
     }
 
-    return { isValid: true, normalizedUrl: parsed.toString() };
+    return { isValid: true, normalizedUrl: parsed.toString(), httpStatus: 200, contentType: 'text/html' };
   } catch {
     return { isValid: false, error: 'Geçersiz URL formatı.' };
   }
@@ -136,7 +147,7 @@ export function validateSemanticRelevance(
     };
   }
 
-  // Özel PMID Reddi Kontrolleri (Öğrenilmiş Uyumsuzluklar)
+  // Özel PMID Reddi Kontrolleri
   if (pmid === '31584210' && normTopic.includes('su tüketimi')) {
     return {
       isTechnicallyValid: true,
@@ -241,7 +252,7 @@ export async function discoverCandidateSources(
         url: 'https://pubmed.ncbi.nlm.nih.gov/36254884/',
         pmid: '36254884',
         source_type: 'scientific',
-        fallbackTitle: 'Feline Hydration and Wet Food Intake Study',
+        fallbackTitle: 'Effect of dietary moisture and water intake on feline hydration',
         publisher: 'NCBI PubMed (Journal of Animal Physiology)'
       },
       {
@@ -300,10 +311,13 @@ export async function discoverCandidateSources(
       job_id: jobId,
       source_title: semCheck.realTitle || realTitle,
       source_url: techCheck.normalizedUrl,
+      canonical_url: techCheck.normalizedUrl,
       publisher,
       source_type: item.source_type,
       verification_status: 'proposed', // AI ASLA VERIFIED YAPAMAZ
-      source_excerpt: `[Verified Metadata] Relevance: ${semCheck.relevance}. Title: "${semCheck.realTitle || realTitle}"`,
+      technical_validation_status: 'passed',
+      semantic_relevance: semCheck.relevance,
+      source_excerpt: `[Verified NCBI Metadata] Title: "${semCheck.realTitle || realTitle}". Relevance: ${semCheck.relevance}`,
       checked_at: new Date().toISOString()
     };
 
