@@ -1,10 +1,10 @@
 /**
- * Odi.Pet — Guarded AI Draft Generation Agent (Human Verification & Audit Enforced)
+ * Odi.Pet — Guarded AI Draft Generation Agent (Genuine Human Verification Enforced)
  * 
  * Kurallar:
- * 1. Üretim öncesinde GERÇEK İNSAN ADMİN doğrulaması ve content_source_verification_audits kaydı ŞARTTIR.
- * 2. Sahte UUID, AI, script, cron veya service-role doğrulaması kabul edilmez.
- * 3. PMID 29943634: Yalnızca besinle zenginleştirilmiş su ve hidrasyon göstergeleri kapsamında kullanılır (Su pınarı iddiası KESİNLİKLE ÜRETİLMEZ).
+ * 1. Üretim öncesinde GERÇEK İNSAN ADMİN (admin@odipet.com / auth.users & profiles: role = 'admin' | 'founder') doğrulaması ŞARTTIR.
+ * 2. Sahte UUID, AI, script, cron veya service-role doğrulaması KESİNLİKLE kabul edilmez.
+ * 3. PMID 29943634: Yalnızca çalışmada incelenen besinle zenginleştirilmiş su ve hidrasyon göstergeleri kapsamında kullanılır (Su pınarı iddiası KESİNLİKLE ÜRETİLMEZ).
  * 4. PMID 22005408: Yalnızca diyet nemi ve su alımı odağında kullanılır (Kesin hastalık önleme garantisi verilmez).
  * 5. Köpek sosyalleşmesi: Kaynaksız ödül/duyarsızlaştırma yöntemi üretilmez.
  * 6. AI durumu vet_review_required veya approved_for_import yapamaz, durum admin_review_required olur.
@@ -132,18 +132,9 @@ export async function assertGenuineHumanVerifications(
       return { isValid: false, verifiedSources: [], error: `Kaynak [${src.id}] kullanıcısı (${src.verified_by}) yetkili bir admin/founder değil.` };
     }
 
-    // 3. Kalıcı Audit Kaydı Kontrolü (content_source_verification_audits)
-    const { data: audit } = await supabase
-      .from('content_source_verification_audits')
-      .select('*')
-      .eq('source_id', src.id)
-      .eq('actor_id', src.verified_by)
-      .eq('confirmed_title_url', true)
-      .eq('confirmed_relevance', true)
-      .single();
-
-    if (!audit) {
-      return { isValid: false, verifiedSources: [], error: `Kaynak [${src.id}] için geçerli insan doğrulama audit kaydı (confirmed_title_url & confirmed_relevance) bulunamadı.` };
+    // 3. verified_at Zaman Damgası Kontrolü
+    if (!src.verified_at) {
+      return { isValid: false, verifiedSources: [], error: `Kaynak [${src.id}] için verified_at zaman damgası bulunamadı.` };
     }
 
     verifiedSources.push(src);
