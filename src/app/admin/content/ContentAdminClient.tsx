@@ -37,6 +37,10 @@ export default function ContentAdminClient() {
   const [filterVetStatus, setFilterVetStatus] = useState('');
   const [filterFreshness, setFilterFreshness] = useState('');
 
+  // Ana Sekme State
+  const [activeMainTab, setActiveMainTab] = useState<'articles' | 'jobs'>('articles');
+  const [jobs, setJobs] = useState<any[]>([]);
+
   // Form State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -106,11 +110,22 @@ export default function ContentAdminClient() {
     }
   };
 
+  const fetchJobs = async () => {
+    try {
+      const res = await fetch('/api/admin/content/jobs');
+      const json = await res.json();
+      if (res.ok) setJobs(json || []);
+    } catch {
+      setJobs([]);
+    }
+  };
+
   const fetchArticles = async () => {
     setLoading(true);
     setErrorMsg('');
     try {
       fetchReviewQueue();
+      fetchJobs();
       const params = new URLSearchParams();
       if (filterQuery) params.set('q', filterQuery);
       if (filterCategory) params.set('category', filterCategory);
@@ -431,7 +446,104 @@ export default function ContentAdminClient() {
         )}
       </div>
 
-      {/* Bildirimler */}
+      {/* Ana Sekmeler */}
+      <div className="flex items-center gap-2 border-b border-[var(--color-border)] pb-2">
+        <button
+          onClick={() => setActiveMainTab('articles')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            activeMainTab === 'articles'
+              ? 'bg-[var(--color-primary)] text-white shadow-xs'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          İçerik Kataloğu ({articles.length})
+        </button>
+
+        <button
+          onClick={() => setActiveMainTab('jobs')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+            activeMainTab === 'jobs'
+              ? 'bg-[var(--color-primary)] text-white shadow-xs'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          <span>AI Taslak Kuyruğu</span>
+          <span className="bg-white/20 px-1.5 py-0.5 rounded-md text-[10px]">
+            {jobs.length}
+          </span>
+        </button>
+      </div>
+
+      {/* SEKME 2: AI Taslak Kuyruğu */}
+      {activeMainTab === 'jobs' && (
+        <div className="space-y-4">
+          <div className="bg-white border border-[var(--color-border)] rounded-2xl overflow-hidden shadow-xs">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-gray-50 border-b font-bold text-gray-700 uppercase tracking-wider">
+                <tr>
+                  <th className="p-3">Konu</th>
+                  <th className="p-3">Tür</th>
+                  <th className="p-3">Durum</th>
+                  <th className="p-3">Kaynaklar</th>
+                  <th className="p-3">Hata</th>
+                  <th className="p-3 text-right">İşlem</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {jobs.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-gray-500 font-medium">
+                      Kuyrukta bekleyen AI içerik işi bulunmuyor.
+                    </td>
+                  </tr>
+                ) : (
+                  jobs.map((j) => (
+                    <tr key={j.id} className="hover:bg-gray-50">
+                      <td className="p-3 font-semibold text-gray-900">{j.topic}</td>
+                      <td className="p-3 text-gray-600 uppercase font-bold text-[10px]">
+                        {j.job_type === 'new_content' ? 'Yeni İçerik' : 'Güncelleme'}
+                      </td>
+                      <td className="p-3">
+                        <span className="px-2 py-0.5 rounded-md font-bold text-[10px] bg-purple-100 text-purple-900 border border-purple-200">
+                          {j.generation_status}
+                        </span>
+                      </td>
+                      <td className="p-3 text-gray-600">
+                        {j.content_generation_job_sources?.filter((s: any) => s.verification_status === 'verified').length || 0} / {j.content_generation_job_sources?.length || 0} Doğrulandı
+                      </td>
+                      <td className="p-3 text-red-600 max-w-xs truncate">{j.last_error || '-'}</td>
+                      <td className="p-3 text-right space-x-2">
+                        {['approved_for_import', 'admin_review_required', 'draft_ready'].includes(j.generation_status) && (
+                          <button
+                            onClick={async () => {
+                              try {
+                                const res = await fetch(`/api/admin/content/jobs/${j.id}`, {
+                                  method: 'PATCH',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ action: 'import' })
+                                });
+                                const json = await res.json();
+                                if (!res.ok) throw new Error(json.error || 'Aktarım başarısız.');
+                                setSuccessMsg('Taslak makaleye aktarıldı (Taslak olarak kaydedildi).');
+                                fetchArticles();
+                              } catch (err: any) {
+                                setErrorMsg(err.message);
+                              }
+                            }}
+                            className="bg-emerald-600 text-white px-2.5 py-1 rounded-lg font-bold text-[11px] hover:bg-emerald-700"
+                          >
+                            Makaleye Aktar
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
       {successMsg && (
         <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-xs font-semibold">
           {successMsg}
@@ -443,8 +555,11 @@ export default function ContentAdminClient() {
         </div>
       )}
 
-      {/* Filtre Barı */}
-      <div className="bg-white border border-[var(--color-border)] rounded-2xl p-4 space-y-3 shadow-xs">
+      {/* SEKME 1: İçerik Kataloğu */}
+      {activeMainTab === 'articles' && (
+        <div className="space-y-6">
+          {/* Filtre Barı */}
+          <div className="bg-white border border-[var(--color-border)] rounded-2xl p-4 space-y-3 shadow-xs">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3">
           {/* Arama */}
           <input
@@ -626,6 +741,8 @@ export default function ContentAdminClient() {
           </div>
         )}
       </div>
+    </div>
+  )}
 
       {/* İçerik Ekleme / Düzenleme Modalı */}
       {isModalOpen && (
