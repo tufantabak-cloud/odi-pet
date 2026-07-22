@@ -46,6 +46,11 @@ export default function ContentAdminClient() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // İnsan Kaynak Doğrulama State
+  const [selectedSourceForVerify, setSelectedSourceForVerify] = useState<any | null>(null);
+  const [chkTitleUrl, setChkTitleUrl] = useState(false);
+  const [chkTopic, setChkTopic] = useState(false);
+
   // Revizyon Geçmişi State
   const [revisionsModalOpen, setRevisionsModalOpen] = useState(false);
   const [revisionsList, setRevisionsList] = useState<any[]>([]);
@@ -510,6 +515,30 @@ export default function ContentAdminClient() {
                       </td>
                       <td className="p-3 text-gray-600">
                         {j.content_generation_job_sources?.filter((s: any) => s.verification_status === 'verified').length || 0} / {j.content_generation_job_sources?.length || 0} Doğrulandı
+                        <div className="mt-1 space-y-1">
+                          {j.content_generation_job_sources?.map((src: any) => (
+                            <div key={src.id} className="text-[11px] p-2 bg-gray-50 border rounded-md space-y-1">
+                              <div className="font-semibold text-gray-800 line-clamp-1">{src.source_title}</div>
+                              <div className="text-[10px] text-gray-500 flex items-center justify-between">
+                                <span>{src.publisher} ({src.publication_date || 'Tarih Yok'})</span>
+                                <a href={src.canonical_url} target="_blank" rel="noreferrer" className="text-blue-600 underline">Yeni Sekmede Aç</a>
+                              </div>
+                              <div className="flex items-center gap-1.5 pt-1">
+                                <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${src.verification_status === 'verified' ? 'bg-emerald-100 text-emerald-800' : src.verification_status === 'rejected' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'}`}>
+                                  {src.verification_status}
+                                </span>
+                                {src.verification_status === 'proposed' && (
+                                  <button
+                                    onClick={() => setSelectedSourceForVerify(src)}
+                                    className="px-2 py-0.5 bg-blue-600 text-white rounded text-[10px] font-bold hover:bg-blue-700"
+                                  >
+                                    İnsan İle İncele & Doğrula
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </td>
                       <td className="p-3 text-red-600 max-w-xs truncate">{j.last_error || '-'}</td>
                       <td className="p-3 text-right space-x-2">
@@ -997,6 +1026,73 @@ export default function ContentAdminClient() {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* İNSAN KAYNAK DOĞRULAMA MODALI */}
+      {selectedSourceForVerify && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white max-w-xl w-full rounded-2xl p-6 shadow-2xl space-y-4">
+            <h3 className="font-bold text-lg text-gray-900 border-b pb-2">İnsan Kaynak İnceleme ve Doğrulama Bariyeri</h3>
+            <div className="space-y-2 text-xs text-gray-700">
+              <div><strong className="text-gray-900">Gerçek Başlık:</strong> {selectedSourceForVerify.source_title}</div>
+              <div><strong className="text-gray-900">Canonical URL:</strong> <a href={selectedSourceForVerify.canonical_url} target="_blank" rel="noreferrer" className="text-blue-600 underline font-mono">{selectedSourceForVerify.canonical_url}</a></div>
+              <div><strong className="text-gray-900">PMID / DOI:</strong> {selectedSourceForVerify.external_identifier || '-'}</div>
+              <div><strong className="text-gray-900">Yayıncı / Dergi:</strong> {selectedSourceForVerify.publisher}</div>
+              <div><strong className="text-gray-900">Yayın Tarihi:</strong> {selectedSourceForVerify.publication_date || '-'}</div>
+              <div><strong className="text-gray-900">Teknik / Semantik Durum:</strong> {selectedSourceForVerify.technical_validation_status} / {selectedSourceForVerify.semantic_relevance}</div>
+              <div className="p-2 bg-gray-50 border rounded text-[11px] font-mono text-gray-600"><strong className="text-gray-900">Abstract Özeti:</strong> {selectedSourceForVerify.source_excerpt || 'Özet mevcut değil'}</div>
+            </div>
+
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-2 text-xs text-amber-900">
+              <div className="font-bold text-amber-950">İnsan Doğrulama Onayları (Zorunlu)</div>
+              <label className="flex items-center gap-2 cursor-pointer font-medium">
+                <input type="checkbox" checked={chkTitleUrl} onChange={(e) => setChkTitleUrl(e.target.checked)} className="rounded text-amber-600" />
+                <span>Kaynağın gerçek başlığını ve adresini kontrol ettim.</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer font-medium">
+                <input type="checkbox" checked={chkTopic} onChange={(e) => setChkTopic(e.target.checked)} className="rounded text-amber-600" />
+                <span>Kaynağın iş konusu ile ilgili olduğunu kontrol ettim.</span>
+              </label>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t">
+              <button
+                onClick={() => { setSelectedSourceForVerify(null); setChkTitleUrl(false); setChkTopic(false); }}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-bold text-xs hover:bg-gray-200"
+              >
+                Vazgeç
+              </button>
+              <button
+                disabled={!chkTitleUrl || !chkTopic}
+                onClick={async () => {
+                  try {
+                    const res = await fetch(`/api/admin/content/jobs/${selectedSourceForVerify.job_id}`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        action: 'verify_source',
+                        source_id: selectedSourceForVerify.id,
+                        verification_status: 'verified'
+                      })
+                    });
+                    const json = await res.json();
+                    if (!res.ok) throw new Error(json.error || 'Doğrulama başarısız.');
+                    setSuccessMsg('Kaynak insan admin oturumu ile başarıyla doğrulandı.');
+                    setSelectedSourceForVerify(null);
+                    setChkTitleUrl(false);
+                    setChkTopic(false);
+                    fetchArticles();
+                  } catch (err: any) {
+                    setErrorMsg(err.message);
+                  }
+                }}
+                className="px-4 py-2 bg-emerald-600 text-white rounded-xl font-bold text-xs hover:bg-emerald-700 disabled:opacity-50"
+              >
+                Kaynağı İnsan Olarak Doğrula
+              </button>
+            </div>
           </div>
         </div>
       )}

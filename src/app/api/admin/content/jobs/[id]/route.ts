@@ -79,15 +79,30 @@ export async function PATCH(
       return NextResponse.json(updatedJob);
     }
 
-    // D. Kaynak Doğrulama / Reddetme
+    // D. Kaynak Doğrulama / Reddetme (Sıkılaştırılmış İnsan Doğrulama Bariyeri)
     if (action === 'verify_source' && source_id) {
+      if (!actor || !actor.id || actor.id === '00000000-0000-0000-0000-000000000001') {
+        return NextResponse.json({ error: 'Geçersiz veya sahte kullanıcı oturumu. İnsan doğrulaması kanıtlanamadı.' }, { status: 403 });
+      }
+
+      // Profil varlığını ve rolünü canlı DB'de bir kez daha açıkça kontrol et
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, role')
+        .eq('id', actor.id)
+        .single();
+
+      if (!profile || !['admin', 'founder'].includes(profile.role)) {
+        return NextResponse.json({ error: 'Kaynak doğrulama yalnız gerçek ve yetkili admin/founder profilleri tarafından yapılabilir.' }, { status: 403 });
+      }
+
       const vStatus = verification_status === 'rejected' ? 'rejected' : 'verified';
       const { data: updatedSource, error: srcErr } = await supabase
         .from('content_generation_job_sources')
         .update({
           verification_status: vStatus,
-          verified_by: actor.id,
-          verified_at: new Date().toISOString()
+          verified_by: actor.id, // İstemciden asla alınmaz!
+          verified_at: new Date().toISOString() // İstemciden asla alınmaz!
         })
         .eq('id', source_id)
         .select()
@@ -95,14 +110,17 @@ export async function PATCH(
 
       if (srcErr) return NextResponse.json({ error: srcErr.message }, { status: 400 });
 
-      // Eğer en az bir verified kaynak varsa job status'unu ready_for_generation yap
-      const { data: verifiedCount } = await supabase
+      // Audit Log Kaydı
+      console.log(`[AUDIT LOG] Source Verification Event: actor_id="${actor.id}", actor_role="${profile.role}", source_id="${source_id}", job_id="${jobId}", action="${vStatus}", timestamp="${new Date().toISOString()}"`);
+
+      // Eğer en az iki verified kaynak varsa job status'unu ready_for_generation yap
+      const { data: verifiedSources } = await supabase
         .from('content_generation_job_sources')
         .select('id')
         .eq('job_id', jobId)
         .eq('verification_status', 'verified');
 
-      if (verifiedCount && verifiedCount.length > 0 && job.generation_status === 'source_review_required') {
+      if (verifiedSources && verifiedSources.length >= 2 && job.generation_status === 'source_review_required') {
         await supabase
           .from('content_generation_jobs')
           .update({ generation_status: 'ready_for_generation' })
