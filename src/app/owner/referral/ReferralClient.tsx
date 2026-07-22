@@ -4,89 +4,11 @@ import { useState, useRef, useCallback } from 'react'
 import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react'
 
 // ── Tip tanımları ─────────────────────────────────────────────────
-interface BadgeData {
-  key: string
-  label: string
-  emoji: string
-  threshold: number
-  earned: boolean
-  earnedAt: string | null
-  progress: number
-}
-
 interface ReferralClientProps {
   referralCode: string
   referralUrl: string
   referralCount: number
-  badges: BadgeData[]
-}
-
-// ── Rozet gradyanları ─────────────────────────────────────────────
-const BADGE_STYLES: Record<string, { from: string; to: string; shadow: string; ringColor: string }> = {
-  first_invite: {
-    from: '#FBBF24',
-    to: '#D97706',
-    shadow: 'rgba(251,191,36,0.45)',
-    ringColor: 'ring-yellow-400/40',
-  },
-  three_friends: {
-    from: '#94A3B8',
-    to: '#64748B',
-    shadow: 'rgba(148,163,184,0.45)',
-    ringColor: 'ring-slate-400/40',
-  },
-  super_ambassador: {
-    from: '#A855F7',
-    to: '#4F46E5',
-    shadow: 'rgba(168,85,247,0.45)',
-    ringColor: 'ring-purple-500/40',
-  },
-}
-
-// ── Yarı-3D Rozet SVG ─────────────────────────────────────────────
-function BadgeSVG({ badgeKey, earned }: { badgeKey: string; earned: boolean }) {
-  const style = BADGE_STYLES[badgeKey] ?? BADGE_STYLES.first_invite
-  const opacity = earned ? 1 : 0.35
-
-  return (
-    <svg
-      width="64"
-      height="64"
-      viewBox="0 0 64 64"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      style={{ opacity }}
-    >
-      <defs>
-        <radialGradient id={`grad-${badgeKey}`} cx="40%" cy="30%" r="70%">
-          <stop offset="0%" stopColor={style.from} />
-          <stop offset="100%" stopColor={style.to} />
-        </radialGradient>
-        <filter id={`shadow-${badgeKey}`} x="-30%" y="-30%" width="160%" height="160%">
-          <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor={style.shadow} />
-        </filter>
-      </defs>
-      {/* Ana rozet şekli — sekizgen */}
-      <polygon
-        points="32,4 52,14 60,34 52,54 32,62 12,54 4,34 12,14"
-        fill={`url(#grad-${badgeKey})`}
-        filter={`url(#shadow-${badgeKey})`}
-      />
-      {/* Parlaklık overlay */}
-      <polygon
-        points="32,7 50,16 57,34 50,52 32,59 14,52 7,34 14,16"
-        fill="none"
-        stroke="rgba(255,255,255,0.3)"
-        strokeWidth="1.5"
-      />
-      {/* İç pati / kemik detayı */}
-      <circle cx="32" cy="28" r="5" fill="rgba(255,255,255,0.85)" />
-      <circle cx="24" cy="23" r="3" fill="rgba(255,255,255,0.7)" />
-      <circle cx="40" cy="23" r="3" fill="rgba(255,255,255,0.7)" />
-      <circle cx="20" cy="30" r="2.5" fill="rgba(255,255,255,0.6)" />
-      <circle cx="44" cy="30" r="2.5" fill="rgba(255,255,255,0.6)" />
-    </svg>
-  )
+  badges?: any[]
 }
 
 // ── Toast Bildirimi ───────────────────────────────────────────────
@@ -117,7 +39,7 @@ function StatChip({ count }: { count: number }) {
       <div>
         <p className="text-[22px] font-black text-text-primary leading-none">{count}</p>
         <p className="text-[12px] text-text-secondary font-medium mt-0.5">
-          {count === 0 ? 'Henüz davet yok' : count === 1 ? 'arkadaşın katıldı' : 'arkadaşın katıldı'}
+          {count === 0 ? 'Henüz davet yok' : 'arkadaşın katıldı'}
         </p>
       </div>
     </div>
@@ -129,7 +51,6 @@ export default function ReferralClient({
   referralCode,
   referralUrl,
   referralCount,
-  badges,
 }: ReferralClientProps) {
   const [toast, setToast] = useState({ visible: false, message: '' })
   const [shareExpanded, setShareExpanded] = useState(false)
@@ -349,80 +270,12 @@ export default function ReferralClient({
         {/* ── İstatistik ── */}
         <StatChip count={referralCount} />
 
-        {/* ── Rozetler ── */}
-        <div className="flex flex-col gap-3">
-          <h2 className="text-[15px] font-extrabold text-text-primary">🏅 Rozetlerim</h2>
-          <div className="grid grid-cols-3 gap-3">
-            {badges.map((badge) => {
-              const style = BADGE_STYLES[badge.key]
-              return (
-                <div
-                  key={badge.key}
-                  className={`relative flex flex-col items-center gap-2 p-4 rounded-[20px] border transition-all duration-200 ${
-                    badge.earned
-                      ? `bg-gradient-to-b from-white to-primary-soft border-primary/20 shadow-md hover:scale-[1.04] ${style?.ringColor ?? ''} ring-2`
-                      : 'bg-surface border-border-main opacity-60'
-                  }`}
-                >
-                  {/* Konfeti efekti — kazanılmış rozetler */}
-                  {badge.earned && (
-                    <div className="absolute inset-0 rounded-[20px] overflow-hidden pointer-events-none">
-                      {[...Array(6)].map((_, i) => (
-                        <div
-                          key={i}
-                          className="absolute w-1.5 h-1.5 rounded-full"
-                          style={{
-                            background: i % 2 === 0 ? '#FBBF24' : '#A78BFA',
-                            top: `${10 + (i * 12) % 60}%`,
-                            left: `${8 + (i * 17) % 84}%`,
-                            animation: `confettiFall ${0.8 + i * 0.2}s ease-in-out infinite alternate`,
-                            animationDelay: `${i * 0.15}s`,
-                          }}
-                        />
-                      ))}
-                    </div>
-                  )}
-
-                  <BadgeSVG badgeKey={badge.key} earned={badge.earned} />
-                  <div className="text-center">
-                    <p className="text-[11px] font-black text-text-primary leading-tight">{badge.label}</p>
-                    <p className="text-[10px] text-text-secondary mt-0.5">
-                      {badge.earned ? '✓ Kazanıldı' : `${badge.progress}/${badge.threshold} davet`}
-                    </p>
-                  </div>
-
-                  {/* İlerleme çubuğu */}
-                  {!badge.earned && (
-                    <div className="w-full h-1 bg-border-main rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-700"
-                        style={{
-                          width: `${(badge.progress / badge.threshold) * 100}%`,
-                          background: `linear-gradient(90deg, ${style?.from ?? '#4F2DBA'}, ${style?.to ?? '#3C2096'})`,
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
         {/* ── KVKK Notu ── */}
         <p className="text-center text-[11px] text-text-secondary/60 px-4 pb-2 leading-relaxed">
           Davet sistemine katılarak KVKK kapsamında veri işlenmesine onay vermiş sayılırsınız.
         </p>
 
       </div>
-
-      {/* Konfeti animasyonu CSS */}
-      <style>{`
-        @keyframes confettiFall {
-          0% { transform: translateY(0) rotate(0deg); opacity: 0.8; }
-          100% { transform: translateY(6px) rotate(45deg); opacity: 0.3; }
-        }
-      `}</style>
     </>
   )
 }
