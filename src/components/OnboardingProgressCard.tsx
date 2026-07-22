@@ -7,11 +7,13 @@ import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
 interface OnboardingProgressCardProps {
   petId: string;
   petName: string;
+  suppressStepIds?: string[];
 }
 
 export default function OnboardingProgressCard({
   petId,
-  petName
+  petName,
+  suppressStepIds = []
 }: OnboardingProgressCardProps) {
   const router = useRouter();
   const { progress, snooze } = useOnboardingProgress(petId);
@@ -68,8 +70,9 @@ export default function OnboardingProgressCard({
 
   if (!progress || progress.isComplete || progress.isSnoozed) return null;
 
-  // Sıradaki tamamlanmamış adım
-  const nextStep = progress.steps.find((s) => !s.done);
+  // Sıradaki tamamlanmamış ve bastırılmamış (un-suppressed) adım CTA için
+  const incompleteSteps = progress.steps.filter((s) => !s.done);
+  const nextStepForCta = incompleteSteps.find((s) => !suppressStepIds.includes(s.id));
 
   // Başarı toast bildirimi
   const toastEl = showToast && (
@@ -196,9 +199,9 @@ export default function OnboardingProgressCard({
           >
             Daha sonra hatırlat
           </button>
-          {nextStep && (
+          {nextStepForCta && (
             <button
-              onClick={() => router.push(nextStep.route)}
+              onClick={() => router.push(nextStepForCta.route)}
               data-testid="next-step-primary-button"
               className="flex-1 py-2.5 px-4 rounded-xl bg-[#534AB7] text-xs font-semibold text-white hover:bg-[#443C9E] transition-colors min-h-[44px]"
             >

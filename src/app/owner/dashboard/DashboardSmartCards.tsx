@@ -70,9 +70,10 @@ interface DashboardSmartCardsProps {
   completedSchedules?: any[]
   allWeightLogs?: any[]
   journalEntries?: any[]
+  suppressSixMonthAlerts?: boolean
 }
 
-export default function DashboardSmartCards({ pets, activePetId, upcomingSchedules, completedSchedules = [], allWeightLogs = [], journalEntries = [] }: DashboardSmartCardsProps) {
+export default function DashboardSmartCards({ pets, activePetId, upcomingSchedules, completedSchedules = [], allWeightLogs = [], journalEntries = [], suppressSixMonthAlerts = false }: DashboardSmartCardsProps) {
   const router = useRouter()
   const supabase = createBrowserSupabaseClient()
   const petIds = pets.map(p => p.id)
@@ -607,7 +608,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
   const sorted = activeCards
 
   const targetPetObj = pets && pets.length > 0 ? (pets.find(p => p.id === activePetId) || pets[0]) : null
-  const activeAlerts = targetPetObj ? alerts.filter((a: any) => a.petId === targetPetObj.id) : []
+  const activeAlerts = (targetPetObj && !suppressSixMonthAlerts) ? alerts.filter((a: any) => a.petId === targetPetObj.id) : []
 
   const mainCard = sorted.length > 0 ? sorted[0] : null
   const compactCriticalCards = sorted.length > 1 ? sorted.slice(1).filter((c: any) => c.isCritical) : []

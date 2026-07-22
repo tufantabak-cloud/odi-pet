@@ -29,7 +29,42 @@ export default function DashboardClient({
   journalEntries
 }: any) {
   const [activePetId, setActivePetId] = useState(pets[0]?.id)
-  const activePet = petsWithStats.find((p: any) => p.id === activePetId)
+  const activePet = petsWithStats?.find((p: any) => p.id === activePetId) || pets?.find((p: any) => p.id === activePetId) || pets?.[0]
+
+  // ── ADIM C: Koordinasyon Katmanı & Tekilleştirme ──────────────
+  // 1. Sağlık Geçmişi Sihirbazı Koşulu (Sadece activePetId için)
+  const isHealthWizardEligible = (pet: any) => {
+    if (!pet) return false
+    const op = pet.onboarding_progress as any
+    const isDone = pet.health_history_status === 'completed' || pet.health_history_status === 'skipped' || op?.vaccine_plan === true
+    if (!pet.birth_date || isDone) return false
+    const born = new Date(pet.birth_date)
+    const now = new Date()
+    const ageInMonths = (now.getFullYear() - born.getFullYear()) * 12 + (now.getMonth() - born.getMonth())
+    return ageInMonths >= 6
+  }
+
+  const showHealthWizardForActivePet = isHealthWizardEligible(activePet)
+
+  // 2. SmartCards içindeki acil durum kişisi ve parazit kart durumları (Sadece activePetId)
+  const hasEmergencyContactSmartCard = activePet && (!activePet.sos_contacts || !Array.isArray(activePet.sos_contacts) || activePet.sos_contacts.length === 0)
+
+  const todayDate = new Date()
+  todayDate.setHours(0,0,0,0)
+  const hasParasiteSmartCard = activePet && upcomingSchedules?.some((s: any) => {
+    if (s.pet_id !== activePet.id || s.status === 'done') return false
+    const isParasite = (s.title || '').toLowerCase().includes('parazit') || (s.sub_category || '').toLowerCase().includes('parazit')
+    if (!isParasite) return false
+    const dueDate = new Date(s.due_date)
+    dueDate.setHours(0,0,0,0)
+    return dueDate <= todayDate
+  })
+
+  // 3. Bastırılacak (Suppressed) Onboarding Adımları
+  const suppressedOnboardingStepIds: string[] = []
+  if (hasEmergencyContactSmartCard) suppressedOnboardingStepIds.push('emergency_contact')
+  if (hasParasiteSmartCard) suppressedOnboardingStepIds.push('parasite_first')
+  if (showHealthWizardForActivePet) suppressedOnboardingStepIds.push('vaccine_plan')
 
   return (
     <>
@@ -79,12 +114,13 @@ export default function DashboardClient({
             completedSchedules={completedSchedules}
             allWeightLogs={allWeightLogs}
             journalEntries={journalEntries}
+            suppressSixMonthAlerts={showHealthWizardForActivePet}
           />
         </div>
       )}
 
       {/* 4. Ajanda (Yaklaşan Etkinlikler & Aktif Planlar Birleşimi) */}
-      <div className="flex flex-col gap-2.5 px-[var(--space-4)] pt-2">
+      <div className="flex flex-col gap-2.5 px-[var(--space-4)] pt-2" id="section-ajanda">
         <div className="flex items-center justify-between">
           <h2 className="text-[11px] font-800 text-[var(--color-text-muted)] uppercase tracking-[1.2px]">Ajanda</h2>
         </div>
@@ -224,7 +260,11 @@ export default function DashboardClient({
       {/* 6. Kurulum Rehberi */}
       {activePetId && (
         <div className="px-[var(--space-4)] pt-1">
-          <OnboardingProgressCard petId={activePetId} petName={activePet?.name || ''} />
+          <OnboardingProgressCard
+            petId={activePetId}
+            petName={activePet?.name || ''}
+            suppressStepIds={suppressedOnboardingStepIds}
+          />
         </div>
       )}
 
@@ -236,22 +276,14 @@ export default function DashboardClient({
         </div>
       )}
 
-      {/* 8. Sağlık Geçmişi Sihirbazı Hatırlatıcısı */}
-      {pets && pets.filter((p: any) => {
-        const op = p.onboarding_progress as any;
-        const isDone = p.health_history_status === 'completed' || p.health_history_status === 'skipped' || op?.vaccine_plan === true;
-        if (!p.birth_date || isDone) return false;
-        const born = new Date(p.birth_date);
-        const now = new Date();
-        const ageInMonths = (now.getFullYear() - born.getFullYear()) * 12 + (now.getMonth() - born.getMonth());
-        return ageInMonths >= 6;
-      }).map((pet: any) => (
-        <div key={`health-wizard-${pet.id}`} className="px-[var(--space-4)] pt-3 pb-1">
-          <Link href={`/owner/pets/${pet.id}/vaccines`} className="block w-full bg-[var(--color-surface-1)] border border-[var(--color-border)] rounded-[12px] p-4 text-left hover:bg-[var(--color-surface-2)] transition-colors shadow-sm">
+      {/* 8. Sağlık Geçmişi Sihirbazı Hatırlatıcısı (Yalnızca activePetId için) */}
+      {showHealthWizardForActivePet && activePet && (
+        <div key={`health-wizard-${activePet.id}`} className="px-[var(--space-4)] pt-3 pb-1">
+          <Link href={`/owner/pets/${activePet.id}/vaccines`} className="block w-full bg-[var(--color-surface-1)] border border-[var(--color-border)] rounded-[12px] p-4 text-left hover:bg-[var(--color-surface-2)] transition-colors shadow-sm">
             <div className="flex items-start gap-3">
               <i className="ti ti-clock text-[20px] text-[var(--color-primary)] mt-0.5 shrink-0" />
               <div>
-                <p className="text-[14px] font-bold text-[var(--color-text-primary)]">{pet.name} için sağlık geçmişini ekle</p>
+                <p className="text-[14px] font-bold text-[var(--color-text-primary)]">{activePet.name} için sağlık geçmişini ekle</p>
                 <p className="text-[12px] text-[var(--color-text-secondary)] mt-1 leading-relaxed">
                   Daha önceki aşılarını sisteme tanıtarak hatırlatıcıların doğru çalışmasını sağlayın. <strong>Sadece 2 dakika sürer.</strong>
                 </p>
@@ -260,7 +292,7 @@ export default function DashboardClient({
             </div>
           </Link>
         </div>
-      ))}
+      )}
 
       {/* 9. Social Shortcuts Grid / SOS Banner */}
       <div className="pt-2">
