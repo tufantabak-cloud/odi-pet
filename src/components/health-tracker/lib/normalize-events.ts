@@ -60,8 +60,9 @@ export function mapDbToUI(
   const isParasite =
     titleLower.includes('parazit') ||
     subCatLower.includes('parazit') ||
-    subCatLower.includes('tasma') ||
-    titleLower.includes('tasma');
+    subCatLower.includes('parazit tasm') ||
+    titleLower.includes('parazit tasm') ||
+    (dbCat === 'Parazit' && (subCatLower.includes('tasma') || titleLower.includes('tasma')));
 
   if (isParasite || dbCat === 'Parazit') {
     let sub = 'Parazit Uygulamaları';
