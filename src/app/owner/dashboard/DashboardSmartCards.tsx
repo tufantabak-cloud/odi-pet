@@ -279,7 +279,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
     if (overdueVaccine) {
       const vaccineCardId = `vaccine-${overdueVaccine.id}`
       const isAlreadyHighlighted = highlightCard?.id === highlight && highlight?.startsWith('vaccine-')
-      if (!dismissedCards.includes(vaccineCardId) && highlight !== vaccineCardId && !isAlreadyHighlighted) {
+      if (highlight !== vaccineCardId && !isAlreadyHighlighted) {
         const pet = targetPet
         const dueDate = new Date(overdueVaccine.due_date)
         dueDate.setHours(0,0,0,0)
@@ -314,7 +314,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
 
     if (overdueHealthTasks && overdueHealthTasks.length > 0) {
       const healthCardId = `health-tasks-overdue-${targetPet.id}-${todayDate.toISOString().split('T')[0]}`
-      if (!dismissedCards.includes(healthCardId) && highlight !== healthCardId) {
+      if (highlight !== healthCardId) {
         const pet = targetPet
         const taskCount = overdueHealthTasks.length
         const firstTask = overdueHealthTasks[0]
@@ -357,7 +357,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
     }
 
     const parasiteCardId = parasiteTask ? `parasite-task-${parasiteTask.id}` : `parasite-local-${petIdForParasite}-${nextParasiteDateStr || 'init'}`
-    const showParasiteCard = isParasiteDue && !dismissedCards.includes(parasiteCardId) && highlight !== parasiteCardId
+    const showParasiteCard = isParasiteDue && highlight !== parasiteCardId
 
     if (showParasiteCard) {
       const pet = targetPet
@@ -388,7 +388,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
 
     if (todayHealthTasks && todayHealthTasks.length > 0) {
       const healthCardId = `health-tasks-today-${targetPet.id}-${todayDate.toISOString().split('T')[0]}`
-      if (!dismissedCards.includes(healthCardId) && highlight !== healthCardId) {
+      if (highlight !== healthCardId) {
         const pet = targetPet
         const taskCount = todayHealthTasks.length
         const firstTask = todayHealthTasks[0]
@@ -727,6 +727,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
 
   const renderMainCard = (card: any) => {
     const style = getCardStyle(card.type)
+    const isDismissible = !['positive', 'vaccine', 'health-task', 'parasite'].includes(card.type)
     return (
       <div
         key={card.id}
@@ -758,7 +759,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
           >
             {card.ctaLabel}
           </button>
-          {card.type !== 'positive' && (
+          {isDismissible && (
             <button
               onClick={() => dismissCard(card.id)}
               className="px-3.5 py-1 rounded-[10px] text-[10px] font-700 text-[var(--color-text-secondary)] border border-[var(--color-border)] hover:bg-[var(--color-surface)]/20 transition-all text-center min-h-[44px]"
@@ -773,6 +774,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
 
   const renderCompactCriticalRow = (card: any) => {
     const style = getCardStyle(card.type)
+    const isDismissible = !['vaccine', 'health-task', 'parasite'].includes(card.type)
     return (
       <div
         key={card.id}
@@ -808,13 +810,15 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
           >
             {card.ctaLabel}
           </button>
-          <button
-            onClick={() => dismissCard(card.id)}
-            className="px-2 py-1 rounded-[8px] text-[10px] font-700 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-all min-h-[44px]"
-            title="Sonra"
-          >
-            <i className="ti ti-x text-[12px]" />
-          </button>
+          {isDismissible && (
+            <button
+              onClick={() => dismissCard(card.id)}
+              className="px-2 py-1 rounded-[8px] text-[10px] font-700 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-all min-h-[44px]"
+              title="Sonra"
+            >
+              <i className="ti ti-x text-[12px]" />
+            </button>
+          )}
         </div>
       </div>
     )
