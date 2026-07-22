@@ -79,13 +79,18 @@ export async function PATCH(
       return NextResponse.json(updatedJob);
     }
 
-    // D. Kaynak Doğrulama / Reddetme (Sıkılaştırılmış İnsan Doğrulama Bariyeri)
+    // D. Kaynak Doğrulama / Reddetme (Sıkılaştırılmış İnsan Doğrulama Bariyeri & Kalıcı Audit)
     if (action === 'verify_source' && source_id) {
       if (!actor || !actor.id || actor.id === '00000000-0000-0000-0000-000000000001') {
         return NextResponse.json({ error: 'Geçersiz veya sahte kullanıcı oturumu. İnsan doğrulaması kanıtlanamadı.' }, { status: 403 });
       }
 
-      // Profil varlığını ve rolünü canlı DB'de bir kez daha açıkça kontrol et
+      // 1. İki Onay Checkbox Kontrolü
+      if (body.confirmed_title_url !== true || body.confirmed_relevance !== true) {
+        return NextResponse.json({ error: 'Doğrulama öncesinde iki onay kutusu da ("Başlık/Adres Kontrolü" ve "Konu Uygunluğu Kontrolü") işaretlenmiş olmalıdır.' }, { status: 400 });
+      }
+
+      // 2. Profil varlığını ve rolünü canlı DB'de bir kez daha açıkça kontrol et
       const { data: profile } = await supabase
         .from('profiles')
         .select('id, role')
@@ -110,8 +115,19 @@ export async function PATCH(
 
       if (srcErr) return NextResponse.json({ error: srcErr.message }, { status: 400 });
 
-      // Audit Log Kaydı
-      console.log(`[AUDIT LOG] Source Verification Event: actor_id="${actor.id}", actor_role="${profile.role}", source_id="${source_id}", job_id="${jobId}", action="${vStatus}", timestamp="${new Date().toISOString()}"`);
+      // 3. Kalıcı DB Audit Kaydı
+      await supabase.from('content_source_verification_audits').insert({
+        job_id: jobId,
+        source_id: source_id,
+        actor_id: actor.id,
+        actor_role: profile.role,
+        action: vStatus,
+        confirmed_title_url: true,
+        confirmed_relevance: true,
+        created_at: new Date().toISOString()
+      });
+
+      console.log(`[AUDIT LOG] Source Verification Event Saved: actor_id="${actor.id}", actor_role="${profile.role}", source_id="${source_id}", job_id="${jobId}", action="${vStatus}"`);
 
       // Eğer en az iki verified kaynak varsa job status'unu ready_for_generation yap
       const { data: verifiedSources } = await supabase

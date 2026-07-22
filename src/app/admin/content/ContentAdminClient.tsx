@@ -1074,7 +1074,9 @@ export default function ContentAdminClient() {
                       body: JSON.stringify({
                         action: 'verify_source',
                         source_id: selectedSourceForVerify.id,
-                        verification_status: 'verified'
+                        verification_status: 'verified',
+                        confirmed_title_url: true,
+                        confirmed_relevance: true
                       })
                     });
                     const json = await res.json();
