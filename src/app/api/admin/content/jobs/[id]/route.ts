@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { requireRole } from '@/lib/auth/get-current-profile';
 import { generateDraftFromVerifiedSources } from '@/lib/agents/aiContentAgent';
+import { discoverCandidateSources, inspectCandidateSource } from '@/lib/content/contentResearchService';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,7 +37,41 @@ export async function PATCH(
       return NextResponse.json({ error: 'İş kaydı bulunamadı.' }, { status: 404 });
     }
 
-    // A. Kaynak Doğrulama / Reddetme
+    // A. Araştırmayı Başlat
+    if (action === 'start_research') {
+      const res = await discoverCandidateSources(supabase, jobId);
+      return NextResponse.json(res);
+    }
+
+    // B. Kaynağı İncele
+    if (action === 'inspect_source' && source_id) {
+      const res = await inspectCandidateSource(supabase, jobId, source_id);
+      return NextResponse.json(res);
+    }
+
+    // C. Üretime Hazır Olarak İşaretle
+    if (action === 'mark_ready_for_generation') {
+      const { data: verifiedCount } = await supabase
+        .from('content_generation_job_sources')
+        .select('id')
+        .eq('job_id', jobId)
+        .eq('verification_status', 'verified');
+
+      if (!verifiedCount || verifiedCount.length < 2) {
+        return NextResponse.json({ error: 'Üretime hazır olması için en az iki (2) doğrulanmış kaynak şarttır.' }, { status: 400 });
+      }
+
+      const { data: updatedJob } = await supabase
+        .from('content_generation_jobs')
+        .update({ generation_status: 'ready_for_generation' })
+        .eq('id', jobId)
+        .select()
+        .single();
+
+      return NextResponse.json(updatedJob);
+    }
+
+    // D. Kaynak Doğrulama / Reddetme
     if (action === 'verify_source' && source_id) {
       const vStatus = verification_status === 'rejected' ? 'rejected' : 'verified';
       const { data: updatedSource, error: srcErr } = await supabase

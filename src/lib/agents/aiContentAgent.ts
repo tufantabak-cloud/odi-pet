@@ -185,23 +185,41 @@ export async function generateDraftFromVerifiedSources(
     throw new Error(`İçerik üretimi için durum "ready_for_generation" olmalıdır. Mevcut durum: ${job.generation_status}`);
   }
 
-  // Doğrulanmış Kaynak Kontrolü
+  // Doğrulanmış Kaynak Kontrolü (En az 2 Verified Kaynak Şartı)
   const { data: verifiedSources } = await supabase
     .from('content_generation_job_sources')
     .select('*')
     .eq('job_id', jobId)
     .eq('verification_status', 'verified');
 
-  if (!verifiedSources || verifiedSources.length === 0) {
+  if (!verifiedSources || verifiedSources.length < 2) {
     await supabase
       .from('content_generation_jobs')
       .update({
         generation_status: 'failed',
-        last_error: 'İçerik üretimi için en az bir doğrulanmış (verified) kaynak zorunludur.'
+        last_error: 'İçerik üretimi için en az iki (2) doğrulanmış (verified) kaynak zorunludur.'
       })
       .eq('id', jobId);
 
-    throw new Error('İçerik üretimi reddedildi: Doğrulanmış kaynak bulunmuyor.');
+    throw new Error('İçerik üretimi reddedildi: En az iki (2) doğrulanmış kaynak bulunmuyor.');
+  }
+
+  // Tıbbi İçerikte Uygun Kaynak Türü Kontrolü
+  const isMedicalTarget = Boolean(job.proposed_targeting?.is_medical_content);
+  if (isMedicalTarget) {
+    const validMedicalTypes = ['veterinary_guideline', 'scientific', 'official'];
+    const hasValidMedicalSource = verifiedSources.some((s) => validMedicalTypes.includes(s.source_type));
+    if (!hasValidMedicalSource) {
+      await supabase
+        .from('content_generation_jobs')
+        .update({
+          generation_status: 'failed',
+          last_error: 'Tıbbi içerik üretimi için en az bir veteriner hekimliği, bilimsel veya resmi kaynak zorunludur.'
+        })
+        .eq('id', jobId);
+
+      throw new Error('Tıbbi içerik üretimi reddedildi: Uygun medikal kaynak türü bulunmuyor.');
+    }
   }
 
   // Taslak Nesnesi Yapılandırma
