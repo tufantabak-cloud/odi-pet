@@ -273,15 +273,21 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
           
           const PLAN_CAT_MAP_REV: Record<string, string> = {
             'Saglik': 'saglik',
+            'Sağlık': 'saglik',
             'Medikal': 'asi',
+            'Aşı': 'asi',
+            'Asi': 'asi',
+            'Parazit': 'parazit',
             'Bakım': 'bakim',
             'Beslenme': 'beslenme',
             'Hijyen': 'hijyen',
+            'Aktivite': 'aktivite',
             'Aktiviteler': 'aktivite',
             'Veteriner': 'kontrol',
+            'Kontrol & Randevu': 'kontrol',
           };
           let planCategory = PLAN_CAT_MAP_REV[category] || category.toLowerCase();
-          if (planCategory === 'asi' && subCategory && (subCategory.includes('Parazit') || subCategory.includes('Tasma') || subCategory.includes('Birleşik'))) {
+          if ((planCategory === 'asi' || planCategory === 'medikal') && subCategory && (subCategory.includes('Parazit') || subCategory.includes('Tasma') || subCategory.includes('Birleşik'))) {
             planCategory = 'parazit';
           }
 

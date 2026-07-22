@@ -155,7 +155,7 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
       // Note: we don't throw for petRes.error as it's non-critical for backward compatibility
       
       const PLAN_CAT_MAP: Record<string, string> = {
-        saglik: 'Saglik', asi: 'Asi', parazit: 'Asi',
+        saglik: 'Saglik', asi: 'Asi', parazit: 'Parazit',
         bakim: 'Bakım', beslenme: 'Beslenme', hijyen: 'Hijyen', aktivite: 'Aktivite'
       };
 

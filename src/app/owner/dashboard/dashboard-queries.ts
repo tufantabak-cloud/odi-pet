@@ -251,8 +251,9 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
             
             // Plans'ı health_schedules formatına dönüştür ve merge et
             const PLAN_CAT_MAP: Record<string, string> = {
-              saglik: 'Saglik', asi: 'Medikal', parazit: 'Medikal',
-              bakim: 'Bakım', beslenme: 'Beslenme', hijyen: 'Hijyen', aktivite: 'Aktiviteler'
+              saglik: 'Sağlık', asi: 'Aşı', parazit: 'Parazit',
+              bakim: 'Bakım', beslenme: 'Beslenme', hijyen: 'Hijyen', aktivite: 'Aktivite', aktiviteler: 'Aktivite',
+              kontrol: 'Kontrol & Randevu', randevu: 'Kontrol & Randevu'
             }
 
             // Dedup: health_schedules'dan gelen plan_id ve sub_category+due_date setleri

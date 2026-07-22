@@ -55,6 +55,43 @@ export function getPlanDisplayTitle(plan: PlanLike): string {
 }
 
 /**
+ * Ham sistem kategorilerini (asi, parazit, saglik, kontrol, bakim, beslenme, hijyen, aktivite)
+ * standart Türkçe arayüz etiketlerine dönüştürür.
+ */
+export function getCategoryLabel(categoryKey: string): string {
+  if (!categoryKey) return '';
+  const catLower = categoryKey.toLowerCase().trim();
+
+  switch (catLower) {
+    case 'asi':
+    case 'aşı':
+      return 'Aşı';
+    case 'parazit':
+      return 'Parazit';
+    case 'saglik':
+    case 'sağlık':
+      return 'Sağlık';
+    case 'kontrol':
+    case 'randevu':
+    case 'veteriner':
+      return 'Kontrol & Randevu';
+    case 'bakim':
+    case 'bakım':
+      return 'Bakım';
+    case 'beslenme':
+      return 'Beslenme';
+    case 'hijyen':
+    case 'temizlik':
+      return 'Hijyen';
+    case 'aktivite':
+    case 'aktiviteler':
+      return 'Aktivite';
+    default:
+      return categoryKey.charAt(0).toUpperCase() + categoryKey.slice(1);
+  }
+}
+
+/**
  * Ham sistem kategorilerini kullanıcı dostu Türkçe etiketlere dönüştürür.
  */
 export function getPlanDisplayCategory(category: string, subCategory?: string | null): string {
@@ -63,26 +100,13 @@ export function getPlanDisplayCategory(category: string, subCategory?: string | 
 
   // Parazit kontrolü (Medikal olup da parazit olanlar veya doğrudan parazit olanlar)
   if (catLower === 'parazit' || subLower.includes('parazit') || subLower.includes('tasma')) {
-    return 'Parazit Koruması';
+    return 'Parazit';
   }
 
   // Aşı kontrolü
   if (catLower === 'asi' || catLower === 'medikal') {
-    return 'Aşı Takibi';
+    return 'Aşı';
   }
 
-  // Diğer standart eşleştirmeler
-  const mapping: Record<string, string> = {
-    'saglik': 'Sağlık Takibi',
-    'bakim': 'Bakım Rutini',
-    'beslenme': 'Beslenme Planı',
-    'hijyen': 'Hijyen Takibi',
-    'aktivite': 'Aktivite',
-    'aktiviteler': 'Aktivite',
-    'veteriner': 'Veteriner Randevusu',
-    'diger': 'Diğer',
-  };
-
-  const key = Object.keys(mapping).find(k => k === catLower);
-  return key ? mapping[key] : (category || 'Plan');
+  return getCategoryLabel(category);
 }

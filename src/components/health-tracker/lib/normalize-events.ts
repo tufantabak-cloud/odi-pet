@@ -32,7 +32,7 @@ export function formatFrequency(days: number | null | undefined, label?: string 
 /** DB category → UI kategori eşleştirmesi */
 export const DB_CATEGORY_TO_UI: Record<string, { category: string; label: string; icon: string; order: number }> = {
   'Saglik':   { category: 'Saglik',   label: 'Sağlık',   icon: '❤️',  order: 0 },
-  'Kontrol':  { category: 'Kontrol',  label: 'Kontroller & Randevular', icon: '🩺', order: 0.5 },
+  'Kontrol':  { category: 'Kontrol',  label: 'Kontrol & Randevu', icon: '🩺', order: 0.5 },
   'Asi':      { category: 'Asi',      label: 'Aşı',      icon: '💉',  order: 1 },
   'Parazit':  { category: 'Parazit',  label: 'Parazit',  icon: '🦠',  order: 2 },
   'Bakım':    { category: 'Bakım',    label: 'Bakım',    icon: '🧼',  order: 3 },

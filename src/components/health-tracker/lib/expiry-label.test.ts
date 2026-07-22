@@ -21,7 +21,7 @@ const iso = (offsetDays: number) => new Date(Date.now() + offsetDays * DAY).toIS
 // ── useHealthTracker.ts içindeki plan→event map'inin birebir kopyası ──
 function mapPlanToEvent(p: any) {
   const PLAN_CAT_MAP: Record<string, string> = {
-    saglik: 'Saglik', asi: 'Asi', parazit: 'Asi',
+    saglik: 'Saglik', asi: 'Asi', parazit: 'Parazit',
     bakim: 'Bakım', beslenme: 'Beslenme', hijyen: 'Hijyen', aktivite: 'Aktivite',
   };
   const dueDateStr = p.scheduled_at.split('T')[0];

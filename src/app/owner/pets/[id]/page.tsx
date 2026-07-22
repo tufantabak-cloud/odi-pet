@@ -61,12 +61,12 @@ export default async function PetDetailPage(props: PageProps) {
   // plans tablosundaki kayıtları health_schedules formatına dönüştür
   const PLAN_CATEGORY_MAP: Record<string, string> = {
     saglik: 'Saglik',
-    asi: 'Medikal',
-    parazit: 'Medikal',
+    asi: 'Asi',
+    parazit: 'Parazit',
     bakim: 'Bakım',
     beslenme: 'Beslenme',
     hijyen: 'Hijyen',
-    aktivite: 'Aktiviteler',
+    aktivite: 'Aktivite',
   }
 
   const plansAsSchedules = (plans ?? []).map((p: any) => {
