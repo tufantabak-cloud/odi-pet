@@ -3,25 +3,25 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { validatePublicUrl } from '../contentResearchService';
+import { validateGroundedUrl } from '../contentResearchService';
 
 describe('Grounded Research & SSRF Security Rules', () => {
   it('1. Sadece geçerli https:// URLleri kabul edilir', () => {
-    const valid = validatePublicUrl('https://www.wsava.org/guidelines');
+    const valid = validateGroundedUrl('https://wsava.org/global-guidelines/global-nutrition-guidelines/');
     expect(valid.isValid).toBe(true);
-    expect(valid.normalizedUrl).toBe('https://www.wsava.org/guidelines');
+    expect(valid.normalizedUrl).toBe('https://wsava.org/global-guidelines/global-nutrition-guidelines/');
 
-    const httpUrl = validatePublicUrl('http://www.wsava.org/guidelines');
+    const httpUrl = validateGroundedUrl('http://wsava.org/global-guidelines/');
     expect(httpUrl.isValid).toBe(false);
     expect(httpUrl.error).toContain('https://');
   });
 
   it('2. SSRF Güvenliği: Localhost, özel IPler ve iç ağ URLleri engellenir', () => {
-    expect(validatePublicUrl('https://localhost/api').isValid).toBe(false);
-    expect(validatePublicUrl('https://127.0.0.1/admin').isValid).toBe(false);
-    expect(validatePublicUrl('https://192.168.1.1/secret').isValid).toBe(false);
-    expect(validatePublicUrl('https://10.0.0.5/internal').isValid).toBe(false);
-    expect(validatePublicUrl('https://172.16.0.1/db').isValid).toBe(false);
+    expect(validateGroundedUrl('https://localhost/api').isValid).toBe(false);
+    expect(validateGroundedUrl('https://127.0.0.1/admin').isValid).toBe(false);
+    expect(validateGroundedUrl('https://192.168.1.1/secret').isValid).toBe(false);
+    expect(validateGroundedUrl('https://10.0.0.5/internal').isValid).toBe(false);
+    expect(validateGroundedUrl('https://172.16.0.1/db').isValid).toBe(false);
   });
 
   it('3. AI ajanı kaynağı kendisi verified yapamaz, varsayılan status proposed kalır', () => {
@@ -36,7 +36,6 @@ describe('Grounded Research & SSRF Security Rules', () => {
 
   it('4. Tek doğrulanmış kaynakla tıbbi taslak üretilemez (En az 2 verified kaynak kuralı)', () => {
     const verifiedSourcesCount = 1;
-    const isMedical = true;
 
     const canGenerate = verifiedSourcesCount >= 2;
     expect(canGenerate).toBe(false);
