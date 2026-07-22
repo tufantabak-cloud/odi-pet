@@ -10,6 +10,161 @@ interface PetRecommendationsCardProps {
   };
 }
 
+/**
+ * Tekil Öneri Kart Bileşeni
+ * IntersectionObserver ile en az %50 görünürlük ve 800ms kesintisiz dwell-time takip eder.
+ */
+function RecommendationCardItem({
+  rec,
+  badgeLabel,
+  activePetId,
+  isSaved,
+  onToggleSave,
+  onDismiss,
+  trackedShownRef
+}: {
+  rec: any;
+  badgeLabel: string;
+  activePetId: string;
+  isSaved: boolean;
+  onToggleSave: (id: string) => void;
+  onDismiss: (id: string) => void;
+  trackedShownRef: React.MutableRefObject<Set<string>>;
+}) {
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el || !rec?.article?.id || !activePetId) return;
+
+    const trackKey = `${activePetId}:${rec.article.id}`;
+    if (trackedShownRef.current.has(trackKey)) return;
+
+    // Window / SSR kontrolü ve IntersectionObserver varlık denetimi
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+            // En az %50 görünürlük sağlandı
+            if (!trackedShownRef.current.has(trackKey) && !timerRef.current) {
+              timerRef.current = setTimeout(() => {
+                if (!trackedShownRef.current.has(trackKey)) {
+                  trackedShownRef.current.add(trackKey);
+                  fetch(`/api/pets/${activePetId}/articles/${rec.article.id}/interaction`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'shown' })
+                  }).catch(() => {});
+                }
+              }, 800);
+            }
+          } else {
+            // Görünürlük %50'nin altına düştü -> Zamanlayıcıyı sıfırla
+            if (timerRef.current) {
+              clearTimeout(timerRef.current);
+              timerRef.current = null;
+            }
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    observer.observe(el);
+
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      observer.disconnect();
+    };
+  }, [rec?.article?.id, activePetId, trackedShownRef]);
+
+  if (!rec || !rec.article) return null;
+  const art = rec.article;
+
+  return (
+    <div
+      ref={cardRef}
+      key={art.id}
+      className="flex flex-col md:flex-row gap-3.5 p-4 rounded-card bg-[var(--color-surface)] border border-[var(--color-border)] shadow-[var(--shadow-sm)] hover:border-[var(--color-primary)]/30 transition-all duration-200"
+    >
+      {/* Kapak Görseli (Varsa) */}
+      {art.cover_url && (
+        <div className="w-full md:w-28 h-28 md:h-full shrink-0 rounded-xl overflow-hidden bg-gray-100">
+          <img src={art.cover_url} alt={art.title} className="w-full h-full object-cover" />
+        </div>
+      )}
+
+      <div className="flex-1 min-w-0 flex flex-col justify-between space-y-2">
+        <div>
+          {/* Rozet & Okuma Süresi */}
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <span className="text-[10px] font-800 text-[var(--color-primary)] bg-[var(--color-primary-soft)] px-2 py-0.5 rounded-md uppercase tracking-wider">
+              {badgeLabel}
+            </span>
+            <span className="text-[10px] text-[var(--color-text-muted)] font-600">
+              {art.read_time_minutes || 3} dk okuma
+            </span>
+          </div>
+
+          <p className="text-[10px] text-[var(--color-text-secondary)] font-600 italic mb-1.5 truncate">
+            {rec.reason}
+          </p>
+
+          <h3 className="text-[14px] font-800 text-[var(--color-text-primary)] leading-snug line-clamp-1">
+            {art.title}
+          </h3>
+
+          <p className="text-[11px] text-[var(--color-text-secondary)] font-500 line-clamp-2 mt-1 leading-relaxed">
+            {art.excerpt}
+          </p>
+        </div>
+
+        {/* Eylemler: Devamını Oku | Kaydet | İlgilenmiyorum */}
+        <div className="flex items-center justify-between pt-2 border-t border-[var(--color-border)]/50">
+          <Link
+            href={`/owner/learn/${art.slug}?pet_id=${activePetId}`}
+            className="text-[11px] font-800 text-[var(--color-primary)] hover:underline flex items-center gap-1"
+          >
+            Devamını Oku →
+          </Link>
+
+          <div className="flex items-center gap-3">
+            {/* Kaydet */}
+            <button
+              onClick={() => onToggleSave(art.id)}
+              className={`text-[11px] font-700 flex items-center gap-1 transition-colors ${
+                isSaved ? 'text-amber-600 font-900' : 'text-[var(--color-text-secondary)] hover:text-amber-600'
+              }`}
+              title={isSaved ? 'Kaydı Kaldır' : 'Kaydet'}
+            >
+              <i className={`ti ${isSaved ? 'ti-bookmark-filled' : 'ti-bookmark'}`} style={{ fontSize: '14px' }} />
+              <span>{isSaved ? 'Kaydedildi' : 'Kaydet'}</span>
+            </button>
+
+            {/* İlgilenmiyorum */}
+            <button
+              onClick={() => onDismiss(art.id)}
+              className="text-[11px] font-700 text-[var(--color-text-muted)] hover:text-rose-600 flex items-center gap-1 transition-colors"
+              title="İlgilenmiyorum"
+            >
+              <i className="ti ti-eye-off" style={{ fontSize: '14px' }} />
+              <span>İlgilenmiyorum</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function PetRecommendationsCard({ activePet }: PetRecommendationsCardProps) {
   const [data, setData] = useState<{
     generalRecommendation: any | null;
@@ -20,7 +175,7 @@ export default function PetRecommendationsCard({ activePet }: PetRecommendations
   const [loading, setLoading] = useState(true);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
 
-  // Render edilen kartların shown etkileşiminin tekil takibi için ref
+  // Render edilen kartların shown etkileşiminin oturum tekilliği takibi için ref
   const trackedShownRef = useRef<Set<string>>(new Set());
 
   const fetchRecommendations = async (petId: string) => {
@@ -48,44 +203,18 @@ export default function PetRecommendationsCard({ activePet }: PetRecommendations
     }
   }, [activePet?.id]);
 
-  // Kartlar ekrana başarıyla render edildikten sonra shown etkileşimi bildirme
-  useEffect(() => {
-    if (!data || loading || !activePet?.id) return;
-
-    const toTrack: string[] = [];
-    if (data.generalRecommendation?.article?.id) {
-      toTrack.push(data.generalRecommendation.article.id);
-    }
-    if (data.personalizedRecommendation?.article?.id) {
-      toTrack.push(data.personalizedRecommendation.article.id);
-    }
-
-    for (const artId of toTrack) {
-      const trackKey = `${activePet.id}:${artId}`;
-      if (!trackedShownRef.current.has(trackKey)) {
-        trackedShownRef.current.add(trackKey);
-        fetch(`/api/pets/${activePet.id}/articles/${artId}/interaction`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'shown' })
-        }).catch(() => {});
-      }
-    }
-  }, [data, loading, activePet?.id]);
-
   // Idempotent Save / Unsave
   const handleToggleSave = async (articleId: string) => {
     try {
       const isCurrentlySaved = savedIds.has(articleId);
       const nextAction = isCurrentlySaved ? 'unsave' : 'save';
 
-      // UI İyimser Güncelleme (Optimistic UI Update)
+      // UI İyimser Güncelleme
       const nextSaved = new Set(savedIds);
       if (isCurrentlySaved) nextSaved.delete(articleId);
       else nextSaved.add(articleId);
       setSavedIds(nextSaved);
 
-      // İdempotent API çağrısı
       const res = await fetch(`/api/articles/${articleId}/save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -94,10 +223,8 @@ export default function PetRecommendationsCard({ activePet }: PetRecommendations
       const json = await res.json();
 
       if (!res.ok) {
-        // Hata durumunda geri al
         setSavedIds(savedIds);
       } else {
-        // Sunucunun döndürdüğü kesin durumu doğrula
         const finalSaved = new Set(savedIds);
         if (json.saved) finalSaved.add(articleId);
         else finalSaved.delete(articleId);
@@ -111,7 +238,6 @@ export default function PetRecommendationsCard({ activePet }: PetRecommendations
   const handleDismiss = async (articleId: string) => {
     try {
       await fetch(`/api/pets/${activePet.id}/articles/${articleId}/dismiss`, { method: 'POST' });
-      // Yeniden çek
       fetchRecommendations(activePet.id);
     } catch {
       // Hata yönetimi
@@ -133,86 +259,6 @@ export default function PetRecommendationsCard({ activePet }: PetRecommendations
 
   const { generalRecommendation, personalizedRecommendation } = data;
 
-  const renderCard = (rec: any, badgeLabel: string) => {
-    if (!rec || !rec.article) return null;
-    const art = rec.article;
-    const isSaved = savedIds.has(art.id);
-
-    return (
-      <div
-        key={art.id}
-        className="flex flex-col md:flex-row gap-3.5 p-4 rounded-card bg-[var(--color-surface)] border border-[var(--color-border)] shadow-[var(--shadow-sm)] hover:border-[var(--color-primary)]/30 transition-all duration-200"
-      >
-        {/* Kapak Görseli (Varsa) */}
-        {art.cover_url && (
-          <div className="w-full md:w-28 h-28 md:h-full shrink-0 rounded-xl overflow-hidden bg-gray-100">
-            <img src={art.cover_url} alt={art.title} className="w-full h-full object-cover" />
-          </div>
-        )}
-
-        <div className="flex-1 min-w-0 flex flex-col justify-between space-y-2">
-          <div>
-            {/* Rozet & Okuma Süresi */}
-            <div className="flex items-center justify-between gap-2 mb-1">
-              <span className="text-[10px] font-800 text-[var(--color-primary)] bg-[var(--color-primary-soft)] px-2 py-0.5 rounded-md uppercase tracking-wider">
-                {badgeLabel}
-              </span>
-              <span className="text-[10px] text-[var(--color-text-muted)] font-600">
-                {art.read_time_minutes || 3} dk okuma
-              </span>
-            </div>
-
-            <p className="text-[10px] text-[var(--color-text-secondary)] font-600 italic mb-1.5 truncate">
-              {rec.reason}
-            </p>
-
-            <h3 className="text-[14px] font-800 text-[var(--color-text-primary)] leading-snug line-clamp-1">
-              {art.title}
-            </h3>
-
-            <p className="text-[11px] text-[var(--color-text-secondary)] font-500 line-clamp-2 mt-1 leading-relaxed">
-              {art.excerpt}
-            </p>
-          </div>
-
-          {/* Eylemler: Devamını Oku | Kaydet | İlgilenmiyorum */}
-          <div className="flex items-center justify-between pt-2 border-t border-[var(--color-border)]/50">
-            <Link
-              href={`/owner/learn/${art.slug}?pet_id=${activePet.id}`}
-              className="text-[11px] font-800 text-[var(--color-primary)] hover:underline flex items-center gap-1"
-            >
-              Devamını Oku →
-            </Link>
-
-            <div className="flex items-center gap-3">
-              {/* Kaydet */}
-              <button
-                onClick={() => handleToggleSave(art.id)}
-                className={`text-[11px] font-700 flex items-center gap-1 transition-colors ${
-                  isSaved ? 'text-amber-600 font-900' : 'text-[var(--color-text-secondary)] hover:text-amber-600'
-                }`}
-                title={isSaved ? 'Kaydı Kaldır' : 'Kaydet'}
-              >
-                <i className={`ti ${isSaved ? 'ti-bookmark-filled' : 'ti-bookmark'}`} style={{ fontSize: '14px' }} />
-                <span>{isSaved ? 'Kaydedildi' : 'Kaydet'}</span>
-              </button>
-
-              {/* İlgilenmiyorum */}
-              <button
-                onClick={() => handleDismiss(art.id)}
-                className="text-[11px] font-700 text-[var(--color-text-muted)] hover:text-rose-600 flex items-center gap-1 transition-colors"
-                title="İlgilenmiyorum"
-              >
-                <i className="ti ti-eye-off" style={{ fontSize: '14px' }} />
-                <span>İlgilenmiyorum</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="flex flex-col gap-2.5 pt-2" id="section-recommendations">
       <div className="flex items-center justify-between">
@@ -223,10 +269,30 @@ export default function PetRecommendationsCard({ activePet }: PetRecommendations
 
       <div className="flex flex-col gap-3">
         {/* 1. Genel Bilgi */}
-        {renderCard(generalRecommendation, 'Genel Bilgi')}
+        {generalRecommendation && (
+          <RecommendationCardItem
+            rec={generalRecommendation}
+            badgeLabel="Genel Bilgi"
+            activePetId={activePet.id}
+            isSaved={savedIds.has(generalRecommendation.article?.id)}
+            onToggleSave={handleToggleSave}
+            onDismiss={handleDismiss}
+            trackedShownRef={trackedShownRef}
+          />
+        )}
 
         {/* 2. Pete Özel Bilgi */}
-        {renderCard(personalizedRecommendation, `${activePet.name}'ya Özel`)}
+        {personalizedRecommendation && (
+          <RecommendationCardItem
+            rec={personalizedRecommendation}
+            badgeLabel={`${activePet.name}'ya Özel`}
+            activePetId={activePet.id}
+            isSaved={savedIds.has(personalizedRecommendation.article?.id)}
+            onToggleSave={handleToggleSave}
+            onDismiss={handleDismiss}
+            trackedShownRef={trackedShownRef}
+          />
+        )}
       </div>
     </div>
   );
