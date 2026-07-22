@@ -183,13 +183,8 @@ export function isArticleEligibleForUser(article: any, hasActiveSources: boolean
   // 1. Yayın ve Arşiv Durumu
   if (!article.is_published || article.archived_at) return false;
 
-  // 2. Güncellik & Kontrol Tarihleri (NULL OLANLAR GÜNCEL KABUL EDİLMEZ)
-  if (
-    !article.content_reviewed_at ||
-    !article.content_reviewed_by ||
-    !article.source_checked_at ||
-    !article.next_review_at
-  ) {
+  // 2. Güncellik & Kontrol Tarihleri (next_review_at şarttır)
+  if (!article.next_review_at) {
     return false;
   }
 

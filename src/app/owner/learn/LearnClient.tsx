@@ -363,7 +363,7 @@ export default function LearnClient({
 
           {filteredAllArticles.length === 0 ? (
             <div className="p-12 text-center bg-gray-50 border border-dashed rounded-card">
-              <p className="text-xs font-semibold text-gray-600">Arama kriterlerinize uygun rehber bulunamadı.</p>
+              <p className="text-xs font-semibold text-gray-600">Henüz yayınlanmış bir rehber bulunmuyor.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4">

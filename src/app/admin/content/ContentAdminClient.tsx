@@ -669,7 +669,7 @@ export default function ContentAdminClient() {
           <div className="p-12 text-center text-xs text-gray-500 font-medium">Yükleniyor...</div>
         ) : articles.length === 0 ? (
           <div className="p-12 text-center text-xs text-gray-500 font-medium">
-            Filtrelere uygun içerik bulunamadı.
+            Henüz içerik bulunmuyor.
           </div>
         ) : (
           <div className="overflow-x-auto">
