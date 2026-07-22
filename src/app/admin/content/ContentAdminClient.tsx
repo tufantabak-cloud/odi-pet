@@ -52,7 +52,7 @@ export default function ContentAdminClient() {
   const [filterVetStatus, setFilterVetStatus] = useState('');
   const [filterFreshness, setFilterFreshness] = useState('');
 
-  // Ana Sekme State
+  // Ana Sekme State (Fail-safe varsayılan: 'articles' / Catalog)
   const [activeMainTab, setActiveMainTab] = useState<'articles' | 'jobs'>('articles');
   const [jobs, setJobs] = useState<any[]>([]);
 
@@ -65,11 +65,6 @@ export default function ContentAdminClient() {
   const [selectedSourceForVerify, setSelectedSourceForVerify] = useState<any | null>(null);
   const [chkTitleUrl, setChkTitleUrl] = useState(false);
   const [chkTopic, setChkTopic] = useState(false);
-
-  // Revizyon Geçmişi State
-  const [revisionsModalOpen, setRevisionsModalOpen] = useState(false);
-  const [revisionsList, setRevisionsList] = useState<any[]>([]);
-  const [revisionsLoading, setRevisionsLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -88,24 +83,6 @@ export default function ContentAdminClient() {
     references_list: '',
     vet_review_status: 'not_required'
   });
-
-  // Sayfa Yüklenirken URL Parametrelerini Okuma (tab=catalog&articleId=...)
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      const tabParam = urlParams.get('tab');
-      const articleIdParam = urlParams.get('articleId');
-
-      if (tabParam === 'jobs') {
-        setActiveMainTab('jobs');
-      } else if (tabParam === 'catalog' || tabParam === 'articles' || articleIdParam) {
-        setActiveMainTab('articles');
-        if (articleIdParam) {
-          handleOpenArticle(articleIdParam);
-        }
-      }
-    }
-  }, []);
 
   const fetchArticles = async () => {
     setLoading(true);
@@ -131,8 +108,32 @@ export default function ContentAdminClient() {
       if (!artRes.ok) throw new Error(artJson.error || 'Makaleler alınamadı.');
       if (!jobsRes.ok) throw new Error(jobsJson.error || 'İş kuyruğu alınamadı.');
 
-      setArticles(artJson.articles || []);
+      const fetchedArticles = artJson.articles || [];
+      setArticles(fetchedArticles);
       setJobs(jobsJson.jobs || []);
+
+      // Sayfa yüklenme ve veri alma sonrası URL parametrelerini değerlendir
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const tabParam = urlParams.get('tab');
+        const articleIdParam = urlParams.get('articleId');
+
+        if (tabParam === 'jobs' || tabParam === 'queue') {
+          setActiveMainTab('jobs');
+        } else {
+          setActiveMainTab('articles');
+        }
+
+        if (articleIdParam) {
+          const target = fetchedArticles.find((a: any) => a.id === articleIdParam);
+          if (target) {
+            handleOpenArticle(articleIdParam, fetchedArticles);
+          } else {
+            setErrorMsg('Makale bulunamadı.');
+            setTimeout(() => setErrorMsg(''), 4000);
+          }
+        }
+      }
     } catch (err: any) {
       setErrorMsg(err.message);
     } finally {
@@ -144,8 +145,8 @@ export default function ContentAdminClient() {
     fetchArticles();
   }, [filterQuery, filterCategory, filterSpecies, filterStatus, filterMedical, filterVetStatus, filterFreshness]);
 
-  // Makaleyi Aç Fonksiyonu (article_id ile tam uyumlu)
-  const handleOpenArticle = (articleId: string | null | undefined) => {
+  // Makaleyi Aç (article_id ile tam uyumlu ve kalıcı URL /admin/content?tab=catalog&articleId=<ID>)
+  const handleOpenArticle = (articleId: string | null | undefined, list = articles) => {
     if (!articleId) {
       setErrorMsg('Makale bağlantısı bulunamadı.');
       setTimeout(() => setErrorMsg(''), 4000);
@@ -155,13 +156,13 @@ export default function ContentAdminClient() {
     setActiveMainTab('articles');
     setEditingId(articleId);
 
-    // Kalıcı URL güncellemesi
+    // Kalıcı URL formatı: /admin/content?tab=catalog&articleId=<ARTICLE_ID>
     if (typeof window !== 'undefined') {
-      const newUrl = `${window.location.pathname}?tab=articles&articleId=${articleId}`;
+      const newUrl = `${window.location.pathname}?tab=catalog&articleId=${articleId}`;
       window.history.pushState({ path: newUrl }, '', newUrl);
     }
 
-    const target = articles.find((a) => a.id === articleId);
+    const target = list.find((a) => a.id === articleId);
     if (target) {
       setFormData({
         title: target.title || '',
@@ -181,6 +182,9 @@ export default function ContentAdminClient() {
         vet_review_status: target.vet_review_status || 'not_required'
       });
       setIsModalOpen(true);
+    } else {
+      setErrorMsg('Makale bulunamadı.');
+      setTimeout(() => setErrorMsg(''), 4000);
     }
   };
 
@@ -396,7 +400,12 @@ export default function ContentAdminClient() {
       {/* Ana Sekmeler */}
       <div className="flex items-center gap-2 border-b border-[var(--color-border)] pb-2">
         <button
-          onClick={() => setActiveMainTab('articles')}
+          onClick={() => {
+            setActiveMainTab('articles');
+            if (typeof window !== 'undefined') {
+              window.history.pushState(null, '', '/admin/content?tab=catalog');
+            }
+          }}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
             activeMainTab === 'articles'
               ? 'bg-[var(--color-primary)] text-white shadow-xs'
@@ -407,7 +416,12 @@ export default function ContentAdminClient() {
         </button>
 
         <button
-          onClick={() => setActiveMainTab('jobs')}
+          onClick={() => {
+            setActiveMainTab('jobs');
+            if (typeof window !== 'undefined') {
+              window.history.pushState(null, '', '/admin/content?tab=jobs');
+            }
+          }}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
             activeMainTab === 'jobs'
               ? 'bg-[var(--color-primary)] text-white shadow-xs'
