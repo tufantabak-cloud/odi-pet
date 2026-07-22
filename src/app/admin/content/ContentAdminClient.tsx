@@ -76,10 +76,41 @@ export default function ContentAdminClient() {
     is_archived: false
   });
 
+  // Kontrol Kuyruğu Uyarısı State
+  const [reviewQueueAlerts, setReviewQueueAlerts] = useState<string[]>([]);
+  const [reviewQueueCounts, setReviewQueueCounts] = useState<any>(null);
+
+  const fetchReviewQueue = async () => {
+    try {
+      const res = await fetch('/api/admin/content/review-queue');
+      const json = await res.json();
+      if (res.ok) {
+        setReviewQueueCounts(json.counts);
+        const alerts: string[] = [];
+        if (json.counts?.expired > 0) {
+          alerts.push(`${json.counts.expired} içeriğin kontrol süresi geçti`);
+        }
+        if (json.counts?.due30Days > 0) {
+          alerts.push(`${json.counts.due30Days} içerik önümüzdeki 30 gün içinde kontrol edilmeli`);
+        }
+        if (json.counts?.missingSources > 0) {
+          alerts.push(`${json.counts.missingSources} içerikte aktif kaynak bulunmuyor`);
+        }
+        if (json.counts?.pendingVetReview > 0) {
+          alerts.push(`${json.counts.pendingVetReview} tıbbi içerik veteriner onayı bekliyor`);
+        }
+        setReviewQueueAlerts(alerts);
+      }
+    } catch {
+      // sessizce geç
+    }
+  };
+
   const fetchArticles = async () => {
     setLoading(true);
     setErrorMsg('');
     try {
+      fetchReviewQueue();
       const params = new URLSearchParams();
       if (filterQuery) params.set('q', filterQuery);
       if (filterCategory) params.set('category', filterCategory);
@@ -353,6 +384,24 @@ export default function ContentAdminClient() {
           + Yeni İçerik Ekle
         </button>
       </div>
+
+      {/* Kontrol Kuyruğu Uyarı Banner'ı */}
+      {reviewQueueAlerts.length > 0 && (
+        <div className="bg-amber-50 border border-amber-300 text-amber-900 rounded-2xl p-4 space-y-2 shadow-xs">
+          <div className="flex items-center gap-2 text-xs font-bold text-amber-900">
+            <i className="ti ti-alert-triangle text-amber-600 text-base" />
+            <span>Kontrol Kuyruğu & Güncellik Uyarıları</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+            {reviewQueueAlerts.map((alert, i) => (
+              <div key={i} className="flex items-center gap-2 bg-white/80 border border-amber-200 p-2.5 rounded-xl font-semibold text-amber-800">
+                <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                <span>{alert}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* İçerik Kapsamı (Coverage Gaps) Paneli */}
       <div className="bg-gradient-to-r from-purple-900 to-indigo-900 text-white rounded-2xl p-5 shadow-sm space-y-3">
