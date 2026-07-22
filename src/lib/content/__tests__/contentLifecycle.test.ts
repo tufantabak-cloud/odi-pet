@@ -29,6 +29,9 @@ describe('Content Freshness & Revision Lifecycle Rules', () => {
       content: 'Metin',
       species_filter: ['dog'],
       is_published: true,
+      content_reviewed_at: yesterday,
+      content_reviewed_by: 'admin-id',
+      source_checked_at: yesterday,
       next_review_at: yesterday // Tarihi geçmiş
     };
 
@@ -47,6 +50,9 @@ describe('Content Freshness & Revision Lifecycle Rules', () => {
       is_published: true,
       is_medical_content: true,
       vet_review_status: 'approved',
+      content_reviewed_at: yesterday,
+      content_reviewed_by: 'admin-id',
+      source_checked_at: yesterday,
       next_review_at: yesterday
     };
 
@@ -63,6 +69,9 @@ describe('Content Freshness & Revision Lifecycle Rules', () => {
       content: 'Metin',
       species_filter: ['dog'],
       is_published: true,
+      content_reviewed_at: yesterday,
+      content_reviewed_by: 'admin-id',
+      source_checked_at: yesterday,
       next_review_at: nextMonth,
       archived_at: yesterday
     };
@@ -79,6 +88,9 @@ describe('Content Freshness & Revision Lifecycle Rules', () => {
       content: 'Metin',
       species_filter: ['dog'],
       is_published: true,
+      content_reviewed_at: yesterday,
+      content_reviewed_by: 'admin-id',
+      source_checked_at: yesterday,
       next_review_at: nextMonth
     };
 
@@ -94,6 +106,9 @@ describe('Content Freshness & Revision Lifecycle Rules', () => {
       content: 'Metin',
       species_filter: ['dog'],
       is_published: true,
+      content_reviewed_at: yesterday,
+      content_reviewed_by: 'admin-id',
+      source_checked_at: yesterday,
       next_review_at: yesterday
     };
 

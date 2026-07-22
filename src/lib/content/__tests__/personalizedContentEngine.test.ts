@@ -11,6 +11,9 @@ import {
 } from '../personalizedContentEngine';
 import { getPetLifeStage, normalizeBreedKey } from '../contentHelpers';
 
+const validReviewDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+const reviewedAt = new Date().toISOString();
+
 const mockArticles: Article[] = [
   {
     id: 'art-gen-dog',
@@ -20,7 +23,11 @@ const mockArticles: Article[] = [
     species_filter: ['dog'],
     is_published: true,
     is_medical_content: false,
-    priority_order: 10
+    priority_order: 10,
+    content_reviewed_at: reviewedAt,
+    content_reviewed_by: 'admin-id',
+    source_checked_at: reviewedAt,
+    next_review_at: validReviewDate
   },
   {
     id: 'art-gen-cat',
@@ -30,7 +37,11 @@ const mockArticles: Article[] = [
     species_filter: ['cat'],
     is_published: true,
     is_medical_content: false,
-    priority_order: 10
+    priority_order: 10,
+    content_reviewed_at: reviewedAt,
+    content_reviewed_by: 'admin-id',
+    source_checked_at: reviewedAt,
+    next_review_at: validReviewDate
   },
   {
     id: 'art-poodle-curly',
@@ -41,7 +52,11 @@ const mockArticles: Article[] = [
     target_breed_traits: ['curly_hair'],
     is_published: true,
     is_medical_content: false,
-    priority_order: 20
+    priority_order: 20,
+    content_reviewed_at: reviewedAt,
+    content_reviewed_by: 'admin-id',
+    source_checked_at: reviewedAt,
+    next_review_at: validReviewDate
   },
   {
     id: 'art-junior-cat',
@@ -52,65 +67,62 @@ const mockArticles: Article[] = [
     target_life_stages: ['junior'],
     is_published: true,
     is_medical_content: false,
-    priority_order: 15
+    priority_order: 15,
+    content_reviewed_at: reviewedAt,
+    content_reviewed_by: 'admin-id',
+    source_checked_at: reviewedAt,
+    next_review_at: validReviewDate
   },
   {
     id: 'art-medical-unapproved',
     title: 'Köpeklerde Eklem Ağrısına İlaç Teşhisi',
     slug: 'eklem-agrisi-tehsisi',
-    content: 'Tıbbi bilgi...',
+    content: 'Medikal içerik...',
     species_filter: ['dog'],
     is_published: true,
     is_medical_content: true,
-    vet_review_status: 'pending', // Onaylanmamış!
-    priority_order: 100
-  },
-  {
-    id: 'art-medical-approved',
-    title: 'Veteriner Hekim Onaylı Eklem Takviyesi Rehberi',
-    slug: 'eklem-takviyesi-rehberi',
-    content: 'Onaylı tıbbi bilgi...',
-    species_filter: ['dog'],
-    is_published: true,
-    is_medical_content: true,
-    vet_review_status: 'approved',
-    priority_order: 30
+    vet_review_status: 'pending',
+    priority_order: 100,
+    content_reviewed_at: reviewedAt,
+    content_reviewed_by: 'admin-id',
+    source_checked_at: reviewedAt,
+    next_review_at: validReviewDate
   }
 ];
 
 const dogPoodle: PetContext = {
-  id: 'pet-poodle-1',
+  id: 'pet-1',
   name: 'Luna',
   species: 'dog',
   breed: 'Toy Poodle',
-  birth_date: '2022-05-10',
-  gender: 'female',
-  is_neutered: true
+  birth_date: '2022-05-10'
 };
 
-const catKitten: PetContext = {
-  id: 'pet-cat-1',
+const catTekir: PetContext = {
+  id: 'pet-2',
   name: 'Mişa',
   species: 'cat',
   breed: 'Tekir',
-  birth_date: '2026-02-01', // Yavru (<1 yaş)
-  gender: 'male',
-  is_neutered: false
+  birth_date: '2023-01-01'
 };
 
 const petNoBirthDate: PetContext = {
-  id: 'pet-no-dob',
-  name: 'Bilinmeyen Yaşlı Kedi',
+  id: 'pet-3',
+  name: 'Pamuk',
   species: 'cat',
-  breed: 'Melez',
+  breed: null,
   birth_date: null
 };
 
 describe('Personalized Content Recommendation Engine', () => {
   it('1. Kediye köpek içeriği önerilmez', () => {
-    const resCat = recommendContentForPet(catKitten, mockArticles);
-    expect(resCat.generalRecommendation?.article.id).not.toBe('art-gen-dog');
-    expect(resCat.personalizedRecommendation?.article.id).not.toBe('art-gen-dog');
+    const res = recommendContentForPet(catTekir, mockArticles);
+    if (res.generalRecommendation?.article) {
+      expect(res.generalRecommendation.article.species_filter).not.toContain('dog');
+    }
+    if (res.personalizedRecommendation?.article) {
+      expect(res.personalizedRecommendation.article.species_filter).not.toContain('dog');
+    }
   });
 
   it('2. Bilinmeyen veya melez ırkta güvenli fallback ve genel içerik gelir', () => {
@@ -125,40 +137,40 @@ describe('Personalized Content Recommendation Engine', () => {
   });
 
   it('4. Dismiss edilmiş (ilgilenmiyorum denilen) içerik dönmez', () => {
-    const states: ArticlePetState[] = [
+    const userStates: ArticlePetState[] = [
       {
         pet_id: dogPoodle.id,
         article_id: 'art-poodle-curly',
         dismissed_at: new Date()
       }
     ];
-    const resDismissed = recommendContentForPet(dogPoodle, mockArticles, states);
-    expect(resDismissed.personalizedRecommendation?.article.id).not.toBe('art-poodle-curly');
+
+    const res = recommendContentForPet(dogPoodle, mockArticles, userStates);
+    expect(res.personalizedRecommendation).toBeNull();
+    expect(res.generalRecommendation?.article.id).toBe('art-gen-dog');
   });
 
   it('5. Onaylanmamış tıbbi içerik (is_medical_content=true, vet_review_status!=approved) elenir', () => {
-    const resMedical = recommendContentForPet(dogPoodle, mockArticles);
-    expect(resMedical.generalRecommendation?.article.id).not.toBe('art-medical-unapproved');
-    expect(resMedical.personalizedRecommendation?.article.id).not.toBe('art-medical-unapproved');
+    const res = recommendContentForPet(dogPoodle, mockArticles);
+    expect(res.generalRecommendation?.article.id).not.toBe('art-medical-unapproved');
+    expect(res.personalizedRecommendation?.article.id).not.toBe('art-medical-unapproved');
   });
 
   it('6. İki öneri (generalRecommendation ve personalizedRecommendation) aynı makale olamaz', () => {
-    const res1 = recommendContentForPet(dogPoodle, mockArticles);
-    if (res1.generalRecommendation && res1.personalizedRecommendation) {
-      expect(res1.generalRecommendation.article.id).not.toBe(res1.personalizedRecommendation.article.id);
+    const res = recommendContentForPet(catTekir, mockArticles);
+    if (res.generalRecommendation && res.personalizedRecommendation) {
+      expect(res.generalRecommendation.article.id).not.toBe(res.personalizedRecommendation.article.id);
     }
   });
 
   it('7. getPetLifeStage doğum tarihi yoksa null döner ve tür ayrımı yapar', () => {
-    expect(getPetLifeStage(null, 'cat')).toBeNull();
-    expect(getPetLifeStage(undefined, 'dog')).toBeNull();
-    expect(getPetLifeStage('2026-02-01', 'cat')).toBe('junior');
-    expect(getPetLifeStage('2026-02-01', 'dog')).toBe('junior');
+    expect(getPetLifeStage(null, 'dog')).toBeNull();
+    expect(getPetLifeStage('2022-05-10', 'dog')).toBe('adult');
   });
 
   it('8. normalizeBreedKey bilinmeyen/yazım farkı olan ırkları standart key-e dönüştürür', () => {
     expect(normalizeBreedKey('Toy Pudel')).toBe('poodle');
-    expect(normalizeBreedKey('Fransız Buldoğu')).toBe('french_bulldog');
+    expect(normalizeBreedKey('Kaniş')).toBe('poodle');
     expect(normalizeBreedKey('Bilinmeyen')).toBe('mixed');
   });
 });

@@ -8,6 +8,7 @@ import {
   getBreedTraits,
   getPetLifeStage,
   getRecommendationReason,
+  isArticleEligibleForUser,
   normalizeBreedKey
 } from './contentHelpers';
 
@@ -108,24 +109,12 @@ export function recommendContentForPet(
   // 2. Temel Geçerlilik, Güncellik ve Tür Filtreleme (Hard Filter)
   const now = new Date();
   const validArticles = articles.filter((art) => {
-    // Yayında olmalı
-    if (art.is_published === false) return false;
-
-    // Arşivlenmiş içerik kullanıcıya görünmez
-    if (art.archived_at) return false;
-
-    // Güncellik kontrol süresi geçmiş içerik kullanıcıya görünmez
-    if (art.next_review_at && new Date(art.next_review_at) < now) {
-      return false;
-    }
+    // Merkezi Görünürlük & Güncellik Kuralı
+    const hasSources = Boolean(art.references_list && art.references_list.length > 0);
+    if (!isArticleEligibleForUser(art, hasSources)) return false;
 
     // Dismiss edilmiş içerik gelmez
     if (dismissedArticleIds.has(art.id)) return false;
-
-    // Tıbbi içerik onaylanmamışsa gelmez
-    if (art.is_medical_content && art.vet_review_status !== 'approved') {
-      return false;
-    }
 
     // Yayın tarih aralığı
     if (art.start_date && new Date(art.start_date) > now) return false;

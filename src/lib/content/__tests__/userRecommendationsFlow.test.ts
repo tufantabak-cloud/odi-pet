@@ -10,6 +10,9 @@ import {
   recommendContentForPet
 } from '../personalizedContentEngine';
 
+const validReviewDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+const reviewedAt = new Date().toISOString();
+
 const mockArticles: Article[] = [
   {
     id: 'art-gen-dog-1',
@@ -19,7 +22,11 @@ const mockArticles: Article[] = [
     species_filter: ['dog'],
     is_published: true,
     is_medical_content: false,
-    priority_order: 10
+    priority_order: 10,
+    content_reviewed_at: reviewedAt,
+    content_reviewed_by: 'admin-id',
+    source_checked_at: reviewedAt,
+    next_review_at: validReviewDate
   },
   {
     id: 'art-gen-cat-1',
@@ -29,7 +36,11 @@ const mockArticles: Article[] = [
     species_filter: ['cat'],
     is_published: true,
     is_medical_content: false,
-    priority_order: 10
+    priority_order: 10,
+    content_reviewed_at: reviewedAt,
+    content_reviewed_by: 'admin-id',
+    source_checked_at: reviewedAt,
+    next_review_at: validReviewDate
   },
   {
     id: 'art-poodle-special',
@@ -40,7 +51,11 @@ const mockArticles: Article[] = [
     target_breed_keys: ['poodle'],
     is_published: true,
     is_medical_content: false,
-    priority_order: 20
+    priority_order: 20,
+    content_reviewed_at: reviewedAt,
+    content_reviewed_by: 'admin-id',
+    source_checked_at: reviewedAt,
+    next_review_at: validReviewDate
   },
   {
     id: 'art-draft',

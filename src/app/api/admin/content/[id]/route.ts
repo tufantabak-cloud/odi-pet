@@ -141,7 +141,7 @@ export async function PATCH(
       (updates.target_breed_traits !== undefined && JSON.stringify(updates.target_breed_traits) !== JSON.stringify(existing.target_breed_traits)) ||
       (updates.target_life_stages !== undefined && JSON.stringify(updates.target_life_stages) !== JSON.stringify(existing.target_life_stages));
 
-    // A. Seçenek B: İçerik / Hedefleme Değişti (Version Bump & Snapshot)
+    // A. Seçenek B: İçerik / Hedefleme Değişti (Version Bump & Snapshot - Atomik RPC)
     if (isContentOrTargetingChanged) {
       if (!body.latest_change_summary || !body.latest_change_summary.trim()) {
         return NextResponse.json(
@@ -150,7 +150,19 @@ export async function PATCH(
         );
       }
 
-      // Sürüm snapshot'ı al
+      // Atomik RPC Stored Procedure Çağrısı
+      const { data: rpcRes, error: rpcErr } = await supabase.rpc('update_article_with_revision', {
+        p_article_id: id,
+        p_updates: updates,
+        p_change_summary: body.latest_change_summary.trim(),
+        p_actor_id: actor.id
+      });
+
+      if (!rpcErr && rpcRes) {
+        return NextResponse.json(rpcRes);
+      }
+
+      // Fallback: RPC erişilemezse standart güncellemeyi yap
       await supabase.from('article_revisions').insert({
         article_id: id,
         version_number: existing.content_version || 1,

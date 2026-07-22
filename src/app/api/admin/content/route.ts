@@ -211,6 +211,19 @@ export async function POST(req: NextRequest) {
           );
         }
       }
+
+      // d. Ürün & Mevzuat (product_regulatory) Resmi Kaynak Koşulu
+      if (fType === 'product_regulatory') {
+        const hasOfficialOrManufacturer = Array.isArray(body.sources) && body.sources.some(
+          (s: any) => s.source_type === 'official' || s.source_type === 'manufacturer'
+        );
+        if (!hasOfficialOrManufacturer) {
+          return NextResponse.json(
+            { error: 'Ürün ve mevzuat içerikleri (product_regulatory) için resmi (official) veya üretici (manufacturer) kaynağı eklenmesi zorunludur.' },
+            { status: 400 }
+          );
+        }
+      }
     }
 
     // Vet onay verileri — YALNIZCA SUNUCU TARAFINDAN ATANIR

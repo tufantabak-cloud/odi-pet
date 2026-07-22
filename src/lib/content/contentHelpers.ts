@@ -173,3 +173,42 @@ export function getRecommendationReason(
       return `${petName}'nin türüne uygun genel bilgi.`;
   }
 }
+
+/**
+ * Normal kullanıcılara sunulacak içeriklerin tekilleştirilmiş merkezi görünürlük kuralı.
+ */
+export function isArticleEligibleForUser(article: any, hasActiveSources: boolean = false): boolean {
+  if (!article) return false;
+
+  // 1. Yayın ve Arşiv Durumu
+  if (!article.is_published || article.archived_at) return false;
+
+  // 2. Güncellik & Kontrol Tarihleri (NULL OLANLAR GÜNCEL KABUL EDİLMEZ)
+  if (
+    !article.content_reviewed_at ||
+    !article.content_reviewed_by ||
+    !article.source_checked_at ||
+    !article.next_review_at
+  ) {
+    return false;
+  }
+
+  const now = new Date();
+  if (new Date(article.next_review_at) < now) {
+    return false;
+  }
+
+  // 3. Tıbbi İçerik Koşulları
+  if (article.is_medical_content) {
+    if (
+      article.vet_review_status !== 'approved' ||
+      !article.vet_reviewed_by ||
+      !article.vet_reviewed_at ||
+      !hasActiveSources
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
