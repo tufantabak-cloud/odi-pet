@@ -104,11 +104,12 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
   }
 
   // Find if there is an active DB task for parasite
-  const getParasiteTask = () => {
+  const getParasiteTask = (petId?: string) => {
     const now = new Date()
     now.setHours(0,0,0,0)
 
     return upcomingSchedules.find((s: any) => {
+      if (petId && s.pet_id !== petId) return false
       const isParasite = (s.title || '').toLowerCase().includes('parazit') || 
                         (s.sub_category || '').toLowerCase().includes('parazit')
       if (!isParasite || s.status === 'done') return false
@@ -196,7 +197,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
     }
   }
 
-  // Collect active cards based on conditions in priority order
+  // Collect active cards based on conditions in priority order for activePetId ONLY
   const activeCards: any[] = []
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
   const highlight = searchParams ? searchParams.get('highlight') : null
@@ -207,41 +208,48 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
   if (pets && pets.length > 0) {
     const targetPet = pets.find(p => p.id === activePetId) || pets[0]
 
-
-    // 1. Highlight Deep-link Card
+    // 1. Highlight Deep-link Card (only if matching targetPet)
     let highlightCard: any = null
     if (highlight) {
       if (highlight.startsWith('vaccine-') || highlight.startsWith('parasite-')) {
         const isVaccine = highlight.startsWith('vaccine-')
         const petId = isVaccine ? highlight.replace('vaccine-', '') : highlight.replace('parasite-', '')
-        const pet = pets.find(p => p.id === petId) || targetPet
+        if (petId === targetPet.id) {
+          const pet = targetPet
 
-        if (isVaccine) {
-          highlightCard = {
-            id: highlight,
-            type: 'vaccine',
-            title: 'Aşı Uygulaması',
-            subtitle: `Bugün ${pet.name}'nın aşı/medikal işlemi var. Takvimden kontrol edebilirsiniz.`,
-            ctaLabel: 'Takvime Git',
-            action: () => {
-              router.push(`/owner/pets/${pet.id}/vaccines`)
+          if (isVaccine) {
+            highlightCard = {
+              id: highlight,
+              type: 'vaccine',
+              priority: 0,
+              isCritical: true,
+              title: 'Aşı Uygulaması',
+              subtitle: `Bugün ${pet.name}'nın aşı/medikal işlemi var. Takvimden kontrol edebilirsiniz.`,
+              dateInfo: 'Bugün',
+              ctaLabel: 'Takvime Git',
+              action: () => {
+                router.push(`/owner/pets/${pet.id}/vaccines`)
+              }
             }
-          }
-        } else {
-          const parasiteTask = getParasiteTask()
-          const nextParasiteDateStr = typeof window !== 'undefined' ? localStorage.getItem(`parasite-next-date-${pet.id}`) : null
-          const cardId = parasiteTask ? `parasite-task-${parasiteTask.id}` : `parasite-local-${pet.id}-${nextParasiteDateStr || 'init'}`
-          highlightCard = {
-            id: highlight,
-            type: 'parasite',
-            title: 'Dış Parazit Uygulaması',
-            subtitle: `Bugün ${pet.name}'nın dış parazit uygulaması zamanı. Yaptıktan sonra işaretleyin.`,
-            ctaLabel: 'Uygulamayı İşaretle',
-            action: () => {
-              handleMarkParasiteDone(pet.id, parasiteTask, cardId)
-              const url = new URL(window.location.href)
-              url.searchParams.delete('highlight')
-              window.history.replaceState({}, '', url.toString())
+          } else {
+            const parasiteTask = getParasiteTask(targetPet.id)
+            const nextParasiteDateStr = typeof window !== 'undefined' ? localStorage.getItem(`parasite-next-date-${pet.id}`) : null
+            const cardId = parasiteTask ? `parasite-task-${parasiteTask.id}` : `parasite-local-${pet.id}-${nextParasiteDateStr || 'init'}`
+            highlightCard = {
+              id: highlight,
+              type: 'parasite',
+              priority: 0,
+              isCritical: true,
+              title: 'Dış Parazit Uygulaması',
+              subtitle: `Bugün ${pet.name}'nın dış parazit uygulaması zamanı. Yaptıktan sonra işaretleyin.`,
+              dateInfo: 'Bugün',
+              ctaLabel: 'İşaretle',
+              action: () => {
+                handleMarkParasiteDone(pet.id, parasiteTask, cardId)
+                const url = new URL(window.location.href)
+                url.searchParams.delete('highlight')
+                window.history.replaceState({}, '', url.toString())
+              }
             }
           }
         }
@@ -252,11 +260,12 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
       activeCards.push(highlightCard)
     }
 
-    // Günü Gelmiş/Geçmiş Aşı Kontrolü
+    // Günü Gelmiş/Geçmiş Aşı Kontrolü (Priority 1)
     const todayDate = new Date()
     todayDate.setHours(0,0,0,0)
 
     const overdueVaccine = upcomingSchedules?.find((s: any) => {
+      if (s.pet_id !== targetPet.id) return false
       const isVaccineTask = (s.title || '').toLowerCase().includes('aşı') || 
                             (s.sub_category || '').toLowerCase().includes('aşı') ||
                             s.vaccines
@@ -271,12 +280,18 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
       const vaccineCardId = `vaccine-${overdueVaccine.id}`
       const isAlreadyHighlighted = highlightCard?.id === highlight && highlight?.startsWith('vaccine-')
       if (!dismissedCards.includes(vaccineCardId) && highlight !== vaccineCardId && !isAlreadyHighlighted) {
-        const pet = pets.find(p => p.id === overdueVaccine.pet_id) || targetPet
+        const pet = targetPet
+        const dueDate = new Date(overdueVaccine.due_date)
+        dueDate.setHours(0,0,0,0)
+        const isOverdue = dueDate < todayDate
         activeCards.push({
           id: vaccineCardId,
           type: 'vaccine',
-          title: 'Aşı Uygulaması',
-          subtitle: `Bugün ${pet.name}'nın aşı/medikal işlemi var. Takvimden kontrol edebilirsiniz.`,
+          priority: 1,
+          isCritical: true,
+          title: overdueVaccine.title || overdueVaccine.vaccines?.name || 'Aşı Uygulaması',
+          subtitle: `${pet.name}'nın ${overdueVaccine.title || overdueVaccine.vaccines?.name || 'aşı/medikal'} işlemi var. Takvimden kontrol edebilirsiniz.`,
+          dateInfo: isOverdue ? 'Gecikti' : 'Bugün',
           ctaLabel: 'Takvime Git',
           action: () => {
             router.push(`/owner/pets/${pet.id}/vaccines`)
@@ -285,8 +300,8 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
       }
     }
 
-    // Bugün vadesi gelmiş/geçmiş sağlık görevleri (aşı/parazit harici ve aktif pet'e ait)
-    const todayHealthTasks = upcomingSchedules?.filter((s: any) => {
+    // Günü Geçmiş Sağlık Görevleri (Priority 2)
+    const overdueHealthTasks = upcomingSchedules?.filter((s: any) => {
       if (s.pet_id !== targetPet.id) return false
       if (s.status === 'done') return false
       const isHealth = s.category === 'saglik' || s.category === 'Saglik'
@@ -294,23 +309,26 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
       if (!s.due_date) return false
       const dueDate = new Date(s.due_date)
       dueDate.setHours(0,0,0,0)
-      return dueDate <= todayDate
+      return dueDate < todayDate
     })
 
-    if (todayHealthTasks && todayHealthTasks.length > 0) {
-      const healthCardId = `health-tasks-${targetPet.id}-${todayDate.toISOString().split('T')[0]}`
+    if (overdueHealthTasks && overdueHealthTasks.length > 0) {
+      const healthCardId = `health-tasks-overdue-${targetPet.id}-${todayDate.toISOString().split('T')[0]}`
       if (!dismissedCards.includes(healthCardId) && highlight !== healthCardId) {
-        const pet = pets.find(p => p.id === todayHealthTasks[0].pet_id) || targetPet
-        const taskCount = todayHealthTasks.length
-        const firstTask = todayHealthTasks[0]
+        const pet = targetPet
+        const taskCount = overdueHealthTasks.length
+        const firstTask = overdueHealthTasks[0]
         const taskTitle = firstTask.title || firstTask.sub_category || 'Sağlık Görevi'
         activeCards.push({
           id: healthCardId,
           type: 'health-task',
+          priority: 2,
+          isCritical: true,
           title: taskCount === 1 ? taskTitle : `${taskCount} Sağlık Görevi Bekliyor`,
           subtitle: taskCount === 1
-            ? `${pet.name}'nın bugün için planlanmış ${taskTitle} görevi var.`
-            : `${pet.name}'nın bugün için ${todayHealthTasks.map((t: any) => t.title || t.sub_category).slice(0, 3).join(', ')} ve daha fazlası planlandı.`,
+            ? `${pet.name}'nın ${taskTitle} görevi gecikti.`
+            : `${pet.name}'nın bugün öncesi geciken sağlık görevleri var.`,
+          dateInfo: 'Gecikti',
           ctaLabel: 'Görüntüle',
           action: () => {
             router.push(`/owner/pets/${pet.id}?tab=saglik#section-saglik`)
@@ -319,56 +337,18 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
       }
     }
 
-    // Calculate weight statistics
-    const lastWeightLog = allWeightLogs?.find(w => w.pet_id === targetPet.id)
-    const daysSinceLastLog = lastWeightLog 
-      ? Math.floor((Date.now() - new Date(lastWeightLog.measured_at).getTime()) / 86400000)
-      : null
-
-    const isFirstEntry = !lastWeightLog
-    const isRoutineDue = lastWeightLog && daysSinceLastLog !== null && daysSinceLastLog >= 30
-
-    // 2. Kilo İlk Giriş (Profil Eksik)
-    const weightFirstCardId = `weight-first-${targetPet.id}`
-    if (isFirstEntry && !dismissedCards.includes(weightFirstCardId) && highlight !== weightFirstCardId) {
-      activeCards.push({
-        id: weightFirstCardId,
-        type: 'weight-first',
-        title: 'Kilo & Boy Bilgisi Eksik',
-        subtitle: `${targetPet.name}'in profilini tamamla`,
-        ctaLabel: 'Gir',
-        action: () => {
-          router.push(`/owner/pets/${targetPet.id}/journal/new/weight`)
-        }
-      })
-    }
-
-    // 2.5. Acil Durum Kişisi Eksikliği Alert
-    const emergencyContactCardId = `emergency-contact-${targetPet.id}`
-    const hasEmergencyContact = targetPet?.sos_contacts && Array.isArray(targetPet.sos_contacts) && targetPet.sos_contacts.length > 0
-    hasCriticalHealthTask = !!overdueVaccine || (todayHealthTasks && todayHealthTasks.length > 0)
-
-    if (!hasEmergencyContact && !hasCriticalHealthTask && !dismissedCards.includes(emergencyContactCardId) && highlight !== emergencyContactCardId) {
-      activeCards.push({
-        id: emergencyContactCardId,
-        type: 'emergency-contact',
-        title: 'Acil Durum Kişisi Eksik',
-        subtitle: `Beklenmeyen durumlar için acil durumda ulaşılacak kişiyi ekleyin.`,
-        ctaLabel: 'Şimdi Ekle',
-        action: () => {
-          router.push(`/owner/pets/${targetPet.id}/edit`)
-        }
-      })
-    }
-
-    // 3. Dış Parazit Card (Rutin Sağlık)
-    const parasiteTask = getParasiteTask()
-    const petIdForParasite = parasiteTask ? parasiteTask.pet_id : targetPet.id
+    // 3. Dış Parazit Card (Priority 3)
+    const parasiteTask = getParasiteTask(targetPet.id)
+    const petIdForParasite = targetPet.id
     const nextParasiteDateStr = typeof window !== 'undefined' ? localStorage.getItem(`parasite-next-date-${petIdForParasite}`) : null
     let isParasiteDue = false
+    let isParasiteOverdue = false
     
     if (parasiteTask) {
       isParasiteDue = true
+      const dueDate = new Date(parasiteTask.due_date)
+      dueDate.setHours(0,0,0,0)
+      if (dueDate < todayDate) isParasiteOverdue = true
     } else if (nextParasiteDateStr) {
       const nextDate = new Date(nextParasiteDateStr)
       if (nextDate <= new Date()) {
@@ -380,19 +360,60 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
     const showParasiteCard = isParasiteDue && !dismissedCards.includes(parasiteCardId) && highlight !== parasiteCardId
 
     if (showParasiteCard) {
-      const pet = pets.find(p => p.id === petIdForParasite) || targetPet
+      const pet = targetPet
       activeCards.push({
         id: parasiteCardId,
         type: 'parasite',
+        priority: 3,
+        isCritical: true,
         title: 'Dış Parazit Uygulaması',
-        subtitle: `Bugün ${pet.name}'nın dış parazit uygulaması zamanı. Yaptıktan sonra işaretleyin.`,
+        subtitle: `${pet.name}'nın dış parazit uygulaması zamanı. Yaptıktan sonra işaretleyin.`,
+        dateInfo: isParasiteOverdue ? 'Gecikti' : 'Bugün',
         ctaLabel: 'İşaretle',
         action: () => handleMarkParasiteDone(pet.id, parasiteTask, parasiteCardId)
       })
     }
 
-    // 4. Aşı Sonrası İştah (Takip)
-    const recentVaccine = completedSchedules.find(s => {
+    // 4. Bugün Yapılacak Sağlık Görevleri (Priority 4)
+    const todayHealthTasks = upcomingSchedules?.filter((s: any) => {
+      if (s.pet_id !== targetPet.id) return false
+      if (s.status === 'done') return false
+      const isHealth = s.category === 'saglik' || s.category === 'Saglik'
+      if (!isHealth) return false
+      if (!s.due_date) return false
+      const dueDate = new Date(s.due_date)
+      dueDate.setHours(0,0,0,0)
+      return dueDate.getTime() === todayDate.getTime()
+    })
+
+    if (todayHealthTasks && todayHealthTasks.length > 0) {
+      const healthCardId = `health-tasks-today-${targetPet.id}-${todayDate.toISOString().split('T')[0]}`
+      if (!dismissedCards.includes(healthCardId) && highlight !== healthCardId) {
+        const pet = targetPet
+        const taskCount = todayHealthTasks.length
+        const firstTask = todayHealthTasks[0]
+        const taskTitle = firstTask.title || firstTask.sub_category || 'Sağlık Görevi'
+        activeCards.push({
+          id: healthCardId,
+          type: 'health-task',
+          priority: 4,
+          isCritical: true,
+          title: taskCount === 1 ? taskTitle : `${taskCount} Sağlık Görevi Bugün`,
+          subtitle: taskCount === 1
+            ? `${pet.name}'nın bugün için planlanmış ${taskTitle} görevi var.`
+            : `${pet.name}'nın bugün için planlanmış sağlık görevleri var.`,
+          dateInfo: 'Bugün',
+          ctaLabel: 'Görüntüle',
+          action: () => {
+            router.push(`/owner/pets/${pet.id}?tab=saglik#section-saglik`)
+          }
+        })
+      }
+    }
+
+    // 5. Aşı Sonrası İştah (Takip - Priority 5)
+    const recentVaccine = completedSchedules.find((s: any) => {
+      if (s.pet_id !== targetPet.id) return false
       const isCompleted = s.status === 'completed' || s.status === 'done'
       const updatedDate = s.updated_at ? new Date(s.updated_at) : new Date(s.completed_at || s.due_date)
       const isRecent = updatedDate.getTime() > Date.now() - 24 * 60 * 60 * 1000
@@ -404,12 +425,15 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
       const showAppetiteCard = !dismissedCards.includes(appetiteCardId) && highlight !== appetiteCardId
 
       if (showAppetiteCard) {
-        const pet = pets.find(p => p.id === recentVaccine.pet_id) || targetPet
+        const pet = targetPet
         activeCards.push({
           id: appetiteCardId,
           type: 'appetite',
+          priority: 5,
+          isCritical: true,
           title: 'Aşı Sonrası Takip',
           subtitle: `${pet.name}'nın aşısı tamamlandı. Aşı sonrası ilk 24 saat iştah takibi önemlidir. İştahını kaydetmek ister misin?`,
+          dateInfo: 'Takip',
           ctaLabel: 'İştahı Kaydet',
           action: () => {
             router.push(`/owner/pets/${pet.id}/journal/new/appetite`)
@@ -418,14 +442,62 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
       }
     }
 
-    // 5. Kilo Rutin Zamanı (Aylık)
+    // 6. Kritik Eksik Bilgi (Priority 6)
+    const lastWeightLog = allWeightLogs?.find(w => w.pet_id === targetPet.id)
+    const daysSinceLastLog = lastWeightLog
+      ? Math.floor((Date.now() - new Date(lastWeightLog.measured_at).getTime()) / 86400000)
+      : null
+
+    const isFirstEntry = !lastWeightLog
+    const isRoutineDue = lastWeightLog && daysSinceLastLog !== null && daysSinceLastLog >= 30
+
+    const weightFirstCardId = `weight-first-${targetPet.id}`
+    if (isFirstEntry && !dismissedCards.includes(weightFirstCardId) && highlight !== weightFirstCardId) {
+      activeCards.push({
+        id: weightFirstCardId,
+        type: 'weight-first',
+        priority: 6,
+        isCritical: true,
+        title: 'Kilo & Boy Bilgisi Eksik',
+        subtitle: `${targetPet.name}'in profilini tamamla`,
+        dateInfo: 'Eksik Bilgi',
+        ctaLabel: 'Gir',
+        action: () => {
+          router.push(`/owner/pets/${targetPet.id}/journal/new/weight`)
+        }
+      })
+    }
+
+    const emergencyContactCardId = `emergency-contact-${targetPet.id}`
+    const hasEmergencyContact = targetPet?.sos_contacts && Array.isArray(targetPet.sos_contacts) && targetPet.sos_contacts.length > 0
+
+    if (!hasEmergencyContact && !dismissedCards.includes(emergencyContactCardId) && highlight !== emergencyContactCardId) {
+      activeCards.push({
+        id: emergencyContactCardId,
+        type: 'emergency-contact',
+        priority: 6,
+        isCritical: true,
+        title: 'Acil Durum Kişisi Eksik',
+        subtitle: `Beklenmeyen durumlar için acil durumda ulaşılacak kişiyi ekleyin.`,
+        dateInfo: 'Eksik Bilgi',
+        ctaLabel: 'Şimdi Ekle',
+        action: () => {
+          router.push(`/owner/pets/${targetPet.id}/edit`)
+        }
+      })
+    }
+
+    // 7. Kilo Rutin Zamanı (Aylık - Priority 7 - Non-Critical)
     const weightRoutineCardId = `weight-routine-${targetPet.id}`
     if (isRoutineDue && !dismissedCards.includes(weightRoutineCardId) && highlight !== weightRoutineCardId) {
       activeCards.push({
         id: weightRoutineCardId,
         type: 'weight-routine',
+        priority: 7,
+        isCritical: false,
         title: 'Aylık Kilo Kontrolü',
         subtitle: `Son ölçüm: ${daysSinceLastLog} gün önce — güncelle`,
+        dateInfo: 'Rutin',
         ctaLabel: 'Güncelle',
         action: () => {
           router.push(`/owner/pets/${targetPet.id}/journal/new/weight`)
@@ -433,7 +505,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
       })
     }
 
-    // 5.5. Journal Card (Sağlık Günlüğü eksik ise)
+    // 8. Journal Card (Priority 8 - Non-Critical)
     function getLocalDateStr(date = new Date()) {
       const offset = date.getTimezoneOffset()
       const local = new Date(date.getTime() - offset * 60000)
@@ -452,8 +524,11 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
       activeCards.push({
         id: journalCardId,
         type: 'journal',
+        priority: 8,
+        isCritical: false,
         title: `${targetPet.name} Bugün Nasıl Hissediyor?`,
         subtitle: `${targetPet.name}'in günlük iştah ve ruh halini kaydet`,
+        dateInfo: 'Günlük',
         ctaLabel: 'Kaydet',
         action: () => {
           setQuickUpdateConfig({
@@ -466,55 +541,77 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
       })
     }
 
-    // 6. Pet Dostu Mekanlar (Yaşam - Fallback)
-    const venueCardId = `venues-${targetPet.id}`
-    const showVenueCard = !dismissedCards.includes(venueCardId) && highlight !== venueCardId
-    const hasOtherRealCards = activeCards.length > 0
-
-    if (showVenueCard && !hasOtherRealCards) {
-      activeCards.push({
-        id: venueCardId,
-        type: 'venues',
-        title: 'Pet Dostu Mekanlar',
-        subtitle: `Yakınınızda ${targetPet.name} ile keyifli vakit geçirebileceğiniz mekanlar bulduk.`,
-        ctaLabel: 'Keşfet',
-        action: () => {
-          router.push('/owner/services')
-        }
-      })
-    }
+    hasCriticalHealthTask = activeCards.some(c => c.isCritical && (c.type === 'vaccine' || c.type === 'health-task' || c.type === 'parasite' || c.type === 'appetite'))
 
     dashboardMicroTasks = targetPet
       ? filterVisibleTasks(
           activePetId,
           buildPetMicroTasks({
-            pet:          targetPet,
-            vaccinePlans: null, // Dashboard'da sorgulanmıyor — false positive engellemek için null
-            parasitePlans: null, // Dashboard'da sorgulanmıyor — false positive engellemek için null
-            latestWeight:  allWeightLogs?.find(w => w.pet_id === activePetId) ?? null,
-            nutritionProfile: null, // Dashboard'da yok — kart üretilmez
-          }).filter(t =>
-            // Acil kişi kartı zaten varsa tekrar üretme
-            t.type !== 'missing_emergency_contact'
-          )
+            pet: targetPet,
+            vaccinePlans: null,
+            parasitePlans: null,
+            latestWeight: allWeightLogs?.find(w => w.pet_id === activePetId) ?? null,
+            nutritionProfile: null,
+          }).filter(t => t.type !== 'missing_emergency_contact')
         )
       : []
   }
 
-  // Already pushed in exact priority order
-  const sorted = activeCards
+  // Sort active cards strictly by priority ascending
+  activeCards.sort((a, b) => a.priority - b.priority)
 
-  if (sorted.length === 0 && dashboardMicroTasks.length === 0) {
-    return (
-      <div className="mx-[var(--space-4)] rounded-2xl border border-dashed border-[var(--color-border)] py-4 text-center">
-        <span className="text-[11px] font-600 text-[var(--color-text-muted)]">
-          Bugün için aktif görev yok 🎉
-        </span>
-      </div>
-    )
+  // 3.5 Positive state fallback when no real health/routine cards exist for targetPet
+  if (activeCards.length === 0 && pets && pets.length > 0) {
+    const targetPet = pets.find(p => p.id === activePetId) || pets[0]
+    const todayDate = new Date()
+    todayDate.setHours(0,0,0,0)
+
+    const upcomingForPet = upcomingSchedules
+      ?.filter((s: any) => {
+        if (s.pet_id !== targetPet?.id) return false
+        if (s.status === 'done') return false
+        const d = new Date(s.due_date)
+        d.setHours(0,0,0,0)
+        return d > todayDate
+      })
+      .sort((a: any, b: any) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+
+    const nextSchedule = upcomingForPet && upcomingForPet.length > 0 ? upcomingForPet[0] : null
+    const nextDateFormatted = nextSchedule
+      ? new Date(nextSchedule.due_date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })
+      : null
+    const nextTaskName = nextSchedule
+      ? (nextSchedule.title || nextSchedule.sub_category || nextSchedule.vaccines?.name || 'Bakım Görevi')
+      : null
+
+    activeCards.push({
+      id: `positive-${targetPet.id}`,
+      type: 'positive',
+      priority: 9,
+      isCritical: false,
+      title: 'Bugün her şey yolunda 🎉',
+      subtitle: nextSchedule
+        ? `Sıradaki: ${nextDateFormatted} · ${nextTaskName}`
+        : 'Şimdilik planlanmış bir bakım görevi bulunmuyor.',
+      ctaLabel: nextSchedule ? 'Ajandayı Gör' : 'Rutin Planla',
+      action: nextSchedule
+        ? () => {
+            const el = document.getElementById('section-ajanda')
+            if (el) el.scrollIntoView({ behavior: 'smooth' })
+            else router.push(`/owner/pets/${targetPet.id}`)
+          }
+        : () => router.push('/owner/plan-yap')
+    })
   }
 
-  const visibleCards = expanded ? sorted : sorted.slice(0, 2)
+  const sorted = activeCards
+
+  const targetPetObj = pets && pets.length > 0 ? (pets.find(p => p.id === activePetId) || pets[0]) : null
+  const activeAlerts = targetPetObj ? alerts.filter((a: any) => a.petId === targetPetObj.id) : []
+
+  const mainCard = sorted.length > 0 ? sorted[0] : null
+  const compactCriticalCards = sorted.length > 1 ? sorted.slice(1).filter((c: any) => c.isCritical) : []
+  const nonCriticalCards = sorted.length > 1 ? sorted.slice(1).filter((c: any) => !c.isCritical) : []
 
   const renderIcon = (type: string) => {
     switch (type) {
@@ -527,6 +624,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
       case 'journal': return <i className="ti ti-mood-smile text-[18px]" style={{ color: 'var(--color-danger)' }} />
       case 'health-task': return <i className="ti ti-heart-rate-monitor text-[18px]" style={{ color: '#E05C97' }} />
       case 'emergency-contact': return <i className="ti ti-alert-circle text-[18px]" style={{ color: '#F59E0B' }} />
+      case 'positive': return <PawIcon width={18} height={18} />
       default: return <PawIcon width={18} height={18} />
     }
   }
@@ -549,7 +647,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
           iconBg: 'rgba(93,63,211,0.12)',
           btnBg: 'var(--color-primary)',
           tagColor: 'var(--color-primary)',
-          tagText: 'Tıbbi · Bugün'
+          tagText: 'Tıbbi · Sağlık'
         }
       case 'parasite':
         return {
@@ -558,7 +656,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
           iconBg: 'rgba(78,205,196,0.12)',
           btnBg: 'var(--color-success)',
           tagColor: '#0F8F84',
-          tagText: 'Rutin Sağlık · Bugün'
+          tagText: 'Rutin Sağlık'
         }
       case 'appetite':
         return {
@@ -603,7 +701,16 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
           iconBg: 'rgba(224,92,151,0.12)',
           btnBg: '#E05C97',
           tagColor: '#E05C97',
-          tagText: 'Sağlık · Bugün'
+          tagText: 'Sağlık · Görev'
+        }
+      case 'positive':
+        return {
+          accentColor: 'var(--color-success)',
+          bg: 'rgba(78,205,196,0.04)',
+          iconBg: 'rgba(78,205,196,0.12)',
+          btnBg: 'var(--color-primary)',
+          tagColor: '#0F8F84',
+          tagText: 'Durum · Harika'
         }
       case 'venues':
       default:
@@ -618,68 +725,139 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
     }
   }
 
+  const renderMainCard = (card: any) => {
+    const style = getCardStyle(card.type)
+    return (
+      <div
+        key={card.id}
+        className="flex items-center gap-2.5 p-3.5 rounded-2xl border border-[var(--color-border)] shadow-sm"
+        style={{ background: style.bg, borderLeft: `3px solid ${style.accentColor}` }}
+      >
+        <div
+          className="w-[38px] h-[38px] rounded-[10px] flex items-center justify-center flex-shrink-0"
+          style={{ background: style.iconBg }}
+        >
+          {renderIcon(card.type)}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[9px] font-800 uppercase tracking-wide" style={{ color: style.tagColor }}>
+            {card.dateInfo || style.tagText}
+          </p>
+          <p className="text-[12px] font-800 text-[var(--color-text-primary)] truncate">
+            {card.title}
+          </p>
+          <p className="text-[10px] text-[var(--color-text-muted)] font-500 leading-normal line-clamp-2">
+            {card.subtitle}
+          </p>
+        </div>
+        <div className="flex flex-col gap-1.5 flex-shrink-0">
+          <button
+            onClick={card.action}
+            className="px-3.5 py-1.5 rounded-[10px] text-[11px] font-800 text-white transition-all active:scale-[0.97] min-h-[44px]"
+            style={{ background: style.btnBg }}
+          >
+            {card.ctaLabel}
+          </button>
+          {card.type !== 'positive' && (
+            <button
+              onClick={() => dismissCard(card.id)}
+              className="px-3.5 py-1 rounded-[10px] text-[10px] font-700 text-[var(--color-text-secondary)] border border-[var(--color-border)] hover:bg-[var(--color-surface)]/20 transition-all text-center min-h-[44px]"
+            >
+              Sonra
+            </button>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  const renderCompactCriticalRow = (card: any) => {
+    const style = getCardStyle(card.type)
+    return (
+      <div
+        key={card.id}
+        className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border border-[var(--color-border)] shadow-xs"
+        style={{ background: style.bg, borderLeft: `3px solid ${style.accentColor}` }}
+      >
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          <div
+            className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{ background: style.iconBg }}
+          >
+            {renderIcon(card.type)}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <p className="text-[11.5px] font-800 text-[var(--color-text-primary)] truncate">
+                {card.title}
+              </p>
+              <span className="text-[8.5px] font-800 px-1.5 py-0.5 rounded-full shrink-0" style={{ color: style.tagColor, backgroundColor: style.iconBg }}>
+                {card.dateInfo || style.tagText}
+              </span>
+            </div>
+            <p className="text-[10px] text-[var(--color-text-muted)] font-500 truncate">
+              {card.subtitle}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <button
+            onClick={card.action}
+            className="px-3 py-1.5 rounded-[9px] text-[10.5px] font-800 text-white transition-all active:scale-[0.97] min-h-[44px]"
+            style={{ background: style.btnBg }}
+          >
+            {card.ctaLabel}
+          </button>
+          <button
+            onClick={() => dismissCard(card.id)}
+            className="px-2 py-1 rounded-[8px] text-[10px] font-700 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-all min-h-[44px]"
+            title="Sonra"
+          >
+            <i className="ti ti-x text-[12px]" />
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-2">
       {/* Başlık */}
-
-      <div className="flex items-center gap-2 px-[var(--space-4)] mb-2.5">
-        <p className="text-[11px] font-800 text-[var(--color-text-primary)]">
+      <div className="flex items-center gap-2 px-[var(--space-4)] mb-1">
+        <p className="text-[11px] font-800 text-[var(--color-text-primary)] uppercase tracking-[0.8px]">
           Bugünkü Odak
         </p>
-        {sorted.length > 0 && (
+        {sorted.length > 0 && sorted[0].type !== 'positive' && (
           <span className="text-[9px] font-800 bg-[var(--color-surface-2)] text-[var(--color-text-muted)] px-[7px] py-[2px] rounded-full">
-            {Math.min(sorted.length, 2)} / {sorted.length}
+            1 / {sorted.length}
           </span>
         )}
       </div>
 
       {/* Kart Listesi */}
       <div className="flex flex-col gap-2 px-[var(--space-4)]">
-        {visibleCards.map((card: any) => {
-          const style = getCardStyle(card.type)
-          return (
-            <div
-              key={card.id}
-              className="flex items-center gap-2.5 p-3.5 rounded-2xl border border-[var(--color-border)] shadow-sm"
-              style={{ background: style.bg, borderLeft: `3px solid ${style.accentColor}` }}
-            >
-              <div
-                className="w-[38px] h-[38px] rounded-[10px] flex items-center justify-center flex-shrink-0"
-                style={{ background: style.iconBg }}
-              >
-                {renderIcon(card.type)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[9px] font-800 uppercase tracking-wide" style={{ color: style.tagColor }}>
-                  {style.tagText}
-                </p>
-                <p className="text-[12px] font-800 text-[var(--color-text-primary)] truncate">
-                  {card.title}
-                </p>
-                <p className="text-[10px] text-[var(--color-text-muted)] font-500 leading-normal line-clamp-2">
-                  {card.subtitle}
-                </p>
-              </div>
-              <div className="flex flex-col gap-1.5 flex-shrink-0">
-                <button
-                  onClick={card.action}
-                  className="px-3.5 py-1.5 rounded-[10px] text-[11px] font-800 text-white transition-all active:scale-[0.97] min-h-[44px]"
-                  style={{ background: style.btnBg }}
-                >
-                  {card.ctaLabel}
-                </button>
-                <button
-                  onClick={() => dismissCard(card.id)}
-                  className="px-3.5 py-1 rounded-[10px] text-[10px] font-700 text-[var(--color-text-secondary)] border border-[var(--color-border)] hover:bg-[var(--color-surface)]/20 transition-all text-center min-h-[44px]"
-                >
-                  Sonra
-                </button>
-              </div>
-            </div>
-          )
-        })}
+        {/* 1. Bir Büyük Ana Kart */}
+        {mainCard && renderMainCard(mainCard)}
 
-        {dashboardMicroTasks.length > 0 && !hasCriticalHealthTask && (
+        {/* 2. Ek Kritik Görevler (Kompakt Satırlar) */}
+        {compactCriticalCards.map((card: any) => renderCompactCriticalRow(card))}
+
+        {/* 3. Kritik Olmayan Görevler (Expander ile açılır) */}
+        {expanded && nonCriticalCards.map((card: any) => renderMainCard(card))}
+
+        {/* 4. Expander Butonu */}
+        {!expanded && nonCriticalCards.length > 0 && (
+          <button
+            onClick={() => setExpanded(true)}
+            className="flex items-center justify-center gap-1 py-2 text-[11px] font-700 text-[var(--color-primary)] active:scale-[0.98] transition-all"
+          >
+            {nonCriticalCards.length} görev daha var
+            <i className="ti ti-chevron-down text-[13px]" />
+          </button>
+        )}
+
+        {/* 5. Mikro Görev (Kritik görev yoksa en fazla 1 adet) */}
+        {!hasCriticalHealthTask && dashboardMicroTasks.length > 0 && (
           <PetMicroTaskCard
             task={dashboardMicroTasks[0]}
             petId={activePetId}
@@ -687,19 +865,8 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
           />
         )}
 
-
-        {!expanded && sorted.length > 2 && (
-          <button
-            onClick={() => setExpanded(true)}
-            className="flex items-center justify-center gap-1 py-2 text-[11px] font-700 text-[var(--color-primary)] active:scale-[0.98] transition-all"
-          >
-            {sorted.length - 2} görev daha var
-            <i className="ti ti-chevron-down text-[13px]" />
-          </button>
-        )}
-
-        {/* 6 aylık temel aşı değerlendirmesi alerts */}
-        {alerts.map((alert: any) => (
+        {/* 6. 6 Aylık Temel Aşı Değerlendirmesi Alert (Sadece Aktif Pet) */}
+        {activeAlerts.map((alert: any) => (
           <SixMonthDashboardCard
             key={alert.petId}
             alert={alert}
