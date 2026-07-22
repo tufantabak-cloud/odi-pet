@@ -35,11 +35,17 @@ export default function ContentAdminClient() {
   const [filterStatus, setFilterStatus] = useState('');
   const [filterMedical, setFilterMedical] = useState('');
   const [filterVetStatus, setFilterVetStatus] = useState('');
+  const [filterFreshness, setFilterFreshness] = useState('');
 
   // Form State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Revizyon Geçmişi State
+  const [revisionsModalOpen, setRevisionsModalOpen] = useState(false);
+  const [revisionsList, setRevisionsList] = useState<any[]>([]);
+  const [revisionsLoading, setRevisionsLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -62,7 +68,12 @@ export default function ContentAdminClient() {
     is_medical_content: false,
     vet_review_status: 'not_required',
     references_list: '',
-    is_published: false
+    is_published: false,
+    freshness_type: 'evergreen',
+    review_interval_days: 365,
+    latest_change_summary: '',
+    content_version: 1,
+    is_archived: false
   });
 
   const fetchArticles = async () => {
@@ -76,6 +87,7 @@ export default function ContentAdminClient() {
       if (filterStatus) params.set('status', filterStatus);
       if (filterMedical) params.set('is_medical', filterMedical);
       if (filterVetStatus) params.set('vet_status', filterVetStatus);
+      if (filterFreshness) params.set('freshness', filterFreshness);
 
       const res = await fetch(`/api/admin/content?${params.toString()}`);
       const json = await res.json();
@@ -93,7 +105,7 @@ export default function ContentAdminClient() {
 
   useEffect(() => {
     fetchArticles();
-  }, [filterQuery, filterCategory, filterSpecies, filterStatus, filterMedical, filterVetStatus]);
+  }, [filterQuery, filterCategory, filterSpecies, filterStatus, filterMedical, filterVetStatus, filterFreshness]);
 
   // Otomatik Slug Üretme
   const handleTitleChange = (val: string) => {
@@ -139,7 +151,12 @@ export default function ContentAdminClient() {
       is_medical_content: false,
       vet_review_status: 'not_required',
       references_list: '',
-      is_published: false
+      is_published: false,
+      freshness_type: 'evergreen',
+      review_interval_days: 365,
+      latest_change_summary: 'İlk sürüm oluşturuldu.',
+      content_version: 1,
+      is_archived: false
     });
     setErrorMsg('');
     setIsModalOpen(true);
@@ -170,10 +187,52 @@ export default function ContentAdminClient() {
       references_list: Array.isArray(article.references_list)
         ? article.references_list.join('\n')
         : '',
-      is_published: Boolean(article.is_published)
+      is_published: Boolean(article.is_published),
+      freshness_type: article.freshness_type || 'evergreen',
+      review_interval_days: article.review_interval_days || 365,
+      latest_change_summary: '',
+      content_version: article.content_version || 1,
+      is_archived: Boolean(article.archived_at)
     });
     setErrorMsg('');
     setIsModalOpen(true);
+  };
+
+  const handleFetchRevisions = async (articleId: string) => {
+    setRevisionsLoading(true);
+    setRevisionsModalOpen(true);
+    try {
+      const res = await fetch(`/api/admin/content/${articleId}/revisions`);
+      const json = await res.json();
+      if (res.ok) {
+        setRevisionsList(json || []);
+      }
+    } catch {
+      setRevisionsList([]);
+    } finally {
+      setRevisionsLoading(false);
+    }
+  };
+
+  const handleReverifyOnly = async (articleId: string) => {
+    try {
+      const res = await fetch(`/api/admin/content/${articleId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reverify' })
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || 'Yeniden doğrulama başarısız oldu.');
+      }
+
+      setSuccessMsg('İçerik güncelliği yeniden doğrulandı (Sürüm değiştirilmedi).');
+      setTimeout(() => setSuccessMsg(''), 4000);
+      setIsModalOpen(false);
+      fetchArticles();
+    } catch (err: any) {
+      setErrorMsg(err.message);
+    }
   };
 
   const handleTogglePublish = async (article: any) => {
@@ -229,7 +288,7 @@ export default function ContentAdminClient() {
         throw new Error(json.error || 'İşlem başarısız oldu.');
       }
 
-      setSuccessMsg(editingId ? 'İçerik başarıyla güncellendi.' : 'Yeni içerik başarıyla oluşturuldu.');
+      setSuccessMsg(editingId ? 'İçerik ve sürüm geçmişi güncellendi.' : 'Yeni içerik oluşturuldu.');
       setTimeout(() => setSuccessMsg(''), 4000);
       setIsModalOpen(false);
       fetchArticles();
@@ -240,21 +299,51 @@ export default function ContentAdminClient() {
     }
   };
 
-  // Dinamik Irk Listesi (Seçili tür filtrelerine göre)
+  // Dinamik Irk Listesi
   const availableBreeds = ALL_BREEDS.filter((b) => {
     if (formData.species_filter.length === 0) return true;
     if (b.species === 'both') return true;
     return formData.species_filter.includes(b.species);
   });
 
+  // İçerik Kapsamı (Coverage Gaps) Analizi
+  const now = new Date();
+  const activePublishedArticles = articles.filter(
+    (a) => a.is_published && !a.archived_at && (!a.next_review_at || new Date(a.next_review_at) >= now)
+  );
+
+  const coverageGaps: string[] = [];
+
+  // Kedi & Köpek genel bakım kontrolü
+  const hasCatGen = activePublishedArticles.some((a) => a.species_filter?.includes('cat'));
+  const hasDogGen = activePublishedArticles.some((a) => a.species_filter?.includes('dog'));
+  if (!hasCatGen) coverageGaps.push('Kedilere yönelik güncel içerik yok.');
+  if (!hasDogGen) coverageGaps.push('Köpeklere yönelik güncel içerik yok.');
+
+  // Yaşam Evresi Kontrolleri
+  const hasJuniorCat = activePublishedArticles.some((a) => a.species_filter?.includes('cat') && a.target_life_stages?.includes('junior'));
+  const hasJuniorDog = activePublishedArticles.some((a) => a.species_filter?.includes('dog') && a.target_life_stages?.includes('junior'));
+  if (!hasJuniorCat) coverageGaps.push('Yavru kediler için güncel bakım/beslenme içeriği eksik.');
+  if (!hasJuniorDog) coverageGaps.push('Yavru köpekler için güncel eğitim/bakım içeriği eksik.');
+
+  // Mevsimsel Kontroller
+  const hasWinter = activePublishedArticles.some((a) => a.target_seasons?.includes('winter'));
+  const hasSummer = activePublishedArticles.some((a) => a.target_seasons?.includes('summer'));
+  if (!hasWinter) coverageGaps.push('Kış dönemi bakımı için güncel içerik yok.');
+  if (!hasSummer) coverageGaps.push('Yaz dönemi bakımı ve sıcak havalar için güncel içerik yok.');
+
+  // Irk Özellikleri Kontrolleri
+  const hasBrachy = activePublishedArticles.some((a) => a.target_breed_traits?.includes('brachycephalic'));
+  if (!hasBrachy) coverageGaps.push('Basık burunlu irklar (Pug, Siyam vb.) için güncel bakım içeriği yok.');
+
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
       {/* Üst Başlık & Ekle Butonu */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-[var(--color-text-primary)]">İçerik Yönetimi</h1>
+          <h1 className="text-2xl font-black text-[var(--color-text-primary)]">İçerik Yaşam Döngüsü & Yönetimi</h1>
           <p className="text-xs text-[var(--color-text-secondary)] mt-1">
-            Aktif pet profiline özel kişiselleştirilmiş içerik ve rehber akışını yönetin.
+            İçerik güncelliğini, sürüm geçmişini ve kapsama boşluklarını (Coverage Gaps) yönetin.
           </p>
         </div>
         <button
@@ -263,6 +352,34 @@ export default function ContentAdminClient() {
         >
           + Yeni İçerik Ekle
         </button>
+      </div>
+
+      {/* İçerik Kapsamı (Coverage Gaps) Paneli */}
+      <div className="bg-gradient-to-r from-purple-900 to-indigo-900 text-white rounded-2xl p-5 shadow-sm space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-extrabold flex items-center gap-2">
+            <i className="ti ti-chart-dots" />
+            İçerik Kapsamı & Eksiklik Analizi (Coverage Gaps)
+          </h2>
+          <span className="text-[11px] bg-white/20 px-2.5 py-0.5 rounded-full font-semibold">
+            {activePublishedArticles.length} Aktif & Güncel İçerik
+          </span>
+        </div>
+
+        {coverageGaps.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+            {coverageGaps.map((gap, i) => (
+              <div key={i} className="flex items-center gap-2 bg-white/10 p-2.5 rounded-xl">
+                <i className="ti ti-alert-circle text-amber-300 shrink-0" />
+                <span className="text-purple-100 font-medium">{gap}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-emerald-300 font-semibold">
+            Tüm temel kategorilerde ve yaş evrelerinde güncel içerik kapsama seviyesi tam.
+          </p>
+        )}
       </div>
 
       {/* Bildirimler */}
@@ -286,7 +403,7 @@ export default function ContentAdminClient() {
             placeholder="Arama yapın..."
             value={filterQuery}
             onChange={(e) => setFilterQuery(e.target.value)}
-            className="w-full text-xs p-2.5 border rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]"
+            className="w-full text-xs p-2.5 border rounded-xl bg-gray-50 focus:bg-white focus:outline-none"
           />
 
           {/* Kategori */}
@@ -300,8 +417,7 @@ export default function ContentAdminClient() {
             <option value="saglik">Sağlık & Medikal</option>
             <option value="beslenme">Beslenme</option>
             <option value="egitim">Eğitim & Davranış</option>
-            <option value="bakim">Tüy & Hijyen Bakımı</option>
-            <option value="guvenlik">Güvenlik & Açık Alan</option>
+            <option value="bakim">Tüy & Hijyen</option>
           </select>
 
           {/* Tür */}
@@ -315,26 +431,16 @@ export default function ContentAdminClient() {
             <option value="dog">Köpek</option>
           </select>
 
-          {/* Yayın Durumu */}
+          {/* Yayın & Arşiv Durumu */}
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
             className="w-full text-xs p-2.5 border rounded-xl bg-gray-50 focus:bg-white focus:outline-none"
           >
-            <option value="">Tüm Durumlar</option>
+            <option value="">Tüm Yayın Durumları</option>
             <option value="published">Yayında</option>
             <option value="draft">Taslak</option>
-          </select>
-
-          {/* Tıbbi Durum */}
-          <select
-            value={filterMedical}
-            onChange={(e) => setFilterMedical(e.target.value)}
-            className="w-full text-xs p-2.5 border rounded-xl bg-gray-50 focus:bg-white focus:outline-none"
-          >
-            <option value="">Tüm İçerikler</option>
-            <option value="true">Tıbbi İçerik</option>
-            <option value="false">Genel İçerik</option>
+            <option value="archived">Arşivlendi</option>
           </select>
 
           {/* Vet Onay Durumu */}
@@ -348,10 +454,23 @@ export default function ContentAdminClient() {
             <option value="pending">Onay Bekliyor</option>
             <option value="approved">Veteriner Onaylı</option>
           </select>
+
+          {/* Güncellik Filtresi */}
+          <select
+            value={filterFreshness}
+            onChange={(e) => setFilterFreshness(e.target.value)}
+            className="w-full text-xs p-2.5 border rounded-xl bg-amber-50/50 border-amber-200 font-bold focus:bg-white focus:outline-none"
+          >
+            <option value="">Tüm Güncellik Durumları</option>
+            <option value="fresh">Güncel İçerikler</option>
+            <option value="due_soon">Kontrol Tarihi Yaklaşanlar (30 Gün)</option>
+            <option value="expired">Kontrol Süresi Geçenler</option>
+            <option value="needs_review">İnceleme Bekleyenler</option>
+          </select>
         </div>
       </div>
 
-      {/* Liste Tablosu / Kartlar */}
+      {/* Liste Tablosu */}
       <div className="bg-white border border-[var(--color-border)] rounded-2xl overflow-hidden shadow-xs">
         {loading ? (
           <div className="p-12 text-center text-xs text-gray-500 font-medium">Yükleniyor...</div>
@@ -364,77 +483,95 @@ export default function ContentAdminClient() {
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200 text-gray-600 font-bold uppercase tracking-wider text-[10px]">
-                  <th className="p-3.5">Başlık / Slug</th>
+                  <th className="p-3.5">Başlık / Sürüm</th>
                   <th className="p-3.5">Kategori / Tür</th>
-                  <th className="p-3.5">Hedefleme Özeti</th>
-                  <th className="p-3.5">Tıbbi / Vet Durumu</th>
-                  <th className="p-3.5">Yayın Durumu</th>
-                  <th className="p-3.5 text-right">İşlem</th>
+                  <th className="p-3.5">Güncellik Durumu</th>
+                  <th className="p-3.5">Sonraki Kontrol</th>
+                  <th className="p-3.5">Yayın / Arşiv</th>
+                  <th className="p-3.5 text-right">İşlemler</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 font-medium text-gray-800">
-                {articles.map((art) => (
-                  <tr key={art.id} className="hover:bg-gray-50/80 transition-colors">
-                    <td className="p-3.5 max-w-xs">
-                      <div className="font-bold text-gray-900 truncate">{art.title}</div>
-                      <div className="text-[10px] text-gray-500 truncate font-mono">/{art.slug}</div>
-                    </td>
-                    <td className="p-3.5">
-                      <span className="inline-block bg-purple-50 text-purple-700 px-2 py-0.5 rounded text-[10px] font-bold">
-                        {art.category || 'genel'}
-                      </span>
-                      <div className="text-[10px] text-gray-500 mt-1">
-                        {art.species_filter?.join(', ') || 'Tür seçilmemiş'}
-                      </div>
-                    </td>
-                    <td className="p-3.5 max-w-xs">
-                      <div className="text-[10px] text-gray-600 space-y-0.5">
-                        {art.target_breed_keys?.length > 0 && (
-                          <div><strong className="text-gray-800">Irk:</strong> {art.target_breed_keys.join(', ')}</div>
-                        )}
-                        {art.target_life_stages?.length > 0 && (
-                          <div><strong className="text-gray-800">Evre:</strong> {art.target_life_stages.join(', ')}</div>
-                        )}
-                        {(!art.target_breed_keys?.length && !art.target_life_stages?.length) && (
-                          <span className="text-gray-400">Genel Bakım</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="p-3.5">
-                      {art.is_medical_content ? (
-                        <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${
-                          art.vet_review_status === 'approved'
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-amber-100 text-amber-800'
-                        }`}>
-                          Tıbbi ({art.vet_review_status})
+                {articles.map((art) => {
+                  const isExpired = art.next_review_at && new Date(art.next_review_at) < now;
+                  const isDueSoon =
+                    art.next_review_at &&
+                    new Date(art.next_review_at) >= now &&
+                    new Date(art.next_review_at) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+                  return (
+                    <tr key={art.id} className="hover:bg-gray-50/80 transition-colors">
+                      <td className="p-3.5 max-w-xs">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-gray-900 truncate">{art.title}</span>
+                          <span className="text-[9px] bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded font-mono">
+                            v{art.content_version || 1}
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-gray-500 truncate font-mono">/{art.slug}</div>
+                      </td>
+                      <td className="p-3.5">
+                        <span className="inline-block bg-purple-50 text-purple-700 px-2 py-0.5 rounded text-[10px] font-bold">
+                          {art.category || 'genel'}
                         </span>
-                      ) : (
-                        <span className="text-[10px] text-gray-500">Genel İçerik</span>
-                      )}
-                    </td>
-                    <td className="p-3.5">
-                      <button
-                        onClick={() => handleTogglePublish(art)}
-                        className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold transition-all ${
-                          art.is_published
-                            ? 'bg-emerald-500 text-white hover:bg-emerald-600'
-                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                        }`}
-                      >
-                        {art.is_published ? 'Yayında ✓' : 'Taslak'}
-                      </button>
-                    </td>
-                    <td className="p-3.5 text-right space-x-2">
-                      <button
-                        onClick={() => handleOpenEditModal(art)}
-                        className="text-indigo-600 hover:text-indigo-900 font-bold"
-                      >
-                        Düzenle
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                        <div className="text-[10px] text-gray-500 mt-1">
+                          {art.species_filter?.join(', ') || 'Tür seçilmemiş'}
+                        </div>
+                      </td>
+                      <td className="p-3.5">
+                        {art.archived_at ? (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-200 text-gray-700">
+                            Arşivlendi
+                          </span>
+                        ) : isExpired ? (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800">
+                            Süresi Geçti (Geçersiz)
+                          </span>
+                        ) : isDueSoon ? (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
+                            Kontrol Yaklaşıyor
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                            Güncel ✓
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-3.5 text-[11px] text-gray-600">
+                        {art.next_review_at
+                          ? new Date(art.next_review_at).toLocaleDateString('tr-TR')
+                          : 'Belirtilmedi'}
+                      </td>
+                      <td className="p-3.5">
+                        <button
+                          onClick={() => handleTogglePublish(art)}
+                          className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold transition-all ${
+                            art.is_published
+                              ? 'bg-emerald-500 text-white hover:bg-emerald-600'
+                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          }`}
+                        >
+                          {art.is_published ? 'Yayında ✓' : 'Taslak'}
+                        </button>
+                      </td>
+                      <td className="p-3.5 text-right space-x-2">
+                        <button
+                          onClick={() => handleFetchRevisions(art.id)}
+                          className="text-gray-600 hover:text-gray-900 font-bold"
+                          title="Sürüm Geçmişi"
+                        >
+                          Sürümler
+                        </button>
+                        <button
+                          onClick={() => handleOpenEditModal(art)}
+                          className="text-indigo-600 hover:text-indigo-900 font-bold"
+                        >
+                          Düzenle
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -446,9 +583,16 @@ export default function ContentAdminClient() {
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-6 shadow-2xl border border-gray-100">
             <div className="flex items-center justify-between border-b pb-3">
-              <h2 className="text-lg font-black text-gray-900">
-                {editingId ? 'İçeriği Düzenle' : 'Yeni İçerik Ekle'}
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-black text-gray-900">
+                  {editingId ? 'İçerik & Sürüm Yönetimi' : 'Yeni İçerik Ekle'}
+                </h2>
+                {editingId && (
+                  <span className="text-xs bg-indigo-100 text-indigo-800 px-2.5 py-0.5 rounded-full font-bold">
+                    Mevcut Sürüm: v{formData.content_version}
+                  </span>
+                )}
+              </div>
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="text-gray-400 hover:text-gray-600 font-bold text-lg"
@@ -456,6 +600,25 @@ export default function ContentAdminClient() {
                 ✕
               </button>
             </div>
+
+            {/* Yeniden Doğrulama Hızlı Eylemi */}
+            {editingId && (
+              <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between text-xs">
+                <div>
+                  <p className="font-extrabold text-emerald-950">Bilgi Hâlâ Güncel mi?</p>
+                  <p className="text-[11px] text-emerald-800">
+                    İçerik metninde değişiklik yapmadan sadece kontrol tarihini yenileyebilirsiniz (Sürüm artmaz).
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleReverifyOnly(editingId)}
+                  className="px-3.5 py-2 bg-emerald-600 text-white font-bold rounded-xl text-xs hover:bg-emerald-700 transition-colors shrink-0"
+                >
+                  Gözden Geçir & Onayla ✓
+                </button>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4 text-xs">
               {/* Temel Bilgiler */}
@@ -468,7 +631,6 @@ export default function ContentAdminClient() {
                     value={formData.title}
                     onChange={(e) => handleTitleChange(e.target.value)}
                     className="w-full p-2.5 border rounded-xl bg-gray-50 focus:bg-white"
-                    placeholder="Örn: Sıcak Havada Köpek Gezdirme"
                   />
                 </div>
                 <div>
@@ -479,7 +641,6 @@ export default function ContentAdminClient() {
                     value={formData.slug}
                     onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                     className="w-full p-2.5 border rounded-xl bg-gray-50 focus:bg-white font-mono"
-                    placeholder="sicak-havada-kopek-gezdirme"
                   />
                 </div>
               </div>
@@ -492,7 +653,6 @@ export default function ContentAdminClient() {
                   value={formData.excerpt}
                   onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
                   className="w-full p-2.5 border rounded-xl bg-gray-50 focus:bg-white"
-                  placeholder="Dashboard öneri kartında görünecek 1-2 cümlelik özet metin..."
                 />
               </div>
 
@@ -504,169 +664,59 @@ export default function ContentAdminClient() {
                   value={formData.content}
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                   className="w-full p-2.5 border rounded-xl bg-gray-50 focus:bg-white font-mono text-[11px]"
-                  placeholder="Detay sayfasında görüntülenecek makale metni..."
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block font-bold text-gray-700 mb-1">Kategori</label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full p-2.5 border rounded-xl bg-gray-50"
-                  >
-                    <option value="genel">Genel Bakım</option>
-                    <option value="saglik">Sağlık & Medikal</option>
-                    <option value="beslenme">Beslenme</option>
-                    <option value="egitim">Eğitim & Davranış</option>
-                    <option value="bakim">Tüy & Hijyen Bakımı</option>
-                    <option value="guvenlik">Güvenlik</option>
-                  </select>
-                </div>
+              {/* Güncellik & Periyot Ayarları */}
+              <div className="border-t pt-4 space-y-3">
+                <h3 className="font-extrabold text-sm text-gray-900">Güncellik & Kontrol Periyodu</h3>
 
-                <div>
-                  <label className="block font-bold text-gray-700 mb-1">Kapak Görseli URL</label>
-                  <input
-                    type="text"
-                    value={formData.cover_url}
-                    onChange={(e) => setFormData({ ...formData, cover_url: e.target.value })}
-                    className="w-full p-2.5 border rounded-xl bg-gray-50"
-                    placeholder="https://..."
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-gray-700 mb-1">Okuma Süresi (Dk)</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={formData.read_time_minutes}
-                    onChange={(e) => setFormData({ ...formData, read_time_minutes: Number(e.target.value) })}
-                    className="w-full p-2.5 border rounded-xl bg-gray-50"
-                  />
-                </div>
-              </div>
-
-              {/* Hedefleme Ayarları */}
-              <div className="border-t pt-4 space-y-4">
-                <h3 className="font-extrabold text-sm text-gray-900">Kişiselleştirilmiş Hedefleme Kuralları</h3>
-
-                {/* Tür Filtresi */}
-                <div>
-                  <label className="block font-bold text-gray-700 mb-1.5">Hedef Tür (species_filter) *</label>
-                  <div className="flex items-center gap-4">
-                    <label className="flex items-center gap-2 cursor-pointer font-semibold">
-                      <input
-                        type="checkbox"
-                        checked={formData.species_filter.includes('cat')}
-                        onChange={(e) => {
-                          const next = e.target.checked
-                            ? [...formData.species_filter, 'cat']
-                            : formData.species_filter.filter((s) => s !== 'cat');
-                          setFormData({ ...formData, species_filter: next });
-                        }}
-                      />
-                      Kedi
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer font-semibold">
-                      <input
-                        type="checkbox"
-                        checked={formData.species_filter.includes('dog')}
-                        onChange={(e) => {
-                          const next = e.target.checked
-                            ? [...formData.species_filter, 'dog']
-                            : formData.species_filter.filter((s) => s !== 'dog');
-                          setFormData({ ...formData, species_filter: next });
-                        }}
-                      />
-                      Köpek
-                    </label>
-                  </div>
-                </div>
-
-                {/* Irk Seçimi (Dinamik) */}
-                <div>
-                  <label className="block font-bold text-gray-700 mb-1">Hedef Irklar (target_breed_keys)</label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-36 overflow-y-auto p-2 border rounded-xl bg-gray-50">
-                    {availableBreeds.map((b) => (
-                      <label key={b.key} className="flex items-center gap-2 text-[11px] cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.target_breed_keys.includes(b.key)}
-                          onChange={(e) => {
-                            const next = e.target.checked
-                              ? [...formData.target_breed_keys, b.key]
-                              : formData.target_breed_keys.filter((k) => k !== b.key);
-                            setFormData({ ...formData, target_breed_keys: next });
-                          }}
-                        />
-                        {b.name}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Irk Özellikleri & Yaşam Evresi */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block font-bold text-gray-700 mb-1">Irk Özellikleri (target_breed_traits)</label>
-                    <div className="space-y-1 p-2.5 border rounded-xl bg-gray-50">
-                      {[
-                        { key: 'long_hair', label: 'Uzun Tüylü' },
-                        { key: 'curly_hair', label: 'Kıvırcık Tüylü' },
-                        { key: 'brachycephalic', label: 'Basık Burunlu' },
-                        { key: 'small_breed', label: 'Küçük Irk' },
-                        { key: 'large_breed', label: 'Büyük Irk' }
-                      ].map((t) => (
-                        <label key={t.key} className="flex items-center gap-2 text-[11px] cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={formData.target_breed_traits.includes(t.key)}
-                            onChange={(e) => {
-                              const next = e.target.checked
-                                ? [...formData.target_breed_traits, t.key]
-                                : formData.target_breed_traits.filter((k) => k !== t.key);
-                              setFormData({ ...formData, target_breed_traits: next });
-                            }}
-                          />
-                          {t.label}
-                        </label>
-                      ))}
-                    </div>
+                    <label className="block font-bold text-gray-700 mb-1">Güncellik Türü (freshness_type)</label>
+                    <select
+                      value={formData.freshness_type}
+                      onChange={(e) => {
+                        const ft = e.target.value;
+                        const defaultInterval = ft === 'medical' || ft === 'seasonal' ? 180 : ft === 'product_regulatory' ? 90 : 365;
+                        setFormData({ ...formData, freshness_type: ft, review_interval_days: defaultInterval });
+                      }}
+                      className="w-full p-2.5 border rounded-xl bg-gray-50"
+                    >
+                      <option value="evergreen">Evergreen (Her Zaman Güncel - 365 Gün)</option>
+                      <option value="medical">Tıbbi / Medikal (180 Gün)</option>
+                      <option value="seasonal">Mevsimsel (180 Gün)</option>
+                      <option value="product_regulatory">Mevzuat / Ürün (90 Gün)</option>
+                    </select>
                   </div>
 
                   <div>
-                    <label className="block font-bold text-gray-700 mb-1">Yaşam Evresi (target_life_stages)</label>
-                    <div className="space-y-1 p-2.5 border rounded-xl bg-gray-50">
-                      {[
-                        { key: 'junior', label: 'Yavru (0-1 Yaş)' },
-                        { key: 'adult', label: 'Yetişkin (1-7 Yaş)' },
-                        { key: 'senior', label: 'Yaşlı (7-12 Yaş)' },
-                        { key: 'senior_12plus', label: 'Yaşlı 12+ (12+ Yaş)' }
-                      ].map((ls) => (
-                        <label key={ls.key} className="flex items-center gap-2 text-[11px] cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={formData.target_life_stages.includes(ls.key)}
-                            onChange={(e) => {
-                              const next = e.target.checked
-                                ? [...formData.target_life_stages, ls.key]
-                                : formData.target_life_stages.filter((k) => k !== ls.key);
-                              setFormData({ ...formData, target_life_stages: next });
-                            }}
-                          />
-                          {ls.label}
-                        </label>
-                      ))}
-                    </div>
+                    <label className="block font-bold text-gray-700 mb-1">Kontrol Periyodu (Gün)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={formData.review_interval_days}
+                      onChange={(e) => setFormData({ ...formData, review_interval_days: Number(e.target.value) })}
+                      className="w-full p-2.5 border rounded-xl bg-gray-50"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-gray-700 mb-1">Değişiklik Açıklaması (Sürüm Notu)</label>
+                    <input
+                      type="text"
+                      value={formData.latest_change_summary}
+                      onChange={(e) => setFormData({ ...formData, latest_change_summary: e.target.value })}
+                      placeholder="İçerik düzenlendiğinde zorunludur..."
+                      className="w-full p-2.5 border rounded-xl bg-gray-50"
+                    />
                   </div>
                 </div>
               </div>
 
-              {/* Tıbbi Güvenlik & Yayınlama Ayarları */}
+              {/* Tıbbi & Kaynakça Ayarları */}
               <div className="border-t pt-4 space-y-4">
-                <h3 className="font-extrabold text-sm text-gray-900">Tıbbi Onay & Yayın Güvenliği</h3>
+                <h3 className="font-extrabold text-sm text-gray-900">Tıbbi Onay & Bilimsel Kaynaklar</h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-amber-50/50 p-3.5 border border-amber-200/60 rounded-2xl">
                   <div className="space-y-2">
@@ -678,9 +728,6 @@ export default function ContentAdminClient() {
                       />
                       Bu Bir Tıbbi / Sağlık İçeriğidir
                     </label>
-                    <p className="text-[10px] text-amber-800 leading-relaxed">
-                      Tıbbi içerikler veteriner hekim onayı (approved) olmadan canlıda yayınlanamaz.
-                    </p>
                   </div>
 
                   <div>
@@ -698,25 +745,33 @@ export default function ContentAdminClient() {
                 </div>
 
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">Medikal / Bilimsel Kaynaklar</label>
+                  <label className="block font-bold text-gray-700 mb-1">Bilimsel / Tıbbi Kaynaklar (Her satıra bir kaynak)</label>
                   <textarea
                     rows={2}
                     value={formData.references_list}
                     onChange={(e) => setFormData({ ...formData, references_list: e.target.value })}
                     className="w-full p-2.5 border rounded-xl bg-gray-50 text-[11px]"
-                    placeholder="Her satıra bir kaynak yazın..."
                   />
                 </div>
 
                 <div className="flex items-center justify-between pt-2 border-t">
-                  <div>
+                  <div className="flex items-center gap-4">
                     <label className="flex items-center gap-2 font-black text-sm text-gray-900 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.is_published}
                         onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })}
                       />
-                      Canlıda Yayınla (is_published = true)
+                      Canlıda Yayınla
+                    </label>
+
+                    <label className="flex items-center gap-2 font-bold text-xs text-rose-700 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.is_archived}
+                        onChange={(e) => setFormData({ ...formData, is_archived: e.target.checked })}
+                      />
+                      Arşivle (Yayından Kaldır)
                     </label>
                   </div>
 
@@ -733,12 +788,49 @@ export default function ContentAdminClient() {
                       disabled={isSubmitting}
                       className="px-5 py-2 text-xs font-bold text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] rounded-xl shadow-xs disabled:opacity-50"
                     >
-                      {isSubmitting ? 'Kaydediliyor...' : 'Kaydet'}
+                      {isSubmitting ? 'Kaydediliyor...' : editingId ? 'Güncelle & Yeni Sürüm Oluştur' : 'Kaydet'}
                     </button>
                   </div>
                 </div>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Sürüm Geçmişi (Revisions) Modalı */}
+      {revisionsModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b pb-3">
+              <h2 className="text-base font-black text-gray-900">Sürüm Geçmişi & Değişiklik Günlüğü</h2>
+              <button
+                onClick={() => setRevisionsModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 font-bold text-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            {revisionsLoading ? (
+              <p className="text-xs text-gray-500 font-medium py-4 text-center">Yükleniyor...</p>
+            ) : revisionsList.length === 0 ? (
+              <p className="text-xs text-gray-500 font-medium py-4 text-center">Henüz kaydedilmiş eski sürüm yok.</p>
+            ) : (
+              <div className="space-y-3 text-xs">
+                {revisionsList.map((rev) => (
+                  <div key={rev.id} className="p-3 bg-gray-50 border border-gray-200 rounded-xl space-y-1">
+                    <div className="flex items-center justify-between font-bold text-gray-900">
+                      <span>Sürüm v{rev.version_number}</span>
+                      <span className="text-[10px] text-gray-500 font-mono">
+                        {new Date(rev.changed_at).toLocaleString('tr-TR')}
+                      </span>
+                    </div>
+                    <p className="text-gray-700 italic text-[11px]">{rev.change_summary || 'Açıklama girilmedi'}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

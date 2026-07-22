@@ -18,9 +18,10 @@ export async function GET(req: NextRequest) {
   const q = searchParams.get('q')?.trim();
   const category = searchParams.get('category');
   const species = searchParams.get('species'); // 'cat' | 'dog' | 'both'
-  const status = searchParams.get('status'); // 'published' | 'draft'
+  const status = searchParams.get('status'); // 'published' | 'draft' | 'archived'
   const isMedical = searchParams.get('is_medical'); // 'true' | 'false'
   const vetStatus = searchParams.get('vet_status'); // 'not_required' | 'pending' | 'approved'
+  const freshnessFilter = searchParams.get('freshness'); // 'expired' | 'due_soon' | 'fresh' | 'needs_review'
   const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10));
   const pageSize = Math.min(50, Math.max(1, parseInt(searchParams.get('pageSize') ?? '20', 10)));
   const from = (page - 1) * pageSize;
@@ -45,9 +46,11 @@ export async function GET(req: NextRequest) {
     query = query.contains('species_filter', [species]);
   }
   if (status === 'published') {
-    query = query.eq('is_published', true);
+    query = query.eq('is_published', true).is('archived_at', null);
   } else if (status === 'draft') {
-    query = query.eq('is_published', false);
+    query = query.eq('is_published', false).is('archived_at', null);
+  } else if (status === 'archived') {
+    query = query.not('archived_at', 'is', null);
   }
   if (isMedical === 'true') {
     query = query.eq('is_medical_content', true);
@@ -56,6 +59,20 @@ export async function GET(req: NextRequest) {
   }
   if (vetStatus) {
     query = query.eq('vet_review_status', vetStatus);
+  }
+
+  // Güncellik Filtreleri
+  const nowIso = new Date().toISOString();
+  const in30DaysIso = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  if (freshnessFilter === 'expired') {
+    query = query.lt('next_review_at', nowIso).is('archived_at', null);
+  } else if (freshnessFilter === 'due_soon') {
+    query = query.gte('next_review_at', nowIso).lte('next_review_at', in30DaysIso).is('archived_at', null);
+  } else if (freshnessFilter === 'fresh') {
+    query = query.gt('next_review_at', nowIso).is('archived_at', null);
+  } else if (freshnessFilter === 'needs_review') {
+    query = query.lte('next_review_at', in30DaysIso).is('archived_at', null);
   }
 
   const { data, error, count } = await query;
@@ -108,7 +125,9 @@ export async function POST(req: NextRequest) {
       is_medical_content,
       vet_review_status,
       references_list,
-      is_published
+      is_published,
+      freshness_type,
+      review_interval_days
     } = body;
 
     // 1. Zorunlu Alan Kontrolü
@@ -148,7 +167,18 @@ export async function POST(req: NextRequest) {
     const isPub = Boolean(is_published);
     let vetStatus = vet_review_status || (isMedical ? 'pending' : 'not_required');
 
-    // 4. Yayın Güvenliği Kuralları (Eğer is_published = true yapılacaksa)
+    // 4. Güncellik Tarih Hesaplamaları
+    const fType = freshness_type || (isMedical ? 'medical' : 'evergreen');
+    let intervalDays = Number(review_interval_days);
+    if (!intervalDays || isNaN(intervalDays)) {
+      intervalDays = fType === 'medical' || fType === 'seasonal' ? 180 : fType === 'product_regulatory' ? 90 : 365;
+    }
+
+    const nowIso = new Date().toISOString();
+    const reviewedAt = body.content_reviewed_at || nowIso;
+    const nextReviewIso = body.next_review_at || new Date(new Date(reviewedAt).getTime() + intervalDays * 24 * 60 * 60 * 1000).toISOString();
+
+    // 5. Yayın Güvenliği Kuralları (Eğer is_published = true yapılacaksa)
     if (isPub) {
       // a. Tür Seçimi Zorunlu
       if (!species_filter || !Array.isArray(species_filter) || species_filter.length === 0) {
@@ -158,12 +188,28 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // b. Tıbbi İçerik Onay Koşulu
-      if (isMedical && vetStatus !== 'approved') {
+      // b. Güncellik Kontrol Tarihi Geçmiş Olamaz
+      if (new Date(nextReviewIso) < new Date()) {
         return NextResponse.json(
-          { error: 'Veteriner onayı (approved) olmadan tıbbi içerikler yayınlanamaz.' },
+          { error: 'Kontrol tarihi geçmiş olan içerikler yayınlanamaz.' },
           { status: 400 }
         );
+      }
+
+      // c. Tıbbi İçerik Onay ve Kaynak Koşulu
+      if (isMedical) {
+        if (vetStatus !== 'approved') {
+          return NextResponse.json(
+            { error: 'Veteriner onayı (approved) olmadan tıbbi içerikler yayınlanamaz.' },
+            { status: 400 }
+          );
+        }
+        if (!references_list || !Array.isArray(references_list) || references_list.length === 0) {
+          return NextResponse.json(
+            { error: 'Tıbbi içerikler için en az bir kaynak eklenmelidir.' },
+            { status: 400 }
+          );
+        }
       }
     }
 
@@ -203,7 +249,17 @@ export async function POST(req: NextRequest) {
         is_published: isPub,
         published_at: isPub ? new Date().toISOString() : null,
         author: actor.full_name || 'Admin',
-        author_id: actor.id
+        author_id: actor.id,
+        // Güncellik alanları
+        freshness_type: fType,
+        review_interval_days: intervalDays,
+        content_reviewed_at: reviewedAt,
+        content_reviewed_by: actor.id,
+        source_checked_at: body.source_checked_at || nowIso,
+        next_review_at: nextReviewIso,
+        content_version: 1,
+        latest_change_summary: body.latest_change_summary || 'İlk oluşturulma',
+        archived_at: null
       })
       .select()
       .single();

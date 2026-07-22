@@ -83,13 +83,24 @@ export async function PATCH(
     if (body.vet_review_status !== undefined) updates.vet_review_status = body.vet_review_status;
     if (body.references_list !== undefined) updates.references_list = body.references_list;
     if (body.is_published !== undefined) updates.is_published = Boolean(body.is_published);
+    if (body.freshness_type !== undefined) updates.freshness_type = body.freshness_type;
+    if (body.review_interval_days !== undefined) updates.review_interval_days = Number(body.review_interval_days);
 
-    // İstemciden gönderilen otoriter denetim parametrelerini ezilmeyi önlemek için sil
+    // Arşivleme Durumu
+    if (body.is_archived === true) {
+      updates.archived_at = new Date().toISOString();
+      updates.is_published = false;
+    } else if (body.is_archived === false) {
+      updates.archived_at = null;
+    }
+
+    // İstemci manipülasyon koruması
     delete updates.author;
     delete updates.author_id;
     delete updates.vet_reviewed_by;
     delete updates.vet_reviewed_at;
     delete updates.published_at;
+    delete updates.content_version;
 
     // Slug kontrolü
     if (body.slug && body.slug !== existing.slug) {
@@ -120,11 +131,60 @@ export async function PATCH(
       );
     }
 
+    // Gerçek İçerik / Hedefleme Değişikliği Tespiti
+    const isContentOrTargetingChanged =
+      (updates.title !== undefined && updates.title !== existing.title) ||
+      (updates.excerpt !== undefined && updates.excerpt !== existing.excerpt) ||
+      (updates.content !== undefined && updates.content !== existing.content) ||
+      (updates.species_filter !== undefined && JSON.stringify(updates.species_filter) !== JSON.stringify(existing.species_filter)) ||
+      (updates.target_breed_keys !== undefined && JSON.stringify(updates.target_breed_keys) !== JSON.stringify(existing.target_breed_keys)) ||
+      (updates.target_breed_traits !== undefined && JSON.stringify(updates.target_breed_traits) !== JSON.stringify(existing.target_breed_traits)) ||
+      (updates.target_life_stages !== undefined && JSON.stringify(updates.target_life_stages) !== JSON.stringify(existing.target_life_stages));
+
+    // A. Seçenek B: İçerik / Hedefleme Değişti (Version Bump & Snapshot)
+    if (isContentOrTargetingChanged) {
+      if (!body.latest_change_summary || !body.latest_change_summary.trim()) {
+        return NextResponse.json(
+          { error: 'İçerik veya hedefleme değişikliklerinde sürüm açıklaması (latest_change_summary) zorunludur.' },
+          { status: 400 }
+        );
+      }
+
+      // Sürüm snapshot'ı al
+      await supabase.from('article_revisions').insert({
+        article_id: id,
+        version_number: existing.content_version || 1,
+        content_snapshot: existing,
+        change_summary: body.latest_change_summary.trim(),
+        changed_by: actor.id,
+        changed_at: new Date().toISOString()
+      });
+
+      updates.content_version = (existing.content_version || 1) + 1;
+      updates.latest_change_summary = body.latest_change_summary.trim();
+      updates.content_reviewed_at = new Date().toISOString();
+      updates.content_reviewed_by = actor.id;
+      updates.source_checked_at = new Date().toISOString();
+    }
+    // B. Seçenek A: Sadece Yeniden Doğrulama (Reverify - No Version Bump)
+    else if (body.action === 'reverify') {
+      updates.content_reviewed_at = new Date().toISOString();
+      updates.content_reviewed_by = actor.id;
+      updates.source_checked_at = new Date().toISOString();
+    }
+
+    // Sonraki Kontrol Tarihi Hesaplama
+    const interval = updates.review_interval_days || existing.review_interval_days || 365;
+    const refDate = updates.content_reviewed_at || existing.content_reviewed_at || new Date().toISOString();
+    updates.next_review_at = new Date(new Date(refDate).getTime() + interval * 24 * 60 * 60 * 1000).toISOString();
+
     // Birleşik nihai durumlar
     const finalIsMedical = updates.is_medical_content !== undefined ? updates.is_medical_content : existing.is_medical_content;
     const finalIsPublished = updates.is_published !== undefined ? updates.is_published : existing.is_published;
     const finalSpeciesFilter = updates.species_filter !== undefined ? updates.species_filter : existing.species_filter;
     const finalVetStatus = updates.vet_review_status !== undefined ? updates.vet_review_status : existing.vet_review_status;
+    const finalNextReview = updates.next_review_at;
+    const finalReferences = updates.references_list !== undefined ? updates.references_list : existing.references_list;
 
     // Yayın Güvenliği Kuralları
     if (finalIsPublished) {
@@ -136,16 +196,32 @@ export async function PATCH(
         );
       }
 
-      // Tıbbi içerik onay zorunluluğu
-      if (finalIsMedical && finalVetStatus !== 'approved') {
+      // Kontrol tarihi geçmiş içerik yayınlanamaz
+      if (new Date(finalNextReview) < new Date()) {
         return NextResponse.json(
-          { error: 'Veteriner onayı (approved) olmadan tıbbi içerikler yayınlanamaz.' },
+          { error: 'Kontrol süresi geçmiş içerikler yayınlanamaz. Lütfen içerik güncelliğini onaylayın.' },
           { status: 400 }
         );
       }
+
+      // Tıbbi içerik onay & kaynak zorunluluğu
+      if (finalIsMedical) {
+        if (finalVetStatus !== 'approved') {
+          return NextResponse.json(
+            { error: 'Veteriner onayı (approved) olmadan tıbbi içerikler yayınlanamaz.' },
+            { status: 400 }
+          );
+        }
+        if (!finalReferences || !Array.isArray(finalReferences) || finalReferences.length === 0) {
+          return NextResponse.json(
+            { error: 'Tıbbi içerikler için en az bir kaynak eklenmelidir.' },
+            { status: 400 }
+          );
+        }
+      }
     }
 
-    // Vet onay verileri güncelleme — YALNIZCA SUNUCU TARAFINDAN YÖNETİLİR
+    // Vet onay verileri güncelleme
     if (finalVetStatus === 'approved') {
       if (!existing.vet_reviewed_at) {
         updates.vet_reviewed_by = actor.id;

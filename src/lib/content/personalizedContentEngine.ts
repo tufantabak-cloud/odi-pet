@@ -1,5 +1,5 @@
 /**
- * Odi.Pet — Personalized Content Recommendation Engine
+ * Odi.Pet — Personalized Content Recommendation Engine & Lifecycle Manager
  */
 
 import {
@@ -43,7 +43,18 @@ export interface Article {
   is_published?: boolean | null;
   is_medical_content?: boolean | null;
   vet_review_status?: string | null; // 'not_required' | 'pending' | 'approved'
+  references_list?: string[] | null;
   created_at?: string | null;
+  // Güncellik ve Yaşam Döngüsü Alanları
+  freshness_type?: 'evergreen' | 'seasonal' | 'medical' | 'product_regulatory' | null;
+  review_interval_days?: number | null;
+  content_reviewed_at?: string | Date | null;
+  content_reviewed_by?: string | null;
+  source_checked_at?: string | Date | null;
+  next_review_at?: string | Date | null;
+  content_version?: number | null;
+  latest_change_summary?: string | null;
+  archived_at?: string | Date | null;
 }
 
 export interface ArticlePetState {
@@ -94,11 +105,19 @@ export function recommendContentForPet(
       .map((st) => st.article_id)
   );
 
-  // 2. Temel Geçerlilik ve Tür Filtreleme (Hard Filter)
+  // 2. Temel Geçerlilik, Güncellik ve Tür Filtreleme (Hard Filter)
   const now = new Date();
   const validArticles = articles.filter((art) => {
     // Yayında olmalı
     if (art.is_published === false) return false;
+
+    // Arşivlenmiş içerik kullanıcıya görünmez
+    if (art.archived_at) return false;
+
+    // Güncellik kontrol süresi geçmiş içerik kullanıcıya görünmez
+    if (art.next_review_at && new Date(art.next_review_at) < now) {
+      return false;
+    }
 
     // Dismiss edilmiş içerik gelmez
     if (dismissedArticleIds.has(art.id)) return false;
@@ -144,7 +163,7 @@ export function recommendContentForPet(
       }
     }
 
-    // b. Irk Özelliği Eşleşmesi (long_hair, curly_hair, brachycephalic vb.)
+    // b. Irk Özelliği Eşleşmesi
     if (!matchedType && art.target_breed_traits && art.target_breed_traits.length > 0) {
       const traitMatch = art.target_breed_traits.some((tr) => traits.includes(tr as any));
       if (traitMatch) {
@@ -152,7 +171,7 @@ export function recommendContentForPet(
       }
     }
 
-    // c. Yaşam Evresi Eşleşmesi (Doğum tarihi tanımlı ise)
+    // c. Yaşam Evresi Eşleşmesi
     if (!matchedType && lifeStage && art.target_life_stages && art.target_life_stages.length > 0) {
       if (art.target_life_stages.includes(lifeStage)) {
         matchedType = 'life_stage';
@@ -188,14 +207,12 @@ export function recommendContentForPet(
         matchingType: matchedType,
         reason: getRecommendationReason(matchedType, pet.name)
       };
-      break; // En yüksek öncelikli kişiselleştirilmiş içerik seçildi
+      break;
     }
   }
 
-  // 4. Genel Adayın Tespiti (Tür bazlı genel bilgi)
-  // Genel içerik: Herhangi bir spesifik ırk/özellik/cinsiyet/yaş/mevsim daraltması bulunmayan genel makale
+  // 4. Genel Adayın Tespiti
   for (const art of sortedArticles) {
-    // Kişiselleştirilmiş içerik ile AYNI MAKALE OLAMAZ!
     if (personalizedCandidate && art.id === personalizedCandidate.article.id) {
       continue;
     }
