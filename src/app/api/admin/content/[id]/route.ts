@@ -82,7 +82,31 @@ export async function PATCH(
     if (body.is_medical_content !== undefined) updates.is_medical_content = Boolean(body.is_medical_content);
     if (body.vet_review_status !== undefined) updates.vet_review_status = body.vet_review_status;
     if (body.references_list !== undefined) updates.references_list = body.references_list;
-    if (body.is_published !== undefined) updates.is_published = Boolean(body.is_published);
+    if (body.is_published !== undefined) {
+      const willPublish = Boolean(body.is_published);
+      if (willPublish) {
+        // Kaynakları ve görselleri çekerek yayın bariyerlerini kontrol et
+        const [{ data: sources }, { data: media }] = await Promise.all([
+          supabase.from('article_sources').select('*').eq('article_id', id),
+          supabase.from('article_media').select('*').eq('article_id', id)
+        ]);
+
+        const { validateArticlePublishability } = await import('@/lib/content/contentPublishGuard');
+        const guardResult = validateArticlePublishability({
+          article: { ...existing, ...updates, is_published: true },
+          sources: sources || [],
+          media: media || []
+        });
+
+        if (!guardResult.canPublish) {
+          return NextResponse.json({
+            error: `Makale yayınlama engellendi: ${guardResult.blockers.join(' ')}`,
+            blockers: guardResult.blockers
+          }, { status: 400 });
+        }
+      }
+      updates.is_published = willPublish;
+    }
     if (body.freshness_type !== undefined) updates.freshness_type = body.freshness_type;
     if (body.review_interval_days !== undefined) updates.review_interval_days = Number(body.review_interval_days);
 
