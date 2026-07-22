@@ -10,6 +10,8 @@ import SmartInsightCard from '@/components/profiling/SmartInsightCard'
 import { getPlanDisplayTitle } from '@/lib/plans/utils'
 import OnboardingProgressCard from '@/components/OnboardingProgressCard'
 
+import PetRecommendationsCard from '@/components/dashboard/PetRecommendationsCard'
+
 export default function DashboardClient({
   greeting,
   firstName,
@@ -180,6 +182,13 @@ export default function DashboardClient({
           </div>
         )}
       </div>
+
+      {/* 4.5. {PetAdı} İçin Öneriler */}
+      {activePet && (
+        <div className="px-[var(--space-4)] pt-2">
+          <PetRecommendationsCard activePet={activePet} />
+        </div>
+      )}
 
       {/* 5. Hızlı Erişim (Mobilde 2 sütun · 4 işlem görünür) */}
       {pets && pets.length > 0 && (
