@@ -23,7 +23,7 @@ export async function GET() {
 
   return NextResponse.json({
     referralCode: profile?.referral_code ?? null,
-    referralUrl: `https://odi-petcare.vercel.app?ref=${profile?.referral_code}`,
+    referralUrl: `https://odi-petcare.vercel.app/register?ref=${profile?.referral_code}`,
     referralCount: referralCount ?? 0,
     firstName: profile?.first_name ?? ''
   })

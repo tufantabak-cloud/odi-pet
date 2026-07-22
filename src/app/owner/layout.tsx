@@ -86,7 +86,16 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
         <div className="flex items-center gap-3">
 
           <FloatingLostPets userCities={userCities} />
-          
+
+          {/* Arkadaşını Davet Et — sade hediye ikonu (alarm rozetsiz, zille yarışmaz) */}
+          <Link
+            href="/owner/referral"
+            aria-label="Arkadaşını davet et"
+            className="w-11 h-11 rounded-full flex items-center justify-center border border-border-main bg-surface hover:bg-bg-main text-text-secondary transition-all cursor-pointer shadow-sm active:scale-95"
+          >
+            <i className="ti ti-gift text-[18px]" />
+          </Link>
+
           {/* Notifications */}
           <NotificationBell initialCount={unreadCount ?? 0} />
         </div>

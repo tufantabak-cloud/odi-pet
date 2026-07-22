@@ -267,7 +267,7 @@ export default function ReferralClient({
               </span>
             </div>
             <p className="text-[11px] text-text-secondary/70 mt-1 font-mono">
-              odi-petcare.vercel.app?ref={referralCode}
+              odi-petcare.vercel.app/register?ref={referralCode}
             </p>
           </div>
         </div>

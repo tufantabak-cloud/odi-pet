@@ -317,7 +317,7 @@ export default function DashboardClient({
             </div>
             <div className="flex-1">
               <p className="text-[12px] font-800 text-[var(--color-text-primary)]">Arkadaşını davet et</p>
-              <p className="text-[10px] text-[var(--color-text-secondary)] font-600">Her davet için 1 ay ücretsiz premium</p>
+              <p className="text-[10px] text-[var(--color-text-secondary)] font-600">Bir dostuna öner, o da can dostuna daha iyi baksın</p>
             </div>
             <i className="ti ti-chevron-right text-[var(--color-text-muted)]" style={{ fontSize: '14px' }} />
           </Link>
