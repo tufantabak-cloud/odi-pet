@@ -3,33 +3,33 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { validateGroundedUrl } from '../contentResearchService';
+import { validateTechnicalUrl } from '../contentResearchService';
 
 describe('Grounded Real URL Validation Rules', () => {
   it('1. PubMed metin pathleri (uydurma slug) reddedilir, sayısal PMID kabul edilir', () => {
-    const invalidPubmed = validateGroundedUrl('https://pubmed.ncbi.nlm.nih.gov/articles/kedilerde-su-tuketimi');
+    const invalidPubmed = validateTechnicalUrl('https://pubmed.ncbi.nlm.nih.gov/articles/kedilerde-su-tuketimi');
     expect(invalidPubmed.isValid).toBe(false);
-    expect(invalidPubmed.error).toContain('Sayısal PMID içermeyen');
+    expect(invalidPubmed.error).toContain('sayısal PMID');
 
-    const validPubmed = validateGroundedUrl('https://pubmed.ncbi.nlm.nih.gov/31584210/');
+    const validPubmed = validateTechnicalUrl('https://pubmed.ncbi.nlm.nih.gov/31584210/');
     expect(validPubmed.isValid).toBe(true);
     expect(validPubmed.pmid).toBe('31584210');
   });
 
-  it('2. WSAVA uydurma metin pathleri reddedilir, gerçek kılavuz kabul edilir', () => {
-    const invalidWsava = validateGroundedUrl('https://wsava.org/guidelines/kedilerde%20su%20t%C3%BCketimi');
-    expect(invalidWsava.isValid).toBe(false);
-    expect(invalidWsava.error).toContain('uydurulmuş path kabul edilmez');
+  it('2. 404 eski AAHA URLsi reddedilir, geçerli kılavuz kabul edilir', () => {
+    const invalidAaha = validateTechnicalUrl('https://www.aaha.org/aaha-guidelines/life-stage-canine-configuration/behavior/');
+    expect(invalidAaha.isValid).toBe(false);
+    expect(invalidAaha.error).toContain('Canonical URL bulunamadı');
 
-    const validWsava = validateGroundedUrl('https://wsava.org/global-guidelines/global-nutrition-guidelines/');
-    expect(validWsava.isValid).toBe(true);
+    const validAaha = validateTechnicalUrl('https://www.aaha.org/your-pet/pet-owner-education/ask-aaha/canine-socialization/');
+    expect(validAaha.isValid).toBe(true);
   });
 
   it('3. Localhost, özel IPler ve http:// protokolü reddedilir (SSRF Protection)', () => {
-    expect(validateGroundedUrl('http://pubmed.ncbi.nlm.nih.gov/31584210/').isValid).toBe(false);
-    expect(validateGroundedUrl('https://localhost/api').isValid).toBe(false);
-    expect(validateGroundedUrl('https://127.0.0.1/admin').isValid).toBe(false);
-    expect(validateGroundedUrl('https://192.168.1.1/secret').isValid).toBe(false);
+    expect(validateTechnicalUrl('http://pubmed.ncbi.nlm.nih.gov/31584210/').isValid).toBe(false);
+    expect(validateTechnicalUrl('https://localhost/api').isValid).toBe(false);
+    expect(validateTechnicalUrl('https://127.0.0.1/admin').isValid).toBe(false);
+    expect(validateTechnicalUrl('https://192.168.1.1/secret').isValid).toBe(false);
   });
 
   it('4. Sahte uyum yüzdesi (%92, %95) yerine açıklayıcı relevance kuralı geçerlidir', () => {
