@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { requireRole } from '@/lib/auth/get-current-profile';
 import { generateDraftFromVerifiedSources } from '@/lib/agents/aiContentAgent';
 import { discoverCandidateSources, inspectCandidateSource } from '@/lib/content/contentResearchService';
+import { validateStateTransition, ActorRole, JobStatus } from '@/lib/content/contentJobStateMachine';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,6 +36,13 @@ export async function PATCH(
 
     if (jobErr || !job) {
       return NextResponse.json({ error: 'İş kaydı bulunamadı.' }, { status: 404 });
+    }
+
+    // State Machine Doğrulaması
+    const actorRole: ActorRole = actor.role === 'founder' ? 'founder_human' : 'admin_human';
+    const transitionCheck = validateStateTransition(action, job.generation_status as JobStatus, actorRole);
+    if (!transitionCheck.isValid) {
+      return NextResponse.json({ error: transitionCheck.error }, { status: 400 });
     }
 
     // A. Araştırmayı Başlat
