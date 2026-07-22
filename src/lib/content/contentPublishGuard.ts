@@ -4,6 +4,7 @@ export interface ArticlePublishGuardParams {
     is_published: boolean;
     is_medical_content: boolean;
     vet_review_status: string;
+    vet_review_requirement?: string;
   };
   sources?: any[];
   media?: any[];
@@ -19,7 +20,8 @@ export function validateArticlePublishability(params: ArticlePublishGuardParams)
   const { article, sources = [], media = [] } = params;
 
   // 1. Tıbbi içerik veteriner onay bariyeri
-  if (article.is_medical_content && article.vet_review_status !== 'approved' && article.vet_review_status !== 'not_required') {
+  const req = article.vet_review_requirement || (article.is_medical_content ? 'required' : 'not_required');
+  if (req === 'required' && article.is_medical_content && article.vet_review_status !== 'approved') {
     blockers.push('Tıbbi içerikler veteriner hekim onayı (approved) olmadan yayınlanamaz.');
   }
 

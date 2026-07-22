@@ -69,6 +69,8 @@ export default function ContentAdminClient() {
   const [chkTitleUrl, setChkTitleUrl] = useState(false);
   const [chkTopic, setChkTopic] = useState(false);
 
+  const [showOptionalConfirmModal, setShowOptionalConfirmModal] = useState(false);
+
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
@@ -84,6 +86,8 @@ export default function ContentAdminClient() {
     freshness_type: 'evergreen',
     review_interval_days: 365,
     references_list: '',
+    vet_review_requirement: 'required',
+    vet_review_override_reason: '',
     vet_review_status: 'not_required',
     is_published: false,
     latest_change_summary: 'İçerik taslağı kaydedildi.'
@@ -166,6 +170,7 @@ export default function ContentAdminClient() {
     setFieldErrors({});
     setModalSuccessMsg('');
     setModalErrorMsg('');
+    setShowOptionalConfirmModal(false);
 
     if (typeof window !== 'undefined') {
       const newUrl = `${window.location.pathname}?tab=catalog&articleId=${articleId}`;
@@ -189,6 +194,8 @@ export default function ContentAdminClient() {
         freshness_type: target.freshness_type || 'evergreen',
         review_interval_days: target.review_interval_days || 365,
         references_list: Array.isArray(target.references_list) ? target.references_list.join('\n') : '',
+        vet_review_requirement: target.vet_review_requirement || (target.is_medical_content ? 'required' : 'not_required'),
+        vet_review_override_reason: target.vet_review_override_reason || '',
         vet_review_status: target.vet_review_status || 'not_required',
         is_published: Boolean(target.is_published),
         latest_change_summary: 'İçerik taslağı güncellendi.'
@@ -225,6 +232,7 @@ export default function ContentAdminClient() {
     setFieldErrors({});
     setModalSuccessMsg('');
     setModalErrorMsg('');
+    setShowOptionalConfirmModal(false);
     setFormData({
       title: '',
       slug: '',
@@ -240,6 +248,8 @@ export default function ContentAdminClient() {
       freshness_type: 'evergreen',
       review_interval_days: 365,
       references_list: '',
+      vet_review_requirement: 'not_required',
+      vet_review_override_reason: '',
       vet_review_status: 'not_required',
       is_published: false,
       latest_change_summary: 'Yeni içerik taslağı oluşturuldu.'
@@ -251,7 +261,7 @@ export default function ContentAdminClient() {
     handleOpenArticle(art.id);
   };
 
-  // Form Doğrulaması (3. Madde)
+  // Form Doğrulaması
   const validateForm = () => {
     const errors: Record<string, string> = {};
     if (!formData.title?.trim()) errors.title = 'Başlık alanı zorunludur.';
@@ -261,6 +271,54 @@ export default function ContentAdminClient() {
 
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
+  };
+
+  // 1. Aksiyon: Veteriner İnceleme Gereksinimini Değiştir
+  const handleChangeRequirement = async (newRequirement: string) => {
+    if (!editingId) {
+      setFormData((prev) => ({ ...prev, vet_review_requirement: newRequirement }));
+      return;
+    }
+
+    if (formData.is_medical_content && formData.vet_review_requirement === 'required' && ['optional', 'not_required'].includes(newRequirement)) {
+      if (!formData.vet_review_override_reason || !formData.vet_review_override_reason.trim()) {
+        setModalErrorMsg('Tıbbi içeriklerde veteriner onay zorunluluğunu değiştirmek için bir gerekçe girilmesi zorunludur.');
+        return;
+      }
+    }
+
+    setIsSubmitting(true);
+    setModalErrorMsg('');
+    setModalSuccessMsg('');
+
+    try {
+      const res = await fetch(`/api/admin/content/${editingId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'change_vet_review_requirement',
+          vet_review_requirement: newRequirement,
+          vet_review_override_reason: formData.vet_review_override_reason
+        })
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Gereksinim güncelleme başarısız oldu.');
+
+      setFormData((prev) => ({
+        ...prev,
+        vet_review_requirement: json.vet_review_requirement || newRequirement,
+        vet_review_status: json.vet_review_status || prev.vet_review_status,
+        vet_review_override_reason: json.vet_review_override_reason || prev.vet_review_override_reason
+      }));
+
+      setModalSuccessMsg('Veteriner onay gereksinimi güncellendi. (Kalıcı audit kaydı oluşturuldu)');
+      fetchArticles();
+    } catch (err: any) {
+      setModalErrorMsg(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // 2. Aksiyon: Taslağı Kaydet
@@ -276,6 +334,7 @@ export default function ContentAdminClient() {
 
     try {
       const payload = {
+        action: 'save_article_draft',
         ...formData,
         references_list: formData.references_list
           .split('\n')
@@ -325,8 +384,7 @@ export default function ContentAdminClient() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          vet_review_status: 'pending',
-          latest_change_summary: 'Veteriner incelemesine gönderildi.'
+          action: 'request_vet_review'
         })
       });
 
@@ -345,8 +403,8 @@ export default function ContentAdminClient() {
     }
   };
 
-  // 8. Aksiyon: Yayınla
-  const handlePublishArticle = async () => {
+  // 8. Aksiyon: Yayınla Tıklama & Gerçek Yayınlama
+  const executePublish = async () => {
     if (!editingId) return;
 
     setIsSubmitting(true);
@@ -358,8 +416,11 @@ export default function ContentAdminClient() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          is_published: true,
-          latest_change_summary: 'İçerik yayınlandı.'
+          action: 'publish_article',
+          title: formData.title,
+          slug: formData.slug,
+          excerpt: formData.excerpt,
+          content: formData.content
         })
       });
 
@@ -368,7 +429,8 @@ export default function ContentAdminClient() {
         throw new Error(json.error || 'Yayınlama başarısız.');
       }
 
-      setFormData((prev) => ({ ...prev, is_published: true }));
+      setFormData((prev) => ({ ...prev, is_published: true, vet_review_status: json.vet_review_status || prev.vet_review_status }));
+      setShowOptionalConfirmModal(false);
       setModalSuccessMsg('İçerik başarıyla yayınlandı.');
       setSuccessMsg('İçerik başarıyla yayınlandı.');
       setTimeout(() => setSuccessMsg(''), 4000);
@@ -378,6 +440,15 @@ export default function ContentAdminClient() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handlePublishClick = () => {
+    // Optional ise uyarı modalı göster
+    if (formData.vet_review_requirement === 'optional' && formData.vet_review_status !== 'approved') {
+      setShowOptionalConfirmModal(true);
+      return;
+    }
+    executePublish();
   };
 
   const activePublishedArticles = articles.filter((a) => a.is_published && !a.archived_at);
@@ -838,9 +909,10 @@ export default function ContentAdminClient() {
                   {formData.is_published ? 'Yayında ✓' : 'Taslak'}
                 </span>
               </div>
-              <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-300">
+              <div className="grid grid-cols-3 gap-2 text-[11px] text-slate-300">
                 <div>İçerik Türü: <strong>{formData.is_medical_content ? 'Tıbbi / Medikal' : 'Genel'}</strong></div>
-                <div>Veteriner Durumu: <strong>{formData.vet_review_status === 'approved' ? 'Onaylandı ✓' : formData.vet_review_status === 'pending' ? 'Onay Bekliyor' : 'Gerekmiyor'}</strong></div>
+                <div>Veteriner Onayı: <strong>{formData.vet_review_requirement === 'required' ? 'Zorunlu' : formData.vet_review_requirement === 'optional' ? 'İsteğe Bağlı' : 'Gerekli Değil'}</strong></div>
+                <div>İnceleme Durumu: <strong>{formData.vet_review_status === 'approved' ? 'Onaylandı ✓' : formData.vet_review_status === 'pending' ? 'Onay Bekliyor' : 'Gerekmiyor'}</strong></div>
               </div>
             </div>
 
@@ -907,6 +979,50 @@ export default function ContentAdminClient() {
                 {fieldErrors.content && <p className="text-red-500 text-[10px] mt-1 font-semibold">{fieldErrors.content}</p>}
               </div>
 
+              {/* Veteriner Onay Gereksinimi Yönetim Alanı */}
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="font-extrabold text-gray-800 text-xs">Veteriner Onayı Gereksinimi</label>
+                  <span className="text-[10px] font-semibold text-slate-500">Admin/Founder Yönetimli</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { key: 'required', label: 'Zorunlu' },
+                    { key: 'optional', label: 'İsteğe Bağlı' },
+                    { key: 'not_required', label: 'Gerekli Değil' }
+                  ].map((opt) => (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => handleChangeRequirement(opt.key)}
+                      className={`p-2.5 rounded-xl font-bold text-xs border transition-all ${
+                        formData.vet_review_requirement === opt.key
+                          ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
+                          : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Tıbbi İçerikte Gerekçe Alanı */}
+                {formData.is_medical_content && (
+                  <div className="pt-2 space-y-1.5">
+                    <label className="font-bold text-gray-700 text-[11px] block">
+                      Tıbbi İçerik İnceleme Esnetme Gerekçesi (Audit Log)
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={formData.vet_review_override_reason}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, vet_review_override_reason: e.target.value }))}
+                      placeholder="Neden veteriner onayı zorunluluğu esnetiliyor? (Gerekçe kalıcı olarak loglanır)"
+                      className="w-full p-2.5 border rounded-xl bg-white text-xs"
+                    />
+                  </div>
+                )}
+              </div>
+
               <div>
                 <label className="font-bold text-gray-700 block mb-1">Revizyon / Değişiklik Özeti Notu</label>
                 <input
@@ -971,7 +1087,7 @@ export default function ContentAdminClient() {
                   </button>
 
                   {/* Veteriner İncelemesine Gönder */}
-                  {formData.is_medical_content && (
+                  {formData.vet_review_requirement !== 'not_required' && (
                     <button
                       type="button"
                       disabled={isSubmitting || !editingId || formData.vet_review_status === 'pending'}
@@ -988,19 +1104,19 @@ export default function ContentAdminClient() {
 
                   {/* Yayınla */}
                   {(() => {
-                    const isMedicalBlocked = formData.is_medical_content && formData.vet_review_status !== 'approved';
-                    const isPublishDisabled = isSubmitting || isMedicalBlocked || formData.is_published;
+                    const isRequiredBlocked = formData.vet_review_requirement === 'required' && formData.is_medical_content && formData.vet_review_status !== 'approved';
+                    const isPublishDisabled = isSubmitting || isRequiredBlocked || formData.is_published;
 
                     return (
                       <div className="relative group">
                         <button
                           type="button"
                           disabled={isPublishDisabled}
-                          onClick={handlePublishArticle}
+                          onClick={handlePublishClick}
                           className={`px-4 py-2 rounded-xl text-xs font-bold shadow-xs transition-all ${
                             formData.is_published
                               ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                              : isMedicalBlocked
+                              : isRequiredBlocked
                               ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                               : 'bg-emerald-600 text-white hover:bg-emerald-700'
                           }`}
@@ -1009,9 +1125,9 @@ export default function ContentAdminClient() {
                         </button>
 
                         {/* Pasif Açıklama Tooltip */}
-                        {isMedicalBlocked && !formData.is_published && (
+                        {isRequiredBlocked && !formData.is_published && (
                           <div className="absolute right-0 bottom-full mb-1 hidden group-hover:block w-56 p-2 bg-slate-900 text-white text-[10px] rounded-lg shadow-lg z-50 font-semibold leading-tight">
-                            Bu tıbbi içerik veteriner onayından sonra yayınlanabilir.
+                            Veteriner onayı gereklidir.
                           </div>
                         )}
                       </div>
@@ -1020,6 +1136,37 @@ export default function ContentAdminClient() {
                 </div>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* İsteğe Bağlı Yayın Onay Modalı */}
+      {showOptionalConfirmModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-amber-200">
+            <div className="flex items-center gap-3 text-amber-600 font-extrabold text-base">
+              <i className="ti ti-alert-triangle text-2xl" />
+              <span>Yayınlama Onayı</span>
+            </div>
+            <p className="text-xs text-gray-700 leading-relaxed font-semibold">
+              Bu içerik veteriner incelemesi tamamlanmadan yayınlanacaktır. Devam etmek istiyor musunuz?
+            </p>
+            <div className="flex items-center justify-end gap-2 pt-2 border-t">
+              <button
+                type="button"
+                onClick={() => setShowOptionalConfirmModal(false)}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700"
+              >
+                Vazgeç
+              </button>
+              <button
+                type="button"
+                onClick={executePublish}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-600 text-white hover:bg-amber-700 shadow-sm"
+              >
+                Evet, Doğrudan Yayınla
+              </button>
+            </div>
           </div>
         </div>
       )}
