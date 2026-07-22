@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/pets/[id]/content-recommendations
- * Aktif pete özel ve genel içerik önerilerini döndürür.
+ * Aktif pete özel ve genel içerik önerilerini döndürür (Salt Okunur - Read-Only).
  */
 export async function GET(
   req: NextRequest,
@@ -93,26 +93,6 @@ export async function GET(
     states || [],
     { currentSeason }
   );
-
-  // 5. Gösterilen Kartlar İçin last_shown_at Güncelle (Otoriter Sunucu Kaydı)
-  const shownIds: string[] = [];
-  if (engineResult.generalRecommendation) shownIds.push(engineResult.generalRecommendation.article.id);
-  if (engineResult.personalizedRecommendation) shownIds.push(engineResult.personalizedRecommendation.article.id);
-
-  if (shownIds.length > 0) {
-    const nowIso = new Date().toISOString();
-    for (const artId of shownIds) {
-      await supabase.from('article_pet_states').upsert(
-        {
-          user_id: user.id,
-          pet_id: petId,
-          article_id: artId,
-          last_shown_at: nowIso
-        },
-        { onConflict: 'user_id,pet_id,article_id' }
-      );
-    }
-  }
 
   return NextResponse.json({
     generalRecommendation: engineResult.generalRecommendation,

@@ -5,8 +5,8 @@ import { getSessionUser } from '@/lib/auth/get-current-profile';
 export const dynamic = 'force-dynamic';
 
 /**
- * POST /api/articles/[id]/save
- * Makaleyi kaydeder veya kaydı kaldırır (Toggle).
+ * POST / DELETE /api/articles/[id]/save
+ * Makaleyi açık ve idempotent (tekrarlanabilir) olarak kaydeder veya kaydı kaldırır.
  */
 export async function POST(
   req: NextRequest,
@@ -20,33 +20,64 @@ export async function POST(
   const { id: articleId } = await params;
   const supabase = await createServerSupabaseClient();
 
-  // Mevcut kaydı kontrol et
-  const { data: existing } = await supabase
-    .from('article_saves')
-    .select('id')
-    .eq('user_id', user.id)
-    .eq('article_id', articleId)
-    .maybeSingle();
+  let action = 'save'; // Varsayılan POST eylemi 'save'dir
+  try {
+    const body = await req.json().catch(() => ({}));
+    if (body.action === 'unsave') action = 'unsave';
+  } catch {
+    // Body yoksa 'save'
+  }
 
-  if (existing) {
-    // Kaydı kaldır
-    const { error: delErr } = await supabase
+  if (action === 'save') {
+    // Idempotent Save: Zaten kaydedildiyse hata vermeden { saved: true } döner
+    const { data: existing } = await supabase
       .from('article_saves')
-      .delete()
-      .eq('id', existing.id);
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('article_id', articleId)
+      .maybeSingle();
 
-    if (delErr) return NextResponse.json({ error: delErr.message }, { status: 400 });
-    return NextResponse.json({ saved: false });
-  } else {
-    // Kaydet
-    const { error: insErr } = await supabase
-      .from('article_saves')
-      .insert({
+    if (!existing) {
+      await supabase.from('article_saves').insert({
         user_id: user.id,
         article_id: articleId
       });
+    }
 
-    if (insErr) return NextResponse.json({ error: insErr.message }, { status: 400 });
     return NextResponse.json({ saved: true });
+  } else {
+    // Idempotent Unsave: Zaten yoksa hata vermeden { saved: false } döner
+    await supabase
+      .from('article_saves')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('article_id', articleId);
+
+    return NextResponse.json({ saved: false });
   }
+}
+
+/**
+ * DELETE /api/articles/[id]/save
+ * Idempotent Kaydı Kaldırma (Unsave)
+ */
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const user = await getSessionUser();
+  if (!user) {
+    return NextResponse.json({ error: 'Yetkisiz erişim.' }, { status: 401 });
+  }
+
+  const { id: articleId } = await params;
+  const supabase = await createServerSupabaseClient();
+
+  await supabase
+    .from('article_saves')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('article_id', articleId);
+
+  return NextResponse.json({ saved: false });
 }

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getSessionUser } from '@/lib/auth/get-current-profile';
+import ArticleViewTracker from './ArticleViewTracker';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,7 +35,7 @@ export default async function ArticleDetailPage({
   const supabase = await createServerSupabaseClient();
   const user = await getSessionUser();
 
-  // 1. Makaleyi Çek
+  // 1. Makaleyi Çek (Read-Only)
   const { data: article, error } = await supabase
     .from('articles')
     .select('*')
@@ -49,19 +50,6 @@ export default async function ArticleDetailPage({
   // Tıbbi onay denetimi
   if (article.is_medical_content && article.vet_review_status !== 'approved') {
     notFound();
-  }
-
-  // 3. Görüntülenme Durumunu Kaydet (last_viewed_at)
-  if (user && petId) {
-    await supabase.from('article_pet_states').upsert(
-      {
-        user_id: user.id,
-        pet_id: petId,
-        article_id: article.id,
-        last_viewed_at: new Date().toISOString()
-      },
-      { onConflict: 'user_id,pet_id,article_id' }
-    );
   }
 
   // Kaydedilme Durumu
@@ -86,6 +74,9 @@ export default async function ArticleDetailPage({
 
   return (
     <div className="p-4 md:p-8 max-w-3xl mx-auto space-y-6">
+      {/* Etkileşim Takipçisi (İstemci Tarafında viewed Gönderir) */}
+      {petId && <ArticleViewTracker petId={petId} articleId={article.id} />}
+
       {/* Üst Navigasyon */}
       <div className="flex items-center justify-between">
         <Link

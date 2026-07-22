@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 
 interface PetRecommendationsCardProps {
@@ -19,6 +19,9 @@ export default function PetRecommendationsCard({ activePet }: PetRecommendations
 
   const [loading, setLoading] = useState(true);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+
+  // Render edilen kartların shown etkileşiminin tekil takibi için ref
+  const trackedShownRef = useRef<Set<string>>(new Set());
 
   const fetchRecommendations = async (petId: string) => {
     setLoading(true);
@@ -40,24 +43,65 @@ export default function PetRecommendationsCard({ activePet }: PetRecommendations
 
   useEffect(() => {
     if (activePet?.id) {
+      trackedShownRef.current.clear(); // Aktif pet değiştiğinde tekilleştirme ref'ini sıfırla
       fetchRecommendations(activePet.id);
     }
   }, [activePet?.id]);
 
+  // Kartlar ekrana başarıyla render edildikten sonra shown etkileşimi bildirme
+  useEffect(() => {
+    if (!data || loading || !activePet?.id) return;
+
+    const toTrack: string[] = [];
+    if (data.generalRecommendation?.article?.id) {
+      toTrack.push(data.generalRecommendation.article.id);
+    }
+    if (data.personalizedRecommendation?.article?.id) {
+      toTrack.push(data.personalizedRecommendation.article.id);
+    }
+
+    for (const artId of toTrack) {
+      const trackKey = `${activePet.id}:${artId}`;
+      if (!trackedShownRef.current.has(trackKey)) {
+        trackedShownRef.current.add(trackKey);
+        fetch(`/api/pets/${activePet.id}/articles/${artId}/interaction`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'shown' })
+        }).catch(() => {});
+      }
+    }
+  }, [data, loading, activePet?.id]);
+
+  // Idempotent Save / Unsave
   const handleToggleSave = async (articleId: string) => {
     try {
-      const isSaved = savedIds.has(articleId);
+      const isCurrentlySaved = savedIds.has(articleId);
+      const nextAction = isCurrentlySaved ? 'unsave' : 'save';
+
+      // UI İyimser Güncelleme (Optimistic UI Update)
       const nextSaved = new Set(savedIds);
-      if (isSaved) nextSaved.delete(articleId);
+      if (isCurrentlySaved) nextSaved.delete(articleId);
       else nextSaved.add(articleId);
       setSavedIds(nextSaved);
 
-      const res = await fetch(`/api/articles/${articleId}/save`, { method: 'POST' });
+      // İdempotent API çağrısı
+      const res = await fetch(`/api/articles/${articleId}/save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: nextAction })
+      });
       const json = await res.json();
 
       if (!res.ok) {
-        // Geri al
+        // Hata durumunda geri al
         setSavedIds(savedIds);
+      } else {
+        // Sunucunun döndürdüğü kesin durumu doğrula
+        const finalSaved = new Set(savedIds);
+        if (json.saved) finalSaved.add(articleId);
+        else finalSaved.delete(articleId);
+        setSavedIds(finalSaved);
       }
     } catch {
       setSavedIds(savedIds);
@@ -70,7 +114,7 @@ export default function PetRecommendationsCard({ activePet }: PetRecommendations
       // Yeniden çek
       fetchRecommendations(activePet.id);
     } catch {
-      // Hata yok
+      // Hata yönetimi
     }
   };
 
@@ -108,7 +152,7 @@ export default function PetRecommendationsCard({ activePet }: PetRecommendations
 
         <div className="flex-1 min-w-0 flex flex-col justify-between space-y-2">
           <div>
-            {/* Rozet & Neden Gösterildiği */}
+            {/* Rozet & Okuma Süresi */}
             <div className="flex items-center justify-between gap-2 mb-1">
               <span className="text-[10px] font-800 text-[var(--color-primary)] bg-[var(--color-primary-soft)] px-2 py-0.5 rounded-md uppercase tracking-wider">
                 {badgeLabel}
@@ -134,7 +178,7 @@ export default function PetRecommendationsCard({ activePet }: PetRecommendations
           {/* Eylemler: Devamını Oku | Kaydet | İlgilenmiyorum */}
           <div className="flex items-center justify-between pt-2 border-t border-[var(--color-border)]/50">
             <Link
-              href={`/owner/learn/${art.slug}`}
+              href={`/owner/learn/${art.slug}?pet_id=${activePet.id}`}
               className="text-[11px] font-800 text-[var(--color-primary)] hover:underline flex items-center gap-1"
             >
               Devamını Oku →
