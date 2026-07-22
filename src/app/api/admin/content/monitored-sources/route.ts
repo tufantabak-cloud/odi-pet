@@ -175,18 +175,33 @@ export async function POST(req: NextRequest) {
 
     const contentHash = generateContentHash(title, permalink);
 
-    // 4. Mükerrer İçerik Kontrolü (discovered_external_contents)
+    // 4. Mükerrer İçerik ve Aktif İş Kontrolü (idempotency)
     const { data: existingContent } = await supabase
       .from('discovered_external_contents')
       .select('*')
       .or(`permalink.eq.${permalink},content_hash.eq.${contentHash}`)
       .maybeSingle();
 
-    if (existingContent && !is_manual_process) {
-      return NextResponse.json({
-        message: 'Bu içerik daha önce keşfedilmiş ve işlenmiş.',
-        discovered: existingContent
-      });
+    if (existingContent && existingContent.job_id) {
+      // Aktif iş varsa ve silinmemişse ikinci iş oluşturma, mevcut işin boru hattını çalıştır
+      const { data: activeJob } = await supabase
+        .from('content_generation_jobs')
+        .select('*')
+        .eq('id', existingContent.job_id)
+        .is('deleted_at', null)
+        .maybeSingle();
+
+      if (activeJob) {
+        const { processJobPipeline } = await import('@/lib/content/jobPipelineService');
+        const pipelineRes = await processJobPipeline(supabase, activeJob.id, actor.id);
+
+        return NextResponse.json({
+          message: 'Bu içerik için halihazırda aktif bir iş bulundu ve boru hattı çalıştırıldı.',
+          source_id: sourceId,
+          discovered: existingContent,
+          result: pipelineRes
+        });
+      }
     }
 
     // 5. Uygunluk Sınıflandırılması
@@ -236,7 +251,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Keşif kaydı atılamadı: ${discInsertErr.message}` }, { status: 400 });
     }
 
-    // 7. Özgün Türkçe Taslak Üretimi (Job Status -> admin_review_required)
+    // 7. Özgün Türkçe Taslak Üretimi (Job Status -> admin_review_required / researching)
     const draftRes = await generateDraftFromMonitoredSource(
       supabase,
       {
@@ -255,18 +270,26 @@ export async function POST(req: NextRequest) {
       actor.id
     );
 
+    // 8. Boru Hattını Uçtan Uca Çalıştır
+    const { processJobPipeline } = await import('@/lib/content/jobPipelineService');
+    const pipelineRes = await processJobPipeline(supabase, draftRes.jobId, actor.id, {
+      category: classification.category,
+      speciesScope: species_scope === 'both' ? classification.speciesScope : (species_scope as any),
+      isMedicalContent: classification.isMedicalContent
+    });
+
     // Güncelleme tarihi koy
     await supabase.from('monitored_sources').update({
       last_checked_at: new Date().toISOString(),
-      last_success_at: draftRes.success ? new Date().toISOString() : null,
-      last_error: draftRes.success ? null : draftRes.message
+      last_success_at: pipelineRes.success ? new Date().toISOString() : null,
+      last_error: pipelineRes.success ? null : pipelineRes.message
     }).eq('id', sourceId);
 
     return NextResponse.json({
-      message: draftRes.message,
+      message: pipelineRes.message,
       source_id: sourceId,
       discovered: newDisc,
-      result: draftRes
+      result: pipelineRes
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Sunucu hatası.' }, { status: 500 });

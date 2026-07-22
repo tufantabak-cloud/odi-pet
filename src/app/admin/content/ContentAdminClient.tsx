@@ -67,6 +67,15 @@ export default function ContentAdminClient() {
   const [sourceSuccessMsg, setSourceSuccessMsg] = useState('');
   const [isAddingSource, setIsAddingSource] = useState(false);
 
+  // İş İşleme ve Silme State
+  const [processingJobId, setProcessingJobId] = useState<string | null>(null);
+  const [selectedCategoryMap, setSelectedCategoryMap] = useState<Record<string, string>>({});
+  const [deleteSourceModal, setDeleteSourceModal] = useState<{ isOpen: boolean; sourceId: string | null; sourceName: string }>({
+    isOpen: false,
+    sourceId: null,
+    sourceName: ''
+  });
+
   // Form State & Validation Error
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -180,19 +189,66 @@ export default function ContentAdminClient() {
     }
   };
 
-  const handleDeleteSource = async (id: string) => {
-    if (!confirm('Bu kaynağı ve bağlı keşif verilerini silmek istediğinize emin misiniz?')) return;
+  const handleDeleteSource = async (id: string, name: string = 'Kaynak') => {
+    setDeleteSourceModal({ isOpen: true, sourceId: id, sourceName: name });
+  };
+
+  const handleConfirmDeleteSource = async (deleteJobs: boolean) => {
+    if (!deleteSourceModal.sourceId) return;
     try {
-      const res = await fetch(`/api/admin/content/monitored-sources/${id}`, {
+      const res = await fetch(`/api/admin/content/monitored-sources/${deleteSourceModal.sourceId}?delete_jobs=${deleteJobs}`, {
         method: 'DELETE'
       });
-      if (!res.ok) {
-        const json = await res.json();
-        throw new Error(json.error || 'Silme işlemi başarısız.');
-      }
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Silme işlemi başarısız.');
+
+      setSourceSuccessMsg(json.message || 'Kaynak silindi.');
+      setTimeout(() => setSourceSuccessMsg(''), 4000);
+      setDeleteSourceModal({ isOpen: false, sourceId: null, sourceName: '' });
       fetchMonitoredSources();
+      fetchArticles();
     } catch (err: any) {
       alert(err.message);
+    }
+  };
+
+  const handleProcessJob = async (jobId: string, category?: string) => {
+    setProcessingJobId(jobId);
+    setErrorMsg('');
+    setSuccessMsg('');
+    try {
+      const res = await fetch(`/api/admin/content/jobs/${jobId}/process`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category })
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'İşlem çalıştırılamadı.');
+
+      setSuccessMsg(json.message || 'Boru hattı çalıştırıldı ve güncellendi.');
+      setTimeout(() => setSuccessMsg(''), 4000);
+      fetchArticles();
+    } catch (err: any) {
+      setErrorMsg(err.message);
+    } finally {
+      setProcessingJobId(null);
+    }
+  };
+
+  const handleDeleteJob = async (jobId: string) => {
+    if (!confirm('Bu AI içerik işini silmek istediğinize emin misiniz?')) return;
+    try {
+      const res = await fetch(`/api/admin/content/jobs/${jobId}`, {
+        method: 'DELETE'
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Silme işlemi başarısız.');
+
+      setSuccessMsg('İçerik işi başarıyla silindi (soft delete).');
+      setTimeout(() => setSuccessMsg(''), 4000);
+      fetchArticles();
+    } catch (err: any) {
+      setErrorMsg(err.message);
     }
   };
 
@@ -728,22 +784,75 @@ export default function ContentAdminClient() {
                 ) : (
                   jobs.map((j) => {
                     const verifiedSourcesCount = j.content_generation_job_sources?.filter((s: any) => s.verification_status === 'verified').length || 0;
-                    const totalSourcesCount = j.content_generation_job_sources?.length || 0;
+                    const requiredSourcesCount = j.required_source_count || (j.generated_draft?.is_medical_content || ['saglik', 'beslenme'].includes(j.generated_draft?.category) ? 2 : 1);
+                    const isProcessing = processingJobId === j.id;
+
+                    const isNeedsClassification = j.classification_status === 'needs_admin_classification' || j.generation_status === 'needs_admin_classification';
+                    const canRunNow = ['research_required', 'failed', 'discovered', 'needs_admin_classification'].includes(j.generation_status) || isNeedsClassification;
+                    const canDelete = !j.article_id && !['imported', 'published'].includes(j.generation_status);
+
+                    let statusLabel = j.generation_status;
+                    let statusBg = 'bg-purple-100 text-purple-900 border-purple-200';
+
+                    if (isNeedsClassification) {
+                      statusLabel = 'Kategori Seçimi Bekleniyor';
+                      statusBg = 'bg-amber-100 text-amber-900 border-amber-300';
+                    } else if (j.generation_status === 'research_required') {
+                      statusLabel = 'Kaynak Araştırması Gerekiyor';
+                      statusBg = 'bg-amber-100 text-amber-900 border-amber-300';
+                    } else if (j.generation_status === 'researching') {
+                      statusLabel = 'Kaynaklar Araştırılıyor...';
+                      statusBg = 'bg-blue-100 text-blue-900 border-blue-300';
+                    } else if (['draft_ready', 'admin_review_required'].includes(j.generation_status)) {
+                      statusLabel = 'Taslak Hazır (İnceleme)';
+                      statusBg = 'bg-indigo-100 text-indigo-900 border-indigo-300';
+                    } else if (j.generation_status === 'imported') {
+                      statusLabel = 'Kataloğa Aktarıldı';
+                      statusBg = 'bg-emerald-100 text-emerald-900 border-emerald-300';
+                    } else if (j.generation_status === 'failed') {
+                      statusLabel = 'Başarısız';
+                      statusBg = 'bg-rose-100 text-rose-900 border-rose-300';
+                    } else if (j.generation_status === 'rejected') {
+                      statusLabel = 'Reddedildi';
+                      statusBg = 'bg-rose-100 text-rose-900 border-rose-300';
+                    }
 
                     return (
                       <tr key={j.id} className="hover:bg-gray-50">
-                        <td className="p-3 font-semibold text-gray-900">{j.topic}</td>
+                        <td className="p-3 font-semibold text-gray-900 max-w-xs">
+                          <div className="line-clamp-2">{j.topic}</div>
+                          {isNeedsClassification && (
+                            <div className="mt-2 flex items-center gap-2">
+                              <select
+                                value={selectedCategoryMap[j.id] || 'egitim'}
+                                onChange={(e) => setSelectedCategoryMap(prev => ({ ...prev, [j.id]: e.target.value }))}
+                                className="text-[11px] p-1.5 border rounded-lg bg-amber-50 border-amber-300 font-semibold"
+                              >
+                                <option value="egitim">Eğitim</option>
+                                <option value="davranis">Davranış</option>
+                                <option value="bakim">Bakım</option>
+                                <option value="saglik">Sağlık (2 Kaynak)</option>
+                                <option value="beslenme">Beslenme (2 Kaynak)</option>
+                                <option value="hijyen">Hijyen</option>
+                                <option value="guvenlik">Güvenlik</option>
+                                <option value="yavru_bakimi">Yavru Bakımı</option>
+                                <option value="sosyal_yasam">Sosyal Yaşam</option>
+                              </select>
+                            </div>
+                          )}
+                        </td>
                         <td className="p-3 text-gray-600 uppercase font-bold text-[10px]">
                           {j.job_type === 'new_content' ? 'Yeni İçerik' : 'Güncelleme'}
                         </td>
                         <td className="p-3">
-                          <span className="px-2 py-0.5 rounded-md font-bold text-[10px] bg-purple-100 text-purple-900 border border-purple-200">
-                            {j.generation_status}
+                          <span className={`px-2.5 py-1 rounded-md font-extrabold text-[10px] border flex items-center gap-1.5 w-max ${statusBg}`}>
+                            {isProcessing && <span className="animate-spin text-xs">↻</span>}
+                            {statusLabel}
                           </span>
                         </td>
                         <td className="p-3 text-gray-600">
                           <div className="font-bold text-[11px] mb-1">
-                            {verifiedSourcesCount} / {totalSourcesCount} Doğrulandı
+                            {verifiedSourcesCount} / {requiredSourcesCount} Doğrulandı
                           </div>
                           <div className="space-y-1">
                             {j.content_generation_job_sources?.map((src: any) => {
@@ -786,10 +895,20 @@ export default function ContentAdminClient() {
                             })}
                           </div>
                         </td>
-                        <td className="p-3 text-red-600 max-w-xs truncate">
+                        <td className="p-3 text-red-600 max-w-xs truncate text-[11px]">
                           {j.generation_status === 'imported' || j.article_id ? '-' : (j.last_error || '-')}
                         </td>
-                        <td className="p-3 text-right space-x-2">
+                        <td className="p-3 text-right space-x-1.5 flex items-center justify-end">
+                          {canRunNow && (
+                            <button
+                              disabled={isProcessing}
+                              onClick={() => handleProcessJob(j.id, selectedCategoryMap[j.id])}
+                              className="bg-blue-600 text-white px-2.5 py-1 rounded-lg font-bold text-[11px] hover:bg-blue-700 transition-all shadow-xs disabled:opacity-50"
+                            >
+                              {isProcessing ? 'İşleniyor...' : isNeedsClassification ? 'Kategori Seç & Çalıştır ▶' : 'Şimdi Çalıştır ▶'}
+                            </button>
+                          )}
+
                           {j.article_id ? (
                             <button
                               onClick={() => handleOpenArticle(j.article_id)}
@@ -799,27 +918,23 @@ export default function ContentAdminClient() {
                             </button>
                           ) : ['approved_for_import', 'admin_review_required', 'draft_ready'].includes(j.generation_status) ? (
                             <button
-                              onClick={async () => {
-                                try {
-                                  const res = await fetch(`/api/admin/content/jobs/${j.id}`, {
-                                    method: 'PATCH',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ action: 'import_generated_draft_to_article' })
-                                  });
-                                  const json = await res.json();
-                                  if (!res.ok) throw new Error(json.error || 'Aktarım başarısız.');
-                                  setSuccessMsg(json.message || 'Makale taslağı oluşturuldu.');
-                                  setTimeout(() => setSuccessMsg(''), 4000);
-                                  fetchArticles();
-                                } catch (err: any) {
-                                  setErrorMsg(err.message);
-                                }
-                              }}
+                              disabled={isProcessing}
+                              onClick={() => handleProcessJob(j.id, selectedCategoryMap[j.id])}
                               className="bg-emerald-600 text-white px-2.5 py-1 rounded-lg font-bold text-[11px] hover:bg-emerald-700 transition-all"
                             >
                               Makaleye Aktar
                             </button>
                           ) : null}
+
+                          {canDelete && (
+                            <button
+                              disabled={isProcessing}
+                              onClick={() => handleDeleteJob(j.id)}
+                              className="bg-rose-100 text-rose-800 border border-rose-200 px-2 py-1 rounded-lg font-bold text-[11px] hover:bg-rose-200 transition-all"
+                            >
+                              Sil
+                            </button>
+                          )}
                         </td>
                       </tr>
                     );
@@ -959,7 +1074,7 @@ export default function ContentAdminClient() {
                           {s.is_active ? 'Aktif' : 'Pasif'}
                         </button>
                         <button
-                          onClick={() => handleDeleteSource(s.id)}
+                          onClick={() => handleDeleteSource(s.id, s.source_name)}
                           className="px-2.5 py-1 bg-rose-100 text-rose-800 rounded text-[10px] font-bold hover:bg-rose-200"
                         >
                           Sil
@@ -1478,6 +1593,59 @@ export default function ContentAdminClient() {
                 className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-600 text-white hover:bg-amber-700 shadow-sm"
               >
                 Evet, Doğrudan Yayınla
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Kaynak Silme Modalı (Option A vs Option B) */}
+      {deleteSourceModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl border">
+            <div className="flex items-center justify-between border-b pb-3">
+              <h3 className="font-extrabold text-sm text-gray-900 flex items-center gap-2">
+                <span>⚠️</span> Kaynak Silme Onayı
+              </h3>
+              <button
+                onClick={() => setDeleteSourceModal({ isOpen: false, sourceId: null, sourceName: '' })}
+                className="text-gray-400 hover:text-gray-600 font-bold"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="text-xs text-gray-700 space-y-2">
+              <p className="font-semibold text-gray-900">
+                "{deleteSourceModal.sourceName}" kaynağını silmek üzeresiniz. Lütfen bir işlem seçin:
+              </p>
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900">
+                <strong>Not:</strong> Yayınlanmış makaleler veya aktarılmış içerikler hiçbir durumda silinmez.
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 pt-2 border-t">
+              <button
+                type="button"
+                onClick={() => handleConfirmDeleteSource(false)}
+                className="w-full px-4 py-2.5 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-800 transition-all text-left flex items-center justify-between"
+              >
+                <span>A. Yalnızca Kaynak Kaydını Sil</span>
+                <span className="text-[10px] text-gray-500">(İşler korunur)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleConfirmDeleteSource(true)}
+                className="w-full px-4 py-2.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white transition-all text-left flex items-center justify-between shadow-xs"
+              >
+                <span>B. Kaynak ve Tamamlanmamış İşleri Sil</span>
+                <span className="text-[10px] text-rose-100">(Soft Delete)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setDeleteSourceModal({ isOpen: false, sourceId: null, sourceName: '' })}
+                className="w-full px-4 py-2 rounded-xl text-xs font-semibold text-gray-500 hover:text-gray-700 text-center mt-1"
+              >
+                Vazgeç
               </button>
             </div>
           </div>

@@ -283,9 +283,84 @@ export async function PATCH(
       });
     }
 
+    // D. Uçtan uca boru hattını çalıştır (run_pipeline)
+    if (action === 'run_pipeline') {
+      const { processJobPipeline } = await import('@/lib/content/jobPipelineService');
+      const result = await processJobPipeline(supabase, jobId, actor.id, {
+        category: body.category,
+        speciesScope: body.speciesScope,
+        isMedicalContent: body.isMedicalContent
+      });
+      return NextResponse.json(result);
+    }
+
     return NextResponse.json({ error: 'Geçersiz aksiyon.' }, { status: 400 });
   } catch (err: any) {
     console.error('Content Job API Error:', err);
+    return NextResponse.json({ error: err.message || 'Sunucu hatası.' }, { status: 500 });
+  }
+}
+
+/**
+ * DELETE /api/admin/content/jobs/[id]
+ * AI işini güvenli bir şekilde soft delete yapar.
+ */
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const actor = await requireRole(['admin', 'founder']);
+  if (!actor) {
+    return NextResponse.json({ error: 'Yetkisiz erişim.' }, { status: 403 });
+  }
+
+  const { id: jobId } = await params;
+  const supabase = await createServerSupabaseClient();
+
+  try {
+    const body = await req.json().catch(() => ({}));
+    const deleteReason = body.delete_reason || 'Admin tarafından silindi';
+
+    // 1. İş Kaydını Çek ve Silinebilirlik Kontrolü Yap
+    const { data: job, error: jobErr } = await supabase
+      .from('content_generation_jobs')
+      .select('*')
+      .eq('id', jobId)
+      .single();
+
+    if (jobErr || !job) {
+      return NextResponse.json({ error: 'İş kaydı bulunamadı.' }, { status: 404 });
+    }
+
+    // Doğrudan silinemez durumlar: imported, published veya article_id dolu
+    if (job.article_id || job.generation_status === 'imported' || job.generation_status === 'published') {
+      return NextResponse.json({
+        error: 'Yayınlanmış veya aktarılmış makale işleri doğrudan silinemez. Makaleyi açın veya arşivleyin.'
+      }, { status: 400 });
+    }
+
+    // 2. Soft Delete Yap
+    const { data: updatedJob, error: updateErr } = await supabase
+      .from('content_generation_jobs')
+      .update({
+        deleted_at: new Date().toISOString(),
+        deleted_by: actor.id,
+        delete_reason: deleteReason
+      })
+      .eq('id', jobId)
+      .select()
+      .single();
+
+    if (updateErr) {
+      return NextResponse.json({ error: updateErr.message }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      message: 'İçerik üretim işi başarıyla kaldırıldı (soft delete).',
+      job: updatedJob
+    });
+  } catch (err: any) {
+    console.error('Job DELETE API Error:', err);
     return NextResponse.json({ error: err.message || 'Sunucu hatası.' }, { status: 500 });
   }
 }

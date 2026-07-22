@@ -142,7 +142,7 @@ export function validateDeterministicFilter(
  * 4. Model Yapılandırması ve Availability Kontrolü
  */
 export function getResearchModelName(): string {
-  const modelName = process.env.GEMINI_RESEARCH_MODEL;
+  const modelName = process.env.GEMINI_RESEARCH_MODEL || process.env.GEMINI_MODEL;
   if (!modelName || modelName.trim() === '') {
     throw new Error('research_model_unavailable: GEMINI_RESEARCH_MODEL zorunludur.');
   }

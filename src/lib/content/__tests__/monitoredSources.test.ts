@@ -52,4 +52,23 @@ describe('Monitored Sources & Draft Generation (Phase 1)', () => {
     expect(validRes.speciesScope).toBe('cat');
     expect(validRes.category).toBe('egitim');
   });
+
+  it('should flag generic title without specific keywords for admin classification', () => {
+    const genericRes = classifyDiscoveredContent('Instagram Paylaşımı (Da284XIIDvl)', 'Instagram gönderisi');
+    expect(genericRes.isEligible).toBe(true);
+    expect(genericRes.needsAdminClassification).toBe(true);
+  });
+
+  it('should enforce 2 required sources for medical/nutrition and 1 for low risk', () => {
+    const medicalRes = classifyDiscoveredContent('Kedilerde Böbrek Hastalığı ve Aşı Takvimi', 'Tedavi yöntemleri');
+    const lowRiskRes = classifyDiscoveredContent('Köpeklerde Tüy Taraması ve Banyo', 'Tarak kullanımı');
+
+    const medicalReqCount = medicalRes.isMedicalContent ? 2 : 1;
+    const lowRiskReqCount = lowRiskRes.isMedicalContent ? 2 : 1;
+
+    expect(medicalRes.isMedicalContent).toBe(true);
+    expect(medicalReqCount).toBe(2);
+    expect(lowRiskRes.isMedicalContent).toBe(false);
+    expect(lowRiskReqCount).toBe(1);
+  });
 });

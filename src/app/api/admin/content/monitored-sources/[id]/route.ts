@@ -45,7 +45,7 @@ export async function PATCH(
 
 /**
  * DELETE /api/admin/content/monitored-sources/[id]
- * Kaynağı silme
+ * Kaynağı ve isteğe bağlı olarak tamamlanmamış bağlı işleri güvenli bir şekilde siler (soft delete).
  */
 export async function DELETE(
   req: NextRequest,
@@ -59,14 +59,53 @@ export async function DELETE(
   const { id } = await params;
   const supabase = await createServerSupabaseClient();
 
-  const { error } = await supabase
-    .from('monitored_sources')
-    .delete()
-    .eq('id', id);
+  try {
+    const url = new URL(req.url);
+    const deleteJobs = url.searchParams.get('delete_jobs') === 'true';
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    // 1. Bağlı tamamlanmamış işleri temizle (Seçenek B)
+    if (deleteJobs) {
+      // Discovered external content'lerden job_id'leri bul
+      const { data: discItems } = await supabase
+        .from('discovered_external_contents')
+        .select('job_id')
+        .eq('source_id', id);
+
+      const jobIds = (discItems || []).map(d => d.job_id).filter(Boolean);
+
+      if (jobIds.length > 0) {
+        // İthal edilmemiş veya makaleye bağlanmamış işleri soft delete yap
+        await supabase
+          .from('content_generation_jobs')
+          .update({
+            deleted_at: new Date().toISOString(),
+            deleted_by: actor.id,
+            delete_reason: 'Bağlı kaynak silindi'
+          })
+          .in('id', jobIds)
+          .is('article_id', null)
+          .neq('generation_status', 'imported')
+          .neq('generation_status', 'published');
+      }
+    }
+
+    // 2. Kaynak kaydını soft delete yap / pasifleştir
+    const { error } = await supabase
+      .from('monitored_sources')
+      .update({
+        is_active: false,
+        deleted_at: new Date().toISOString(),
+        deleted_by: actor.id,
+        delete_reason: deleteJobs ? 'Kaynak ve tamamlanmamış işler silindi' : 'Yalnız kaynak silindi'
+      })
+      .eq('id', id);
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    return NextResponse.json({ success: true, message: 'Kaynak başarıyla silindi.' });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || 'Sunucu hatası.' }, { status: 500 });
   }
-
-  return NextResponse.json({ success: true, message: 'Kaynak silindi.' });
 }

@@ -18,6 +18,7 @@ export interface ContentClassificationResult {
   speciesScope: 'cat' | 'dog' | 'both';
   category: string;
   isMedicalContent: boolean;
+  needsAdminClassification?: boolean;
   rejectionReason?: string;
 }
 
@@ -88,15 +89,15 @@ export function classifyDiscoveredContent(
   if (hasDog && !hasCat) speciesScope = 'dog';
 
   if (!hasCat && !hasDog && sourceType === 'instagram_post') {
-    // Genel evcil hayvan olarak değerlendirilebilir
     speciesScope = 'both';
   }
 
   // 5. Kategori Tespiti ve Tıbbi İçerik Bayrağı
   let category = 'bakim';
   let isMedicalContent = false;
+  let hasSpecificKeyword = true;
 
-  if (/aşı|hastalık|tedavi|enfeksiyon|parazit|vücut sıcaklığı|kusma|ishal|veteriner|klinik/.test(combined)) {
+  if (/\başı\b|\başılar\b|\başısı\b|hastalık|tedavi|enfeksiyon|parazit|vücut sıcaklığı|kusma|ishal|veteriner|klinik/.test(combined)) {
     category = 'saglik';
     isMedicalContent = true;
   } else if (/mama|beslenme|su tüketimi|diyet|protein|yaş mama|kuru mama|vitamin/.test(combined)) {
@@ -104,7 +105,7 @@ export function classifyDiscoveredContent(
     isMedicalContent = true; // Beslenme tıbbi denetim gerektirir
   } else if (/eğitim|komut|tuvalet eğitimi|tasma eğitimi/.test(combined)) {
     category = 'egitim';
-  } else if (/davranış|tırmalama|miyavlama|havlama|sosyalleşme|anKsiyete/.test(combined)) {
+  } else if (/davranış|tırmalama|miyavlama|havlama|sosyalleşme|ansiyete|anKsiyete/.test(combined)) {
     category = 'davranis';
   } else if (/tarak|tüy bakımı|banyo|tırnak kesimi|kulak temizliği/.test(combined)) {
     category = 'bakim';
@@ -116,12 +117,19 @@ export function classifyDiscoveredContent(
     category = 'yavru_bakimi';
   } else if (/park|seyahat|taşınma|otobüs/.test(combined)) {
     category = 'sosyal_yasam';
+  } else {
+    hasSpecificKeyword = false;
   }
+
+  // If title is generic like "Instagram Paylaşımı (...)" and no keyword matched, flag for admin classification
+  const isGenericTitle = normTitle.includes('instagram') || title.length < 5;
+  const needsAdminClassification = isGenericTitle && !hasSpecificKeyword;
 
   return {
     isEligible: true,
     speciesScope,
     category,
-    isMedicalContent
+    isMedicalContent,
+    needsAdminClassification
   };
 }

@@ -19,6 +19,7 @@ export async function GET(req: NextRequest) {
   const { data: jobs, error } = await supabase
     .from('content_generation_jobs')
     .select('*, content_generation_job_sources(*)')
+    .is('deleted_at', null)
     .order('created_at', { ascending: false });
 
   if (error) {
