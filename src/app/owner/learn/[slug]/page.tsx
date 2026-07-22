@@ -52,18 +52,25 @@ export default async function ArticleDetailPage({
     notFound();
   }
 
-  // 3. Yönetilen İzinli Kaynakları Çek (display_in_article = true olanlar)
+  // 3. Yönetilen Kaynakları Çek (Yalnızca is_active = true olanlar)
   const { data: rawSources } = await supabase
     .from('article_sources')
     .select('*')
     .eq('article_id', article.id)
-    .eq('is_active', true)
-    .eq('display_in_article', true)
-    .order('sort_order', { ascending: true });
+    .eq('is_active', true);
 
   const activeSources = rawSources || [];
 
-  // 4. Makale Medya Görsellerini Çek (rights_status != 'unknown' & is_active = true)
+  // Kaynakları 2 Gruba Ayır
+  const scientificSources = activeSources.filter((s) =>
+    ['scientific', 'pubmed', 'official_guideline', 'official'].includes(s.source_type)
+  );
+
+  const additionalSources = activeSources.filter((s) =>
+    ['web_page', 'instagram_post', 'instagram_profile', 'reputable_editorial', 'manual_reference'].includes(s.source_type)
+  );
+
+  // 4. Medya Görsellerini Çek
   const { data: rawMedia } = await supabase
     .from('article_media')
     .select('*')
@@ -76,7 +83,7 @@ export default async function ArticleDetailPage({
 
   const featuredMedia = activeMedia.find((m) => m.media_type === 'featured_image');
   const contentMediaList = activeMedia.filter((m) => m.media_type === 'content_image');
-  const galleryMediaList = activeMedia.filter((m) => m.media_type === 'gallery_image').slice(0, 8); // En fazla 8
+  const galleryMediaList = activeMedia.filter((m) => m.media_type === 'gallery_image').slice(0, 8);
 
   const coverUrl = featuredMedia?.external_url || featuredMedia?.storage_path || article.cover_url;
 
@@ -161,13 +168,13 @@ export default async function ArticleDetailPage({
         </div>
       )}
 
-      {/* Paragraf Metinleri ve İçerik İçi Görseller */}
+      {/* Tam İçerik Metni */}
       <div className="prose max-w-none text-xs md:text-sm text-[var(--color-text-primary)] leading-relaxed space-y-4">
         {article.content.split('\n\n').map((paragraph: string, idx: number) => (
           <div key={idx} className="space-y-4">
             <p>{paragraph}</p>
 
-            {/* Araya giren içerik görseli (varsa) */}
+            {/* Araya giren içerik görseli */}
             {contentMediaList[idx] && (
               <div className="my-4 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 p-2 space-y-2">
                 <img
@@ -187,7 +194,7 @@ export default async function ArticleDetailPage({
         ))}
       </div>
 
-      {/* Görsel Galeri Alanı (En fazla 8 Görsel) */}
+      {/* Fotoğraf Galerisi */}
       {galleryMediaList.length > 0 && (
         <div className="space-y-2 border-t pt-4">
           <h3 className="text-xs font-black uppercase text-gray-700 tracking-wider flex items-center gap-1.5">
@@ -213,8 +220,8 @@ export default async function ArticleDetailPage({
         </div>
       )}
 
-      {/* Yönetilen Kaynaklar & Referanslar Bölümü */}
-      <div className="border-t border-[var(--color-border)] pt-4 space-y-3">
+      {/* Kaynaklar Bölümü (İki Gruplu Gösterim) */}
+      <div className="border-t border-[var(--color-border)] pt-4 space-y-4">
         {vetReviewedDate && (
           <p className="text-[11px] text-[var(--color-text-muted)] font-600 flex items-center gap-1.5">
             <i className="ti ti-circle-check-filled text-emerald-600" />
@@ -222,49 +229,62 @@ export default async function ArticleDetailPage({
           </p>
         )}
 
-        {activeSources.length > 0 && (
-          <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200/80 text-xs space-y-2">
-            <p className="font-extrabold text-gray-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
-              <span>🔬</span> Doğrulanmış Tıbbi & Harici Kaynaklar
+        {/* Grup 1: Doğrulanmış Bilimsel Kaynaklar */}
+        {scientificSources.length > 0 && (
+          <div className="bg-emerald-50/70 p-4 rounded-2xl border border-emerald-200 text-xs space-y-2">
+            <p className="font-extrabold text-emerald-950 text-xs uppercase tracking-wider flex items-center gap-1.5">
+              <span>🔬</span> Doğrulanmış Bilimsel & Tıbbi Kaynaklar ({scientificSources.length})
             </p>
-
-            <div className="divide-y divide-gray-200/60">
-              {activeSources.map((src: any) => {
-                const targetUrl = src.source_url;
-
-                return (
-                  <div key={src.id} className="py-2 space-y-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="font-semibold text-gray-800 text-[11px]">
-                        {src.show_source_name ? (src.source_name || src.publisher) : 'Kaynak'} — {src.source_title}
-                      </div>
-
-                      {src.show_source_link && targetUrl && (
-                        <a
-                          href={targetUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 font-bold hover:underline text-[11px] shrink-0 inline-flex items-center gap-0.5"
-                        >
-                          <span>Kaynağa Git ↗</span>
-                        </a>
-                      )}
+            <div className="divide-y divide-emerald-200/60">
+              {scientificSources.map((src: any) => (
+                <div key={src.id} className="py-2 flex items-center justify-between gap-2">
+                  <div className="space-y-0.5">
+                    <div className="font-bold text-gray-900 text-[11px]">
+                      {src.publisher || 'PubMed'} — {src.source_title}
                     </div>
-
-                    {src.instagram_username && (
-                      <div className="text-[10px] text-purple-700 font-medium">
-                        Instagram: @{src.instagram_username}
-                      </div>
-                    )}
-
-                    {src.short_description && (
-                      <p className="text-[10px] text-gray-500 italic">
-                        {src.short_description}
-                      </p>
-                    )}
                   </div>
-                );
-              })}
+                  {src.source_url && (
+                    <a
+                      href={src.source_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-emerald-700 font-bold hover:underline text-[11px] shrink-0 inline-flex items-center gap-0.5"
+                    >
+                      <span>Makaleyi İncele ↗</span>
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Grup 2: Ek Kaynaklar & Harici Bağlantılar */}
+        {additionalSources.length > 0 && (
+          <div className="bg-purple-50/70 p-4 rounded-2xl border border-purple-200 text-xs space-y-2">
+            <p className="font-extrabold text-purple-950 text-xs uppercase tracking-wider flex items-center gap-1.5">
+              <span>🔗</span> Ek Kaynaklar & Harici Bağlantılar ({additionalSources.length})
+            </p>
+            <div className="divide-y divide-purple-200/60">
+              {additionalSources.map((src: any) => (
+                <div key={src.id} className="py-2 flex items-center justify-between gap-2">
+                  <div className="space-y-0.5">
+                    <div className="font-semibold text-gray-800 text-[11px]">
+                      {src.publisher || 'Web'} — {src.source_title}
+                    </div>
+                  </div>
+                  {src.source_url && (
+                    <a
+                      href={src.source_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-purple-700 font-bold hover:underline text-[11px] shrink-0 inline-flex items-center gap-0.5"
+                    >
+                      <span>Bağlantıya Git ↗</span>
+                    </a>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         )}
