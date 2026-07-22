@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 
 interface LearnClientProps {
@@ -16,12 +16,48 @@ export default function LearnClient({
   initialSavedIds,
   initialPetId
 }: LearnClientProps) {
-  const [activeTab, setActiveTab] = useState<'personalized' | 'all' | 'saved'>('personalized');
   const [selectedPetId, setSelectedPetId] = useState<string>(
     initialPetId || userPets[0]?.id || ''
   );
 
+  const selectedPet = useMemo(
+    () => userPets.find((p) => p.id === selectedPetId) || userPets[0],
+    [selectedPetId, userPets]
+  );
+
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set(initialSavedIds));
+
+  // 1. Sekme: Petine Özel İçerikler
+  const personalizedArticles = useMemo(() => {
+    if (!selectedPet) return [];
+    const petSpecies = (selectedPet.species || '').toLowerCase().trim();
+
+    return articles.filter((art) => {
+      if (art.species_filter && art.species_filter.length > 0) {
+        const allowed = art.species_filter.map((s: string) => s.toLowerCase());
+        if (!allowed.includes('both') && !allowed.includes(petSpecies)) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [articles, selectedPet]);
+
+  // Varsayılan Sekme Mantığı: Petine özel varsa 'personalized', yoksa genel içerik varsa 'all'
+  const initialDefaultTab = useMemo(() => {
+    if (personalizedArticles.length > 0) return 'personalized';
+    if (articles.length > 0) return 'all';
+    return 'personalized';
+  }, [personalizedArticles.length, articles.length]);
+
+  const [activeTab, setActiveTab] = useState<'personalized' | 'all' | 'saved'>(initialDefaultTab);
+
+  // Sekme senkronizasyonu
+  useEffect(() => {
+    if (activeTab === 'personalized' && personalizedArticles.length === 0 && articles.length > 0) {
+      setActiveTab('all');
+    }
+  }, []);
 
   // Filtreler (Tüm Bilgiler sekmesi)
   const [searchQuery, setSearchQuery] = useState('');
@@ -30,11 +66,6 @@ export default function LearnClient({
   const [filterLifeStage, setFilterLifeStage] = useState('');
   const [filterSeason, setFilterSeason] = useState('');
   const [filterTargetType, setFilterTargetType] = useState('');
-
-  const selectedPet = useMemo(
-    () => userPets.find((p) => p.id === selectedPetId) || userPets[0],
-    [selectedPetId, userPets]
-  );
 
   // Idempotent Save / Unsave
   const handleToggleSave = async (articleId: string) => {
@@ -67,34 +98,19 @@ export default function LearnClient({
     }
   };
 
-  // 1. Sekme: Petine Özel İçerikler
-  const personalizedArticles = useMemo(() => {
-    if (!selectedPet) return [];
-    const petSpecies = (selectedPet.species || '').toLowerCase().trim();
-
-    return articles.filter((art) => {
-      // Tür filtresi
-      if (art.species_filter && art.species_filter.length > 0) {
-        const allowed = art.species_filter.map((s: string) => s.toLowerCase());
-        if (!allowed.includes('both') && !allowed.includes(petSpecies)) {
-          return false;
-        }
-      }
-      return true;
-    });
-  }, [articles, selectedPet]);
-
-  // 2. Sekme: Tüm Bilgiler Filtreleme
+  // 2. Sekme: Tüm Bilgiler (Filtrelenmiş)
   const filteredAllArticles = useMemo(() => {
     return articles.filter((art) => {
       if (searchQuery) {
-        const q = searchQuery.toLowerCase().trim();
+        const q = searchQuery.toLowerCase();
         const titleMatch = art.title?.toLowerCase().includes(q);
         const excerptMatch = art.excerpt?.toLowerCase().includes(q);
         if (!titleMatch && !excerptMatch) return false;
       }
 
-      if (filterCategory && art.category !== filterCategory) return false;
+      if (filterCategory && art.category !== filterCategory) {
+        return false;
+      }
 
       if (filterSpecies) {
         if (art.species_filter && art.species_filter.length > 0) {
@@ -152,84 +168,89 @@ export default function LearnClient({
     return (
       <div
         key={art.id}
-        className="flex flex-col md:flex-row gap-4 p-4 rounded-card bg-[var(--color-surface)] border border-[var(--color-border)] shadow-[var(--shadow-sm)] hover:border-[var(--color-primary)]/40 transition-all duration-200"
+        className="bg-white border border-[var(--color-border)] rounded-2xl p-5 shadow-xs hover:shadow-md transition-all space-y-3"
       >
-        {/* Kapak Görseli */}
-        {art.cover_url && (
-          <div className="w-full md:w-36 h-36 shrink-0 rounded-2xl overflow-hidden bg-gray-100">
-            <img src={art.cover_url} alt={art.title} className="w-full h-full object-cover" />
+        {/* Üst Bilgiler & Rozetler */}
+        <div className="flex items-center justify-between gap-2 flex-wrap text-xs">
+          <div className="flex items-center gap-2">
+            <span className="bg-purple-100 text-purple-800 px-2.5 py-0.5 rounded-full font-bold uppercase text-[10px]">
+              {art.category || 'Rehber'}
+            </span>
+            {art.is_medical_content && (
+              <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold text-[10px]">
+                Medikal Onaylı ✓
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-[11px] text-gray-500 font-medium">
+              ⏱ {art.read_time_minutes || 3} dk okuma
+            </span>
+            <button
+              onClick={() => handleToggleSave(art.id)}
+              className={`p-1.5 rounded-xl transition-all ${
+                isSaved
+                  ? 'bg-purple-100 text-purple-700 font-bold'
+                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+              }`}
+              title={isSaved ? 'Kaydedilenlerden Çıkar' : 'Kaydet'}
+            >
+              <i className={`ti ${isSaved ? 'ti-bookmark-filled' : 'ti-bookmark'}`} />
+            </button>
+          </div>
+        </div>
+
+        {/* Eşleşme Gerekçesi (Pete Özel sekmesinde) */}
+        {reason && (
+          <div className="bg-purple-50/70 border border-purple-100 text-purple-900 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+            <i className="ti ti-sparkles text-purple-600 text-sm" />
+            <span>{reason}</span>
           </div>
         )}
 
-        <div className="flex-1 min-w-0 flex flex-col justify-between space-y-2">
-          <div>
-            <div className="flex items-center justify-between gap-2 mb-1.5">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-800 text-[var(--color-primary)] bg-[var(--color-primary-soft)] px-2.5 py-0.5 rounded-md uppercase tracking-wider">
-                  {art.category || 'genel'}
-                </span>
-                {art.is_medical_content && (
-                  <span className="text-[10px] font-800 text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md uppercase">
-                    Veteriner Onaylı
-                  </span>
-                )}
-              </div>
-              <span className="text-[10px] text-[var(--color-text-muted)] font-600">
-                {art.read_time_minutes || 3} dk okuma
+        {/* Başlık ve Özet */}
+        <div>
+          <Link
+            href={`/owner/learn/${art.slug}`}
+            className="text-base font-extrabold text-gray-900 hover:text-[var(--color-primary)] transition-colors line-clamp-2"
+          >
+            {art.title}
+          </Link>
+          <p className="text-xs text-gray-600 mt-1.5 line-clamp-3 leading-relaxed">
+            {art.excerpt || art.content?.slice(0, 140) + '...'}
+          </p>
+        </div>
+
+        {/* Alt Bilgi Barı */}
+        <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-500">
+          <div className="flex items-center gap-3">
+            {reviewDate && <span>Son Kontrol: {reviewDate}</span>}
+            {art.references_list && art.references_list.length > 0 && (
+              <span className="text-purple-700 font-semibold">
+                {art.references_list.length} Kanıt Kaynağı
               </span>
-            </div>
-
-            {reason && (
-              <p className="text-[10px] text-[var(--color-text-secondary)] font-600 italic mb-1 truncate">
-                {reason}
-              </p>
             )}
-
-            <h3 className="text-[15px] font-800 text-[var(--color-text-primary)] leading-snug line-clamp-1">
-              {art.title}
-            </h3>
-
-            <p className="text-[11px] text-[var(--color-text-secondary)] font-500 line-clamp-2 mt-1 leading-relaxed">
-              {art.excerpt}
-            </p>
           </div>
 
-          <div className="flex items-center justify-between pt-2.5 border-t border-[var(--color-border)]/60">
-            <span className="text-[10px] text-[var(--color-text-muted)] font-500">
-              {reviewDate ? `Son kontrol: ${reviewDate}` : 'Güncel'}
-            </span>
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => handleToggleSave(art.id)}
-                className={`text-[11px] font-700 flex items-center gap-1 transition-colors ${
-                  isSaved ? 'text-amber-600 font-900' : 'text-[var(--color-text-secondary)] hover:text-amber-600'
-                }`}
-              >
-                <i className={`ti ${isSaved ? 'ti-bookmark-filled' : 'ti-bookmark'}`} style={{ fontSize: '14px' }} />
-                <span>{isSaved ? 'Kaydedildi' : 'Kaydet'}</span>
-              </button>
-
-              <Link
-                href={`/owner/learn/${art.slug}?pet_id=${selectedPet?.id || ''}`}
-                className="text-[11px] font-800 text-[var(--color-primary)] hover:underline flex items-center gap-0.5"
-              >
-                Devamını Oku →
-              </Link>
-            </div>
-          </div>
+          <Link
+            href={`/owner/learn/${art.slug}`}
+            className="text-[var(--color-primary)] font-extrabold hover:underline flex items-center gap-1"
+          >
+            Detaylı Oku <i className="ti ti-arrow-right" />
+          </Link>
         </div>
       </div>
     );
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6">
-      {/* Üst Başlık & Açıklama */}
-      <div className="space-y-1">
-        <h1 className="text-2xl md:text-3xl font-black text-[var(--color-text-primary)]">Bilgi ve Rehber</h1>
-        <p className="text-xs md:text-sm text-[var(--color-text-secondary)] font-500">
-          Petinin sağlığı, bakımı ve mutlu yaşamı için güvenilir bilgiler.
+    <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
+      {/* Üst Başlık */}
+      <div>
+        <h1 className="text-xl font-extrabold text-gray-900">Bilgi ve Rehber Kütüphanesi</h1>
+        <p className="text-xs text-gray-500 mt-1">
+          Can dostunuzun sağlığı, bakımı ve gelişimi için bilimsel araştırmalara dayalı onaylı rehberler.
         </p>
       </div>
 
@@ -237,24 +258,30 @@ export default function LearnClient({
       <div className="flex items-center gap-2 border-b border-[var(--color-border)] pb-2 overflow-x-auto">
         <button
           onClick={() => setActiveTab('personalized')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
             activeTab === 'personalized'
               ? 'bg-[var(--color-primary)] text-white shadow-xs'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
           }`}
         >
-          Petine Özel {userPets.length > 0 && `(${selectedPet?.name || ''})`}
+          <span>✨ Petine Özel</span>
+          <span className="bg-white/20 px-1.5 py-0.5 rounded-md text-[10px]">
+            {personalizedArticles.length}
+          </span>
         </button>
 
         <button
           onClick={() => setActiveTab('all')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
             activeTab === 'all'
               ? 'bg-[var(--color-primary)] text-white shadow-xs'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
           }`}
         >
-          Tüm Bilgiler ({articles.length})
+          <span>📚 Tüm Bilgiler</span>
+          <span className="bg-white/20 px-1.5 py-0.5 rounded-md text-[10px]">
+            {articles.length}
+          </span>
         </button>
 
         <button
@@ -293,11 +320,25 @@ export default function LearnClient({
           )}
 
           {personalizedArticles.length === 0 ? (
-            <div className="p-12 text-center bg-gray-50 border border-dashed rounded-card space-y-2">
-              <i className="ti ti-bookmark-off text-3xl text-gray-400" />
-              <p className="text-xs font-semibold text-gray-600">
-                {selectedPet?.name || 'Petiniz'} için henüz kişiselleştirilmiş içerik bulunmuyor.
-              </p>
+            <div className="p-10 text-center bg-gray-50 border border-dashed border-gray-300 rounded-2xl space-y-3">
+              <i className="ti ti-sparkles text-3xl text-purple-400" />
+              <div className="space-y-1">
+                <p className="text-xs font-bold text-gray-800">
+                  Petiniz için henüz kişiselleştirilmiş bir rehber bulunmuyor.
+                </p>
+                {articles.length > 0 && (
+                  <p className="text-[11px] text-gray-500">
+                    Tüm Bilgiler bölümünde {articles.length} rehber bulunuyor.
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={() => setActiveTab('all')}
+                className="mt-2 inline-flex items-center gap-1.5 bg-[var(--color-primary)] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-[var(--color-primary-hover)] transition-all shadow-xs"
+              >
+                <span>Tüm Bilgileri Gör</span>
+                <i className="ti ti-arrow-right" />
+              </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4">
@@ -362,7 +403,7 @@ export default function LearnClient({
           </div>
 
           {filteredAllArticles.length === 0 ? (
-            <div className="p-12 text-center bg-gray-50 border border-dashed rounded-card">
+            <div className="p-12 text-center bg-gray-50 border border-dashed rounded-2xl">
               <p className="text-xs font-semibold text-gray-600">Henüz yayınlanmış bir rehber bulunmuyor.</p>
             </div>
           ) : (
@@ -377,7 +418,7 @@ export default function LearnClient({
       {activeTab === 'saved' && (
         <div className="space-y-4">
           {savedArticlesList.length === 0 ? (
-            <div className="p-12 text-center bg-gray-50 border border-dashed rounded-card space-y-2">
+            <div className="p-12 text-center bg-gray-50 border border-dashed rounded-2xl space-y-2">
               <i className="ti ti-bookmark text-3xl text-gray-400" />
               <p className="text-xs font-semibold text-gray-600">Henüz kaydettiğiniz bir rehber bulunmuyor.</p>
             </div>

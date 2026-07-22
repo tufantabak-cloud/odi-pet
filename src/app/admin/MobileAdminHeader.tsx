@@ -92,6 +92,9 @@ export default function MobileAdminHeader({ profile, roleBadgeColor, roleBadge }
 
               <div className="mb-4">
                 <p className="px-3 text-[11px] font-black text-text-secondary uppercase tracking-widest mb-2">Platform Servisleri</p>
+                <Link href="/admin/content" onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
+                  <span>📚</span> İçerik Yönetimi
+                </Link>
                 <Link href="/admin/ai-vet" onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
                   <span>🤖</span> AI-Vet Analiz
                 </Link>
