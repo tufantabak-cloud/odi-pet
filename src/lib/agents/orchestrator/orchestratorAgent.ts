@@ -8,6 +8,7 @@ import { createOverdueVaccineNotifications } from '@/lib/notifications/create-ov
 import { expireSharedPetCards } from '@/lib/cron/expire-shared-pet-cards'
 import { createAdminSupabaseClient } from '@/lib/supabase/server'
 import { createEstrusNotifications } from '@/services/estrus/createEstrusNotifications'
+import { runContentReviewWatch } from '@/lib/content/contentReviewWatch'
 import { writeEvent } from './eventContract'
 import { randomUUID } from 'crypto'
 
@@ -50,7 +51,7 @@ export async function runOrchestratedPipeline(
   await writeEvent(supabase, null, 'orchestrator_run_started', {
     run_id,
     triggered_by,
-    agents_planned: ['data_quality', 'vaccine_check', 'user_health', 'overdue_plans', 'estrus_notifications', 'expire_cards'],
+    agents_planned: ['data_quality', 'vaccine_check', 'user_health', 'overdue_plans', 'estrus_notifications', 'expire_cards', 'content_review_watch'],
   })
 
   // ADIM 1 — Data Quality
@@ -189,6 +190,23 @@ export async function runOrchestratedPipeline(
     await writeEvent(supabase, null, 'orchestrator_agent_failed', {
       run_id,
       agent: 'expire_cards',
+      error,
+      downstream_skipped: [],
+    })
+  }
+
+  // ADIM 7 — Content Review Watch (İçerik güncelliği ve kontrol takibi)
+  try {
+    const adminSupabase = createAdminSupabaseClient()
+    const watchResult = await runContentReviewWatch(adminSupabase)
+    console.log('Content Review Watch completed:', watchResult.counts, 'Alerts:', watchResult.summaryAlerts)
+    agents_succeeded.push('content_review_watch')
+  } catch (err) {
+    const error = err instanceof Error ? err.message : String(err)
+    agents_failed.push('content_review_watch')
+    await writeEvent(supabase, null, 'orchestrator_agent_failed', {
+      run_id,
+      agent: 'content_review_watch',
       error,
       downstream_skipped: [],
     })
