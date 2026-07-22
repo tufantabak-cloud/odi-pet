@@ -4,6 +4,7 @@ import { requireRole } from '@/lib/auth/get-current-profile';
 import { generateDraftFromVerifiedSources } from '@/lib/agents/aiContentAgent';
 import { discoverCandidateSources, inspectCandidateSource } from '@/lib/content/contentResearchService';
 import { validateStateTransition, ActorRole, JobStatus } from '@/lib/content/contentJobStateMachine';
+import { verifyJobSources } from '@/lib/content/sourceVerificationService';
 
 export const dynamic = 'force-dynamic';
 
@@ -80,64 +81,23 @@ export async function PATCH(
     }
 
     // D. Kaynak Doğrulama / Reddetme
-    if (action === 'verify_source' && source_id) {
+    if ((action === 'verify_source' || action === 'reject_source' || action === 'verify_sources') && (source_id || body.sources)) {
       if (!actor || !actor.id || actor.id === '00000000-0000-0000-0000-000000000001') {
         return NextResponse.json({ error: 'Geçersiz veya sahte kullanıcı oturumu. İnsan doğrulaması kanıtlanamadı.' }, { status: 403 });
       }
 
-      if (body.confirmed_title_url !== true || body.confirmed_relevance !== true) {
-        return NextResponse.json({ error: 'Doğrulama öncesinde iki onay kutusu da işaretlenmiş olmalıdır.' }, { status: 400 });
-      }
+      const sourcesList = body.sources && Array.isArray(body.sources)
+        ? body.sources
+        : [{
+            source_id,
+            action: verification_status === 'rejected' || action === 'reject_source' ? 'rejected' : 'verified',
+            confirmed_title_url: body.confirmed_title_url,
+            confirmed_relevance: body.confirmed_relevance,
+            rejection_reason
+          }];
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id, role')
-        .eq('id', actor.id)
-        .single();
-
-      if (!profile || !['admin', 'founder'].includes(profile.role)) {
-        return NextResponse.json({ error: 'Kaynak doğrulama yalnız gerçek ve yetkili admin/founder profilleri tarafından yapılabilir.' }, { status: 403 });
-      }
-
-      const vStatus = verification_status === 'rejected' ? 'rejected' : 'verified';
-      const { data: updatedSource, error: srcErr } = await supabase
-        .from('content_generation_job_sources')
-        .update({
-          verification_status: vStatus,
-          verified_by: actor.id,
-          verified_at: new Date().toISOString()
-        })
-        .eq('id', source_id)
-        .select()
-        .single();
-
-      if (srcErr) return NextResponse.json({ error: srcErr.message }, { status: 400 });
-
-      await supabase.from('content_source_verification_audits').insert({
-        job_id: jobId,
-        source_id: source_id,
-        actor_id: actor.id,
-        actor_role: profile.role,
-        action: vStatus,
-        confirmed_title_url: true,
-        confirmed_relevance: true,
-        created_at: new Date().toISOString()
-      });
-
-      const { data: verifiedSources } = await supabase
-        .from('content_generation_job_sources')
-        .select('id')
-        .eq('job_id', jobId)
-        .eq('verification_status', 'verified');
-
-      if (verifiedSources && verifiedSources.length >= 2 && job.generation_status === 'source_review_required') {
-        await supabase
-          .from('content_generation_jobs')
-          .update({ generation_status: 'ready_for_generation' })
-          .eq('id', jobId);
-      }
-
-      return NextResponse.json({ source: updatedSource });
+      const result = await verifyJobSources(supabase, jobId, sourcesList, actor.id);
+      return NextResponse.json(result);
     }
 
     // E. Taslak Üretimini Tetikle

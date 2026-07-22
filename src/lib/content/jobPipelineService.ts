@@ -170,28 +170,75 @@ export async function processJobPipeline(
     review_interval_days: isMedicalContent ? 180 : 365
   };
 
-  // 6. Articles tablosuna yayınlanmamış taslak ekle (is_published = false)
-  const { data: newArticle, error: artErr } = await supabase
-    .from('articles')
-    .insert({
-      title: draft.title,
-      slug: draft.slug,
-      excerpt: draft.excerpt,
-      content: draft.content,
-      category: draft.category,
-      species_filter: draft.species_filter,
-      is_medical_content: draft.is_medical_content,
-      is_published: false,
-      vet_review_requirement: isMedicalContent ? 'required' : 'not_required',
-      vet_review_status: isMedicalContent ? 'pending' : 'not_required',
-      freshness_type: draft.freshness_type,
-      review_interval_days: draft.review_interval_days
-    })
-    .select()
-    .single();
+  // 6. Check if article already exists for this job or source_job_id
+  let targetArticleId = job.article_id;
 
-  if (artErr || !newArticle) {
-    throw new Error(`Makale oluşturulamadı: ${artErr?.message}`);
+  if (!targetArticleId) {
+    const { data: existingByJob } = await supabase
+      .from('articles')
+      .select('id')
+      .eq('source_job_id', jobId)
+      .maybeSingle();
+
+    if (existingByJob) {
+      targetArticleId = existingByJob.id;
+    }
+  }
+
+  let newArticle = null;
+
+  if (!targetArticleId) {
+    // Articles tablosuna yayınlanmamış taslak ekle (is_published = false, source_job_id = jobId)
+    const { data: insertedArticle, error: artErr } = await supabase
+      .from('articles')
+      .insert({
+        source_job_id: jobId,
+        title: draft.title,
+        slug: draft.slug,
+        excerpt: draft.excerpt,
+        content: draft.content,
+        category: draft.category,
+        species_filter: draft.species_filter,
+        is_medical_content: draft.is_medical_content,
+        is_published: false,
+        published_at: null,
+        published_by: null,
+        vet_review_requirement: isMedicalContent ? 'required' : 'not_required',
+        vet_review_status: isMedicalContent ? 'pending' : 'not_required',
+        freshness_type: draft.freshness_type,
+        review_interval_days: draft.review_interval_days
+      })
+      .select()
+      .maybeSingle();
+
+    if (artErr) {
+      // If unique constraint on source_job_id failed due to race condition
+      if (artErr.code === '23505' || artErr.message?.includes('source_job_id')) {
+        const { data: existingRaceArticle } = await supabase
+          .from('articles')
+          .select('*')
+          .eq('source_job_id', jobId)
+          .single();
+
+        newArticle = existingRaceArticle;
+      } else {
+        throw new Error(`Makale oluşturulamadı: ${artErr.message}`);
+      }
+    } else {
+      newArticle = insertedArticle;
+    }
+  } else {
+    const { data: fetchedArticle } = await supabase
+      .from('articles')
+      .select('*')
+      .eq('id', targetArticleId)
+      .single();
+
+    newArticle = fetchedArticle;
+  }
+
+  if (!newArticle) {
+    throw new Error('Makale kaydı oluşturulamadı veya alınamadı.');
   }
 
   // 7. article_sources bağlantılarını oluştur

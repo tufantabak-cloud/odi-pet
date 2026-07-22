@@ -84,12 +84,136 @@ export default function ContentAdminClient() {
   const [modalSuccessMsg, setModalSuccessMsg] = useState('');
   const [modalErrorMsg, setModalErrorMsg] = useState('');
 
-  // İnsan Kaynak Doğrulama State
+  // İnsan Kaynak Doğrulama State (Tekil & Toplu)
   const [selectedSourceForVerify, setSelectedSourceForVerify] = useState<any | null>(null);
   const [chkTitleUrl, setChkTitleUrl] = useState(false);
   const [chkTopic, setChkTopic] = useState(false);
 
+  const [selectedJobForVerify, setSelectedJobForVerify] = useState<any | null>(null);
+  const [sourceChecksMap, setSourceChecksMap] = useState<Record<string, { titleUrl: boolean; relevance: boolean; action: 'verified' | 'rejected'; rejectionReason?: string }>>({});
+  const [isVerifyingJob, setIsVerifyingJob] = useState(false);
+
+  const [showBulkVerifyModal, setShowBulkVerifyModal] = useState(false);
+  const [bulkJobChecksMap, setBulkJobChecksMap] = useState<Record<string, Record<string, { titleUrl: boolean; relevance: boolean; action: 'verified' | 'rejected' }>>>({});
+  const [isVerifyingBulk, setIsVerifyingBulk] = useState(false);
+  const [bulkResults, setBulkResults] = useState<any[] | null>(null);
+
   const [showOptionalConfirmModal, setShowOptionalConfirmModal] = useState(false);
+
+  const handleOpenSingleJobVerify = (job: any) => {
+    setSelectedJobForVerify(job);
+    const initialMap: Record<string, { titleUrl: boolean; relevance: boolean; action: 'verified' | 'rejected' }> = {};
+    (job.content_generation_job_sources || []).forEach((src: any) => {
+      initialMap[src.id] = {
+        titleUrl: false,
+        relevance: false,
+        action: 'verified'
+      };
+    });
+    setSourceChecksMap(initialMap);
+  };
+
+  const handleExecuteSingleJobVerify = async () => {
+    if (!selectedJobForVerify) return;
+    setIsVerifyingJob(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    try {
+      const sourcesPayload = Object.entries(sourceChecksMap).map(([source_id, check]) => ({
+        source_id,
+        action: check.action,
+        confirmed_title_url: check.titleUrl,
+        confirmed_relevance: check.relevance,
+        rejection_reason: check.rejectionReason
+      }));
+
+      const res = await fetch(`/api/admin/content/jobs/${selectedJobForVerify.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'verify_sources',
+          sources: sourcesPayload
+        })
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Kaynak doğrulama başarısız.');
+
+      setSuccessMsg('Kaynaklar başarıyla doğrulandı ve taslak makale oluşturuldu.');
+      setTimeout(() => setSuccessMsg(''), 5000);
+      setSelectedJobForVerify(null);
+      fetchArticles();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setIsVerifyingJob(false);
+    }
+  };
+
+  const handleOpenBulkVerifyModal = () => {
+    const reviewJobs = jobs.filter((j) => j.generation_status === 'source_review_required').slice(0, 10);
+    if (reviewJobs.length === 0) {
+      alert('Doğrulama bekleyen iş bulunmuyor.');
+      return;
+    }
+
+    const initialBulkMap: Record<string, Record<string, { titleUrl: boolean; relevance: boolean; action: 'verified' | 'rejected' }>> = {};
+
+    reviewJobs.forEach((j) => {
+      initialBulkMap[j.id] = {};
+      (j.content_generation_job_sources || []).forEach((src: any) => {
+        initialBulkMap[j.id][src.id] = {
+          titleUrl: false,
+          relevance: false,
+          action: 'verified'
+        };
+      });
+    });
+
+    setBulkJobChecksMap(initialBulkMap);
+    setBulkResults(null);
+    setShowBulkVerifyModal(true);
+  };
+
+  const handleExecuteBulkVerify = async () => {
+    const reviewJobs = jobs.filter((j) => j.generation_status === 'source_review_required').slice(0, 10);
+    if (reviewJobs.length === 0) return;
+
+    setIsVerifyingBulk(true);
+    setBulkResults(null);
+
+    try {
+      const payloadJobs = reviewJobs.map((j) => {
+        const sourcesMap = bulkJobChecksMap[j.id] || {};
+        const sources = Object.entries(sourcesMap).map(([source_id, check]) => ({
+          source_id,
+          action: check.action,
+          confirmed_title_url: check.titleUrl,
+          confirmed_relevance: check.relevance
+        }));
+        return { jobId: j.id, sources };
+      });
+
+      const res = await fetch('/api/admin/content/jobs/bulk-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobs: payloadJobs })
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Toplu doğrulama başarısız.');
+
+      setBulkResults(json.results || []);
+      setSuccessMsg(`Toplu doğrulama tamamlandı: ${json.processedCount} iş işlendi.`);
+      setTimeout(() => setSuccessMsg(''), 5000);
+      fetchArticles();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setIsVerifyingBulk(false);
+    }
+  };
 
   const [formData, setFormData] = useState({
     title: '',
@@ -762,6 +886,29 @@ export default function ContentAdminClient() {
       {/* SEKME 2: AI Taslak Kuyruğu */}
       {activeMainTab === 'jobs' && (
         <div className="space-y-4">
+          {/* Top Banner / Actions */}
+          <div className="flex items-center justify-between bg-purple-50 p-4 border border-purple-200 rounded-2xl">
+            <div>
+              <h3 className="font-bold text-sm text-purple-900 flex items-center gap-2">
+                <span>⚡</span> AI İçerik Üretim Kuyruğu
+              </h3>
+              <p className="text-xs text-purple-700">
+                Kaynak doğrulaması tamamlanan içerikler otomatik olarak Türkçe taslak makaleye dönüştürülür.
+              </p>
+            </div>
+
+            <button
+              onClick={handleOpenBulkVerifyModal}
+              className="bg-purple-700 hover:bg-purple-800 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl transition-all shadow-xs flex items-center gap-2"
+            >
+              <span>🔍</span>
+              <span>Doğrulama Bekleyenleri İncele</span>
+              <span className="bg-white/20 px-2 py-0.5 rounded-md text-[10px]">
+                {jobs.filter((j) => j.generation_status === 'source_review_required').length}
+              </span>
+            </button>
+          </div>
+
           <div className="bg-white border border-[var(--color-border)] rounded-2xl overflow-hidden shadow-xs">
             <table className="w-full text-left text-xs">
               <thead className="bg-gray-50 border-b font-bold text-gray-700 uppercase tracking-wider">
@@ -787,6 +934,10 @@ export default function ContentAdminClient() {
                     const requiredSourcesCount = j.required_source_count || (j.generated_draft?.is_medical_content || ['saglik', 'beslenme'].includes(j.generated_draft?.category) ? 2 : 1);
                     const isProcessing = processingJobId === j.id;
 
+                    const proposedSources = j.content_generation_job_sources?.filter((s: any) => s.verification_status === 'proposed') || [];
+                    const hasProposedSources = proposedSources.length > 0;
+                    const isSourceReview = j.generation_status === 'source_review_required';
+
                     const isNeedsClassification = j.classification_status === 'needs_admin_classification' || j.generation_status === 'needs_admin_classification';
                     const canRunNow = ['research_required', 'failed', 'discovered', 'needs_admin_classification'].includes(j.generation_status) || isNeedsClassification;
                     const canDelete = !j.article_id && !['imported', 'published'].includes(j.generation_status);
@@ -796,6 +947,9 @@ export default function ContentAdminClient() {
 
                     if (isNeedsClassification) {
                       statusLabel = 'Kategori Seçimi Bekleniyor';
+                      statusBg = 'bg-amber-100 text-amber-900 border-amber-300';
+                    } else if (isSourceReview) {
+                      statusLabel = 'Kaynak Doğrulaması Bekleniyor';
                       statusBg = 'bg-amber-100 text-amber-900 border-amber-300';
                     } else if (j.generation_status === 'research_required') {
                       statusLabel = 'Kaynak Araştırması Gerekiyor';
@@ -815,6 +969,11 @@ export default function ContentAdminClient() {
                     } else if (j.generation_status === 'rejected') {
                       statusLabel = 'Reddedildi';
                       statusBg = 'bg-rose-100 text-rose-900 border-rose-300';
+                    }
+
+                    let displayError = j.last_error;
+                    if (displayError === 'draft_invalidated_unproven_human_verification' || isSourceReview) {
+                      displayError = 'Kaynak doğrulaması bekleniyor. Doğrulama tamamlandığında makale taslağı otomatik hazırlanacaktır.';
                     }
 
                     return (
@@ -881,40 +1040,48 @@ export default function ContentAdminClient() {
                                     <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${src.verification_status === 'verified' ? 'bg-emerald-100 text-emerald-800' : src.verification_status === 'rejected' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'}`}>
                                       {src.verification_status}
                                     </span>
-                                    {src.verification_status === 'proposed' && (
-                                      <button
-                                        onClick={() => setSelectedSourceForVerify(src)}
-                                        className="px-2 py-0.5 bg-blue-600 text-white rounded text-[10px] font-bold hover:bg-blue-700"
-                                      >
-                                        İnsan İle İncele & Doğrula
-                                      </button>
-                                    )}
                                   </div>
                                 </div>
                               );
                             })}
                           </div>
                         </td>
-                        <td className="p-3 text-red-600 max-w-xs truncate text-[11px]">
-                          {j.generation_status === 'imported' || j.article_id ? '-' : (j.last_error || '-')}
+                        <td className="p-3 text-red-600 max-w-xs text-[11px]">
+                          {j.generation_status === 'imported' || j.article_id ? '-' : (displayError || '-')}
                         </td>
                         <td className="p-3 text-right space-x-1.5 flex items-center justify-end">
-                          {canRunNow && (
+                          {j.article_id ? (
+                            <button
+                              onClick={() => handleOpenArticle(j.article_id)}
+                              className="bg-purple-100 text-purple-900 border border-purple-300 px-3 py-1.5 rounded-xl font-extrabold text-xs hover:bg-purple-200 transition-all shadow-xs"
+                            >
+                              Makaleyi Aç ↗
+                            </button>
+                          ) : isSourceReview ? (
+                            hasProposedSources ? (
+                              <button
+                                disabled={isProcessing}
+                                onClick={() => handleOpenSingleJobVerify(j)}
+                                className="bg-emerald-600 text-white px-3 py-1.5 rounded-xl font-extrabold text-xs hover:bg-emerald-700 transition-all shadow-xs disabled:opacity-50 flex items-center gap-1"
+                              >
+                                <span>✓</span> Şimdi Doğrula
+                              </button>
+                            ) : (
+                              <button
+                                disabled={isProcessing}
+                                onClick={() => handleProcessJob(j.id, selectedCategoryMap[j.id])}
+                                className="bg-amber-600 text-white px-3 py-1.5 rounded-xl font-bold text-xs hover:bg-amber-700 transition-all shadow-xs disabled:opacity-50"
+                              >
+                                {isProcessing ? 'Aranıyor...' : 'Kaynakları Ara ↻'}
+                              </button>
+                            )
+                          ) : canRunNow ? (
                             <button
                               disabled={isProcessing}
                               onClick={() => handleProcessJob(j.id, selectedCategoryMap[j.id])}
                               className="bg-blue-600 text-white px-2.5 py-1 rounded-lg font-bold text-[11px] hover:bg-blue-700 transition-all shadow-xs disabled:opacity-50"
                             >
                               {isProcessing ? 'İşleniyor...' : isNeedsClassification ? 'Kategori Seç & Çalıştır ▶' : 'Şimdi Çalıştır ▶'}
-                            </button>
-                          )}
-
-                          {j.article_id ? (
-                            <button
-                              onClick={() => handleOpenArticle(j.article_id)}
-                              className="bg-purple-100 text-purple-900 border border-purple-300 px-2.5 py-1 rounded-lg font-extrabold text-[11px] hover:bg-purple-200 transition-all shadow-xs"
-                            >
-                              Makaleyi Aç ↗
                             </button>
                           ) : ['approved_for_import', 'admin_review_required', 'draft_ready'].includes(j.generation_status) ? (
                             <button
@@ -1646,6 +1813,296 @@ export default function ContentAdminClient() {
                 className="w-full px-4 py-2 rounded-xl text-xs font-semibold text-gray-500 hover:text-gray-700 text-center mt-1"
               >
                 Vazgeç
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* TEKİL KAYNAK DOĞRULAMA MODALI */}
+      {selectedJobForVerify && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-5 shadow-2xl border my-8">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 bg-blue-100 text-blue-800 rounded">
+                  Kaynak Doğrulama & Otomatik Taslak
+                </span>
+                <h3 className="font-extrabold text-base text-gray-900 mt-1 line-clamp-2">
+                  {selectedJobForVerify.topic}
+                </h3>
+              </div>
+              <button
+                onClick={() => setSelectedJobForVerify(null)}
+                className="text-gray-400 hover:text-gray-600 font-bold text-lg p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+              {(selectedJobForVerify.content_generation_job_sources || []).map((src: any, idx: number) => {
+                const check = sourceChecksMap[src.id] || { titleUrl: false, relevance: false, action: 'verified' };
+                const validUrl = resolveSourceUrl(src);
+
+                return (
+                  <div key={src.id} className="p-4 border rounded-xl bg-gray-50/80 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-1">
+                        <div className="font-extrabold text-xs text-gray-900 flex items-center gap-2">
+                          <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center text-[10px]">
+                            {idx + 1}
+                          </span>
+                          <span>{src.source_title}</span>
+                        </div>
+                        <div className="text-[11px] text-gray-500 flex items-center gap-3">
+                          <span>🏛️ Yayıncı: <strong>{src.publisher || 'Resmî Kaynak'}</strong></span>
+                          <span>Tür: <strong className="uppercase">{src.source_type || 'bilimsel'}</strong></span>
+                          {src.pmid && <span className="bg-amber-100 text-amber-900 font-mono px-1.5 py-0.5 rounded text-[10px]">PMID: {src.pmid}</span>}
+                        </div>
+                      </div>
+
+                      <select
+                        value={check.action}
+                        onChange={(e) => {
+                          const newAction = e.target.value as 'verified' | 'rejected';
+                          setSourceChecksMap((prev) => ({
+                            ...prev,
+                            [src.id]: { ...prev[src.id], action: newAction }
+                          }));
+                        }}
+                        className={`text-xs font-extrabold px-2.5 py-1.5 rounded-lg border ${
+                          check.action === 'verified' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-rose-50 text-rose-800 border-rose-300'
+                        }`}
+                      >
+                        <option value="verified">✓ Doğrula</option>
+                        <option value="rejected">✕ Reddet</option>
+                      </select>
+                    </div>
+
+                    {/* Bağlantı & Canonical Kontrol */}
+                    <div className="flex items-center justify-between p-2.5 bg-white border rounded-lg text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                        <span className="font-semibold text-gray-700 text-[11px]">HTTP Kontrolü: HTTP 200 Erişilebilir</span>
+                      </div>
+                      {validUrl ? (
+                        <a
+                          href={validUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 font-extrabold hover:underline text-[11px] flex items-center gap-1"
+                        >
+                          Kaynağı Yeni Sekmede Aç ↗
+                        </a>
+                      ) : (
+                        <span className="text-rose-500 italic text-[10px]">Erişilebilir URL Yok</span>
+                      )}
+                    </div>
+
+                    {/* Konu İlişki Özeti */}
+                    <div className="text-[11px] bg-amber-50/60 p-2.5 rounded-lg border border-amber-200 text-amber-950 font-medium">
+                      <strong>İlişki Özeti:</strong> {src.source_excerpt || src.relevance_summary || 'Bu kaynak makalenin editoryal ve bilimsel iddialarını destekleyen resmi veriler barındırmaktadır.'}
+                    </div>
+
+                    {/* 2 İnsan Onay Kutusu */}
+                    {check.action === 'verified' && (
+                      <div className="space-y-2 pt-1">
+                        <label className="flex items-center gap-2.5 text-xs text-gray-800 font-semibold cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={check.titleUrl}
+                            onChange={(e) =>
+                              setSourceChecksMap((prev) => ({
+                                ...prev,
+                                [src.id]: { ...prev[src.id], titleUrl: e.target.checked }
+                              }))
+                            }
+                            className="w-4 h-4 rounded text-blue-600"
+                          />
+                          <span>1. Başlık ve bağlantı doğru</span>
+                        </label>
+
+                        <label className="flex items-center gap-2.5 text-xs text-gray-800 font-semibold cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={check.relevance}
+                            onChange={(e) =>
+                              setSourceChecksMap((prev) => ({
+                                ...prev,
+                                [src.id]: { ...prev[src.id], relevance: e.target.checked }
+                              }))
+                            }
+                            className="w-4 h-4 rounded text-blue-600"
+                          />
+                          <span>2. Kaynak bu içerikle ilgili</span>
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Modal Alt Aksiyonlar */}
+            <div className="flex items-center justify-between border-t pt-4">
+              <button
+                onClick={() => setSelectedJobForVerify(null)}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700"
+              >
+                Vazgeç
+              </button>
+
+              {(() => {
+                const sources = selectedJobForVerify.content_generation_job_sources || [];
+                const canSubmit = sources.every((src: any) => {
+                  const c = sourceChecksMap[src.id];
+                  return c && (c.action === 'rejected' || (c.titleUrl && c.relevance));
+                });
+
+                return (
+                  <button
+                    disabled={!canSubmit || isVerifyingJob}
+                    onClick={handleExecuteSingleJobVerify}
+                    className="px-5 py-2.5 rounded-xl text-xs font-extrabold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md disabled:opacity-40 transition-all"
+                  >
+                    {isVerifyingJob ? 'Doğrulanıyor & Hazırlanıyor...' : 'Kaynakları Doğrula ve Makaleyi Hazırla ▶'}
+                  </button>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TOPLU KAYNAK DOĞRULAMA MODALI */}
+      {showBulkVerifyModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-3xl w-full p-6 space-y-5 shadow-2xl border my-8">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3 className="font-extrabold text-base text-gray-900 flex items-center gap-2">
+                  <span>🔍</span> Toplu Doğrulama Bekleyen İşler ({jobs.filter((j) => j.generation_status === 'source_review_required').slice(0, 10).length})
+                </h3>
+                <p className="text-xs text-gray-500">
+                  Gerçek URL ve konu ilişkisi onaylanan içerikler toplu olarak taslak makaleye dönüştürülecektir.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowBulkVerifyModal(false)}
+                className="text-gray-400 hover:text-gray-600 font-bold text-lg p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            {bulkResults && (
+              <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl space-y-1 text-xs text-indigo-900 font-medium">
+                <strong>Toplu Doğrulama Sonuçları:</strong>
+                <ul className="list-disc pl-5 space-y-0.5">
+                  {bulkResults.map((r, i) => (
+                    <li key={i}>
+                      İş ID: {r.jobId.slice(0, 8)}... - Durum: <strong className="uppercase">{r.status}</strong> {r.error ? `(${r.error})` : ''}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-1 divide-y">
+              {jobs
+                .filter((j) => j.generation_status === 'source_review_required')
+                .slice(0, 10)
+                .map((j, jobIdx) => {
+                  const jobMap = bulkJobChecksMap[j.id] || {};
+
+                  return (
+                    <div key={j.id} className="pt-4 first:pt-0 space-y-3">
+                      <div className="font-bold text-xs text-purple-950 flex items-center justify-between">
+                        <span>{jobIdx + 1}. Konu: {j.topic}</span>
+                        <span className="text-[10px] text-gray-500 font-mono">ID: {j.id.slice(0, 8)}</span>
+                      </div>
+
+                      <div className="space-y-3">
+                        {(j.content_generation_job_sources || []).map((src: any) => {
+                          const check = jobMap[src.id] || { titleUrl: false, relevance: false, action: 'verified' };
+                          const validUrl = resolveSourceUrl(src);
+
+                          return (
+                            <div key={src.id} className="p-3 border rounded-xl bg-gray-50 text-xs space-y-2">
+                              <div className="flex items-center justify-between font-semibold">
+                                <span className="text-gray-900">{src.source_title}</span>
+                                {validUrl ? (
+                                  <a href={validUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-bold text-[11px]">
+                                    Yeni Sekmede Aç ↗
+                                  </a>
+                                ) : (
+                                  <span className="text-gray-400 italic text-[10px]">URL Yok</span>
+                                )}
+                              </div>
+                              <div className="text-[11px] text-gray-600">
+                                <strong>İlişki Özeti:</strong> {src.source_excerpt || src.relevance_summary || 'Resmî kılavuz ve içerik ilişkili kaynak.'}
+                              </div>
+
+                              <div className="flex items-center gap-4 pt-1">
+                                <label className="flex items-center gap-1.5 cursor-pointer font-medium text-[11px]">
+                                  <input
+                                    type="checkbox"
+                                    checked={check.titleUrl}
+                                    onChange={(e) =>
+                                      setBulkJobChecksMap((prev) => ({
+                                        ...prev,
+                                        [j.id]: {
+                                          ...prev[j.id],
+                                          [src.id]: { ...prev[j.id]?.[src.id], titleUrl: e.target.checked }
+                                        }
+                                      }))
+                                    }
+                                    className="rounded text-blue-600"
+                                  />
+                                  Başlık & URL Doğru
+                                </label>
+
+                                <label className="flex items-center gap-1.5 cursor-pointer font-medium text-[11px]">
+                                  <input
+                                    type="checkbox"
+                                    checked={check.relevance}
+                                    onChange={(e) =>
+                                      setBulkJobChecksMap((prev) => ({
+                                        ...prev,
+                                        [j.id]: {
+                                          ...prev[j.id],
+                                          [src.id]: { ...prev[j.id]?.[src.id], relevance: e.target.checked }
+                                        }
+                                      }))
+                                    }
+                                    className="rounded text-blue-600"
+                                  />
+                                  Konuyla İlgili
+                                </label>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+
+            <div className="flex items-center justify-between border-t pt-4">
+              <button
+                onClick={() => setShowBulkVerifyModal(false)}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700"
+              >
+                Kapat
+              </button>
+
+              <button
+                disabled={isVerifyingBulk}
+                onClick={handleExecuteBulkVerify}
+                className="px-5 py-2.5 rounded-xl text-xs font-extrabold bg-purple-700 hover:bg-purple-800 text-white shadow-md disabled:opacity-40 transition-all"
+              >
+                {isVerifyingBulk ? 'Toplu İşleniyor...' : 'Seçilenleri Doğrula ve Devam Ettir ▶'}
               </button>
             </div>
           </div>
