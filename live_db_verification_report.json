@@ -1,0 +1,368 @@
+{
+  "articles_columns": [
+    {
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "title",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "slug",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "content",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "category",
+      "data_type": "text",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "author",
+      "data_type": "text",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "target_breed_keys",
+      "data_type": "ARRAY",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "target_breed_traits",
+      "data_type": "ARRAY",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "target_life_stages",
+      "data_type": "ARRAY",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "target_genders",
+      "data_type": "ARRAY",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "target_neutered_status",
+      "data_type": "text",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "target_seasons",
+      "data_type": "ARRAY",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "start_date",
+      "data_type": "date",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "end_date",
+      "data_type": "date",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "priority_order",
+      "data_type": "integer",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "is_medical_content",
+      "data_type": "boolean",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "vet_review_status",
+      "data_type": "text",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "vet_reviewed_by",
+      "data_type": "uuid",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "vet_reviewed_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "references_list",
+      "data_type": "ARRAY",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "is_published",
+      "data_type": "boolean",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "species_filter",
+      "data_type": "ARRAY",
+      "is_nullable": "YES"
+    }
+  ],
+  "article_pet_states_columns": [
+    {
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "user_id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "pet_id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "article_id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "last_shown_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "last_viewed_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "read_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "dismissed_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    }
+  ],
+  "constraints": [
+    {
+      "table_name": "articles",
+      "conname": "articles_neutered_status_check",
+      "definition": "CHECK ((target_neutered_status = ANY (ARRAY['all'::text, 'neutered'::text, 'intact'::text])))"
+    },
+    {
+      "table_name": "articles",
+      "conname": "articles_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "articles",
+      "conname": "articles_slug_key",
+      "definition": "UNIQUE (slug)"
+    },
+    {
+      "table_name": "articles",
+      "conname": "articles_vet_review_status_check",
+      "definition": "CHECK ((vet_review_status = ANY (ARRAY['not_required'::text, 'pending'::text, 'approved'::text])))"
+    },
+    {
+      "table_name": "articles",
+      "conname": "articles_vet_reviewed_by_fkey",
+      "definition": "FOREIGN KEY (vet_reviewed_by) REFERENCES profiles(id)"
+    },
+    {
+      "table_name": "article_saves",
+      "conname": "article_saves_article_id_fkey",
+      "definition": "FOREIGN KEY (article_id) REFERENCES articles(id)"
+    },
+    {
+      "table_name": "article_saves",
+      "conname": "article_saves_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "article_saves",
+      "conname": "article_saves_user_id_article_id_key",
+      "definition": "UNIQUE (user_id, article_id)"
+    },
+    {
+      "table_name": "article_saves",
+      "conname": "article_saves_user_id_fkey",
+      "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id)"
+    },
+    {
+      "table_name": "article_pet_states",
+      "conname": "article_pet_states_article_id_fkey",
+      "definition": "FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE"
+    },
+    {
+      "table_name": "article_pet_states",
+      "conname": "article_pet_states_pet_id_fkey",
+      "definition": "FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE"
+    },
+    {
+      "table_name": "article_pet_states",
+      "conname": "article_pet_states_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "article_pet_states",
+      "conname": "article_pet_states_user_id_fkey",
+      "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+    },
+    {
+      "table_name": "article_pet_states",
+      "conname": "article_pet_states_user_pet_article_key",
+      "definition": "UNIQUE (user_id, pet_id, article_id)"
+    }
+  ],
+  "indexes": [
+    {
+      "tablename": "article_pet_states",
+      "indexname": "article_pet_states_pkey",
+      "indexdef": "CREATE UNIQUE INDEX article_pet_states_pkey ON public.article_pet_states USING btree (id)"
+    },
+    {
+      "tablename": "article_pet_states",
+      "indexname": "article_pet_states_user_pet_article_key",
+      "indexdef": "CREATE UNIQUE INDEX article_pet_states_user_pet_article_key ON public.article_pet_states USING btree (user_id, pet_id, article_id)"
+    },
+    {
+      "tablename": "article_pet_states",
+      "indexname": "idx_article_pet_states_lookup",
+      "indexdef": "CREATE INDEX idx_article_pet_states_lookup ON public.article_pet_states USING btree (user_id, pet_id, article_id)"
+    },
+    {
+      "tablename": "article_saves",
+      "indexname": "article_saves_pkey",
+      "indexdef": "CREATE UNIQUE INDEX article_saves_pkey ON public.article_saves USING btree (id)"
+    },
+    {
+      "tablename": "article_saves",
+      "indexname": "article_saves_user_id_article_id_key",
+      "indexdef": "CREATE UNIQUE INDEX article_saves_user_id_article_id_key ON public.article_saves USING btree (user_id, article_id)"
+    },
+    {
+      "tablename": "articles",
+      "indexname": "idx_articles_breed_traits",
+      "indexdef": "CREATE INDEX idx_articles_breed_traits ON public.articles USING gin (target_breed_traits)"
+    },
+    {
+      "tablename": "articles",
+      "indexname": "idx_articles_life_stages",
+      "indexdef": "CREATE INDEX idx_articles_life_stages ON public.articles USING gin (target_life_stages)"
+    },
+    {
+      "tablename": "articles",
+      "indexname": "idx_articles_species",
+      "indexdef": "CREATE INDEX idx_articles_species ON public.articles USING gin (species_filter)"
+    },
+    {
+      "tablename": "articles",
+      "indexname": "idx_articles_priority",
+      "indexdef": "CREATE INDEX idx_articles_priority ON public.articles USING btree (priority_order, is_published)"
+    },
+    {
+      "tablename": "articles",
+      "indexname": "articles_pkey",
+      "indexdef": "CREATE UNIQUE INDEX articles_pkey ON public.articles USING btree (id)"
+    },
+    {
+      "tablename": "articles",
+      "indexname": "articles_slug_key",
+      "indexdef": "CREATE UNIQUE INDEX articles_slug_key ON public.articles USING btree (slug)"
+    },
+    {
+      "tablename": "articles",
+      "indexname": "idx_articles_breed_keys",
+      "indexdef": "CREATE INDEX idx_articles_breed_keys ON public.articles USING gin (target_breed_keys)"
+    }
+  ],
+  "triggers": [
+    {
+      "table_name": "article_pet_states",
+      "trigger_name": "update_article_pet_states_updated_at_trigger",
+      "action_statement": "EXECUTE FUNCTION update_article_pet_states_updated_at()"
+    }
+  ],
+  "policies": [
+    {
+      "tablename": "article_pet_states",
+      "policyname": "Users can delete own pet article states",
+      "roles": [
+        "public"
+      ],
+      "cmd": "DELETE",
+      "qual": "((auth.uid() = user_id) AND ((EXISTS ( SELECT 1\n   FROM pets\n  WHERE ((pets.id = article_pet_states.pet_id) AND (pets.owner_id = auth.uid())))) OR (EXISTS ( SELECT 1\n   FROM pet_owners\n  WHERE ((pet_owners.pet_id = article_pet_states.pet_id) AND (pet_owners.profile_id = auth.uid()))))))"
+    },
+    {
+      "tablename": "article_pet_states",
+      "policyname": "Users can insert own pet article states",
+      "roles": [
+        "public"
+      ],
+      "cmd": "INSERT",
+      "qual": null
+    },
+    {
+      "tablename": "article_pet_states",
+      "policyname": "Users can update own pet article states",
+      "roles": [
+        "public"
+      ],
+      "cmd": "UPDATE",
+      "qual": "((auth.uid() = user_id) AND ((EXISTS ( SELECT 1\n   FROM pets\n  WHERE ((pets.id = article_pet_states.pet_id) AND (pets.owner_id = auth.uid())))) OR (EXISTS ( SELECT 1\n   FROM pet_owners\n  WHERE ((pet_owners.pet_id = article_pet_states.pet_id) AND (pet_owners.profile_id = auth.uid()))))))"
+    },
+    {
+      "tablename": "article_pet_states",
+      "policyname": "Users can view own pet article states",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "((auth.uid() = user_id) AND ((EXISTS ( SELECT 1\n   FROM pets\n  WHERE ((pets.id = article_pet_states.pet_id) AND (pets.owner_id = auth.uid())))) OR (EXISTS ( SELECT 1\n   FROM pet_owners\n  WHERE ((pet_owners.pet_id = article_pet_states.pet_id) AND (pet_owners.profile_id = auth.uid()))))))"
+    },
+    {
+      "tablename": "articles",
+      "policyname": "Admin and founder can manage articles",
+      "roles": [
+        "public"
+      ],
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::user_role, 'founder'::user_role])))))"
+    },
+    {
+      "tablename": "articles",
+      "policyname": "Anyone can read eligible published articles",
+      "roles": [
+        "public"
+      ],
+      "cmd": "SELECT",
+      "qual": "(((is_published = true) AND ((is_medical_content = false) OR (vet_review_status = 'approved'::text))) OR (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::user_role, 'founder'::user_role]))))))"
+    }
+  ]
+}
