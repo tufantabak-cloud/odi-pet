@@ -265,6 +265,12 @@ export default function PetRecommendationsCard({ activePet }: PetRecommendations
         <h2 className="text-[11px] font-800 text-[var(--color-text-muted)] uppercase tracking-[1.2px]">
           {activePet.name} İçin Öneriler
         </h2>
+        <Link
+          href={`/owner/learn?petId=${activePet.id}`}
+          className="text-[11px] font-800 text-[var(--color-primary)] hover:underline flex items-center gap-0.5"
+        >
+          Tümünü gör →
+        </Link>
       </div>
 
       <div className="flex flex-col gap-3">
