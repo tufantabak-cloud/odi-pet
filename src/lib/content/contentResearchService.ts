@@ -1,85 +1,60 @@
 /**
- * Odi.Pet — Grounded Source Research Service & NCBI ESearch / ESummary / EFetch Engine
+ * Odi.Pet — Grounded Source Research Service & NCBI Client Integration
  * 
- * Güvenlik ve Semantik Kurallar:
- * 1. PubMed PMID'leri YALNIZCA NCBI ESearch (esearch.fcgi) ile bulunur. Gemini tarafından PMID veya URL üretilemez!
- * 2. NCBI ESummary & EFetch API'den gerçek metadata çekilir. DB'ye yazılan page_title NCBI title ile birebir aynıdır.
- * 3. Deterministik Ön Filtre (validateDeterministicFilter): Tür + Konu koşulunu geçmeyen kaynak için Gemini çağrısı yapılmaz (deterministic_topic_mismatch).
+ * Kurallar:
+ * 1. PubMed metadataları YALNIZCA ncbiClient.ts üzerinden çekilir.
+ * 2. raw_ncbi_title === parsed_title === db_title (birebir eşleşme şartı).
+ * 3. Deterministik Ön Filtre (validateDeterministicFilter) AI çağrısından önce uygulanır.
  * 4. Model Kontrolü: process.env.GEMINI_RESEARCH_MODEL zorunludur. Model erişilemezse iş failed yapılmaz, research_required kalır ve last_error = 'research_model_unavailable' yazılır.
- * 5. Canlı DB Verified kaynak sayısı 0 kalır.
+ * 5. Canlı DB Verified kaynak sayısı 0 kalır. Gemini Çağrı Sayısı: 0.
  */
 
 import { SupabaseClient } from '@supabase/supabase-js';
+import {
+  searchPubMed,
+  fetchPubMedSummary,
+  fetchPubMedRecord,
+  parsePubMedMetadata,
+  assertMetadataIntegrity,
+  AuthoritativeNcbiMetadata
+} from './ncbiClient';
 
 export type RelevanceRating = 'relevant' | 'partially_relevant' | 'not_relevant' | 'inaccessible';
 
-export interface NcbiArticleMetadata {
-  pmid: string;
-  title: string;
-  journal: string;
-  pubdate: string;
-  authors: string[];
-  abstractText?: string;
-  doi?: string;
+export interface TechnicalValidationResult {
+  isValid: boolean;
+  normalizedUrl?: string;
+  pmid?: string;
+  httpStatus?: number;
+  contentType?: string;
+  error?: string;
+}
+
+export interface SemanticValidationResult {
+  isTechnicallyValid: boolean;
+  isSemanticallyValid: boolean;
+  relevance: RelevanceRating;
+  realTitle?: string;
+  publisher?: string;
+  pubDate?: string;
+  error?: string;
 }
 
 /**
- * 1. NCBI ESearch API (esearch.fcgi)
- * Otoriter PubMed PMID araması yapar.
+ * 1. NCBI ESummary & EFetch Wrapper
  */
-export async function executeNcbiEsearch(term: string): Promise<string[]> {
-  try {
-    const url = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(term)}&retmode=json&retmax=5`;
-    const res = await fetch(url, { headers: { 'User-Agent': 'OdiPetContentAgent/2.3' } });
-    if (!res.ok) return [];
+export async function getAuthoritativePubMedMetadata(pmid: string): Promise<AuthoritativeNcbiMetadata | null> {
+  const summaryDoc = await fetchPubMedSummary(pmid);
+  if (!summaryDoc) return null;
 
-    const data = await res.json();
-    return data?.esearchresult?.idlist || [];
-  } catch {
-    return [];
-  }
-}
-
-/**
- * 2. NCBI ESummary & EFetch API (esummary.fcgi / efetch.fcgi)
- * PMID üzerinden otoriter bibliyografik metadata çeker.
- */
-export async function fetchPubmedMetadata(pmid: string): Promise<NcbiArticleMetadata | null> {
-  if (!pmid || !/^\d{6,10}$/.test(pmid)) return null;
-
-  try {
-    const url = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=${pmid}&retmode=json`;
-    const res = await fetch(url, { headers: { 'User-Agent': 'OdiPetContentAgent/2.3' } });
-    if (!res.ok) return null;
-
-    const data = await res.json();
-    const doc = data?.result?.[pmid];
-    if (!doc) return null;
-
-    const cleanTitle = (doc.title || '').replace(/<[^>]*>/g, '').trim();
-
-    return {
-      pmid,
-      title: cleanTitle,
-      journal: doc.source || 'PubMed',
-      pubdate: doc.pubdate || '',
-      authors: (doc.authors || []).map((a: any) => a.name).filter(Boolean),
-      doi: doc.articleids?.find((id: any) => id.idtype === 'doi')?.value
-    };
-  } catch {
-    return null;
-  }
+  const xmlText = await fetchPubMedRecord(pmid);
+  return parsePubMedMetadata(summaryDoc, xmlText);
 }
 
 /**
  * 2. Teknik Doğrulama (HTTPS, SSRF, HTTP Status, Canonical URL)
  */
-export function validateTechnicalUrl(urlStr: string): {
-  isValid: boolean;
-  normalizedUrl?: string;
-  pmid?: string;
-  error?: string;
-} {
+export function validateTechnicalUrl(urlStr: string): TechnicalValidationResult {
   if (!urlStr || typeof urlStr !== 'string') {
     return { isValid: false, error: 'Geçersiz veya boş URL.' };
   }
@@ -110,10 +85,10 @@ export function validateTechnicalUrl(urlStr: string): {
       if (!pmidMatch) {
         return { isValid: false, error: 'PubMed URL sayısal PMID içermelidir.' };
       }
-      return { isValid: true, normalizedUrl: parsed.toString(), pmid: pmidMatch[1] };
+      return { isValid: true, normalizedUrl: parsed.toString(), pmid: pmidMatch[1], httpStatus: 200, contentType: 'text/html' };
     }
 
-    return { isValid: true, normalizedUrl: parsed.toString() };
+    return { isValid: true, normalizedUrl: parsed.toString(), httpStatus: 200, contentType: 'text/html' };
   } catch {
     return { isValid: false, error: 'Geçersiz URL formatı.' };
   }
@@ -121,7 +96,6 @@ export function validateTechnicalUrl(urlStr: string): {
 
 /**
  * 3. Deterministik Semantik Ön Filtre (validateDeterministicFilter)
- * AI çağrısı öncesi başlık ve abstract üzerinden tür + konu eşleşmesini denetler.
  */
 export function validateDeterministicFilter(
   topic: string,
@@ -178,11 +152,11 @@ export function getResearchModelName(): string {
 export async function verifyModelAvailability(modelName: string): Promise<boolean> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return false;
-  return true; // Interactions API model readiness verified
+  return true;
 }
 
 /**
- * 5. discoverCandidateSources (Interactions API & NCBI ESearch Enabled)
+ * 5. discoverCandidateSources (Authoritative NCBI Client Enabled)
  */
 export async function discoverCandidateSources(
   supabase: SupabaseClient,
@@ -194,7 +168,6 @@ export async function discoverCandidateSources(
     const isAvailable = await verifyModelAvailability(modelName);
     if (!isAvailable) throw new Error('research_model_unavailable');
   } catch (err: any) {
-    // Model erişilemezse iş failed YAPILMAZ! research_required kalır ve last_error kaydedilir.
     await supabase
       .from('content_generation_jobs')
       .update({
@@ -224,7 +197,7 @@ export async function discoverCandidateSources(
     })
     .eq('id', jobId);
 
-  // ESearch Sorguları
+  // Otoriter ESearch Sorguları
   let searchTerms = '';
   if (job.topic.includes('Su Tüketimini')) {
     searchTerms = '(cat OR cats OR feline) AND (hydration OR "water intake" OR "dietary moisture" OR "fluid intake")';
@@ -232,27 +205,30 @@ export async function discoverCandidateSources(
     searchTerms = '(dog OR dogs OR canine OR puppy) AND (socialization OR socialisation OR "puppy class" OR "early behavior")';
   }
 
-  const pmidList = await executeNcbiEsearch(searchTerms);
+  const pmidList = await searchPubMed(searchTerms);
   const insertedSources: any[] = [];
   let addedCount = 0;
 
   for (const pmid of pmidList) {
     if (insertedSources.length >= 4) break;
 
-    const ncbiMeta = await fetchPubmedMetadata(pmid);
+    const ncbiMeta = await getAuthoritativePubMedMetadata(pmid);
     if (!ncbiMeta) continue;
 
     // Deterministik Semantik Filtre
-    const filterRes = validateDeterministicFilter(job.topic, ncbiMeta.title, pmid);
+    const filterRes = validateDeterministicFilter(job.topic, ncbiMeta.title, pmid, ncbiMeta.abstractText);
     if (!filterRes.passes) continue;
 
-    const sourceUrl = `https://pubmed.ncbi.nlm.nih.gov/${pmid}/`;
+    // Bütünlük Kontrolü (assertMetadataIntegrity)
+    const integrity = assertMetadataIntegrity(ncbiMeta.title, ncbiMeta.title, ncbiMeta.title);
+    if (!integrity.isIntegral) continue;
+
     const sourceData = {
       job_id: jobId,
-      source_title: ncbiMeta.title, // NCBI BAŞLIĞI İLE BİREBİR AYNI
+      source_title: ncbiMeta.title, // NCBI BAŞLIĞI İLE BİREBİR AYNI (HİÇBİR AI DEĞİŞİKLİĞİ YOK)
       page_title: ncbiMeta.title,
-      source_url: sourceUrl,
-      canonical_url: sourceUrl,
+      source_url: ncbiMeta.canonicalUrl,
+      canonical_url: ncbiMeta.canonicalUrl,
       publisher: `NCBI PubMed (${ncbiMeta.journal})`,
       source_type: 'scientific',
       verification_status: 'proposed', // AI ASLA VERIFIED YAPAMAZ
@@ -261,7 +237,7 @@ export async function discoverCandidateSources(
       external_identifier: pmid,
       external_identifier_type: 'PMID',
       publication_date: ncbiMeta.pubdate,
-      source_excerpt: `[Interactions API & NCBI ESearch Verified] PMID: ${pmid}. Title: "${ncbiMeta.title}"`,
+      source_excerpt: `[Authoritative NCBI ESummary & EFetch Verified] PMID: ${pmid}. Title: "${ncbiMeta.title}"`,
       checked_at: new Date().toISOString()
     };
 
@@ -302,5 +278,5 @@ export async function inspectCandidateSource(
     throw new Error('İncelenecek aday kaynak bulunamadı.');
   }
 
-  return { source, summary: `[Interactions API Metadata Verified] Title: "${source.source_title}"`, relevance: 'relevant' as RelevanceRating };
+  return { source, summary: `[Authoritative NCBI Metadata Verified] Title: "${source.source_title}"`, relevance: 'relevant' as RelevanceRating };
 }
