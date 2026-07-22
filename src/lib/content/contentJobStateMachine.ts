@@ -15,7 +15,8 @@ export type JobAction =
   | 'request_vet_review'
   | 'approve_for_import'
   | 'reject_job'
-  | 'import_as_draft';
+  | 'import_as_draft'
+  | 'import_generated_draft_to_article';
 
 export type JobStatus =
   | 'queued'
@@ -101,9 +102,14 @@ export const STATE_MACHINE_RULES: Record<JobAction, StateTransitionRule> = {
     allowedRoles: ['admin_human', 'founder_human']
   },
   import_as_draft: {
-    allowedFromStatuses: ['approved_for_import', 'admin_review_required'],
+    allowedFromStatuses: ['approved_for_import', 'admin_review_required', 'imported'],
     targetStatus: 'imported',
-    allowedRoles: ['admin_human', 'founder_human'] // AI KESİNLİKLE ÇALIŞTIRAMAZ
+    allowedRoles: ['admin_human', 'founder_human']
+  },
+  import_generated_draft_to_article: {
+    allowedFromStatuses: ['approved_for_import', 'admin_review_required', 'imported'],
+    targetStatus: 'imported',
+    allowedRoles: ['admin_human', 'founder_human']
   }
 };
 
@@ -116,7 +122,7 @@ export function validateStateTransition(
   actorRole: ActorRole
 ): { isValid: boolean; targetStatus?: JobStatus; error?: string } {
   // Generic action yasaklama
-  if (['status', 'import', 'approve', 'update'].includes(action)) {
+  if (['status', 'import', 'approve', 'update', 'process'].includes(action)) {
     return {
       isValid: false,
       error: `Generic veya belirsiz "${action}" aksiyonu kabul edilemez. Lütfen tanımlı açık aksiyonları kullanın.`

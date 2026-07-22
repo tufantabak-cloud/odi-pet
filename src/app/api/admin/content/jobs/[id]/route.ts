@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 /**
  * PATCH /api/admin/content/jobs/[id]
- * İşi günceller, kaynak doğrular, taslak üretir veya approved_for_import işi makaleye aktarır (Import).
+ * İşi günceller, kaynak doğrular, taslak üretir veya açık aksiyonla makaleye aktarır (import_generated_draft_to_article).
  */
 export async function PATCH(
   req: NextRequest,
@@ -25,7 +25,7 @@ export async function PATCH(
 
   try {
     const body = await req.json();
-    const { action, source_id, verification_status, draft_override, rejection_reason } = body;
+    const { action, source_id, verification_status, rejection_reason } = body;
 
     // 1. İş Kaydını Çek
     const { data: job, error: jobErr } = await supabase
@@ -38,7 +38,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'İş kaydı bulunamadı.' }, { status: 404 });
     }
 
-    // State Machine Doğrulaması
+    // State Machine Doğrulaması (Generic 'import' vb. reddedilir)
     const actorRole: ActorRole = actor.role === 'founder' ? 'founder_human' : 'admin_human';
     const transitionCheck = validateStateTransition(action, job.generation_status as JobStatus, actorRole);
     if (!transitionCheck.isValid) {
@@ -79,18 +79,16 @@ export async function PATCH(
       return NextResponse.json(updatedJob);
     }
 
-    // D. Kaynak Doğrulama / Reddetme (Sıkılaştırılmış İnsan Doğrulama Bariyeri & Kalıcı Audit)
+    // D. Kaynak Doğrulama / Reddetme
     if (action === 'verify_source' && source_id) {
       if (!actor || !actor.id || actor.id === '00000000-0000-0000-0000-000000000001') {
         return NextResponse.json({ error: 'Geçersiz veya sahte kullanıcı oturumu. İnsan doğrulaması kanıtlanamadı.' }, { status: 403 });
       }
 
-      // 1. İki Onay Checkbox Kontrolü
       if (body.confirmed_title_url !== true || body.confirmed_relevance !== true) {
-        return NextResponse.json({ error: 'Doğrulama öncesinde iki onay kutusu da ("Başlık/Adres Kontrolü" ve "Konu Uygunluğu Kontrolü") işaretlenmiş olmalıdır.' }, { status: 400 });
+        return NextResponse.json({ error: 'Doğrulama öncesinde iki onay kutusu da işaretlenmiş olmalıdır.' }, { status: 400 });
       }
 
-      // 2. Profil varlığını ve rolünü canlı DB'de bir kez daha açıkça kontrol et
       const { data: profile } = await supabase
         .from('profiles')
         .select('id, role')
@@ -106,8 +104,8 @@ export async function PATCH(
         .from('content_generation_job_sources')
         .update({
           verification_status: vStatus,
-          verified_by: actor.id, // İstemciden asla alınmaz!
-          verified_at: new Date().toISOString() // İstemciden asla alınmaz!
+          verified_by: actor.id,
+          verified_at: new Date().toISOString()
         })
         .eq('id', source_id)
         .select()
@@ -115,7 +113,6 @@ export async function PATCH(
 
       if (srcErr) return NextResponse.json({ error: srcErr.message }, { status: 400 });
 
-      // 3. Kalıcı DB Audit Kaydı
       await supabase.from('content_source_verification_audits').insert({
         job_id: jobId,
         source_id: source_id,
@@ -127,9 +124,6 @@ export async function PATCH(
         created_at: new Date().toISOString()
       });
 
-      console.log(`[AUDIT LOG] Source Verification Event Saved: actor_id="${actor.id}", actor_role="${profile.role}", source_id="${source_id}", job_id="${jobId}", action="${vStatus}"`);
-
-      // Eğer en az iki verified kaynak varsa job status'unu ready_for_generation yap
       const { data: verifiedSources } = await supabase
         .from('content_generation_job_sources')
         .select('id')
@@ -146,14 +140,14 @@ export async function PATCH(
       return NextResponse.json({ source: updatedSource });
     }
 
-    // B. Taslak Üretimini Tetikle
+    // E. Taslak Üretimini Tetikle
     if (action === 'generate_draft') {
       const updatedJob = await generateDraftFromVerifiedSources(supabase, jobId);
       return NextResponse.json(updatedJob);
     }
 
-    // C. İşi Reddet
-    if (action === 'reject') {
+    // F. İşi Reddet
+    if (action === 'reject' || action === 'reject_job') {
       const { data: rejectedJob } = await supabase
         .from('content_generation_jobs')
         .update({
@@ -169,20 +163,46 @@ export async function PATCH(
       return NextResponse.json(rejectedJob);
     }
 
-    // D. Makaleye Aktar (Import to Articles - Idempotent)
-    if (action === 'import') {
-      if (job.generation_status === 'imported') {
-        return NextResponse.json({ message: 'Bu iş zaten makaleye aktarılmıştır (Idempotent).', job });
-      }
-
-      if (!['approved_for_import', 'admin_review_required'].includes(job.generation_status)) {
-        return NextResponse.json(
-          { error: `Aktarım için durum "approved_for_import" veya "admin_review_required" olmalıdır. Mevcut durum: ${job.generation_status}` },
-          { status: 400 }
-        );
-      }
-
+    // G. AÇIK MAKALEYE AKTARIM (Idempotent: import_generated_draft_to_article / import_as_draft)
+    if (action === 'import_generated_draft_to_article' || action === 'import_as_draft') {
       const draft = job.generated_draft;
+
+      // 1. Zaten Bağlı Article veya Var olan Slug/Title Kontrolü
+      let existingArticleId = job.article_id;
+
+      if (!existingArticleId && draft?.title) {
+        const { data: foundArticle } = await supabase
+          .from('articles')
+          .select('id')
+          .ilike('title', draft.title.trim())
+          .maybeSingle();
+
+        if (foundArticle) {
+          existingArticleId = foundArticle.id;
+        }
+      }
+
+      // Var olan makaleye bağla (Mükerrer OLUŞTURMA!)
+      if (existingArticleId) {
+        const { data: updatedJob } = await supabase
+          .from('content_generation_jobs')
+          .update({
+            job_type: 'update_content',
+            article_id: existingArticleId,
+            generation_status: 'imported',
+            last_error: null
+          })
+          .eq('id', jobId)
+          .select()
+          .single();
+
+        return NextResponse.json({
+          message: 'Bu içerik daha önce makaleye aktarılmış.',
+          article_id: existingArticleId,
+          job: updatedJob
+        });
+      }
+
       if (!draft || !draft.title) {
         return NextResponse.json({ error: 'Aktarılacak geçerli taslak bulunamadı.' }, { status: 400 });
       }
@@ -194,25 +214,20 @@ export async function PATCH(
         .replace(/[^a-z0-9\s-]/g, '')
         .replace(/\s+/g, '-');
 
-      // 1. Yeni Articles Kaydı Oluştur (is_published = false)
+      // 2. Yeni Articles Kaydı Oluştur (is_published = false)
       const { data: newArticle, error: artErr } = await supabase
         .from('articles')
         .insert({
           title: draft.title,
           slug: `${cleanSlug}-${Date.now().toString().slice(-4)}`,
-          excerpt: draft.excerpt,
           content: draft.content,
           category: draft.category || 'genel',
           species_filter: draft.species_filter || ['cat', 'dog'],
-          target_life_stages: draft.target_life_stages || [],
-          target_breed_traits: draft.target_breed_traits || [],
-          target_seasons: draft.target_seasons || [],
           is_medical_content: isMedical,
-          vet_review_status: isMedical ? 'pending' : 'not_required', // AI ASLA APPROVED YAZAMAZ
-          is_published: false, // AKTARIM YAYINLAMA ANLAMINA GELMEZ
+          vet_review_status: isMedical ? 'pending' : 'not_required',
+          is_published: false,
           freshness_type: draft.freshness_type || 'evergreen',
           review_interval_days: draft.review_interval_days || 365,
-          author_id: actor.id,
           content_reviewed_at: new Date().toISOString(),
           content_reviewed_by: actor.id,
           source_checked_at: new Date().toISOString(),
@@ -225,7 +240,7 @@ export async function PATCH(
         return NextResponse.json({ error: artErr.message }, { status: 400 });
       }
 
-      // 2. Verified kaynakları article_sources tablosuna kopyala
+      // 3. Verified kaynakları article_sources tablosuna bağla
       const { data: verifiedSources } = await supabase
         .from('content_generation_job_sources')
         .select('*')
@@ -246,11 +261,14 @@ export async function PATCH(
         await supabase.from('article_sources').insert(articleSourcesInsert);
       }
 
-      // 3. İşi imported olarak kapat
+      // 4. İşi imported olarak kapat ve last_error = null yap
       const { data: importedJob } = await supabase
         .from('content_generation_jobs')
         .update({
+          job_type: 'update_content',
           generation_status: 'imported',
+          article_id: newArticle.id,
+          last_error: null,
           reviewed_by: actor.id,
           reviewed_at: new Date().toISOString()
         })
@@ -258,11 +276,16 @@ export async function PATCH(
         .select()
         .single();
 
-      return NextResponse.json({ article: newArticle, job: importedJob });
+      return NextResponse.json({
+        message: 'Makale taslağı oluşturuldu.',
+        article_id: newArticle.id,
+        job: importedJob
+      });
     }
 
-    return NextResponse.json({ error: 'Geçersiz eylem.' }, { status: 400 });
+    return NextResponse.json({ error: 'Geçersiz aksiyon.' }, { status: 400 });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Geçersiz güncelleme isteği.' }, { status: 400 });
+    console.error('Content Job API Error:', err);
+    return NextResponse.json({ error: err.message || 'Sunucu hatası.' }, { status: 500 });
   }
 }

@@ -540,30 +540,43 @@ export default function ContentAdminClient() {
                           ))}
                         </div>
                       </td>
-                      <td className="p-3 text-red-600 max-w-xs truncate">{j.last_error || '-'}</td>
+                      <td className="p-3 text-red-600 max-w-xs truncate">
+                        {j.generation_status === 'imported' || j.article_id ? '-' : (j.last_error || '-')}
+                      </td>
                       <td className="p-3 text-right space-x-2">
-                        {['approved_for_import', 'admin_review_required', 'draft_ready'].includes(j.generation_status) && (
+                        {j.generation_status === 'imported' || j.article_id ? (
+                          <button
+                            onClick={() => {
+                              setActiveMainTab('articles');
+                              setFilterQuery(j.topic || '');
+                            }}
+                            className="bg-purple-100 text-purple-800 border border-purple-300 px-2.5 py-1 rounded-lg font-bold text-[11px] hover:bg-purple-200 transition-all"
+                          >
+                            Makaleyi Aç ↗
+                          </button>
+                        ) : ['approved_for_import', 'admin_review_required', 'draft_ready'].includes(j.generation_status) ? (
                           <button
                             onClick={async () => {
                               try {
                                 const res = await fetch(`/api/admin/content/jobs/${j.id}`, {
                                   method: 'PATCH',
                                   headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify({ action: 'import' })
+                                  body: JSON.stringify({ action: 'import_generated_draft_to_article' })
                                 });
                                 const json = await res.json();
                                 if (!res.ok) throw new Error(json.error || 'Aktarım başarısız.');
-                                setSuccessMsg('Taslak makaleye aktarıldı (Taslak olarak kaydedildi).');
+                                setSuccessMsg(json.message || 'Makale taslağı oluşturuldu.');
+                                setTimeout(() => setSuccessMsg(''), 4000);
                                 fetchArticles();
                               } catch (err: any) {
                                 setErrorMsg(err.message);
                               }
                             }}
-                            className="bg-emerald-600 text-white px-2.5 py-1 rounded-lg font-bold text-[11px] hover:bg-emerald-700"
+                            className="bg-emerald-600 text-white px-2.5 py-1 rounded-lg font-bold text-[11px] hover:bg-emerald-700 transition-all"
                           >
                             Makaleye Aktar
                           </button>
-                        )}
+                        ) : null}
                       </td>
                     </tr>
                   ))
