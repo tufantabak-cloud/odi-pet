@@ -98,3 +98,32 @@ export function buildCoverageIntervals(events: FlowEvent[]): CoverageInterval[] 
     .filter((e): e is FlowEvent & { coverage: NonNullable<FlowEvent['coverage']> } => !!e.coverage)
     .map(e => ({ startDateKey: e.coverage.startDateKey, endDateKey: e.coverage.endDateKey, sourceEvent: e }));
 }
+
+/**
+ * Son geçerlilik tarihini hesaplar ve dd.mm.yy formatında döndürür.
+ */
+export function computeExpiryDateLabel(rowEvents: FlowEvent[], frequencyDays: number = 0): string | null {
+  if (!rowEvents || rowEvents.length === 0) return null;
+  const lastDoneWithCoverage = [...rowEvents]
+    .reverse()
+    .find(e => (e.status === 'done' || e.computedStatus === 'done') && e.coverage?.endDateKey);
+  if (lastDoneWithCoverage?.coverage?.endDateKey) {
+    const [y, m, d] = lastDoneWithCoverage.coverage.endDateKey.split('-');
+    return `${d}.${m}.${y.slice(2)}`;
+  }
+
+  // Fallback for recurring events with due_date and frequencyDays > 0
+  const eventWithDate = [...rowEvents].reverse().find(e => (e as any).due_date);
+  if (eventWithDate && frequencyDays > 0) {
+    const dueDateStr = (eventWithDate as any).due_date;
+    if (typeof dueDateStr === 'string' && dueDateStr.includes('-')) {
+      const parts = dueDateStr.split('T')[0].split('-');
+      if (parts.length === 3) {
+        const [y, m, d] = parts;
+        return `${d}.${m}.${y.slice(2)}`;
+      }
+    }
+  }
+
+  return null;
+}

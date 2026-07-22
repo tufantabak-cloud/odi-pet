@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { buildCategoryGroups } from './group-events';
 import { expandRecurringForTimeline } from './recurring-events';
-import { toComputedEvent, formatFrequency } from './normalize-events';
+import { toComputedEvent, formatFrequency, mapDbToUI } from './normalize-events';
 import { computeExpiryDateLabel } from './coverage';
 import { getPlanDisplayTitle } from '@/lib/plans/utils';
 import type { CategoryGroup, FlowEvent, TaskRow } from '../types';
@@ -208,3 +208,29 @@ describe('Timeline satır başlığı: alt kategori · periyot · Son geçerlili
     expect(ok).toBe(recurring.length);
   });
 });
+
+describe('mapDbToUI Kategori & Tasma Regresyon Testleri', () => {
+  it('Gerçek parazit tasması hâlâ Parazit kategorisine atanır', () => {
+    const res = mapDbToUI('Parazit', 'Tasma', 'Parazit Tasması', new Map());
+    expect(res.category).toBe('Parazit');
+    expect(res.subCategory).toBe('Parazit Tasması');
+  });
+
+  it('İç/Dış Parazit Tasması başlığı Parazit kategorisine atanır', () => {
+    const res = mapDbToUI('Saglik', null, 'İç ve Dış Parazit Tasması', new Map());
+    expect(res.category).toBe('Parazit');
+    expect(res.subCategory).toBe('Parazit Tasması');
+  });
+
+  it('Hijyen kategorisindeki jenerik tasma işlemi Parazit olarak DEĞİL Hijyen olarak kalır', () => {
+    const res = mapDbToUI('Hijyen', 'Tasma', 'Tasma Temizliği', new Map());
+    expect(res.category).toBe('Hijyen');
+    expect(res.subCategory).toBe('Tasma & Göğüslük Temizliği');
+  });
+
+  it('Aşı eventleri etkilenmez', () => {
+    const res = mapDbToUI('Asi', 'Aşı', 'Kuduz Aşısı', new Map());
+    expect(res.category).toBe('Asi');
+  });
+});
+
