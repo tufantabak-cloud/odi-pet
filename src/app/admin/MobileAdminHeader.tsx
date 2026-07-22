@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { logout } from '@/features/auth/actions'
+import AdminSidebarNav from './AdminSidebarNav'
 
 interface MobileAdminHeaderProps {
   profile: any
@@ -72,58 +73,17 @@ export default function MobileAdminHeader({ profile, roleBadgeColor, roleBadge }
             </div>
 
             {/* Navigation links */}
-            <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-              <div className="mb-4">
-                <p className="px-3 text-[11px] font-black text-text-secondary uppercase tracking-widest mb-2">Genel Bakış</p>
-                <Link href="/admin" onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-                  <span>🏠</span> Panel
-                </Link>
-              </div>
+            <div className="flex-1 overflow-y-auto" onClick={() => setIsOpen(false)}>
+              <AdminSidebarNav />
+            </div>
 
-              <div className="mb-4">
-                <p className="px-3 text-[11px] font-black text-text-secondary uppercase tracking-widest mb-2">Yönetim</p>
-                <Link href="/admin/users" onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-                  <span>👥</span> Kullanıcılar
-                </Link>
-                <Link href="/admin/pets" onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-                  <span>🐾</span> Evcil Hayvanlar
-                </Link>
-              </div>
-
-              <div className="mb-4">
-                <p className="px-3 text-[11px] font-black text-text-secondary uppercase tracking-widest mb-2">Platform Servisleri</p>
-                <Link href="/admin/content" onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-                  <span>📚</span> İçerik Yönetimi
-                </Link>
-                <Link href="/admin/ai-vet" onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-                  <span>🤖</span> AI-Vet Analiz
-                </Link>
-              </div>
-
-              <div className="mb-4">
-                <p className="px-3 text-[11px] font-black text-text-secondary uppercase tracking-widest mb-2">Sistem</p>
-                <Link href="/admin/system-health" onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-                  <span>🩺</span> Sistem Sağlığı
-                </Link>
-                <Link href="/admin/weekly-reports" onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-                  <span>📊</span> Haftalık Raporlar
-                </Link>
-                <Link href="/admin/settings" onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-                  <span>⚙️</span> Ayarlar
-                </Link>
-              </div>
-            </nav>
-
-            {/* Operator and Logout */}
+            {/* User Footer */}
             <div className="p-4 border-t border-border-main space-y-1">
-              <div className="px-3 py-2.5 rounded-xl bg-bg-main text-[12px] text-text-secondary font-semibold truncate">
-                🧑‍💻 {profile.first_name ?? profile.email ?? 'Yönetici'}
+              <div className="px-3 py-2 rounded-xl bg-bg-main text-[12px] text-text-secondary font-semibold truncate">
+                🧑‍💻 {profile.first_name ?? profile.email ?? 'Unknown'}
               </div>
-              <Link href="/owner/dashboard" onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-                <span>←</span> Uygulamaya Dön
-              </Link>
               <form action={logout} className="w-full mt-1">
-                <button type="submit" className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] font-semibold text-error hover:bg-error/10 rounded-xl transition-all">
+                <button type="submit" className="w-full flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-error hover:bg-error/10 rounded-xl transition-all">
                   <span>🚪</span> Çıkış Yap
                 </button>
               </form>

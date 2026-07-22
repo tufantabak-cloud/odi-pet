@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { requireRole } from '@/lib/auth/get-current-profile'
 import { logout } from '@/features/auth/actions'
 import MobileAdminHeader from './MobileAdminHeader'
+import AdminSidebarNav from './AdminSidebarNav'
 
 export const metadata: Metadata = {
   title: 'Admin Console — ODI Pet',
@@ -34,58 +35,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </span>
         </div>
 
-        <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-          <div className="mb-4">
-            <p className="px-3 text-[11px] font-black text-text-secondary uppercase tracking-widest mb-2">Genel Bakış</p>
-            <Link href="/admin" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-              <span>🏠</span> Panel
-            </Link>
-          </div>
-
-          <div className="mb-4">
-            <p className="px-3 text-[11px] font-black text-text-secondary uppercase tracking-widest mb-2">Yönetim</p>
-            <Link href="/admin/users" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-              <span>👥</span> Kullanıcılar
-            </Link>
-            <Link href="/admin/pets" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-              <span>🐾</span> Evcil Hayvanlar
-            </Link>
-
-          </div>
-
-          <div className="mb-4">
-            <p className="px-3 text-[11px] font-black text-text-secondary uppercase tracking-widest mb-2">Platform Servisleri</p>
-            <Link href="/admin/content" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-              <span>📚</span> İçerik Yönetimi
-            </Link>
-            <Link href="/admin/ai-vet" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-              <span>🤖</span> AI-Vet Analiz
-            </Link>
-            <Link href="/admin/vaccines" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-              <span>💉</span> Aşı Protokolleri
-            </Link>
-            <Link href="/admin/parasite-products" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-              <span>🦟</span> Parazit Ürünleri
-            </Link>
-
-          </div>
-
-          <div className="mb-4">
-            <p className="px-3 text-[11px] font-black text-text-secondary uppercase tracking-widest mb-2">Sistem</p>
-            <Link href="/admin/system-health" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-              <span>🩺</span> Sistem Sağlığı
-            </Link>
-            <Link href="/admin/weekly-reports" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-              <span>📊</span> Haftalık Raporlar
-            </Link>
-            <Link href="/admin/settings" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-              <span>⚙️</span> Ayarlar & Özellikler
-            </Link>
-            <Link href="/admin/navigation" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-              <span>🧭</span> Navigasyon
-            </Link>
-          </div>
-        </nav>
+        {/* Dynamic Interactive Active Route Nav */}
+        <AdminSidebarNav />
 
         <div className="p-4 border-t border-border-main space-y-1">
           {/* Current operator badge */}
@@ -103,14 +54,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 w-full overflow-x-hidden">
-        {/* Mobile Header */}
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0">
         <MobileAdminHeader profile={profile} roleBadgeColor={roleBadgeColor} roleBadge={roleBadge} />
-        <div className="p-6 md:p-10 max-w-6xl mx-auto">
+        <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
           {children}
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   )
 }
