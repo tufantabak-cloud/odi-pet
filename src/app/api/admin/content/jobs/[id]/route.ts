@@ -114,7 +114,7 @@ export async function PATCH(
 
     // B. Taslak Üretimini Tetikle
     if (action === 'generate_draft') {
-      const updatedJob = await generateDraftFromVerifiedSources(supabase, jobId, draft_override);
+      const updatedJob = await generateDraftFromVerifiedSources(supabase, jobId);
       return NextResponse.json(updatedJob);
     }
 

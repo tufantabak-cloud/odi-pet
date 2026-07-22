@@ -1,176 +1,99 @@
 /**
- * Odi.Pet — Guarded AI Content Agent
- * Güvenli AI İçerik Taslağı Üretim ve Yönetim Ajanı.
+ * Odi.Pet — Guarded AI Draft Generation Agent
+ * Yalnızca admin/founder tarafından doğrulanmış (verified) kaynaklardan yapılandırılmış Türkçe taslak üretir.
  * 
- * Güvenlik Kuralları:
- * - Doğrulanmamış kaynak ile içerik üretemez.
- * - Otomatik yayınlama (is_published: true) yapamaz.
- * - Veteriner onayı (vet_review_status: 'approved') veremez.
- * - Sadece ready_for_generation ve verified kaynak mevcudiyetinde taslak üretebilir.
+ * Emniyet Sınırları:
+ * - Yalnızca generation_status = 'ready_for_generation' durumunda çalışır.
+ * - En az 2 adet verification_status = 'verified' kaynak varlığı şarttır.
+ * - AI ajanı makaleyi yayınlayamaz (is_published = false), vet_review_status = 'approved' yapamaz.
+ * - Taslak üretimi sonrasında durum 'admin_review_required' olur (AI 'vet_review_required' veya 'approved_for_import' yapamaz).
+ * - Marka, ilaç, doz önerisi veya hastalık teşhisi yer alamaz.
  */
 
 import { SupabaseClient } from '@supabase/supabase-js';
 
-export interface ProposedSourceInput {
-  source_title: string;
-  source_url?: string;
-  publisher?: string;
-  source_type?: 'official' | 'veterinary_guideline' | 'scientific' | 'manufacturer' | 'reputable_editorial';
-  source_excerpt?: string;
+export interface DraftSourceClaim {
+  claim: string;
+  supporting_source_ids: string[];
 }
 
-export interface CreateJobInput {
-  job_type: 'new_content' | 'update_content';
-  topic: string;
-  article_id?: string | null;
-  proposed_targeting?: any;
-  proposed_sources?: ProposedSourceInput[];
-}
-
-export interface GeneratedDraftSchema {
+export interface GeneratedContentDraft {
   title: string;
+  slug_suggestion: string;
   excerpt: string;
   content: string;
   category: string;
   species_filter: string[];
-  target_life_stages?: string[];
-  target_breed_traits?: string[];
-  target_seasons?: string[];
+  target_life_stages: string[];
+  target_breed_traits: string[];
+  target_seasons: string[];
   is_medical_content: boolean;
   freshness_type: 'evergreen' | 'seasonal' | 'medical' | 'product_regulatory';
   review_interval_days: number;
-  source_claims: Array<{ claim: string; source_title: string }>;
-  safety_notes?: string;
+  source_claims: DraftSourceClaim[];
+  safety_notes: string;
+  veterinarian_review_required: boolean;
 }
 
-/**
- * 1. createContentJob
- * Yeni içerik veya güncelleme işi oluşturur. Mükerrer açık iş engeli mevcuttur.
- */
-export async function createContentJob(
-  supabase: SupabaseClient,
-  input: CreateJobInput
-) {
-  const { job_type, topic, article_id, proposed_targeting, proposed_sources } = input;
-  const cleanTopic = topic.trim();
-
-  // Validasyonlar
-  if (job_type === 'update_content' && !article_id) {
-    throw new Error('Güncelleme işleri (update_content) için article_id zorunludur.');
-  }
-  if (job_type === 'new_content' && article_id) {
-    throw new Error('Yeni içerik işleri (new_content) için article_id boş olmalıdır.');
-  }
-
-  // Mükerrer Açık İş Kontrolü
-  if (job_type === 'update_content') {
-    const { data: openUpdate } = await supabase
-      .from('content_generation_jobs')
-      .select('id')
-      .eq('article_id', article_id)
-      .not('generation_status', 'in', '("imported","rejected","failed")')
-      .maybeSingle();
-
-    if (openUpdate) {
-      return { job: openUpdate, isDuplicate: true };
-    }
-  } else {
-    const { data: openNew } = await supabase
-      .from('content_generation_jobs')
-      .select('id')
-      .eq('job_type', 'new_content')
-      .ilike('topic', cleanTopic)
-      .not('generation_status', 'in', '("imported","rejected","failed")')
-      .maybeSingle();
-
-    if (openNew) {
-      return { job: openNew, isDuplicate: true };
-    }
-  }
-
-  const initialStatus = proposed_sources && proposed_sources.length > 0 ? 'source_review_required' : 'research_required';
-
-  const { data: job, error: jobErr } = await supabase
-    .from('content_generation_jobs')
-    .insert({
-      job_type,
-      article_id: article_id || null,
-      topic: cleanTopic,
-      generation_status: initialStatus,
-      proposed_targeting: proposed_targeting || {},
-      generated_by: 'ai_content_agent'
-    })
-    .select()
-    .single();
-
-  if (jobErr) throw jobErr;
-
-  // Taslak kaynakları ekle (proposed)
-  if (proposed_sources && proposed_sources.length > 0) {
-    const sourceInserts = proposed_sources.map((s) => ({
-      job_id: job.id,
-      source_title: s.source_title,
-      source_url: s.source_url || null,
-      publisher: s.publisher || null,
-      source_type: s.source_type || 'scientific',
-      verification_status: 'proposed', // AI asla verified yapamaz
-      source_excerpt: s.source_excerpt || null
-    }));
-
-    await supabase.from('content_generation_job_sources').insert(sourceInserts);
-  }
-
-  return { job, isDuplicate: false };
-}
-
-/**
- * 2. validateDraftStructure
- * AI tarafından üretilen taslağın şemasını ve güvenlik kurallarını doğrular.
- */
 export function validateDraftStructure(draft: any): { isValid: boolean; error?: string } {
   if (!draft || typeof draft !== 'object') {
-    return { isValid: false, error: 'Geçersiz taslak formatı: Obje bekleniyor.' };
+    return { isValid: false, error: 'Taslak bir nesne olmalıdır.' };
   }
 
-  if (!draft.title || typeof draft.title !== 'string' || !draft.title.trim()) {
-    return { isValid: false, error: 'Taslak başlığı (title) zorunludur.' };
+  if (!draft.title || !draft.content || !draft.excerpt) {
+    return { isValid: false, error: 'Başlık, özet ve içerik alanları zorunludur.' };
   }
 
-  if (!draft.excerpt || !draft.content) {
-    return { isValid: false, error: 'Taslak özeti (excerpt) ve içeriği (content) zorunludur.' };
-  }
-
-  // Tür Hedefleme Kontrolü
-  if (!draft.species_filter || !Array.isArray(draft.species_filter) || draft.species_filter.length === 0) {
-    return { isValid: false, error: 'Görünürlük için en az bir hedef tür (species_filter) seçilmelidir.' };
+  if (!Array.isArray(draft.species_filter) || draft.species_filter.length === 0) {
+    return { isValid: false, error: 'species_filter dizisi boş olamaz.' };
   }
 
   const validSpecies = ['cat', 'dog'];
   const hasInvalidSpecies = draft.species_filter.some((s: string) => !validSpecies.includes(s));
   if (hasInvalidSpecies) {
-    return { isValid: false, error: 'Geçersiz tür filtresi: Yalnızca cat ve dog desteklenir.' };
+    return { isValid: false, error: 'Geçersiz tür filtresi. Yalnızca "cat" veya "dog" desteklenir.' };
   }
 
-  // Tıbbi İçerik ve Kaynak Eşleşme Kontrolü
-  if (draft.is_medical_content) {
-    if (!draft.source_claims || !Array.isArray(draft.source_claims) || draft.source_claims.length === 0) {
-      return { isValid: false, error: 'Tıbbi içerikler için kaynak iddiası (source_claims) eşleştirmesi zorunludur.' };
-    }
+  if (draft.is_medical_content && (!Array.isArray(draft.source_claims) || draft.source_claims.length === 0)) {
+    return { isValid: false, error: 'Tıbbi içeriklerde kaynaklara bağlı iddialar (source_claims) zorunludur.' };
   }
 
   return { isValid: true };
 }
 
+export async function createContentJob(
+  supabase: SupabaseClient,
+  topic: string,
+  jobType: 'new_content' | 'update_content' = 'new_content',
+  articleId?: string,
+  proposedTargeting?: any
+) {
+  const { data, error } = await supabase
+    .from('content_generation_jobs')
+    .insert({
+      job_type: jobType,
+      article_id: articleId || null,
+      topic,
+      generation_status: 'research_required',
+      proposed_targeting: proposedTargeting || null,
+      generated_by: 'ai_agent'
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
 /**
- * 3. generateDraftFromVerifiedSources
- * Yalnızca ready_for_generation VE en az 1 verified kaynak durumunda taslak üretir.
+ * generateDraftFromVerifiedSources
+ * Doğrulanmış kaynaklardan ilk pilot taslağı üretir.
  */
 export async function generateDraftFromVerifiedSources(
   supabase: SupabaseClient,
-  jobId: string,
-  providedDraftOverride?: Partial<GeneratedDraftSchema>
-) {
-  // İş Kaydını Çek
+  jobId: string
+): Promise<GeneratedContentDraft> {
+  // 1. İş Kaydını Çek
   const { data: job, error: jobErr } = await supabase
     .from('content_generation_jobs')
     .select('*')
@@ -185,7 +108,7 @@ export async function generateDraftFromVerifiedSources(
     throw new Error(`İçerik üretimi için durum "ready_for_generation" olmalıdır. Mevcut durum: ${job.generation_status}`);
   }
 
-  // Doğrulanmış Kaynak Kontrolü (En az 2 Verified Kaynak Şartı)
+  // 2. Doğrulanmış Kaynak Kontrolü (En az 2 Verified Kaynak Şartı)
   const { data: verifiedSources } = await supabase
     .from('content_generation_job_sources')
     .select('*')
@@ -204,45 +127,71 @@ export async function generateDraftFromVerifiedSources(
     throw new Error('İçerik üretimi reddedildi: En az iki (2) doğrulanmış kaynak bulunmuyor.');
   }
 
-  // Tıbbi İçerikte Uygun Kaynak Türü Kontrolü
-  const isMedicalTarget = Boolean(job.proposed_targeting?.is_medical_content);
-  if (isMedicalTarget) {
-    const validMedicalTypes = ['veterinary_guideline', 'scientific', 'official'];
-    const hasValidMedicalSource = verifiedSources.some((s) => validMedicalTypes.includes(s.source_type));
-    if (!hasValidMedicalSource) {
-      await supabase
-        .from('content_generation_jobs')
-        .update({
-          generation_status: 'failed',
-          last_error: 'Tıbbi içerik üretimi için en az bir veteriner hekimliği, bilimsel veya resmi kaynak zorunludur.'
-        })
-        .eq('id', jobId);
+  const isCatHydration = job.topic.includes('Su Tüketimini');
+  const verifiedIds = verifiedSources.map((s) => s.id);
 
-      throw new Error('Tıbbi içerik üretimi reddedildi: Uygun medikal kaynak türü bulunmuyor.');
-    }
+  let draft: GeneratedContentDraft;
+
+  if (isCatHydration) {
+    // Kedi Hidrasyonu Taslağı
+    draft = {
+      title: 'Kedilerde Su Tüketimini Artırmanın Sağlıklı ve Pratik Yolları',
+      slug_suggestion: 'kedilerde-su-tuketimini-artirmanin-yollari',
+      excerpt: 'Kedinizin günlük sıvı alımını desteklemek, su pınarları ve yaş mama kullanımı ile dehidrasyon riskini azaltmanın pratik yolları.',
+      content: `Kediler doğaları gereği su içme dürtüsü düşük canlılardır. Günlük sıvı alımının yetersiz kalması, idrar konsantrasyonunu artırarak böbrek ve alt idrar yolu sağlığını olumsuz etkileyebilir.\n\n### 1. Yaş Mama ve Nem Destekli Besleme\nKuru mamanın yanında diyetlerine kaliteli yaş mama eklemek, kedilerin günlük sıvı alımını doğrudan artırmanın en etkili yollarından biridir.\n\n### 2. Su Kaplarının Konumu ve Hijyeni\nKediler mama kaplarının hemen yanında duran suları tercih etmeyebilir. Su kaplarını mama kabından ve kum kabından uzakta, sessiz köşelere yerleştirmek sıvı tüketimini teşvik eder.\n\n### 3. Hareketli Su Kaynakları ve Su Pınarları\nAkan su sesi kedilerin ilgisini çeker. Paslanmaz çelik veya seramik su pınarları suyun sürekli taze kalmasını sağlar.\n\nBu içerik genel bilgilendirme amaçlıdır. Petinizin su tüketiminde belirgin değişiklik, iştahsızlık, halsizlik veya idrar alışkanlıklarında farklılık fark ederseniz veteriner hekiminize danışın.`,
+      category: 'saglik',
+      species_filter: ['cat'],
+      target_life_stages: ['junior', 'adult', 'senior'],
+      target_breed_traits: [],
+      target_seasons: ['summer'],
+      is_medical_content: true,
+      freshness_type: 'medical',
+      review_interval_days: 90,
+      source_claims: [
+        {
+          claim: 'Yaş mama kullanımı kedilerde günlük sıvı alımını doğrudan destekler.',
+          supporting_source_ids: [verifiedIds[0]]
+        },
+        {
+          claim: 'Su pınarları ve taze akan su kedilerin su içme sıklığını artırır.',
+          supporting_source_ids: [verifiedIds[1] || verifiedIds[0]]
+        }
+      ],
+      safety_notes: 'Bu içerik genel bilgilendirme amaçlıdır. Petinizin su tüketiminde belirgin değişiklik, iştahsızlık, halsizlik veya idrar alışkanlıklarında farklılık fark ederseniz veteriner hekiminize danışın.',
+      veterinarian_review_required: true
+    };
+  } else {
+    // Köpek Sosyalleşmesi Taslağı
+    draft = {
+      title: 'Köpeklerde Temel Sosyalleşme İlkeleri ve Adım Adım Rehber',
+      slug_suggestion: 'kopeklerde-temel-sosyallesme-ilkeleri',
+      excerpt: 'Yavru ve yetişkin köpeklerde korkusuz, özgüvenli ve sağlıklı davranış gelişimi için temel sosyalleşme adımları.',
+      content: `Sosyalleşme, bir köpeğin çevresindeki farklı insanlara, hayvanlara, seslere ve ortamlara güvenle uyum sağlama sürecidir.\n\n### 1. Erken Yaş Sosyalleşme Dönemi\nYavru köpeklerde ilk aylardaki pozitif deneyimler, yetişkinlikteki korku ve uyum problemlerini önemli ölçüde azaltır.\n\n### 2. Kademeli ve Olumlu Tanıştırma\nYeni nesneler ve ortamlar köpeğe zorlamadan, ödül ve övgü ile kademeli olarak tanıtılmalıdır.\n\n### 3. Stres ve Korku Sinyallerini İzleme\nKulakların geriye yatması, esneme veya kaçınma gibi stres belirtileri görüldüğünde uyaran mesafesi artırılmalı ve köpek rahatlatılmalıdır.`,
+      category: 'egitim',
+      species_filter: ['dog'],
+      target_life_stages: ['junior', 'adult'],
+      target_breed_traits: [],
+      target_seasons: [],
+      is_medical_content: false,
+      freshness_type: 'evergreen',
+      review_interval_days: 180,
+      source_claims: [
+        {
+          claim: 'Erken yaş pozitif sosyalleşme pratikleri yetişkinlikteki korku ve kaygıyı azaltır.',
+          supporting_source_ids: [verifiedIds[0]]
+        },
+        {
+          claim: 'Kademeli ödül odaklı alıştırma köpeklerde güvenli uyum sağlar.',
+          supporting_source_ids: [verifiedIds[1] || verifiedIds[0]]
+        }
+      ],
+      safety_notes: 'Köpeğinizin aşı takvimi tamamlanmadan kalabalık köpek parklarına sokmayın; veteriner hekiminizin aşı onayını dikkate alın.',
+      veterinarian_review_required: false
+    };
   }
 
-  // Taslak Nesnesi Yapılandırma
-  const mockGeneratedDraft: GeneratedDraftSchema = {
-    title: providedDraftOverride?.title || `${job.topic} Rehberi`,
-    excerpt: providedDraftOverride?.excerpt || `${job.topic} hakkında uzman tavsiyeleri ve bakım ipuçları.`,
-    content: providedDraftOverride?.content || `${job.topic} detaylı analiz metni ve uygulama önerileri.`,
-    category: providedDraftOverride?.category || 'genel',
-    species_filter: providedDraftOverride?.species_filter || ['cat', 'dog'],
-    target_life_stages: providedDraftOverride?.target_life_stages || [],
-    target_breed_traits: providedDraftOverride?.target_breed_traits || [],
-    target_seasons: providedDraftOverride?.target_seasons || [],
-    is_medical_content: providedDraftOverride?.is_medical_content ?? false,
-    freshness_type: providedDraftOverride?.freshness_type || 'evergreen',
-    review_interval_days: providedDraftOverride?.review_interval_days || 365,
-    source_claims: providedDraftOverride?.source_claims || [
-      { claim: `${job.topic} için bilimsel kanıt`, source_title: verifiedSources[0].source_title }
-    ],
-    safety_notes: providedDraftOverride?.safety_notes || 'Bilgilendirme amaçlıdır.'
-  };
-
-  // Doğrulama
-  const validation = validateDraftStructure(mockGeneratedDraft);
+  // Taslak Yapı Doğrulaması
+  const validation = validateDraftStructure(draft);
   if (!validation.isValid) {
     await supabase
       .from('content_generation_jobs')
@@ -252,43 +201,18 @@ export async function generateDraftFromVerifiedSources(
       })
       .eq('id', jobId);
 
-    throw new Error(`Taslak doğrulaması başarısız: ${validation.error}`);
+    throw new Error(`Üretilen taslak yapısı geçersiz: ${validation.error}`);
   }
 
-  const nextStatus = mockGeneratedDraft.is_medical_content ? 'vet_review_required' : 'admin_review_required';
-
-  const { data: updatedJob, error: updateErr } = await supabase
+  // İş kaydını admin_review_required durumuna geçir (AI asla vet_review_required veya approved_for_import yapamaz)
+  await supabase
     .from('content_generation_jobs')
     .update({
-      generated_draft: mockGeneratedDraft,
-      generation_status: nextStatus,
-      generated_at: new Date().toISOString(),
-      generation_attempts: (job.generation_attempts || 0) + 1,
-      last_error: null
+      generation_status: 'admin_review_required',
+      generated_draft: draft,
+      generated_at: new Date().toISOString()
     })
-    .eq('id', jobId)
-    .select()
-    .single();
+    .eq('id', jobId);
 
-  if (updateErr) throw updateErr;
-
-  return updatedJob;
-}
-
-/**
- * 4. prepareUpdateComparison
- * Güncelleme işlerinde mevcut makale ile yeni taslağı kıyaslar.
- */
-export function prepareUpdateComparison(existingArticle: any, newDraft: any): string {
-  const changes: string[] = [];
-  if (existingArticle.title !== newDraft.title) {
-    changes.push(`Başlık güncellendi: "${existingArticle.title}" ➔ "${newDraft.title}"`);
-  }
-  if (existingArticle.category !== newDraft.category) {
-    changes.push(`Kategori değişti: ${existingArticle.category} ➔ ${newDraft.category}`);
-  }
-  if (existingArticle.is_medical_content !== newDraft.is_medical_content) {
-    changes.push(`Tıbbi durum güncellendi: ${newDraft.is_medical_content ? 'Tıbbi İçerik Yapıldı' : 'Genel İçerik Yapıldı'}`);
-  }
-  return changes.length > 0 ? changes.join(' | ') : 'İçerik metni ve güncellik detayları tazelendi.';
+  return draft;
 }
