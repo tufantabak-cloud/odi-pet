@@ -10,7 +10,7 @@
  */
 
 import crypto from 'crypto';
-import { safeFetchWithRedirects, isPrivateOrLocalHost } from './instagramOembedService.js';
+import { safeFetchWithRedirects, isPrivateOrLocalHost } from './instagramOembedService';
 
 export interface FeedItem {
   guid: string;
