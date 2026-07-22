@@ -108,9 +108,11 @@ export default function ContentAdminClient() {
       if (!artRes.ok) throw new Error(artJson.error || 'Makaleler alınamadı.');
       if (!jobsRes.ok) throw new Error(jobsJson.error || 'İş kuyruğu alınamadı.');
 
-      const fetchedArticles = artJson.articles || [];
+      const fetchedArticles = artJson.articles || (Array.isArray(artJson) ? artJson : []);
+      const fetchedJobs = jobsJson.jobs || (Array.isArray(jobsJson) ? jobsJson : []);
+
       setArticles(fetchedArticles);
-      setJobs(jobsJson.jobs || []);
+      setJobs(fetchedJobs);
 
       // Sayfa yüklenme ve veri alma sonrası URL parametrelerini değerlendir
       if (typeof window !== 'undefined') {
@@ -135,7 +137,8 @@ export default function ContentAdminClient() {
         }
       }
     } catch (err: any) {
-      setErrorMsg(err.message);
+      console.error('[Admin Content Fetch Error]:', err);
+      setErrorMsg(`İçerikler veya AI kuyruğu yüklenemedi: ${err.message || 'Bilinmeyen hata'}`);
     } finally {
       setLoading(false);
     }
