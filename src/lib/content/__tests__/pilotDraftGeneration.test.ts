@@ -1,5 +1,5 @@
 /**
- * Odi.Pet — Pilot Draft Generation & Safety Rules Vitest Suite
+ * Odi.Pet — Pilot Draft Generation & Human Verification Security Vitest Suite
  */
 
 import { describe, it, expect } from 'vitest';
@@ -12,7 +12,7 @@ describe('Pilot Draft Generation Safety & Structure Rules', () => {
     expect(canGenerate).toBe(false);
   });
 
-  it('2. AI proposed ve rejected kaynakları taslak iddialarında temel alamaz', () => {
+  it('2. Proposed ve rejected kaynaklar taslak iddialarında temel alınamaz', () => {
     const proposedSource = { verification_status: 'proposed' };
     const rejectedSource = { verification_status: 'rejected' };
 
@@ -20,20 +20,20 @@ describe('Pilot Draft Generation Safety & Structure Rules', () => {
     expect(rejectedSource.verification_status === 'verified').toBe(false);
   });
 
-  it('3. Kaynaksız önemli iddia barındıran tıbbi taslak doğrulama hatası verir', () => {
-    const invalidMedicalDraft = {
-      title: 'Tıbbi Rehber',
+  it('3. Su pınarı veya akan su iddiası içeren taslak reddedilir', () => {
+    const draftWithFountain = {
+      title: 'Kedi Hidrasyonu',
       excerpt: 'Özet',
-      content: 'Metin',
+      content: 'Su pınarları kedilerin su içme sıklığını artırır.',
       category: 'saglik',
       species_filter: ['cat'],
       is_medical_content: true,
-      source_claims: [] // Boş iddialar
+      source_claims: [{ claim: 'Su pınarları faydalıdır', supporting_source_ids: ['src1'] }]
     };
 
-    const res = validateDraftStructure(invalidMedicalDraft);
+    const res = validateDraftStructure(draftWithFountain);
     expect(res.isValid).toBe(false);
-    expect(res.error).toContain('source_claims');
+    expect(res.error).toContain('Su pınarı');
   });
 
   it('4. Kedi hidrasyonu taslağı yalnız cat hedeflidir ve sabit güvenlik uyarısı içerir', () => {
@@ -44,18 +44,20 @@ describe('Pilot Draft Generation Safety & Structure Rules', () => {
       category: 'saglik',
       species_filter: ['cat'],
       is_medical_content: true,
+      source_claims: [{ claim: 'Diyet nemi su alımını artırır', supporting_source_ids: ['src1'] }],
       safety_notes: 'Bu içerik genel bilgilendirme amaçlıdır. Petinizin su tüketiminde belirgin değişiklik, iştahsızlık, halsizlik veya idrar alışkanlıklarında farklılık fark ederseniz veteriner hekiminize danışın.'
     };
 
+    const res = validateDraftStructure(catDraft);
+    expect(res.isValid).toBe(true);
     expect(catDraft.species_filter).toEqual(['cat']);
-    expect(catDraft.safety_notes).toContain('veteriner hekiminize danışın');
   });
 
   it('5. Köpek sosyalleşmesi taslağı yalnız dog hedeflidir', () => {
     const dogDraft = {
       title: 'Köpeklerde Sosyalleşme',
       excerpt: 'Özet',
-      content: 'Metin',
+      content: 'Köpeklerde sosyalleşme rehberi...',
       category: 'egitim',
       species_filter: ['dog'],
       is_medical_content: false
