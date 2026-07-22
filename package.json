@@ -15,7 +15,7 @@
     "test:all": "npm run test && npm run test:e2e"
   },
   "dependencies": {
-    "@google/genai": "^0.1.1",
+    "@google/genai": "^2.13.0",
     "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^5.4.0",
     "@marsidev/react-turnstile": "^1.5.2",
