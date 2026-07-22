@@ -84,6 +84,13 @@ export async function PATCH(
     if (body.references_list !== undefined) updates.references_list = body.references_list;
     if (body.is_published !== undefined) updates.is_published = Boolean(body.is_published);
 
+    // İstemciden gönderilen otoriter denetim parametrelerini ezilmeyi önlemek için sil
+    delete updates.author;
+    delete updates.author_id;
+    delete updates.vet_reviewed_by;
+    delete updates.vet_reviewed_at;
+    delete updates.published_at;
+
     // Slug kontrolü
     if (body.slug && body.slug !== existing.slug) {
       const cleanSlug = body.slug.toLowerCase().trim().replace(/[^a-z0-9-]+/g, '-');
@@ -138,10 +145,15 @@ export async function PATCH(
       }
     }
 
-    // Vet onay verileri güncelleme
-    if (finalVetStatus === 'approved' && !existing.vet_reviewed_at) {
-      updates.vet_reviewed_by = actor.id;
-      updates.vet_reviewed_at = new Date().toISOString();
+    // Vet onay verileri güncelleme — YALNIZCA SUNUCU TARAFINDAN YÖNETİLİR
+    if (finalVetStatus === 'approved') {
+      if (!existing.vet_reviewed_at) {
+        updates.vet_reviewed_by = actor.id;
+        updates.vet_reviewed_at = new Date().toISOString();
+      }
+    } else {
+      updates.vet_reviewed_by = null;
+      updates.vet_reviewed_at = null;
     }
 
     if (updates.is_published === true && !existing.published_at) {

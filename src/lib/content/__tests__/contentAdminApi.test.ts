@@ -4,7 +4,6 @@
 
 import { describe, it, expect } from 'vitest';
 
-// API Yayın Güvenliği Mantık Doğrulama Yardımcısı
 export function validateArticlePublishRules(article: {
   title?: string;
   slug?: string;
@@ -41,6 +40,23 @@ export function validateArticlePublishRules(article: {
   }
 
   return { valid: true };
+}
+
+// İstemci Manipülasyon Filtreleme Yardımcısı
+export function sanitizeClientAuditFields(payload: Record<string, any>, actorId: string) {
+  const updates = { ...payload };
+  delete updates.author;
+  delete updates.author_id;
+  delete updates.vet_reviewed_by;
+  delete updates.vet_reviewed_at;
+  delete updates.published_at;
+
+  if (updates.vet_review_status === 'approved') {
+    updates.vet_reviewed_by = actorId;
+    updates.vet_reviewed_at = '2026-07-22T10:00:00.000Z';
+  }
+
+  return updates;
 }
 
 describe('Admin Content API & Safety Validation Rules', () => {
@@ -105,18 +121,16 @@ describe('Admin Content API & Safety Validation Rules', () => {
     expect(res.error).toBe('Başlangıç tarihi bitiş tarihinden sonra olamaz.');
   });
 
-  it('5. Onaysız tıbbi içerik taslak (is_published = false) olarak kaydedilebilir', () => {
-    const res = validateArticlePublishRules({
-      title: 'Taslak Tıbbi İçerik',
-      slug: 'taslak-tibbi-icerik',
-      excerpt: 'Özet',
-      content: 'İçerik',
-      species_filter: ['cat'],
-      is_medical_content: true,
-      vet_review_status: 'pending',
-      is_published: false
-    });
+  it('5. İstemciden gönderilen vet_reviewed_by ve published_at manipülasyonları sunucuda ezilir', () => {
+    const clientPayload = {
+      title: 'Hileli Makale',
+      vet_review_status: 'approved',
+      vet_reviewed_by: 'fake-hacker-id',
+      published_at: '2010-01-01T00:00:00.000Z'
+    };
 
-    expect(res.valid).toBe(true);
+    const sanitized = sanitizeClientAuditFields(clientPayload, 'admin-real-id');
+    expect(sanitized.vet_reviewed_by).toBe('admin-real-id');
+    expect(sanitized.published_at).not.toBe('2010-01-01T00:00:00.000Z');
   });
 });

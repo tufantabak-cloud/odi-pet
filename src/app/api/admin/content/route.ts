@@ -167,7 +167,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Vet onay verileri
+    // Vet onay verileri — YALNIZCA SUNUCU TARAFINDAN ATANIR
     let vetReviewedBy = null;
     let vetReviewedAt = null;
     if (vetStatus === 'approved') {
@@ -202,7 +202,8 @@ export async function POST(req: NextRequest) {
         references_list: Array.isArray(references_list) ? references_list : [],
         is_published: isPub,
         published_at: isPub ? new Date().toISOString() : null,
-        author: actor.full_name || 'Admin'
+        author: actor.full_name || 'Admin',
+        author_id: actor.id
       })
       .select()
       .single();
