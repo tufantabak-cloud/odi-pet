@@ -97,6 +97,25 @@ export async function PATCH(
         }
       }
 
+      // Sahte klinik onay ifade engeli (sunucu tarafı ek güvence)
+      const hasRealVetApproval = existing.vet_review_status === 'approved' && existing.vet_reviewed_by;
+      if (!hasRealVetApproval && reason) {
+        const cleanReason = reason.trim();
+        const fakeClaimPatterns = [
+          /klinik.*(denetim|inceleme|kontrol).*(tamamland|yapıld)/i,
+          /veteriner.*(tarafından\s+)?onayland/i,
+          /hekim.*(kontrol|inceleme|denetim).*ge.ti/i,
+          /veteriner\s+hekim\s+incelemes/i
+        ];
+        const hasFakeClaim = fakeClaimPatterns.some(p => p.test(cleanReason));
+        if (hasFakeClaim) {
+          return NextResponse.json(
+            { error: 'Bu ifade gerçek bir veteriner incelemesi yapıldığını ima ediyor ancak bu makale için onaylanmış veteriner kaydı bulunmuyor. Lütfen gerekçeyi düzeltin.' },
+            { status: 400 }
+          );
+        }
+      }
+
       // Atomik RPC Çağrısı (Audit kaydı aynı transaction içinde oluşur)
       const { data: rpcRes, error: rpcErr } = await supabase.rpc('change_vet_review_requirement', {
         p_article_id: id,
