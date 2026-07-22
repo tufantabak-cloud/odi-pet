@@ -82,7 +82,9 @@ export async function GET(req: NextRequest) {
   }
 
   return NextResponse.json({
+    articles: data || [],
     data: data || [],
+    totalCount: count ?? 0,
     pagination: {
       page,
       pageSize,

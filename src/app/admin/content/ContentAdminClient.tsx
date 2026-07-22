@@ -108,8 +108,8 @@ export default function ContentAdminClient() {
       if (!artRes.ok) throw new Error(artJson.error || 'Makaleler alınamadı.');
       if (!jobsRes.ok) throw new Error(jobsJson.error || 'İş kuyruğu alınamadı.');
 
-      const fetchedArticles = artJson.articles || (Array.isArray(artJson) ? artJson : []);
-      const fetchedJobs = jobsJson.jobs || (Array.isArray(jobsJson) ? jobsJson : []);
+      const fetchedArticles = artJson.articles || artJson.data || (Array.isArray(artJson) ? artJson : []);
+      const fetchedJobs = jobsJson.jobs || jobsJson.data || (Array.isArray(jobsJson) ? jobsJson : []);
 
       setArticles(fetchedArticles);
       setJobs(fetchedJobs);
