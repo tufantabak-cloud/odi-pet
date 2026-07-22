@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getCurrentProfile } from '@/lib/auth/get-current-profile'
+import { normalizeSpecies } from '@/lib/species'
 
 export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
   try {
@@ -64,6 +65,106 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     
     if (!Array.isArray(vaccine_answers)) {
       return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
+    }
+
+    // ── P0.5: Aşı Tür Bariyeri ─────────────────────────────────────────────
+    // Tüm yazma işlemlerinden ÖNCE, sunucu tarafında doğrula. Otoriter kaynak
+    // vaccine_protocols'tur; species CHECK domain'i yalnızca 'dog'/'cat' (bu
+    // tabloda 'both' YOKTUR — migration 20260605000001:11). Pet türü pet
+    // kaydından okunur, istemciye güvenilmez. Tek bir uyumsuz, bilinmeyen veya
+    // kodsuz aşı girdisi bile olsa hiçbir plans insert / pets update yapılmaz.
+    const petSpecies = normalizeSpecies(pet.species)
+    if (petSpecies !== 'cat' && petSpecies !== 'dog') {
+      return NextResponse.json(
+        {
+          error: 'INVALID_PET_SPECIES',
+          message: 'Pet türü çözümlenemedi.',
+          details: { pet_species: pet.species },
+        },
+        { status: 400 }
+      )
+    }
+
+    // Doğrulama için dar kapsamlı katalog. Mevcut tür-filtreli zenginleştirme
+    // sorgusu (yukarıda) DEĞİŞTİRİLMEZ; bu ayrı sorgu yalnızca tür/varlık
+    // doğrulaması içindir. is_active'e göre süzülmez → is_active davranışı korunur.
+    const { data: catalogRows, error: catalogError } = await supabase
+      .from('vaccine_protocols')
+      .select('vaccine_code, species')
+    if (catalogError) throw catalogError
+    const catalogSpeciesByCode = new Map<string, string>(
+      (catalogRows ?? []).map((r: any) => [r.vaccine_code, r.species])
+    )
+
+    const unknownVaccineCodes: string[] = []
+    const speciesMismatches: { vaccine_code: string; protocol_species: string }[] = []
+    const missingVaccineCodeIndices: number[] = []
+    const seenUnknown = new Set<string>()
+    const seenMismatch = new Set<string>()
+
+    for (let idx = 0; idx < vaccine_answers.length; idx++) {
+      const item = vaccine_answers[idx]
+      // Parazit girdileri vaccine_protocols kapsamı dışıdır (parasite_protocols
+      // ayrı otoriter kaynaktır). Parazit tür doğrulaması P0.5 kapsamı DIŞI —
+      // ayrı bir takip görevidir.
+      if (item?.category === 'parasite') continue
+
+      const code = item?.vaccine_code
+      // Kodsuz aşı girdisi: bu akışta (sağlık geçmişi sihirbazı) aşı kodu
+      // zorunludur — sihirbaz her zaman katalog kodu gönderir. Kodsuz girdi,
+      // istemci serbest metninden doğrulanmamış plan üretmemeli → reddedilir.
+      // (CUSTOM aşı yolu bu route'ta YOKTUR; katalogda olmadığından zaten
+      //  'unknown' sayılır. vaccines/scanner route'ları ayrı kapsamdır.)
+      if (!code) {
+        missingVaccineCodeIndices.push(idx)
+        continue
+      }
+
+      const protoSpecies = catalogSpeciesByCode.get(code)
+      if (protoSpecies === undefined) {
+        if (!seenUnknown.has(code)) {
+          seenUnknown.add(code)
+          unknownVaccineCodes.push(code)
+        }
+        continue
+      }
+      if (normalizeSpecies(protoSpecies) !== petSpecies) {
+        if (!seenMismatch.has(code)) {
+          seenMismatch.add(code)
+          speciesMismatches.push({ vaccine_code: code, protocol_species: protoSpecies })
+        }
+      }
+    }
+
+    // Herhangi bir sorun varsa: tek 400 yanıt, hiçbir yazma yok.
+    // Bilinmeyen veya kodsuz girdi varsa ana kod VACCINE_PROTOCOL_NOT_FOUND'dur;
+    // ANCAK details TÜM grupları (unknown + mismatch + missing) eksiksiz taşır —
+    // hiçbir uyumsuz kod yanıtta kaybolmaz. Yalnızca tür uyumsuzluğu varsa
+    // VACCINE_SPECIES_MISMATCH döner.
+    if (unknownVaccineCodes.length > 0 || missingVaccineCodeIndices.length > 0) {
+      return NextResponse.json(
+        {
+          error: 'VACCINE_PROTOCOL_NOT_FOUND',
+          message: 'Seçilen aşılardan bazıları doğrulanamadı.',
+          details: {
+            pet_species: petSpecies,
+            unknown_vaccine_codes: unknownVaccineCodes,
+            mismatches: speciesMismatches,
+            missing_vaccine_code_indices: missingVaccineCodeIndices,
+          },
+        },
+        { status: 400 }
+      )
+    }
+    if (speciesMismatches.length > 0) {
+      return NextResponse.json(
+        {
+          error: 'VACCINE_SPECIES_MISMATCH',
+          message: 'Seçilen aşılardan bazıları bu pet türüyle uyumlu değil.',
+          details: { pet_species: petSpecies, mismatches: speciesMismatches },
+        },
+        { status: 400 }
+      )
     }
 
     const tasks: any[] = []
