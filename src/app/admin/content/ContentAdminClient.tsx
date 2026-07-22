@@ -53,8 +53,19 @@ export default function ContentAdminClient() {
   const [filterFreshness, setFilterFreshness] = useState('');
 
   // Ana Sekme State
-  const [activeMainTab, setActiveMainTab] = useState<'articles' | 'jobs'>('articles');
+  const [activeMainTab, setActiveMainTab] = useState<'articles' | 'jobs' | 'sources'>('articles');
   const [jobs, setJobs] = useState<any[]>([]);
+
+  // Takip Edilen Kaynaklar State (Phase 1)
+  const [monitoredSources, setMonitoredSources] = useState<any[]>([]);
+  const [discoveredContents, setDiscoveredContents] = useState<any[]>([]);
+  const [loadingSources, setLoadingSources] = useState(false);
+  const [sourceFormUrl, setSourceFormUrl] = useState('');
+  const [sourceFormSpecies, setSourceFormSpecies] = useState<'cat' | 'dog' | 'both'>('both');
+  const [sourceFormMode, setSourceFormMode] = useState<'admin_review' | 'draft_only'>('admin_review');
+  const [sourceErrorMsg, setSourceErrorMsg] = useState('');
+  const [sourceSuccessMsg, setSourceSuccessMsg] = useState('');
+  const [isAddingSource, setIsAddingSource] = useState(false);
 
   // Form State & Validation Error
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -93,6 +104,98 @@ export default function ContentAdminClient() {
     latest_change_summary: 'İçerik taslağı kaydedildi.'
   });
 
+  const fetchMonitoredSources = async () => {
+    setLoadingSources(true);
+    setSourceErrorMsg('');
+    try {
+      const res = await fetch('/api/admin/content/monitored-sources');
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Kaynaklar alınamadı.');
+
+      setMonitoredSources(json.sources || []);
+      setDiscoveredContents(json.discovered || []);
+    } catch (err: any) {
+      setSourceErrorMsg(err.message);
+    } finally {
+      setLoadingSources(false);
+    }
+  };
+
+  const handleAddSource = async () => {
+    if (!sourceFormUrl || !sourceFormUrl.trim()) {
+      setSourceErrorMsg('Lütfen geçerli bir kaynak URL adresi girin.');
+      return;
+    }
+
+    setIsAddingSource(true);
+    setSourceErrorMsg('');
+    setSourceSuccessMsg('');
+
+    try {
+      const res = await fetch('/api/admin/content/monitored-sources', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          source_url: sourceFormUrl.trim(),
+          species_scope: sourceFormSpecies,
+          processing_mode: sourceFormMode,
+          is_manual_process: true
+        })
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        if (json.code === 'unsupported_api') {
+          throw new Error(json.error || 'Bu hesap resmî Instagram API ile takip edilemiyor. Gönderi URL\'si ekleyin.');
+        }
+        throw new Error(json.error || 'Kaynak ekleme başarısız.');
+      }
+
+      setSourceSuccessMsg(json.message || 'Kaynak başarıyla işlendi ve taslak hazırlandı.');
+      setSourceFormUrl('');
+      fetchMonitoredSources();
+      fetchArticles(); // İş kuyruğu ve makaleleri yenile
+    } catch (err: any) {
+      setSourceErrorMsg(err.message);
+    } finally {
+      setIsAddingSource(false);
+    }
+  };
+
+  const handleToggleSourceActive = async (id: string, currentActive: boolean) => {
+    try {
+      const res = await fetch(`/api/admin/content/monitored-sources/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: !currentActive })
+      });
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.error || 'Güncelleme başarısız.');
+      }
+      fetchMonitoredSources();
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  const handleDeleteSource = async (id: string) => {
+    if (!confirm('Bu kaynağı ve bağlı keşif verilerini silmek istediğinize emin misiniz?')) return;
+    try {
+      const res = await fetch(`/api/admin/content/monitored-sources/${id}`, {
+        method: 'DELETE'
+      });
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.error || 'Silme işlemi başarısız.');
+      }
+      fetchMonitoredSources();
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
   const fetchArticles = async () => {
     setLoading(true);
     setErrorMsg('');
@@ -129,7 +232,10 @@ export default function ContentAdminClient() {
         const tabParam = urlParams.get('tab');
         const articleIdParam = urlParams.get('articleId');
 
-        if (tabParam === 'jobs' || tabParam === 'queue') {
+        if (tabParam === 'sources') {
+          setActiveMainTab('sources');
+          fetchMonitoredSources();
+        } else if (tabParam === 'jobs' || tabParam === 'queue') {
           setActiveMainTab('jobs');
         } else {
           setActiveMainTab('articles');
@@ -575,6 +681,26 @@ export default function ContentAdminClient() {
             {jobs.length}
           </span>
         </button>
+
+        <button
+          onClick={() => {
+            setActiveMainTab('sources');
+            fetchMonitoredSources();
+            if (typeof window !== 'undefined') {
+              window.history.pushState(null, '', '/admin/content?tab=sources');
+            }
+          }}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+            activeMainTab === 'sources'
+              ? 'bg-[var(--color-primary)] text-white shadow-xs'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          <span> Takip Edilen Kaynaklar</span>
+          <span className="bg-white/20 px-1.5 py-0.5 rounded-md text-[10px]">
+            {monitoredSources.length}
+          </span>
+        </button>
       </div>
 
       {/* SEKME 2: AI Taslak Kuyruğu */}
@@ -698,6 +824,193 @@ export default function ContentAdminClient() {
                       </tr>
                     );
                   })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* SEKME 3: Takip Edilen Kaynaklar (Phase 1) */}
+      {activeMainTab === 'sources' && (
+        <div className="space-y-6">
+          {/* Yeni Kaynak Ekleme Hızlı Formu */}
+          <div className="bg-white border border-[var(--color-border)] rounded-2xl p-5 shadow-xs space-y-4">
+            <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+              <span>📡</span> Yeni Kaynak Ekle & Otomatik Taslak Hazırla
+            </h2>
+
+            {sourceErrorMsg && (
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs font-medium">
+                ⚠️ {sourceErrorMsg}
+              </div>
+            )}
+
+            {sourceSuccessMsg && (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-medium">
+                ✅ {sourceSuccessMsg}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+              <div className="md:col-span-2 space-y-1">
+                <label className="font-bold text-gray-700">Kaynak URL (Instagram Gönderisi / Reel / Web / RSS)</label>
+                <input
+                  type="url"
+                  placeholder="https://www.instagram.com/p/SHORTCODE/ veya https://site.com/rss.xml"
+                  value={sourceFormUrl}
+                  onChange={(e) => setSourceFormUrl(e.target.value)}
+                  className="w-full p-2.5 border rounded-xl bg-gray-50 focus:bg-white text-xs font-mono"
+                />
+                <p className="text-[10px] text-gray-500">
+                  * Profil URL'si eklenemez. Yalnızca tekil gönderi/Reel, Web veya RSS adresi kabul edilir.
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-gray-700">Tür Kapsamı</label>
+                <select
+                  value={sourceFormSpecies}
+                  onChange={(e) => setSourceFormSpecies(e.target.value as any)}
+                  className="w-full p-2.5 border rounded-xl bg-gray-50 text-xs font-semibold"
+                >
+                  <option value="both">İkisi (Kedi & Köpek)</option>
+                  <option value="cat">Yalnız Kedi</option>
+                  <option value="dog">Yalnız Köpek</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-gray-700">İşleme Modu</label>
+                <select
+                  value={sourceFormMode}
+                  onChange={(e) => setSourceFormMode(e.target.value as any)}
+                  className="w-full p-2.5 border rounded-xl bg-gray-50 text-xs font-semibold"
+                >
+                  <option value="admin_review">Admin İnceleme (Varsayılan)</option>
+                  <option value="draft_only">Yalnız Taslak Oluştur</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                onClick={handleAddSource}
+                disabled={isAddingSource}
+                className="bg-[var(--color-primary)] text-white px-5 py-2.5 rounded-xl font-bold text-xs hover:bg-[var(--color-primary-hover)] transition-all shadow-xs disabled:opacity-50"
+              >
+                {isAddingSource ? 'İşleniyor & Taslak Oluşturuluyor...' : '＋ Kaynağı İşle & Taslak Hazırla'}
+              </button>
+            </div>
+          </div>
+
+          {/* Kaynaklar Tablosu */}
+          <div className="bg-white border border-[var(--color-border)] rounded-2xl overflow-hidden shadow-xs">
+            <div className="p-4 border-b bg-gray-50 font-bold text-xs text-gray-800 flex items-center justify-between">
+              <span>Takip Edilen Kaynak Listesi ({monitoredSources.length})</span>
+              <button onClick={fetchMonitoredSources} className="text-blue-600 hover:underline text-xs">Yenile ↻</button>
+            </div>
+            <table className="w-full text-left text-xs">
+              <thead className="bg-gray-100 border-b font-bold text-gray-600 uppercase tracking-wider text-[10px]">
+                <tr>
+                  <th className="p-3">Kaynak Adı & Türü</th>
+                  <th className="p-3">URL / Permalınk</th>
+                  <th className="p-3">Tür</th>
+                  <th className="p-3">İzleme Modu</th>
+                  <th className="p-3">Son Kontrol</th>
+                  <th className="p-3 text-right">İşlem</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {loadingSources ? (
+                  <tr><td colSpan={6} className="p-6 text-center text-gray-500">Yükleniyor...</td></tr>
+                ) : monitoredSources.length === 0 ? (
+                  <tr><td colSpan={6} className="p-6 text-center text-gray-500 font-medium">Henüz eklenmiş takip kaynağı bulunmuyor.</td></tr>
+                ) : (
+                  monitoredSources.map((s) => (
+                    <tr key={s.id} className="hover:bg-gray-50/80">
+                      <td className="p-3 font-semibold text-gray-900">
+                        <div className="font-bold">{s.source_name}</div>
+                        <div className="text-[10px] text-gray-500">{s.source_type}</div>
+                      </td>
+                      <td className="p-3 max-w-xs truncate">
+                        <a href={s.source_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                          {s.source_url} ↗
+                        </a>
+                      </td>
+                      <td className="p-3">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800">
+                          {s.species_scope === 'cat' ? 'Kedi' : s.species_scope === 'dog' ? 'Köpek' : 'Kedi & Köpek'}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${s.monitoring_mode === 'unsupported_api' ? 'bg-amber-100 text-amber-900' : 'bg-blue-100 text-blue-800'}`}>
+                          {s.monitoring_mode}
+                        </span>
+                      </td>
+                      <td className="p-3 text-[11px] text-gray-500">
+                        {s.last_checked_at ? new Date(s.last_checked_at).toLocaleDateString('tr-TR') : 'Henüz Kontrol Edilmedi'}
+                      </td>
+                      <td className="p-3 text-right space-x-2">
+                        <button
+                          onClick={() => handleToggleSourceActive(s.id, s.is_active)}
+                          className={`px-2.5 py-1 rounded text-[10px] font-bold ${s.is_active ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-700'}`}
+                        >
+                          {s.is_active ? 'Aktif' : 'Pasif'}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteSource(s.id)}
+                          className="px-2.5 py-1 bg-rose-100 text-rose-800 rounded text-[10px] font-bold hover:bg-rose-200"
+                        >
+                          Sil
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Keşfedilen İçerikler Tablosu */}
+          <div className="bg-white border border-[var(--color-border)] rounded-2xl overflow-hidden shadow-xs">
+            <div className="p-4 border-b bg-gray-50 font-bold text-xs text-gray-800">
+              Keşfedilen ve İşlenen İçerik Kayıtları ({discoveredContents.length})
+            </div>
+            <table className="w-full text-left text-xs">
+              <thead className="bg-gray-100 border-b font-bold text-gray-600 uppercase tracking-wider text-[10px]">
+                <tr>
+                  <th className="p-3">Başlık / Özet</th>
+                  <th className="p-3">Durum</th>
+                  <th className="p-3">Bağlı İş (Job)</th>
+                  <th className="p-3">Açıklama / Ret Sebebi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {discoveredContents.length === 0 ? (
+                  <tr><td colSpan={4} className="p-6 text-center text-gray-500 font-medium">İşlenmiş keşif kaydı yok.</td></tr>
+                ) : (
+                  discoveredContents.map((d) => (
+                    <tr key={d.id} className="hover:bg-gray-50/80">
+                      <td className="p-3 font-semibold max-w-sm">
+                        <div className="font-bold text-gray-900 line-clamp-1">{d.title || 'Başlıksız'}</div>
+                        <a href={d.permalink} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-600 hover:underline truncate block">
+                          {d.permalink}
+                        </a>
+                      </td>
+                      <td className="p-3">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${d.processing_status === 'admin_review_required' ? 'bg-amber-100 text-amber-900' : d.processing_status === 'rejected' ? 'bg-rose-100 text-rose-900' : 'bg-blue-100 text-blue-900'}`}>
+                          {d.processing_status}
+                        </span>
+                      </td>
+                      <td className="p-3 text-[11px] font-mono text-gray-600">
+                        {d.job_id ? d.job_id.substring(0, 8) + '...' : '-'}
+                      </td>
+                      <td className="p-3 text-red-600 max-w-xs text-[11px]">
+                        {d.rejection_reason || '-'}
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
