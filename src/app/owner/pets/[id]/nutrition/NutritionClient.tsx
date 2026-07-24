@@ -85,6 +85,12 @@ export default function NutritionClient({
   const [gramsInput, setGramsInput] = useState<number>(100)
   const [mealsInput, setMealsInput] = useState<number>(2)
 
+  // Product Autocomplete Combobox States
+  const [productSuggestions, setProductSuggestions] = useState<any[]>([])
+  const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false)
+  const [showSuggestionsDropdown, setShowSuggestionsDropdown] = useState(false)
+  const [selectedManualFamilyId, setSelectedManualFamilyId] = useState<string | null>(null)
+
   // Active Primary Assignment
   const activePrimary = assignments.find((a: any) => a.is_primary && !a.ended_at) || null
 
@@ -121,6 +127,41 @@ export default function NutritionClient({
     } finally {
       setIsSearching(false)
     }
+  }
+
+  // ── Product Suggestions Autocomplete Handler ──
+  async function fetchProductSuggestions(brand: string, query: string) {
+    const searchTarget = query.trim() || brand.trim()
+    if (searchTarget.length < 2) {
+      setProductSuggestions([])
+      return
+    }
+    setIsFetchingSuggestions(true)
+    try {
+      const res = await fetch(`/api/nutrition/catalog/search?q=${encodeURIComponent(searchTarget)}&species=${pet.species || 'dog'}&include_pending=true&limit=20`)
+      const json = await res.json()
+      setProductSuggestions(json.products || json.data || [])
+    } catch (err) {
+      console.error('Catalog suggestions fetch error:', err)
+    } finally {
+      setIsFetchingSuggestions(false)
+    }
+  }
+
+  function handleSelectSuggestion(item: any) {
+    setProductText(item.official_name)
+    if (item.brand?.display_name && (!brandText || brandText.trim() === '' || brandText === 'Diğer')) {
+      setBrandText(item.brand.display_name)
+    }
+    if (item.food_form) {
+      setFoodForm(item.food_form)
+    }
+    if (item.verification_status === 'verified') {
+      setSelectedManualFamilyId(item.product_family_id)
+    } else {
+      setSelectedManualFamilyId(null) // Pending selection is saved as free-text manual entry
+    }
+    setShowSuggestionsDropdown(false)
   }
 
   // ── Barcode API Handler ──
@@ -170,10 +211,17 @@ export default function NutritionClient({
       } else if (barcodeResult) {
         payload.food_product_family_id = barcodeResult.product_family?.id
         payload.food_sku_id = barcodeResult.food_sku_id
+      } else if (selectedManualFamilyId) {
+        payload.food_product_family_id = selectedManualFamilyId
+        payload.food_form = foodForm
+        payload.source = 'catalog'
+        payload.measurement_method = 'owner_confirmed'
       } else {
         payload.brand_free_text = brandText.trim() || 'Diğer'
         payload.product_free_text = productText.trim() || 'Mama'
         payload.food_form = foodForm
+        payload.source = 'manual'
+        payload.measurement_method = 'owner_confirmed'
       }
 
       const res = await fetch(`/api/pets/${pet.id}/nutrition/assignments`, {
@@ -271,6 +319,9 @@ export default function NutritionClient({
     setMealsInput(2)
     setPortionMode('daily')
     setApiErrorMessage(null)
+    setProductSuggestions([])
+    setShowSuggestionsDropdown(false)
+    setSelectedManualFamilyId(null)
   }
 
   async function handleAddLog(e: React.FormEvent<HTMLFormElement>) {
@@ -763,7 +814,7 @@ export default function NutritionClient({
             </div>
           )}
 
-          {/* Mode 3: Manual Input Fields */}
+          {/* Mode 3: Manual Input Fields with Autocomplete Combobox */}
           {addMode === 'manual' && (
             <div className="flex flex-col gap-3">
               <div>
@@ -771,20 +822,87 @@ export default function NutritionClient({
                 <input
                   type="text"
                   value={brandText}
-                  onChange={e => setBrandText(e.target.value)}
-                  placeholder="Örn: Ev Yapımı / Özel Marka"
+                  onChange={e => {
+                    const val = e.target.value
+                    setBrandText(val)
+                    setSelectedManualFamilyId(null)
+                    if (val.trim().length >= 2) {
+                      fetchProductSuggestions(val, productText)
+                      setShowSuggestionsDropdown(true)
+                    } else {
+                      setProductSuggestions([])
+                      setShowSuggestionsDropdown(false)
+                    }
+                  }}
+                  placeholder="Örn: Royal Canin / Ev Yapımı"
                   className="input-base min-h-[44px]"
                 />
               </div>
-              <div>
+              <div className="relative">
                 <label className="text-[12px] font-bold text-text-secondary">Ürün / Çeşit Adı</label>
                 <input
                   type="text"
                   value={productText}
-                  onChange={e => setProductText(e.target.value)}
-                  placeholder="Örn: Tavuklu ve Pirinçli Formül"
+                  onChange={e => {
+                    const val = e.target.value
+                    setProductText(val)
+                    setSelectedManualFamilyId(null)
+                    if (val.trim().length >= 1 || brandText.trim().length >= 2) {
+                      fetchProductSuggestions(brandText, val)
+                      setShowSuggestionsDropdown(true)
+                    }
+                  }}
+                  onFocus={() => {
+                    if (brandText.trim().length >= 2 || productText.trim().length >= 1) {
+                      fetchProductSuggestions(brandText, productText)
+                      setShowSuggestionsDropdown(true)
+                    }
+                  }}
+                  placeholder="Örn: Medium Adult Dog / Tavuklu ve Pirinçli"
                   className="input-base min-h-[44px]"
                 />
+
+                {/* Autocomplete Combobox Dropdown */}
+                {showSuggestionsDropdown && (productSuggestions.length > 0 || isFetchingSuggestions) && (
+                  <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-border-main rounded-xl shadow-xl z-50 max-h-52 overflow-y-auto divide-y divide-border-main">
+                    {isFetchingSuggestions && productSuggestions.length === 0 ? (
+                      <div className="p-3 text-[12px] text-text-secondary text-center font-bold">
+                        Öneriler yükleniyor...
+                      </div>
+                    ) : (
+                      productSuggestions.map((item: any) => {
+                        const isPending = item.verification_status === 'pending'
+                        return (
+                          <div
+                            key={item.product_family_id}
+                            onClick={() => handleSelectSuggestion(item)}
+                            className="p-3 hover:bg-surface cursor-pointer min-h-[44px] flex flex-col justify-center transition-colors"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-extrabold text-[13px] text-text-primary">
+                                {item.official_name}
+                              </span>
+                              {isPending ? (
+                                <span className="text-[10px] font-bold px-2 py-0.5 bg-amber-100 text-amber-800 rounded-md shrink-0">
+                                  ⏳ Doğrulama bekliyor
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-md shrink-0">
+                                  ✓ Doğrulanmış
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 mt-0.5 text-[11px] text-text-secondary">
+                              <span>{item.brand?.display_name}</span>
+                              <span>•</span>
+                              <span>{getFoodFormLabel(item.food_form)}</span>
+                            </div>
+                          </div>
+                        )
+                      })
+                    )}
+                  </div>
+                )}
               </div>
               <div>
                 <label className="text-[12px] font-bold text-text-secondary">Mama Formu *</label>

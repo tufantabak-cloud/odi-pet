@@ -198,4 +198,84 @@ describe('Beslenme Katalog Arama ve GTIN API Sözleşmeleri', () => {
     expect(fallbackResult.addMode).toBe('manual')
     expect(fallbackResult.brandText).toBe('Royal Canin')
   })
+
+  it('Autocomplete önerilerinde marka seçilince tür uyumlu öneriler gelir, başka türe ait ürünler görünmez', () => {
+    const mockFamilies = [
+      { id: 'f1', official_name: 'Medium Adult Dog', species: 'dog', verification_status: 'pending', brand: 'Royal Canin' },
+      { id: 'f2', official_name: 'Sterilised 37', species: 'cat', verification_status: 'verified', brand: 'Royal Canin' },
+      { id: 'f3', official_name: 'Puppy Dog Formula', species: 'dog', verification_status: 'verified', brand: 'Royal Canin' }
+    ]
+
+    const getSuggestions = (brand: string, petSpecies: string) => {
+      return mockFamilies.filter(f =>
+        f.brand.toLowerCase() === brand.toLowerCase() &&
+        (f.species === petSpecies || f.species === 'both')
+      ).sort((a, b) => {
+        if (a.verification_status === 'verified' && b.verification_status === 'pending') return -1
+        if (a.verification_status === 'pending' && b.verification_status === 'verified') return 1
+        return a.official_name.localeCompare(b.official_name)
+      })
+    }
+
+    const dogSuggestions = getSuggestions('Royal Canin', 'dog')
+    expect(dogSuggestions).toHaveLength(2)
+    expect(dogSuggestions.map(s => s.official_name)).toEqual(['Puppy Dog Formula', 'Medium Adult Dog'])
+    expect(dogSuggestions.some(s => s.species === 'cat')).toBe(false)
+  })
+
+  it('Kayıt sözleşmesi: Verified seçim katalog ID ile, Pending seçim free-text/manual kaydedilmeli ve verified yapılmamalıdır', () => {
+    const buildAssignmentPayload = (selectedSuggestion: { id?: string; official_name: string; verification_status: 'verified' | 'pending'; food_form: string } | null, brandText: string, productText: string, foodForm: string) => {
+      if (selectedSuggestion && selectedSuggestion.verification_status === 'verified') {
+        return {
+          food_product_family_id: selectedSuggestion.id,
+          food_form: selectedSuggestion.food_form,
+          source: 'catalog',
+          measurement_method: 'owner_confirmed'
+        }
+      }
+      return {
+        food_product_family_id: null,
+        food_sku_id: null,
+        brand_free_text: brandText.trim(),
+        product_free_text: (selectedSuggestion ? selectedSuggestion.official_name : productText).trim(),
+        food_form: selectedSuggestion ? selectedSuggestion.food_form : foodForm,
+        source: 'manual',
+        measurement_method: 'owner_confirmed'
+      }
+    }
+
+    // 1. Verified selection -> catalog registration with food_product_family_id
+    const verifiedPayload = buildAssignmentPayload(
+      { id: 'f3', official_name: 'Puppy Dog Formula', verification_status: 'verified', food_form: 'dry' },
+      'Royal Canin',
+      'Puppy Dog Formula',
+      'dry'
+    )
+    expect(verifiedPayload.food_product_family_id).toBe('f3')
+    expect(verifiedPayload.source).toBe('catalog')
+    expect(verifiedPayload).not.toHaveProperty('brand_free_text')
+
+    // 2. Pending selection -> free-text manual registration, NO food_product_family_id
+    const pendingPayload = buildAssignmentPayload(
+      { official_name: 'Medium Adult Dog', verification_status: 'pending', food_form: 'dry' },
+      'Royal Canin',
+      'Medium Adult Dog',
+      'dry'
+    )
+    expect(pendingPayload.food_product_family_id).toBeNull()
+    expect(pendingPayload.source).toBe('manual')
+    expect(pendingPayload.brand_free_text).toBe('Royal Canin')
+    expect(pendingPayload.product_free_text).toBe('Medium Adult Dog')
+
+    // 3. Custom unknown product -> free-text manual registration
+    const customPayload = buildAssignmentPayload(
+      null,
+      'Ev Yapımı',
+      'Tavuklu Pilav',
+      'wet'
+    )
+    expect(customPayload.food_product_family_id).toBeNull()
+    expect(customPayload.brand_free_text).toBe('Ev Yapımı')
+    expect(customPayload.product_free_text).toBe('Tavuklu Pilav')
+  })
 })
