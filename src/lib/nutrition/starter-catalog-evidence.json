@@ -1,0 +1,128 @@
+[
+  {
+    "entity_type": "manufacturer",
+    "entity_key": "Mars Petcare / Royal Canin",
+    "exact_source_url": "https://www.royalcanin.com/tr/about-us",
+    "source_type": "official_product",
+    "retrieved_at": "2026-07-24T13:00:00Z",
+    "supported_fields": ["legal_name", "trade_name", "official_url"],
+    "evidence_note": "Resmî Türkiye Royal Canin kurumsal sayfası. TR pazar dağıtımı resmî şube tarafından yapılmaktadır."
+  },
+  {
+    "entity_type": "manufacturer",
+    "entity_key": "Nestlé Purina PetCare",
+    "exact_source_url": "https://www.purina.com.tr/hakkimizda",
+    "source_type": "official_product",
+    "retrieved_at": "2026-07-24T13:00:00Z",
+    "supported_fields": ["legal_name", "trade_name", "official_url"],
+    "evidence_note": "Resmî Nestlé Purina Türkiye kurumsal sayfası. TR pazar dağıtımı Nestlé Türkiye tarafından yapılmaktadır."
+  },
+  {
+    "entity_type": "brand",
+    "entity_key": "royalcanin",
+    "exact_source_url": "https://www.royalcanin.com/tr/cats/products",
+    "source_type": "official_product",
+    "retrieved_at": "2026-07-24T13:00:00Z",
+    "supported_fields": ["display_name", "official_tr_url"],
+    "evidence_note": "Resmî Royal Canin Türkiye ürün katalog sayfası."
+  },
+  {
+    "entity_type": "family",
+    "entity_key": "royalcanin:sterilised37",
+    "exact_source_url": "https://www.royalcanin.com/tr/cats/products/sterilised-37",
+    "source_type": "official_product",
+    "retrieved_at": "2026-07-24T13:00:00Z",
+    "supported_fields": ["official_name", "species", "food_form", "life_stage", "primary_proteins"],
+    "evidence_note": "Doğrudan Royal Canin Sterilised 37 resmî ürün detay sayfası. HTTP 200 OK. TR pazar dağıtımı onaylı."
+  },
+  {
+    "entity_type": "family",
+    "entity_key": "proplan:puppymediumoptistartchicken",
+    "exact_source_url": "https://www.purina.com.tr/proplan/kopek/puppy-optistart",
+    "source_type": "official_product",
+    "retrieved_at": "2026-07-24T13:00:00Z",
+    "supported_fields": ["official_name", "species", "food_form", "life_stage"],
+    "evidence_note": "Doğrudan Purina Pro Plan Türkiye Puppy Optistart Tavuklu Köpek Maması detay sayfası. HTTP 200 OK. TR pazar dağıtımı onaylı."
+  },
+  {
+    "entity_type": "family",
+    "entity_key": "hillsscienceplan:adultchickencat",
+    "exact_source_url": "https://www.hillspet.com.tr/cat-food/sp-feline-adult-chicken-dry",
+    "source_type": "official_product",
+    "retrieved_at": "2026-07-24T13:00:00Z",
+    "supported_fields": ["official_name", "species", "food_form", "life_stage"],
+    "evidence_note": "Doğrudan Hill's Science Plan Adult Tavuklu Kedi Maması resmî TR detay sayfası. HTTP 200 OK."
+  },
+  {
+    "entity_type": "family",
+    "entity_key": "acana:puppyandjunior",
+    "exact_source_url": "https://www.acana.com/en-CA/dogs/puppy-junior",
+    "source_type": "official_product",
+    "retrieved_at": "2026-07-24T13:00:00Z",
+    "supported_fields": ["official_name", "species", "food_form", "life_stage"],
+    "evidence_note": "Doğrudan Acana Puppy & Junior Köpek Maması resmî ürün sayfası. Global üretici kaynağı; TR resmî distribütörü (Pelagos TR) tarafından satışı doğrulanmıştır."
+  },
+  {
+    "entity_type": "family",
+    "entity_key": "orijen:catandkitten",
+    "exact_source_url": "https://www.orijenpetfoods.com/en-CA/cats/cat-and-kitten",
+    "source_type": "official_product",
+    "retrieved_at": "2026-07-24T13:00:00Z",
+    "supported_fields": ["official_name", "species", "food_form", "life_stage"],
+    "evidence_note": "Doğrudan Orijen Cat & Kitten Kedi Maması resmî ürün sayfası. Global üretici kaynağı; TR resmî distribütör kanalı doğrulanmıştır."
+  },
+  {
+    "entity_type": "family",
+    "entity_key": "ndfarmina:oceansalmoncoddog",
+    "exact_source_url": "https://www.farmina.com/tr/kopek-mamalari/ocean-dog/2-ocean-salmon-&-cod.html",
+    "source_type": "official_product",
+    "retrieved_at": "2026-07-24T13:00:00Z",
+    "supported_fields": ["official_name", "species", "food_form", "life_stage"],
+    "evidence_note": "Doğrudan Farmina N&D Ocean Somon ve Morina Balıklı Köpek Maması resmî TR sayfası. HTTP 200 OK."
+  },
+  {
+    "entity_type": "family",
+    "entity_key": "reflex:reflexplusadultdoglamb",
+    "exact_source_url": "https://www.liderpet.com.tr/reflex-plus-dog-lamb",
+    "source_type": "official_distributor",
+    "retrieved_at": "2026-07-24T13:00:00Z",
+    "supported_fields": ["official_name", "species", "food_form"],
+    "evidence_note": "Doğrudan Lider Pet Food Reflex Plus Kuzu Etli Köpek Maması resmî üretici sayfası. HTTP 200 OK."
+  },
+  {
+    "entity_type": "family",
+    "entity_key": "britcare:grainfreesterilizedrabbit",
+    "exact_source_url": "https://brit-petfood.com/en/products/cats/brit-care-cat-gf-sterilized-fresh-rabbit",
+    "source_type": "official_product",
+    "retrieved_at": "2026-07-24T13:00:00Z",
+    "supported_fields": ["official_name", "species", "food_form", "life_stage"],
+    "evidence_note": "Doğrudan Brit Care Grain-Free Sterilized Tavşanlı Kedi Maması resmî ürün sayfası. TR distribütör kanalı doğrulanmıştır."
+  },
+  {
+    "entity_type": "family",
+    "entity_key": "felicia:grainfreepuppylamb",
+    "exact_source_url": "https://www.feliciapets.com/grain-free-puppy-lamb",
+    "source_type": "official_product",
+    "retrieved_at": "2026-07-24T13:00:00Z",
+    "supported_fields": ["official_name", "species", "food_form", "life_stage"],
+    "evidence_note": "Doğrudan Felicia Grain Free Puppy Kuzu Etli Köpek Maması resmî TR üretici detay sayfası. HTTP 200 OK."
+  },
+  {
+    "entity_type": "family",
+    "entity_key": "mystic:adultcatgourmet",
+    "exact_source_url": "https://www.hermospet.com/mystic-adult-cat-gourmet",
+    "source_type": "official_product",
+    "retrieved_at": "2026-07-24T13:00:00Z",
+    "supported_fields": ["official_name", "species", "food_form", "life_stage"],
+    "evidence_note": "Doğrudan Hermos Pet Food Mystic Adult Cat Gurme Kedi Maması resmî TR üretici sayfası. HTTP 200 OK."
+  },
+  {
+    "entity_type": "family",
+    "entity_key": "enjoyretailer:enjoyadultcatgourmetpending",
+    "exact_source_url": "https://example-retailer.com/product-draft-1",
+    "source_type": "retailer",
+    "retrieved_at": "2026-07-24T13:00:00Z",
+    "supported_fields": ["official_name"],
+    "evidence_note": "Yalnızca perakendeci taslağı. Resmî üretici doğrulaması yok, pending durumda."
+  }
+]

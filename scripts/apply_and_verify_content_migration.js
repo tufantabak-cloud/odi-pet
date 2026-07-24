@@ -7,12 +7,7 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function runSQL(ddlText) {
-  const cleanDdl = ddlText.trim().replace(/;$/, '');
-  let { error } = await supabase.rpc('execute_ddl', { ddl: cleanDdl });
-  if (error) {
-    console.error('DDL Çalıştırma Hatası:', error.message, '\nSQL:', cleanDdl.substring(0, 100));
-    throw error;
-  }
+  throw new Error('SECURITY_NOTICE: RPC execute_ddl HAS BEEN REMOVED FOR SECURITY REASONS. Please use Supabase CLI (`npx supabase db push` or `npx supabase migration`) or standard direct migration execution to apply DDL.');
 }
 
 async function run() {

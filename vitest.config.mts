@@ -7,7 +7,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    exclude: ['node_modules', '.next', '.git', 'e2e'],
+    exclude: ['node_modules', '.next', '.git', 'e2e', '.claude', 'brain', 'scratch', 'tests'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],

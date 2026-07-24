@@ -43,13 +43,7 @@ async function run() {
   }
 
   for (const stmt of statements) {
-    const cleanStmt = stmt.trim().replace(/;$/, '');
-    if (!cleanStmt) continue;
-    console.log('Executing DDL Block:', cleanStmt.substring(0, 60).replace(/\n/g, ' ') + '...');
-    const { error } = await supabase.rpc('execute_ddl', { ddl: cleanStmt });
-    if (error) {
-      console.error('DDL Error:', error);
-    }
+    throw new Error('SECURITY_NOTICE: RPC execute_ddl HAS BEEN REMOVED FOR SECURITY REASONS. Please use Supabase CLI (`npx supabase db push` or `npx supabase migration`) or standard direct migration execution to apply DDL.');
   }
 
   console.log('--- Verifying Schema & RPC Updates ---');

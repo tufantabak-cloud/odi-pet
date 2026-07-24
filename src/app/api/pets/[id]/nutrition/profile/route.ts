@@ -12,7 +12,7 @@ async function assertOwner(petId: string, userId: string) {
     .select('role')
     .eq('pet_id', petId)
     .eq('profile_id', userId)
-    .single()
+    .maybeSingle()
   return !!data
 }
 
@@ -25,9 +25,9 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
   const { data, error } = await supabase
     .from('pet_nutrition_profiles')
-    .select('*')
+    .select('id, pet_id, allergy_info, sensitivity_notes, created_at, updated_at')
     .eq('pet_id', id)
-    .single()
+    .maybeSingle()
 
   if (error && error.code !== 'PGRST116') {
     return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
@@ -48,22 +48,24 @@ export async function POST(req: NextRequest, { params }: Params) {
   const body = await req.json()
   const supabase = await createServerSupabaseClient()
 
-  const payload = {
+  const { data: existing } = await supabase
+    .from('pet_nutrition_profiles')
+    .select('*')
+    .eq('pet_id', id)
+    .maybeSingle()
+
+  // Single Source of Truth: ONLY allergy_info and sensitivity_notes are written to pet_nutrition_profiles
+  const payload: any = {
     pet_id: id,
-    food_brand: body.food_brand ?? null,
-    food_product: body.food_product ?? null,
-    food_type: body.food_type ?? null,
-    package_size_grams: body.package_size_grams ? Number(body.package_size_grams) : null,
-    daily_grams: body.daily_grams ? Number(body.daily_grams) : null,
-    meals_per_day: body.meals_per_day ? Number(body.meals_per_day) : 2,
-    allergy_info: Array.isArray(body.allergy_info) ? body.allergy_info : [],
-    sensitivity_notes: body.sensitivity_notes ?? null,
+    allergy_info: body.allergy_info !== undefined ? (Array.isArray(body.allergy_info) ? body.allergy_info : (typeof body.allergy_info === 'string' ? body.allergy_info.split(',').map((s: string) => s.trim()).filter(Boolean) : [])) : (existing?.allergy_info ?? []),
+    sensitivity_notes: body.sensitivity_notes !== undefined ? body.sensitivity_notes : (existing?.sensitivity_notes ?? null),
+    updated_at: new Date().toISOString()
   }
 
   const { data, error } = await supabase
     .from('pet_nutrition_profiles')
     .upsert(payload, { onConflict: 'pet_id' })
-    .select()
+    .select('id, pet_id, allergy_info, sensitivity_notes, created_at, updated_at')
     .single()
 
   if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })

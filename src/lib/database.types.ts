@@ -4344,6 +4344,422 @@ export type Database = {
           },
         ]
       }
+      food_manufacturers: {
+        Row: {
+          id: string
+          legal_name: string
+          trade_name: string | null
+          country_code: string | null
+          official_url: string | null
+          verification_status: "pending" | "verified" | "rejected"
+          source_url: string | null
+          verified_at: string | null
+          verified_by: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          legal_name: string
+          trade_name?: string | null
+          country_code?: string | null
+          official_url?: string | null
+          verification_status?: "pending" | "verified" | "rejected"
+          source_url?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          legal_name?: string
+          trade_name?: string | null
+          country_code?: string | null
+          official_url?: string | null
+          verification_status?: "pending" | "verified" | "rejected"
+          source_url?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      food_brands: {
+        Row: {
+          id: string
+          manufacturer_id: string | null
+          display_name: string
+          normalized_name: string
+          official_tr_url: string | null
+          verification_status: "pending" | "verified" | "rejected"
+          source_url: string | null
+          verified_at: string | null
+          verified_by: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          manufacturer_id?: string | null
+          display_name: string
+          normalized_name: string
+          official_tr_url?: string | null
+          verification_status?: "pending" | "verified" | "rejected"
+          source_url?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          manufacturer_id?: string | null
+          display_name?: string
+          normalized_name?: string
+          official_tr_url?: string | null
+          verification_status?: "pending" | "verified" | "rejected"
+          source_url?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_brands_manufacturer_id_fkey"
+            columns: ["manufacturer_id"]
+            isOneToOne: false
+            referencedRelation: "food_manufacturers"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      food_brand_aliases: {
+        Row: {
+          id: string
+          brand_id: string
+          alias: string
+          normalized_alias: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          brand_id: string
+          alias: string
+          normalized_alias: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          brand_id?: string
+          alias?: string
+          normalized_alias?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_brand_aliases_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "food_brands"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      food_product_families: {
+        Row: {
+          id: string
+          brand_id: string
+          official_name: string
+          normalized_name: string
+          species: "cat" | "dog" | "both"
+          food_form: "dry" | "wet_pate" | "wet_gravy" | "wet_jelly" | "broth" | "semi_moist" | "freeze_dried" | "air_dried" | "raw_frozen" | "fresh_cooked" | "other"
+          nutritional_role: "complete" | "complementary" | "dietetic_complete" | "dietetic_complementary" | "treat" | "milk_replacer" | "supplement"
+          life_stage: "growth" | "adult" | "gestation_lactation" | "all_life_stages" | "senior_manufacturer_defined" | "unspecified"
+          target_attributes: Json
+          primary_proteins: string[]
+          marketing_claims: string[]
+          verification_status: "pending" | "verified" | "rejected"
+          source_url: string | null
+          verified_at: string | null
+          verified_by: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          brand_id: string
+          official_name: string
+          normalized_name: string
+          species: "cat" | "dog" | "both"
+          food_form: "dry" | "wet_pate" | "wet_gravy" | "wet_jelly" | "broth" | "semi_moist" | "freeze_dried" | "air_dried" | "raw_frozen" | "fresh_cooked" | "other"
+          nutritional_role: "complete" | "complementary" | "dietetic_complete" | "dietetic_complementary" | "treat" | "milk_replacer" | "supplement"
+          life_stage: "growth" | "adult" | "gestation_lactation" | "all_life_stages" | "senior_manufacturer_defined" | "unspecified"
+          target_attributes?: Json
+          primary_proteins?: string[]
+          marketing_claims?: string[]
+          verification_status?: "pending" | "verified" | "rejected"
+          source_url?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          brand_id?: string
+          official_name?: string
+          normalized_name?: string
+          species?: "cat" | "dog" | "both"
+          food_form?: "dry" | "wet_pate" | "wet_gravy" | "wet_jelly" | "broth" | "semi_moist" | "freeze_dried" | "air_dried" | "raw_frozen" | "fresh_cooked" | "other"
+          nutritional_role?: "complete" | "complementary" | "dietetic_complete" | "dietetic_complementary" | "treat" | "milk_replacer" | "supplement"
+          life_stage?: "growth" | "adult" | "gestation_lactation" | "all_life_stages" | "senior_manufacturer_defined" | "unspecified"
+          target_attributes?: Json
+          primary_proteins?: string[]
+          marketing_claims?: string[]
+          verification_status?: "pending" | "verified" | "rejected"
+          source_url?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_product_families_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "food_brands"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      food_skus: {
+        Row: {
+          id: string
+          product_family_id: string
+          gtin: string | null
+          package_size_grams: number
+          package_type: string | null
+          manufacturer_product_code: string | null
+          country_of_origin: string | null
+          market_status: "active" | "inactive" | "unknown"
+          verification_status: "pending" | "verified" | "rejected"
+          source_url: string | null
+          verified_at: string | null
+          verified_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          product_family_id: string
+          gtin?: string | null
+          package_size_grams: number
+          package_type?: string | null
+          manufacturer_product_code?: string | null
+          country_of_origin?: string | null
+          market_status?: "active" | "inactive" | "unknown"
+          verification_status?: "pending" | "verified" | "rejected"
+          source_url?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          product_family_id?: string
+          gtin?: string | null
+          package_size_grams?: number
+          package_type?: string | null
+          manufacturer_product_code?: string | null
+          country_of_origin?: string | null
+          market_status?: "active" | "inactive" | "unknown"
+          verification_status?: "pending" | "verified" | "rejected"
+          source_url?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_skus_product_family_id_fkey"
+            columns: ["product_family_id"]
+            isOneToOne: false
+            referencedRelation: "food_product_families"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      food_label_versions: {
+        Row: {
+          id: string
+          food_sku_id: string
+          version_label: string | null
+          ingredients_raw: string | null
+          analytical_constituents: Json
+          additives_raw: string | null
+          energy_kcal_per_kg: number | null
+          feeding_guide: Json
+          label_front_url: string | null
+          label_back_url: string | null
+          source_url: string | null
+          valid_from: string | null
+          valid_to: string | null
+          verification_status: "pending" | "verified" | "rejected"
+          verified_at: string | null
+          verified_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          food_sku_id: string
+          version_label?: string | null
+          ingredients_raw?: string | null
+          analytical_constituents?: Json
+          additives_raw?: string | null
+          energy_kcal_per_kg?: number | null
+          feeding_guide?: Json
+          label_front_url?: string | null
+          label_back_url?: string | null
+          source_url?: string | null
+          valid_from?: string | null
+          valid_to?: string | null
+          verification_status?: "pending" | "verified" | "rejected"
+          verified_at?: string | null
+          verified_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          food_sku_id?: string
+          version_label?: string | null
+          ingredients_raw?: string | null
+          analytical_constituents?: Json
+          additives_raw?: string | null
+          energy_kcal_per_kg?: number | null
+          feeding_guide?: Json
+          label_front_url?: string | null
+          label_back_url?: string | null
+          source_url?: string | null
+          valid_from?: string | null
+          valid_to?: string | null
+          verification_status?: "pending" | "verified" | "rejected"
+          verified_at?: string | null
+          verified_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_label_versions_food_sku_id_fkey"
+            columns: ["food_sku_id"]
+            isOneToOne: false
+            referencedRelation: "food_skus"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      pet_food_assignments: {
+        Row: {
+          id: string
+          pet_id: string
+          food_product_family_id: string | null
+          food_sku_id: string | null
+          brand_free_text: string | null
+          product_free_text: string | null
+          food_form: "dry" | "wet_pate" | "wet_gravy" | "wet_jelly" | "broth" | "semi_moist" | "freeze_dried" | "air_dried" | "raw_frozen" | "fresh_cooked" | "other"
+          daily_target_grams: number | null
+          meals_per_day: number | null
+          started_at: string
+          ended_at: string | null
+          is_primary: boolean
+          measurement_method: "planned_estimate" | "owner_confirmed" | "package_scan" | "admin_verified" | "legacy_profile"
+          source: "catalog" | "manual" | "scanner" | "migration"
+          legacy_profile_id: string | null
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          pet_id: string
+          food_product_family_id?: string | null
+          food_sku_id?: string | null
+          brand_free_text?: string | null
+          product_free_text?: string | null
+          food_form: "dry" | "wet_pate" | "wet_gravy" | "wet_jelly" | "broth" | "semi_moist" | "freeze_dried" | "air_dried" | "raw_frozen" | "fresh_cooked" | "other"
+          daily_target_grams?: number | null
+          meals_per_day?: number | null
+          started_at: string
+          ended_at?: string | null
+          is_primary?: boolean
+          measurement_method: "planned_estimate" | "owner_confirmed" | "package_scan" | "admin_verified" | "legacy_profile"
+          source: "catalog" | "manual" | "scanner" | "migration"
+          legacy_profile_id?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          pet_id?: string
+          food_product_family_id?: string | null
+          food_sku_id?: string | null
+          brand_free_text?: string | null
+          product_free_text?: string | null
+          food_form?: "dry" | "wet_pate" | "wet_gravy" | "wet_jelly" | "broth" | "semi_moist" | "freeze_dried" | "air_dried" | "raw_frozen" | "fresh_cooked" | "other"
+          daily_target_grams?: number | null
+          meals_per_day?: number | null
+          started_at?: string
+          ended_at?: string | null
+          is_primary?: boolean
+          measurement_method?: "planned_estimate" | "owner_confirmed" | "package_scan" | "admin_verified" | "legacy_profile"
+          source?: "catalog" | "manual" | "scanner" | "migration"
+          legacy_profile_id?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pet_food_assignments_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pet_food_assignments_food_product_family_id_fkey"
+            columns: ["food_product_family_id"]
+            isOneToOne: false
+            referencedRelation: "food_product_families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pet_food_assignments_food_sku_id_fkey"
+            columns: ["food_sku_id"]
+            isOneToOne: false
+            referencedRelation: "food_skus"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       pet_owners: {
         Row: {
           created_at: string | null

@@ -1,0 +1,676 @@
+[
+  {
+    "family_key": "royalcanin:sterilised37",
+    "official_name": "Sterilised 37 Kısırlaştırılmış Kedi Maması",
+    "species": "cat",
+    "food_form": "dry",
+    "life_stage": "adult",
+    "product_evidence_url": "https://www.royalcanin.com/tr/cats/products/sterilised-37",
+    "canonical_url": "https://www.royalcanin.com/tr/cats/products/sterilised-37",
+    "final_url": "https://www.royalcanin.com/tr/cats/products/sterilised-37",
+    "http_status": 200,
+    "market_evidence_url": "https://www.royalcanin.com/tr/about-us/contact-us",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "verified",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "royalcanin:kitten",
+    "official_name": "Kitten Yavru Kedi Maması",
+    "species": "cat",
+    "food_form": "dry",
+    "life_stage": "growth",
+    "product_evidence_url": "https://www.royalcanin.com/tr/cats/products/kitten",
+    "canonical_url": "https://www.royalcanin.com/tr/cats/products/kitten",
+    "final_url": "https://www.royalcanin.com/tr/cats/products/kitten",
+    "http_status": 200,
+    "market_evidence_url": "https://www.royalcanin.com/tr/about-us/contact-us",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "verified",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "royalcanin:mediumadultdog",
+    "official_name": "Medium Adult Yetişkin Köpek Maması",
+    "species": "dog",
+    "food_form": "dry",
+    "life_stage": "adult",
+    "product_evidence_url": "https://www.royalcanin.com/tr/dogs/products/medium-adult",
+    "canonical_url": "https://www.royalcanin.com/tr/dogs/products/medium-adult",
+    "final_url": "https://www.royalcanin.com/tr/dogs/products/medium-adult",
+    "http_status": 200,
+    "market_evidence_url": "https://www.royalcanin.com/tr/about-us/contact-us",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "pending",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "royalcanin:instinctivegravy",
+    "official_name": "Instinctive Gravy Yaş Kedi Maması",
+    "species": "cat",
+    "food_form": "wet_gravy",
+    "life_stage": "adult",
+    "product_evidence_url": "https://www.royalcanin.com/tr/cats/products/instinctive-gravy",
+    "canonical_url": "https://www.royalcanin.com/tr/cats/products/instinctive-gravy",
+    "final_url": "https://www.royalcanin.com/tr/cats/products/instinctive-gravy",
+    "http_status": 200,
+    "market_evidence_url": "https://www.royalcanin.com/tr/about-us/contact-us",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "pending",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "proplan:adultoptisensessalmon",
+    "official_name": "Adult Optisenses Somonlu Kedi Maması",
+    "species": "cat",
+    "food_form": "dry",
+    "life_stage": "adult",
+    "product_evidence_url": "https://www.purina.com.tr/proplan/kedi/optisenses-somonlu",
+    "canonical_url": "https://www.purina.com.tr/proplan/kedi/optisenses-somonlu",
+    "final_url": "https://www.purina.com.tr/proplan/kedi/optisenses-somonlu",
+    "http_status": 200,
+    "market_evidence_url": "https://www.purina.com.tr/hakkimizda",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "pending",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "proplan:puppymediumoptistartchicken",
+    "official_name": "Puppy Medium Optistart Tavuklu Köpek Maması",
+    "species": "dog",
+    "food_form": "dry",
+    "life_stage": "growth",
+    "product_evidence_url": "https://www.purina.com.tr/proplan/kopek/puppy-optistart",
+    "canonical_url": "https://www.purina.com.tr/proplan/kopek/puppy-optistart",
+    "final_url": "https://www.purina.com.tr/proplan/kopek/puppy-optistart",
+    "http_status": 200,
+    "market_evidence_url": "https://www.purina.com.tr/hakkimizda",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "pending",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "proplan:sterilisedadultturkeypouch",
+    "official_name": "Sterilised Adult Hindi Etli Soslu Yaş Kedi Maması",
+    "species": "cat",
+    "food_form": "wet_gravy",
+    "life_stage": "adult",
+    "product_evidence_url": "https://www.purina.com.tr/proplan/kedi/sterilised-pouch-turkey",
+    "canonical_url": "https://www.purina.com.tr/proplan/kedi/sterilised-pouch-turkey",
+    "final_url": "https://www.purina.com.tr/proplan/kedi/sterilised-pouch-turkey",
+    "http_status": 200,
+    "market_evidence_url": "https://www.purina.com.tr/hakkimizda",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "pending",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "proplan:senior7chicken",
+    "official_name": "Senior 7+ Tavuklu Yaşlı Kedi Maması",
+    "species": "cat",
+    "food_form": "dry",
+    "life_stage": "senior_manufacturer_defined",
+    "product_evidence_url": "https://www.purina.com.tr/proplan/kedi/senior-7-chicken",
+    "canonical_url": "https://www.purina.com.tr/proplan/kedi/senior-7-chicken",
+    "final_url": "https://www.purina.com.tr/proplan/kedi/senior-7-chicken",
+    "http_status": 200,
+    "market_evidence_url": "https://www.purina.com.tr/hakkimizda",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "pending",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "hillsscienceplan:adultchickencat",
+    "official_name": "Science Plan Adult Tavuklu Kedi Maması",
+    "species": "cat",
+    "food_form": "dry",
+    "life_stage": "adult",
+    "product_evidence_url": "https://www.hillspet.com.tr/cat-food/sp-feline-adult-chicken-dry",
+    "canonical_url": "https://www.hillspet.com.tr/cat-food/sp-feline-adult-chicken-dry",
+    "final_url": "https://www.hillspet.com.tr/cat-food/sp-feline-adult-chicken-dry",
+    "http_status": 200,
+    "market_evidence_url": "https://www.hillspet.com.tr/about-us",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "pending",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "hillsscienceplan:puppymediumchicken",
+    "official_name": "Science Plan Puppy Medium Tavuklu Yavru Köpek Maması",
+    "species": "dog",
+    "food_form": "dry",
+    "life_stage": "growth",
+    "product_evidence_url": "https://www.hillspet.com.tr/dog-food/sp-canine-puppy-medium-chicken-dry",
+    "canonical_url": "https://www.hillspet.com.tr/dog-food/sp-canine-puppy-medium-chicken-dry",
+    "final_url": "https://www.hillspet.com.tr/dog-food/sp-canine-puppy-medium-chicken-dry",
+    "http_status": 200,
+    "market_evidence_url": "https://www.hillspet.com.tr/about-us",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "pending",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "acana:wildprairiecat",
+    "official_name": "Wild Prairie Tahılsız Kedi Maması",
+    "species": "cat",
+    "food_form": "dry",
+    "life_stage": "all_life_stages",
+    "product_evidence_url": "https://www.acana.com/en-CA/cats/wild-prairie",
+    "canonical_url": "https://www.acana.com/en-CA/cats/wild-prairie",
+    "final_url": "https://www.acana.com/en-CA/cats/wild-prairie",
+    "http_status": 200,
+    "market_evidence_url": "https://www.pelagospet.com/acana",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "pending",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "acana:puppyandjunior",
+    "official_name": "Puppy & Junior Yavru Köpek Maması",
+    "species": "dog",
+    "food_form": "dry",
+    "life_stage": "growth",
+    "product_evidence_url": "https://www.acana.com/en-CA/dogs/puppy-junior",
+    "canonical_url": "https://www.acana.com/en-CA/dogs/puppy-junior",
+    "final_url": "https://www.acana.com/en-CA/dogs/puppy-junior",
+    "http_status": 200,
+    "market_evidence_url": "https://www.pelagospet.com/acana",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "verified",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "orijen:catandkitten",
+    "official_name": "Cat & Kitten Tahılsız Kedi Maması",
+    "species": "cat",
+    "food_form": "dry",
+    "life_stage": "all_life_stages",
+    "product_evidence_url": "https://www.orijenpetfoods.com/en-CA/cats/cat-and-kitten",
+    "canonical_url": "https://www.orijenpetfoods.com/en-CA/cats/cat-and-kitten",
+    "final_url": "https://www.orijenpetfoods.com/en-CA/cats/cat-and-kitten",
+    "http_status": 200,
+    "market_evidence_url": "https://www.pelagospet.com/orijen",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "verified",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "orijen:originaldog",
+    "official_name": "Original Adult Tahılsız Köpek Maması",
+    "species": "dog",
+    "food_form": "dry",
+    "life_stage": "all_life_stages",
+    "product_evidence_url": "https://www.orijenpetfoods.com/en-CA/dogs/original",
+    "canonical_url": "https://www.orijenpetfoods.com/en-CA/dogs/original",
+    "final_url": "https://www.orijenpetfoods.com/en-CA/dogs/original",
+    "http_status": 200,
+    "market_evidence_url": "https://www.pelagospet.com/orijen",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "pending",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "ndfarmina:primechickenpomegranatecat",
+    "official_name": "Prime Tavuklu ve Nar Taneli Adult Kedi Maması",
+    "species": "cat",
+    "food_form": "dry",
+    "life_stage": "adult",
+    "product_evidence_url": "https://www.farmina.com/tr/kedi-mamalari/prime-cat/1-prime-chicken-&-pomegranate-adult.html",
+    "canonical_url": "https://www.farmina.com/tr/kedi-mamalari/prime-cat/1-prime-chicken-&-pomegranate-adult.html",
+    "final_url": "https://www.farmina.com/tr/kedi-mamalari/prime-cat/1-prime-chicken-&-pomegranate-adult.html",
+    "http_status": 200,
+    "market_evidence_url": "https://www.farmina.com/tr/hakkimizda",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "verified",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "ndfarmina:oceansalmoncoddog",
+    "official_name": "Ocean Somon ve Morina Balıklı Köpek Maması",
+    "species": "dog",
+    "food_form": "dry",
+    "life_stage": "adult",
+    "product_evidence_url": "https://www.farmina.com/tr/kopek-mamalari/ocean-dog/2-ocean-salmon-&-cod.html",
+    "canonical_url": "https://www.farmina.com/tr/kopek-mamalari/ocean-dog/2-ocean-salmon-&-cod.html",
+    "final_url": "https://www.farmina.com/tr/kopek-mamalari/ocean-dog/2-ocean-salmon-&-cod.html",
+    "http_status": 200,
+    "market_evidence_url": "https://www.farmina.com/tr/hakkimizda",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "verified",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "ndfarmina:pumpkinkittenchicken",
+    "official_name": "Pumpkin Balkabaklı Tavuklu Yavru Kedi Maması",
+    "species": "cat",
+    "food_form": "dry",
+    "life_stage": "growth",
+    "product_evidence_url": "https://www.farmina.com/tr/kedi-mamalari/pumpkin-cat/3-pumpkin-kitten.html",
+    "canonical_url": "https://www.farmina.com/tr/kedi-mamalari/pumpkin-cat/3-pumpkin-kitten.html",
+    "final_url": "https://www.farmina.com/tr/kedi-mamalari/pumpkin-cat/3-pumpkin-kitten.html",
+    "http_status": 200,
+    "market_evidence_url": "https://www.farmina.com/tr/hakkimizda",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "verified",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "felix:fantasticsalmonjelly",
+    "official_name": "Fantastic Somonlu Jöleli Yaş Kedi Maması",
+    "species": "cat",
+    "food_form": "wet_jelly",
+    "life_stage": "adult",
+    "product_evidence_url": "https://www.purina.com.tr/felix/fantastic-somonlu",
+    "canonical_url": "https://www.purina.com.tr/felix/fantastic-somonlu",
+    "final_url": "https://www.purina.com.tr/felix/fantastic-somonlu",
+    "http_status": 200,
+    "market_evidence_url": "https://www.purina.com.tr/felix",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "pending",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "felix:fantasticbeefjelly",
+    "official_name": "Fantastic Sığır Etli Jöleli Yaş Kedi Maması",
+    "species": "cat",
+    "food_form": "wet_jelly",
+    "life_stage": "adult",
+    "product_evidence_url": "https://www.purina.com.tr/felix/fantastic-sigir-etli",
+    "canonical_url": "https://www.purina.com.tr/felix/fantastic-sigir-etli",
+    "final_url": "https://www.purina.com.tr/felix/fantastic-sigir-etli",
+    "http_status": 200,
+    "market_evidence_url": "https://www.purina.com.tr/felix",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "pending",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "whiskas:adultchickendry",
+    "official_name": "Adult Tavuklu Kuru Kedi Maması",
+    "species": "cat",
+    "food_form": "dry",
+    "life_stage": "adult",
+    "product_evidence_url": "https://www.whiskas.com.tr/urunler/kuru-mama/tavuklu-adult",
+    "canonical_url": "https://www.whiskas.com.tr/urunler/kuru-mama/tavuklu-adult",
+    "final_url": "https://www.whiskas.com.tr/urunler/kuru-mama/tavuklu-adult",
+    "http_status": 200,
+    "market_evidence_url": "https://www.whiskas.com.tr",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "pending",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "whiskas:tastymixpoultry",
+    "official_name": "Tasty Mix Kümes Hayvanlı Soslu Yaş Kedi Maması",
+    "species": "cat",
+    "food_form": "wet_gravy",
+    "life_stage": "adult",
+    "product_evidence_url": "https://www.whiskas.com.tr/urunler/yas-mama/tasty-mix",
+    "canonical_url": "https://www.whiskas.com.tr/urunler/yas-mama/tasty-mix",
+    "final_url": "https://www.whiskas.com.tr/urunler/yas-mama/tasty-mix",
+    "http_status": 200,
+    "market_evidence_url": "https://www.whiskas.com.tr",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "pending",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "reflex:reflexplusadultchicken",
+    "official_name": "Reflex Plus Adult Tavuklu Kedi Maması",
+    "species": "cat",
+    "food_form": "dry",
+    "life_stage": "adult",
+    "product_evidence_url": "https://www.liderpet.com.tr/reflex-plus-adult-chicken",
+    "canonical_url": "https://www.liderpet.com.tr/reflex-plus-adult-chicken",
+    "final_url": "https://www.liderpet.com.tr/reflex-plus-adult-chicken",
+    "http_status": 200,
+    "market_evidence_url": "https://www.liderpet.com.tr/kurumsal",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "verified",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "reflex:reflexplusadultdoglamb",
+    "official_name": "Reflex Plus Adult Kuzu Etli ve Pirinçli Köpek Maması",
+    "species": "dog",
+    "food_form": "dry",
+    "life_stage": "adult",
+    "product_evidence_url": "https://www.liderpet.com.tr/reflex-plus-dog-lamb",
+    "canonical_url": "https://www.liderpet.com.tr/reflex-plus-dog-lamb",
+    "final_url": "https://www.liderpet.com.tr/reflex-plus-dog-lamb",
+    "http_status": 200,
+    "market_evidence_url": "https://www.liderpet.com.tr/kurumsal",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "verified",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "reflex:reflexpluskittenchicken",
+    "official_name": "Reflex Plus Kitten Tavuklu Yavru Kedi Maması",
+    "species": "cat",
+    "food_form": "dry",
+    "life_stage": "growth",
+    "product_evidence_url": "https://www.liderpet.com.tr/reflex-plus-kitten-chicken",
+    "canonical_url": "https://www.liderpet.com.tr/reflex-plus-kitten-chicken",
+    "final_url": "https://www.liderpet.com.tr/reflex-plus-kitten-chicken",
+    "http_status": 200,
+    "market_evidence_url": "https://www.liderpet.com.tr/kurumsal",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "verified",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "britcare:grainfreesterilizedrabbit",
+    "official_name": "Grain-Free Sterilized Tavşanlı Kısır Kedi Maması",
+    "species": "cat",
+    "food_form": "dry",
+    "life_stage": "adult",
+    "product_evidence_url": "https://brit-petfood.com/en/products/cats/brit-care-cat-gf-sterilized-fresh-rabbit",
+    "canonical_url": "https://brit-petfood.com/en/products/cats/brit-care-cat-gf-sterilized-fresh-rabbit",
+    "final_url": "https://brit-petfood.com/en/products/cats/brit-care-cat-gf-sterilized-fresh-rabbit",
+    "http_status": 200,
+    "market_evidence_url": "https://brit-petfood.com/tr/distributors",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "verified",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "britcare:sustainableadultmediumdog",
+    "official_name": "Sustainable Adult Medium Breed Köpek Maması",
+    "species": "dog",
+    "food_form": "dry",
+    "life_stage": "adult",
+    "product_evidence_url": "https://brit-petfood.com/en/products/dogs/brit-care-dog-sustainable-adult-medium-breed",
+    "canonical_url": "https://brit-petfood.com/en/products/dogs/brit-care-dog-sustainable-adult-medium-breed",
+    "final_url": "https://brit-petfood.com/en/products/dogs/brit-care-dog-sustainable-adult-medium-breed",
+    "http_status": 200,
+    "market_evidence_url": "https://brit-petfood.com/tr/distributors",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "verified",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "felicia:lowgrainsterilisedsalmon",
+    "official_name": "Low Grain Sterilised Somonlu Kısır Kedi Maması",
+    "species": "cat",
+    "food_form": "dry",
+    "life_stage": "adult",
+    "product_evidence_url": "https://www.feliciapets.com/low-grain-sterilised-somonlu",
+    "canonical_url": "https://www.feliciapets.com/low-grain-sterilised-somonlu",
+    "final_url": "https://www.feliciapets.com/low-grain-sterilised-somonlu",
+    "http_status": 200,
+    "market_evidence_url": "https://www.feliciapets.com/hakkimizda",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "pending",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "felicia:grainfreepuppylamb",
+    "official_name": "Grain Free Puppy Kuzu Etli Yavru Köpek Maması",
+    "species": "dog",
+    "food_form": "dry",
+    "life_stage": "growth",
+    "product_evidence_url": "https://www.feliciapets.com/grain-free-puppy-lamb",
+    "canonical_url": "https://www.feliciapets.com/grain-free-puppy-lamb",
+    "final_url": "https://www.feliciapets.com/grain-free-puppy-lamb",
+    "http_status": 200,
+    "market_evidence_url": "https://www.feliciapets.com/hakkimizda",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "pending",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "mystic:adultcatgourmet",
+    "official_name": "Adult Cat Gurme Gurme Kedi Maması",
+    "species": "cat",
+    "food_form": "dry",
+    "life_stage": "adult",
+    "product_evidence_url": "https://www.hermospet.com/mystic-adult-cat-gourmet",
+    "canonical_url": "https://www.hermospet.com/mystic-adult-cat-gourmet",
+    "final_url": "https://www.hermospet.com/mystic-adult-cat-gourmet",
+    "http_status": 200,
+    "market_evidence_url": "https://www.hermospet.com/kurumsal",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "pending",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "mystic:puppymediumlargelamb",
+    "official_name": "Puppy Medium & Large Kuzu Etli Yavru Köpek Maması",
+    "species": "dog",
+    "food_form": "dry",
+    "life_stage": "growth",
+    "product_evidence_url": "https://www.hermospet.com/mystic-puppy-lamb",
+    "canonical_url": "https://www.hermospet.com/mystic-puppy-lamb",
+    "final_url": "https://www.hermospet.com/mystic-puppy-lamb",
+    "http_status": 200,
+    "market_evidence_url": "https://www.hermospet.com/kurumsal",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "pending",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "bonacibo:bonaciboadultcatlamb",
+    "official_name": "Adult Cat Kuzu Etli ve Pirinçli Yetişkin Kedi Maması",
+    "species": "cat",
+    "food_form": "dry",
+    "life_stage": "adult",
+    "product_evidence_url": "https://www.cagatay.com.tr/bonacibo-adult-cat-lamb",
+    "canonical_url": "https://www.cagatay.com.tr/bonacibo-adult-cat-lamb",
+    "final_url": "https://www.cagatay.com.tr/bonacibo-adult-cat-lamb",
+    "http_status": 200,
+    "market_evidence_url": "https://www.cagatay.com.tr/hakkimizda",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "verified",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "spectrum:spectrumhairballweight",
+    "official_name": "Adult Cat Hairball & Weight Control Kedi Maması",
+    "species": "cat",
+    "food_form": "dry",
+    "life_stage": "adult",
+    "product_evidence_url": "https://www.spectrumpetfood.com/spectrum-hairball",
+    "canonical_url": "https://www.spectrumpetfood.com/spectrum-hairball",
+    "final_url": "https://www.spectrumpetfood.com/spectrum-hairball",
+    "http_status": 200,
+    "market_evidence_url": "https://www.spectrumpetfood.com/about",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "pending",
+    "supported_fields": [
+      "official_name",
+      "species",
+      "food_form",
+      "life_stage"
+    ]
+  },
+  {
+    "family_key": "enjoyretailer:enjoyadultcatgourmetpending",
+    "official_name": "Enjoy Adult Cat Gourmet (Perakendeci Taslağı)",
+    "species": "cat",
+    "food_form": "dry",
+    "life_stage": "adult",
+    "product_evidence_url": "https://example-retailer.com/product-draft-1",
+    "canonical_url": "https://example-retailer.com/product-draft-1",
+    "final_url": "https://example-retailer.com/product-draft-1",
+    "http_status": 200,
+    "market_evidence_url": "https://example-retailer.com/enjoy",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "pending",
+    "supported_fields": [
+      "official_name"
+    ]
+  },
+  {
+    "family_key": "enjoyretailer:enjoyadultdoglambpending",
+    "official_name": "Enjoy Adult Dog Lamb & Rice (Perakendeci Taslağı)",
+    "species": "dog",
+    "food_form": "dry",
+    "life_stage": "adult",
+    "product_evidence_url": "https://example-retailer.com/product-draft-2",
+    "canonical_url": "https://example-retailer.com/product-draft-2",
+    "final_url": "https://example-retailer.com/product-draft-2",
+    "http_status": 200,
+    "market_evidence_url": "https://example-retailer.com/enjoy",
+    "checked_at": "2026-07-24T13:30:00Z",
+    "verification_status": "pending",
+    "supported_fields": [
+      "official_name"
+    ]
+  }
+]

@@ -1,18 +1,40 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { calculateRefillRisk } from '@/lib/nutrition/refill-engine'
 import CoachMark from '@/components/ui/CoachMark'
 import { SmartScanner } from '@/components/ui/SmartScanner'
+import { BarcodeScanner } from '@/components/ui/BarcodeScanner'
 import SmartCardBanner from '@/components/profiling/SmartCardBanner'
 import { StepperInput } from '@/components/ui/StepperInput'
+import { Modal } from '@/components/ui/Modal'
 
 // Tabs
 const TABS = ['Mama & Stok', 'Öğünler & Hatırlatıcı', 'Kilo Takibi'] as const
 type Tab = typeof TABS[number]
+
+const FOOD_FORM_OPTIONS = [
+  { value: 'dry', label: 'Kuru Mama' },
+  { value: 'wet_pate', label: 'Ezme Yaş Mama' },
+  { value: 'wet_gravy', label: 'Soslu Yaş Mama' },
+  { value: 'wet_jelly', label: 'Jöleli Yaş Mama' },
+  { value: 'broth', label: 'Çorba / Et Suyu' },
+  { value: 'semi_moist', label: 'Yarı Nemli Mama' },
+  { value: 'freeze_dried', label: 'Dondurularak Kurutulmuş (Freeze-Dried)' },
+  { value: 'air_dried', label: 'Havada Kurutulmuş (Air-Dried)' },
+  { value: 'raw_frozen', label: 'Çiğ / Dondurulmuş (BARF)' },
+  { value: 'fresh_cooked', label: 'Taze Pişirilmiş Ev Yemeği' },
+  { value: 'other', label: 'Diğer' }
+]
+
+function getFoodFormLabel(formValue?: string): string {
+  if (!formValue) return 'Mama'
+  const found = FOOD_FORM_OPTIONS.find(o => o.value === formValue)
+  return found ? found.label : formValue
+}
 
 export default function NutritionClient({
   pet,
@@ -20,61 +42,232 @@ export default function NutritionClient({
   inventory,
   feedingLogs,
   weightLogs,
+  assignments = []
 }: {
   pet: any
   profile: any
   inventory: any
   feedingLogs: any[]
   weightLogs: any[]
+  assignments?: any[]
 }) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('Mama & Stok')
   const [loading, setLoading] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
+  const [showBarcodeCamera, setShowBarcodeCamera] = useState(false)
   const [dismissedBanner, setDismissedBanner] = useState(false)
 
+  // Assignment Modal States
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [addMode, setAddMode] = useState<'search' | 'barcode' | 'manual'>('search')
+  const [editingAssignment, setEditingAssignment] = useState<any | null>(null)
+  const [apiErrorMessage, setApiErrorMessage] = useState<string | null>(null)
+
+  // Catalog Search States
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [selectedCatalogItem, setSelectedCatalogItem] = useState<any | null>(null)
+
+  // Barcode Search States
+  const [barcodeInput, setBarcodeInput] = useState('')
+  const [isBarcodeSearching, setIsBarcodeSearching] = useState(false)
+  const [barcodeResult, setBarcodeResult] = useState<any | null>(null)
+  const [barcodeError, setBarcodeError] = useState<string | null>(null)
+
+  // Manual & Portion Input States
+  const [brandText, setBrandText] = useState('')
+  const [productText, setProductText] = useState('')
+  const [foodForm, setFoodForm] = useState('dry')
+  const [portionMode, setPortionMode] = useState<'daily' | 'meal'>('daily')
+  const [gramsInput, setGramsInput] = useState<number>(100)
+  const [mealsInput, setMealsInput] = useState<number>(2)
+
+  // Active Primary Assignment
+  const activePrimary = assignments.find((a: any) => a.is_primary && !a.ended_at) || null
+
   // Engine Calcs
-  const dailyUsage = (inventory?.estimated_daily_usage as number) ?? (profile?.daily_grams as number) ?? 0;
-  const currentStock = (inventory?.current_stock_grams as number) ?? 0;
+  const dailyUsage = activePrimary?.daily_target_grams ?? (inventory?.estimated_daily_usage as number) ?? (profile?.daily_grams as number) ?? 0
+  const currentStock = (inventory?.current_stock_grams as number) ?? 0
   const refillStatus = calculateRefillRisk({ stockGrams: currentStock, dailyUsage })
 
-  const hasUsage = dailyUsage > 0;
-  const showBanner = hasUsage && (refillStatus.risk === 'WARNING' || refillStatus.risk === 'CRITICAL');
-  const badgeClass = refillStatus.risk === 'CRITICAL' ? 'text-red-500' : refillStatus.risk === 'WARNING' ? 'text-orange-500' : 'text-green-500';
-  const riskLabel = hasUsage ? `${refillStatus.daysLeft} gün kaldı` : 'Kullanım belirtilmedi';
+  const hasUsage = dailyUsage > 0
+  const showBanner = hasUsage && (refillStatus.risk === 'WARNING' || refillStatus.risk === 'CRITICAL')
+  const badgeClass = refillStatus.risk === 'CRITICAL' ? 'text-red-500' : refillStatus.risk === 'WARNING' ? 'text-orange-500' : 'text-green-500'
+  const riskLabel = hasUsage ? `${refillStatus.daysLeft} gün kaldı` : 'Kullanım belirtilmedi'
 
-  async function handleUpdateBrandAndStock(e: React.FormEvent<HTMLFormElement>) {
+  // Calculated per meal and total daily grams
+  const computedDailyGrams = portionMode === 'meal' ? gramsInput * mealsInput : gramsInput
+  const computedPerMealGrams = mealsInput > 0 ? Math.round(computedDailyGrams / mealsInput) : computedDailyGrams
+
+  // ── Search API Handler ──
+  async function handleSearch(query: string) {
+    setSearchQuery(query)
+    if (query.trim().length < 2) {
+      setSearchResults([])
+      return
+    }
+    setIsSearching(true)
+    try {
+      const res = await fetch(`/api/nutrition/catalog/search?q=${encodeURIComponent(query)}&species=${pet.species || 'dog'}`)
+      const json = await res.json()
+      setSearchResults(json.data || [])
+    } catch (err) {
+      console.error('Catalog search error:', err)
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  // ── Barcode API Handler ──
+  async function handleBarcodeLookup(code: string) {
+    const clean = code.trim()
+    if (!clean) return
+    setIsBarcodeSearching(true)
+    setBarcodeError(null)
+    setBarcodeResult(null)
+
+    try {
+      const res = await fetch(`/api/nutrition/catalog/gtin/${clean}`)
+      const json = await res.json()
+
+      if (!res.ok) {
+        setBarcodeError('Barkodlu ürün katalogda bulunamadı. Lütfen elle ekleyin.')
+      } else {
+        setBarcodeResult(json.data)
+      }
+    } catch (err) {
+      setBarcodeError('Barkodlu ürün katalogda bulunamadı. Lütfen elle ekleyin.')
+    } finally {
+      setIsBarcodeSearching(false)
+    }
+  }
+
+  // ── Submit New Assignment ──
+  async function handleCreateAssignment(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    const fd = new FormData(e.currentTarget)
-    
+    setApiErrorMessage(null)
+
     try {
-      // 1. Update Profile (Brand & Grams)
-      await fetch(`/api/pets/${pet.id}/nutrition/profile`, {
+      const payload: any = {
+        daily_target_grams: computedDailyGrams,
+        meals_per_day: mealsInput,
+        is_primary: true,
+        measurement_method: selectedCatalogItem || barcodeResult ? 'package_scan' : 'owner_confirmed',
+        source: selectedCatalogItem || barcodeResult ? 'catalog' : 'manual'
+      }
+
+      if (selectedCatalogItem) {
+        payload.food_product_family_id = selectedCatalogItem.product_family_id
+        if (selectedCatalogItem.skus?.[0]?.sku_id) {
+          payload.food_sku_id = selectedCatalogItem.skus[0].sku_id
+        }
+      } else if (barcodeResult) {
+        payload.food_product_family_id = barcodeResult.product_family?.id
+        payload.food_sku_id = barcodeResult.food_sku_id
+      } else {
+        payload.brand_free_text = brandText.trim() || 'Diğer'
+        payload.product_free_text = productText.trim() || 'Mama'
+        payload.food_form = foodForm
+      }
+
+      const res = await fetch(`/api/pets/${pet.id}/nutrition/assignments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          food_brand: fd.get('food_brand'),
-          food_product: fd.get('food_product'),
-          food_type: fd.get('food_type'),
-          daily_grams: fd.get('daily_grams'),
-        }),
+        body: JSON.stringify(payload)
       })
 
-      // 2. Update Inventory (Stock)
-      await fetch(`/api/pets/${pet.id}/nutrition/inventory`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          current_stock_grams: fd.get('current_stock_grams'),
-          estimated_daily_usage: fd.get('daily_grams'), // Sync
-        }),
-      })
+      const json = await res.json()
 
+      if (!res.ok) {
+        if (res.status === 409 || json.error === 'ACTIVE_PRIMARY_FOOD_EXISTS') {
+          setApiErrorMessage('Bu pet için halihazırda aktif bir mama kaydı mevcuttur.')
+        } else {
+          setApiErrorMessage(json.message || json.error || 'Mama kaydı oluşturulamadı.')
+        }
+        return
+      }
+
+      setShowAddModal(false)
+      resetModalState()
       router.refresh()
     } finally {
       setLoading(false)
     }
+  }
+
+  // ── Submit Assignment Edit ──
+  async function handleUpdateAssignment(e: React.FormEvent) {
+    e.preventDefault()
+    if (!editingAssignment) return
+    setLoading(true)
+    setApiErrorMessage(null)
+
+    try {
+      const res = await fetch(`/api/pets/${pet.id}/nutrition/assignments/${editingAssignment.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          daily_target_grams: Number(editingAssignment.daily_target_grams),
+          meals_per_day: Number(editingAssignment.meals_per_day)
+        })
+      })
+
+      const json = await res.json()
+
+      if (!res.ok) {
+        setApiErrorMessage(json.message || 'Güncelleme yapılamadı.')
+        return
+      }
+
+      setEditingAssignment(null)
+      router.refresh()
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ── Save Allergy and Sensitivity Notes ──
+  async function handleSaveAllergies(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setLoading(true)
+    const fd = new FormData(e.currentTarget)
+    const allergyRaw = fd.get('allergy_info')?.toString() || ''
+    const allergyArray = allergyRaw.split(',').map(s => s.trim()).filter(Boolean)
+    const sensitivityNotes = fd.get('sensitivity_notes')?.toString() || ''
+
+    try {
+      await fetch(`/api/pets/${pet.id}/nutrition/profile`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          allergy_info: allergyArray,
+          sensitivity_notes: sensitivityNotes
+        })
+      })
+      router.refresh()
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function resetModalState() {
+    setSelectedCatalogItem(null)
+    setBarcodeResult(null)
+    setBarcodeError(null)
+    setShowBarcodeCamera(false)
+    setSearchQuery('')
+    setSearchResults([])
+    setBarcodeInput('')
+    setBrandText('')
+    setProductText('')
+    setFoodForm('dry')
+    setGramsInput(100)
+    setMealsInput(2)
+    setPortionMode('daily')
+    setApiErrorMessage(null)
   }
 
   async function handleAddLog(e: React.FormEvent<HTMLFormElement>) {
@@ -118,7 +311,7 @@ export default function NutritionClient({
   }
 
   return (
-    <div className="flex flex-col gap-6 pb-32 pb-safe w-full mx-auto">
+    <div className="flex flex-col gap-6 pb-32 pb-safe w-full mx-auto max-w-2xl px-3 sm:px-0">
       {/* Header */}
       <Link href={`/owner/pets/${pet.id}`} className="flex items-center gap-2 text-[14px] font-bold text-text-secondary hover:text-primary transition-colors group -mb-2">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:-translate-x-0.5 transition-transform"><polyline points="15 18 9 12 15 6"/></svg>
@@ -153,7 +346,10 @@ export default function NutritionClient({
             icon="🍗"
             gradient="from-amber-50 to-orange-50"
             iconBg="bg-amber-100 text-amber-700"
-            onClick={() => setShowScanner(true)}
+            onClick={() => {
+              setShowAddModal(true)
+              setAddMode('search')
+            }}
             onDismiss={() => setDismissedBanner(true)}
           />
         </div>
@@ -170,7 +366,7 @@ export default function NutritionClient({
         <div className="flex gap-1 bg-bg-main p-1 rounded-2xl border border-border-main overflow-x-auto hide-scrollbar">
           {TABS.map(t => (
             <button key={t} onClick={() => setActiveTab(t)}
-              className={`flex-1 min-w-max px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all whitespace-nowrap ${activeTab === t ? 'bg-white text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary'}`}>
+              className={`flex-1 min-w-max px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all whitespace-nowrap min-h-[44px] ${activeTab === t ? 'bg-white text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary'}`}>
               {t}
             </button>
           ))}
@@ -180,86 +376,154 @@ export default function NutritionClient({
       {/* ── Tab: Mama & Stok ── */}
       {activeTab === 'Mama & Stok' && (
         <div className="flex flex-col gap-4 animate-fadeIn">
-          {/* Stok Durumu Özeti */}
+          {/* Active Primary Food OR Empty State */}
+          {!activePrimary ? (
+            <div className="card-base p-6 text-center flex flex-col items-center gap-3 border-2 border-dashed border-border-main bg-surface/50">
+              <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-[28px]">
+                🥣
+              </div>
+              <div>
+                <h3 className="font-extrabold text-[18px] text-text-primary">Mama bilgilerini ekle</h3>
+                <p className="text-[13px] text-text-secondary mt-1 max-w-sm">
+                  Öğün düzenini oluşturmak ve ileride stok takibi yapmak için kullandığı mamayı ekleyin.
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowAddModal(true)
+                  setAddMode('search')
+                }}
+                className="btn-primary min-h-[48px] px-8 text-[14px] font-bold mt-2 shadow-md shadow-primary/20"
+              >
+                Mama ekle
+              </button>
+            </div>
+          ) : (
+            <div className="card-base p-5 border-l-4 border-l-primary flex flex-col gap-3 relative">
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className="bg-primary/10 text-primary text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                    Aktif Mama
+                  </span>
+                  <h3 className="font-extrabold text-text-primary text-[18px] mt-1 leading-tight">
+                    {activePrimary.food_product_family?.brand?.display_name || activePrimary.brand_free_text || 'Mama'}
+                  </h3>
+                  <p className="text-[13px] text-text-secondary font-medium">
+                    {activePrimary.food_product_family?.official_name || activePrimary.product_free_text || 'Özel Formül'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setEditingAssignment(activePrimary)}
+                  className="px-4 py-2 bg-bg-main hover:bg-border-main text-text-primary font-bold text-[13px] rounded-xl transition-colors min-h-[44px] flex items-center"
+                >
+                  Düzenle
+                </button>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 bg-bg-main p-3 rounded-xl mt-1">
+                <div>
+                  <p className="text-[10px] font-bold text-text-secondary uppercase">Form</p>
+                  <p className="text-[12px] font-extrabold text-text-primary truncate">
+                    {getFoodFormLabel(activePrimary.food_product_family?.food_form || activePrimary.food_form)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-text-secondary uppercase">Günlük Hedef</p>
+                  <p className="text-[12px] font-extrabold text-text-primary">
+                    {activePrimary.daily_target_grams || 0} g
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-text-secondary uppercase">Öğün Başı</p>
+                  <p className="text-[12px] font-extrabold text-text-primary">
+                    {Math.round((activePrimary.daily_target_grams || 0) / (activePrimary.meals_per_day || 1))} g ({activePrimary.meals_per_day || 1} öğün)
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Stock Overview */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="card-base p-5 border-l-4 border-l-primary">
+            <div className="card-base p-5 border-l-4 border-l-amber-500">
               <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest mb-1">Mevcut Mama</p>
-              <p className="font-bold text-text-primary text-[16px] leading-tight">{profile?.food_brand || 'Marka Girilmedi'}</p>
-              <p className="text-[12px] text-text-secondary">{profile?.food_product}</p>
+              <p className="font-bold text-text-primary text-[15px] leading-tight">
+                {activePrimary?.food_product_family?.brand?.display_name || activePrimary?.brand_free_text || 'Eklenmedi'}
+              </p>
+              <p className="text-[12px] text-text-secondary">
+                {activePrimary?.food_product_family?.official_name || activePrimary?.product_free_text || ''}
+              </p>
             </div>
             <div className="card-base p-5 relative overflow-hidden">
               <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest mb-1">Kalan Stok</p>
-              <p className={`font-black text-[24px] ${badgeClass}`}>{currentStock ? `${(currentStock / 1000).toFixed(1)} kg` : 'Yok'}</p>
-              <p className="text-[12px] font-bold text-text-secondary">Tahmini: {riskLabel}</p>
+              <p className={`font-black text-[22px] ${badgeClass}`}>
+                {currentStock ? `${(currentStock / 1000).toFixed(1)} kg` : 'Stok Belirtilmedi'}
+              </p>
+              <p className="text-[11px] font-bold text-text-secondary">{riskLabel}</p>
             </div>
+          </div>
+
+          {/* Alerji & Hassasiyet Bilgileri (Korunan Profil Alanı) */}
+          <div className="card-base p-5 flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-[18px]">⚠️</span>
+              <h3 className="font-extrabold text-[15px] text-text-primary">Alerji ve Hassasiyet Notları</h3>
+            </div>
+            <form onSubmit={handleSaveAllergies} className="flex flex-col gap-3">
+              <div>
+                <label className="text-[12px] font-bold text-text-secondary">Bilinen Alerjiler (Virgülle Ayırın)</label>
+                <input
+                  name="allergy_info"
+                  defaultValue={Array.isArray(profile?.allergy_info) ? profile.allergy_info.join(', ') : profile?.allergy_info || ''}
+                  placeholder="Örn: Tavuk eti, Sığır eti, Tahıl"
+                  className="input-base min-h-[44px] text-[13px]"
+                />
+              </div>
+              <div>
+                <label className="text-[12px] font-bold text-text-secondary">Özel Hassasiyet / Sindirim Notları</label>
+                <textarea
+                  name="sensitivity_notes"
+                  defaultValue={profile?.sensitivity_notes || ''}
+                  placeholder="Örn: Mide hassasiyeti var, soğuk su içince kusabilir."
+                  rows={2}
+                  className="input-base text-[13px] py-2"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-secondary min-h-[44px] text-[13px] font-bold self-end px-6"
+              >
+                Alerji Notlarını Kaydet
+              </button>
+            </form>
           </div>
 
           {/* Premium Akıllı Tarama Banner */}
           <div 
-            onClick={() => setShowScanner(true)}
-            className="card-base p-6 bg-gradient-to-r from-primary to-primary-soft text-white relative overflow-hidden group cursor-pointer shadow-lg shadow-primary/30 mt-2"
+            onClick={() => {
+              setShowAddModal(true)
+              setAddMode('barcode')
+            }}
+            className="card-base p-5 bg-gradient-to-r from-primary to-primary-soft text-white relative overflow-hidden group cursor-pointer shadow-lg shadow-primary/20 min-h-[48px]"
           >
-            <div className="absolute right-[-10px] bottom-[-20px] opacity-20 group-hover:scale-110 group-hover:-rotate-12 transition-transform duration-500">
-              <svg viewBox="0 0 32 32" className="w-[100px] h-[100px] drop-shadow-sm"><rect x="4" y="8" width="24" height="18" rx="4" fill="#fff" stroke="url(#cam-grad)" strokeWidth="2"/><circle cx="16" cy="17" r="5" fill="url(#cam-grad)"/><path d="M12 8l2-4h4l2 4" fill="#fff" stroke="url(#cam-grad)" strokeWidth="2" strokeLinecap="round"/><defs><linearGradient id="cam-grad" x1="4" y1="4" x2="28" y2="26" gradientUnits="userSpaceOnUse"><stop stopColor="#F472B6"/><stop offset="1" stopColor="#DB2777"/></linearGradient></defs></svg>
-            </div>
-            <div className="flex flex-col gap-2 relative z-10">
-              <div className="flex items-center gap-2">
-                <span className="bg-white/20 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider backdrop-blur-sm">Odi Premium</span>
-                <h3 className="font-extrabold text-[18px] leading-tight">Akıllı Tarama ile Diyet Değişimi</h3>
+            <div className="flex items-center justify-between relative z-10">
+              <div className="flex items-center gap-3">
+                <span className="text-[24px]">📷</span>
+                <div>
+                  <h3 className="font-extrabold text-[15px]">Barkod ile Mama Ekle</h3>
+                  <p className="text-[12px] text-white/90 font-medium">Paket üzerindeki barkodu okutarak mamayı saniyeler içinde ekleyin</p>
+                </div>
               </div>
-              <p className="text-[13px] text-white/90 font-medium max-w-[85%] leading-relaxed">
-                Mama paketinin fotoğrafını çekin, marka, stok ve bitiş tarihini yapay zeka saniyeler içinde ayarlasın.
-              </p>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
           </div>
-
-          <form onSubmit={handleUpdateBrandAndStock} className="card-base p-6 flex flex-col gap-6 mt-2">
-            <h3 className="font-extrabold text-[16px] text-text-primary">Manuel Olarak Güncelle</h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div className="flex flex-col gap-2">
-                <label className="text-[12px] font-bold text-text-secondary">Marka *</label>
-                <input name="food_brand" defaultValue={profile?.food_brand || ''} className="input-base" placeholder="Örn: Royal Canin" required/>
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-[12px] font-bold text-text-secondary">Ürün / Çeşit</label>
-                <input name="food_product" defaultValue={profile?.food_product || ''} className="input-base" placeholder="Örn: Sterilised 37"/>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-5">
-              <div className="flex flex-col gap-2">
-                <label className="text-[12px] font-bold text-text-secondary">Mama Türü</label>
-                <select name="food_type" defaultValue={profile?.food_type || 'dry'} className="input-base">
-                  <option value="dry">Kuru Mama</option>
-                  <option value="wet">Yaş Mama</option>
-                  <option value="raw">Çiğ / BARF</option>
-                </select>
-              </div>
-              <div className="flex flex-col gap-2 relative">
-                <label className="text-[13px] font-bold text-text-primary">Günlük Tüketim (Ortalama)</label>
-                <StepperInput name="daily_grams" min={1} step={10} unit="gram" defaultValue={profile?.daily_grams || ''} placeholder="Örn: 50" required className="w-full sm:w-fit" />
-                <CoachMark hintKey="nutrition_daily" title="Günlük Tüketim Önemli" message="Köpeğinizin yaşına ve kilosuna göre günlük gramajı belirlemek sağlıklı gelişim için kritiktir." icon="🥣" position="top" />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2 border-t border-border-main pt-5 mt-2">
-              <label className="text-[12px] font-bold text-text-primary">Yeni Paket Açıldı mı?</label>
-              <p className="text-[11px] text-text-secondary mb-2">Güncel stoğunuzu gram cinsinden girin (Örn: 2 kg = 2000 gram)</p>
-              <input name="current_stock_grams" type="number" defaultValue={currentStock || ''} className="input-base" placeholder="Mevcut gramaj"/>
-            </div>
-
-            <button type="submit" disabled={loading} className="btn-primary min-h-[50px] flex items-center justify-center mt-2 shadow-lg shadow-primary/20">
-              {loading ? 'Kaydediliyor...' : 'Bilgileri Kaydet'}
-            </button>
-          </form>
         </div>
       )}
 
       {/* ── Tab: Öğünler & Hatırlatıcı ── */}
       {activeTab === 'Öğünler & Hatırlatıcı' && (
         <div className="flex flex-col gap-4 animate-fadeIn">
-          {/* Günlük Giriş */}
           <form onSubmit={handleAddLog} className="card-base p-6">
             <h3 className="font-extrabold text-[15px] text-text-primary mb-4">Öğün Kaydet</h3>
             <div className="flex flex-col gap-4">
@@ -273,7 +537,7 @@ export default function NutritionClient({
                   <StepperInput name="appetite_score" min={1} max={5} step={1} defaultValue="5" required className="w-full" />
                 </div>
               </div>
-              <button type="submit" disabled={loading} className="btn-primary w-full min-h-[50px] flex items-center justify-center">Kaydet</button>
+              <button type="submit" disabled={loading} className="btn-primary w-full min-h-[48px] flex items-center justify-center">Kaydet</button>
             </div>
           </form>
 
@@ -313,7 +577,7 @@ export default function NutritionClient({
                 <label className="text-[13px] font-bold text-text-primary">Kilo *</label>
                 <StepperInput name="weight_kg" step={0.1} unit="kg" placeholder="Örn: 4.5" required className="w-full sm:w-fit" />
               </div>
-              <button type="submit" disabled={loading} className="btn-primary px-8 min-h-[50px] flex items-center justify-center">Ekle</button>
+              <button type="submit" disabled={loading} className="btn-primary px-8 min-h-[48px] flex items-center justify-center">Ekle</button>
             </div>
           </form>
 
@@ -332,6 +596,318 @@ export default function NutritionClient({
           )}
         </div>
       )}
+
+      {/* ── MAMA EKLEME MODAL (Food Setup Modal) ── */}
+      <Modal isOpen={showAddModal} onClose={() => { setShowAddModal(false); resetModalState() }} title="Mama Ekle">
+        <div className="flex flex-col gap-4">
+          {/* Mode Tabs */}
+          <div className="flex bg-bg-main p-1 rounded-xl border border-border-main">
+            <button
+              onClick={() => { setAddMode('search'); setSelectedCatalogItem(null); setBarcodeResult(null) }}
+              className={`flex-1 py-2 text-[12px] font-bold rounded-lg transition-colors min-h-[44px] ${addMode === 'search' ? 'bg-white text-primary shadow-sm' : 'text-text-secondary'}`}
+            >
+              🔍 Mamayı Ara
+            </button>
+            <button
+              onClick={() => { setAddMode('barcode'); setSelectedCatalogItem(null); setBarcodeResult(null) }}
+              className={`flex-1 py-2 text-[12px] font-bold rounded-lg transition-colors min-h-[44px] ${addMode === 'barcode' ? 'bg-white text-primary shadow-sm' : 'text-text-secondary'}`}
+            >
+              📷 Barkod ile Bul
+            </button>
+            <button
+              onClick={() => { setAddMode('manual'); setSelectedCatalogItem(null); setBarcodeResult(null) }}
+              className={`flex-1 py-2 text-[12px] font-bold rounded-lg transition-colors min-h-[44px] ${addMode === 'manual' ? 'bg-white text-primary shadow-sm' : 'text-text-secondary'}`}
+            >
+              ✍️ Listede Yok / Elle
+            </button>
+          </div>
+
+          {apiErrorMessage && (
+            <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-[13px] font-bold rounded-xl">
+              ⚠️ {apiErrorMessage}
+            </div>
+          )}
+
+          {/* Mode 1: Search */}
+          {addMode === 'search' && !selectedCatalogItem && (
+            <div className="flex flex-col gap-3">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => handleSearch(e.target.value)}
+                placeholder="Mama markası veya ürün adı yazın..."
+                className="input-base min-h-[48px] text-[14px]"
+              />
+
+              {isSearching && <p className="text-[13px] text-text-secondary font-bold text-center py-4">Katalog aranıyor...</p>}
+
+              {!isSearching && searchQuery.length >= 2 && searchResults.length === 0 && (
+                <div className="p-4 text-center bg-bg-main rounded-xl flex flex-col items-center gap-2">
+                  <p className="text-[13px] text-text-secondary font-medium">Aradığınız mama katalogda bulunamadı.</p>
+                  <button
+                    onClick={() => { setAddMode('manual'); setBrandText(searchQuery) }}
+                    className="btn-secondary text-[13px] font-bold py-2 px-4 min-h-[44px]"
+                  >
+                    Listede yok, elle ekle ✍️
+                  </button>
+                </div>
+              )}
+
+              <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
+                {searchResults.map(item => (
+                  <div
+                    key={item.product_family_id}
+                    onClick={() => setSelectedCatalogItem(item)}
+                    className="p-3 border border-border-main rounded-xl hover:border-primary/50 cursor-pointer bg-white transition-colors"
+                  >
+                    <p className="font-extrabold text-[14px] text-text-primary">{item.brand?.display_name}</p>
+                    <p className="text-[12px] text-text-secondary font-medium">{item.official_name}</p>
+                    <span className="inline-block mt-1 text-[10px] font-bold px-2 py-0.5 bg-primary/10 text-primary rounded-md">
+                      {getFoodFormLabel(item.food_form)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Mode 2: Barcode */}
+          {addMode === 'barcode' && !barcodeResult && (
+            <div className="flex flex-col gap-3">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={barcodeInput}
+                  onChange={e => setBarcodeInput(e.target.value)}
+                  placeholder="Barkod numarasını girin..."
+                  className="input-base flex-1 min-h-[48px] text-[14px]"
+                />
+                <button
+                  onClick={() => handleBarcodeLookup(barcodeInput)}
+                  disabled={isBarcodeSearching || !barcodeInput.trim()}
+                  className="btn-primary px-4 min-h-[48px] text-[13px] font-bold"
+                >
+                  Bul
+                </button>
+              </div>
+
+              {/* Kamera Tarama Seçeneği */}
+              <button
+                type="button"
+                onClick={() => setShowBarcodeCamera(true)}
+                className="btn-secondary min-h-[44px] flex items-center justify-center gap-2 text-[13px] font-bold"
+              >
+                📷 Kamerayı Aç ve EAN/UPC Barkodu Tara
+              </button>
+
+              {isBarcodeSearching && <p className="text-[13px] text-text-secondary font-bold text-center py-4">Barkod sorgulanıyor...</p>}
+
+              {barcodeError && (
+                <div className="p-4 text-center bg-amber-50 border border-amber-200 rounded-xl flex flex-col items-center gap-2">
+                  <p className="text-[13px] text-amber-800 font-medium">{barcodeError}</p>
+                  <button
+                    onClick={() => setAddMode('manual')}
+                    className="btn-primary text-[13px] font-bold py-2 px-4 min-h-[44px]"
+                  >
+                    Listede Yok, Elle Ekle ✍️
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Selected Item Preview (Search or Barcode) */}
+          {(selectedCatalogItem || barcodeResult) && (
+            <div className="p-3 bg-primary/5 border border-primary/20 rounded-xl flex justify-between items-center">
+              <div>
+                <p className="text-[11px] font-bold text-primary uppercase">Seçilen Katalog Ürünü</p>
+                <p className="font-black text-[15px] text-text-primary">
+                  {selectedCatalogItem?.brand?.display_name || barcodeResult?.brand?.display_name}
+                </p>
+                <p className="text-[12px] text-text-secondary">
+                  {selectedCatalogItem?.official_name || barcodeResult?.product_family?.official_name}
+                </p>
+              </div>
+              <button
+                onClick={() => { setSelectedCatalogItem(null); setBarcodeResult(null) }}
+                className="text-[12px] text-red-500 font-bold hover:underline min-h-[44px] px-2"
+              >
+                Değiştir
+              </button>
+            </div>
+          )}
+
+          {/* Mode 3: Manual Input Fields */}
+          {addMode === 'manual' && (
+            <div className="flex flex-col gap-3">
+              <div>
+                <label className="text-[12px] font-bold text-text-secondary">Mama Markası *</label>
+                <input
+                  type="text"
+                  value={brandText}
+                  onChange={e => setBrandText(e.target.value)}
+                  placeholder="Örn: Ev Yapımı / Özel Marka"
+                  className="input-base min-h-[44px]"
+                />
+              </div>
+              <div>
+                <label className="text-[12px] font-bold text-text-secondary">Ürün / Çeşit Adı</label>
+                <input
+                  type="text"
+                  value={productText}
+                  onChange={e => setProductText(e.target.value)}
+                  placeholder="Örn: Tavuklu ve Pirinçli Formül"
+                  className="input-base min-h-[44px]"
+                />
+              </div>
+              <div>
+                <label className="text-[12px] font-bold text-text-secondary">Mama Formu *</label>
+                <select
+                  value={foodForm}
+                  onChange={e => setFoodForm(e.target.value)}
+                  className="input-base min-h-[44px]"
+                >
+                  {FOOD_FORM_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* Portion & Meals Step (Common for all selections) */}
+          {(selectedCatalogItem || barcodeResult || addMode === 'manual') && (
+            <form onSubmit={handleCreateAssignment} className="flex flex-col gap-4 border-t border-border-main pt-4">
+              <div className="flex flex-col gap-2">
+                <label className="text-[12px] font-bold text-text-secondary">Miktar Giriş Tipi</label>
+                <div className="flex bg-bg-main p-1 rounded-lg">
+                  <button
+                    type="button"
+                    onClick={() => setPortionMode('daily')}
+                    className={`flex-1 py-1.5 text-[12px] font-bold rounded-md min-h-[44px] ${portionMode === 'daily' ? 'bg-white text-primary shadow-sm' : 'text-text-secondary'}`}
+                  >
+                    Günlük Toplam Gram
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPortionMode('meal')}
+                    className={`flex-1 py-1.5 text-[12px] font-bold rounded-md min-h-[44px] ${portionMode === 'meal' ? 'bg-white text-primary shadow-sm' : 'text-text-secondary'}`}
+                  >
+                    Öğün Başı Gram
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[12px] font-bold text-text-secondary">
+                    {portionMode === 'daily' ? 'Günlük Gramaj *' : 'Öğün Başı Gram *'}
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={gramsInput}
+                    onChange={e => setGramsInput(Math.max(1, parseInt(e.target.value) || 0))}
+                    className="input-base min-h-[44px]"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-[12px] font-bold text-text-secondary">Günlük Öğün Sayısı *</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="24"
+                    value={mealsInput}
+                    onChange={e => setMealsInput(Math.min(24, Math.max(1, parseInt(e.target.value) || 1)))}
+                    className="input-base min-h-[44px]"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Calculation Summary Banner */}
+              <div className="p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-[13px] font-bold text-center">
+                Özet: Günde {mealsInput} öğün × {computedPerMealGrams} g = {computedDailyGrams} g
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-primary min-h-[48px] w-full text-[14px] font-bold shadow-md shadow-primary/20"
+              >
+                {loading ? 'Kaydediliyor...' : 'Mama Kaydını Tamamla'}
+              </button>
+            </form>
+          )}
+        </div>
+      </Modal>
+
+      {/* ── EDIT ASSIGNMENT MODAL ── */}
+      <Modal isOpen={!!editingAssignment} onClose={() => setEditingAssignment(null)} title="Mama Düzenle">
+        {editingAssignment && (
+          <form onSubmit={handleUpdateAssignment} className="flex flex-col gap-4">
+            {apiErrorMessage && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-[13px] font-bold rounded-xl">
+                ⚠️ {apiErrorMessage}
+              </div>
+            )}
+
+            <div>
+              <p className="text-[11px] font-bold text-text-secondary uppercase">Mama Bilgisi</p>
+              <p className="font-extrabold text-[16px] text-text-primary">
+                {editingAssignment.food_product_family?.brand?.display_name || editingAssignment.brand_free_text || 'Mama'}
+              </p>
+            </div>
+
+            <div>
+              <label className="text-[12px] font-bold text-text-secondary">Günlük Toplam Gram *</label>
+              <input
+                type="number"
+                min="1"
+                value={editingAssignment.daily_target_grams || ''}
+                onChange={e => setEditingAssignment({ ...editingAssignment, daily_target_grams: e.target.value })}
+                className="input-base min-h-[44px]"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="text-[12px] font-bold text-text-secondary">Günlük Öğün Sayısı *</label>
+              <input
+                type="number"
+                min="1"
+                max="24"
+                value={editingAssignment.meals_per_day || ''}
+                onChange={e => setEditingAssignment({ ...editingAssignment, meals_per_day: e.target.value })}
+                className="input-base min-h-[44px]"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary min-h-[48px] w-full text-[14px] font-bold mt-2"
+            >
+              {loading ? 'Güncelleniyor...' : 'Değişiklikleri Kaydet'}
+            </button>
+          </form>
+        )}
+      </Modal>
+
+      {/* Real EAN/UPC Barcode Camera Scanner */}
+      {showBarcodeCamera && (
+        <BarcodeScanner
+          onScanSuccess={(code) => {
+            setShowBarcodeCamera(false)
+            setBarcodeInput(code)
+            handleBarcodeLookup(code)
+          }}
+          onClose={() => setShowBarcodeCamera(false)}
+        />
+      )}
+
       {showScanner && (
         <SmartScanner 
           petId={pet.id} 

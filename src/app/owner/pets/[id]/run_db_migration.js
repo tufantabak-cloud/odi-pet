@@ -11,38 +11,7 @@ const supabase = createClient(
 );
 
 async function run() {
-  console.log("Applying column updates using RPC connection...");
-  
-  // First attempt: Create a generic DDL executor
-  const ddlHelperSql = `
-    CREATE OR REPLACE FUNCTION public.execute_ddl(ddl text)
-    RETURNS void AS $$
-    BEGIN
-      EXECUTE ddl;
-    END;
-    $$ LANGUAGE plpgsql SECURITY DEFINER;
-  `;
-  
-  const alterPetsSql = `
-    ALTER TABLE public.pets 
-    ADD COLUMN IF NOT EXISTS cover_url TEXT,
-    ADD COLUMN IF NOT EXISTS cover_position TEXT DEFAULT 'center';
-  `;
-
-  // We can try to use a postgres query or execute DDL if execute_ddl function already exists,
-  // or we can invoke SQL directly using the REST interface if possible.
-  // Since we have the service role key, we can try to call execute_ddl.
-  try {
-    const { error: err } = await supabase.rpc('execute_ddl', { ddl: alterPetsSql });
-    if (err) {
-      console.log("RPC execute_ddl failed, probably doesn't exist yet.", err.message);
-      console.log("Since Supabase REST RPC requires the function to exist, you should execute this SQL query in your Supabase SQL Editor Dashboard:");
-      console.log("\n========================================");
-      console.log(alterPetsSql.trim());
-      console.log("========================================\n");
-    } else {
-      console.log("Database columns cover_url and cover_position successfully added!");
-    }
+  throw new Error('SECURITY_NOTICE: RPC execute_ddl HAS BEEN REMOVED FOR SECURITY REASONS. Please use Supabase CLI (`npx supabase db push` or `npx supabase migration`) or standard direct migration execution to apply DDL.');
   } catch (ex) {
     console.error("Execution failed:", ex);
   }
