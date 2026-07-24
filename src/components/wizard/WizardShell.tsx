@@ -24,6 +24,8 @@ interface WizardShellProps {
   isSubmitting?: boolean;
   nextText?: string;
   skipText?: string;
+  /** Son adımdaki kaydet butonu metni (varsayılan: "Planı Kaydet") */
+  submitText?: string;
   /** Düzenleme modu: tüm adımlar tek sayfada açık form olarak gösterilir */
   editAll?: boolean;
 }
@@ -40,6 +42,7 @@ export function WizardShell({
   isSubmitting = false,
   nextText = 'Devam et',
   skipText = 'Atla',
+  submitText = 'Planı Kaydet',
   editAll = false,
 }: WizardShellProps) {
   const router = useRouter();
@@ -201,7 +204,7 @@ export function WizardShell({
                       }`}
                     style={{ backgroundColor: (isNextDisabled || isSubmitting) ? undefined : theme.progressColor }}
                   >
-                    {isSubmitting ? 'Kaydediliyor...' : (isLastStep ? 'Planı Kaydet' : nextText)}
+                    {isSubmitting ? 'Kaydediliyor...' : (isLastStep ? submitText : nextText)}
                   </button>
 
                   {canSkip && !isLastStep && (

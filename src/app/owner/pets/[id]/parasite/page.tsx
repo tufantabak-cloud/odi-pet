@@ -1,42 +1,10 @@
-import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
-import { getCurrentProfile } from '@/lib/auth/get-current-profile'
-import { redirect, notFound } from 'next/navigation'
-import ParasiteClient from './ParasiteClient'
+import { redirect } from 'next/navigation';
 
 type PageProps = {
   params: Promise<{ id: string }>;
 };
 
 export default async function PetParasitePage(props: PageProps) {
-  const { id } = await props.params
-  const profile = await getCurrentProfile()
-  if (!profile) redirect('/login')
-
-  const isAdmin = profile.role === 'admin' || profile.role === 'founder'
-  const supabase = isAdmin ? createAdminSupabaseClient() : await createServerSupabaseClient()
-
-  if (!isAdmin) {
-    // Verify ownership
-    const { data: ownership } = await supabase
-      .from('pet_owners')
-      .select('pet_id')
-      .eq('pet_id', id)
-      .eq('profile_id', profile.id)
-      .single()
-
-    if (!ownership) notFound()
-  }
-
-  // Fetch pet
-  const { data: pet } = await supabase
-    .from('pets')
-    .select('id, name, species, avatar_url, birth_date')
-    .eq('id', id)
-    .single()
-
-  if (!pet) notFound()
-
-  return (
-    <ParasiteClient pet={pet} />
-  )
+  const { id } = await props.params;
+  redirect(`/owner/pets/${id}?tab=parasite`);
 }

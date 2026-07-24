@@ -1,0 +1,124 @@
+import {
+  AgendaReadHandler,
+  PetAgendaEvent,
+  AgendaIdentity,
+  AgendaMatchResult,
+  AgendaNormalizationContext,
+  AgendaDateRange,
+  AgendaActionDescriptor,
+  AgendaDisplayMetadata,
+  deriveDateKey
+} from '../types';
+
+export class NutritionLogReadHandler implements AgendaReadHandler {
+  readonly category = 'beslenme';
+
+  normalizePlan(plan: any, context: AgendaNormalizationContext): PetAgendaEvent {
+    const scheduledAt = plan.scheduled_at || null;
+    const dateKey = deriveDateKey(scheduledAt, context.timeZone);
+
+    return {
+      eventId: `plan_${plan.id}`,
+      source: 'plans',
+      sourceRecordId: plan.id,
+      category: 'beslenme',
+      subCategory: plan.sub_type || 'Mama Saati',
+      stableIdentity: `beslenme:${(plan.sub_type || 'mama').toLowerCase().replace(/\s+/g, '_')}`,
+      occurrenceIdentity: null,
+      fallbackIdentity: `beslenme:${plan.id}_${dateKey}`,
+      mainPlanId: plan.id,
+      parentPlanId: null,
+      scheduledAt,
+      occurrenceScheduledAt: null,
+      actualAt: plan.completed_at || null,
+      nextDueAt: plan.repeat_rule ? scheduledAt : null,
+      dateKey,
+      sourceStatus: plan.status,
+      lifecycleType: 'plan',
+      displayStatus: plan.status === 'completed' ? 'completed' : dateKey < context.todayStr ? 'overdue' : 'upcoming',
+      status: plan.status === 'completed' ? 'completed' : dateKey < context.todayStr ? 'overdue' : 'upcoming',
+      repeatRule: plan.repeat_rule || null,
+      isVirtual: false,
+      isActionable: plan.status === 'active',
+      displayMetadata: {
+        title: plan.sub_type || 'Mama Saati',
+        note: plan.note,
+        extraData: plan.extra_data
+      },
+      actionDescriptors: [
+        { type: 'complete', targetSource: 'plan', targetId: plan.id, enabled: plan.status === 'active' },
+        { type: 'edit', targetSource: 'plan', targetId: plan.id, enabled: true },
+        { type: 'delete', targetSource: 'plan', targetId: plan.id, enabled: true }
+      ]
+    };
+  }
+
+  normalizeActualRecord(record: any, context: AgendaNormalizationContext): PetAgendaEvent {
+    const loggedAt = record.logged_at || record.created_at;
+    const dateKey = deriveDateKey(loggedAt, context.timeZone);
+
+    return {
+      eventId: `nutrition_${record.id}`,
+      source: 'nutrition_logs',
+      sourceRecordId: record.id,
+      category: 'beslenme',
+      subCategory: 'Beslenme Kaydı',
+      stableIdentity: `beslenme:log_${record.id}`,
+      occurrenceIdentity: null,
+      fallbackIdentity: `beslenme:log_${dateKey}`,
+      mainPlanId: null,
+      parentPlanId: null,
+      scheduledAt: loggedAt,
+      occurrenceScheduledAt: loggedAt,
+      actualAt: loggedAt,
+      nextDueAt: null,
+      dateKey,
+      sourceStatus: 'completed',
+      lifecycleType: 'nutrition_log',
+      displayStatus: 'completed',
+      status: 'completed',
+      repeatRule: null,
+      isVirtual: false,
+      isActionable: false,
+      displayMetadata: {
+        title: record.food_name ? `Beslenme: ${record.food_name}` : 'Beslenme Kaydı',
+        note: record.notes,
+        extraData: record
+      },
+      actionDescriptors: [
+        { type: 'delete', targetSource: 'nutrition_log', targetId: record.id, enabled: true },
+        { type: 'view', targetSource: 'nutrition_log', targetId: record.id, enabled: true }
+      ]
+    };
+  }
+
+  projectOccurrences(mainPlan: any, _range: AgendaDateRange, context: AgendaNormalizationContext): PetAgendaEvent[] {
+    return [this.normalizePlan(mainPlan, context)];
+  }
+
+  getIdentity(input: any, context: AgendaNormalizationContext): AgendaIdentity {
+    const dateKey = deriveDateKey(input.logged_at || input.scheduled_at, context.timeZone);
+    return {
+      category: 'beslenme',
+      baseIdentity: `beslenme:${input.id}`,
+      occurrenceIdentity: null,
+      fallbackIdentity: `beslenme:${input.id}_${dateKey}`
+    };
+  }
+
+  getFallbackMatchCandidates(_record: any, _events: PetAgendaEvent[], _context: AgendaNormalizationContext): AgendaMatchResult {
+    return { status: 'none' };
+  }
+
+  getAllowedActions(event: PetAgendaEvent): any[] {
+    return (event.actionDescriptors || []).map(a => a.type);
+  }
+
+  getActionDescriptors(event: PetAgendaEvent): AgendaActionDescriptor[] {
+    return event.actionDescriptors;
+  }
+
+  getDisplayMetadata(event: PetAgendaEvent): AgendaDisplayMetadata {
+    return event.displayMetadata;
+  }
+}

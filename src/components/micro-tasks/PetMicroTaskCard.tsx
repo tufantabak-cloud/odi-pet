@@ -8,14 +8,24 @@ interface PetMicroTaskCardProps {
   task: PetMicroTask;
   petId: string;
   onDismiss: (id: string) => void;
+  onDirectAction?: (directAction: string) => void;
 }
 
-export function PetMicroTaskCard({ task, petId, onDismiss }: PetMicroTaskCardProps) {
+export function PetMicroTaskCard({
+  task,
+  petId,
+  onDismiss,
+  onDirectAction,
+}: PetMicroTaskCardProps) {
   const router = useRouter();
 
   const handleAction = (e: React.MouseEvent) => {
     e.stopPropagation();
-    router.push(task.route);
+    if (task.directAction && onDirectAction) {
+      onDirectAction(task.directAction);
+    } else {
+      router.push(task.route);
+    }
   };
 
   const handleDismiss = (e: React.MouseEvent) => {

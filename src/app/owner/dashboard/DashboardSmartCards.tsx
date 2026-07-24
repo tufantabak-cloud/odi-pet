@@ -229,7 +229,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
               dateInfo: 'Bugün',
               ctaLabel: 'Takvime Git',
               action: () => {
-                router.push(`/owner/pets/${pet.id}/vaccines`)
+                router.push(`/owner/plan-yap/asi?pet_id=${pet.id}`)
               }
             }
           } else {
@@ -295,7 +295,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
           dateInfo: isOverdue ? 'Gecikti' : 'Bugün',
           ctaLabel: 'Takvime Git',
           action: () => {
-            router.push(`/owner/pets/${pet.id}/vaccines`)
+            router.push(`/owner/plan-yap/asi?pet_id=${pet.id}`)
           }
         })
       }
@@ -549,8 +549,15 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
           activePetId,
           buildPetMicroTasks({
             pet: targetPet,
-            vaccinePlans: null,
-            parasitePlans: null,
+            vaccinePlans: upcomingSchedules?.filter(
+              (s: any) => s.pet_id === activePetId && ((s.sub_category || '').includes('Aşı') || (s.title || '').toLowerCase().includes('aşı'))
+            ) ?? [],
+            parasitePlans: upcomingSchedules?.filter(
+              (s: any) => s.pet_id === activePetId && ((s.sub_category || '').includes('Parazit') || (s.title || '').toLowerCase().includes('parazit'))
+            ) ?? [],
+            carePlans: upcomingSchedules?.filter(
+              (s: any) => s.pet_id === activePetId && (s._plan_category === 'bakim' || s.category === 'Bakım' || s.category === 'bakim')
+            ) ?? [],
             latestWeight: allWeightLogs?.find(w => w.pet_id === activePetId) ?? null,
             nutritionProfile: null,
           }).filter(t => t.type !== 'missing_emergency_contact')
@@ -1019,7 +1026,7 @@ export function SixMonthDashboardCard({ alert, onDismiss }: SixMonthDashboardCar
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
         <button
-          onClick={() => router.push(`/owner/pets/${alert.petId}/vaccines`)}
+          onClick={() => router.push(`/owner/plan-yap/asi?pet_id=${alert.petId}`)}
           className="self-start px-4 py-2 rounded-xl text-[11px] font-800 text-white bg-[var(--color-primary, #5D3FD3)] hover:opacity-90 transition-all active:scale-[0.97]"
         >
           Aşı sayfasına git →

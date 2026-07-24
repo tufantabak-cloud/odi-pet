@@ -44,12 +44,6 @@ export default async function SocialPage() {
       <section className="card-base overflow-hidden relative shadow-lg shadow-primary/5 bg-white p-8 md:p-10 border border-border-main text-center">
         <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-pink-500 via-primary to-violet-600" />
         <div className="relative z-10 flex flex-col items-center max-w-2xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-soft text-primary text-[12px] font-bold uppercase tracking-wider mb-4">
-            Odi.Pet
-          </div>
-          <div className="w-20 h-20 rounded-full bg-primary-soft flex items-center justify-center text-primary text-[42px] mb-5 shadow-inner animate-bounce">
-            🎈
-          </div>
           <h1 className="text-[28px] md:text-[36px] font-black text-text-primary tracking-tight leading-none mb-4">
             Odi.Pet Sosyal Dünyası
           </h1>

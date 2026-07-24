@@ -25,11 +25,27 @@ type BottomNavProps = {
 
 const fallbackActionMenuItems = [
   { label: 'Rutin Planla',     href: '/owner/plan-yap' },
-  { label: 'Kayıt Ekle',       href: '/owner/plan-yap' },
+  { label: 'Kayıt Ekle',       href: '/owner/plan-yap?mode=log' },
   { label: 'Sağlık Kaydı/Aşı',   href: '/owner/pets' },
   { label: 'Akıllı Tarama',    href: '/owner/scanner' },
   { label: 'Durum Kaydet',  href: '/owner/pets' },
 ]
+
+// Hızlı Ekle menüsündeki bir öğenin gideceği asıl yolu çözer.
+// "Kayıt Ekle" = geriye dönük kayıt modu → plan-yap'a mode=log ile yönlendirilir.
+// (DB'den gelen öğe hâlâ sade /owner/plan-yap gösterse bile mode=log eklenir.)
+export function resolveActionHref(item: { label?: string; href: string }) {
+  if (item.label === 'Durum Kaydet') return '/owner/journal/select-pet?redirect=new'
+  if (
+    item.label === 'Kayıt Ekle' &&
+    typeof item.href === 'string' &&
+    item.href.startsWith('/owner/plan-yap') &&
+    !item.href.includes('mode=')
+  ) {
+    return item.href.includes('?') ? `${item.href}&mode=log` : `${item.href}?mode=log`
+  }
+  return item.href
+}
 
 const tabs = [
   {
@@ -155,7 +171,7 @@ export default function BottomNav({
           />
           <div className="relative z-[9991] w-full max-w-lg mx-auto px-[var(--space-4)] pb-[100px] flex flex-col items-end gap-2 pointer-events-none">
             {activeActionMenuItems.map((item: any, index) => {
-              const href = item.label === 'Durum Kaydet' ? '/owner/journal/select-pet?redirect=new' : item.href
+              const href = resolveActionHref(item)
               return (
                 <Link
                   key={item.label}

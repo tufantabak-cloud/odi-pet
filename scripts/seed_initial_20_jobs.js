@@ -9,6 +9,19 @@ if (!supabaseUrl || !serviceRoleKey) {
   process.exit(1);
 }
 
+// ── P0 GÜVENLİK BARİYERİ ──
+const isTestEnv = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true' || process.env.CI === 'true';
+const isLocal = supabaseUrl.includes('localhost') || supabaseUrl.includes('127.0.0.1');
+
+if (!isLocal) {
+  if (isTestEnv) {
+    throw new Error('REFUSING_REMOTE_DATABASE_SEED: Test veya CI ortamında uzak hedefe bağlantı kesinlikle yasaktır.');
+  }
+  if (process.env.ALLOW_REMOTE_SEED !== 'true') {
+    throw new Error('REFUSING_REMOTE_DATABASE_SEED: Uzak üretim veritabanına seed çalıştırmak için ALLOW_REMOTE_SEED=true ortam değişkeni gereklidir.');
+  }
+}
+
 const supabase = createClient(supabaseUrl, serviceRoleKey);
 
 const initial20Topics = [

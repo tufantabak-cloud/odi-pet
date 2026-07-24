@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { getIcon } from '@/lib/navigation/iconMap'
+import { resolveActionHref } from '@/components/BottomNav'
 
 export type NavItem = {
   id: string
@@ -18,11 +19,13 @@ export type NavItem = {
 
 type SideNavProps = {
   actionMenuItems?: NavItem[]
+  bottomNavItems?: NavItem[]
+  menuDrawerItems?: NavItem[]
 }
 
 const fallbackActionMenuItems = [
   { label: 'Rutin Planla',     href: '/owner/plan-yap', icon: 'calendar-plus' },
-  { label: 'Kayıt Ekle',       href: '/owner/plan-yap', icon: 'clipboard-plus' },
+  { label: 'Kayıt Ekle',       href: '/owner/plan-yap?mode=log', icon: 'clipboard-plus' },
   { label: 'Sağlık Kaydı/Aşı',   href: '/owner/pets', icon: 'first-aid-kit' },
   { label: 'Akıllı Tarama',    href: '/owner/scanner', icon: 'scan' },
   { label: 'Durum Kaydet',  href: '/owner/pets', icon: 'notebook' },
@@ -123,12 +126,30 @@ function NavLink({ href, label, icon }: { href: string; label: string; icon: Rea
   )
 }
 
-export default function SideNav({ actionMenuItems }: SideNavProps) {
+export default function SideNav({ actionMenuItems, bottomNavItems, menuDrawerItems }: SideNavProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const activeActionMenuItems = actionMenuItems && actionMenuItems.length > 0
     ? actionMenuItems
     : fallbackActionMenuItems
+
+  const activePrimaryItems = bottomNavItems && bottomNavItems.length > 0
+    ? bottomNavItems
+        .filter(item => item.href !== '#' && item.label !== 'Menü')
+        .map(item => ({
+          href: item.href,
+          label: item.label,
+          icon: getIcon(item.icon, 18)
+        }))
+    : primaryItems
+
+  const activeShortcutItems = menuDrawerItems && menuDrawerItems.length > 0
+    ? menuDrawerItems.map(item => ({
+        href: item.href,
+        label: item.label,
+        icon: getIcon(item.icon, 18)
+      }))
+    : shortcutItems
 
   return (
     <aside className="hidden md:flex w-[220px] shrink-0 flex-col gap-1 p-6 border-r border-border-main sticky top-16 h-[calc(100vh-4rem)] self-start overflow-y-auto">
@@ -147,7 +168,7 @@ export default function SideNav({ actionMenuItems }: SideNavProps) {
             <div className="fixed inset-0 z-[9990]" onClick={() => setIsMenuOpen(false)} />
             <div className="absolute left-0 right-0 mt-2 bg-surface border border-border-main rounded-[14px] shadow-xl p-2 z-[9991] flex flex-col gap-1 animate-in fade-in slide-in-from-top-2 duration-150">
               {activeActionMenuItems.map((item) => {
-                const href = item.label === 'Durum Kaydet' ? '/owner/journal/select-pet?redirect=new' : item.href
+                const href = resolveActionHref(item)
                 return (
                   <Link
                     key={item.label}
@@ -168,14 +189,14 @@ export default function SideNav({ actionMenuItems }: SideNavProps) {
       <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest px-4 mb-2">
         ANA MENÜ
       </p>
-      {primaryItems.map((item) => (
+      {activePrimaryItems.map((item) => (
         <NavLink key={item.href} {...item} />
       ))}
 
       <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest px-4 mb-2 mt-6">
         KISA YOLLAR
       </p>
-      {shortcutItems.map((item) => (
+      {activeShortcutItems.map((item) => (
         <NavLink key={item.href} {...item} />
       ))}
     </aside>

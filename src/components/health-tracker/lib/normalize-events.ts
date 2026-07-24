@@ -165,9 +165,16 @@ export function mapDbToUI(
   return { category: dbCat, subCategory: subCategory || title || 'Diğer' };
 }
 
+
+
 /** health_schedules kaydından status hesapla */
 export function computeStatus(schedule: any): ComputedStatus {
   if (schedule.status === 'done' || schedule.status === 'completed') return 'done';
+
+  const seriesStart = schedule.series_start_at || schedule._series_start_at;
+  if (seriesStart && schedule.due_date && schedule.due_date < seriesStart) {
+    return 'upcoming';
+  }
 
   const now = new Date();
   const dueDate = new Date(schedule.due_date);

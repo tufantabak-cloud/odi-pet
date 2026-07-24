@@ -1,6 +1,53 @@
 import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server';
 import { CreatePlanInput, UpdatePlanInput } from './schema';
 import { normalizeSpecies } from '@/lib/species';
+import { calculateNextBoosterDate } from '@/features/pets/vaccination-algorithm';
+
+export function calculateNextOccurrenceDate(
+  baseScheduledAt: string,
+  repeatRule: string | null,
+  extraData?: any
+): string | null {
+  const baseDate = new Date(baseScheduledAt);
+  if (isNaN(baseDate.getTime())) return null;
+
+  // 1. Vaccine category with a known vaccine_code: use vaccine booster rules engine
+  const vaccineCode = extraData?.vaccine_code || extraData?.vaccine?.code;
+  if (vaccineCode) {
+    try {
+      const { date } = calculateNextBoosterDate(baseScheduledAt, vaccineCode);
+      if (date && !isNaN(date.getTime())) {
+        return date.toISOString();
+      }
+    } catch {
+      /* continue to check explicit repeat_rule */
+    }
+  }
+
+  // 2. Explicit repeat_rule provided by user (hour, daily, weekly, monthly, yearly)
+  if (repeatRule && repeatRule !== 'none') {
+    const interval = Number(extraData?.interval) || 1;
+    const nextDate = new Date(baseDate);
+
+    if (repeatRule === 'hour' || repeatRule === 'hourly') {
+      nextDate.setHours(nextDate.getHours() + interval);
+    } else if (repeatRule === 'daily') {
+      nextDate.setDate(nextDate.getDate() + interval);
+    } else if (repeatRule === 'weekly') {
+      nextDate.setDate(nextDate.getDate() + interval * 7);
+    } else if (repeatRule === 'monthly') {
+      nextDate.setMonth(nextDate.getMonth() + interval);
+    } else if (repeatRule === 'yearly') {
+      nextDate.setFullYear(nextDate.getFullYear() + interval);
+    } else {
+      return null;
+    }
+    return nextDate.toISOString();
+  }
+
+  // 3. Unsupported category or no explicit repeat_rule: DO NOT guess +365 days! Return null safely.
+  return null;
+}
 
 export function calculateFireAt(scheduledAt: string, notifBefore: number | null, notifUnit: string): string | null {
   if (notifBefore === null) return null;
@@ -187,48 +234,65 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
 
   if (isPastDone) {
     if (isRecurring) {
-      // 1. Create a completed static copy of the plan for history
+      // 1. Calculate the next occurrence date for the main recurring plan from completion date
+      const nextScheduledAtStr = calculateNextOccurrenceDate(
+        input.scheduled_at,
+        input.repeat_rule || null,
+        input.extra_data
+      ) || input.scheduled_at; // Safe fallback if no next date
+
+      const fireAt = calculateFireAt(nextScheduledAtStr, input.notif_before, input.notif_unit);
+
+      // 2. Create the main recurring plan FIRST (status: 'active')
+      const { data: mainPlan, error: mainPlanErr } = await supabase
+        .from('plans')
+        .insert({
+          user_id: userId,
+          pet_id: input.pet_id,
+          category: input.category,
+          sub_type: input.sub_type,
+          scheduled_at: nextScheduledAtStr,
+          repeat_rule: input.repeat_rule || null,
+          ends_at: input.ends_at || null,
+          notif_before: input.notif_before,
+          notif_unit: input.notif_unit,
+          note: input.note || null,
+          extra_data: { ...(input.extra_data || {}), is_past_done: false },
+          status: 'active',
+        })
+        .select()
+        .single();
+
+      if (mainPlanErr) throw new Error(mainPlanErr.message);
+
+      // 3. Create static completed copy linked via parent_plan_id and occurrence_scheduled_at
       const completedPlanData = {
         user_id: userId,
         pet_id: input.pet_id,
         category: input.category,
         sub_type: input.sub_type,
         scheduled_at: input.scheduled_at,
+        occurrence_scheduled_at: input.occurrence_scheduled_at || input.scheduled_at,
         repeat_rule: null,
         ends_at: null,
         notif_before: 0,
         notif_unit: 'minute',
         note: input.note || null,
-        extra_data: { ...input.extra_data, is_past_done: true },
+        extra_data: { ...(input.extra_data || {}), is_past_done: true },
         status: 'completed',
+        parent_plan_id: mainPlan.id,
       };
 
-      const { error: copyError } = await supabase
-        .from('plans')
-        .insert(completedPlanData);
+      await supabase.from('plans').insert(completedPlanData);
 
-      if (copyError) throw new Error(copyError.message);
-
-      // 2. Calculate the next occurrence date for the main recurring plan
-      const currentScheduledAt = new Date(input.scheduled_at);
-      let nextScheduledAtDate = new Date(currentScheduledAt);
-
-      const interval = Number(input.extra_data?.interval) || 1;
-      const rule = input.repeat_rule;
-
-      if (rule === 'hour' || rule === 'hourly') {
-        nextScheduledAtDate.setHours(nextScheduledAtDate.getHours() + interval);
-      } else if (rule === 'daily') {
-        nextScheduledAtDate.setDate(nextScheduledAtDate.getDate() + interval);
-      } else if (rule === 'weekly') {
-        nextScheduledAtDate.setDate(nextScheduledAtDate.getDate() + (interval * 7));
-      } else if (rule === 'monthly') {
-        nextScheduledAtDate.setMonth(nextScheduledAtDate.getMonth() + interval);
-      } else if (rule === 'yearly') {
-        nextScheduledAtDate.setFullYear(nextScheduledAtDate.getFullYear() + interval);
+      if (fireAt) {
+        await supabase.from('notification_jobs').insert({
+          plan_id: mainPlan.id,
+          fire_at: fireAt,
+        });
       }
 
-      scheduledAt = nextScheduledAtDate.toISOString();
+      return mainPlan;
     } else {
       // One-time plan: save with completed status directly
       initialStatus = 'completed';
@@ -245,6 +309,7 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
       category: input.category,
       sub_type: input.sub_type,
       scheduled_at: scheduledAt,
+      occurrence_scheduled_at: input.occurrence_scheduled_at || null,
       repeat_rule: input.repeat_rule || null,
       ends_at: input.ends_at || null,
       notif_before: input.notif_before,
@@ -273,6 +338,10 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
 }
 
 export async function updatePlan(userId: string, planId: string, input: UpdatePlanInput) {
+  if (planId.toString().startsWith('virtual_')) {
+    throw new Error('INVALID_VIRTUAL_PLAN_ID');
+  }
+
   const supabase = await createServerSupabaseClient();
   
   // RLS will ensure user owns the plan, but we need to check if pet_id is being changed
@@ -298,100 +367,84 @@ export async function updatePlan(userId: string, planId: string, input: UpdatePl
   }
 
   const hasRepeatRule = input.repeat_rule !== undefined ? input.repeat_rule : currentPlan.repeat_rule;
+  const isMainRecurringPlan = hasRepeatRule && !currentPlan.parent_plan_id;
 
-  if (statusToApply === 'completed' && hasRepeatRule) {
-    // 1. Create a completed static copy of the plan for history
-    const completedPlanData = {
-      pet_id: input.pet_id || currentPlan.pet_id,
-      user_id: currentPlan.user_id,
-      category: input.category || currentPlan.category,
-      sub_type: input.sub_type || currentPlan.sub_type,
-      scheduled_at: input.scheduled_at || currentPlan.scheduled_at,
-      repeat_rule: null,
-      ends_at: null,
-      notif_before: 0,
-      notif_unit: 'minute',
-      note: input.note !== undefined ? input.note : currentPlan.note,
-      extra_data: { ...(input.extra_data || currentPlan.extra_data), is_past_done: true },
-      status: 'completed',
-    };
+  if (statusToApply === 'completed' && isMainRecurringPlan) {
+    const occurrenceScheduledAt = input.occurrence_scheduled_at || currentPlan.scheduled_at;
+    const actualCompletionDate = input.scheduled_at || occurrenceScheduledAt;
 
-    await supabase.from('plans').insert(completedPlanData);
+    // Calculate next occurrence date using protocol/rules (server-side only)
+    const computedNextScheduledAt = calculateNextOccurrenceDate(
+      actualCompletionDate,
+      hasRepeatRule,
+      input.extra_data || currentPlan.extra_data
+    );
 
-    // 2. Calculate the next occurrence date
-    const currentScheduledAt = new Date(input.scheduled_at || currentPlan.scheduled_at);
-    let nextScheduledAtDate = new Date(currentScheduledAt);
-
-    const interval = Number(input.extra_data?.interval || currentPlan.extra_data?.interval) || 1;
-    const rule = hasRepeatRule;
-
-    if (rule === 'hour' || rule === 'hourly') {
-      nextScheduledAtDate.setHours(nextScheduledAtDate.getHours() + interval);
-    } else if (rule === 'daily') {
-      nextScheduledAtDate.setDate(nextScheduledAtDate.getDate() + interval);
-    } else if (rule === 'weekly') {
-      nextScheduledAtDate.setDate(nextScheduledAtDate.getDate() + (interval * 7));
-    } else if (rule === 'monthly') {
-      nextScheduledAtDate.setMonth(nextScheduledAtDate.getMonth() + interval);
-    } else if (rule === 'yearly') {
-      nextScheduledAtDate.setFullYear(nextScheduledAtDate.getFullYear() + interval);
+    const closeSeries = !hasRepeatRule || input.ends_at === 'close';
+    if (!computedNextScheduledAt && !closeSeries) {
+      throw new Error('NEXT_OCCURRENCE_UNRESOLVED');
     }
 
-    const nextScheduledAt = nextScheduledAtDate.toISOString();
+    // Use atomic database function complete_recurring_plan RPC (service_role only)
+    const adminClient = createAdminSupabaseClient();
+    const { data: rpcRes, error: rpcErr } = await adminClient.rpc('complete_recurring_plan', {
+      p_plan_id: planId,
+      p_user_id: userId,
+      p_occurrence_scheduled_at: occurrenceScheduledAt,
+      p_actual_completion_date: actualCompletionDate,
+      p_next_scheduled_at: computedNextScheduledAt || null,
+      p_close_series: closeSeries,
+      p_note: input.note !== undefined ? input.note : currentPlan.note,
+      p_extra_data: input.extra_data || {}
+    });
 
-    // 3. Roll original plan forward
-    const { data: plan, error: planError } = await supabase
+    if (rpcErr) {
+      console.error('[service.ts updatePlan] complete_recurring_plan RPC error:', rpcErr);
+      throw new Error(rpcErr.message || 'PLAN_COMPLETION_FAILED');
+    }
+
+    // Refetch the updated main recurring plan
+    const { data: updatedMainPlan } = await supabase
       .from('plans')
-      .update({
-        scheduled_at: nextScheduledAt,
-        repeat_rule: rule,
-        category: input.category || currentPlan.category,
-        sub_type: input.sub_type || currentPlan.sub_type,
-        ends_at: input.ends_at !== undefined ? input.ends_at : currentPlan.ends_at,
-        notif_before: input.notif_before !== undefined ? input.notif_before : currentPlan.notif_before,
-        notif_unit: input.notif_unit || currentPlan.notif_unit,
-        note: input.note !== undefined ? input.note : currentPlan.note,
-        extra_data: input.extra_data || currentPlan.extra_data,
-        updated_at: new Date().toISOString(),
-      })
+      .select('*')
       .eq('id', planId)
-      .select()
       .single();
 
-    if (planError) throw new Error(planError.message);
+    if (updatedMainPlan) {
+      // Update notification job for the next occurrence
+      const newNotifBefore = updatedMainPlan.notif_before;
+      const newNotifUnit = updatedMainPlan.notif_unit;
+      const newFireAt = calculateFireAt(updatedMainPlan.scheduled_at, newNotifBefore, newNotifUnit);
 
-    // Update notification job for the next occurrence
-    const newNotifBefore = plan.notif_before;
-    const newNotifUnit = plan.notif_unit;
-    const newFireAt = calculateFireAt(nextScheduledAt, newNotifBefore, newNotifUnit);
+      if (newFireAt !== null) {
+        const { data: updatedJobs } = await supabase
+          .from('notification_jobs')
+          .update({ fire_at: newFireAt })
+          .eq('plan_id', planId)
+          .eq('sent', false)
+          .select();
 
-    if (newFireAt !== null) {
-      const { data: updatedJobs } = await supabase
-        .from('notification_jobs')
-        .update({ fire_at: newFireAt })
-        .eq('plan_id', planId)
-        .eq('sent', false)
-        .select();
-
-      if (!updatedJobs || updatedJobs.length === 0) {
+        if (!updatedJobs || updatedJobs.length === 0) {
+          await supabase
+            .from('notification_jobs')
+            .insert({
+              plan_id: planId,
+              fire_at: newFireAt,
+            });
+        }
+      } else {
         await supabase
           .from('notification_jobs')
-          .insert({
-            plan_id: planId,
-            fire_at: newFireAt,
-          });
+          .delete()
+          .eq('plan_id', planId)
+          .eq('sent', false);
       }
-    } else {
-      await supabase
-        .from('notification_jobs')
-        .delete()
-        .eq('plan_id', planId)
-        .eq('sent', false);
-    }
 
-    return plan;
+      return updatedMainPlan;
+    }
   }
 
+  // Standard update flow for one-time plans or updating existing static records
   const { data: plan, error: planError } = await supabase
     .from('plans')
     .update({

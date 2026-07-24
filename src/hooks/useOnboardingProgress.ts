@@ -60,14 +60,14 @@ export function useOnboardingProgress(petId: string) {
         label: 'Aşı planı kuruldu',
         icon: 'ti ti-shield-check',
         done: op?.vaccine_plan ?? false,
-        route: `/owner/pets/${petId}/vaccines`,
+        route: `/owner/plan-yap/asi?pet_id=${petId}`,
       },
       {
         id: 'parasite_first',
         label: 'Parazit koruması eklendi',
         icon: 'ti ti-bug',
         done: op?.parasite_first ?? false,
-        route: `/owner/pets/${petId}/parasite`,
+        route: `/owner/plan-yap/parazit?pet_id=${petId}`,
       },
       {
         id: 'emergency_contact',
@@ -78,10 +78,10 @@ export function useOnboardingProgress(petId: string) {
       },
       {
         id: 'documents',
-        label: 'Belgeler ve karne yüklendi',
+        label: 'Aşı Karnesi ve Belgeleri',
         icon: 'ti ti-file',
         done: op?.documents ?? false,
-        route: `/owner/pets/${petId}/vaccines`,
+        route: `/owner/pets/${petId}?tab=vaccines`,
       },
     ];
 

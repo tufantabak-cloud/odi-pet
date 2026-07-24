@@ -111,41 +111,8 @@ export default function ReferralClient({
 
         {/* ── Hero Başlık ── */}
         <div className="text-center pt-2">
-          {/* Animasyonlu pati + yıldız */}
-          <div className="flex items-center justify-center gap-1 mb-3">
-            <svg width="36" height="36" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"
-              style={{ animation: 'pawBounce 2s ease-in-out infinite' }}>
-              <style>{`
-                @keyframes pawBounce {
-                  0%, 100% { transform: translateY(0) rotate(-5deg); }
-                  50% { transform: translateY(-5px) rotate(5deg); }
-                }
-                @keyframes starSpin {
-                  0% { transform: rotate(0deg) scale(1); }
-                  50% { transform: rotate(20deg) scale(1.15); }
-                  100% { transform: rotate(0deg) scale(1); }
-                }
-              `}</style>
-              <ellipse cx="32" cy="42" rx="14" ry="12" fill="url(#pawGrad)" />
-              <circle cx="18" cy="30" r="7" fill="url(#pawGrad)" />
-              <circle cx="46" cy="30" r="7" fill="url(#pawGrad)" />
-              <circle cx="24" cy="20" r="5.5" fill="url(#pawGrad)" />
-              <circle cx="40" cy="20" r="5.5" fill="url(#pawGrad)" />
-              <defs>
-                <radialGradient id="pawGrad" cx="40%" cy="30%" r="70%">
-                  <stop offset="0%" stopColor="#A78BFA" />
-                  <stop offset="100%" stopColor="#4F2DBA" />
-                </radialGradient>
-              </defs>
-            </svg>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-              style={{ animation: 'starSpin 3s ease-in-out infinite', animationDelay: '0.5s' }}>
-              <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"
-                fill="#FBBF24" />
-            </svg>
-          </div>
           <h1 className="text-[26px] font-black text-text-primary tracking-tight">
-            🐾 Arkadaşını Davet Et
+            Arkadaşını Davet Et
           </h1>
           <p className="text-[14px] text-text-secondary mt-1.5 leading-relaxed">
             Her davet eden, can dostunu da daha iyi baktırır.

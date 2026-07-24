@@ -306,7 +306,7 @@ export default function FounderIntelligencePage() {
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-                <KpiCard label="Setup Tamamlama %" value={m.vaccine.setupCompletedPct} threshold="vaccineSetupPct" note="Hedef: >60%" />
+                <KpiCard label="Aşı Kaydı Bulunan %" value={m.vaccine.setupCompletedPct} threshold="vaccineSetupPct" note="Hedef: >60%" />
                 <KpiCard label="İlk Kayıt %" value={m.vaccine.firstVaccinePct} threshold="vaccineFirstPct" note="Setup → İlk aşı" />
                 <KpiCard label="Gecikme Oranı %" value={m.vaccine.overdueRatePct} threshold="vaccineOverduePct" invert={true} note="Hedef: <20%" />
                 <KpiCard label="Zincir Tamamlama %" value={m.vaccine.chainCompletionPct} threshold="vaccineChainPct" note="≥3 aşı tamamlandı" />
@@ -316,7 +316,7 @@ export default function FounderIntelligencePage() {
               <h3 className="text-[11px] font-black text-text-secondary uppercase tracking-widest mb-4">Vaccine OS Funnel</h3>
               <FunnelBar steps={[
                 { label: 'Signup',         pct: 100,                             threshold: 'vaccineSetupPct' },
-                { label: 'Setup Seçildi',  pct: m.vaccine.setupCompletedPct,    threshold: 'vaccineSetupPct' },
+                { label: 'Aşı Tanımlandı', pct: m.vaccine.setupCompletedPct,    threshold: 'vaccineSetupPct' },
                 { label: 'İlk Kayıt',      pct: m.vaccine.firstVaccinePct,      threshold: 'vaccineFirstPct' },
                 { label: 'Zincir (3+)',    pct: m.vaccine.chainCompletionPct,   threshold: 'vaccineChainPct' },
               ]} />

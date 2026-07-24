@@ -54,6 +54,11 @@ export default function WizardOrchestrator() {
   const editId = searchParams.get('editId');
   const categoryKey = params.kategori as CategoryKey;
 
+  // "Kayıt Ekle" (geriye dönük kayıt) modu: planlanmamış ama o an uygulanmış bir
+  // işlemi kaydeder. Aynı sihirbaz motorunu kullanır; yalnızca varsayılanları ve
+  // çerçevelemeyi değiştirir. Düzenlemede (editId) log modu devreye girmez.
+  const logMode = searchParams.get('mode') === 'log' && !editId;
+
   // Timeline'daki boş bir tarih hücresine tıklanınca gelen ön-doldurma parametreleri
   const queryDate = searchParams.get('date');
   const queryMedName = searchParams.get('medName');
@@ -89,6 +94,10 @@ export default function WizardOrchestrator() {
    * Reaktif türetim bu sınıf hatayı tamamen ortadan kaldırır.
    */
   const [loadedPlan, setLoadedPlan] = useState<any>(null);
+  // editId verildi ama plan yüklenemedi (silinmiş/RLS/erişilemez) → sessiz create
+  // moduna düşmek yerine açık hata göster; ayrıca handleSubmit'in yanlışlıkla ölü
+  // bir editId'ye PATCH atmasını engeller.
+  const [editLoadFailed, setEditLoadFailed] = useState(false);
   const isEditMode = !!editId && !!loadedPlan;
   // Düzenlemede planın orijinal extra_data'sı; kayıtta üzerine yazılmayan alanlar (dose_number, migrated_from vb.) korunur
   const [initialExtraData, setInitialExtraData] = useState<Record<string, any> | null>(null);
@@ -128,6 +137,14 @@ export default function WizardOrchestrator() {
   // Smart Scanner State
   const [showScanner, setShowScanner] = useState(false);
 
+  // ── İlişkilendirme (Log modu): eşleşen aktif planlar ─────────────────
+  // Kayıt Ekle'de girilen işlem, zaten planlanmış aktif bir görevin parçası
+  // olabilir. Aynı pet + kategori + alt tür için aktif planları getirir; varsa
+  // kullanıcı bu kaydı o plana bağlayabilir (çift kayıt yerine planı tamamlar).
+  const [matchingPlans, setMatchingPlans] = useState<any[]>([]);
+  const [matchLoading, setMatchLoading] = useState(false);
+  const [matchSub, setMatchSub] = useState<string | null>(null);
+
   // Symptoms State
   const [symptoms, setSymptoms] = useState<Array<{
     id: string;
@@ -148,14 +165,16 @@ export default function WizardOrchestrator() {
       
       let initialPlanData: any = null;
       if (editId) {
+        setEditLoadFailed(false);
         const { data: planData, error: planError } = await supabase.from('plans').select('*').eq('id', editId).single();
         if (planData) {
           initialPlanData = planData;
           setInitialExtraData(planData.extra_data || {});
-        } else if (planError) {
+        } else {
           // Sessizce create moduna düşmek yerine görünür kılıyoruz — RLS/izin
           // sorunları veya artık var olmayan bir plan burada yakalanır.
           console.error('[plan-yap] editId ile plan yüklenemedi:', editId, planError);
+          setEditLoadFailed(true);
         }
       }
 
@@ -243,12 +262,15 @@ export default function WizardOrchestrator() {
           pet_id: queryPetId || undefined,
           subCategory: initialSubCat || undefined,
           date: queryDate || d.toISOString().split('T')[0],
-          time: '12:00',
+          // Log modunda işlem "az önce yapıldı" varsayılır: saat = şimdi
+          time: logMode ? new Date().toTimeString().slice(0, 5) : '12:00',
           frequency: 'once',
           interval: 1,
           endCondition: 'never',
           notificationMinutes: 0,
           notificationEnabled: true,
+          // Log modunda kayıt otomatik "yapıldı" (tamamlandı) olarak işaretlenir
+          markAsDone: logMode ? true : false,
           metadata: {},
           notes: '',
           selectedProduct: null,
@@ -293,7 +315,9 @@ export default function WizardOrchestrator() {
     if (subCat && subCat !== 'Diğer') {
       const defaults = getSmartDefault(subCat);
       const updateData: any = {
-        frequency: defaults.frequency,
+        // Log modunda "Kayıt Ekle" doğası gereği tek seferliktir; tekrar opt-in
+        // olur. Bu yüzden alt kategorinin akıllı tekrar sıklığını uygulamayız.
+        frequency: logMode ? 'once' : defaults.frequency,
         interval: defaults.interval,
         notificationMinutes: defaults.notification_minutes,
       };
@@ -310,6 +334,56 @@ export default function WizardOrchestrator() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wizardData.subCategory, categoryKey]);
+
+  // ── Eşleşen aktif planları getir (yalnızca Log modu, genel kategoriler) ──
+  // Kapsam: aşı/parazit (kendi protokol/RPC akışları var), İlaç, Alerji ve
+  // 'Diğer' (serbest metin) hariç. Bunlarda sub_type doğrudan alt kategoriyle
+  // eşleşir, güvenli tamamlanabilir.
+  const linkEligibleBase =
+    logMode &&
+    categoryKey !== 'asi' &&
+    categoryKey !== 'parazit' &&
+    !!wizardData.subCategory &&
+    wizardData.subCategory !== 'İlaç' &&
+    wizardData.subCategory !== 'Alerji' &&
+    wizardData.subCategory !== 'Diğer';
+
+  useEffect(() => {
+    // Alt kategori/pet değişince önceki bağlantı seçimini sıfırla
+    setStepData({ linkedPlanId: undefined });
+
+    if (!linkEligibleBase || !wizardData.pet_id) {
+      setMatchingPlans([]);
+      setMatchLoading(false);
+      setMatchSub(null);
+      return;
+    }
+
+    const petId = wizardData.pet_id;
+    const sub = wizardData.subCategory as string;
+    let cancelled = false;
+    setMatchLoading(true);
+    setMatchingPlans([]);
+
+    const supabase = createBrowserSupabaseClient();
+    const fetchMatches = async () => {
+      const { data } = await supabase
+        .from('plans')
+        .select('*')
+        .eq('pet_id', petId)
+        .eq('category', categoryKey)
+        .eq('status', 'active')
+        .eq('sub_type', sub);
+      if (cancelled) return;
+      setMatchingPlans(data || []);
+      setMatchSub(sub);
+      setMatchLoading(false);
+    };
+    fetchMatches();
+
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [logMode, categoryKey, wizardData.pet_id, wizardData.subCategory]);
 
   // ── Fetch Vaccines / Products (Aşı veya Parazit ise) ────────────────
   useEffect(() => {
@@ -487,6 +561,28 @@ export default function WizardOrchestrator() {
     return <div className="min-h-screen bg-slate-50 flex items-center justify-center">Yükleniyor...</div>;
   }
 
+  // editId verildi ama plan yüklenemedi → boş "oluştur" formuna sessizce düşme;
+  // açık hata göster. (Silinmiş plan, RLS veya artık geçersiz bir düzenleme linki.)
+  if (editId && editLoadFailed) {
+    return (
+      <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center text-red-500 mb-4">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <h2 className="text-xl font-black text-text-primary mb-1">Plan bulunamadı</h2>
+        <p className="text-sm text-text-secondary max-w-xs mb-6">Düzenlemek istediğiniz plan silinmiş veya artık erişilemiyor olabilir.</p>
+        <div className="flex flex-col gap-2 w-full max-w-xs">
+          <Link href="/owner/plan-yap" className="w-full py-3 rounded-2xl bg-indigo-600 text-white font-bold text-center hover:bg-indigo-700 transition-colors">
+            Yeni Plan Oluştur
+          </Link>
+          <button onClick={() => router.push('/owner/dashboard')} className="w-full py-3 rounded-2xl border border-border-main text-text-secondary font-semibold hover:bg-bg-main transition-colors">
+            Panoya Dön
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const tc = categoryMap[categoryKey];
   if (!tc) {
     return <div className="min-h-screen bg-slate-50 p-6">Geçersiz Kategori.</div>;
@@ -507,6 +603,20 @@ export default function WizardOrchestrator() {
 
   const subCat = categoryKey === 'asi' ? 'Aşı' : wizardData.subCategory;
   const isVaccineOrParasite = subCat === 'Aşı' || subCat === 'İç Parazit' || subCat === 'Dış Parazit' || subCat === 'Parazit Tasması' || subCat === 'Birleşik Parazit';
+
+  // ── İlişkilendirme durumu (Log modu) ──────────────────────────────
+  // Kullanıcı eşleşen bir planlı görevi seçtiyse (linkedPlanId gerçek bir id),
+  // kayıt o planı tamamlar; yeni bağımsız kayıt oluşturulmaz.
+  const isLinked = logMode && typeof wizardData.linkedPlanId === 'string' && wizardData.linkedPlanId !== 'none';
+  const linkedPlan = isLinked ? matchingPlans.find((p) => p.id === wizardData.linkedPlanId) : null;
+  // İlişkilendirme adımının durumu: kapalı / yükleniyor / seç / eşleşme yok
+  const linkStepMode: 'off' | 'loading' | 'select' | 'none' = !linkEligibleBase
+    ? 'off'
+    : (matchLoading || matchSub !== wizardData.subCategory)
+      ? 'loading'
+      : matchingPlans.length > 0
+        ? 'select'
+        : 'none';
   
   if (isVaccineOrParasite) {
     const dynamicTitle = categoryKey === 'asi' ? 'Aşı Seçimi' : `${subCat} Seçimi`;
@@ -538,15 +648,30 @@ export default function WizardOrchestrator() {
       return false;
     };
 
-    if (showMetadata()) {
-      steps.push({ key: 'metadata', type: 'metadata_selection', title: 'Detaylar', desc: 'Planla ilgili ekstra detaylar girin.' });
+    // Log modu ilişkilendirme adımı: eşleşen planlı görev varsa (veya kontrol
+    // ediliyorsa) "Bunu zaten planlamış mıydınız?" adımı araya girer.
+    if (linkStepMode === 'loading') {
+      steps.push({ key: 'link_plan', type: 'link_plan_loading', title: 'Planlı görev mi?', desc: 'Kontrol ediliyor…' });
+    } else if (linkStepMode === 'select') {
+      steps.push({ key: 'link_plan', type: 'link_plan_selection', title: 'Planlı görev mi?', desc: 'Bu işlem zaten planladığınız bir görev olabilir.' });
     }
 
-    // Alerji kaydı için tarih-saat, tekrar ve bildirim adımlarını atlayalım
-    if (subCat !== 'Alerji') {
-      steps.push({ key: 'datetime', type: 'datetime_selection', title: 'Tarih & Saat', desc: 'İşlem ne zaman gerçekleşecek?' });
-      steps.push({ key: 'recurrence', type: 'recurrence_selection', title: 'Tekrar Sıklığı', desc: 'Bu plan tekrarlanacak mı?' });
-      steps.push({ key: 'notification', type: 'notification_selection', title: 'Bildirim', desc: 'Hatırlatıcı ayarlarınızı tamamlayın.' });
+    if (isLinked) {
+      // Bir planlı göreve bağlandı: yalnızca onay adımı gösterilir. Kayıt,
+      // mevcut planı "yapıldı" olarak tamamlar (tekrarlıysa ileri taşır);
+      // ayrı/çift kayıt oluşturmaz.
+      steps.push({ key: 'notification', type: 'notification_selection', title: 'Onayla', desc: 'Planlı görevi tamamlayın.' });
+    } else {
+      if (showMetadata()) {
+        steps.push({ key: 'metadata', type: 'metadata_selection', title: 'Detaylar', desc: 'Planla ilgili ekstra detaylar girin.' });
+      }
+
+      // Alerji kaydı için tarih-saat, tekrar ve bildirim adımlarını atlayalım
+      if (subCat !== 'Alerji') {
+        steps.push({ key: 'datetime', type: 'datetime_selection', title: logMode ? 'Ne Zaman Yapıldı?' : 'Tarih & Saat', desc: logMode ? 'İşlemi ne zaman uyguladınız?' : 'İşlem ne zaman gerçekleşecek?' });
+        steps.push({ key: 'recurrence', type: 'recurrence_selection', title: logMode ? 'Tekrarlanacak mı?' : 'Tekrar Sıklığı', desc: logMode ? 'Bu işlem düzenli tekrar ediyorsa bir plan da oluşturalım.' : 'Bu plan tekrarlanacak mı?' });
+        steps.push({ key: 'notification', type: 'notification_selection', title: logMode ? 'Onay & Not' : 'Bildirim', desc: logMode ? 'Kaydı onaylayın, dilerseniz not ekleyin.' : 'Hatırlatıcı ayarlarınızı tamamlayın.' });
+      }
     }
   }
 
@@ -559,6 +684,7 @@ export default function WizardOrchestrator() {
   let isNextDisabled = false;
   if (currentStep?.key === 'pet_id' && !wizardData.pet_id) isNextDisabled = true;
   if (currentStep?.key === 'subCategory' && !wizardData.subCategory) isNextDisabled = true;
+  if (currentStep?.key === 'link_plan' && wizardData.linkedPlanId === undefined) isNextDisabled = true;
   if (currentStep?.key === 'selectedVaccine' && (categoryKey === 'parazit' ? !wizardData.selectedProduct : !wizardData.selectedVaccine)) isNextDisabled = true;
   if (currentStep?.key === 'datetime' && !wizardData.date) isNextDisabled = true;
   if (currentStep?.key === 'metadata' && subCat === 'Diğer' && !wizardData.customText?.trim()) isNextDisabled = true;
@@ -600,6 +726,31 @@ export default function WizardOrchestrator() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     const petId = wizardData.pet_id || (pets.length === 1 ? pets[0].id : null);
+
+    // ── İlişkilendirilmiş kayıt: mevcut planı tamamla (çift kayıt yok) ──
+    // Zaman çizelgesindeki "yapıldı" akışıyla birebir aynı: PATCH status=completed
+    // → updatePlan tekrarlıysa geçmiş kaydını bırakıp planı ileri taşır.
+    if (isLinked && wizardData.linkedPlanId) {
+      try {
+        const res = await fetch(`/api/plans/${wizardData.linkedPlanId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'completed' }),
+        });
+        if (res.ok) {
+          setIsSuccess(true);
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          alert(`Hata: ${errData.error || 'Görev tamamlanamadı'}`);
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Beklenmeyen bir hata oluştu.');
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
 
     if (subCat === 'Alerji') {
       try {
@@ -683,8 +834,8 @@ export default function WizardOrchestrator() {
        };
        
        try {
-         const res = await fetch('/api/plans' + (editId ? `/${editId}` : ''), {
-           method: editId ? 'PATCH' : 'POST',
+         const res = await fetch('/api/plans' + (isEditMode ? `/${editId}` : ''), {
+           method: isEditMode ? 'PATCH' : 'POST',
            headers: { 'Content-Type': 'application/json' },
            body: JSON.stringify(medPayload),
          });
@@ -772,8 +923,8 @@ export default function WizardOrchestrator() {
     };
 
     try {
-      const res = await fetch('/api/plans' + (editId ? `/${editId}` : ''), {
-        method: editId ? 'PATCH' : 'POST',
+      const res = await fetch('/api/plans' + (isEditMode ? `/${editId}` : ''), {
+        method: isEditMode ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
@@ -794,7 +945,61 @@ export default function WizardOrchestrator() {
 
   // ── Render Adımları ─────────────────────────────────────────────
   const renderStepContent = (step: any) => {
-    
+
+    if (step.type === 'link_plan_loading') {
+      return (
+        <div className="flex flex-col items-center justify-center py-8 gap-3 animate-in fade-in">
+          <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-[13px] text-text-secondary">Planlı görevleriniz kontrol ediliyor…</p>
+        </div>
+      );
+    }
+
+    if (step.type === 'link_plan_selection') {
+      const fmtDate = (iso: string) => {
+        try { return new Date(iso).toLocaleDateString('tr-TR', { day: '2-digit', month: 'long' }); } catch { return ''; }
+      };
+      const fmtFreq = (p: any) => p.repeat_rule
+        ? `Her ${p.extra_data?.interval || 1} ${FREQ_LABEL[p.repeat_rule] || ''}`.trim()
+        : 'Tek seferlik';
+      return (
+        <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2">
+          <p className="text-[13px] text-text-secondary leading-relaxed">
+            Bu işlem, aşağıda planladığınız görevlerden biri mi? Seçerseniz o görev
+            <b className="text-text-primary"> “yapıldı”</b> olarak işaretlenir ve ayrı bir kayıt oluşturulmaz.
+          </p>
+          {matchingPlans.map((p) => {
+            const isSel = wizardData.linkedPlanId === p.id;
+            return (
+              <button
+                key={p.id}
+                onClick={() => { setStepData({ linkedPlanId: p.id }); nextStep(); }}
+                className={`w-full text-left p-4 rounded-2xl border transition-all shadow-sm flex items-center gap-3 ${
+                  isSel ? 'border-indigo-500 bg-indigo-50 scale-[1.01]' : 'border-slate-200 bg-white hover:border-indigo-300'
+                }`}
+              >
+                <div className="w-10 h-10 shrink-0 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[14px] font-extrabold text-text-primary truncate">{p.sub_type}</p>
+                  <p className="text-[12px] text-text-secondary mt-0.5">Planlı: {fmtDate(p.scheduled_at)} • {fmtFreq(p)}</p>
+                </div>
+              </button>
+            );
+          })}
+          <button
+            onClick={() => { setStepData({ linkedPlanId: 'none' }); nextStep(); }}
+            className={`w-full text-center p-3.5 rounded-2xl border border-dashed transition-all text-[13px] font-bold ${
+              wizardData.linkedPlanId === 'none' ? 'border-slate-400 bg-slate-50 text-slate-700' : 'border-slate-300 text-slate-500 hover:bg-slate-50'
+            }`}
+          >
+            Hayır, bu ekstra bir kayıt
+          </button>
+        </div>
+      );
+    }
+
     if (step.type === 'pet_selection') {
       return (
         <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-2">
@@ -1491,7 +1696,7 @@ export default function WizardOrchestrator() {
         <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2">
           {/* Plan Tipi Seçimi */}
           <div className="flex flex-col gap-2">
-            <label className="text-[13px] font-bold text-text-primary">Plan Tipi</label>
+            <label className="text-[13px] font-bold text-text-primary">{logMode ? 'Bu işlem tekrar edecek mi?' : 'Plan Tipi'}</label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -1502,7 +1707,7 @@ export default function WizardOrchestrator() {
                     : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300'
                 }`}
               >
-                Tek Seferlik
+                {logMode ? 'Sadece bu kayıt' : 'Tek Seferlik'}
               </button>
               <button
                 type="button"
@@ -1517,9 +1722,16 @@ export default function WizardOrchestrator() {
                     : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300'
                 }`}
               >
-                Tekrarlı Plan
+                {logMode ? 'Tekrarlı yap (plan kur)' : 'Tekrarlı Plan'}
               </button>
             </div>
+            {logMode && (
+              <p className="text-[11px] text-text-secondary leading-relaxed mt-0.5">
+                {wizardData.frequency === 'once'
+                  ? 'Yalnızca bugünkü işlem kaydedilecek.'
+                  : 'Bugünkü işlem kaydedilecek ve bir sonraki için tekrar planı oluşturulacak.'}
+              </p>
+            )}
           </div>
 
           {isRecurring && (
@@ -1820,7 +2032,37 @@ export default function WizardOrchestrator() {
 
     if (step.type === 'notification_selection') {
       const isPastDate = wizardData.date <= new Date().toISOString().split('T')[0];
-      
+
+      // İlişkilendirilmiş kayıt: yalnızca onay — mevcut planlı görev tamamlanır
+      if (isLinked && linkedPlan) {
+        const recurring = !!linkedPlan.repeat_rule;
+        return (
+          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+            <div className="p-4 bg-surface border border-border-main rounded-2xl">
+              <p className="text-[11px] font-bold text-text-secondary uppercase tracking-wider mb-1">Planlı Görev</p>
+              <p className="text-[15px] font-extrabold text-text-primary">{linkedPlan.sub_type}</p>
+              <p className="text-[12px] text-text-secondary mt-0.5">
+                {(() => { try { return new Date(linkedPlan.scheduled_at).toLocaleDateString('tr-TR', { day: '2-digit', month: 'long' }); } catch { return ''; } })()}
+                {recurring ? ` • Her ${linkedPlan.extra_data?.interval || 1} ${FREQ_LABEL[linkedPlan.repeat_rule] || ''}`.trimEnd() : ' • Tek seferlik'}
+              </p>
+            </div>
+            <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-start gap-3">
+              <div className="w-5 h-5 mt-0.5 shrink-0 rounded-full bg-emerald-600 flex items-center justify-center">
+                <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div>
+                <p className="text-sm font-bold text-emerald-900 mb-0.5">Bu planlı görev tamamlanacak</p>
+                <p className="text-[11px] text-emerald-700/80 leading-relaxed">
+                  {recurring
+                    ? '“Yapıldı” olarak işaretlenecek ve plan bir sonraki tarihe otomatik taşınacak. Ayrı bir kayıt oluşturulmaz.'
+                    : '“Yapıldı” olarak işaretlenecek. Ayrı bir kayıt oluşturulmaz.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
       return (
         <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2">
           <div className="flex items-center justify-between p-4 bg-surface border border-border-main rounded-2xl">
@@ -1856,11 +2098,11 @@ export default function WizardOrchestrator() {
             />
           </div>
 
-          {isPastDate && (
+          {isPastDate && !logMode && (
              <label className="p-4 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-start gap-3 cursor-pointer group hover:bg-indigo-100/50 transition-colors">
               <div className="relative flex items-center mt-0.5 shrink-0">
-               <input 
-                 type="checkbox" 
+               <input
+                 type="checkbox"
                  checked={wizardData.markAsDone || false}
                  onChange={(e) => setStepData({ markAsDone: e.target.checked })}
                  className="peer appearance-none w-5 h-5 border-2 border-indigo-300 rounded bg-white checked:bg-indigo-600 checked:border-indigo-600 transition-all cursor-pointer"
@@ -1872,6 +2114,21 @@ export default function WizardOrchestrator() {
                <p className="text-[11px] text-indigo-700/80 leading-relaxed">Geçmiş tarihli bu planın yapıldığını onaylıyorsanız işaretleyin.</p>
              </div>
            </label>
+          )}
+          {logMode && (
+             <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-start gap-3">
+              <div className="w-5 h-5 mt-0.5 shrink-0 rounded-full bg-emerald-600 flex items-center justify-center">
+                <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div>
+                <p className="text-sm font-bold text-emerald-900 mb-0.5">Yapıldı olarak kaydedilecek</p>
+                <p className="text-[11px] text-emerald-700/80 leading-relaxed">
+                  {wizardData.frequency === 'once'
+                    ? 'Bu işlem geçmişe dönük tamamlanmış kayıt olarak eklenecek.'
+                    : 'Bu işlem tamamlanmış kayıt olarak eklenecek; ayrıca bir sonraki için tekrar planı oluşturulacak.'}
+                </p>
+              </div>
+            </div>
           )}
         </div>
       );
@@ -1889,11 +2146,26 @@ export default function WizardOrchestrator() {
             <CheckCircle2 className="w-10 h-10" />
           </div>
           <div>
-            <h2 className="text-2xl font-black text-slate-900">{isAllergy ? 'Alerji Kaydı Oluşturuldu!' : (isEditMode ? 'Rutin Güncellendi!' : 'Rutin Oluşturuldu!')}</h2>
-            <p className="text-slate-500 text-sm mt-1">{petInfo?.name || 'Evcil hayvanınız'} için {isAllergy ? 'alerji kaydı başarıyla oluşturuldu' : (isEditMode ? 'plan başarıyla güncellendi' : 'plan başarıyla kaydedildi')}.</p>
+            <h2 className="text-2xl font-black text-slate-900">{isLinked ? 'Görev Tamamlandı!' : isAllergy ? 'Alerji Kaydı Oluşturuldu!' : logMode ? 'Kayıt Eklendi!' : (isEditMode ? 'Rutin Güncellendi!' : 'Rutin Oluşturuldu!')}</h2>
+            <p className="text-slate-500 text-sm mt-1">{petInfo?.name || 'Evcil hayvanınız'} için {isLinked ? (linkedPlan?.repeat_rule ? 'planlı görev yapıldı olarak işaretlendi ve bir sonraki tarihe taşındı' : 'planlı görev yapıldı olarak işaretlendi') : isAllergy ? 'alerji kaydı başarıyla oluşturuldu' : logMode ? (wizardData.frequency === 'once' ? 'işlem yapıldı olarak kaydedildi' : 'işlem kaydedildi ve tekrar planı oluşturuldu') : (isEditMode ? 'plan başarıyla güncellendi' : 'plan başarıyla kaydedildi')}.</p>
           </div>
           <div className="bg-surface rounded-3xl p-5 shadow-sm border border-border-main text-left space-y-3">
-             {isAllergy ? (
+             {isLinked && linkedPlan ? (
+               <>
+                 <div className="flex justify-between items-start py-2 border-b border-slate-50">
+                   <span className="text-[12px] font-semibold text-slate-400">Görev</span>
+                   <span className="text-xs font-bold text-slate-800 text-right">{linkedPlan.sub_type}</span>
+                 </div>
+                 <div className="flex justify-between items-start py-2 border-b border-slate-50">
+                   <span className="text-[12px] font-semibold text-slate-400">Durum</span>
+                   <span className="text-xs font-bold text-emerald-600 text-right">Yapıldı ✓</span>
+                 </div>
+                 <div className="flex justify-between items-start py-2">
+                   <span className="text-[12px] font-semibold text-slate-400">Tekrar</span>
+                   <span className="text-xs font-bold text-slate-800 text-right">{linkedPlan.repeat_rule ? `Her ${linkedPlan.extra_data?.interval || 1} ${FREQ_LABEL[linkedPlan.repeat_rule] || ''}`.trimEnd() : 'Tek seferlik'}</span>
+                 </div>
+               </>
+             ) : isAllergy ? (
                <>
                  <div className="flex justify-between items-start py-2 border-b border-slate-50">
                    <span className="text-[12px] font-semibold text-slate-400">Alerjen / Tetikleyici</span>
@@ -1953,10 +2225,10 @@ export default function WizardOrchestrator() {
           <button
             onClick={() => {
               resetWizard()
-              router.push('/owner/plan-yap')
+              router.push(logMode ? '/owner/plan-yap?mode=log' : '/owner/plan-yap')
             }}
             className="w-full py-3.5 rounded-2xl border border-primary text-primary font-semibold text-[16px] transition-all duration-300 hover:bg-primary/5 mb-3">
-            Planlama Yapmaya Devam Et
+            {logMode ? 'Yeni Kayıt Ekle' : 'Planlama Yapmaya Devam Et'}
           </button>
           <button onClick={() => router.push(`/owner/pets/${wizardData.pet_id}`)} className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-md transition-all active:scale-[0.98]">
             Pet Profiline Dön
@@ -1988,6 +2260,10 @@ export default function WizardOrchestrator() {
         if (subCat === 'Alerji') return wizardData.metadata?.trigger_name || 'Belirtilmedi';
         if (subCat === 'Belirti Takibi') return wizardData.metadata?.symptomNames?.join(', ') || 'Belirtilmedi';
         return 'Detay girildi';
+      case 'link_plan':
+        return wizardData.linkedPlanId === 'none'
+          ? 'Yeni kayıt'
+          : (linkedPlan ? `${linkedPlan.sub_type} planına bağlandı` : 'Belirtilmedi');
       case 'datetime':
         return wizardData.date ? `${wizardData.date} ${wizardData.time || ''}`.trim() : 'Belirtilmedi';
       case 'recurrence':
@@ -2029,6 +2305,7 @@ export default function WizardOrchestrator() {
       <WizardShell
         category={categoryKey}
         onNext={currentStepIndex === totalSteps - 1 ? handleSubmit : nextStep}
+        submitText={isLinked ? 'Görevi Tamamla' : logMode ? 'Kaydı Ekle' : 'Planı Kaydet'}
         canSkip={steps[currentStepIndex]?.key === 'selectedVaccine' && categoryKey !== 'parazit'}
         skipText="Belirtmek İstemiyorum"
         onSkip={() => {

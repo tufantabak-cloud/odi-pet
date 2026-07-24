@@ -17,6 +17,9 @@ import {
 } from './lib/recurring-events';
 import { buildCategoryGroups } from './lib/group-events';
 import { fetchEstrusVirtualEvents } from '@/lib/estrus/virtual-events';
+import { buildPetAgendaEvents } from '@/lib/agenda/pet-agenda-service';
+import { selectSummaryEvents, selectTimelineEvents } from '@/lib/agenda/selectors';
+import { deriveDateKey } from '@/lib/agenda/types';
 
 // Grid bileşenlerinin kullandığı ortak sabit ve yardımcılar tek noktadan
 export {
@@ -30,6 +33,7 @@ export {
 export function useHealthTracker(petId: string, refreshTrigger?: number) {
   // Ham (genişletilmemiş) birleşik event listesi — DB'den geldiği hali
   const [rawEvents, setRawEvents] = useState<any[]>([]);
+  const [agendaEvents, setAgendaEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = createBrowserSupabaseClient();
 
@@ -123,7 +127,7 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
 
       // vaccines join: is_core + code (template eşleştirme için)
       // vaccines tablosunda alan adı: code (vaccine_code değil)
-      const [schedulesRes, plansRes, parasiteRes, petRes] = await Promise.all([
+      const [schedulesRes, plansRes, parasiteRes, vaccinesRes, growthRes, appointmentsRes, medicationsRes, nutritionRes, petRes] = await Promise.all([
         usePlansOnly ? Promise.resolve({ data: [], error: null }) : supabase
           .from('health_schedules')
           .select('*')
@@ -143,6 +147,28 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
           .gte('administered_at', pastThreeYearsStr)
           .lte('administered_at', future365Str),
         supabase
+          .from('vaccine_records_v2')
+          .select('*')
+          .eq('pet_id', petId)
+          .gte('administered_at', pastThreeYearsStr)
+          .lte('administered_at', future365Str),
+        supabase
+          .from('growth_records')
+          .select('*')
+          .eq('pet_id', petId),
+        supabase
+          .from('appointments')
+          .select('*')
+          .eq('pet_id', petId),
+        supabase
+          .from('health_medications')
+          .select('*')
+          .eq('pet_id', petId),
+        supabase
+          .from('nutrition_logs')
+          .select('*')
+          .eq('pet_id', petId),
+        supabase
           .from('pets')
           .select('id, name, species, gender, is_neutered')
           .eq('id', petId)
@@ -152,7 +178,6 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
       if (schedulesRes.error) throw schedulesRes.error;
       if (plansRes.error) throw plansRes.error;
       if (parasiteRes.error) throw parasiteRes.error;
-      // Note: we don't throw for petRes.error as it's non-critical for backward compatibility
       
       const PLAN_CAT_MAP: Record<string, string> = {
         saglik: 'Saglik', asi: 'Asi', parazit: 'Parazit',
@@ -162,11 +187,16 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
       const completedPlanIdsInParasiteRecords = new Set(
         (parasiteRes.data || []).map((item: any) => item.plan_id).filter(Boolean)
       );
+      const completedPlanIdsInVaccineRecords = new Set(
+        (vaccinesRes.data || []).map((item: any) => item.plan_id).filter(Boolean)
+      );
 
       const mergedEvents = [
         ...(schedulesRes.data || []),
         ...(plansRes.data || [])
+          .filter((p: any) => p.status !== 'cancelled')
           .filter((p: any) => !(p.category === 'parazit' && p.status === 'completed' && completedPlanIdsInParasiteRecords.has(p.id)))
+          .filter((p: any) => !(p.category === 'asi' && p.status === 'completed' && completedPlanIdsInVaccineRecords.has(p.id)))
           .map((p: any) => {
             let dueDateStr = p.scheduled_at?.split('T')[0];
             let dueTimeStr = '12:00:00';
@@ -228,6 +258,7 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
               frequency_days: freqDays,
               frequency_label: freqLabel,
               repeat_rule: p.repeat_rule || null, // ← expandRecurringForTimeline için gerekli
+              ends_at: p.ends_at || null,
               extra_data: p.extra_data,
             };
           }),
@@ -270,6 +301,18 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
           mergedEvents.push(...estrusEvents);
         }
       }
+
+      const canonicalAgendaEvents = buildPetAgendaEvents(
+        plansRes.data || [],
+        vaccinesRes.data || [],
+        parasiteRes.data || [],
+        schedulesRes.data || [],
+        growthRes.data || [],
+        appointmentsRes.data || [],
+        medicationsRes.data || [],
+        nutritionRes.data || []
+      );
+      setAgendaEvents(canonicalAgendaEvents);
 
       mergedEvents.sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
 
@@ -323,7 +366,7 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
       .channel('parasite_changes_tracker')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'parasite_plan_items', filter: `pet_id=eq.${petId}` },
+        { event: '*', schema: 'public', table: 'parasite_records', filter: `pet_id=eq.${petId}` },
         () => { scheduleRefresh(); }
       )
       .subscribe();
@@ -361,6 +404,11 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
       console.warn('[useHealthTracker] Sanal event API\'ye gönderilemez:', eventId);
       return;
     }
+    const matchingAgendaEvt = agendaEvents.find(e => e.eventId === eventId || e.sourceRecordId === eventId.replace(/^(plan|parasite|v2_vac|growth|appointment|nutrition)_/, ''));
+    if (matchingAgendaEvt && matchingAgendaEvt.source !== 'plans') {
+      console.warn(`[useHealthTracker] Non-plan source (${matchingAgendaEvt.source}) status cannot be updated via plans API:`, matchingAgendaEvt);
+      return;
+    }
     try {
       // Optimistic güncelleme ham listede yapılır; computedStatus memo'da yeniden hesaplanır
       setRawEvents(prev => prev.map(e =>
@@ -384,6 +432,11 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
   const postponeEvent = async (eventId: string, days: number = 1) => {
     if (isVirtualEventId(eventId)) {
       console.warn('[useHealthTracker] Sanal event API\'ye gönderilemez:', eventId);
+      return;
+    }
+    const matchingAgendaEvt = agendaEvents.find(e => e.eventId === eventId || e.sourceRecordId === eventId.replace(/^(plan|parasite|v2_vac|growth|appointment|nutrition)_/, ''));
+    if (matchingAgendaEvt && matchingAgendaEvt.source !== 'plans') {
+      console.warn(`[useHealthTracker] Non-plan source (${matchingAgendaEvt.source}) cannot be postponed via plans API:`, matchingAgendaEvt);
       return;
     }
     try {
@@ -411,6 +464,30 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
       console.warn('[useHealthTracker] Sanal event API\'ye gönderilemez:', eventId);
       return;
     }
+    const matchingAgendaEvt = agendaEvents.find(e => e.eventId === eventId || e.sourceRecordId === eventId.replace(/^(plan|parasite|v2_vac|growth|appointment|nutrition)_/, ''));
+    if (matchingAgendaEvt && matchingAgendaEvt.source !== 'plans') {
+      console.info(`[useHealthTracker] Non-plan source (${matchingAgendaEvt.source}), executing source-specific route:`, matchingAgendaEvt);
+      if (matchingAgendaEvt.source === 'vaccine_records_v2') {
+        await fetch(`/api/pets/${petId}/vaccines/${matchingAgendaEvt.sourceRecordId}`, { method: 'DELETE' });
+      } else if (matchingAgendaEvt.source === 'growth_records') {
+        await fetch(`/api/pets/${petId}/growth`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ record_id: matchingAgendaEvt.sourceRecordId })
+        });
+      } else if (matchingAgendaEvt.source === 'appointments') {
+        await fetch(`/api/appointments/${matchingAgendaEvt.sourceRecordId}`, { method: 'DELETE' });
+      } else if (matchingAgendaEvt.source === 'health_medications') {
+        await fetch(`/api/pets/${petId}/medications`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ medication_id: matchingAgendaEvt.sourceRecordId })
+        });
+      }
+      fetchEvents();
+      return;
+    }
+
     try {
       const realId = eventId.toString().startsWith('plan_') ? eventId.replace('plan_', '') : eventId;
       await fetch(`/api/plans/${realId}`, { method: 'DELETE' });
@@ -420,8 +497,15 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
     }
   };
 
+  const summarySelection = useMemo(() => {
+    const todayStr = deriveDateKey(new Date().toISOString());
+    return selectSummaryEvents(agendaEvents, todayStr);
+  }, [agendaEvents]);
+
   return {
     categoryGroups,
+    agendaEvents,
+    summarySelection,
     loading,
     refetch: fetchEvents,
     markEventStatus,

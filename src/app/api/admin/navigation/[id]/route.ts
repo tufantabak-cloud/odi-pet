@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createAdminSupabaseClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth/get-current-profile'
+import { revalidatePath } from 'next/cache'
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const profile = await requireRole(['admin', 'founder'])
@@ -9,7 +10,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   try {
     const body = await req.json()
-    const supabase = await createServerSupabaseClient()
+    const supabase = createAdminSupabaseClient()
 
     // Handle bulk reordering
     if (body.items && Array.isArray(body.items)) {
@@ -25,6 +26,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       
       await Promise.all(updatePromises)
       
+      revalidatePath('/owner', 'layout')
       return NextResponse.json({ success: true })
     }
 
@@ -46,6 +48,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
     if (error) throw error
 
+    revalidatePath('/owner', 'layout')
+
     return NextResponse.json(data)
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Invalid request' }, { status: 400 })
@@ -58,13 +62,15 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   const resolvedParams = await params;
 
   try {
-    const supabase = await createServerSupabaseClient()
+    const supabase = createAdminSupabaseClient()
     const { error } = await supabase
       .from('navigation_items')
       .delete()
       .eq('id', resolvedParams.id)
 
     if (error) throw error
+
+    revalidatePath('/owner', 'layout')
 
     return NextResponse.json({ success: true })
   } catch (error: any) {

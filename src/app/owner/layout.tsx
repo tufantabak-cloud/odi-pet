@@ -105,7 +105,13 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
       <div className="flex flex-1 w-full max-w-[1440px] mx-auto">
 
         {/* Desktop Sidebar Nav */}
-        {showNav && <SideNav actionMenuItems={actionMenuItems} />}
+        {showNav && (
+          <SideNav 
+            actionMenuItems={actionMenuItems} 
+            bottomNavItems={bottomNavItems} 
+            menuDrawerItems={menuDrawerItems} 
+          />
+        )}
 
         {/* Main Content */}
         <main className="flex-1 p-4 sm:p-6 lg:p-10 pb-0 min-w-0">

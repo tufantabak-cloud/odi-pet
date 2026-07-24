@@ -26,6 +26,7 @@ import MedicationManager from '@/components/pets/MedicationManager'
 import { buildPetMicroTasks } from '@/lib/microTasks/petMicroTasks'
 import { PetMicroTaskCard } from '@/components/micro-tasks/PetMicroTaskCard'
 import { useDismissedMicroTasks } from '@/hooks/useDismissedMicroTasks'
+import { PetTaskModals, TaskModalType } from '@/components/pets/PetTaskModals'
 import ParasitePlanCompletionModal from '@/components/pets/ParasitePlanCompletionModal'
 
 import { getPlanDisplayCategory } from '@/lib/plans/utils'
@@ -276,7 +277,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   }
 
   const tabParam = searchParams?.get('tab')
-  const initialTab = (tabParam === 'saglik' || tabParam === 'asi' || tabParam === 'parazit' || tabParam === 'beslenme' || tabParam === 'veteriner')
+  const initialTab = (tabParam === 'saglik' || tabParam === 'asi' || tabParam === 'parazit' || tabParam === 'vaccines' || tabParam === 'parasite' || tabParam === 'beslenme' || tabParam === 'veteriner')
     ? 'saglik'
     : (tabParam === 'bakim' || tabParam === 'hijyen' || tabParam === 'aktivite' || tabParam === 'diger')
       ? 'bakim'
@@ -357,6 +358,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     return () => window.removeEventListener('open-pet-section', handleOpenSection);
   }, [])
   const [quickUpdateConfig, setQuickUpdateConfig] = useState<any>(null)
+  const [activeTaskModal, setActiveTaskModal] = useState<TaskModalType>(null)
   const [parasiteCompletionTask, setParasiteCompletionTask] = useState<any>(null)
   const [enrichOpen, setEnrichOpen] = useState(false)
   const [taskWizardOpen, setTaskWizardOpen] = useState(false)
@@ -1333,6 +1335,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       parasitePlans: schedules?.filter(
         (s: any) => (s.sub_category || '').includes('Parazit') || (s.title || '').toLowerCase().includes('parazit')
       ) ?? [],
+      carePlans: schedules?.filter(
+        (s: any) => s._plan_category === 'bakim' || s.category === 'Bakım' || s.category === 'bakim'
+      ) ?? [],
       latestWeight: growthRecords?.[0] ?? null,
       nutritionProfile: nutritionLogs?.[0] ?? null,
     })
@@ -1476,8 +1481,16 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                         task={task}
                         petId={pet.id}
                         onDismiss={(id) => dismissTask(pet.id, id)}
+                        onDirectAction={(action) => setActiveTaskModal(action as TaskModalType)}
                       />
                     ))}
+                    <PetTaskModals
+                      petId={pet.id}
+                      petName={pet.name}
+                      activeModal={activeTaskModal}
+                      onClose={() => setActiveTaskModal(null)}
+                      onSuccess={() => router.refresh()}
+                    />
                   </div>
                 )}
 

@@ -222,7 +222,6 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
         source: 'user_manual',
         created_by: user.id,
         plan_id: null,
-        source_plan_item_id: null,
         // Alan yalnızca ürün seçildiğinde gönderilir; Migration B canlıya
         // uygulanana kadar ürünsüz kayıt akışı aynen çalışmaya devam eder.
         ...(product ? { parasite_product_id: product.id } : {})

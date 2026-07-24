@@ -52,6 +52,9 @@ function PlanYapContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const urlPetId = searchParams.get('pet_id');
+  // "Kayıt Ekle" (geriye dönük kayıt) modu — aynı akışı yeniden çerçeveler
+  const isLog = searchParams.get('mode') === 'log';
+  const modeSuffix = isLog ? '&mode=log' : '';
 
   const supabase = createBrowserSupabaseClient();
 
@@ -72,7 +75,7 @@ function PlanYapContent() {
         
         if (data.length === 1 && !urlPetId) {
           setSelectedPet(data[0].id);
-          router.replace(`?pet_id=${data[0].id}`);
+          router.replace(`?pet_id=${data[0].id}${modeSuffix}`);
         }
       }
       setIsLoadingPets(false);
@@ -99,10 +102,10 @@ function PlanYapContent() {
               >
                 <ArrowLeft size={20} className="text-text-secondary" />
               </button>
-              <h1 className="text-[22px] font-black text-text-primary">Rutin Planla</h1>
+              <h1 className="text-[22px] font-black text-text-primary">{isLog ? 'Kayıt Ekle' : 'Rutin Planla'}</h1>
             </div>
           </div>
-          <p className="text-text-secondary mb-8 ml-1">Kimin için plan oluşturuyoruz?</p>
+          <p className="text-text-secondary mb-8 ml-1">{isLog ? 'Hangi dostunuz için kayıt ekliyoruz?' : 'Kimin için plan oluşturuyoruz?'}</p>
           
           {isLoadingPets ? (
             <div className="space-y-4 animate-pulse">
@@ -118,7 +121,7 @@ function PlanYapContent() {
                   aria-label={`${pet.name} profili için plan oluştur`}
                   onClick={() => {
                     setSelectedPet(pet.id);
-                    router.push(`?pet_id=${pet.id}`);
+                    router.push(`?pet_id=${pet.id}${modeSuffix}`);
                   }}
                   className="w-full flex items-center p-5 bg-white border border-gray-100 rounded-3xl shadow-sm hover:shadow-md hover:border-indigo-200 transition-all group focus:outline-none focus:ring-4 focus:ring-indigo-500/30"
                 >
@@ -171,7 +174,7 @@ function PlanYapContent() {
             <button 
               onClick={() => {
                 setSelectedPet(null);
-                router.push('/owner/plan-yap');
+                router.push(isLog ? '/owner/plan-yap?mode=log' : '/owner/plan-yap');
               }}
               className="text-[12px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors px-3 py-1.5 rounded-xl"
             >
@@ -194,9 +197,9 @@ function PlanYapContent() {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-2xl font-black text-text-primary">Rutin Planla</h1>
+          <h1 className="text-2xl font-black text-text-primary">{isLog ? 'Kayıt Ekle' : 'Rutin Planla'}</h1>
         </div>
-        <p className="text-text-secondary text-[12px] mb-6 ml-1">Lütfen plan oluşturmak istediğiniz kategoriyi seçin.</p>
+        <p className="text-text-secondary text-[12px] mb-6 ml-1">{isLog ? 'Yapılan işlemin kategorisini seçin.' : 'Lütfen plan oluşturmak istediğiniz kategoriyi seçin.'}</p>
 
         {/* Categories List */}
         <div className="space-y-3" role="list">
@@ -206,10 +209,13 @@ function PlanYapContent() {
               role="listitem"
               aria-label={`${category.title} plan sihirbazını başlat`}
               onClick={() => {
-                if (category.key === 'beslenme') {
+                // Beslenme "plan" modunda özel besleme planlayıcısına gider; "log"
+                // modunda ise diğer kategoriler gibi sihirbazda geçmişe dönük
+                // öğün/işlem kaydı olarak işlenir.
+                if (category.key === 'beslenme' && !isLog) {
                   router.push(`/owner/pets/${selectedPet}/nutrition`);
                 } else {
-                  router.push(`/owner/plan-yap/${category.key}?pet_id=${selectedPet}`);
+                  router.push(`/owner/plan-yap/${category.key}?pet_id=${selectedPet}${modeSuffix}`);
                 }
               }}
               className="w-full flex items-start p-4 bg-white border border-gray-100 rounded-3xl shadow-sm hover:shadow-md hover:border-gray-200 transition-all group focus:outline-none focus:ring-4 focus:ring-slate-300/30 text-left"

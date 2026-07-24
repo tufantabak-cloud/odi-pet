@@ -74,13 +74,12 @@ export async function GET() {
       'vaccine_overdue_detected', 'vaccine_plan_reset', 'vaccine_chain_completed',
     ])
 
-  // --- Vaccine OS DB metrics ---
-  const { count: vaccineSetupCount } = await supabase
-    .from('vaccine_setup_profiles').select('id', { count: 'exact', head: true })
-
   const { data: vaccineRecordsRaw } = await supabase
     .from('vaccine_records_v2')
     .select('pet_id, status, vaccine_code, dose_number')
+
+  // En az bir aşı kaydı bulunan evcil hayvan sayısı
+  const vaccinatedPetCount = new Set((vaccineRecordsRaw || []).map((r: any) => r.pet_id)).size
 
   const vaccineSetupCompletedSet = new Set<string>()
   const vaccineFirstLoggedSet = new Set<string>()
@@ -304,8 +303,10 @@ export async function GET() {
       }))
     },
     vaccine: {
-      setupCompletedPct: safe(vaccineSetupCount, totalSignups),
-      firstVaccinePct: safe(vaccineFirstLoggedSet.size, vaccineSetupCount),
+      vaccinatedPetCount,
+      vaccinatedPetPct: safe(vaccinatedPetCount, totalSignups),
+      setupCompletedPct: safe(vaccinatedPetCount, totalSignups),
+      firstVaccinePct: safe(vaccineFirstLoggedSet.size, vaccinatedPetCount),
       overdueRatePct,
       chainCompletionPct,
       quickMarkRatePct,

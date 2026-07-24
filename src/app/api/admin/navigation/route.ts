@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createAdminSupabaseClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth/get-current-profile'
 import { z } from 'zod'
+import { revalidatePath } from 'next/cache'
 
 const navSchema = z.object({
   label: z.string().min(1).max(50),
@@ -15,7 +16,7 @@ export async function GET() {
   const profile = await requireRole(['admin', 'founder'])
   if (!profile) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const supabase = await createServerSupabaseClient()
+  const supabase = createAdminSupabaseClient()
 
   const { data: items, error: itemsError } = await supabase
     .from('navigation_items')
@@ -47,7 +48,7 @@ export async function POST(req: Request) {
     const body = await req.json()
     const parsed = navSchema.parse(body)
 
-    const supabase = await createServerSupabaseClient()
+    const supabase = createAdminSupabaseClient()
     const { data, error } = await supabase
       .from('navigation_items')
       .insert({
@@ -63,6 +64,8 @@ export async function POST(req: Request) {
       .single()
 
     if (error) throw error
+
+    revalidatePath('/owner', 'layout')
 
     return NextResponse.json(data)
   } catch (error: any) {

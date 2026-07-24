@@ -153,7 +153,7 @@ function SuccessContent() {
           </div>
           
           <button
-            onClick={() => router.push(`/owner/pets/${petId}/vaccines`)}
+            onClick={() => router.push(`/owner/plan-yap/asi?pet_id=${petId}&mode=log`)}
             className="w-full bg-primary text-white border-none rounded-xl py-3 text-[14px] font-bold cursor-pointer hover:bg-primary-hover transition-colors shadow-md"
           >
             Şimdi ekle (2 dk) →

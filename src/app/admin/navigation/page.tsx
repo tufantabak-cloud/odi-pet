@@ -41,7 +41,7 @@ export default function AdminNavigationPage() {
   const fetchNavData = async () => {
     setIsLoading(true)
     try {
-      const res = await fetch('/api/admin/navigation')
+      const res = await fetch(`/api/admin/navigation?t=${Date.now()}`, { cache: 'no-store' })
       if (res.ok) {
         const data = await res.json()
         setItems(data.items || [])
@@ -141,6 +141,9 @@ export default function AdminNavigationPage() {
       if (res.ok) {
         triggerToast('Durum güncellendi.')
         fetchNavData()
+      } else {
+        const err = await res.json()
+        triggerToast(`Hata: ${err.error || 'Güncellenemedi'}`)
       }
     } catch (e) {
       console.error(e)
@@ -188,9 +191,76 @@ export default function AdminNavigationPage() {
 
   const createPage = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Sayfa ekleme formunu simüle edelim (Mevcut yapı api'ye bağlanabilir)
-    triggerToast('Sayfa oluşturma backend\'e bağlı değil. Ancak form mantığı hazır.')
-    setNewPageForm({ label: '', href: '', icon: 'ti-home' })
+    setIsSaving(true)
+    try {
+      const res = await fetch('/api/admin/navigation/pages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newPageForm)
+      })
+      if (res.ok) {
+        triggerToast('Yeni sayfa havuzuna eklendi.')
+        setNewPageForm({ label: '', href: '', icon: 'ti-home' })
+        fetchNavData()
+      } else {
+        const err = await res.json()
+        triggerToast(`Hata: ${err.error || 'Sayfa eklenemedi'}`)
+      }
+    } catch (e) {
+      console.error(e)
+      triggerToast('Bir hata oluştu.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const deletePage = async (id: string) => {
+    if (!confirm('Bu sayfayı havuzdan silmek istediğinize emin misiniz? (Bağlı navigasyon bağlantıları da silinebilir veya etkilenebilir)')) return
+    setIsSaving(true)
+    try {
+      const res = await fetch(`/api/admin/navigation/pages/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        triggerToast('Sayfa havuzdan silindi.')
+        fetchNavData()
+      } else {
+        const err = await res.json()
+        triggerToast(`Hata: ${err.error || 'Sayfa silinemedi'}`)
+      }
+    } catch (e) {
+      console.error(e)
+      triggerToast('Bir hata oluştu.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const updatePageField = async (id: string, field: 'label' | 'href', value: string) => {
+    setIsSaving(true)
+    try {
+      const res = await fetch(`/api/admin/navigation/pages/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: value })
+      })
+      if (res.ok) {
+        triggerToast('Sayfa güncellendi.')
+        fetchNavData()
+      } else {
+        const err = await res.json()
+        triggerToast(`Hata: ${err.error || 'Güncellenemedi'}`)
+      }
+    } catch (e) {
+      console.error(e)
+      triggerToast('Bir hata oluştu.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.currentTarget.blur()
+    }
   }
 
   const renderSlotTab = (slot: 'bottom_nav' | 'action_menu' | 'menu_drawer', title: string, maxItems: number) => {
@@ -233,11 +303,9 @@ export default function AdminNavigationPage() {
                   </button>
                 </div>
                 
-                {slot === 'menu_drawer' && (
-                  <button onClick={() => toggleActive(item)} className="px-3 py-1.5 bg-bg-main rounded-lg text-[12px] font-bold">
-                    {item.is_active ? 'Gizle' : 'Göster'}
-                  </button>
-                )}
+                <button onClick={() => toggleActive(item)} className="px-3 py-1.5 bg-bg-main rounded-lg text-[12px] font-bold">
+                  {item.is_active ? 'Gizle' : 'Göster'}
+                </button>
 
                 {slot === 'bottom_nav' ? (
                   <button onClick={() => setShowPagePickerForSlot({ slot, editingItemId: item.id })} className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-[12px] font-bold">
@@ -281,15 +349,39 @@ export default function AdminNavigationPage() {
                     {getIcon(page.icon, 20)}
                   </div>
                   <div>
-                    <input type="text" defaultValue={page.label} className="text-[14px] font-bold text-text-primary border-none bg-transparent outline-none focus:ring-2 focus:ring-primary rounded px-1 -ml-1" />
-                    <input type="text" defaultValue={page.href} className="text-[11px] text-text-secondary font-mono border-none bg-transparent outline-none focus:ring-2 focus:ring-primary rounded px-1 -ml-1 w-full mt-1" />
+                    <input 
+                      type="text" 
+                      defaultValue={page.label} 
+                      onKeyDown={handleKeyDown}
+                      onBlur={(e) => {
+                        if (e.target.value !== page.label) {
+                          updatePageField(page.id, 'label', e.target.value)
+                        }
+                      }}
+                      className="text-[14px] font-bold text-text-primary border-none bg-transparent outline-none focus:ring-2 focus:ring-primary rounded px-1 -ml-1" 
+                    />
+                    <input 
+                      type="text" 
+                      defaultValue={page.href} 
+                      onKeyDown={handleKeyDown}
+                      onBlur={(e) => {
+                        if (e.target.value !== page.href) {
+                          updatePageField(page.id, 'href', e.target.value)
+                        }
+                      }}
+                      className="text-[11px] text-text-secondary font-mono border-none bg-transparent outline-none focus:ring-2 focus:ring-primary rounded px-1 -ml-1 w-full mt-1" 
+                    />
                   </div>
                 </div>
                 <div className="flex items-center">
                   {page.is_locked ? (
                     <span className="text-[20px] text-text-secondary mr-2" title="Sistem sayfası, silinemez">🔒</span>
                   ) : (
-                    <button className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-[12px] font-bold">
+                    <button 
+                      onClick={() => deletePage(page.id)} 
+                      disabled={isSaving}
+                      className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-[12px] font-bold disabled:opacity-50"
+                    >
                       Sil
                     </button>
                   )}

@@ -288,7 +288,7 @@ export default function DashboardClient({
       {/* 8. Sağlık Geçmişi Sihirbazı Hatırlatıcısı (Yalnızca activePetId için) */}
       {showHealthWizardForActivePet && activePet && (
         <div key={`health-wizard-${activePet.id}`} className="px-[var(--space-4)] pt-3 pb-1">
-          <Link href={`/owner/pets/${activePet.id}/vaccines`} className="block w-full bg-[var(--color-surface-1)] border border-[var(--color-border)] rounded-[12px] p-4 text-left hover:bg-[var(--color-surface-2)] transition-colors shadow-sm">
+          <Link href={`/owner/plan-yap/asi?pet_id=${activePet.id}&mode=log`} className="block w-full bg-[var(--color-surface-1)] border border-[var(--color-border)] rounded-[12px] p-4 text-left hover:bg-[var(--color-surface-2)] transition-colors shadow-sm">
             <div className="flex items-start gap-3">
               <i className="ti ti-clock text-[20px] text-[var(--color-primary)] mt-0.5 shrink-0" />
               <div>

@@ -1,0 +1,88 @@
+import { NextResponse } from 'next/server';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { processRecordCreation } from '@/lib/agenda/write-handlers/write-service';
+
+export async function POST(request: Request) {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 });
+    }
+
+    const body = await request.json();
+
+    // Rejects user_id in request body for security
+    if ('user_id' in body || 'userId' in body) {
+      return NextResponse.json({ error: 'FORBIDDEN_USER_ID_IN_BODY' }, { status: 400 });
+    }
+
+    const { pet_id, category, input, idempotencyKey, selectedPlanId } = body;
+
+    if (!pet_id || !category || !input || !idempotencyKey) {
+      return NextResponse.json({ error: 'INVALID_PARAMETERS' }, { status: 400 });
+    }
+
+    // Verify UUID format for idempotencyKey
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(idempotencyKey)) {
+      return NextResponse.json({ error: 'INVALID_IDEMPOTENCY_KEY' }, { status: 400 });
+    }
+
+    // Verify pet ownership
+    const { data: pet, error: petErr } = await supabase
+      .from('pets')
+      .select('id')
+      .eq('id', pet_id)
+      .eq('owner_id', user.id)
+      .single();
+
+    if (petErr || !pet) {
+      return NextResponse.json({ error: 'PET_NOT_FOUND_OR_FORBIDDEN' }, { status: 403 });
+    }
+
+    // Process record creation via atomic write service
+    const { result, matchResult } = await processRecordCreation(
+      category,
+      input,
+      {
+        supabase,
+        petId: pet_id,
+        userId: user.id,
+        timeZone: 'Europe/Istanbul',
+        idempotencyKey
+      },
+      selectedPlanId
+    );
+
+    return NextResponse.json({
+      success: true,
+      result,
+      matchResult
+    });
+  } catch (error: any) {
+    console.error('Error in /api/agenda/write:', error);
+    
+    // User-friendly error code translation
+    const msg = error.message || '';
+    let userMsg = 'Kayıt oluşturulurken bir hata oluştu.';
+    if (msg.includes('MAIN_PLAN_NOT_FOUND_OR_INVALID') || msg.includes('INVALID_OCCURRENCE')) {
+      userMsg = 'Eşleşen görev artık güncel değil. Lütfen tekrar kontrol edin.';
+    } else if (msg.includes('IDEMPOTENCY_KEY_CONTEXT_CONFLICT') || msg.includes('OCCURRENCE_RECORD_CONFLICT')) {
+      userMsg = 'Bu kayıt farklı bir görev bağlamında zaten işlenmiş.';
+    } else if (msg.includes('NEXT_SCHEDULED_AT_REQUIRED')) {
+      userMsg = 'Sonraki tarih hesaplanamadı.';
+    } else if (msg.includes('PLAN_RECORD_IDENTITY_MISMATCH')) {
+      userMsg = 'Seçilen görev bu kayıtla uyuşmuyor.';
+    } else if (msg.includes('INVALID_APPLICATION_METHOD')) {
+      userMsg = 'Geçersiz uygulama yöntemi seçildi.';
+    }
+
+    return NextResponse.json({
+      error: 'WRITE_ERROR',
+      message: userMsg,
+      rawError: msg
+    }, { status: 400 });
+  }
+}

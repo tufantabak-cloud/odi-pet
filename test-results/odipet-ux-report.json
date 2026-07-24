@@ -1,0 +1,1296 @@
+{
+  "reports": [
+    {
+      "session_id": "ECE_FULL_FLOW_001",
+      "persona": {
+        "name": "Ece",
+        "age": 18,
+        "device": "iPhone",
+        "tech_level": "very_high"
+      },
+      "environment": {
+        "base_url": "http://localhost:3001",
+        "is_production": false,
+        "viewport": "390x844",
+        "browser": "chromium"
+      },
+      "results": [
+        {
+          "module": "registration",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "about:blank",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/login\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/login\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Ece_registration_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "pet_addition",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Ece_pet_addition_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "smart_next_step",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Ece_smart_next_step_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "vaccine",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Ece_vaccine_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "parasite",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Ece_parasite_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "nutrition",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Ece_nutrition_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "budget",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Ece_budget_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "health_card",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Ece_health_card_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "find_services",
+          "outcome": "failed",
+          "duration_seconds": 10,
+          "status": "missing_selector",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"services-module-button\"]')\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Ece_find_services_fail.png",
+          "notes": "Target selector was missing or not interactive."
+        }
+      ],
+      "overall_result": "fail",
+      "ux_lead_note": "Persona got blocked at some steps. Check selectors."
+    },
+    {
+      "session_id": "MERT_FULL_FLOW_002",
+      "persona": {
+        "name": "Mert",
+        "age": 24,
+        "device": "Android",
+        "tech_level": "medium"
+      },
+      "environment": {
+        "base_url": "http://localhost:3001",
+        "is_production": false,
+        "viewport": "412x915",
+        "browser": "chromium"
+      },
+      "results": [
+        {
+          "module": "registration",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "about:blank",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/login\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/login\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Mert_registration_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "pet_addition",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Mert_pet_addition_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "smart_next_step",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Mert_smart_next_step_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "vaccine",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Mert_vaccine_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "parasite",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Mert_parasite_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "nutrition",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Mert_nutrition_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "budget",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Mert_budget_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "health_card",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Mert_health_card_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "find_services",
+          "outcome": "failed",
+          "duration_seconds": 10,
+          "status": "missing_selector",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"services-module-button\"]')\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Mert_find_services_fail.png",
+          "notes": "Target selector was missing or not interactive."
+        }
+      ],
+      "overall_result": "fail",
+      "ux_lead_note": "Persona got blocked at some steps. Check selectors."
+    },
+    {
+      "session_id": "SELIN_FULL_FLOW_003",
+      "persona": {
+        "name": "Selin",
+        "age": 31,
+        "device": "iPhone",
+        "tech_level": "high"
+      },
+      "environment": {
+        "base_url": "http://localhost:3001",
+        "is_production": false,
+        "viewport": "390x844",
+        "browser": "chromium"
+      },
+      "results": [
+        {
+          "module": "registration",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "about:blank",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/login\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/login\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Selin_registration_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "pet_addition",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Selin_pet_addition_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "smart_next_step",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Selin_smart_next_step_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "vaccine",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Selin_vaccine_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "parasite",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Selin_parasite_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "nutrition",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Selin_nutrition_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "budget",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Selin_budget_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "health_card",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Selin_health_card_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "find_services",
+          "outcome": "failed",
+          "duration_seconds": 10,
+          "status": "missing_selector",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"services-module-button\"]')\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Selin_find_services_fail.png",
+          "notes": "Target selector was missing or not interactive."
+        }
+      ],
+      "overall_result": "fail",
+      "ux_lead_note": "Persona got blocked at some steps. Check selectors."
+    },
+    {
+      "session_id": "BURAK_FULL_FLOW_004",
+      "persona": {
+        "name": "Burak",
+        "age": 38,
+        "device": "Android",
+        "tech_level": "medium"
+      },
+      "environment": {
+        "base_url": "http://localhost:3001",
+        "is_production": false,
+        "viewport": "360x800",
+        "browser": "chromium"
+      },
+      "results": [
+        {
+          "module": "registration",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "about:blank",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/login\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/login\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Burak_registration_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "pet_addition",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Burak_pet_addition_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "smart_next_step",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Burak_smart_next_step_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "vaccine",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Burak_vaccine_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "parasite",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Burak_parasite_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "nutrition",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Burak_nutrition_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "budget",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Burak_budget_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "health_card",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Burak_health_card_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "find_services",
+          "outcome": "failed",
+          "duration_seconds": 10,
+          "status": "missing_selector",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"services-module-button\"]')\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Burak_find_services_fail.png",
+          "notes": "Target selector was missing or not interactive."
+        }
+      ],
+      "overall_result": "fail",
+      "ux_lead_note": "Persona got blocked at some steps. Check selectors."
+    },
+    {
+      "session_id": "AYŞE_FULL_FLOW_005",
+      "persona": {
+        "name": "Ayşe",
+        "age": 45,
+        "device": "Android",
+        "tech_level": "low"
+      },
+      "environment": {
+        "base_url": "http://localhost:3001",
+        "is_production": false,
+        "viewport": "412x892",
+        "browser": "chromium"
+      },
+      "results": [
+        {
+          "module": "registration",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "about:blank",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/login\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/login\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Ayşe_registration_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "pet_addition",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Ayşe_pet_addition_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "smart_next_step",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Ayşe_smart_next_step_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "vaccine",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Ayşe_vaccine_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "parasite",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Ayşe_parasite_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "nutrition",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Ayşe_nutrition_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "budget",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Ayşe_budget_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "health_card",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Ayşe_health_card_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "find_services",
+          "outcome": "failed",
+          "duration_seconds": 10,
+          "status": "missing_selector",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"services-module-button\"]')\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Ayşe_find_services_fail.png",
+          "notes": "Target selector was missing or not interactive."
+        }
+      ],
+      "overall_result": "fail",
+      "ux_lead_note": "Persona got blocked at some steps. Check selectors."
+    },
+    {
+      "session_id": "DENIZ_FULL_FLOW_006",
+      "persona": {
+        "name": "Deniz",
+        "age": 52,
+        "device": "iPhone",
+        "tech_level": "medium"
+      },
+      "environment": {
+        "base_url": "http://localhost:3001",
+        "is_production": false,
+        "viewport": "428x926",
+        "browser": "chromium"
+      },
+      "results": [
+        {
+          "module": "registration",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "about:blank",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/login\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/login\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Deniz_registration_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "pet_addition",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Deniz_pet_addition_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "smart_next_step",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Deniz_smart_next_step_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "vaccine",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Deniz_vaccine_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "parasite",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Deniz_parasite_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "nutrition",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Deniz_nutrition_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "budget",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Deniz_budget_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "health_card",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Deniz_health_card_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "find_services",
+          "outcome": "failed",
+          "duration_seconds": 10,
+          "status": "missing_selector",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"services-module-button\"]')\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Deniz_find_services_fail.png",
+          "notes": "Target selector was missing or not interactive."
+        }
+      ],
+      "overall_result": "fail",
+      "ux_lead_note": "Persona got blocked at some steps. Check selectors."
+    },
+    {
+      "session_id": "KEREM_FULL_FLOW_007",
+      "persona": {
+        "name": "Kerem",
+        "age": 29,
+        "device": "Android",
+        "tech_level": "high"
+      },
+      "environment": {
+        "base_url": "http://localhost:3001",
+        "is_production": false,
+        "viewport": "384x854",
+        "browser": "chromium"
+      },
+      "results": [
+        {
+          "module": "registration",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "about:blank",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/login\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/login\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Kerem_registration_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "pet_addition",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Kerem_pet_addition_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "smart_next_step",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Kerem_smart_next_step_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "vaccine",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Kerem_vaccine_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "parasite",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Kerem_parasite_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "nutrition",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Kerem_nutrition_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "budget",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Kerem_budget_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "health_card",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Kerem_health_card_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "find_services",
+          "outcome": "failed",
+          "duration_seconds": 10,
+          "status": "missing_selector",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"services-module-button\"]')\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Kerem_find_services_fail.png",
+          "notes": "Target selector was missing or not interactive."
+        }
+      ],
+      "overall_result": "fail",
+      "ux_lead_note": "Persona got blocked at some steps. Check selectors."
+    },
+    {
+      "session_id": "HÜLYA_FULL_FLOW_008",
+      "persona": {
+        "name": "Hülya",
+        "age": 63,
+        "device": "Android",
+        "tech_level": "low"
+      },
+      "environment": {
+        "base_url": "http://localhost:3001",
+        "is_production": false,
+        "viewport": "360x740",
+        "browser": "chromium"
+      },
+      "results": [
+        {
+          "module": "registration",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "about:blank",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/login\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/login\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Hülya_registration_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "pet_addition",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Hülya_pet_addition_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "smart_next_step",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Hülya_smart_next_step_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "vaccine",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Hülya_vaccine_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "parasite",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Hülya_parasite_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "nutrition",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Hülya_nutrition_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "budget",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Hülya_budget_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "health_card",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Hülya_health_card_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "find_services",
+          "outcome": "failed",
+          "duration_seconds": 10,
+          "status": "missing_selector",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"services-module-button\"]')\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Hülya_find_services_fail.png",
+          "notes": "Target selector was missing or not interactive."
+        }
+      ],
+      "overall_result": "fail",
+      "ux_lead_note": "Persona got blocked at some steps. Check selectors."
+    },
+    {
+      "session_id": "CAN_FULL_FLOW_009",
+      "persona": {
+        "name": "Can",
+        "age": 34,
+        "device": "iPhone",
+        "tech_level": "high"
+      },
+      "environment": {
+        "base_url": "http://localhost:3001",
+        "is_production": false,
+        "viewport": "375x812",
+        "browser": "chromium"
+      },
+      "results": [
+        {
+          "module": "registration",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "about:blank",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/login\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/login\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Can_registration_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "pet_addition",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Can_pet_addition_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "smart_next_step",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Can_smart_next_step_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "vaccine",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Can_vaccine_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "parasite",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Can_parasite_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "nutrition",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Can_nutrition_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "budget",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Can_budget_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "health_card",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Can_health_card_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "find_services",
+          "outcome": "failed",
+          "duration_seconds": 10,
+          "status": "missing_selector",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"services-module-button\"]')\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Can_find_services_fail.png",
+          "notes": "Target selector was missing or not interactive."
+        }
+      ],
+      "overall_result": "fail",
+      "ux_lead_note": "Persona got blocked at some steps. Check selectors."
+    },
+    {
+      "session_id": "NAZLI_FULL_FLOW_010",
+      "persona": {
+        "name": "Nazlı",
+        "age": 27,
+        "device": "Android",
+        "tech_level": "high"
+      },
+      "environment": {
+        "base_url": "http://localhost:3001",
+        "is_production": false,
+        "viewport": "412x915",
+        "browser": "chromium"
+      },
+      "results": [
+        {
+          "module": "registration",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "about:blank",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/login\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/login\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Nazlı_registration_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "pet_addition",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Nazlı_pet_addition_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "smart_next_step",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Nazlı_smart_next_step_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "vaccine",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Nazlı_vaccine_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "parasite",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Nazlı_parasite_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "nutrition",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Nazlı_nutrition_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "budget",
+          "outcome": "failed",
+          "duration_seconds": 2,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Nazlı_budget_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "health_card",
+          "outcome": "failed",
+          "duration_seconds": 0,
+          "status": "technical_error",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Nazlı_health_card_fail.png",
+          "notes": ""
+        },
+        {
+          "module": "find_services",
+          "outcome": "failed",
+          "duration_seconds": 10,
+          "status": "missing_selector",
+          "stuck_screen": "chrome-error://chromewebdata/",
+          "selector_used": "",
+          "error_message": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"services-module-button\"]')\u001b[22m\n",
+          "screenshot_path": "test-results/screenshots/Nazlı_find_services_fail.png",
+          "notes": "Target selector was missing or not interactive."
+        }
+      ],
+      "overall_result": "fail",
+      "ux_lead_note": "Persona got blocked at some steps. Check selectors."
+    }
+  ],
+  "summary": {
+    "total_personas": 10,
+    "passed_personas": 0,
+    "partial_personas": 0,
+    "failed_personas": 10,
+    "most_failed_module": "registration",
+    "slowest_module": "find_services",
+    "missing_selectors": [
+      ""
+    ],
+    "blocker_issues": [],
+    "major_issues": [
+      "registration threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/login\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/login\", waiting until \"load\"\u001b[22m\n",
+      "pet_addition threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "smart_next_step threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "vaccine threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "parasite threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "nutrition threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "budget threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "health_card threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "registration threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/login\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/login\", waiting until \"load\"\u001b[22m\n",
+      "pet_addition threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "smart_next_step threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "vaccine threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "parasite threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "nutrition threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "budget threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "health_card threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "registration threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/login\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/login\", waiting until \"load\"\u001b[22m\n",
+      "pet_addition threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "smart_next_step threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "vaccine threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "parasite threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "nutrition threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "budget threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "health_card threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "registration threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/login\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/login\", waiting until \"load\"\u001b[22m\n",
+      "pet_addition threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "smart_next_step threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "vaccine threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "parasite threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "nutrition threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "budget threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "health_card threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "registration threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/login\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/login\", waiting until \"load\"\u001b[22m\n",
+      "pet_addition threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "smart_next_step threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "vaccine threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "parasite threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "nutrition threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "budget threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "health_card threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "registration threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/login\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/login\", waiting until \"load\"\u001b[22m\n",
+      "pet_addition threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "smart_next_step threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "vaccine threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "parasite threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "nutrition threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "budget threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "health_card threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "registration threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/login\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/login\", waiting until \"load\"\u001b[22m\n",
+      "pet_addition threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "smart_next_step threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "vaccine threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "parasite threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "nutrition threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "budget threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "health_card threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "registration threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/login\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/login\", waiting until \"load\"\u001b[22m\n",
+      "pet_addition threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "smart_next_step threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "vaccine threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "parasite threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "nutrition threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "budget threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "health_card threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "registration threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/login\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/login\", waiting until \"load\"\u001b[22m\n",
+      "pet_addition threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "smart_next_step threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "vaccine threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "parasite threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "nutrition threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "budget threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "health_card threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "registration threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/login\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/login\", waiting until \"load\"\u001b[22m\n",
+      "pet_addition threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "smart_next_step threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "vaccine threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/owner/dashboard\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/owner/dashboard\", waiting until \"load\"\u001b[22m\n",
+      "parasite threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "nutrition threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "budget threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n",
+      "health_card threw a technical error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/\", waiting until \"load\"\u001b[22m\n"
+    ],
+    "minor_issues": [
+      "Missing selector: ",
+      "Missing selector: ",
+      "Missing selector: ",
+      "Missing selector: ",
+      "Missing selector: ",
+      "Missing selector: ",
+      "Missing selector: ",
+      "Missing selector: ",
+      "Missing selector: ",
+      "Missing selector: "
+    ],
+    "recommended_actions": [
+      "Fix issues in the registration module since it had the highest failure rate.",
+      "Inject missing data-testid attributes for: "
+    ]
+  },
+  "cleanup_skipped": true,
+  "cleanup_reason": "Admin cleanup yetkisi bulunamadı."
+}
