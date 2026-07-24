@@ -17,11 +17,11 @@ export async function GET(req: NextRequest) {
 
   // Empty query guard: do not return full catalog on empty search without species/form filter
   if (!q && !species && !foodForm) {
-    return NextResponse.json({ data: [] })
+    return NextResponse.json({ products: [], data: [], brands: [] })
   }
 
   if (q && q.length < 2 && !species && !foodForm) {
-    return NextResponse.json({ data: [] })
+    return NextResponse.json({ products: [], data: [], brands: [] })
   }
 
   const supabase = await createServerSupabaseClient()
@@ -41,7 +41,33 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // 2. Query food_product_families with relations
+  // 2. Brand Search (Verified and Active Brands)
+  let matchedBrands: { id: string; display_name: string; normalized_name: string }[] = []
+  if (q) {
+    const normalizedQ = q.toLowerCase().replace(/[^a-z0-9]/g, '')
+    let brandQuery = supabase
+      .from('food_brands')
+      .select('id, display_name, normalized_name, verification_status, is_active')
+      .eq('is_active', true)
+      .eq('verification_status', 'verified')
+
+    const brandFilter = matchedBrandIdsFromAliases.length > 0
+      ? `display_name.ilike.%${q}%,normalized_name.ilike.%${normalizedQ}%,id.in.(${matchedBrandIdsFromAliases.join(',')})`
+      : `display_name.ilike.%${q}%,normalized_name.ilike.%${normalizedQ}%`
+
+    brandQuery = brandQuery.or(brandFilter).limit(10)
+    const { data: brandData } = await brandQuery
+
+    if (brandData && brandData.length > 0) {
+      matchedBrands = brandData.map(b => ({
+        id: b.id,
+        display_name: b.display_name,
+        normalized_name: b.normalized_name
+      }))
+    }
+  }
+
+  // 3. Query food_product_families with relations (Verified Product Families)
   let query = supabase
     .from('food_product_families')
     .select(`
@@ -154,5 +180,9 @@ export async function GET(req: NextRequest) {
       }
     })
 
-  return NextResponse.json({ data: formattedResults })
+  return NextResponse.json({
+    products: formattedResults,
+    data: formattedResults,
+    brands: matchedBrands
+  })
 }

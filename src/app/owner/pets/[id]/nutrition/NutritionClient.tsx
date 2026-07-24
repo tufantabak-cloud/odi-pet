@@ -67,6 +67,7 @@ export default function NutritionClient({
   // Catalog Search States
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<any[]>([])
+  const [matchedBrands, setMatchedBrands] = useState<any[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [selectedCatalogItem, setSelectedCatalogItem] = useState<any | null>(null)
 
@@ -106,13 +107,15 @@ export default function NutritionClient({
     setSearchQuery(query)
     if (query.trim().length < 2) {
       setSearchResults([])
+      setMatchedBrands([])
       return
     }
     setIsSearching(true)
     try {
       const res = await fetch(`/api/nutrition/catalog/search?q=${encodeURIComponent(query)}&species=${pet.species || 'dog'}`)
       const json = await res.json()
-      setSearchResults(json.data || [])
+      setSearchResults(json.products || json.data || [])
+      setMatchedBrands(json.brands || [])
     } catch (err) {
       console.error('Catalog search error:', err)
     } finally {
@@ -641,16 +644,39 @@ export default function NutritionClient({
 
               {isSearching && <p className="text-[13px] text-text-secondary font-bold text-center py-4">Katalog aranıyor...</p>}
 
-              {!isSearching && searchQuery.length >= 2 && searchResults.length === 0 && (
-                <div className="p-4 text-center bg-bg-main rounded-xl flex flex-col items-center gap-2">
-                  <p className="text-[13px] text-text-secondary font-medium">Aradığınız mama katalogda bulunamadı.</p>
-                  <button
-                    onClick={() => { setAddMode('manual'); setBrandText(searchQuery) }}
-                    className="btn-secondary text-[13px] font-bold py-2 px-4 min-h-[44px]"
-                  >
-                    Listede yok, elle ekle ✍️
-                  </button>
-                </div>
+              {!isSearching && searchQuery.trim().length >= 2 && searchResults.length === 0 && (
+                matchedBrands.length > 0 ? (
+                  <div className="p-4 text-center bg-amber-50/80 border border-amber-200 rounded-xl flex flex-col items-center gap-2 animate-fadeIn">
+                    <div className="flex items-center gap-2 text-amber-900 font-extrabold text-[15px]">
+                      <span>🏷️</span>
+                      <h4>{matchedBrands[0].display_name} markası bulundu</h4>
+                    </div>
+                    <p className="text-[12px] text-amber-800 font-medium">
+                      Bu markanın seçtiğiniz ürünü henüz doğrulanmış katalogda bulunmuyor. Ürün adını elle ekleyebilirsiniz.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAddMode('manual')
+                        setBrandText(matchedBrands[0].display_name)
+                      }}
+                      className="btn-primary text-[13px] font-bold py-2.5 px-5 min-h-[44px] mt-1 shadow-sm"
+                    >
+                      {matchedBrands[0].display_name} ile devam et ✍️
+                    </button>
+                  </div>
+                ) : (
+                  <div className="p-4 text-center bg-bg-main rounded-xl flex flex-col items-center gap-2">
+                    <p className="text-[13px] text-text-secondary font-medium">Aradığınız mama katalogda bulunamadı.</p>
+                    <button
+                      type="button"
+                      onClick={() => { setAddMode('manual'); setBrandText(searchQuery) }}
+                      className="btn-secondary text-[13px] font-bold py-2 px-4 min-h-[44px]"
+                    >
+                      Listede yok, elle ekle ✍️
+                    </button>
+                  </div>
+                )
               )}
 
               <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">

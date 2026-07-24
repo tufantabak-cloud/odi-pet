@@ -148,4 +148,54 @@ describe('Beslenme Katalog Arama ve GTIN API Sözleşmeleri', () => {
       userMessage: 'Kamera izni verilemedi. Lütfen barkod numarasını el ile yazın.'
     })
   })
+
+  it('Arama yanıtı hem products hem brands içermelidir ve pending aileler products içinde DÖNMEMELİDİR', () => {
+    const mockSearchResponse = (query: string, species: string) => {
+      // Mock catalog data
+      const brands = [{ id: 'b1', display_name: 'Royal Canin', normalized_name: 'royalcanin' }]
+      const productFamilies = [
+        { id: 'f1', official_name: 'Sterilised 37', species: 'cat', verification_status: 'verified', brand_id: 'b1' },
+        { id: 'f2', official_name: 'Medium Adult Dog', species: 'dog', verification_status: 'pending', brand_id: 'b1' }
+      ]
+
+      const isBrandMatch = brands.some(b => b.display_name.toLowerCase().includes(query.toLowerCase()))
+      const matchedBrands = isBrandMatch ? brands : []
+
+      // Filter products: MUST be verified AND species compatible
+      const verifiedProducts = productFamilies.filter(f => 
+        f.verification_status === 'verified' && 
+        (f.species === species || f.species === 'both') &&
+        f.official_name.toLowerCase().includes(query.toLowerCase())
+      )
+
+      return {
+        products: verifiedProducts,
+        brands: matchedBrands
+      }
+    }
+
+    // Royal Canin + Dog -> products empty (dog family is pending), brands contains Royal Canin
+    const dogRoyalRes = mockSearchResponse('royal canin', 'dog')
+    expect(dogRoyalRes.products).toHaveLength(0)
+    expect(dogRoyalRes.brands).toHaveLength(1)
+    expect(dogRoyalRes.brands[0].display_name).toBe('Royal Canin')
+
+    // Totally unknown brand -> both products and brands empty
+    const unknownRes = mockSearchResponse('unknownbrandxyz', 'dog')
+    expect(unknownRes.products).toHaveLength(0)
+    expect(unknownRes.brands).toHaveLength(0)
+  })
+
+  it('Marka bulunduğunda UI fallback davranışı markayı otomatik doldurmalıdır', () => {
+    const handleBrandFallback = (brandName: string) => {
+      return {
+        addMode: 'manual',
+        brandText: brandName
+      }
+    }
+
+    const fallbackResult = handleBrandFallback('Royal Canin')
+    expect(fallbackResult.addMode).toBe('manual')
+    expect(fallbackResult.brandText).toBe('Royal Canin')
+  })
 })
