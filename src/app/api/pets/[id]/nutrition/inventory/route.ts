@@ -20,7 +20,7 @@ async function assertOwner(petId: string, userId: string) {
   return !!data
 }
 
-// GET — current inventory
+// GET — current inventory with server-side estimated calculations
 export async function GET(_req: NextRequest, { params }: Params) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -28,17 +28,63 @@ export async function GET(_req: NextRequest, { params }: Params) {
   const { id } = await params
   const supabase = await createServerSupabaseClient()
 
-  const { data, error } = await supabase
-    .from('food_inventory')
-    .select('*')
-    .eq('pet_id', id)
-    .single()
+  const [{ data: inv, error }, { data: assignments }] = await Promise.all([
+    supabase.from('food_inventory').select('*').eq('pet_id', id).maybeSingle(),
+    supabase.from('pet_food_assignments').select('daily_target_grams').eq('pet_id', id).is('ended_at', null)
+  ])
 
-  if (error && error.code !== 'PGRST116') {
+  if (error) {
     return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
   }
 
-  return NextResponse.json({ inventory: data ?? null })
+  if (!inv) {
+    return NextResponse.json({
+      inventory: null,
+      estimated_remaining_grams: null,
+      days_left: null,
+      stock_status: 'unknown'
+    })
+  }
+
+  const dailyUsage = (assignments || []).reduce((sum, a) => sum + Number(a.daily_target_grams || 0), 0)
+  
+  if (dailyUsage <= 0) {
+    return NextResponse.json({
+      inventory: inv,
+      estimated_remaining_grams: Number(inv.current_stock_grams || 0),
+      days_left: null,
+      stock_status: 'paused'
+    })
+  }
+
+  const rawStock = Number(inv.current_stock_grams || 0)
+  const lastRefill = inv.last_refill_date ? new Date(inv.last_refill_date).getTime() : Date.now()
+  const now = Date.now()
+
+  let passedDays = 0
+  if (lastRefill < now) {
+    passedDays = Math.max(0, Math.floor((now - lastRefill) / (1000 * 60 * 60 * 24)))
+  }
+
+  const estRemaining = Math.max(0, rawStock - (passedDays * dailyUsage))
+
+  if (estRemaining <= 0) {
+    return NextResponse.json({
+      inventory: inv,
+      estimated_remaining_grams: 0,
+      days_left: 0,
+      stock_status: 'depleted'
+    })
+  }
+
+  const daysLeft = Math.round((estRemaining / dailyUsage) * 10) / 10
+
+  return NextResponse.json({
+    inventory: inv,
+    estimated_remaining_grams: estRemaining,
+    days_left: daysLeft,
+    stock_status: 'available'
+  })
 }
 
 // PATCH — update inventory (stock + daily usage)
@@ -54,19 +100,47 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const body = await req.json()
   const supabase = await createServerSupabaseClient()
 
-  const currentStock = Number(body.current_stock_grams ?? 0)
-  const dailyUsage = Number(body.estimated_daily_usage ?? 0)
-  const nextRefill = estimateNextRefillDate({ stockGrams: currentStock, dailyUsage })
+  // Fetch current inventory and assignments to calculate usage
+  const [{ data: currentInv }, { data: assignments }] = await Promise.all([
+    supabase.from('food_inventory').select('*').eq('pet_id', id).single(),
+    supabase.from('pet_food_assignments').select('daily_target_grams').eq('pet_id', id).is('ended_at', null)
+  ]);
+
+  const dailyUsage = (assignments || []).reduce((sum, a) => sum + (a.daily_target_grams || 0), 0);
+  
+  let newStockGrams = 0;
+  
+  if (body.action === 'add_package') {
+    // Calculate current estimated stock
+    const prevStock = currentInv?.current_stock_grams || 0;
+    const lastRefill = currentInv?.last_refill_date;
+    
+    let estimatedStock = prevStock;
+    if (lastRefill && dailyUsage > 0) {
+      const passedMs = Date.now() - new Date(lastRefill).getTime();
+      const passedDays = Math.max(0, Math.floor(passedMs / (1000 * 60 * 60 * 24)));
+      estimatedStock = Math.max(0, prevStock - (passedDays * dailyUsage));
+    }
+    
+    const addedGrams = Number(body.package_size_grams || 0) * Number(body.package_count || 1);
+    newStockGrams = estimatedStock + addedGrams;
+  } else if (body.action === 'set_stock') {
+    newStockGrams = Number(body.current_stock_grams || 0);
+  } else {
+    // Fallback for direct update
+    newStockGrams = Number(body.current_stock_grams || 0);
+  }
+
+  const nextRefill = estimateNextRefillDate({ stockGrams: newStockGrams, dailyUsage })
 
   const payload: FoodInventoryInsert = {
     pet_id: id,
-    current_stock_grams: currentStock,
+    current_stock_grams: newStockGrams,
     estimated_daily_usage: dailyUsage || null,
-    last_refill_date: body.last_refill_date ?? null,
+    last_refill_date: new Date().toISOString(),
     low_stock_threshold_days: body.low_stock_threshold_days
       ? Number(body.low_stock_threshold_days)
-      : 5,
-    updated_at: new Date().toISOString(),
+      : (currentInv?.low_stock_threshold_days || 5)
   }
 
   if (nextRefill) {
@@ -85,7 +159,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   // Fire refill_risk event if critical
   if (dailyUsage > 0) {
-    const daysLeft = currentStock / dailyUsage
+    const daysLeft = newStockGrams / dailyUsage
     if (daysLeft <= 3) {
       await fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? ''}/api/analytics/onboarding`, {
         method: 'POST',
@@ -100,4 +174,27 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   revalidatePath(`/owner/pets/${id}/nutrition`)
   return NextResponse.json({ inventory: data })
+}
+
+// DELETE — delete inventory
+export async function DELETE(req: NextRequest, { params }: Params) {
+  const user = await getSessionUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { id } = await params
+  if (!(await assertOwner(id, user.id))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const supabase = await createServerSupabaseClient()
+  
+  const { error } = await supabase
+    .from('food_inventory')
+    .delete()
+    .eq('pet_id', id)
+
+  if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
+
+  revalidatePath(`/owner/pets/${id}/nutrition`)
+  return NextResponse.json({ success: true })
 }

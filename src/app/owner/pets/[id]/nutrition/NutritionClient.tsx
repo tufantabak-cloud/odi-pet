@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { calculateRefillRisk } from '@/lib/nutrition/refill-engine'
+import ConfirmModal from '@/components/ui/ConfirmModal'
 import CoachMark from '@/components/ui/CoachMark'
 import { SmartScanner } from '@/components/ui/SmartScanner'
 import { BarcodeScanner } from '@/components/ui/BarcodeScanner'
@@ -60,9 +61,36 @@ export default function NutritionClient({
 
   // Assignment Modal States
   const [showAddModal, setShowAddModal] = useState(false)
+  const [modalStep, setModalStep] = useState<1 | 2>(1)
+  const [createdAssignmentId, setCreatedAssignmentId] = useState<string | null>(null)
+  const [isSwappingFood, setIsSwappingFood] = useState(false)
+  
+  // Stock Entry State
+  const [stockRemainingType, setStockRemainingType] = useState<'full' | 'three_quarters' | 'half' | 'quarter' | 'exact' | 'unknown'>('unknown')
+  const [exactGrams, setExactGrams] = useState<number | ''>('')
+  const [unopenedCount, setUnopenedCount] = useState<number | ''>('')
+  const [packageSize, setPackageSize] = useState<number | ''>('')
+
   const [addMode, setAddMode] = useState<'search' | 'barcode' | 'manual'>('search')
   const [editingAssignment, setEditingAssignment] = useState<any | null>(null)
   const [apiErrorMessage, setApiErrorMessage] = useState<string | null>(null)
+
+  // Stock Action Modal State
+  const [showStockModal, setShowStockModal] = useState(false)
+  const [showClearStockModal, setShowClearStockModal] = useState(false)
+  const [showMarkDepletedModal, setShowMarkDepletedModal] = useState(false)
+  const [showEndAssignmentModal, setShowEndAssignmentModal] = useState(false)
+  const [targetEndingAssignment, setTargetEndingAssignment] = useState<any | null>(null)
+  const [endStockChoice, setEndStockChoice] = useState<'keep' | 'mark_depleted' | 'remove'>('keep')
+
+  const [stockActionType, setStockActionType] = useState<'add_package' | 'set_stock'>('add_package')
+  const [stockInputMode, setStockInputMode] = useState<'ratio' | 'exact'>('ratio')
+  const [addPackageSize, setAddPackageSize] = useState<number | ''>(3000)
+  const [addPackageCount, setAddPackageCount] = useState<number>(1)
+  const [setPackageSizeInput, setSetPackageSizeInput] = useState<number | ''>(3000)
+  const [setRatioType, setSetRatioType] = useState<'full' | 'three_quarters' | 'half' | 'quarter'>('full')
+  const [setUnopenedInput, setSetUnopenedInput] = useState<number | ''>('')
+  const [setExactGramsInput, setSetExactGramsInput] = useState<number | ''>('')
 
   // Catalog Search States
   const [searchQuery, setSearchQuery] = useState('')
@@ -95,15 +123,63 @@ export default function NutritionClient({
   // Active Primary Assignment
   const activePrimary = assignments.find((a: any) => a.is_primary && !a.ended_at) || null
 
-  // Engine Calcs
-  const dailyUsage = activePrimary?.daily_target_grams ?? (inventory?.estimated_daily_usage as number) ?? (profile?.daily_grams as number) ?? 0
-  const currentStock = (inventory?.current_stock_grams as number) ?? 0
-  const refillStatus = calculateRefillRisk({ stockGrams: currentStock, dailyUsage })
+  // Engine & Server-Side Estimated Stock Calculations
+  const hasInventory = inventory !== null && inventory !== undefined
+  const activeAssignmentsTotalGrams = assignments
+    .filter((a: any) => !a.ended_at)
+    .reduce((sum: number, a: any) => sum + Number(a.daily_target_grams || 0), 0)
 
-  const hasUsage = dailyUsage > 0
-  const showBanner = hasUsage && (refillStatus.risk === 'WARNING' || refillStatus.risk === 'CRITICAL')
-  const badgeClass = refillStatus.risk === 'CRITICAL' ? 'text-red-500' : refillStatus.risk === 'WARNING' ? 'text-orange-500' : 'text-green-500'
-  const riskLabel = hasUsage ? `${refillStatus.daysLeft} gün kaldı` : 'Kullanım belirtilmedi'
+  const dailyUsage = activeAssignmentsTotalGrams > 0 
+    ? activeAssignmentsTotalGrams 
+    : (inventory?.estimated_daily_usage as number) ?? (profile?.daily_grams as number) ?? 0
+
+  let estimatedRemainingGrams = 0
+  let stockStatus: 'unknown' | 'available' | 'depleted' | 'paused' = 'unknown'
+
+  if (!hasInventory) {
+    stockStatus = 'unknown'
+  } else if (dailyUsage <= 0) {
+    estimatedRemainingGrams = Number(inventory.current_stock_grams || 0)
+    stockStatus = 'paused'
+  } else {
+    const rawStock = Number(inventory.current_stock_grams || 0)
+    const lastRefill = inventory.last_refill_date ? new Date(inventory.last_refill_date).getTime() : Date.now()
+    const now = Date.now()
+    let passedDays = 0
+    if (lastRefill < now) {
+      passedDays = Math.max(0, Math.floor((now - lastRefill) / (1000 * 60 * 60 * 24)))
+    }
+    estimatedRemainingGrams = Math.max(0, rawStock - (passedDays * dailyUsage))
+    stockStatus = estimatedRemainingGrams === 0 ? 'depleted' : 'available'
+  }
+
+  const refillStatus = hasInventory && dailyUsage > 0
+    ? calculateRefillRisk({ stockGrams: estimatedRemainingGrams, dailyUsage })
+    : { daysLeft: null, risk: 'OK', shouldNotify: false, shouldSuggestRefill: false, shouldUrgentRefill: false }
+
+  const showBanner = hasInventory && dailyUsage > 0 && stockStatus === 'available' && (refillStatus.risk === 'WARNING' || refillStatus.risk === 'CRITICAL')
+  
+  const badgeClass = stockStatus === 'unknown'
+    ? 'text-text-secondary font-bold'
+    : stockStatus === 'depleted'
+      ? 'text-red-500 font-extrabold'
+      : stockStatus === 'paused'
+        ? 'text-amber-500 font-bold'
+        : refillStatus.risk === 'CRITICAL'
+          ? 'text-red-500 font-extrabold'
+          : refillStatus.risk === 'WARNING'
+            ? 'text-orange-500 font-extrabold'
+            : 'text-green-500 font-extrabold'
+
+  const riskLabel = stockStatus === 'unknown'
+    ? 'Stok bilgisi girilmedi'
+    : stockStatus === 'depleted'
+      ? 'Mama bitti'
+      : stockStatus === 'paused'
+        ? 'Stok takibi duraklatıldı (Aktif mama yok)'
+        : refillStatus.daysLeft !== null
+          ? `${refillStatus.daysLeft} gün kaldı`
+          : 'Kullanım belirtilmedi'
 
   // Calculated per meal and total daily grams
   const computedDailyGrams = portionMode === 'meal' ? gramsInput * mealsInput : gramsInput
@@ -248,11 +324,27 @@ export default function NutritionClient({
     }
   }
 
-  // ── Submit New Assignment ──
-  async function handleCreateAssignment(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
-    setApiErrorMessage(null)
+  // ── Submit New Assignment (Step 1) ──
+  async function handleNextStep(e: React.FormEvent) {
+    e.preventDefault();
+    setApiErrorMessage(null);
+    setModalStep(2);
+    if (selectedCatalogItem?.skus?.[0]?.weight_grams) {
+      setPackageSize(selectedCatalogItem.skus[0].weight_grams);
+    } else if (barcodeResult?.weight_grams) {
+      setPackageSize(barcodeResult.weight_grams);
+    } else {
+      setPackageSize('');
+    }
+  }
+
+  // ── Submit All (Step 2) ──
+  async function handleSaveAll(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setApiErrorMessage(null);
+
+    let assignId = createdAssignmentId;
 
     try {
       const payload: any = {
@@ -284,26 +376,90 @@ export default function NutritionClient({
         payload.measurement_method = 'owner_confirmed'
       }
 
-      const res = await fetch(`/api/pets/${pet.id}/nutrition/assignments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
+      const pSize = Number(packageSize) || 0;
+      const uCount = Number(unopenedCount) || 0;
+      let calculatedGrams = 0;
+      let stockAction: any = null;
 
-      const json = await res.json()
-
-      if (!res.ok) {
-        if (res.status === 409 || json.error === 'ACTIVE_PRIMARY_FOOD_EXISTS') {
-          setApiErrorMessage('Bu pet için halihazırda aktif bir mama kaydı mevcuttur.')
+      if (stockRemainingType === 'unknown') {
+        stockAction = { action: 'delete' };
+      } else {
+        if (stockRemainingType === 'exact') {
+           calculatedGrams = Number(exactGrams) || 0;
         } else {
-          setApiErrorMessage(json.message || json.error || 'Mama kaydı oluşturulamadı.')
+           let mult = 0;
+           if (stockRemainingType === 'full') mult = 1.0;
+           if (stockRemainingType === 'three_quarters') mult = 0.75;
+           if (stockRemainingType === 'half') mult = 0.5;
+           if (stockRemainingType === 'quarter') mult = 0.25;
+           calculatedGrams = Math.round((pSize * mult) + (pSize * uCount));
         }
-        return
+        stockAction = { action: 'set', grams: calculatedGrams };
+      }
+
+      if (isSwappingFood && activePrimary) {
+        const res = await fetch(`/api/pets/${pet.id}/nutrition/assignments/swap`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            old_assignment_id: activePrimary.id,
+            new_assignment: payload,
+            new_stock_decision: stockAction
+          })
+        });
+        const json = await res.json();
+        if (!res.ok) {
+           setApiErrorMessage(json.message || 'Değişim yapılamadı.');
+           setLoading(false);
+           return;
+        }
+      } else {
+        if (!assignId) {
+          const res = await fetch(`/api/pets/${pet.id}/nutrition/assignments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          })
+
+          const json = await res.json()
+
+          if (!res.ok) {
+            if (res.status === 409 || json.error === 'ACTIVE_PRIMARY_FOOD_EXISTS') {
+              setApiErrorMessage('Bu pet için halihazırda aktif bir mama kaydı mevcuttur.')
+            } else {
+              setApiErrorMessage(json.message || json.error || 'Mama kaydı oluşturulamadı.')
+            }
+            setLoading(false);
+            return;
+          }
+          assignId = json.assignment?.id;
+          setCreatedAssignmentId(assignId);
+        }
+
+        if (stockAction.action === 'delete') {
+          if (inventory) {
+            await fetch(`/api/pets/${pet.id}/nutrition/inventory`, { method: 'DELETE' });
+          }
+        } else {
+          const stockRes = await fetch(`/api/pets/${pet.id}/nutrition/inventory`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'set_stock', current_stock_grams: stockAction.grams })
+          });
+          if (!stockRes.ok) {
+            const sJson = await stockRes.json();
+            setApiErrorMessage(sJson.error || 'Stok kaydedilemedi, tekrar deneyin.');
+            setLoading(false);
+            return;
+          }
+        }
       }
 
       setShowAddModal(false)
       resetModalState()
       router.refresh()
+    } catch(err) {
+      setApiErrorMessage('Bir hata oluştu. Lütfen tekrar deneyin.');
     } finally {
       setLoading(false)
     }
@@ -340,6 +496,76 @@ export default function NutritionClient({
     }
   }
 
+  // ── End Active Assignment Handlers ──
+  function openEndAssignmentModal(assignment: any) {
+    setTargetEndingAssignment(assignment)
+    setEndStockChoice('keep')
+    setShowEndAssignmentModal(true)
+  }
+
+  async function handleEndAssignmentSubmit() {
+    if (!targetEndingAssignment) return
+    setLoading(true)
+    setShowEndAssignmentModal(false)
+    try {
+      const res = await fetch(`/api/pets/${pet.id}/nutrition/assignments/${targetEndingAssignment.id}/end`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stock_action: endStockChoice })
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        setApiErrorMessage(json.message || 'Plan sonlandırılamadı.')
+      } else {
+        router.refresh()
+      }
+    } catch (err) {
+      setApiErrorMessage('Bir hata oluştu.')
+    } finally {
+      setLoading(false)
+      setTargetEndingAssignment(null)
+    }
+  }
+
+  // ── Modal Handlers for Stock Clear and Deplete ──
+  async function handleClearStockConfirm() {
+    setLoading(true)
+    setShowClearStockModal(false)
+    try {
+      const res = await fetch(`/api/pets/${pet.id}/nutrition/inventory`, { method: 'DELETE' })
+      if (!res.ok) {
+        setApiErrorMessage('Stok kaydı silinemedi.')
+      } else {
+        router.refresh()
+      }
+    } catch (err) {
+      setApiErrorMessage('Stok kaydı silinirken hata oluştu.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleMarkDepletedConfirm() {
+    setLoading(true)
+    setShowMarkDepletedModal(false)
+    try {
+      const res = await fetch(`/api/pets/${pet.id}/nutrition/inventory`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'set_stock', current_stock_grams: 0 })
+      })
+      if (!res.ok) {
+        setApiErrorMessage('Stok güncellenemedi.')
+      } else {
+        router.refresh()
+      }
+    } catch (err) {
+      setApiErrorMessage('Bir hata oluştu.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // ── Save Allergy and Sensitivity Notes ──
   async function handleSaveAllergies(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -364,6 +590,88 @@ export default function NutritionClient({
     }
   }
 
+  // ── Dedicated Stock Management Handlers ──
+  function openStockModal(action: 'add_package' | 'set_stock') {
+    setStockActionType(action)
+    setApiErrorMessage(null)
+    const pSize = activePrimary?.food_sku?.package_size_grams || 3000
+    setAddPackageSize(pSize)
+    setAddPackageCount(1)
+    setSetPackageSizeInput(pSize)
+    if (action === 'set_stock' && inventory?.current_stock_grams) {
+      setStockInputMode('exact')
+      setSetExactGramsInput(inventory.current_stock_grams)
+    } else {
+      setStockInputMode('ratio')
+    }
+    setShowStockModal(true)
+  }
+
+  async function handleStockModalSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setLoading(true)
+    setApiErrorMessage(null)
+
+    try {
+      let body: any = {}
+      if (stockActionType === 'add_package') {
+        const pSize = Number(addPackageSize) || 0
+        const pCount = Number(addPackageCount) || 1
+        if (pSize <= 0) {
+          setApiErrorMessage('Lütfen geçerli bir paket boyu (gram) girin.')
+          setLoading(false)
+          return
+        }
+        body = {
+          action: 'add_package',
+          package_size_grams: pSize,
+          package_count: pCount
+        }
+      } else {
+        let calculatedGrams = 0
+        if (stockInputMode === 'exact') {
+          calculatedGrams = Number(setExactGramsInput) || 0
+        } else {
+          const pSize = Number(setPackageSizeInput) || 0
+          const uCount = Number(setUnopenedInput) || 0
+          let mult = 1.0
+          if (setRatioType === 'three_quarters') mult = 0.75
+          if (setRatioType === 'half') mult = 0.5
+          if (setRatioType === 'quarter') mult = 0.25
+          calculatedGrams = Math.round((pSize * mult) + (pSize * uCount))
+        }
+
+        body = {
+          action: 'set_stock',
+          current_stock_grams: calculatedGrams
+        }
+      }
+
+      const res = await fetch(`/api/pets/${pet.id}/nutrition/inventory`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+
+      const json = await res.json()
+      if (!res.ok) {
+        setApiErrorMessage(json.error || 'Stok kaydedilemedi.')
+        return
+      }
+
+      setShowStockModal(false)
+      router.refresh()
+    } catch (err) {
+      setApiErrorMessage('Stok güncellenirken bir hata oluştu.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function handleDeleteInventory() {
+    setShowClearStockModal(true)
+  }
+
   function resetModalState() {
     setSelectedCatalogItem(null)
     setBarcodeResult(null)
@@ -383,6 +691,13 @@ export default function NutritionClient({
     setProductSuggestions([])
     setShowSuggestionsDropdown(false)
     setSelectedManualFamilyId(null)
+    setModalStep(1)
+    setCreatedAssignmentId(null)
+    setIsSwappingFood(false)
+    setStockRemainingType('unknown')
+    setExactGrams('')
+    setUnopenedCount('')
+    setPackageSize('')
   }
 
   async function handleAddLog(e: React.FormEvent<HTMLFormElement>) {
@@ -527,12 +842,35 @@ export default function NutritionClient({
                     {activePrimary.food_product_family?.official_name || activePrimary.product_free_text || 'Özel Formül'}
                   </p>
                 </div>
-                <button
-                  onClick={() => setEditingAssignment(activePrimary)}
-                  className="px-4 py-2 bg-bg-main hover:bg-border-main text-text-primary font-bold text-[13px] rounded-xl transition-colors min-h-[44px] flex items-center"
-                >
-                  Düzenle
-                </button>
+                <details className="relative group">
+                  <summary className="px-4 py-2 bg-bg-main hover:bg-border-main text-text-primary font-bold text-[13px] rounded-xl transition-colors min-h-[44px] flex items-center cursor-pointer list-none select-none">
+                    İşlemler <span className="ml-1 text-[10px]">▼</span>
+                  </summary>
+                  <div className="absolute right-0 top-[110%] w-52 bg-white rounded-xl shadow-lg border border-border-main py-1.5 z-50 flex flex-col">
+                    <button
+                      onClick={() => setEditingAssignment(activePrimary)}
+                      className="px-4 py-2.5 text-left text-[13px] font-bold text-text-primary hover:bg-bg-main"
+                    >
+                      Porsiyonu Düzenle
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsSwappingFood(true);
+                        setAddMode('search');
+                        setShowAddModal(true);
+                      }}
+                      className="px-4 py-2.5 text-left text-[13px] font-bold text-primary hover:bg-primary/10"
+                    >
+                      Mamayı Değiştir
+                    </button>
+                    <button
+                      onClick={() => openEndAssignmentModal(activePrimary)}
+                      className="px-4 py-2.5 text-left text-[13px] font-bold text-red-500 hover:bg-red-50 border-t border-border-main mt-1 pt-2.5"
+                    >
+                      Kullanmayı Bırak
+                    </button>
+                  </div>
+                </details>
               </div>
 
               <div className="grid grid-cols-3 gap-2 bg-bg-main p-3 rounded-xl mt-1">
@@ -559,22 +897,90 @@ export default function NutritionClient({
           )}
 
           {/* Stock Overview */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="card-base p-5 border-l-4 border-l-amber-500">
-              <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest mb-1">Mevcut Mama</p>
-              <p className="font-bold text-text-primary text-[15px] leading-tight">
-                {activePrimary?.food_product_family?.brand?.display_name || activePrimary?.brand_free_text || 'Eklenmedi'}
-              </p>
-              <p className="text-[12px] text-text-secondary">
-                {activePrimary?.food_product_family?.official_name || activePrimary?.product_free_text || ''}
-              </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="card-base p-5 border-l-4 border-l-amber-500 flex flex-col justify-between">
+              <div>
+                <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest mb-1">Mevcut Mama</p>
+                <p className="font-bold text-text-primary text-[15px] leading-tight">
+                  {activePrimary?.food_product_family?.brand?.display_name || activePrimary?.brand_free_text || 'Eklenmedi'}
+                </p>
+                <p className="text-[12px] text-text-secondary mt-0.5">
+                  {activePrimary?.food_product_family?.official_name || activePrimary?.product_free_text || ''}
+                </p>
+              </div>
             </div>
-            <div className="card-base p-5 relative overflow-hidden">
-              <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest mb-1">Kalan Stok</p>
-              <p className={`font-black text-[22px] ${badgeClass}`}>
-                {currentStock ? `${(currentStock / 1000).toFixed(1)} kg` : 'Stok Belirtilmedi'}
-              </p>
-              <p className="text-[11px] font-bold text-text-secondary">{riskLabel}</p>
+
+            <div className="card-base p-5 relative overflow-hidden flex flex-col justify-between gap-3">
+              <div>
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest mb-1">Kalan Stok</p>
+                </div>
+
+                {!hasInventory ? (
+                  <div>
+                    <p className="font-black text-[18px] text-text-secondary">Stok bilgisi girilmedi</p>
+                    <p className="text-[11px] font-bold text-text-secondary mt-0.5">Stok ve bitiş tarihini takip edin</p>
+                  </div>
+                ) : stockStatus === 'depleted' ? (
+                  <div>
+                    <p className="font-black text-[22px] text-red-500">Mama bitti</p>
+                    <p className="text-[11px] font-bold text-red-600">0 g / 0 gün kaldı</p>
+                  </div>
+                ) : stockStatus === 'paused' ? (
+                  <div>
+                    <p className="font-black text-[20px] text-amber-500">
+                      {estimatedRemainingGrams >= 1000 ? `${(estimatedRemainingGrams / 1000).toFixed(1)} kg` : `${estimatedRemainingGrams} g`}
+                    </p>
+                    <p className="text-[11px] font-bold text-amber-600">Stok takibi duraklatıldı (Aktif mama yok)</p>
+                  </div>
+                ) : (
+                  <div>
+                    <p className={`font-black text-[22px] ${badgeClass}`}>
+                      {estimatedRemainingGrams >= 1000 ? `${(estimatedRemainingGrams / 1000).toFixed(1)} kg` : `${estimatedRemainingGrams} g`}
+                    </p>
+                    <p className="text-[11px] font-bold text-text-secondary">{riskLabel}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-2 pt-1 border-t border-border-main/60">
+                {!hasInventory ? (
+                  <button
+                    onClick={() => openStockModal('set_stock')}
+                    className="btn-primary w-full py-2 text-[12px] font-bold min-h-[38px] flex items-center justify-center gap-1 shadow-sm"
+                  >
+                    <span>➕</span> Başlangıç Stoğunu Ekle
+                  </button>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2 w-full">
+                    <button
+                      onClick={() => openStockModal('add_package')}
+                      className="btn-primary py-2 text-[12px] font-bold min-h-[36px] flex items-center justify-center gap-1 shadow-sm"
+                    >
+                      <span>📦</span> Yeni Paket Ekle
+                    </button>
+                    <button
+                      onClick={() => openStockModal('set_stock')}
+                      className="btn-secondary py-2 text-[12px] font-bold min-h-[36px] flex items-center justify-center gap-1"
+                    >
+                      <span>✏️</span> Stok Miktarını Düzelt
+                    </button>
+                    <button
+                      onClick={() => setShowMarkDepletedModal(true)}
+                      className="px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl text-[12px] font-bold min-h-[36px] flex items-center justify-center gap-1 border border-amber-200 transition-colors"
+                    >
+                      <span>🛑</span> Mama Bitti
+                    </button>
+                    <button
+                      onClick={() => setShowClearStockModal(true)}
+                      className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-[12px] font-bold min-h-[36px] flex items-center justify-center gap-1 border border-red-200 transition-colors"
+                    >
+                      <span>🗑️</span> Stok Bilgisini Kaldır
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -983,8 +1389,8 @@ export default function NutritionClient({
           )}
 
           {/* Portion & Meals Step (Common for all selections) */}
-          {(selectedCatalogItem || barcodeResult || addMode === 'manual') && (
-            <form onSubmit={handleCreateAssignment} className="flex flex-col gap-4 border-t border-border-main pt-4">
+          {(selectedCatalogItem || barcodeResult || addMode === 'manual') && modalStep === 1 && (
+            <form onSubmit={handleNextStep} className="flex flex-col gap-4 border-t border-border-main pt-4">
               <div className="flex flex-col gap-2">
                 <label className="text-[12px] font-bold text-text-secondary">Miktar Giriş Tipi</label>
                 <div className="flex bg-bg-main p-1 rounded-lg">
@@ -1040,11 +1446,56 @@ export default function NutritionClient({
 
               <button
                 type="submit"
-                disabled={loading}
                 className="btn-primary min-h-[48px] w-full text-[14px] font-bold shadow-md shadow-primary/20"
               >
-                {loading ? 'Kaydediliyor...' : 'Mama Kaydını Tamamla'}
+                İleri: Stok Durumu
               </button>
+            </form>
+          )}
+
+          {modalStep === 2 && (
+            <form onSubmit={handleSaveAll} className="flex flex-col gap-4 border-t border-border-main pt-4">
+              <h3 className="font-extrabold text-[15px] text-text-primary">Evde ne kadar mama var?</h3>
+              
+              <div className="flex flex-col gap-3">
+                <div>
+                  <label className="text-[12px] font-bold text-text-secondary">Paket Boyu (gram)</label>
+                  <input type="number" min="1" value={packageSize} onChange={e => setPackageSize(e.target.value ? Number(e.target.value) : '')} className="input-base" placeholder="Örn: 3000" />
+                </div>
+
+                <div>
+                  <label className="text-[12px] font-bold text-text-secondary">Kalan Miktar</label>
+                  <select value={stockRemainingType} onChange={e => setStockRemainingType(e.target.value as any)} className="input-base">
+                    <option value="unknown">Şimdi bilmiyorum</option>
+                    <option value="full">Yeni açıldı / Dolu</option>
+                    <option value="three_quarters">Yaklaşık 3/4</option>
+                    <option value="half">Yaklaşık yarım</option>
+                    <option value="quarter">Yaklaşık 1/4</option>
+                    <option value="exact">Tam gramını biliyorum</option>
+                  </select>
+                </div>
+
+                {stockRemainingType === 'exact' && (
+                  <div>
+                    <label className="text-[12px] font-bold text-text-secondary">Gram cinsinden miktar</label>
+                    <input type="number" min="1" value={exactGrams} onChange={e => setExactGrams(e.target.value ? Number(e.target.value) : '')} className="input-base" />
+                  </div>
+                )}
+
+                {stockRemainingType !== 'unknown' && stockRemainingType !== 'exact' && (
+                  <div>
+                    <label className="text-[12px] font-bold text-text-secondary">Açılmamış paket sayısı (isteğe bağlı)</label>
+                    <input type="number" min="0" value={unopenedCount} onChange={e => setUnopenedCount(e.target.value ? Number(e.target.value) : '')} className="input-base" placeholder="0" />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3 mt-2">
+                <button type="button" onClick={() => setModalStep(1)} className="btn-secondary flex-1 min-h-[48px]">Geri</button>
+                <button type="submit" disabled={loading} className="btn-primary flex-1 min-h-[48px]">
+                  {loading ? 'Kaydediliyor...' : 'Kaydet'}
+                </button>
+              </div>
             </form>
           )}
         </div>
@@ -1103,6 +1554,148 @@ export default function NutritionClient({
         )}
       </Modal>
 
+      {/* ── STOCK ACTION MODAL ── */}
+      <Modal
+        isOpen={showStockModal}
+        onClose={() => setShowStockModal(false)}
+        title={stockActionType === 'add_package' ? 'Yeni Paket Ekle' : 'Stok Miktarını Düzelt'}
+      >
+        <form onSubmit={handleStockModalSubmit} className="flex flex-col gap-4">
+          {apiErrorMessage && (
+            <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-[13px] font-bold rounded-xl">
+              ⚠️ {apiErrorMessage}
+            </div>
+          )}
+
+          {stockActionType === 'add_package' ? (
+            <div className="flex flex-col gap-3">
+              <p className="text-[13px] text-text-secondary">
+                Evdeki yeni ambalajı stoğa ekleyin. Eklenen miktar mevcut tahmini stoğunuzun üzerine ilave edilecektir.
+              </p>
+              <div>
+                <label className="text-[12px] font-bold text-text-secondary">Paket Boyu (gram) *</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={addPackageSize}
+                  onChange={e => setAddPackageSize(e.target.value ? Number(e.target.value) : '')}
+                  className="input-base"
+                  placeholder="Örn: 3000"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-[12px] font-bold text-text-secondary">Paket Adedi *</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={addPackageCount}
+                  onChange={e => setAddPackageCount(e.target.value ? Number(e.target.value) : 1)}
+                  className="input-base"
+                  required
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <p className="text-[13px] text-text-secondary">
+                Mevcut kalan mama stoğunu güncellemek için hesaplama yöntemini seçin.
+              </p>
+              <div className="flex gap-2 p-1 bg-bg-main rounded-xl border border-border-main">
+                <button
+                  type="button"
+                  onClick={() => setStockInputMode('ratio')}
+                  className={`flex-1 py-2 text-[12px] font-bold rounded-lg transition-all ${
+                    stockInputMode === 'ratio' ? 'bg-white text-primary shadow-sm' : 'text-text-secondary'
+                  }`}
+                >
+                  Yaklaşık Oran ile
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStockInputMode('exact')}
+                  className={`flex-1 py-2 text-[12px] font-bold rounded-lg transition-all ${
+                    stockInputMode === 'exact' ? 'bg-white text-primary shadow-sm' : 'text-text-secondary'
+                  }`}
+                >
+                  Tam Gram ile
+                </button>
+              </div>
+
+              {stockInputMode === 'ratio' ? (
+                <>
+                  <div>
+                    <label className="text-[12px] font-bold text-text-secondary">Paket Boyu (gram)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={setPackageSizeInput}
+                      onChange={e => setSetPackageSizeInput(e.target.value ? Number(e.target.value) : '')}
+                      className="input-base"
+                      placeholder="Örn: 3000"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[12px] font-bold text-text-secondary">Açılmış Paket Kalanı</label>
+                    <select
+                      value={setRatioType}
+                      onChange={e => setSetRatioType(e.target.value as any)}
+                      className="input-base"
+                    >
+                      <option value="full">Yeni açıldı / Dolu (1/1)</option>
+                      <option value="three_quarters">Yaklaşık 3/4</option>
+                      <option value="half">Yaklaşık yarım (1/2)</option>
+                      <option value="quarter">Yaklaşık 1/4</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[12px] font-bold text-text-secondary">Açılmamış Paket Sayısı (isteğe bağlı)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={setUnopenedInput}
+                      onChange={e => setSetUnopenedInput(e.target.value ? Number(e.target.value) : '')}
+                      className="input-base"
+                      placeholder="0"
+                    />
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <label className="text-[12px] font-bold text-text-secondary">Mevcut Toplam Stok (gram)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={setExactGramsInput}
+                    onChange={e => setSetExactGramsInput(e.target.value ? Number(e.target.value) : '')}
+                    className="input-base"
+                    placeholder="Örn: 1500"
+                    required
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex gap-3 mt-2">
+            <button
+              type="button"
+              onClick={() => setShowStockModal(false)}
+              className="btn-secondary flex-1 min-h-[44px] text-[13px] font-bold"
+            >
+              İptal
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary flex-1 min-h-[44px] text-[13px] font-bold"
+            >
+              {loading ? 'Kaydediliyor...' : 'Kaydet'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
       {/* Real EAN/UPC Barcode Camera Scanner */}
       {showBarcodeCamera && (
         <BarcodeScanner
@@ -1125,6 +1718,99 @@ export default function NutritionClient({
           }} 
         />
       )}
+
+      {/* Confirm Modal: Clear Stock */}
+      <ConfirmModal
+        open={showClearStockModal}
+        title="Stok Bilgisini Kaldır"
+        message="Stok takibini ve mevcut stok kaydını tamamen kaldırmak istediğinize emin misiniz?"
+        confirmLabel="Stok Bilgisini Kaldır"
+        cancelLabel="Vazgeç"
+        variant="danger"
+        onConfirm={handleClearStockConfirm}
+        onCancel={() => setShowClearStockModal(false)}
+      />
+
+      {/* Confirm Modal: Mark Depleted */}
+      <ConfirmModal
+        open={showMarkDepletedModal}
+        title="Mama Bitti İşaretle"
+        message="Mevcut mama stoğunu 0 gram (bitti) olarak güncellemek istediğinize emin misiniz?"
+        confirmLabel="Mama Bitti İşaretle"
+        cancelLabel="Vazgeç"
+        variant="warning"
+        onConfirm={handleMarkDepletedConfirm}
+        onCancel={() => setShowMarkDepletedModal(false)}
+      />
+
+      {/* Modal: End Assignment with Stock Decision */}
+      <Modal
+        isOpen={showEndAssignmentModal}
+        onClose={() => { setShowEndAssignmentModal(false); setTargetEndingAssignment(null); }}
+        title="Mamayı Kullanmayı Bırak"
+      >
+        <div className="flex flex-col gap-4">
+          <p className="text-[13px] text-text-secondary leading-relaxed">
+            <strong className="text-text-primary">{targetEndingAssignment?.food_product_family?.brand?.display_name || targetEndingAssignment?.brand_free_text || 'Bu mamanın'}</strong> kullanımını sonlandırmak üzeresiniz. Geçmiş beslenme ve tüketim kayıtlarınız korunacaktır.
+          </p>
+
+          <div className="flex flex-col gap-2 bg-bg-main p-3.5 rounded-xl border border-border-main">
+            <p className="text-[12px] font-black text-text-primary uppercase tracking-wide">Kalan Stok Ne Yapılsın?</p>
+            
+            <label className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-surface cursor-pointer text-[13px] font-bold text-text-primary">
+              <input
+                type="radio"
+                name="end_stock_choice"
+                value="keep"
+                checked={endStockChoice === 'keep'}
+                onChange={() => setEndStockChoice('keep')}
+                className="accent-primary"
+              />
+              <span>Stoğu koru (Stok miktarına dokunma, duraklat)</span>
+            </label>
+
+            <label className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-surface cursor-pointer text-[13px] font-bold text-amber-700">
+              <input
+                type="radio"
+                name="end_stock_choice"
+                value="mark_depleted"
+                checked={endStockChoice === 'mark_depleted'}
+                onChange={() => setEndStockChoice('mark_depleted')}
+                className="accent-amber-600"
+              />
+              <span>Mama bitti işaretle (0 gram yap)</span>
+            </label>
+
+            <label className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-surface cursor-pointer text-[13px] font-bold text-red-600">
+              <input
+                type="radio"
+                name="end_stock_choice"
+                value="remove"
+                checked={endStockChoice === 'remove'}
+                onChange={() => setEndStockChoice('remove')}
+                className="accent-red-600"
+              />
+              <span>Stok bilgisini kaldır (Stok kaydını sil)</span>
+            </label>
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <button
+              onClick={() => { setShowEndAssignmentModal(false); setTargetEndingAssignment(null); }}
+              className="flex-1 py-3 rounded-xl border border-border-main text-text-secondary font-bold text-[13px]"
+            >
+              Vazgeç
+            </button>
+            <button
+              onClick={handleEndAssignmentSubmit}
+              disabled={loading}
+              className="flex-1 py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-[13px] transition-colors"
+            >
+              Kullanmayı Bırak
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }
