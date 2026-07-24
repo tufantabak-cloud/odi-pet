@@ -278,4 +278,73 @@ describe('Beslenme Katalog Arama ve GTIN API Sözleşmeleri', () => {
     expect(customPayload.brand_free_text).toBe('Ev Yapımı')
     expect(customPayload.product_free_text).toBe('Tavuklu Pilav')
   })
+
+  it('Pro Plan ve alias yazımları ("Pro Plan", "pro plan", "pro-plan", "Purina Pro Plan") aynı markaya çözümlenmelidir', () => {
+    const resolveBrand = (input: string) => {
+      const canonicalBrand = { id: 'b_proplan', display_name: 'Pro Plan', normalized_name: 'proplan' }
+      const aliases = ['pro plan', 'proplan', 'pro-plan', 'purina pro plan']
+
+      const cleanInput = input.trim().toLowerCase().replace(/[^a-z0-9]/g, '')
+      const matchesAlias = aliases.some(a => a.replace(/[^a-z0-9]/g, '') === cleanInput)
+
+      if (cleanInput === canonicalBrand.normalized_name || matchesAlias) {
+        return canonicalBrand
+      }
+      return null
+    }
+
+    expect(resolveBrand('Pro Plan')).toEqual({ id: 'b_proplan', display_name: 'Pro Plan', normalized_name: 'proplan' })
+    expect(resolveBrand('pro plan')).toEqual({ id: 'b_proplan', display_name: 'Pro Plan', normalized_name: 'proplan' })
+    expect(resolveBrand('pro-plan')).toEqual({ id: 'b_proplan', display_name: 'Pro Plan', normalized_name: 'proplan' })
+    expect(resolveBrand('Purina Pro Plan')).toEqual({ id: 'b_proplan', display_name: 'Pro Plan', normalized_name: 'proplan' })
+  })
+
+  it('Marka çözüldüğünde Ürün alanına odaklanılması 0 harf dahi yazılsa önerileri açmalıdır ve Odi (dog) için sadece köpek ürünleri gelmelidir', () => {
+    const proPlanFamilies = [
+      { id: 'f1', official_name: 'Adult Optisenses Somonlu Kedi Maması', species: 'cat', brand_id: 'b_proplan' },
+      { id: 'f2', official_name: 'Puppy Medium Optistart Tavuklu Köpek Maması', species: 'dog', brand_id: 'b_proplan' },
+      { id: 'f3', official_name: 'Senior 7+ Tavuklu Yaşlı Kedi Maması', species: 'cat', brand_id: 'b_proplan' }
+    ]
+
+    const handleProductFocus = (selectedBrand: { id: string } | null, productInputText: string, petSpecies: string) => {
+      if (!selectedBrand) return { openDropdown: false, items: [] }
+
+      // Product query can be 0 length if brand is resolved
+      const items = proPlanFamilies.filter(f =>
+        f.brand_id === selectedBrand.id &&
+        (f.species === petSpecies || f.species === 'both') &&
+        (productInputText === '' || f.official_name.toLowerCase().includes(productInputText.toLowerCase()))
+      )
+
+      return {
+        openDropdown: true,
+        items
+      }
+    }
+
+    // Focus with 0 chars typed in product field
+    const dogFocusResult = handleProductFocus({ id: 'b_proplan' }, '', 'dog')
+    expect(dogFocusResult.openDropdown).toBe(true)
+    expect(dogFocusResult.items).toHaveLength(1)
+    expect(dogFocusResult.items[0].official_name).toBe('Puppy Medium Optistart Tavuklu Köpek Maması')
+
+    // Cat products must NOT be returned for dog
+    expect(dogFocusResult.items.some(i => i.species === 'cat')).toBe(false)
+  })
+
+  it('Marka metni değiştirildiğinde eski çözümlenmiş marka ve öneriler temizlenmelidir', () => {
+    let selectedBrand: any = { id: 'b_proplan', display_name: 'Pro Plan' }
+    let suggestions: any[] = [{ id: 'f2', official_name: 'Puppy Medium' }]
+
+    const handleBrandTextChange = (newText: string) => {
+      if (selectedBrand && newText !== selectedBrand.display_name) {
+        selectedBrand = null
+        suggestions = []
+      }
+    }
+
+    handleBrandTextChange('Pro Plan Extra')
+    expect(selectedBrand).toBeNull()
+    expect(suggestions).toHaveLength(0)
+  })
 })

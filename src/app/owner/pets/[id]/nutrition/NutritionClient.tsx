@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -86,6 +86,7 @@ export default function NutritionClient({
   const [mealsInput, setMealsInput] = useState<number>(2)
 
   // Product Autocomplete Combobox States
+  const [selectedBrand, setSelectedBrand] = useState<any | null>(null)
   const [productSuggestions, setProductSuggestions] = useState<any[]>([])
   const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false)
   const [showSuggestionsDropdown, setShowSuggestionsDropdown] = useState(false)
@@ -129,20 +130,79 @@ export default function NutritionClient({
     }
   }
 
+  // ── Debounced Brand Resolver (280ms) ──
+  useEffect(() => {
+    if (addMode !== 'manual') return
+    const cleanBrand = brandText.trim()
+    if (cleanBrand.length < 2) {
+      setSelectedBrand(null)
+      return
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/nutrition/catalog/search?q=${encodeURIComponent(cleanBrand)}&species=${pet.species || 'dog'}&include_pending=true`)
+        const json = await res.json()
+        const brands: any[] = json.brands || []
+
+        if (brands.length > 0) {
+          const normalizedClean = cleanBrand.toLowerCase().replace(/[^a-z0-9]/g, '')
+          const matched = brands.find(b => 
+            b.display_name.toLowerCase() === cleanBrand.toLowerCase() ||
+            b.normalized_name === normalizedClean ||
+            cleanBrand.toLowerCase().includes(b.display_name.toLowerCase()) ||
+            b.display_name.toLowerCase().includes(cleanBrand.toLowerCase())
+          ) || brands[0]
+
+          setSelectedBrand(matched)
+        } else {
+          setSelectedBrand(null)
+        }
+      } catch (err) {
+        console.error('Brand auto-resolve error:', err)
+      }
+    }, 280)
+
+    return () => clearTimeout(timer)
+  }, [brandText, addMode, pet.species])
+
   // ── Product Suggestions Autocomplete Handler ──
-  async function fetchProductSuggestions(brand: string, query: string) {
-    const searchTarget = query.trim() || brand.trim()
-    if (searchTarget.length < 2) {
+  async function fetchProductSuggestions(brand: string, query: string, targetBrandObj?: any) {
+    const activeBrandObj = targetBrandObj || selectedBrand
+    const cleanBrand = brand.trim()
+    const cleanQuery = query.trim()
+
+    if (!activeBrandObj && cleanBrand.length < 2 && cleanQuery.length < 2) {
       setProductSuggestions([])
       return
     }
+
     setIsFetchingSuggestions(true)
     try {
-      const res = await fetch(`/api/nutrition/catalog/search?q=${encodeURIComponent(searchTarget)}&species=${pet.species || 'dog'}&include_pending=true&limit=20`)
+      let url = `/api/nutrition/catalog/search?species=${pet.species || 'dog'}&include_pending=true&limit=20`
+
+      if (activeBrandObj?.id) {
+        url += `&brand_id=${activeBrandObj.id}`
+        if (cleanQuery) {
+          url += `&q=${encodeURIComponent(cleanQuery)}`
+        }
+      } else {
+        const searchTarget = cleanQuery || cleanBrand
+        url += `&q=${encodeURIComponent(searchTarget)}`
+      }
+
+      const res = await fetch(url)
       const json = await res.json()
-      setProductSuggestions(json.products || json.data || [])
+      let items = json.products || json.data || []
+
+      // Client-side species check for absolute safety
+      const petSpecies = pet.species || 'dog'
+      items = items.filter((item: any) => item.species === petSpecies || item.species === 'both')
+
+      setProductSuggestions(items)
     } catch (err) {
       console.error('Catalog suggestions fetch error:', err)
+      setProductSuggestions([])
     } finally {
       setIsFetchingSuggestions(false)
     }
@@ -319,6 +379,7 @@ export default function NutritionClient({
     setMealsInput(2)
     setPortionMode('daily')
     setApiErrorMessage(null)
+    setSelectedBrand(null)
     setProductSuggestions([])
     setShowSuggestionsDropdown(false)
     setSelectedManualFamilyId(null)
@@ -825,16 +886,14 @@ export default function NutritionClient({
                   onChange={e => {
                     const val = e.target.value
                     setBrandText(val)
+                    setSelectedBrand(null)
                     setSelectedManualFamilyId(null)
-                    if (val.trim().length >= 2) {
-                      fetchProductSuggestions(val, productText)
-                      setShowSuggestionsDropdown(true)
-                    } else {
-                      setProductSuggestions([])
+                    setProductSuggestions([])
+                    if (val.trim().length < 2) {
                       setShowSuggestionsDropdown(false)
                     }
                   }}
-                  placeholder="Örn: Royal Canin / Ev Yapımı"
+                  placeholder="Örn: Pro Plan / Royal Canin / Ev Yapımı"
                   className="input-base min-h-[44px]"
                 />
               </div>
@@ -847,29 +906,29 @@ export default function NutritionClient({
                     const val = e.target.value
                     setProductText(val)
                     setSelectedManualFamilyId(null)
-                    if (val.trim().length >= 1 || brandText.trim().length >= 2) {
+                    if (selectedBrand || brandText.trim().length >= 2 || val.trim().length >= 1) {
                       fetchProductSuggestions(brandText, val)
                       setShowSuggestionsDropdown(true)
                     }
                   }}
                   onFocus={() => {
-                    if (brandText.trim().length >= 2 || productText.trim().length >= 1) {
+                    setShowSuggestionsDropdown(true)
+                    if (selectedBrand || brandText.trim().length >= 2 || productText.trim().length >= 1) {
                       fetchProductSuggestions(brandText, productText)
-                      setShowSuggestionsDropdown(true)
                     }
                   }}
-                  placeholder="Örn: Medium Adult Dog / Tavuklu ve Pirinçli"
+                  placeholder="Örn: Puppy Medium Optistart / Tavuklu ve Pirinçli"
                   className="input-base min-h-[44px]"
                 />
 
                 {/* Autocomplete Combobox Dropdown */}
-                {showSuggestionsDropdown && (productSuggestions.length > 0 || isFetchingSuggestions) && (
+                {showSuggestionsDropdown && (
                   <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-border-main rounded-xl shadow-xl z-50 max-h-52 overflow-y-auto divide-y divide-border-main">
-                    {isFetchingSuggestions && productSuggestions.length === 0 ? (
-                      <div className="p-3 text-[12px] text-text-secondary text-center font-bold">
-                        Öneriler yükleniyor...
+                    {isFetchingSuggestions ? (
+                      <div className="p-3 text-[12px] text-text-secondary text-center font-bold animate-pulse">
+                        Ürünler yükleniyor…
                       </div>
-                    ) : (
+                    ) : productSuggestions.length > 0 ? (
                       productSuggestions.map((item: any) => {
                         const isPending = item.verification_status === 'pending'
                         return (
@@ -900,6 +959,10 @@ export default function NutritionClient({
                           </div>
                         )
                       })
+                    ) : (
+                      <div className="p-3 text-[12px] text-text-secondary text-center font-medium">
+                        Bu marka için ürün önerisi bulunamadı
+                      </div>
                     )}
                   </div>
                 )}

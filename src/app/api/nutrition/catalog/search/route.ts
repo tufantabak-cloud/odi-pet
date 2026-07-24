@@ -11,6 +11,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const q = searchParams.get('q')?.trim() || ''
   const brandParam = searchParams.get('brand')?.trim() || ''
+  const brandIdParam = searchParams.get('brand_id')?.trim() || searchParams.get('brandId')?.trim() || ''
   const species = searchParams.get('species')?.trim().toLowerCase()
   const foodForm = searchParams.get('food_form')?.trim().toLowerCase()
   const includePending = searchParams.get('include_pending') === 'true'
@@ -19,12 +20,12 @@ export async function GET(req: NextRequest) {
 
   const searchTarget = q || brandParam
 
-  // Empty query guard: do not return full catalog on empty search without species/form filter
-  if (!searchTarget && !species && !foodForm) {
+  // Empty query guard: do not return full catalog on empty search without brand_id / species / form filter
+  if (!searchTarget && !brandIdParam && !species && !foodForm) {
     return NextResponse.json({ products: [], data: [], brands: [] })
   }
 
-  if (searchTarget && searchTarget.length < 2 && !species && !foodForm) {
+  if (searchTarget && searchTarget.length < 2 && !brandIdParam && !species && !foodForm) {
     return NextResponse.json({ products: [], data: [], brands: [] })
   }
 
@@ -47,7 +48,7 @@ export async function GET(req: NextRequest) {
 
   // 2. Brand Search (Verified and Active Brands by default)
   let matchedBrands: { id: string; display_name: string; normalized_name: string }[] = []
-  if (searchTarget) {
+  if (searchTarget || brandIdParam) {
     const normalizedQ = searchTarget.toLowerCase().replace(/[^a-z0-9]/g, '')
     let brandQuery = supabase
       .from('food_brands')
@@ -60,11 +61,17 @@ export async function GET(req: NextRequest) {
       brandQuery = brandQuery.in('verification_status', ['verified', 'pending'])
     }
 
-    const brandFilter = matchedBrandIdsFromAliases.length > 0
-      ? `display_name.ilike.%${searchTarget}%,normalized_name.ilike.%${normalizedQ}%,id.in.(${matchedBrandIdsFromAliases.join(',')})`
-      : `display_name.ilike.%${searchTarget}%,normalized_name.ilike.%${normalizedQ}%`
+    if (brandIdParam) {
+      brandQuery = brandQuery.eq('id', brandIdParam)
+    } else {
+      const brandFilter = matchedBrandIdsFromAliases.length > 0
+        ? `display_name.ilike.%${searchTarget}%,normalized_name.ilike.%${normalizedQ}%,id.in.(${matchedBrandIdsFromAliases.join(',')})`
+        : `display_name.ilike.%${searchTarget}%,normalized_name.ilike.%${normalizedQ}%`
 
-    brandQuery = brandQuery.or(brandFilter).limit(10)
+      brandQuery = brandQuery.or(brandFilter)
+    }
+
+    brandQuery = brandQuery.limit(10)
     const { data: brandData } = await brandQuery
 
     if (brandData && brandData.length > 0) {
@@ -75,6 +82,12 @@ export async function GET(req: NextRequest) {
       }))
     }
   }
+
+  // Combine all matched brand IDs
+  const allMatchedBrandIds = Array.from(new Set([
+    ...matchedBrandIdsFromAliases,
+    ...matchedBrands.map(b => b.id)
+  ]))
 
   // 3. Query food_product_families with relations
   let query = supabase
@@ -138,10 +151,13 @@ export async function GET(req: NextRequest) {
     query = query.eq('food_form', foodForm)
   }
 
-  // Text search on family official_name, brand display_name, or matched aliases
-  if (searchTarget) {
-    const searchFilter = matchedBrandIdsFromAliases.length > 0
-      ? `official_name.ilike.%${searchTarget}%,brand_id.in.(${matchedBrandIdsFromAliases.join(',')})`
+  // Filter by explicit brand_id if provided
+  if (brandIdParam) {
+    query = query.eq('brand_id', brandIdParam)
+  } else if (searchTarget) {
+    // Text search on family official_name, brand display_name, or matched brand IDs
+    const searchFilter = allMatchedBrandIds.length > 0
+      ? `official_name.ilike.%${searchTarget}%,brand_id.in.(${allMatchedBrandIds.join(',')})`
       : `official_name.ilike.%${searchTarget}%`
 
     query = query.or(searchFilter)
