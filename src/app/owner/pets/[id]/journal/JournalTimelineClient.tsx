@@ -58,7 +58,18 @@ type LostItem = {
   sortDate: number
 }
 
-type JournalItem = JournalEntry | PlanItem | GalleryItem | AdoptionItem | LostItem
+type NutritionNormItem = {
+  source: 'nutrition_norm'
+  id: string
+  category: 'beslenme'
+  title: string
+  scheduled_at: string
+  status: string
+  linkHref: string
+  sortDate: number
+}
+
+type JournalItem = JournalEntry | PlanItem | GalleryItem | AdoptionItem | LostItem | NutritionNormItem
 
 // ── Filtre Tanımları (T2) ───────────────────────────────────────────────────
 
@@ -109,6 +120,7 @@ function groupByDate(items: JournalItem[]): { label: string; items: JournalItem[
 // ── İkon & Başlık Yardımcıları ───────────────────────────────────────────────
 
 function getIcon(item: JournalItem): string {
+  if (item.source === 'nutrition_norm') return '🥣'
   if (item.source === 'adoption') return '🏠'
   if (item.source === 'lost') return '🚨'
   if (item.source === 'gallery') return '📸'
@@ -131,6 +143,7 @@ function getIcon(item: JournalItem): string {
 }
 
 function getTitle(item: JournalItem): string {
+  if (item.source === 'nutrition_norm') return (item as NutritionNormItem).title
   if (item.source === 'adoption') {
     return item.status === 'active' 
       ? 'Sahiplendirme İlanı Açıldı' 
@@ -159,6 +172,7 @@ function getTitle(item: JournalItem): string {
 }
 
 function getCardStyle(item: JournalItem): string {
+  if (item.source === 'nutrition_norm') return 'border-l-4 border-l-orange-500 bg-orange-50/40 hover:bg-orange-50/70 cursor-pointer'
   if (item.source === 'adoption') return 'border-l-4 border-l-violet-500 bg-violet-50'
   if (item.source === 'lost') return 'border-l-4 border-l-red-500 bg-red-50'
   if (item.source === 'gallery') return 'border-l-4 border-l-violet-500 bg-violet-50'

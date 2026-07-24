@@ -17,17 +17,26 @@ export class NutritionLogReadHandler implements AgendaReadHandler {
     const scheduledAt = plan.scheduled_at || null;
     const dateKey = deriveDateKey(scheduledAt, context.timeZone);
 
+    const isVirtual = plan._is_virtual === true;
+    const parentId = plan.parent_plan_id || plan._plan_id;
+    const scheduledIso = scheduledAt ? new Date(scheduledAt).toISOString() : dateKey;
+    const eventId = isVirtual
+      ? `nutrition-plan:${parentId || plan.id}:occ:${scheduledIso}`
+      : plan.parent_plan_id
+      ? `nutrition-plan:${plan.id}`
+      : `nutrition-plan:${plan.id}`;
+
     return {
-      eventId: `plan_${plan.id}`,
+      eventId,
       source: 'plans',
       sourceRecordId: plan.id,
       category: 'beslenme',
       subCategory: plan.sub_type || 'Mama Saati',
       stableIdentity: `beslenme:${(plan.sub_type || 'mama').toLowerCase().replace(/\s+/g, '_')}`,
-      occurrenceIdentity: null,
+      occurrenceIdentity: plan.parent_plan_id ? `beslenme:${plan.parent_plan_id}_${dateKey}` : null,
       fallbackIdentity: `beslenme:${plan.id}_${dateKey}`,
-      mainPlanId: plan.id,
-      parentPlanId: null,
+      mainPlanId: parentId || plan.id,
+      parentPlanId: plan.parent_plan_id || null,
       scheduledAt,
       occurrenceScheduledAt: null,
       actualAt: plan.completed_at || null,

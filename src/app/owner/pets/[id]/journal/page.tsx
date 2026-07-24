@@ -3,6 +3,7 @@ import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/sup
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import JournalTimelineClient from './JournalTimelineClient'
+import { buildNutritionTimelineEvents } from '@/lib/nutrition/nutrition-timeline-events'
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -26,52 +27,55 @@ export default async function PetJournalPage(props: PageProps) {
 
   if (!pet) redirect('/owner/dashboard')
 
-  // Fetch journal entries
-  const { data: entries } = await supabase
-    .from('pet_journal_entries')
-    .select('*')
-    .eq('pet_id', id)
-    .order('created_at', { ascending: false })
-    .limit(100)
+  const [
+    { data: entries },
+    { data: plans },
+    { data: gallery },
+    { data: adoptions },
+    { data: lostReports },
+    { data: assignments },
+    { data: weightLogs }
+  ] = await Promise.all([
+    supabase.from('pet_journal_entries').select('*').eq('pet_id', id).order('created_at', { ascending: false }).limit(100),
+    supabase.from('plans').select('*').eq('pet_id', id).order('scheduled_at', { ascending: false }).limit(100),
+    supabase.from('pet_gallery').select('*').eq('pet_id', id).neq('category', 'document').order('created_at', { ascending: false }).limit(100),
+    supabase.from('pet_adoptions').select('id, status, story, created_at').eq('pet_id', id).order('created_at', { ascending: false }),
+    supabase.from('lost_reports').select('id, status, created_at').eq('pet_id', id).order('created_at', { ascending: false }),
+    supabase.from('pet_food_assignments').select(`*, food_product_family:food_product_families (official_name, brand:food_brands(display_name))`).eq('pet_id', id),
+    supabase.from('weight_logs').select('*').eq('pet_id', id).order('measured_at', { ascending: false }).limit(20)
+  ])
 
-  // Fetch plans
-  const { data: plans } = await supabase
-    .from('plans')
-    .select('*')
-    .eq('pet_id', id)
-    .order('scheduled_at', { ascending: false })
-    .limit(100)
+  // Build normalized nutrition timeline events (assignments start/end and plans)
+  const normNutritionEvents = buildNutritionTimelineEvents({
+    petId: id,
+    assignments: assignments || [],
+    plans: (plans || []).filter((p: any) => p.category === 'beslenme')
+  });
 
-  // Fetch gallery
-  const { data: gallery } = await supabase
-    .from('pet_gallery')
-    .select('*')
-    .eq('pet_id', id)
-    .neq('category', 'document') // Belgeler Timeline'a gelmesin
-    .order('created_at', { ascending: false })
-    .limit(100)
+  // Filter out raw nutrition plans from standard plan list to prevent duplication
+  const nonNutritionPlans = (plans || []).filter((p: any) => p.category !== 'beslenme');
 
-  // Fetch adoptions
-  const { data: adoptions } = await supabase
-    .from('pet_adoptions')
-    .select('id, status, story, created_at')
-    .eq('pet_id', id)
-    .order('created_at', { ascending: false })
-
-  // Fetch lost reports
-  const { data: lostReports } = await supabase
-    .from('lost_reports')
-    .select('id, status, created_at')
-    .eq('pet_id', id)
-    .order('created_at', { ascending: false })
+  // Filter out daily feeding_logs entries from journal entries if any exist
+  const nonFeedingEntries = (entries || []).filter((e: any) => e.entry_type !== 'nutrition' || !e.data?.amount_grams);
 
   // Merge and sort
   const allTimelineItems = [
-    ...(entries || []).map((e: any) => ({ ...e, source: 'journal', sortDate: new Date(e.created_at).getTime() })),
-    ...(plans || []).map((p: any) => ({ ...p, source: 'plan', sortDate: new Date(p.scheduled_at).getTime() })),
+    ...(nonFeedingEntries || []).map((e: any) => ({ ...e, source: 'journal', sortDate: new Date(e.created_at).getTime() })),
+    ...(nonNutritionPlans || []).map((p: any) => ({ ...p, source: 'plan', sortDate: new Date(p.scheduled_at).getTime() })),
     ...(gallery || []).map((g: any) => ({ ...g, source: 'gallery', sortDate: new Date(g.taken_at || g.created_at).getTime() })),
     ...(adoptions || []).map((a: any) => ({ ...a, source: 'adoption' as const, sortDate: new Date(a.created_at).getTime() })),
-    ...(lostReports || []).map((l: any) => ({ ...l, source: 'lost' as const, sortDate: new Date(l.created_at).getTime() }))
+    ...(lostReports || []).map((l: any) => ({ ...l, source: 'lost' as const, sortDate: new Date(l.created_at).getTime() })),
+    ...(weightLogs || []).map((w: any) => ({ ...w, source: 'weight' as const, sortDate: new Date(w.measured_at).getTime() })),
+    ...normNutritionEvents.map((ne) => ({
+      id: ne.id,
+      source: 'nutrition_norm' as const,
+      category: 'beslenme' as const,
+      title: ne.title,
+      scheduled_at: ne.dateKey,
+      status: ne.status,
+      linkHref: ne.linkHref,
+      sortDate: ne.sortDate,
+    }))
   ].sort((a, b) => b.sortDate - a.sortDate)
 
   return (

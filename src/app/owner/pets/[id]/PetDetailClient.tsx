@@ -8,7 +8,9 @@ import HealthTab from '@/components/pets/tabs/HealthTab'
 
 import SmartTaskWizard from '@/components/tasks/SmartTaskWizard'
 import { TaskCategory } from '@/lib/tasks/taskDefaults'
-import { FirstAidIcon, VaccineIcon, ShampooIcon, BowlIcon, CarrierIcon, ScoopIcon, BoneIcon, HouseIcon, ParasiteIcon } from '@/components/icons/PetIcons'
+import { AlertCircleIcon, CalendarClockIcon, CheckCircle2Icon, CheckCircleIcon, ChevronRightIcon, HeartPulseIcon, ShieldAlertIcon, SmileIcon, StarIcon, TrophyIcon, ActivityIcon, PlusIcon, FileTextIcon, HistoryIcon, MapPinIcon, BabyIcon, FileLineChartIcon, HelpCircleIcon, DownloadIcon, PillIcon, DogIcon, CatIcon, IdCardIcon, TargetIcon, DropletsIcon } from 'lucide-react'
+import { VaccineIcon, ParasiteIcon, ShampooIcon, BowlIcon, CarrierIcon, HouseIcon, BoneIcon, ScoopIcon, FirstAidIcon } from '@/components/icons/PetIcons'
+import NutritionClient from './nutrition/NutritionClient'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
@@ -204,6 +206,10 @@ export interface PetDetailProps {
   growthRecords: any[];
   appointments: any[];
   nutritionLogs: any[];
+  inventory: any;
+  feedingLogs: any[];
+  weightLogs: any[];
+  assignments: any[];
   payments: any[];
   subscription: any;
   activeLostReport?: any;
@@ -244,7 +250,7 @@ export function getTaskCardStyle(isOverdue: boolean, isCompleted: boolean) {
   };
 }
 
-export default function PetDetailClient({ pet, age, score, overdue, schedules, diseases, allergies, medications, growthRecords, appointments, nutritionLogs, payments, subscription, activeLostReport, hasPasskey = false, isAdminView = false }: PetDetailProps) {
+export default function PetDetailClient({ pet, age, score, overdue, schedules, diseases, allergies, medications, growthRecords, appointments, nutritionLogs, inventory, feedingLogs, weightLogs, assignments, payments, subscription, activeLostReport, hasPasskey = false, isAdminView = false }: PetDetailProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -277,15 +283,15 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   }
 
   const tabParam = searchParams?.get('tab')
-  const initialTab = (tabParam === 'saglik' || tabParam === 'asi' || tabParam === 'parazit' || tabParam === 'vaccines' || tabParam === 'parasite' || tabParam === 'beslenme' || tabParam === 'veteriner')
+  const initialTab = (tabParam === 'saglik' || tabParam === 'asi' || tabParam === 'parazit' || tabParam === 'vaccines' || tabParam === 'parasite' || tabParam === 'veteriner')
     ? 'saglik'
     : (tabParam === 'bakim' || tabParam === 'hijyen' || tabParam === 'aktivite' || tabParam === 'diger')
       ? 'bakim'
-      : (tabParam === 'takvim' || tabParam === 'ekstra')
+      : (tabParam === 'takvim' || tabParam === 'ekstra' || tabParam === 'beslenme')
         ? tabParam
         : 'ozet'
 
-  const [activeTab, setActiveTab] = useState<'ozet'|'saglik'|'bakim'|'takvim'|'ekstra'>(initialTab)
+  const [activeTab, setActiveTab] = useState<'ozet'|'saglik'|'bakim'|'takvim'|'beslenme'|'ekstra'>(initialTab)
   const { filterVisibleTasks, dismissTask } = useDismissedMicroTasks()
 
   // Canlı saat — her dakika yenilenerek gecikme etiketlerini ve overdue sayısını günceller
@@ -1183,19 +1189,6 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           ],
           onSuccess: () => handlePlanla('Veteriner')
         });
-      } else if (tabName === 'Beslenme' && (!nutritionLogs || nutritionLogs.length === 0)) {
-        setQuickUpdateConfig({
-          title: 'Beslenme Bilgisi',
-          desc: 'Beslenme görevi planlayabilmek için önce kullanılan mamayı kaydedin.',
-          endpoint: `/api/pets/${pet.id}/nutrition/profile`,
-          method: 'POST',
-          fields: [
-            { name: 'food_brand', type: 'text', label: 'Mama Markası', placeholder: 'Örn: Royal Canin', required: true },
-            { name: 'food_type', type: 'select', label: 'Mama Türü', options: [{label: 'Kuru Mama', value: 'kuru'}, {label: 'Yaş Mama', value: 'yas'}, {label: 'Ödül Maması', value: 'odul'}], required: true },
-            { name: 'daily_grams', type: 'number', label: 'Günlük Tüketim (Gram)', placeholder: 'Örn: 120', required: true }
-          ],
-          onSuccess: () => handlePlanla('Beslenme')
-        });
       } else {
         handlePlanla(tabName);
       }
@@ -1434,6 +1427,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                   {id:'takvim', label:'Takvim'},
                   {id:'saglik', label:'Sağlık'},
                   {id:'bakim', label:'Bakım'},
+                  {id:'beslenme', label:'Beslenme'},
                   {id:'ekstra', label:'Ekstra'},
                 ] as const).map(tab => (
                   <button
@@ -1790,6 +1784,20 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       </div>
       )}
 
+      {activeTab === 'beslenme' && (
+        <div className="flex flex-col gap-3">
+          <NutritionClient
+            pet={pet}
+            profile={nutritionLogs?.[0] ?? null}
+            inventory={inventory ?? null}
+            feedingLogs={feedingLogs ?? []}
+            weightLogs={weightLogs ?? []}
+            assignments={assignments ?? []}
+            nutritionPlans={(localSchedules || []).filter((s: any) => s._source === 'plans' && (s._plan_category === 'beslenme' || s.category === 'Beslenme' || s.category === 'beslenme'))}
+          />
+        </div>
+      )}
+
       {/* ── Sağlık & Bakım Accordion (Tab Filtrelemeli) ── */}
       {(activeTab === 'saglik' || activeTab === 'bakim') && (
       <div className="p-4 flex flex-col gap-3">
@@ -1824,7 +1832,6 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               { name: 'Sağlık', icon: <FirstAidIcon width={22} height={22} />, color: 'text-red-500', bg: 'bg-red-50' },
               { name: 'Aşı', icon: <VaccineIcon width={22} height={22} />, color: 'text-blue-500', bg: 'bg-blue-50' },
               { name: 'Parazit', icon: <ParasiteIcon width={22} height={22} />, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-              { name: 'Beslenme', icon: <BowlIcon width={22} height={22} />, color: 'text-orange-500', bg: 'bg-orange-50' },
               { name: 'Veteriner', icon: <CarrierIcon width={22} height={22} />, color: 'text-purple-500', bg: 'bg-purple-50' },
             ] : []),
             ...(activeTab === 'bakim' ? [
@@ -1894,19 +1901,6 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                             { name: 'vet_email', type: 'email', label: 'E-posta (Opsiyonel)', placeholder: 'klinik@email.com', required: false }
                           ],
                           onSuccess: () => handlePlanla('Veteriner')
-                        });
-                      } else if (module.name === 'Beslenme' && (!nutritionLogs || nutritionLogs.length === 0)) {
-                        setQuickUpdateConfig({
-                          title: 'Beslenme Bilgisi',
-                          desc: 'Beslenme görevi planlayabilmek için önce kullanılan mamayı kaydedin.',
-                          endpoint: `/api/pets/${pet.id}/nutrition/profile`,
-                          method: 'POST',
-                          fields: [
-                            { name: 'food_brand', type: 'text', label: 'Mama Markası', placeholder: 'Örn: Royal Canin', required: true },
-                            { name: 'food_type', type: 'select', label: 'Mama Türü', options: [{label: 'Kuru Mama', value: 'kuru'}, {label: 'Yaş Mama', value: 'yas'}, {label: 'Ödül Maması', value: 'odul'}], required: true },
-                            { name: 'daily_grams', type: 'number', label: 'Günlük Tüketim (Gram)', placeholder: 'Örn: 120', required: true }
-                          ],
-                          onSuccess: () => handlePlanla('Beslenme')
                         });
                       } else {
                         handlePlanla(module.name);

@@ -43,7 +43,8 @@ export default function NutritionClient({
   inventory,
   feedingLogs,
   weightLogs,
-  assignments = []
+  assignments = [],
+  nutritionPlans = []
 }: {
   pet: any
   profile: any
@@ -51,6 +52,7 @@ export default function NutritionClient({
   feedingLogs: any[]
   weightLogs: any[]
   assignments?: any[]
+  nutritionPlans?: any[]
 }) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('Mama & Stok')
@@ -58,6 +60,84 @@ export default function NutritionClient({
   const [showScanner, setShowScanner] = useState(false)
   const [showBarcodeCamera, setShowBarcodeCamera] = useState(false)
   const [dismissedBanner, setDismissedBanner] = useState(false)
+
+  // Reminder Modal & State
+  const [showReminderModal, setShowReminderModal] = useState(false)
+  const [editingReminderId, setEditingReminderId] = useState<string | null>(null)
+  const [reminderSubType, setReminderSubType] = useState('Mama Saati')
+  const [customReminderTitle, setCustomReminderTitle] = useState('')
+  const [reminderDate, setReminderDate] = useState(() => new Date().toISOString().split('T')[0])
+  const [reminderTime, setReminderTime] = useState('08:00')
+  const [reminderRepeat, setReminderRepeat] = useState<string>('daily')
+  const [reminderSubmitting, setReminderSubmitting] = useState(false)
+
+  async function handleSaveReminder(e: React.FormEvent) {
+    e.preventDefault()
+    setReminderSubmitting(true)
+    try {
+      const title = reminderSubType === 'Özel' ? customReminderTitle : reminderSubType
+      const scheduledAt = `${reminderDate}T${reminderTime}:00`
+      const payload = {
+        pet_id: pet.id,
+        category: 'beslenme',
+        sub_type: title,
+        scheduled_at: scheduledAt,
+        repeat_rule: reminderRepeat === 'none' ? null : reminderRepeat,
+        status: 'active'
+      }
+
+      if (editingReminderId) {
+        const res = await fetch(`/api/plans/${editingReminderId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        })
+        if (!res.ok) throw new Error('Hatırlatıcı güncellenemedi')
+      } else {
+        const res = await fetch('/api/plans', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        })
+        if (!res.ok) throw new Error('Hatırlatıcı eklenemedi')
+      }
+
+      setShowReminderModal(false)
+      setEditingReminderId(null)
+      router.refresh()
+    } catch (err: any) {
+      alert(err.message || 'Bir hata oluştu')
+    } finally {
+      setReminderSubmitting(false)
+    }
+  }
+
+  async function handleCompleteReminder(planId: string) {
+    try {
+      const res = await fetch(`/api/plans/${planId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'completed' })
+      })
+      if (!res.ok) throw new Error('Hatırlatıcı tamamlanamadı')
+      router.refresh()
+    } catch (err: any) {
+      alert(err.message || 'Bir hata oluştu')
+    }
+  }
+
+  async function handleDeleteReminder(planId: string) {
+    if (!confirm('Bu hatırlatıcıyı silmek istediğinize emin misiniz?')) return
+    try {
+      const res = await fetch(`/api/plans/${planId}`, {
+        method: 'DELETE'
+      })
+      if (!res.ok) throw new Error('Hatırlatıcı silinemedi')
+      router.refresh()
+    } catch (err: any) {
+      alert(err.message || 'Bir hata oluştu')
+    }
+  }
 
   // Assignment Modal States
   const [showAddModal, setShowAddModal] = useState(false)
@@ -1045,6 +1125,104 @@ export default function NutritionClient({
       {/* ── Tab: Öğünler & Hatırlatıcı ── */}
       {activeTab === 'Öğünler & Hatırlatıcı' && (
         <div className="flex flex-col gap-4 animate-fadeIn">
+          {/* Beslenme Hatırlatıcıları */}
+          <div className="card-base p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="font-extrabold text-[15px] text-text-primary">Beslenme Hatırlatıcıları</h3>
+                <p className="text-[12px] text-text-secondary">Ajanda ve Takvim ile senkronize mama/düzen hatırlatmaları</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingReminderId(null)
+                  setReminderSubType('Mama Saati')
+                  setReminderDate(new Date().toISOString().split('T')[0])
+                  setReminderTime('08:00')
+                  setReminderRepeat('daily')
+                  setShowReminderModal(true)
+                }}
+                className="btn-primary text-[12px] py-2 px-3 shadow-xs"
+              >
+                + Yeni Hatırlatıcı
+              </button>
+            </div>
+
+            {nutritionPlans.length === 0 ? (
+              <div className="p-4 rounded-xl border border-dashed border-border-main text-center bg-bg-main/50">
+                <p className="text-[13px] text-text-secondary font-medium mb-1">Henüz beslenme hatırlatıcısı eklenmemiş.</p>
+                <p className="text-[11px] text-text-secondary/80">Mama saati, mama siparişi veya su tazeleme hatırlatıcıları ekleyebilirsiniz.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-border-main">
+                {nutritionPlans.map((plan: any) => {
+                  const isDone = plan.status === 'completed';
+                  const dateStr = plan.scheduled_at
+                    ? new Date(plan.scheduled_at).toLocaleString('tr-TR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+                    : '';
+                  const repeatLabel = plan.repeat_rule === 'daily' ? 'Her gün' : plan.repeat_rule === 'weekly' ? 'Haftalık' : plan.repeat_rule === 'monthly' ? 'Aylık' : plan.repeat_rule === 'hourly' ? 'Saatlik' : 'Tek Seferlik';
+
+                  return (
+                    <div key={plan.id} className="py-3 flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${isDone ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'}`}>
+                          {isDone ? '✓' : '⏰'}
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-text-primary text-[14px]">
+                            {plan.sub_type || 'Mama Saati'}
+                          </h4>
+                          <p className="text-[11px] text-text-secondary">
+                            {dateStr} • <span className="font-semibold text-text-primary">{repeatLabel}</span>
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {!isDone && (
+                          <button
+                            type="button"
+                            onClick={() => handleCompleteReminder(plan.id)}
+                            className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors"
+                          >
+                            ✓ Tamamla
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingReminderId(plan.id)
+                            const known = ['Mama Saati', 'Su Tazeleme', 'Mama Siparişi', 'Diyet Değişimi'];
+                            setReminderSubType(known.includes(plan.sub_type) ? plan.sub_type : 'Özel')
+                            if (!known.includes(plan.sub_type)) {
+                              setCustomReminderTitle(plan.sub_type || '')
+                            }
+                            if (plan.scheduled_at) {
+                              const d = new Date(plan.scheduled_at)
+                              setReminderDate(d.toISOString().split('T')[0])
+                              setReminderTime(d.toTimeString().slice(0, 5))
+                            }
+                            setReminderRepeat(plan.repeat_rule || 'none')
+                            setShowReminderModal(true)
+                          }}
+                          className="px-2 py-1 rounded-lg text-[11px] font-bold bg-slate-100 text-text-secondary hover:bg-slate-200 transition-colors"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteReminder(plan.id)}
+                          className="px-2 py-1 rounded-lg text-[11px] font-bold bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                        >
+                          Sil
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           <form onSubmit={handleAddLog} className="card-base p-6">
             <h3 className="font-extrabold text-[15px] text-text-primary mb-4">Öğün Kaydet</h3>
             <div className="flex flex-col gap-4">
@@ -1087,6 +1265,95 @@ export default function NutritionClient({
           </div>
         </div>
       )}
+
+      {/* Reminder Modal */}
+      <Modal isOpen={showReminderModal} onClose={() => setShowReminderModal(false)} title={editingReminderId ? "Hatırlatıcıyı Düzenle" : "Yeni Beslenme Hatırlatıcısı"}>
+        <form onSubmit={handleSaveReminder} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[12px] font-bold text-text-secondary">Hatırlatıcı Türü</label>
+            <select
+              value={reminderSubType}
+              onChange={(e) => setReminderSubType(e.target.value)}
+              className="input-base py-2.5 text-[14px]"
+            >
+              <option value="Mama Saati">Mama Saati</option>
+              <option value="Su Tazeleme">Su Tazeleme</option>
+              <option value="Mama Siparişi">Mama Siparişi</option>
+              <option value="Diyet Değişimi">Diyet Değişimi</option>
+              <option value="Özel">Özel...</option>
+            </select>
+          </div>
+
+          {reminderSubType === 'Özel' && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[12px] font-bold text-text-secondary">Hatırlatıcı Adı</label>
+              <input
+                type="text"
+                value={customReminderTitle}
+                onChange={(e) => setCustomReminderTitle(e.target.value)}
+                placeholder="Örn: Ödül Maması Saati"
+                className="input-base py-2.5 text-[14px]"
+                required
+              />
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[12px] font-bold text-text-secondary">Tarih</label>
+              <input
+                type="date"
+                value={reminderDate}
+                onChange={(e) => setReminderDate(e.target.value)}
+                className="input-base py-2.5 text-[14px]"
+                required
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[12px] font-bold text-text-secondary">Saat</label>
+              <input
+                type="time"
+                value={reminderTime}
+                onChange={(e) => setReminderTime(e.target.value)}
+                className="input-base py-2.5 text-[14px]"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[12px] font-bold text-text-secondary">Tekrar</label>
+            <select
+              value={reminderRepeat}
+              onChange={(e) => setReminderRepeat(e.target.value)}
+              className="input-base py-2.5 text-[14px]"
+            >
+              <option value="none">Tek Seferlik</option>
+              <option value="daily">Her Gün</option>
+              <option value="weekly">Her Hafta</option>
+              <option value="monthly">Her Ay</option>
+              <option value="hourly">Her Saat</option>
+            </select>
+          </div>
+
+          <div className="flex gap-3 pt-3 border-t border-border-main/50">
+            <button
+              type="button"
+              onClick={() => setShowReminderModal(false)}
+              className="flex-1 py-3 rounded-xl border border-border-main text-text-secondary font-bold text-[13px]"
+            >
+              İptal
+            </button>
+            <button
+              type="submit"
+              disabled={reminderSubmitting}
+              className="flex-[2] btn-primary py-3 text-[13px] font-bold"
+            >
+              {reminderSubmitting ? 'Kaydediliyor...' : 'Kaydet ✓'}
+            </button>
+          </div>
+        </form>
+      </Modal>
 
       {/* ── Tab: Kilo Takibi ── */}
       {activeTab === 'Kilo Takibi' && (

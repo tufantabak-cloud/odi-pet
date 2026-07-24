@@ -280,12 +280,17 @@ export default function WizardOrchestrator() {
         });
       }
 
+      if (categoryKey === 'beslenme' && queryPetId) {
+        router.replace(`/owner/pets/${queryPetId}/nutrition`);
+        return;
+      }
+
       const { data, error } = await supabase.from('pets').select('id, name, species, avatar_url');
       let petCount = 0;
       if (!error && data) {
         petCount = data.length;
         setPets(data.map((p: any) => ({ ...p, type: p.species })));
-        if (data.length === 1 && !initialPlanData && !queryPetId) {
+        if (data.length === 1 && !initialPlanData && !queryPetId && categoryKey !== 'beslenme') {
           setStepData({ pet_id: data[0].id });
         }
       }
@@ -1009,6 +1014,10 @@ export default function WizardOrchestrator() {
               <button
                 key={pet.id}
                 onClick={() => {
+                  if (categoryKey === 'beslenme') {
+                    router.replace(`/owner/pets/${pet.id}/nutrition`);
+                    return;
+                  }
                   setStepData({ pet_id: pet.id });
                   nextStep();
                 }}

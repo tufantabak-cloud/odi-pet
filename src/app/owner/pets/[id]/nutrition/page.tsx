@@ -34,7 +34,8 @@ export default async function PetNutritionPage({ params }: { params: Promise<{ i
     { data: inventory },
     { data: feedingLogs },
     { data: weightLogs },
-    { data: assignments }
+    { data: assignments },
+    { data: nutritionPlans }
   ] = await Promise.all([
     supabase.from('pets').select('id, name, avatar_url, species').eq('id', id).single(),
     supabase.from('pet_nutrition_profiles').select('*').eq('pet_id', id).maybeSingle(),
@@ -60,7 +61,8 @@ export default async function PetNutritionPage({ params }: { params: Promise<{ i
         package_size_grams,
         package_type
       )
-    `).eq('pet_id', id).order('started_at', { ascending: false }).order('created_at', { ascending: false })
+    `).eq('pet_id', id).order('started_at', { ascending: false }).order('created_at', { ascending: false }),
+    supabase.from('plans').select('*').eq('pet_id', id).eq('category', 'beslenme').order('scheduled_at', { ascending: false })
   ])
 
   if (!pet) redirect('/owner/dashboard')
@@ -73,6 +75,7 @@ export default async function PetNutritionPage({ params }: { params: Promise<{ i
       feedingLogs={feedingLogs ?? []}
       weightLogs={weightLogs ?? []}
       assignments={assignments ?? []}
+      nutritionPlans={nutritionPlans ?? []}
     />
   )
 }
