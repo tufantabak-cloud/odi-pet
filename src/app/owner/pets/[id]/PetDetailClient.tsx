@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Share2, Phone, Camera, ImageIcon, FileImage, Wallet, Home, FileText, AlertTriangle, Heart, ShieldCheck } from 'lucide-react'
+import { Share2, Phone, Camera, ImageIcon, FileImage, Wallet, Home, FileText, AlertTriangle, Heart, ShieldCheck, Pencil } from 'lucide-react'
 import FamilyTab from './FamilyTab'
 import HealthTab from '@/components/pets/tabs/HealthTab'
 
@@ -386,8 +386,11 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   const [showNoteInput, setShowNoteInput] = useState(false)
   const [trackerRefreshKey, setTrackerRefreshKey] = useState(0)
   const coverInputRef = useRef<HTMLInputElement>(null)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
 
+  const [showPetMenuSheet, setShowPetMenuSheet] = useState(false)
   const [coverUploading, setCoverUploading] = useState(false)
+  const [avatarUploading, setAvatarUploading] = useState(false)
   const [coverAdjustingUrl, setCoverAdjustingUrl] = useState<string | null>(null)
   const [savingAdjust, setSavingAdjust] = useState(false)
   const [zoom, setZoom] = useState(1.0)
@@ -497,14 +500,52 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       const { data: urlData } = supabase.storage.from('pet-avatars').getPublicUrl(path)
       const publicUrl = urlData.publicUrl
 
-      // 2. Kullanıcıya Yakınlaştırma & Kaydırma Modalı Açmak Yerine Basit Pozisyon Modalı Aç
-      setPendingCoverUrl(publicUrl)
-      setShowPositionModal(true)
+      // 2. Doğrudan Sürükle-Bırak Pozisyonlama Modalı Aç
+      setZoom(1.0)
+      setPan({ x: 0, y: 0 })
+      setCoverAdjustingUrl(publicUrl)
     } catch (err: any) {
       alert("Kapak fotoğrafı yüklenirken hata oluştu: " + err.message)
     } finally {
       setCoverUploading(false)
       if (coverInputRef.current) coverInputRef.current.value = ''
+    }
+  }
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setAvatarUploading(true)
+    try {
+      const supabase = createBrowserSupabaseClient()
+      const { data: userData } = await supabase.auth.getUser()
+      const userId = userData.user?.id
+      if (!userId) throw new Error("Kullanıcı oturumu bulunamadı.")
+
+      const ext = file.name.split('.').pop() || 'jpg'
+      const path = `avatars/${userId}/${Date.now()}.${ext}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('pet-avatars')
+        .upload(path, file, { contentType: file.type, upsert: false })
+      if (uploadError) throw uploadError
+
+      const { data: urlData } = supabase.storage.from('pet-avatars').getPublicUrl(path)
+      const publicUrl = urlData.publicUrl
+
+      const { error: updateError } = await supabase
+        .from('pets')
+        .update({ avatar_url: publicUrl })
+        .eq('id', pet.id)
+      if (updateError) throw updateError
+
+      router.refresh()
+    } catch (err: any) {
+      alert("Profil fotoğrafı yüklenirken hata oluştu: " + err.message)
+    } finally {
+      setAvatarUploading(false)
+      if (avatarInputRef.current) avatarInputRef.current.value = ''
     }
   }
   
@@ -1430,11 +1471,14 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               score={score}
               age={age}
               coverInputRef={coverInputRef}
+              avatarInputRef={avatarInputRef}
               activeLostReport={activeLostReport}
               onLostReport={() => setLostWizardOpen(true)}
               onMarkFound={handleMarkFound}
               latestWeight={primaryWeight !== '-' ? primaryWeight : null}
+              onMenuOpen={() => setShowPetMenuSheet(true)}
               onChangeCoverClick={() => setShowCoverSourceSheet(true)}
+              onChangeAvatarClick={() => avatarInputRef.current?.click()}
             />
 
             <div className="sticky top-16 z-20 bg-surface border-b border-border">
@@ -2200,15 +2244,111 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
 
 
-      {/* Hidden cover input — en dışta, overflow-hidden kap olmadan */}
+      {/* Hidden cover & avatar inputs */}
       <input
         ref={coverInputRef}
         type="file"
         accept="image/*"
-        capture={undefined}
         className="hidden"
         onChange={handleCoverUpload}
       />
+      <input
+        ref={avatarInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleAvatarUpload}
+      />
+
+      {/* TEK ÜÇ NOKTA (...) MENÜ MODALI */}
+      {showPetMenuSheet && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999] flex items-end animate-fade-in"
+          onClick={() => setShowPetMenuSheet(false)}>
+          <div className="bg-surface w-full rounded-t-[28px] p-6 pb-[calc(24px+env(safe-area-inset-bottom,0px))] shadow-2xl border-t border-border"
+            onClick={e => e.stopPropagation()}>
+            
+            <div className="w-12 h-1.5 bg-border rounded-full mx-auto mb-4" />
+            <p className="text-[16px] font-black text-text-primary mb-5 text-center flex items-center justify-center gap-2">
+              <span>🐾</span> {pet.name} Profil Yönetimi
+            </p>
+
+            <div className="flex flex-col gap-2.5">
+              {/* Kapak Fotoğrafı Değiştir */}
+              <button
+                onClick={() => {
+                  setShowPetMenuSheet(false)
+                  setShowCoverSourceSheet(true)
+                }}
+                className="w-full py-3.5 px-4 rounded-xl bg-surface-1 hover:bg-surface-2 border border-border text-[14px] font-bold text-text-primary flex items-center justify-between transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                    <Camera size={18} />
+                  </div>
+                  <span>Kapak Fotoğrafını Değiştir</span>
+                </div>
+                <ChevronRightIcon size={16} className="text-text-muted" />
+              </button>
+
+              {/* Kapak Konumu Ayarla */}
+              {pet.cover_url && (
+                <button
+                  onClick={() => {
+                    setShowPetMenuSheet(false)
+                    setCoverAdjustingUrl(pet.cover_url)
+                    setZoom(1.0)
+                    setPan({ x: 0, y: 0 })
+                  }}
+                  className="w-full py-3.5 px-4 rounded-xl bg-surface-1 hover:bg-surface-2 border border-border text-[14px] font-bold text-text-primary flex items-center justify-between transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                      <TargetIcon size={18} />
+                    </div>
+                    <span>Kapak Konumunu Ayarla (Sürükle)</span>
+                  </div>
+                  <ChevronRightIcon size={16} className="text-text-muted" />
+                </button>
+              )}
+
+              {/* Profil Fotoğrafını Değiştir */}
+              <button
+                onClick={() => {
+                  setShowPetMenuSheet(false)
+                  avatarInputRef.current?.click()
+                }}
+                className="w-full py-3.5 px-4 rounded-xl bg-surface-1 hover:bg-surface-2 border border-border text-[14px] font-bold text-text-primary flex items-center justify-between transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center">
+                    <ImageIcon size={18} />
+                  </div>
+                  <span>Profil Fotoğrafını Değiştir (Avatar)</span>
+                </div>
+                <ChevronRightIcon size={16} className="text-text-muted" />
+              </button>
+
+              {/* Profili Düzenle */}
+              <Link
+                href={`/owner/pets/${pet.id}/edit`}
+                onClick={() => setShowPetMenuSheet(false)}
+                className="w-full py-3.5 px-4 rounded-xl bg-surface-1 hover:bg-surface-2 border border-border text-[14px] font-bold text-text-primary flex items-center justify-between transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
+                    <Pencil size={18} />
+                  </div>
+                  <span>Evcil Hayvan Bilgilerini Düzenle</span>
+                </div>
+                <ChevronRightIcon size={16} className="text-text-muted" />
+              </Link>
+
+              {/* İptal */}
+              <button
+                onClick={() => setShowPetMenuSheet(false)}
+                className="w-full py-3.5 rounded-xl border border-border text-[14px] font-bold text-text-secondary mt-2 hover:bg-surface-1 transition-colors">
+                Kapat
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showCoverSourceSheet && (
         <div className="fixed inset-0 bg-black/60 z-[99999] flex items-end"
@@ -2276,104 +2416,17 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         </div>
       )}
 
-      {showPositionModal && pendingCoverUrl && (
-        <div className="fixed inset-0 bg-black/60 z-[99999] flex items-end">
-          <div className="bg-surface w-full rounded-t-[24px] p-6 pb-[calc(24px+env(safe-area-inset-bottom,0px))]">
-            
-            {/* Önizleme */}
-            <div className="relative h-[180px] w-full rounded-xl overflow-hidden mb-4" id="position-preview">
-              <Image
-                src={pendingCoverUrl}
-                alt="Önizleme"
-                fill
-                className={`object-cover ${
-                  selectedPosition === 'top'
-                    ? 'object-top'
-                    : selectedPosition === 'bottom'
-                    ? 'object-bottom'
-                    : 'object-center'
-                }`}
-                style={{
-                  transform: `scale(${selectedScale})`,
-                  transformOrigin: 
-                    selectedPosition === 'top' 
-                      ? 'center top'
-                      : selectedPosition === 'bottom'
-                      ? 'center bottom'
-                      : 'center center'
-                }}
-              />
-            </div>
-
-            {/* Pozisyon seçimi */}
-            <p className="text-[13px] text-text-secondary mb-3">
-              Fotoğrafın hangi bölümü görünsün?
-            </p>
-            <div className="grid grid-cols-3 gap-2 mb-4">
-              {(['top','center','bottom'] as const).map(pos => (
-                <button
-                  key={pos}
-                  onClick={() => setSelectedPosition(pos)}
-                  className={`py-2 rounded-xl text-[12px] font-medium border transition-colors ${selectedPosition === pos
-                      ? 'bg-primary text-white border-primary'
-                      : 'bg-surface-1 text-text-secondary border-border'
-                    }`}
-                >
-                  {pos === 'top' ? 'Üst' : pos === 'center' ? 'Orta' : 'Alt'}
-                </button>
-              ))}
-            </div>
-
-            {/* Ölçek slider */}
-            <div className="mt-4 mb-6">
-              <div className="flex justify-between items-center mb-2">
-                <p className="text-[13px] text-text-secondary">
-                  Ölçek
-                </p>
-                <span className="text-[12px] text-text-muted">
-                  {Math.round(selectedScale * 100)}%
-                </span>
-              </div>
-              <input
-                type="range"
-                min={0.8}
-                max={2}
-                step={0.05}
-                value={selectedScale}
-                onChange={e => setSelectedScale(parseFloat(e.target.value))}
-                className="w-full"
-              />
-              <div className="flex justify-between mt-1">
-                <span className="text-[10px] text-text-muted">Uzak</span>
-                <span className="text-[10px] text-text-muted">Yakın</span>
-              </div>
-            </div>
-
-            {/* Butonlar */}
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => {
-                  setShowPositionModal(false)
-                  setPendingCoverUrl(null)
-                }}
-                className="py-3 rounded-xl border border-border text-[13px] text-text-secondary">
-                İptal
-              </button>
-              <button
-                onClick={handleSavePosition}
-                className="py-3 rounded-xl bg-primary text-white text-[13px] font-medium">
-                Kaydet
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Kapak Fotoğrafı Ayarlama Modalı */}
+      {/* Kapak Fotoğrafı Sürükle & Zoom Konumlandırma Modalı */}
       {coverAdjustingUrl && (
-        <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-4">
-          <div className="bg-surface w-full max-w-sm rounded-[28px] overflow-hidden shadow-2xl animate-fade-in">
-            <div className="relative w-full h-[240px] overflow-hidden bg-black cursor-grab active:cursor-grabbing select-none"
+        <div className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex flex-col items-center justify-center p-4">
+          <div className="bg-surface w-full max-w-md rounded-[28px] overflow-hidden shadow-2xl animate-fade-in border border-white/10">
+            <div className="p-4 border-b border-border text-center">
+              <h3 className="text-[16px] font-black text-text-primary">Kapak Fotoğrafı Konumlandır</h3>
+              <p className="text-[12px] text-text-secondary mt-0.5">Fotoğrafı sürükleyerek görünmesini istediğiniz merkezi belirleyin</p>
+            </div>
+
+            {/* Sürükleme Çerçevesi */}
+            <div className="relative w-full h-[220px] overflow-hidden bg-black cursor-grab active:cursor-grabbing select-none border-y border-border"
               onMouseDown={handleDragStart}
               onMouseMove={handleDragMove}
               onMouseUp={handleDragEnd}
@@ -2385,37 +2438,76 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               <img
                 src={coverAdjustingUrl}
                 alt="Kapak Önizleme"
-                className="absolute top-1/2 left-1/2 pointer-events-none"
+                className="w-full h-full object-cover pointer-events-none transition-transform duration-75"
                 style={{
-                  width: 'auto',
-                  height: 'auto',
-                  maxWidth: 'none',
-                  maxHeight: 'none',
-                  transformOrigin: 'center',
-                  transform: `translate(-50%, -50%) scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`
+                  transformOrigin: 'center center',
+                  transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`
                 }}
               />
+              
+              {/* İpucu Katmanı */}
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/65 text-white text-[10px] font-semibold backdrop-blur-sm pointer-events-none flex items-center gap-1.5 shadow-md">
+                <span>✋</span> Parmağınızla veya fareyle kaydırın
+              </div>
             </div>
+
             <div className="p-5 flex flex-col gap-4">
+              {/* Hizalama Hızlı Butonları */}
               <div>
-                <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Yakınlaştır</label>
+                <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider block mb-2">Hızlı Hizalama</label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPan({ x: 0, y: 35 })}
+                    className="py-2 rounded-xl bg-surface-1 hover:bg-surface-2 border border-border text-[12px] font-bold text-text-primary transition-colors">
+                    Üst Odağı
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setPan({ x: 0, y: 0 }); setZoom(1.0); }}
+                    className="py-2 rounded-xl bg-surface-1 hover:bg-surface-2 border border-border text-[12px] font-bold text-text-primary transition-colors">
+                    Tam Orta (Sıfırla)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPan({ x: 0, y: -35 })}
+                    className="py-2 rounded-xl bg-surface-1 hover:bg-surface-2 border border-border text-[12px] font-bold text-text-primary transition-colors">
+                    Alt Odağı
+                  </button>
+                </div>
+              </div>
+
+              {/* Zoom Slider */}
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Yakınlaştır / Uzaklaştır</label>
+                  <span className="text-[11px] font-bold text-primary">{Math.round(zoom * 100)}%</span>
+                </div>
                 <input
-                  type="range" min={0.3} max={3} step={0.05}
+                  type="range" min={1.0} max={2.5} step={0.05}
                   value={zoom}
                   onChange={e => setZoom(parseFloat(e.target.value))}
-                  className="w-full mt-2"
+                  className="w-full accent-primary cursor-pointer"
                 />
+                <div className="flex justify-between text-[10px] text-text-muted mt-1 font-medium">
+                  <span>%100 (Varsayılan Tam Sığdır)</span>
+                  <span>%250 (Yakınlaştır)</span>
+                </div>
               </div>
-              <div className="flex gap-3">
+
+              {/* Aksiyon Butonları */}
+              <div className="flex gap-3 pt-2">
                 <button
+                  type="button"
                   onClick={() => setCoverAdjustingUrl(null)}
-                  className="flex-1 py-3 rounded-xl border-2 border-border-main text-text-secondary font-bold text-[14px]"
+                  className="flex-1 py-3 rounded-xl border border-border text-text-secondary font-bold text-[14px] hover:bg-surface-1 transition-colors"
                 >İptal</button>
                 <button
+                  type="button"
                   onClick={saveCoverAdjustment}
                   disabled={savingAdjust}
-                  className="flex-[2] btn-primary py-3 disabled:opacity-50 text-[14px]"
-                >{savingAdjust ? 'Kaydediliyor...' : 'Kaydet ✓'}</button>
+                  className="flex-[2] btn-primary py-3 disabled:opacity-50 text-[14px] shadow-md"
+                >{savingAdjust ? 'Kaydediliyor...' : 'Konumu Kaydet ✓'}</button>
               </div>
             </div>
           </div>

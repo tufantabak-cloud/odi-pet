@@ -87,8 +87,14 @@ test('Odi.Pet Auth & Onboarding Flow - Full Lifecycle', async ({ page }) => {
   await page.click('button:has-text("Devam Et →")');
   await page.waitForTimeout(1000);
 
-  // Adım 3: Profil Fotoğrafı Ekle
-  await page.getByTestId('pet-photo-default-avatar-button').click();
+  // Adım 3: Profil Fotoğrafı Ekle (Zorunlu)
+  const fileInput = page.getByTestId('pet-photo-input');
+  await fileInput.setInputFiles({
+    name: 'test-pet.jpg',
+    mimeType: 'image/jpeg',
+    buffer: Buffer.from('fake-image-bytes')
+  });
+  await page.getByTestId('pet-profile-create-button').click();
   await page.waitForTimeout(1000);
 
   // Adım 4: Acil Durum Ağı (Atla)

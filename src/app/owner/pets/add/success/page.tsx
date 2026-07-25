@@ -11,12 +11,17 @@ function SuccessContent() {
   const { isSubscribed, isLoading, subscribe } = useWebPush()
   const [errorMsg, setErrorMsg] = useState('')
   const [justSubscribed, setJustSubscribed] = useState(false)
+  // Adım 5: Bildirim Onayı, Adım 6: Sağlık Geçmişi
+  const [activeStep, setActiveStep] = useState<5 | 6>(5)
+  const [showSkipWarning, setShowSkipWarning] = useState(false)
   
   const [pet, setPet] = useState<any>(null)
   const supabase = createBrowserSupabaseClient()
 
-  const petId   = params.get('id')   ?? ''
-  const petName = params.get('name') ?? 'Dostunuz'
+  const petId       = params.get('id') ?? ''
+  const avatarParam = params.get('avatar') ?? ''
+  const petName     = pet?.name || params.get('name') || 'Dostunuz'
+  const displayPhoto = pet?.avatar_url || avatarParam
 
   useEffect(() => {
     if (!petId) {
@@ -27,7 +32,7 @@ function SuccessContent() {
     const fetchPet = async () => {
       const { data } = await supabase
         .from('pets')
-        .select('birth_date, health_history_status, species, onboarding_progress')
+        .select('name, birth_date, health_history_status, species, onboarding_progress, avatar_url')
         .eq('id', petId)
         .single()
       if (data) setPet(data)
@@ -35,31 +40,33 @@ function SuccessContent() {
     fetchPet()
   }, [petId, router, supabase])
 
+  const isAlreadyActive = isSubscribed || justSubscribed
+
   const handleSubscribe = async () => {
     setErrorMsg('')
     const result = await subscribe()
     if (result.success) {
       setJustSubscribed(true)
-      // Redirect after 1.5s
       setTimeout(() => {
-        router.push(`/owner/pets/${petId}`)
-      }, 1500)
+        setActiveStep(6)
+      }, 1000)
     } else if (result.error) {
       setErrorMsg(result.error)
     } else {
       if (Notification.permission === 'denied') {
-        setErrorMsg('Tarayıcınızda bildirim izinleri engellenmiş. Lütfen tarayıcı ayarlarından izni açın.')
+        setErrorMsg('Tarayıcınızda bildirim izinleri engellenmiş. Lütfen adres çubuğundaki kilit simgesinden bildirim iznini açın.')
       } else {
         setErrorMsg('Bildirimler etkinleştirilemedi. Lütfen tekrar deneyin.')
       }
     }
   }
 
-  const isAlreadyActive = isSubscribed || justSubscribed
+  const handleSkipToStep6 = () => {
+    setActiveStep(6)
+  }
 
-  const handleSkip = async () => {
+  const handleFinalProfileGo = async () => {
     if (showHealthHistoryCard) {
-      // Eğer sağlık geçmişi kartı görünüyor ve kullanıcı atlıyorsa, skipped olarak işaretle
       await supabase.from('pets').update({ health_history_status: 'skipped' }).eq('id', petId)
     }
     router.push(`/owner/pets/${petId}`)
@@ -75,157 +82,243 @@ function SuccessContent() {
   const op = pet?.onboarding_progress as any
   const isDone = pet?.health_history_status === 'completed' || pet?.health_history_status === 'skipped' || op?.vaccine_plan === true
   const showHealthHistoryCard = ageInMonths >= 6 && !isDone
-  // Yavru petlerde (sağlık geçmişi kartı yokken) aşı planı oluşturmaya yönlendir
   const showVaccinePlanCard = !!pet && !showHealthHistoryCard && op?.vaccine_plan !== true
 
   if (!petId) return null
 
   return (
-    <div className="card-base p-8 sm:p-10 flex flex-col items-center gap-6 animate-fadeInUp mt-10 max-w-md mx-auto border border-primary/10 text-center">
-      {/* 3D gradient pet-centric bell collar icon */}
-      <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-primary-soft to-indigo-50/30 flex items-center justify-center shadow-md relative hover:scale-105 transition-transform duration-300 group">
-        <div className="absolute inset-0 rounded-full bg-primary/5 animate-ping opacity-75" style={{ animationDuration: '3s' }} />
-        <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative z-10">
-          <defs>
-            <linearGradient id="collarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#8B5CF6" />
-              <stop offset="100%" stopColor="#4F46E5" />
-            </linearGradient>
-            <linearGradient id="bellGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#FBBF24" />
-              <stop offset="100%" stopColor="#F59E0B" />
-            </linearGradient>
-            <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
-              <feDropShadow dx="0" dy="3" stdDeviation="3" floodColor="#4F46E5" floodOpacity="0.25" />
-            </filter>
-            <filter id="bellShadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#D97706" floodOpacity="0.3" />
-            </filter>
-          </defs>
-          <path d="M12 24C12 24 24 28 32 28C40 28 52 24 52 24C52 24 48 34 32 34C16 34 12 24 12 24Z" fill="url(#collarGrad)" filter="url(#softShadow)" />
-          <circle cx="32" cy="35" r="4" stroke="#F59E0B" strokeWidth="2" fill="none" />
-          <circle cx="32" cy="44" r="10" fill="url(#bellGrad)" filter="url(#bellShadow)" className="group-hover:rotate-12 origin-[32px_35px] transition-transform duration-300" />
-          <path d="M26 46C26 46 29 49 32 49C35 49 38 46 38 46" stroke="#78350F" strokeWidth="2" strokeLinecap="round" />
-          <circle cx="32" cy="42" r="2.5" fill="#78350F" />
-        </svg>
+    <div className="card-base p-6 sm:p-10 flex flex-col items-center gap-6 animate-fadeInUp mt-6 sm:mt-10 max-w-md mx-auto border border-primary/10 text-center relative">
+      
+      {/* 6 Adımlı Wizard Göstergesi */}
+      <div className="w-full flex flex-col gap-2 pb-3 border-b border-border/60">
+        <div className="flex items-center justify-between">
+          <span className="text-[12px] font-extrabold text-primary uppercase tracking-wider">
+            {activeStep === 5 ? 'Adım 5 / 6 • Bildirim Onayı' : 'Adım 6 / 6 • Sağlık Geçmişi'}
+          </span>
+          <span className="text-[11px] font-bold text-text-tertiary">
+            {activeStep === 5 ? '%83 Tamamlandı' : '%100 Tamamlandı'}
+          </span>
+        </div>
+        <div className="w-full bg-surface-2 rounded-full h-2 overflow-hidden border border-border/40">
+          <div 
+            className="bg-gradient-to-r from-primary to-indigo-600 h-full rounded-full transition-all duration-500"
+            style={{ width: activeStep === 5 ? '83.3%' : '100%' }}
+          />
+        </div>
       </div>
 
-      <div>
-        <h1 className="text-[26px] font-black text-text-primary mb-2 leading-tight">
-          Aramıza Hoş Geldin, {petName}! 🎉
-        </h1>
-        
-        {isAlreadyActive ? (
-          <p className="text-[14px] text-success font-bold mt-2 flex items-center justify-center gap-1.5 bg-success-soft/30 py-2 px-4 rounded-xl border border-success/15 animate-scaleIn">
-            <span>✓</span> Hatırlatıcı bildirimleriniz aktif edildi!
+      {/* Pet Header Profile */}
+      <div className="flex flex-col items-center gap-3">
+        <div className="relative group hover:scale-105 transition-transform duration-300">
+          <div className="absolute -inset-1.5 rounded-full bg-gradient-to-tr from-primary/30 to-purple-500/30 blur-sm opacity-70 group-hover:opacity-100 transition duration-300" />
+          <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-2 border-white shadow-lg bg-surface-1 flex items-center justify-center">
+            {displayPhoto ? (
+              <img
+                src={displayPhoto}
+                alt={petName}
+                className="w-full h-full object-cover rounded-full"
+              />
+            ) : (
+              <div className="w-full h-full bg-surface-2 flex items-center justify-center text-text-secondary text-3xl">
+                📷
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <h1 className="text-[24px] sm:text-[26px] font-black text-text-primary mb-1 leading-tight">
+            {activeStep === 5 ? `Aramıza Hoş Geldin, ${petName}! 🎉` : `${petName} İçin Son Adım! 🐾`}
+          </h1>
+          <p className="text-[13px] text-text-secondary px-2">
+            {activeStep === 5
+              ? `${petName}'in aşı ve bakım zamanlarını kaçırmamanız için bildirim izni zorunludur.`
+              : `${petName}'in geçmiş sağlık verilerini ve aşı takvimini oluşturalım.`}
           </p>
-        ) : (
-          <p className="text-[14px] text-text-secondary leading-relaxed px-2">
-            {petName}&apos;in aşı, parazit kontrolü ve bakım zamanlarını kaçırmamak için akıllı hatırlatıcı bildirimlerini etkinleştirin.
-          </p>
-        )}
+        </div>
       </div>
 
-      {showHealthHistoryCard && (
-        <div className="w-full bg-surface-1 border border-border rounded-[10px] p-4 mb-2 text-left animate-scaleIn">
-          <div className="flex items-start gap-2.5 mb-3">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary mt-0.5 shrink-0">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            <div>
-              <p className="text-[14px] font-bold text-text-primary">Sağlık geçmişini ekle</p>
-              <p className="text-[12px] text-text-secondary mt-1">
-                Yaklaşık 2 dakika sürer. <strong className="text-text-primary">Sadece bir kez yapılır</strong> — bundan sonrası otomatik.
+      {/* ADIM 5: BİLDİRİM ONAYI */}
+      {activeStep === 5 && (
+        <div className="w-full flex flex-col gap-4 animate-fadeIn text-left">
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4.5">
+            <div className="flex items-center gap-2 mb-2 text-amber-700 font-extrabold text-[14px]">
+              <span className="text-lg">🔔</span>
+              <span>5. Adım: Akıllı Bildirim İzni</span>
+            </div>
+            
+            <p className="text-[13px] text-text-primary font-medium leading-relaxed mb-3">
+              Odi.Pet&apos;in temel amacı <strong className="text-primary">{petName}</strong>&apos;in aşı tarihlerini, parazit damlalarını ve veteriner kontrollerini zamanı geldiğinde size anlık hatırlatmaktır.
+            </p>
+
+            <div className="p-3 bg-white/80 rounded-xl border border-amber-500/20 text-[12px] text-amber-900 font-semibold space-y-1.5">
+              <div className="flex items-center gap-1.5">
+                <span className="text-amber-600 font-bold">⚠️</span>
+                <span>Bildirimlere izin vermezseniz zamanında uyarı alamazsınız.</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-amber-600 font-bold">⚠️</span>
+                <span>Uygulama temel amacına uygun çalışamaz.</span>
+              </div>
+            </div>
+          </div>
+
+          {errorMsg && (
+            <div className="p-3 bg-error/10 text-error text-[13px] font-bold rounded-xl border border-error/20 w-full animate-scaleIn">
+              ⚠️ {errorMsg}
+            </div>
+          )}
+
+          {isAlreadyActive ? (
+            <div className="flex flex-col gap-3">
+              <p className="text-[14px] text-success font-bold p-3 bg-success-soft/30 rounded-xl border border-success/15 text-center animate-scaleIn">
+                ✓ Bildirimler başarıyla etkinleştirildi!
               </p>
+              <button
+                onClick={() => setActiveStep(6)}
+                className="w-full bg-primary text-white py-3.5 text-[14px] font-bold shadow-md flex items-center justify-center gap-2 hover:bg-primary-hover transition-all rounded-xl cursor-pointer"
+              >
+                Sonraki Adım: Sağlık Geçmişi (6/6) →
+              </button>
             </div>
-          </div>
-          <div className="flex flex-col gap-1.5 mb-4 pb-4 border-b border-border">
-            <div className="flex items-center gap-2 text-[12px] text-text-secondary">
-              <span className="text-success text-[14px]">✓</span> Geçmiş aşıları sisteme tanıtırsınız
-            </div>
-            <div className="flex items-center gap-2 text-[12px] text-text-secondary">
-              <span className="text-success text-[14px]">✓</span> Gelecek hatırlatıcılar doğru tarihlere planlanır
-            </div>
-            <div className="flex items-center gap-2 text-[12px] text-text-secondary">
-              <span className="text-success text-[14px]">✓</span> Bir daha sormayız — sistem otomatik takip eder
-            </div>
-          </div>
-          
-          <button
-            onClick={() => router.push(`/owner/plan-yap/asi?pet_id=${petId}&mode=log`)}
-            className="w-full bg-primary text-white border-none rounded-xl py-3 text-[14px] font-bold cursor-pointer hover:bg-primary-hover transition-colors shadow-md"
-          >
-            Şimdi ekle (2 dk) →
-          </button>
-        </div>
-      )}
+          ) : (
+            <div className="flex flex-col gap-3 pt-1">
+              <button
+                onClick={handleSubscribe}
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-primary to-indigo-600 text-white py-4 text-[15px] font-black shadow-lg hover:shadow-xl flex items-center justify-center gap-2.5 hover:scale-[1.01] active:scale-[0.99] transition-all rounded-xl cursor-pointer"
+              >
+                {isLoading ? (
+                  <span className="flex items-center gap-2 justify-center">
+                    <svg className="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" strokeDasharray="60" strokeDashoffset="15"/></svg>
+                    Etkinleştiriliyor...
+                  </span>
+                ) : (
+                  <>
+                    <span>🔔 Bildirimleri Etkinleştir ve Devam Et →</span>
+                  </>
+                )}
+              </button>
 
-      {showVaccinePlanCard && (
-        <div className="w-full bg-surface-1 border border-border rounded-[10px] p-4 mb-2 text-left animate-scaleIn">
-          <div className="flex items-start gap-2.5 mb-3">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary mt-0.5 shrink-0">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-              <polyline points="9 12 11 14 15 10"></polyline>
-            </svg>
-            <div>
-              <p className="text-[14px] font-bold text-text-primary">Aşı takibini başlat</p>
-              <p className="text-[12px] text-text-secondary mt-1">
-                {petName} için aşı planı oluşturun; zamanı gelince <strong className="text-text-primary">biz hatırlatalım</strong>.
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => router.push(`/owner/plan-yap/asi?pet_id=${petId}`)}
-            className="w-full bg-primary text-white border-none rounded-xl py-3 text-[14px] font-bold cursor-pointer hover:bg-primary-hover transition-colors shadow-md"
-          >
-            Aşı planı oluştur →
-          </button>
-        </div>
-      )}
-
-      {errorMsg && (
-        <div className="p-3 bg-error/10 text-error text-[13px] font-bold rounded-xl border border-error/20 w-full animate-scaleIn">
-          ⚠️ {errorMsg}
-        </div>
-      )}
-
-      <div className="flex flex-col w-full gap-3 mt-2 relative">
-        {isAlreadyActive ? (
-          <button
-            id="btn-goto-profile"
-            onClick={() => router.push(`/owner/pets/${petId}`)}
-            className="btn-secondary w-full py-3.5 text-[14px] font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-surface-1 transition-all rounded-[12px]"
-          >
-            Profile Git →
-          </button>
-        ) : (
-          <>
-            <button
-              onClick={handleSubscribe}
-              disabled={isLoading}
-              className="btn-secondary border-primary/20 bg-primary/5 text-primary w-full py-3.5 text-[14px] font-bold shadow-sm flex items-center justify-center gap-2 hover:bg-primary/10 transition-all rounded-[12px]"
-            >
-              {isLoading ? (
-                <span className="flex items-center gap-2 justify-center">
-                  <svg className="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" strokeDasharray="60" strokeDashoffset="15"/></svg>
-                  Etkinleştiriliyor...
-                </span>
+              {!showSkipWarning ? (
+                <button
+                  onClick={() => setShowSkipWarning(true)}
+                  disabled={isLoading}
+                  className="text-[13px] font-bold text-text-secondary hover:text-text-primary py-2 hover:underline transition-colors text-center cursor-pointer"
+                >
+                  Bildirim Açmadan 6. Adıma Geç
+                </button>
               ) : (
-                'Bildirimleri Etkinleştir (Önerilen)'
+                <div className="p-3.5 bg-red-500/10 border border-red-500/30 rounded-xl text-center space-y-2 animate-fadeIn">
+                  <p className="text-[12px] text-red-600 font-bold">
+                    ⚠️ Bildirimleri açmazsanız aşı ve bakım zamanlarını kaçırabilirsiniz. Yine de devam etmek istiyor musunuz?
+                  </p>
+                  <div className="flex items-center justify-center gap-2 pt-1">
+                    <button
+                      onClick={handleSubscribe}
+                      className="px-3.5 py-2 bg-primary text-white text-[12px] font-bold rounded-lg shadow-xs cursor-pointer"
+                    >
+                      Vazgeç, Bildirim Aç
+                    </button>
+                    <button
+                      onClick={handleSkipToStep6}
+                      className="px-3.5 py-2 bg-surface-2 text-text-secondary hover:text-text-primary text-[12px] font-bold rounded-lg border border-border cursor-pointer"
+                    >
+                      Yine de 6. Adıma Geç
+                    </button>
+                  </div>
+                </div>
               )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ADIM 6: SAĞLIK GEÇMİŞİNİ EKLE */}
+      {activeStep === 6 && (
+        <div className="w-full flex flex-col gap-4 animate-fadeIn text-left">
+          
+          {showHealthHistoryCard && (
+            <div className="w-full bg-surface-1 border border-border rounded-[14px] p-5 text-left shadow-xs">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5 font-bold">
+                  ⏱️
+                </div>
+                <div>
+                  <p className="text-[15px] font-bold text-text-primary">6. Adım: Sağlık Geçmişini Ekle</p>
+                  <p className="text-[12px] text-text-secondary mt-0.5">
+                    Yaklaşık 2 dakika sürer. <strong className="text-text-primary">Sadece bir kez yapılır</strong> — bundan sonrası otomatik.
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2 mb-4 pb-4 border-b border-border text-[12px] text-text-secondary">
+                <div className="flex items-center gap-2">
+                  <span className="text-success text-[14px]">✓</span> Geçmiş aşıları sisteme tanıtırsınız
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-success text-[14px]">✓</span> Gelecek hatırlatıcılar doğru tarihlere planlanır
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-success text-[14px]">✓</span> Sistem otomatik takip eder
+                </div>
+              </div>
+              
+              <button
+                onClick={() => router.push(`/owner/plan-yap/asi?pet_id=${petId}&mode=log`)}
+                className="w-full bg-primary text-white border-none rounded-xl py-3.5 text-[14px] font-bold cursor-pointer hover:bg-primary-hover transition-all shadow-md"
+              >
+                Şimdi Ekle (2 dk) →
+              </button>
+            </div>
+          )}
+
+          {showVaccinePlanCard && (
+            <div className="w-full bg-surface-1 border border-border rounded-[14px] p-5 text-left shadow-xs">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5 font-bold">
+                  🛡️
+                </div>
+                <div>
+                  <p className="text-[15px] font-bold text-text-primary">6. Adım: Aşı Takibini Başlat</p>
+                  <p className="text-[12px] text-text-secondary mt-0.5">
+                    {petName} için aşı planı oluşturun; zamanı gelince biz hatırlatalım.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => router.push(`/owner/plan-yap/asi?pet_id=${petId}`)}
+                className="w-full bg-primary text-white border-none rounded-xl py-3.5 text-[14px] font-bold cursor-pointer hover:bg-primary-hover transition-all shadow-md"
+              >
+                Aşı Planı Oluştur →
+              </button>
+            </div>
+          )}
+
+          {!showHealthHistoryCard && !showVaccinePlanCard && (
+            <div className="p-4 bg-success-soft/30 rounded-xl border border-success/20 text-center">
+              <p className="text-xs text-success font-bold">✓ Bütün adımlar başarıyla tamamlandı!</p>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-2 pt-2">
+            <button
+              id="btn-goto-profile"
+              onClick={handleFinalProfileGo}
+              className="w-full bg-surface-2 text-text-primary border border-border hover:bg-surface-3 py-3.5 text-[14px] font-bold rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+            >
+              Tamamla ve Profile Git →
             </button>
             
             <button
-              onClick={handleSkip}
-              disabled={isLoading}
-              className="text-[13px] font-bold text-text-secondary hover:text-text-primary py-2 hover:underline transition-colors mt-2"
+              onClick={() => setActiveStep(5)}
+              className="text-[12px] text-text-secondary hover:text-text-primary underline text-center cursor-pointer mt-1"
             >
-              Daha Sonra Profile Git
+              ← Önceki Adıma Dön (5. Adım: Bildirim Onayı)
             </button>
-          </>
-        )}
-      </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
@@ -237,3 +330,4 @@ export default function PetAddSuccessPage() {
     </Suspense>
   )
 }
+

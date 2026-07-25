@@ -90,12 +90,35 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // ─── Kapak Fotoğrafı Yükleme (opsiyonel) ─────────────────────
+  let coverUrl: string | null = null
+  const coverFile = (fd.get('cover') || fd.get('cover_url')) as File | string | null
+
+  if (coverFile && typeof coverFile === 'object' && coverFile.size > 0) {
+    const ext = coverFile.name.split('.').pop() || 'jpg'
+    const path = `${user.id}/${Date.now()}_cover.${ext}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('pet-avatars')
+      .upload(path, coverFile, { contentType: coverFile.type, upsert: false })
+
+    if (uploadError) {
+      console.error('[API/Pets] Cover upload error:', uploadError)
+    } else {
+      const { data: urlData } = supabase.storage
+        .from('pet-avatars')
+        .getPublicUrl(path)
+      coverUrl = urlData.publicUrl
+    }
+  }
+
   const payload = {
     owner_id:      user.id,
     name,
     species,
     breed,
     avatar_url:    avatarUrl,
+    cover_url:     coverUrl,
     birth_date:    str(fd, 'birth_date') || null,
     gender:        str(fd, 'gender')     || null,
     color:         str(fd, 'color')      || null,
@@ -135,17 +158,19 @@ export async function POST(req: NextRequest) {
     .from('pet_owners')
     .insert({ pet_id: data.id, profile_id: user.id, role: 'owner' })
 
-  // ─── Katman 1: İlk Kilo Kaydının Alınması ──────────────────────
-  const weightVal = str(fd, 'weight')
-  if (weightVal && !isNaN(parseFloat(weightVal))) {
+  // ─── Katman 1: İlk Kilo ve Boy Kaydının Alınması ────────────────
+  const weightVal = str(fd, 'weight') || str(fd, 'weight_kg')
+  const heightVal = str(fd, 'height') || str(fd, 'height_cm')
+  if ((weightVal && !isNaN(parseFloat(weightVal))) || (heightVal && !isNaN(parseFloat(heightVal)))) {
     const { error: weightError } = await supabase
       .from('weight_logs')
       .insert({ 
         pet_id: data.id, 
-        weight_kg: parseFloat(weightVal), 
+        weight_kg: weightVal ? parseFloat(weightVal) : null, 
+        height_cm: heightVal ? parseFloat(heightVal) : null,
         measured_at: new Date().toISOString()
       })
-    if (weightError) console.error('[API/Pets] Weight log error:', weightError)
+    if (weightError) console.error('[API/Pets] Weight/Height log error:', weightError)
   }
 
   // ─── Generate Vaccination Plan (Sadece Yavrular İçin) ─────────

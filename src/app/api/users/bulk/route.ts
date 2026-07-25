@@ -19,9 +19,17 @@ export async function DELETE(req: NextRequest) {
 
     const adminSupabase = createAdminSupabaseClient();
     
-    // Auth users siliniyor (ilgili public.profiles kayıtları foreign key cascade ile silinmelidir)
+    // Auth users siliniyor (kullanıcının kendi hesabını silmesi engellenir, ilişkili profiller temizlenir)
     const results = await Promise.allSettled(
       user_ids.map(async (id: string) => {
+        if (id === user.id) {
+          throw new Error('Kendi hesabınızı silemezsiniz.');
+        }
+
+        // Önce profiles kaydını ve bağlı verilerini temizlemeyi dene
+        await adminSupabase.from('profiles').delete().eq('id', id);
+
+        // Supabase Auth kullanıcısını sil
         const { data, error } = await adminSupabase.auth.admin.deleteUser(id);
         if (error) throw error;
         return data;
@@ -29,11 +37,32 @@ export async function DELETE(req: NextRequest) {
     );
 
     const successful = results.filter(r => r.status === 'fulfilled').length;
-    const failed = results.filter(r => r.status === 'rejected').length;
+    const failedResults = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
+    const failed = failedResults.length;
+
+    // Hata nedenlerini benzersiz ve anlaşılır olarak topla
+    const errorDetails = Array.from(new Set(failedResults.map(r => {
+      const msg = r.reason?.message || String(r.reason);
+      if (msg.includes('invalid JWT') || msg.includes('unrecognized JWT')) {
+        return 'Test/Mock hesaba ait geçersiz JWT kimliği (Supabase Auth imza doğrulaması başarısız)';
+      }
+      if (msg.includes('Database error deleting user')) {
+        return 'Veritabanında bağımlı kayıt/trigger kısıtlaması (Database error deleting user)';
+      }
+      return msg;
+    })));
+
+    let message = `${successful} kullanıcı başarıyla silindi.`;
+    if (failed > 0) {
+      message += ` ${failed} işlem başarısız.\n\nNedenler:\n• ${errorDetails.join('\n• ')}`;
+    }
 
     return NextResponse.json({ 
       success: true, 
-      message: `${successful} kullanıcı başarıyla silindi. ${failed} işlem başarısız.` 
+      message,
+      successful,
+      failed,
+      errorDetails
     });
   } catch (error: unknown) {
     console.error('[API/Users Bulk DELETE] Error:', error);

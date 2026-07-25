@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { calcAge } from '@/lib/pets/utils'
 import { DefaultCatAvatar, DefaultDogAvatar } from '@/components/icons/PetIcons'
 import { StepperInput } from '@/components/ui/StepperInput'
+import { RulerPicker } from '@/components/ui/RulerPicker'
+import { BreedCombobox } from '@/components/ui/BreedCombobox'
 // ── Irk Listeleri ──────────────────────────────────────────────
 const CAT_BREEDS = [
   'British Shorthair', 'Scottish Fold', 'Scottish Straight',
@@ -13,12 +15,20 @@ const CAT_BREEDS = [
   'Norwegian Forest Cat', 'Sphynx', 'Tekir (Sokak)', 'Diğer',
 ]
 
+const POPULAR_CAT_BREEDS = [
+  'British Shorthair', 'Tekir (Sokak)', 'Scottish Fold', 'Persian (İran Kedisi)'
+]
+
 const DOG_BREEDS = [
   'Golden Retriever', 'Labrador Retriever', 'Alman Çoban Köpeği',
   'French Bulldog', 'Bulldog', 'Poodle (Kaniş)', 'Beagle',
   'Rottweiler', 'Husky', 'Dachshund (Sosis)', 'Chihuahua',
   'Shih Tzu', 'Border Collie', 'Cocker Spaniel', 'Maltese',
   'Pomeranian', 'Kangal', 'Akbaş', 'Diğer',
+]
+
+const POPULAR_DOG_BREEDS = [
+  'Golden Retriever', 'Labrador Retriever', 'French Bulldog', 'Pomeranian', 'Poodle (Kaniş)'
 ]
 
 type Species = 'cat' | 'dog'
@@ -105,6 +115,8 @@ interface PetFormProps {
   setIsNeutered: (v: boolean) => void
   weight: string
   setWeight: (v: string) => void
+  height: string
+  setHeight: (v: string) => void
   onSubmit: (e: React.FormEvent) => void
   submitError: string
 }
@@ -130,9 +142,12 @@ function PetForm({
   setIsNeutered,
   weight,
   setWeight,
+  height,
+  setHeight,
   onSubmit,
   submitError
 }: PetFormProps) {
+  const [activeMeasureTab, setActiveMeasureTab] = useState<'weight' | 'height'>('weight')
   const handleApproxChange = (yStr: string, mStr: string) => {
     setApproxYears(yStr)
     setApproxMonths(mStr)
@@ -165,6 +180,7 @@ function PetForm({
   }
 
   const breeds = species === 'cat' ? CAT_BREEDS : DOG_BREEDS
+  const popularBreeds = species === 'cat' ? POPULAR_CAT_BREEDS : POPULAR_DOG_BREEDS
   const AvatarHeader = species === 'cat' ? <DefaultCatAvatar width={36} height={36} /> : <DefaultDogAvatar width={36} height={36} />
 
   const isFormValid = !!petName.trim() && !!selectedBreed && !!gender && !!birthDate && !!weight
@@ -210,32 +226,40 @@ function PetForm({
               className="input-base uppercase" required/>
           </div>
 
-          {/* Irk */}
+          {/* Irk Combobox */}
           <div className="flex flex-col gap-2">
-            <label htmlFor="breed" className="text-[13px] font-bold text-text-primary">Irk *</label>
-            <div className="relative">
-              <select id="breed" value={selectedBreed} onChange={e => setSelectedBreed(e.target.value)} data-testid="pet-breed-select" className="input-base w-full appearance-none cursor-pointer" required>
-                <option value="" disabled>Yazmaya başlayın veya seçin</option>
-                {breeds.map(b => <option key={b} value={b}>{b}</option>)}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-text-secondary">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-              </div>
-            </div>
+            <label htmlFor="pet-breed-combobox" className="text-[13px] font-bold text-text-primary">Irk *</label>
+            <BreedCombobox
+              id="pet-breed-combobox"
+              value={selectedBreed}
+              onChange={(b) => setSelectedBreed(b)}
+              breeds={breeds}
+              popularBreeds={popularBreeds}
+              placeholder="Irk yazın veya listeden seçin..."
+              required
+              data-testid="pet-breed-select"
+            />
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           {/* Cinsiyet */}
           <div className="flex flex-col gap-2">
-            <label className="text-[13px] font-bold text-text-primary">Cinsiyet</label>
-            <div className="flex gap-2">
-              {([['male', '♂ Erkek'], ['female', '♀ Dişi']] as const).map(([v, l]) => (
-                <label key={v} className="flex-1 flex items-center justify-center gap-2 p-3 border-2 border-border-main rounded-[14px] cursor-pointer has-[:checked]:border-primary has-[:checked]:bg-primary-soft/30 transition-all text-[13px] font-bold text-text-secondary has-[:checked]:text-primary">
-                  <input type="radio" name="gender" value={v} checked={gender === v} onChange={() => setGender(v)} className="sr-only"/>
-                  {l}
-                </label>
-              ))}
+            <label className="text-[13px] font-bold text-text-primary">Cinsiyet *</label>
+            <div className="flex gap-3">
+              {([['male', '♂ Erkek', 'sky'], ['female', '♀ Dişi', 'pink']] as const).map(([v, l, theme]) => {
+                const isSelected = gender === v
+                const themeClasses = theme === 'sky'
+                  ? (isSelected ? 'border-sky-500 bg-sky-50/80 text-sky-700 shadow-sm scale-[1.02]' : 'hover:border-sky-300 text-text-secondary')
+                  : (isSelected ? 'border-pink-500 bg-pink-50/80 text-pink-700 shadow-sm scale-[1.02]' : 'hover:border-pink-300 text-text-secondary')
+
+                return (
+                  <label key={v} className={`flex-1 flex items-center justify-center gap-2 p-3.5 border-2 border-border-main rounded-[16px] cursor-pointer transition-all duration-200 text-[13px] font-extrabold ${themeClasses}`}>
+                    <input type="radio" name="gender" value={v} checked={gender === v} onChange={() => setGender(v)} className="sr-only"/>
+                    {l}
+                  </label>
+                )
+              })}
             </div>
           </div>
 
@@ -330,30 +354,81 @@ function PetForm({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-1">
-          {/* Kısırlaştırılma Durumu */}
-          <div className="flex flex-col gap-2">
-            <label className="text-[13px] font-bold text-text-primary">Kısırlaştırılma Durumu</label>
-            <label className="flex items-center justify-between gap-2 p-3.5 border-2 border-border-main rounded-[14px] cursor-pointer hover:border-primary/50 transition-all text-[13px] font-bold text-text-secondary has-[:checked]:border-primary has-[:checked]:bg-primary-soft/30 group">
-              <div className="flex items-center gap-2">
-                <span className="text-[16px] group-hover:scale-110 transition-transform">✂️</span>
-                <span className="group-has-[:checked]:text-primary">Kısırlaştırıldı</span>
-              </div>
-              <input type="checkbox" checked={isNeutered} onChange={e => setIsNeutered(e.target.checked)} className="w-5 h-5 text-primary focus:ring-primary rounded-[6px] border-border-main bg-white cursor-pointer"/>
-            </label>
+        {/* Kısırlaştırılma Durumu */}
+        <div className="flex flex-col gap-2">
+          <label className="text-[13px] font-bold text-text-primary">Kısırlaştırılma Durumu</label>
+          <label className="flex items-center justify-between gap-2 p-3.5 border-2 border-border-main rounded-[14px] cursor-pointer hover:border-primary/50 transition-all text-[13px] font-bold text-text-secondary has-[:checked]:border-primary has-[:checked]:bg-primary-soft/30 group">
+            <div className="flex items-center gap-2">
+              <span className="text-[16px] group-hover:scale-110 transition-transform">✂️</span>
+              <span className="group-has-[:checked]:text-primary">Kısırlaştırıldı</span>
+            </div>
+            <input type="checkbox" checked={isNeutered} onChange={e => setIsNeutered(e.target.checked)} className="w-5 h-5 text-primary focus:ring-primary rounded-[6px] border-border-main bg-white cursor-pointer"/>
+          </label>
+        </div>
+
+        {/* Fiziksel Mezüra / Ruler Picker (Kilo & Boy) */}
+        <div className="flex flex-col gap-3.5 mt-2">
+          {/* Tab Seçimi (Kilo vs Boy) */}
+          <div className="flex items-center justify-between gap-2 border-b border-border-main pb-2">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveMeasureTab('weight')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-bold transition-all cursor-pointer ${
+                  activeMeasureTab === 'weight'
+                    ? 'bg-primary text-white shadow-md shadow-primary/25 scale-[1.02]'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                <span>⚖️ Kilo (kg) *</span>
+                {weight && <span className="px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-black">{weight} kg</span>}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveMeasureTab('height')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-bold transition-all cursor-pointer ${
+                  activeMeasureTab === 'height'
+                    ? 'bg-primary text-white shadow-md shadow-primary/25 scale-[1.02]'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                <span>📏 Boy (cm)</span>
+                <span className="text-[11px] opacity-80">(Opsiyonel)</span>
+                {height && <span className="px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-black">{height} cm</span>}
+              </button>
+            </div>
           </div>
 
-          {/* Kilo */}
-          <div className="flex flex-col gap-2">
-            <label htmlFor="weight" className="text-[13px] font-bold text-text-primary">Kilo *</label>
-            <StepperInput 
-              id="weight" min={0} max={150} step={0.5} unit="kg"
-              value={weight} onChange={e => setWeight(e.target.value)}
-              placeholder="Örn: 4.5"
-              className="w-full h-14"
-              required
+          {/* Aktif Cetvel Seçici */}
+          {activeMeasureTab === 'weight' ? (
+            <RulerPicker
+              id="pet-weight-ruler"
+              label="Kilo Ölçümü *"
+              sublabel="Cetveli kaydırarak veya sayıya dokunarak kilo girin"
+              unit="kg"
+              min={0.1}
+              max={120}
+              step={0.1}
+              value={weight ? parseFloat(weight) : (species === 'cat' ? 4.0 : 10.0)}
+              onChange={(val) => setWeight(String(val))}
+              presets={species === 'cat' ? [2.5, 4.0, 5.5, 7.0] : [5.0, 10.0, 18.0, 25.0, 35.0]}
             />
-          </div>
+          ) : (
+            <RulerPicker
+              id="pet-height-ruler"
+              label="Boy / Uzunluk Ölçümü"
+              sublabel="Burundan kuyruk sokumuna veya omuza boy (Opsiyonel)"
+              isOptional
+              unit="cm"
+              min={5}
+              max={180}
+              step={1}
+              value={height ? parseFloat(height) : (species === 'cat' ? 25 : 45)}
+              onChange={(val) => setHeight(String(val))}
+              presets={species === 'cat' ? [20, 25, 30, 35] : [30, 45, 60, 80]}
+            />
+          )}
         </div>
 
         <div className="flex justify-end mt-4 pt-6 border-t border-border-main">
@@ -371,6 +446,120 @@ function PetForm({
   )
 }
 
+// ── Live Camera Modal ──────────────────────────────────────────────
+function CameraModal({
+  onCapture,
+  onClose
+}: {
+  onCapture: (file: File) => void
+  onClose: () => void
+}) {
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const [stream, setStream] = useState<MediaStream | null>(null)
+  const [error, setError] = useState<string>('')
+
+  useEffect(() => {
+    async function startCamera() {
+      try {
+        const mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' }
+        })
+        setStream(mediaStream)
+        if (videoRef.current) {
+          videoRef.current.srcObject = mediaStream
+        }
+      } catch (err: any) {
+        console.error('Kamera erişim hatası:', err)
+        setError('Kameraya erişilemedi. Lütfen cihaz izinlerini kontrol edin veya galeri seçimini kullanın.')
+      }
+    }
+    startCamera()
+
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop())
+      }
+    }
+  }, [])
+
+  const takePhoto = () => {
+    if (!videoRef.current) return
+    const video = videoRef.current
+    const canvas = document.createElement('canvas')
+    canvas.width = video.videoWidth || 640
+    canvas.height = video.videoHeight || 480
+    const ctx = canvas.getContext('2d')
+    if (ctx) {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+      canvas.toBlob(blob => {
+        if (blob) {
+          const file = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' })
+          onCapture(file)
+          if (stream) {
+            stream.getTracks().forEach(track => track.stop())
+          }
+          onClose()
+        }
+      }, 'image/jpeg', 0.9)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-xs animate-fadeIn">
+      <div className="bg-white rounded-3xl p-5 max-w-md w-full flex flex-col gap-4 shadow-2xl">
+        <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-[18px]">📸</span>
+            <h3 className="text-[16px] font-extrabold text-text-primary">Fotoğraf Çek</h3>
+          </div>
+          <button 
+            type="button" 
+            onClick={() => {
+              if (stream) stream.getTracks().forEach(t => t.stop())
+              onClose()
+            }}
+            className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:text-gray-800"
+          >
+            ✕
+          </button>
+        </div>
+
+        {error ? (
+          <div className="p-4 bg-rose-50 text-rose-700 rounded-2xl text-[13px] text-center font-bold">
+            {error}
+          </div>
+        ) : (
+          <div className="relative w-full aspect-4/3 rounded-2xl bg-black overflow-hidden shadow-inner">
+            <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
+          </div>
+        )}
+
+        <div className="flex gap-3 justify-end pt-2">
+          <button
+            type="button"
+            onClick={() => {
+              if (stream) stream.getTracks().forEach(t => t.stop())
+              onClose()
+            }}
+            className="px-4 py-2.5 rounded-xl bg-gray-100 text-gray-700 font-bold text-[13px]"
+          >
+            İptal
+          </button>
+          {!error && (
+            <button
+              type="button"
+              onClick={takePhoto}
+              className="px-6 py-2.5 rounded-xl bg-primary text-white font-extrabold text-[13px] shadow-md shadow-primary/20 hover:scale-[1.02] transition-all flex items-center gap-2"
+            >
+              <span>📸 Fotoğrafı Çek</span>
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Adım 3: Profil Fotoğrafı Ekleme ────────────────────────────
 interface PetPhotoStepProps {
   species: Species
@@ -379,6 +568,10 @@ interface PetPhotoStepProps {
   setPhotoPreview: (p: string) => void
   photoFile: File | null
   setPhotoFile: (f: File | null) => void
+  coverPreview: string
+  setCoverPreview: (p: string) => void
+  coverFile: File | null
+  setCoverFile: (f: File | null) => void
   onBack: () => void
   onSubmit: () => void
   loading: boolean
@@ -392,15 +585,21 @@ function PetPhotoStep({
   setPhotoPreview,
   photoFile,
   setPhotoFile,
+  coverPreview,
+  setCoverPreview,
+  coverFile,
+  setCoverFile,
   onBack,
   onSubmit,
   loading,
   submitError
 }: PetPhotoStepProps) {
+  const [activeCameraTarget, setActiveCameraTarget] = useState<'profile' | 'cover' | null>(null)
+
   const defaultAvatar = species === 'cat' ? (
-    <DefaultCatAvatar width={110} height={110} />
+    <DefaultCatAvatar width={100} height={100} />
   ) : (
-    <DefaultDogAvatar width={110} height={110} />
+    <DefaultDogAvatar width={100} height={100} />
   )
 
   const isCat = species === 'cat'
@@ -411,8 +610,25 @@ function PetPhotoStep({
     ? 'bg-violet-100 hover:bg-violet-200 text-violet-700' 
     : 'bg-amber-100 hover:bg-amber-200 text-amber-700'
 
+  const hasPhoto = !!photoPreview || !!photoFile
+
   return (
     <div className="flex flex-col w-full mx-auto pb-10 animate-fadeIn">
+      {activeCameraTarget && (
+        <CameraModal 
+          onCapture={(file) => {
+            if (activeCameraTarget === 'profile') {
+              setPhotoFile(file)
+              setPhotoPreview(URL.createObjectURL(file))
+            } else if (activeCameraTarget === 'cover') {
+              setCoverFile(file)
+              setCoverPreview(URL.createObjectURL(file))
+            }
+          }}
+          onClose={() => setActiveCameraTarget(null)}
+        />
+      )}
+
       {/* Header */}
       <div className="flex items-center gap-4 mb-6 border-b border-border-main pb-4">
         <button onClick={onBack}
@@ -424,33 +640,47 @@ function PetPhotoStep({
           </svg>
         </button>
         <div className="flex flex-col flex-1">
-          <h1 className="text-[20px] font-extrabold text-text-primary tracking-tight">Profil Fotoğrafı Ekle</h1>
-          <p className="text-[12px] text-text-secondary font-medium">{petName} dostumuz için güzel bir fotoğraf seçebilirsiniz.</p>
+          <h1 className="text-[20px] font-extrabold text-text-primary tracking-tight">Fotoğraf Ekle</h1>
+          <p className="text-[12px] text-text-secondary font-medium">{petName} dostumuz için profil ve kapak fotoğrafı seçebilirsiniz.</p>
         </div>
       </div>
 
-      <div className="card-base p-6 sm:p-8 flex flex-col gap-6 items-center">
+      <div className="card-base p-6 sm:p-8 flex flex-col gap-8">
         {submitError && (
           <div role="alert" aria-live="assertive" className="w-full p-3 bg-error/10 text-error text-[13px] font-bold rounded-xl border border-error/20">
             ⚠️ {submitError}
           </div>
         )}
 
-        <div className="flex flex-col items-center gap-5 my-4 w-full">
-          {/* Photo Frame Container */}
-          <div className={`relative w-[160px] h-[160px] rounded-[36px] bg-gradient-to-br ${gradientClass} border-2 border-dashed flex items-center justify-center overflow-hidden shadow-md group transition-all duration-300 hover:scale-[1.03]`}>
-            {photoPreview ? (
-               
-              <img src={photoPreview} alt="Önizleme" className="w-full h-full object-cover animate-scaleIn" />
+        {/* SECTION 1: PROFIL FOTOĞRAFI (ZORUNLU) */}
+        <div className="flex flex-col items-center gap-4 p-6 rounded-2xl bg-slate-50/60 border border-slate-200/80 w-full text-center">
+          <div className="flex items-center justify-between w-full border-b border-slate-200/60 pb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-[16px]">📷</span>
+              <span className="text-[14px] font-extrabold text-text-primary">Profil Fotoğrafı</span>
+            </div>
+            {hasPhoto ? (
+              <span className="text-[11px] font-black px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 flex items-center gap-1">
+                <span>✓</span> Seçildi
+              </span>
             ) : (
-              <div className="w-[110px] h-[110px] flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+              <span className="text-[11px] font-black px-2.5 py-1 rounded-full bg-rose-100 text-rose-700">
+                * Zorunlu
+              </span>
+            )}
+          </div>
+
+          <div className={`relative w-[140px] h-[140px] rounded-[32px] bg-gradient-to-br ${gradientClass} border-2 border-dashed flex items-center justify-center overflow-hidden shadow-md group transition-all duration-300 hover:scale-[1.02]`}>
+            {photoPreview ? (
+              <img src={photoPreview} alt="Profil Önizleme" className="w-full h-full object-cover animate-scaleIn" />
+            ) : (
+              <div className="w-[95px] h-[95px] flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
                 {defaultAvatar}
               </div>
             )}
-            
-            {/* Camera Overlay when no photo */}
+
             {!photoPreview && (
-              <div className="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-white shadow-md border border-gray-100 flex items-center justify-center text-text-secondary group-hover:text-primary group-hover:scale-110 transition-all">
+              <div className="absolute bottom-2.5 right-2.5 w-8 h-8 rounded-full bg-white shadow-md border border-gray-100 flex items-center justify-center text-text-secondary group-hover:text-primary transition-all">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
                   <circle cx="12" cy="13" r="4"/>
@@ -459,14 +689,17 @@ function PetPhotoStep({
             )}
           </div>
 
-          {/* Action buttons for selection */}
-          <div className="flex flex-col sm:flex-row gap-3 items-center">
-            <label className={`text-[13px] font-bold px-5 py-2.5 rounded-full cursor-pointer transition-all duration-200 ${bgSoftClass} active:scale-[0.97] inline-block text-center`}>
-              {photoPreview ? 'Fotoğrafı Değiştir' : 'Fotoğraf Seç'}
+          {/* DUAL ACTION BUTTONS: FOTOĞRAF SEÇ & FOTOĞRAF ÇEK */}
+          <div className="flex flex-wrap gap-2.5 justify-center items-center">
+            {/* Galeriden Seç */}
+            <label className={`text-[13px] font-bold px-4 py-2.5 rounded-full cursor-pointer transition-all duration-200 ${bgSoftClass} active:scale-[0.97] inline-flex items-center gap-1.5 shadow-xs`}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <span>{photoPreview ? 'Galeriden Değiştir' : 'Fotoğraf Seç *'}</span>
               <input 
                 type="file" 
                 accept="image/*" 
                 className="sr-only" 
+                data-testid="pet-photo-input"
                 onChange={e => {
                   const file = e.target.files?.[0]
                   if (file) {
@@ -477,6 +710,17 @@ function PetPhotoStep({
               />
             </label>
 
+            {/* Fotoğraf Çek */}
+            <button
+              type="button"
+              onClick={() => setActiveCameraTarget('profile')}
+              className="text-[13px] font-bold px-4 py-2.5 rounded-full cursor-pointer transition-all duration-200 bg-primary/10 hover:bg-primary/20 text-primary active:scale-[0.97] inline-flex items-center gap-1.5 shadow-xs"
+              data-testid="pet-photo-camera-button"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <span>Fotoğraf Çek</span>
+            </button>
+
             {photoPreview && (
               <button 
                 type="button"
@@ -484,50 +728,114 @@ function PetPhotoStep({
                   setPhotoFile(null)
                   setPhotoPreview('')
                 }}
-                className="text-[13px] font-bold px-5 py-2.5 rounded-full bg-gray-100 hover:bg-gray-250 text-text-secondary hover:text-text-primary transition-all active:scale-[0.97]"
+                className="text-[13px] font-bold px-3.5 py-2.5 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 transition-all active:scale-[0.97]"
               >
                 Görseli Kaldır
               </button>
             )}
           </div>
 
-          <p className="text-center text-sm text-gray-500 mt-4 mb-2">
-            Fotoğrafı şimdi eklemek zorunda değilsin.
-            İstersen varsayılan görselle devam edebilir,
-            daha sonra değiştirebilirsin.
-          </p>
-
-          <button
-            type="button"
-            data-testid="pet-photo-default-avatar-button"
-            onClick={() => {
-              onSubmit();
-            }}
-            className="w-full py-3 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
-          >
-            Varsayılan Görselle Devam Et
-          </button>
-
-          <button
-            type="button"
-            data-testid="pet-photo-skip-button"
-            onClick={() => onSubmit()}
-            className="w-full mt-1 py-2 text-sm text-gray-400 underline underline-offset-2"
-          >
-            Daha Sonra Ekle
-          </button>
+          {!hasPhoto && (
+            <p className="text-[12px] text-rose-600 font-semibold mt-1 animate-pulse">
+              * Devam edebilmek için lütfen {petName} için bir profil fotoğrafı seçin veya çekin.
+            </p>
+          )}
         </div>
 
-        {/* Dynamic Tip Card for Premium Aesthetics */}
-        <div className="w-full border border-primary/10 bg-primary-soft/20 rounded-2xl p-4 flex gap-3 text-left">
+        {/* SECTION 2: KAPAK FOTOĞRAFI (OPSİYONEL) */}
+        <div className="flex flex-col gap-4 p-5 rounded-2xl bg-slate-50/60 border border-slate-200/80 w-full">
+          <div className="flex items-center justify-between w-full border-b border-slate-200/60 pb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-[16px]">🖼️</span>
+              <span className="text-[14px] font-extrabold text-text-primary">Kapak Fotoğrafı</span>
+            </div>
+            <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-600">
+              Opsiyonel
+            </span>
+          </div>
+
+          <div className="relative w-full h-[140px] sm:h-[160px] rounded-2xl border-2 border-dashed border-slate-300 bg-white overflow-hidden flex items-center justify-center transition-all hover:border-primary/50 group">
+            {coverPreview ? (
+              <img src={coverPreview} alt="Kapak Önizleme" className="w-full h-full object-cover" />
+            ) : (
+              <div className="flex flex-col items-center justify-center p-4 text-center gap-2">
+                <div className="w-10 h-10 rounded-full bg-primary-soft/40 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                  </svg>
+                </div>
+                <p className="text-[12px] font-bold text-text-primary">Kapak Fotoğrafı Yükle</p>
+                <p className="text-[11px] text-text-secondary">Göz alıcı bir arka plan görseli ekleyebilirsiniz.</p>
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-wrap gap-2.5 items-center justify-between">
+            <div className="flex flex-wrap gap-2 items-center">
+              {/* Galeriden Kapak Seç */}
+              <label className="text-[12px] font-bold px-3.5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 cursor-pointer transition-all active:scale-[0.97] inline-flex items-center gap-1.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <span>{coverPreview ? 'Galeriden Değiştir' : 'Fotoğraf Seç'}</span>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="sr-only" 
+                  data-testid="pet-cover-input"
+                  onChange={e => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      setCoverFile(file)
+                      setCoverPreview(URL.createObjectURL(file))
+                    }
+                  }}
+                />
+              </label>
+
+              {/* Kapak Fotoğrafı Çek */}
+              <button
+                type="button"
+                onClick={() => setActiveCameraTarget('cover')}
+                className="text-[12px] font-bold px-3.5 py-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary cursor-pointer transition-all active:scale-[0.97] inline-flex items-center gap-1.5"
+                data-testid="pet-cover-camera-button"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <span>Fotoğraf Çek</span>
+              </button>
+            </div>
+
+            {coverPreview && (
+              <button 
+                type="button"
+                onClick={() => {
+                  setCoverFile(null)
+                  setCoverPreview('')
+                }}
+                className="text-[12px] font-bold px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 transition-all"
+              >
+                Kaldır
+              </button>
+            )}
+          </div>
+
+          {!coverPreview && (
+            <p className="text-[11px] text-text-secondary leading-relaxed bg-amber-50/60 p-2.5 rounded-xl border border-amber-200/50">
+              💡 <strong>Bilgi:</strong> Kapak fotoğrafı eklemezseniz profiliniz varsayılan görsel ile oluşturulur ve profil tamamlama listenize görev olarak eklenir.
+            </p>
+          )}
+        </div>
+
+        {/* Dynamic Tip Card */}
+        <div className="w-full border border-primary/10 bg-primary-soft/20 rounded-2xl p-4 flex gap-3 text-left items-center">
           <span className="text-[20px] shrink-0">✨</span>
           <p className="text-[12px] text-text-secondary leading-relaxed">
-            Dostunuzun fotoğrafı ana panelde, aşı bildirimlerinde ve raporlarda yer alacaktır. Profil kurulumuna devam etmek için lütfen bir fotoğraf seçin.
+            Profil fotoğrafı zorunludur. Görsel eklendikten sonra <strong>Devam Et</strong> butonu aktifleşecektir.
           </p>
         </div>
 
         {/* Footer Actions */}
-        <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-4 mt-6 pt-6 border-t border-border-main">
+        <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-4 pt-4 border-t border-border-main">
           <button 
             type="button" 
             onClick={onBack}
@@ -536,24 +844,26 @@ function PetPhotoStep({
             ← Geri
           </button>
           
-          <button 
-            type="button" 
-            onClick={onSubmit} 
-            disabled={loading} 
-            data-testid="pet-profile-create-button"
-            className="btn-primary min-w-[200px] py-3.5 text-[15px] shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none hover:-translate-y-0.5 transition-transform w-full sm:w-auto order-1 sm:order-2"
-          >
-            {loading ? (
-              <span className="flex items-center gap-2 justify-center">
-                <svg className="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" strokeDasharray="60" strokeDashoffset="15"/></svg>
-                Oluşturuluyor...
-              </span>
-            ) : (
-              <span className="flex items-center justify-center gap-2">
-                Devam Et →
-              </span>
-            )}
-          </button>
+          {hasPhoto && (
+            <button 
+              type="button" 
+              onClick={onSubmit} 
+              disabled={loading} 
+              data-testid="pet-profile-create-button"
+              className="btn-primary min-w-[200px] py-3.5 text-[15px] shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none hover:-translate-y-0.5 transition-transform w-full sm:w-auto order-1 sm:order-2"
+            >
+              {loading ? (
+                <span className="flex items-center gap-2 justify-center">
+                  <svg className="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" strokeDasharray="60" strokeDashoffset="15"/></svg>
+                  Oluşturuluyor...
+                </span>
+              ) : (
+                <span className="flex items-center justify-center gap-2">
+                  Devam Et →
+                </span>
+              )}
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -842,6 +1152,8 @@ const WIZARD_STEPS = [
   { id: 2, label: 'Bilgiler' },
   { id: 3, label: 'Profil Fotoğrafı' },
   { id: 4, label: 'Acil Durum Ağı' },
+  { id: 5, label: 'Bildirim Onayı' },
+  { id: 6, label: 'Sağlık Geçmişi' },
 ]
 
 export default function AddPetPage() {
@@ -863,8 +1175,11 @@ export default function AddPetPage() {
   const [approxMonths, setApproxMonths] = useState('')
   const [photoPreview, setPhotoPreview] = useState('')
   const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [coverPreview, setCoverPreview] = useState('')
+  const [coverFile, setCoverFile] = useState<File | null>(null)
   const [isNeutered, setIsNeutered] = useState(false)
   const [weight, setWeight] = useState('')
+  const [height, setHeight] = useState('')
   const [loading, setLoading] = useState(false)
   const [submitError, setSubmitError] = useState('')
 
@@ -891,6 +1206,7 @@ export default function AddPetPage() {
       gender,
       birthDate,
       weight,
+      height,
       isNeutered
     })
 
@@ -928,13 +1244,19 @@ export default function AddPetPage() {
     if (gender) fd.set('gender', gender)
     if (birthDate) fd.set('birth_date', birthDate)
     if (photoFile) fd.set('avatar', photoFile)
+    if (coverFile) fd.set('cover', coverFile)
     fd.set('is_neutered', isNeutered.toString())
     if (weight) fd.set('weight', weight)
+    if (height) {
+      fd.set('height', height)
+      fd.set('height_cm', height)
+    }
     try {
       const res = await fetch('/api/pets', { method: 'POST', body: fd })
       const data = await res.json()
       if (!res.ok) { setSubmitError(data.error || 'Kayıt sırasında bir hata oluştu.'); return }
       setCreatedPetId(data.pet.id)
+      if (data.pet?.avatar_url) setCreatedPetAvatar(data.pet.avatar_url)
       setStep(4)
     } catch (err: any) {
       setSubmitError('Sunucu bağlantı hatası: ' + err.message)
@@ -943,8 +1265,13 @@ export default function AddPetPage() {
     }
   }
 
-  const getSuccessUrl = (id: string) =>
-    `/owner/pets/add/success?id=${id}&name=${encodeURIComponent(petName.trim())}&species=${encodeURIComponent(selectedSpecies ?? '')}`
+  const [createdPetAvatar, setCreatedPetAvatar] = useState('')
+
+  const getSuccessUrl = (id: string) => {
+    const avatar = createdPetAvatar || photoPreview
+    const base = `/owner/pets/add/success?id=${id}&name=${encodeURIComponent(petName.trim())}&species=${encodeURIComponent(selectedSpecies ?? '')}`
+    return avatar ? `${base}&avatar=${encodeURIComponent(avatar)}` : base
+  }
 
   const handleSosSubmit = async () => {
     if (!createdPetId) return
@@ -965,22 +1292,43 @@ export default function AddPetPage() {
 
   return (
     <div className="flex flex-col gap-6 w-full max-w-2xl mx-auto pb-8">
-      <div data-testid="wizard-step-indicator" className="flex items-center justify-center gap-2 sm:gap-4 mb-2 mt-2 flex-wrap">
-        {WIZARD_STEPS.map((s) => {
-          const isCurrent = step === s.id
-          const isCompleted = step > s.id
-          return (
-            <div key={s.id} className="flex items-center gap-2">
-              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[12px] sm:text-[13px] font-bold transition-all duration-300 ${isCurrent ? 'bg-primary-soft/50 border-primary text-primary scale-105 shadow-sm' : isCompleted ? 'bg-green-50 border-green-200 text-green-600' : 'bg-surface border-border-main text-text-secondary'}`}>
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-extrabold ${isCurrent ? 'bg-primary text-white' : isCompleted ? 'bg-green-500 text-white' : 'bg-gray-100 text-text-secondary'}`}>
-                  {isCompleted ? '✓' : s.id}
+      {/* Wizard Header & Stepper Bar */}
+      <div data-testid="wizard-step-indicator" className="w-full flex flex-col gap-2.5 mb-2 mt-2 px-1">
+        {/* Top Progress & Active Title Bar */}
+        <div className="flex items-center justify-between">
+          <span className="text-[12px] font-extrabold text-primary uppercase tracking-wider">
+            Adım {step} / 4 • {WIZARD_STEPS.find(s => s.id === step)?.label || ''}
+          </span>
+          <span className="text-[11px] font-extrabold text-text-tertiary bg-surface-2 px-2.5 py-0.5 rounded-full border border-border/40">
+            %{Math.round((step / 4) * 100)} Tamamlandı
+          </span>
+        </div>
+
+        {/* Dynamic Gradient Progress Bar */}
+        <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-border-main/50">
+          <div
+            className="bg-gradient-to-r from-primary via-indigo-600 to-primary h-full rounded-full transition-all duration-500 shadow-xs"
+            style={{ width: `${(step / 4) * 100}%` }}
+          />
+        </div>
+
+        {/* Step Pills for Desktop / Larger Screens */}
+        <div className="hidden sm:flex items-center justify-between gap-2 pt-1">
+          {WIZARD_STEPS.slice(0, 4).map((s) => {
+            const isCurrent = step === s.id
+            const isCompleted = step > s.id
+            return (
+              <div key={s.id} className="flex items-center gap-2 flex-1">
+                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[12px] font-bold transition-all duration-300 w-full justify-center ${isCurrent ? 'bg-primary-soft/50 border-primary text-primary scale-[1.02] shadow-xs' : isCompleted ? 'bg-green-50 border-green-200 text-green-700' : 'bg-surface border-border-main text-text-secondary'}`}>
+                  <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-extrabold ${isCurrent ? 'bg-primary text-white' : isCompleted ? 'bg-green-500 text-white' : 'bg-gray-200 text-text-secondary'}`}>
+                    {isCompleted ? '✓' : s.id}
+                  </div>
+                  <span className="truncate">{s.label}</span>
                 </div>
-                <span>{s.label}</span>
               </div>
-              {s.id < 4 && <div className={`h-[2px] w-4 sm:w-8 rounded-full transition-colors duration-300 ${step > s.id ? 'bg-green-300' : 'bg-border-main'}`} />}
-            </div>
-          )
-        })}
+            )
+          })}
+        </div>
       </div>
 
       {step === 1 && <SpeciesSelector onSelect={handleSpeciesSelect} onBack={() => router.back()} />}
@@ -998,6 +1346,7 @@ export default function AddPetPage() {
           approxMonths={approxMonths} setApproxMonths={setApproxMonths}
           isNeutered={isNeutered} setIsNeutered={setIsNeutered}
           weight={weight} setWeight={setWeight}
+          height={height} setHeight={setHeight}
           onSubmit={handleStep2Next}
           submitError={submitError}
         />
@@ -1009,6 +1358,8 @@ export default function AddPetPage() {
           petName={petName}
           photoPreview={photoPreview} setPhotoPreview={setPhotoPreview}
           photoFile={photoFile} setPhotoFile={setPhotoFile}
+          coverPreview={coverPreview} setCoverPreview={setCoverPreview}
+          coverFile={coverFile} setCoverFile={setCoverFile}
           onBack={() => setStep(2)}
           onSubmit={handleSubmit}
           loading={loading}

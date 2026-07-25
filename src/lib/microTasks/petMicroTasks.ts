@@ -25,6 +25,7 @@ interface BuildMicroTasksArgs {
     name: string;
     species?: string | null;
     avatar_url?: string | null;
+    cover_url?: string | null;
     gender?: string | null;
     is_neutered?: boolean | null;
     breed?: string | null;
@@ -282,7 +283,22 @@ export function buildPetMicroTasks({
     });
   }
 
-  // 13. Acil Durum Kişisi
+  // 13. Kapak Fotoğrafı Ekle
+  if (!pet.cover_url) {
+    allTasks.push({
+      id: `missing_cover_photo_${pet.id}`,
+      type: 'missing_cover_photo',
+      priority: 5,
+      actionType: 'DIRECT_DATA',
+      title: 'Kapak Fotoğrafı Ekle',
+      description: `${pet.name} için kişiselleştirilmiş bir kapak fotoğrafı ekleyin.`,
+      actionText: 'Kapak Ekle',
+      route: `/owner/pets/${pet.id}/edit?highlight=cover`,
+      icon: 'ti ti-photo'
+    });
+  }
+
+  // 14. Acil Durum Kişisi
   const hasValidContact = Array.isArray(pet.sos_contacts) && 
     pet.sos_contacts.some(c => c && typeof c.name === 'string' && c.name.trim() && typeof c.phone === 'string' && c.phone.trim());
 

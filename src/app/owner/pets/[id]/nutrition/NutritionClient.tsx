@@ -11,6 +11,7 @@ import { SmartScanner } from '@/components/ui/SmartScanner'
 import { BarcodeScanner } from '@/components/ui/BarcodeScanner'
 import SmartCardBanner from '@/components/profiling/SmartCardBanner'
 import { StepperInput } from '@/components/ui/StepperInput'
+import { RulerPicker } from '@/components/ui/RulerPicker'
 import { Modal } from '@/components/ui/Modal'
 import WeightChangeChart from '@/components/pets/WeightChangeChart'
 import WeightGoalBand from '@/components/pets/WeightGoalBand'
@@ -88,6 +89,13 @@ export default function NutritionClient({
   const [showBarcodeCamera, setShowBarcodeCamera] = useState(false)
   const [dismissedBanner, setDismissedBanner] = useState(false)
   const [weightError, setWeightError] = useState<string | null>(null)
+
+  // Ruler / Wheel Picker State for Weight & Height
+  const [newWeightKg, setNewWeightKg] = useState<number | string>(() =>
+    weightLogs && weightLogs.length > 0 && weightLogs[0].weight_kg != null ? weightLogs[0].weight_kg : (pet?.species === 'cat' ? 4.0 : 10.0)
+  )
+  const [newHeightCm, setNewHeightCm] = useState<number | string>('')
+  const [nutritionMeasureTab, setNutritionMeasureTab] = useState<'weight' | 'height'>('weight')
 
   // Reminder Modal & State
   const [showReminderModal, setShowReminderModal] = useState(false)
@@ -1505,34 +1513,97 @@ export default function NutritionClient({
         return (
           <div className="flex flex-col gap-4 animate-fadeIn">
             {/* Form */}
-            <form onSubmit={handleAddWeight} className="card-base p-6">
-              <h3 className="font-extrabold text-[15px] text-text-primary mb-4">Yeni Kilo & Boy Kaydı</h3>
+            <form onSubmit={handleAddWeight} className="card-base p-6 flex flex-col gap-4">
+              <h3 className="font-extrabold text-[16px] text-text-primary">Yeni Kilo & Boy Ölçüm Kaydı</h3>
+              
               {weightError && (
-                <div className="mb-4 p-3.5 bg-red-50 border border-red-200 text-red-700 text-[13px] rounded-xl font-medium flex items-start gap-2 animate-fadeIn">
+                <div className="p-3.5 bg-red-50 border border-red-200 text-red-700 text-[13px] rounded-xl font-medium flex items-start gap-2 animate-fadeIn">
                   <span className="text-[16px] shrink-0">⚠️</span>
                   <span>{weightError}</span>
                 </div>
               )}
-              <div className="flex flex-wrap gap-4 items-end">
-                <div className="flex flex-col gap-2 flex-1 min-w-[130px]">
-                  <label className="text-[13px] font-bold text-text-primary">Kilo (kg) *</label>
-                  <StepperInput name="weight_kg" step={0.1} unit="kg" placeholder="Örn: 4.5" required className="w-full" />
+
+              {/* Hidden Inputs for Form Data */}
+              <input type="hidden" name="weight_kg" value={newWeightKg} />
+              <input type="hidden" name="height_cm" value={newHeightCm} />
+
+              {/* Tab Seçimi (Kilo vs Boy) */}
+              <div className="flex items-center justify-between gap-2 border-b border-border-main pb-2">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setNutritionMeasureTab('weight')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-bold transition-all cursor-pointer ${
+                      nutritionMeasureTab === 'weight'
+                        ? 'bg-primary text-white shadow-md shadow-primary/25 scale-[1.02]'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    <span>⚖️ Kilo (kg) *</span>
+                    {newWeightKg !== '' && <span className="px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-black">{newWeightKg} kg</span>}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setNutritionMeasureTab('height')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-bold transition-all cursor-pointer ${
+                      nutritionMeasureTab === 'height'
+                        ? 'bg-primary text-white shadow-md shadow-primary/25 scale-[1.02]'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    <span>📏 Boy (cm)</span>
+                    <span className="text-[11px] opacity-80">(Opsiyonel)</span>
+                    {newHeightCm !== '' && <span className="px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-black">{newHeightCm} cm</span>}
+                  </button>
                 </div>
-                <div className="flex flex-col gap-2 flex-1 min-w-[130px]">
-                  <label className="text-[13px] font-bold text-text-primary">Boy (cm) <span className="text-text-secondary font-normal">(opsiyonel)</span></label>
-                  <input type="number" step="0.5" name="height_cm" placeholder="Örn: 35" className="input-base min-h-[48px]" />
-                </div>
-                <div className="flex flex-col gap-2 flex-1 min-w-[150px]">
-                  <label className="text-[13px] font-bold text-text-primary">Tarih <span className="text-text-secondary font-normal">(opsiyonel)</span></label>
+              </div>
+
+              {/* Cetvel Tipi Seçici (Ruler Picker) */}
+              {nutritionMeasureTab === 'weight' ? (
+                <RulerPicker
+                  id="nutrition-weight-ruler"
+                  label="Güncel Kilo *"
+                  sublabel="Cetveli kaydırarak veya sayıya dokunarak kiloyu belirleyin"
+                  unit="kg"
+                  min={0.1}
+                  max={120}
+                  step={0.1}
+                  value={typeof newWeightKg === 'number' ? newWeightKg : parseFloat(newWeightKg as string) || (pet?.species === 'cat' ? 4.0 : 10.0)}
+                  onChange={(val) => setNewWeightKg(val)}
+                  presets={pet?.species === 'cat' ? [2.5, 4.0, 5.5, 7.0] : [5.0, 10.0, 18.0, 25.0, 35.0]}
+                />
+              ) : (
+                <RulerPicker
+                  id="nutrition-height-ruler"
+                  label="Boy / Uzunluk"
+                  sublabel="Burundan kuyruk sokumuna veya omuza boy (Opsiyonel)"
+                  isOptional
+                  unit="cm"
+                  min={5}
+                  max={180}
+                  step={1}
+                  value={typeof newHeightCm === 'number' ? newHeightCm : parseFloat(newHeightCm as string) || (pet?.species === 'cat' ? 25 : 45)}
+                  onChange={(val) => setNewHeightCm(val)}
+                  presets={pet?.species === 'cat' ? [20, 25, 30, 35] : [30, 45, 60, 80]}
+                />
+              )}
+
+              {/* Alt Kontroller: Ölçüm Tarihi ve Kaydet Butonu */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-3 border-t border-border-main/60 mt-1">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <label className="text-[13px] font-bold text-text-primary whitespace-nowrap">Ölçüm Tarihi:</label>
                   <input
                     type="date"
                     name="measured_at"
                     defaultValue={new Date().toISOString().split('T')[0]}
                     max={new Date().toISOString().split('T')[0]}
-                    className="input-base min-h-[48px] text-[14px]"
+                    className="input-base text-[14px] py-2 px-3 min-h-[42px]"
                   />
                 </div>
-                <button type="submit" disabled={loading} className="btn-primary px-8 min-h-[48px] flex items-center justify-center shrink-0">Ekle</button>
+                <button type="submit" disabled={loading} className="btn-primary px-8 min-h-[46px] w-full sm:w-auto flex items-center justify-center shrink-0 shadow-md shadow-primary/20">
+                  Ölçümü Kaydet ✓
+                </button>
               </div>
             </form>
 

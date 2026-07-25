@@ -111,9 +111,15 @@ test.describe.serial('Onboarding Lifecycle', () => {
     
     await page.click('button:has-text("Devam Et")');
     
-    // Adım 3: Fotoğraf Ekleme (Atla)
-    await page.waitForSelector('text=Profil Fotoğrafı Ekle', { timeout: 10000 });
-    await page.getByTestId('pet-photo-default-avatar-button').click();
+    // Adım 3: Fotoğraf Ekleme (Zorunlu)
+    await page.waitForSelector('text=Fotoğraf Ekle', { timeout: 10000 });
+    const fileInput = page.getByTestId('pet-photo-input');
+    await fileInput.setInputFiles({
+      name: 'test-pet.jpg',
+      mimeType: 'image/jpeg',
+      buffer: Buffer.from('fake-image-bytes')
+    });
+    await page.getByTestId('pet-profile-create-button').click();
 
     // Adım 4: Acil Durum Ağı (Atla)
     await page.waitForSelector('text=Acil Durum Ağı', { timeout: 10000 });

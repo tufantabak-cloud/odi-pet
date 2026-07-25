@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { calcAge } from '@/lib/pets/utils'
 import { SmartScanner } from '@/components/ui/SmartScanner'
 import { StepperInput } from '@/components/ui/StepperInput'
+import { RulerPicker } from '@/components/ui/RulerPicker'
 
 const CAT_BREEDS = [
   'British Shorthair', 'Scottish Fold', 'Scottish Straight',
@@ -143,6 +144,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
   const [isNeutered, setIsNeutered] = useState<boolean>(pet.is_neutered || false)
   const [weightKg, setWeightKg] = useState(pet.weight_kg !== undefined && pet.weight_kg !== null ? String(pet.weight_kg) : '')
   const [heightCm, setHeightCm] = useState(pet.height_cm !== undefined && pet.height_cm !== null ? String(pet.height_cm) : '')
+  const [editMeasureTab, setEditMeasureTab] = useState<'weight' | 'height'>('weight')
   const [microchipNo, setMicrochipNo] = useState(pet.microchip_no || '')
   const [passportNo, setPassportNo] = useState(pet.passport_no || '')
   const [vetCompany, setVetCompany] = useState(pet.vet_company || '')
@@ -480,27 +482,67 @@ export default function EditPetForm({ pet }: { pet: any }) {
                )}
              </div>
 
-            <div id="weight-input" className="flex flex-col gap-2">
-              <label className="text-[13px] font-bold text-text-primary">Kilo *</label>
-              <StepperInput
-                id="weight"
-                min={0} max={150} step={0.5} unit="kg"
-                placeholder="Örn: 4.5"
-                value={weightKg}
-                onChange={e => setWeightKg(e.target.value)}
-                className="w-full h-[54px] !rounded-[16px] border-2 border-primary/40 focus-within:border-primary"
-                required
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-[13px] font-bold text-text-primary">Boy (cm)</label>
-              <StepperInput
-                min={1} max={150} step={0.5} unit="cm"
-                placeholder="Örn: 35"
-                value={heightCm}
-                onChange={e => setHeightCm(e.target.value)}
-                className="w-full h-[54px] !rounded-[16px] border-2 border-primary/40 focus-within:border-primary"
-              />
+            {/* Fiziksel Mezüra / Ruler Picker (Kilo & Boy) */}
+            <div id="weight-input" className="flex flex-col gap-3.5 col-span-1 sm:col-span-2">
+              <div className="flex items-center justify-between gap-2 border-b border-border-main pb-2">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditMeasureTab('weight')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-bold transition-all cursor-pointer ${
+                      editMeasureTab === 'weight'
+                        ? 'bg-primary text-white shadow-md shadow-primary/25 scale-[1.02]'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    <span>⚖️ Kilo (kg) *</span>
+                    {weightKg && <span className="px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-black">{weightKg} kg</span>}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setEditMeasureTab('height')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-bold transition-all cursor-pointer ${
+                      editMeasureTab === 'height'
+                        ? 'bg-primary text-white shadow-md shadow-primary/25 scale-[1.02]'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    <span>📏 Boy (cm)</span>
+                    <span className="text-[11px] opacity-80">(Opsiyonel)</span>
+                    {heightCm && <span className="px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-black">{heightCm} cm</span>}
+                  </button>
+                </div>
+              </div>
+
+              {editMeasureTab === 'weight' ? (
+                <RulerPicker
+                  id="edit-pet-weight-ruler"
+                  label="Güncel Kilo *"
+                  sublabel="Cetveli kaydırarak veya sayıya dokunarak kiloyu güncelleyin"
+                  unit="kg"
+                  min={0.1}
+                  max={120}
+                  step={0.1}
+                  value={weightKg ? parseFloat(weightKg) : (species === 'cat' ? 4.0 : 10.0)}
+                  onChange={(val) => setWeightKg(String(val))}
+                  presets={species === 'cat' ? [2.5, 4.0, 5.5, 7.0] : [5.0, 10.0, 18.0, 25.0, 35.0]}
+                />
+              ) : (
+                <RulerPicker
+                  id="edit-pet-height-ruler"
+                  label="Boy / Uzunluk"
+                  sublabel="Burundan kuyruk sokumuna veya omuza boy (Opsiyonel)"
+                  isOptional
+                  unit="cm"
+                  min={5}
+                  max={180}
+                  step={1}
+                  value={heightCm ? parseFloat(heightCm) : (species === 'cat' ? 25 : 45)}
+                  onChange={(val) => setHeightCm(String(val))}
+                  presets={species === 'cat' ? [20, 25, 30, 35] : [30, 45, 60, 80]}
+                />
+              )}
             </div>
 
             <div className="flex flex-col gap-2 col-span-1 sm:col-span-2 mt-2">
@@ -783,11 +825,12 @@ export default function EditPetForm({ pet }: { pet: any }) {
         {(() => {
           const enrichTasks: { label: string; icon: string }[] = []
           if (!pet.avatar_url) enrichTasks.push({ label: 'Profil Fotoğrafı Ekle', icon: '📷' })
+          if (!pet.cover_url) enrichTasks.push({ label: 'Kapak Fotoğrafı Ekle', icon: '🖼️' })
           if (!pet.breed) enrichTasks.push({ label: 'Irk Bilgisi Gir', icon: '🐾' })
           if (!pet.microchip_no) enrichTasks.push({ label: 'Mikroçip Numarası Ekle', icon: '🆔' })
           if (!pet.vet_name) enrichTasks.push({ label: 'Veteriner Bilgisi Gir', icon: '🩺' })
           if (!pet.sos_contacts || !(pet.sos_contacts as any)?.[0]?.phone) enrichTasks.push({ label: 'Acil Durum (SOS) Ağı Kur', icon: '🆘' })
-          const totalFields = 5;
+          const totalFields = 6;
 
           return enrichTasks.length > 0 && (
             <section 

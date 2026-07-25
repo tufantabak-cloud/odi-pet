@@ -9,15 +9,7 @@
   },
   {
     "step": 1,
-    "msg": "Login with 123456 failed or still on login, trying password \"test1234\""
-  },
-  {
-    "step": 1,
-    "msg": "Login with test1234 failed or still on login, trying password \"password\""
-  },
-  {
-    "step": 1,
-    "msg": "Current URL after login phase: http://localhost:3000/login"
+    "msg": "Current URL after login phase: http://localhost:3000/"
   },
   {
     "step": 2,
@@ -25,7 +17,7 @@
   },
   {
     "step": 2,
-    "msg": "Navigated to pet profile: http://localhost:3000/login"
+    "msg": "Navigated to pet profile: http://localhost:3000/owner/dashboard"
   },
   {
     "step": 3,
@@ -37,7 +29,7 @@
   },
   {
     "step": 3,
-    "msg": "Available buttons: Google ile Giriş Yap, Apple ile Giriş Yap, , Giriş Yap, FaceID / TouchID ile Giriş Yap, "
+    "msg": "Available buttons: , , Hızlı Ekle, Gir, Sonra, Şimdi Ekle, , 1 görev daha var, Planla, , Kaydet, İlgilenmiyorum, Daha sonra hatırlat, Sıradaki Adım, , "
   },
   {
     "step": 3,
@@ -49,7 +41,7 @@
   },
   {
     "step": 4,
-    "msg": "Vaccines page URL: http://localhost:3000/login"
+    "msg": "Vaccines page URL: http://localhost:3000/owner/dashboard"
   },
   {
     "step": 4,
