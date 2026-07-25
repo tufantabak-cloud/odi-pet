@@ -1925,188 +1925,122 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             </Link>
           )}
 
-          {([
-            ...(activeTab === 'saglik' ? [] : []),
-            ...(activeTab === 'bakim' ? [
-              { name: 'Bakım', icon: <ShampooIcon width={22} height={22} />, color: 'text-pink-500', bg: 'bg-pink-50' },
-              { name: 'Hijyen', icon: <ScoopIcon width={22} height={22} />, color: 'text-teal-500', bg: 'bg-teal-50' },
-              { name: 'Aktivite', icon: <BoneIcon width={22} height={22} />, color: 'text-green-500', bg: 'bg-green-50' },
-              { name: 'Diğer', icon: <HouseIcon width={22} height={22} />, color: 'text-gray-500', bg: 'bg-gray-50' },
-            ] : []),
-          ] as Array<{ name: string; icon: React.ReactNode; color: string; bg: string }>).map((module) => {
-          const isOpen = openSections.has(module.name)
-          const pending = getSchedulesForTab(module.name)
-          const completed = getCompletedSchedulesForTab(module.name)
-          const isMenuOpenInModule = activeMenuId && (
-            pending.some((s: any) => s.id === activeMenuId) ||
-            completed.some((s: any) => s.id === activeMenuId)
-          )
-          const overdueCount = pending.filter((s: any) => getTaskDateTime(s) < new Date(now)).length
-          // Başlık sayaçları, aktif filtre ile uyumlu olmalı — listede görünmeyen gelecek görevler sayılmaz
-          const filteredPendingForHeader = pending.filter((s: any) => {
-            const taskDate = getTaskDateTime(s)
-            // "Bugün + Gecikenler" (varsayılan): bugün gece yarısına kadar olanlar
-            const today = new Date()
-            today.setHours(23, 59, 59, 999)
-            return taskDate <= today
-          })
-          const headerOverdueCount = filteredPendingForHeader.filter((s: any) => getTaskDateTime(s) < new Date(now)).length
-          const headerPlannedCount = filteredPendingForHeader.length - headerOverdueCount
-          const cta = tabCtaInfo[module.name]
-          const contentId = `module-content-${MODULE_ID_MAP[module.name] ?? module.name}`
-          return (
-            <div key={module.name} id={`section-${MODULE_ID_MAP[module.name] ?? module.name}`} className={`card-base border border-border-main/60 scroll-mt-24 ${isMenuOpenInModule ? 'relative z-[100]' : ''} ${initialSection === module.name ? 'animate-pulseHighlight' : ''}`}>
-              <div
-                onClick={() => toggleSection(module.name)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    toggleSection(module.name);
-                  }
-                }}
-                aria-expanded={isOpen}
-                aria-controls={contentId}
-                data-testid={
-                  module.name === 'Aşı' ? 'vaccine-module-button' :
-                  module.name === 'Parazit' ? 'parasite-module-button' :
-                  module.name === 'Beslenme' ? 'nutrition-module-button' :
-                  module.name === 'Veteriner' ? 'services-module-button' : undefined
+          {activeTab === 'bakim' && (
+            <div className="flex flex-col gap-6 py-2">
+              {[
+                {
+                  name: 'Bakım',
+                  title: 'Bakım Rutinleri',
+                  desc: `${pet.name} için banyo, tırnak kesimi ve tüy bakımı kayıtları`,
+                  icon: <ShampooIcon width={24} height={24} />,
+                  headerIcon: <ShampooIcon width={22} height={22} />,
+                  color: 'text-pink-600',
+                  bg: 'bg-pink-50',
+                  planBtnLabel: 'Bakım Planla',
+                  planBtnBg: 'bg-primary hover:bg-primary-hover',
+                  logBtnLabel: 'Bakım Kaydı Ekle',
+                  planUrl: `/owner/plan-yap/bakim?pet_id=${pet.id}`,
+                  logUrl: `/owner/plan-yap/bakim?pet_id=${pet.id}&mode=log`,
+                  emptyDesc: 'Bakım takvimi veya hatırlatıcı oluşturmak için "Bakım Planla" veya yapılan bakımı kaydetmek için "Bakım Kaydı Ekle" butonunu kullanabilirsiniz.'
+                },
+                {
+                  name: 'Hijyen',
+                  title: 'Hijyen Takibi',
+                  desc: `${pet.name} için kum kabı, çiş pedi ve ortam hijyeni kayıtları`,
+                  icon: <ScoopIcon width={24} height={24} />,
+                  headerIcon: <ScoopIcon width={22} height={22} />,
+                  color: 'text-teal-600',
+                  bg: 'bg-teal-50',
+                  planBtnLabel: 'Hijyen Planla',
+                  planBtnBg: 'bg-teal-600 hover:bg-teal-700',
+                  logBtnLabel: 'Hijyen Kaydı Ekle',
+                  planUrl: `/owner/plan-yap/hijyen?pet_id=${pet.id}`,
+                  logUrl: `/owner/plan-yap/hijyen?pet_id=${pet.id}&mode=log`,
+                  emptyDesc: 'Hijyen takvimi oluşturmak için "Hijyen Planla" veya hijyen işlemini kaydetmek için "Hijyen Kaydı Ekle" butonunu kullanabilirsiniz.'
+                },
+                {
+                  name: 'Aktivite',
+                  title: 'Egzersiz & Aktivite',
+                  desc: `${pet.name} için yürüyüş, oyun seansı ve tuvalet/eğitim rutinleri`,
+                  icon: <BoneIcon width={24} height={24} />,
+                  headerIcon: <BoneIcon width={22} height={22} />,
+                  color: 'text-emerald-600',
+                  bg: 'bg-emerald-50',
+                  planBtnLabel: 'Aktivite Planla',
+                  planBtnBg: 'bg-emerald-600 hover:bg-emerald-700',
+                  logBtnLabel: 'Aktivite Kaydı Ekle',
+                  planUrl: `/owner/plan-yap/aktivite?pet_id=${pet.id}`,
+                  logUrl: `/owner/plan-yap/aktivite?pet_id=${pet.id}&mode=log`,
+                  emptyDesc: 'Aktivite ve egzersiz takvimi oluşturmak için "Aktivite Planla" veya tamamlanan aktiviteyi kaydetmek için "Aktivite Kaydı Ekle" butonunu kullanabilirsiniz.'
+                },
+                {
+                  name: 'Diğer',
+                  title: 'Diğer Görevler',
+                  desc: `${pet.name} için diğer genel bakım ve özel görev kayıtları`,
+                  icon: <HouseIcon width={24} height={24} />,
+                  headerIcon: <HouseIcon width={22} height={22} />,
+                  color: 'text-slate-600',
+                  bg: 'bg-slate-100',
+                  planBtnLabel: 'Diğer Planla',
+                  planBtnBg: 'bg-slate-700 hover:bg-slate-800',
+                  logBtnLabel: 'Diğer Kaydı Ekle',
+                  planUrl: `/owner/plan-yap/diger?pet_id=${pet.id}`,
+                  logUrl: `/owner/plan-yap/diger?pet_id=${pet.id}&mode=log`,
+                  emptyDesc: 'Genel görev ve hatırlatma oluşturmak için "Diğer Planla" veya tamamlanan görevi kaydetmek için "Diğer Kaydı Ekle" butonunu kullanabilirsiniz.'
                 }
-                className="w-full flex items-center gap-3 p-4 text-left hover:bg-bg-main/50 transition-colors cursor-pointer rounded-t-[20px]"
-                role="button"
-                tabIndex={0}
-              >
-                <div className={`w-10 h-10 rounded-xl ${module.bg} flex items-center justify-center ${module.color} shrink-0`}>
-                  {module.icon}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span className="text-[15px] font-extrabold text-text-primary">{module.name}</span>
-                  {(headerOverdueCount > 0 || headerPlannedCount > 0) && (
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      {headerOverdueCount > 0 && <span className="text-[11px] font-bold text-error bg-error/10 px-2 py-0.5 rounded-full">{headerOverdueCount} gecikmiş</span>}
-                      {headerPlannedCount > 0 && <span className="text-[11px] font-bold text-primary bg-primary-soft px-2 py-0.5 rounded-full">{headerPlannedCount} planlandı</span>}
-                    </div>
-                  )}
-                </div>
-                {isOpen && (pending.length > 0 || getCompletedSchedulesForTab(module.name).length > 0) && cta && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (module.name === 'Veteriner' && !pet.vet_company && !pet.vet_name && !pet.vet_phone && !pet.vet_email) {
-                        setQuickUpdateConfig({
-                          title: 'Veteriner Bilgisi',
-                          desc: 'Veteriner görevi planlayabilmek için veteriner bilgisini girin.',
-                          fields: [
-                            { name: 'vet_company', type: 'text', label: 'Klinik / Şirket Adı', placeholder: 'Örn: Pati Veteriner Kliniği', required: true },
-                            { name: 'vet_name', type: 'text', label: 'Veteriner Adı (Opsiyonel)', placeholder: 'Örn: Dr. Ali Yılmaz', required: false },
-                            { name: 'vet_phone', type: 'tel', label: 'Telefon (Opsiyonel)', placeholder: '05xx xxx xx xx', required: false },
-                            { name: 'vet_email', type: 'email', label: 'E-posta (Opsiyonel)', placeholder: 'klinik@email.com', required: false }
-                          ],
-                          onSuccess: () => handlePlanla('Veteriner')
-                        });
-                      } else {
-                        handlePlanla(module.name);
-                      }
-                    }}
-                    className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-[10px] text-[12px] font-bold hover:bg-primary-hover hover:scale-105 active:scale-95 transition-all shadow-sm"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Ekle
-                  </button>
-                )}
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={`text-text-secondary shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9"/></svg>
-              </div>
+              ].map((module) => {
+                const pending = getSchedulesForTab(module.name);
+                const completed = getCompletedSchedulesForTab(module.name);
+                const hasAnyTasks = pending.length > 0 || completed.length > 0;
 
-              {isOpen && (
-                <div id={contentId} className="border-t border-border-main/40 p-4 flex flex-col gap-5 animate-fade-in">
-                  {/* Aşı: Smart Scan banner */}
-                  {module.name === 'Aşı' && (
-                    <div className="bg-gradient-to-tr from-blue-600 to-indigo-700 p-5 rounded-2xl shadow-lg flex flex-col items-center text-center gap-3 relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-28 h-28 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3 blur-2xl pointer-events-none" />
-                      <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30 text-white shadow-sm z-10">
-                        <VaccineIcon width={24} height={24} />
-                      </div>
-                      <div className="z-10">
-                        <h3 className="font-extrabold text-white text-[16px] mb-1">Aşı Kayıtlarınızı Kolayca Yönetin</h3>
-                        <p className="text-[13px] text-white/90 leading-relaxed">Smart Scan ile aşı belgelerinizi tarayarak kayıtlarınızı otomatik güncelleyin.</p>
-                      </div>
-                      <button onClick={() => setIsSmartScannerOpen(true)} className="w-full bg-white text-indigo-700 py-3 text-[13px] font-black rounded-2xl shadow-sm hover:bg-slate-50 transition-colors z-10">
-                        Belge Tara
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Veteriner: klinik bilgisi ve randevular */}
-                  {module.name === 'Veteriner' && (pet.vet_company || pet.vet_name || pet.vet_phone || pet.vet_email) && (
-                    <div className="card-base p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-[12px] font-black text-text-secondary uppercase tracking-widest">Klinik Veterinerim</h3>
-                        <button onClick={handleEditVetInfo} className="text-[12px] font-bold text-primary hover:underline">Düzenle</button>
-                      </div>
-                      <div className="flex items-center gap-3 p-3 bg-bg-main rounded-xl border border-border-main">
-                        <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-[22px] shrink-0">🩺</div>
-                        <div className="flex-1">
-                          {pet.vet_company && <p className="font-bold text-text-primary">{pet.vet_company}</p>}
-                          {pet.vet_name && <p className="font-semibold text-text-secondary text-[13px]">{pet.vet_name}</p>}
-                          {pet.vet_phone && <a href={`tel:${pet.vet_phone}`} className="text-primary font-semibold hover:underline text-[13px] block mt-0.5">{pet.vet_phone}</a>}
-                        </div>
-                        {pet.vet_phone && <a href={`tel:${pet.vet_phone}`} className="btn-primary text-[12px] py-2 px-3 shrink-0">Ara</a>}
-                      </div>
-                      {appointments && appointments.length > 0 && (
-                        <div className="mt-3">
-                          <h4 className="text-[11px] font-black text-text-secondary uppercase tracking-widest mb-2">Son Randevular</h4>
-                          <div className="flex flex-col gap-2">
-                            {appointments.map((apt: any) => (
-                              <div key={apt.id} className="flex justify-between items-center p-2.5 rounded-xl border border-border-main">
-                                <div>
-                                  <p className="font-bold text-text-primary text-[13px]">{apt.clinics?.name || 'Klinik'}</p>
-                                  <p className="text-[11px] text-text-secondary">{new Date(apt.scheduled_at).toLocaleDateString('tr-TR')}</p>
-                                </div>
-                                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-primary-soft text-primary capitalize">{apt.status}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      <Link href={`/owner/ai-vet?petId=${pet.id}`} className="mt-3 flex items-center justify-center gap-2 p-2.5 rounded-xl bg-primary text-white font-bold text-[13px] hover:bg-primary-hover transition-colors">
-                        🤖 {pet.name}&apos;e Özel AI Vet Chat&apos;e Sor
-                      </Link>
-                    </div>
-                  )}
-
-                  {/* Beslenme: Aktif mama ve porsiyon bilgisi */}
-                  {module.name === 'Beslenme' && nutritionLogs && nutritionLogs.length > 0 && (
-                    <div className="card-base p-4 bg-orange-50/40 border border-orange-100/50 flex flex-col gap-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-[12px] font-black text-orange-800 uppercase tracking-widest">Kayıtlı Beslenme Planı</span>
-                        <Link href={`/owner/pets/${pet.id}/nutrition`} className="text-[12px] font-bold text-primary hover:underline">Düzenle</Link>
-                      </div>
+                return (
+                  <div key={module.name} id={`section-${MODULE_ID_MAP[module.name] ?? module.name}`} className="card-base p-5 border border-border-main flex flex-col gap-4 bg-surface">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-main/50 pb-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-[20px]">🍖</div>
+                        {module.headerIcon}
                         <div>
-                          <p className="font-bold text-text-primary text-[14px]">{nutritionLogs[0].food_brand || 'Markasız'} ({nutritionLogs[0].food_product || 'Çeşit Belirtilmedi'})</p>
-                          <p className="text-[12px] text-text-secondary">Günlük Tüketim: <span className="font-extrabold text-orange-700">{nutritionLogs[0].daily_grams || 0} g</span></p>
+                          <h3 className="font-extrabold text-text-primary text-[16px]">{module.title}</h3>
+                          <p className="text-[12px] text-text-secondary">{module.desc}</p>
                         </div>
                       </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Link
+                          href={module.planUrl}
+                          className={`min-h-[44px] px-4 py-2.5 rounded-xl ${module.planBtnBg} text-white font-bold text-[12px] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xs inline-flex items-center gap-1.5`}
+                        >
+                          {module.planBtnLabel}
+                        </Link>
+                        <Link
+                          href={module.logUrl}
+                          className="min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-[12px] hover:bg-emerald-700 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xs inline-flex items-center gap-1.5"
+                        >
+                          📋 {module.logBtnLabel}
+                        </Link>
+                      </div>
                     </div>
-                  )}
 
-                  {/* Diğer: SOS ağı */}
-                  {module.name === 'Diğer' && (
-                    <>
+                    {module.name === 'Diğer' && (
                       <FamilyTab petId={pet.id} petName={pet.name} plan={subscription?.plan ?? 'free'} initialSos={pet.sos_contacts} />
-                    </>
-                  )}
+                    )}
 
-                  {/* Sağlık Modülü Özel İçerik (Accordion Dışına Taşındı) */}
-
-                  {/* CTA Kartı Kaldırıldı - Artık görev yoksa empty state altında veya module header'da + Ekle olarak gösteriliyor */}
-                  {renderTabFiltersAndTasks(module.name)}
-                </div>
-              )}
+                    {hasAnyTasks ? (
+                      renderTabFiltersAndTasks(module.name)
+                    ) : (
+                      <div className="p-6 rounded-2xl border border-dashed border-border-main text-center bg-bg-main/50 flex flex-col items-center justify-center gap-2">
+                        <div className={`w-12 h-12 rounded-2xl ${module.bg} ${module.color} flex items-center justify-center font-bold text-xl shadow-xs`}>
+                          {module.icon}
+                        </div>
+                        <p className="text-[14px] text-text-primary font-bold">Henüz {module.name} Kaydı Yok</p>
+                        <p className="text-[12px] text-text-secondary/80 max-w-sm leading-relaxed mb-1">
+                          {module.emptyDesc}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          )
-          })}
+          )}
         </div>
         {activeTab === 'saglik' && (
           <>

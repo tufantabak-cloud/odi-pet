@@ -114,9 +114,20 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
           <h3 className="text-[12px] font-black text-text-secondary uppercase tracking-widest">Bakım Ekibi</h3>
         </div>
         {loading ? (
-          <div className="p-6 text-center text-text-secondary text-[14px]">Yükleniyor...</div>
+          <div className="py-8 text-center flex flex-col items-center justify-center gap-2">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-[13px] text-text-secondary font-medium">Bakım ekibi yükleniyor...</p>
+          </div>
         ) : members.length === 0 ? (
-          <div className="p-6 text-center text-text-secondary text-[14px]">Henüz üye yok</div>
+          <div className="p-6 text-center flex flex-col items-center justify-center gap-2 bg-bg-main/30">
+            <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-xl shadow-xs mb-1">
+              👨‍👩‍👧‍👦
+            </div>
+            <p className="text-[14px] text-text-primary font-bold">Henüz Bakım Ekibi Üyesi Yok</p>
+            <p className="text-[12px] text-text-secondary/80 max-w-sm leading-relaxed">
+              Aile üyelerinizi, eşinizi veya bakıcınızı davet ederek {petName} dostunuzun bakımını birlikte yönetebilirsiniz.
+            </p>
+          </div>
         ) : (
           <div className="divide-y divide-border-main">
             {members.map((m: any) => {

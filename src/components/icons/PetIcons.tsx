@@ -1,12 +1,15 @@
 import React from 'react';
 import { CategoryKey } from '@/lib/categoryThemes';
 
-interface IconProps {
+export interface IconProps {
   width?: number | string;
   height?: number | string;
+  size?: number | string;
   className?: string;
   isSelected?: boolean;
 }
+
+export type BadgeSize = 'sm' | 'md' | 'lg' | 'xl' | 'none';
 
 // ── Sample Icon Pack Components (Unified Lavender Squircle Badge + Line Icon) ──
 export function IconBadge({
@@ -18,10 +21,14 @@ export function IconBadge({
 }: {
   children?: React.ReactNode;
   size?: number;
-  badgeSize?: 'sm' | 'md' | 'lg' | 'xl';
+  badgeSize?: BadgeSize;
   className?: string;
   isSelected?: boolean;
 }) {
+  if (badgeSize === 'none') {
+    return <>{children}</>;
+  }
+
   const badgeDimensions = {
     sm: 'w-8 h-8 rounded-xl p-1.5',
     md: 'w-10 h-10 rounded-2xl p-2.5',
@@ -41,7 +48,7 @@ export function IconBadge({
 }
 
 // 1. ShieldCheckIcon - Aşı / Güvenlik / Sağlık Doğrulama / Belge Kasası (Example Icon Pack - Top Icon)
-export function ShieldCheckIcon({ size = 22, className = '', isSelected = false, badgeSize = 'md' }: IconProps & { size?: number; badgeSize?: 'sm' | 'md' | 'lg' | 'xl' }) {
+export function ShieldCheckIcon({ size = 22, className = '', isSelected = false, badgeSize = 'md' }: IconProps & { size?: number; badgeSize?: BadgeSize }) {
   return (
     <IconBadge size={size} badgeSize={badgeSize} isSelected={isSelected} className={className}>
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -53,7 +60,7 @@ export function ShieldCheckIcon({ size = 22, className = '', isSelected = false,
 }
 
 // 2. BugIcon - Parazit / Haşere / İç-Dış Parazit / Teşhis (Example Icon Pack - Middle Icon)
-export function BugIcon({ size = 22, className = '', isSelected = false, badgeSize = 'md' }: IconProps & { size?: number; badgeSize?: 'sm' | 'md' | 'lg' | 'xl' }) {
+export function BugIcon({ size = 22, className = '', isSelected = false, badgeSize = 'md' }: IconProps & { size?: number; badgeSize?: BadgeSize }) {
   return (
     <IconBadge size={size} badgeSize={badgeSize} isSelected={isSelected} className={className}>
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -73,7 +80,7 @@ export function BugIcon({ size = 22, className = '', isSelected = false, badgeSi
 }
 
 // 3. ScaleIcon - Kilo / Ölçüm / Tartı / Dozlama (Example Icon Pack - Bottom Icon)
-export function ScaleIcon({ size = 22, className = '', isSelected = false, badgeSize = 'md' }: IconProps & { size?: number; badgeSize?: 'sm' | 'md' | 'lg' | 'xl' }) {
+export function ScaleIcon({ size = 22, className = '', isSelected = false, badgeSize = 'md' }: IconProps & { size?: number; badgeSize?: BadgeSize }) {
   return (
     <IconBadge size={size} badgeSize={badgeSize} isSelected={isSelected} className={className}>
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -88,7 +95,7 @@ export function ScaleIcon({ size = 22, className = '', isSelected = false, badge
 }
 
 // 4. UtensilsIcon - Beslenme / Mama
-export function UtensilsIcon({ size = 22, className = '', isSelected = false, badgeSize = 'md' }: IconProps & { size?: number; badgeSize?: 'sm' | 'md' | 'lg' | 'xl' }) {
+export function UtensilsIcon({ size = 22, className = '', isSelected = false, badgeSize = 'md' }: IconProps & { size?: number; badgeSize?: BadgeSize }) {
   return (
     <IconBadge size={size} badgeSize={badgeSize} isSelected={isSelected} className={className}>
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -102,7 +109,7 @@ export function UtensilsIcon({ size = 22, className = '', isSelected = false, ba
 }
 
 // 5. SparklesIcon - Bakım / Hijyen / Banyo
-export function SparklesIcon({ size = 22, className = '', isSelected = false, badgeSize = 'md' }: IconProps & { size?: number; badgeSize?: 'sm' | 'md' | 'lg' | 'xl' }) {
+export function SparklesIcon({ size = 22, className = '', isSelected = false, badgeSize = 'md' }: IconProps & { size?: number; badgeSize?: BadgeSize }) {
   return (
     <IconBadge size={size} badgeSize={badgeSize} isSelected={isSelected} className={className}>
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -115,7 +122,7 @@ export function SparklesIcon({ size = 22, className = '', isSelected = false, ba
 }
 
 // 6. ActivityIcon - Aktivite / Yürüyüş / Egzersiz
-export function ActivityIcon({ size = 22, className = '', isSelected = false, badgeSize = 'md' }: IconProps & { size?: number; badgeSize?: 'sm' | 'md' | 'lg' | 'xl' }) {
+export function ActivityIcon({ size = 22, className = '', isSelected = false, badgeSize = 'md' }: IconProps & { size?: number; badgeSize?: BadgeSize }) {
   return (
     <IconBadge size={size} badgeSize={badgeSize} isSelected={isSelected} className={className}>
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -126,7 +133,7 @@ export function ActivityIcon({ size = 22, className = '', isSelected = false, ba
 }
 
 // 7. CalendarIcon - Ajanda / Takvim / Randevular
-export function CalendarIcon({ size = 22, className = '', isSelected = false, badgeSize = 'md' }: IconProps & { size?: number; badgeSize?: 'sm' | 'md' | 'lg' | 'xl' }) {
+export function CalendarIcon({ size = 22, className = '', isSelected = false, badgeSize = 'md' }: IconProps & { size?: number; badgeSize?: BadgeSize }) {
   return (
     <IconBadge size={size} badgeSize={badgeSize} isSelected={isSelected} className={className}>
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -140,7 +147,7 @@ export function CalendarIcon({ size = 22, className = '', isSelected = false, ba
 }
 
 // 8. StethoscopeIcon - Veteriner & Genel Sağlık
-export function StethoscopeIcon({ size = 22, className = '', isSelected = false, badgeSize = 'md' }: IconProps & { size?: number; badgeSize?: 'sm' | 'md' | 'lg' | 'xl' }) {
+export function StethoscopeIcon({ size = 22, className = '', isSelected = false, badgeSize = 'md' }: IconProps & { size?: number; badgeSize?: BadgeSize }) {
   return (
     <IconBadge size={size} badgeSize={badgeSize} isSelected={isSelected} className={className}>
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -524,12 +531,14 @@ export function RulerIcon({ width = 34, height = 34, className = '', isSelected 
 }
 
 // 10. VaccineIcon - Aşı / Şırınga (Blue-to-Indigo gradient syringe with drop shadow)
-export function VaccineIcon({ width = 34, height = 34, className = '', isSelected = false }: IconProps) {
+export function VaccineIcon({ width, height, size, className = '', isSelected = false }: IconProps) {
+  const w = width ?? size ?? 34;
+  const h = height ?? size ?? 34;
   const scaleClass = isSelected ? 'scale-[1.1]' : 'hover:scale-[1.05]';
   return (
     <svg
-      width={width}
-      height={height}
+      width={w}
+      height={h}
       viewBox="0 0 32 32"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -636,12 +645,14 @@ export function FirstAidIcon({ width = 34, height = 34, className = '', isSelect
 }
 
 // 12.5 ParasiteIcon - Parazit Koruması (Teal-to-Green Protection Shield with a bug symbol)
-export function ParasiteIcon({ width = 34, height = 34, className = '', isSelected = false }: IconProps) {
+export function ParasiteIcon({ width, height, size, className = '', isSelected = false }: IconProps) {
+  const w = width ?? size ?? 34;
+  const h = height ?? size ?? 34;
   const scaleClass = isSelected ? 'scale-[1.1]' : 'hover:scale-[1.05]';
   return (
     <svg
-      width={width}
-      height={height}
+      width={w}
+      height={h}
       viewBox="0 0 32 32"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"

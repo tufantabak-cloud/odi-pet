@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { createBrowserSupabaseClient } from '@/lib/supabase/client';
-import { ShieldCheckIcon, BugIcon, StethoscopeIcon, CarrierIcon } from '@/components/icons/PetIcons';
+import { ShieldCheckIcon, BugIcon, StethoscopeIcon, CarrierIcon, VaccineIcon, ParasiteIcon } from '@/components/icons/PetIcons';
 import { SmartScanner } from '@/components/ui/SmartScanner';
 
 interface HealthTabProps {
@@ -137,13 +137,13 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
           <div className="flex flex-wrap items-center gap-2">
             <Link
               href={`/owner/plan-yap/saglik?pet_id=${petId}`}
-              className="px-3.5 py-2 rounded-xl bg-primary text-white font-bold text-[12px] hover:bg-primary-hover transition-all shadow-xs"
+              className="min-h-[44px] px-4 py-2.5 rounded-xl bg-primary text-white font-bold text-[12px] hover:bg-primary-hover hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xs inline-flex items-center gap-1.5"
             >
-              🩺 Sağlık Planla
+              <StethoscopeIcon size={16} badgeSize="none" /> Sağlık Planla
             </Link>
             <Link
               href={`/owner/plan-yap/saglik?pet_id=${petId}&mode=log`}
-              className="px-3.5 py-2 rounded-xl bg-emerald-600 text-white font-bold text-[12px] hover:bg-emerald-700 transition-all shadow-xs"
+              className="min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-[12px] hover:bg-emerald-700 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xs inline-flex items-center gap-1.5"
             >
               📋 Sağlık Kaydı Ekle
             </Link>
@@ -152,18 +152,26 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
 
         {/* Sağlık Geçmişi Listesi */}
         {loadingHealth ? (
-          <p className="text-[13px] text-text-secondary py-3">Yükleniyor...</p>
+          <div className="py-8 text-center flex flex-col items-center justify-center gap-2">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-[13px] text-text-secondary font-medium">Sağlık kayıtları yükleniyor...</p>
+          </div>
         ) : healthRecords.length === 0 ? (
-          <div className="p-4 rounded-xl border border-dashed border-border-main text-center bg-bg-main/50">
-            <p className="text-[13px] text-text-secondary font-medium mb-1">Henüz kaydedilmiş bir sağlık veya muayene kaydı bulunmuyor.</p>
-            <p className="text-[11px] text-text-secondary/80">Sağlık takvimi veya randevu oluşturmak için "Sağlık Planla" veya muayene/tedavi kaydetmek için "Sağlık Kaydı Ekle" butonunu kullanabilirsiniz.</p>
+          <div className="p-6 rounded-2xl border border-dashed border-border-main text-center bg-bg-main/50 flex flex-col items-center justify-center gap-2">
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xl shadow-xs">
+              <StethoscopeIcon size={24} badgeSize="none" />
+            </div>
+            <p className="text-[14px] text-text-primary font-bold">Henüz Sağlık Kaydı Yok</p>
+            <p className="text-[12px] text-text-secondary/80 max-w-sm leading-relaxed mb-1">Sağlık takvimi veya randevu oluşturmak için "Sağlık Planla" veya muayene/tedavi kaydetmek için "Sağlık Kaydı Ekle" butonunu kullanabilirsiniz.</p>
           </div>
         ) : (
           <div className="flex flex-col gap-2.5">
             {healthRecords.map((rec) => (
-              <div key={rec.id} className="p-3.5 rounded-xl border border-border-main/60 bg-bg-main flex items-center justify-between gap-3">
+              <div key={rec.id} className="p-3.5 rounded-xl border border-border-main/60 bg-bg-main flex items-center justify-between gap-3 hover:border-primary/30 transition-all">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm shrink-0">🩺</div>
+                  <div className="w-9 h-9 rounded-xl bg-blue-100/80 text-blue-700 flex items-center justify-center font-bold text-sm shrink-0 shadow-xs">
+                    <StethoscopeIcon size={18} badgeSize="none" />
+                  </div>
                   <div>
                     <h4 className="font-bold text-text-primary text-[14px]">{rec.title || rec.type || 'Sağlık Kaydı'}</h4>
                     <p className="text-[11px] text-text-secondary">
@@ -178,7 +186,7 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
                     href={rec.document_path}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg transition-colors"
+                    className="text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1"
                   >
                     📄 Belge
                   </a>
@@ -202,19 +210,19 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => setIsScannerOpen(true)}
-              className="px-3 py-2 rounded-xl bg-indigo-50 text-indigo-700 font-bold text-[12px] hover:bg-indigo-100 transition-colors border border-indigo-200/60 flex items-center gap-1.5"
+              className="min-h-[44px] px-3.5 py-2 rounded-xl bg-indigo-50 text-indigo-700 font-bold text-[12px] hover:bg-indigo-100 hover:scale-[1.02] active:scale-[0.98] transition-all border border-indigo-200/60 flex items-center gap-1.5"
             >
               📷 Belge / OCR Tara
             </button>
             <Link
               href={`/owner/plan-yap/asi?pet_id=${petId}`}
-              className="px-3.5 py-2 rounded-xl bg-primary text-white font-bold text-[12px] hover:bg-primary-hover transition-all shadow-xs"
+              className="min-h-[44px] px-4 py-2 rounded-xl bg-primary text-white font-bold text-[12px] hover:bg-primary-hover hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xs flex items-center gap-1.5"
             >
               💉 Aşı Planla
             </Link>
             <Link
               href={`/owner/plan-yap/asi?pet_id=${petId}&mode=log`}
-              className="px-3.5 py-2 rounded-xl bg-emerald-600 text-white font-bold text-[12px] hover:bg-emerald-700 transition-all shadow-xs"
+              className="min-h-[44px] px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-[12px] hover:bg-emerald-700 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xs flex items-center gap-1.5"
             >
               📋 Aşı Kaydı Ekle
             </Link>
@@ -223,18 +231,26 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
 
         {/* Aşı Geçmişi Listesi */}
         {loadingVaccines ? (
-          <p className="text-[13px] text-text-secondary py-3">Yükleniyor...</p>
+          <div className="py-8 text-center flex flex-col items-center justify-center gap-2">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-[13px] text-text-secondary font-medium">Aşı kayıtları yükleniyor...</p>
+          </div>
         ) : vaccineRecords.length === 0 ? (
-          <div className="p-4 rounded-xl border border-dashed border-border-main text-center bg-bg-main/50">
-            <p className="text-[13px] text-text-secondary font-medium mb-1">Henüz kaydedilmiş bir aşı bulunmuyor.</p>
-            <p className="text-[11px] text-text-secondary/80">Aşı takvimi oluşturmak için "Aşı Planla" veya geçmiş aşıları kaydetmek için "Aşı Kaydı Ekle" butonunu kullanabilirsiniz.</p>
+          <div className="p-6 rounded-2xl border border-dashed border-border-main text-center bg-bg-main/50 flex flex-col items-center justify-center gap-2">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xl shadow-xs">
+              <VaccineIcon size={24} />
+            </div>
+            <p className="text-[14px] text-text-primary font-bold">Henüz Aşı Kaydı Yok</p>
+            <p className="text-[12px] text-text-secondary/80 max-w-sm leading-relaxed mb-1">Aşı takvimi oluşturmak için "Aşı Planla" veya geçmiş aşıları kaydetmek için "Aşı Kaydı Ekle" butonunu kullanabilirsiniz.</p>
           </div>
         ) : (
           <div className="flex flex-col gap-2.5">
             {vaccineRecords.map((rec) => (
-              <div key={rec.id} className="p-3.5 rounded-xl border border-border-main/60 bg-bg-main flex items-center justify-between gap-3">
+              <div key={rec.id} className="p-3.5 rounded-xl border border-border-main/60 bg-bg-main flex items-center justify-between gap-3 hover:border-emerald-300/50 transition-all">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm shrink-0">✓</div>
+                  <div className="w-9 h-9 rounded-xl bg-emerald-100/80 text-emerald-700 flex items-center justify-center shrink-0 shadow-xs">
+                    <VaccineIcon size={20} />
+                  </div>
                   <div>
                     <h4 className="font-bold text-text-primary text-[14px]">{rec.vaccine_name}</h4>
                     <p className="text-[11px] text-text-secondary">
@@ -250,7 +266,7 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
                     href={rec.document_storage_path}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg transition-colors"
+                    className="text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1"
                   >
                     📄 Belge
                   </a>
@@ -261,7 +277,7 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
         )}
       </div>
 
-      {/* ── 2. Parazit Geçmişi Bölümü ── */}
+      {/* ── 3. Parazit Geçmişi Bölümü ── */}
       <div id="section-parasite" className="card-base p-5 border border-border-main flex flex-col gap-4 bg-surface">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-main/50 pb-4">
           <div className="flex items-center gap-3">
@@ -274,13 +290,13 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
           <div className="flex flex-wrap items-center gap-2">
             <Link
               href={`/owner/plan-yap/parazit?pet_id=${petId}`}
-              className="px-3.5 py-2 rounded-xl bg-teal-600 text-white font-bold text-[12px] hover:bg-teal-700 transition-all shadow-xs"
+              className="min-h-[44px] px-4 py-2 rounded-xl bg-teal-600 text-white font-bold text-[12px] hover:bg-teal-700 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xs flex items-center gap-1.5"
             >
               🐛 Parazit Planla
             </Link>
             <Link
               href={`/owner/plan-yap/parazit?pet_id=${petId}&mode=log`}
-              className="px-3.5 py-2 rounded-xl bg-emerald-600 text-white font-bold text-[12px] hover:bg-emerald-700 transition-all shadow-xs"
+              className="min-h-[44px] px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-[12px] hover:bg-emerald-700 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xs flex items-center gap-1.5"
             >
               📋 Parazit Kaydı Ekle
             </Link>
@@ -289,18 +305,26 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
 
         {/* Parazit Geçmişi Listesi */}
         {loadingParasites ? (
-          <p className="text-[13px] text-text-secondary py-3">Yükleniyor...</p>
+          <div className="py-8 text-center flex flex-col items-center justify-center gap-2">
+            <div className="w-6 h-6 border-2 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-[13px] text-text-secondary font-medium">Parazit kayıtları yükleniyor...</p>
+          </div>
         ) : parasiteRecords.length === 0 ? (
-          <div className="p-4 rounded-xl border border-dashed border-border-main text-center bg-bg-main/50">
-            <p className="text-[13px] text-text-secondary font-medium mb-1">Henüz kaydedilmiş bir parazit uygulaması bulunmuyor.</p>
-            <p className="text-[11px] text-text-secondary/80">İç ve dış parazit korumasını başlatmak için "Parazit Planla" veya tamamlanan bir uygulamayı girmek için "Parazit Kaydı Ekle" butonunu kullanabilirsiniz.</p>
+          <div className="p-6 rounded-2xl border border-dashed border-border-main text-center bg-bg-main/50 flex flex-col items-center justify-center gap-2">
+            <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center font-bold text-xl shadow-xs">
+              <ParasiteIcon size={24} />
+            </div>
+            <p className="text-[14px] text-text-primary font-bold">Henüz Parazit Kaydı Yok</p>
+            <p className="text-[12px] text-text-secondary/80 max-w-sm leading-relaxed mb-1">İç ve dış parazit korumasını başlatmak için "Parazit Planla" veya tamamlanan bir uygulamayı girmek için "Parazit Kaydı Ekle" butonunu kullanabilirsiniz.</p>
           </div>
         ) : (
           <div className="flex flex-col gap-2.5">
             {parasiteRecords.map((rec) => (
-              <div key={rec.id} className="p-3.5 rounded-xl border border-border-main/60 bg-bg-main flex items-center justify-between gap-3">
+              <div key={rec.id} className="p-3.5 rounded-xl border border-border-main/60 bg-bg-main flex items-center justify-between gap-3 hover:border-teal-300/50 transition-all">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-sm shrink-0">🛡️</div>
+                  <div className="w-9 h-9 rounded-xl bg-teal-100/80 text-teal-700 flex items-center justify-center shrink-0 shadow-xs">
+                    <ParasiteIcon size={20} />
+                  </div>
                   <div>
                     <h4 className="font-bold text-text-primary text-[14px]">
                       {rec.brand_free_text || rec.product_free_text || rec.parasite_code || 'Parazit Koruması'}
@@ -317,7 +341,7 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
                     href={rec.document_storage_path}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg transition-colors"
+                    className="text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1"
                   >
                     📄 Fotoğraf
                   </a>
@@ -343,13 +367,13 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
           <div className="flex flex-wrap items-center gap-2">
             <Link
               href={`/owner/plan-yap/kontrol?pet_id=${petId}`}
-              className="px-3.5 py-2 rounded-xl bg-purple-600 text-white font-bold text-[12px] hover:bg-purple-700 transition-all shadow-xs"
+              className="min-h-[44px] px-4 py-2 rounded-xl bg-purple-600 text-white font-bold text-[12px] hover:bg-purple-700 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xs flex items-center gap-1.5"
             >
               🏥 Randevu Planla
             </Link>
             <Link
               href={`/owner/plan-yap/kontrol?pet_id=${petId}&mode=log`}
-              className="px-3.5 py-2 rounded-xl bg-emerald-600 text-white font-bold text-[12px] hover:bg-emerald-700 transition-all shadow-xs"
+              className="min-h-[44px] px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-[12px] hover:bg-emerald-700 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xs flex items-center gap-1.5"
             >
               📋 Veteriner Kaydı Ekle
             </Link>
@@ -358,18 +382,26 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
 
         {/* Veteriner Kayıtları Listesi */}
         {loadingVet ? (
-          <p className="text-[13px] text-text-secondary py-3">Yükleniyor...</p>
+          <div className="py-8 text-center flex flex-col items-center justify-center gap-2">
+            <div className="w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-[13px] text-text-secondary font-medium">Veteriner kayıtları yükleniyor...</p>
+          </div>
         ) : vetRecords.length === 0 ? (
-          <div className="p-4 rounded-xl border border-dashed border-border-main text-center bg-bg-main/50">
-            <p className="text-[13px] text-text-secondary font-medium mb-1">Henüz kaydedilmiş bir veteriner randevusu veya klinik ziyareti bulunmuyor.</p>
-            <p className="text-[11px] text-text-secondary/80">Veteriner kontrolü veya klinik randevusu oluşturmak için "Randevu Planla" veya geçmiş klinik ziyaretlerini girmek için "Veteriner Kaydı Ekle" butonunu kullanabilirsiniz.</p>
+          <div className="p-6 rounded-2xl border border-dashed border-border-main text-center bg-bg-main/50 flex flex-col items-center justify-center gap-2">
+            <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-xl shadow-xs">
+              <CarrierIcon width={24} height={24} />
+            </div>
+            <p className="text-[14px] text-text-primary font-bold">Henüz Veteriner Kaydı Yok</p>
+            <p className="text-[12px] text-text-secondary/80 max-w-sm leading-relaxed mb-1">Veteriner kontrolü veya klinik randevusu oluşturmak için "Randevu Planla" veya geçmiş klinik ziyaretlerini girmek için "Veteriner Kaydı Ekle" butonunu kullanabilirsiniz.</p>
           </div>
         ) : (
           <div className="flex flex-col gap-2.5">
             {vetRecords.map((rec) => (
-              <div key={rec.id} className="p-3.5 rounded-xl border border-border-main/60 bg-bg-main flex items-center justify-between gap-3">
+              <div key={rec.id} className="p-3.5 rounded-xl border border-border-main/60 bg-bg-main flex items-center justify-between gap-3 hover:border-purple-300/50 transition-all">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-sm shrink-0">🏥</div>
+                  <div className="w-9 h-9 rounded-xl bg-purple-100/80 text-purple-700 flex items-center justify-center shrink-0 shadow-xs">
+                    <CarrierIcon width={20} height={20} />
+                  </div>
                   <div>
                     <h4 className="font-bold text-text-primary text-[14px]">
                       {rec.clinics?.name || rec.title || rec.reason || 'Veteriner Ziyareti'}
@@ -382,7 +414,7 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
                   </div>
                 </div>
                 {rec.status && (
-                  <span className="text-[11px] font-bold text-purple-700 bg-purple-50 px-2.5 py-1 rounded-lg">
+                  <span className="text-[11px] font-bold text-purple-700 bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-200/50">
                     {rec.status === 'completed' || rec.status === 'done' ? '✓ Tamamlandı' : rec.status}
                   </span>
                 )}
