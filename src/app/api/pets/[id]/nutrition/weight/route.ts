@@ -56,7 +56,27 @@ export async function POST(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: 'Geçerli bir kilo değeri giriniz.' }, { status: 400 })
   }
 
+  // ─── Aynı Gün Çift Kayıt Engeli ──────────────
+  const measuredAtIso = body.measured_at ? new Date(body.measured_at).toISOString() : new Date().toISOString()
+  const dayStart = new Date(measuredAtIso); dayStart.setHours(0, 0, 0, 0)
+  const dayEnd = new Date(measuredAtIso); dayEnd.setHours(23, 59, 59, 999)
+
+  const { data: existingSameDay } = await supabase
+    .from('weight_logs')
+    .select('id')
+    .eq('pet_id', id)
+    .gte('measured_at', dayStart.toISOString())
+    .lte('measured_at', dayEnd.toISOString())
+    .limit(1)
+
+  if (existingSameDay && existingSameDay.length > 0) {
+    return NextResponse.json({
+      error: 'Bu tarih için zaten bir kilo/boy ölçüm kaydı bulunmaktadır. Bir gün içinde yalnızca 1 kayıt eklenebilir. Mevcut kaydı değiştirmek isterseniz aşağıdaki "Geçmiş Ölçümler" listesindeki Düzenle (✏️) butonunu kullanabilirsiniz.'
+    }, { status: 400 })
+  }
+
   const { data, error } = await supabase
+
     .from('weight_logs')
     .insert({
       pet_id: id,

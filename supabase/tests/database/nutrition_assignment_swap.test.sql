@@ -1,5 +1,7 @@
 BEGIN;
 
+CREATE EXTENSION IF NOT EXISTS pgtap;
+
 SELECT plan(10);
 
 -- 1. SETUP

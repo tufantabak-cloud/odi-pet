@@ -2,7 +2,12 @@
  * Odi.Pet — Personalized Content Helper Utilities
  */
 
-export type LifeStage = 'junior' | 'adult' | 'senior' | 'senior_12plus';
+import {
+  getPetAgeStageFromBirthDate,
+  type PetAgeStageKey,
+} from '@/lib/pets/age-stage';
+
+export type LifeStage = PetAgeStageKey;
 
 export type BreedTrait =
   | 'long_hair'
@@ -132,22 +137,8 @@ export function getPetLifeStage(
   birthDate: string | Date | null | undefined,
   species?: string | null
 ): LifeStage | null {
-  if (!birthDate) return null;
-
-  const born = new Date(birthDate);
-  if (isNaN(born.getTime())) return null;
-
-  const now = new Date();
-  const months = (now.getFullYear() - born.getFullYear()) * 12 + (now.getMonth() - born.getMonth());
-  if (months < 0) return null;
-
-  const normSpecies = (species || '').toLowerCase().trim();
-
-  // Kedi ve Köpek Yaş Skalası
-  if (months < 12) return 'junior';
-  if (months < 84) return 'adult';
-  if (months < 144) return 'senior';
-  return 'senior_12plus';
+  void species;
+  return getPetAgeStageFromBirthDate(birthDate)?.key ?? null;
 }
 
 /**

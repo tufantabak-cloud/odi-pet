@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
   graphql_public: {
     Tables: {
       [_ in never]: never
@@ -84,13 +79,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "activation_metrics_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
         ]
       }
       admin_audit_logs: {
@@ -100,6 +88,7 @@ export type Database = {
           created_at: string | null
           details: Json | null
           id: string
+          ip_address: string | null
           target_id: string | null
           target_table: string | null
         }
@@ -109,6 +98,7 @@ export type Database = {
           created_at?: string | null
           details?: Json | null
           id?: string
+          ip_address?: string | null
           target_id?: string | null
           target_table?: string | null
         }
@@ -118,62 +108,69 @@ export type Database = {
           created_at?: string | null
           details?: Json | null
           id?: string
+          ip_address?: string | null
           target_id?: string | null
           target_table?: string | null
         }
         Relationships: []
       }
-      adoption_applications: {
+      admin_vet_override_logs: {
         Row: {
-          applicant_id: string
-          created_at: string | null
+          action: string
+          actor_id: string | null
+          actor_role: string
+          article_id: string
+          created_at: string
           id: string
-          kvkk_consent: boolean | null
-          kvkk_consent_at: string | null
-          listing_id: string
-          message: string | null
-          status: string | null
+          new_requirement: string
+          old_requirement: string
+          reason: string
+          reference_log_id: string | null
         }
         Insert: {
-          applicant_id: string
-          created_at?: string | null
+          action?: string
+          actor_id?: string | null
+          actor_role: string
+          article_id: string
+          created_at?: string
           id?: string
-          kvkk_consent?: boolean | null
-          kvkk_consent_at?: string | null
-          listing_id: string
-          message?: string | null
-          status?: string | null
+          new_requirement: string
+          old_requirement: string
+          reason: string
+          reference_log_id?: string | null
         }
         Update: {
-          applicant_id?: string
-          created_at?: string | null
+          action?: string
+          actor_id?: string | null
+          actor_role?: string
+          article_id?: string
+          created_at?: string
           id?: string
-          kvkk_consent?: boolean | null
-          kvkk_consent_at?: string | null
-          listing_id?: string
-          message?: string | null
-          status?: string | null
+          new_requirement?: string
+          old_requirement?: string
+          reason?: string
+          reference_log_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "adoption_applications_applicant_id_fkey"
-            columns: ["applicant_id"]
+            foreignKeyName: "admin_vet_override_logs_actor_id_fkey"
+            columns: ["actor_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "adoption_applications_applicant_id_fkey"
-            columns: ["applicant_id"]
+            foreignKeyName: "admin_vet_override_logs_article_id_fkey"
+            columns: ["article_id"]
             isOneToOne: false
-            referencedRelation: "users"
+            referencedRelation: "articles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "adoption_applications_listing_id_fkey"
-            columns: ["listing_id"]
+            foreignKeyName: "admin_vet_override_logs_reference_log_id_fkey"
+            columns: ["reference_log_id"]
             isOneToOne: false
-            referencedRelation: "pet_adoptions"
+            referencedRelation: "admin_vet_override_logs"
             referencedColumns: ["id"]
           },
         ]
@@ -208,13 +205,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "ai_usage_logs_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
         ]
       }
       alerts: {
@@ -241,48 +231,6 @@ export type Database = {
           message?: string
           severity?: string
           type?: string
-        }
-        Relationships: []
-      }
-      app_users: {
-        Row: {
-          auth_user_id: string | null
-          created_at: string | null
-          display_name: string | null
-          durum: string | null
-          email: string
-          id: string
-          is_deleted: boolean | null
-          last_login: string | null
-          password: string | null
-          rol_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          auth_user_id?: string | null
-          created_at?: string | null
-          display_name?: string | null
-          durum?: string | null
-          email: string
-          id?: string
-          is_deleted?: boolean | null
-          last_login?: string | null
-          password?: string | null
-          rol_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          auth_user_id?: string | null
-          created_at?: string | null
-          display_name?: string | null
-          durum?: string | null
-          email?: string
-          id?: string
-          is_deleted?: boolean | null
-          last_login?: string | null
-          password?: string | null
-          rol_id?: string | null
-          updated_at?: string | null
         }
         Relationships: []
       }
@@ -329,14 +277,178 @@ export type Database = {
             foreignKeyName: "appointments_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      article_media: {
+        Row: {
+          alt_text: string
+          article_id: string
+          caption: string | null
+          created_at: string | null
+          created_by: string | null
+          display_order: number | null
+          external_url: string | null
+          id: string
+          is_active: boolean | null
+          media_type: string
+          rights_note: string | null
+          rights_status: string
+          source_name: string | null
+          source_url: string | null
+          storage_path: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          alt_text: string
+          article_id: string
+          caption?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          display_order?: number | null
+          external_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          media_type: string
+          rights_note?: string | null
+          rights_status: string
+          source_name?: string | null
+          source_url?: string | null
+          storage_path?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          alt_text?: string
+          article_id?: string
+          caption?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          display_order?: number | null
+          external_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          media_type?: string
+          rights_note?: string | null
+          rights_status?: string
+          source_name?: string | null
+          source_url?: string | null
+          storage_path?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_media_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "appointments_pet_id_fkey"
+            foreignKeyName: "article_media_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      article_pet_states: {
+        Row: {
+          article_id: string
+          created_at: string
+          dismissed_at: string | null
+          id: string
+          last_shown_at: string | null
+          last_viewed_at: string | null
+          pet_id: string
+          read_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          dismissed_at?: string | null
+          id?: string
+          last_shown_at?: string | null
+          last_viewed_at?: string | null
+          pet_id: string
+          read_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          dismissed_at?: string | null
+          id?: string
+          last_shown_at?: string | null
+          last_viewed_at?: string | null
+          pet_id?: string
+          read_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_pet_states_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "article_pet_states_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
             referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      article_revisions: {
+        Row: {
+          article_id: string
+          change_summary: string | null
+          changed_at: string | null
+          changed_by: string | null
+          content_snapshot: Json
+          id: string
+          version_number: number
+        }
+        Insert: {
+          article_id: string
+          change_summary?: string | null
+          changed_at?: string | null
+          changed_by?: string | null
+          content_snapshot: Json
+          id?: string
+          version_number: number
+        }
+        Update: {
+          article_id?: string
+          change_summary?: string | null
+          changed_at?: string | null
+          changed_by?: string | null
+          content_snapshot?: Json
+          id?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_revisions_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "article_revisions_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -370,35 +482,298 @@ export type Database = {
           },
         ]
       }
-      articles: {
+      article_sources: {
         Row: {
-          author: string | null
-          category: string | null
-          content: string
+          article_id: string
+          checked_at: string | null
           created_at: string | null
+          created_by: string | null
+          display_in_article: boolean | null
           id: string
-          slug: string
-          title: string
+          instagram_username: string | null
+          is_active: boolean | null
+          published_at: string | null
+          publisher: string | null
+          short_description: string | null
+          show_source_link: boolean | null
+          show_source_name: boolean | null
+          sort_order: number | null
+          source_name: string | null
+          source_title: string
+          source_type: string
+          source_url: string | null
+          updated_at: string | null
+          verification_status: string | null
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
-          author?: string | null
-          category?: string | null
-          content: string
+          article_id: string
+          checked_at?: string | null
           created_at?: string | null
+          created_by?: string | null
+          display_in_article?: boolean | null
           id?: string
-          slug: string
-          title: string
+          instagram_username?: string | null
+          is_active?: boolean | null
+          published_at?: string | null
+          publisher?: string | null
+          short_description?: string | null
+          show_source_link?: boolean | null
+          show_source_name?: boolean | null
+          sort_order?: number | null
+          source_name?: string | null
+          source_title: string
+          source_type?: string
+          source_url?: string | null
+          updated_at?: string | null
+          verification_status?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
+          article_id?: string
+          checked_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          display_in_article?: boolean | null
+          id?: string
+          instagram_username?: string | null
+          is_active?: boolean | null
+          published_at?: string | null
+          publisher?: string | null
+          short_description?: string | null
+          show_source_link?: boolean | null
+          show_source_name?: boolean | null
+          sort_order?: number | null
+          source_name?: string | null
+          source_title?: string
+          source_type?: string
+          source_url?: string | null
+          updated_at?: string | null
+          verification_status?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_sources_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "article_sources_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "article_sources_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      articles: {
+        Row: {
+          archived_at: string | null
+          author: string | null
+          author_id: string | null
+          category: string | null
+          content: string
+          content_reviewed_at: string | null
+          content_reviewed_by: string | null
+          content_version: number | null
+          cover_url: string | null
+          created_at: string | null
+          end_date: string | null
+          excerpt: string | null
+          freshness_type: string | null
+          id: string
+          is_medical_content: boolean | null
+          is_published: boolean | null
+          is_sponsored: boolean | null
+          latest_change_summary: string | null
+          like_count: number | null
+          next_review_at: string | null
+          priority_order: number | null
+          published_at: string | null
+          published_by: string | null
+          read_time_minutes: number | null
+          references_list: string[] | null
+          review_interval_days: number | null
+          slug: string
+          source_checked_at: string | null
+          source_job_id: string | null
+          species_filter: string[] | null
+          sponsor_name: string | null
+          start_date: string | null
+          tags: string[] | null
+          target_breed_keys: string[] | null
+          target_breed_traits: string[] | null
+          target_genders: string[] | null
+          target_life_stages: string[] | null
+          target_neutered_status: string | null
+          target_seasons: string[] | null
+          title: string
+          vet_review_override_at: string | null
+          vet_review_override_by: string | null
+          vet_review_override_reason: string | null
+          vet_review_requirement: string
+          vet_review_status: string | null
+          vet_reviewed_at: string | null
+          vet_reviewed_by: string | null
+          view_count: number | null
+        }
+        Insert: {
+          archived_at?: string | null
           author?: string | null
+          author_id?: string | null
+          category?: string | null
+          content: string
+          content_reviewed_at?: string | null
+          content_reviewed_by?: string | null
+          content_version?: number | null
+          cover_url?: string | null
+          created_at?: string | null
+          end_date?: string | null
+          excerpt?: string | null
+          freshness_type?: string | null
+          id?: string
+          is_medical_content?: boolean | null
+          is_published?: boolean | null
+          is_sponsored?: boolean | null
+          latest_change_summary?: string | null
+          like_count?: number | null
+          next_review_at?: string | null
+          priority_order?: number | null
+          published_at?: string | null
+          published_by?: string | null
+          read_time_minutes?: number | null
+          references_list?: string[] | null
+          review_interval_days?: number | null
+          slug: string
+          source_checked_at?: string | null
+          source_job_id?: string | null
+          species_filter?: string[] | null
+          sponsor_name?: string | null
+          start_date?: string | null
+          tags?: string[] | null
+          target_breed_keys?: string[] | null
+          target_breed_traits?: string[] | null
+          target_genders?: string[] | null
+          target_life_stages?: string[] | null
+          target_neutered_status?: string | null
+          target_seasons?: string[] | null
+          title: string
+          vet_review_override_at?: string | null
+          vet_review_override_by?: string | null
+          vet_review_override_reason?: string | null
+          vet_review_requirement?: string
+          vet_review_status?: string | null
+          vet_reviewed_at?: string | null
+          vet_reviewed_by?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          archived_at?: string | null
+          author?: string | null
+          author_id?: string | null
           category?: string | null
           content?: string
+          content_reviewed_at?: string | null
+          content_reviewed_by?: string | null
+          content_version?: number | null
+          cover_url?: string | null
           created_at?: string | null
+          end_date?: string | null
+          excerpt?: string | null
+          freshness_type?: string | null
           id?: string
+          is_medical_content?: boolean | null
+          is_published?: boolean | null
+          is_sponsored?: boolean | null
+          latest_change_summary?: string | null
+          like_count?: number | null
+          next_review_at?: string | null
+          priority_order?: number | null
+          published_at?: string | null
+          published_by?: string | null
+          read_time_minutes?: number | null
+          references_list?: string[] | null
+          review_interval_days?: number | null
           slug?: string
+          source_checked_at?: string | null
+          source_job_id?: string | null
+          species_filter?: string[] | null
+          sponsor_name?: string | null
+          start_date?: string | null
+          tags?: string[] | null
+          target_breed_keys?: string[] | null
+          target_breed_traits?: string[] | null
+          target_genders?: string[] | null
+          target_life_stages?: string[] | null
+          target_neutered_status?: string | null
+          target_seasons?: string[] | null
           title?: string
+          vet_review_override_at?: string | null
+          vet_review_override_by?: string | null
+          vet_review_override_reason?: string | null
+          vet_review_requirement?: string
+          vet_review_status?: string | null
+          vet_reviewed_at?: string | null
+          vet_reviewed_by?: string | null
+          view_count?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "articles_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "articles_content_reviewed_by_fkey"
+            columns: ["content_reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "articles_published_by_fkey"
+            columns: ["published_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "articles_source_job_id_fkey"
+            columns: ["source_job_id"]
+            isOneToOne: false
+            referencedRelation: "content_generation_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "articles_vet_review_override_by_fkey"
+            columns: ["vet_review_override_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "articles_vet_reviewed_by_fkey"
+            columns: ["vet_reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       beta_signups: {
         Row: {
@@ -480,20 +855,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "bookings_owner_id_fkey"
-            columns: ["owner_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bookings_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
             foreignKeyName: "bookings_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
@@ -543,13 +904,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "breeding_applications_applicant_pet_id_fkey"
-            columns: ["applicant_pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
           {
             foreignKeyName: "breeding_applications_applicant_pet_id_fkey"
             columns: ["applicant_pet_id"]
@@ -616,7 +970,9 @@ export type Database = {
       breeding_listings: {
         Row: {
           created_at: string
+          estrus_end_date: string | null
           estrus_notification_enabled: boolean | null
+          estrus_start_date: string | null
           experience_level: string | null
           id: string
           notes: string | null
@@ -633,7 +989,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          estrus_end_date?: string | null
           estrus_notification_enabled?: boolean | null
+          estrus_start_date?: string | null
           experience_level?: string | null
           id?: string
           notes?: string | null
@@ -650,7 +1008,9 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          estrus_end_date?: string | null
           estrus_notification_enabled?: boolean | null
+          estrus_start_date?: string | null
           experience_level?: string | null
           id?: string
           notes?: string | null
@@ -666,13 +1026,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "breeding_listings_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
           {
             foreignKeyName: "breeding_listings_pet_id_fkey"
             columns: ["pet_id"]
@@ -798,13 +1151,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "business_profiles_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
         ]
       }
       calendar_feed_tokens: {
@@ -846,13 +1192,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "calendar_feed_tokens_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
         ]
       }
       care_events: {
@@ -890,13 +1229,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "care_plans"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "care_events_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
           },
           {
             foreignKeyName: "care_events_pet_id_fkey"
@@ -947,13 +1279,6 @@ export type Database = {
             foreignKeyName: "care_plans_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "care_plans_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
@@ -988,13 +1313,6 @@ export type Database = {
           shared_card_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "caregiver_logbook_entries_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
           {
             foreignKeyName: "caregiver_logbook_entries_pet_id_fkey"
             columns: ["pet_id"]
@@ -1045,92 +1363,359 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "clinic_memberships_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
         ]
       }
       clinics: {
         Row: {
           address: string | null
-          city: string | null
           contact_email: string | null
           contact_phone: string | null
           created_at: string | null
-          district: string | null
-          google_place_id: string | null
           id: string
           is_public: boolean | null
-          is_verified: boolean | null
-          latitude: number | null
-          longitude: number | null
           name: string
-          operating_hours: Json | null
-          tags: string[] | null
-          website: string | null
         }
         Insert: {
           address?: string | null
-          city?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string | null
-          district?: string | null
-          google_place_id?: string | null
           id?: string
           is_public?: boolean | null
-          is_verified?: boolean | null
-          latitude?: number | null
-          longitude?: number | null
           name: string
-          operating_hours?: Json | null
-          tags?: string[] | null
-          website?: string | null
         }
         Update: {
           address?: string | null
-          city?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string | null
-          district?: string | null
-          google_place_id?: string | null
           id?: string
           is_public?: boolean | null
-          is_verified?: boolean | null
-          latitude?: number | null
-          longitude?: number | null
           name?: string
-          operating_hours?: Json | null
-          tags?: string[] | null
-          website?: string | null
         }
         Relationships: []
       }
-      conversations: {
+      content_generation_job_sources: {
         Row: {
+          canonical_url: string | null
+          checked_at: string | null
+          content_type: string | null
           created_at: string | null
+          domain: string | null
+          external_identifier: string | null
+          external_identifier_type: string | null
+          final_url: string | null
+          grounding_chunk_index: number | null
+          grounding_provider: string | null
+          http_status: number | null
           id: string
-          participant_1: string | null
-          participant_2: string | null
+          job_id: string
+          original_grounding_url: string | null
+          page_h1: string | null
+          page_title: string | null
+          publication_date: string | null
+          published_at: string | null
+          publisher: string | null
+          semantic_relevance: string | null
+          semantic_validation_reason: string | null
+          source_excerpt: string | null
+          source_title: string
+          source_type: string
+          source_url: string | null
+          technical_validation_status: string | null
+          updated_at: string | null
+          verification_status: string
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
+          canonical_url?: string | null
+          checked_at?: string | null
+          content_type?: string | null
           created_at?: string | null
+          domain?: string | null
+          external_identifier?: string | null
+          external_identifier_type?: string | null
+          final_url?: string | null
+          grounding_chunk_index?: number | null
+          grounding_provider?: string | null
+          http_status?: number | null
           id?: string
-          participant_1?: string | null
-          participant_2?: string | null
+          job_id: string
+          original_grounding_url?: string | null
+          page_h1?: string | null
+          page_title?: string | null
+          publication_date?: string | null
+          published_at?: string | null
+          publisher?: string | null
+          semantic_relevance?: string | null
+          semantic_validation_reason?: string | null
+          source_excerpt?: string | null
+          source_title: string
+          source_type?: string
+          source_url?: string | null
+          technical_validation_status?: string | null
+          updated_at?: string | null
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
+          canonical_url?: string | null
+          checked_at?: string | null
+          content_type?: string | null
+          created_at?: string | null
+          domain?: string | null
+          external_identifier?: string | null
+          external_identifier_type?: string | null
+          final_url?: string | null
+          grounding_chunk_index?: number | null
+          grounding_provider?: string | null
+          http_status?: number | null
+          id?: string
+          job_id?: string
+          original_grounding_url?: string | null
+          page_h1?: string | null
+          page_title?: string | null
+          publication_date?: string | null
+          published_at?: string | null
+          publisher?: string | null
+          semantic_relevance?: string | null
+          semantic_validation_reason?: string | null
+          source_excerpt?: string | null
+          source_title?: string
+          source_type?: string
+          source_url?: string | null
+          technical_validation_status?: string | null
+          updated_at?: string | null
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_generation_job_sources_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "content_generation_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_generation_job_sources_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_generation_jobs: {
+        Row: {
+          article_id: string | null
+          change_summary: string | null
+          classification_status: string | null
+          created_at: string | null
+          delete_reason: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          generated_at: string | null
+          generated_by: string | null
+          generated_draft: Json | null
+          generation_attempts: number | null
+          generation_status: string
+          id: string
+          job_type: string
+          last_error: string | null
+          model_name: string | null
+          prompt_version: number | null
+          proposed_targeting: Json | null
+          rejection_reason: string | null
+          required_source_count: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          topic: string
+          updated_at: string | null
+        }
+        Insert: {
+          article_id?: string | null
+          change_summary?: string | null
+          classification_status?: string | null
+          created_at?: string | null
+          delete_reason?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          generated_at?: string | null
+          generated_by?: string | null
+          generated_draft?: Json | null
+          generation_attempts?: number | null
+          generation_status?: string
+          id?: string
+          job_type: string
+          last_error?: string | null
+          model_name?: string | null
+          prompt_version?: number | null
+          proposed_targeting?: Json | null
+          rejection_reason?: string | null
+          required_source_count?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          topic: string
+          updated_at?: string | null
+        }
+        Update: {
+          article_id?: string | null
+          change_summary?: string | null
+          classification_status?: string | null
+          created_at?: string | null
+          delete_reason?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          generated_at?: string | null
+          generated_by?: string | null
+          generated_draft?: Json | null
+          generation_attempts?: number | null
+          generation_status?: string
+          id?: string
+          job_type?: string
+          last_error?: string | null
+          model_name?: string | null
+          prompt_version?: number | null
+          proposed_targeting?: Json | null
+          rejection_reason?: string | null
+          required_source_count?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          topic?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_generation_jobs_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_generation_jobs_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_generation_jobs_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_source_verification_audits: {
+        Row: {
+          action: string
+          actor_id: string
+          actor_role: string
+          confirmed_relevance: boolean
+          confirmed_title_url: boolean
+          created_at: string
+          id: string
+          job_id: string
+          source_id: string
+          source_version_hash: string | null
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          actor_role: string
+          confirmed_relevance?: boolean
+          confirmed_title_url?: boolean
+          created_at?: string
+          id?: string
+          job_id: string
+          source_id: string
+          source_version_hash?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          actor_role?: string
+          confirmed_relevance?: boolean
+          confirmed_title_url?: boolean
+          created_at?: string
+          id?: string
+          job_id?: string
+          source_id?: string
+          source_version_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_source_verification_audits_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_source_verification_audits_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "content_generation_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_source_verification_audits_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "content_generation_job_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          booking_id: string | null
+          created_at: string | null
+          id: string
+          last_message_at: string | null
+          last_message_preview: string | null
+          participant_1: string | null
+          participant_2: string | null
+          unread_count_1: number | null
+          unread_count_2: number | null
+        }
+        Insert: {
+          booking_id?: string | null
           created_at?: string | null
           id?: string
+          last_message_at?: string | null
+          last_message_preview?: string | null
           participant_1?: string | null
           participant_2?: string | null
+          unread_count_1?: number | null
+          unread_count_2?: number | null
         }
-        Relationships: []
+        Update: {
+          booking_id?: string | null
+          created_at?: string | null
+          id?: string
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          participant_1?: string | null
+          participant_2?: string | null
+          unread_count_1?: number | null
+          unread_count_2?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       data_quality_configs: {
         Row: {
@@ -1213,14 +1798,89 @@ export type Database = {
             foreignKeyName: "devices_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discovered_external_contents: {
+        Row: {
+          article_id: string | null
+          canonical_url: string
+          content_hash: string
+          created_at: string
+          excerpt: string | null
+          external_content_id: string
+          id: string
+          job_id: string | null
+          metadata: Json | null
+          permalink: string
+          processing_status: string
+          published_at: string | null
+          raw_caption: string | null
+          rejection_reason: string | null
+          source_id: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          article_id?: string | null
+          canonical_url: string
+          content_hash: string
+          created_at?: string
+          excerpt?: string | null
+          external_content_id: string
+          id?: string
+          job_id?: string | null
+          metadata?: Json | null
+          permalink: string
+          processing_status?: string
+          published_at?: string | null
+          raw_caption?: string | null
+          rejection_reason?: string | null
+          source_id: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          article_id?: string | null
+          canonical_url?: string
+          content_hash?: string
+          created_at?: string
+          excerpt?: string | null
+          external_content_id?: string
+          id?: string
+          job_id?: string | null
+          metadata?: Json | null
+          permalink?: string
+          processing_status?: string
+          published_at?: string | null
+          raw_caption?: string | null
+          rejection_reason?: string | null
+          source_id?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discovered_external_contents_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "devices_pet_id_fkey"
-            columns: ["pet_id"]
+            foreignKeyName: "discovered_external_contents_job_id_fkey"
+            columns: ["job_id"]
             isOneToOne: false
-            referencedRelation: "pets"
+            referencedRelation: "content_generation_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discovered_external_contents_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "monitored_sources"
             referencedColumns: ["id"]
           },
         ]
@@ -1262,13 +1922,6 @@ export type Database = {
             foreignKeyName: "event_attendees_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "event_attendees_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
@@ -1279,18 +1932,10 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "event_attendees_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
         ]
       }
       event_stream: {
         Row: {
-          action_url: string | null
           created_at: string | null
           event: string
           event_type: string
@@ -1302,7 +1947,6 @@ export type Database = {
           ts: string | null
         }
         Insert: {
-          action_url?: string | null
           created_at?: string | null
           event?: string
           event_type: string
@@ -1314,7 +1958,6 @@ export type Database = {
           ts?: string | null
         }
         Update: {
-          action_url?: string | null
           created_at?: string | null
           event?: string
           event_type?: string
@@ -1330,13 +1973,6 @@ export type Database = {
             foreignKeyName: "event_stream_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "event_stream_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
@@ -1345,13 +1981,6 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "event_stream_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -1401,13 +2030,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "events_organizer_id_fkey"
-            columns: ["organizer_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
         ]
       }
       feeding_logs: {
@@ -1449,11 +2071,134 @@ export type Database = {
             foreignKeyName: "feeding_logs_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      food_brand_aliases: {
+        Row: {
+          alias: string
+          brand_id: string
+          created_at: string
+          id: string
+          normalized_alias: string
+        }
+        Insert: {
+          alias: string
+          brand_id: string
+          created_at?: string
+          id?: string
+          normalized_alias: string
+        }
+        Update: {
+          alias?: string
+          brand_id?: string
+          created_at?: string
+          id?: string
+          normalized_alias?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_brand_aliases_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "food_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      food_brands: {
+        Row: {
+          created_at: string
+          display_name: string
+          id: string
+          is_active: boolean
+          manufacturer_id: string | null
+          normalized_name: string
+          official_tr_url: string | null
+          source_url: string | null
+          updated_at: string
+          verification_status: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          id?: string
+          is_active?: boolean
+          manufacturer_id?: string | null
+          normalized_name: string
+          official_tr_url?: string | null
+          source_url?: string | null
+          updated_at?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          id?: string
+          is_active?: boolean
+          manufacturer_id?: string | null
+          normalized_name?: string
+          official_tr_url?: string | null
+          source_url?: string | null
+          updated_at?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_brands_manufacturer_id_fkey"
+            columns: ["manufacturer_id"]
+            isOneToOne: false
+            referencedRelation: "food_manufacturers"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "feeding_logs_pet_id_fkey"
+            foreignKeyName: "food_brands_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      food_inventory: {
+        Row: {
+          current_stock_grams: number | null
+          estimated_daily_usage: number | null
+          id: string
+          last_refill_date: string | null
+          low_stock_threshold_days: number | null
+          next_refill_estimate: string | null
+          pet_id: string | null
+        }
+        Insert: {
+          current_stock_grams?: number | null
+          estimated_daily_usage?: number | null
+          id?: string
+          last_refill_date?: string | null
+          low_stock_threshold_days?: number | null
+          next_refill_estimate?: string | null
+          pet_id?: string | null
+        }
+        Update: {
+          current_stock_grams?: number | null
+          estimated_daily_usage?: number | null
+          id?: string
+          last_refill_date?: string | null
+          low_stock_threshold_days?: number | null
+          next_refill_estimate?: string | null
+          pet_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_inventory_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
             referencedRelation: "pets"
@@ -1461,50 +2206,277 @@ export type Database = {
           },
         ]
       }
-      food_inventory: {
+      food_label_versions: {
         Row: {
-          current_stock_grams: number
-          estimated_daily_usage: number | null
+          additives_raw: string | null
+          analytical_constituents: Json
+          created_at: string
+          energy_kcal_per_kg: number | null
+          feeding_guide: Json
+          food_sku_id: string
           id: string
-          last_refill_date: string | null
-          low_stock_threshold_days: number | null
-          next_refill_estimate: string | null
-          pet_id: string | null
-          updated_at: string | null
+          ingredients_raw: string | null
+          label_back_url: string | null
+          label_front_url: string | null
+          source_url: string | null
+          updated_at: string
+          valid_from: string | null
+          valid_to: string | null
+          verification_status: string
+          verified_at: string | null
+          verified_by: string | null
+          version_label: string | null
         }
         Insert: {
-          current_stock_grams?: number
-          estimated_daily_usage?: number | null
+          additives_raw?: string | null
+          analytical_constituents?: Json
+          created_at?: string
+          energy_kcal_per_kg?: number | null
+          feeding_guide?: Json
+          food_sku_id: string
           id?: string
-          last_refill_date?: string | null
-          low_stock_threshold_days?: number | null
-          next_refill_estimate?: string | null
-          pet_id?: string | null
-          updated_at?: string | null
+          ingredients_raw?: string | null
+          label_back_url?: string | null
+          label_front_url?: string | null
+          source_url?: string | null
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          version_label?: string | null
         }
         Update: {
-          current_stock_grams?: number
-          estimated_daily_usage?: number | null
+          additives_raw?: string | null
+          analytical_constituents?: Json
+          created_at?: string
+          energy_kcal_per_kg?: number | null
+          feeding_guide?: Json
+          food_sku_id?: string
           id?: string
-          last_refill_date?: string | null
-          low_stock_threshold_days?: number | null
-          next_refill_estimate?: string | null
-          pet_id?: string | null
-          updated_at?: string | null
+          ingredients_raw?: string | null
+          label_back_url?: string | null
+          label_front_url?: string | null
+          source_url?: string | null
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          version_label?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "food_inventory_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: true
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
+            foreignKeyName: "food_label_versions_food_sku_id_fkey"
+            columns: ["food_sku_id"]
+            isOneToOne: false
+            referencedRelation: "food_skus"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "food_inventory_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: true
-            referencedRelation: "pets"
+            foreignKeyName: "food_label_versions_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      food_manufacturers: {
+        Row: {
+          country_code: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          legal_name: string
+          official_url: string | null
+          source_url: string | null
+          trade_name: string | null
+          updated_at: string
+          verification_status: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          country_code?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          legal_name: string
+          official_url?: string | null
+          source_url?: string | null
+          trade_name?: string | null
+          updated_at?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          country_code?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          legal_name?: string
+          official_url?: string | null
+          source_url?: string | null
+          trade_name?: string | null
+          updated_at?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_manufacturers_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      food_product_families: {
+        Row: {
+          brand_id: string
+          created_at: string
+          food_form: string
+          id: string
+          is_active: boolean
+          life_stage: string
+          marketing_claims: string[]
+          normalized_name: string
+          nutritional_role: string
+          official_name: string
+          primary_proteins: string[]
+          source_url: string | null
+          species: string
+          target_attributes: Json
+          updated_at: string
+          verification_status: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          food_form: string
+          id?: string
+          is_active?: boolean
+          life_stage: string
+          marketing_claims?: string[]
+          normalized_name: string
+          nutritional_role: string
+          official_name: string
+          primary_proteins?: string[]
+          source_url?: string | null
+          species: string
+          target_attributes?: Json
+          updated_at?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          food_form?: string
+          id?: string
+          is_active?: boolean
+          life_stage?: string
+          marketing_claims?: string[]
+          normalized_name?: string
+          nutritional_role?: string
+          official_name?: string
+          primary_proteins?: string[]
+          source_url?: string | null
+          species?: string
+          target_attributes?: Json
+          updated_at?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_product_families_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "food_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_product_families_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      food_skus: {
+        Row: {
+          country_of_origin: string | null
+          created_at: string
+          gtin: string | null
+          id: string
+          manufacturer_product_code: string | null
+          market_status: string
+          package_size_grams: number
+          package_type: string | null
+          product_family_id: string
+          source_url: string | null
+          updated_at: string
+          verification_status: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          country_of_origin?: string | null
+          created_at?: string
+          gtin?: string | null
+          id?: string
+          manufacturer_product_code?: string | null
+          market_status?: string
+          package_size_grams: number
+          package_type?: string | null
+          product_family_id: string
+          source_url?: string | null
+          updated_at?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          country_of_origin?: string | null
+          created_at?: string
+          gtin?: string | null
+          id?: string
+          manufacturer_product_code?: string | null
+          market_status?: string
+          package_size_grams?: number
+          package_type?: string | null
+          product_family_id?: string
+          source_url?: string | null
+          updated_at?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_skus_product_family_id_fkey"
+            columns: ["product_family_id"]
+            isOneToOne: false
+            referencedRelation: "food_product_families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_skus_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1545,13 +2517,6 @@ export type Database = {
             foreignKeyName: "funnel_events_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "funnel_events_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
@@ -1562,11 +2527,42 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      growth_records: {
+        Row: {
+          created_at: string | null
+          height_cm: number | null
+          id: string
+          notes: string | null
+          pet_id: string | null
+          recorded_at: string
+          weight_kg: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          height_cm?: number | null
+          id?: string
+          notes?: string | null
+          pet_id?: string | null
+          recorded_at?: string
+          weight_kg?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          height_cm?: number | null
+          id?: string
+          notes?: string | null
+          pet_id?: string | null
+          recorded_at?: string
+          weight_kg?: number | null
+        }
+        Relationships: [
           {
-            foreignKeyName: "funnel_events_profile_id_fkey"
-            columns: ["profile_id"]
+            foreignKeyName: "growth_records_pet_id_fkey"
+            columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "users"
+            referencedRelation: "pets"
             referencedColumns: ["id"]
           },
         ]
@@ -1597,13 +2593,6 @@ export type Database = {
           trigger_name?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "health_allergies_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
           {
             foreignKeyName: "health_allergies_pet_id_fkey"
             columns: ["pet_id"]
@@ -1646,13 +2635,6 @@ export type Database = {
             foreignKeyName: "health_diseases_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "health_diseases_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
@@ -1691,13 +2673,6 @@ export type Database = {
             foreignKeyName: "health_measurements_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "health_measurements_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
@@ -1711,6 +2686,8 @@ export type Database = {
           is_active: boolean | null
           medication_name: string
           pet_id: string | null
+          scan_details: Json | null
+          source: string | null
           usage_duration: string | null
         }
         Insert: {
@@ -1720,6 +2697,8 @@ export type Database = {
           is_active?: boolean | null
           medication_name: string
           pet_id?: string | null
+          scan_details?: Json | null
+          source?: string | null
           usage_duration?: string | null
         }
         Update: {
@@ -1729,16 +2708,11 @@ export type Database = {
           is_active?: boolean | null
           medication_name?: string
           pet_id?: string | null
+          scan_details?: Json | null
+          source?: string | null
           usage_duration?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "health_medications_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
           {
             foreignKeyName: "health_medications_pet_id_fkey"
             columns: ["pet_id"]
@@ -1787,13 +2761,6 @@ export type Database = {
             foreignKeyName: "health_plans_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "health_plans_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
@@ -1835,109 +2802,12 @@ export type Database = {
             foreignKeyName: "health_records_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "health_records_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
         ]
       }
       health_schedules: {
-        Row: {
-          assigned_at: string | null
-          assigned_by: string | null
-          assigned_to: string | null
-          assignment_status: string | null
-          category: string | null
-          created_at: string | null
-          decline_reason: string | null
-          due_date: string | null
-          due_time: string | null
-          escalation_level: string | null
-          id: string | null
-          last_escalated_at: string | null
-          metadata: Json | null
-          notes: string | null
-          notification_rule: Json | null
-          pet_id: string | null
-          plan_id: string | null
-          plan_type: string | null
-          postpone_count: number | null
-          priority: string | null
-          reassigned_at: string | null
-          source: string | null
-          status: string | null
-          sub_category: string | null
-          title: string | null
-          updated_at: string | null
-          vaccine_id: string | null
-        }
-        Insert: {
-          assigned_at?: string | null
-          assigned_by?: string | null
-          assigned_to?: string | null
-          assignment_status?: string | null
-          category?: string | null
-          created_at?: string | null
-          decline_reason?: string | null
-          due_date?: string | null
-          due_time?: string | null
-          escalation_level?: string | null
-          id?: string | null
-          last_escalated_at?: string | null
-          metadata?: Json | null
-          notes?: string | null
-          notification_rule?: Json | null
-          pet_id?: string | null
-          plan_id?: string | null
-          plan_type?: string | null
-          postpone_count?: number | null
-          priority?: string | null
-          reassigned_at?: string | null
-          source?: string | null
-          status?: string | null
-          sub_category?: string | null
-          title?: string | null
-          updated_at?: string | null
-          vaccine_id?: string | null
-        }
-        Update: {
-          assigned_at?: string | null
-          assigned_by?: string | null
-          assigned_to?: string | null
-          assignment_status?: string | null
-          category?: string | null
-          created_at?: string | null
-          decline_reason?: string | null
-          due_date?: string | null
-          due_time?: string | null
-          escalation_level?: string | null
-          id?: string | null
-          last_escalated_at?: string | null
-          metadata?: Json | null
-          notes?: string | null
-          notification_rule?: Json | null
-          pet_id?: string | null
-          plan_id?: string | null
-          plan_type?: string | null
-          postpone_count?: number | null
-          priority?: string | null
-          reassigned_at?: string | null
-          source?: string | null
-          status?: string | null
-          sub_category?: string | null
-          title?: string | null
-          updated_at?: string | null
-          vaccine_id?: string | null
-        }
-        Relationships: []
-      }
-      health_schedules_archived_2026: {
         Row: {
           assigned_at: string | null
           assigned_by: string | null
@@ -2034,32 +2904,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "health_schedules_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "health_schedules_assigned_to_fkey"
             columns: ["assigned_to"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "health_schedules_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "health_schedules_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
           },
           {
             foreignKeyName: "health_schedules_pet_id_fkey"
@@ -2079,40 +2928,54 @@ export type Database = {
       }
       health_treatments: {
         Row: {
+          category: string | null
+          clinic_name: string | null
+          cost: number | null
           created_at: string | null
-          description: string | null
+          disease_name: string
+          documents: string[] | null
           end_date: string | null
+          expense_items: string | null
           id: string
+          payment_status: string | null
           pet_id: string | null
-          start_date: string | null
-          title: string
+          start_date: string
+          status: string | null
+          treatment_methods: string | null
         }
         Insert: {
+          category?: string | null
+          clinic_name?: string | null
+          cost?: number | null
           created_at?: string | null
-          description?: string | null
+          disease_name: string
+          documents?: string[] | null
           end_date?: string | null
+          expense_items?: string | null
           id?: string
+          payment_status?: string | null
           pet_id?: string | null
-          start_date?: string | null
-          title: string
+          start_date?: string
+          status?: string | null
+          treatment_methods?: string | null
         }
         Update: {
+          category?: string | null
+          clinic_name?: string | null
+          cost?: number | null
           created_at?: string | null
-          description?: string | null
+          disease_name?: string
+          documents?: string[] | null
           end_date?: string | null
+          expense_items?: string | null
           id?: string
+          payment_status?: string | null
           pet_id?: string | null
-          start_date?: string | null
-          title?: string
+          start_date?: string
+          status?: string | null
+          treatment_methods?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "health_treatments_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
           {
             foreignKeyName: "health_treatments_pet_id_fkey"
             columns: ["pet_id"]
@@ -2176,13 +3039,6 @@ export type Database = {
             foreignKeyName: "insurance_profiles_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: true
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "insurance_profiles_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: true
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
@@ -2193,11 +3049,46 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      lost_report_contacts: {
+        Row: {
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string | null
+          id: string
+          message: string | null
+          report_id: string | null
+        }
+        Insert: {
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          report_id?: string | null
+        }
+        Update: {
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          report_id?: string | null
+        }
+        Relationships: [
           {
-            foreignKeyName: "insurance_profiles_profile_id_fkey"
-            columns: ["profile_id"]
+            foreignKeyName: "lost_report_contacts_report_id_fkey"
+            columns: ["report_id"]
             isOneToOne: false
-            referencedRelation: "users"
+            referencedRelation: "lost_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lost_report_contacts_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "sos_public_view"
             referencedColumns: ["id"]
           },
         ]
@@ -2207,21 +3098,32 @@ export type Database = {
           created_at: string
           expires_at: string
           payload: Json
+          profile_id: string | null
           session_id: string
         }
         Insert: {
           created_at?: string
           expires_at: string
           payload?: Json
+          profile_id?: string | null
           session_id: string
         }
         Update: {
           created_at?: string
           expires_at?: string
           payload?: Json
+          profile_id?: string | null
           session_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "lost_report_drafts_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lost_reports: {
         Row: {
@@ -2233,6 +3135,8 @@ export type Database = {
           latitude: number | null
           longitude: number | null
           pet_id: string | null
+          photo_url: string | null
+          source_session_id: string | null
           status: string | null
         }
         Insert: {
@@ -2244,6 +3148,8 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           pet_id?: string | null
+          photo_url?: string | null
+          source_session_id?: string | null
           status?: string | null
         }
         Update: {
@@ -2255,16 +3161,11 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           pet_id?: string | null
+          photo_url?: string | null
+          source_session_id?: string | null
           status?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "lost_reports_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
           {
             foreignKeyName: "lost_reports_pet_id_fkey"
             columns: ["pet_id"]
@@ -2304,13 +3205,6 @@ export type Database = {
             foreignKeyName: "marketplace_clicks_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "marketplace_clicks_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
@@ -2326,13 +3220,6 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "marketplace_clicks_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -2385,6 +3272,57 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_waitlist: {
+        Row: {
+          created_at: string | null
+          id: string
+          notes: string | null
+          pet_id: string
+          preferred_food_brand: string | null
+          preferred_food_product: string | null
+          profile_id: string
+          source: string | null
+          urgency_level: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          pet_id: string
+          preferred_food_brand?: string | null
+          preferred_food_product?: string | null
+          profile_id: string
+          source?: string | null
+          urgency_level?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          pet_id?: string
+          preferred_food_brand?: string | null
+          preferred_food_product?: string | null
+          profile_id?: string
+          source?: string | null
+          urgency_level?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_waitlist_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_waitlist_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           content: string
@@ -2392,6 +3330,8 @@ export type Database = {
           created_at: string | null
           id: string
           is_read: boolean | null
+          message_type: string | null
+          metadata: Json | null
           sender_id: string | null
         }
         Insert: {
@@ -2400,6 +3340,8 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_read?: boolean | null
+          message_type?: string | null
+          metadata?: Json | null
           sender_id?: string | null
         }
         Update: {
@@ -2408,6 +3350,8 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_read?: boolean | null
+          message_type?: string | null
+          metadata?: Json | null
           sender_id?: string | null
         }
         Relationships: [
@@ -2420,68 +3364,101 @@ export type Database = {
           },
         ]
       }
-      navigation_items: {
+      monitored_sources: {
         Row: {
-          created_at: string | null
-          href: string
-          icon: string
+          allowed_categories: string[] | null
+          attribution_mode: string
+          check_frequency_hours: number | null
+          created_at: string
+          created_by: string | null
+          delete_reason: string | null
+          deleted_at: string | null
+          deleted_by: string | null
           id: string
-          is_active: boolean | null
-          label: string
-          match_type: string | null
-          order_index: number
-          slot: string
+          is_active: boolean
+          language: string
+          last_checked_at: string | null
+          last_error: string | null
+          last_success_at: string | null
+          media_usage_mode: string
+          monitoring_mode: string
+          processing_mode: string
+          source_handle: string | null
+          source_name: string
+          source_type: string
+          source_url: string
+          species_scope: string
+          trust_level: string
+          updated_at: string
         }
         Insert: {
-          created_at?: string | null
-          href: string
-          icon: string
+          allowed_categories?: string[] | null
+          attribution_mode?: string
+          check_frequency_hours?: number | null
+          created_at?: string
+          created_by?: string | null
+          delete_reason?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
-          is_active?: boolean | null
-          label: string
-          match_type?: string | null
-          order_index?: number
-          slot: string
+          is_active?: boolean
+          language?: string
+          last_checked_at?: string | null
+          last_error?: string | null
+          last_success_at?: string | null
+          media_usage_mode?: string
+          monitoring_mode?: string
+          processing_mode?: string
+          source_handle?: string | null
+          source_name: string
+          source_type: string
+          source_url: string
+          species_scope?: string
+          trust_level?: string
+          updated_at?: string
         }
         Update: {
-          created_at?: string | null
-          href?: string
-          icon?: string
+          allowed_categories?: string[] | null
+          attribution_mode?: string
+          check_frequency_hours?: number | null
+          created_at?: string
+          created_by?: string | null
+          delete_reason?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
-          is_active?: boolean | null
-          label?: string
-          match_type?: string | null
-          order_index?: number
-          slot?: string
+          is_active?: boolean
+          language?: string
+          last_checked_at?: string | null
+          last_error?: string | null
+          last_success_at?: string | null
+          media_usage_mode?: string
+          monitoring_mode?: string
+          processing_mode?: string
+          source_handle?: string | null
+          source_name?: string
+          source_type?: string
+          source_url?: string
+          species_scope?: string
+          trust_level?: string
+          updated_at?: string
         }
-        Relationships: []
-      }
-      navigation_pages: {
-        Row: {
-          created_at: string | null
-          href: string
-          icon: string
-          id: string
-          is_locked: boolean | null
-          label: string
-        }
-        Insert: {
-          created_at?: string | null
-          href: string
-          icon: string
-          id?: string
-          is_locked?: boolean | null
-          label: string
-        }
-        Update: {
-          created_at?: string | null
-          href?: string
-          icon?: string
-          id?: string
-          is_locked?: boolean | null
-          label?: string
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "monitored_sources_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monitored_sources_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notification_jobs: {
         Row: {
@@ -2572,13 +3549,6 @@ export type Database = {
             foreignKeyName: "notifications_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "notifications_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
@@ -2594,13 +3564,6 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "notifications_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -2638,13 +3601,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "notifications_log_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
         ]
       }
       nutrition_logs: {
@@ -2680,14 +3636,36 @@ export type Database = {
             foreignKeyName: "nutrition_logs_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "nutrition_logs_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_hints: {
+        Row: {
+          dismissed_at: string | null
+          hint_key: string
+          id: string
+          profile_id: string
+        }
+        Insert: {
+          dismissed_at?: string | null
+          hint_key: string
+          id?: string
+          profile_id: string
+        }
+        Update: {
+          dismissed_at?: string | null
+          hint_key?: string
+          id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_hints_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -2785,13 +3763,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "onboarding_progress_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
         ]
       }
       outreach_pipeline: {
@@ -2854,157 +3825,7 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "outreach_pipeline_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
         ]
-      }
-      parasite_plan_items: {
-        Row: {
-          application_method: string
-          applied_by: string | null
-          completed_record_id: string | null
-          created_at: string
-          dose_number: number
-          extra_data: Json | null
-          id: string
-          parasite_type: string
-          pet_id: string
-          plan_origin: string
-          plans_mirror_id: string | null
-          product_id: string | null
-          recommended_end: string | null
-          recommended_start: string | null
-          scheduled_date: string | null
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          application_method: string
-          applied_by?: string | null
-          completed_record_id?: string | null
-          created_at?: string
-          dose_number?: number
-          extra_data?: Json | null
-          id?: string
-          parasite_type: string
-          pet_id: string
-          plan_origin?: string
-          plans_mirror_id?: string | null
-          product_id?: string | null
-          recommended_end?: string | null
-          recommended_start?: string | null
-          scheduled_date?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          application_method?: string
-          applied_by?: string | null
-          completed_record_id?: string | null
-          created_at?: string
-          dose_number?: number
-          extra_data?: Json | null
-          id?: string
-          parasite_type?: string
-          pet_id?: string
-          plan_origin?: string
-          plans_mirror_id?: string | null
-          product_id?: string | null
-          recommended_end?: string | null
-          recommended_start?: string | null
-          scheduled_date?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "parasite_plan_items_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "parasite_plan_items_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "pets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "parasite_plan_items_plans_mirror_id_fkey"
-            columns: ["plans_mirror_id"]
-            isOneToOne: false
-            referencedRelation: "plans"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "parasite_plan_items_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "parasite_products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      parasite_products: {
-        Row: {
-          active_ingredient: string | null
-          application_method: string
-          brand: string
-          covers_ear_mites: boolean
-          created_at: string | null
-          description: string | null
-          id: string
-          image_url: string | null
-          is_active: boolean
-          min_age_weeks: number | null
-          name: string
-          notes: string | null
-          protection_duration_days: number
-          species: string
-          type: string
-        }
-        Insert: {
-          active_ingredient?: string | null
-          application_method: string
-          brand: string
-          covers_ear_mites?: boolean
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          is_active?: boolean
-          min_age_weeks?: number | null
-          name: string
-          notes?: string | null
-          protection_duration_days: number
-          species: string
-          type: string
-        }
-        Update: {
-          active_ingredient?: string | null
-          application_method?: string
-          brand?: string
-          covers_ear_mites?: boolean
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          is_active?: boolean
-          min_age_weeks?: number | null
-          name?: string
-          notes?: string | null
-          protection_duration_days?: number
-          species?: string
-          type?: string
-        }
-        Relationships: []
       }
       parasite_product_suggestions: {
         Row: {
@@ -3092,6 +3913,60 @@ export type Database = {
           },
         ]
       }
+      parasite_products: {
+        Row: {
+          active_ingredient: string | null
+          application_method: string
+          brand: string
+          covers_ear_mites: boolean
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          min_age_weeks: number | null
+          name: string
+          notes: string | null
+          protection_duration_days: number
+          species: string
+          type: string
+        }
+        Insert: {
+          active_ingredient?: string | null
+          application_method: string
+          brand: string
+          covers_ear_mites?: boolean
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          min_age_weeks?: number | null
+          name: string
+          notes?: string | null
+          protection_duration_days: number
+          species: string
+          type: string
+        }
+        Update: {
+          active_ingredient?: string | null
+          application_method?: string
+          brand?: string
+          covers_ear_mites?: boolean
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          min_age_weeks?: number | null
+          name?: string
+          notes?: string | null
+          protection_duration_days?: number
+          species?: string
+          type?: string
+        }
+        Relationships: []
+      }
       parasite_protocols: {
         Row: {
           allowed_application_methods: string[]
@@ -3149,6 +4024,7 @@ export type Database = {
           created_by: string | null
           document_storage_path: string | null
           id: string
+          idempotency_key: string | null
           notes: string | null
           parasite_code: string
           parasite_product_id: string | null
@@ -3159,7 +4035,6 @@ export type Database = {
           product_free_text: string | null
           protection_duration_days: number
           source: string
-          source_plan_item_id: string | null
           updated_at: string
         }
         Insert: {
@@ -3170,6 +4045,7 @@ export type Database = {
           created_by?: string | null
           document_storage_path?: string | null
           id?: string
+          idempotency_key?: string | null
           notes?: string | null
           parasite_code: string
           parasite_product_id?: string | null
@@ -3180,7 +4056,6 @@ export type Database = {
           product_free_text?: string | null
           protection_duration_days: number
           source: string
-          source_plan_item_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -3191,6 +4066,7 @@ export type Database = {
           created_by?: string | null
           document_storage_path?: string | null
           id?: string
+          idempotency_key?: string | null
           notes?: string | null
           parasite_code?: string
           parasite_product_id?: string | null
@@ -3201,7 +4077,6 @@ export type Database = {
           product_free_text?: string | null
           protection_duration_days?: number
           source?: string
-          source_plan_item_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -3210,13 +4085,6 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "parasite_records_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
           {
@@ -3237,13 +4105,6 @@ export type Database = {
             foreignKeyName: "parasite_records_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "parasite_records_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
@@ -3252,20 +4113,6 @@ export type Database = {
             columns: ["plan_id"]
             isOneToOne: false
             referencedRelation: "plans"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "parasite_records_source_plan_item_id_fkey"
-            columns: ["source_plan_item_id"]
-            isOneToOne: true
-            referencedRelation: "parasite_plan_items"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "parasite_records_source_plan_item_id_fkey"
-            columns: ["source_plan_item_id"]
-            isOneToOne: true
-            referencedRelation: "parasite_upcoming_tasks"
             referencedColumns: ["id"]
           },
         ]
@@ -3302,13 +4149,6 @@ export type Database = {
           record_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "payments_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
           {
             foreignKeyName: "payments_pet_id_fkey"
             columns: ["pet_id"]
@@ -3358,20 +4198,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "pet_activity_log_actor_id_fkey"
-            columns: ["actor_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pet_activity_log_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
             foreignKeyName: "pet_activity_log_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
@@ -3409,13 +4235,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "pet_adoptions_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
           {
             foreignKeyName: "pet_adoptions_pet_id_fkey"
             columns: ["pet_id"]
@@ -3485,13 +4304,6 @@ export type Database = {
             foreignKeyName: "pet_breeding_eligibility_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: true
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "pet_breeding_eligibility_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: true
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
@@ -3529,13 +4341,6 @@ export type Database = {
           task_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "pet_care_events_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
           {
             foreignKeyName: "pet_care_events_pet_id_fkey"
             columns: ["pet_id"]
@@ -3585,11 +4390,53 @@ export type Database = {
             foreignKeyName: "pet_care_tasks_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pet_clinic_access: {
+        Row: {
+          clinic_id: string | null
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+          pet_id: string | null
+          revoked_at: string | null
+        }
+        Insert: {
+          clinic_id?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          pet_id?: string | null
+          revoked_at?: string | null
+        }
+        Update: {
+          clinic_id?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          pet_id?: string | null
+          revoked_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pet_clinic_access_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "pet_care_tasks_pet_id_fkey"
+            foreignKeyName: "pet_clinic_access_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pet_clinic_access_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
             referencedRelation: "pets"
@@ -3629,13 +4476,6 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "pet_estrus_cycles_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
           {
             foreignKeyName: "pet_estrus_cycles_pet_id_fkey"
             columns: ["pet_id"]
@@ -3697,13 +4537,6 @@ export type Database = {
             foreignKeyName: "pet_estrus_observations_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "pet_estrus_observations_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
@@ -3711,28 +4544,27 @@ export type Database = {
       }
       pet_estrus_preferences: {
         Row: {
+          created_at: string
+          id: string
           pet_id: string
           reminders_enabled: boolean
           updated_at: string
         }
         Insert: {
+          created_at?: string
+          id?: string
           pet_id: string
           reminders_enabled?: boolean
           updated_at?: string
         }
         Update: {
+          created_at?: string
+          id?: string
           pet_id?: string
           reminders_enabled?: boolean
           updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "pet_estrus_preferences_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: true
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
           {
             foreignKeyName: "pet_estrus_preferences_pet_id_fkey"
             columns: ["pet_id"]
@@ -3749,8 +4581,11 @@ export type Database = {
           created_at: string
           date: string
           description: string | null
+          expense_date: string | null
           id: string
           pet_id: string
+          profile_id: string | null
+          source: string | null
           user_id: string
         }
         Insert: {
@@ -3759,8 +4594,11 @@ export type Database = {
           created_at?: string
           date?: string
           description?: string | null
+          expense_date?: string | null
           id?: string
           pet_id: string
+          profile_id?: string | null
+          source?: string | null
           user_id: string
         }
         Update: {
@@ -3769,8 +4607,11 @@ export type Database = {
           created_at?: string
           date?: string
           description?: string | null
+          expense_date?: string | null
           id?: string
           pet_id?: string
+          profile_id?: string | null
+          source?: string | null
           user_id?: string
         }
         Relationships: [
@@ -3778,11 +4619,110 @@ export type Database = {
             foreignKeyName: "pet_expenses_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "pet_expenses_pet_id_fkey"
+            foreignKeyName: "pet_expenses_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pet_food_assignments: {
+        Row: {
+          brand_free_text: string | null
+          created_at: string
+          created_by: string | null
+          daily_target_grams: number | null
+          ended_at: string | null
+          food_form: string
+          food_product_family_id: string | null
+          food_sku_id: string | null
+          id: string
+          is_primary: boolean
+          legacy_profile_id: string | null
+          meals_per_day: number | null
+          measurement_method: string
+          pet_id: string
+          product_free_text: string | null
+          source: string
+          started_at: string
+          updated_at: string
+        }
+        Insert: {
+          brand_free_text?: string | null
+          created_at?: string
+          created_by?: string | null
+          daily_target_grams?: number | null
+          ended_at?: string | null
+          food_form: string
+          food_product_family_id?: string | null
+          food_sku_id?: string | null
+          id?: string
+          is_primary?: boolean
+          legacy_profile_id?: string | null
+          meals_per_day?: number | null
+          measurement_method: string
+          pet_id: string
+          product_free_text?: string | null
+          source: string
+          started_at: string
+          updated_at?: string
+        }
+        Update: {
+          brand_free_text?: string | null
+          created_at?: string
+          created_by?: string | null
+          daily_target_grams?: number | null
+          ended_at?: string | null
+          food_form?: string
+          food_product_family_id?: string | null
+          food_sku_id?: string | null
+          id?: string
+          is_primary?: boolean
+          legacy_profile_id?: string | null
+          meals_per_day?: number | null
+          measurement_method?: string
+          pet_id?: string
+          product_free_text?: string | null
+          source?: string
+          started_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pet_food_assignments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pet_food_assignments_food_product_family_id_fkey"
+            columns: ["food_product_family_id"]
+            isOneToOne: false
+            referencedRelation: "food_product_families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pet_food_assignments_food_sku_id_fkey"
+            columns: ["food_sku_id"]
+            isOneToOne: false
+            referencedRelation: "food_skus"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pet_food_assignments_legacy_profile_id_fkey"
+            columns: ["legacy_profile_id"]
+            isOneToOne: true
+            referencedRelation: "pet_nutrition_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pet_food_assignments_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
             referencedRelation: "pets"
@@ -3839,13 +4779,6 @@ export type Database = {
             foreignKeyName: "pet_gallery_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "pet_gallery_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
@@ -3894,20 +4827,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "pet_invites_invited_by_fkey"
-            columns: ["invited_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pet_invites_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
             foreignKeyName: "pet_invites_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
@@ -3949,13 +4868,6 @@ export type Database = {
             foreignKeyName: "pet_journal_entries_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "pet_journal_entries_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
@@ -3964,66 +4876,6 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pet_journal_entries_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      pet_match_likes: {
-        Row: {
-          action: string
-          created_at: string | null
-          from_pet_id: string | null
-          id: string
-          to_pet_id: string | null
-        }
-        Insert: {
-          action: string
-          created_at?: string | null
-          from_pet_id?: string | null
-          id?: string
-          to_pet_id?: string | null
-        }
-        Update: {
-          action?: string
-          created_at?: string | null
-          from_pet_id?: string | null
-          id?: string
-          to_pet_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "pet_match_likes_from_pet_id_fkey"
-            columns: ["from_pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "pet_match_likes_from_pet_id_fkey"
-            columns: ["from_pet_id"]
-            isOneToOne: false
-            referencedRelation: "pets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pet_match_likes_to_pet_id_fkey"
-            columns: ["to_pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "pet_match_likes_to_pet_id_fkey"
-            columns: ["to_pet_id"]
-            isOneToOne: false
-            referencedRelation: "pets"
             referencedColumns: ["id"]
           },
         ]
@@ -4055,22 +4907,8 @@ export type Database = {
             foreignKeyName: "pet_matches_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "pet_matches_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pet_matches_target_pet_id_fkey"
-            columns: ["target_pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
           },
           {
             foreignKeyName: "pet_matches_target_pet_id_fkey"
@@ -4115,20 +4953,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "pet_members_invited_by_fkey"
-            columns: ["invited_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pet_members_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
             foreignKeyName: "pet_members_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
@@ -4140,13 +4964,6 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pet_members_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -4193,13 +5010,6 @@ export type Database = {
             foreignKeyName: "pet_notifications_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "pet_notifications_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
@@ -4208,13 +5018,6 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pet_notifications_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -4258,13 +5061,6 @@ export type Database = {
             foreignKeyName: "pet_nutrition_logs_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "pet_nutrition_logs_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
@@ -4273,13 +5069,6 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pet_nutrition_logs_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -4331,433 +5120,10 @@ export type Database = {
           {
             foreignKeyName: "pet_nutrition_profiles_pet_id_fkey"
             columns: ["pet_id"]
-            isOneToOne: true
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "pet_nutrition_profiles_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: true
-            referencedRelation: "pets"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      food_manufacturers: {
-        Row: {
-          id: string
-          legal_name: string
-          trade_name: string | null
-          country_code: string | null
-          official_url: string | null
-          verification_status: "pending" | "verified" | "rejected"
-          source_url: string | null
-          verified_at: string | null
-          verified_by: string | null
-          is_active: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          legal_name: string
-          trade_name?: string | null
-          country_code?: string | null
-          official_url?: string | null
-          verification_status?: "pending" | "verified" | "rejected"
-          source_url?: string | null
-          verified_at?: string | null
-          verified_by?: string | null
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          legal_name?: string
-          trade_name?: string | null
-          country_code?: string | null
-          official_url?: string | null
-          verification_status?: "pending" | "verified" | "rejected"
-          source_url?: string | null
-          verified_at?: string | null
-          verified_by?: string | null
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      food_brands: {
-        Row: {
-          id: string
-          manufacturer_id: string | null
-          display_name: string
-          normalized_name: string
-          official_tr_url: string | null
-          verification_status: "pending" | "verified" | "rejected"
-          source_url: string | null
-          verified_at: string | null
-          verified_by: string | null
-          is_active: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          manufacturer_id?: string | null
-          display_name: string
-          normalized_name: string
-          official_tr_url?: string | null
-          verification_status?: "pending" | "verified" | "rejected"
-          source_url?: string | null
-          verified_at?: string | null
-          verified_by?: string | null
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          manufacturer_id?: string | null
-          display_name?: string
-          normalized_name?: string
-          official_tr_url?: string | null
-          verification_status?: "pending" | "verified" | "rejected"
-          source_url?: string | null
-          verified_at?: string | null
-          verified_by?: string | null
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "food_brands_manufacturer_id_fkey"
-            columns: ["manufacturer_id"]
-            isOneToOne: false
-            referencedRelation: "food_manufacturers"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      food_brand_aliases: {
-        Row: {
-          id: string
-          brand_id: string
-          alias: string
-          normalized_alias: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          brand_id: string
-          alias: string
-          normalized_alias: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          brand_id?: string
-          alias?: string
-          normalized_alias?: string
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "food_brand_aliases_brand_id_fkey"
-            columns: ["brand_id"]
-            isOneToOne: false
-            referencedRelation: "food_brands"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      food_product_families: {
-        Row: {
-          id: string
-          brand_id: string
-          official_name: string
-          normalized_name: string
-          species: "cat" | "dog" | "both"
-          food_form: "dry" | "wet_pate" | "wet_gravy" | "wet_jelly" | "broth" | "semi_moist" | "freeze_dried" | "air_dried" | "raw_frozen" | "fresh_cooked" | "other"
-          nutritional_role: "complete" | "complementary" | "dietetic_complete" | "dietetic_complementary" | "treat" | "milk_replacer" | "supplement"
-          life_stage: "growth" | "adult" | "gestation_lactation" | "all_life_stages" | "senior_manufacturer_defined" | "unspecified"
-          target_attributes: Json
-          primary_proteins: string[]
-          marketing_claims: string[]
-          verification_status: "pending" | "verified" | "rejected"
-          source_url: string | null
-          verified_at: string | null
-          verified_by: string | null
-          is_active: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          brand_id: string
-          official_name: string
-          normalized_name: string
-          species: "cat" | "dog" | "both"
-          food_form: "dry" | "wet_pate" | "wet_gravy" | "wet_jelly" | "broth" | "semi_moist" | "freeze_dried" | "air_dried" | "raw_frozen" | "fresh_cooked" | "other"
-          nutritional_role: "complete" | "complementary" | "dietetic_complete" | "dietetic_complementary" | "treat" | "milk_replacer" | "supplement"
-          life_stage: "growth" | "adult" | "gestation_lactation" | "all_life_stages" | "senior_manufacturer_defined" | "unspecified"
-          target_attributes?: Json
-          primary_proteins?: string[]
-          marketing_claims?: string[]
-          verification_status?: "pending" | "verified" | "rejected"
-          source_url?: string | null
-          verified_at?: string | null
-          verified_by?: string | null
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          brand_id?: string
-          official_name?: string
-          normalized_name?: string
-          species?: "cat" | "dog" | "both"
-          food_form?: "dry" | "wet_pate" | "wet_gravy" | "wet_jelly" | "broth" | "semi_moist" | "freeze_dried" | "air_dried" | "raw_frozen" | "fresh_cooked" | "other"
-          nutritional_role?: "complete" | "complementary" | "dietetic_complete" | "dietetic_complementary" | "treat" | "milk_replacer" | "supplement"
-          life_stage?: "growth" | "adult" | "gestation_lactation" | "all_life_stages" | "senior_manufacturer_defined" | "unspecified"
-          target_attributes?: Json
-          primary_proteins?: string[]
-          marketing_claims?: string[]
-          verification_status?: "pending" | "verified" | "rejected"
-          source_url?: string | null
-          verified_at?: string | null
-          verified_by?: string | null
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "food_product_families_brand_id_fkey"
-            columns: ["brand_id"]
-            isOneToOne: false
-            referencedRelation: "food_brands"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      food_skus: {
-        Row: {
-          id: string
-          product_family_id: string
-          gtin: string | null
-          package_size_grams: number
-          package_type: string | null
-          manufacturer_product_code: string | null
-          country_of_origin: string | null
-          market_status: "active" | "inactive" | "unknown"
-          verification_status: "pending" | "verified" | "rejected"
-          source_url: string | null
-          verified_at: string | null
-          verified_by: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          product_family_id: string
-          gtin?: string | null
-          package_size_grams: number
-          package_type?: string | null
-          manufacturer_product_code?: string | null
-          country_of_origin?: string | null
-          market_status?: "active" | "inactive" | "unknown"
-          verification_status?: "pending" | "verified" | "rejected"
-          source_url?: string | null
-          verified_at?: string | null
-          verified_by?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          product_family_id?: string
-          gtin?: string | null
-          package_size_grams?: number
-          package_type?: string | null
-          manufacturer_product_code?: string | null
-          country_of_origin?: string | null
-          market_status?: "active" | "inactive" | "unknown"
-          verification_status?: "pending" | "verified" | "rejected"
-          source_url?: string | null
-          verified_at?: string | null
-          verified_by?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "food_skus_product_family_id_fkey"
-            columns: ["product_family_id"]
-            isOneToOne: false
-            referencedRelation: "food_product_families"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      food_label_versions: {
-        Row: {
-          id: string
-          food_sku_id: string
-          version_label: string | null
-          ingredients_raw: string | null
-          analytical_constituents: Json
-          additives_raw: string | null
-          energy_kcal_per_kg: number | null
-          feeding_guide: Json
-          label_front_url: string | null
-          label_back_url: string | null
-          source_url: string | null
-          valid_from: string | null
-          valid_to: string | null
-          verification_status: "pending" | "verified" | "rejected"
-          verified_at: string | null
-          verified_by: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          food_sku_id: string
-          version_label?: string | null
-          ingredients_raw?: string | null
-          analytical_constituents?: Json
-          additives_raw?: string | null
-          energy_kcal_per_kg?: number | null
-          feeding_guide?: Json
-          label_front_url?: string | null
-          label_back_url?: string | null
-          source_url?: string | null
-          valid_from?: string | null
-          valid_to?: string | null
-          verification_status?: "pending" | "verified" | "rejected"
-          verified_at?: string | null
-          verified_by?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          food_sku_id?: string
-          version_label?: string | null
-          ingredients_raw?: string | null
-          analytical_constituents?: Json
-          additives_raw?: string | null
-          energy_kcal_per_kg?: number | null
-          feeding_guide?: Json
-          label_front_url?: string | null
-          label_back_url?: string | null
-          source_url?: string | null
-          valid_from?: string | null
-          valid_to?: string | null
-          verification_status?: "pending" | "verified" | "rejected"
-          verified_at?: string | null
-          verified_by?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "food_label_versions_food_sku_id_fkey"
-            columns: ["food_sku_id"]
-            isOneToOne: false
-            referencedRelation: "food_skus"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      pet_food_assignments: {
-        Row: {
-          id: string
-          pet_id: string
-          food_product_family_id: string | null
-          food_sku_id: string | null
-          brand_free_text: string | null
-          product_free_text: string | null
-          food_form: "dry" | "wet_pate" | "wet_gravy" | "wet_jelly" | "broth" | "semi_moist" | "freeze_dried" | "air_dried" | "raw_frozen" | "fresh_cooked" | "other"
-          daily_target_grams: number | null
-          meals_per_day: number | null
-          started_at: string
-          ended_at: string | null
-          is_primary: boolean
-          measurement_method: "planned_estimate" | "owner_confirmed" | "package_scan" | "admin_verified" | "legacy_profile"
-          source: "catalog" | "manual" | "scanner" | "migration"
-          legacy_profile_id: string | null
-          created_by: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          pet_id: string
-          food_product_family_id?: string | null
-          food_sku_id?: string | null
-          brand_free_text?: string | null
-          product_free_text?: string | null
-          food_form: "dry" | "wet_pate" | "wet_gravy" | "wet_jelly" | "broth" | "semi_moist" | "freeze_dried" | "air_dried" | "raw_frozen" | "fresh_cooked" | "other"
-          daily_target_grams?: number | null
-          meals_per_day?: number | null
-          started_at: string
-          ended_at?: string | null
-          is_primary?: boolean
-          measurement_method: "planned_estimate" | "owner_confirmed" | "package_scan" | "admin_verified" | "legacy_profile"
-          source: "catalog" | "manual" | "scanner" | "migration"
-          legacy_profile_id?: string | null
-          created_by?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          pet_id?: string
-          food_product_family_id?: string | null
-          food_sku_id?: string | null
-          brand_free_text?: string | null
-          product_free_text?: string | null
-          food_form?: "dry" | "wet_pate" | "wet_gravy" | "wet_jelly" | "broth" | "semi_moist" | "freeze_dried" | "air_dried" | "raw_frozen" | "fresh_cooked" | "other"
-          daily_target_grams?: number | null
-          meals_per_day?: number | null
-          started_at?: string
-          ended_at?: string | null
-          is_primary?: boolean
-          measurement_method?: "planned_estimate" | "owner_confirmed" | "package_scan" | "admin_verified" | "legacy_profile"
-          source?: "catalog" | "manual" | "scanner" | "migration"
-          legacy_profile_id?: string | null
-          created_by?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "pet_food_assignments_pet_id_fkey"
-            columns: ["pet_id"]
             isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "pet_food_assignments_food_product_family_id_fkey"
-            columns: ["food_product_family_id"]
-            isOneToOne: false
-            referencedRelation: "food_product_families"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pet_food_assignments_food_sku_id_fkey"
-            columns: ["food_sku_id"]
-            isOneToOne: false
-            referencedRelation: "food_skus"
-            referencedColumns: ["id"]
-          }
         ]
       }
       pet_owners: {
@@ -4787,13 +5153,6 @@ export type Database = {
             foreignKeyName: "pet_owners_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "pet_owners_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
@@ -4802,13 +5161,6 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pet_owners_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -4845,13 +5197,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "parasite_protocols"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pet_parasite_preferences_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
           },
           {
             foreignKeyName: "pet_parasite_preferences_pet_id_fkey"
@@ -4901,13 +5246,6 @@ export type Database = {
             foreignKeyName: "pet_reports_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "pet_reports_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
@@ -4916,13 +5254,6 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pet_reports_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -5009,13 +5340,6 @@ export type Database = {
             foreignKeyName: "pet_reproductive_tests_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "pet_reproductive_tests_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
@@ -5066,13 +5390,6 @@ export type Database = {
             foreignKeyName: "pet_vaccine_preferences_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "pet_vaccine_preferences_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
@@ -5087,7 +5404,6 @@ export type Database = {
           city: string | null
           color: string | null
           cover_position: string | null
-          cover_scale: number | null
           cover_url: string | null
           created_at: string | null
           data_quality_score: number | null
@@ -5126,7 +5442,6 @@ export type Database = {
           city?: string | null
           color?: string | null
           cover_position?: string | null
-          cover_scale?: number | null
           cover_url?: string | null
           created_at?: string | null
           data_quality_score?: number | null
@@ -5165,7 +5480,6 @@ export type Database = {
           city?: string | null
           color?: string | null
           cover_position?: string | null
-          cover_scale?: number | null
           cover_url?: string | null
           created_at?: string | null
           data_quality_score?: number | null
@@ -5204,18 +5518,12 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "pets_owner_id_fkey"
-            columns: ["owner_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
         ]
       }
       plans: {
         Row: {
           category: string
+          completed_at: string | null
           created_at: string | null
           ends_at: string | null
           extra_data: Json | null
@@ -5223,6 +5531,8 @@ export type Database = {
           note: string | null
           notif_before: number | null
           notif_unit: string | null
+          occurrence_scheduled_at: string | null
+          parent_plan_id: string | null
           pet_id: string
           repeat_rule: string | null
           scheduled_at: string
@@ -5233,6 +5543,7 @@ export type Database = {
         }
         Insert: {
           category: string
+          completed_at?: string | null
           created_at?: string | null
           ends_at?: string | null
           extra_data?: Json | null
@@ -5240,6 +5551,8 @@ export type Database = {
           note?: string | null
           notif_before?: number | null
           notif_unit?: string | null
+          occurrence_scheduled_at?: string | null
+          parent_plan_id?: string | null
           pet_id: string
           repeat_rule?: string | null
           scheduled_at: string
@@ -5250,6 +5563,7 @@ export type Database = {
         }
         Update: {
           category?: string
+          completed_at?: string | null
           created_at?: string | null
           ends_at?: string | null
           extra_data?: Json | null
@@ -5257,6 +5571,8 @@ export type Database = {
           note?: string | null
           notif_before?: number | null
           notif_unit?: string | null
+          occurrence_scheduled_at?: string | null
+          parent_plan_id?: string | null
           pet_id?: string
           repeat_rule?: string | null
           scheduled_at?: string
@@ -5267,11 +5583,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "plans_pet_id_fkey"
-            columns: ["pet_id"]
+            foreignKeyName: "plans_parent_plan_id_fkey"
+            columns: ["parent_plan_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "plans_pet_id_fkey"
@@ -5310,13 +5626,6 @@ export type Database = {
             columns: ["author_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "post_comments_author_id_fkey"
-            columns: ["author_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
           {
@@ -5360,13 +5669,6 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "post_likes_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -5413,74 +5715,7 @@ export type Database = {
             foreignKeyName: "predictive_insights_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "predictive_insights_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      product_templates: {
-        Row: {
-          added_by: string | null
-          brand_name: string
-          category: string
-          created_at: string | null
-          duration_days: number | null
-          id: string
-          is_active: boolean | null
-          is_approved: boolean | null
-          metadata: Json | null
-          product_name: string | null
-          species: string | null
-          usage_count: number | null
-        }
-        Insert: {
-          added_by?: string | null
-          brand_name: string
-          category: string
-          created_at?: string | null
-          duration_days?: number | null
-          id?: string
-          is_active?: boolean | null
-          is_approved?: boolean | null
-          metadata?: Json | null
-          product_name?: string | null
-          species?: string | null
-          usage_count?: number | null
-        }
-        Update: {
-          added_by?: string | null
-          brand_name?: string
-          category?: string
-          created_at?: string | null
-          duration_days?: number | null
-          id?: string
-          is_active?: boolean | null
-          is_approved?: boolean | null
-          metadata?: Json | null
-          product_name?: string | null
-          species?: string | null
-          usage_count?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_templates_added_by_fkey"
-            columns: ["added_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "product_templates_added_by_fkey"
-            columns: ["added_by"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -5566,13 +5801,6 @@ export type Database = {
             foreignKeyName: "profiling_prompts_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "profiling_prompts_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
@@ -5581,13 +5809,6 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiling_prompts_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -5626,13 +5847,6 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "push_subscriptions_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -5677,13 +5891,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "referral_rewards_rewarded_profile_id_fkey"
-            columns: ["rewarded_profile_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
         ]
       }
       referrals: {
@@ -5717,24 +5924,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "referrals_referred_id_fkey"
-            columns: ["referred_id"]
-            isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "referrals_referrer_id_fkey"
             columns: ["referrer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "referrals_referrer_id_fkey"
-            columns: ["referrer_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -5820,13 +6013,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "session_logs_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
         ]
       }
       shared_pet_cards: {
@@ -5877,13 +6063,6 @@ export type Database = {
             foreignKeyName: "shared_pet_cards_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "shared_pet_cards_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
@@ -5924,13 +6103,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "smart_scanner_records_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
           {
             foreignKeyName: "smart_scanner_records_pet_id_fkey"
             columns: ["pet_id"]
@@ -5989,32 +6161,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "social_posts_author_id_fkey"
-            columns: ["author_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "social_posts_owner_id_fkey"
             columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "social_posts_owner_id_fkey"
-            columns: ["owner_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "social_posts_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
           },
           {
             foreignKeyName: "social_posts_pet_id_fkey"
@@ -6058,6 +6209,39 @@ export type Database = {
           session_id?: string | null
           step_id?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      stripe_webhook_events: {
+        Row: {
+          attempt_count: number
+          event_type: string
+          id: string
+          last_attempt_at: string
+          last_error: string | null
+          processed_at: string | null
+          received_at: string
+          status: string
+        }
+        Insert: {
+          attempt_count?: number
+          event_type: string
+          id: string
+          last_attempt_at?: string
+          last_error?: string | null
+          processed_at?: string | null
+          received_at?: string
+          status?: string
+        }
+        Update: {
+          attempt_count?: number
+          event_type?: string
+          id?: string
+          last_attempt_at?: string
+          last_error?: string | null
+          processed_at?: string | null
+          received_at?: string
+          status?: string
         }
         Relationships: []
       }
@@ -6136,39 +6320,6 @@ export type Database = {
         }
         Relationships: []
       }
-      symptom_templates: {
-        Row: {
-          body_system: string | null
-          created_at: string | null
-          id: string
-          is_active: boolean | null
-          is_critical: boolean | null
-          name: string
-          name_tr: string
-          species: string | null
-        }
-        Insert: {
-          body_system?: string | null
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          is_critical?: boolean | null
-          name: string
-          name_tr: string
-          species?: string | null
-        }
-        Update: {
-          body_system?: string | null
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          is_critical?: boolean | null
-          name?: string
-          name_tr?: string
-          species?: string | null
-        }
-        Relationships: []
-      }
       user_activation_scores: {
         Row: {
           id: string
@@ -6215,13 +6366,6 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_badges_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -6295,13 +6439,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "user_subscriptions_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
         ]
       }
       user_survey_stats: {
@@ -6338,13 +6475,6 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: true
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_survey_stats_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -6423,13 +6553,6 @@ export type Database = {
             foreignKeyName: "vaccination_plan_items_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "vaccination_plan_items_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
@@ -6502,13 +6625,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "vaccine_brands_suggested_by_fkey"
-            columns: ["suggested_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
         ]
       }
       vaccine_catalog_suggestions: {
@@ -6557,24 +6673,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "vaccine_catalog_suggestions_reviewed_by_fkey"
-            columns: ["reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "vaccine_catalog_suggestions_suggested_by_fkey"
             columns: ["suggested_by"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "vaccine_catalog_suggestions_suggested_by_fkey"
-            columns: ["suggested_by"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -6704,11 +6806,13 @@ export type Database = {
           due_at: string | null
           expiration_date: string | null
           id: string
+          idempotency_key: string | null
           lot_number: string | null
           manufacturer_free_text: string | null
           next_due_at: string | null
           notes: string | null
           pet_id: string
+          plan_id: string | null
           reaction_observed: string | null
           source: string
           status: string
@@ -6730,11 +6834,13 @@ export type Database = {
           due_at?: string | null
           expiration_date?: string | null
           id?: string
+          idempotency_key?: string | null
           lot_number?: string | null
           manufacturer_free_text?: string | null
           next_due_at?: string | null
           notes?: string | null
           pet_id: string
+          plan_id?: string | null
           reaction_observed?: string | null
           source?: string
           status?: string
@@ -6756,11 +6862,13 @@ export type Database = {
           due_at?: string | null
           expiration_date?: string | null
           id?: string
+          idempotency_key?: string | null
           lot_number?: string | null
           manufacturer_free_text?: string | null
           next_due_at?: string | null
           notes?: string | null
           pet_id?: string
+          plan_id?: string | null
           reaction_observed?: string | null
           source?: string
           status?: string
@@ -6781,92 +6889,14 @@ export type Database = {
             foreignKeyName: "vaccine_records_v2_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "vaccine_records_v2_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      vaccine_schedules: {
-        Row: {
-          created_at: string | null
-          due_date: string
-          id: string
-          pet_id: string | null
-          status: string | null
-          vaccine_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          due_date: string
-          id?: string
-          pet_id?: string | null
-          status?: string | null
-          vaccine_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          due_date?: string
-          id?: string
-          pet_id?: string | null
-          status?: string | null
-          vaccine_id?: string | null
-        }
-        Relationships: [
           {
-            foreignKeyName: "vaccine_schedules_pet_id_fkey"
-            columns: ["pet_id"]
+            foreignKeyName: "vaccine_records_v2_plan_id_fkey"
+            columns: ["plan_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "vaccine_schedules_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "pets"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      vaccine_setup_profiles: {
-        Row: {
-          created_at: string | null
-          id: string
-          pet_id: string
-          setup_mode: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          pet_id: string
-          setup_mode: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          pet_id?: string
-          setup_mode?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "vaccine_setup_profiles_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: true
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "vaccine_setup_profiles_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: true
-            referencedRelation: "pets"
+            referencedRelation: "plans"
             referencedColumns: ["id"]
           },
         ]
@@ -6955,13 +6985,6 @@ export type Database = {
             foreignKeyName: "vet_reviews_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "vet_reviews_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["id"]
           },
@@ -6970,13 +6993,6 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "vet_reviews_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
           {
@@ -7099,36 +7115,26 @@ export type Database = {
           height_cm: number | null
           id: string
           measured_at: string | null
-          notes: string | null
           pet_id: string | null
-          weight_kg: number
+          weight_kg: number | null
         }
         Insert: {
           body_condition_score?: number | null
           height_cm?: number | null
           id?: string
           measured_at?: string | null
-          notes?: string | null
           pet_id?: string | null
-          weight_kg: number
+          weight_kg?: number | null
         }
         Update: {
           body_condition_score?: number | null
           height_cm?: number | null
           id?: string
           measured_at?: string | null
-          notes?: string | null
           pet_id?: string | null
-          weight_kg?: number
+          weight_kg?: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "weight_logs_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
           {
             foreignKeyName: "weight_logs_pet_id_fkey"
             columns: ["pet_id"]
@@ -7155,126 +7161,24 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "event_stream_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
         ]
       }
-      nutrition_overview: {
+      sos_public_view: {
         Row: {
-          avg_appetite_7d: number | null
-          current_stock_grams: number | null
-          daily_grams: number | null
-          days_left: number | null
-          estimated_daily_usage: number | null
-          food_brand: string | null
-          food_product: string | null
-          food_type: string | null
-          latest_weight_kg: number | null
-          low_stock_threshold_days: number | null
-          meals_per_day: number | null
-          pet_id: string | null
-          pet_name: string | null
-        }
-        Relationships: []
-      }
-      parasite_upcoming_tasks: {
-        Row: {
-          application_method: string | null
-          applied_by: string | null
-          covers_ear_mites: boolean | null
-          dose_number: number | null
-          due_date: string | null
-          extra_data: Json | null
-          id: string | null
-          parasite_type: string | null
-          pet_id: string | null
-          pet_name: string | null
-          product_name: string | null
-          protection_duration_days: number | null
-          recommended_end: string | null
-          species: string | null
-          status: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "parasite_plan_items_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "parasite_plan_items_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "pets"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      users: {
-        Row: {
-          care_points: number | null
           created_at: string | null
-          first_name: string | null
           id: string | null
-          last_name: string | null
-          pro_trial_until: string | null
-          role: Database["public"]["Enums"]["user_role"] | null
-          updated_at: string | null
-        }
-        Insert: {
-          care_points?: number | null
-          created_at?: string | null
-          first_name?: string | null
-          id?: string | null
-          last_name?: string | null
-          pro_trial_until?: string | null
-          role?: Database["public"]["Enums"]["user_role"] | null
-          updated_at?: string | null
-        }
-        Update: {
-          care_points?: number | null
-          created_at?: string | null
-          first_name?: string | null
-          id?: string | null
-          last_name?: string | null
-          pro_trial_until?: string | null
-          role?: Database["public"]["Enums"]["user_role"] | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      vaccination_upcoming_tasks: {
-        Row: {
-          administration_route: string | null
-          antigen_code: string | null
-          brand_name: string | null
-          dose_number: number | null
-          due_date: string | null
-          extra_data: Json | null
-          id: string | null
+          last_seen_at: string | null
+          last_seen_location: string | null
+          pet_breed: string | null
           pet_id: string | null
           pet_name: string | null
-          recommended_end: string | null
-          species: string | null
+          pet_photo: string | null
+          pet_species: string | null
           status: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "vaccination_plan_items_pet_id_fkey"
-            columns: ["pet_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_overview"
-            referencedColumns: ["pet_id"]
-          },
-          {
-            foreignKeyName: "vaccination_plan_items_pet_id_fkey"
+            foreignKeyName: "lost_reports_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
             referencedRelation: "pets"
@@ -7284,19 +7188,88 @@ export type Database = {
       }
     }
     Functions: {
-      admin_update_user: {
-        Args: {
-          new_display_name?: string
-          new_durum?: string
-          new_email?: string
-          new_role_id?: string
-          target_user_id: string
-        }
-        Returns: Json
+      backfill_pet_nutrition_profiles_to_assignments: {
+        Args: never
+        Returns: number
       }
       calculate_completeness_score: {
         Args: { target_user_id: string }
         Returns: number
+      }
+      change_vet_review_requirement: {
+        Args: {
+          p_article_id: string
+          p_new_requirement: string
+          p_reason: string
+        }
+        Returns: Json
+      }
+      complete_parasite_plan: {
+        Args: {
+          p_administered_at: string
+          p_application_method: string
+          p_brand_free_text: string
+          p_created_by: string
+          p_document_storage_path: string
+          p_notes: string
+          p_plan_id: string
+          p_product_free_text: string
+          p_protection_duration_days: number
+        }
+        Returns: Json
+      }
+      complete_parasite_plan_and_record: {
+        Args: {
+          p_actual_date: string
+          p_application_method: string
+          p_brand_free_text?: string
+          p_idempotency_key: string
+          p_main_plan_id: string
+          p_next_scheduled_at: string
+          p_notes?: string
+          p_occurrence_scheduled_at: string
+          p_parasite_code: string
+          p_parasite_protocol_id?: string
+          p_parasite_type: string
+          p_pet_id: string
+          p_product_free_text?: string
+          p_protection_duration_days: number
+        }
+        Returns: Json
+      }
+      complete_recurring_plan: {
+        Args: {
+          p_actual_completion_date: string
+          p_close_series?: boolean
+          p_extra_data?: Json
+          p_next_scheduled_at?: string
+          p_note?: string
+          p_occurrence_scheduled_at: string
+          p_plan_id: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      complete_vaccine_plan_and_record: {
+        Args: {
+          p_actual_date: string
+          p_brand_free_text?: string
+          p_brand_id?: string
+          p_close_series: boolean
+          p_dose_number: number
+          p_idempotency_key: string
+          p_main_plan_id: string
+          p_next_scheduled_at: string
+          p_notes?: string
+          p_occurrence_scheduled_at: string
+          p_pet_id: string
+          p_protocol_id?: string
+          p_protocol_stage?: number
+          p_species?: string
+          p_vaccine_code: string
+          p_vaccine_name: string
+        }
+        Returns: Json
       }
       create_pet_notification: {
         Args: {
@@ -7311,29 +7284,22 @@ export type Database = {
         Returns: undefined
       }
       decrement_vet_load: { Args: { p_vet_id: string }; Returns: undefined }
-      execute_ddl: { Args: { ddl: string }; Returns: undefined }
-      execute_sql: { Args: { query: string }; Returns: Json }
-      generate_schedule_notifications: { Args: never; Returns: number }
-      get_nearby_clinics: {
-        Args: { max_dist_km?: number; user_lat: number; user_long: number }
-        Returns: {
-          address: string
-          city: string
-          dist_km: number
-          district: string
-          id: string
-          is_verified: boolean
-          latitude: number
-          longitude: number
-          name: string
-          tags: string[]
-        }[]
+      end_pet_food_assignment: {
+        Args: {
+          p_assignment_id: string
+          p_pet_id: string
+          p_stock_action: string
+        }
+        Returns: Json
       }
+      generate_birthday_notifications: { Args: never; Returns: number }
+      generate_schedule_notifications: { Args: never; Returns: number }
       increment_care_points: {
         Args: { p_amount: number; p_profile_id: string }
         Returns: undefined
       }
       increment_vet_load: { Args: { p_vet_id: string }; Returns: undefined }
+      is_admin_or_founder: { Args: never; Returns: boolean }
       is_valid_method_array: { Args: { arr: string[] }; Returns: boolean }
       process_smart_scan_results: {
         Args: { p_parsed_data: Json; p_pet_id: string; p_record_type: string }
@@ -7348,6 +7314,24 @@ export type Database = {
           schedule_id: string
         }[]
       }
+      swap_pet_food_assignment: {
+        Args: {
+          p_new_assignment: Json
+          p_new_stock: Json
+          p_old_assignment_id: string
+          p_pet_id: string
+        }
+        Returns: Json
+      }
+      update_article_with_revision: {
+        Args: {
+          p_actor_id: string
+          p_article_id: string
+          p_change_summary: string
+          p_updates: Json
+        }
+        Returns: Json
+      }
       update_onboarding_step: {
         Args: { p_pet_id: string; p_step: string; p_value: boolean }
         Returns: undefined
@@ -7355,10 +7339,31 @@ export type Database = {
       user_has_pet_access: { Args: { p_pet_id: string }; Returns: boolean }
       user_is_pet_member: { Args: { p_pet_id: string }; Returns: boolean }
       user_pet_role: { Args: { p_pet_id: string }; Returns: string }
+      verify_job_source_atomic: {
+        Args: {
+          p_action: string
+          p_confirmed_relevance?: boolean
+          p_confirmed_title_url?: boolean
+          p_job_id: string
+          p_rejection_reason?: string
+          p_source_id: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       appointment_status: "pending" | "confirmed" | "cancelled" | "completed"
-      user_role: "owner" | "vet" | "admin" | "founder"
+      user_role:
+        | "owner"
+        | "vet"
+        | "admin"
+        | "founder"
+        | "hotel_admin"
+        | "hotel_staff"
+        | "groomer_admin"
+        | "groomer_staff"
+        | "sitter"
+        | "trainer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -7490,7 +7495,18 @@ export const Constants = {
   public: {
     Enums: {
       appointment_status: ["pending", "confirmed", "cancelled", "completed"],
-      user_role: ["owner", "vet", "admin", "founder"],
+      user_role: [
+        "owner",
+        "vet",
+        "admin",
+        "founder",
+        "hotel_admin",
+        "hotel_staff",
+        "groomer_admin",
+        "groomer_staff",
+        "sitter",
+        "trainer",
+      ],
     },
   },
 } as const

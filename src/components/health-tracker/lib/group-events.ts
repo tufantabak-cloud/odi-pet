@@ -111,6 +111,15 @@ export function buildCategoryGroups(
       });
       group.subGroups = []; // subGroups yok → HealthTracker düz liste render eder
     }
+    
+    // Beslenme kategorisinde Mama Stok Takibi en altta olsun
+    if (group.category === 'Beslenme') {
+      group.taskRows.sort((a, b) => {
+        if (a.task.title === 'Mama Stok Takibi') return 1;
+        if (b.task.title === 'Mama Stok Takibi') return -1;
+        return 0;
+      });
+    }
 
     // Tarih-grid timeline: kategori genelinde kronolojik düz akış
     group.flowEvents = buildFlowEvents(group.taskRows);
@@ -119,8 +128,8 @@ export function buildCategoryGroups(
       sub.flowEvents = buildFlowEvents(sub.taskRows);
     });
 
-    // Koruma çubuğu: sadece Aşı ve Parazit için anlamlı
-    if (group.category === 'Asi' || group.category === 'Parazit') {
+    // Koruma çubuğu ve son geçerlilik tarihi: Aşı, Parazit, Beslenme veya periyot içeren görevler için hesaplanır
+    if (group.category === 'Asi' || group.category === 'Parazit' || group.category === 'Beslenme' || group.flowEvents.some(e => (e.pet_care_tasks?.frequency_days || (e as any).frequency_days || 0) > 0)) {
       if (group.flowEvents) computeCoverage(group.flowEvents);
       group.subGroups?.forEach(sub => {
         if (sub.flowEvents) computeCoverage(sub.flowEvents);

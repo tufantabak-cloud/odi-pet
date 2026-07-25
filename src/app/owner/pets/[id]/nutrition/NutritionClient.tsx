@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { calculateRefillRisk } from '@/lib/nutrition/refill-engine'
@@ -12,6 +12,11 @@ import { BarcodeScanner } from '@/components/ui/BarcodeScanner'
 import SmartCardBanner from '@/components/profiling/SmartCardBanner'
 import { StepperInput } from '@/components/ui/StepperInput'
 import { Modal } from '@/components/ui/Modal'
+import WeightChangeChart from '@/components/pets/WeightChangeChart'
+import WeightGoalBand from '@/components/pets/WeightGoalBand'
+import { assessWeight } from '@/lib/vetStandards/weightStandards'
+import { ScaleIcon, UtensilsIcon } from '@/components/icons/PetIcons'
+import StockTimeline from '@/components/nutrition/StockTimeline'
 
 // Tabs
 const TABS = ['Mama & Stok', 'Öğünler & Hatırlatıcı', 'Kilo Takibi'] as const
@@ -44,7 +49,8 @@ export default function NutritionClient({
   feedingLogs,
   weightLogs,
   assignments = [],
-  nutritionPlans = []
+  nutritionPlans = [],
+  embedded = false
 }: {
   pet: any
   profile: any
@@ -53,13 +59,35 @@ export default function NutritionClient({
   weightLogs: any[]
   assignments?: any[]
   nutritionPlans?: any[]
+  embedded?: boolean
 }) {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<Tab>('Mama & Stok')
+  const searchParams = useSearchParams()
+
+  const getInitialTab = (): Tab => {
+    const rawTab = searchParams ? searchParams.get('tab')?.toLowerCase().trim() : null
+    if (rawTab === 'kilo' || rawTab === 'kilo-takibi' || rawTab === 'kilo_takibi' || rawTab === 'weight' || rawTab === 'kilo takibi' || rawTab === 'gelisim' || rawTab === 'gelişim') {
+      return 'Kilo Takibi'
+    }
+    if (rawTab === 'ogun' || rawTab === 'ogunler' || rawTab === 'meals' || rawTab === 'öğünler' || rawTab === 'ogunler & hatirlatici' || rawTab === 'öğünler & hatırlatıcı') {
+      return 'Öğünler & Hatırlatıcı'
+    }
+    return 'Mama & Stok'
+  }
+
+  const [activeTab, setActiveTab] = useState<Tab>(getInitialTab)
+
+  useEffect(() => {
+    const tabFromUrl = getInitialTab()
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl)
+    }
+  }, [searchParams])
   const [loading, setLoading] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
   const [showBarcodeCamera, setShowBarcodeCamera] = useState(false)
   const [dismissedBanner, setDismissedBanner] = useState(false)
+  const [weightError, setWeightError] = useState<string | null>(null)
 
   // Reminder Modal & State
   const [showReminderModal, setShowReminderModal] = useState(false)
@@ -199,6 +227,14 @@ export default function NutritionClient({
   const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false)
   const [showSuggestionsDropdown, setShowSuggestionsDropdown] = useState(false)
   const [selectedManualFamilyId, setSelectedManualFamilyId] = useState<string | null>(null)
+
+  // Weight Log Edit & Delete States
+  const [editingWeightLog, setEditingWeightLog] = useState<any | null>(null)
+  const [editWeightKg, setEditWeightKg] = useState<number | ''>('')
+  const [editHeightCm, setEditHeightCm] = useState<number | ''>('')
+  const [editWeightDate, setEditWeightDate] = useState<string>('')
+  const [isDeletingWeight, setIsDeletingWeight] = useState<string | null>(null)
+  const [isSavingWeightEdit, setIsSavingWeightEdit] = useState<boolean>(false)
 
   // Active Primary Assignment
   const activePrimary = assignments.find((a: any) => a.is_primary && !a.ended_at) || null
@@ -782,8 +818,9 @@ export default function NutritionClient({
 
   async function handleAddLog(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    const form = e.currentTarget
     setLoading(true)
-    const fd = new FormData(e.currentTarget)
+    const fd = new FormData(form)
     try {
       await fetch(`/api/pets/${pet.id}/nutrition/feeding`, {
         method: 'POST',
@@ -794,7 +831,7 @@ export default function NutritionClient({
           notes: fd.get('notes'),
         }),
       })
-      e.currentTarget.reset()
+      form.reset()
       router.refresh()
     } finally {
       setLoading(false)
@@ -803,49 +840,134 @@ export default function NutritionClient({
 
   async function handleAddWeight(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    const form = e.currentTarget
+    setWeightError(null)
+
+    const fd = new FormData(form)
+    const rawWeight = fd.get('weight_kg')?.toString() || ''
+    const rawHeight = fd.get('height_cm')?.toString() || ''
+    const rawDate = fd.get('measured_at')?.toString() || ''
+
+    const sanitizedWeight = rawWeight.replace(',', '.')
+    const sanitizedHeight = rawHeight.replace(',', '.')
+
+    const selectedDateStr = rawDate.trim() || new Date().toISOString().split('T')[0]
+
+    // Aynı gün kayıt kontrolü (seçilen tarih için kayıt var mı?)
+    const hasLogForSelectedDate = (weightLogs || []).some((log: any) => {
+      const logDate = log.measured_at ? log.measured_at.split('T')[0] : log.created_at?.split('T')[0]
+      return logDate === selectedDateStr
+    })
+
+    if (hasLogForSelectedDate) {
+      const formattedDate = new Date(selectedDateStr + 'T00:00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
+      setWeightError(`${formattedDate} tarihi için zaten bir kilo/boy ölçüm kaydı bulunmaktadır. Bir günde en fazla 1 kayıt eklenebilir. Mevcut kaydı değiştirmek isterseniz aşağıdaki "Geçmiş Ölçümler" listesindeki Düzenle (✏️) butonunu kullanabilirsiniz.`)
+      return
+    }
+
     setLoading(true)
-    const fd = new FormData(e.currentTarget)
-    const rawVal = fd.get('weight_kg')?.toString() || ''
-    const sanitizedVal = rawVal.replace(',', '.')
+
+    const payload: Record<string, any> = {
+      weight_kg: parseFloat(sanitizedWeight),
+      measured_at: new Date(selectedDateStr + 'T12:00:00.000Z').toISOString()
+    }
+    if (sanitizedHeight.trim()) {
+      payload.height_cm = parseFloat(sanitizedHeight)
+    }
+
     try {
-      await fetch(`/api/pets/${pet.id}/nutrition/weight`, {
+      const res = await fetch(`/api/pets/${pet.id}/nutrition/weight`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ weight_kg: parseFloat(sanitizedVal) }),
+        body: JSON.stringify(payload),
       })
-      e.currentTarget.reset()
+
+      const resData = await res.json()
+      if (!res.ok) {
+        setWeightError(resData.error || 'Kayıt eklenirken bir hata oluştu.')
+        return
+      }
+
+      form.reset()
       router.refresh()
+    } catch (err: any) {
+      setWeightError(err.message || 'Kayıt eklenirken bir hata oluştu.')
     } finally {
       setLoading(false)
     }
   }
 
-  return (
-    <div className="flex flex-col gap-6 pb-32 pb-safe w-full mx-auto max-w-2xl px-3 sm:px-0">
-      {/* Header */}
-      <Link href={`/owner/pets/${pet.id}`} className="flex items-center gap-2 text-[14px] font-bold text-text-secondary hover:text-primary transition-colors group -mb-2">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:-translate-x-0.5 transition-transform"><polyline points="15 18 9 12 15 6"/></svg>
-        Profile Dön
-      </Link>
+  async function handleDeleteWeightLog(logId: string) {
+    if (!confirm('Bu kilo kaydını silmek istediğinize emin misiniz?')) return
+    setIsDeletingWeight(logId)
+    try {
+      const res = await fetch(`/api/pets/${pet.id}/nutrition/weight/${logId}`, {
+        method: 'DELETE'
+      })
+      if (!res.ok) throw new Error('Kilo kaydı silinemedi')
+      router.refresh()
+    } catch (err: any) {
+      alert(err.message || 'Silme işlemi sırasında hata oluştu')
+    } finally {
+      setIsDeletingWeight(null)
+    }
+  }
 
-      <div className="flex items-center gap-4 relative">
-        <CoachMark
-          hintKey="nutrition_intro"
-          title="Mama bilgisini gir"
-          message="Mama markası ve günlük miktarı gir — sistem kalori ve porsiyon takibini otomatik hesaplasın."
-          icon="🍗"
-          position="bottom"
-        />
-        <div className="relative w-16 h-16 rounded-[20px] bg-gradient-to-br from-primary-soft to-white border-2 border-primary/20 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
-          {pet.avatar_url ? <Image src={pet.avatar_url} fill={true} className="object-cover" alt="" /> : (
-            <svg viewBox="0 0 32 32" className="w-8 h-8 drop-shadow-sm"><path d="M12 10c0-3.3 5.4-3.3 5.4 0 0 3.3 5.3 3.3 5.3 6.6S16 26 12 26 2.7 20 2.7 16.6C2.7 13.3 12 13.3 12 10z" fill="url(#nut-grad)" /><path d="M26 8c-2 0-3 2-3 4h6c0-2-1-4-3-4z" fill="#D1D5DB" /><defs><linearGradient id="nut-grad" x1="2" y1="8" x2="28" y2="28" gradientUnits="userSpaceOnUse"><stop stopColor="#EF4444" /><stop offset="1" stopColor="#B91C1C" /></linearGradient></defs></svg>
-          )}
-        </div>
-        <div>
-          <h1 className="text-[28px] font-extrabold text-text-primary tracking-tight">Beslenme Planı</h1>
-          <p className="text-text-secondary font-medium">Mama, stok ve öğün takibi</p>
-        </div>
-      </div>
+  async function handleSaveWeightEdit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!editingWeightLog) return
+    setIsSavingWeightEdit(true)
+    try {
+      const payload: Record<string, any> = {
+        weight_kg: Number(editWeightKg),
+        height_cm: editHeightCm !== '' ? Number(editHeightCm) : null,
+        measured_at: editWeightDate ? new Date(editWeightDate).toISOString() : undefined
+      }
+      const res = await fetch(`/api/pets/${pet.id}/nutrition/weight/${editingWeightLog.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      if (!res.ok) throw new Error('Kilo kaydı güncellenemedi')
+      setEditingWeightLog(null)
+      router.refresh()
+    } catch (err: any) {
+      alert(err.message || 'Güncelleme sırasında hata oluştu')
+    } finally {
+      setIsSavingWeightEdit(false)
+    }
+  }
+
+  return (
+    <div className={`flex flex-col gap-6 w-full mx-auto ${embedded ? 'max-w-none pb-4 px-0' : 'max-w-2xl pb-32 pb-safe px-3 sm:px-0'}`}>
+      {/* Header */}
+      {!embedded && (
+        <>
+          <Link href={`/owner/pets/${pet.id}`} className="flex items-center gap-2 text-[14px] font-bold text-text-secondary hover:text-primary transition-colors group -mb-2">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:-translate-x-0.5 transition-transform"><polyline points="15 18 9 12 15 6"/></svg>
+            Profile Dön
+          </Link>
+
+          <div className="flex items-center gap-4 relative">
+            <CoachMark
+              hintKey="nutrition_intro"
+              title="Mama bilgisini gir"
+              message="Mama markası ve günlük miktarı gir — sistem kalori ve porsiyon takibini otomatik hesaplasın."
+              icon="🍗"
+              position="bottom"
+            />
+            <div className="relative w-16 h-16 rounded-[20px] bg-gradient-to-br from-primary-soft to-white border-2 border-primary/20 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+              {pet.avatar_url ? <Image src={pet.avatar_url} fill={true} className="object-cover" alt="" /> : (
+                <svg viewBox="0 0 32 32" className="w-8 h-8 drop-shadow-sm"><path d="M12 10c0-3.3 5.4-3.3 5.4 0 0 3.3 5.3 3.3 5.3 6.6S16 26 12 26 2.7 20 2.7 16.6C2.7 13.3 12 13.3 12 10z" fill="url(#nut-grad)" /><path d="M26 8c-2 0-3 2-3 4h6c0-2-1-4-3-4z" fill="#D1D5DB" /><defs><linearGradient id="nut-grad" x1="2" y1="8" x2="28" y2="28" gradientUnits="userSpaceOnUse"><stop stopColor="#EF4444" /><stop offset="1" stopColor="#B91C1C" /></linearGradient></defs></svg>
+              )}
+            </div>
+            <div>
+              <h1 className="text-[28px] font-extrabold text-text-primary tracking-tight">Beslenme Planı</h1>
+              <p className="text-text-secondary font-medium">Mama, stok ve öğün takibi</p>
+            </div>
+          </div>
+        </>
+      )}
 
       {!inventory && !dismissedBanner && (
         <div className="animate-in fade-in slide-in-from-top-4 duration-500">
@@ -872,7 +994,7 @@ export default function NutritionClient({
       )}
 
       {/* Tabs */}
-      <div className="relative sticky top-16 z-30 after:content-[''] after:absolute after:right-0 after:top-0 after:h-full after:w-8 after:bg-gradient-to-l after:from-bg-main after:to-transparent after:pointer-events-none after:z-10">
+      <div className={`relative sticky ${embedded ? 'top-[108px] z-10' : 'top-16 z-20'} after:content-[''] after:absolute after:right-0 after:top-0 after:h-full after:w-8 after:bg-gradient-to-l after:from-bg-main after:to-transparent after:pointer-events-none after:z-10`}>
         <div className="flex gap-1 bg-bg-main p-1 rounded-2xl border border-border-main overflow-x-auto hide-scrollbar">
           {TABS.map(t => (
             <button key={t} onClick={() => setActiveTab(t)}
@@ -992,34 +1114,37 @@ export default function NutritionClient({
 
             <div className="card-base p-5 relative overflow-hidden flex flex-col justify-between gap-3">
               <div>
-                <div className="flex items-center justify-between">
-                  <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest mb-1">Kalan Stok</p>
-                </div>
-
+                {/* Stok bilgisi girilmemişse veya duraklatılmışsa eski metin gösterim */}
                 {!hasInventory ? (
                   <div>
+                    <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest mb-1">Kalan Stok</p>
                     <p className="font-black text-[18px] text-text-secondary">Stok bilgisi girilmedi</p>
                     <p className="text-[11px] font-bold text-text-secondary mt-0.5">Stok ve bitiş tarihini takip edin</p>
                   </div>
-                ) : stockStatus === 'depleted' ? (
-                  <div>
-                    <p className="font-black text-[22px] text-red-500">Mama bitti</p>
-                    <p className="text-[11px] font-bold text-red-600">0 g / 0 gün kaldı</p>
-                  </div>
                 ) : stockStatus === 'paused' ? (
                   <div>
+                    <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest mb-1">Kalan Stok</p>
                     <p className="font-black text-[20px] text-amber-500">
                       {estimatedRemainingGrams >= 1000 ? `${(estimatedRemainingGrams / 1000).toFixed(1)} kg` : `${estimatedRemainingGrams} g`}
                     </p>
                     <p className="text-[11px] font-bold text-amber-600">Stok takibi duraklatıldı (Aktif mama yok)</p>
                   </div>
                 ) : (
-                  <div>
-                    <p className={`font-black text-[22px] ${badgeClass}`}>
-                      {estimatedRemainingGrams >= 1000 ? `${(estimatedRemainingGrams / 1000).toFixed(1)} kg` : `${estimatedRemainingGrams} g`}
-                    </p>
-                    <p className="text-[11px] font-bold text-text-secondary">{riskLabel}</p>
-                  </div>
+                  /* Timeline bileşeni: depleted + available durumları */
+                  <StockTimeline
+                    estimatedRemainingGrams={estimatedRemainingGrams}
+                    dailyUsage={dailyUsage}
+                    daysLeft={refillStatus.daysLeft}
+                    stockStatus={stockStatus}
+                    maxDays={
+                      inventory && dailyUsage > 0
+                        ? Math.max(
+                            Math.round(Number(inventory.current_stock_grams || 0) / dailyUsage),
+                            refillStatus.daysLeft ?? 0
+                          )
+                        : undefined
+                    }
+                  />
                 )}
               </div>
 
@@ -1356,34 +1481,213 @@ export default function NutritionClient({
       </Modal>
 
       {/* ── Tab: Kilo Takibi ── */}
-      {activeTab === 'Kilo Takibi' && (
-        <div className="flex flex-col gap-4 animate-fadeIn">
-          <form onSubmit={handleAddWeight} className="card-base p-6">
-            <h3 className="font-extrabold text-[15px] text-text-primary mb-4">Yeni Kilo Kaydı</h3>
-            <div className="flex gap-4 items-end">
-              <div className="flex flex-col gap-2">
-                <label className="text-[13px] font-bold text-text-primary">Kilo *</label>
-                <StepperInput name="weight_kg" step={0.1} unit="kg" placeholder="Örn: 4.5" required className="w-full sm:w-fit" />
-              </div>
-              <button type="submit" disabled={loading} className="btn-primary px-8 min-h-[48px] flex items-center justify-center">Ekle</button>
-            </div>
-          </form>
+      {activeTab === 'Kilo Takibi' && (() => {
+        const lastWeightLog = weightLogs && weightLogs.length > 0 ? weightLogs[0] : null
+        const lastWeightKg = lastWeightLog ? Number(lastWeightLog.weight_kg) : null
 
-          {weightLogs.length > 0 && (
-            <div className="card-base overflow-hidden">
-              <h3 className="p-4 font-bold border-b border-border-main bg-surface/50">Geçmiş Ölçümler</h3>
-              <div className="divide-y divide-border-main">
-                {weightLogs.map(w => (
-                  <div key={w.id} className="p-4 flex items-center justify-between hover:bg-bg-main transition-colors">
-                    <p className="font-bold text-text-primary text-[15px]">{w.weight_kg} kg</p>
-                    <p className="text-[12px] text-text-secondary">{new Date(w.measured_at).toLocaleDateString('tr-TR')}</p>
-                  </div>
-                ))}
+        const weightAssessment = lastWeightKg !== null && pet?.birth_date
+          ? assessWeight({
+              species: pet.species || 'cat',
+              breed: pet.breed,
+              birthDate: pet.birth_date,
+              weightKg: lastWeightKg,
+              isNeutered: pet.is_neutered ?? false,
+              gender: pet.gender || 'unknown'
+            })
+          : null
+
+        const upcomingWeightTask = (nutritionPlans || []).find(
+          (p: any) =>
+            p.status === 'active' &&
+            (p.sub_type === 'Kilo & Boy Ölçümü' || p.sub_type === 'Kilo Ölçümü' || (p.title && p.title.includes('Kilo')) || p.category === 'saglik')
+        )
+
+        return (
+          <div className="flex flex-col gap-4 animate-fadeIn">
+            {/* Form */}
+            <form onSubmit={handleAddWeight} className="card-base p-6">
+              <h3 className="font-extrabold text-[15px] text-text-primary mb-4">Yeni Kilo & Boy Kaydı</h3>
+              {weightError && (
+                <div className="mb-4 p-3.5 bg-red-50 border border-red-200 text-red-700 text-[13px] rounded-xl font-medium flex items-start gap-2 animate-fadeIn">
+                  <span className="text-[16px] shrink-0">⚠️</span>
+                  <span>{weightError}</span>
+                </div>
+              )}
+              <div className="flex flex-wrap gap-4 items-end">
+                <div className="flex flex-col gap-2 flex-1 min-w-[130px]">
+                  <label className="text-[13px] font-bold text-text-primary">Kilo (kg) *</label>
+                  <StepperInput name="weight_kg" step={0.1} unit="kg" placeholder="Örn: 4.5" required className="w-full" />
+                </div>
+                <div className="flex flex-col gap-2 flex-1 min-w-[130px]">
+                  <label className="text-[13px] font-bold text-text-primary">Boy (cm) <span className="text-text-secondary font-normal">(opsiyonel)</span></label>
+                  <input type="number" step="0.5" name="height_cm" placeholder="Örn: 35" className="input-base min-h-[48px]" />
+                </div>
+                <div className="flex flex-col gap-2 flex-1 min-w-[150px]">
+                  <label className="text-[13px] font-bold text-text-primary">Tarih <span className="text-text-secondary font-normal">(opsiyonel)</span></label>
+                  <input
+                    type="date"
+                    name="measured_at"
+                    defaultValue={new Date().toISOString().split('T')[0]}
+                    max={new Date().toISOString().split('T')[0]}
+                    className="input-base min-h-[48px] text-[14px]"
+                  />
+                </div>
+                <button type="submit" disabled={loading} className="btn-primary px-8 min-h-[48px] flex items-center justify-center shrink-0">Ekle</button>
               </div>
-            </div>
-          )}
-        </div>
-      )}
+            </form>
+
+            {/* Upcoming Reminder Task Pill */}
+            {upcomingWeightTask && (
+              <div className="flex items-center justify-between p-3.5 bg-amber-50/80 border border-amber-200/80 rounded-2xl relative overflow-hidden group">
+                <div className="flex items-center gap-3">
+                  <ScaleIcon badgeSize="sm" size={18} />
+                  <div>
+                    <p className="text-[13px] font-extrabold text-amber-950">
+                      {upcomingWeightTask.sub_type || upcomingWeightTask.title || 'Kilo & Boy Ölçümü'}
+                    </p>
+                    <p className="text-[11px] font-medium text-amber-800/80 mt-0.5">
+                      Takvim Hatırlatıcısı: {new Date(upcomingWeightTask.scheduled_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleCompleteReminder(upcomingWeightTask.id)}
+                  className="px-3.5 py-1.5 rounded-xl text-[11px] font-bold bg-amber-600 text-white hover:bg-amber-700 transition-colors shadow-sm shrink-0"
+                >
+                  Tamamla ✓
+                </button>
+              </div>
+            )}
+
+            {/* Kilo Değişim Grafiği (Gram & Tarih) - Geçmiş Ölçümler Üstünde */}
+            <WeightChangeChart weightLogs={weightLogs} />
+
+            {/* Ideal Weight Goal Assessment Band */}
+            {weightAssessment && lastWeightKg !== null && (
+              <div className="card-base overflow-hidden border border-border-main">
+                <WeightGoalBand
+                  assessment={weightAssessment}
+                  currentWeight={lastWeightKg}
+                  compact={false}
+                  isNeutered={pet?.is_neutered}
+                />
+              </div>
+            )}
+
+            {/* Geçmiş Ölçümler Listesi */}
+            {weightLogs.length > 0 && (
+              <div className="card-base overflow-hidden">
+                <h3 className="p-4 font-bold border-b border-border-main bg-surface/50 flex justify-between items-center">
+                  <span>Geçmiş Ölçümler</span>
+                  <span className="text-[11px] font-semibold text-text-secondary">{weightLogs.length} Kayıt</span>
+                </h3>
+                <div className="divide-y divide-border-main">
+                  {weightLogs.map(w => (
+                    <div key={w.id} className="p-4 flex items-center justify-between hover:bg-bg-main transition-colors group">
+                      <div>
+                        <p className="font-bold text-text-primary text-[15px]">
+                          {w.weight_kg} kg
+                          {w.height_cm ? <span className="text-[13px] text-text-secondary font-semibold ml-2">· {w.height_cm} cm</span> : null}
+                        </p>
+                        <p className="text-[12px] text-text-secondary">
+                          {new Date(w.measured_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingWeightLog(w)
+                            setEditWeightKg(w.weight_kg)
+                            setEditHeightCm(w.height_cm ?? '')
+                            const d = new Date(w.measured_at)
+                            setEditWeightDate(d.toISOString().split('T')[0])
+                          }}
+                          className="px-3 py-1.5 rounded-xl text-[12px] font-bold bg-slate-100 text-slate-700 hover:bg-amber-100 hover:text-amber-800 transition-colors flex items-center gap-1 min-h-[36px]"
+                          title="Ölçümü Düzenle"
+                        >
+                          ✏️ <span>Düzenle</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteWeightLog(w.id)}
+                          disabled={isDeletingWeight === w.id}
+                          className="px-3 py-1.5 rounded-xl text-[12px] font-bold bg-slate-100 text-red-600 hover:bg-red-100 transition-colors flex items-center gap-1 min-h-[36px]"
+                          title="Ölçümü Sil"
+                        >
+                          🗑️ <span>{isDeletingWeight === w.id ? '...' : 'Sil'}</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )
+      })()}
+
+      {/* Modal for Editing Weight Log */}
+      <Modal
+        isOpen={!!editingWeightLog}
+        onClose={() => setEditingWeightLog(null)}
+        title="Kilo Kaydını Düzenle"
+      >
+        <form onSubmit={handleSaveWeightEdit} className="flex flex-col gap-4">
+          <div>
+            <label className="text-[13px] font-bold text-text-primary block mb-1">Kilo (kg) *</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0.1"
+              value={editWeightKg}
+              onChange={e => setEditWeightKg(e.target.value === '' ? '' : parseFloat(e.target.value))}
+              required
+              className="input-base min-h-[44px]"
+            />
+          </div>
+          <div>
+            <label className="text-[13px] font-bold text-text-primary block mb-1">Boy (cm) <span className="text-text-secondary font-normal">(opsiyonel)</span></label>
+            <input
+              type="number"
+              step="0.5"
+              value={editHeightCm}
+              onChange={e => setEditHeightCm(e.target.value === '' ? '' : parseFloat(e.target.value))}
+              placeholder="Örn: 35"
+              className="input-base min-h-[44px]"
+            />
+          </div>
+          <div>
+            <label className="text-[13px] font-bold text-text-primary block mb-1">Ölçüm Tarihi *</label>
+            <input
+              type="date"
+              value={editWeightDate}
+              onChange={e => setEditWeightDate(e.target.value)}
+              required
+              className="input-base min-h-[44px]"
+            />
+          </div>
+          <div className="flex gap-2 justify-end pt-2">
+            <button
+              type="button"
+              onClick={() => setEditingWeightLog(null)}
+              className="btn-secondary px-4 py-2 text-[13px] font-bold min-h-[44px]"
+            >
+              Vazgeç
+            </button>
+            <button
+              type="submit"
+              disabled={isSavingWeightEdit}
+              className="btn-primary px-6 py-2 text-[13px] font-bold min-h-[44px]"
+            >
+              {isSavingWeightEdit ? 'Kaydedildiği...' : 'Değişikliği Kaydet'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+
 
       {/* ── MAMA EKLEME MODAL (Food Setup Modal) ── */}
       <Modal isOpen={showAddModal} onClose={() => { setShowAddModal(false); resetModalState() }} title="Mama Ekle">

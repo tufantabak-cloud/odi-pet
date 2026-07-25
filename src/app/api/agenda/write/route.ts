@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import {
+  createAdminSupabaseClient,
+  createServerSupabaseClient
+} from '@/lib/supabase/server';
 import { processRecordCreation } from '@/lib/agenda/write-handlers/write-service';
 
 export async function POST(request: Request) {
@@ -11,7 +14,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 });
     }
 
-    const body = await request.json();
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return NextResponse.json({ error: 'INVALID_JSON_BODY' }, { status: 400 });
+    }
 
     // Rejects user_id in request body for security
     if ('user_id' in body || 'userId' in body) {
@@ -30,17 +36,36 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'INVALID_IDEMPOTENCY_KEY' }, { status: 400 });
     }
 
-    // Verify pet ownership
-    const { data: pet, error: petErr } = await supabase
-      .from('pets')
-      .select('id')
-      .eq('id', pet_id)
-      .eq('owner_id', user.id)
-      .single();
+    // Ana sahip ve pet_owners tablosundaki ortak sahipler desteklenir.
+    const [
+      { data: primaryOwner },
+      { data: sharedOwner }
+    ] = await Promise.all([
+      supabase
+        .from('pets')
+        .select('id')
+        .eq('id', pet_id)
+        .eq('owner_id', user.id)
+        .maybeSingle(),
+      supabase
+        .from('pet_owners')
+        .select('id')
+        .eq('pet_id', pet_id)
+        .eq('profile_id', user.id)
+        .maybeSingle()
+    ]);
 
-    if (petErr || !pet) {
-      return NextResponse.json({ error: 'PET_NOT_FOUND_OR_FORBIDDEN' }, { status: 403 });
+    if (!primaryOwner && !sharedOwner) {
+      return NextResponse.json(
+        { error: 'PET_NOT_FOUND_OR_FORBIDDEN' },
+        { status: 403 }
+      );
     }
+
+    // Service role yalnızca oturum ve sahiplik doğrulamasından sonra atomik
+    // RPC çağrılarında kullanılır. Plan sorguları kullanıcı oturumuyla ve
+    // mevcut RLS politikalarıyla çalışmaya devam eder.
+    const rpcSupabase = createAdminSupabaseClient();
 
     // Process record creation via atomic write service
     const { result, matchResult } = await processRecordCreation(
@@ -51,7 +76,8 @@ export async function POST(request: Request) {
         petId: pet_id,
         userId: user.id,
         timeZone: 'Europe/Istanbul',
-        idempotencyKey
+        idempotencyKey,
+        rpcSupabase
       },
       selectedPlanId
     );
@@ -81,8 +107,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       error: 'WRITE_ERROR',
-      message: userMsg,
-      rawError: msg
+      message: userMsg
     }, { status: 400 });
   }
 }

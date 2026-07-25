@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
-import { revalidatePath, revalidateTag } from 'next/cache'
+import { revalidatePath } from 'next/cache'
 import { Database } from '@/lib/database.types'
 
 type WeightLogInsert = Database['public']['Tables']['weight_logs']['Insert']
@@ -29,7 +29,6 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
   const weight_kg = fd.get('weight_kg')?.toString().replace(',', '.')
   const height_cm = fd.get('height_cm')?.toString().replace(',', '.')
-  // Form alanı 'recorded_at' gönderiyor; eski 'measured_at' da desteklenir (geriye uyumlu)
   const measured_at = (fd.get('measured_at') || fd.get('recorded_at'))?.toString()
 
   if (!weight_kg) {
@@ -39,25 +38,21 @@ export async function POST(req: NextRequest, context: RouteContext) {
   const weightValue = Number(weight_kg)
   const measuredAtIso = measured_at ? new Date(measured_at).toISOString() : new Date().toISOString()
 
-  // ─── Tekilleştirme (çift gönderim koruması) ─────────────────────────
-  // Aynı gün + aynı kilo değeri zaten kayıtlıysa, yeni ölçüm/plan oluşturma.
-  // Kullanıcının yanlışlıkla iki kez göndermesi durumunda mükerrer kayıt
-  // ve sahte "tamamlandı" hatırlatıcı planı oluşmasını engeller.
+  // ─── Tekilleştirme (aynı gün çift kayıt engeli) ─────────────────────────
   const dayStart = new Date(measuredAtIso); dayStart.setHours(0, 0, 0, 0)
   const dayEnd = new Date(measuredAtIso); dayEnd.setHours(23, 59, 59, 999)
   const { data: dupes } = await supabase
     .from('weight_logs')
     .select('id')
     .eq('pet_id', id)
-    .eq('weight_kg', weightValue)
     .gte('measured_at', dayStart.toISOString())
     .lte('measured_at', dayEnd.toISOString())
     .limit(1)
 
   if (dupes && dupes.length > 0) {
-    // Idempotent: aynı gün aynı kilo zaten var — sessizce başarı dön
-    revalidatePath(`/owner/pets/${id}`)
-    return NextResponse.json({ success: true, idempotent: true })
+    return NextResponse.json({
+      error: 'Bu tarih için zaten bir kilo/boy ölçüm kaydı bulunmaktadır. Bir gün içinde yalnızca 1 kayıt eklenebilir.'
+    }, { status: 400 })
   }
 
   const insertData: WeightLogInsert = {
@@ -74,7 +69,6 @@ export async function POST(req: NextRequest, context: RouteContext) {
   if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
 
   // ─── Otomatik Kilo & Boy Hatırlatıcısı Güncelleme ──────────────
-  // 1. Varsa eski hatırlatıcıyı tamamlandı olarak işaretle
   await supabase
     .from('plans')
     .update({ status: 'completed' })
@@ -83,7 +77,6 @@ export async function POST(req: NextRequest, context: RouteContext) {
     .eq('sub_type', 'Kilo & Boy Ölçümü')
     .eq('status', 'active');
     
-  // 2. Yeni ölçüm tarihi + 1 ay sonrasına yeni hatırlatıcı kur
   const logDate = new Date(measuredAtIso);
   logDate.setMonth(logDate.getMonth() + 1);
   
@@ -99,11 +92,6 @@ export async function POST(req: NextRequest, context: RouteContext) {
       extra_data: { source: 'system', auto_generated: true }
     });
 
-  revalidatePath('/owner/dashboard')
-  // @ts-expect-error
-  revalidateTag('dashboard')
-  revalidatePath('/owner/pets')
   revalidatePath(`/owner/pets/${id}`)
-
   return NextResponse.json({ success: true })
 }

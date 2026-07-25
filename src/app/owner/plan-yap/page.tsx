@@ -8,6 +8,16 @@ import {
   Loader2,
   ArrowLeft
 } from 'lucide-react';
+import {
+  ShieldCheckIcon,
+  BugIcon,
+  ScaleIcon,
+  UtensilsIcon,
+  SparklesIcon,
+  ActivityIcon,
+  CalendarIcon,
+  StethoscopeIcon
+} from '@/components/icons/PetIcons';
 
 // Özel Yarı-3D İkon Bileşeni
 const Semi3DIcon = ({ svgPath, className }: { svgPath: React.ReactNode, className?: string }) => (
@@ -38,14 +48,14 @@ const PetIcons = {
 
 // 8 Gerçek Kategori (API Uyumlu)
 const CATEGORIES = [
-  { key: 'saglik', title: 'Sağlık Takibi', desc: 'Kilo ölçümü, semptom takibi, ilaç kullanımı planlayın.', iconPath: PetIcons.DefaultAvatar, color: 'text-rose-500', bg: 'bg-rose-50', border: 'border-rose-100 hover:border-rose-200', gradient: 'from-rose-500 to-red-500' },
-  { key: 'kontrol', title: 'Kontroller & Randevular', desc: 'Genel kontrol, acil durum ve takip randevularını planlayın.', iconPath: PetIcons.Carrier, color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-100 hover:border-violet-200', gradient: 'from-violet-600 to-indigo-600' },
-  { key: 'asi', title: 'Aşı Takibi', desc: 'Aşı ve bağışıklık hatırlatmaları oluşturun.', iconPath: PetIcons.Syringe, color: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-100 hover:border-blue-200', gradient: 'from-blue-500 to-cyan-500' },
-  { key: 'parazit', title: 'Parazit Koruması', desc: 'İç ve dış parazit uygulama rutinleri planlayın.', iconPath: PetIcons.Whistle, color: 'text-teal-500', bg: 'bg-teal-50', border: 'border-teal-100 hover:border-teal-200', gradient: 'from-teal-500 to-emerald-500' },
-  { key: 'bakim', title: 'Bakım Rutini', desc: 'Tıraş, banyo, tırnak kesimi ve genel hijyen planlayın.', iconPath: PetIcons.Comb, color: 'text-fuchsia-500', bg: 'bg-fuchsia-50', border: 'border-fuchsia-100 hover:border-fuchsia-200', gradient: 'from-fuchsia-500 to-pink-500' },
-  { key: 'beslenme', title: 'Beslenme Planı', desc: 'Günlük kuru/yaş mama ve diyet planları oluşturun.', iconPath: PetIcons.FoodBowl, color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-100 hover:border-amber-200', gradient: 'from-amber-500 to-orange-500' },
-  { key: 'hijyen', title: 'Hijyen Takibi', desc: 'Kum kabı temizliği, diş fırçalama, kulak bakımı planlayın.', iconPath: PetIcons.Bed, color: 'text-text-secondary', bg: 'bg-bg-main', border: 'border-border-main hover:border-border-main', gradient: 'from-slate-500 to-slate-700' },
-  { key: 'aktivite', title: 'Aktivite & Egzersiz', desc: 'Yürüyüş, oyun seansları ve eğitim rutinleri planlayın.', iconPath: PetIcons.Frisbee, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100 hover:border-emerald-200', gradient: 'from-emerald-500 to-green-500' },
+  { key: 'saglik', title: 'Sağlık Takibi', desc: 'Kilo ölçümü, semptom takibi, ilaç kullanımı planlayın.', renderIcon: () => <ScaleIcon badgeSize="lg" size={22} /> },
+  { key: 'kontrol', title: 'Kontroller & Randevular', desc: 'Genel kontrol, acil durum ve takip randevularını planlayın.', renderIcon: () => <StethoscopeIcon badgeSize="lg" size={22} /> },
+  { key: 'asi', title: 'Aşı Takibi', desc: 'Aşı ve bağışıklık hatırlatmaları oluşturun.', renderIcon: () => <ShieldCheckIcon badgeSize="lg" size={22} /> },
+  { key: 'parazit', title: 'Parazit Koruması', desc: 'İç ve dış parazit uygulama rutinleri planlayın.', renderIcon: () => <BugIcon badgeSize="lg" size={22} /> },
+  { key: 'bakim', title: 'Bakım Rutini', desc: 'Tıraş, banyo, tırnak kesimi ve genel hijyen planlayın.', renderIcon: () => <SparklesIcon badgeSize="lg" size={22} /> },
+  { key: 'beslenme', title: 'Beslenme Planı', desc: 'Günlük kuru/yaş mama ve diyet planları oluşturun.', renderIcon: () => <UtensilsIcon badgeSize="lg" size={22} /> },
+  { key: 'hijyen', title: 'Hijyen Takibi', desc: 'Kum kabı temizliği, diş fırçalama, kulak bakımı planlayın.', renderIcon: () => <SparklesIcon badgeSize="lg" size={22} /> },
+  { key: 'aktivite', title: 'Aktivite & Egzersiz', desc: 'Yürüyüş, oyun seansları ve eğitim rutinleri planlayın.', renderIcon: () => <ActivityIcon badgeSize="lg" size={22} /> },
 ];
 
 function PlanYapContent() {
@@ -220,9 +230,7 @@ function PlanYapContent() {
               }}
               className="w-full flex items-start p-4 bg-white border border-gray-100 rounded-3xl shadow-sm hover:shadow-md hover:border-gray-200 transition-all group focus:outline-none focus:ring-4 focus:ring-slate-300/30 text-left"
             >
-              <div className={`w-12 h-12 shrink-0 flex items-center justify-center rounded-2xl ${category.bg} ${category.color} group-hover:scale-105 transition-all shadow-inner`}>
-                <Semi3DIcon svgPath={category.iconPath} className="w-6 h-6" />
-              </div>
+              {category.renderIcon()}
               <div className="ml-4 flex-1">
                 <span className="font-bold text-text-primary text-[13px] block">{category.title}</span>
                 <span className="text-[11px] text-text-secondary mt-0.5 block leading-relaxed">{category.desc}</span>

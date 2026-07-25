@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { VaccineIcon, PillIcon, BowlIcon, PawIcon, HouseIcon } from '@/components/icons/PetIcons'
+import { ShieldCheckIcon, BugIcon, ScaleIcon, UtensilsIcon, SparklesIcon, PawIcon, HouseIcon } from '@/components/icons/PetIcons'
 import QuickJournalWidget from '@/components/dashboard/QuickJournalWidget'
 import { buildPetMicroTasks } from '@/lib/microTasks/petMicroTasks'
 import { PetMicroTaskCard } from '@/components/micro-tasks/PetMicroTaskCard'
@@ -464,7 +464,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
         dateInfo: 'Eksik Bilgi',
         ctaLabel: 'Gir',
         action: () => {
-          router.push(`/owner/pets/${targetPet.id}/journal/new/weight`)
+          router.push(`/owner/pets/${targetPet.id}/nutrition?tab=kilo`)
         }
       })
     }
@@ -501,7 +501,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
         dateInfo: 'Rutin',
         ctaLabel: 'Güncelle',
         action: () => {
-          router.push(`/owner/pets/${targetPet.id}/journal/new/weight`)
+          router.push(`/owner/pets/${targetPet.id}/nutrition?tab=kilo`)
         }
       })
     }
@@ -623,17 +623,16 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
 
   const renderIcon = (type: string) => {
     switch (type) {
-      case 'vaccine': return <VaccineIcon width={18} height={18} />
-      case 'parasite': return <PillIcon width={18} height={18} />
-      case 'appetite': return <BowlIcon width={18} height={18} />
-      case 'venues': return <HouseIcon width={18} height={18} />
-      case 'weight-first': return <i className="ti ti-scale text-[18px]" style={{ color: 'var(--color-danger)' }} />
-      case 'weight-routine': return <i className="ti ti-scale text-[18px]" style={{ color: '#0F8F84' }} />
-      case 'journal': return <i className="ti ti-mood-smile text-[18px]" style={{ color: 'var(--color-danger)' }} />
-      case 'health-task': return <i className="ti ti-heart-rate-monitor text-[18px]" style={{ color: '#E05C97' }} />
-      case 'emergency-contact': return <i className="ti ti-alert-circle text-[18px]" style={{ color: '#F59E0B' }} />
-      case 'positive': return <PawIcon width={18} height={18} />
-      default: return <PawIcon width={18} height={18} />
+      case 'vaccine': return <ShieldCheckIcon size={20} badgeSize="md" />
+      case 'parasite': return <BugIcon size={20} badgeSize="md" />
+      case 'appetite': return <UtensilsIcon size={20} badgeSize="md" />
+      case 'weight-first':
+      case 'weight-routine': return <ScaleIcon size={20} badgeSize="md" />
+      case 'health-task': return <ShieldCheckIcon size={20} badgeSize="md" />
+      case 'emergency-contact': return <ShieldCheckIcon size={20} badgeSize="md" />
+      case 'journal': return <SparklesIcon size={20} badgeSize="md" />
+      case 'positive':
+      default: return <ShieldCheckIcon size={20} badgeSize="md" />
     }
   }
 

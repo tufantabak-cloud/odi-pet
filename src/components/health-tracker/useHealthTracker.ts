@@ -127,7 +127,7 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
 
       // vaccines join: is_core + code (template eşleştirme için)
       // vaccines tablosunda alan adı: code (vaccine_code değil)
-      const [schedulesRes, plansRes, parasiteRes, vaccinesRes, growthRes, appointmentsRes, medicationsRes, nutritionRes, petRes] = await Promise.all([
+      const [schedulesRes, plansRes, parasiteRes, vaccinesRes, growthRes, weightLogsRes, appointmentsRes, medicationsRes, nutritionRes, petRes, foodInventoryRes] = await Promise.all([
         usePlansOnly ? Promise.resolve({ data: [], error: null }) : supabase
           .from('health_schedules')
           .select('*')
@@ -157,6 +157,10 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
           .select('*')
           .eq('pet_id', petId),
         supabase
+          .from('weight_logs')
+          .select('*')
+          .eq('pet_id', petId),
+        supabase
           .from('appointments')
           .select('*')
           .eq('pet_id', petId),
@@ -172,8 +176,14 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
           .from('pets')
           .select('id, name, species, gender, is_neutered')
           .eq('id', petId)
-          .single()
+          .single(),
+        supabase
+          .from('food_inventory')
+          .select('*')
+          .eq('pet_id', petId)
+          .maybeSingle()
       ]);
+
 
       if (schedulesRes.error) throw schedulesRes.error;
       if (plansRes.error) throw plansRes.error;
@@ -191,12 +201,28 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
         (vaccinesRes.data || []).map((item: any) => item.plan_id).filter(Boolean)
       );
 
+      const weightLogDates = new Set(
+        [...(weightLogsRes.data || []), ...(growthRes.data || [])]
+          .map((item: any) => {
+            const dt = item.measured_at || item.recorded_at || item.created_at;
+            return dt ? dt.split('T')[0] : null;
+          })
+          .filter(Boolean)
+      );
+
       const mergedEvents = [
         ...(schedulesRes.data || []),
         ...(plansRes.data || [])
           .filter((p: any) => p.status !== 'cancelled')
           .filter((p: any) => !(p.category === 'parazit' && p.status === 'completed' && completedPlanIdsInParasiteRecords.has(p.id)))
           .filter((p: any) => !(p.category === 'asi' && p.status === 'completed' && completedPlanIdsInVaccineRecords.has(p.id)))
+          .filter((p: any) => {
+             if (getPlanDisplayTitle(p) === 'Kilo Takibi' && p.status === 'completed') {
+                const dateStr = p.scheduled_at?.split('T')[0];
+                return dateStr ? !weightLogDates.has(dateStr) : true;
+             }
+             return true;
+          })
           .map((p: any) => {
             let dueDateStr = p.scheduled_at?.split('T')[0];
             let dueTimeStr = '12:00:00';
@@ -291,7 +317,97 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
             frequency_days: item.protection_duration_days || 30,
             frequency_label: typeLabel,
           };
-        })
+        }),
+        ...(weightLogsRes.data || []).map((item: any) => {
+          const dateStr = item.measured_at ? item.measured_at.split('T')[0] : item.created_at?.split('T')[0];
+          return {
+            id: `weight_${item.id}`,
+            _plan_id: item.id,
+            _source: 'weight_logs',
+            pet_id: item.pet_id,
+            title: `Kilo Ölçümü: ${item.weight_kg} kg${item.height_cm ? ` (${item.height_cm} cm)` : ''}`,
+            due_date: dateStr,
+            due_time: '12:00:00',
+            status: 'done',
+            category: 'Beslenme',
+            sub_category: 'Kilo Takibi',
+            vaccines: null,
+            notes: item.notes || '',
+            updated_at: item.created_at || item.measured_at,
+            frequency_days: 30,
+            frequency_label: 'Aylık',
+          };
+        }),
+        ...(growthRes.data || []).map((item: any) => {
+          const dateStr = item.recorded_at ? item.recorded_at.split('T')[0] : item.created_at?.split('T')[0];
+          return {
+            id: `growth_${item.id}`,
+            _plan_id: item.id,
+            _source: 'growth_records',
+            pet_id: item.pet_id,
+            title: item.weight_kg ? `Kilo Ölçümü: ${item.weight_kg} kg${item.height_cm ? ` (${item.height_cm} cm)` : ''}` : 'Gelişim Kaydı',
+            due_date: dateStr,
+            due_time: '12:00:00',
+            status: 'done',
+            category: 'Beslenme',
+            sub_category: 'Kilo Takibi',
+            vaccines: null,
+            notes: item.notes || '',
+            updated_at: item.created_at,
+            frequency_days: 30,
+            frequency_label: 'Aylık',
+          };
+        }),
+        ...(() => {
+          if (!foodInventoryRes?.data?.last_refill_date || !foodInventoryRes?.data?.next_refill_estimate) return [];
+          const inv = foodInventoryRes.data;
+          const lastRefill = inv.last_refill_date.split('T')[0];
+          const nextRefill = inv.next_refill_estimate.split('T')[0];
+          
+          const start = new Date(lastRefill);
+          const end = new Date(nextRefill);
+          const diffTime = Math.abs(end.getTime() - start.getTime());
+          const diffDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+
+          return [
+            {
+              id: `virtual_stock_${inv.pet_id}_refill`,
+              _plan_id: inv.pet_id,
+              _source: 'food_inventory',
+              _is_virtual: true,
+              pet_id: inv.pet_id,
+              title: 'Mama Stok Yenileme',
+              due_date: lastRefill,
+              due_time: '12:00:00',
+              status: 'done',
+              category: 'Beslenme',
+              sub_category: 'Mama Stok Takibi',
+              vaccines: null,
+              notes: 'Mama stoğu yenilendi',
+              updated_at: inv.last_refill_date,
+              frequency_days: diffDays,
+              frequency_label: 'Tahmini Bitiş',
+            },
+            {
+              id: `virtual_stock_${inv.pet_id}_next`,
+              _plan_id: inv.pet_id,
+              _source: 'food_inventory',
+              _is_virtual: true,
+              pet_id: inv.pet_id,
+              title: 'Tahmini Bitiş',
+              due_date: nextRefill,
+              due_time: '12:00:00',
+              status: 'upcoming',
+              category: 'Beslenme',
+              sub_category: 'Mama Stok Takibi',
+              vaccines: null,
+              notes: 'Tahmini bitiş tarihi',
+              updated_at: inv.next_refill_estimate,
+              frequency_days: diffDays,
+              frequency_label: 'Tahmini Bitiş',
+            }
+          ];
+        })()
       ];
 
       // Inject virtual estrus forecast events
@@ -307,7 +423,7 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
         vaccinesRes.data || [],
         parasiteRes.data || [],
         schedulesRes.data || [],
-        growthRes.data || [],
+        [...(growthRes.data || []), ...(weightLogsRes.data || [])],
         appointmentsRes.data || [],
         medicationsRes.data || [],
         nutritionRes.data || []
@@ -371,6 +487,24 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
       )
       .subscribe();
 
+    const channel4 = supabase
+      .channel('weight_logs_changes_tracker')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'weight_logs', filter: `pet_id=eq.${petId}` },
+        () => { scheduleRefresh(); }
+      )
+      .subscribe();
+
+    const channel5 = supabase
+      .channel('food_inventory_changes_tracker')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'food_inventory', filter: `pet_id=eq.${petId}` },
+        () => { scheduleRefresh(); }
+      )
+      .subscribe();
+
     return () => {
       if (refreshTimerRef.current) {
         clearTimeout(refreshTimerRef.current);
@@ -379,8 +513,11 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
       if (channel1) supabase.removeChannel(channel1);
       supabase.removeChannel(channel2);
       supabase.removeChannel(channel3);
+      supabase.removeChannel(channel4);
+      supabase.removeChannel(channel5);
     };
   }, [fetchEvents, scheduleRefresh, petId, supabase, refreshTrigger]);
+
 
   // ── Gruplama ─────────────────────────────────────────────────────────────────
   const categoryGroups: CategoryGroup[] = useMemo(
@@ -475,7 +612,10 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ record_id: matchingAgendaEvt.sourceRecordId })
         });
+      } else if (matchingAgendaEvt.source === 'weight_logs') {
+        await fetch(`/api/pets/${petId}/nutrition/weight/${matchingAgendaEvt.sourceRecordId}`, { method: 'DELETE' });
       } else if (matchingAgendaEvt.source === 'appointments') {
+
         await fetch(`/api/appointments/${matchingAgendaEvt.sourceRecordId}`, { method: 'DELETE' });
       } else if (matchingAgendaEvt.source === 'health_medications') {
         await fetch(`/api/pets/${petId}/medications`, {

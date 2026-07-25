@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Share2, Phone, Camera, ImageIcon, FileImage } from 'lucide-react'
+import { Share2, Phone, Camera, ImageIcon, FileImage, Wallet, Home, FileText, AlertTriangle, Heart, ShieldCheck } from 'lucide-react'
 import FamilyTab from './FamilyTab'
 import HealthTab from '@/components/pets/tabs/HealthTab'
 
@@ -215,6 +215,7 @@ export interface PetDetailProps {
   activeLostReport?: any;
   hasPasskey?: boolean;
   isAdminView?: boolean;
+  lastVaccineRecord?: { vaccine_name?: string; administered_at?: string; status?: string | null } | null;
 }
 
 export function getTaskCardStyle(isOverdue: boolean, isCompleted: boolean) {
@@ -226,7 +227,10 @@ export function getTaskCardStyle(isOverdue: boolean, isCompleted: boolean) {
       textSub: 'text-red-800',
       textDate: 'text-red-600 animate-pulse',
       textDots: 'text-red-800 hover:text-red-950',
-      iconBorder: 'border-red-100/50'
+      iconBorder: 'border-red-100/50',
+      badgeBg: 'bg-red-100/80',
+      badgeText: 'text-red-950',
+      iconColor: 'text-red-700'
     };
   } else if (!isCompleted) {
     return {
@@ -236,7 +240,10 @@ export function getTaskCardStyle(isOverdue: boolean, isCompleted: boolean) {
       textSub: 'text-text-secondary',
       textDate: 'text-primary',
       textDots: 'text-text-secondary hover:text-primary',
-      iconBorder: 'border-primary/10'
+      iconBorder: 'border-primary/10',
+      badgeBg: 'bg-primary-soft',
+      badgeText: 'text-primary',
+      iconColor: 'text-primary'
     };
   }
   return {
@@ -246,11 +253,14 @@ export function getTaskCardStyle(isOverdue: boolean, isCompleted: boolean) {
     textSub: 'text-[#3c6b65]',
     textDate: 'text-[#5a8680]',
     textDots: 'text-[#3c6b65] hover:text-[#0f3a35]',
-    iconBorder: 'border-[#edf7f6]'
+    iconBorder: 'border-[#edf7f6]',
+    badgeBg: 'bg-emerald-100/80',
+    badgeText: 'text-emerald-950',
+    iconColor: 'text-emerald-700'
   };
 }
 
-export default function PetDetailClient({ pet, age, score, overdue, schedules, diseases, allergies, medications, growthRecords, appointments, nutritionLogs, inventory, feedingLogs, weightLogs, assignments, payments, subscription, activeLostReport, hasPasskey = false, isAdminView = false }: PetDetailProps) {
+export default function PetDetailClient({ pet, age, score, overdue, schedules, diseases, allergies, medications, growthRecords, appointments, nutritionLogs, inventory, feedingLogs, weightLogs, assignments, payments, subscription, activeLostReport, hasPasskey = false, isAdminView = false, lastVaccineRecord }: PetDetailProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -1337,7 +1347,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   )
 
   return (
-    <div className="flex flex-col gap-6 pb-[100px] pb-safe w-full mx-auto">
+    <div className="flex flex-col gap-6 pb-[100px] pb-safe w-full max-w-6xl mx-auto">
       {generalError && (
         <div role="alert" className="p-3 bg-error/10 text-error text-[13px] font-bold rounded-xs text-center border border-error/20 mx-4 mt-4">
           {generalError}
@@ -1376,22 +1386,29 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
         // Kilo
         const primaryWeight = growthRecords?.[0]?.weight_kg ? `${growthRecords[0].weight_kg}` : '-';
-        
-        // Profil Yüzdesi (enrichTasks'dan hesaplanıyor)
-        const enrichTasks: any[] = [];
-        if (!pet.avatar_url) enrichTasks.push(1);
-        if (!pet.breed) enrichTasks.push(1);
-        if (!pet.vet_name) enrichTasks.push(1);
-        if (!localSchedules || !localSchedules.some((s: any) => s.category === 'Medikal')) enrichTasks.push(1);
-        if (!pet.microchip_no) enrichTasks.push(1);
-        if (!growthRecords || !growthRecords[0]?.weight_kg) enrichTasks.push(1);
-        if (!nutritionLogs || nutritionLogs.length === 0) enrichTasks.push(1);
-        if (!pet.sos_contacts?.[0]?.phone) enrichTasks.push(1);
-        if (!hasPasskey) enrichTasks.push(1);
-        
-        const totalTasks = 9;
-        const completedTasks = totalTasks - enrichTasks.length;
-        const profileCompletion = completedTasks === totalTasks ? 100 : Math.max(15, Math.round((completedTasks / totalTasks) * 100));
+
+        // Son Aşı (kanonik vaccine_records_v2 verisi)
+        let lastVaccineStr = '-';
+        let lastVaccineSub = 'Kayıt yok';
+        const EXCLUDED_VACCINE_STATUSES = new Set(['cancelled', 'migrated_to_plan', 'overdue', 'pending', 'upcoming', 'scheduled', 'planned']);
+        const ALLOWED_VACCINE_STATUSES = new Set(['completed', 'done']);
+
+        if (lastVaccineRecord?.administered_at) {
+          const vStatus = lastVaccineRecord.status;
+          const isAllowed = !vStatus || ALLOWED_VACCINE_STATUSES.has(vStatus);
+          const isExcluded = vStatus ? EXCLUDED_VACCINE_STATUSES.has(vStatus) : false;
+
+          if (isAllowed && !isExcluded) {
+            try {
+              const d = new Date(lastVaccineRecord.administered_at);
+              if (!isNaN(d.getTime())) {
+                const months = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+                lastVaccineStr = `${d.getDate()} ${months[d.getMonth()]}`;
+                lastVaccineSub = lastVaccineRecord.vaccine_name || 'Tamamlandı';
+              }
+            } catch {}
+          }
+        }
 
         // Sıradaki
         const now = new Date();
@@ -1420,8 +1437,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               onChangeCoverClick={() => setShowCoverSourceSheet(true)}
             />
 
-            <div className="sticky top-0 z-20 bg-surface border-b border-border">
-              <div className="flex overflow-x-auto [&::-webkit-scrollbar]:hidden">
+            <div className="sticky top-16 z-20 bg-surface border-b border-border">
+              <div className="flex overflow-x-auto [&::-webkit-scrollbar]:hidden min-h-[44px] items-center" role="tablist">
                 {([
                   {id:'ozet', label:'Özet'},
                   {id:'takvim', label:'Takvim'},
@@ -1432,8 +1449,10 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                 ] as const).map(tab => (
                   <button
                     key={tab.id}
+                    role="tab"
+                    aria-selected={activeTab === tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex-shrink-0 px-4 py-2.5 text-[12px] font-medium whitespace-nowrap border-b-2 transition-colors ${activeTab === tab.id ? 'border-primary text-primary' : 'border-transparent text-text-secondary'}`}
+                    className={`flex-shrink-0 px-4 min-h-[44px] inline-flex items-center text-[13px] font-bold whitespace-nowrap border-b-2 transition-colors cursor-pointer ${activeTab === tab.id ? 'border-primary text-primary font-black' : 'border-transparent text-text-secondary hover:text-text-primary'}`}
                   >
                     {tab.label}
                   </button>
@@ -1442,199 +1461,230 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             </div>
 
             {activeTab === 'ozet' && (
-              <div className="p-4 flex flex-col gap-3">
-                {/* Paylaş + Acil Durum */}
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => router.push(`/owner/pets/${pet.id}/share`)}
-                    className="relative w-full h-9 rounded-btn bg-white border border-border-main flex items-center justify-center gap-2 hover:bg-gray-50 active:scale-[0.98] transition-all duration-200 focus:outline-none"
-                  >
-                    <Share2 size={18} className="text-primary" />
-                    <span className="text-[14px] font-bold text-text-primary">Paylaş</span>
-                  </button>
-                  <FloatingSOS
-                    fullWidth={true}
-                    petId={pet.id}
-                    petName={pet.name}
-                    vetPhone={(pet as any).vet_phone ?? undefined}
-                    vetName={pet.vet_name ?? undefined}
-                    sosContacts={pet.sos_contacts}
-                    onLostReport={() => setLostWizardOpen(true)}
-                    onMarkFound={handleMarkFound}
-                  />
-                </div>
-
-                {microTasks.length > 0 && (
-                  <div className="mt-4 space-y-3">
-                    <p className="text-[11px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide px-1">
-                      Profilini güçlendir
-                    </p>
-                    {microTasks.slice(0, 3).map(task => (
-                      <PetMicroTaskCard
-                        key={task.id}
-                        task={task}
+              <div className="p-4 flex flex-col gap-6">
+                <div className="lg:grid lg:grid-cols-12 lg:gap-6 lg:items-start flex flex-col gap-4">
+                  
+                  {/* SOL SÜTUN (Masaüstü: lg:col-span-7) */}
+                  <div className="lg:col-span-7 flex flex-col gap-4">
+                    {/* Paylaş + Acil Durum */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        onClick={() => router.push(`/owner/pets/${pet.id}/share`)}
+                        className="relative w-full h-11 rounded-btn bg-white border border-border-main flex items-center justify-center gap-2 hover:bg-gray-50 active:scale-[0.98] transition-all duration-200 focus:outline-none cursor-pointer"
+                      >
+                        <Share2 size={18} className="text-primary" />
+                        <span className="text-[14px] font-bold text-text-primary">Paylaş</span>
+                      </button>
+                      <FloatingSOS
+                        fullWidth={true}
                         petId={pet.id}
-                        onDismiss={(id) => dismissTask(pet.id, id)}
-                        onDirectAction={(action) => setActiveTaskModal(action as TaskModalType)}
+                        petName={pet.name}
+                        vetPhone={(pet as any).vet_phone ?? undefined}
+                        vetName={pet.vet_name ?? undefined}
+                        sosContacts={pet.sos_contacts}
+                        onLostReport={() => setLostWizardOpen(true)}
+                        onMarkFound={handleMarkFound}
                       />
-                    ))}
-                    <PetTaskModals
-                      petId={pet.id}
-                      petName={pet.name}
-                      activeModal={activeTaskModal}
-                      onClose={() => setActiveTaskModal(null)}
-                      onSuccess={() => router.refresh()}
-                    />
-                  </div>
-                )}
-
-                {/* 2. 3 Metrik */}
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    {
-                      value: primaryWeight,
-                      unit: primaryWeight !== '-' ? 'kg' : '',
-                      label: 'Kilo',
-                      sub: primaryWeight !== '-' ? 'Son ölçüm' : 'Kayıt yok',
-                      subType: 'neutral' as const,
-                    },
-                    {
-                      value: `${profileCompletion}`,
-                      unit: '%',
-                      label: 'Profil',
-                      sub: profileCompletion >= 80 ? 'Tamamlandı' : 'Eksik alan var',
-                      subType: profileCompletion >= 80 ? 'success' as const : 'warning' as const,
-                    },
-                    {
-                      value: nextDateStr,
-                      unit: '',
-                      label: 'Sıradaki',
-                      sub: nextSchedule ? (nextSchedule as any).title?.slice(0,10) || 'Bakım' : 'Yok',
-                      subType: overdueCount > 0 ? 'warning' as const : 'neutral' as const,
-                    },
-                  ].map((m) => (
-                    <div key={m.label} className="bg-[var(--color-surface)] rounded-md p-3 flex flex-col items-center text-center border border-[var(--color-border)] shadow-[var(--shadow-sm)]">
-                      <div className="flex items-baseline gap-0.5">
-                        <span className="text-[18px] font-800 text-[var(--color-text-primary)] leading-none tabular-nums">{m.value}</span>
-                        {m.unit && <span className="text-[10px] font-600 text-[var(--color-text-muted)]">{m.unit}</span>}
-                      </div>
-                      <span className="text-[10px] font-500 text-[var(--color-text-muted)] mt-1">{m.label}</span>
-                      <span className={`text-[9px] font-600 mt-0.5 ${
-                        m.subType === 'success' ? 'text-[var(--color-success)]' :
-                        m.subType === 'warning' ? 'text-[var(--color-warning)]' :
-                        'text-[var(--color-text-muted)]'
-                      }`}>{m.sub}</span>
                     </div>
-                  ))}
-                </div>
 
-                {/* 3. Bugün */}
-                <div className="flex flex-col gap-2">
-                  <p className="text-[11px] font-700 text-[var(--color-text-muted)] uppercase tracking-[0.8px] px-1">Bugün</p>
-                  <div className="bg-[var(--color-surface)] rounded-card overflow-hidden border border-[var(--color-border)] shadow-[var(--shadow-sm)] divide-y divide-[var(--color-border)]">
-                    {(() => {
-                      const filteredToday = todaySchedules.filter((plan: any) => {
-                        const taskDT = getTaskDateTime(plan);
-                        const isOverdue = taskDT < now;
-                        const today = new Date(now); today.setHours(0,0,0,0);
-                        const target = new Date(taskDT); target.setHours(0,0,0,0);
-                        const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000);
-                        return diffDays <= 1 || isOverdue;
-                      });
+                    {/* 3. Bugün */}
+                    <div className="flex flex-col gap-2">
+                      <p className="text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-[0.8px] px-1">Bugün</p>
+                      <div className="bg-[var(--color-surface)] rounded-card overflow-hidden border border-[var(--color-border)] shadow-[var(--shadow-sm)] divide-y divide-[var(--color-border)]">
+                        {(() => {
+                          const filteredToday = todaySchedules.filter((plan: any) => {
+                            const taskDT = getTaskDateTime(plan);
+                            const isOverdue = taskDT < now;
+                            const today = new Date(now); today.setHours(0,0,0,0);
+                            const target = new Date(taskDT); target.setHours(0,0,0,0);
+                            const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000);
+                            return diffDays <= 1 || isOverdue;
+                          });
 
-                      if (filteredToday.length === 0) {
-                        return (
-                          <div className="flex flex-col items-center justify-center py-6 px-4 text-center gap-2">
-                            <p className="text-[13px] font-600 text-[var(--color-text-secondary)]">Bugün planlı bakım yok</p>
-                            <p className="text-[11px] text-[var(--color-text-muted)]">{pet.name} ile güzel bir gün geçirin!</p>
-                          </div>
-                        );
-                      }
-
-                      return filteredToday.map((plan: any) => {
-                        const taskDT = getTaskDateTime(plan);
-                        const isOverdue = taskDT < now;
-                        const timeStr = plan.due_time ? plan.due_time.slice(0, 5) : '';
-                        
-                        let badge = ''; let dotColor = ''; let badgeBg = ''; let badgeColor = '';
-                        const today = new Date(now); today.setHours(0,0,0,0);
-                        const target = new Date(taskDT); target.setHours(0,0,0,0);
-                        const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000);
-                        if (isOverdue) {
-                          const dm = Math.floor((now.getTime() - taskDT.getTime()) / 60000)
-                          const hours = Math.floor(dm / 60)
-                          if (dm < 60) {
-                            badge = `${Math.max(1, dm)} dk gecikti`
-                          } else if (hours < 24) {
-                            badge = `${hours} sa gecikti`
-                          } else {
-                            badge = `${Math.floor(hours / 24)} gün gecikti`
+                          if (filteredToday.length === 0) {
+                            return (
+                              <div className="flex flex-col items-center justify-center py-6 px-4 text-center gap-2">
+                                <p className="text-[13px] font-600 text-[var(--color-text-secondary)]">Bugün planlı bakım yok</p>
+                                <p className="text-[11px] text-[var(--color-text-muted)]">{pet.name} ile güzel bir gün geçirin!</p>
+                              </div>
+                            );
                           }
-                          dotColor = 'var(--color-danger)'; badgeBg = 'var(--color-danger-soft)'; badgeColor = 'var(--color-danger)'
-                        } else if (diffDays === 0) {
-                          badge = `Bugün${timeStr ? ' '+timeStr : ''}`
-                          dotColor = 'var(--color-warning)'; badgeBg = 'var(--color-warning-soft)'; badgeColor = 'var(--color-warning)'
-                        } else if (diffDays === 1) {
-                          badge = 'Yarın'
-                          dotColor = 'var(--color-primary)'; badgeBg = 'var(--color-primary-soft)'; badgeColor = 'var(--color-primary)'
-                        }
 
-                        const isActionsOpen = activeMenuId === plan.id;
-                        return (
-                          <div key={plan.id}>
-                            <button type="button"
-                              onClick={() => setActiveMenuId(prev => prev === plan.id ? null : plan.id)}
-                              className="w-full text-left flex items-center gap-3 px-[var(--space-4)] py-3 hover:bg-[var(--color-surface-secondary)] transition-colors group">
-                              <span className="text-[11px] font-700 text-[var(--color-text-muted)] w-10 shrink-0 tabular-nums">{timeStr || '-'}</span>
-                              <div className="w-2 h-2 rounded-full shrink-0" style={{ background: dotColor }} />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-[13px] font-600 text-[var(--color-text-primary)] truncate group-hover:text-[var(--color-primary)] transition-colors">
-                                  {plan.title || (plan as any).vaccines?.name || 'Sağlık İşlemi'}
-                                </p>
-                                <p className="text-[10px] text-[var(--color-text-muted)] mt-0.5">{getPlanDisplayCategory(plan.category, plan.sub_category)}</p>
+                          return filteredToday.map((plan: any) => {
+                            const taskDT = getTaskDateTime(plan);
+                            const isOverdue = taskDT < now;
+                            const timeStr = plan.due_time ? plan.due_time.slice(0, 5) : '';
+                            
+                            let badge = ''; let dotColor = ''; let badgeBg = ''; let badgeColor = '';
+                            const today = new Date(now); today.setHours(0,0,0,0);
+                            const target = new Date(taskDT); target.setHours(0,0,0,0);
+                            const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000);
+                            if (isOverdue) {
+                              const dm = Math.floor((now.getTime() - taskDT.getTime()) / 60000)
+                              const hours = Math.floor(dm / 60)
+                              if (dm < 60) {
+                                badge = `${Math.max(1, dm)} dk gecikti`
+                              } else if (hours < 24) {
+                                badge = `${hours} sa gecikti`
+                              } else {
+                                badge = `${Math.floor(hours / 24)} gün gecikti`
+                              }
+                              dotColor = 'var(--color-danger)'; badgeBg = 'var(--color-danger-soft)'; badgeColor = 'var(--color-danger)'
+                            } else if (diffDays === 0) {
+                              badge = `Bugün${timeStr ? ' '+timeStr : ''}`
+                              dotColor = 'var(--color-warning)'; badgeBg = 'var(--color-warning-soft)'; badgeColor = 'var(--color-warning)'
+                            } else if (diffDays === 1) {
+                              badge = 'Yarın'
+                              dotColor = 'var(--color-primary)'; badgeBg = 'var(--color-primary-soft)'; badgeColor = 'var(--color-primary)'
+                            }
+
+                            const isActionsOpen = activeMenuId === plan.id;
+                            return (
+                              <div key={plan.id}>
+                                <button type="button"
+                                  onClick={() => setActiveMenuId(prev => prev === plan.id ? null : plan.id)}
+                                  className="w-full text-left flex items-center gap-3 px-[var(--space-4)] py-3 hover:bg-[var(--color-surface-secondary)] transition-colors group">
+                                  <span className="text-[11px] font-700 text-[var(--color-text-muted)] w-10 shrink-0 tabular-nums">{timeStr || '-'}</span>
+                                  <div className="w-2 h-2 rounded-full shrink-0" style={{ background: dotColor }} />
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-[13px] font-600 text-[var(--color-text-primary)] truncate group-hover:text-[var(--color-primary)] transition-colors">
+                                      {plan.title || (plan as any).vaccines?.name || 'Sağlık İşlemi'}
+                                    </p>
+                                    <p className="text-[10px] text-[var(--color-text-muted)] mt-0.5">{getPlanDisplayCategory(plan.category, plan.sub_category)}</p>
+                                  </div>
+                                  <span className="text-[10px] font-700 px-2 py-1 rounded-xs shrink-0 whitespace-nowrap"
+                                    style={{ background: badgeBg, color: badgeColor }}>
+                                    {badge}
+                                  </span>
+                                </button>
+                                {isActionsOpen && (
+                                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 px-4 pb-3 pt-1 animate-in fade-in slide-in-from-top-1">
+                                    <button onClick={() => handleMarkCompleted(plan.id)}
+                                      className="min-h-[44px] px-2 py-2 text-[12px] font-bold text-success bg-success/10 hover:bg-success/20 rounded-xl transition-colors flex items-center justify-center cursor-pointer">
+                                      ✓ Tamamlandı
+                                    </button>
+                                    <button onClick={() => handlePostpone(plan.id)}
+                                      className="min-h-[44px] px-2 py-2 text-[12px] font-bold text-text-secondary bg-text-secondary/10 hover:bg-text-secondary/20 rounded-xl transition-colors flex items-center justify-center cursor-pointer">
+                                      📅 +1 Gün
+                                    </button>
+                                    <button onClick={() => { setActiveMenuId(null); handleEditTask(plan); }}
+                                      className="min-h-[44px] px-2 py-2 text-[12px] font-bold text-primary bg-primary/10 hover:bg-primary/20 rounded-xl transition-colors flex items-center justify-center cursor-pointer">
+                                      ✏️ Düzenle
+                                    </button>
+                                    <button onClick={() => handleDeleteTask(plan.id)}
+                                      className="min-h-[44px] px-2 py-2 text-[12px] font-bold text-error bg-error/10 hover:bg-error/20 rounded-xl transition-colors flex items-center justify-center cursor-pointer">
+                                      ❌ Sil
+                                    </button>
+                                  </div>
+                                )}
                               </div>
-                              <span className="text-[10px] font-700 px-2 py-1 rounded-xs shrink-0 whitespace-nowrap"
-                                style={{ background: badgeBg, color: badgeColor }}>
-                                {badge}
-                              </span>
-                            </button>
-                            {isActionsOpen && (
-                              <div className="flex items-center gap-1.5 px-[var(--space-4)] pb-3 pt-0.5 animate-in fade-in slide-in-from-top-1">
-                                <button onClick={() => handleMarkCompleted(plan.id)}
-                                  className="flex-1 px-2 py-2 text-[11px] font-bold text-success bg-success/10 hover:bg-success/20 rounded-lg transition-colors whitespace-nowrap">
-                                  ✓ Tamamlandı
-                                </button>
-                                <button onClick={() => handlePostpone(plan.id)}
-                                  className="flex-1 px-2 py-2 text-[11px] font-bold text-text-secondary bg-text-secondary/10 hover:bg-text-secondary/20 rounded-lg transition-colors whitespace-nowrap">
-                                  📅 +1 Gün
-                                </button>
-                                <button onClick={() => { setActiveMenuId(null); handleEditTask(plan); }}
-                                  className="flex-1 px-2 py-2 text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors whitespace-nowrap">
-                                  ✏️ Düzenle
-                                </button>
-                                <button onClick={() => handleDeleteTask(plan.id)}
-                                  className="flex-1 px-2 py-2 text-[11px] font-bold text-error bg-error/10 hover:bg-error/20 rounded-lg transition-colors whitespace-nowrap">
-                                  ❌ Sil
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      });
-                    })()}
+                            );
+                          });
+                        })()}
+                      </div>
+                    </div>
+
+                    {/* MicroTasks */}
+                    {microTasks.length > 0 && (
+                      <div className="mt-2 space-y-3">
+                        <p className="text-[11px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide px-1">
+                          Profilini güçlendir
+                        </p>
+                        {microTasks.slice(0, 3).map(task => (
+                          <PetMicroTaskCard
+                            key={task.id}
+                            task={task}
+                            petId={pet.id}
+                            onDismiss={(id) => dismissTask(pet.id, id)}
+                            onDirectAction={(action) => setActiveTaskModal(action as TaskModalType)}
+                          />
+                        ))}
+                        <PetTaskModals
+                          petId={pet.id}
+                          petName={pet.name}
+                          activeModal={activeTaskModal}
+                          onClose={() => setActiveTaskModal(null)}
+                          onSuccess={() => router.refresh()}
+                        />
+                      </div>
+                    )}
                   </div>
+
+                  {/* SAĞ SÜTUN (Masaüstü: lg:col-span-5) */}
+                  <div className="lg:col-span-5 flex flex-col gap-4">
+                    {/* 2. 3 Metrik */}
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        {
+                          value: primaryWeight,
+                          unit: primaryWeight !== '-' ? 'kg' : '',
+                          label: 'Kilo',
+                          sub: primaryWeight !== '-' ? 'Son ölçüm' : 'Kayıt yok',
+                          subType: 'neutral' as const,
+                        },
+                        {
+                          value: lastVaccineStr,
+                          unit: '',
+                          label: 'Son aşı',
+                          sub: lastVaccineSub,
+                          subType: lastVaccineStr !== '-' ? 'success' as const : 'neutral' as const,
+                        },
+                        {
+                          value: nextDateStr,
+                          unit: '',
+                          label: 'Sıradaki',
+                          sub: nextSchedule ? (nextSchedule as any).title?.slice(0,10) || 'Bakım' : 'Yok',
+                          subType: overdueCount > 0 ? 'warning' as const : 'neutral' as const,
+                        },
+                      ].map((m) => (
+                        <div key={m.label} className="bg-surface rounded-card p-3 flex flex-col items-center text-center border border-border-main/60 shadow-soft min-w-0">
+                          <div className="flex items-baseline gap-0.5 max-w-full truncate">
+                            <span className="text-[16px] xs:text-[18px] font-extrabold text-text-primary leading-none tabular-nums truncate">{m.value}</span>
+                            {m.unit && <span className="text-[11px] font-bold text-text-secondary ml-0.5">{m.unit}</span>}
+                          </div>
+                          <span className="text-[11px] font-semibold text-text-secondary mt-1 truncate max-w-full">{m.label}</span>
+                          <span className={`text-[11px] font-bold mt-0.5 truncate max-w-full ${
+                            m.subType === 'success' ? 'text-success' :
+                            m.subType === 'warning' ? 'text-warning' :
+                            'text-text-secondary'
+                          }`}>{m.sub}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Temel Bilgiler Kartı */}
+                    <div className="bg-surface rounded-card p-4 border border-border-main/60 shadow-soft flex flex-col gap-3">
+                      <h3 className="text-[14px] font-extrabold text-text-primary flex items-center gap-2">
+                        <ShieldCheck size={16} className="text-primary" />
+                        Temel Bilgiler
+                      </h3>
+                      <div className="flex flex-col gap-2.5 divide-y divide-border-main/40">
+                        <div className="flex items-center justify-between pt-1">
+                          <span className="text-[12px] font-semibold text-text-secondary">Mikroçip No</span>
+                          <span className="text-[12px] font-bold text-text-primary font-mono">{pet.microchip_no || 'Henüz girilmedi'}</span>
+                        </div>
+                        <div className="flex items-center justify-between pt-2.5">
+                          <span className="text-[12px] font-semibold text-text-secondary">Veteriner</span>
+                          <span className="text-[12px] font-bold text-text-primary truncate max-w-[180px]">{pet.vet_company || pet.vet_name || 'Kayıtlı veteriner yok'}</span>
+                        </div>
+                        <div className="flex items-center justify-between pt-2.5">
+                          <span className="text-[12px] font-semibold text-text-secondary">Beslenme</span>
+                          <span className="text-[12px] font-bold text-text-primary truncate max-w-[180px]">{nutritionLogs?.[0]?.food_brand || assignments?.[0]?.food_product_family?.official_name || 'Mama tanımlanmadı'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {pet.birth_date && (
+                      <HumanAgeCalculator 
+                        species={pet.species} 
+                        birthDate={pet.birth_date} 
+                        weightKg={growthRecords && growthRecords.length > 0 ? growthRecords[0].weight_kg : undefined} 
+                        petName={pet.name} 
+                      />
+                    )}
+                  </div>
+
                 </div>
-
-
-                {pet.birth_date && (
-                  <HumanAgeCalculator 
-                    species={pet.species} 
-                    birthDate={pet.birth_date} 
-                    weightKg={growthRecords && growthRecords.length > 0 ? growthRecords[0].weight_kg : undefined} 
-                    petName={pet.name} 
-                  />
-                )}
-
               </div>
             )}
           </div>
@@ -1785,7 +1835,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       )}
 
       {activeTab === 'beslenme' && (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 p-4">
           <NutritionClient
             pet={pet}
             profile={nutritionLogs?.[0] ?? null}
@@ -1794,6 +1844,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             weightLogs={weightLogs ?? []}
             assignments={assignments ?? []}
             nutritionPlans={(localSchedules || []).filter((s: any) => s._source === 'plans' && (s._plan_category === 'beslenme' || s.category === 'Beslenme' || s.category === 'beslenme'))}
+            embedded={true}
           />
         </div>
       )}
@@ -1806,34 +1857,32 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             {activeTab === 'saglik' ? 'Sağlık ve Bakım' : 'Bakım'}
           </h2>
           {activeTab === 'saglik' && (
-              <MinimalGrowthChart 
-              records={growthRecords} 
-              petSpecies={pet.species as 'cat' | 'dog'}
-              petBreed={pet.breed}
-              petBirthDate={pet.birth_date}
-              petGender={pet.gender as 'male' | 'female' | 'unknown'}
-              isNeutered={pet.is_neutered ?? false}
-              upcomingTask={localSchedules.find(s => (s.sub_type === 'Kilo & Boy Ölçümü' || (s.title && s.title.includes('Kilo & Boy'))) && s.status !== 'done')}
-              onAddRecord={() => setQuickUpdateConfig({ 
-                title: 'Gelişim Bilgisi', 
-                desc: 'Gelişimi takip edebilmek için güncel kilo ve boyunu girin.', 
-                endpoint: `/api/pets/${pet.id}/growth`, 
-                method: 'POST', 
-                fields: [
-                  { name: 'recorded_at', type: 'date', label: 'Tarih', defaultValue: new Date().toISOString().split('T')[0], required: true },
-                  { name: 'weight_kg', type: 'number', label: 'Kilo (kg)', placeholder: 'Örn: 4.5', required: true }, 
-                  { name: 'height_cm', type: 'number', label: 'Boy (cm)', placeholder: 'Örn: 35.5', required: false }
-                ] 
-              })}
-            />
+            <Link
+              href={`/owner/pets/${pet.id}/nutrition?tab=kilo`}
+              className="card-base p-4 bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-white border border-amber-200/80 rounded-2xl flex items-center justify-between gap-3 group hover:border-amber-400/80 transition-all shadow-sm"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-[20px] shadow-sm shrink-0">
+                  ⚖️
+                </div>
+                <div>
+                  <h4 className="text-[14px] font-black text-text-primary group-hover:text-amber-700 transition-colors flex items-center gap-1.5">
+                    Kilo & Gelişim Takibi
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Beslenme Modülünde</span>
+                  </h4>
+                  <p className="text-[12px] text-text-secondary font-medium mt-0.5">
+                    Kilo değişimi (gr), gram farkları, ideal kilo hedefi ve geçmiş ölçümler Beslenme modülünde takip edilmektedir.
+                  </p>
+                </div>
+              </div>
+              <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-[14px] group-hover:translate-x-1 transition-transform shrink-0">
+                →
+              </div>
+            </Link>
           )}
+
           {([
-            ...(activeTab === 'saglik' ? [
-              { name: 'Sağlık', icon: <FirstAidIcon width={22} height={22} />, color: 'text-red-500', bg: 'bg-red-50' },
-              { name: 'Aşı', icon: <VaccineIcon width={22} height={22} />, color: 'text-blue-500', bg: 'bg-blue-50' },
-              { name: 'Parazit', icon: <ParasiteIcon width={22} height={22} />, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-              { name: 'Veteriner', icon: <CarrierIcon width={22} height={22} />, color: 'text-purple-500', bg: 'bg-purple-50' },
-            ] : []),
+            ...(activeTab === 'saglik' ? [] : []),
             ...(activeTab === 'bakim' ? [
               { name: 'Bakım', icon: <ShampooIcon width={22} height={22} />, color: 'text-pink-500', bg: 'bg-pink-50' },
               { name: 'Hijyen', icon: <ScoopIcon width={22} height={22} />, color: 'text-teal-500', bg: 'bg-teal-50' },
@@ -1860,10 +1909,19 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           const headerOverdueCount = filteredPendingForHeader.filter((s: any) => getTaskDateTime(s) < new Date(now)).length
           const headerPlannedCount = filteredPendingForHeader.length - headerOverdueCount
           const cta = tabCtaInfo[module.name]
+          const contentId = `module-content-${MODULE_ID_MAP[module.name] ?? module.name}`
           return (
             <div key={module.name} id={`section-${MODULE_ID_MAP[module.name] ?? module.name}`} className={`card-base border border-border-main/60 scroll-mt-24 ${isMenuOpenInModule ? 'relative z-[100]' : ''} ${initialSection === module.name ? 'animate-pulseHighlight' : ''}`}>
               <div
                 onClick={() => toggleSection(module.name)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleSection(module.name);
+                  }
+                }}
+                aria-expanded={isOpen}
+                aria-controls={contentId}
                 data-testid={
                   module.name === 'Aşı' ? 'vaccine-module-button' :
                   module.name === 'Parazit' ? 'parasite-module-button' :
@@ -1916,7 +1974,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               </div>
 
               {isOpen && (
-                <div className="border-t border-border-main/40 p-4 flex flex-col gap-5 animate-fade-in">
+                <div id={contentId} className="border-t border-border-main/40 p-4 flex flex-col gap-5 animate-fade-in">
                   {/* Aşı: Smart Scan banner */}
                   {module.name === 'Aşı' && (
                     <div className="bg-gradient-to-tr from-blue-600 to-indigo-700 p-5 rounded-2xl shadow-lg flex flex-col items-center text-center gap-3 relative overflow-hidden">
@@ -2008,8 +2066,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         </div>
         {activeTab === 'saglik' && (
           <>
-            <BreedHealthCard breed={pet.breed} />
             <HealthTab petId={pet.id} petName={pet.name} />
+            <BreedHealthCard breed={pet.breed} />
           </>
         )}
       </div>
@@ -2023,15 +2081,15 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         <h2 className="text-[16px] font-black text-text-primary px-1">Ek Bilgiler ve Araçlar</h2>
         <div className="grid grid-cols-2 gap-3">
           {([
-            { id: 'Galeri', label: 'Galeri', icon: '📸', gradient: 'from-blue-500 to-indigo-500' },
-            { id: 'Eşleştirme', label: 'Eşleştirme', icon: '❤️', gradient: 'from-rose-400 to-pink-500' },
-            { id: 'Bütçe', label: 'Bütçe', icon: '🐾', gradient: 'from-emerald-400 to-teal-500' },
-            { id: 'Sahiplendir', label: 'Sahiplendir', icon: '🏠', gradient: 'from-amber-400 to-orange-500' },
-            { id: 'Raporlar', label: 'Raporlar', icon: '📊', gradient: 'from-violet-500 to-purple-600' },
+            { id: 'Galeri', label: 'Galeri', icon: <Camera size={22} className="text-white" />, gradient: 'from-blue-500 to-indigo-500' },
+            { id: 'Eşleştirme', label: 'Eşleştirme', icon: <Heart size={22} className="text-white" />, gradient: 'from-rose-400 to-pink-500' },
+            { id: 'Bütçe', label: 'Bütçe', icon: <Wallet size={22} className="text-white" />, gradient: 'from-emerald-400 to-teal-500' },
+            { id: 'Sahiplendir', label: 'Sahiplendir', icon: <Home size={22} className="text-white" />, gradient: 'from-amber-400 to-orange-500' },
+            { id: 'Raporlar', label: 'Raporlar', icon: <FileText size={22} className="text-white" />, gradient: 'from-violet-500 to-purple-600' },
             { 
               id: 'Kayip', 
               label: activeLostReport ? 'İlan Aktif' : 'Kayıp İlanı', 
-              icon: activeLostReport ? '🆘' : '🚨', 
+              icon: <AlertTriangle size={22} className="text-white" />, 
               gradient: activeLostReport ? 'from-red-600 to-red-700 animate-pulse' : 'from-red-500 to-rose-600' 
             },
           ]).map((item) => {

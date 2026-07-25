@@ -231,6 +231,8 @@ export default function NotificationsClient({
                       router.push(`/owner/dashboard?highlight=vaccine-${notif.pet_id}`)
                     } else if (titleLower.includes('parazit')) {
                       router.push(`/owner/dashboard?highlight=parasite-${notif.pet_id}`)
+                    } else if (titleLower.includes('kilo') || msgLower.includes('kilo') || titleLower.includes('boy') || msgLower.includes('boy') || titleLower.includes('gelişim') || msgLower.includes('gelişim')) {
+                      router.push(`/owner/pets/${notif.pet_id}/nutrition?tab=kilo`)
                     } else if (titleLower.includes('bakım') || msgLower.includes('(bakım)')) {
                       router.push(`/owner/pets/${notif.pet_id}/care`)
                     } else if (titleLower.includes('beslenme') || msgLower.includes('(beslenme)')) {

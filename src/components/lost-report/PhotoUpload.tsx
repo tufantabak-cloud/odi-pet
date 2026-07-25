@@ -46,6 +46,14 @@ export const PhotoUpload = ({ sessionId, onNext }: { sessionId: string, onNext: 
       <button onClick={handleUpload} disabled={loading} className="bg-black text-white p-2 rounded font-medium mt-2 disabled:opacity-50">
         {loading ? 'Yükleniyor...' : 'Devam Et'}
       </button>
+      <button
+        type="button"
+        onClick={() => onNext({ skipped: true })}
+        disabled={loading}
+        className="rounded p-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+      >
+        Fotoğrafsız devam et
+      </button>
     </div>
   );
 };

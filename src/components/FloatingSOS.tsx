@@ -275,7 +275,7 @@ export default function FloatingSOS({
         {open && mounted && createPortal(modalContent, document.body)}
         <button
           onClick={() => setOpen(true)}
-          className="relative w-full h-9 rounded-btn bg-[#fff0f0] border border-[#ffcccc] flex items-center justify-center gap-2 hover:bg-[#ffe5e5] active:scale-[0.98] transition-all duration-200 focus:outline-none overflow-hidden"
+          className="relative w-full h-11 rounded-btn bg-[#fff0f0] border border-[#ffcccc] flex items-center justify-center gap-2 hover:bg-[#ffe5e5] active:scale-[0.98] transition-all duration-200 focus:outline-none overflow-hidden"
           aria-label="Acil SOS"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e04b4b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="relative z-10 text-[#e04b4b]">

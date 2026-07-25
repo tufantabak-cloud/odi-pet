@@ -27,26 +27,24 @@ test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification'
     test.setTimeout(120000);
     await login(page);
 
-    // 1. Create a Pet Profile
+    // Bu senaryo kayıt sihirbazını değil gelişim/beslenme modülünü sınar.
+    // Test petini kararlı API sözleşmesi üzerinden oluştur.
     console.log('Creating a temporary dog...');
-    await page.goto('/owner/pets/add');
-    await page.click('button:has-text("Köpek")');
-    await page.waitForTimeout(600);
-    await page.fill('#name', petName);
-    await page.selectOption('#breed', 'Poodle (Kaniş)');
-    await page.click('label:has-text("♂ Erkek")');
-    await page.fill('input[type="date"]', '2026-01-01');
-    await page.fill('#weight', '4.5');
-    await page.click('button:has-text("Devam Et →")');
-    await page.waitForTimeout(600);
-    await page.click('button:has-text("Profili Oluştur")');
-    await page.waitForTimeout(600);
-    await page.click('button:has-text("Atla →")');
-    await expect(page).toHaveURL(/\/owner\/pets\/add\/success/, { timeout: 15000 });
-
-    const url = page.url();
-    const petIdMatch = url.match(/[?&]id=([^&]+)/);
-    const petId = petIdMatch ? petIdMatch[1] : '';
+    const petResponse = await page.evaluate(async (name) => {
+      const form = new FormData();
+      form.append('name', name);
+      form.append('species', 'dog');
+      form.append('breed', 'Poodle (Kaniş)');
+      form.append('birth_date', '2026-01-01');
+      form.append('gender', 'male');
+      form.append('is_neutered', 'false');
+      form.append('weight', '4.5');
+      const response = await fetch('/api/pets', { method: 'POST', body: form });
+      return { status: response.status, body: await response.json() };
+    }, petName);
+    expect(petResponse.status).toBe(200);
+    expect(petResponse.body.success).toBe(true);
+    const petId = petResponse.body.pet.id;
     console.log(`Created pet with ID: ${petId}`);
     expect(petId).not.toBe('');
 
@@ -55,6 +53,8 @@ test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification'
     await page.goto(`/owner/pets/${petId}`);
     await page.waitForLoadState('networkidle');
 
+    // Gelişim grafiği güncel birleşik profilde Sağlık sekmesindedir.
+    await page.getByRole('tab', { name: 'Sağlık' }).click();
     // Add first weight record from Pet Profile page using MinimalGrowthChart (add record button)
     await page.click('button[title="Kilo veya Boy Ekle"]');
     await page.waitForTimeout(500);
@@ -82,6 +82,7 @@ test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification'
     // Go back to pet profile to verify MinimalGrowthChart rendered weight & custom curve
     await page.goto(`/owner/pets/${petId}`);
     await page.waitForLoadState('networkidle');
+    await page.getByRole('tab', { name: 'Sağlık' }).click();
 
     // Let's verify that the chart SVG is visible and contains paths/points
     const chartSvg = page.locator('svg.drop-shadow-sm');

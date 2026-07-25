@@ -3,6 +3,8 @@ import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/sup
 import { redirect } from 'next/navigation'
 import NutritionClient from './NutritionClient'
 
+import { Suspense } from 'react'
+
 export default async function PetNutritionPage({ params }: { params: Promise<{ id: string }> }) {
   let profile = await getCurrentProfile()
   if (!profile) {
@@ -37,7 +39,7 @@ export default async function PetNutritionPage({ params }: { params: Promise<{ i
     { data: assignments },
     { data: nutritionPlans }
   ] = await Promise.all([
-    supabase.from('pets').select('id, name, avatar_url, species').eq('id', id).single(),
+    supabase.from('pets').select('id, name, avatar_url, species, breed, birth_date, gender, is_neutered').eq('id', id).single(),
     supabase.from('pet_nutrition_profiles').select('*').eq('pet_id', id).maybeSingle(),
     supabase.from('food_inventory').select('*').eq('pet_id', id).maybeSingle(),
     supabase.from('feeding_logs').select('*').eq('pet_id', id).order('meal_time', { ascending: false }).limit(30),
@@ -68,14 +70,16 @@ export default async function PetNutritionPage({ params }: { params: Promise<{ i
   if (!pet) redirect('/owner/dashboard')
 
   return (
-    <NutritionClient
-      pet={pet}
-      profile={nutritionProfile ?? null}
-      inventory={inventory ?? null}
-      feedingLogs={feedingLogs ?? []}
-      weightLogs={weightLogs ?? []}
-      assignments={assignments ?? []}
-      nutritionPlans={nutritionPlans ?? []}
-    />
+    <Suspense fallback={<div className="p-8 text-center text-text-secondary text-[14px] font-medium">Beslenme Modülü Yükleniyor...</div>}>
+      <NutritionClient
+        pet={pet}
+        profile={nutritionProfile ?? null}
+        inventory={inventory ?? null}
+        feedingLogs={feedingLogs ?? []}
+        weightLogs={weightLogs ?? []}
+        assignments={assignments ?? []}
+        nutritionPlans={nutritionPlans ?? []}
+      />
+    </Suspense>
   )
 }

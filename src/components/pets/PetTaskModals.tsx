@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Scale, Utensils, Award, Sparkles } from 'lucide-react';
+import { X } from 'lucide-react';
+import { ScaleIcon, UtensilsIcon, SparklesIcon } from '@/components/icons/PetIcons';
 
 export type TaskModalType =
   | 'WEIGHT_MODAL'
@@ -193,12 +194,10 @@ export function PetTaskModals({
         {/* Header */}
         <div className="flex items-center justify-between p-4 px-5 border-b border-[#F0EEFC] bg-gradient-to-r from-[#F7F6FF] to-white">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#EEEDFE] text-[#534AB7] flex items-center justify-center font-bold">
-              {activeModal === 'WEIGHT_MODAL' && <Scale size={18} />}
-              {activeModal === 'DAILY_MEALS_MODAL' && <Utensils size={18} />}
-              {activeModal === 'FOOD_AMOUNT_MODAL' && <Award size={18} />}
-              {activeModal === 'NUTRITION_TYPE_MODAL' && <Sparkles size={18} />}
-            </div>
+            {activeModal === 'WEIGHT_MODAL' && <ScaleIcon badgeSize="sm" size={18} />}
+            {activeModal === 'DAILY_MEALS_MODAL' && <UtensilsIcon badgeSize="sm" size={18} />}
+            {activeModal === 'FOOD_AMOUNT_MODAL' && <UtensilsIcon badgeSize="sm" size={18} />}
+            {activeModal === 'NUTRITION_TYPE_MODAL' && <SparklesIcon badgeSize="sm" size={18} />}
             <div>
               <h3 className="text-sm font-bold text-[#26215C] leading-tight">
                 {activeModal === 'WEIGHT_MODAL' && `${petName} için Kilo Bilgisi`}

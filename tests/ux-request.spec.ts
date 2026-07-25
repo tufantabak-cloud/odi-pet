@@ -15,8 +15,8 @@ test('User Request Flow', async ({ page }) => {
 
   try {
     // Step 1: Login
-    log(1, 'Navigating to http://localhost:3000/login');
-    await page.goto('http://localhost:3000/login');
+    log(1, 'Navigating to /login');
+    await page.goto('/login');
     await page.waitForTimeout(2000);
     
     log(1, 'Attempting to login');
@@ -64,7 +64,7 @@ test('User Request Flow', async ({ page }) => {
     log(2, 'Looking for pet "Odi" or direct navigation to 11b747b8-b719-4fe3-a782-7cd4cad70bc7');
     const petUrlPart = '11b747b8-b719-4fe3-a782-7cd4cad70bc7';
     
-    await page.goto(`http://localhost:3000/owner/pets/${petUrlPart}`);
+    await page.goto(`/owner/pets/${petUrlPart}`);
     await page.waitForTimeout(3000);
     log(2, `Navigated to pet profile: ${page.url()}`);
     
@@ -138,7 +138,7 @@ test('User Request Flow', async ({ page }) => {
 
     // Step 4: Navigate to `/owner/pets/11b747b8-b719-4fe3-a782-7cd4cad70bc7/vaccines` and verify
     log(4, 'Navigating to vaccines page');
-    await page.goto(`http://localhost:3000/owner/pets/${petUrlPart}/vaccines`);
+    await page.goto(`/owner/pets/${petUrlPart}/vaccines`);
     await page.waitForTimeout(3000);
     
     const pageText = await page.locator('body').innerText();

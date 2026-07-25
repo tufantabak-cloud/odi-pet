@@ -86,13 +86,15 @@ interface Case {
 // ── Kapsam: kullanıcının belirttiği 8 kategori + tüm alt kategoriler ──
 const CASES: Case[] = [
   // ═══ SAĞLIK ═══
-  { label: 'Sağlık · Kilo Takibi (aylık)',      source: 'plan', cat: 'saglik', sub: 'Kilo Takibi',    rule: 'monthly', group: 'Saglik', recurring: true },
+  { label: 'Beslenme · Kilo Takibi (aylık)',      source: 'plan', cat: 'beslenme', sub: 'Kilo Takibi',    rule: 'monthly', group: 'Beslenme', recurring: true },
   { label: 'Sağlık · Belirti Takibi (haftalık)', source: 'plan', cat: 'saglik', sub: 'Belirti Takibi', rule: 'weekly',  group: 'Saglik', recurring: true },
   { label: 'Sağlık · Tedavi/Pansuman (günlük)',  source: 'plan', cat: 'saglik', sub: 'Tedavi/Pansuman', rule: 'daily',  group: 'Saglik', recurring: true },
   { label: 'Sağlık · Kronik Takip (günlük)',     source: 'plan', cat: 'saglik', sub: 'Kronik Takip',   rule: 'daily',   group: 'Saglik', recurring: true },
   { label: 'Sağlık · Tahlil/Rapor (tek sefer)',  source: 'plan', cat: 'saglik', sub: 'Tahlil/Rapor',   rule: null,      group: 'Saglik', recurring: false },
   { label: 'Sağlık · Alerji (tek sefer)',        source: 'plan', cat: 'saglik', sub: 'Alerji',         rule: null,      group: 'Saglik', recurring: false },
-  { label: 'Sağlık · Kilo & Boy Ölçümü (aylık)', source: 'plan', cat: 'saglik', sub: 'Kilo & Boy Ölçümü', rule: 'monthly', group: 'Saglik', recurring: true },
+  { label: 'Beslenme · Kilo & Boy Ölçümü (aylık)', source: 'plan', cat: 'beslenme', sub: 'Kilo & Boy Ölçümü', rule: 'monthly', group: 'Beslenme', recurring: true },
+
+
 
   // ═══ AŞI ═══ (Zorunlu / Opsiyonel alt gruplar, satır = aşı adı)
   { label: 'Aşı · Kuduz Aşısı (yıllık)',   source: 'plan', cat: 'asi', sub: 'Aşı', rule: 'yearly', group: 'Asi', recurring: true, vaccineName: 'Kuduz Aşısı Protokolü' },

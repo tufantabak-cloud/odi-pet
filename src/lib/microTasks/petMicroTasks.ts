@@ -106,8 +106,7 @@ export function buildPetMicroTasks({
       title: 'Kilo Bilgisi Gir',
       description: 'Gelişimini takip edebilmek için güncel kilosunu girin.',
       actionText: 'Bilgi Gir',
-      route: `/owner/pets/${pet.id}`,
-      directAction: 'WEIGHT_MODAL',
+      route: `/owner/pets/${pet.id}/nutrition?tab=kilo`,
       icon: 'ti ti-scale'
     });
   }

@@ -1,63 +1,146 @@
-'use client';
-import React, { useState, useEffect } from 'react';
-import { ProgressBar } from './ProgressBar';
-import { PhotoUpload } from './PhotoUpload';
-import { LocationForm } from './LocationForm';
-import { OTPVerification } from './OTPVerification';
-import { PublishSummary } from './PublishSummary';
+'use client'
 
-export const WizardForm = () => {
-  const [step, setStep] = useState(1);
-  const [sessionId, setSessionId] = useState('');
-  const [payload, setPayload] = useState<any>({});
-  const [reportId, setReportId] = useState<string | null>(null);
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+
+import { LocationForm } from './LocationForm'
+import { OTPVerification } from './OTPVerification'
+import { PetSelection } from './PetSelection'
+import { PhotoUpload } from './PhotoUpload'
+import { ProgressBar } from './ProgressBar'
+import { PublishSummary } from './PublishSummary'
+
+type PetOption = {
+  id: string
+  name: string
+  species: string | null
+}
+
+export function WizardForm({ pets }: { pets: PetOption[] }) {
+  const [step, setStep] = useState(1)
+  const [sessionId, setSessionId] = useState('')
+  const [payload, setPayload] = useState<Record<string, unknown>>({})
+  const [reportId, setReportId] = useState<string | null>(null)
+  const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    setSessionId(`sess_${Date.now()}_${Math.random().toString(36).substring(7)}`);
-  }, []);
+    setSessionId(crypto.randomUUID())
+  }, [])
 
-  const saveDraft = async (newData: any) => {
-    const updatedPayload = { ...payload, ...newData };
-    setPayload(updatedPayload);
-    await fetch('/api/v1/reports/lost/publish', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionId, payload: updatedPayload, action: 'save_draft' })
-    });
-  };
+  const saveDraftAndAdvance = async (
+    newData: Record<string, unknown>,
+    nextStep: number
+  ) => {
+    if (!sessionId) return
 
-  const renderStep = () => {
-    switch (step) {
-      case 1:
-        return <PhotoUpload sessionId={sessionId} onNext={(data) => { saveDraft({ photo: data }); setStep(2); }} />;
-      case 2:
-        return <LocationForm onNext={(data) => { saveDraft({ location: data }); setStep(3); }} />;
-      case 3:
-        return <OTPVerification onNext={() => { setStep(4); }} />;
-      case 4:
-        return <PublishSummary sessionId={sessionId} payload={payload} onPublish={(id) => setReportId(id)} />;
-      default:
-        return null;
+    setSaving(true)
+    setError('')
+    const updatedPayload = { ...payload, ...newData }
+
+    try {
+      const response = await fetch('/api/v1/reports/lost/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          payload: updatedPayload,
+          action: 'save_draft',
+        }),
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'DRAFT_SAVE_FAILED')
+      }
+
+      setPayload(updatedPayload)
+      setStep(nextStep)
+    } catch {
+      setError('Bilgiler kaydedilemedi. Lütfen tekrar dene.')
+    } finally {
+      setSaving(false)
     }
-  };
+  }
+
+  if (pets.length === 0) {
+    return (
+      <div className="card-base mx-auto w-full max-w-md p-6 text-center">
+        <h2 className="text-xl font-bold text-gray-900">Önce bir pet profili gerekli</h2>
+        <p className="mt-2 text-sm text-gray-600">
+          Kayıp ilanının doğru petle ve sahiplik kaydıyla eşleşmesi için profil oluşturmalısın.
+        </p>
+        <Link href="/owner/pets/add" className="btn-primary mt-5 inline-flex px-5 py-3">
+          Pet Profili Oluştur
+        </Link>
+      </div>
+    )
+  }
 
   if (reportId) {
     return (
-      <div className="bg-white p-6 rounded-xl shadow-md text-center">
-        <div className="text-4xl mb-4">✅</div>
-        <h2 className="text-2xl font-bold text-green-600 mb-2">İlan Yayınlandı!</h2>
-        <p className="text-gray-600 mb-4">Kayıp ilanınız başarıyla oluşturuldu.</p>
-        <p className="text-sm text-gray-500 font-mono bg-gray-100 p-2 rounded inline-block">ID: {reportId}</p>
+      <div className="card-base mx-auto w-full max-w-md p-6 text-center">
+        <div className="mb-4 text-4xl" aria-hidden="true">✅</div>
+        <h2 className="mb-2 text-2xl font-bold text-green-700">İlan yayınlandı</h2>
+        <p className="mb-4 text-gray-600">
+          Kayıp ilanı aktif edildi ve sosyal kayıp pet akışında görünür durumda.
+        </p>
+        <p className="inline-block rounded bg-gray-100 p-2 font-mono text-sm text-gray-500">
+          ID: {reportId}
+        </p>
       </div>
-    );
+    )
   }
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-md max-w-md w-full mx-auto">
-      <ProgressBar currentStep={step} totalSteps={4} />
+    <div className="card-base mx-auto w-full max-w-md p-6">
+      <ProgressBar currentStep={step} totalSteps={5} />
+
       <div className="min-h-[300px]">
-        {renderStep()}
+        {step === 1 && (
+          <PetSelection
+            pets={pets}
+            onNext={(petId) => void saveDraftAndAdvance({ petId }, 2)}
+          />
+        )}
+        {step === 2 && (
+          <PhotoUpload
+            sessionId={sessionId}
+            onNext={(photo) => void saveDraftAndAdvance({ photo }, 3)}
+          />
+        )}
+        {step === 3 && (
+          <LocationForm
+            onNext={(location) => void saveDraftAndAdvance({ location }, 4)}
+          />
+        )}
+        {step === 4 && (
+          <OTPVerification
+            onNext={(contactPhone) =>
+              void saveDraftAndAdvance({ contactPhone }, 5)
+            }
+          />
+        )}
+        {step === 5 && (
+          <PublishSummary
+            sessionId={sessionId}
+            payload={payload}
+            onPublish={setReportId}
+          />
+        )}
       </div>
+
+      {(saving || error) && (
+        <div
+          className={`mt-4 rounded-lg px-3 py-2 text-sm font-medium ${
+            error
+              ? 'bg-red-50 text-red-700'
+              : 'bg-primary/5 text-primary'
+          }`}
+          role={error ? 'alert' : 'status'}
+        >
+          {error || 'Bilgilerin güvenle kaydediliyor…'}
+        </div>
+      )}
     </div>
-  );
-};
+  )
+}

@@ -29,7 +29,7 @@ test.describe('Lost Pet E2E Lifecycle Flow', () => {
     const petResponse = await page.evaluate(async (name) => {
       const fd = new FormData();
       fd.append('name', name);
-      fd.append('species', 'Köpek');
+      fd.append('species', 'dog');
       fd.append('breed', 'Golden Retriever');
       fd.append('birth_date', '2025-01-01');
       fd.append('gender', 'male');

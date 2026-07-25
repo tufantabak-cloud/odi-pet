@@ -4,31 +4,84 @@ import { useState } from 'react'
 
 interface UpgradeButtonProps {
   plan: 'pro' | 'ai_plus'
+  interval?: 'monthly' | 'yearly'
   label?: string
   className?: string
+  disabled?: boolean
 }
 
-export default function UpgradeButton({ plan, label, className }: UpgradeButtonProps) {
-  const [toast, setToast] = useState<{ message: string; type: 'success' } | null>(null)
+const ERROR_MESSAGES: Record<string, string> = {
+  UNAUTHORIZED: 'Devam etmek için yeniden giriş yap.',
+  PLAN_NOT_AVAILABLE: 'Bu plan şu anda kullanılamıyor.',
+  PLAN_PRICE_NOT_CONFIGURED: 'Bu planın ödeme ayarı henüz tamamlanmamış.',
+  PAYMENT_PROVIDER_NOT_CONFIGURED: 'Güvenli ödeme sistemi henüz yapılandırılmamış.',
+  SUBSCRIPTION_ALREADY_EXISTS: 'Mevcut aboneliğini “Aboneliği Yönet” alanından değiştirebilirsin.',
+}
 
-  const handleUpgrade = () => {
-    setToast({ message: '✨ Çok yakında! Bekleme listesine eklendiniz.', type: 'success' })
-    setTimeout(() => setToast(null), 3000)
+export default function UpgradeButton({
+  plan,
+  interval = 'monthly',
+  label,
+  className,
+  disabled = false,
+}: UpgradeButtonProps) {
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleUpgrade = async () => {
+    if (disabled || isLoading) return
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const response = await fetch('/api/payments/create-checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ plan, interval }),
+      })
+      const result = (await response.json()) as {
+        url?: string
+        error?: string
+      }
+
+      if (!response.ok || !result.url) {
+        setError(
+          ERROR_MESSAGES[result.error ?? ''] ??
+            'Ödeme sayfası açılamadı. Lütfen tekrar dene.'
+        )
+        return
+      }
+
+      window.location.assign(result.url)
+    } catch {
+      setError('Bağlantı kurulamadı. Lütfen internetini kontrol edip tekrar dene.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const buttonLabel = label || 'Çok Yakında — Bildirim Al →'
+  const buttonLabel = label || 'Güvenli Ödemeye Geç →'
 
   return (
-    <>
-      <button onClick={handleUpgrade} className={className}>
-        {buttonLabel}
+    <div className="flex flex-col gap-2">
+      <button
+        type="button"
+        onClick={handleUpgrade}
+        className={className}
+        disabled={disabled || isLoading}
+        aria-busy={isLoading}
+      >
+        {isLoading ? 'Ödeme sayfası hazırlanıyor…' : buttonLabel}
       </button>
 
-      {toast && (
-        <div className="fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl shadow-xl text-[13px] font-bold border transition-all bg-emerald-50 text-emerald-800 border-emerald-200">
-          {toast.message}
-        </div>
+      {error && (
+        <p role="alert" className="text-[12px] font-semibold text-error">
+          {error}
+        </p>
       )}
-    </>
+    </div>
   )
 }

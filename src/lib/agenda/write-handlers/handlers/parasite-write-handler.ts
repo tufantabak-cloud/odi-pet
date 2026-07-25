@@ -205,8 +205,10 @@ export class ParasiteWriteHandler implements AgendaWriteHandler<ParasiteWriteInp
       applicationMethod = 'spot_on';
     }
 
+    const rpcSupabase = context.rpcSupabase ?? context.supabase;
+
     // Atomic RPC execution — V4 signature
-    const { data: rpcRes, error: rpcErr } = await supabase.rpc('complete_parasite_plan_and_record', {
+    const { data: rpcRes, error: rpcErr } = await rpcSupabase.rpc('complete_parasite_plan_and_record', {
       p_pet_id: petId,
       p_main_plan_id: mainPlan.id,
       p_actual_date: input.administered_at,

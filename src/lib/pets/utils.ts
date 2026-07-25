@@ -1,4 +1,5 @@
 import { getNowTR } from '@/lib/utils'
+import { getPetAgeStage } from '@/lib/pets/age-stage'
 
 /**
  * Calculates the age of a pet based on birth date and returns human-readable text and group label.
@@ -50,21 +51,7 @@ export function calcAge(birthDate: string | null) {
 
   const text = parts.join(' ') || '0 günlük'
 
-  // Köpek & Kedi yaş gruplandırması:
-  // - Yavru: 0 - 1 yaş (yaş < 1 yani years === 0 ise)
-  // - Yetişkin: 1 - 7 yaş (1 <= years < 7)
-  // - Yaşlı: 7 - 12 yaş (7 <= years < 12)
-  // - Yaşlı (12+): 12+ yaş (years >= 12)
-  let label = 'Yavru'
-  if (years === 0) {
-    label = 'Yavru'
-  } else if (years >= 1 && years < 7) {
-    label = 'Yetişkin'
-  } else if (years >= 7 && years < 12) {
-    label = 'Yaşlı'
-  } else if (years >= 12) {
-    label = 'Yaşlı (12+)'
-  }
+  const label = getPetAgeStage(years)?.label ?? '—'
 
   return { text, label }
 }

@@ -1,14 +1,14 @@
 import React from 'react';
 import { TASK_CATEGORIES, TaskCategory } from '@/lib/tasks/taskDefaults';
 import {
-  ShampooIcon,
-  ScoopIcon,
-  BoneIcon,
-  VaccineIcon,
-  CarrierIcon,
-  BowlIcon,
-  HouseIcon,
-  FirstAidIcon
+  ShieldCheckIcon,
+  BugIcon,
+  ScaleIcon,
+  UtensilsIcon,
+  SparklesIcon,
+  ActivityIcon,
+  CalendarIcon,
+  StethoscopeIcon
 } from '@/components/icons/PetIcons';
 
 interface CategoryGridProps {
@@ -19,22 +19,22 @@ interface CategoryGridProps {
 function getPetThemedIcon(categoryId: TaskCategory, isSelected: boolean) {
   switch (categoryId) {
     case 'Bakım':
-      return <ShampooIcon isSelected={isSelected} />;
+      return <SparklesIcon size={20} isSelected={isSelected} />;
     case 'Hijyen':
-      return <ScoopIcon isSelected={isSelected} />;
+      return <BugIcon size={20} isSelected={isSelected} />;
     case 'Aktiviteler':
-      return <BoneIcon isSelected={isSelected} />;
+      return <ActivityIcon size={20} isSelected={isSelected} />;
     case 'Medikal':
-      return <VaccineIcon isSelected={isSelected} />;
+      return <ShieldCheckIcon size={20} isSelected={isSelected} />;
     case 'Veteriner':
-      return <CarrierIcon isSelected={isSelected} />;
+      return <StethoscopeIcon size={20} isSelected={isSelected} />;
     case 'Beslenme':
-      return <BowlIcon isSelected={isSelected} />;
+      return <UtensilsIcon size={20} isSelected={isSelected} />;
     case 'Saglik':
-      return <FirstAidIcon isSelected={isSelected} />;
+      return <ScaleIcon size={20} isSelected={isSelected} />;
     case 'Diger':
     default:
-      return <HouseIcon isSelected={isSelected} />;
+      return <CalendarIcon size={20} isSelected={isSelected} />;
   }
 }
 

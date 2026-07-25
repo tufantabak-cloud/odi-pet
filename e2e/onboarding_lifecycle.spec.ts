@@ -29,7 +29,7 @@ test.describe.serial('Onboarding Lifecycle', () => {
     
     await page.fill('#name', 'Onboarding Test User');
     await page.fill('#reg-email', email);
-    await page.click('button:has-text("İleri")');
+    await page.getByTestId('register-next-button').click();
     
     await page.waitForSelector('#password', { state: 'visible', timeout: 5000 });
     await page.fill('#password', password);
@@ -113,11 +113,11 @@ test.describe.serial('Onboarding Lifecycle', () => {
     
     // Adım 3: Fotoğraf Ekleme (Atla)
     await page.waitForSelector('text=Profil Fotoğrafı Ekle', { timeout: 10000 });
-    await page.click('button:has-text("Profili Oluştur")');
+    await page.getByTestId('pet-photo-default-avatar-button').click();
 
     // Adım 4: Acil Durum Ağı (Atla)
     await page.waitForSelector('text=Acil Durum Ağı', { timeout: 10000 });
-    await page.click('button:has-text("Atla")');
+    await page.getByTestId('emergency-contact-skip-button').click();
 
     // Bu noktada /api/pets POST edilmiş olmalı ve success sayfasına yönlenmiş olmalı.
     await expect(page).toHaveURL(/\/owner\/pets\/add\/success/, { timeout: 15000 });

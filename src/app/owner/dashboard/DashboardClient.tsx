@@ -11,6 +11,7 @@ import { getPlanDisplayTitle } from '@/lib/plans/utils'
 import OnboardingProgressCard from '@/components/OnboardingProgressCard'
 
 import PetRecommendationsCard from '@/components/dashboard/PetRecommendationsCard'
+import { ShieldCheckIcon, BugIcon, ScaleIcon, UtensilsIcon, SparklesIcon, CalendarIcon, StethoscopeIcon } from '@/components/icons/PetIcons'
 
 export default function DashboardClient({
   greeting,
@@ -135,10 +136,7 @@ export default function DashboardClient({
               return (
                 <div key={event.id} className="flex items-center justify-between p-3.5 rounded-card bg-[var(--color-surface)] border border-[var(--color-border)] shadow-[var(--shadow-sm)] hover:border-[var(--color-primary)]/20 transition-all duration-200">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-xs flex items-center justify-center shrink-0"
-                         style={{background: 'rgba(255,107,107,0.12)'}}>
-                      <i className="ti ti-vaccine" style={{fontSize: '17px', color: 'var(--color-danger)'}} />
-                    </div>
+                    <ShieldCheckIcon badgeSize="sm" size={18} />
                     <div className="min-w-0">
                       <p className="text-[13px] font-700 text-[var(--color-text-primary)] truncate">{event.title || event.vaccines?.name || 'Sağlık Takibi'}</p>
                       <p className="text-[10px] text-[var(--color-text-secondary)] font-600 truncate">{event.pets?.name || 'Pet'}</p>
@@ -158,10 +156,7 @@ export default function DashboardClient({
               return (
                 <div key={plan.id} className="flex items-center justify-between p-3.5 rounded-card bg-[var(--color-surface)] border border-[var(--color-border)] shadow-[var(--shadow-sm)] hover:border-[var(--color-primary)]/20 transition-all duration-200">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-xs flex items-center justify-center shrink-0"
-                         style={{background: 'rgba(93,63,211,0.12)'}}>
-                      <i className="ti ti-refresh" style={{fontSize: '17px', color: 'var(--color-primary)'}} />
-                    </div>
+                    <SparklesIcon badgeSize="sm" size={18} />
                     <div className="min-w-0">
                       <p className="text-[13px] font-700 text-[var(--color-text-primary)] truncate">{getPlanDisplayTitle(plan)}</p>
                       <p className="text-[10px] text-[var(--color-text-secondary)] font-600 truncate">{plan.pets?.name || 'Pet'}</p>
@@ -200,15 +195,13 @@ export default function DashboardClient({
 
             {/* AI Vet — Primary */}
             <Link href="/owner/ai-vet" prefetch={false}
-              className="flex flex-col items-center justify-center gap-2.5 p-4 rounded-2xl min-h-[90px] cursor-pointer bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] transition-colors">
-              <div className="w-[38px] h-[38px] rounded-[10px] bg-white/20 flex items-center justify-center">
-                <i className="ti ti-robot text-white text-[20px]" />
-              </div>
+              className="flex flex-col items-center justify-center gap-2.5 p-4 rounded-2xl min-h-[90px] cursor-pointer bg-white border-[1.5px] border-[#e8e4f8] hover:border-[var(--color-primary)]/30 transition-colors">
+              <StethoscopeIcon badgeSize="md" size={20} />
               <div className="text-center">
-                <div className="text-[11px] font-800 text-white leading-tight">
+                <div className="text-[11px] font-800 text-[var(--color-text-primary)] leading-tight">
                   Odi AI Vet
                 </div>
-                <div className="text-[9px] text-white/70 font-500 mt-0.5 leading-tight">
+                <div className="text-[9px] text-[var(--color-text-muted)] font-500 mt-0.5 leading-tight">
                   Yapay zeka asistanı
                 </div>
               </div>
@@ -217,9 +210,7 @@ export default function DashboardClient({
             {/* Akıllı Tarama */}
             <Link href="/owner/scanner" prefetch={false}
               className="flex flex-col items-center justify-center gap-2.5 p-4 rounded-2xl min-h-[90px] cursor-pointer bg-white border-[1.5px] border-[#e8e4f8] hover:border-[var(--color-primary)]/30 transition-colors">
-              <div className="w-[38px] h-[38px] rounded-[10px] bg-[var(--color-success)]/10 flex items-center justify-center">
-                <i className="ti ti-scan text-[20px] text-[var(--color-success)]" />
-              </div>
+              <ShieldCheckIcon badgeSize="md" size={20} />
               <div className="text-center">
                 <div className="text-[11px] font-800 text-[var(--color-text-primary)] leading-tight">
                   Akıllı Tarama
@@ -233,9 +224,7 @@ export default function DashboardClient({
             {/* Vet Bul */}
             <Link href="/owner/vets"
               className="flex flex-col items-center justify-center gap-2.5 p-4 rounded-2xl min-h-[90px] cursor-pointer bg-white border-[1.5px] border-[#e8e4f8] hover:border-[var(--color-primary)]/30 transition-colors">
-              <div className="w-[38px] h-[38px] rounded-[10px] bg-[var(--color-danger)]/10 flex items-center justify-center">
-                <i className="ti ti-stethoscope text-[20px] text-[var(--color-danger)]" />
-              </div>
+              <StethoscopeIcon badgeSize="md" size={20} />
               <div className="text-center">
                 <div className="text-[11px] font-800 text-[var(--color-text-primary)] leading-tight">
                   Vet Bul
@@ -249,9 +238,7 @@ export default function DashboardClient({
             {/* Rutin Planla — mobilde de görünür */}
             <Link href="/owner/plan-yap" prefetch={false}
               className="flex flex-col items-center justify-center gap-2.5 p-4 rounded-2xl min-h-[90px] cursor-pointer bg-white border-[1.5px] border-[#e8e4f8] hover:border-[var(--color-primary)]/30 transition-colors">
-              <div className="w-[38px] h-[38px] rounded-[10px] bg-[var(--color-primary)]/10 flex items-center justify-center">
-                <i className="ti ti-calendar-plus text-[20px] text-[var(--color-primary)]" />
-              </div>
+              <CalendarIcon badgeSize="md" size={20} />
               <div className="text-center">
                 <div className="text-[11px] font-800 text-[var(--color-text-primary)] leading-tight">
                   Rutin Planla

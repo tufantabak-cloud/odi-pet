@@ -9,5 +9,7 @@ export const checkSubscription = cache(async (userId: string): Promise<boolean> 
     .eq('profile_id', userId)
     .single()
   if (!data) return false
-  return data.plan === 'pro' || data.plan === 'ai_plus'
+  const hasPaidPlan = data.plan === 'pro' || data.plan === 'ai_plus'
+  const hasEntitlement = data.status === 'active' || data.status === 'trialing'
+  return hasPaidPlan && hasEntitlement
 })

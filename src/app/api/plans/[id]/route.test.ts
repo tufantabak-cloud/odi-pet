@@ -4,7 +4,6 @@ import { NextRequest } from 'next/server'
 
 // Load environment variables
 dotenv.config({ path: '.env.local' })
-process.env.ALLOW_LOCAL_DB_DDL_TESTS = 'true'
 
 import * as authModule from '@/lib/auth/get-current-profile'
 import { createAdminSupabaseClient } from '@/lib/supabase/server'

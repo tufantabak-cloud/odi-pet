@@ -3,7 +3,7 @@ import * as fs from 'fs';
 
 test('User Request Flow Login Check', async ({ page }) => {
   try {
-    await page.goto('http://localhost:3000/login');
+    await page.goto('/login');
     await page.waitForTimeout(2000);
     
     const emailInput = page.locator('[data-testid="login-email-input"]');

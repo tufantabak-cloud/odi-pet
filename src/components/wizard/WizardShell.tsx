@@ -166,7 +166,7 @@ export function WizardShell({
             // 1. TAMAMLANAN ADIMLAR
             if (currentStep > index) {
               return (
-                <div key={index} className="card-base p-3 mb-2 flex items-center gap-3">
+                <div key={`completed-${index}`} className="card-base p-3 mb-2 flex items-center gap-3">
                   <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
                     <Check size={13} className="text-green-600" />
                   </div>
@@ -184,7 +184,7 @@ export function WizardShell({
             // 2. AKTİF ADIM
             if (currentStep === index) {
               return (
-                <div key={index} className="card-base p-4 mb-2 border-2" style={{ borderColor: theme.progressColor }}>
+                <div key={`active-${index}`} className="card-base p-4 mb-2 border-2" style={{ borderColor: theme.progressColor }}>
                   <div className="flex items-center gap-2 mb-4">
                     <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: theme.progressColor }}>
                       <span className="text-[12px] font-medium text-white">{index + 1}</span>
@@ -221,7 +221,7 @@ export function WizardShell({
 
             // 3. BEKLEYEN ADIMLAR
             return (
-              <div key={index} className="card-base p-3 mb-2 flex items-center gap-3 opacity-40">
+              <div key={`pending-${index}`} className="card-base p-3 mb-2 flex items-center gap-3 opacity-40">
                 <div className="w-6 h-6 rounded-full border-[1.5px] border-border-strong flex items-center justify-center flex-shrink-0">
                   <span className="text-[12px] text-text-muted">{index + 1}</span>
                 </div>

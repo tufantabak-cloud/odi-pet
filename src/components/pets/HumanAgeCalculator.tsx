@@ -2,6 +2,12 @@
 
 import React, { useMemo, useState } from 'react'
 
+import {
+  getPetAgeStage,
+  PET_AGE_STAGES,
+  type PetAgeStageKey,
+} from '@/lib/pets/age-stage'
+
 interface Props {
   species?: string
   birthDate?: string
@@ -49,14 +55,19 @@ export default function HumanAgeCalculator({ species, birthDate, weightKg, petNa
   const w = weightKg || 10 // default small/cat
   const humanAge = isCat ? getCatAge(displayYear) : getDogAge(displayYear, w)
 
-  const getLifeStage = (y: number) => {
-    if (y <= 1) return { label: 'Yavru', color: 'bg-stone-100 text-stone-700', border: 'border-stone-200' }
-    if (y <= 7) return { label: 'Yetişkin', color: 'bg-[#6a2b86] text-white', border: 'border-[#5b2473]' }
-    if (y <= 12) return { label: 'Yaşlı', color: 'bg-[#00c814] text-white', border: 'border-[#00a811]' }
-    return { label: 'Yaşlı (12+)', color: 'bg-[#ff9914] text-white', border: 'border-[#d98211]' }
+  const lifeStageStyles: Record<PetAgeStageKey, { color: string; border: string }> = {
+    junior: { color: 'bg-stone-100 text-stone-700', border: 'border-stone-200' },
+    adult: { color: 'bg-[#6a2b86] text-white', border: 'border-[#5b2473]' },
+    senior: { color: 'bg-[#00c814] text-white', border: 'border-[#00a811]' },
+    senior_12plus: { color: 'bg-[#ff9914] text-white', border: 'border-[#d98211]' },
   }
 
-  const currentStage = getLifeStage(displayYear)
+  const getLifeStage = (ageInYears: number) => {
+    const stage = getPetAgeStage(ageInYears) ?? PET_AGE_STAGES.junior
+    return { ...stage, ...lifeStageStyles[stage.key] }
+  }
+
+  const currentStage = getLifeStage(Math.max(0, exactYears))
 
   if (!isCat && !isDog) return null
 
@@ -109,7 +120,7 @@ export default function HumanAgeCalculator({ species, birthDate, weightKg, petNa
           
           <div className="flex flex-col mt-2 gap-1 relative">
             {rows.map(y => {
-              const isCurrent = y === displayYear
+              const isCurrent = exactYears >= 1 && y === displayYear
               const ageVal = isCat ? getCatAge(y) : getDogAge(y, w)
               const stage = getLifeStage(y)
               
@@ -145,7 +156,7 @@ export default function HumanAgeCalculator({ species, birthDate, weightKg, petNa
       
       {/* Legend */}
           <div className="p-4 bg-bg-main/50 border-t border-border-main flex flex-wrap justify-center gap-3">
-            {[1, 4, 10, 15].map(y => {
+            {[0, 1, 7, 12].map(y => {
               const stage = getLifeStage(y)
               return (
                 <div key={y} className="flex items-center gap-1.5">

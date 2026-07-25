@@ -15,6 +15,11 @@
 
 # next.js
 /.next/
+/.next-e2e/
+/.next-codex/
+/.next-verify/
+/test-results/
+/test_findings.json
 /out/
 
 # production

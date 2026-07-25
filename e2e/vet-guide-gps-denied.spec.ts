@@ -3,7 +3,9 @@ import { test, expect } from '@playwright/test'
 test.describe('Veterinary Guide GPS and Edge Cases', () => {
   test('Should show GPS denied fallback card when location is blocked', async ({ page, context }) => {
     // Block geolocation explicitly
-    await context.grantPermissions([], { origin: 'http://localhost:3000' })
+    await context.grantPermissions([], {
+      origin: process.env.TEST_BASE_URL ?? 'http://127.0.0.1:3100'
+    })
     await context.clearPermissions()
 
     // Assuming we have a mock user session in the test environment.

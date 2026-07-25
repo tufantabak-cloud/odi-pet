@@ -280,6 +280,14 @@ export default function WizardOrchestrator() {
         });
       }
 
+      const querySubCat = searchParams?.get('subCat');
+      if (querySubCat === 'Kilo Takibi' || querySubCat === 'Kilo Ölçümü' || querySubCat === 'Kilo & Boy Ölçümü') {
+        if (queryPetId) {
+          router.replace(`/owner/pets/${queryPetId}/nutrition?tab=kilo`);
+          return;
+        }
+      }
+
       if (categoryKey === 'beslenme' && queryPetId) {
         router.replace(`/owner/pets/${queryPetId}/nutrition`);
         return;

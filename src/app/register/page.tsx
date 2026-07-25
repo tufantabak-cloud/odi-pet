@@ -359,6 +359,7 @@ export default function RegisterPage() {
 
                   {/* İleri */}
                   <button type="button" onClick={handleNextStep}
+                    data-testid="register-next-button"
                     className="w-full bg-[#4726AF] text-white rounded-xl font-medium text-[15px] py-3 mt-1 hover:opacity-90 transition-opacity flex items-center justify-center shadow-md disabled:opacity-60">
                     İleri
                   </button>

@@ -5,7 +5,7 @@ import { useHealthTracker, toDateKey, formatFrequency } from './useHealthTracker
 import { CategoryCard, toCategoryKey } from './CategoryCard';
 import { CategoryGroup, FlowEvent, TaskRow } from './types';
 import { buildPlanYapHref } from './lib/plan-link';
-import { buildCoverageIntervals, CoverageInterval } from './lib/coverage';
+import { buildCoverageIntervals, computeExpiryDateLabel, CoverageInterval } from './lib/coverage';
 
 interface HealthTrackerProps {
   petId: string;
@@ -160,16 +160,8 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
       const coverageIntervals = onlyShowMissed ? [] : buildCoverageIntervals(allRowEvents);
       const missedIntervals = onlyShowMissed ? [] : buildMissedIntervals(allRowEvents);
 
-      // Son geçerlilik tarihi: en son done event'teki coverage.endDateKey (dd.mm.yy)
-      const lastDoneWithCoverage = [...allRowEvents]
-        .reverse()
-        .find(e => e.status === 'done' && e.coverage?.endDateKey);
-      const expiryDateLabel = lastDoneWithCoverage?.coverage?.endDateKey
-        ? (() => {
-            const [y, m, d] = lastDoneWithCoverage.coverage!.endDateKey.split('-');
-            return `${d}.${m}.${y.slice(2)}`;
-          })()
-        : null;
+      // Son geçerlilik / Gelecek ölçüm tarihi: en son done/planned event'teki son tarih (dd.mm.yy)
+      const expiryDateLabel = computeExpiryDateLabel(allRowEvents, row.task.frequency_days);
 
       return (
         <div key={`${row.task.category}-${row.task.title}`} className="border-b border-border-main/20 last:border-b-0 py-1.5">
@@ -200,6 +192,8 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
             coverageIntervals={coverageIntervals}
             missedIntervals={missedIntervals}
             getCreateHref={onlyShowMissed ? undefined : (dateKey) => buildPlanYapHref(petId, group, row, dateKey)}
+            isStockTracker={row.task.title === 'Mama Stok Takibi'}
+            isWeightTracker={row.task.title === 'Kilo Takibi'}
             {...cardProps}
           />
         </div>
@@ -346,7 +340,7 @@ function findCoveringMissedInterval(key: string, intervals: MissedInterval[]): M
  * çizgisini kendi içinde taşır.
  */
 function TimelineRow({
-  visibleKeys, todayKey, resetToken, eventsByDate, categoryKey, coverageIntervals, missedIntervals, getCreateHref,
+  visibleKeys, todayKey, resetToken, eventsByDate, categoryKey, coverageIntervals, missedIntervals, getCreateHref, isStockTracker, isWeightTracker,
   onMarkDone, onPostpone, onEdit, onDelete,
 }: {
   visibleKeys: string[];
@@ -360,6 +354,8 @@ function TimelineRow({
   missedIntervals?: MissedInterval[];
   /** Boş hücre için "plan yap" sayfasına deep-link üretir; null dönerse hücre pasif kalır */
   getCreateHref?: (dateKey: string) => string | null;
+  isStockTracker?: boolean;
+  isWeightTracker?: boolean;
   onMarkDone: (id: string) => void;
   onPostpone: (id: string) => void;
   onEdit: (event: FlowEvent) => void;
@@ -394,8 +390,11 @@ function TimelineRow({
           />
         )}
         <div
-          className="grid items-start py-2 relative z-10"
-          style={{ gridTemplateColumns: `repeat(${visibleKeys.length}, ${DATE_COL_WIDTH}px)` }}
+          className="grid items-center relative z-10"
+          style={{
+            gridTemplateColumns: `repeat(${visibleKeys.length}, ${DATE_COL_WIDTH}px)`,
+            height: '80px',
+          }}
         >
           {visibleKeys.map(key => {
             const cellEvents = eventsByDate.get(key) || [];
@@ -405,23 +404,57 @@ function TimelineRow({
               // Koruma sürüyorsa: bu tarih bir "boşluk" değil, gerçek bir kaydın devamı —
               // tıklanınca YENİ kayıt açmak yerine o kaydın kendisi düzenlemeye açılır.
               if (coveringInterval) {
+                let statusLabel = 'Korumada';
+                let colors = 'border-[#86efac] bg-[#f0fdf4] text-[#166534]';
+                let iconBg = 'bg-[#22c55e]';
+                let iconContent = (
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                );
+
+                if (isStockTracker) {
+                  const currentMs = new Date(key + 'T00:00:00').getTime();
+                  const endMs = new Date(coveringInterval.endDateKey + 'T00:00:00').getTime();
+                  const daysLeft = Math.ceil((endMs - currentMs) / (1000 * 60 * 60 * 24));
+                  
+                  if (daysLeft <= 0) {
+                    statusLabel = 'Bitti';
+                    colors = 'border-[#fca5a5] bg-[#fef2f2] text-[#b91c1c]';
+                    iconBg = 'bg-[#ef4444]';
+                    iconContent = <span className="block text-[9px] font-black leading-none">!</span>;
+                  } else if (daysLeft <= 3) {
+                    statusLabel = 'Bitiyor';
+                    colors = 'border-[#fca5a5] bg-[#fef2f2] text-[#b91c1c]';
+                    iconBg = 'bg-[#ef4444]';
+                    iconContent = <span className="block text-[9px] font-black leading-none">!</span>;
+                  } else if (daysLeft <= 7) {
+                    statusLabel = 'Azalıyor';
+                    colors = 'border-[#fcd34d] bg-[#fffbeb] text-[#b45309]';
+                    iconBg = 'bg-[#f59e0b]';
+                    iconContent = <span className="block text-[9px] font-black leading-none">!</span>;
+                  } else {
+                    statusLabel = 'Yeterli';
+                  }
+                } else if (isWeightTracker) {
+                  statusLabel = 'Takipte';
+                }
+
                 return (
                   <div key={key} className="flex items-center justify-center min-h-[64px]">
                     <button
                       type="button"
                       onClick={() => onEdit(coveringInterval.sourceEvent)}
-                      aria-label={`${formatShortDate(key)} — koruma sürüyor, kaydı düzenle`}
-                      title={`${formatShortDate(key)} — koruma sürüyor, kaydı düzenle`}
-                      className="w-[100px] min-h-[64px] rounded-2xl border border-[#86efac] bg-[#f0fdf4] text-[#166534] hover:bg-[#e2fbe8] hover:scale-[1.05] active:scale-95 flex flex-col items-start text-left overflow-hidden p-2.5 transition-all duration-200"
+                      aria-label={`${formatShortDate(key)} — ${statusLabel}`}
+                      title={`${formatShortDate(key)} — ${statusLabel}`}
+                      className={`w-[100px] h-[64px] min-h-[64px] shrink-0 rounded-2xl border ${colors} hover:scale-[1.05] active:scale-95 flex flex-col items-start text-left overflow-hidden p-2.5 transition-all duration-200`}
                     >
                       <div className="w-full flex items-center justify-between">
-                        <div className="w-5 h-5 shrink-0 rounded-full flex items-center justify-center bg-[#22c55e] text-white">
-                          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M20 6 9 17l-5-5" />
-                          </svg>
+                        <div className={`w-5 h-5 shrink-0 rounded-full flex items-center justify-center ${iconBg} text-white`}>
+                          {iconContent}
                         </div>
                         <span className="text-[8.5px] font-bold uppercase tracking-wide opacity-70">
-                          Korumada
+                          {statusLabel}
                         </span>
                       </div>
                       <span className="text-[10.5px] font-extrabold mt-auto pt-1.5">
@@ -434,21 +467,22 @@ function TimelineRow({
 
               const coveringMissedInterval = findCoveringMissedInterval(key, missedIntervals || []);
               if (coveringMissedInterval) {
+                const statusLabel = isStockTracker ? 'Bitti' : isWeightTracker ? 'Ölçüm Gecikti' : 'Kaçırıldı';
                 return (
                   <div key={key} className="flex items-center justify-center min-h-[64px]">
                     <button
                       type="button"
                       onClick={() => onEdit(coveringMissedInterval.sourceEvent)}
-                      aria-label={`${formatShortDate(key)} — görev gecikti, kaydı düzenle`}
-                      title={`${formatShortDate(key)} — görev gecikti, kaydı düzenle`}
-                      className="w-[100px] min-h-[64px] rounded-2xl border border-[#fca5a5] bg-[#fef2f2] text-[#b91c1c] hover:bg-[#fee2e2] hover:scale-[1.05] active:scale-95 flex flex-col items-start text-left overflow-hidden p-2.5 transition-all duration-200"
+                      aria-label={`${formatShortDate(key)} — ${statusLabel}`}
+                      title={`${formatShortDate(key)} — ${statusLabel}`}
+                      className="w-[100px] h-[64px] min-h-[64px] shrink-0 rounded-2xl border border-[#fca5a5] bg-[#fef2f2] text-[#b91c1c] hover:bg-[#fee2e2] hover:scale-[1.05] active:scale-95 flex flex-col items-start text-left overflow-hidden p-2.5 transition-all duration-200"
                     >
                       <div className="w-full flex items-center justify-between">
                         <div className="w-5 h-5 shrink-0 rounded-full flex items-center justify-center bg-[#ef4444] text-white">
                           <span className="block text-[9px] font-black leading-none">!</span>
                         </div>
                         <span className="text-[8.5px] font-bold uppercase tracking-wide opacity-70">
-                          Kaçırıldı
+                          {statusLabel}
                         </span>
                       </div>
                       <span className="text-[10.5px] font-extrabold mt-auto pt-1.5">
@@ -468,24 +502,38 @@ function TimelineRow({
                       onClick={() => router.push(href)}
                       aria-label={`${formatShortDate(key)} için kayıt ekle`}
                       title={`${formatShortDate(key)} için kayıt ekle`}
-                      className={`w-[92px] min-h-[64px] rounded-2xl border border-dashed flex flex-col items-center justify-center gap-1 transition-colors ${
+                      className={`w-[100px] h-[64px] min-h-[64px] shrink-0 rounded-2xl border border-dashed flex flex-col items-center justify-between p-2.5 transition-all ${
                         isToday
-                           ? 'border-[#5b86ff]/50 text-[#3358e0] hover:bg-[#eef3ff]'
+                           ? 'border-[#5b86ff]/60 bg-[#eff6ff]/40 text-[#3358e0] hover:bg-[#eef3ff]'
                            : 'border-border-main text-text-secondary/40 hover:text-primary hover:border-primary/50 hover:bg-primary/5'
                       }`}
                     >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                        <path d="M12 5v14M5 12h14" />
-                      </svg>
-                      <span className="text-[9.5px] font-bold">{formatShortDate(key)}</span>
-                      {isToday && <span className="text-[7.5px] font-black uppercase tracking-wide">Bugün</span>}
+                      {isToday ? (
+                        <div className="w-full flex items-center justify-between">
+                          <div className="w-4 h-4 shrink-0 rounded-full flex items-center justify-center bg-[#3358e0] text-white">
+                            <span className="block w-[5px] h-[5px] rounded-full bg-white" />
+                          </div>
+                          <span className="text-[8.5px] font-bold uppercase tracking-wide text-[#3358e0]/80">
+                            {isWeightTracker ? 'Kilo Ölç' : 'Bugün'}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="w-full flex items-center justify-center pt-0.5 text-text-secondary/40">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                            <path d="M12 5v14M5 12h14" />
+                          </svg>
+                        </div>
+                      )}
+                      <span className="text-[10px] font-extrabold mt-auto pt-1 text-center">
+                        {formatShortDate(key)}
+                      </span>
                     </button>
                   )}
                 </div>
               );
             }
             return (
-              <div key={key} className="flex flex-col items-center gap-2 min-h-[24px]">
+              <div key={key} className="flex flex-col items-center justify-center gap-2 min-h-[64px]">
                 {cellEvents.map(event => (
                   <CategoryCard
                     key={event.id}
@@ -506,20 +554,11 @@ function TimelineRow({
   );
 }
 
-/** Kategori başlığı: etiket + toplam GERÇEK kayıt sayısı.
- *  flowEvents timeline için tekrarlayan görevlerin sanal (virtual) occurrence'larını
- *  da içerir; "kayıt" sayısı yalnızca DB'deki gerçek kayıtları saymalıdır — aksi
- *  halde haftalık/aylık tekrarlar sayacı şişirir (örn. 5 yerine 95). */
+/** Kategori başlığı */
 function CategoryHeader({ group }: { group: CategoryGroup }) {
-  const countReal = (list?: FlowEvent[]) => (list || []).filter(e => !e._is_virtual).length;
-  const count = (group.subGroups && group.subGroups.length > 0)
-    ? group.subGroups.reduce((sum, s) => sum + countReal(s.flowEvents), 0)
-    : countReal(group.flowEvents);
-
   return (
     <div className="bg-[#f6f8fb] border-y border-border-main/40 mb-2 py-2 px-4 flex items-center gap-2">
       <h3 className="text-[11px] font-black text-[#556987] uppercase tracking-wider">{group.label}</h3>
-      <span className="text-[10.5px] font-bold text-text-secondary/60 ml-2">{count} kayıt</span>
     </div>
   );
 }

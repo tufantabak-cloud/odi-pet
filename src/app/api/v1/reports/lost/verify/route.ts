@@ -1,62 +1,98 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
+import { z } from 'zod'
 
-// Mock DB for OTP requests
-const otpStore = new Map<string, { code: string, expiresAt: number, lockUntil?: number, attempts: number }>();
+import { getSessionUser } from '@/lib/auth/get-current-profile'
+import { normalizeTurkishPhone } from '@/lib/lost-reports/validation'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 
-export async function POST(req: Request) {
-  try {
-    const { phone, code, action } = await req.json();
+const requestSchema = z.discriminatedUnion('action', [
+  z.object({
+    action: z.literal('send'),
+    phone: z.string().min(10).max(24),
+  }),
+  z.object({
+    action: z.literal('verify'),
+    phone: z.string().min(10).max(24),
+    code: z.string().regex(/^\d{6}$/),
+  }),
+])
 
-    if (action === 'send') {
-      const existing = otpStore.get(phone);
-      if (existing && existing.lockUntil && existing.lockUntil > Date.now()) {
-        const remainingMinutes = Math.ceil((existing.lockUntil - Date.now()) / 60000);
-        return NextResponse.json({ error: `Locked. Try again in ${remainingMinutes} minutes.` }, { status: 429 });
-      }
+const responseHeaders = { 'Cache-Control': 'no-store' }
 
-      // Generate 6 digit mock OTP
-      const mockCode = Math.floor(100000 + Math.random() * 900000).toString();
-      otpStore.set(phone, {
-        code: mockCode,
-        expiresAt: Date.now() + 3 * 60000, // 3 minutes validity
-        attempts: (existing?.attempts || 0) + 1
-      });
-
-      console.log(`[MOCK SMS SERVICE] Sending OTP to ${phone}: ${mockCode}`);
-      return NextResponse.json({ message: 'OTP sent successfully' });
-    }
-
-    if (action === 'verify') {
-      const record = otpStore.get(phone);
-      
-      if (!record) {
-        return NextResponse.json({ error: 'No OTP requested for this number' }, { status: 400 });
-      }
-
-      if (record.lockUntil && record.lockUntil > Date.now()) {
-        return NextResponse.json({ error: 'Too many attempts. Account locked for 15 minutes.' }, { status: 429 });
-      }
-
-      if (Date.now() > record.expiresAt) {
-        return NextResponse.json({ error: 'OTP expired' }, { status: 400 });
-      }
-
-      if (record.code !== code) {
-        if (record.attempts >= 3) {
-           otpStore.set(phone, { ...record, lockUntil: Date.now() + 15 * 60000 }); // 15 mins lock
-           return NextResponse.json({ error: 'Too many failed attempts. Locked for 15 minutes.' }, { status: 429 });
-        }
-        otpStore.set(phone, { ...record, attempts: record.attempts + 1 });
-        return NextResponse.json({ error: 'Invalid OTP' }, { status: 400 });
-      }
-
-      otpStore.delete(phone);
-      return NextResponse.json({ message: 'Phone verified successfully' });
-    }
-
-    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
-
-  } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+export async function POST(request: Request) {
+  const user = await getSessionUser()
+  if (!user) {
+    return NextResponse.json(
+      { success: false, error: 'UNAUTHORIZED' },
+      { status: 401, headers: responseHeaders }
+    )
   }
+
+  const body = await request.json().catch(() => null)
+  const parsed = requestSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json(
+      { success: false, error: 'INVALID_OTP_REQUEST' },
+      { status: 400, headers: responseHeaders }
+    )
+  }
+
+  const phone = normalizeTurkishPhone(parsed.data.phone)
+  if (!phone) {
+    return NextResponse.json(
+      { success: false, error: 'INVALID_PHONE_NUMBER' },
+      { status: 400, headers: responseHeaders }
+    )
+  }
+
+  const supabase = await createServerSupabaseClient()
+
+  if (parsed.data.action === 'send') {
+    const currentPhone = normalizeTurkishPhone(user.phone ?? '')
+    if (currentPhone === phone && user.phone_confirmed_at) {
+      return NextResponse.json(
+        { success: true, phone, alreadyVerified: true },
+        { headers: responseHeaders }
+      )
+    }
+
+    const { error } = currentPhone === phone
+      ? await supabase.auth.resend({ type: 'phone_change', phone })
+      : await supabase.auth.updateUser({ phone })
+
+    if (error) {
+      return NextResponse.json(
+        { success: false, error: 'OTP_DELIVERY_FAILED' },
+        { status: 503, headers: responseHeaders }
+      )
+    }
+
+    return NextResponse.json(
+      { success: true, phone, alreadyVerified: false },
+      { headers: responseHeaders }
+    )
+  }
+
+  const { data, error } = await supabase.auth.verifyOtp({
+    phone,
+    token: parsed.data.code,
+    type: 'phone_change',
+  })
+
+  if (error || !data.user || data.user.id !== user.id) {
+    return NextResponse.json(
+      { success: false, error: 'INVALID_OR_EXPIRED_OTP' },
+      { status: 400, headers: responseHeaders }
+    )
+  }
+
+  await supabase
+    .from('profiles')
+    .update({ phone })
+    .eq('id', user.id)
+
+  return NextResponse.json(
+    { success: true, phone },
+    { headers: responseHeaders }
+  )
 }

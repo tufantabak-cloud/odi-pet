@@ -38,6 +38,7 @@ export type NextDueResult =
 
 export interface WriteContext {
   supabase: any;
+  rpcSupabase?: any;
   petId: string;
   userId: string;
   timeZone: string;

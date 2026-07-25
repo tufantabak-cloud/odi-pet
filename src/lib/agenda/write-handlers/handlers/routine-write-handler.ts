@@ -130,7 +130,9 @@ export class RoutineWriteHandler implements AgendaWriteHandler<RoutineWriteInput
     const { supabase } = context;
     const mainPlan = match.rawPlan;
 
-    const { data: rpcRes, error: rpcErr } = await supabase.rpc('complete_recurring_plan', {
+    const rpcSupabase = context.rpcSupabase ?? context.supabase;
+
+    const { data: rpcRes, error: rpcErr } = await rpcSupabase.rpc('complete_recurring_plan', {
       p_plan_id: mainPlan.id,
       p_actual_date: input.completed_at,
       p_occurrence_scheduled_at: match.occurrenceScheduledAt,

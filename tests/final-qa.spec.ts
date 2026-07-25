@@ -55,7 +55,7 @@ test.describe('Vaccination Module Final QA Suite', () => {
     });
 
     // Session Setup
-    await page.goto('http://localhost:3000/login');
+    await page.goto('/login');
     const sessionStr = JSON.stringify(sessionData);
     const base64Session = Buffer.from(sessionStr).toString('base64');
     const cookieValue = `base64-${base64Session}`;
@@ -123,7 +123,7 @@ test.describe('Vaccination Module Final QA Suite', () => {
 
     // ─── Step 2: Plan Kur Akışı ────────────────────────────────────────
     console.log("Navigating to Vaccines Page...");
-    await page.goto(`http://localhost:3000/owner/pets/${testPetId}/vaccines`);
+    await page.goto(`/owner/pets/${testPetId}/vaccines`);
     await page.waitForLoadState('networkidle');
 
     // Choice screen "Bana plan oluştur" button
@@ -225,7 +225,7 @@ test.describe('Vaccination Module Final QA Suite', () => {
 
     // ─── Step 4: Duplicate Run Control ─────────────────────────────────
     console.log("Re-triggering setup wizard to test duplicate safety...");
-    await page.goto(`http://localhost:3000/owner/pets/${testPetId}/vaccines`);
+    await page.goto(`/owner/pets/${testPetId}/vaccines`);
     await page.waitForLoadState('networkidle');
 
     // Click "Planı Yeniden Düzenle" or similar setup edit triggers.
@@ -245,7 +245,7 @@ test.describe('Vaccination Module Final QA Suite', () => {
       }
     });
     console.log("DELETE RESPONSE:", delRes.status, await delRes.text());
-    await page.goto(`http://localhost:3000/owner/pets/${testPetId}/vaccines`);
+    await page.goto(`/owner/pets/${testPetId}/vaccines`);
     await page.waitForLoadState('networkidle');
     await page.locator('[data-testid="vaccine-entry-smart-start-button"]').click();
     const dateInput2 = page.locator('input[type="date"]');
@@ -274,7 +274,7 @@ test.describe('Vaccination Module Final QA Suite', () => {
 
     // ─── Step 5: Click "Yaptırdım" ─────────────────────────────────────
     console.log("Clicking 'Yaptırdım' on scheduled vaccine...");
-    await page.goto(`http://localhost:3000/owner/pets/${testPetId}/vaccines`);
+    await page.goto(`/owner/pets/${testPetId}/vaccines`);
     await page.waitForLoadState('networkidle');
 
     // Click "Yaptırdım" button

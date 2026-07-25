@@ -12,6 +12,8 @@
  * - Üretim importu yalnızca ALLOW_REMOTE_IMPORT=true değişkeniyle mümkündür (tek kullanımlık onay).
  */
 
+import { createAdminSupabaseClient } from '../supabase/server'
+
 export class RemoteDatabaseRefusedError extends Error {
   constructor(url: string, operation: string) {
     super(
@@ -105,6 +107,5 @@ export function createSafeAdminClient(operation: 'test' | 'import' | 'seed' | 'r
   assertSafeDatabaseTarget(url, operation)
 
   // Bariyer geçildiyse orijinal client'ı oluştur
-  const { createAdminSupabaseClient } = require('../supabase/server')
   return createAdminSupabaseClient()
 }

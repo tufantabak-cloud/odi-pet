@@ -1,3 +1,6 @@
+import { existsSync, readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { assertSafeDatabaseTarget, RemoteDatabaseRefusedError } from '../db-safety-barrier'
 import { isValidGtin } from '../import-starter-catalog'
@@ -144,11 +147,9 @@ describe('Beslenme Faz 1B.3.5.3 — İzole Starter Katalog ve Manifest Testleri'
     // 1. Load the network audit file dynamically since it's an artifact and might not exist initially
     let networkAudit: any[] = []
     try {
-      const fs = require('fs')
-      const path = require('path')
-      const auditPath = path.resolve(process.cwd(), 'artifacts/starter-catalog-network-audit.json')
-      if (fs.existsSync(auditPath)) {
-        networkAudit = JSON.parse(fs.readFileSync(auditPath, 'utf8'))
+      const auditPath = resolve(process.cwd(), 'artifacts/starter-catalog-network-audit.json')
+      if (existsSync(auditPath)) {
+        networkAudit = JSON.parse(readFileSync(auditPath, 'utf8'))
       }
     } catch (e) {
       // Ignore if file doesn't exist in CI environment
@@ -199,9 +200,7 @@ describe('Beslenme Faz 1B.3.5.3 — İzole Starter Katalog ve Manifest Testleri'
     // Given the targetStatus logic: existing === 'pending' ? 'pending' : newData
     // If existing is pending, even if new is verified, it stays pending.
     // We can verify this via static source code check or a mock.
-    const fs = require('fs')
-    const path = require('path')
-    const src = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/nutrition/import-starter-catalog.ts'), 'utf8')
+    const src = readFileSync(resolve(process.cwd(), 'src/lib/nutrition/import-starter-catalog.ts'), 'utf8')
     
     // Check if the logic we just updated is present
     expect(src).toContain("const targetStatus = existingFamily.verification_status === 'pending'")

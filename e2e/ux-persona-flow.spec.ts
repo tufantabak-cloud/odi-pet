@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 import { PERSONAS, TEST_PASSWORD, type Persona } from './personas'
 import { UxRecorder, type ModuleRecorder } from './helpers/ux-recorder'
 
-const BASE_URL = process.env.ODIPET_BASE_URL ?? 'http://localhost:3000'
+const BASE_URL = process.env.ODIPET_BASE_URL ?? 'http://127.0.0.1:3100'
 const OUTPUT_DIR = 'test-results'
 
 // ─── GÜVENLİK KAPISI KALDIRILDI (ODIPET_BASE_URL ile manuel test yapılabilir) ───

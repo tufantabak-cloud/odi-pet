@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 
-export const OTPVerification = ({ onNext }: { onNext: () => void }) => {
+export const OTPVerification = ({ onNext }: { onNext: (phone: string) => void }) => {
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const [step, setStep] = useState<'phone' | 'code'>('phone');
@@ -26,6 +26,10 @@ export const OTPVerification = ({ onNext }: { onNext: () => void }) => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
+      if (data.alreadyVerified) {
+        onNext(data.phone);
+        return;
+      }
       setStep('code');
       setCountdown(180);
     } catch (err: any) {
@@ -43,7 +47,7 @@ export const OTPVerification = ({ onNext }: { onNext: () => void }) => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      onNext();
+      onNext(data.phone);
     } catch (err: any) {
       setError(err.message || 'Kod hatalı');
     }

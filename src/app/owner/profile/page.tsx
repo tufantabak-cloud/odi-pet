@@ -7,6 +7,7 @@ import NotificationSettings from './NotificationSettings'
 import CoachMark from '@/components/ui/CoachMark'
 import { BiometricPrompt } from '@/components/BiometricPrompt'
 import { BiometricSettingsRow } from '@/components/BiometricSettingsRow'
+import { UtensilsIcon } from '@/components/icons/PetIcons'
 export default async function ProfileMenuPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const profile = await getCurrentProfile()
   const user = await getSessionUser()
@@ -287,11 +288,7 @@ export default async function ProfileMenuPage({ searchParams }: { searchParams: 
           </Link>
           <Link href="/owner/profile/feeding-templates" className="block p-4 hover:bg-bg-main transition-colors flex justify-between items-center">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-                </svg>
-              </div>
+              <UtensilsIcon badgeSize="sm" size={18} />
               Beslenme & Porsiyon Şablonları
             </div>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-secondary"><polyline points="9 18 15 12 9 6"/></svg>

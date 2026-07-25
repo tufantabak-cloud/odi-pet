@@ -283,7 +283,6 @@ export default function ProductCatalogPanel() {
             {products.map(p => (
               <div key={p.id} className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
                 {p.image_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
                   <img src={p.image_url} alt={p.name} className="w-12 h-12 rounded-lg object-cover border border-gray-200 shrink-0" />
                 ) : (
                   <div className="w-12 h-12 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-300 text-lg shrink-0">💊</div>
@@ -456,7 +455,6 @@ export default function ProductCatalogPanel() {
                   <label className="block text-xs font-semibold text-gray-500 mb-1">Ürün Görseli</label>
                   <div className="flex items-center gap-3">
                     {form.image_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
                       <img src={form.image_url} alt="Ürün görseli" className="w-16 h-16 rounded-xl object-cover border border-gray-200 shrink-0" />
                     ) : (
                       <div className="w-16 h-16 rounded-xl bg-gray-50 border border-dashed border-gray-300 flex items-center justify-center text-gray-300 text-xs shrink-0">Yok</div>

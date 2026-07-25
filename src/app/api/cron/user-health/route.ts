@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { calculateChurnRisk, emitHealthEvent } from '@/lib/agents/userHealthAgent';
 import { calculateCompleteness } from '@/lib/agents/dataQualityAgent';
+import { authorizeCronRequest } from '@/lib/security/cron-auth'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
@@ -8,16 +9,10 @@ import { cookies } from 'next/headers'
 export const dynamic = 'force-dynamic'; 
 
 export async function GET(request: Request) {
-  try {
-    const authHeader = request.headers.get('authorization');
-    if (
-      process.env.CRON_SECRET && 
-      authHeader !== `Bearer ${process.env.CRON_SECRET}` &&
-      new URL(request.url).searchParams.get('token') !== process.env.CRON_SECRET
-    ) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  const authorizationError = authorizeCronRequest(request)
+  if (authorizationError) return authorizationError
 
+  try {
     const cookieStore = await cookies()
     // Hizmet rolü (Service Role) key'i gerekir çünkü admin işlemleri
     const supabase = createServerClient(

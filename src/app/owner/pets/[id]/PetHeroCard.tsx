@@ -110,31 +110,35 @@ export default function PetHeroCard({
         
         <button
           onClick={() => router.back()}
-          className="w-8 h-8 rounded-full bg-black/35 flex items-center justify-center">
-          <ChevronLeft size={18} className="text-white" />
+          aria-label="Geri Dön"
+          className="w-[44px] h-[44px] min-w-[44px] min-h-[44px] rounded-full bg-black/35 flex items-center justify-center cursor-pointer hover:bg-black/50 transition-colors">
+          <ChevronLeft size={20} className="text-white" />
         </button>
 
         <div className="flex gap-2">
           {/* Kapak fotoğrafı değiştir */}
           <button
             onClick={() => onChangeCoverClick ? onChangeCoverClick() : coverInputRef.current?.click()}
-            className="w-8 h-8 rounded-full bg-black/35 flex items-center justify-center"
+            className="w-[44px] h-[44px] min-w-[44px] min-h-[44px] rounded-full bg-black/35 flex items-center justify-center cursor-pointer hover:bg-black/50 transition-colors"
+            aria-label="Kapak fotoğrafını değiştir"
             title="Kapak fotoğrafını değiştir">
-            <Camera size={15} className="text-white" />
+            <Camera size={18} className="text-white" />
           </button>
           
           {/* Düzenle */}
           <Link
             href={`/owner/pets/${pet.id}/edit`}
-            className="w-8 h-8 rounded-full bg-black/35 flex items-center justify-center">
-            <Pencil size={15} className="text-white" />
+            aria-label="Profili Düzenle"
+            className="w-[44px] h-[44px] min-w-[44px] min-h-[44px] rounded-full bg-black/35 flex items-center justify-center cursor-pointer hover:bg-black/50 transition-colors">
+            <Pencil size={18} className="text-white" />
           </Link>
 
           {/* Menü */}
           <button
             onClick={onMenuOpen}
-            className="w-8 h-8 rounded-full bg-black/35 flex items-center justify-center">
-            <MoreVertical size={15} className="text-white" />
+            aria-label="Diğer Seçenekler"
+            className="w-[44px] h-[44px] min-w-[44px] min-h-[44px] rounded-full bg-black/35 flex items-center justify-center cursor-pointer hover:bg-black/50 transition-colors">
+            <MoreVertical size={18} className="text-white" />
           </button>
         </div>
       </div>
@@ -142,7 +146,7 @@ export default function PetHeroCard({
       {/* Alt: Profil foto + isim */}
       <div className="absolute bottom-0 
         left-0 right-0 px-4 pb-0
-        flex items-center gap-3 z-10">
+        flex items-center gap-2.5 sm:gap-3 z-10">
 
         {/* Profil fotoğrafı */}
         <div className="relative flex-shrink-0">
@@ -171,12 +175,12 @@ export default function PetHeroCard({
 
         {/* İsim sol — bilgiler sağ */}
         <div className="flex items-center 
-          gap-3 flex-1">
+          gap-2.5 sm:gap-3 flex-1 min-w-0">
           
           {/* İsim — büyük sol */}
           <h1 
-            className="text-[32px] font-black 
-              text-white leading-none flex-shrink-0"
+            className="text-[22px] sm:text-[32px] font-black 
+              text-white leading-none truncate max-w-[110px] sm:max-w-none flex-shrink min-w-0"
             style={{
               textShadow: 
                 '0 1px 4px rgba(0,0,0,0.8)'
@@ -185,30 +189,30 @@ export default function PetHeroCard({
           </h1>
 
           {/* Dikey çizgi */}
-          <div className="w-[1px] h-[48px] 
+          <div className="w-[1px] h-[36px] sm:h-[48px] 
             bg-white/40 flex-shrink-0" />
 
           {/* Bilgiler — sağ */}
           <div 
-            className="flex flex-col gap-0.5"
+            className="flex flex-col gap-0.5 min-w-0 flex-1 overflow-hidden"
             style={{
               textShadow: 
                 '0 1px 3px rgba(0,0,0,0.8)'
             }}>
-            <p className="text-[11px] 
-              text-white font-medium leading-tight">
+            <p className="text-[10px] sm:text-[11px] 
+              text-white font-medium leading-tight truncate">
               {pet.breed || 'Bilinmiyor'} 
               {pet.gender === 'male' 
                 ? ' - Erkek' 
                 : pet.gender === 'female' 
                 ? ' - Dişi' : ''}
             </p>
-            <p className="text-[11px] 
-              text-white/90 leading-tight">
+            <p className="text-[10px] sm:text-[11px] 
+              text-white/90 leading-tight truncate">
               {age.text}
             </p>
-            <p className="text-[11px] 
-              text-white/90 leading-tight">
+            <p className="text-[10px] sm:text-[11px] 
+              text-white/90 leading-tight truncate">
               {latestWeight && 
                latestWeight !== '-' 
                 ? `${latestWeight} Kilo  –  ` : ''}

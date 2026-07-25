@@ -51,5 +51,13 @@ describe('Pet Utils - calcAge', () => {
     const result = calcAge('2026-05-12')
     expect(result).toEqual({ text: '0 günlük', label: 'Yavru' })
   })
+
+  it.each([
+    ['2025-05-12', 'Yetişkin'],
+    ['2019-05-12', 'Yaşlı'],
+    ['2014-05-12', 'Yaşlı (12+)'],
+  ])('%s doğum tarihini merkezi sınırlarla etiketler', (birthDate, label) => {
+    expect(calcAge(birthDate).label).toBe(label)
+  })
 })
 

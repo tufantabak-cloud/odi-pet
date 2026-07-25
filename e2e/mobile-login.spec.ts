@@ -21,7 +21,10 @@ test('Mobile Google Login Redirect Flow', async ({ page }) => {
   
   // Yeni sayfa/yönlendirme yakalamak için Promise hazırlıyoruz
   const [request] = await Promise.all([
-    page.waitForRequest(req => req.url().includes('supabase.co/auth/v1/authorize')),
+    page.waitForRequest(req => {
+      const url = new URL(req.url());
+      return url.pathname.endsWith('/auth/v1/authorize');
+    }),
     googleBtn.click()
   ]);
 

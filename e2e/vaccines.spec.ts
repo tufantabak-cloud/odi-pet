@@ -30,7 +30,7 @@ test.describe('Vaccine OS Module', () => {
     const petResponse = await page.evaluate(async (name) => {
       const fd = new FormData();
       fd.append('name', name);
-      fd.append('species', 'Köpek');
+      fd.append('species', 'dog');
       fd.append('breed', 'Golden Retriever');
       fd.append('birth_date', '2025-01-01');
       fd.append('gender', 'male');
@@ -78,7 +78,7 @@ test.describe('Vaccine OS Module', () => {
     }
   });
 
-  test('Vaccine plan items are listed (Takvim tab) and cleanup', async ({ page }) => {
+  test('Takvim görünümü görev takibini gösterir ve test petini temizler', async ({ page }) => {
     await login(page);
     await page.goto(`/owner/pets/${petId}/vaccines`);
     await page.waitForLoadState('networkidle');
@@ -87,10 +87,11 @@ test.describe('Vaccine OS Module', () => {
     const takvimTab = page.locator('button:has-text("Takvim"), a:has-text("Takvim")').first();
     if (await takvimTab.isVisible()) await takvimTab.click();
 
-    // Either vaccine plan items or an empty-state message must be present
-    const planItems = await page.locator('[data-testid="vaccine-plan-item"]').count();
-    const emptyMsg = await page.locator('text=Plan Bulunamadı').count();
-    expect(planItems + emptyMsg).toBeGreaterThan(0);
+    // Güncel birleşik pet profilinde Takvim sekmesi, aşıları da içeren
+    // merkezi görev takip görünümünü açar.
+    await expect(
+      page.getByRole('heading', { name: 'Görev Takibi' })
+    ).toBeVisible({ timeout: 10_000 });
 
     // Clean up pet
     await page.goto('/owner/profile');

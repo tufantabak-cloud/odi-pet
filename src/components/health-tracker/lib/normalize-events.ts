@@ -91,7 +91,9 @@ export function mapDbToUI(
   // ── 1. Sağlık ──────────────────────────────────────────────────────────────
   if (dbCat === 'Saglik') {
     let sub = 'Sağlık Takibi';
-    if (subCategory === 'Kilo Takibi') sub = 'Kilo Ölçümü';
+    if (subCategory === 'Kilo Takibi' || subCategory === 'Kilo Ölçümü' || subCategory === 'Kilo & Boy Ölçümü' || titleLower.includes('kilo')) {
+      return { category: 'Beslenme', subCategory: 'Kilo Takibi' };
+    }
     else if (subCategory === 'Belirti Takibi') sub = 'Semptom & Belirti Takibi';
     else if (subCategory === 'İlaç') sub = 'İlaç Kullanımı';
     else if (subCategory === 'Tedavi/Pansuman') sub = 'Tedavi & Pansuman';
@@ -130,8 +132,10 @@ export function mapDbToUI(
     let sub = subCategory || 'Beslenme';
     if (subCategory === 'Mama Siparişi') sub = 'Mama Siparişi / Stok';
     else if (subCategory === 'Diyet Değişimi') sub = 'Diyet Değişimi';
+    else if (subCategory === 'Kilo Takibi' || subCategory === 'Kilo Ölçümü' || subCategory === 'Kilo & Boy Ölçümü' || titleLower.includes('kilo')) sub = 'Kilo Takibi';
     return { category: 'Beslenme', subCategory: sub };
   }
+
 
   // ── 7. Hijyen ───────────────────────────────────────────────────────────────
   if (dbCat === 'Hijyen') {

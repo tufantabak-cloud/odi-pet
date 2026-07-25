@@ -34,7 +34,7 @@ test('Odi.Pet Auth & Onboarding Flow - Full Lifecycle', async ({ page }) => {
   
   await page.fill('#name', 'E2E Test User');
   await page.fill('#reg-email', email);
-  await page.click('button:has-text("İleri")');
+  await page.getByTestId('register-next-button').click();
   
   await page.waitForSelector('#password', { state: 'visible', timeout: 5000 });
   await page.fill('#password', password);
@@ -88,11 +88,11 @@ test('Odi.Pet Auth & Onboarding Flow - Full Lifecycle', async ({ page }) => {
   await page.waitForTimeout(1000);
 
   // Adım 3: Profil Fotoğrafı Ekle
-  await page.click('button:has-text("Profili Oluştur")');
+  await page.getByTestId('pet-photo-default-avatar-button').click();
   await page.waitForTimeout(1000);
 
   // Adım 4: Acil Durum Ağı (Atla)
-  await page.click('button:has-text("Atla →")');
+  await page.getByTestId('emergency-contact-skip-button').click();
 
   // Başarıyla eklenip başarı ekranına yönlendirildi mi?
   await expect(page).toHaveURL(/\/owner\/pets\/add\/success/, { timeout: 15000 });

@@ -68,6 +68,15 @@ export function buildPlanYapHref(
   row: TaskRow,
   dateKey: string,
 ): string | null {
+  if (
+    row.uiSubCategory === 'Kilo Takibi' ||
+    row.uiSubCategory === 'Kilo Ölçümü' ||
+    row.uiSubCategory === 'Kilo & Boy Ölçümü' ||
+    row.task.title.includes('Kilo')
+  ) {
+    return `/owner/pets/${petId}/nutrition?tab=kilo`;
+  }
+
   const routeKey = CATEGORY_ROUTE_KEY[group.category];
   if (!routeKey) return null;
 

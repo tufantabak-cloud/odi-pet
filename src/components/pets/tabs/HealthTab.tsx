@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { createBrowserSupabaseClient } from '@/lib/supabase/client';
-import { FirstAidIcon, VaccineIcon, ParasiteIcon } from '@/components/icons/PetIcons';
+import { ShieldCheckIcon, BugIcon, StethoscopeIcon, CarrierIcon } from '@/components/icons/PetIcons';
 import { SmartScanner } from '@/components/ui/SmartScanner';
 
 interface HealthTabProps {
@@ -14,10 +14,14 @@ interface HealthTabProps {
 export default function HealthTab({ petId, petName }: HealthTabProps) {
   const supabase = createBrowserSupabaseClient();
   const [hideVaultBanner, setHideVaultBanner] = useState(true);
+  const [healthRecords, setHealthRecords] = useState<any[]>([]);
   const [vaccineRecords, setVaccineRecords] = useState<any[]>([]);
   const [parasiteRecords, setParasiteRecords] = useState<any[]>([]);
+  const [vetRecords, setVetRecords] = useState<any[]>([]);
+  const [loadingHealth, setLoadingHealth] = useState(true);
   const [loadingVaccines, setLoadingVaccines] = useState(true);
   const [loadingParasites, setLoadingParasites] = useState(true);
+  const [loadingVet, setLoadingVet] = useState(true);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   // Check localStorage for banner state on mount
@@ -31,6 +35,17 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
     setHideVaultBanner(true);
   };
 
+  const loadHealthRecords = useCallback(async () => {
+    setLoadingHealth(true);
+    const { data } = await supabase
+      .from('health_records')
+      .select('*')
+      .eq('pet_id', petId)
+      .order('date', { ascending: false });
+    setHealthRecords(data || []);
+    setLoadingHealth(false);
+  }, [supabase, petId]);
+
   const loadVaccines = useCallback(async () => {
     setLoadingVaccines(true);
     const { data } = await supabase
@@ -38,9 +53,11 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
       .select('*')
       .eq('pet_id', petId)
       .not('administered_at', 'is', null)
-      .neq('status', 'migrated_to_plan')
       .order('administered_at', { ascending: false });
-    setVaccineRecords(data || []);
+
+    const EXCLUDED = new Set(['cancelled', 'migrated_to_plan', 'overdue', 'pending', 'upcoming', 'scheduled', 'planned']);
+    const filtered = (data || []).filter((v: any) => v.administered_at && (!v.status || v.status === 'completed' || v.status === 'done') && !EXCLUDED.has(v.status));
+    setVaccineRecords(filtered);
     setLoadingVaccines(false);
   }, [supabase, petId]);
 
@@ -55,10 +72,23 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
     setLoadingParasites(false);
   }, [supabase, petId]);
 
+  const loadVetRecords = useCallback(async () => {
+    setLoadingVet(true);
+    const { data } = await supabase
+      .from('appointments')
+      .select('*, clinics(name)')
+      .eq('pet_id', petId)
+      .order('scheduled_at', { ascending: false });
+    setVetRecords(data || []);
+    setLoadingVet(false);
+  }, [supabase, petId]);
+
   useEffect(() => {
+    loadHealthRecords();
     loadVaccines();
     loadParasites();
-  }, [loadVaccines, loadParasites]);
+    loadVetRecords();
+  }, [loadHealthRecords, loadVaccines, loadParasites, loadVetRecords]);
 
   return (
     <div className="flex flex-col gap-6 py-2">
@@ -66,9 +96,7 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
       {!hideVaultBanner && (
         <div className="card-base p-5 bg-gradient-to-br from-blue-50/50 to-indigo-50/30 border border-blue-100 relative overflow-hidden">
           <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xs bg-blue-50 text-blue-500 flex items-center justify-center shrink-0 shadow-inner">
-              <FirstAidIcon width={24} height={24} />
-            </div>
+            <ShieldCheckIcon badgeSize="md" size={22} />
             <div className="flex-1 pr-6">
               <h3 className="font-extrabold text-text-primary text-[14px] mb-1">Dijital Belge Kasası</h3>
               <p className="text-[12px] text-text-secondary leading-relaxed mb-3">
@@ -96,13 +124,76 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
         </div>
       )}
 
-      {/* ── 1. Aşı Karnesi ve Belgeleri Bölümü ── */}
+      {/* ── 1. Sağlık Karnesi ve Muayene Kayıtları Bölümü ── */}
+      <div id="section-health" className="card-base p-5 border border-border-main flex flex-col gap-4 bg-surface">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-main/50 pb-4">
+          <div className="flex items-center gap-3">
+            <StethoscopeIcon badgeSize="md" size={22} />
+            <div>
+              <h3 className="font-extrabold text-text-primary text-[16px]">Sağlık Karnesi ve Muayene Kayıtları</h3>
+              <p className="text-[12px] text-text-secondary">{petName} için geçmiş sağlık, muayene ve tedavi kayıtları</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href={`/owner/plan-yap/saglik?pet_id=${petId}`}
+              className="px-3.5 py-2 rounded-xl bg-primary text-white font-bold text-[12px] hover:bg-primary-hover transition-all shadow-xs"
+            >
+              🩺 Sağlık Planla
+            </Link>
+            <Link
+              href={`/owner/plan-yap/saglik?pet_id=${petId}&mode=log`}
+              className="px-3.5 py-2 rounded-xl bg-emerald-600 text-white font-bold text-[12px] hover:bg-emerald-700 transition-all shadow-xs"
+            >
+              📋 Sağlık Kaydı Ekle
+            </Link>
+          </div>
+        </div>
+
+        {/* Sağlık Geçmişi Listesi */}
+        {loadingHealth ? (
+          <p className="text-[13px] text-text-secondary py-3">Yükleniyor...</p>
+        ) : healthRecords.length === 0 ? (
+          <div className="p-4 rounded-xl border border-dashed border-border-main text-center bg-bg-main/50">
+            <p className="text-[13px] text-text-secondary font-medium mb-1">Henüz kaydedilmiş bir sağlık veya muayene kaydı bulunmuyor.</p>
+            <p className="text-[11px] text-text-secondary/80">Sağlık takvimi veya randevu oluşturmak için "Sağlık Planla" veya muayene/tedavi kaydetmek için "Sağlık Kaydı Ekle" butonunu kullanabilirsiniz.</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2.5">
+            {healthRecords.map((rec) => (
+              <div key={rec.id} className="p-3.5 rounded-xl border border-border-main/60 bg-bg-main flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm shrink-0">🩺</div>
+                  <div>
+                    <h4 className="font-bold text-text-primary text-[14px]">{rec.title || rec.type || 'Sağlık Kaydı'}</h4>
+                    <p className="text-[11px] text-text-secondary">
+                      Tarih: <span className="font-semibold">{rec.date ? new Date(rec.date).toLocaleDateString('tr-TR') : 'Belirtilmedi'}</span>
+                      {rec.type && ` • Tür: ${rec.type}`}
+                      {rec.notes && ` • Not: ${rec.notes}`}
+                    </p>
+                  </div>
+                </div>
+                {rec.document_path && (
+                  <a
+                    href={rec.document_path}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg transition-colors"
+                  >
+                    📄 Belge
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── 2. Aşı Karnesi ve Belgeleri Bölümü ── */}
       <div id="section-vaccines" className="card-base p-5 border border-border-main flex flex-col gap-4 bg-surface">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-main/50 pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
-              <VaccineIcon width={22} height={22} />
-            </div>
+            <ShieldCheckIcon badgeSize="md" size={22} />
             <div>
               <h3 className="font-extrabold text-text-primary text-[16px]">Aşı Karnesi ve Belgeleri</h3>
               <p className="text-[12px] text-text-secondary">{petName} için geçmiş aşı kayıtları ve karnesi</p>
@@ -174,9 +265,7 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
       <div id="section-parasite" className="card-base p-5 border border-border-main flex flex-col gap-4 bg-surface">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-main/50 pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center text-teal-600 shrink-0">
-              <ParasiteIcon width={22} height={22} />
-            </div>
+            <BugIcon badgeSize="md" size={22} />
             <div>
               <h3 className="font-extrabold text-text-primary text-[16px]">Parazit Geçmişi</h3>
               <p className="text-[12px] text-text-secondary">{petName} için geçmiş parazit uygulamaları</p>
@@ -232,6 +321,70 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
                   >
                     📄 Fotoğraf
                   </a>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── 4. Veteriner & Randevu Geçmişi Bölümü ── */}
+      <div id="section-vet" className="card-base p-5 border border-border-main flex flex-col gap-4 bg-surface">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-main/50 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl p-2 bg-purple-100/80 text-purple-700 flex items-center justify-center shrink-0">
+              <CarrierIcon width={24} height={24} />
+            </div>
+            <div>
+              <h3 className="font-extrabold text-text-primary text-[16px]">Veteriner & Randevu Geçmişi</h3>
+              <p className="text-[12px] text-text-secondary">{petName} için geçmiş veteriner kontrolleri ve randevular</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href={`/owner/plan-yap/kontrol?pet_id=${petId}`}
+              className="px-3.5 py-2 rounded-xl bg-purple-600 text-white font-bold text-[12px] hover:bg-purple-700 transition-all shadow-xs"
+            >
+              🏥 Randevu Planla
+            </Link>
+            <Link
+              href={`/owner/plan-yap/kontrol?pet_id=${petId}&mode=log`}
+              className="px-3.5 py-2 rounded-xl bg-emerald-600 text-white font-bold text-[12px] hover:bg-emerald-700 transition-all shadow-xs"
+            >
+              📋 Veteriner Kaydı Ekle
+            </Link>
+          </div>
+        </div>
+
+        {/* Veteriner Kayıtları Listesi */}
+        {loadingVet ? (
+          <p className="text-[13px] text-text-secondary py-3">Yükleniyor...</p>
+        ) : vetRecords.length === 0 ? (
+          <div className="p-4 rounded-xl border border-dashed border-border-main text-center bg-bg-main/50">
+            <p className="text-[13px] text-text-secondary font-medium mb-1">Henüz kaydedilmiş bir veteriner randevusu veya klinik ziyareti bulunmuyor.</p>
+            <p className="text-[11px] text-text-secondary/80">Veteriner kontrolü veya klinik randevusu oluşturmak için "Randevu Planla" veya geçmiş klinik ziyaretlerini girmek için "Veteriner Kaydı Ekle" butonunu kullanabilirsiniz.</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2.5">
+            {vetRecords.map((rec) => (
+              <div key={rec.id} className="p-3.5 rounded-xl border border-border-main/60 bg-bg-main flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-sm shrink-0">🏥</div>
+                  <div>
+                    <h4 className="font-bold text-text-primary text-[14px]">
+                      {rec.clinics?.name || rec.title || rec.reason || 'Veteriner Ziyareti'}
+                    </h4>
+                    <p className="text-[11px] text-text-secondary">
+                      Tarih: <span className="font-semibold">{rec.scheduled_at ? new Date(rec.scheduled_at).toLocaleDateString('tr-TR') : 'Belirtilmedi'}</span>
+                      {rec.doctor_name && ` • Dr. ${rec.doctor_name}`}
+                      {rec.notes && ` • ${rec.notes}`}
+                    </p>
+                  </div>
+                </div>
+                {rec.status && (
+                  <span className="text-[11px] font-bold text-purple-700 bg-purple-50 px-2.5 py-1 rounded-lg">
+                    {rec.status === 'completed' || rec.status === 'done' ? '✓ Tamamlandı' : rec.status}
+                  </span>
                 )}
               </div>
             ))}

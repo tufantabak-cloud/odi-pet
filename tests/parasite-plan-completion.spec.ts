@@ -121,7 +121,7 @@ test.describe('Parasite Plan Completion and Administration Records', () => {
   });
 
   async function injectSession(page: any, context: any) {
-    await page.goto('http://localhost:3000/login');
+    await page.goto('/login');
     const sessionStr = JSON.stringify(sessionData);
     const base64Session = Buffer.from(sessionStr).toString('base64');
     await context.addCookies([{
@@ -139,7 +139,7 @@ test.describe('Parasite Plan Completion and Administration Records', () => {
   }
 
   test('Oturumsuz istek -> 401 Unauthorized', async ({ page }) => {
-    await page.goto('http://localhost:3000/login');
+    await page.goto('/login');
 
     // Create a plan for the test
     const { data: plan } = await adminClient.from('plans').insert({

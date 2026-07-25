@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const EMAIL = process.env.TEST_EMAIL;
-const PASSWORD = process.env.TEST_PASSWORD;
+const EMAIL = process.env.TEST_ADMIN_EMAIL;
+const PASSWORD = process.env.TEST_ADMIN_PASSWORD;
 
 async function loginAsAdmin(page: Page) {
   if (!EMAIL || !PASSWORD) {
@@ -12,7 +12,7 @@ async function loginAsAdmin(page: Page) {
   await page.fill('input[name="email"]', EMAIL);
   await page.fill('input[name="password"]', PASSWORD);
   await page.click('button[type="submit"]');
-  await expect(page).toHaveURL(/\/admin|\/owner\//, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/admin(?:\/|$)/, { timeout: 15_000 });
 }
 
 test.describe('Dynamic Admin Panel E2E flow', () => {
@@ -36,7 +36,7 @@ test.describe('Dynamic Admin Panel E2E flow', () => {
     const petResponse = await page.evaluate(async (name) => {
       const fd = new FormData();
       fd.append('name', name);
-      fd.append('species', 'Kedi');
+      fd.append('species', 'cat');
       fd.append('breed', 'British Shorthair');
       fd.append('birth_date', '2025-01-01');
       fd.append('gender', 'female');

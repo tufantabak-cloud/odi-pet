@@ -18,7 +18,7 @@ export default function SmartQuestionCard({ question }: SmartQuestionCardProps) 
 
   const handleClick = async () => {
     if (question.type === 'weight') {
-      router.push(`/owner/pets/${question.petId}/edit#weight-input`);
+      router.push(`/owner/pets/${question.petId}/nutrition?tab=kilo`);
       await fetch('/api/profiling/answer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

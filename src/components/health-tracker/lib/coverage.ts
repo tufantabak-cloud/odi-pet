@@ -56,7 +56,7 @@ export function computeCoverage(flowEvents: FlowEvent[]): void {
         endMs = getEventSortDate(next);
         endDateKey = (next as any).due_date || null;
       } else {
-        const freqDays = curr.pet_care_tasks?.frequency_days || 0;
+        const freqDays = curr.pet_care_tasks?.frequency_days || (curr as any).frequency_days || 0;
         if (freqDays > 0) {
           endMs = startMs + freqDays * 24 * 60 * 60 * 1000;
           endDateKey = startDateKey ? addDaysToDateKey(startDateKey, freqDays) : null;

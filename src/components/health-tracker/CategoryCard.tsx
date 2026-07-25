@@ -123,6 +123,30 @@ export function CategoryCard({ event, categoryKey, onMarkDone, onPostpone, onEdi
 
   const theme = STATUS_THEME[computedStatus] ?? STATUS_THEME.future;
   const title = event.pet_care_tasks?.title || event.title || 'Görev';
+  const isStockTracker = event.taskKey === 'Mama Stok Takibi' || title === 'Mama Stok Takibi' || event.title === 'Mama Stok Yenileme' || event.title === 'Tahmini Bitiş';
+  const isWeightTracker = event.taskKey === 'Kilo Takibi' || title === 'Kilo Takibi';
+
+  let customLabel: string | null = null;
+  if (isStockTracker) {
+    if (computedStatus === 'done') {
+      customLabel = '+Stok';
+    } else if (computedStatus === 'upcoming' || computedStatus === 'future') {
+      customLabel = 'Tahmini Bitiş';
+    } else if (computedStatus === 'missed') {
+      customLabel = 'Bitti';
+    }
+  } else if (isWeightTracker) {
+    if (computedStatus === 'done') {
+      customLabel = '+Ölçüm';
+    } else if (computedStatus === 'upcoming' || computedStatus === 'future') {
+      customLabel = 'Ölçüm Bekleniyor';
+    } else if (computedStatus === 'missed') {
+      customLabel = 'Ölçüm Gecikti';
+    } else if (computedStatus === 'today') {
+      customLabel = 'Kilo Ölç';
+    }
+  }
+
   const coverageTheme = event.coverage ? COVERAGE_THEME[event.coverage.status] : null;
 
   // Kart her zaman kendi görev satırının içinde render edilir; satır başlığı
@@ -136,7 +160,7 @@ export function CategoryCard({ event, categoryKey, onMarkDone, onPostpone, onEdi
         className={`
           flex flex-col items-start text-left overflow-hidden
           rounded-2xl border transition-all duration-200
-          w-[100px] min-h-[64px] p-2.5
+          w-[100px] h-[64px] min-h-[64px] p-2.5
           ${theme.card}
           hover:scale-[1.05] active:scale-95
         `}
@@ -146,7 +170,7 @@ export function CategoryCard({ event, categoryKey, onMarkDone, onPostpone, onEdi
             {theme.icon}
           </div>
           <span className="text-[8.5px] font-bold uppercase tracking-wide opacity-70">
-            {theme.label}
+            {customLabel || theme.label}
           </span>
         </div>
 

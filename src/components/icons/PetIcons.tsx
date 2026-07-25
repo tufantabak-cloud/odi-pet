@@ -8,7 +8,152 @@ interface IconProps {
   isSelected?: boolean;
 }
 
-// 1. ShampooIcon - Bakım (Pink-to-Purple)
+// ── Sample Icon Pack Components (Unified Lavender Squircle Badge + Line Icon) ──
+export function IconBadge({
+  children,
+  size = 24,
+  badgeSize = 'md',
+  className = '',
+  isSelected = false
+}: {
+  children?: React.ReactNode;
+  size?: number;
+  badgeSize?: 'sm' | 'md' | 'lg' | 'xl';
+  className?: string;
+  isSelected?: boolean;
+}) {
+  const badgeDimensions = {
+    sm: 'w-8 h-8 rounded-xl p-1.5',
+    md: 'w-10 h-10 rounded-2xl p-2.5',
+    lg: 'w-12 h-12 rounded-2xl p-3',
+    xl: 'w-14 h-14 rounded-2xl p-3.5',
+  }[badgeSize];
+
+  const scaleClass = isSelected ? 'scale-105 ring-2 ring-[#5955D8]/40' : 'hover:scale-105';
+
+  return (
+    <div
+      className={`inline-flex items-center justify-center bg-[#EEECFE] text-[#5955D8] shrink-0 transition-all duration-200 ${badgeDimensions} ${scaleClass} ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+// 1. ShieldCheckIcon - Aşı / Güvenlik / Sağlık Doğrulama / Belge Kasası (Example Icon Pack - Top Icon)
+export function ShieldCheckIcon({ size = 22, className = '', isSelected = false, badgeSize = 'md' }: IconProps & { size?: number; badgeSize?: 'sm' | 'md' | 'lg' | 'xl' }) {
+  return (
+    <IconBadge size={size} badgeSize={badgeSize} isSelected={isSelected} className={className}>
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        <path d="m9 12 2 2 4-4" />
+      </svg>
+    </IconBadge>
+  );
+}
+
+// 2. BugIcon - Parazit / Haşere / İç-Dış Parazit / Teşhis (Example Icon Pack - Middle Icon)
+export function BugIcon({ size = 22, className = '', isSelected = false, badgeSize = 'md' }: IconProps & { size?: number; badgeSize?: 'sm' | 'md' | 'lg' | 'xl' }) {
+  return (
+    <IconBadge size={size} badgeSize={badgeSize} isSelected={isSelected} className={className}>
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <rect width="8" height="14" x="8" y="6" rx="4" />
+        <path d="M12 6v14" />
+        <path d="M19 9h-3" />
+        <path d="M5 9h3" />
+        <path d="M20 13h-4" />
+        <path d="M4 13h4" />
+        <path d="M19 17h-3" />
+        <path d="M5 17h3" />
+        <path d="m10 6-2-3" />
+        <path d="m14 6 2-3" />
+      </svg>
+    </IconBadge>
+  );
+}
+
+// 3. ScaleIcon - Kilo / Ölçüm / Tartı / Dozlama (Example Icon Pack - Bottom Icon)
+export function ScaleIcon({ size = 22, className = '', isSelected = false, badgeSize = 'md' }: IconProps & { size?: number; badgeSize?: 'sm' | 'md' | 'lg' | 'xl' }) {
+  return (
+    <IconBadge size={size} badgeSize={badgeSize} isSelected={isSelected} className={className}>
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
+        <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
+        <path d="M7 21h10" />
+        <path d="M12 3v18" />
+        <path d="M3 7h18" />
+      </svg>
+    </IconBadge>
+  );
+}
+
+// 4. UtensilsIcon - Beslenme / Mama
+export function UtensilsIcon({ size = 22, className = '', isSelected = false, badgeSize = 'md' }: IconProps & { size?: number; badgeSize?: 'sm' | 'md' | 'lg' | 'xl' }) {
+  return (
+    <IconBadge size={size} badgeSize={badgeSize} isSelected={isSelected} className={className}>
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18 2v6a3 3 0 0 1-3 3 3 3 0 0 1-3-3V2" />
+        <path d="M15 2v20" />
+        <path d="M5 2v8a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V2" />
+        <path d="M9 12v10" />
+      </svg>
+    </IconBadge>
+  );
+}
+
+// 5. SparklesIcon - Bakım / Hijyen / Banyo
+export function SparklesIcon({ size = 22, className = '', isSelected = false, badgeSize = 'md' }: IconProps & { size?: number; badgeSize?: 'sm' | 'md' | 'lg' | 'xl' }) {
+  return (
+    <IconBadge size={size} badgeSize={badgeSize} isSelected={isSelected} className={className}>
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+        <path d="M5 3v4" />
+        <path d="M19 17v4" />
+      </svg>
+    </IconBadge>
+  );
+}
+
+// 6. ActivityIcon - Aktivite / Yürüyüş / Egzersiz
+export function ActivityIcon({ size = 22, className = '', isSelected = false, badgeSize = 'md' }: IconProps & { size?: number; badgeSize?: 'sm' | 'md' | 'lg' | 'xl' }) {
+  return (
+    <IconBadge size={size} badgeSize={badgeSize} isSelected={isSelected} className={className}>
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+      </svg>
+    </IconBadge>
+  );
+}
+
+// 7. CalendarIcon - Ajanda / Takvim / Randevular
+export function CalendarIcon({ size = 22, className = '', isSelected = false, badgeSize = 'md' }: IconProps & { size?: number; badgeSize?: 'sm' | 'md' | 'lg' | 'xl' }) {
+  return (
+    <IconBadge size={size} badgeSize={badgeSize} isSelected={isSelected} className={className}>
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+        <line x1="16" x2="16" y1="2" y2="6" />
+        <line x1="8" x2="8" y1="2" y2="6" />
+        <line x1="3" x2="21" y1="10" y2="10" />
+      </svg>
+    </IconBadge>
+  );
+}
+
+// 8. StethoscopeIcon - Veteriner & Genel Sağlık
+export function StethoscopeIcon({ size = 22, className = '', isSelected = false, badgeSize = 'md' }: IconProps & { size?: number; badgeSize?: 'sm' | 'md' | 'lg' | 'xl' }) {
+  return (
+    <IconBadge size={size} badgeSize={badgeSize} isSelected={isSelected} className={className}>
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .2.3" />
+        <path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4" />
+        <circle cx="20" cy="10" r="2" />
+      </svg>
+    </IconBadge>
+  );
+}
+
+// 1. ShampooIcon - Bakım
+
 export function ShampooIcon({ width = 34, height = 34, className = '', isSelected = false }: IconProps) {
   const scaleClass = isSelected ? 'scale-[1.1]' : 'hover:scale-[1.05]';
   return (

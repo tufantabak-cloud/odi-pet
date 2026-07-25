@@ -27,27 +27,24 @@ test.describe('Odi.Pet Health and Care Module Verification', () => {
     test.setTimeout(120000);
     await login(page);
 
-    // 1. Create a Puppy Dog
+    // Bu senaryo kayıt sihirbazını değil sağlık yaşam döngüsünü sınar.
+    // Test petini kararlı API sözleşmesi üzerinden oluştur.
     console.log('Creating a temporary dog...');
-    await page.goto('/owner/pets/add');
-    await page.click('button:has-text("Köpek")');
-    await page.waitForTimeout(600);
-    await page.fill('#name', petName);
-    await page.selectOption('#breed', 'Poodle (Kaniş)');
-    await page.click('label:has-text("♂ Erkek")');
-    await page.fill('input[type="date"]', '2026-01-01'); // Puppy dog (born in current year)
-    await page.fill('#weight', '3.5');
-    await page.click('button:has-text("Devam Et →")');
-    await page.waitForTimeout(600);
-    await page.click('button:has-text("Profili Oluştur")');
-    await page.waitForTimeout(600);
-    await page.click('button:has-text("Atla →")');
-    await expect(page).toHaveURL(/\/owner\/pets\/add\/success/, { timeout: 15000 });
-
-    // Get the pet ID from the success page URL
-    const url = page.url();
-    const petIdMatch = url.match(/[?&]id=([^&]+)/);
-    const petId = petIdMatch ? petIdMatch[1] : '';
+    const petResponse = await page.evaluate(async (name) => {
+      const form = new FormData();
+      form.append('name', name);
+      form.append('species', 'dog');
+      form.append('breed', 'Poodle (Kaniş)');
+      form.append('birth_date', '2026-01-01');
+      form.append('gender', 'male');
+      form.append('is_neutered', 'false');
+      form.append('weight', '3.5');
+      const response = await fetch('/api/pets', { method: 'POST', body: form });
+      return { status: response.status, body: await response.json() };
+    }, petName);
+    expect(petResponse.status).toBe(200);
+    expect(petResponse.body.success).toBe(true);
+    const petId = petResponse.body.pet.id;
     console.log(`Created pet with ID: ${petId}`);
     expect(petId).not.toBe('');
 
@@ -68,24 +65,26 @@ test.describe('Odi.Pet Health and Care Module Verification', () => {
     await expect(page.locator('text=Aşı Seçimi').first()).toBeVisible({ timeout: 10000 });
     // Click first core vaccine in the list
     await page.locator('button h4').first().click();
-    await page.click('button:has-text("Devam")');
+    await page.getByRole('button', { name: 'Devam et', exact: true }).click();
 
     // Step: Date & Time
     console.log('Setting date and time...');
     await expect(page.locator('text=Tarih & Saat').first()).toBeVisible({ timeout: 10000 });
-    await page.click('button:has-text("Devam")');
+    await page.getByRole('button', { name: 'Devam et', exact: true }).click();
 
     // Step: Recurrence
     console.log('Verifying recurrence options...');
-    await expect(page.locator('text=Tekrar Sıklığı').first()).toBeVisible({ timeout: 10000 });
+    await expect(
+      page.getByRole('button', { name: 'Tek Seferlik', exact: true })
+    ).toBeVisible({ timeout: 10_000 });
     // Select "Tek Sefer" to verify single event frequency labelling
-    await page.locator('button:has-text("Tek Sefer")').click();
-    await page.click('button:has-text("Devam")');
+    await page.getByRole('button', { name: 'Tek Seferlik', exact: true }).click();
+    await page.getByRole('button', { name: 'Devam et', exact: true }).click();
 
     // Step: Notification & Save
     console.log('Saving the plan...');
     await expect(page.locator('text=Hatırlatıcı').first()).toBeVisible({ timeout: 10000 });
-    await page.click('button:has-text("Planı Kaydet")');
+    await page.getByRole('button', { name: 'Planı Kaydet', exact: true }).click();
 
     // Verify Success Screen
     console.log('Verifying success screen...');

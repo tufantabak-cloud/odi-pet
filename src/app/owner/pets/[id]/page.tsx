@@ -45,17 +45,44 @@ export default async function PetDetailPage(props: PageProps) {
     { data: nutritionProfile },
     { data: payments },
     { data: activeLostReport },
+    { data: inventory },
+    { data: feedingLogs },
+    { data: assignments },
+    { data: lastVaccineRecord }
   ] = await Promise.all([
     supabase.from('health_schedules').select('*').eq('pet_id', id).order('due_date').limit(100),
     supabase.from('plans').select('*').eq('pet_id', id).order('scheduled_at').limit(100),
     supabase.from('health_diseases').select('*').eq('pet_id', id).order('diagnosis_date', { ascending: false }).limit(5),
     supabase.from('health_allergies').select('*').eq('pet_id', id).limit(5),
     supabase.from('health_medications').select('*').eq('pet_id', id).limit(5),
-    supabase.from('weight_logs').select('*').eq('pet_id', id).order('measured_at', { ascending: false }).limit(15),
+    supabase.from('weight_logs').select('*').eq('pet_id', id).order('measured_at', { ascending: false }).limit(20),
     supabase.from('appointments').select('*, clinics(name)').eq('pet_id', id).order('scheduled_at', { ascending: false }).limit(5),
     supabase.from('pet_nutrition_profiles').select('*').eq('pet_id', id).maybeSingle(),
     supabase.from('payments').select('*').eq('pet_id', id).order('payment_date', { ascending: false }).limit(5),
     supabase.from('lost_reports').select('*').eq('pet_id', id).eq('status', 'active').limit(1).maybeSingle(),
+    supabase.from('food_inventory').select('*').eq('pet_id', id).maybeSingle(),
+    supabase.from('feeding_logs').select('*').eq('pet_id', id).order('meal_time', { ascending: false }).limit(30),
+    supabase.from('pet_food_assignments').select(`
+      *,
+      food_product_family:food_product_families (
+        id,
+        official_name,
+        food_form,
+        life_stage,
+        species,
+        brand:food_brands (
+          id,
+          display_name
+        )
+      ),
+      food_sku:food_skus (
+        id,
+        gtin,
+        package_size_grams,
+        package_type
+      )
+    `).eq('pet_id', id).order('started_at', { ascending: false }).order('created_at', { ascending: false }),
+    supabase.from('vaccine_records_v2').select('vaccine_name, administered_at, status').eq('pet_id', id).not('administered_at', 'is', null).in('status', ['completed', 'done']).order('administered_at', { ascending: false }).limit(1).maybeSingle()
   ])
 
   // plans tablosundaki kayıtları health_schedules formatına dönüştür
@@ -186,11 +213,16 @@ export default async function PetDetailPage(props: PageProps) {
         growthRecords={growthRecords ?? []}
         appointments={appointments ?? []}
         nutritionLogs={nutritionProfile ? [nutritionProfile] : []}
+        inventory={inventory ?? null}
+        feedingLogs={feedingLogs ?? []}
+        weightLogs={growthRecords ?? []}
+        assignments={assignments ?? []}
         payments={payments ?? []}
         subscription={sub}
         activeLostReport={activeLostReport || null}
         hasPasskey={(passkeyCount ?? 0) > 0}
         isAdminView={isAdmin}
+        lastVaccineRecord={lastVaccineRecord ?? null}
       />
     </OnboardingGate>
   )

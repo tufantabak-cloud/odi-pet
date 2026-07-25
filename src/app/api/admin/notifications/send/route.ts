@@ -1,84 +1,131 @@
-import { NextResponse } from 'next/server';
-import { sendWebPush, PushPayload } from '@/lib/agents/notificationAgent';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server'
+import { z } from 'zod'
+import { sendWebPush, type PushPayload } from '@/lib/agents/notificationAgent'
+import { getSessionUser, requireRole } from '@/lib/auth/get-current-profile'
+import { createAdminSupabaseClient } from '@/lib/supabase/server'
+
+const notificationPayloadSchema = z.object({
+  profile_id: z.string().uuid(),
+  title: z.string().trim().min(1).max(120),
+  message: z.string().trim().min(1).max(500),
+}).strict()
+
+function getPushErrorStatus(error: unknown): number | undefined {
+  if (
+    typeof error === 'object'
+    && error !== null
+    && 'statusCode' in error
+    && typeof error.statusCode === 'number'
+  ) {
+    return error.statusCode
+  }
+
+  return undefined
+}
 
 export async function POST(request: Request) {
   try {
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() { return cookieStore.getAll() },
-          setAll() {}
-        },
-      }
-    );
-
-    // Oturum kontrolü (Admin mi?)
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getSessionUser()
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 })
     }
 
-    const body = await request.json();
-    const { profile_id, title, message } = body;
-
-    if (!profile_id || !title || !message) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    const actor = await requireRole(['admin', 'founder'])
+    if (!actor) {
+      return NextResponse.json({ error: 'FORBIDDEN' }, { status: 403 })
     }
 
-    const { data: subs, error: subsErr } = await supabase
+    let body: unknown
+    try {
+      body = await request.json()
+    } catch {
+      return NextResponse.json(
+        { error: 'INVALID_NOTIFICATION_PAYLOAD' },
+        { status: 400 }
+      )
+    }
+
+    const parsedPayload = notificationPayloadSchema.safeParse(body)
+    if (!parsedPayload.success) {
+      return NextResponse.json(
+        { error: 'INVALID_NOTIFICATION_PAYLOAD' },
+        { status: 400 }
+      )
+    }
+
+    const { profile_id, title, message } = parsedPayload.data
+    const admin = createAdminSupabaseClient()
+    const { data: subscriptions, error: subscriptionsError } = await admin
       .from('push_subscriptions')
       .select('*')
-      .eq('profile_id', profile_id);
+      .eq('profile_id', profile_id)
 
-    if (subsErr || !subs || subs.length === 0) {
-      return NextResponse.json({ error: 'Bu kullanıcı için aktif push aboneliği bulunamadı.' }, { status: 404 });
+    if (subscriptionsError) {
+      console.error('Push subscription query failed:', subscriptionsError)
+      return NextResponse.json(
+        { error: 'PUSH_SUBSCRIPTIONS_QUERY_FAILED' },
+        { status: 500 }
+      )
     }
-    
+
+    if (!subscriptions || subscriptions.length === 0) {
+      return NextResponse.json(
+        { error: 'PUSH_SUBSCRIPTION_NOT_FOUND' },
+        { status: 404 }
+      )
+    }
+
     const payload: PushPayload = {
       title,
       body: message,
-      url: '/'
-    };
+      url: '/',
+    }
 
-    let sentCount = 0;
-    const errors = [];
+    let sentCount = 0
+    const errors: string[] = []
 
-    for (const sub of subs) {
-      const pushSub = {
-        endpoint: sub.endpoint,
+    for (const subscription of subscriptions) {
+      const pushSubscription: Parameters<typeof sendWebPush>[0] = {
+        endpoint: subscription.endpoint,
         keys: {
-          p256dh: sub.p256dh,
-          auth: sub.auth_key
-        }
-      };
+          p256dh: subscription.p256dh,
+          auth: subscription.auth_key,
+        },
+      }
 
-      const result = await sendWebPush(pushSub as any, payload);
+      const result = await sendWebPush(pushSubscription, payload)
       if (result.success) {
-        sentCount++;
+        sentCount += 1
       } else {
-        errors.push(result.error);
-        const errStatusCode = (result.error as any)?.statusCode;
-        // Eğer cihaz abonelikten çıkmışsa veya silinmişse veritabanından temizle
-        if (errStatusCode === 410 || errStatusCode === 404) {
-          await supabase.from('push_subscriptions').delete().eq('id', sub.id);
+        errors.push('PUSH_DELIVERY_FAILED')
+        const errorStatus = getPushErrorStatus(result.error)
+        if (errorStatus === 410 || errorStatus === 404) {
+          const { error: deleteError } = await admin
+            .from('push_subscriptions')
+            .delete()
+            .eq('id', subscription.id)
+
+          if (deleteError) {
+            console.error('Stale push subscription cleanup failed:', deleteError)
+          }
         }
       }
     }
 
     return NextResponse.json({
       success: sentCount > 0,
-      message: sentCount > 0 ? `${sentCount} cihaza bildirim gönderildi.` : 'Bildirim gönderilemedi.',
+      sentCount,
+      message: sentCount > 0
+        ? `${sentCount} cihaza bildirim gönderildi.`
+        : 'Bildirim gönderilemedi.',
       payload,
-      errors: errors.length > 0 ? errors : undefined
-    });
-
-  } catch (error: any) {
-    console.error('Manual Push Error:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+      errors: errors.length > 0 ? errors : undefined,
+    })
+  } catch (error: unknown) {
+    console.error('Manual push failed:', error)
+    return NextResponse.json(
+      { success: false, error: 'MANUAL_PUSH_FAILED' },
+      { status: 500 }
+    )
   }
 }

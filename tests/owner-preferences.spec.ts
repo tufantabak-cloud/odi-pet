@@ -185,7 +185,7 @@ test.describe('Owner Vaccine and Parasite Preferences E2E Tests', () => {
     await page.setViewportSize({ width: 320, height: 568 });
 
     // Inject Session
-    await page.goto('http://localhost:3000/login');
+    await page.goto('/login');
     const sessionStr = JSON.stringify(sessionData);
     const base64Session = Buffer.from(sessionStr).toString('base64');
     const cookiesToSet = [{
@@ -203,7 +203,7 @@ test.describe('Owner Vaccine and Parasite Preferences E2E Tests', () => {
     }, sessionData);
 
     // 1. Navigate to Settings page
-    await page.goto('http://localhost:3000/owner/profile/vaccine-settings');
+    await page.goto('/owner/profile/vaccine-settings');
     await page.waitForLoadState('networkidle');
 
     // 2. Pet Selection: verify Milo_SettingsE2E button exists and click it

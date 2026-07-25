@@ -1,18 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import "@fontsource-variable/plus-jakarta-sans/wght.css";
 import "./globals.css";
 import 'leaflet/dist/leaflet.css';
 import OfflineIndicator from "@/components/ui/OfflineIndicator";
 import SplashScreen from "@/components/ui/SplashScreen";
 import PwaEnforcer from "@/components/ui/PwaEnforcer";
 import PwaUpdater from "@/components/ui/PwaUpdater";
-
-const plusJakarta = Plus_Jakarta_Sans({
-  variable: "--font-plus-jakarta",
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "600", "700", "800"],
-  display: "swap",
-});
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -44,11 +37,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr" className={`${plusJakarta.variable} antialiased h-full`}>
+    <html lang="tr" className="antialiased h-full">
       <head>
+        {/* The versioned stylesheet is self-hosted in public/vendor. */}
+        {/* eslint-disable-next-line @next/next/no-css-tags */}
         <link
           rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"
+          href="/vendor/tabler-icons/tabler-icons.min.css"
         />
       </head>
       <body className="min-h-full flex flex-col font-sans text-[16px] bg-bg-main text-text-primary">

@@ -8,10 +8,10 @@ const reporter = new UXReporter();
 // Run tests for all 10 personas sequentially
 test.describe('Odi.Pet E2E UX Persona Flow', () => {
   let isProduction = false;
-  let baseUrl = 'http://localhost:3001';
+  let baseUrl = 'http://127.0.0.1:3100';
 
   test.beforeAll(async ({ request }) => {
-    baseUrl = process.env.TEST_BASE_URL || 'http://localhost:3001';
+    baseUrl = process.env.TEST_BASE_URL || 'http://127.0.0.1:3100';
     if (baseUrl.includes('vercel.app') || baseUrl.includes('odi-petcare')) {
       isProduction = true;
     }

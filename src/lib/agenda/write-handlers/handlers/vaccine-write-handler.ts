@@ -186,8 +186,10 @@ export class VaccineWriteHandler implements AgendaWriteHandler<VaccineWriteInput
     // Ensure UUID idempotency key exists
     const idempotencyKey = context.idempotencyKey || crypto.randomUUID();
 
+    const rpcSupabase = context.rpcSupabase ?? context.supabase;
+
     // Atomic RPC execution — V3 signature (p_user_id removed, user_id taken from v_main_plan)
-    const { data: rpcRes, error: rpcErr } = await supabase.rpc('complete_vaccine_plan_and_record', {
+    const { data: rpcRes, error: rpcErr } = await rpcSupabase.rpc('complete_vaccine_plan_and_record', {
       p_pet_id: petId,
       p_main_plan_id: mainPlan.id,
       p_actual_date: input.administered_at,

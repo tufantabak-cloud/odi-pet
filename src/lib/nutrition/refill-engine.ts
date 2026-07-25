@@ -31,9 +31,16 @@ export function calculateRefillRisk({
   if (daysLeft <= 3) risk = 'CRITICAL';
   else if (daysLeft <= thresholdDays) risk = 'WARNING';
 
+  const timelineStatus: 'normal' | 'azalıyor' | 'bitiyor' | 'bitti' =
+    daysLeft <= 1 ? 'bitti'
+    : daysLeft <= 3 ? 'bitiyor'
+    : daysLeft <= 7 ? 'azalıyor'
+    : 'normal';
+
   return {
     daysLeft: Math.round(daysLeft * 10) / 10,
     risk,
+    timelineStatus,
     shouldNotify: daysLeft <= 7,
     shouldSuggestRefill: daysLeft <= 5,
     shouldUrgentRefill: daysLeft <= 3

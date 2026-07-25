@@ -26,27 +26,24 @@ test.describe('Odi.Pet Pet Profile Page Verification', () => {
   test('Full Pet Profile Lifecycle (Create, View, Calculate Size, SOS, Edit, Purge, Delete)', async ({ page }) => {
     await login(page);
 
-    // 1. Create a Temporary Pet
+    // Bu senaryo kayıt sihirbazını değil profil yaşam döngüsünü sınar.
+    // Test petini kararlı API sözleşmesi üzerinden oluştur.
     console.log('Creating a temporary pet...');
-    await page.goto('/owner/pets/add');
-    await page.click('button:has-text("Kedi")');
-    await page.waitForTimeout(600);
-    await page.fill('#name', petName);
-    await page.selectOption('#breed', 'British Shorthair');
-    await page.click('label:has-text("♂ Erkek")');
-    await page.fill('input[type="date"]', '2023-06-01'); // 3 years old approximately
-    await page.fill('#weight', '4.5'); // 4.5 kg
-    await page.click('button:has-text("Devam Et →")');
-    await page.waitForTimeout(600);
-    await page.click('button:has-text("Profili Oluştur")');
-    await page.waitForTimeout(600);
-    await page.click('button:has-text("Atla →")');
-    await expect(page).toHaveURL(/\/owner\/pets\/add\/success/, { timeout: 15000 });
-
-    // Get the pet ID from the success page URL
-    const url = page.url();
-    const petIdMatch = url.match(/[?&]id=([^&]+)/);
-    const petId = petIdMatch ? petIdMatch[1] : '';
+    const petResponse = await page.evaluate(async (name) => {
+      const form = new FormData();
+      form.append('name', name);
+      form.append('species', 'cat');
+      form.append('breed', 'British Shorthair');
+      form.append('birth_date', '2023-06-01');
+      form.append('gender', 'male');
+      form.append('is_neutered', 'false');
+      form.append('weight', '4.5');
+      const response = await fetch('/api/pets', { method: 'POST', body: form });
+      return { status: response.status, body: await response.json() };
+    }, petName);
+    expect(petResponse.status).toBe(200);
+    expect(petResponse.body.success).toBe(true);
+    const petId = petResponse.body.pet.id;
     console.log(`Created pet with ID: ${petId}`);
     expect(petId).not.toBe('');
 
@@ -58,7 +55,7 @@ test.describe('Odi.Pet Pet Profile Page Verification', () => {
     console.log('Verifying Basic Card View...');
     await expect(page.locator(`h1:has-text("${petName}")`)).toBeVisible({ timeout: 10000 });
     await expect(page.locator('text=British Shorthair').first()).toBeVisible();
-    await expect(page.locator('text=4.5 kg').first()).toBeVisible();
+    await expect(page.getByText('4.5 Kilo', { exact: false }).first()).toBeVisible();
 
     // 3. Boyut Hesaplama & Düzenleme Modülü (Size Calculation & Edit Module)
     console.log('Navigating to Edit Page for Size Calculation Checks...');

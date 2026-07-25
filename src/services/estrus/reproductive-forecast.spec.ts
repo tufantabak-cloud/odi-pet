@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { generateReproductiveForecastWithDate } from '../src/services/estrus/generateReproductiveForecast';
-import { generateReproductiveForecast } from '../src/services/estrus/generateReproductiveForecast';
+import { generateReproductiveForecastWithDate, generateReproductiveForecast } from './generateReproductiveForecast';
 
 describe('Reproductive Forecast Engine (ADIM 15.1)', () => {
   const TODAY = new Date('2026-07-15T12:00:00Z');

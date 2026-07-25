@@ -237,7 +237,7 @@ test.describe('Plan Yap Preference Filtering E2E Tests', () => {
     await page.setViewportSize({ width: 320, height: 568 });
 
     // Inject Session
-    await page.goto('http://localhost:3000/login');
+    await page.goto('/login');
     const sessionStr = JSON.stringify(sessionData);
     const base64Session = Buffer.from(sessionStr).toString('base64');
     await context.addCookies([{
@@ -254,7 +254,7 @@ test.describe('Plan Yap Preference Filtering E2E Tests', () => {
     }, sessionData);
 
     // 1. Check Vaccine Visibility for Dog
-    await page.goto(`http://localhost:3000/owner/plan-yap/asi?pet_id=${testPetIdDog}`);
+    await page.goto(`/owner/plan-yap/asi?pet_id=${testPetIdDog}`);
     await page.waitForLoadState('networkidle');
 
     // Legal & Core must be visible
@@ -271,7 +271,7 @@ test.describe('Plan Yap Preference Filtering E2E Tests', () => {
 
     // 2. Check Parasite Visibility for Dog
     // Let's go to SubCategory selection step first if needed, or route directly to parasite
-    await page.goto(`http://localhost:3000/owner/plan-yap/parazit?pet_id=${testPetIdDog}`);
+    await page.goto(`/owner/plan-yap/parazit?pet_id=${testPetIdDog}`);
     await page.waitForLoadState('networkidle');
 
     // Click 'İç Parazit' alt kategori
@@ -288,7 +288,7 @@ test.describe('Plan Yap Preference Filtering E2E Tests', () => {
     await expect(page.locator('text=PY Cat Parasite')).not.toBeVisible();
 
     // Re-navigate back to parasite category to select Dış Parazit
-    await page.goto(`http://localhost:3000/owner/plan-yap/parazit?pet_id=${testPetIdDog}`);
+    await page.goto(`/owner/plan-yap/parazit?pet_id=${testPetIdDog}`);
     await page.waitForLoadState('networkidle');
     const externalSubCat = page.locator('button', { hasText: 'Dış Parazit' });
     await expect(externalSubCat).toBeVisible();
