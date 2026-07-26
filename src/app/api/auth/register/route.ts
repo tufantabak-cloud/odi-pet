@@ -35,9 +35,19 @@ export async function POST(req: NextRequest) {
   // Response nesnesini önceden oluşturuyoruz
   const response = NextResponse.json({ success: true })
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return NextResponse.json(
+      { error: 'Kimlik doğrulama servisi yapılandırılmamış.' },
+      { status: 503 }
+    )
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-project.supabase.co',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key',
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {
@@ -59,9 +69,14 @@ export async function POST(req: NextRequest) {
 
   // Dinamik callback URL — production'da NEXT_PUBLIC_SITE_URL kullan,
   // local'de request origin'inden türet (localhost:3000)
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    `https://${req.headers.get('host')}`
+  const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '')
+  if (!configuredSiteUrl && process.env.NODE_ENV === 'production') {
+    return NextResponse.json(
+      { error: 'Uygulama adresi yapılandırılmamış.' },
+      { status: 503 }
+    )
+  }
+  const siteUrl = configuredSiteUrl || req.nextUrl.origin
 
   const { error } = await supabase.auth.signUp({
     email,

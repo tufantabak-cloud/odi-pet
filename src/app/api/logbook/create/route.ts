@@ -1,13 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { createAdminSupabaseClient } from '@/lib/supabase/server'
+import { getIP, logbookRateLimit } from '@/lib/auth-security'
+
+const createLogbookSchema = z.object({
+  token: z.string().min(10).max(128).regex(/^[A-Za-z0-9_-]+$/),
+  entryType: z.string().min(1).max(64),
+  notes: z.string().max(1000).nullable().optional(),
+})
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
-    const { token, entryType, notes } = body
+    const ip = getIP(req)
+    const body = await req.json().catch(() => null)
+    const parsed = createLogbookSchema.safeParse(body)
 
-    if (!token || !entryType) {
-      return NextResponse.json({ error: 'Eksik bilgi: token ve entryType zorunludur.' }, { status: 400 })
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Geçersiz veri: token, entryType ve en fazla 1000 karakterlik not kabul edilir.' }, { status: 400 })
+    }
+
+    const { token, entryType, notes } = parsed.data
+    const { success: withinLimit } = await logbookRateLimit.limit(`logbook:${token}:${ip}`)
+    if (!withinLimit) {
+      return NextResponse.json({ error: 'Çok fazla seyir defteri girişi yapıldı. Lütfen biraz bekleyin.' }, { status: 429 })
     }
 
     const supabase = createAdminSupabaseClient()
@@ -36,7 +51,7 @@ export async function POST(req: NextRequest) {
       shared_card_id: card.id,
       pet_id: card.pet_id,
       entry_type: entryType,
-      notes: notes || null
+      notes: notes ? notes.trim() : null
     }
 
     const { error: insertError } = await supabase
@@ -55,3 +70,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Sunucu hatası.' }, { status: 500 })
   }
 }
+

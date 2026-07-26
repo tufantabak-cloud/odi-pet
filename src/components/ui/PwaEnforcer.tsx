@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useWebPush } from "@/hooks/useWebPush";
 
 export default function PwaEnforcer() {
+  const pathname = usePathname();
   const [isMounted, setIsMounted] = useState(false);
   const [shouldShow, setShouldShow] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -14,7 +16,14 @@ export default function PwaEnforcer() {
   const [showIosGuide, setShowIosGuide] = useState(false);
   const [showPostInstallGuide, setShowPostInstallGuide] = useState(false);
 
-  const { subscribe, isLoading, permission: pushPermission } = useWebPush();
+  const {
+    subscribe,
+    isSubscribed,
+    isInitializing,
+    isLoading,
+    error: pushError,
+    permission: pushPermission,
+  } = useWebPush();
 
   // Listen for beforeinstallprompt
   useEffect(() => {
@@ -80,7 +89,8 @@ export default function PwaEnforcer() {
       window.matchMedia("(display-mode: standalone)").matches || 
       (window.navigator as any).standalone === true;
 
-    const hasNotificationPermission = pushPermission === 'granted';
+    const hasWorkingPushSubscription =
+      pushPermission === 'granted' && isSubscribed;
 
     if (!isStandalone) {
       // PWA is enforced if not dismissed
@@ -89,13 +99,19 @@ export default function PwaEnforcer() {
     } else if (pushPermission === 'unsupported') {
       // Cihaz bildirimleri desteklemiyorsa kilitlenme yaşanmaması için bypass et
       setShouldShow(false);
-    } else if (!hasNotificationPermission) {
+    } else if (!pathname.startsWith('/owner')) {
+      // Oturumu olmayan kullanıcıdan sunucuya kaydedilemeyecek bir abonelik isteme.
+      setShouldShow(false);
+    } else if (isInitializing) {
+      // Tarayıcı izni ile gerçek push aboneliğinin doğrulanmasını bekle.
+      setShouldShow(false);
+    } else if (!hasWorkingPushSubscription) {
       setEnforceType("notification");
       setShouldShow(true);
     } else {
       setShouldShow(false);
     }
-  }, [pushPermission, dismissed]);
+  }, [dismissed, isInitializing, isSubscribed, pathname, pushPermission]);
 
   // Prevent scroll if visible
   useEffect(() => {
@@ -194,16 +210,28 @@ export default function PwaEnforcer() {
               )}
             </div>
           ) : (
-            <button
-              onClick={handleEnableNotifications}
-              disabled={isLoading}
-              className="btn-primary w-full py-4 flex items-center justify-center gap-2"
-            >
-              {isLoading ? (
-                <span className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : '🔔'}
-              Bildirimleri Etkinleştir
-            </button>
+            <div className="w-full space-y-3">
+              {pushError && (
+                <div
+                  role="alert"
+                  className="p-3 rounded-xl border border-red-400/20 bg-red-500/10 text-left text-[12px] font-semibold text-red-200"
+                >
+                  {pushError}
+                </div>
+              )}
+              <button
+                onClick={handleEnableNotifications}
+                disabled={isLoading}
+                className="btn-primary w-full py-4 flex items-center justify-center gap-2"
+              >
+                {isLoading ? (
+                  <span className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : '🔔'}
+                {pushPermission === 'granted'
+                  ? 'Cihaz Kaydını Tamamla'
+                  : 'Bildirimleri Etkinleştir'}
+              </button>
+            </div>
           )}
 
           <button

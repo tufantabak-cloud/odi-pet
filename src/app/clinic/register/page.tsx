@@ -5,6 +5,12 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Eye, EyeOff } from 'lucide-react'
+import dynamic from 'next/dynamic'
+
+const Turnstile = dynamic(
+  () => import('@marsidev/react-turnstile').then((mod) => mod.Turnstile),
+  { ssr: false }
+)
 
 export default function ClinicRegisterPage() {
   const router = useRouter()
@@ -12,6 +18,7 @@ export default function ClinicRegisterPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState('')
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -19,6 +26,7 @@ export default function ClinicRegisterPage() {
     setError('')
     
     const fd = new FormData(e.currentTarget)
+    fd.append('turnstileToken', turnstileToken)
     
     try {
       const res = await fetch('/api/auth/clinic-register', {
@@ -82,6 +90,13 @@ export default function ClinicRegisterPage() {
         </div>
 
         <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+          {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+            <Turnstile
+              siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+              onSuccess={setTurnstileToken}
+              options={{ size: 'invisible' }}
+            />
+          )}
           {error && (
             <div role="alert" aria-live="assertive" className="p-4 rounded-2xl bg-error/10 border border-error/20 text-error text-[13px] font-bold text-center animate-in shake-in duration-300">
               ⚠️ {error}
@@ -169,7 +184,7 @@ export default function ClinicRegisterPage() {
           </div>
 
           <div className="flex items-start gap-3 mt-1 px-1">
-            <input type="checkbox" required id="terms" className="mt-1 w-5 h-5 rounded border-border-main text-primary focus:ring-primary" />
+            <input type="checkbox" required id="terms" name="terms" className="mt-1 w-5 h-5 rounded border-border-main text-primary focus:ring-primary" />
             <label htmlFor="terms" className="text-[12px] text-text-secondary leading-snug">
               <Link href="/legal/terms" className="font-bold text-primary hover:underline">Klinik Kullanım Koşullarını</Link> ve <Link href="/legal/kvkk" className="font-bold text-primary hover:underline">Gizlilik Politikası</Link>'nı okudum, onaylıyorum.
             </label>

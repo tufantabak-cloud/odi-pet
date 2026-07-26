@@ -3,16 +3,26 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
 export default async function ClinicAdminPage() {
-  const profile = await requireRole(['admin'])
+  const profile = await requireRole(['vet', 'admin', 'founder'])
   if (!profile) redirect('/clinic/dashboard')
 
   const supabase = await createServerSupabaseClient()
 
   const { data: memberships } = await supabase
-    .from('clinic_memberships').select('clinic_id, clinics(*)').eq('profile_id', profile.id)
+    .from('clinic_memberships')
+    .select('clinic_id, is_clinic_admin, clinics(*)')
+    .eq('profile_id', profile.id)
+    .limit(1)
 
-  const clinic = (memberships?.[0]?.clinics as any) ?? null
-  const clinicId = memberships?.[0]?.clinic_id ?? null
+  const membership = memberships?.[0]
+  const hasGlobalAdminRole =
+    profile.role === 'admin' || profile.role === 'founder'
+  if (!membership || (!membership.is_clinic_admin && !hasGlobalAdminRole)) {
+    redirect('/clinic/dashboard')
+  }
+
+  const clinic = (membership.clinics as any) ?? null
+  const clinicId = membership.clinic_id ?? null
 
   // Tüm üyeler
   const { data: members } = clinicId
@@ -98,7 +108,7 @@ export default async function ClinicAdminPage() {
           <div className="flex flex-col gap-3">
             {members.map((m: any) => {
               const p = m.profiles
-              const isAdmin = p?.role === 'clinic_admin'
+              const isAdmin = m.is_clinic_admin === true
               return (
                 <div key={m.id} className="flex items-center gap-4 p-4 rounded-[16px] border border-border-main bg-surface hover:border-primary/20 transition-colors">
                   <div className="w-11 h-11 rounded-full bg-primary-soft flex items-center justify-center text-primary font-extrabold text-[15px] shrink-0">

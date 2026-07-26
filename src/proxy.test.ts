@@ -110,6 +110,10 @@ describe('proxy erişim sınırı', () => {
     const response = await proxy(
       new NextRequest('http://localhost/api/v1/reports/lost', {
         method: 'POST',
+        headers: {
+          host: 'localhost',
+          origin: 'http://localhost',
+        },
       })
     )
 

@@ -14,13 +14,28 @@ declare global {
 
 declare const self: ServiceWorkerGlobalScope & typeof globalThis;
 
-// PWA Cache Buster: v1.0.1 (Force Update)
+import { NetworkOnly } from "serwist";
+
+const customRuntimeCaching = [
+  {
+    matcher: ({ url }: { url: URL }) =>
+      url.pathname.startsWith('/api/') ||
+      url.pathname.startsWith('/owner') ||
+      url.pathname.startsWith('/clinic') ||
+      url.pathname.startsWith('/admin') ||
+      url.pathname.startsWith('/caregiver'),
+    handler: new NetworkOnly(),
+  },
+  ...defaultCache,
+];
+
+// PWA Cache Buster: v1.0.2 (Force Update & Explicit NetworkOnly for Sensitive Routes)
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: true,
-  runtimeCaching: defaultCache,
+  runtimeCaching: customRuntimeCaching,
   fallbacks: {
     entries: [
       {
@@ -41,7 +56,31 @@ self.addEventListener('install', (event: ExtendableEvent) => {
 })
 
 self.addEventListener('activate', (event: ExtendableEvent) => {
-  event.waitUntil(self.clients.claim())
+  event.waitUntil(
+    (async () => {
+      await self.clients.claim()
+
+      // Clean up legacy sensitive caches created by previous service worker versions
+      const cacheNames = await self.caches.keys()
+      const sensitiveCachePrefixes = [
+        'apis',
+        'pages',
+        'pages-rsc',
+        'pages-rsc-prefetch',
+        'serwist-runtime',
+      ]
+
+      await Promise.all(
+        cacheNames.map((cacheName) => {
+          if (sensitiveCachePrefixes.some((prefix) => cacheName.includes(prefix))) {
+            console.info(`[sw] Purging sensitive cache: ${cacheName}`)
+            return self.caches.delete(cacheName)
+          }
+          return Promise.resolve(true)
+        })
+      )
+    })()
+  )
 })
 
 // ── PWA Push Notification Handler ───────────────────────────────

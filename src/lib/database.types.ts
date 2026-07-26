@@ -1334,18 +1334,21 @@ export type Database = {
           clinic_id: string | null
           created_at: string | null
           id: string
+          is_clinic_admin: boolean
           profile_id: string | null
         }
         Insert: {
           clinic_id?: string | null
           created_at?: string | null
           id?: string
+          is_clinic_admin?: boolean
           profile_id?: string | null
         }
         Update: {
           clinic_id?: string | null
           created_at?: string | null
           id?: string
+          is_clinic_admin?: boolean
           profile_id?: string | null
         }
         Relationships: [
@@ -7510,4 +7513,3 @@ export const Constants = {
     },
   },
 } as const
-

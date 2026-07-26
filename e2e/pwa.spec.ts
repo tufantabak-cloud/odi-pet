@@ -52,6 +52,18 @@ test.describe('PWA üretim doğrulaması', () => {
       await page.evaluate(() => Boolean(navigator.serviceWorker.controller)),
     ).toBe(true)
 
+    // Verify private API responses are NOT cached in Cache Storage
+    const isApiCached = await page.evaluate(async () => {
+      const keys = await window.caches.keys()
+      for (const key of keys) {
+        const cache = await window.caches.open(key)
+        const match = await cache.match('/api/pets')
+        if (match) return true
+      }
+      return false
+    })
+    expect(isApiCached).toBe(false)
+
     await context.setOffline(true)
     try {
       await page.goto('/pwa-offline-verification', {
@@ -65,3 +77,4 @@ test.describe('PWA üretim doğrulaması', () => {
     }
   })
 })
+

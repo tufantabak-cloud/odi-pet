@@ -28,6 +28,18 @@ export const registerSchema = z.object({
   path: ["confirmPassword"],
 });
 
+export const clinicRegisterSchema = z.object({
+  name: z.string().trim().min(2, "Ad soyad en az 2 karakter olmalıdır.").max(100),
+  clinicName: z.string().trim().min(2, "Klinik adı en az 2 karakter olmalıdır.").max(160),
+  clinicPhone: z.string().trim().max(30).optional(),
+  email: z.string().trim().email("Geçerli bir e-posta adresi giriniz.").max(254),
+  password: passwordSchema,
+  terms: z.literal(true, {
+    message: "Kullanım koşullarını kabul etmelisiniz.",
+  }),
+  turnstileToken: z.string().optional(),
+});
+
 export const updatePasswordSchema = z.object({
   password: passwordSchema,
   confirmPassword: z.string().min(1, "Şifre onayı zorunludur."),
@@ -44,5 +56,6 @@ export const resetPasswordSchema = z.object({
 
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
+export type ClinicRegisterInput = z.infer<typeof clinicRegisterSchema>;
 export type UpdatePasswordInput = z.infer<typeof updatePasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;

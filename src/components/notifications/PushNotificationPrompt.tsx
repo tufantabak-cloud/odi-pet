@@ -5,7 +5,15 @@ import { useWebPush } from '@/hooks/useWebPush'
 import { useOnboarding } from '@/lib/onboarding/useOnboarding'
 
 export default function PushNotificationPrompt() {
-  const { permission, subscribe, isLoading, showBatteryGuide, dismissBatteryGuide } = useWebPush()
+  const {
+    permission,
+    isSubscribed,
+    isInitializing,
+    subscribe,
+    isLoading,
+    showBatteryGuide,
+    dismissBatteryGuide,
+  } = useWebPush()
   const { completeStepByTrigger } = useOnboarding()
   const [showPrompt, setShowPrompt] = useState(false)
   const [toastMsg, setToastMsg] = useState<string | null>(null)
@@ -23,11 +31,11 @@ export default function PushNotificationPrompt() {
 
     const forcePrompt = typeof window !== 'undefined' && window.location.search.includes('forcePrompt=true');
     
-    if (permission === 'default' || forcePrompt) {
+    if (!isInitializing && !isSubscribed && (permission === 'default' || permission === 'granted' || forcePrompt)) {
       const timer = setTimeout(() => setShowPrompt(true), 2500)
       return () => clearTimeout(timer)
     }
-  }, [permission, dismissed])
+  }, [dismissed, isInitializing, isSubscribed, permission])
 
   const handleDismiss = () => {
     localStorage.setItem('push_prompt_dismissed', 'true')
@@ -62,7 +70,12 @@ export default function PushNotificationPrompt() {
   }
 
   const forcePrompt = typeof window !== 'undefined' && window.location.search.includes('forcePrompt=true');
-  const shouldRenderPrompt = showPrompt && !dismissed && (permission === 'default' || forcePrompt) && permission !== 'unsupported';
+  const shouldRenderPrompt =
+    showPrompt
+    && !dismissed
+    && !isSubscribed
+    && (permission === 'default' || permission === 'granted' || forcePrompt)
+    && permission !== 'unsupported';
 
   return (
     <>
@@ -105,7 +118,7 @@ export default function PushNotificationPrompt() {
               {isLoading && (
                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
               )}
-              İzin Ver
+              {permission === 'granted' ? 'Kaydı Tamamla' : 'İzin Ver'}
             </button>
           </div>
         </div>

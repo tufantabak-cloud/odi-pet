@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import webpush from "https://esm.sh/web-push@3.6.7"
+import { shouldFinalizePushJob } from "./delivery-state.ts"
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -41,6 +42,15 @@ async function sendEmail(to: string, subject: string, html: string) {
   return res.ok
 }
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 // ── HTML E-mail Template ────────────────────────────────────────
 function buildEmailHtml(notifications: Array<{ title: string; message: string; type: string }>) {
   const items = notifications
@@ -49,10 +59,10 @@ function buildEmailHtml(notifications: Array<{ title: string; message: string; t
       <tr>
         <td style="padding:16px 24px;border-bottom:1px solid #f0f0f0;">
           <p style="margin:0;font-weight:700;font-size:15px;color:${n.type === 'vaccine_overdue' ? '#ef4444' : '#7c3aed'}">
-            ${n.title}
+            ${escapeHtml(n.title)}
           </p>
           <p style="margin:6px 0 0;font-size:13px;color:#6b7280;line-height:1.5">
-            ${n.message}
+            ${escapeHtml(n.message)}
           </p>
         </td>
       </tr>`
@@ -144,6 +154,7 @@ serve(async (_req: Request) => {
     
     let emailsSent = 0
     let pushesSent = 0
+    let pushJobsDeferred = 0
     const sentIds: string[] = []
 
     if (isQuietHours) {
@@ -312,53 +323,131 @@ serve(async (_req: Request) => {
         if (!plan) continue
         const profileId = plan.user_id
         const userSubs = jobSubsByProfile.get(profileId) ?? []
-        const deepLink = plan.pet_id ? `/owner/pets/${plan.pet_id}#pet-tasks` : "/owner/notifications"
         const title = `${plan.sub_type ?? plan.category} Hatırlatması ⏰`
         const body = `Planladığınız görevin zamanı geldi.`
 
-        const payload = JSON.stringify({
-          title: title,
-          body: body,
-          icon: 'https://odi.pet/icon-192.png',
-          badge: 'https://odi.pet/icon-192.png',
-          url: `https://odi.pet${deepLink}`,
-          tag: job.id
-        })
+        // Retry-safe in-app notification creation. A transient push failure must
+        // not create another bell item on every five-minute dispatch cycle.
+        const inAppWindowStart = new Date(
+          new Date(job.fire_at).getTime() - 60_000
+        ).toISOString()
+        const { data: existingInApp, error: existingInAppError } = await supabase
+          .from("notifications")
+          .select("id")
+          .eq("profile_id", profileId)
+          .eq("plan_id", job.plan_id)
+          .eq("type", "general")
+          .gte("created_at", inAppWindowStart)
+          .limit(1)
+          .maybeSingle()
 
-        for (const sub of userSubs) {
-          try {
-            await webpush.sendNotification(
-              { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth_key } },
-              payload,
-              {
-                urgency: 'high',
-                TTL: 86400
-              }
+        if (existingInAppError) {
+          console.error(
+            `[dispatch-notifications] In-app notification lookup failed for ${profileId}:`,
+            existingInAppError
+          )
+          pushJobsDeferred++
+          continue
+        }
+
+        if (!existingInApp) {
+          const { error: inAppError } = await supabase
+            .from("notifications")
+            .insert({
+              profile_id: profileId,
+              pet_id: plan.pet_id,
+              plan_id: job.plan_id,
+              title,
+              message: body,
+              type: "general",
+              sent_email: false
+            })
+
+          if (inAppError) {
+            console.error(
+              `[dispatch-notifications] In-app notification insert failed for ${profileId}:`,
+              inAppError
             )
-            pushesSent++
-          } catch (err: any) {
-            if (err.statusCode === 410 || err.statusCode === 404) {
-              await supabase.from("push_subscriptions").delete().eq("id", sub.id)
-            } else {
-              console.error(`[dispatch-notifications] Job push error for ${profileId}:`, err)
+            pushJobsDeferred++
+            continue
+          }
+        }
+
+        const deliveryOutcome = {
+          subscriptionCount: userSubs.length,
+          deliveredCount: 0,
+          invalidSubscriptionCount: 0,
+          retryableFailureCount: 0,
+        }
+
+        if (
+          userSubs.length > 0
+          && (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY)
+        ) {
+          deliveryOutcome.retryableFailureCount = userSubs.length
+          console.error(
+            `[dispatch-notifications] Push job ${job.id} deferred: VAPID keys are missing`
+          )
+        } else {
+          const deepLink = plan.pet_id
+            ? `/owner/pets/${plan.pet_id}#pet-tasks`
+            : "/owner/notifications"
+          const payload = JSON.stringify({
+            title,
+            body,
+            icon: 'https://odi.pet/icon-192.png',
+            badge: 'https://odi.pet/icon-192.png',
+            url: `https://odi.pet${deepLink}`,
+            tag: job.id
+          })
+
+          for (const sub of userSubs) {
+            try {
+              await webpush.sendNotification(
+                {
+                  endpoint: sub.endpoint,
+                  keys: { p256dh: sub.p256dh, auth: sub.auth_key }
+                },
+                payload,
+                {
+                  urgency: 'high',
+                  TTL: 86400
+                }
+              )
+              deliveryOutcome.deliveredCount++
+              pushesSent++
+            } catch (err: unknown) {
+              const pushError = err as {
+                statusCode?: number
+                message?: string
+              }
+              if (
+                pushError.statusCode === 410
+                || pushError.statusCode === 404
+              ) {
+                deliveryOutcome.invalidSubscriptionCount++
+                await supabase
+                  .from("push_subscriptions")
+                  .delete()
+                  .eq("id", sub.id)
+              } else {
+                deliveryOutcome.retryableFailureCount++
+                console.error(
+                  `[dispatch-notifications] Push job ${job.id} failed and will retry:`,
+                  {
+                    statusCode: pushError.statusCode,
+                    message: pushError.message,
+                  }
+                )
+              }
             }
           }
         }
 
-        // Insert in-app notification (bell icon) so it populates the in-app list
-        const { error: inAppError } = await supabase
-          .from("notifications")
-          .insert({
-            profile_id: profileId,
-            pet_id: plan.pet_id,
-            title: title,
-            message: body,
-            type: "general",
-            sent_email: false
-          });
-
-        if (inAppError) {
-          console.error(`[dispatch-notifications] In-app notification insert error for ${profileId}:`, inAppError);
+        const shouldFinalize = shouldFinalizePushJob(deliveryOutcome)
+        if (!shouldFinalize) {
+          pushJobsDeferred++
+          continue
         }
 
         // Auto-reschedule next occurrence for active repeating plans (daily/weekly/monthly/yearly)
@@ -433,14 +522,17 @@ serve(async (_req: Request) => {
         .in("id", sentIds)
     }
 
-    console.log(`[dispatch-notifications] Emails sent: ${emailsSent}, Web Pushes sent: ${pushesSent}`)
+    console.log(
+      `[dispatch-notifications] Emails sent: ${emailsSent}, Web Pushes sent: ${pushesSent}, Push jobs deferred: ${pushJobsDeferred}`
+    )
 
     return new Response(
       JSON.stringify({
         status: "success",
         in_app_notifications_created: bdayCount + scheduleCount,
         emails_sent: emailsSent,
-        pushes_sent: pushesSent
+        pushes_sent: pushesSent,
+        push_jobs_deferred: pushJobsDeferred
       }),
       { headers: { "Content-Type": "application/json" } }
     )

@@ -61,6 +61,7 @@ const createRateLimit = (tokens: number, windowStr: string, prefix: string) => {
 
 export const loginRateLimit = createRateLimit(5, "1 m", "@upstash/ratelimit/login");
 export const registerRateLimit = createRateLimit(3, "1 m", "@upstash/ratelimit/register");
+export const logbookRateLimit = createRateLimit(20, "1 m", "@upstash/ratelimit/logbook");
 export const resetRateLimit = createRateLimit(2, "1 m", "@upstash/ratelimit/reset");
 export const updatePasswordRateLimit = createRateLimit(3, "1 m", "@upstash/ratelimit/update-password");
 
@@ -78,8 +79,13 @@ export async function verifyTurnstile(token: string | null | undefined, ip: stri
 
   const secretKey = process.env.TURNSTILE_SECRET_KEY;
   if (!secretKey) {
-    console.warn("TURNSTILE_SECRET_KEY is not set. Bypassing check.");
-    return true; // Bypass if not configured, useful for local dev without keys
+    if (process.env.NODE_ENV === 'production') {
+      console.error("TURNSTILE_SECRET_KEY is not set in production.");
+      return false;
+    }
+
+    console.warn("TURNSTILE_SECRET_KEY is not set. Bypassing check outside production.");
+    return true;
   }
 
   if (!token) {

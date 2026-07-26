@@ -6,9 +6,26 @@ SELECT ok(
   has_table_privilege(
     'authenticated',
     'public.profiles',
-    'SELECT, INSERT, UPDATE, DELETE'
+    'SELECT'
+  )
+  AND NOT has_table_privilege(
+    'authenticated',
+    'public.profiles',
+    'INSERT, UPDATE, DELETE'
+  )
+  AND has_column_privilege(
+    'authenticated',
+    'public.profiles',
+    'first_name',
+    'UPDATE'
+  )
+  AND NOT has_column_privilege(
+    'authenticated',
+    'public.profiles',
+    'role',
+    'UPDATE'
   ),
-  'authenticated profile işlemleri için tablo ayrıcalıklarına sahip olmalı'
+  'authenticated profilde yalnızca güvenli alanları güncelleyebilmeli'
 );
 
 SELECT ok(

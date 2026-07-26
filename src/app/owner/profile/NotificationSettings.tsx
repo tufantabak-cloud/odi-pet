@@ -3,7 +3,7 @@
 import { useWebPush } from '@/hooks/useWebPush'
 
 export default function NotificationSettings() {
-  const { permission, isSubscribed, isLoading, subscribe, unsubscribe } = useWebPush()
+  const { permission, isSubscribed, isLoading, error, subscribe, unsubscribe } = useWebPush()
 
   const handleToggle = async () => {
     if (isSubscribed) {
@@ -49,6 +49,11 @@ export default function NotificationSettings() {
           <span className="text-text-secondary">Tarayıcı Bildirimleri: <span className="text-primary">{isLoading ? 'Güncelleniyor...' : isSubscribed ? 'Aktif' : 'Pasif'}</span></span>
           <span className="text-text-secondary">Kanal: <span className="text-primary">Push & Email</span></span>
         </div>
+        {error && (
+          <div role="alert" className="p-4 bg-error/5 text-error text-[12px] font-semibold">
+            {error}
+          </div>
+        )}
       </div>
     </section>
   )

@@ -32,8 +32,8 @@ function iconFor(type: string) {
 
 // ── Web Push Smart Card (Progressive Profiling) ─────────────────
 function PushPermissionCard({ onDismiss, pets = [] }: { onDismiss: () => void, pets?: { id: string, name: string }[] }) {
-  const { permission, isSubscribed, isLoading, subscribe } = useWebPush()
-  const [result, setResult] = useState<'idle' | 'success' | 'denied'>('idle')
+  const { permission, isSubscribed, isLoading, error, subscribe } = useWebPush()
+  const [result, setResult] = useState<'idle' | 'success' | 'error'>('idle')
   const [testSending, setTestSending] = useState(false)
 
   const firstPet = pets && pets.length > 0 ? pets[0] : null
@@ -77,7 +77,7 @@ function PushPermissionCard({ onDismiss, pets = [] }: { onDismiss: () => void, p
     </div>
   )
 
-  if (isSubscribed || permission === 'granted' || result === 'success') return (
+  if (isSubscribed || result === 'success') return (
     <div className="p-5 bg-success/5 border border-success/20 rounded-2xl flex gap-4 items-start animate-in fade-in duration-300">
       <div className="w-12 h-12 rounded-xl bg-success/15 flex items-center justify-center text-[24px] shrink-0">
         🎉
@@ -120,8 +120,8 @@ function PushPermissionCard({ onDismiss, pets = [] }: { onDismiss: () => void, p
           <button
             id="push-enable-btn"
             onClick={async () => {
-              const result = await subscribe()
-              setResult(result.success ? 'success' : 'denied')
+              const subscriptionResult = await subscribe()
+              setResult(subscriptionResult.success ? 'success' : 'error')
             }}
             disabled={isLoading}
             className="btn-primary flex items-center gap-2 text-[13px]"
@@ -129,7 +129,7 @@ function PushPermissionCard({ onDismiss, pets = [] }: { onDismiss: () => void, p
             {isLoading ? (
               <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : '✓'}
-            Bildirimleri Aç
+            {permission === 'granted' ? 'Cihaz Kaydını Tamamla' : 'Bildirimleri Aç'}
           </button>
           <button
             onClick={onDismiss}
@@ -138,6 +138,11 @@ function PushPermissionCard({ onDismiss, pets = [] }: { onDismiss: () => void, p
             Şimdi Değil
           </button>
         </div>
+        {result === 'error' && error && (
+          <p role="alert" className="text-[12px] font-semibold text-error mt-3">
+            {error}
+          </p>
+        )}
       </div>
     </div>
   )

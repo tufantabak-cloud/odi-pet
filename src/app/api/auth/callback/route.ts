@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { getSafeRelativeRedirect } from '@/lib/security/redirect'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,9 +31,7 @@ export async function GET(req: NextRequest) {
     )
   }
 
-  // next parametresini al — sadece relative path kabul et (open-redirect önlemi)
-  const rawNext = requestUrl.searchParams.get('next') ?? '/owner/dashboard'
-  const next = rawNext.startsWith('/') ? rawNext : '/owner/dashboard'
+  const next = getSafeRelativeRedirect(requestUrl.searchParams.get('next'))
 
   const response = NextResponse.redirect(new URL(next, req.url))
 

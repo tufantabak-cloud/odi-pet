@@ -6,27 +6,15 @@ import {
   isAdminBoundaryPath,
   isProtectedPagePath,
 } from '@/lib/routing/request-boundary'
+import { validateSameOriginHeaders } from '@/lib/security/request-origin'
 
 const STATE_CHANGING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 
 function validateSameOrigin(request: NextRequest): NextResponse | null {
-  const source = request.headers.get('origin') ?? request.headers.get('referer')
-  const host = request.headers.get('host')
-
-  if (!source || !host) {
-    return null
-  }
-
-  try {
-    if (new URL(source).host !== host) {
-      return NextResponse.json(
-        { error: 'CSRF validation failed' },
-        { status: 403 }
-      )
-    }
-  } catch {
+  const validation = validateSameOriginHeaders(request.headers)
+  if (!validation.valid) {
     return NextResponse.json(
-      { error: 'Invalid origin header' },
+      { error: 'CSRF validation failed' },
       { status: 403 }
     )
   }

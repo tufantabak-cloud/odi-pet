@@ -1,52 +1,86 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
+import { NextRequest, NextResponse } from 'next/server'
+
+import {
+  getIP,
+  registerRateLimit,
+  verifyTurnstile,
+} from '@/lib/auth-security'
+import { clinicRegisterSchema } from '@/lib/validations/auth'
 
 export async function POST(req: NextRequest) {
-  const fd = await req.formData()
-  const name       = (fd.get('name')       as string)?.trim()
-  const email      = (fd.get('email')      as string)?.trim()
-  const password   = (fd.get('password')   as string)?.trim()
-  const clinicName = (fd.get('clinicName') as string)?.trim()
-  const clinicPhone= (fd.get('clinicPhone')as string)?.trim()
+  const ip = getIP(req)
+  const { success: withinLimit } = await registerRateLimit.limit(`clinic:${ip}`)
 
-  if (!email || !password || !name || !clinicName) {
-    return NextResponse.json({ error: 'Tüm zorunlu alanları doldurunuz.' }, { status: 400 })
+  if (!withinLimit) {
+    return NextResponse.json(
+      { error: 'Çok fazla kayıt denemesi yaptınız. Lütfen daha sonra tekrar deneyin.' },
+      { status: 429 }
+    )
   }
 
+  const formData = await req.formData()
+  const rawData = Object.fromEntries(formData.entries())
+  const parsed = clinicRegisterSchema.safeParse({
+    ...rawData,
+    terms: String(rawData.terms) === 'on' || String(rawData.terms) === 'true',
+  })
+
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0].message },
+      { status: 400 }
+    )
+  }
+
+  const isHuman = await verifyTurnstile(parsed.data.turnstileToken, ip)
+  if (!isHuman) {
+    return NextResponse.json(
+      { error: 'Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.' },
+      { status: 400 }
+    )
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!supabaseUrl || !supabaseAnonKey || !serviceRoleKey) {
+    return NextResponse.json(
+      { error: 'Klinik kayıt servisi yapılandırılmamış.' },
+      { status: 503 }
+    )
+  }
+
+  const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '')
+  if (!configuredSiteUrl && process.env.NODE_ENV === 'production') {
+    return NextResponse.json(
+      { error: 'Uygulama adresi yapılandırılmamış.' },
+      { status: 503 }
+    )
+  }
+  const siteUrl = configuredSiteUrl || req.nextUrl.origin
   const response = NextResponse.json({ success: true })
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-project.supabase.co'
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key'
-  const serviceKey  = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-
-  // For signing up the user and setting local session
-  const supabase = createServerClient(
-    supabaseUrl,
-    supabaseKey,
-    {
-      cookies: {
-        getAll() {
-          return req.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            const secureOptions = {
-              ...options,
-              secure: process.env.NODE_ENV === 'production',
-              sameSite: 'lax' as const,
-            }
-            response.cookies.set(name, value, secureOptions)
-          })
-        },
+  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return req.cookies.getAll()
       },
-    }
-  )
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value, options }) => {
+          response.cookies.set(name, value, {
+            ...options,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+          })
+        })
+      },
+    },
+  })
 
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    `https://${req.headers.get('host')}`
-
+  const { name, email, password, clinicName, clinicPhone } = parsed.data
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email,
     password,
@@ -55,8 +89,8 @@ export async function POST(req: NextRequest) {
       data: {
         first_name: name,
         full_name: name,
-      }
-    }
+      },
+    },
   })
 
   if (authError) {
@@ -65,57 +99,87 @@ export async function POST(req: NextRequest) {
 
   const user = authData.user
   if (!user) {
-    return NextResponse.json({ error: 'Kullanıcı oluşturulamadı.' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Kullanıcı oluşturulamadı.' },
+      { status: 500 }
+    )
   }
 
-  // Use Admin Client to set up roles and clinic
-  if (serviceKey) {
-    const adminClient = createClient(supabaseUrl, serviceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
+  const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  })
+
+  let createdClinicId: string | null = null
+  const rollbackRegistration = async () => {
+    if (createdClinicId) {
+      const { error } = await adminClient
+        .from('clinics')
+        .delete()
+        .eq('id', createdClinicId)
+      if (error) {
+        console.error('[clinic-register] Clinic rollback failed:', error.message)
       }
+    }
+
+    const { error } = await adminClient.auth.admin.deleteUser(user.id)
+    if (error) {
+      console.error('[clinic-register] User rollback failed:', error.message)
+    }
+  }
+
+  const { error: profileError } = await adminClient
+    .from('profiles')
+    .update({ role: 'vet' })
+    .eq('id', user.id)
+
+  if (profileError) {
+    console.error('[clinic-register] Profile setup failed:', profileError.message)
+    await rollbackRegistration()
+    return NextResponse.json(
+      { error: 'Klinik hesabı hazırlanamadı.' },
+      { status: 500 }
+    )
+  }
+
+  const { data: clinic, error: clinicError } = await adminClient
+    .from('clinics')
+    .insert({
+      name: clinicName,
+      contact_phone: clinicPhone || null,
+      contact_email: email,
+      is_public: false,
+    })
+    .select('id')
+    .single()
+
+  if (clinicError || !clinic) {
+    console.error('[clinic-register] Clinic setup failed:', clinicError?.message)
+    await rollbackRegistration()
+    return NextResponse.json(
+      { error: 'Klinik kaydı oluşturulamadı.' },
+      { status: 500 }
+    )
+  }
+
+  createdClinicId = clinic.id
+  const { error: membershipError } = await adminClient
+    .from('clinic_memberships')
+    .insert({
+      profile_id: user.id,
+      clinic_id: clinic.id,
+      is_clinic_admin: true,
     })
 
-    // Update the profile role to 'admin'
-    const { error: profileError } = await adminClient
-      .from('profiles')
-      .update({ role: 'admin' })
-      .eq('id', user.id)
-
-    if (profileError) {
-      console.error('Error updating profile role:', profileError)
-      // Non-fatal, but we should log it
-    }
-
-    // Create the clinic
-    const { data: clinicData, error: clinicError } = await adminClient
-      .from('clinics')
-      .insert({
-        name: clinicName,
-        contact_phone: clinicPhone || null,
-        contact_email: email, // Default clinic contact to the registering user's email
-      })
-      .select('id')
-      .single()
-
-    if (clinicError) {
-      console.error('Error creating clinic:', clinicError)
-    } else if (clinicData) {
-      // Create the membership
-      const { error: membershipError } = await adminClient
-        .from('clinic_memberships')
-        .insert({
-          profile_id: user.id,
-          clinic_id: clinicData.id,
-        })
-      
-      if (membershipError) {
-        console.error('Error creating membership:', membershipError)
-      }
-    }
-  } else {
-    console.warn('SUPABASE_SERVICE_ROLE_KEY is not set. Could not assign clinic role and create clinic.')
+  if (membershipError) {
+    console.error('[clinic-register] Membership setup failed:', membershipError.message)
+    await rollbackRegistration()
+    return NextResponse.json(
+      { error: 'Klinik üyeliği oluşturulamadı.' },
+      { status: 500 }
+    )
   }
 
   return response

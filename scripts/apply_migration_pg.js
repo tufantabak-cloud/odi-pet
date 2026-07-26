@@ -2,14 +2,19 @@ require('dotenv').config({ path: '.env.local' });
 const { Client } = require('pg');
 
 async function runPgMigration() {
-  // Direct connection string
-  const dbUrl = 'postgres://postgres.soautcxgiqhxiaxrubxv:att1472o@aws-0-eu-central-1.pooler.supabase.com:5432/postgres';
-  const dbDirect = 'postgres://postgres:att1472o@db.soautcxgiqhxiaxrubxv.supabase.co:5432/postgres';
+  const connectionString =
+    process.env.SUPABASE_DB_URL || process.env.DATABASE_URL;
+
+  if (!connectionString) {
+    throw new Error(
+      'SUPABASE_DB_URL veya DATABASE_URL ortam değişkeni tanımlanmalıdır.'
+    );
+  }
 
   console.log('Connecting to Supabase Direct DB...');
 
   const client = new Client({
-    connectionString: dbDirect,
+    connectionString,
     ssl: { rejectUnauthorized: false }
   });
 
@@ -55,11 +60,15 @@ async function runPgMigration() {
     `);
 
     console.log('PostgreSQL migration applied successfully!');
-  } catch (err) {
-    console.error('PostgreSQL Direct DB Error:', err.message);
+  } catch (error) {
+    console.error('PostgreSQL Direct DB Error:', error.message);
+    process.exitCode = 1;
   } finally {
     await client.end();
   }
 }
 
-runPgMigration();
+runPgMigration().catch((error) => {
+  console.error(error.message);
+  process.exitCode = 1;
+});

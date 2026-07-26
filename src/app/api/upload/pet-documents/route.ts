@@ -3,6 +3,57 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import crypto from 'crypto'
 
+function detectMimeTypeFromMagicBytes(header: Uint8Array): 'image/jpeg' | 'image/png' | 'image/webp' | 'application/pdf' | null {
+  if (header.length < 12) return null
+
+  // JPEG: FF D8 FF
+  if (header[0] === 0xFF && header[1] === 0xD8 && header[2] === 0xFF) {
+    return 'image/jpeg'
+  }
+
+  // PNG: 89 50 4E 47 0D 0A 1A 0A
+  if (
+    header[0] === 0x89 &&
+    header[1] === 0x50 &&
+    header[2] === 0x4E &&
+    header[3] === 0x47 &&
+    header[4] === 0x0D &&
+    header[5] === 0x0A &&
+    header[6] === 0x1A &&
+    header[7] === 0x0A
+  ) {
+    return 'image/png'
+  }
+
+  // PDF: 25 50 44 46 (%PDF-)
+  if (header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46) {
+    return 'application/pdf'
+  }
+
+  // WebP: RIFF (52 49 46 46) ... WEBP (57 45 42 50 at index 8)
+  if (
+    header[0] === 0x52 &&
+    header[1] === 0x49 &&
+    header[2] === 0x46 &&
+    header[3] === 0x46 &&
+    header[8] === 0x57 &&
+    header[9] === 0x45 &&
+    header[10] === 0x42 &&
+    header[11] === 0x50
+  ) {
+    return 'image/webp'
+  }
+
+  return null
+}
+
+const MIME_EXT_MAP: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'application/pdf': 'pdf',
+}
+
 export async function POST(req: NextRequest) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -19,20 +70,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'File size exceeds 5MB limit' }, { status: 400 })
   }
 
-  // File type check
-  if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
-    return NextResponse.json({ error: 'Invalid file type. Only images and PDFs are allowed.' }, { status: 400 })
+  // Read header bytes for magic number verification
+  const fileBuffer = new Uint8Array(await file.arrayBuffer())
+  const verifiedMime = detectMimeTypeFromMagicBytes(fileBuffer)
+
+  if (!verifiedMime) {
+    return NextResponse.json({
+      error: 'Geçersiz dosya türü. Yalnızca JPEG, PNG, WebP ve PDF belgeleri kabul edilir.'
+    }, { status: 400 })
   }
 
-  const supabase = await createServerSupabaseClient()
-  
-  const ext = file.name.split('.').pop() || 'tmp'
+  const ext = MIME_EXT_MAP[verifiedMime] || 'bin'
   const filename = `${user.id}/${crypto.randomUUID()}.${ext}`
 
+  const supabase = await createServerSupabaseClient()
   const { error } = await supabase.storage
     .from('pet-documents')
-    .upload(filename, file, {
-      contentType: file.type,
+    .upload(filename, fileBuffer, {
+      contentType: verifiedMime,
       upsert: false
     })
 
@@ -50,6 +105,7 @@ export async function POST(req: NextRequest) {
     url: publicUrl 
   })
 }
+
 
 export async function DELETE(req: NextRequest) {
   try {
