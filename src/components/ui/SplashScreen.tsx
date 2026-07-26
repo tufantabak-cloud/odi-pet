@@ -65,7 +65,7 @@ export default function SplashScreen() {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 z-[99999] bg-black">
+    <div className="fixed inset-0 z-[99999] bg-[#3E1EA3]">
       {/* Faz 2 — splash2.jpg (altta başlar, faz 2'de tam görünür) */}
       <div
         className={`absolute inset-0 transition-opacity duration-300 ease-in-out ${
