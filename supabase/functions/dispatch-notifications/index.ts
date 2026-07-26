@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.177.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import webpush from "https://esm.sh/web-push@3.6.7"
 import { shouldFinalizePushJob } from "./delivery-state.ts"
+import { isAuthorizedServiceRequest } from "./request-auth.ts"
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -119,8 +120,41 @@ function buildEmailHtml(notifications: Array<{ title: string; message: string; t
 }
 
 // ── Main Handler ────────────────────────────────────────────────
-serve(async (_req: Request) => {
-  console.log("[dispatch-notifications] Starting notification cycle…")
+serve(async (req: Request) => {
+  const requestId =
+    req.headers.get("x-request-id")?.slice(0, 128)
+    || crypto.randomUUID()
+
+  if (!(await isAuthorizedServiceRequest(req, SERVICE_ROLE_KEY))) {
+    return new Response(
+      JSON.stringify({ status: "error", message: "Unauthorized" }),
+      {
+        status: 401,
+        headers: {
+          "Cache-Control": "no-store",
+          "Content-Type": "application/json",
+        },
+      },
+    )
+  }
+
+  if (req.method !== "POST") {
+    return new Response(
+      JSON.stringify({ status: "error", message: "Method not allowed" }),
+      {
+        status: 405,
+        headers: {
+          "Allow": "POST",
+          "Cache-Control": "no-store",
+          "Content-Type": "application/json",
+        },
+      },
+    )
+  }
+
+  console.log(
+    `[dispatch-notifications] Starting notification cycle request_id=${requestId}`,
+  )
 
   try {
     // 1. Generate in-app notifications via DB function (Deprecated: generate_vaccine_notifications removed)
@@ -255,9 +289,9 @@ serve(async (_req: Request) => {
           const payload = JSON.stringify({
             title: notif.title,
             body: notif.message,
-            icon: 'https://odi.pet/icon-192.png',
-            badge: 'https://odi.pet/icon-192.png',
-            url: `https://odi.pet${deepLinkUrl}`,
+            icon: '/icon-192.png',
+            badge: '/icon-192.png',
+            url: deepLinkUrl,
             tag: notif.id // unique tag to prevent duplicate alerts or group them
           })
 
@@ -529,18 +563,37 @@ serve(async (_req: Request) => {
     return new Response(
       JSON.stringify({
         status: "success",
+        request_id: requestId,
         in_app_notifications_created: bdayCount + scheduleCount,
         emails_sent: emailsSent,
         pushes_sent: pushesSent,
         push_jobs_deferred: pushJobsDeferred
       }),
-      { headers: { "Content-Type": "application/json" } }
+      {
+        headers: {
+          "Cache-Control": "no-store",
+          "Content-Type": "application/json",
+        },
+      }
     )
   } catch (err) {
-    console.error("[dispatch-notifications] Error:", err)
+    console.error(
+      `[dispatch-notifications] Error request_id=${requestId}:`,
+      err,
+    )
     return new Response(
-      JSON.stringify({ status: "error", message: String(err) }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      JSON.stringify({
+        status: "error",
+        message: "Internal error",
+        request_id: requestId,
+      }),
+      {
+        status: 500,
+        headers: {
+          "Cache-Control": "no-store",
+          "Content-Type": "application/json",
+        },
+      }
     )
   }
 })

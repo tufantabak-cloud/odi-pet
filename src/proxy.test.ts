@@ -44,7 +44,7 @@ describe('proxy matcher', () => {
     ['/admin/settings', true],
     ['/api', true],
     ['/api/pets', true],
-    ['/login', false],
+    ['/login', true],
     ['/ownership', false],
   ])('%s eşleşmesi %s olur', (url, expected) => {
     expect(unstable_doesMiddlewareMatch({ config, url })).toBe(expected)
@@ -138,6 +138,26 @@ describe('proxy erişim sınırı', () => {
     expect(response.headers.get('location')).toBe(
       'http://localhost/login?reason=session_expired'
     )
+  })
+
+  it('oturumsuz kullanıcı için giriş ekranını geçirir', async () => {
+    const response = await proxy(
+      new NextRequest('http://localhost/login')
+    )
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get('x-middleware-next')).toBe('1')
+  })
+
+  it('oturumlu kullanıcıyı giriş ekranından ana yönlendiriciye taşır', async () => {
+    configureSession({ id: 'owner-1' }, 'owner')
+
+    const response = await proxy(
+      new NextRequest('http://localhost/login')
+    )
+
+    expect(response.status).toBe(307)
+    expect(response.headers.get('location')).toBe('http://localhost/')
   })
 
   it('admin olmayan oturumu /api/admin altında reddeder', async () => {

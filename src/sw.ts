@@ -29,7 +29,7 @@ const customRuntimeCaching = [
   ...defaultCache,
 ];
 
-// PWA Cache Buster: v1.0.2 (Force Update & Explicit NetworkOnly for Sensitive Routes)
+// PWA Cache Buster: v1.0.3 (private pages excluded from precache)
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
   skipWaiting: true,
@@ -128,16 +128,23 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
   event.notification.close();
 
   const data = event.notification.data as NotificationData;
-  const targetUrl = data?.url ?? '/owner/notifications';
+  let targetUrl = '/owner/notifications';
+
+  try {
+    const requestedUrl = new URL(data?.url ?? targetUrl, self.location.origin);
+    if (requestedUrl.origin === self.location.origin) {
+      targetUrl = `${requestedUrl.pathname}${requestedUrl.search}${requestedUrl.hash}`;
+    }
+  } catch {
+    // Malformed or cross-origin targets fall back to the notifications page.
+  }
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients: WindowClient[]) => {
       // If an Odi.Pet tab is already open, focus it and navigate
       for (const client of windowClients) {
         if (client.url.includes(self.location.origin) && 'focus' in client) {
-          client.focus();
-          client.navigate(targetUrl);
-          return;
+          return client.navigate(targetUrl).then(() => client.focus());
         }
       }
       // Otherwise open a new window

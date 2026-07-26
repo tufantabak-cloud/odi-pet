@@ -1,6 +1,7 @@
 import { vi, describe, it, expect, afterAll, beforeAll } from 'vitest'
 import * as dotenv from 'dotenv'
 import { NextRequest } from 'next/server'
+import { Client } from 'pg'
 
 // Load environment variables
 dotenv.config({ path: '.env.local' })
@@ -481,12 +482,17 @@ describe('Parasite Plan Completion API Tests', () => {
 
     const isLocal = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').includes('localhost') || (process.env.NEXT_PUBLIC_SUPABASE_URL || '').includes('127.0.0.1')
     const isDdlAllowed = process.env.ALLOW_LOCAL_DB_DDL_TESTS === 'true'
+    const databaseUrl = process.env.LOCAL_DATABASE_URL
 
-    if (!isLocal || !isDdlAllowed) {
+    if (!isLocal || !isDdlAllowed || !databaseUrl) {
       console.log('SKIPPED — local database required')
       ctx.skip()
       return
     }
+
+    const ddlClient = new Client({ connectionString: databaseUrl })
+    await ddlClient.connect()
+    let cleanupObjectCount = -1
 
     const { data: plan } = await adminClient.from('plans').insert({
       user_id: testUserId,
@@ -499,8 +505,7 @@ describe('Parasite Plan Completion API Tests', () => {
     }).select().single()
 
     // 1. Create temporary trigger to force plans update failure
-    await adminClient.rpc('execute_ddl', {
-      ddl: `
+    await ddlClient.query(`
         CREATE OR REPLACE FUNCTION public.fn_test_force_plans_update_failure()
         RETURNS TRIGGER AS $$
         BEGIN
@@ -514,8 +519,7 @@ describe('Parasite Plan Completion API Tests', () => {
           FOR EACH ROW
           WHEN (NEW.id = '${plan.id}')
           EXECUTE FUNCTION public.fn_test_force_plans_update_failure();
-      `
-    })
+    `)
 
     try {
       // 2. Call API PATCH which invokes complete_parasite_plan
@@ -533,12 +537,24 @@ describe('Parasite Plan Completion API Tests', () => {
       expect(res.status).toBe(400) // Trigger throws and RPC aborts, mapped to 400 or 500
     } finally {
       // 3. Cleanup trigger
-      await adminClient.rpc('execute_ddl', {
-        ddl: `
+      try {
+        await ddlClient.query(`
           DROP TRIGGER IF EXISTS trg_test_force_plans_update_failure ON public.plans;
           DROP FUNCTION IF EXISTS public.fn_test_force_plans_update_failure();
-        `
-      })
+        `)
+      } finally {
+        const cleanupObjects = await ddlClient.query(`
+          SELECT tgname AS object_name
+          FROM pg_trigger
+          WHERE tgname = 'trg_test_force_plans_update_failure'
+          UNION ALL
+          SELECT proname AS object_name
+          FROM pg_proc
+          WHERE proname = 'fn_test_force_plans_update_failure'
+        `)
+        cleanupObjectCount = cleanupObjects.rowCount ?? -1
+        await ddlClient.end()
+      }
     }
 
     // 4. Verify DB state is rolled back
@@ -549,15 +565,7 @@ describe('Parasite Plan Completion API Tests', () => {
     expect(records?.length).toBe(0) // No parasite records committed (rolled back)
 
     // 5. Verify cleanup was successful
-    const { data: triggers } = await adminClient.rpc('execute_sql', {
-      query: `SELECT tgname FROM pg_trigger WHERE tgname = 'trg_test_force_plans_update_failure'`
-    })
-    expect(triggers?.length).toBe(0)
-
-    const { data: procs } = await adminClient.rpc('execute_sql', {
-      query: `SELECT proname FROM pg_proc WHERE proname = 'fn_test_force_plans_update_failure'`
-    })
-    expect(procs?.length).toBe(0)
+    expect(cleanupObjectCount).toBe(0)
   })
 
   it('Pasif protokollü mevcut planın tamamlanması ve user_manual engeli', async () => {

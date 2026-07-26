@@ -68,6 +68,7 @@ const testEnv = {
   TEST_ADMIN_EMAIL: LOCAL_E2E_ADMIN_EMAIL,
   TEST_ADMIN_PASSWORD: LOCAL_E2E_ADMIN_PASSWORD,
   CRON_SECRET: 'odi-pet-local-e2e-cron-secret',
+  PLAYWRIGHT_TEST: 'true',
 }
 
 try {

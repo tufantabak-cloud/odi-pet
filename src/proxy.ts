@@ -24,6 +24,7 @@ function validateSameOrigin(request: NextRequest): NextResponse | null {
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
+  const isLoginPage = pathname === '/login'
   const isApiRequest = pathname === '/api' || pathname.startsWith('/api/')
   const apiAccessMode = isApiRequest
     ? classifyApiRequest(pathname, request.method)
@@ -47,7 +48,11 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next({ request })
   }
 
-  if (!isApiRequest && !isProtectedPagePath(pathname)) {
+  if (
+    !isApiRequest
+    && !isProtectedPagePath(pathname)
+    && !isLoginPage
+  ) {
     return NextResponse.next({ request })
   }
 
@@ -92,6 +97,10 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   if (!user) {
+    if (isLoginPage) {
+      return supabaseResponse
+    }
+
     if (isApiRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -100,6 +109,18 @@ export async function proxy(request: NextRequest) {
     loginUrl.pathname = '/login'
     loginUrl.searchParams.set('reason', 'session_expired')
     return NextResponse.redirect(loginUrl)
+  }
+
+  if (isLoginPage) {
+    const homeUrl = request.nextUrl.clone()
+    homeUrl.pathname = '/'
+    homeUrl.search = ''
+
+    const redirectResponse = NextResponse.redirect(homeUrl)
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie)
+    })
+    return redirectResponse
   }
 
   if (isAdminBoundaryPath(pathname)) {
@@ -132,5 +153,6 @@ export const config = {
     '/admin/:path*',
     '/clinic/:path*',
     '/api/:path*',
+    '/login',
   ],
 }

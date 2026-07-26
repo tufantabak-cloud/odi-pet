@@ -314,7 +314,6 @@ export default function WizardOrchestrator() {
       if (editId) setLoadingEdit(false);
     };
     fetchPetsAndPlan();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryKey, editId]); // reset on category change
 
   const activePet = pets.find(p => p.id === (wizardData.pet_id || searchParams.get('pet_id')));
@@ -345,7 +344,6 @@ export default function WizardOrchestrator() {
 
       setStepData(updateData);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wizardData.subCategory, categoryKey]);
 
   // ── Eşleşen aktif planları getir (yalnızca Log modu, genel kategoriler) ──
@@ -395,7 +393,6 @@ export default function WizardOrchestrator() {
     fetchMatches();
 
     return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [logMode, categoryKey, wizardData.pet_id, wizardData.subCategory]);
 
   // ── Fetch Vaccines / Products (Aşı veya Parazit ise) ────────────────
@@ -540,7 +537,6 @@ export default function WizardOrchestrator() {
     fetchCatalog().finally(() => { if (!cancelled) setCatalogProductsLoading(false); });
 
     return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryKey, wizardData.selectedProduct?.id, speciesStr]);
 
   // ── Timeline'dan gelen parazit ürün adını otomatik seç (yalnızca oluşturma modunda) ──

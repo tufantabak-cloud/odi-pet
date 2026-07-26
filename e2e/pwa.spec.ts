@@ -1,13 +1,39 @@
 import { expect, test } from '@playwright/test'
 
+const SENSITIVE_PATH_PREFIXES = [
+  '/api/',
+  '/owner',
+  '/clinic',
+  '/admin',
+  '/caregiver',
+]
+
+const LEGACY_SENSITIVE_CACHE_MARKERS = [
+  'apis',
+  'pages',
+  'pages-rsc',
+  'pages-rsc-prefetch',
+  'serwist-runtime',
+]
+
+function extractPrecacheUrls(serviceWorkerSource: string): string[] {
+  return Array.from(
+    serviceWorkerSource.matchAll(
+      /\{revision:(?:null|"[^"]*"),url:"([^"]+)"\}/g,
+    ),
+    (match) => JSON.parse(`"${match[1]}"`) as string,
+  )
+}
+
 test.describe('PWA üretim doğrulaması', () => {
-  test('servis işçisini etkinleştirir ve çevrimdışı sayfaya düşer', async ({
+  test('servis işçisini etkinleştirir, özel veriyi önbelleklemez ve çevrimdışı sayfaya düşer', async ({
     context,
     page,
   }) => {
     const cdp = await context.newCDPSession(page)
     const serviceWorkerErrors: unknown[] = []
     const serviceWorkerVersions: unknown[] = []
+
     await cdp.send('ServiceWorker.enable')
     cdp.on('ServiceWorker.workerErrorReported', ({ errorMessage }) => {
       serviceWorkerErrors.push(errorMessage)
@@ -16,16 +42,93 @@ test.describe('PWA üretim doğrulaması', () => {
       serviceWorkerVersions.push(...versions)
     })
 
-    const serviceWorkerResponse = await page.request.get('/sw.js')
+    const serviceWorkerResponse = await page.request.get('/sw.js', {
+      maxRedirects: 0,
+    })
     expect(serviceWorkerResponse.ok()).toBe(true)
-    expect((await serviceWorkerResponse.body()).byteLength).toBeGreaterThan(10_000)
+    expect(serviceWorkerResponse.status()).toBe(200)
+    expect(new URL(serviceWorkerResponse.url()).pathname).toBe('/sw.js')
+    expect(serviceWorkerResponse.headers()['content-type']).toMatch(
+      /(?:java|ecma)script/i,
+    )
+    const testOrigin = new URL(serviceWorkerResponse.url()).origin
 
-    await page.goto('/offline?test=true')
+    const serviceWorkerSource = await serviceWorkerResponse.text()
+    expect(serviceWorkerSource.length).toBeGreaterThan(10_000)
+    expect(serviceWorkerSource.trimStart().startsWith('<')).toBe(false)
+
+    const precacheUrls = extractPrecacheUrls(serviceWorkerSource)
+    expect(precacheUrls.length).toBeGreaterThan(0)
+    expect(precacheUrls).toContain('/offline')
+    expect(
+      precacheUrls.filter((value) => {
+        const pathname = new URL(value, testOrigin).pathname
+        return SENSITIVE_PATH_PREFIXES.some((prefix) =>
+          prefix.endsWith('/')
+            ? pathname.startsWith(prefix)
+            : pathname === prefix || pathname.startsWith(`${prefix}/`),
+        )
+      }),
+    ).toEqual([])
+
+    const failedPrecacheRequests: Array<{
+      url: string
+      status: number
+      contentType: string
+    }> = []
+    for (const url of precacheUrls) {
+      const absoluteUrl = new URL(url, testOrigin)
+      expect(absoluteUrl.origin).toBe(testOrigin)
+
+      const response = await page.request.get(absoluteUrl.href, {
+        maxRedirects: 0,
+      })
+      if (response.status() !== 200) {
+        failedPrecacheRequests.push({
+          url: absoluteUrl.pathname,
+          status: response.status(),
+          contentType: response.headers()['content-type'] ?? '',
+        })
+      }
+    }
+    expect(failedPrecacheRequests).toEqual([])
+
+    await page.goto('/manifest.json')
+    await page.evaluate(async (legacyMarkers) => {
+      const registrations = await navigator.serviceWorker.getRegistrations()
+      await Promise.all(registrations.map((registration) => registration.unregister()))
+      const existingCaches = await caches.keys()
+      await Promise.all(existingCaches.map((cacheName) => caches.delete(cacheName)))
+
+      for (const marker of legacyMarkers) {
+        const cache = await caches.open(`legacy-${marker}-test`)
+        await cache.put(
+          `/owner/legacy-${marker}`,
+          new Response('sensitive test fixture'),
+        )
+      }
+    }, LEGACY_SENSITIVE_CACHE_MARKERS)
 
     try {
-      await page.evaluate(async () => {
-        const registration = await navigator.serviceWorker.register('/sw.js')
-        await Promise.race([
+      const registrationState = await page.evaluate(async () => {
+        const states: ServiceWorkerState[] = []
+        const registration = await navigator.serviceWorker.register('/sw.js', {
+          scope: '/',
+        })
+
+        const observedWorker =
+          registration.installing
+          ?? registration.waiting
+          ?? registration.active
+        if (!observedWorker) {
+          throw new Error('SW_WORKER_MISSING')
+        }
+        states.push(observedWorker.state)
+        observedWorker.addEventListener('statechange', () => {
+          states.push(observedWorker.state)
+        })
+
+        const readyRegistration = await Promise.race([
           navigator.serviceWorker.ready,
           new Promise<never>((_, reject) => {
             window.setTimeout(
@@ -35,11 +138,58 @@ test.describe('PWA üretim doğrulaması', () => {
                     `SW_READY_TIMEOUT installing=${registration.installing?.state ?? 'none'} waiting=${registration.waiting?.state ?? 'none'} active=${registration.active?.state ?? 'none'}`,
                   ),
                 ),
-              10_000,
+              30_000,
             )
           }),
         ])
+
+        const activeWorker =
+          readyRegistration.active ?? registration.active
+
+        if (!activeWorker) {
+          throw new Error('SW_ACTIVE_WORKER_MISSING')
+        }
+        const worker = activeWorker
+
+        if (worker.state !== 'activated') {
+          await new Promise<void>((resolve, reject) => {
+            const timeoutId = window.setTimeout(() => {
+              worker.removeEventListener('statechange', handleStateChange)
+              reject(new Error(`SW_ACTIVATION_TIMEOUT state=${worker.state}`))
+            }, 10_000)
+
+            function handleStateChange() {
+              if (worker.state === 'activated') {
+                window.clearTimeout(timeoutId)
+                worker.removeEventListener('statechange', handleStateChange)
+                resolve()
+              }
+            }
+
+            worker.addEventListener('statechange', handleStateChange)
+            handleStateChange()
+          })
+        }
+
+        return {
+          active: worker.state,
+          scope: registration.scope,
+          states,
+        }
       })
+
+      expect(registrationState.active).toBe('activated')
+      expect(registrationState.scope).toBe(`${new URL(page.url()).origin}/`)
+      const cdpStates = serviceWorkerVersions.flatMap((version) => {
+        const status = (version as { status?: string }).status
+        return status ? [status] : []
+      })
+      expect(
+        [...registrationState.states, ...cdpStates],
+      ).toContain('installed')
+      expect(
+        [...registrationState.states, ...cdpStates],
+      ).toContain('activated')
     } catch (error) {
       await page.waitForTimeout(250)
       throw new Error(
@@ -48,21 +198,61 @@ test.describe('PWA üretim doğrulaması', () => {
     }
 
     await page.reload()
-    expect(
-      await page.evaluate(() => Boolean(navigator.serviceWorker.controller)),
+    await expect.poll(
+      () => page.evaluate(() => Boolean(navigator.serviceWorker.controller)),
+      { timeout: 10_000 },
     ).toBe(true)
 
-    // Verify private API responses are NOT cached in Cache Storage
-    const isApiCached = await page.evaluate(async () => {
-      const keys = await window.caches.keys()
-      for (const key of keys) {
-        const cache = await window.caches.open(key)
-        const match = await cache.match('/api/pets')
-        if (match) return true
-      }
-      return false
+    await page.evaluate(async () => {
+      const requests = [
+        fetch('/api/version'),
+        fetch('/owner', { headers: { Accept: 'text/html' } }),
+        fetch('/clinic', { headers: { Accept: 'text/html' } }),
+        fetch('/admin', { headers: { Accept: 'text/html' } }),
+        fetch('/caregiver', { headers: { Accept: 'text/html' } }),
+      ]
+
+      await Promise.allSettled(requests)
     })
-    expect(isApiCached).toBe(false)
+
+    const cacheAudit = await page.evaluate((sensitivePrefixes) => {
+      return window.caches.keys().then(async (cacheNames) => {
+        const cachedUrls: string[] = []
+
+        for (const cacheName of cacheNames) {
+          const cache = await window.caches.open(cacheName)
+          const requests = await cache.keys()
+          cachedUrls.push(...requests.map((request) => request.url))
+        }
+
+        const sensitiveUrls = cachedUrls.filter((value) => {
+          const pathname = new URL(value).pathname
+          return sensitivePrefixes.some((prefix) =>
+            prefix.endsWith('/')
+              ? pathname.startsWith(prefix)
+              : pathname === prefix || pathname.startsWith(`${prefix}/`),
+          )
+        })
+
+        return {
+          cacheNames,
+          hasOfflineFallback: cachedUrls.some(
+            (value) => new URL(value).pathname === '/offline',
+          ),
+          sensitiveUrls,
+        }
+      })
+    }, SENSITIVE_PATH_PREFIXES)
+
+    expect(cacheAudit.sensitiveUrls).toEqual([])
+    expect(cacheAudit.hasOfflineFallback).toBe(true)
+    expect(
+      cacheAudit.cacheNames.filter((cacheName) =>
+        LEGACY_SENSITIVE_CACHE_MARKERS.some((marker) =>
+          cacheName.includes(marker),
+        ),
+      ),
+    ).toEqual([])
 
     await context.setOffline(true)
     try {
@@ -77,4 +267,3 @@ test.describe('PWA üretim doğrulaması', () => {
     }
   })
 })
-

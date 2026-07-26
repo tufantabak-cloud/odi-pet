@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
-import { getIP, resetRateLimit, verifyTurnstile } from '@/lib/auth-security'
+import {
+  getIP,
+  isTrustedPlaywrightTestEnvironment,
+  resetRateLimit,
+  verifyTurnstile,
+} from '@/lib/auth-security'
 import { resetPasswordSchema } from '@/lib/validations/auth'
 
 export async function POST(req: NextRequest) {
   const ip = getIP(req);
 
   // Test bypass for Playwright tests
-  if (process.env.PLAYWRIGHT_TEST === 'true') {
+  if (isTrustedPlaywrightTestEnvironment()) {
     return NextResponse.json({ success: true })
   }
 
@@ -61,7 +66,7 @@ export async function POST(req: NextRequest) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || `https://${req.headers.get('host')}`
 
   let error = null
-  if (process.env.PLAYWRIGHT_TEST !== 'true') {
+  if (!isTrustedPlaywrightTestEnvironment()) {
     const authResult = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${siteUrl}/update-password`,
     })

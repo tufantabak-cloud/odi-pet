@@ -29,6 +29,28 @@ type RateLimitResult = {
   reset: number;
 };
 
+const LOCAL_TEST_HOSTS = new Set(['127.0.0.1', 'localhost', '::1', '[::1]']);
+
+export function isTrustedPlaywrightTestEnvironment(): boolean {
+  if (process.env.PLAYWRIGHT_TEST !== 'true') return false;
+
+  const configuredUrls = [
+    process.env.TEST_BASE_URL,
+    process.env.NEXT_PUBLIC_SITE_URL,
+    process.env.NEXT_PUBLIC_APP_URL,
+  ].filter((value): value is string => Boolean(value));
+
+  if (configuredUrls.length === 0) return false;
+
+  return configuredUrls.every((value) => {
+    try {
+      return LOCAL_TEST_HOSTS.has(new URL(value).hostname);
+    } catch {
+      return false;
+    }
+  });
+}
+
 const createInMemoryLimiter = (tokens: number, windowMs: number) => ({
   async limit(key: string): Promise<RateLimitResult> {
     const now = Date.now();
@@ -44,7 +66,7 @@ const createInMemoryLimiter = (tokens: number, windowMs: number) => ({
 });
 
 const createRateLimit = (tokens: number, windowStr: string, prefix: string) => {
-  const isTest = process.env.PLAYWRIGHT_TEST === 'true' || process.env.NODE_ENV === 'test';
+  const isTest = isTrustedPlaywrightTestEnvironment() || process.env.NODE_ENV === 'test';
   const finalTokens = isTest ? 1000 : tokens;
   const windowMs = 60_000; // 1 minute default
   if (!redis) {
@@ -73,7 +95,7 @@ export const aiSummaryRateLimit  = createRateLimit(10, "1 m", "@upstash/ratelimi
 
 export async function verifyTurnstile(token: string | null | undefined, ip: string): Promise<boolean> {
   // Allow bypass in test environment
-  if (process.env.PLAYWRIGHT_TEST === 'true' || process.env.NODE_ENV === 'test') {
+  if (isTrustedPlaywrightTestEnvironment() || process.env.NODE_ENV === 'test') {
     return true;
   }
 
