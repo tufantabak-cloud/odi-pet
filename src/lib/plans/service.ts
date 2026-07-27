@@ -203,6 +203,16 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
       throw new Error('PARASITE_PREFERENCE_DISABLED');
     }
 
+    // Parazit protokol kimliğini tek ve kanonik biçimde plana yaz.
+    // İstemciler tarihsel olarak yalnızca extra_data.product.id gönderiyordu;
+    // atomik tamamlama RPC'si ise üst seviye kimlik alanlarını doğruluyor.
+    input.extra_data = {
+      ...(input.extra_data || {}),
+      parasite_protocol_id: proto.id,
+      parasite_code: proto.parasite_code,
+      parasite_type: proto.parasite_type,
+    };
+
     // Validate sub_type matches protocol parasite_type
     const subCat = input.sub_type;
     const pType = proto.parasite_type;

@@ -205,5 +205,11 @@ describe('Plans Creation API - sub_type mismatch validation tests', () => {
 
     const res = await POST(req)
     expect(res.status).toBe(201)
+    const body = await res.json()
+    expect(body.plan.extra_data).toEqual(expect.objectContaining({
+      parasite_protocol_id: externalProtoId,
+      parasite_code: 'P_POST_EXT',
+      parasite_type: 'external'
+    }))
   })
 })

@@ -214,7 +214,15 @@ describe('ADIM 4B.4 — Canonical Protocol Engine, Idempotency Key, Strict Match
       planId: 'par_main', mainPlanId: 'par_main', occurrenceScheduledAt: '2026-07-23T10:00:00Z',
       category: 'parazit', subCategory: 'İç Parazit', stableIdentity: 'parazit:internal',
       distanceMinutes: 0, repeatRule: 'monthly', displayDate: '2026-07-23',
-      rawPlan: { id: 'par_main', scheduled_at: '2026-07-23T10:00:00Z', repeat_rule: 'monthly' }
+      rawPlan: {
+        id: 'par_main',
+        scheduled_at: '2026-07-23T10:00:00Z',
+        repeat_rule: 'monthly',
+        extra_data: {
+          parasite_protocol_id: 'bbbbbbbb-cccc-dddd-eeee-ffffffffffff',
+          parasite_code: 'DOG_INTERNAL'
+        }
+      }
     };
     const testUuid = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
     await handler.persistLinkedRecord(
@@ -227,7 +235,8 @@ describe('ADIM 4B.4 — Canonical Protocol Engine, Idempotency Key, Strict Match
       p_idempotency_key: testUuid,
       p_next_scheduled_at: '2026-08-22T10:00:00Z',
       p_protection_duration_days: 30,
-      p_parasite_code: 'INTERNAL_GENERIC',
+      p_parasite_code: 'DOG_INTERNAL',
+      p_parasite_protocol_id: 'bbbbbbbb-cccc-dddd-eeee-ffffffffffff',
       p_application_method: 'spot_on'
     }));
     const args = mockSupabase.rpc.mock.calls[0][1];

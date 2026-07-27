@@ -193,6 +193,10 @@ export class ParasiteWriteHandler implements AgendaWriteHandler<ParasiteWriteInp
     const idempotencyKey = context.idempotencyKey || crypto.randomUUID();
 
     const parasiteCode = mainPlan.extra_data?.parasite_code || `${input.parasite_type.toUpperCase()}_GENERIC`;
+    const parasiteProtocolId =
+      mainPlan.extra_data?.parasite_protocol_id ||
+      mainPlan.extra_data?.product?.id ||
+      null;
     const rawMethod = (input.application_method || mainPlan.extra_data?.application_method || 'spot_on').toLowerCase();
     let applicationMethod = 'spot_on';
     if (rawMethod === 'oral' || rawMethod === 'tablet' || rawMethod === 'chewable') {
@@ -221,7 +225,8 @@ export class ParasiteWriteHandler implements AgendaWriteHandler<ParasiteWriteInp
       p_idempotency_key: idempotencyKey,
       p_brand_free_text: input.brand_free_text || null,
       p_product_free_text: input.product_free_text || null,
-      p_notes: input.notes || null
+      p_notes: input.notes || null,
+      p_parasite_protocol_id: parasiteProtocolId
     });
 
     if (rpcErr) throw rpcErr;
