@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { revalidatePath } from 'next/cache'
+import { normalizeTurkishMobilePhone } from '@/lib/phone/turkish-mobile'
 
 type RouteContext = {
   params: Promise<{ id: string }>
@@ -13,6 +14,32 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
   const { id } = await context.params
   const { sos_contacts } = await req.json()
+  if (!Array.isArray(sos_contacts)) {
+    return NextResponse.json({ error: 'Acil durum kişileri geçersiz.' }, { status: 400 })
+  }
+
+  const normalizedContacts = []
+  for (const contact of sos_contacts) {
+    if (!contact || typeof contact !== 'object') {
+      return NextResponse.json({ error: 'Acil durum kişisi geçersiz.' }, { status: 400 })
+    }
+
+    const phone = normalizeTurkishMobilePhone(
+      typeof contact.phone === 'string' ? contact.phone : '',
+    )
+    if (!phone) {
+      return NextResponse.json(
+        { error: 'Telefon numarası 05XX XXX XX XX biçiminde bir cep telefonu olmalıdır.' },
+        { status: 400 },
+      )
+    }
+
+    normalizedContacts.push({
+      name: typeof contact.name === 'string' ? contact.name.trim() : '',
+      phone,
+      relation: typeof contact.relation === 'string' ? contact.relation.trim() : '',
+    })
+  }
   const supabase = await createServerSupabaseClient()
 
   // Verify ownership or admin role
@@ -23,7 +50,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
   const { error } = await supabase
     .from('pets')
-    .update({ sos_contacts })
+    .update({ sos_contacts: normalizedContacts })
     .eq('id', id)
 
   if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })

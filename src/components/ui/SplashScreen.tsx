@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 
+const PHASE_TWO_START_DELAY_MS = 800;
+const SPLASH_END_DELAY_MS = 5000;
+
 export default function SplashScreen() {
   const [isVisible, setIsVisible] = useState(true);
   const [phase, setPhase] = useState<1 | 2>(1);
@@ -31,12 +34,12 @@ export default function SplashScreen() {
     // Faz 1 → Faz 2 geçişi: 800ms sonra
     const phase2Timer = setTimeout(() => {
       setPhase(2);
-    }, 800);
+    }, PHASE_TWO_START_DELAY_MS);
 
-    // Toplam süre: 1.5 saniye (1500ms) sonra kapat
+    // Splash 2'yi slogan rahatça okunabilsin diye yaklaşık 4,2 saniye göster.
     const endTimer = setTimeout(() => {
       setIsVisible(false);
-    }, 1500);
+    }, SPLASH_END_DELAY_MS);
 
     return () => {
       clearTimeout(phase2Timer);
@@ -62,10 +65,30 @@ export default function SplashScreen() {
     };
   }, [isVisible]);
 
+  const dismissSplash = () => {
+    if (phase === 2) {
+      setIsVisible(false);
+    }
+  };
+
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 z-[99999] bg-[#3E1EA3]">
+    <div
+      className={`fixed inset-0 z-[99999] bg-[#3E1EA3] ${
+        phase === 2 ? "cursor-pointer" : ""
+      }`}
+      role={phase === 2 ? "button" : undefined}
+      tabIndex={phase === 2 ? 0 : -1}
+      aria-label={phase === 2 ? "Açılış ekranını geç" : undefined}
+      onClick={dismissSplash}
+      onKeyDown={(event) => {
+        if (phase === 2 && (event.key === "Enter" || event.key === " ")) {
+          event.preventDefault();
+          dismissSplash();
+        }
+      }}
+    >
       {/* Faz 2 — splash2.jpg (altta başlar, faz 2'de tam görünür) */}
       <div
         className={`absolute inset-0 transition-opacity duration-300 ease-in-out ${

@@ -4,6 +4,7 @@ import {
   createServerSupabaseClient
 } from '@/lib/supabase/server';
 import { processRecordCreation } from '@/lib/agenda/write-handlers/write-service';
+import { persistApplicationDetails } from '@/lib/agenda/write-handlers/persist-application-details';
 
 export async function POST(request: Request) {
   try {
@@ -24,10 +25,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'FORBIDDEN_USER_ID_IN_BODY' }, { status: 400 });
     }
 
-    const { pet_id, category, input, idempotencyKey, selectedPlanId } = body;
+    const { pet_id, category, input, idempotencyKey, selectedPlanId, applicationDetails } = body;
 
     if (!pet_id || !category || !input || !idempotencyKey) {
       return NextResponse.json({ error: 'INVALID_PARAMETERS' }, { status: 400 });
+    }
+
+    if (applicationDetails !== undefined && category !== 'asi' && category !== 'parazit') {
+      return NextResponse.json({ error: 'INVALID_APPLICATION_DETAILS_CATEGORY' }, { status: 400 });
     }
 
     // Verify UUID format for idempotencyKey
@@ -81,6 +86,17 @@ export async function POST(request: Request) {
       },
       selectedPlanId
     );
+
+    if (category === 'asi' || category === 'parazit') {
+      await persistApplicationDetails({
+        category,
+        rawDetails: applicationDetails,
+        recordId: result.recordId,
+        petId: pet_id,
+        userId: user.id,
+        supabase,
+      });
+    }
 
     return NextResponse.json({
       success: true,

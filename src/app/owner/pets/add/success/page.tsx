@@ -8,9 +8,15 @@ import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 function SuccessContent() {
   const router = useRouter()
   const params = useSearchParams()
-  const { isSubscribed, isInitializing, isLoading, subscribe } = useWebPush()
+  const {
+    permission,
+    isSubscribed,
+    isInitializing,
+    isLoading,
+    error: pushError,
+    subscribe,
+  } = useWebPush()
   const [errorMsg, setErrorMsg] = useState('')
-  const [justSubscribed, setJustSubscribed] = useState(false)
   // Adım 5: Bildirim Onayı, Adım 6: Sağlık Geçmişi
   const [activeStep, setActiveStep] = useState<5 | 6>(5)
   const [showSkipWarning, setShowSkipWarning] = useState(false)
@@ -40,16 +46,23 @@ function SuccessContent() {
     fetchPet()
   }, [petId, router, supabase])
 
-  const isAlreadyActive = isSubscribed || justSubscribed
+  useEffect(() => {
+    if (isInitializing) return
+
+    if (isSubscribed) {
+      setErrorMsg('')
+      setActiveStep(6)
+      return
+    }
+
+    if (pushError) setErrorMsg(pushError)
+  }, [isInitializing, isSubscribed, pushError])
 
   const handleSubscribe = async () => {
     setErrorMsg('')
     const result = await subscribe()
     if (result.success) {
-      setJustSubscribed(true)
-      setTimeout(() => {
-        setActiveStep(6)
-      }, 1000)
+      setActiveStep(6)
     } else if (result.error) {
       setErrorMsg(result.error)
     } else {
@@ -169,7 +182,7 @@ function SuccessContent() {
             </div>
           )}
 
-          {isAlreadyActive ? (
+          {isSubscribed ? (
             <div className="flex flex-col gap-3">
               <p className="text-[14px] text-success font-bold p-3 bg-success-soft/30 rounded-xl border border-success/15 text-center animate-scaleIn">
                 ✓ Bildirimler başarıyla etkinleştirildi!
@@ -195,7 +208,11 @@ function SuccessContent() {
                   </span>
                 ) : (
                   <>
-                    <span>🔔 Bildirimleri Etkinleştir ve Devam Et →</span>
+                    <span>
+                      🔔 {permission === 'granted'
+                        ? 'Cihaz Kaydını Tamamla ve Devam Et'
+                        : 'Bildirimleri Etkinleştir ve Devam Et'} →
+                    </span>
                   </>
                 )}
               </button>

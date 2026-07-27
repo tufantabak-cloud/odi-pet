@@ -35,7 +35,10 @@ export interface ParsedScannerData {
 interface SmartScannerProps {
   petId?: string;
   onSave?: (data: ParsedScannerData) => void;
-  onResult?: (data: ParsedScannerData) => void;
+  onResult?: (
+    data: ParsedScannerData,
+    metadata?: { recordType: string; documentStoragePath: string | null }
+  ) => void;
   onClose: () => void;
 }
 
@@ -504,6 +507,14 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
           </div>
           
           {renderField('title', 'Ürün Adı', parsedData.title)}
+          {renderField('brand', 'Marka', parsedData.brand)}
+          {renderField('product_name', 'Ürün Adı', parsedData.product_name)}
+          {renderField('lot_number', 'Lot / Seri No', parsedData.lot_number)}
+          {renderField('product_expiry_at', 'Ürün SKT', parsedData.product_expiry_at, 'date')}
+          {renderField('application_method', 'Uygulama Yöntemi', parsedData.application_method)}
+          {renderField('dose', 'Uygulanan Doz', parsedData.dose)}
+          {renderField('active_ingredient', 'Etken Madde', parsedData.active_ingredient)}
+          {renderField('duration_days', 'Koruma Süresi (Gün)', parsedData.duration_days, 'number', true)}
           {renderField('parasite_type', 'Tür (İç/Dış Parazit)', parsedData.parasite_type, 'select', false, [
             {value: 'Dış Parazit', label: 'Dış Parazit'},
             {value: 'İç Parazit', label: 'İç Parazit'}
@@ -832,7 +843,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
               {onResult ? (
                 <button 
                   onClick={() => {
-                    onResult(parsedData);
+                    onResult(parsedData, { recordType, documentStoragePath });
                   }}
                   className="btn-primary w-full py-4 mb-3 flex gap-2"
                 >

@@ -7,6 +7,11 @@ import { DefaultCatAvatar, DefaultDogAvatar } from '@/components/icons/PetIcons'
 import { StepperInput } from '@/components/ui/StepperInput'
 import { RulerPicker } from '@/components/ui/RulerPicker'
 import { BreedCombobox } from '@/components/ui/BreedCombobox'
+import {
+  formatTurkishMobileInput,
+  isTurkishMobilePhone,
+  normalizeTurkishMobilePhone,
+} from '@/lib/phone/turkish-mobile'
 // ── Irk Listeleri ──────────────────────────────────────────────
 const CAT_BREEDS = [
   'British Shorthair', 'Scottish Fold', 'Scottish Straight',
@@ -891,6 +896,8 @@ function PetSOSStep({
   submitError
 }: PetSOSStepProps) {
   const [availableContacts, setAvailableContacts] = useState<{ name: string; phone: string; relation: string }[]>([])
+  const [touchedPhones, setTouchedPhones] = useState([false, false])
+  const [showValidation, setShowValidation] = useState(false)
 
   useEffect(() => {
     async function loadContacts() {
@@ -929,9 +936,35 @@ function PetSOSStep({
     loadContacts()
   }, [])
 
-  const isPerson1Valid = !!sosContacts[0]?.name?.trim() && 
-                         !!sosContacts[0]?.phone?.trim() && 
-                         !!sosContacts[0]?.relation?.trim();
+  const primaryNameMissing = !sosContacts[0]?.name?.trim()
+  const primaryRelationMissing = !sosContacts[0]?.relation?.trim()
+  const primaryPhoneInvalid = !isTurkishMobilePhone(sosContacts[0]?.phone || '')
+  const secondaryHasData = !!(
+    sosContacts[1]?.name?.trim()
+    || sosContacts[1]?.phone?.trim()
+    || sosContacts[1]?.relation?.trim()
+  )
+  const secondaryNameMissing = secondaryHasData && !sosContacts[1]?.name?.trim()
+  const secondaryRelationMissing = secondaryHasData && !sosContacts[1]?.relation?.trim()
+  const secondaryPhoneInvalid = secondaryHasData
+    && !isTurkishMobilePhone(sosContacts[1]?.phone || '')
+
+  const handleSave = () => {
+    setShowValidation(true)
+
+    if (
+      primaryNameMissing
+      || primaryPhoneInvalid
+      || primaryRelationMissing
+      || secondaryNameMissing
+      || secondaryPhoneInvalid
+      || secondaryRelationMissing
+    ) {
+      return
+    }
+
+    onSubmit()
+  }
 
   return (
     <div className="flex flex-col w-full mx-auto pb-10 animate-fadeIn">
@@ -968,7 +1001,11 @@ function PetSOSStep({
                     if (!isNaN(idx) && availableContacts[idx]) {
                       const selected = availableContacts[idx]
                       const nc = [...sosContacts]
-                      nc[0] = { name: selected.name, phone: selected.phone, relation: selected.relation }
+                      nc[0] = {
+                        name: selected.name,
+                        phone: formatTurkishMobileInput(selected.phone),
+                        relation: selected.relation,
+                      }
                       setSosContacts(nc)
                     }
                   }}
@@ -993,32 +1030,63 @@ function PetSOSStep({
               <label className="text-[12px] font-bold text-text-secondary">Ad Soyad *</label>
               <input 
                 type="text" 
-                className="input-base text-[14px] py-3 px-4 bg-white" 
+                className={`input-base text-[14px] py-3 px-4 bg-white ${
+                  showValidation && primaryNameMissing ? 'border-error focus:border-error focus:ring-error/20' : ''
+                }`}
                 placeholder="Örn: Ali Yılmaz" 
                 value={sosContacts[0]?.name || ''} 
                 data-testid="emergency-contact-name-input"
+                aria-invalid={showValidation && primaryNameMissing}
                 onChange={e => { const nc = [...sosContacts]; nc[0] = { ...nc[0], name: e.target.value }; setSosContacts(nc); }} 
                 required
               />
+              {showValidation && primaryNameMissing && (
+                <p role="alert" className="text-[11px] font-bold text-error">Ad soyad zorunludur.</p>
+              )}
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-[12px] font-bold text-text-secondary">Telefon *</label>
               <input 
                 type="tel" 
-                className="input-base text-[14px] py-3 px-4 bg-white" 
-                placeholder="Örn: 0555 123 4567" 
+                inputMode="numeric"
+                autoComplete="tel-national"
+                maxLength={14}
+                className={`input-base text-[14px] py-3 px-4 bg-white ${
+                  (touchedPhones[0] || showValidation) && primaryPhoneInvalid
+                    ? 'border-error focus:border-error focus:ring-error/20'
+                    : ''
+                }`}
+                placeholder="05XX XXX XX XX"
                 value={sosContacts[0]?.phone || ''} 
                 data-testid="emergency-contact-phone-input"
-                onChange={e => { const nc = [...sosContacts]; nc[0] = { ...nc[0], phone: e.target.value }; setSosContacts(nc); }} 
+                aria-invalid={(touchedPhones[0] || showValidation) && primaryPhoneInvalid}
+                aria-describedby="primary-phone-hint primary-phone-error"
+                onBlur={() => setTouchedPhones(current => [true, current[1]])}
+                onChange={e => {
+                  const nc = [...sosContacts]
+                  nc[0] = { ...nc[0], phone: formatTurkishMobileInput(e.target.value) }
+                  setSosContacts(nc)
+                }}
                 required
               />
+              <p id="primary-phone-hint" className="text-[11px] text-text-secondary">
+                Türkiye cep telefonu numarası girin.
+              </p>
+              {(touchedPhones[0] || showValidation) && primaryPhoneInvalid && (
+                <p id="primary-phone-error" role="alert" className="text-[11px] font-bold text-error">
+                  Geçerli bir cep telefonu numarası girin: 05XX XXX XX XX
+                </p>
+              )}
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-[12px] font-bold text-text-secondary">Yakınlık *</label>
               <select 
-                className="input-base text-[14px] py-3 px-4 bg-white" 
+                className={`input-base text-[14px] py-3 px-4 bg-white ${
+                  showValidation && primaryRelationMissing ? 'border-error focus:border-error focus:ring-error/20' : ''
+                }`}
                 value={sosContacts[0]?.relation || ''} 
                 data-testid="emergency-contact-relation-select"
+                aria-invalid={showValidation && primaryRelationMissing}
                 onChange={e => { const nc = [...sosContacts]; nc[0] = { ...nc[0], relation: e.target.value }; setSosContacts(nc); }}
                 required
               >
@@ -1032,6 +1100,9 @@ function PetSOSStep({
                 <option value="Veteriner Hekim">Veteriner Hekim</option>
                 <option value="Diğer">Diğer</option>
               </select>
+              {showValidation && primaryRelationMissing && (
+                <p role="alert" className="text-[11px] font-bold text-error">Yakınlık seçimi zorunludur.</p>
+              )}
             </div>
           </div>
 
@@ -1047,7 +1118,11 @@ function PetSOSStep({
                     if (!isNaN(idx) && availableContacts[idx]) {
                       const selected = availableContacts[idx]
                       const nc = [...sosContacts]
-                      nc[1] = { name: selected.name, phone: selected.phone, relation: selected.relation }
+                      nc[1] = {
+                        name: selected.name,
+                        phone: formatTurkishMobileInput(selected.phone),
+                        relation: selected.relation,
+                      }
                       setSosContacts(nc)
                     }
                   }}
@@ -1072,27 +1147,58 @@ function PetSOSStep({
               <label className="text-[12px] font-bold text-text-secondary">Ad Soyad</label>
               <input 
                 type="text" 
-                className="input-base text-[14px] py-3 px-4 bg-white" 
+                className={`input-base text-[14px] py-3 px-4 bg-white ${
+                  showValidation && secondaryNameMissing ? 'border-error focus:border-error focus:ring-error/20' : ''
+                }`}
                 placeholder="Örn: Ayşe Yılmaz" 
                 value={sosContacts[1]?.name || ''} 
+                aria-invalid={showValidation && secondaryNameMissing}
                 onChange={e => { const nc = [...sosContacts]; nc[1] = { ...nc[1], name: e.target.value }; setSosContacts(nc); }} 
               />
+              {showValidation && secondaryNameMissing && (
+                <p role="alert" className="text-[11px] font-bold text-error">Yedek kişi için ad soyad girin.</p>
+              )}
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-[12px] font-bold text-text-secondary">Telefon</label>
               <input 
                 type="tel" 
-                className="input-base text-[14px] py-3 px-4 bg-white" 
-                placeholder="Örn: 0555 987 6543" 
+                inputMode="numeric"
+                autoComplete="tel-national"
+                maxLength={14}
+                className={`input-base text-[14px] py-3 px-4 bg-white ${
+                  (touchedPhones[1] || showValidation) && secondaryPhoneInvalid
+                    ? 'border-error focus:border-error focus:ring-error/20'
+                    : ''
+                }`}
+                placeholder="05XX XXX XX XX"
                 value={sosContacts[1]?.phone || ''} 
-                onChange={e => { const nc = [...sosContacts]; nc[1] = { ...nc[1], phone: e.target.value }; setSosContacts(nc); }} 
+                aria-invalid={(touchedPhones[1] || showValidation) && secondaryPhoneInvalid}
+                aria-describedby="secondary-phone-hint secondary-phone-error"
+                onBlur={() => setTouchedPhones(current => [current[0], true])}
+                onChange={e => {
+                  const nc = [...sosContacts]
+                  nc[1] = { ...nc[1], phone: formatTurkishMobileInput(e.target.value) }
+                  setSosContacts(nc)
+                }}
               />
+              <p id="secondary-phone-hint" className="text-[11px] text-text-secondary">
+                İsteğe bağlı Türkiye cep telefonu numarası.
+              </p>
+              {(touchedPhones[1] || showValidation) && secondaryPhoneInvalid && (
+                <p id="secondary-phone-error" role="alert" className="text-[11px] font-bold text-error">
+                  Geçerli bir cep telefonu numarası girin: 05XX XXX XX XX
+                </p>
+              )}
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-[12px] font-bold text-text-secondary">Yakınlık</label>
               <select 
-                className="input-base text-[14px] py-3 px-4 bg-white" 
+                className={`input-base text-[14px] py-3 px-4 bg-white ${
+                  showValidation && secondaryRelationMissing ? 'border-error focus:border-error focus:ring-error/20' : ''
+                }`}
                 value={sosContacts[1]?.relation || ''} 
+                aria-invalid={showValidation && secondaryRelationMissing}
                 onChange={e => { const nc = [...sosContacts]; nc[1] = { ...nc[1], relation: e.target.value }; setSosContacts(nc); }}
               >
                 <option value="" disabled>Seçiniz</option>
@@ -1108,6 +1214,9 @@ function PetSOSStep({
                   <option value={sosContacts[1].relation}>{sosContacts[1].relation}</option>
                 )}
               </select>
+              {showValidation && secondaryRelationMissing && (
+                <p role="alert" className="text-[11px] font-bold text-error">Yedek kişi için yakınlık seçin.</p>
+              )}
             </div>
           </div>
         </div>
@@ -1115,7 +1224,7 @@ function PetSOSStep({
         <div className="flex flex-col items-center w-full gap-2 mt-6 pt-6 border-t border-border-main">
           <button
             type="button"
-            onClick={onSubmit}
+            onClick={handleSave}
             disabled={loading}
             data-testid="emergency-contact-save-button"
             className="btn-primary min-w-[200px] w-full sm:w-auto py-3.5 text-[15px] shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
@@ -1275,16 +1384,33 @@ export default function AddPetPage() {
 
   const handleSosSubmit = async () => {
     if (!createdPetId) return
+    setSubmitError('')
     setSosLoading(true)
     try {
-      await fetch(`/api/pets/${createdPetId}/sos`, {
+      const normalizedContacts = sosContacts
+        .filter(c => c.name || c.phone)
+        .map(contact => ({
+          ...contact,
+          phone: normalizeTurkishMobilePhone(contact.phone) ?? contact.phone,
+        }))
+
+      const response = await fetch(`/api/pets/${createdPetId}/sos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sos_contacts: sosContacts.filter(c => c.name || c.phone) }),
+        body: JSON.stringify({ sos_contacts: normalizedContacts }),
       })
+
+      const data = await response.json()
+      if (!response.ok) {
+        setSubmitError(data.error || 'Acil durum ağı kaydedilemedi.')
+        return
+      }
+
+      router.replace(getSuccessUrl(createdPetId))
+    } catch {
+      setSubmitError('Bağlantı kurulamadı. Lütfen tekrar deneyin.')
     } finally {
       setSosLoading(false)
-      router.replace(getSuccessUrl(createdPetId))
     }
   }
 

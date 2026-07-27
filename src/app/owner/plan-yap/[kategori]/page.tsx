@@ -12,8 +12,10 @@ import { CheckCircle2, Search, ScanLine, Check } from 'lucide-react';
 import { TaskCategory, getFilteredSubCategories, getSmartDefault } from '@/lib/tasks/taskDefaults';
 import Image from 'next/image';
 import Link from 'next/link';
-import { SmartScanner } from '@/components/ui/SmartScanner';
+import { SmartScanner, type ParsedScannerData } from '@/components/ui/SmartScanner';
 import { StepperInput } from '@/components/ui/StepperInput';
+import { OptionalApplicationDetails } from '@/components/health-records/OptionalApplicationDetails';
+import type { ApplicationDetails } from '@/lib/health-records/application-details';
 import { normalizeSpecies } from '@/lib/species';
 import {
   isProductSpeciesCompatible,
@@ -732,6 +734,113 @@ export default function WizardOrchestrator() {
   };
 
   // ── API Payload Hazırlama ─────────────────────────────────────────
+  const healthCategory = categoryKey === 'asi' || categoryKey === 'parazit'
+    ? categoryKey
+    : null;
+  const applicationDetails: ApplicationDetails = {
+    currency: 'TRY',
+    ...(wizardData.applicationDetails || {}),
+  };
+
+  const buildHealthRecordInput = (petId: string) => {
+    const administeredAt = new Date(
+      `${wizardData.date || new Date().toISOString().split('T')[0]}T${wizardData.time || '12:00'}:00`
+    ).toISOString();
+
+    if (categoryKey === 'asi') {
+      return {
+        pet_id: petId,
+        species: normalizeSpecies(speciesStr),
+        vaccine_code:
+          wizardData.selectedVaccine?.code ||
+          initialExtraData?.vaccine_code ||
+          initialExtraData?.vaccine?.code ||
+          'CUSTOM',
+        vaccine_name:
+          wizardData.selectedVaccine?.name ||
+          initialExtraData?.vaccine?.name ||
+          wizardData.subCategory ||
+          'Aşı Kaydı',
+        dose_number: initialExtraData?.dose_number || 1,
+        administered_at: administeredAt,
+        notes: applicationDetails.product_notes || wizardData.notes || null,
+        brand_id:
+          wizardData.selectedVaccine?.brand_id ||
+          wizardData.selectedVaccine?.brandId ||
+          null,
+        brand_name: applicationDetails.brand || null,
+      };
+    }
+
+    const parasiteTypeBySubCategory: Record<string, 'internal' | 'external' | 'combined' | 'collar'> = {
+      'İç Parazit': 'internal',
+      'Dış Parazit': 'external',
+      'Birleşik Parazit': 'combined',
+      'Parazit Tasması': 'collar',
+    };
+    const plannedProduct = wizardData.plannedProduct;
+
+    return {
+      pet_id: petId,
+      parasite_type:
+        wizardData.selectedProduct?.category ||
+        parasiteTypeBySubCategory[wizardData.subCategory] ||
+        'combined',
+      parasite_code:
+        wizardData.selectedProduct?.parasite_code ||
+        initialExtraData?.parasite_code ||
+        undefined,
+      administered_at: administeredAt,
+      protection_duration_days:
+        applicationDetails.protection_duration_days ||
+        plannedProduct?.protection_duration_days ||
+        wizardData.selectedProduct?.duration_days ||
+        30,
+      application_method:
+        applicationDetails.application_method ||
+        plannedProduct?.application_method ||
+        'spot_on',
+      brand_free_text:
+        applicationDetails.brand ||
+        plannedProduct?.brand ||
+        null,
+      product_free_text:
+        applicationDetails.product_name ||
+        plannedProduct?.name ||
+        null,
+      notes: applicationDetails.product_notes || wizardData.notes || null,
+    };
+  };
+
+  const writeHealthRecord = async (petId: string, selectedPlanId?: string) => {
+    if (!healthCategory) return null;
+
+    const idempotencyKey =
+      wizardData.healthRecordIdempotencyKey ||
+      crypto.randomUUID();
+    if (!wizardData.healthRecordIdempotencyKey) {
+      setStepData({ healthRecordIdempotencyKey: idempotencyKey });
+    }
+
+    const response = await fetch('/api/agenda/write', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pet_id: petId,
+        category: healthCategory,
+        input: buildHealthRecordInput(petId),
+        idempotencyKey,
+        selectedPlanId,
+        applicationDetails,
+      }),
+    });
+    const responseData = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(responseData.message || responseData.error || 'Sağlık kaydı oluşturulamadı');
+    }
+    return responseData;
+  };
+
   const handleSubmit = async () => {
     setIsSubmitting(true);
     const petId = wizardData.pet_id || (pets.length === 1 ? pets[0].id : null);
@@ -741,20 +850,23 @@ export default function WizardOrchestrator() {
     // → updatePlan tekrarlıysa geçmiş kaydını bırakıp planı ileri taşır.
     if (isLinked && wizardData.linkedPlanId) {
       try {
-        const res = await fetch(`/api/plans/${wizardData.linkedPlanId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'completed' }),
-        });
-        if (res.ok) {
-          setIsSuccess(true);
+        if (healthCategory) {
+          await writeHealthRecord(petId, wizardData.linkedPlanId);
         } else {
-          const errData = await res.json().catch(() => ({}));
-          alert(`Hata: ${errData.error || 'Görev tamamlanamadı'}`);
+          const res = await fetch(`/api/plans/${wizardData.linkedPlanId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'completed' }),
+          });
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || 'Görev tamamlanamadı');
+          }
         }
+        setIsSuccess(true);
       } catch (err) {
         console.error(err);
-        alert('Beklenmeyen bir hata oluştu.');
+        alert(err instanceof Error ? err.message : 'Beklenmeyen bir hata oluştu.');
       } finally {
         setIsSubmitting(false);
       }
@@ -930,6 +1042,59 @@ export default function WizardOrchestrator() {
         is_past_done: !!wizardData.markAsDone
       },
     };
+
+    const shouldCreateHealthRecord =
+      !!healthCategory &&
+      (logMode || !!wizardData.markAsDone);
+
+    if (shouldCreateHealthRecord) {
+      let createdPlanId: string | null = null;
+      let linkCreatedPlan = false;
+      try {
+        const vaccineCode =
+          wizardData.selectedVaccine?.code ||
+          initialExtraData?.vaccine_code ||
+          initialExtraData?.vaccine?.code;
+        const canUseAtomicPlanCompletion =
+          categoryKey === 'asi'
+            ? !!vaccineCode && vaccineCode !== 'CUSTOM'
+            : !!wizardData.selectedProduct?.id && wizardData.selectedProduct.id !== 'other';
+        const needsPlan = !logMode || wizardData.frequency !== 'once';
+
+        if (needsPlan) {
+          const planPayload = {
+            ...payload,
+            extra_data: {
+              ...payload.extra_data,
+              is_past_done: canUseAtomicPlanCompletion ? false : true,
+            },
+          };
+          const planResponse = await fetch('/api/plans', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(planPayload),
+          });
+          const planData = await planResponse.json().catch(() => ({}));
+          if (!planResponse.ok) {
+            throw new Error(planData.error || 'Plan oluşturulamadı');
+          }
+          createdPlanId = planData.plan?.id || null;
+          linkCreatedPlan = canUseAtomicPlanCompletion;
+        }
+
+        await writeHealthRecord(
+          petId,
+          linkCreatedPlan ? createdPlanId || undefined : undefined
+        );
+        setIsSuccess(true);
+      } catch (err) {
+        console.error(err);
+        alert(err instanceof Error ? err.message : 'Sağlık kaydı oluşturulamadı.');
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
 
     try {
       const res = await fetch('/api/plans' + (isEditMode ? `/${editId}` : ''), {
@@ -1550,16 +1715,18 @@ export default function WizardOrchestrator() {
             Karneyi / Ambalajı Tara
           </button>
           
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Marka veya ürün ara..."
-              className="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
-            />
-          </div>
+          {categoryKey !== 'asi' && (
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Marka veya ürün ara..."
+                className="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
+              />
+            </div>
+          )}
 
           <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-1">
             {loadingProducts ? (
@@ -1628,16 +1795,18 @@ export default function WizardOrchestrator() {
             )}
           </div>
 
-          <div className="mt-2 pt-4 border-t border-border-main">
-            <label className="text-[13px] font-bold text-text-primary">Marka / Ürün Notu (İsteğe Bağlı)</label>
-            <input
-              type="text"
-              value={wizardData.metadata?.custom_brand || ''}
-              onChange={(e) => setStepData({ metadata: { ...wizardData.metadata, custom_brand: e.target.value } })}
-              placeholder="Örn: Bayer Advocate, Zoetis..."
-              className="w-full mt-1.5 p-3 border border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
-            />
-          </div>
+          {categoryKey !== 'asi' && (
+            <div className="mt-2 pt-4 border-t border-border-main">
+              <label className="text-[13px] font-bold text-text-primary">Marka / Ürün Notu (İsteğe Bağlı)</label>
+              <input
+                type="text"
+                value={wizardData.metadata?.custom_brand || ''}
+                onChange={(e) => setStepData({ metadata: { ...wizardData.metadata, custom_brand: e.target.value } })}
+                placeholder="Örn: Bayer Advocate, Zoetis..."
+                className="w-full mt-1.5 p-3 border border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
+              />
+            </div>
+          )}
         </div>
       );
     }
@@ -2072,6 +2241,14 @@ export default function WizardOrchestrator() {
                 </p>
               </div>
             </div>
+          {healthCategory && (
+            <OptionalApplicationDetails
+              category={healthCategory}
+              value={applicationDetails}
+              onChange={(nextValue) => setStepData({ applicationDetails: nextValue })}
+              onScan={() => setShowScanner(true)}
+            />
+          )}
           </div>
         );
       }
@@ -2127,6 +2304,14 @@ export default function WizardOrchestrator() {
                <p className="text-[11px] text-indigo-700/80 leading-relaxed">Geçmiş tarihli bu planın yapıldığını onaylıyorsanız işaretleyin.</p>
              </div>
            </label>
+          )}
+          {healthCategory && ((isPastDate && wizardData.markAsDone) || logMode) && (
+            <OptionalApplicationDetails
+              category={healthCategory}
+              value={applicationDetails}
+              onChange={(nextValue) => setStepData({ applicationDetails: nextValue })}
+              onScan={() => setShowScanner(true)}
+            />
           )}
           {logMode && (
              <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-start gap-3">
@@ -2318,7 +2503,15 @@ export default function WizardOrchestrator() {
       <WizardShell
         category={categoryKey}
         onNext={currentStepIndex === totalSteps - 1 ? handleSubmit : nextStep}
-        submitText={isLinked ? 'Görevi Tamamla' : logMode ? 'Kaydı Ekle' : 'Planı Kaydet'}
+        submitText={
+          isLinked
+            ? 'Görevi Tamamla'
+            : logMode
+              ? 'Kaydı Ekle'
+              : wizardData.markAsDone && healthCategory
+                ? 'Tamamla ve Kaydet'
+                : 'Planı Kaydet'
+        }
         canSkip={steps[currentStepIndex]?.key === 'selectedVaccine' && categoryKey !== 'parazit'}
         skipText="Belirtmek İstemiyorum"
         onSkip={() => {
@@ -2348,15 +2541,41 @@ export default function WizardOrchestrator() {
         <SmartScanner 
           petId={wizardData.pet_id} 
           onClose={() => setShowScanner(false)}
-          onResult={(data: any) => {
-            const parsed = data?.parsed;
-            if (parsed) {
-              if (parsed.vaccine_name || parsed.brand || parsed.title) {
-                 setSearchQuery(parsed.vaccine_name || parsed.brand || parsed.title);
-              }
-              if (parsed.date) {
-                 setStepData({ date: parsed.date });
-              }
+          onResult={(parsed: ParsedScannerData, metadata) => {
+            const nextDetails: ApplicationDetails = {
+              ...applicationDetails,
+              brand: String(parsed.brand || parsed.vaccine_brand || applicationDetails.brand || ''),
+              product_name: String(parsed.product_name || applicationDetails.product_name || ''),
+              lot_number: String(parsed.lot_number || applicationDetails.lot_number || ''),
+              product_expiry_at: String(
+                parsed.product_expiry_at ||
+                parsed.expiration_date ||
+                parsed.expiry_date ||
+                applicationDetails.product_expiry_at ||
+                ''
+              ) || null,
+              provider_name: String(parsed.vet_name || applicationDetails.provider_name || ''),
+              institution_name: String(parsed.vet_company || applicationDetails.institution_name || ''),
+              administration_route: String(
+                parsed.administration_route || applicationDetails.administration_route || ''
+              ),
+              application_method: String(
+                parsed.application_method || applicationDetails.application_method || ''
+              ),
+              applied_dose: String(parsed.dose || applicationDetails.applied_dose || ''),
+              active_ingredient: String(
+                parsed.active_ingredient || parsed.ingredient || applicationDetails.active_ingredient || ''
+              ),
+              protection_duration_days:
+                Number(parsed.duration_days || applicationDetails.protection_duration_days) || null,
+              document_storage_path:
+                metadata?.documentStoragePath || applicationDetails.document_storage_path || null,
+            };
+            const scannerUpdate: Record<string, unknown> = { applicationDetails: nextDetails };
+            if (parsed.date) scannerUpdate.date = parsed.date;
+            setStepData(scannerUpdate);
+            if (parsed.vaccine_name || parsed.brand || parsed.title) {
+              setSearchQuery(String(parsed.vaccine_name || parsed.brand || parsed.title));
             }
             setShowScanner(false);
           }}

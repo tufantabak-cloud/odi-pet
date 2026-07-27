@@ -25,6 +25,8 @@ Zorunlu JSON Şeması:
     "title": "Aşı Adı",
     "brand": "Marka (örn: Nobivac)",
     "lot_number": "Lot Numarası",
+    "product_expiry_at": "YYYY-MM-DD", // Ürün/ambalaj son kullanma tarihi
+    "administration_route": "parenteral_sc" | "parenteral_im" | "intranasal" | "oral",
     "date": "YYYY-MM-DD", // Uygulama tarihi
     "next_date": "YYYY-MM-DD", // Sonraki tarih
     "vet_name": "Veteriner Hekim Adı",
@@ -35,9 +37,17 @@ Zorunlu JSON Şeması:
     "duration": "Kullanım süresi (örn: 7 gün)",
     // Eğer document_type = "parasite_product" ise:
     "title": "Ürün Adı",
-    "parasite_type": "İç Parazit" | "Dış Parazit",
-    "duration_months": 3,
-    "next_date": "YYYY-MM-DD" // Bugün + duration_months
+    "brand": "Marka",
+    "product_name": "Ürün Adı",
+    "parasite_type": "İç Parazit" | "Dış Parazit" | "Birleşik Parazit" | "Parazit Tasması",
+    "lot_number": "Lot/Seri Numarası",
+    "product_expiry_at": "YYYY-MM-DD",
+    "application_method": "oral" | "spot_on" | "injection" | "collar" | "spray" | "other",
+    "dose": "Uygulanan doz",
+    "active_ingredient": "Etken madde",
+    "duration_days": 30,
+    "duration_months": 1,
+    "next_date": "YYYY-MM-DD" // Koruma süresine göre sonraki tarih
   }
 }
 Lütfen verileri olabildiğince eksiksiz doldur. Tespit edemediğin alanları null yap.

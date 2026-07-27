@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useWebPush } from "@/hooks/useWebPush";
+import { shouldShowGlobalNotificationGate } from "@/lib/notifications/pwa-enforcer-policy";
 
 export default function PwaEnforcer() {
   const pathname = usePathname();
@@ -89,23 +90,16 @@ export default function PwaEnforcer() {
       window.matchMedia("(display-mode: standalone)").matches || 
       (window.navigator as any).standalone === true;
 
-    const hasWorkingPushSubscription =
-      pushPermission === 'granted' && isSubscribed;
-
     if (!isStandalone) {
       // PWA is enforced if not dismissed
       setEnforceType("pwa");
       setShouldShow(true);
-    } else if (pushPermission === 'unsupported') {
-      // Cihaz bildirimleri desteklemiyorsa kilitlenme yaşanmaması için bypass et
-      setShouldShow(false);
-    } else if (!pathname.startsWith('/owner')) {
-      // Oturumu olmayan kullanıcıdan sunucuya kaydedilemeyecek bir abonelik isteme.
-      setShouldShow(false);
-    } else if (isInitializing) {
-      // Tarayıcı izni ile gerçek push aboneliğinin doğrulanmasını bekle.
-      setShouldShow(false);
-    } else if (!hasWorkingPushSubscription) {
+    } else if (shouldShowGlobalNotificationGate({
+      pathname,
+      permission: pushPermission,
+      isSubscribed,
+      isInitializing,
+    })) {
       setEnforceType("notification");
       setShouldShow(true);
     } else {

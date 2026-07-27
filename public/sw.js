@@ -1,3 +1,3353 @@
-var w=[{revision:null,url:"/_next/static/puov_peCP9xXlHGzdOV1B/_ssgManifest.js"},{revision:null,url:"/_next/static/puov_peCP9xXlHGzdOV1B/_clientMiddlewareManifest.js"},{revision:null,url:"/_next/static/puov_peCP9xXlHGzdOV1B/_buildManifest.js"},{revision:null,url:"/_next/static/media/marker-icon.1le94j_pe_ih1.png"},{revision:null,url:"/_next/static/media/layers.3muxcl8sz6330.png"},{revision:null,url:"/_next/static/media/layers-2x.23wrxu3xxu9-i.png"},{revision:null,url:"/_next/static/chunks/turbopack-0q3fmakk6dwo-.js"},{revision:null,url:"/_next/static/chunks/43p88uww30m0a.js"},{revision:null,url:"/_next/static/chunks/437ckca4w10d-.js"},{revision:null,url:"/_next/static/chunks/41tuk253_yqyv.css"},{revision:null,url:"/_next/static/chunks/412kp5di4s3ga.js"},{revision:null,url:"/_next/static/chunks/40q_h83-ez548.js"},{revision:null,url:"/_next/static/chunks/3_q6igu2kxlm7.js"},{revision:null,url:"/_next/static/chunks/3ze_6ldsm9sm_.js"},{revision:null,url:"/_next/static/chunks/3ycm6j3f9ypm4.js"},{revision:null,url:"/_next/static/chunks/3ybxrraddsgk5.js"},{revision:null,url:"/_next/static/chunks/3xe-avnesrikx.js"},{revision:null,url:"/_next/static/chunks/3w6j1vl__a2p6.js"},{revision:null,url:"/_next/static/chunks/3t42e-2wze_ik.css"},{revision:null,url:"/_next/static/chunks/3r_nlmogyknr5.js"},{revision:null,url:"/_next/static/chunks/3r-77mqdgopft.js"},{revision:null,url:"/_next/static/chunks/3pv0jodjtzu_t.js"},{revision:null,url:"/_next/static/chunks/3ou2t88vn7y70.js"},{revision:null,url:"/_next/static/chunks/3o5qylw7x1tko.js"},{revision:null,url:"/_next/static/chunks/3nsvm-sjtok-v.js"},{revision:null,url:"/_next/static/chunks/3m_38yccln8gl.js"},{revision:null,url:"/_next/static/chunks/3imv7jeyobsim.js"},{revision:null,url:"/_next/static/chunks/3ieudy7pphkh7.js"},{revision:null,url:"/_next/static/chunks/3gkg6_vlz9oe-.js"},{revision:null,url:"/_next/static/chunks/3e5cxxtabi11e.js"},{revision:null,url:"/_next/static/chunks/3cq78pbq9xkfj.js"},{revision:null,url:"/_next/static/chunks/39f_mzzj5wfl-.js"},{revision:null,url:"/_next/static/chunks/37kcjv3vdo6a6.js"},{revision:null,url:"/_next/static/chunks/364qgt4kejrl7.js"},{revision:null,url:"/_next/static/chunks/35t3vk_yd34z0.js"},{revision:null,url:"/_next/static/chunks/35ip4ctshr802.js"},{revision:null,url:"/_next/static/chunks/351ap0pnlvygj.js"},{revision:null,url:"/_next/static/chunks/34gfefff22wem.js"},{revision:null,url:"/_next/static/chunks/34ac4f3ouh65o.js"},{revision:null,url:"/_next/static/chunks/32jaltd2c_rc6.js"},{revision:null,url:"/_next/static/chunks/31ommun8zlanx.js"},{revision:null,url:"/_next/static/chunks/2yds99buraf7i.js"},{revision:null,url:"/_next/static/chunks/2w8m7wp77zte1.js"},{revision:null,url:"/_next/static/chunks/2vv_9cl0lb0e5.js"},{revision:null,url:"/_next/static/chunks/2sc799xdmzqc4.js"},{revision:null,url:"/_next/static/chunks/2s5cz7ew6xe62.js"},{revision:null,url:"/_next/static/chunks/2rr6cjq61n5ve.js"},{revision:null,url:"/_next/static/chunks/2rgf6insk-1yn.js"},{revision:null,url:"/_next/static/chunks/2nss7y3zs30z3.js"},{revision:null,url:"/_next/static/chunks/2n2_gr230wk1t.js"},{revision:null,url:"/_next/static/chunks/2mai08p4ff_mn.js"},{revision:null,url:"/_next/static/chunks/2jc59zcdq6wn1.js"},{revision:null,url:"/_next/static/chunks/2hehcq9ylmsp1.js"},{revision:null,url:"/_next/static/chunks/2hcplgy54wux2.js"},{revision:null,url:"/_next/static/chunks/2dr_gs91nwpcu.js"},{revision:null,url:"/_next/static/chunks/269e0ed710-zf.js"},{revision:null,url:"/_next/static/chunks/25wj5y2e3b2dj.js"},{revision:null,url:"/_next/static/chunks/23nt09im27xms.js"},{revision:null,url:"/_next/static/chunks/23fawhuxqyysd.js"},{revision:null,url:"/_next/static/chunks/232t4a_7ukh3v.js"},{revision:null,url:"/_next/static/chunks/1_at7j8pra_z9.js"},{revision:null,url:"/_next/static/chunks/1ymadmbr54who.js"},{revision:null,url:"/_next/static/chunks/1sei5x_01jpd2.js"},{revision:null,url:"/_next/static/chunks/1ppdg4dmpr9fd.js"},{revision:null,url:"/_next/static/chunks/1mug_gvcnrkf_.js"},{revision:null,url:"/_next/static/chunks/1ls2udhpcxutd.js"},{revision:null,url:"/_next/static/chunks/1ikr3c38dttob.js"},{revision:null,url:"/_next/static/chunks/1hji700vorhbg.js"},{revision:null,url:"/_next/static/chunks/1h96efrctb6hr.js"},{revision:null,url:"/_next/static/chunks/1d51a54bx_jvv.js"},{revision:null,url:"/_next/static/chunks/1ckhybdnqav1-.js"},{revision:null,url:"/_next/static/chunks/1apr6fgclitx3.js"},{revision:null,url:"/_next/static/chunks/19p9-g4jb-c8-.js"},{revision:null,url:"/_next/static/chunks/17g6qr3m6zxgs.js"},{revision:null,url:"/_next/static/chunks/17cuma4a4eo70.js"},{revision:null,url:"/_next/static/chunks/15_t_le4d4osf.js"},{revision:null,url:"/_next/static/chunks/13jcoqomnd2vi.js"},{revision:null,url:"/_next/static/chunks/12ywybz7g5f9q.js"},{revision:null,url:"/_next/static/chunks/12ebw9wxab96i.js"},{revision:null,url:"/_next/static/chunks/117bf55au9ve9.js"},{revision:null,url:"/_next/static/chunks/1-n4fnkrkmqr-.js"},{revision:null,url:"/_next/static/chunks/0x7-wvxxnvdfp.js"},{revision:null,url:"/_next/static/chunks/0vj_poxipdfht.js"},{revision:null,url:"/_next/static/chunks/0tvm-cxxn84gk.js"},{revision:null,url:"/_next/static/chunks/0paxexg6-m0de.js"},{revision:null,url:"/_next/static/chunks/0n8kzvw2z_6as.css"},{revision:null,url:"/_next/static/chunks/0jcn_9vg6dvfn.js"},{revision:null,url:"/_next/static/chunks/0j17954of77zn.js"},{revision:null,url:"/_next/static/chunks/0fxh4ujjfi-mw.js"},{revision:null,url:"/_next/static/chunks/0d7z5o1bxadqd.js"},{revision:null,url:"/_next/static/chunks/0cz1d0mv5g_q7.js"},{revision:null,url:"/_next/static/chunks/09v_niav-bx7w.js"},{revision:null,url:"/_next/static/chunks/09vhfd1n7hw4q.js"},{revision:null,url:"/_next/static/chunks/09iz4od4ia8r2.css"},{revision:null,url:"/_next/static/chunks/08vyc2zwopzl8.js"},{revision:null,url:"/_next/static/chunks/07j_mcs1nnawv.js"},{revision:null,url:"/_next/static/chunks/07h5jitwekco4.js"},{revision:null,url:"/_next/static/chunks/02hp71zy4a03w.js"},{revision:null,url:"/_next/static/chunks/01t7wa4cv44p1.js"},{revision:null,url:"/_next/static/chunks/01heircm0b6ef.js"},{revision:"2cf095b5d0bfd67737e9eeccdb8d22a7",url:"/splash.png"},{revision:"0b88d9a4c72cc114a4ffe49c4ad320e1",url:"/manifest.json"},{revision:"db0fc233a3229707c8e18783ed3e2a97",url:"/logo.webp"},{revision:"ec6610d2a6c04f55c15ea3facdfacf90",url:"/icon-512.png"},{revision:"ec6610d2a6c04f55c15ea3facdfacf90",url:"/icon-512-maskable.png"},{revision:"46f730a42cf1655c654b2a2a3710d066",url:"/icon-192.png"},{revision:"4ce7c3df87e45ecaec4f2d39d3f1ce84",url:"/favicon.ico"},{revision:"ca95082f2a415c7b46ed0d9730de14b1",url:"/apple-touch-icon.png"},{revision:"7dbb45526900cce878d89e5d1e4130a8",url:"/vendor/tabler-icons/tabler-icons.min.css"},{revision:"773c12d38d1fb8e4b902b248c05ec06f",url:"/vendor/tabler-icons/LICENSE"},{revision:"262ca05014f0b51081f398bc51623b39",url:"/vendor/tabler-icons/fonts/tabler-icons.woff2"},{revision:"44a526eed258222515aa21eaffd14a96",url:"/vendor/leaflet/marker-shadow.png"},{revision:"2273e3d8ad9264b7daa5bdbf8e6b47f8",url:"/vendor/leaflet/marker-icon.png"},{revision:"401d815dc206b8dc1b17cd0e37695975",url:"/vendor/leaflet/marker-icon-2x.png"},{revision:"c115291a497e22ae0e10bb594b948a45",url:"/vendor/leaflet/lost-pet-marker.svg"},{revision:"27f0cee29d2c29b089f3c4cf990c2f7f",url:"/assets/splash2.jpg"},{revision:"84e577f1511f0373e586ab9765d8fd89",url:"/assets/splash1.jpg"},{revision:"76822351558a074895e4c1870a6af06d",url:"/offline"}];var y={googleAnalytics:"googleAnalytics",precache:"precache-v2",prefix:"serwist",runtime:"runtime",suffix:typeof registration<"u"?registration.scope:""},L=e=>[y.prefix,e,y.suffix].filter(t=>t&&t.length>0).join("-"),Be=e=>{for(let t of Object.keys(y))e(t)},_={updateDetails:e=>{Be(t=>{let s=e[t];typeof s=="string"&&(y[t]=s)})},getGoogleAnalyticsName:e=>e||L(y.googleAnalytics),getPrecacheName:e=>e||L(y.precache),getPrefix:()=>y.prefix,getRuntimeName:e=>e||L(y.runtime),getSuffix:()=>y.suffix},D;function se(){if(D===void 0){let e=new Response("");if("body"in e)try{new Response(e.body),D=!0}catch{D=!1}D=!1}return D}var We=(e,...t)=>{let s=e;return t.length>0&&(s+=` :: ${JSON.stringify(t)}`),s};var Ke=We,l=class extends Error{details;constructor(e,t){let s=Ke(e,t);super(s),this.name=e,this.details=t}};var re=e=>new URL(String(e),location.href).href.replace(new RegExp(`^${location.origin}`),"");function S(e){return new Promise(t=>setTimeout(t,e))}var V=new Set;function te(e,t){let s=new URL(e);for(let r of t)s.searchParams.delete(r);return s.href}async function ne(e,t,s,r){let n=te(t.url,s);if(t.url===n)return e.match(t,r);let a={...r,ignoreSearch:!0},i=await e.keys(t,a);for(let o of i)if(n===te(o.url,s))return e.match(o,r)}var ae=class{promise;resolve;reject;constructor(){this.promise=new Promise((e,t)=>{this.resolve=e,this.reject=t})}},ie=async()=>{for(let e of V)await e()},He="-precache-",Ge=async(e,t=He)=>{let s=(await self.caches.keys()).filter(r=>r.includes(t)&&r.includes(self.registration.scope)&&r!==e);return await Promise.all(s.map(r=>self.caches.delete(r))),s},oe=e=>{self.addEventListener("activate",t=>{t.waitUntil(Ge(_.getPrecacheName(e)).then(s=>{}))})},ce=()=>{self.addEventListener("activate",()=>self.clients.claim())},F=(e,t)=>{let s=t();return e.waitUntil(s),s};var W=(e,t)=>t.some(s=>e instanceof s),le,ue;function ze(){return le||(le=[IDBDatabase,IDBObjectStore,IDBIndex,IDBCursor,IDBTransaction])}function Qe(){return ue||(ue=[IDBCursor.prototype.advance,IDBCursor.prototype.continue,IDBCursor.prototype.continuePrimaryKey])}var K=new WeakMap,M=new WeakMap,O=new WeakMap;function Je(e){let t=new Promise((s,r)=>{let n=()=>{e.removeEventListener("success",a),e.removeEventListener("error",i)},a=()=>{s(v(e.result)),n()},i=()=>{r(e.error),n()};e.addEventListener("success",a),e.addEventListener("error",i)});return O.set(t,e),t}function Ye(e){if(K.has(e))return;let t=new Promise((s,r)=>{let n=()=>{e.removeEventListener("complete",a),e.removeEventListener("error",i),e.removeEventListener("abort",i)},a=()=>{s(),n()},i=()=>{r(e.error||new DOMException("AbortError","AbortError")),n()};e.addEventListener("complete",a),e.addEventListener("error",i),e.addEventListener("abort",i)});K.set(e,t)}var H={get(e,t,s){if(e instanceof IDBTransaction){if(t==="done")return K.get(e);if(t==="store")return s.objectStoreNames[1]?void 0:s.objectStore(s.objectStoreNames[0])}return v(e[t])},set(e,t,s){return e[t]=s,!0},has(e,t){return e instanceof IDBTransaction&&(t==="done"||t==="store")?!0:t in e}};function ge(e){H=e(H)}function Xe(e){return Qe().includes(e)?function(...t){return e.apply(G(this),t),v(this.request)}:function(...t){return v(e.apply(G(this),t))}}function Ze(e){return typeof e=="function"?Xe(e):(e instanceof IDBTransaction&&Ye(e),W(e,ze())?new Proxy(e,H):e)}function v(e){if(e instanceof IDBRequest)return Je(e);if(M.has(e))return M.get(e);let t=Ze(e);return t!==e&&(M.set(e,t),O.set(t,e)),t}var G=e=>O.get(e);function P(e,t,{blocked:s,upgrade:r,blocking:n,terminated:a}={}){let i=indexedDB.open(e,t),o=v(i);return r&&i.addEventListener("upgradeneeded",c=>{r(v(i.result),c.oldVersion,c.newVersion,v(i.transaction),c)}),s&&i.addEventListener("blocked",c=>s(c.oldVersion,c.newVersion,c)),o.then(c=>{a&&c.addEventListener("close",()=>a()),n&&c.addEventListener("versionchange",u=>n(u.oldVersion,u.newVersion,u))}).catch(()=>{}),o}function fe(e,{blocked:t}={}){let s=indexedDB.deleteDatabase(e);return t&&s.addEventListener("blocked",r=>t(r.oldVersion,r)),v(s).then(()=>{})}var et=["get","getKey","getAll","getAllKeys","count"],tt=["put","add","delete","clear"],B=new Map;function he(e,t){if(!(e instanceof IDBDatabase&&!(t in e)&&typeof t=="string"))return;if(B.get(t))return B.get(t);let s=t.replace(/FromIndex$/,""),r=t!==s,n=tt.includes(s);if(!(s in(r?IDBIndex:IDBObjectStore).prototype)||!(n||et.includes(s)))return;let a=async function(i,...o){let c=this.transaction(i,n?"readwrite":"readonly"),u=c.store;return r&&(u=u.index(o.shift())),(await Promise.all([u[s](...o),n&&c.done]))[0]};return B.set(t,a),a}ge(e=>({...e,get:(t,s,r)=>he(t,s)||e.get(t,s,r),has:(t,s)=>!!he(t,s)||e.has(t,s)}));var st=["continue","continuePrimaryKey","advance"],de={},z=new WeakMap,me=new WeakMap,rt={get(e,t){if(!st.includes(t))return e[t];let s=de[t];return s||(s=de[t]=function(...r){z.set(this,me.get(this)[t](...r))}),s}};async function*nt(...e){let t=this;if(t instanceof IDBCursor||(t=await t.openCursor(...e)),!t)return;t=t;let s=new Proxy(t,rt);for(me.set(s,t),O.set(s,G(t));t;)yield s,t=await(z.get(s)||t.continue()),z.delete(s)}function pe(e,t){return t===Symbol.asyncIterator&&W(e,[IDBIndex,IDBObjectStore,IDBCursor])||t==="iterate"&&W(e,[IDBIndex,IDBObjectStore])}ge(e=>({...e,get(t,s,r){return pe(t,s)?nt:e.get(t,s,r)},has(t,s){return pe(t,s)||e.has(t,s)}}));var Ne=async(e,t)=>{let s=null;if(e.url&&(s=new URL(e.url).origin),s!==self.location.origin)throw new l("cross-origin-copy-response",{origin:s});let r=e.clone(),n={headers:new Headers(r.headers),status:r.status,statusText:r.statusText},a=t?t(n):n,i=se()?r.body:await r.blob();return new Response(i,a)},Ee=()=>{self.__WB_DISABLE_DEV_LOGS=!0},we=3,at="serwist-background-sync",N="requests",q="queueName",it=class{_db=null;async addEntry(e){let t=(await this.getDb()).transaction(N,"readwrite",{durability:"relaxed"});await t.store.add(e),await t.done}async getFirstEntryId(){return(await(await this.getDb()).transaction(N).store.openCursor())?.value.id}async getAllEntriesByQueueName(e){let t=await(await this.getDb()).getAllFromIndex(N,q,IDBKeyRange.only(e));return t||[]}async getEntryCountByQueueName(e){return(await this.getDb()).countFromIndex(N,q,IDBKeyRange.only(e))}async deleteEntry(e){await(await this.getDb()).delete(N,e)}async getFirstEntryByQueueName(e){return await this.getEndEntryFromIndex(IDBKeyRange.only(e),"next")}async getLastEntryByQueueName(e){return await this.getEndEntryFromIndex(IDBKeyRange.only(e),"prev")}async getEndEntryFromIndex(e,t){return(await(await this.getDb()).transaction(N).store.index(q).openCursor(e,t))?.value}async getDb(){return this._db||(this._db=await P(at,we,{upgrade:this._upgradeDb})),this._db}_upgradeDb(e,t){t>0&&t<we&&e.objectStoreNames.contains(N)&&e.deleteObjectStore(N),e.createObjectStore(N,{autoIncrement:!0,keyPath:"id"}).createIndex(q,q,{unique:!1})}},ve=class{_queueName;_queueDb;constructor(e){this._queueName=e,this._queueDb=new it}async pushEntry(e){delete e.id,e.queueName=this._queueName,await this._queueDb.addEntry(e)}async unshiftEntry(e){let t=await this._queueDb.getFirstEntryId();t?e.id=t-1:delete e.id,e.queueName=this._queueName,await this._queueDb.addEntry(e)}async popEntry(){return this._removeEntry(await this._queueDb.getLastEntryByQueueName(this._queueName))}async shiftEntry(){return this._removeEntry(await this._queueDb.getFirstEntryByQueueName(this._queueName))}async getAll(){return await this._queueDb.getAllEntriesByQueueName(this._queueName)}async size(){return await this._queueDb.getEntryCountByQueueName(this._queueName)}async deleteEntry(e){await this._queueDb.deleteEntry(e)}async _removeEntry(e){return e&&await this.deleteEntry(e.id),e}},ot=["method","referrer","referrerPolicy","mode","credentials","cache","redirect","integrity","keepalive"],Y=class J{_requestData;static async fromRequest(t){let s={url:t.url,headers:{}};t.method!=="GET"&&(s.body=await t.clone().arrayBuffer()),t.headers.forEach((r,n)=>{s.headers[n]=r});for(let r of ot)t[r]!==void 0&&(s[r]=t[r]);return new J(s)}constructor(t){t.mode==="navigate"&&(t.mode="same-origin"),this._requestData=t}toObject(){let t=Object.assign({},this._requestData);return t.headers=Object.assign({},this._requestData.headers),t.body&&(t.body=t.body.slice(0)),t}toRequest(){return new Request(this._requestData.url,this._requestData)}clone(){return new J(this.toObject())}},ye="serwist-background-sync",ct=1440*7,Q=new Set,_e=e=>{let t={request:new Y(e.requestData).toRequest(),timestamp:e.timestamp};return e.metadata&&(t.metadata=e.metadata),t},xe=class{_name;_onSync;_maxRetentionTime;_queueStore;_forceSyncFallback;_syncInProgress=!1;_requestsAddedDuringSync=!1;constructor(e,{forceSyncFallback:t,onSync:s,maxRetentionTime:r}={}){if(Q.has(e))throw new l("duplicate-queue-name",{name:e});Q.add(e),this._name=e,this._onSync=s||this.replayRequests,this._maxRetentionTime=r||ct,this._forceSyncFallback=!!t,this._queueStore=new ve(this._name),this._addSyncListener()}get name(){return this._name}async pushRequest(e){await this._addRequest(e,"push")}async unshiftRequest(e){await this._addRequest(e,"unshift")}async popRequest(){return this._removeRequest("pop")}async shiftRequest(){return this._removeRequest("shift")}async getAll(){let e=await this._queueStore.getAll(),t=Date.now(),s=[];for(let r of e){let n=this._maxRetentionTime*60*1e3;t-r.timestamp>n?await this._queueStore.deleteEntry(r.id):s.push(_e(r))}return s}async size(){return await this._queueStore.size()}async _addRequest({request:e,metadata:t,timestamp:s=Date.now()},r){let n={requestData:(await Y.fromRequest(e.clone())).toObject(),timestamp:s};switch(t&&(n.metadata=t),r){case"push":await this._queueStore.pushEntry(n);break;case"unshift":await this._queueStore.unshiftEntry(n);break}this._syncInProgress?this._requestsAddedDuringSync=!0:await this.registerSync()}async _removeRequest(e){let t=Date.now(),s;switch(e){case"pop":s=await this._queueStore.popEntry();break;case"shift":s=await this._queueStore.shiftEntry();break}if(s){let r=this._maxRetentionTime*60*1e3;return t-s.timestamp>r?this._removeRequest(e):_e(s)}}async replayRequests(){let e;for(;e=await this.shiftRequest();)try{await fetch(e.request.clone())}catch{throw await this.unshiftRequest(e),new l("queue-replay-failed",{name:this._name})}}async registerSync(){if("sync"in self.registration&&!this._forceSyncFallback)try{await self.registration.sync.register(`${ye}:${this._name}`)}catch{}}_addSyncListener(){"sync"in self.registration&&!this._forceSyncFallback?self.addEventListener("sync",e=>{if(e.tag===`${ye}:${this._name}`){let t=async()=>{this._syncInProgress=!0;let s;try{await this._onSync({queue:this})}catch(r){if(r instanceof Error)throw s=r,s}finally{this._requestsAddedDuringSync&&!(s&&!e.lastChance)&&await this.registerSync(),this._syncInProgress=!1,this._requestsAddedDuringSync=!1}};e.waitUntil(t())}}):this._onSync({queue:this})}static get _queueNames(){return Q}},be=class{_queue;constructor(e,t){this._queue=new xe(e,t)}async fetchDidFail({request:e}){await this._queue.pushRequest({request:e})}},X={cacheWillUpdate:async({response:e})=>e.status===200||e.status===0?e:null};function U(e){return typeof e=="string"?new Request(e):e}var Re=class{event;request;url;params;_cacheKeys={};_strategy;_handlerDeferred;_extendLifetimePromises;_plugins;_pluginStateMap;constructor(e,t){this.event=t.event,this.request=t.request,t.url&&(this.url=t.url,this.params=t.params),this._strategy=e,this._handlerDeferred=new ae,this._extendLifetimePromises=[],this._plugins=[...e.plugins],this._pluginStateMap=new Map;for(let s of this._plugins)this._pluginStateMap.set(s,{});this.event.waitUntil(this._handlerDeferred.promise)}async fetch(e){let{event:t}=this,s=U(e),r=await this.getPreloadResponse();if(r)return r;let n=this.hasCallback("fetchDidFail")?s.clone():null;try{for(let i of this.iterateCallbacks("requestWillFetch"))s=await i({request:s.clone(),event:t})}catch(i){if(i instanceof Error)throw new l("plugin-error-request-will-fetch",{thrownErrorMessage:i.message})}let a=s.clone();try{let i;i=await fetch(s,s.mode==="navigate"?void 0:this._strategy.fetchOptions);for(let o of this.iterateCallbacks("fetchDidSucceed"))i=await o({event:t,request:a,response:i});return i}catch(i){throw n&&await this.runCallbacks("fetchDidFail",{error:i,event:t,originalRequest:n.clone(),request:a.clone()}),i}}async fetchAndCachePut(e){let t=await this.fetch(e),s=t.clone();return this.waitUntil(this.cachePut(e,s)),t}async cacheMatch(e){let t=U(e),s,{cacheName:r,matchOptions:n}=this._strategy,a=await this.getCacheKey(t,"read"),i={...n,cacheName:r};s=await caches.match(a,i);for(let o of this.iterateCallbacks("cachedResponseWillBeUsed"))s=await o({cacheName:r,matchOptions:n,cachedResponse:s,request:a,event:this.event})||void 0;return s}async cachePut(e,t){let s=U(e);await S(0);let r=await this.getCacheKey(s,"write");if(!t)throw new l("cache-put-with-no-response",{url:re(r.url)});let n=await this._ensureResponseSafeToCache(t);if(!n)return!1;let{cacheName:a,matchOptions:i}=this._strategy,o=await self.caches.open(a),c=this.hasCallback("cacheDidUpdate"),u=c?await ne(o,r.clone(),["__WB_REVISION__"],i):null;try{await o.put(r,c?n.clone():n)}catch(d){if(d instanceof Error)throw d.name==="QuotaExceededError"&&await ie(),d}for(let d of this.iterateCallbacks("cacheDidUpdate"))await d({cacheName:a,oldResponse:u,newResponse:n.clone(),request:r,event:this.event});return!0}async getCacheKey(e,t){let s=`${e.url} | ${t}`;if(!this._cacheKeys[s]){let r=e;for(let n of this.iterateCallbacks("cacheKeyWillBeUsed"))r=U(await n({mode:t,request:r,event:this.event,params:this.params}));this._cacheKeys[s]=r}return this._cacheKeys[s]}hasCallback(e){for(let t of this._strategy.plugins)if(e in t)return!0;return!1}async runCallbacks(e,t){for(let s of this.iterateCallbacks(e))await s(t)}*iterateCallbacks(e){for(let t of this._strategy.plugins)if(typeof t[e]=="function"){let s=this._pluginStateMap.get(t);yield n=>{let a={...n,state:s};return t[e](a)}}}waitUntil(e){return this._extendLifetimePromises.push(e),e}async doneWaiting(){let e;for(;e=this._extendLifetimePromises.shift();)await e}destroy(){this._handlerDeferred.resolve(null)}async getPreloadResponse(){if(this.event instanceof FetchEvent&&this.event.request.mode==="navigate"&&"preloadResponse"in this.event)try{let e=await this.event.preloadResponse;if(e)return e}catch{return}}async _ensureResponseSafeToCache(e){let t=e,s=!1;for(let r of this.iterateCallbacks("cacheWillUpdate"))if(t=await r({request:this.request,response:t,event:this.event})||void 0,s=!0,!t)break;return s||t&&t.status!==200&&(t=void 0),t}},b=class{cacheName;plugins;fetchOptions;matchOptions;constructor(e={}){this.cacheName=_.getRuntimeName(e.cacheName),this.plugins=e.plugins||[],this.fetchOptions=e.fetchOptions,this.matchOptions=e.matchOptions}handle(e){let[t]=this.handleAll(e);return t}handleAll(e){e instanceof FetchEvent&&(e={event:e,request:e.request});let t=e.event,s=typeof e.request=="string"?new Request(e.request):e.request,r=new Re(this,e.url?{event:t,request:s,url:e.url,params:e.params}:{event:t,request:s}),n=this._getResponse(r,s,t);return[n,this._awaitComplete(n,r,s,t)]}async _getResponse(e,t,s){await e.runCallbacks("handlerWillStart",{event:s,request:t});let r;try{if(r=await this._handle(t,e),r===void 0||r.type==="error")throw new l("no-response",{url:t.url})}catch(n){if(n instanceof Error){for(let a of e.iterateCallbacks("handlerDidError"))if(r=await a({error:n,event:s,request:t}),r!==void 0)break}if(!r)throw n}for(let n of e.iterateCallbacks("handlerWillRespond"))r=await n({event:s,request:t,response:r});return r}async _awaitComplete(e,t,s,r){let n,a;try{n=await e}catch{}try{await t.runCallbacks("handlerDidRespond",{event:r,request:s,response:n}),await t.doneWaiting()}catch(i){i instanceof Error&&(a=i)}if(await t.runCallbacks("handlerDidComplete",{event:r,request:s,response:n,error:a}),t.destroy(),a)throw a}};var p=class extends b{_networkTimeoutSeconds;constructor(e={}){super(e),this.plugins.some(t=>"cacheWillUpdate"in t)||this.plugins.unshift(X),this._networkTimeoutSeconds=e.networkTimeoutSeconds||0}async _handle(e,t){let s=[],r=[],n;if(this._networkTimeoutSeconds){let{id:o,promise:c}=this._getTimeoutPromise({request:e,logs:s,handler:t});n=o,r.push(c)}let a=this._getNetworkPromise({timeoutId:n,request:e,logs:s,handler:t});r.push(a);let i=await t.waitUntil((async()=>await t.waitUntil(Promise.race(r))||await a)());if(!i)throw new l("no-response",{url:e.url});return i}_getTimeoutPromise({request:e,logs:t,handler:s}){let r;return{promise:new Promise(n=>{r=setTimeout(async()=>{n(await s.cacheMatch(e))},this._networkTimeoutSeconds*1e3)}),id:r}}async _getNetworkPromise({timeoutId:e,request:t,logs:s,handler:r}){let n,a;try{a=await r.fetchAndCachePut(t)}catch(i){i instanceof Error&&(n=i)}return e&&clearTimeout(e),(n||!a)&&(a=await r.cacheMatch(t)),a}},R=class extends b{_networkTimeoutSeconds;constructor(e={}){super(e),this._networkTimeoutSeconds=e.networkTimeoutSeconds||0}async _handle(e,t){let s,r;try{let n=[t.fetch(e)];if(this._networkTimeoutSeconds){let a=S(this._networkTimeoutSeconds*1e3);n.push(a)}if(r=await Promise.race(n),!r)throw new Error(`Timed out the network response after ${this._networkTimeoutSeconds} seconds.`)}catch(n){n instanceof Error&&(s=n)}if(!r)throw new l("no-response",{url:e.url,error:s});return r}};var T=e=>e&&typeof e=="object"?e:{handle:e},g=class{handler;match;method;catchHandler;constructor(e,t,s="GET"){this.handler=T(t),this.match=e,this.method=s}setCatchHandler(e){this.catchHandler=T(e)}},ke=class C extends b{_fallbackToNetwork;static defaultPrecacheCacheabilityPlugin={async cacheWillUpdate({response:t}){return!t||t.status>=400?null:t}};static copyRedirectedCacheableResponsesPlugin={async cacheWillUpdate({response:t}){return t.redirected?await Ne(t):t}};constructor(t={}){t.cacheName=_.getPrecacheName(t.cacheName),super(t),this._fallbackToNetwork=t.fallbackToNetwork!==!1,this.plugins.push(C.copyRedirectedCacheableResponsesPlugin)}async _handle(t,s){let r=await s.getPreloadResponse();if(r)return r;let n=await s.cacheMatch(t);return n||(s.event&&s.event.type==="install"?await this._handleInstall(t,s):await this._handleFetch(t,s))}async _handleFetch(t,s){let r,n=s.params||{};if(this._fallbackToNetwork){let a=n.integrity,i=t.integrity,o=!i||i===a;if(r=await s.fetch(new Request(t,{integrity:t.mode!=="no-cors"?i||a:void 0})),a&&o&&t.mode!=="no-cors"){this._useDefaultCacheabilityPluginIfNeeded();let c=await s.cachePut(t,r.clone())}}else throw new l("missing-precache-entry",{cacheName:this.cacheName,url:t.url});return r}async _handleInstall(t,s){this._useDefaultCacheabilityPluginIfNeeded();let r=await s.fetch(t);if(!await s.cachePut(t,r.clone()))throw new l("bad-precaching-response",{url:t.url,status:r.status});return r}_useDefaultCacheabilityPluginIfNeeded(){let t=null,s=0;for(let[r,n]of this.plugins.entries())n!==C.copyRedirectedCacheableResponsesPlugin&&(n===C.defaultPrecacheCacheabilityPlugin&&(t=r),n.cacheWillUpdate&&s++);s===0?this.plugins.push(C.defaultPrecacheCacheabilityPlugin):s>1&&t!==null&&this.plugins.splice(t,1)}},De=class extends g{_allowlist;_denylist;constructor(e,{allowlist:t=[/./],denylist:s=[]}={}){super(r=>this._match(r),e),this._allowlist=t,this._denylist=s}_match({url:e,request:t}){if(t&&t.mode!=="navigate")return!1;let s=e.pathname+e.search;for(let r of this._denylist)if(r.test(s))return!1;return!!this._allowlist.some(r=>r.test(s))}},Se=()=>!!self.registration?.navigationPreload,qe=e=>{Se()&&self.addEventListener("activate",t=>{t.waitUntil(self.registration.navigationPreload.enable().then(()=>{e&&self.registration.navigationPreload.setHeaderValue(e)}))})};var lt=(e,t=[])=>{for(let s of[...e.searchParams.keys()])t.some(r=>r.test(s))&&e.searchParams.delete(s);return e};function*Ce(e,{directoryIndex:t="index.html",ignoreURLParametersMatching:s=[/^utm_/,/^fbclid$/],cleanURLs:r=!0,urlManipulation:n}={}){let a=new URL(e,location.href);a.hash="",yield a.href;let i=lt(a,s);if(yield i.href,t&&i.pathname.endsWith("/")){let o=new URL(i.href);o.pathname+=t,yield o.href}if(r){let o=new URL(i.href);o.pathname+=".html",yield o.href}if(n){let o=n({url:a});for(let c of o)yield c.href}}var Te=class extends g{constructor(e,t,s){let r=({url:n})=>{let a=e.exec(n.href);if(a&&!(n.origin!==location.origin&&a.index!==0))return a.slice(1)};super(r,t,s)}},Ae=e=>{_.updateDetails(e)},ut="__WB_REVISION__",Oe=e=>{if(!e)throw new l("add-to-cache-list-unexpected-type",{entry:e});if(typeof e=="string"){let a=new URL(e,location.href);return{cacheKey:a.href,url:a.href}}let{revision:t,url:s}=e;if(!s)throw new l("add-to-cache-list-unexpected-type",{entry:e});if(!t){let a=new URL(s,location.href);return{cacheKey:a.href,url:a.href}}let r=new URL(s,location.href),n=new URL(s,location.href);return r.searchParams.set(ut,t),{cacheKey:r.href,url:n.href}},Pe=class{updatedURLs=[];notUpdatedURLs=[];handlerWillStart=async({request:e,state:t})=>{t&&(t.originalRequest=e)};cachedResponseWillBeUsed=async({event:e,state:t,cachedResponse:s})=>{if(e.type==="install"&&t?.originalRequest&&t.originalRequest instanceof Request){let r=t.originalRequest.url;s?this.notUpdatedURLs.push(r):this.updatedURLs.push(r)}return s}},Ue=(e,t,s)=>{if(typeof e=="string"){let r=new URL(e,location.href),n=({url:a})=>a.href===r.href;return new g(n,t,s)}if(e instanceof RegExp)return new Te(e,t,s);if(typeof e=="function")return new g(e,t,s);if(e instanceof g)return e;throw new l("unsupported-route-type",{moduleName:"serwist",funcName:"parseRoute",paramName:"capture"})};var $e=async(e,t,s)=>{let r=t.map((i,o)=>({index:o,item:i})),n=async i=>{let o=[];for(;;){let c=r.pop();if(!c)return i(o);let u=await s(c.item);o.push({result:u,index:c.index})}},a=Array.from({length:e},()=>new Promise(n));return(await Promise.all(a)).flat().sort((i,o)=>i.index<o.index?-1:1).map(i=>i.result)};var Es=typeof navigator<"u"&&/^((?!chrome|android).)*safari/i.test(navigator.userAgent);var ht="serwist-expiration",$="cache-entries",je=e=>{let t=new URL(e,location.href);return t.hash="",t.href},dt=class{_cacheName;_db=null;constructor(e){this._cacheName=e}_getId(e){return`${this._cacheName}|${je(e)}`}_upgradeDb(e){let t=e.createObjectStore($,{keyPath:"id"});t.createIndex("cacheName","cacheName",{unique:!1}),t.createIndex("timestamp","timestamp",{unique:!1})}_upgradeDbAndDeleteOldDbs(e){this._upgradeDb(e),this._cacheName&&fe(this._cacheName)}async setTimestamp(e,t){e=je(e);let s={id:this._getId(e),cacheName:this._cacheName,url:e,timestamp:t},r=(await this.getDb()).transaction($,"readwrite",{durability:"relaxed"});await r.store.put(s),await r.done}async getTimestamp(e){return(await(await this.getDb()).get($,this._getId(e)))?.timestamp}async expireEntries(e,t){let s=await(await this.getDb()).transaction($,"readwrite").store.index("timestamp").openCursor(null,"prev"),r=[],n=0;for(;s;){let a=s.value;a.cacheName===this._cacheName&&(e&&a.timestamp<e||t&&n>=t?(s.delete(),r.push(a.url)):n++),s=await s.continue()}return r}async getDb(){return this._db||(this._db=await P(ht,1,{upgrade:this._upgradeDbAndDeleteOldDbs.bind(this)})),this._db}},pt=class{_isRunning=!1;_rerunRequested=!1;_maxEntries;_maxAgeSeconds;_matchOptions;_cacheName;_timestampModel;constructor(e,t={}){this._maxEntries=t.maxEntries,this._maxAgeSeconds=t.maxAgeSeconds,this._matchOptions=t.matchOptions,this._cacheName=e,this._timestampModel=new dt(e)}async expireEntries(){if(this._isRunning){this._rerunRequested=!0;return}this._isRunning=!0;let e=this._maxAgeSeconds?Date.now()-this._maxAgeSeconds*1e3:0,t=await this._timestampModel.expireEntries(e,this._maxEntries),s=await self.caches.open(this._cacheName);for(let r of t)await s.delete(r,this._matchOptions);this._isRunning=!1,this._rerunRequested&&(this._rerunRequested=!1,this.expireEntries())}async updateTimestamp(e){await this._timestampModel.setTimestamp(e,Date.now())}async isURLExpired(e){if(!this._maxAgeSeconds)return!1;let t=await this._timestampModel.getTimestamp(e),s=Date.now()-this._maxAgeSeconds*1e3;return t!==void 0?t<s:!0}async delete(){this._rerunRequested=!1,await this._timestampModel.expireEntries(Number.POSITIVE_INFINITY)}},gt=e=>{V.add(e)},h=class{_config;_cacheExpirations;constructor(e={}){this._config=e,this._cacheExpirations=new Map,this._config.maxAgeFrom||(this._config.maxAgeFrom="last-fetched"),this._config.purgeOnQuotaError&&gt(()=>this.deleteCacheAndMetadata())}_getCacheExpiration(e){if(e===_.getRuntimeName())throw new l("expire-custom-caches-only");let t=this._cacheExpirations.get(e);return t||(t=new pt(e,this._config),this._cacheExpirations.set(e,t)),t}cachedResponseWillBeUsed({event:e,cacheName:t,request:s,cachedResponse:r}){if(!r)return null;let n=this._isResponseDateFresh(r),a=this._getCacheExpiration(t),i=this._config.maxAgeFrom==="last-used",o=(async()=>{i&&await a.updateTimestamp(s.url),await a.expireEntries()})();try{e.waitUntil(o)}catch{}return n?r:null}_isResponseDateFresh(e){if(this._config.maxAgeFrom==="last-used")return!0;let t=Date.now();if(!this._config.maxAgeSeconds)return!0;let s=this._getDateHeaderTimestamp(e);return s===null?!0:s>=t-this._config.maxAgeSeconds*1e3}_getDateHeaderTimestamp(e){if(!e.headers.has("date"))return null;let t=e.headers.get("date"),s=new Date(t).getTime();return Number.isNaN(s)?null:s}async cacheDidUpdate({cacheName:e,request:t}){let s=this._getCacheExpiration(e);await s.updateTimestamp(t.url),await s.expireEntries()}async deleteCacheAndMetadata(){for(let[e,t]of this._cacheExpirations)await self.caches.delete(e),await t.delete();this._cacheExpirations=new Map}},ft="serwist-google-analytics",mt=2880,wt=/^\/(\w+\/)?collect/,yt=e=>async({queue:t})=>{let s;for(;s=await t.shiftRequest();){let{request:r,timestamp:n}=s,a=new URL(r.url);try{let i=r.method==="POST"?new URLSearchParams(await r.clone().text()):a.searchParams,o=n-(Number(i.get("qt"))||0),c=Date.now()-o;if(i.set("qt",String(c)),e.parameterOverrides)for(let u of Object.keys(e.parameterOverrides)){let d=e.parameterOverrides[u];i.set(u,d)}typeof e.hitFilter=="function"&&e.hitFilter.call(null,i),await fetch(new Request(a.origin+a.pathname,{body:i.toString(),method:"POST",mode:"cors",credentials:"omit",headers:{"Content-Type":"text/plain"}}))}catch(i){throw await t.unshiftRequest(s),i}}},_t=e=>{let t=({url:r})=>r.hostname==="www.google-analytics.com"&&wt.test(r.pathname),s=new R({plugins:[e]});return[new g(t,s,"GET"),new g(t,s,"POST")]},Nt=e=>{let t=({url:s})=>s.hostname==="www.google-analytics.com"&&s.pathname==="/analytics.js";return new g(t,new p({cacheName:e}),"GET")},Et=e=>{let t=({url:s})=>s.hostname==="www.googletagmanager.com"&&s.pathname==="/gtag/js";return new g(t,new p({cacheName:e}),"GET")},vt=e=>{let t=({url:s})=>s.hostname==="www.googletagmanager.com"&&s.pathname==="/gtm.js";return new g(t,new p({cacheName:e}),"GET")},Ie=({serwist:e,cacheName:t,...s})=>{let r=_.getGoogleAnalyticsName(t),n=new be(ft,{maxRetentionTime:mt,onSync:yt(s)}),a=[vt(r),Nt(r),Et(r),..._t(n)];for(let i of a)e.registerRoute(i)},xt=class{_fallbackUrls;_serwist;constructor({fallbackUrls:e,serwist:t}){this._fallbackUrls=e,this._serwist=t}async handlerDidError(e){for(let t of this._fallbackUrls)if(typeof t=="string"){let s=await this._serwist.matchPrecache(t);if(s!==void 0)return s}else if(t.matcher(e)){let s=await this._serwist.matchPrecache(t.url);if(s!==void 0)return s}}},bt=(e,t,s)=>{let r=e.size;if(s&&s>r||t&&t<0)throw new l("range-not-satisfiable",{size:r,end:s,start:t});let n,a;return t!==void 0&&s!==void 0?(n=t,a=s+1):t!==void 0&&s===void 0?(n=t,a=r):s!==void 0&&t===void 0&&(n=r-s,a=r),{start:n,end:a}},Rt=e=>{let t=e.trim().toLowerCase();if(!t.startsWith("bytes="))throw new l("unit-must-be-bytes",{normalizedRangeHeader:t});if(t.includes(","))throw new l("single-range-only",{normalizedRangeHeader:t});let s=/(\d*)-(\d*)/.exec(t);if(!s||!(s[1]||s[2]))throw new l("invalid-range-values",{normalizedRangeHeader:t});return{start:s[1]===""?void 0:Number(s[1]),end:s[2]===""?void 0:Number(s[2])}},kt=async(e,t)=>{try{if(t.status===206)return t;let s=e.headers.get("range");if(!s)throw new l("no-range-header");let r=Rt(s),n=await t.blob(),a=bt(n,r.start,r.end),i=n.slice(a.start,a.end),o=i.size,c=new Response(i,{status:206,statusText:"Partial Content",headers:t.headers});return c.headers.set("Content-Length",String(o)),c.headers.set("Content-Range",`bytes ${a.start}-${a.end-1}/${n.size}`),c}catch{return new Response("",{status:416,statusText:"Range Not Satisfiable"})}},Z=class{cachedResponseWillBeUsed=async({request:e,cachedResponse:t})=>t&&e.headers.has("range")?await kt(e,t):t},A=class extends b{async _handle(e,t){let s=[],r=await t.cacheMatch(e),n;if(!r)try{r=await t.fetchAndCachePut(e)}catch(a){a instanceof Error&&(n=a)}if(!r)throw new l("no-response",{url:e.url,error:n});return r}};var k=class extends b{constructor(e={}){super(e),this.plugins.some(t=>"cacheWillUpdate"in t)||this.plugins.unshift(X)}async _handle(e,t){let s=[],r=t.fetchAndCachePut(e).catch(()=>{});t.waitUntil(r);let n=await t.cacheMatch(e),a;if(!n)try{n=await r}catch(i){i instanceof Error&&(a=i)}if(!n)throw new l("no-response",{url:e.url,error:a});return n}},Dt=class extends g{constructor(e,t){let s=({request:r})=>{let n=e.getUrlsToPrecacheKeys();for(let a of Ce(r.url,t)){let i=n.get(a);if(i)return{cacheKey:i,integrity:e.getIntegrityForPrecacheKey(i)}}};super(s,e.precacheStrategy)}},St=class{_precacheController;constructor({precacheController:e}){this._precacheController=e}cacheKeyWillBeUsed=async({request:e,params:t})=>{let s=t?.cacheKey||this._precacheController.getPrecacheKeyForUrl(e.url);return s?new Request(s,{headers:e.headers}):e}},qt=(e,t={})=>{let{cacheName:s,plugins:r=[],fetchOptions:n,matchOptions:a,fallbackToNetwork:i,directoryIndex:o,ignoreURLParametersMatching:c,cleanURLs:u,urlManipulation:d,cleanupOutdatedCaches:m,concurrency:x=10,navigateFallback:j,navigateFallbackAllowlist:E,navigateFallbackDenylist:f}=t??{};return{precacheStrategyOptions:{cacheName:_.getPrecacheName(s),plugins:[...r,new St({precacheController:e})],fetchOptions:n,matchOptions:a,fallbackToNetwork:i},precacheRouteOptions:{directoryIndex:o,ignoreURLParametersMatching:c,cleanURLs:u,urlManipulation:d},precacheMiscOptions:{cleanupOutdatedCaches:m,concurrency:x,navigateFallback:j,navigateFallbackAllowlist:E,navigateFallbackDenylist:f}}},Le=class{_urlsToCacheKeys=new Map;_urlsToCacheModes=new Map;_cacheKeysToIntegrities=new Map;_concurrentPrecaching;_precacheStrategy;_routes;_defaultHandlerMap;_catchHandler;_requestRules;constructor({precacheEntries:e,precacheOptions:t,skipWaiting:s=!1,importScripts:r,navigationPreload:n=!1,cacheId:a,clientsClaim:i=!1,runtimeCaching:o,offlineAnalyticsConfig:c,disableDevLogs:u=!1,fallbacks:d,requestRules:m}={}){let{precacheStrategyOptions:x,precacheRouteOptions:j,precacheMiscOptions:E}=qt(this,t);if(this._concurrentPrecaching=E.concurrency,this._precacheStrategy=new ke(x),this._routes=new Map,this._defaultHandlerMap=new Map,this._requestRules=m,this.handleInstall=this.handleInstall.bind(this),this.handleActivate=this.handleActivate.bind(this),this.handleFetch=this.handleFetch.bind(this),this.handleCache=this.handleCache.bind(this),r&&r.length>0&&self.importScripts(...r),n&&qe(),a!==void 0&&Ae({prefix:a}),s?self.skipWaiting():self.addEventListener("message",f=>{f.data&&f.data.type==="SKIP_WAITING"&&self.skipWaiting()}),i&&ce(),e&&e.length>0&&this.addToPrecacheList(e),E.cleanupOutdatedCaches&&oe(x.cacheName),this.registerRoute(new Dt(this,j)),E.navigateFallback&&this.registerRoute(new De(this.createHandlerBoundToUrl(E.navigateFallback),{allowlist:E.navigateFallbackAllowlist,denylist:E.navigateFallbackDenylist})),c!==void 0&&(typeof c=="boolean"?c&&Ie({serwist:this}):Ie({...c,serwist:this})),o!==void 0){if(d!==void 0){let f=new xt({fallbackUrls:d.entries,serwist:this});o.forEach(I=>{I.handler instanceof b&&!I.handler.plugins.some(Fe=>"handlerDidError"in Fe)&&I.handler.plugins.push(f)})}for(let f of o)this.registerCapture(f.matcher,f.handler,f.method)}u&&Ee()}get precacheStrategy(){return this._precacheStrategy}get routes(){return this._routes}addEventListeners(){self.addEventListener("install",this.handleInstall),self.addEventListener("activate",this.handleActivate),self.addEventListener("fetch",this.handleFetch),self.addEventListener("message",this.handleCache)}addToPrecacheList(e){let t=[];for(let s of e){typeof s=="string"?t.push(s):s&&!s.integrity&&s.revision===void 0&&t.push(s.url);let{cacheKey:r,url:n}=Oe(s),a=typeof s!="string"&&s.revision?"reload":"default";if(this._urlsToCacheKeys.has(n)&&this._urlsToCacheKeys.get(n)!==r)throw new l("add-to-cache-list-conflicting-entries",{firstEntry:this._urlsToCacheKeys.get(n),secondEntry:r});if(typeof s!="string"&&s.integrity){if(this._cacheKeysToIntegrities.has(r)&&this._cacheKeysToIntegrities.get(r)!==s.integrity)throw new l("add-to-cache-list-conflicting-integrities",{url:n});this._cacheKeysToIntegrities.set(r,s.integrity)}this._urlsToCacheKeys.set(n,r),this._urlsToCacheModes.set(n,a)}if(t.length>0){let s=`Serwist is precaching URLs without revision info: ${t.join(", ")}
-This is generally NOT safe. Learn more at https://bit.ly/wb-precache`;console.warn(s)}}handleInstall(e){return this.registerRequestRules(e),F(e,async()=>{let t=new Pe;this.precacheStrategy.plugins.push(t),await $e(this._concurrentPrecaching,Array.from(this._urlsToCacheKeys.entries()),async([n,a])=>{let i=this._cacheKeysToIntegrities.get(a),o=this._urlsToCacheModes.get(n),c=new Request(n,{integrity:i,cache:o,credentials:"same-origin"});await Promise.all(this.precacheStrategy.handleAll({event:e,request:c,url:new URL(c.url),params:{cacheKey:a}}))});let{updatedURLs:s,notUpdatedURLs:r}=t;return{updatedURLs:s,notUpdatedURLs:r}})}async registerRequestRules(e){if(this._requestRules&&e?.addRoutes)try{await e.addRoutes(this._requestRules),this._requestRules=void 0}catch(t){throw t}}handleActivate(e){return F(e,async()=>{let t=await self.caches.open(this.precacheStrategy.cacheName),s=await t.keys(),r=new Set(this._urlsToCacheKeys.values()),n=[];for(let a of s)r.has(a.url)||(await t.delete(a),n.push(a.url));return{deletedCacheRequests:n}})}handleFetch(e){let{request:t}=e,s=this.handleRequest({request:t,event:e});s&&e.respondWith(s)}handleCache(e){if(e.data&&e.data.type==="CACHE_URLS"){let{payload:t}=e.data,s=Promise.all(t.urlsToCache.map(r=>{let n;return typeof r=="string"?n=new Request(r):n=new Request(...r),this.handleRequest({request:n,event:e})}));e.waitUntil(s),e.ports?.[0]&&s.then(()=>e.ports[0].postMessage(!0))}}setDefaultHandler(e,t="GET"){this._defaultHandlerMap.set(t,T(e))}setCatchHandler(e){this._catchHandler=T(e)}registerCapture(e,t,s){let r=Ue(e,t,s);return this.registerRoute(r),r}registerRoute(e){this._routes.has(e.method)||this._routes.set(e.method,[]),this._routes.get(e.method).push(e)}unregisterRoute(e){if(!this._routes.has(e.method))throw new l("unregister-route-but-not-found-with-method",{method:e.method});let t=this._routes.get(e.method).indexOf(e);if(t>-1)this._routes.get(e.method).splice(t,1);else throw new l("unregister-route-route-not-registered")}getUrlsToPrecacheKeys(){return this._urlsToCacheKeys}getPrecachedUrls(){return[...this._urlsToCacheKeys.keys()]}getPrecacheKeyForUrl(e){let t=new URL(e,location.href);return this._urlsToCacheKeys.get(t.href)}getIntegrityForPrecacheKey(e){return this._cacheKeysToIntegrities.get(e)}async matchPrecache(e){let t=e instanceof Request?e.url:e,s=this.getPrecacheKeyForUrl(t);if(s)return(await self.caches.open(this.precacheStrategy.cacheName)).match(s)}createHandlerBoundToUrl(e){let t=this.getPrecacheKeyForUrl(e);if(!t)throw new l("non-precached-url",{url:e});return s=>(s.request=new Request(e),s.params={cacheKey:t,...s.params},this.precacheStrategy.handle(s))}handleRequest({request:e,event:t}){let s=new URL(e.url,location.href);if(!s.protocol.startsWith("http"))return;let r=s.origin===location.origin,{params:n,route:a}=this.findMatchingRoute({event:t,request:e,sameOrigin:r,url:s}),i=a?.handler,o=[],c=e.method;if(!i&&this._defaultHandlerMap.has(c)&&(i=this._defaultHandlerMap.get(c)),!i)return;let u;try{u=i.handle({url:s,request:e,event:t,params:n})}catch(m){u=Promise.reject(m)}let d=a?.catchHandler;return u instanceof Promise&&(this._catchHandler||d)&&(u=u.catch(async m=>{if(d)try{return await d.handle({url:s,request:e,event:t,params:n})}catch(x){x instanceof Error&&(m=x)}if(this._catchHandler)return this._catchHandler.handle({url:s,request:e,event:t});throw m})),u}findMatchingRoute({url:e,sameOrigin:t,request:s,event:r}){let n=this._routes.get(s.method)||[];for(let a of n){let i,o=a.match({url:e,sameOrigin:t,request:s,event:r});if(o)return i=o,(Array.isArray(i)&&i.length===0||o.constructor===Object&&Object.keys(o).length===0||typeof o=="boolean")&&(i=void 0),{route:a,params:i}}return{}}};var ee={rscPrefetch:"pages-rsc-prefetch",rsc:"pages-rsc",html:"pages"},Ve=[{matcher:/^https:\/\/fonts\.(?:gstatic)\.com\/.*/i,handler:new A({cacheName:"google-fonts-webfonts",plugins:[new h({maxEntries:4,maxAgeSeconds:365*24*60*60,maxAgeFrom:"last-used"})]})},{matcher:/^https:\/\/fonts\.(?:googleapis)\.com\/.*/i,handler:new k({cacheName:"google-fonts-stylesheets",plugins:[new h({maxEntries:4,maxAgeSeconds:10080*60,maxAgeFrom:"last-used"})]})},{matcher:/\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i,handler:new k({cacheName:"static-font-assets",plugins:[new h({maxEntries:4,maxAgeSeconds:10080*60,maxAgeFrom:"last-used"})]})},{matcher:/\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i,handler:new k({cacheName:"static-image-assets",plugins:[new h({maxEntries:64,maxAgeSeconds:720*60*60,maxAgeFrom:"last-used"})]})},{matcher:/\/_next\/static.+\.js$/i,handler:new A({cacheName:"next-static-js-assets",plugins:[new h({maxEntries:64,maxAgeSeconds:1440*60,maxAgeFrom:"last-used"})]})},{matcher:/\/_next\/image\?url=.+$/i,handler:new k({cacheName:"next-image",plugins:[new h({maxEntries:64,maxAgeSeconds:1440*60,maxAgeFrom:"last-used"})]})},{matcher:/\.(?:mp3|wav|ogg)$/i,handler:new A({cacheName:"static-audio-assets",plugins:[new h({maxEntries:32,maxAgeSeconds:1440*60,maxAgeFrom:"last-used"}),new Z]})},{matcher:/\.(?:mp4|webm)$/i,handler:new A({cacheName:"static-video-assets",plugins:[new h({maxEntries:32,maxAgeSeconds:1440*60,maxAgeFrom:"last-used"}),new Z]})},{matcher:/\.(?:js)$/i,handler:new k({cacheName:"static-js-assets",plugins:[new h({maxEntries:48,maxAgeSeconds:1440*60,maxAgeFrom:"last-used"})]})},{matcher:/\.(?:css|less)$/i,handler:new k({cacheName:"static-style-assets",plugins:[new h({maxEntries:32,maxAgeSeconds:1440*60,maxAgeFrom:"last-used"})]})},{matcher:/\/_next\/data\/.+\/.+\.json$/i,handler:new p({cacheName:"next-data",plugins:[new h({maxEntries:32,maxAgeSeconds:1440*60,maxAgeFrom:"last-used"})]})},{matcher:/\.(?:json|xml|csv)$/i,handler:new p({cacheName:"static-data-assets",plugins:[new h({maxEntries:32,maxAgeSeconds:1440*60,maxAgeFrom:"last-used"})]})},{matcher:/\/api\/auth\/.*/,handler:new R({networkTimeoutSeconds:10})},{matcher:({sameOrigin:e,url:{pathname:t}})=>e&&t.startsWith("/api/"),method:"GET",handler:new p({cacheName:"apis",plugins:[new h({maxEntries:16,maxAgeSeconds:1440*60,maxAgeFrom:"last-used"})],networkTimeoutSeconds:10})},{matcher:({request:e,url:{pathname:t},sameOrigin:s})=>e.headers.get("RSC")==="1"&&e.headers.get("Next-Router-Prefetch")==="1"&&s&&!t.startsWith("/api/"),handler:new p({cacheName:ee.rscPrefetch,plugins:[new h({maxEntries:32,maxAgeSeconds:1440*60})]})},{matcher:({request:e,url:{pathname:t},sameOrigin:s})=>e.headers.get("RSC")==="1"&&s&&!t.startsWith("/api/"),handler:new p({cacheName:ee.rsc,plugins:[new h({maxEntries:32,maxAgeSeconds:1440*60})]})},{matcher:({request:e,url:{pathname:t},sameOrigin:s})=>e.headers.get("Content-Type")?.includes("text/html")&&s&&!t.startsWith("/api/"),handler:new p({cacheName:ee.html,plugins:[new h({maxEntries:32,maxAgeSeconds:1440*60})]})},{matcher:({url:{pathname:e},sameOrigin:t})=>t&&!e.startsWith("/api/"),handler:new p({cacheName:"others",plugins:[new h({maxEntries:32,maxAgeSeconds:1440*60})]})},{matcher:({sameOrigin:e})=>!e,handler:new p({cacheName:"cross-origin",plugins:[new h({maxEntries:32,maxAgeSeconds:3600})],networkTimeoutSeconds:10})},{matcher:/.*/i,method:"GET",handler:new R}];var Ct=[{matcher:({url:e})=>e.pathname.startsWith("/api/")||e.pathname.startsWith("/owner")||e.pathname.startsWith("/clinic")||e.pathname.startsWith("/admin")||e.pathname.startsWith("/caregiver"),handler:new R},...Ve],Tt=new Le({precacheEntries:w,skipWaiting:!0,clientsClaim:!0,navigationPreload:!0,runtimeCaching:Ct,fallbacks:{entries:[{url:"/offline",matcher({request:e}){return e.destination==="document"}}]}});Tt.addEventListeners();self.addEventListener("install",e=>{e.waitUntil(self.skipWaiting())});self.addEventListener("activate",e=>{e.waitUntil((async()=>{await self.clients.claim();let t=await self.caches.keys(),s=["apis","pages","pages-rsc","pages-rsc-prefetch","serwist-runtime"];await Promise.all(t.map(r=>s.some(n=>r.includes(n))?(console.info(`[sw] Purging sensitive cache: ${r}`),self.caches.delete(r)):Promise.resolve(!0)))})())});self.addEventListener("push",e=>{if(!e.data)return;let t;try{t=e.data.json()}catch{t={title:"Odi.Pet",body:e.data.text()}}let s=t.title??"Odi.Pet",r={body:t.body??"",icon:t.icon??"/icon-192.png",badge:t.badge??"/icon-192.png",tag:t.tag??`odi-${Date.now()}`,renotify:!0,data:{url:t.url??"/owner/notifications"}};e.waitUntil(self.registration.showNotification(s,r))});self.addEventListener("notificationclick",e=>{e.notification.close();let t=e.notification.data,s="/owner/notifications";try{let r=new URL(t?.url??s,self.location.origin);r.origin===self.location.origin&&(s=`${r.pathname}${r.search}${r.hash}`)}catch{}e.waitUntil(self.clients.matchAll({type:"window",includeUncontrolled:!0}).then(r=>{for(let n of r)if(n.url.includes(self.location.origin)&&"focus"in n)return n.navigate(s).then(()=>n.focus());return self.clients.openWindow(s)}))});
+// node_modules/serwist/dist/chunks/waitUntil-BHDx3Rgo.js
+var _cacheNameDetails = {
+  googleAnalytics: "googleAnalytics",
+  precache: "precache-v2",
+  prefix: "serwist",
+  runtime: "runtime",
+  suffix: typeof registration !== "undefined" ? registration.scope : ""
+};
+var _createCacheName = (cacheName) => {
+  return [
+    _cacheNameDetails.prefix,
+    cacheName,
+    _cacheNameDetails.suffix
+  ].filter((value) => value && value.length > 0).join("-");
+};
+var eachCacheNameDetail = (fn) => {
+  for (const key of Object.keys(_cacheNameDetails)) fn(key);
+};
+var cacheNames = {
+  updateDetails: (details) => {
+    eachCacheNameDetail((key) => {
+      const detail = details[key];
+      if (typeof detail === "string") _cacheNameDetails[key] = detail;
+    });
+  },
+  getGoogleAnalyticsName: (userCacheName) => {
+    return userCacheName || _createCacheName(_cacheNameDetails.googleAnalytics);
+  },
+  getPrecacheName: (userCacheName) => {
+    return userCacheName || _createCacheName(_cacheNameDetails.precache);
+  },
+  getPrefix: () => {
+    return _cacheNameDetails.prefix;
+  },
+  getRuntimeName: (userCacheName) => {
+    return userCacheName || _createCacheName(_cacheNameDetails.runtime);
+  },
+  getSuffix: () => {
+    return _cacheNameDetails.suffix;
+  }
+};
+var supportStatus;
+function canConstructResponseFromBodyStream() {
+  if (supportStatus === void 0) {
+    const testResponse = new Response("");
+    if ("body" in testResponse) try {
+      new Response(testResponse.body);
+      supportStatus = true;
+    } catch {
+      supportStatus = false;
+    }
+    supportStatus = false;
+  }
+  return supportStatus;
+}
+var messages = {
+  "invalid-value": ({ paramName, validValueDescription, value }) => {
+    if (!paramName || !validValueDescription) throw new Error(`Unexpected input to 'invalid-value' error.`);
+    return `The '${paramName}' parameter was given a value with an unexpected value. ${validValueDescription} Received a value of ${JSON.stringify(value)}.`;
+  },
+  "not-an-array": ({ moduleName, className, funcName, paramName }) => {
+    if (!moduleName || !className || !funcName || !paramName) throw new Error(`Unexpected input to 'not-an-array' error.`);
+    return `The parameter '${paramName}' passed into '${moduleName}.${className}.${funcName}()' must be an array.`;
+  },
+  "incorrect-type": ({ expectedType, paramName, moduleName, className, funcName }) => {
+    if (!expectedType || !paramName || !moduleName || !funcName) throw new Error(`Unexpected input to 'incorrect-type' error.`);
+    return `The parameter '${paramName}' passed into '${moduleName}.${className ? `${className}.` : ""}${funcName}()' must be of type ${expectedType}.`;
+  },
+  "incorrect-class": ({ expectedClassName, paramName, moduleName, className, funcName, isReturnValueProblem }) => {
+    if (!expectedClassName || !moduleName || !funcName) throw new Error(`Unexpected input to 'incorrect-class' error.`);
+    const classNameStr = className ? `${className}.` : "";
+    if (isReturnValueProblem) return `The return value from '${moduleName}.${classNameStr}${funcName}()' must be an instance of class ${expectedClassName}.`;
+    return `The parameter '${paramName}' passed into '${moduleName}.${classNameStr}${funcName}()' must be an instance of class ${expectedClassName}.`;
+  },
+  "missing-a-method": ({ expectedMethod, paramName, moduleName, className, funcName }) => {
+    if (!expectedMethod || !paramName || !moduleName || !className || !funcName) throw new Error(`Unexpected input to 'missing-a-method' error.`);
+    return `${moduleName}.${className}.${funcName}() expected the '${paramName}' parameter to expose a '${expectedMethod}' method.`;
+  },
+  "add-to-cache-list-unexpected-type": ({ entry }) => {
+    return `An unexpected entry was passed to 'serwist.Serwist.addToPrecacheList()' The entry '${JSON.stringify(entry)}' isn't supported. You must supply an array of strings with one or more characters, objects with a url property or Request objects.`;
+  },
+  "add-to-cache-list-conflicting-entries": ({ firstEntry, secondEntry }) => {
+    if (!firstEntry || !secondEntry) throw new Error("Unexpected input to 'add-to-cache-list-duplicate-entries' error.");
+    return `Two of the entries passed to 'serwist.Serwist.addToPrecacheList()' had the URL ${firstEntry} but different revision details. Serwist is unable to cache and version the asset correctly. Please remove one of the entries.`;
+  },
+  "plugin-error-request-will-fetch": ({ thrownErrorMessage }) => {
+    if (!thrownErrorMessage) throw new Error("Unexpected input to 'plugin-error-request-will-fetch', error.");
+    return `An error was thrown by a plugin's 'requestWillFetch()' method. The thrown error message was: '${thrownErrorMessage}'.`;
+  },
+  "invalid-cache-name": ({ cacheNameId, value }) => {
+    if (!cacheNameId) throw new Error(`Expected a 'cacheNameId' for error 'invalid-cache-name'`);
+    return `You must provide a name containing at least one character for setCacheDetails({${cacheNameId}: '...'}). Received a value of '${JSON.stringify(value)}'`;
+  },
+  "unregister-route-but-not-found-with-method": ({ method }) => {
+    if (!method) throw new Error("Unexpected input to 'unregister-route-but-not-found-with-method' error.");
+    return `The route you're trying to unregister was not  previously registered for the method type '${method}'.`;
+  },
+  "unregister-route-route-not-registered": () => {
+    return "The route you're trying to unregister was not previously registered.";
+  },
+  "queue-replay-failed": ({ name }) => {
+    return `Replaying the background sync queue '${name}' failed.`;
+  },
+  "duplicate-queue-name": ({ name }) => {
+    return `The queue name '${name}' is already being used. All instances of 'serwist.BackgroundSyncQueue' must be given unique names.`;
+  },
+  "expired-test-without-max-age": ({ methodName, paramName }) => {
+    return `The '${methodName}()' method can only be used when the '${paramName}' is used in the constructor.`;
+  },
+  "unsupported-route-type": ({ moduleName, className, funcName, paramName }) => {
+    return `The supplied '${paramName}' parameter was an unsupported type. Please check the docs for ${moduleName}.${className}.${funcName} for valid input types.`;
+  },
+  "not-array-of-class": ({ value, expectedClass, moduleName, className, funcName, paramName }) => {
+    return `The supplied '${paramName}' parameter must be an array of '${expectedClass}' objects. Received '${JSON.stringify(value)},'. Please check the call to ${moduleName}.${className}.${funcName}() to fix the issue.`;
+  },
+  "max-entries-or-age-required": ({ moduleName, className, funcName }) => {
+    return `You must define either 'config.maxEntries' or 'config.maxAgeSeconds' in '${moduleName}.${className}.${funcName}'`;
+  },
+  "statuses-or-headers-required": ({ moduleName, className, funcName }) => {
+    return `You must define either 'config.statuses' or 'config.headers' in '${moduleName}.${className}.${funcName}'`;
+  },
+  "invalid-string": ({ moduleName, funcName, paramName }) => {
+    if (!paramName || !moduleName || !funcName) throw new Error(`Unexpected input to 'invalid-string' error.`);
+    return `When using strings, the '${paramName}' parameter must start with 'http' (for cross-origin matches) or '/' (for same-origin matches). Please see the docs for ${moduleName}.${funcName}() for more info.`;
+  },
+  "channel-name-required": () => {
+    return "You must provide a channelName to construct a BroadcastCacheUpdate instance.";
+  },
+  "invalid-responses-are-same-args": () => {
+    return "The arguments passed into responsesAreSame() appear to be invalid. Please ensure valid Responses are used.";
+  },
+  "expire-custom-caches-only": () => {
+    return "You must provide a 'cacheName' property when using the expiration plugin with a runtime caching strategy.";
+  },
+  "unit-must-be-bytes": ({ normalizedRangeHeader }) => {
+    if (!normalizedRangeHeader) throw new Error(`Unexpected input to 'unit-must-be-bytes' error.`);
+    return `The 'unit' portion of the Range header must be set to 'bytes'. The Range header provided was "${normalizedRangeHeader}"`;
+  },
+  "single-range-only": ({ normalizedRangeHeader }) => {
+    if (!normalizedRangeHeader) throw new Error(`Unexpected input to 'single-range-only' error.`);
+    return `Multiple ranges are not supported. Please use a  single start value, and optional end value. The Range header provided was "${normalizedRangeHeader}"`;
+  },
+  "invalid-range-values": ({ normalizedRangeHeader }) => {
+    if (!normalizedRangeHeader) throw new Error(`Unexpected input to 'invalid-range-values' error.`);
+    return `The Range header is missing both start and end values. At least one of those values is needed. The Range header provided was "${normalizedRangeHeader}"`;
+  },
+  "no-range-header": () => {
+    return "No Range header was found in the Request provided.";
+  },
+  "range-not-satisfiable": ({ size, start, end }) => {
+    return `The start (${start}) and end (${end}) values in the Range are not satisfiable by the cached response, which is ${size} bytes.`;
+  },
+  "attempt-to-cache-non-get-request": ({ url, method }) => {
+    return `Unable to cache '${url}' because it is a '${method}' request and only 'GET' requests can be cached.`;
+  },
+  "cache-put-with-no-response": ({ url }) => {
+    return `There was an attempt to cache '${url}' but the response was not defined.`;
+  },
+  "no-response": ({ url, error }) => {
+    let message = `The strategy could not generate a response for '${url}'.`;
+    if (error) message += ` The underlying error is ${error}.`;
+    return message;
+  },
+  "bad-precaching-response": ({ url, status }) => {
+    return `The precaching request for '${url}' failed${status ? ` with an HTTP status of ${status}.` : "."}`;
+  },
+  "non-precached-url": ({ url }) => {
+    return `'createHandlerBoundToURL("${url}")' was called, but that URL is not precached. Please pass in a URL that is precached instead.`;
+  },
+  "add-to-cache-list-conflicting-integrities": ({ url }) => {
+    return `Two of the entries passed to 'serwist.Serwist.addToPrecacheList()' had the URL ${url} with different integrity values. Please remove one of them.`;
+  },
+  "missing-precache-entry": ({ cacheName, url }) => {
+    return `Unable to find a precached response in ${cacheName} for ${url}.`;
+  },
+  "cross-origin-copy-response": ({ origin }) => {
+    return `'@serwist/core.copyResponse()' can only be used with same-origin responses. It was passed a response with origin ${origin}.`;
+  },
+  "opaque-streams-source": ({ type }) => {
+    const message = `One of the '@serwist/streams' sources resulted in an '${type}' response.`;
+    if (type === "opaqueredirect") return `${message} Please do not use a navigation request that results in a redirect as a source.`;
+    return `${message} Please ensure your sources are CORS-enabled.`;
+  }
+};
+var generatorFunction = (code, details = {}) => {
+  const message = messages[code];
+  if (!message) throw new Error(`Unable to find message for code '${code}'.`);
+  return message(details);
+};
+var messageGenerator = false ? fallback : generatorFunction;
+var SerwistError = class extends Error {
+  details;
+  /**
+  *
+  * @param errorCode The error code that
+  * identifies this particular error.
+  * @param details Any relevant arguments
+  * that will help developers identify issues should
+  * be added as a key on the context object.
+  */
+  constructor(errorCode, details) {
+    const message = messageGenerator(errorCode, details);
+    super(message);
+    this.name = errorCode;
+    this.details = details;
+  }
+};
+var isArray = (value, details) => {
+  if (!Array.isArray(value)) throw new SerwistError("not-an-array", details);
+};
+var hasMethod = (object, expectedMethod, details) => {
+  if (typeof object[expectedMethod] !== "function") {
+    details.expectedMethod = expectedMethod;
+    throw new SerwistError("missing-a-method", details);
+  }
+};
+var isType = (object, expectedType, details) => {
+  if (typeof object !== expectedType) {
+    details.expectedType = expectedType;
+    throw new SerwistError("incorrect-type", details);
+  }
+};
+var isInstance = (object, expectedClass, details) => {
+  if (!(object instanceof expectedClass)) {
+    details.expectedClassName = expectedClass.name;
+    throw new SerwistError("incorrect-class", details);
+  }
+};
+var isOneOf = (value, validValues, details) => {
+  if (!validValues.includes(value)) {
+    details.validValueDescription = `Valid values are ${JSON.stringify(validValues)}.`;
+    throw new SerwistError("invalid-value", details);
+  }
+};
+var isArrayOfClass = (value, expectedClass, details) => {
+  const error = new SerwistError("not-array-of-class", details);
+  if (!Array.isArray(value)) throw error;
+  for (const item of value) if (!(item instanceof expectedClass)) throw error;
+};
+var finalAssertExports = false ? null : {
+  hasMethod,
+  isArray,
+  isInstance,
+  isOneOf,
+  isType,
+  isArrayOfClass
+};
+var getFriendlyURL = (url) => {
+  return new URL(String(url), location.href).href.replace(new RegExp(`^${location.origin}`), "");
+};
+var logger = typeof self === "undefined" ? null : (() => {
+  if (!("__WB_DISABLE_DEV_LOGS" in globalThis)) self.__WB_DISABLE_DEV_LOGS = false;
+  let inGroup = false;
+  const methodToColorMap = {
+    debug: "#7f8c8d",
+    log: "#2ecc71",
+    warn: "#f39c12",
+    error: "#c0392b",
+    groupCollapsed: "#3498db",
+    groupEnd: null
+  };
+  const print = (method, args) => {
+    if (self.__WB_DISABLE_DEV_LOGS) return;
+    if (method === "groupCollapsed") {
+      if (typeof navigator !== "undefined" && /^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
+        console[method](...args);
+        return;
+      }
+    }
+    const styles = [
+      `background: ${methodToColorMap[method]}`,
+      "border-radius: 0.5em",
+      "color: white",
+      "font-weight: bold",
+      "padding: 2px 0.5em"
+    ];
+    const logPrefix = inGroup ? [] : ["%cserwist", styles.join(";")];
+    console[method](...logPrefix, ...args);
+    if (method === "groupCollapsed") inGroup = true;
+    if (method === "groupEnd") inGroup = false;
+  };
+  return Object.keys(methodToColorMap).reduce((api, method) => {
+    api[method] = (...args) => {
+      print(method, args);
+    };
+    return api;
+  }, {});
+})();
+function timeout(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+var quotaErrorCallbacks = /* @__PURE__ */ new Set();
+function stripParams(fullURL, ignoreParams) {
+  const strippedURL = new URL(fullURL);
+  for (const param of ignoreParams) strippedURL.searchParams.delete(param);
+  return strippedURL.href;
+}
+async function cacheMatchIgnoreParams(cache, request, ignoreParams, matchOptions) {
+  const strippedRequestURL = stripParams(request.url, ignoreParams);
+  if (request.url === strippedRequestURL) return cache.match(request, matchOptions);
+  const keysOptions = {
+    ...matchOptions,
+    ignoreSearch: true
+  };
+  const cacheKeys = await cache.keys(request, keysOptions);
+  for (const cacheKey of cacheKeys) if (strippedRequestURL === stripParams(cacheKey.url, ignoreParams)) return cache.match(cacheKey, matchOptions);
+}
+var Deferred = class {
+  promise;
+  resolve;
+  reject;
+  /**
+  * Creates a promise and exposes its resolve and reject functions as methods.
+  */
+  constructor() {
+    this.promise = new Promise((resolve, reject) => {
+      this.resolve = resolve;
+      this.reject = reject;
+    });
+  }
+};
+var executeQuotaErrorCallbacks = async () => {
+  if (true) logger.log(`About to run ${quotaErrorCallbacks.size} callbacks to clean up caches.`);
+  for (const callback of quotaErrorCallbacks) {
+    await callback();
+    if (true) logger.log(callback, "is complete.");
+  }
+  if (true) logger.log("Finished running callbacks.");
+};
+var SUBSTRING_TO_FIND = "-precache-";
+var deleteOutdatedCaches = async (currentPrecacheName, substringToFind = SUBSTRING_TO_FIND) => {
+  const cacheNamesToDelete = (await self.caches.keys()).filter((cacheName) => {
+    return cacheName.includes(substringToFind) && cacheName.includes(self.registration.scope) && cacheName !== currentPrecacheName;
+  });
+  await Promise.all(cacheNamesToDelete.map((cacheName) => self.caches.delete(cacheName)));
+  return cacheNamesToDelete;
+};
+var cleanupOutdatedCaches = (cacheName) => {
+  self.addEventListener("activate", (event) => {
+    event.waitUntil(deleteOutdatedCaches(cacheNames.getPrecacheName(cacheName)).then((cachesDeleted) => {
+      if (true) {
+        if (cachesDeleted.length > 0) logger.log("The following out-of-date precaches were cleaned up automatically:", cachesDeleted);
+      }
+    }));
+  });
+};
+var clientsClaim = () => {
+  self.addEventListener("activate", () => self.clients.claim());
+};
+var waitUntil = (event, asyncFn) => {
+  const returnPromise = asyncFn();
+  event.waitUntil(returnPromise);
+  return returnPromise;
+};
+
+// node_modules/idb/build/index.js
+var instanceOfAny = (object, constructors) => constructors.some((c) => object instanceof c);
+var idbProxyableTypes;
+var cursorAdvanceMethods;
+function getIdbProxyableTypes() {
+  return idbProxyableTypes || (idbProxyableTypes = [
+    IDBDatabase,
+    IDBObjectStore,
+    IDBIndex,
+    IDBCursor,
+    IDBTransaction
+  ]);
+}
+function getCursorAdvanceMethods() {
+  return cursorAdvanceMethods || (cursorAdvanceMethods = [
+    IDBCursor.prototype.advance,
+    IDBCursor.prototype.continue,
+    IDBCursor.prototype.continuePrimaryKey
+  ]);
+}
+var transactionDoneMap = /* @__PURE__ */ new WeakMap();
+var transformCache = /* @__PURE__ */ new WeakMap();
+var reverseTransformCache = /* @__PURE__ */ new WeakMap();
+function promisifyRequest(request) {
+  const promise = new Promise((resolve, reject) => {
+    const unlisten = () => {
+      request.removeEventListener("success", success);
+      request.removeEventListener("error", error);
+    };
+    const success = () => {
+      resolve(wrap(request.result));
+      unlisten();
+    };
+    const error = () => {
+      reject(request.error);
+      unlisten();
+    };
+    request.addEventListener("success", success);
+    request.addEventListener("error", error);
+  });
+  reverseTransformCache.set(promise, request);
+  return promise;
+}
+function cacheDonePromiseForTransaction(tx) {
+  if (transactionDoneMap.has(tx))
+    return;
+  const done = new Promise((resolve, reject) => {
+    const unlisten = () => {
+      tx.removeEventListener("complete", complete);
+      tx.removeEventListener("error", error);
+      tx.removeEventListener("abort", error);
+    };
+    const complete = () => {
+      resolve();
+      unlisten();
+    };
+    const error = () => {
+      reject(tx.error || new DOMException("AbortError", "AbortError"));
+      unlisten();
+    };
+    tx.addEventListener("complete", complete);
+    tx.addEventListener("error", error);
+    tx.addEventListener("abort", error);
+  });
+  transactionDoneMap.set(tx, done);
+}
+var idbProxyTraps = {
+  get(target, prop, receiver) {
+    if (target instanceof IDBTransaction) {
+      if (prop === "done")
+        return transactionDoneMap.get(target);
+      if (prop === "store") {
+        return receiver.objectStoreNames[1] ? void 0 : receiver.objectStore(receiver.objectStoreNames[0]);
+      }
+    }
+    return wrap(target[prop]);
+  },
+  set(target, prop, value) {
+    target[prop] = value;
+    return true;
+  },
+  has(target, prop) {
+    if (target instanceof IDBTransaction && (prop === "done" || prop === "store")) {
+      return true;
+    }
+    return prop in target;
+  }
+};
+function replaceTraps(callback) {
+  idbProxyTraps = callback(idbProxyTraps);
+}
+function wrapFunction(func) {
+  if (getCursorAdvanceMethods().includes(func)) {
+    return function(...args) {
+      func.apply(unwrap(this), args);
+      return wrap(this.request);
+    };
+  }
+  return function(...args) {
+    return wrap(func.apply(unwrap(this), args));
+  };
+}
+function transformCachableValue(value) {
+  if (typeof value === "function")
+    return wrapFunction(value);
+  if (value instanceof IDBTransaction)
+    cacheDonePromiseForTransaction(value);
+  if (instanceOfAny(value, getIdbProxyableTypes()))
+    return new Proxy(value, idbProxyTraps);
+  return value;
+}
+function wrap(value) {
+  if (value instanceof IDBRequest)
+    return promisifyRequest(value);
+  if (transformCache.has(value))
+    return transformCache.get(value);
+  const newValue = transformCachableValue(value);
+  if (newValue !== value) {
+    transformCache.set(value, newValue);
+    reverseTransformCache.set(newValue, value);
+  }
+  return newValue;
+}
+var unwrap = (value) => reverseTransformCache.get(value);
+function openDB(name, version, { blocked, upgrade, blocking, terminated } = {}) {
+  const request = indexedDB.open(name, version);
+  const openPromise = wrap(request);
+  if (upgrade) {
+    request.addEventListener("upgradeneeded", (event) => {
+      upgrade(wrap(request.result), event.oldVersion, event.newVersion, wrap(request.transaction), event);
+    });
+  }
+  if (blocked) {
+    request.addEventListener("blocked", (event) => blocked(
+      // Casting due to https://github.com/microsoft/TypeScript-DOM-lib-generator/pull/1405
+      event.oldVersion,
+      event.newVersion,
+      event
+    ));
+  }
+  openPromise.then((db) => {
+    if (terminated)
+      db.addEventListener("close", () => terminated());
+    if (blocking) {
+      db.addEventListener("versionchange", (event) => blocking(event.oldVersion, event.newVersion, event));
+    }
+  }).catch(() => {
+  });
+  return openPromise;
+}
+var readMethods = ["get", "getKey", "getAll", "getAllKeys", "count"];
+var writeMethods = ["put", "add", "delete", "clear"];
+var cachedMethods = /* @__PURE__ */ new Map();
+function getMethod(target, prop) {
+  if (!(target instanceof IDBDatabase && !(prop in target) && typeof prop === "string")) {
+    return;
+  }
+  if (cachedMethods.get(prop))
+    return cachedMethods.get(prop);
+  const targetFuncName = prop.replace(/FromIndex$/, "");
+  const useIndex = prop !== targetFuncName;
+  const isWrite = writeMethods.includes(targetFuncName);
+  if (
+    // Bail if the target doesn't exist on the target. Eg, getAll isn't in Edge.
+    !(targetFuncName in (useIndex ? IDBIndex : IDBObjectStore).prototype) || !(isWrite || readMethods.includes(targetFuncName))
+  ) {
+    return;
+  }
+  const method = async function(storeName, ...args) {
+    const tx = this.transaction(storeName, isWrite ? "readwrite" : "readonly");
+    let target2 = tx.store;
+    if (useIndex)
+      target2 = target2.index(args.shift());
+    return (await Promise.all([
+      target2[targetFuncName](...args),
+      isWrite && tx.done
+    ]))[0];
+  };
+  cachedMethods.set(prop, method);
+  return method;
+}
+replaceTraps((oldTraps) => ({
+  ...oldTraps,
+  get: (target, prop, receiver) => getMethod(target, prop) || oldTraps.get(target, prop, receiver),
+  has: (target, prop) => !!getMethod(target, prop) || oldTraps.has(target, prop)
+}));
+var advanceMethodProps = ["continue", "continuePrimaryKey", "advance"];
+var methodMap = {};
+var advanceResults = /* @__PURE__ */ new WeakMap();
+var ittrProxiedCursorToOriginalProxy = /* @__PURE__ */ new WeakMap();
+var cursorIteratorTraps = {
+  get(target, prop) {
+    if (!advanceMethodProps.includes(prop))
+      return target[prop];
+    let cachedFunc = methodMap[prop];
+    if (!cachedFunc) {
+      cachedFunc = methodMap[prop] = function(...args) {
+        advanceResults.set(this, ittrProxiedCursorToOriginalProxy.get(this)[prop](...args));
+      };
+    }
+    return cachedFunc;
+  }
+};
+async function* iterate(...args) {
+  let cursor = this;
+  if (!(cursor instanceof IDBCursor)) {
+    cursor = await cursor.openCursor(...args);
+  }
+  if (!cursor)
+    return;
+  cursor = cursor;
+  const proxiedCursor = new Proxy(cursor, cursorIteratorTraps);
+  ittrProxiedCursorToOriginalProxy.set(proxiedCursor, cursor);
+  reverseTransformCache.set(proxiedCursor, unwrap(cursor));
+  while (cursor) {
+    yield proxiedCursor;
+    cursor = await (advanceResults.get(proxiedCursor) || cursor.continue());
+    advanceResults.delete(proxiedCursor);
+  }
+}
+function isIteratorProp(target, prop) {
+  return prop === Symbol.asyncIterator && instanceOfAny(target, [IDBIndex, IDBObjectStore, IDBCursor]) || prop === "iterate" && instanceOfAny(target, [IDBIndex, IDBObjectStore]);
+}
+replaceTraps((oldTraps) => ({
+  ...oldTraps,
+  get(target, prop, receiver) {
+    if (isIteratorProp(target, prop))
+      return iterate;
+    return oldTraps.get(target, prop, receiver);
+  },
+  has(target, prop) {
+    return isIteratorProp(target, prop) || oldTraps.has(target, prop);
+  }
+}));
+
+// node_modules/serwist/dist/chunks/printInstallDetails-c9A08ZVZ.js
+var copyResponse = async (response, modifier) => {
+  let origin = null;
+  if (response.url) origin = new URL(response.url).origin;
+  if (origin !== self.location.origin) throw new SerwistError("cross-origin-copy-response", { origin });
+  const clonedResponse = response.clone();
+  const responseInit = {
+    headers: new Headers(clonedResponse.headers),
+    status: clonedResponse.status,
+    statusText: clonedResponse.statusText
+  };
+  const modifiedResponseInit = modifier ? modifier(responseInit) : responseInit;
+  const body = canConstructResponseFromBodyStream() ? clonedResponse.body : await clonedResponse.blob();
+  return new Response(body, modifiedResponseInit);
+};
+var disableDevLogs = () => {
+  self.__WB_DISABLE_DEV_LOGS = true;
+};
+var BACKGROUND_SYNC_DB_VERSION = 3;
+var BACKGROUND_SYNC_DB_NAME = "serwist-background-sync";
+var REQUEST_OBJECT_STORE_NAME = "requests";
+var QUEUE_NAME_INDEX = "queueName";
+var BackgroundSyncQueueDb = class {
+  _db = null;
+  /**
+  * Add QueueStoreEntry to underlying db.
+  *
+  * @param entry
+  */
+  async addEntry(entry) {
+    const tx = (await this.getDb()).transaction(REQUEST_OBJECT_STORE_NAME, "readwrite", { durability: "relaxed" });
+    await tx.store.add(entry);
+    await tx.done;
+  }
+  /**
+  * Returns the first entry id in the ObjectStore.
+  *
+  * @returns
+  */
+  async getFirstEntryId() {
+    return (await (await this.getDb()).transaction(REQUEST_OBJECT_STORE_NAME).store.openCursor())?.value.id;
+  }
+  /**
+  * Get all the entries filtered by index
+  *
+  * @param queueName
+  * @returns
+  */
+  async getAllEntriesByQueueName(queueName) {
+    const results = await (await this.getDb()).getAllFromIndex(REQUEST_OBJECT_STORE_NAME, QUEUE_NAME_INDEX, IDBKeyRange.only(queueName));
+    return results ? results : [];
+  }
+  /**
+  * Returns the number of entries filtered by index
+  *
+  * @param queueName
+  * @returns
+  */
+  async getEntryCountByQueueName(queueName) {
+    return (await this.getDb()).countFromIndex(REQUEST_OBJECT_STORE_NAME, QUEUE_NAME_INDEX, IDBKeyRange.only(queueName));
+  }
+  /**
+  * Deletes a single entry by id.
+  *
+  * @param id the id of the entry to be deleted
+  */
+  async deleteEntry(id) {
+    await (await this.getDb()).delete(REQUEST_OBJECT_STORE_NAME, id);
+  }
+  /**
+  *
+  * @param queueName
+  * @returns
+  */
+  async getFirstEntryByQueueName(queueName) {
+    return await this.getEndEntryFromIndex(IDBKeyRange.only(queueName), "next");
+  }
+  /**
+  *
+  * @param queueName
+  * @returns
+  */
+  async getLastEntryByQueueName(queueName) {
+    return await this.getEndEntryFromIndex(IDBKeyRange.only(queueName), "prev");
+  }
+  /**
+  * Returns either the first or the last entries, depending on direction.
+  * Filtered by index.
+  *
+  * @param direction
+  * @param query
+  * @returns
+  * @private
+  */
+  async getEndEntryFromIndex(query, direction) {
+    return (await (await this.getDb()).transaction(REQUEST_OBJECT_STORE_NAME).store.index(QUEUE_NAME_INDEX).openCursor(query, direction))?.value;
+  }
+  /**
+  * Returns an open connection to the database.
+  *
+  * @private
+  */
+  async getDb() {
+    if (!this._db) this._db = await openDB(BACKGROUND_SYNC_DB_NAME, BACKGROUND_SYNC_DB_VERSION, { upgrade: this._upgradeDb });
+    return this._db;
+  }
+  /**
+  * Upgrades QueueDB
+  *
+  * @param db
+  * @param oldVersion
+  * @private
+  */
+  _upgradeDb(db, oldVersion) {
+    if (oldVersion > 0 && oldVersion < BACKGROUND_SYNC_DB_VERSION) {
+      if (db.objectStoreNames.contains(REQUEST_OBJECT_STORE_NAME)) db.deleteObjectStore(REQUEST_OBJECT_STORE_NAME);
+    }
+    db.createObjectStore(REQUEST_OBJECT_STORE_NAME, {
+      autoIncrement: true,
+      keyPath: "id"
+    }).createIndex(QUEUE_NAME_INDEX, QUEUE_NAME_INDEX, { unique: false });
+  }
+};
+var BackgroundSyncQueueStore = class {
+  _queueName;
+  _queueDb;
+  /**
+  * Associates this instance with a Queue instance, so entries added can be
+  * identified by their queue name.
+  *
+  * @param queueName
+  */
+  constructor(queueName) {
+    this._queueName = queueName;
+    this._queueDb = new BackgroundSyncQueueDb();
+  }
+  /**
+  * Append an entry last in the queue.
+  *
+  * @param entry
+  */
+  async pushEntry(entry) {
+    if (true) {
+      finalAssertExports.isType(entry, "object", {
+        moduleName: "serwist",
+        className: "BackgroundSyncQueueStore",
+        funcName: "pushEntry",
+        paramName: "entry"
+      });
+      finalAssertExports.isType(entry.requestData, "object", {
+        moduleName: "serwist",
+        className: "BackgroundSyncQueueStore",
+        funcName: "pushEntry",
+        paramName: "entry.requestData"
+      });
+    }
+    delete entry.id;
+    entry.queueName = this._queueName;
+    await this._queueDb.addEntry(entry);
+  }
+  /**
+  * Prepend an entry first in the queue.
+  *
+  * @param entry
+  */
+  async unshiftEntry(entry) {
+    if (true) {
+      finalAssertExports.isType(entry, "object", {
+        moduleName: "serwist",
+        className: "BackgroundSyncQueueStore",
+        funcName: "unshiftEntry",
+        paramName: "entry"
+      });
+      finalAssertExports.isType(entry.requestData, "object", {
+        moduleName: "serwist",
+        className: "BackgroundSyncQueueStore",
+        funcName: "unshiftEntry",
+        paramName: "entry.requestData"
+      });
+    }
+    const firstId = await this._queueDb.getFirstEntryId();
+    if (firstId) entry.id = firstId - 1;
+    else delete entry.id;
+    entry.queueName = this._queueName;
+    await this._queueDb.addEntry(entry);
+  }
+  /**
+  * Removes and returns the last entry in the queue matching the `queueName`.
+  *
+  * @returns
+  */
+  async popEntry() {
+    return this._removeEntry(await this._queueDb.getLastEntryByQueueName(this._queueName));
+  }
+  /**
+  * Removes and returns the first entry in the queue matching the `queueName`.
+  *
+  * @returns
+  */
+  async shiftEntry() {
+    return this._removeEntry(await this._queueDb.getFirstEntryByQueueName(this._queueName));
+  }
+  /**
+  * Returns all entries in the store matching the `queueName`.
+  *
+  * @returns
+  */
+  async getAll() {
+    return await this._queueDb.getAllEntriesByQueueName(this._queueName);
+  }
+  /**
+  * Returns the number of entries in the store matching the `queueName`.
+  *
+  * @returns
+  */
+  async size() {
+    return await this._queueDb.getEntryCountByQueueName(this._queueName);
+  }
+  /**
+  * Deletes the entry for the given ID.
+  *
+  * WARNING: this method does not ensure the deleted entry belongs to this
+  * queue (i.e. matches the `queueName`). But this limitation is acceptable
+  * as this class is not publicly exposed. An additional check would make
+  * this method slower than it needs to be.
+  *
+  * @param id
+  */
+  async deleteEntry(id) {
+    await this._queueDb.deleteEntry(id);
+  }
+  /**
+  * Removes and returns the first or last entry in the queue (based on the
+  * `direction` argument) matching the `queueName`.
+  *
+  * @returns
+  * @private
+  */
+  async _removeEntry(entry) {
+    if (entry) await this.deleteEntry(entry.id);
+    return entry;
+  }
+};
+var serializableProperties = [
+  "method",
+  "referrer",
+  "referrerPolicy",
+  "mode",
+  "credentials",
+  "cache",
+  "redirect",
+  "integrity",
+  "keepalive"
+];
+var StorableRequest = class StorableRequest2 {
+  _requestData;
+  /**
+  * Converts a Request object to a plain object that can be structured
+  * cloned or stringified to JSON.
+  *
+  * @param request
+  * @returns
+  */
+  static async fromRequest(request) {
+    const requestData = {
+      url: request.url,
+      headers: {}
+    };
+    if (request.method !== "GET") requestData.body = await request.clone().arrayBuffer();
+    request.headers.forEach((value, key) => {
+      requestData.headers[key] = value;
+    });
+    for (const prop of serializableProperties) if (request[prop] !== void 0) requestData[prop] = request[prop];
+    return new StorableRequest2(requestData);
+  }
+  /**
+  * Accepts an object of request data that can be used to construct a
+  * `Request` object but can also be stored in IndexedDB.
+  *
+  * @param requestData An object of request data that includes the `url` plus any relevant property of
+  * [`requestInit`](https://fetch.spec.whatwg.org/#requestinit).
+  */
+  constructor(requestData) {
+    if (true) {
+      finalAssertExports.isType(requestData, "object", {
+        moduleName: "serwist",
+        className: "StorableRequest",
+        funcName: "constructor",
+        paramName: "requestData"
+      });
+      finalAssertExports.isType(requestData.url, "string", {
+        moduleName: "serwist",
+        className: "StorableRequest",
+        funcName: "constructor",
+        paramName: "requestData.url"
+      });
+    }
+    if (requestData.mode === "navigate") requestData.mode = "same-origin";
+    this._requestData = requestData;
+  }
+  /**
+  * Returns a deep clone of the instance's `requestData` object.
+  *
+  * @returns
+  */
+  toObject() {
+    const requestData = Object.assign({}, this._requestData);
+    requestData.headers = Object.assign({}, this._requestData.headers);
+    if (requestData.body) requestData.body = requestData.body.slice(0);
+    return requestData;
+  }
+  /**
+  * Converts this instance to a Request.
+  *
+  * @returns
+  */
+  toRequest() {
+    return new Request(this._requestData.url, this._requestData);
+  }
+  /**
+  * Creates and returns a deep clone of the instance.
+  *
+  * @returns
+  */
+  clone() {
+    return new StorableRequest2(this.toObject());
+  }
+};
+var TAG_PREFIX = "serwist-background-sync";
+var MAX_RETENTION_TIME = 1440 * 7;
+var queueNames = /* @__PURE__ */ new Set();
+var convertEntry = (queueStoreEntry) => {
+  const queueEntry = {
+    request: new StorableRequest(queueStoreEntry.requestData).toRequest(),
+    timestamp: queueStoreEntry.timestamp
+  };
+  if (queueStoreEntry.metadata) queueEntry.metadata = queueStoreEntry.metadata;
+  return queueEntry;
+};
+var BackgroundSyncQueue = class {
+  _name;
+  _onSync;
+  _maxRetentionTime;
+  _queueStore;
+  _forceSyncFallback;
+  _syncInProgress = false;
+  _requestsAddedDuringSync = false;
+  /**
+  * Creates an instance of Queue with the given options
+  *
+  * @param name The unique name for this queue. This name must be
+  * unique as it's used to register sync events and store requests
+  * in IndexedDB specific to this instance. An error will be thrown if
+  * a duplicate name is detected.
+  * @param options
+  */
+  constructor(name, { forceSyncFallback, onSync, maxRetentionTime } = {}) {
+    if (queueNames.has(name)) throw new SerwistError("duplicate-queue-name", { name });
+    queueNames.add(name);
+    this._name = name;
+    this._onSync = onSync || this.replayRequests;
+    this._maxRetentionTime = maxRetentionTime || MAX_RETENTION_TIME;
+    this._forceSyncFallback = Boolean(forceSyncFallback);
+    this._queueStore = new BackgroundSyncQueueStore(this._name);
+    this._addSyncListener();
+  }
+  /**
+  * @returns
+  */
+  get name() {
+    return this._name;
+  }
+  /**
+  * Stores the passed request in IndexedDB (with its timestamp and any
+  * metadata) at the end of the queue.
+  *
+  * @param entry
+  */
+  async pushRequest(entry) {
+    if (true) {
+      finalAssertExports.isType(entry, "object", {
+        moduleName: "serwist",
+        className: "BackgroundSyncQueue",
+        funcName: "pushRequest",
+        paramName: "entry"
+      });
+      finalAssertExports.isInstance(entry.request, Request, {
+        moduleName: "serwist",
+        className: "BackgroundSyncQueue",
+        funcName: "pushRequest",
+        paramName: "entry.request"
+      });
+    }
+    await this._addRequest(entry, "push");
+  }
+  /**
+  * Stores the passed request in IndexedDB (with its timestamp and any
+  * metadata) at the beginning of the queue.
+  *
+  * @param entry
+  */
+  async unshiftRequest(entry) {
+    if (true) {
+      finalAssertExports.isType(entry, "object", {
+        moduleName: "serwist",
+        className: "BackgroundSyncQueue",
+        funcName: "unshiftRequest",
+        paramName: "entry"
+      });
+      finalAssertExports.isInstance(entry.request, Request, {
+        moduleName: "serwist",
+        className: "BackgroundSyncQueue",
+        funcName: "unshiftRequest",
+        paramName: "entry.request"
+      });
+    }
+    await this._addRequest(entry, "unshift");
+  }
+  /**
+  * Removes and returns the last request in the queue (along with its
+  * timestamp and any metadata).
+  *
+  * @returns
+  */
+  async popRequest() {
+    return this._removeRequest("pop");
+  }
+  /**
+  * Removes and returns the first request in the queue (along with its
+  * timestamp and any metadata).
+  *
+  * @returns
+  */
+  async shiftRequest() {
+    return this._removeRequest("shift");
+  }
+  /**
+  * Returns all the entries that have not expired (per `maxRetentionTime`).
+  * Any expired entries are removed from the queue.
+  *
+  * @returns
+  */
+  async getAll() {
+    const allEntries = await this._queueStore.getAll();
+    const now = Date.now();
+    const unexpiredEntries = [];
+    for (const entry of allEntries) {
+      const maxRetentionTimeInMs = this._maxRetentionTime * 60 * 1e3;
+      if (now - entry.timestamp > maxRetentionTimeInMs) await this._queueStore.deleteEntry(entry.id);
+      else unexpiredEntries.push(convertEntry(entry));
+    }
+    return unexpiredEntries;
+  }
+  /**
+  * Returns the number of entries present in the queue.
+  * Note that expired entries (per `maxRetentionTime`) are also included in this count.
+  *
+  * @returns
+  */
+  async size() {
+    return await this._queueStore.size();
+  }
+  /**
+  * Adds the entry to the QueueStore and registers for a sync event.
+  *
+  * @param entry
+  * @param operation
+  * @private
+  */
+  async _addRequest({ request, metadata, timestamp = Date.now() }, operation) {
+    const entry = {
+      requestData: (await StorableRequest.fromRequest(request.clone())).toObject(),
+      timestamp
+    };
+    if (metadata) entry.metadata = metadata;
+    switch (operation) {
+      case "push":
+        await this._queueStore.pushEntry(entry);
+        break;
+      case "unshift":
+        await this._queueStore.unshiftEntry(entry);
+        break;
+    }
+    if (true) logger.log(`Request for '${getFriendlyURL(request.url)}' has been added to background sync queue '${this._name}'.`);
+    if (this._syncInProgress) this._requestsAddedDuringSync = true;
+    else await this.registerSync();
+  }
+  /**
+  * Removes and returns the first or last (depending on `operation`) entry
+  * from the {@linkcode BackgroundSyncQueueStore} that's not older than the `maxRetentionTime`.
+  *
+  * @param operation
+  * @returns
+  * @private
+  */
+  async _removeRequest(operation) {
+    const now = Date.now();
+    let entry;
+    switch (operation) {
+      case "pop":
+        entry = await this._queueStore.popEntry();
+        break;
+      case "shift":
+        entry = await this._queueStore.shiftEntry();
+        break;
+    }
+    if (entry) {
+      const maxRetentionTimeInMs = this._maxRetentionTime * 60 * 1e3;
+      if (now - entry.timestamp > maxRetentionTimeInMs) return this._removeRequest(operation);
+      return convertEntry(entry);
+    }
+  }
+  /**
+  * Loops through each request in the queue and attempts to re-fetch it.
+  * If any request fails to re-fetch, it's put back in the same position in
+  * the queue (which registers a retry for the next sync event).
+  */
+  async replayRequests() {
+    let entry;
+    while (entry = await this.shiftRequest()) try {
+      await fetch(entry.request.clone());
+      if (true) logger.log(`Request for '${getFriendlyURL(entry.request.url)}' has been replayed in queue '${this._name}'`);
+    } catch {
+      await this.unshiftRequest(entry);
+      if (true) logger.log(`Request for '${getFriendlyURL(entry.request.url)}' failed to replay, putting it back in queue '${this._name}'`);
+      throw new SerwistError("queue-replay-failed", { name: this._name });
+    }
+    if (true) logger.log(`All requests in queue '${this.name}' have successfully replayed; the queue is now empty!`);
+  }
+  /**
+  * Registers a sync event with a tag unique to this instance.
+  */
+  async registerSync() {
+    if ("sync" in self.registration && !this._forceSyncFallback) try {
+      await self.registration.sync.register(`${TAG_PREFIX}:${this._name}`);
+    } catch (err) {
+      if (true) logger.warn(`Unable to register sync event for '${this._name}'.`, err);
+    }
+  }
+  /**
+  * In sync-supporting browsers, this adds a listener for the sync event.
+  * In non-sync-supporting browsers, or if _forceSyncFallback is true, this
+  * will retry the queue on service worker startup.
+  *
+  * @private
+  */
+  _addSyncListener() {
+    if ("sync" in self.registration && !this._forceSyncFallback) self.addEventListener("sync", (event) => {
+      if (event.tag === `${TAG_PREFIX}:${this._name}`) {
+        if (true) logger.log(`Background sync for tag '${event.tag}' has been received`);
+        const syncComplete = async () => {
+          this._syncInProgress = true;
+          let syncError;
+          try {
+            await this._onSync({ queue: this });
+          } catch (error) {
+            if (error instanceof Error) {
+              syncError = error;
+              throw syncError;
+            }
+          } finally {
+            if (this._requestsAddedDuringSync && !(syncError && !event.lastChance)) await this.registerSync();
+            this._syncInProgress = false;
+            this._requestsAddedDuringSync = false;
+          }
+        };
+        event.waitUntil(syncComplete());
+      }
+    });
+    else {
+      if (true) logger.log("Background sync replaying without background sync event");
+      this._onSync({ queue: this });
+    }
+  }
+  /**
+  * Returns the set of queue names. This is primarily used to reset the list
+  * of queue names in tests.
+  *
+  * @returns
+  * @private
+  */
+  static get _queueNames() {
+    return queueNames;
+  }
+};
+var BackgroundSyncPlugin = class {
+  _queue;
+  /**
+  * @param name See the {@linkcode BackgroundSyncQueue}
+  * documentation for parameter details.
+  * @param options See the {@linkcode BackgroundSyncQueue}
+  * documentation for parameter details.
+  * @see https://serwist.pages.dev/docs/serwist/core/background-sync-queue
+  */
+  constructor(name, options) {
+    this._queue = new BackgroundSyncQueue(name, options);
+  }
+  /**
+  * @param options
+  * @private
+  */
+  async fetchDidFail({ request }) {
+    await this._queue.pushRequest({ request });
+  }
+};
+var cacheOkAndOpaquePlugin = {
+  /**
+  * Returns a valid response (to allow caching) if the status is 200 (OK) or
+  * 0 (opaque).
+  *
+  * @param options
+  * @returns
+  * @private
+  */
+  cacheWillUpdate: async ({ response }) => {
+    if (response.status === 200 || response.status === 0) return response;
+    return null;
+  }
+};
+function toRequest(input) {
+  return typeof input === "string" ? new Request(input) : input;
+}
+var StrategyHandler = class {
+  /**
+  * The event associated with this request.
+  */
+  event;
+  /**
+  * The request the strategy is processing (passed to the strategy's
+  * `handle()` or `handleAll()` method).
+  */
+  request;
+  /**
+  * A `URL` instance of `request.url` (if passed to the strategy's
+  * `handle()` or `handleAll()` method).
+  * Note: the `url` param will be present if the strategy is invoked
+  * from a {@linkcode Route} object.
+  */
+  url;
+  /**
+  * Some additional params (if passed to the strategy's
+  * `handle()` or `handleAll()` method).
+  *
+  * Note: the `params` param will be present if the strategy is invoked
+  * from a {@linkcode Route} object and that route's matcher returned a truthy
+  * value (it will be that value).
+  */
+  params;
+  _cacheKeys = {};
+  _strategy;
+  _handlerDeferred;
+  _extendLifetimePromises;
+  _plugins;
+  _pluginStateMap;
+  /**
+  * Creates a new instance associated with the passed strategy and event
+  * that's handling the request.
+  *
+  * The constructor also initializes the state that will be passed to each of
+  * the plugins handling this request.
+  *
+  * @param strategy
+  * @param options
+  */
+  constructor(strategy, options) {
+    if (true) {
+      finalAssertExports.isInstance(options.event, ExtendableEvent, {
+        moduleName: "serwist",
+        className: "StrategyHandler",
+        funcName: "constructor",
+        paramName: "options.event"
+      });
+      finalAssertExports.isInstance(options.request, Request, {
+        moduleName: "serwist",
+        className: "StrategyHandler",
+        funcName: "constructor",
+        paramName: "options.request"
+      });
+    }
+    this.event = options.event;
+    this.request = options.request;
+    if (options.url) {
+      this.url = options.url;
+      this.params = options.params;
+    }
+    this._strategy = strategy;
+    this._handlerDeferred = new Deferred();
+    this._extendLifetimePromises = [];
+    this._plugins = [...strategy.plugins];
+    this._pluginStateMap = /* @__PURE__ */ new Map();
+    for (const plugin of this._plugins) this._pluginStateMap.set(plugin, {});
+    this.event.waitUntil(this._handlerDeferred.promise);
+  }
+  /**
+  * Fetches a given request (and invokes any applicable plugin callback
+  * methods), taking the `fetchOptions` (for non-navigation requests) and
+  * `plugins` provided to the {@linkcode Strategy} object into account.
+  *
+  * The following plugin lifecycle methods are invoked when using this method:
+  * - `requestWillFetch()`
+  * - `fetchDidSucceed()`
+  * - `fetchDidFail()`
+  *
+  * @param input The URL or request to fetch.
+  * @returns
+  */
+  async fetch(input) {
+    const { event } = this;
+    let request = toRequest(input);
+    const preloadResponse = await this.getPreloadResponse();
+    if (preloadResponse) return preloadResponse;
+    const originalRequest = this.hasCallback("fetchDidFail") ? request.clone() : null;
+    try {
+      for (const cb of this.iterateCallbacks("requestWillFetch")) request = await cb({
+        request: request.clone(),
+        event
+      });
+    } catch (err) {
+      if (err instanceof Error) throw new SerwistError("plugin-error-request-will-fetch", { thrownErrorMessage: err.message });
+    }
+    const pluginFilteredRequest = request.clone();
+    try {
+      let fetchResponse;
+      fetchResponse = await fetch(request, request.mode === "navigate" ? void 0 : this._strategy.fetchOptions);
+      if (true) logger.debug(`Network request for '${getFriendlyURL(request.url)}' returned a response with status '${fetchResponse.status}'.`);
+      for (const callback of this.iterateCallbacks("fetchDidSucceed")) fetchResponse = await callback({
+        event,
+        request: pluginFilteredRequest,
+        response: fetchResponse
+      });
+      return fetchResponse;
+    } catch (error) {
+      if (true) logger.log(`Network request for '${getFriendlyURL(request.url)}' threw an error.`, error);
+      if (originalRequest) await this.runCallbacks("fetchDidFail", {
+        error,
+        event,
+        originalRequest: originalRequest.clone(),
+        request: pluginFilteredRequest.clone()
+      });
+      throw error;
+    }
+  }
+  /**
+  * Calls `this.fetch()` and (in the background) caches the generated response.
+  *
+  * The call to `this.cachePut()` automatically invokes `this.waitUntil()`,
+  * so you do not have to call `waitUntil()` yourself.
+  *
+  * @param input The request or URL to fetch and cache.
+  * @returns
+  */
+  async fetchAndCachePut(input) {
+    const response = await this.fetch(input);
+    const responseClone = response.clone();
+    this.waitUntil(this.cachePut(input, responseClone));
+    return response;
+  }
+  /**
+  * Matches a request from the cache (and invokes any applicable plugin
+  * callback method) using the `cacheName`, `matchOptions`, and `plugins`
+  * provided to the `Strategy` object.
+  *
+  * The following lifecycle methods are invoked when using this method:
+  * - `cacheKeyWillBeUsed`
+  * - `cachedResponseWillBeUsed`
+  *
+  * @param key The `Request` or `URL` object to use as the cache key.
+  * @returns A matching response, if found.
+  */
+  async cacheMatch(key) {
+    const request = toRequest(key);
+    let cachedResponse;
+    const { cacheName, matchOptions } = this._strategy;
+    const effectiveRequest = await this.getCacheKey(request, "read");
+    const multiMatchOptions = {
+      ...matchOptions,
+      cacheName
+    };
+    cachedResponse = await caches.match(effectiveRequest, multiMatchOptions);
+    if (true) if (cachedResponse) logger.debug(`Found a cached response in '${cacheName}'.`);
+    else logger.debug(`No cached response found in '${cacheName}'.`);
+    for (const callback of this.iterateCallbacks("cachedResponseWillBeUsed")) cachedResponse = await callback({
+      cacheName,
+      matchOptions,
+      cachedResponse,
+      request: effectiveRequest,
+      event: this.event
+    }) || void 0;
+    return cachedResponse;
+  }
+  /**
+  * Puts a request/response pair into the cache (and invokes any applicable
+  * plugin callback method) using the `cacheName` and `plugins` provided to
+  * the {@linkcode Strategy} object.
+  *
+  * The following plugin lifecycle methods are invoked when using this method:
+  * - `cacheKeyWillBeUsed`
+  * - `cacheWillUpdate`
+  * - `cacheDidUpdate`
+  *
+  * @param key The request or URL to use as the cache key.
+  * @param response The response to cache.
+  * @returns `false` if a `cacheWillUpdate` caused the response to
+  * not be cached, and `true` otherwise.
+  */
+  async cachePut(key, response) {
+    const request = toRequest(key);
+    await timeout(0);
+    const effectiveRequest = await this.getCacheKey(request, "write");
+    if (true) {
+      if (effectiveRequest.method && effectiveRequest.method !== "GET") throw new SerwistError("attempt-to-cache-non-get-request", {
+        url: getFriendlyURL(effectiveRequest.url),
+        method: effectiveRequest.method
+      });
+    }
+    if (!response) {
+      if (true) logger.error(`Cannot cache non-existent response for '${getFriendlyURL(effectiveRequest.url)}'.`);
+      throw new SerwistError("cache-put-with-no-response", { url: getFriendlyURL(effectiveRequest.url) });
+    }
+    const responseToCache = await this._ensureResponseSafeToCache(response);
+    if (!responseToCache) {
+      if (true) logger.debug(`Response '${getFriendlyURL(effectiveRequest.url)}' will not be cached.`, responseToCache);
+      return false;
+    }
+    const { cacheName, matchOptions } = this._strategy;
+    const cache = await self.caches.open(cacheName);
+    if (true) {
+      const vary = response.headers.get("Vary");
+      if (vary && matchOptions?.ignoreVary !== true) logger.debug(`The response for ${getFriendlyURL(effectiveRequest.url)} has a 'Vary: ${vary}' header. Consider setting the {ignoreVary: true} option on your strategy to ensure cache matching and deletion works as expected.`);
+    }
+    const hasCacheUpdateCallback = this.hasCallback("cacheDidUpdate");
+    const oldResponse = hasCacheUpdateCallback ? await cacheMatchIgnoreParams(cache, effectiveRequest.clone(), ["__WB_REVISION__"], matchOptions) : null;
+    if (true) logger.debug(`Updating the '${cacheName}' cache with a new Response for ${getFriendlyURL(effectiveRequest.url)}.`);
+    try {
+      await cache.put(effectiveRequest, hasCacheUpdateCallback ? responseToCache.clone() : responseToCache);
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.name === "QuotaExceededError") await executeQuotaErrorCallbacks();
+        throw error;
+      }
+    }
+    for (const callback of this.iterateCallbacks("cacheDidUpdate")) await callback({
+      cacheName,
+      oldResponse,
+      newResponse: responseToCache.clone(),
+      request: effectiveRequest,
+      event: this.event
+    });
+    return true;
+  }
+  /**
+  * Checks the `plugins` provided to the {@linkcode Strategy} object for `cacheKeyWillBeUsed`
+  * callbacks and executes found callbacks in sequence. The final `Request`
+  * object returned by the last plugin is treated as the cache key for cache
+  * reads and/or writes. If no `cacheKeyWillBeUsed` plugin callbacks have
+  * been registered, the passed request is returned unmodified.
+  *
+  * @param request
+  * @param mode
+  * @returns
+  */
+  async getCacheKey(request, mode) {
+    const key = `${request.url} | ${mode}`;
+    if (!this._cacheKeys[key]) {
+      let effectiveRequest = request;
+      for (const callback of this.iterateCallbacks("cacheKeyWillBeUsed")) effectiveRequest = toRequest(await callback({
+        mode,
+        request: effectiveRequest,
+        event: this.event,
+        params: this.params
+      }));
+      this._cacheKeys[key] = effectiveRequest;
+    }
+    return this._cacheKeys[key];
+  }
+  /**
+  * Returns `true` if the strategy has at least one plugin with the given
+  * callback.
+  *
+  * @param name The name of the callback to check for.
+  * @returns
+  */
+  hasCallback(name) {
+    for (const plugin of this._strategy.plugins) if (name in plugin) return true;
+    return false;
+  }
+  /**
+  * Runs all plugin callbacks matching the given name, in order, passing the
+  * given param object as the only argument.
+  *
+  * Note: since this method runs all plugins, it's not suitable for cases
+  * where the return value of a callback needs to be applied prior to calling
+  * the next callback. See {@linkcode StrategyHandler.iterateCallbacks} for how to handle that case.
+  *
+  * @param name The name of the callback to run within each plugin.
+  * @param param The object to pass as the first (and only) param when executing each callback. This object will be merged with the
+  * current plugin state prior to callback execution.
+  */
+  async runCallbacks(name, param) {
+    for (const callback of this.iterateCallbacks(name)) await callback(param);
+  }
+  /**
+  * Accepts a callback name and returns an iterable of matching plugin callbacks.
+  *
+  * @param name The name fo the callback to run
+  * @returns
+  */
+  *iterateCallbacks(name) {
+    for (const plugin of this._strategy.plugins) if (typeof plugin[name] === "function") {
+      const state = this._pluginStateMap.get(plugin);
+      const statefulCallback = (param) => {
+        const statefulParam = {
+          ...param,
+          state
+        };
+        return plugin[name](statefulParam);
+      };
+      yield statefulCallback;
+    }
+  }
+  /**
+  * Adds a promise to the
+  * [extend lifetime promises](https://w3c.github.io/ServiceWorker/#extendableevent-extend-lifetime-promises)
+  * of the event event associated with the request being handled (usually a `FetchEvent`).
+  *
+  * Note: you can await {@linkcode StrategyHandler.doneWaiting} to know when all added promises have settled.
+  *
+  * @param promise A promise to add to the extend lifetime promises of
+  * the event that triggered the request.
+  */
+  waitUntil(promise) {
+    this._extendLifetimePromises.push(promise);
+    return promise;
+  }
+  /**
+  * Returns a promise that resolves once all promises passed to
+  * `this.waitUntil()` have settled.
+  *
+  * Note: any work done after `doneWaiting()` settles should be manually
+  * passed to an event's `waitUntil()` method (not `this.waitUntil()`), otherwise
+  * the service worker thread may be killed prior to your work completing.
+  */
+  async doneWaiting() {
+    let promise;
+    while (promise = this._extendLifetimePromises.shift()) await promise;
+  }
+  /**
+  * Stops running the strategy and immediately resolves any pending
+  * `waitUntil()` promise.
+  */
+  destroy() {
+    this._handlerDeferred.resolve(null);
+  }
+  /**
+  * This method checks if the navigation preload `Response` is available.
+  *
+  * @param request
+  * @param event
+  * @returns
+  */
+  async getPreloadResponse() {
+    if (this.event instanceof FetchEvent && this.event.request.mode === "navigate" && "preloadResponse" in this.event) try {
+      const possiblePreloadResponse = await this.event.preloadResponse;
+      if (possiblePreloadResponse) {
+        if (true) logger.log(`Using a preloaded navigation response for '${getFriendlyURL(this.event.request.url)}'`);
+        return possiblePreloadResponse;
+      }
+    } catch (error) {
+      if (true) logger.error(error);
+      return;
+    }
+  }
+  /**
+  * This method will call `cacheWillUpdate` on the available plugins (or use
+  * status === 200) to determine if the response is safe and valid to cache.
+  *
+  * @param response
+  * @returns
+  * @private
+  */
+  async _ensureResponseSafeToCache(response) {
+    let responseToCache = response;
+    let pluginsUsed = false;
+    for (const callback of this.iterateCallbacks("cacheWillUpdate")) {
+      responseToCache = await callback({
+        request: this.request,
+        response: responseToCache,
+        event: this.event
+      }) || void 0;
+      pluginsUsed = true;
+      if (!responseToCache) break;
+    }
+    if (!pluginsUsed) {
+      if (responseToCache && responseToCache.status !== 200) {
+        if (true) if (responseToCache.status === 0) logger.warn(`The response for '${this.request.url}' is an opaque response. The caching strategy that you're using will not cache opaque responses by default.`);
+        else logger.debug(`The response for '${this.request.url}' returned a status code of '${response.status}' and won't be cached as a result.`);
+        responseToCache = void 0;
+      }
+    }
+    return responseToCache;
+  }
+};
+var Strategy = class {
+  cacheName;
+  plugins;
+  fetchOptions;
+  matchOptions;
+  /**
+  * Creates a new instance of the strategy and sets all documented option
+  * properties as public instance properties.
+  *
+  * Note: if a custom strategy class extends the base Strategy class and does
+  * not need more than these properties, it does not need to define its own
+  * constructor.
+  *
+  * @param options
+  */
+  constructor(options = {}) {
+    this.cacheName = cacheNames.getRuntimeName(options.cacheName);
+    this.plugins = options.plugins || [];
+    this.fetchOptions = options.fetchOptions;
+    this.matchOptions = options.matchOptions;
+  }
+  /**
+  * Performs a request strategy and returns a promise that will resolve to
+  * a response, invoking all relevant plugin callbacks.
+  *
+  * When a strategy instance is registered with a route, this method is automatically
+  * called when the route matches.
+  *
+  * Alternatively, this method can be used in a standalone `fetch` event
+  * listener by passing it to `event.respondWith()`.
+  *
+  * @param options A `FetchEvent` or an object with the properties listed below.
+  * @param options.request A request to run this strategy for.
+  * @param options.event The event associated with the request.
+  * @param options.url
+  * @param options.params
+  */
+  handle(options) {
+    const [responseDone] = this.handleAll(options);
+    return responseDone;
+  }
+  /**
+  * Similar to `handle()`, but instead of just returning a promise that
+  * resolves to a response, it will return an tuple of `[response, done]` promises,
+  * where `response` is equivalent to what `handle()` returns, and `done` is a
+  * promise that will resolve once all promises added to `event.waitUntil()` as a part
+  * of performing the strategy have completed.
+  *
+  * You can await the `done` promise to ensure any extra work performed by
+  * the strategy (usually caching responses) completes successfully.
+  *
+  * @param options A `FetchEvent` or `HandlerCallbackOptions` object.
+  * @returns A tuple of [response, done] promises that can be used to determine when the response resolves as
+  * well as when the handler has completed all its work.
+  */
+  handleAll(options) {
+    if (options instanceof FetchEvent) options = {
+      event: options,
+      request: options.request
+    };
+    const event = options.event;
+    const request = typeof options.request === "string" ? new Request(options.request) : options.request;
+    const handler = new StrategyHandler(this, options.url ? {
+      event,
+      request,
+      url: options.url,
+      params: options.params
+    } : {
+      event,
+      request
+    });
+    const responseDone = this._getResponse(handler, request, event);
+    return [responseDone, this._awaitComplete(responseDone, handler, request, event)];
+  }
+  async _getResponse(handler, request, event) {
+    await handler.runCallbacks("handlerWillStart", {
+      event,
+      request
+    });
+    let response;
+    try {
+      response = await this._handle(request, handler);
+      if (response === void 0 || response.type === "error") throw new SerwistError("no-response", { url: request.url });
+    } catch (error) {
+      if (error instanceof Error) for (const callback of handler.iterateCallbacks("handlerDidError")) {
+        response = await callback({
+          error,
+          event,
+          request
+        });
+        if (response !== void 0) break;
+      }
+      if (!response) throw error;
+      if (true) throw logger.log(`While responding to '${getFriendlyURL(request.url)}', an ${error instanceof Error ? error.toString() : ""} error occurred. Using a fallback response provided by a handlerDidError plugin.`);
+    }
+    for (const callback of handler.iterateCallbacks("handlerWillRespond")) response = await callback({
+      event,
+      request,
+      response
+    });
+    return response;
+  }
+  async _awaitComplete(responseDone, handler, request, event) {
+    let response;
+    let error;
+    try {
+      response = await responseDone;
+    } catch {
+    }
+    try {
+      await handler.runCallbacks("handlerDidRespond", {
+        event,
+        request,
+        response
+      });
+      await handler.doneWaiting();
+    } catch (waitUntilError) {
+      if (waitUntilError instanceof Error) error = waitUntilError;
+    }
+    await handler.runCallbacks("handlerDidComplete", {
+      event,
+      request,
+      response,
+      error
+    });
+    handler.destroy();
+    if (error) throw error;
+  }
+};
+var messages2 = {
+  strategyStart: (strategyName, request) => `Using ${strategyName} to respond to '${getFriendlyURL(request.url)}'`,
+  printFinalResponse: (response) => {
+    if (response) {
+      logger.groupCollapsed("View the final response here.");
+      logger.log(response || "[No response returned]");
+      logger.groupEnd();
+    }
+  }
+};
+var NetworkFirst = class extends Strategy {
+  _networkTimeoutSeconds;
+  /**
+  * @param options
+  * This option can be used to combat
+  * "[lie-fi](https://developers.google.com/web/fundamentals/performance/poor-connectivity/#lie-fi)"
+  * scenarios.
+  */
+  constructor(options = {}) {
+    super(options);
+    if (!this.plugins.some((p) => "cacheWillUpdate" in p)) this.plugins.unshift(cacheOkAndOpaquePlugin);
+    this._networkTimeoutSeconds = options.networkTimeoutSeconds || 0;
+    if (true) {
+      if (this._networkTimeoutSeconds) finalAssertExports.isType(this._networkTimeoutSeconds, "number", {
+        moduleName: "serwist",
+        className: this.constructor.name,
+        funcName: "constructor",
+        paramName: "networkTimeoutSeconds"
+      });
+    }
+  }
+  /**
+  * @private
+  * @param request A request to run this strategy for.
+  * @param handler The event that triggered the request.
+  * @returns
+  */
+  async _handle(request, handler) {
+    const logs = [];
+    if (true) finalAssertExports.isInstance(request, Request, {
+      moduleName: "serwist",
+      className: this.constructor.name,
+      funcName: "handle",
+      paramName: "makeRequest"
+    });
+    const promises = [];
+    let timeoutId;
+    if (this._networkTimeoutSeconds) {
+      const { id, promise } = this._getTimeoutPromise({
+        request,
+        logs,
+        handler
+      });
+      timeoutId = id;
+      promises.push(promise);
+    }
+    const networkPromise = this._getNetworkPromise({
+      timeoutId,
+      request,
+      logs,
+      handler
+    });
+    promises.push(networkPromise);
+    const response = await handler.waitUntil((async () => {
+      return await handler.waitUntil(Promise.race(promises)) || await networkPromise;
+    })());
+    if (true) {
+      logger.groupCollapsed(messages2.strategyStart(this.constructor.name, request));
+      for (const log of logs) logger.log(log);
+      messages2.printFinalResponse(response);
+      logger.groupEnd();
+    }
+    if (!response) throw new SerwistError("no-response", { url: request.url });
+    return response;
+  }
+  /**
+  * @param options
+  * @returns
+  * @private
+  */
+  _getTimeoutPromise({ request, logs, handler }) {
+    let timeoutId;
+    return {
+      promise: new Promise((resolve) => {
+        const onNetworkTimeout = async () => {
+          if (true) logs.push(`Timing out the network response at ${this._networkTimeoutSeconds} seconds.`);
+          resolve(await handler.cacheMatch(request));
+        };
+        timeoutId = setTimeout(onNetworkTimeout, this._networkTimeoutSeconds * 1e3);
+      }),
+      id: timeoutId
+    };
+  }
+  /**
+  * @param options
+  * @param options.timeoutId
+  * @param options.request
+  * @param options.logs A reference to the logs Array.
+  * @param options.event
+  * @returns
+  *
+  * @private
+  */
+  async _getNetworkPromise({ timeoutId, request, logs, handler }) {
+    let error;
+    let response;
+    try {
+      response = await handler.fetchAndCachePut(request);
+    } catch (fetchError) {
+      if (fetchError instanceof Error) error = fetchError;
+    }
+    if (timeoutId) clearTimeout(timeoutId);
+    if (true) if (response) logs.push("Got response from network.");
+    else logs.push("Unable to get a response from the network. Will respond with a cached response.");
+    if (error || !response) {
+      response = await handler.cacheMatch(request);
+      if (true) if (response) logs.push(`Found a cached response in the '${this.cacheName}' cache.`);
+      else logs.push(`No response found in the '${this.cacheName}' cache.`);
+    }
+    return response;
+  }
+};
+var NetworkOnly = class extends Strategy {
+  _networkTimeoutSeconds;
+  /**
+  * @param options
+  */
+  constructor(options = {}) {
+    super(options);
+    this._networkTimeoutSeconds = options.networkTimeoutSeconds || 0;
+  }
+  /**
+  * @private
+  * @param request A request to run this strategy for.
+  * @param handler The event that triggered the request.
+  * @returns
+  */
+  async _handle(request, handler) {
+    if (true) finalAssertExports.isInstance(request, Request, {
+      moduleName: "serwist",
+      className: this.constructor.name,
+      funcName: "_handle",
+      paramName: "request"
+    });
+    let error;
+    let response;
+    try {
+      const promises = [handler.fetch(request)];
+      if (this._networkTimeoutSeconds) {
+        const timeoutPromise = timeout(this._networkTimeoutSeconds * 1e3);
+        promises.push(timeoutPromise);
+      }
+      response = await Promise.race(promises);
+      if (!response) throw new Error(`Timed out the network response after ${this._networkTimeoutSeconds} seconds.`);
+    } catch (err) {
+      if (err instanceof Error) error = err;
+    }
+    if (true) {
+      logger.groupCollapsed(messages2.strategyStart(this.constructor.name, request));
+      if (response) logger.log("Got response from network.");
+      else logger.log("Unable to get a response from the network.");
+      messages2.printFinalResponse(response);
+      logger.groupEnd();
+    }
+    if (!response) throw new SerwistError("no-response", {
+      url: request.url,
+      error
+    });
+    return response;
+  }
+};
+var validMethods = [
+  "DELETE",
+  "GET",
+  "HEAD",
+  "PATCH",
+  "POST",
+  "PUT"
+];
+var normalizeHandler = (handler) => {
+  if (handler && typeof handler === "object") {
+    if (true) finalAssertExports.hasMethod(handler, "handle", {
+      moduleName: "serwist",
+      className: "Route",
+      funcName: "constructor",
+      paramName: "handler"
+    });
+    return handler;
+  }
+  if (true) finalAssertExports.isType(handler, "function", {
+    moduleName: "serwist",
+    className: "Route",
+    funcName: "constructor",
+    paramName: "handler"
+  });
+  return { handle: handler };
+};
+var Route = class {
+  handler;
+  match;
+  method;
+  catchHandler;
+  /**
+  * Constructor for Route class.
+  *
+  * @param match A callback function that determines whether the
+  * route matches a given `fetch` event by returning a truthy value.
+  * @param handler A callback function that returns a `Promise` resolving
+  * to a `Response`.
+  * @param method The HTTP method to match the route against. Defaults
+  * to `GET`.
+  */
+  constructor(match, handler, method = "GET") {
+    if (true) {
+      finalAssertExports.isType(match, "function", {
+        moduleName: "serwist",
+        className: "Route",
+        funcName: "constructor",
+        paramName: "match"
+      });
+      if (method) finalAssertExports.isOneOf(method, validMethods, { paramName: "method" });
+    }
+    this.handler = normalizeHandler(handler);
+    this.match = match;
+    this.method = method;
+  }
+  /**
+  *
+  * @param handler A callback function that returns a Promise resolving
+  * to a Response.
+  */
+  setCatchHandler(handler) {
+    this.catchHandler = normalizeHandler(handler);
+  }
+};
+var PrecacheStrategy = class PrecacheStrategy2 extends Strategy {
+  _fallbackToNetwork;
+  static defaultPrecacheCacheabilityPlugin = { async cacheWillUpdate({ response }) {
+    if (!response || response.status >= 400) return null;
+    return response;
+  } };
+  static copyRedirectedCacheableResponsesPlugin = { async cacheWillUpdate({ response }) {
+    return response.redirected ? await copyResponse(response) : response;
+  } };
+  /**
+  * @param options
+  */
+  constructor(options = {}) {
+    options.cacheName = cacheNames.getPrecacheName(options.cacheName);
+    super(options);
+    this._fallbackToNetwork = options.fallbackToNetwork !== false;
+    this.plugins.push(PrecacheStrategy2.copyRedirectedCacheableResponsesPlugin);
+  }
+  /**
+  * @private
+  * @param request A request to run this strategy for.
+  * @param handler The event that triggered the request.
+  * @returns
+  */
+  async _handle(request, handler) {
+    const preloadResponse = await handler.getPreloadResponse();
+    if (preloadResponse) return preloadResponse;
+    const response = await handler.cacheMatch(request);
+    if (response) return response;
+    if (handler.event && handler.event.type === "install") return await this._handleInstall(request, handler);
+    return await this._handleFetch(request, handler);
+  }
+  async _handleFetch(request, handler) {
+    let response;
+    const params = handler.params || {};
+    if (this._fallbackToNetwork) {
+      if (true) logger.warn(`The precached response for ${getFriendlyURL(request.url)} in ${this.cacheName} was not found. Falling back to the network.`);
+      const integrityInManifest = params.integrity;
+      const integrityInRequest = request.integrity;
+      const noIntegrityConflict = !integrityInRequest || integrityInRequest === integrityInManifest;
+      response = await handler.fetch(new Request(request, { integrity: request.mode !== "no-cors" ? integrityInRequest || integrityInManifest : void 0 }));
+      if (integrityInManifest && noIntegrityConflict && request.mode !== "no-cors") {
+        this._useDefaultCacheabilityPluginIfNeeded();
+        const wasCached = await handler.cachePut(request, response.clone());
+        if (true) {
+          if (wasCached) logger.log(`A response for ${getFriendlyURL(request.url)} was used to "repair" the precache.`);
+        }
+      }
+    } else throw new SerwistError("missing-precache-entry", {
+      cacheName: this.cacheName,
+      url: request.url
+    });
+    if (true) {
+      const cacheKey = params.cacheKey || await handler.getCacheKey(request, "read");
+      logger.groupCollapsed(`Precaching is responding to: ${getFriendlyURL(request.url)}`);
+      logger.log(`Serving the precached url: ${getFriendlyURL(cacheKey instanceof Request ? cacheKey.url : cacheKey)}`);
+      logger.groupCollapsed("View request details here.");
+      logger.log(request);
+      logger.groupEnd();
+      logger.groupCollapsed("View response details here.");
+      logger.log(response);
+      logger.groupEnd();
+      logger.groupEnd();
+    }
+    return response;
+  }
+  async _handleInstall(request, handler) {
+    this._useDefaultCacheabilityPluginIfNeeded();
+    const response = await handler.fetch(request);
+    if (!await handler.cachePut(request, response.clone())) throw new SerwistError("bad-precaching-response", {
+      url: request.url,
+      status: response.status
+    });
+    return response;
+  }
+  /**
+  * This method is complex, as there a number of things to account for:
+  *
+  * The `plugins` array can be set at construction, and/or it might be added to
+  * to at any time before the strategy is used.
+  *
+  * At the time the strategy is used (i.e. during an `install` event), there
+  * needs to be at least one plugin that implements `cacheWillUpdate` in the
+  * array, other than `copyRedirectedCacheableResponsesPlugin`.
+  *
+  * - If this method is called and there are no suitable `cacheWillUpdate`
+  * plugins, we need to add `defaultPrecacheCacheabilityPlugin`.
+  *
+  * - If this method is called and there is exactly one `cacheWillUpdate`, then
+  * we don't have to do anything (this might be a previously added
+  * `defaultPrecacheCacheabilityPlugin`, or it might be a custom plugin).
+  *
+  * - If this method is called and there is more than one `cacheWillUpdate`,
+  * then we need to check if one is `defaultPrecacheCacheabilityPlugin`. If so,
+  * we need to remove it. (This situation is unlikely, but it could happen if
+  * the strategy is used multiple times, the first without a `cacheWillUpdate`,
+  * and then later on after manually adding a custom `cacheWillUpdate`.)
+  *
+  * See https://github.com/GoogleChrome/workbox/issues/2737 for more context.
+  *
+  * @private
+  */
+  _useDefaultCacheabilityPluginIfNeeded() {
+    let defaultPluginIndex = null;
+    let cacheWillUpdatePluginCount = 0;
+    for (const [index, plugin] of this.plugins.entries()) {
+      if (plugin === PrecacheStrategy2.copyRedirectedCacheableResponsesPlugin) continue;
+      if (plugin === PrecacheStrategy2.defaultPrecacheCacheabilityPlugin) defaultPluginIndex = index;
+      if (plugin.cacheWillUpdate) cacheWillUpdatePluginCount++;
+    }
+    if (cacheWillUpdatePluginCount === 0) this.plugins.push(PrecacheStrategy2.defaultPrecacheCacheabilityPlugin);
+    else if (cacheWillUpdatePluginCount > 1 && defaultPluginIndex !== null) this.plugins.splice(defaultPluginIndex, 1);
+  }
+};
+var NavigationRoute = class extends Route {
+  _allowlist;
+  _denylist;
+  /**
+  * If both `denylist` and `allowlist` are provided, `denylist` will
+  * take precedence.
+  *
+  * The regular expressions in `allowlist` and `denylist`
+  * are matched against the concatenated
+  * [`pathname`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLHyperlinkElementUtils/pathname)
+  * and [`search`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLHyperlinkElementUtils/search)
+  * portions of the requested URL.
+  *
+  * *Note*: These RegExps may be evaluated against every destination URL during
+  * a navigation. Avoid using
+  * [complex RegExps](https://github.com/GoogleChrome/workbox/issues/3077),
+  * or else your users may see delays when navigating your site.
+  *
+  * @param handler A callback function that returns a `Promise` resulting in a `Response`.
+  * @param options
+  */
+  constructor(handler, { allowlist = [/./], denylist = [] } = {}) {
+    if (true) {
+      finalAssertExports.isArrayOfClass(allowlist, RegExp, {
+        moduleName: "serwist",
+        className: "NavigationRoute",
+        funcName: "constructor",
+        paramName: "options.allowlist"
+      });
+      finalAssertExports.isArrayOfClass(denylist, RegExp, {
+        moduleName: "serwist",
+        className: "NavigationRoute",
+        funcName: "constructor",
+        paramName: "options.denylist"
+      });
+    }
+    super((options) => this._match(options), handler);
+    this._allowlist = allowlist;
+    this._denylist = denylist;
+  }
+  /**
+  * Routes match handler.
+  *
+  * @param options
+  * @returns
+  * @private
+  */
+  _match({ url, request }) {
+    if (request && request.mode !== "navigate") return false;
+    const pathnameAndSearch = url.pathname + url.search;
+    for (const regExp of this._denylist) if (regExp.test(pathnameAndSearch)) {
+      if (true) logger.log(`The navigation route ${pathnameAndSearch} is not being used, since the URL matches this denylist pattern: ${regExp.toString()}`);
+      return false;
+    }
+    if (this._allowlist.some((regExp) => regExp.test(pathnameAndSearch))) {
+      if (true) logger.debug(`The navigation route ${pathnameAndSearch} is being used.`);
+      return true;
+    }
+    if (true) logger.log(`The navigation route ${pathnameAndSearch} is not being used, since the URL being navigated to doesn't match the allowlist.`);
+    return false;
+  }
+};
+var isNavigationPreloadSupported = () => {
+  return Boolean(self.registration?.navigationPreload);
+};
+var enableNavigationPreload = (headerValue) => {
+  if (isNavigationPreloadSupported()) self.addEventListener("activate", (event) => {
+    event.waitUntil(self.registration.navigationPreload.enable().then(() => {
+      if (headerValue) self.registration.navigationPreload.setHeaderValue(headerValue);
+      if (true) logger.log("Navigation preloading is enabled.");
+    }));
+  });
+  else if (true) logger.log("Navigation preloading is not supported in this browser.");
+};
+var removeIgnoredSearchParams = (urlObject, ignoreURLParametersMatching = []) => {
+  for (const paramName of [...urlObject.searchParams.keys()]) if (ignoreURLParametersMatching.some((regExp) => regExp.test(paramName))) urlObject.searchParams.delete(paramName);
+  return urlObject;
+};
+function* generateURLVariations(url, { directoryIndex = "index.html", ignoreURLParametersMatching = [/^utm_/, /^fbclid$/], cleanURLs = true, urlManipulation } = {}) {
+  const urlObject = new URL(url, location.href);
+  urlObject.hash = "";
+  yield urlObject.href;
+  const urlWithoutIgnoredParams = removeIgnoredSearchParams(urlObject, ignoreURLParametersMatching);
+  yield urlWithoutIgnoredParams.href;
+  if (directoryIndex && urlWithoutIgnoredParams.pathname.endsWith("/")) {
+    const directoryURL = new URL(urlWithoutIgnoredParams.href);
+    directoryURL.pathname += directoryIndex;
+    yield directoryURL.href;
+  }
+  if (cleanURLs) {
+    const cleanURL = new URL(urlWithoutIgnoredParams.href);
+    cleanURL.pathname += ".html";
+    yield cleanURL.href;
+  }
+  if (urlManipulation) {
+    const additionalURLs = urlManipulation({ url: urlObject });
+    for (const urlToAttempt of additionalURLs) yield urlToAttempt.href;
+  }
+}
+var RegExpRoute = class extends Route {
+  /**
+  * If the regular expression contains
+  * [capture groups](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp#grouping-back-references),
+  * the captured values will be passed to the `params` argument.
+  *
+  * @param regExp The regular expression to match against URLs.
+  * @param handler A callback function that returns a `Promise` resulting in a `Response`.
+  * @param method The HTTP method to match the {@linkcode Route} against. Defaults to `GET`.
+  * against.
+  */
+  constructor(regExp, handler, method) {
+    if (true) finalAssertExports.isInstance(regExp, RegExp, {
+      moduleName: "serwist",
+      className: "RegExpRoute",
+      funcName: "constructor",
+      paramName: "pattern"
+    });
+    const match = ({ url }) => {
+      const result = regExp.exec(url.href);
+      if (!result) return;
+      if (url.origin !== location.origin && result.index !== 0) {
+        if (true) logger.debug(`The regular expression '${regExp.toString()}' only partially matched against the cross-origin URL '${url.toString()}'. RegExpRoute's will only handle cross-origin requests if they match the entire URL.`);
+        return;
+      }
+      return result.slice(1);
+    };
+    super(match, handler, method);
+  }
+};
+var setCacheNameDetails = (details) => {
+  if (true) {
+    for (const key of Object.keys(details)) finalAssertExports.isType(details[key], "string", {
+      moduleName: "@serwist/core",
+      funcName: "setCacheNameDetails",
+      paramName: `details.${key}`
+    });
+    if (details.precache?.length === 0) throw new SerwistError("invalid-cache-name", {
+      cacheNameId: "precache",
+      value: details.precache
+    });
+    if (details.runtime?.length === 0) throw new SerwistError("invalid-cache-name", {
+      cacheNameId: "runtime",
+      value: details.runtime
+    });
+    if (details.googleAnalytics?.length === 0) throw new SerwistError("invalid-cache-name", {
+      cacheNameId: "googleAnalytics",
+      value: details.googleAnalytics
+    });
+  }
+  cacheNames.updateDetails(details);
+};
+var REVISION_SEARCH_PARAM = "__WB_REVISION__";
+var createCacheKey = (entry) => {
+  if (!entry) throw new SerwistError("add-to-cache-list-unexpected-type", { entry });
+  if (typeof entry === "string") {
+    const urlObject = new URL(entry, location.href);
+    return {
+      cacheKey: urlObject.href,
+      url: urlObject.href
+    };
+  }
+  const { revision, url } = entry;
+  if (!url) throw new SerwistError("add-to-cache-list-unexpected-type", { entry });
+  if (!revision) {
+    const urlObject = new URL(url, location.href);
+    return {
+      cacheKey: urlObject.href,
+      url: urlObject.href
+    };
+  }
+  const cacheKeyURL = new URL(url, location.href);
+  const originalURL = new URL(url, location.href);
+  cacheKeyURL.searchParams.set(REVISION_SEARCH_PARAM, revision);
+  return {
+    cacheKey: cacheKeyURL.href,
+    url: originalURL.href
+  };
+};
+var PrecacheInstallReportPlugin = class {
+  updatedURLs = [];
+  notUpdatedURLs = [];
+  handlerWillStart = async ({ request, state }) => {
+    if (state) state.originalRequest = request;
+  };
+  cachedResponseWillBeUsed = async ({ event, state, cachedResponse }) => {
+    if (event.type === "install") {
+      if (state?.originalRequest && state.originalRequest instanceof Request) {
+        const url = state.originalRequest.url;
+        if (cachedResponse) this.notUpdatedURLs.push(url);
+        else this.updatedURLs.push(url);
+      }
+    }
+    return cachedResponse;
+  };
+};
+var parseRoute = (capture, handler, method) => {
+  if (typeof capture === "string") {
+    const captureUrl = new URL(capture, location.href);
+    if (true) {
+      if (!(capture.startsWith("/") || capture.startsWith("http"))) throw new SerwistError("invalid-string", {
+        moduleName: "serwist",
+        funcName: "parseRoute",
+        paramName: "capture"
+      });
+      const valueToCheck = capture.startsWith("http") ? captureUrl.pathname : capture;
+      const wildcards = "[*:?+]";
+      if (new RegExp(`${wildcards}`).exec(valueToCheck)) logger.debug(`The '$capture' parameter contains an Express-style wildcard character (${wildcards}). Strings are now always interpreted as exact matches; use a RegExp for partial or wildcard matches.`);
+    }
+    const matchCallback = ({ url }) => {
+      if (true) {
+        if (url.pathname === captureUrl.pathname && url.origin !== captureUrl.origin) logger.debug(`${capture} only partially matches the cross-origin URL ${url.toString()}. This route will only handle cross-origin requests if they match the entire URL.`);
+      }
+      return url.href === captureUrl.href;
+    };
+    return new Route(matchCallback, handler, method);
+  }
+  if (capture instanceof RegExp) return new RegExpRoute(capture, handler, method);
+  if (typeof capture === "function") return new Route(capture, handler, method);
+  if (capture instanceof Route) return capture;
+  throw new SerwistError("unsupported-route-type", {
+    moduleName: "serwist",
+    funcName: "parseRoute",
+    paramName: "capture"
+  });
+};
+var logGroup = (groupTitle, deletedURLs) => {
+  logger.groupCollapsed(groupTitle);
+  for (const url of deletedURLs) logger.log(url);
+  logger.groupEnd();
+};
+var printCleanupDetails = (deletedURLs) => {
+  const deletionCount = deletedURLs.length;
+  if (deletionCount > 0) {
+    logger.groupCollapsed(`During precaching cleanup, ${deletionCount} cached request${deletionCount === 1 ? " was" : "s were"} deleted.`);
+    logGroup("Deleted Cache Requests", deletedURLs);
+    logger.groupEnd();
+  }
+};
+function _nestedGroup(groupTitle, urls) {
+  if (urls.length === 0) return;
+  logger.groupCollapsed(groupTitle);
+  for (const url of urls) logger.log(url);
+  logger.groupEnd();
+}
+var printInstallDetails = (urlsToPrecache, urlsAlreadyPrecached) => {
+  const precachedCount = urlsToPrecache.length;
+  const alreadyPrecachedCount = urlsAlreadyPrecached.length;
+  if (precachedCount || alreadyPrecachedCount) {
+    let message = `Precaching ${precachedCount} file${precachedCount === 1 ? "" : "s"}.`;
+    if (alreadyPrecachedCount > 0) message += ` ${alreadyPrecachedCount} file${alreadyPrecachedCount === 1 ? " is" : "s are"} already cached.`;
+    logger.groupCollapsed(message);
+    _nestedGroup("View newly precached URLs.", urlsToPrecache);
+    _nestedGroup("View previously precached URLs.", urlsAlreadyPrecached);
+    logger.groupEnd();
+  }
+};
+
+// node_modules/@serwist/utils/dist/index.mjs
+var parallel = async (limit, array, func) => {
+  const work = array.map((item, index) => ({
+    index,
+    item
+  }));
+  const processor = async (res) => {
+    const results = [];
+    while (true) {
+      const next = work.pop();
+      if (!next) return res(results);
+      const result = await func(next.item);
+      results.push({
+        result,
+        index: next.index
+      });
+    }
+  };
+  const queues = Array.from({ length: limit }, () => new Promise(processor));
+  return (await Promise.all(queues)).flat().sort((a, b) => a.index < b.index ? -1 : 1).map((res) => res.result);
+};
+
+// node_modules/serwist/dist/index.mjs
+var isSafari = typeof navigator !== "undefined" && /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+var QUEUE_NAME = "serwist-google-analytics";
+var MAX_RETENTION_TIME2 = 2880;
+var COLLECT_PATHS_REGEX = /^\/(\w+\/)?collect/;
+var createOnSyncCallback = (config) => {
+  return async ({ queue }) => {
+    let entry;
+    while (entry = await queue.shiftRequest()) {
+      const { request, timestamp } = entry;
+      const url = new URL(request.url);
+      try {
+        const params = request.method === "POST" ? new URLSearchParams(await request.clone().text()) : url.searchParams;
+        const originalHitTime = timestamp - (Number(params.get("qt")) || 0);
+        const queueTime = Date.now() - originalHitTime;
+        params.set("qt", String(queueTime));
+        if (config.parameterOverrides) for (const param of Object.keys(config.parameterOverrides)) {
+          const value = config.parameterOverrides[param];
+          params.set(param, value);
+        }
+        if (typeof config.hitFilter === "function") config.hitFilter.call(null, params);
+        await fetch(new Request(url.origin + url.pathname, {
+          body: params.toString(),
+          method: "POST",
+          mode: "cors",
+          credentials: "omit",
+          headers: { "Content-Type": "text/plain" }
+        }));
+        if (true) logger.log(`Request for '${getFriendlyURL(url.href)}' has been replayed`);
+      } catch (err) {
+        await queue.unshiftRequest(entry);
+        if (true) logger.log(`Request for '${getFriendlyURL(url.href)}' failed to replay, putting it back in the queue.`);
+        throw err;
+      }
+    }
+    if (true) logger.log("All Google Analytics request successfully replayed; the queue is now empty!");
+  };
+};
+var createCollectRoutes = (bgSyncPlugin) => {
+  const match = ({ url }) => url.hostname === "www.google-analytics.com" && COLLECT_PATHS_REGEX.test(url.pathname);
+  const handler = new NetworkOnly({ plugins: [bgSyncPlugin] });
+  return [new Route(match, handler, "GET"), new Route(match, handler, "POST")];
+};
+var createAnalyticsJsRoute = (cacheName) => {
+  const match = ({ url }) => url.hostname === "www.google-analytics.com" && url.pathname === "/analytics.js";
+  return new Route(match, new NetworkFirst({ cacheName }), "GET");
+};
+var createGtagJsRoute = (cacheName) => {
+  const match = ({ url }) => url.hostname === "www.googletagmanager.com" && url.pathname === "/gtag/js";
+  return new Route(match, new NetworkFirst({ cacheName }), "GET");
+};
+var createGtmJsRoute = (cacheName) => {
+  const match = ({ url }) => url.hostname === "www.googletagmanager.com" && url.pathname === "/gtm.js";
+  return new Route(match, new NetworkFirst({ cacheName }), "GET");
+};
+var initializeGoogleAnalytics = ({ serwist: serwist2, cacheName, ...options }) => {
+  const resolvedCacheName = cacheNames.getGoogleAnalyticsName(cacheName);
+  const bgSyncPlugin = new BackgroundSyncPlugin(QUEUE_NAME, {
+    maxRetentionTime: MAX_RETENTION_TIME2,
+    onSync: createOnSyncCallback(options)
+  });
+  const routes = [
+    createGtmJsRoute(resolvedCacheName),
+    createAnalyticsJsRoute(resolvedCacheName),
+    createGtagJsRoute(resolvedCacheName),
+    ...createCollectRoutes(bgSyncPlugin)
+  ];
+  for (const route of routes) serwist2.registerRoute(route);
+};
+var PrecacheFallbackPlugin = class {
+  _fallbackUrls;
+  _serwist;
+  /**
+  * Constructs a new instance with the associated `fallbackUrls`.
+  *
+  * @param config
+  */
+  constructor({ fallbackUrls, serwist: serwist2 }) {
+    this._fallbackUrls = fallbackUrls;
+    this._serwist = serwist2;
+  }
+  /**
+  * @returns The precache response for one of the fallback URLs, or `undefined` if
+  * nothing satisfies the conditions.
+  * @private
+  */
+  async handlerDidError(param) {
+    for (const fallback of this._fallbackUrls) if (typeof fallback === "string") {
+      const fallbackResponse = await this._serwist.matchPrecache(fallback);
+      if (fallbackResponse !== void 0) return fallbackResponse;
+    } else if (fallback.matcher(param)) {
+      const fallbackResponse = await this._serwist.matchPrecache(fallback.url);
+      if (fallbackResponse !== void 0) return fallbackResponse;
+    }
+  }
+};
+var PrecacheRoute = class extends Route {
+  /**
+  * @param serwist A {@linkcode Serwist} instance.
+  * @param options Options to control how requests are matched
+  * against the list of precached URLs.
+  */
+  constructor(serwist2, options) {
+    const match = ({ request }) => {
+      const urlsToCacheKeys = serwist2.getUrlsToPrecacheKeys();
+      for (const possibleURL of generateURLVariations(request.url, options)) {
+        const cacheKey = urlsToCacheKeys.get(possibleURL);
+        if (cacheKey) return {
+          cacheKey,
+          integrity: serwist2.getIntegrityForPrecacheKey(cacheKey)
+        };
+      }
+      if (true) logger.debug(`Precaching did not find a match for ${getFriendlyURL(request.url)}.`);
+    };
+    super(match, serwist2.precacheStrategy);
+  }
+};
+var PrecacheCacheKeyPlugin = class {
+  _precacheController;
+  constructor({ precacheController }) {
+    this._precacheController = precacheController;
+  }
+  cacheKeyWillBeUsed = async ({ request, params }) => {
+    const cacheKey = params?.cacheKey || this._precacheController.getPrecacheKeyForUrl(request.url);
+    return cacheKey ? new Request(cacheKey, { headers: request.headers }) : request;
+  };
+};
+var parsePrecacheOptions = (serwist2, precacheOptions = {}) => {
+  const { cacheName: precacheCacheName, plugins: precachePlugins = [], fetchOptions: precacheFetchOptions, matchOptions: precacheMatchOptions, fallbackToNetwork: precacheFallbackToNetwork, directoryIndex: precacheDirectoryIndex, ignoreURLParametersMatching: precacheIgnoreUrls, cleanURLs: precacheCleanUrls, urlManipulation: precacheUrlManipulation, cleanupOutdatedCaches: cleanupOutdatedCaches2, concurrency = 10, navigateFallback, navigateFallbackAllowlist, navigateFallbackDenylist } = precacheOptions ?? {};
+  return {
+    precacheStrategyOptions: {
+      cacheName: cacheNames.getPrecacheName(precacheCacheName),
+      plugins: [...precachePlugins, new PrecacheCacheKeyPlugin({ precacheController: serwist2 })],
+      fetchOptions: precacheFetchOptions,
+      matchOptions: precacheMatchOptions,
+      fallbackToNetwork: precacheFallbackToNetwork
+    },
+    precacheRouteOptions: {
+      directoryIndex: precacheDirectoryIndex,
+      ignoreURLParametersMatching: precacheIgnoreUrls,
+      cleanURLs: precacheCleanUrls,
+      urlManipulation: precacheUrlManipulation
+    },
+    precacheMiscOptions: {
+      cleanupOutdatedCaches: cleanupOutdatedCaches2,
+      concurrency,
+      navigateFallback,
+      navigateFallbackAllowlist,
+      navigateFallbackDenylist
+    }
+  };
+};
+var Serwist = class {
+  _urlsToCacheKeys = /* @__PURE__ */ new Map();
+  _urlsToCacheModes = /* @__PURE__ */ new Map();
+  _cacheKeysToIntegrities = /* @__PURE__ */ new Map();
+  _concurrentPrecaching;
+  _precacheStrategy;
+  _routes;
+  _defaultHandlerMap;
+  _catchHandler;
+  _requestRules;
+  constructor({ precacheEntries, precacheOptions, skipWaiting = false, importScripts, navigationPreload = false, cacheId, clientsClaim: clientsClaim$1 = false, runtimeCaching, offlineAnalyticsConfig, disableDevLogs: disableDevLogs$1 = false, fallbacks, requestRules } = {}) {
+    const { precacheStrategyOptions, precacheRouteOptions, precacheMiscOptions } = parsePrecacheOptions(this, precacheOptions);
+    this._concurrentPrecaching = precacheMiscOptions.concurrency;
+    this._precacheStrategy = new PrecacheStrategy(precacheStrategyOptions);
+    this._routes = /* @__PURE__ */ new Map();
+    this._defaultHandlerMap = /* @__PURE__ */ new Map();
+    this._requestRules = requestRules;
+    this.handleInstall = this.handleInstall.bind(this);
+    this.handleActivate = this.handleActivate.bind(this);
+    this.handleFetch = this.handleFetch.bind(this);
+    this.handleCache = this.handleCache.bind(this);
+    if (!!importScripts && importScripts.length > 0) self.importScripts(...importScripts);
+    if (navigationPreload) enableNavigationPreload();
+    if (cacheId !== void 0) setCacheNameDetails({ prefix: cacheId });
+    if (skipWaiting) self.skipWaiting();
+    else self.addEventListener("message", (event) => {
+      if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();
+    });
+    if (clientsClaim$1) clientsClaim();
+    if (!!precacheEntries && precacheEntries.length > 0) this.addToPrecacheList(precacheEntries);
+    if (precacheMiscOptions.cleanupOutdatedCaches) cleanupOutdatedCaches(precacheStrategyOptions.cacheName);
+    this.registerRoute(new PrecacheRoute(this, precacheRouteOptions));
+    if (precacheMiscOptions.navigateFallback) this.registerRoute(new NavigationRoute(this.createHandlerBoundToUrl(precacheMiscOptions.navigateFallback), {
+      allowlist: precacheMiscOptions.navigateFallbackAllowlist,
+      denylist: precacheMiscOptions.navigateFallbackDenylist
+    }));
+    if (offlineAnalyticsConfig !== void 0) if (typeof offlineAnalyticsConfig === "boolean") offlineAnalyticsConfig && initializeGoogleAnalytics({ serwist: this });
+    else initializeGoogleAnalytics({
+      ...offlineAnalyticsConfig,
+      serwist: this
+    });
+    if (runtimeCaching !== void 0) {
+      if (fallbacks !== void 0) {
+        const fallbackPlugin = new PrecacheFallbackPlugin({
+          fallbackUrls: fallbacks.entries,
+          serwist: this
+        });
+        runtimeCaching.forEach((cacheEntry) => {
+          if (cacheEntry.handler instanceof Strategy && !cacheEntry.handler.plugins.some((plugin) => "handlerDidError" in plugin)) cacheEntry.handler.plugins.push(fallbackPlugin);
+        });
+      }
+      for (const entry of runtimeCaching) this.registerCapture(entry.matcher, entry.handler, entry.method);
+    }
+    if (disableDevLogs$1) disableDevLogs();
+  }
+  /**
+  * The strategy used to precache assets and respond to `fetch` events.
+  */
+  get precacheStrategy() {
+    return this._precacheStrategy;
+  }
+  /**
+  * A `Map` of HTTP method name (`'GET'`, etc.) to an array of all corresponding registered {@linkcode Route}
+  * instances.
+  */
+  get routes() {
+    return this._routes;
+  }
+  /**
+  * Adds Serwist's event listeners for you. Before calling it, add your own listeners should you need to.
+  */
+  addEventListeners() {
+    self.addEventListener("install", this.handleInstall);
+    self.addEventListener("activate", this.handleActivate);
+    self.addEventListener("fetch", this.handleFetch);
+    self.addEventListener("message", this.handleCache);
+  }
+  /**
+  * Adds items to the precache list, removing duplicates and ensuring the information is valid.
+  *
+  * @param entries Array of entries to precache.
+  */
+  addToPrecacheList(entries) {
+    if (true) finalAssertExports.isArray(entries, {
+      moduleName: "serwist",
+      className: "Serwist",
+      funcName: "addToCacheList",
+      paramName: "entries"
+    });
+    const urlsToWarnAbout = [];
+    for (const entry of entries) {
+      if (typeof entry === "string") urlsToWarnAbout.push(entry);
+      else if (entry && !entry.integrity && entry.revision === void 0) urlsToWarnAbout.push(entry.url);
+      const { cacheKey, url } = createCacheKey(entry);
+      const cacheMode = typeof entry !== "string" && entry.revision ? "reload" : "default";
+      if (this._urlsToCacheKeys.has(url) && this._urlsToCacheKeys.get(url) !== cacheKey) throw new SerwistError("add-to-cache-list-conflicting-entries", {
+        firstEntry: this._urlsToCacheKeys.get(url),
+        secondEntry: cacheKey
+      });
+      if (typeof entry !== "string" && entry.integrity) {
+        if (this._cacheKeysToIntegrities.has(cacheKey) && this._cacheKeysToIntegrities.get(cacheKey) !== entry.integrity) throw new SerwistError("add-to-cache-list-conflicting-integrities", { url });
+        this._cacheKeysToIntegrities.set(cacheKey, entry.integrity);
+      }
+      this._urlsToCacheKeys.set(url, cacheKey);
+      this._urlsToCacheModes.set(url, cacheMode);
+    }
+    if (urlsToWarnAbout.length > 0) {
+      const warningMessage = `Serwist is precaching URLs without revision info: ${urlsToWarnAbout.join(", ")}
+This is generally NOT safe. Learn more at https://bit.ly/wb-precache`;
+      if (false) console.warn(warningMessage);
+      else logger.warn(warningMessage);
+    }
+  }
+  /**
+  * Precaches new and updated assets. Call this method from the service worker's
+  * `install` event.
+  *
+  * Note: this method calls `event.waitUntil()` for you, so you do not need
+  * to call it yourself in your event handlers.
+  *
+  * @param event
+  * @returns
+  */
+  handleInstall(event) {
+    this.registerRequestRules(event);
+    return waitUntil(event, async () => {
+      const installReportPlugin = new PrecacheInstallReportPlugin();
+      this.precacheStrategy.plugins.push(installReportPlugin);
+      await parallel(this._concurrentPrecaching, Array.from(this._urlsToCacheKeys.entries()), async ([url, cacheKey]) => {
+        const integrity = this._cacheKeysToIntegrities.get(cacheKey);
+        const cacheMode = this._urlsToCacheModes.get(url);
+        const request = new Request(url, {
+          integrity,
+          cache: cacheMode,
+          credentials: "same-origin"
+        });
+        await Promise.all(this.precacheStrategy.handleAll({
+          event,
+          request,
+          url: new URL(request.url),
+          params: { cacheKey }
+        }));
+      });
+      const { updatedURLs, notUpdatedURLs } = installReportPlugin;
+      if (true) printInstallDetails(updatedURLs, notUpdatedURLs);
+      return {
+        updatedURLs,
+        notUpdatedURLs
+      };
+    });
+  }
+  /**
+  * Registers request rules using the experimental `InstallEvent.addRoutes()` API.
+  * These rules allow bypassing the service worker for specific requests to improve performance.
+  *
+  * @param event The event object of an `install` event handler.
+  * @throws {Error} When the route rules are invalid
+  */
+  async registerRequestRules(event) {
+    if (!this._requestRules) return;
+    if (!event?.addRoutes) {
+      if (true) logger.warn("Request rules ignored as the Static Routing API is not supported in this browser. See https://caniuse.com/mdn-api_installevent_addroutes for more information.");
+      return;
+    }
+    try {
+      if (true) logger.warn("Request rules may not be supported in all browsers as the Static Routing API is experimental. This feature allows bypassing the service worker for specific requests to improve performance. See https://developer.mozilla.org/en-US/docs/Web/API/InstallEvent/addRoutes for more information.");
+      await event.addRoutes(this._requestRules);
+      this._requestRules = void 0;
+    } catch (error) {
+      if (true) logger.error(`Failed to register request rules: ${error instanceof Error ? error.message : String(error)}. This may occur if the browser doesn't support the Static Routing API or if the request rules are invalid.`);
+      throw error;
+    }
+  }
+  /**
+  * Deletes assets that are no longer present in the current precache manifest.
+  * Call this method from the service worker's `activate` event.
+  *
+  * Note: this method calls `event.waitUntil()` for you, so you do not need
+  * to call it yourself in your event handlers.
+  *
+  * @param event
+  * @returns
+  */
+  handleActivate(event) {
+    return waitUntil(event, async () => {
+      const cache = await self.caches.open(this.precacheStrategy.cacheName);
+      const currentlyCachedRequests = await cache.keys();
+      const expectedCacheKeys = new Set(this._urlsToCacheKeys.values());
+      const deletedCacheRequests = [];
+      for (const request of currentlyCachedRequests) if (!expectedCacheKeys.has(request.url)) {
+        await cache.delete(request);
+        deletedCacheRequests.push(request.url);
+      }
+      if (true) printCleanupDetails(deletedCacheRequests);
+      return { deletedCacheRequests };
+    });
+  }
+  /**
+  * Gets a `Response` from an appropriate `Route`'s handler. Call this method
+  * from the service worker's `fetch` event.
+  * @param event
+  */
+  handleFetch(event) {
+    const { request } = event;
+    const responsePromise = this.handleRequest({
+      request,
+      event
+    });
+    if (responsePromise) event.respondWith(responsePromise);
+  }
+  /**
+  * Caches new URLs on demand. Call this method from the service worker's
+  * `message` event. To trigger the handler, send a message of type `"CACHE_URLS"`
+  * alongside a list of URLs that should be cached as `urlsToCache`.
+  * @param event
+  */
+  handleCache(event) {
+    if (event.data && event.data.type === "CACHE_URLS") {
+      const { payload } = event.data;
+      if (true) logger.debug("Caching URLs from the window", payload.urlsToCache);
+      const requestPromises = Promise.all(payload.urlsToCache.map((entry) => {
+        let request;
+        if (typeof entry === "string") request = new Request(entry);
+        else request = new Request(...entry);
+        return this.handleRequest({
+          request,
+          event
+        });
+      }));
+      event.waitUntil(requestPromises);
+      if (event.ports?.[0]) requestPromises.then(() => event.ports[0].postMessage(true));
+    }
+  }
+  /**
+  * Define a default handler that's called when no routes explicitly
+  * match the incoming request.
+  *
+  * Each HTTP method (`'GET'`, `'POST'`, etc.) gets its own default handler.
+  *
+  * Without a default handler, unmatched requests will go against the
+  * network as if there were no service worker present.
+  *
+  * @param handler A callback function that returns a `Promise` resulting in a `Response`.
+  * @param method The HTTP method to associate with this default handler. Each method
+  * has its own default. Defaults to `'GET'`.
+  */
+  setDefaultHandler(handler, method = "GET") {
+    this._defaultHandlerMap.set(method, normalizeHandler(handler));
+  }
+  /**
+  * If a {@linkcode Route} throws an error while handling a request, this handler
+  * will be called and given a chance to provide a response.
+  *
+  * @param handler A callback function that returns a `Promise` resulting
+  * in a `Response`.
+  */
+  setCatchHandler(handler) {
+    this._catchHandler = normalizeHandler(handler);
+  }
+  /**
+  * Registers a `RegExp`, string, or function with a caching
+  * strategy to the router.
+  *
+  * @param capture If the capture param is a {@linkcode Route} object, all other arguments will be ignored.
+  * @param handler A callback function that returns a `Promise` resulting in a `Response`.
+  * This parameter is required if `capture` is not a {@linkcode Route} object.
+  * @param method The HTTP method to match the route against. Defaults to `'GET'`.
+  * @returns The generated {@linkcode Route} object.
+  */
+  registerCapture(capture, handler, method) {
+    const route = parseRoute(capture, handler, method);
+    this.registerRoute(route);
+    return route;
+  }
+  /**
+  * Registers a {@linkcode Route} with the router.
+  *
+  * @param route The {@linkcode Route} to register.
+  */
+  registerRoute(route) {
+    if (true) {
+      finalAssertExports.isType(route, "object", {
+        moduleName: "serwist",
+        className: "Serwist",
+        funcName: "registerRoute",
+        paramName: "route"
+      });
+      finalAssertExports.hasMethod(route, "match", {
+        moduleName: "serwist",
+        className: "Serwist",
+        funcName: "registerRoute",
+        paramName: "route"
+      });
+      finalAssertExports.isType(route.handler, "object", {
+        moduleName: "serwist",
+        className: "Serwist",
+        funcName: "registerRoute",
+        paramName: "route"
+      });
+      finalAssertExports.hasMethod(route.handler, "handle", {
+        moduleName: "serwist",
+        className: "Serwist",
+        funcName: "registerRoute",
+        paramName: "route.handler"
+      });
+      finalAssertExports.isType(route.method, "string", {
+        moduleName: "serwist",
+        className: "Serwist",
+        funcName: "registerRoute",
+        paramName: "route.method"
+      });
+    }
+    if (!this._routes.has(route.method)) this._routes.set(route.method, []);
+    this._routes.get(route.method).push(route);
+  }
+  /**
+  * Unregisters a route from the router.
+  *
+  * @param route The {@linkcode Route} object to unregister.
+  */
+  unregisterRoute(route) {
+    if (!this._routes.has(route.method)) throw new SerwistError("unregister-route-but-not-found-with-method", { method: route.method });
+    const routeIndex = this._routes.get(route.method).indexOf(route);
+    if (routeIndex > -1) this._routes.get(route.method).splice(routeIndex, 1);
+    else throw new SerwistError("unregister-route-route-not-registered");
+  }
+  /**
+  * Returns a mapping of a precached URL to the corresponding cache key, taking
+  * into account the revision information for the URL.
+  *
+  * @returns A URL to cache key mapping.
+  */
+  getUrlsToPrecacheKeys() {
+    return this._urlsToCacheKeys;
+  }
+  /**
+  * Returns a list of all the URLs that have been precached by the current
+  * service worker.
+  *
+  * @returns The precached URLs.
+  */
+  getPrecachedUrls() {
+    return [...this._urlsToCacheKeys.keys()];
+  }
+  /**
+  * Returns the cache key used for storing a given URL. If that URL is
+  * unversioned, like "/index.html", then the cache key will be the original
+  * URL with a search parameter appended to it.
+  *
+  * @param url A URL whose cache key you want to look up.
+  * @returns The versioned URL that corresponds to a cache key
+  * for the original URL, or undefined if that URL isn't precached.
+  */
+  getPrecacheKeyForUrl(url) {
+    const urlObject = new URL(url, location.href);
+    return this._urlsToCacheKeys.get(urlObject.href);
+  }
+  /**
+  * @param url A cache key whose SRI you want to look up.
+  * @returns The subresource integrity associated with the cache key,
+  * or undefined if it's not set.
+  */
+  getIntegrityForPrecacheKey(cacheKey) {
+    return this._cacheKeysToIntegrities.get(cacheKey);
+  }
+  /**
+  * This acts as a drop-in replacement for
+  * [`cache.match()`](https://developer.mozilla.org/en-US/docs/Web/API/Cache/match)
+  * with the following differences:
+  *
+  * - It knows what the name of the precache is, and only checks in that cache.
+  * - It allows you to pass in an "original" URL without versioning parameters,
+  * and it will automatically look up the correct cache key for the currently
+  * active revision of that URL.
+  *
+  * E.g., `matchPrecache('index.html')` will find the correct precached
+  * response for the currently active service worker, even if the actual cache
+  * key is `'/index.html?__WB_REVISION__=1234abcd'`.
+  *
+  * @param request The key (without revisioning parameters)
+  * to look up in the precache.
+  * @returns
+  */
+  async matchPrecache(request) {
+    const url = request instanceof Request ? request.url : request;
+    const cacheKey = this.getPrecacheKeyForUrl(url);
+    if (cacheKey) return (await self.caches.open(this.precacheStrategy.cacheName)).match(cacheKey);
+  }
+  /**
+  * Returns a function that looks up `url` in the precache (taking into
+  * account revision information), and returns the corresponding `Response`.
+  *
+  * @param url The precached URL which will be used to lookup the response.
+  * @return
+  */
+  createHandlerBoundToUrl(url) {
+    const cacheKey = this.getPrecacheKeyForUrl(url);
+    if (!cacheKey) throw new SerwistError("non-precached-url", { url });
+    return (options) => {
+      options.request = new Request(url);
+      options.params = {
+        cacheKey,
+        ...options.params
+      };
+      return this.precacheStrategy.handle(options);
+    };
+  }
+  /**
+  * Applies the routing rules to a `FetchEvent` object to get a response from an
+  * appropriate route.
+  *
+  * @param options
+  * @returns A promise is returned if a registered route can handle the request.
+  * If there is no matching route and there's no default handler, `undefined`
+  * is returned.
+  */
+  handleRequest({ request, event }) {
+    if (true) finalAssertExports.isInstance(request, Request, {
+      moduleName: "serwist",
+      className: "Serwist",
+      funcName: "handleRequest",
+      paramName: "options.request"
+    });
+    const url = new URL(request.url, location.href);
+    if (!url.protocol.startsWith("http")) {
+      if (true) logger.debug("Router only supports URLs that start with 'http'.");
+      return;
+    }
+    const sameOrigin = url.origin === location.origin;
+    const { params, route } = this.findMatchingRoute({
+      event,
+      request,
+      sameOrigin,
+      url
+    });
+    let handler = route?.handler;
+    const debugMessages = [];
+    if (true) {
+      if (handler) {
+        debugMessages.push(["Found a route to handle this request:", route]);
+        if (params) debugMessages.push([`Passing the following params to the route's handler:`, params]);
+      }
+    }
+    const method = request.method;
+    if (!handler && this._defaultHandlerMap.has(method)) {
+      if (true) debugMessages.push(`Failed to find a matching route. Falling back to the default handler for ${method}.`);
+      handler = this._defaultHandlerMap.get(method);
+    }
+    if (!handler) {
+      if (true) logger.debug(`No route found for: ${getFriendlyURL(url)}`);
+      return;
+    }
+    if (true) {
+      logger.groupCollapsed(`Router is responding to: ${getFriendlyURL(url)}`);
+      for (const msg of debugMessages) if (Array.isArray(msg)) logger.log(...msg);
+      else logger.log(msg);
+      logger.groupEnd();
+    }
+    let responsePromise;
+    try {
+      responsePromise = handler.handle({
+        url,
+        request,
+        event,
+        params
+      });
+    } catch (err) {
+      responsePromise = Promise.reject(err);
+    }
+    const catchHandler = route?.catchHandler;
+    if (responsePromise instanceof Promise && (this._catchHandler || catchHandler)) responsePromise = responsePromise.catch(async (err) => {
+      if (catchHandler) {
+        if (true) {
+          logger.groupCollapsed(`Error thrown when responding to:  ${getFriendlyURL(url)}. Falling back to route's Catch Handler.`);
+          logger.error("Error thrown by:", route);
+          logger.error(err);
+          logger.groupEnd();
+        }
+        try {
+          return await catchHandler.handle({
+            url,
+            request,
+            event,
+            params
+          });
+        } catch (catchErr) {
+          if (catchErr instanceof Error) err = catchErr;
+        }
+      }
+      if (this._catchHandler) {
+        if (true) {
+          logger.groupCollapsed(`Error thrown when responding to:  ${getFriendlyURL(url)}. Falling back to global Catch Handler.`);
+          logger.error("Error thrown by:", route);
+          logger.error(err);
+          logger.groupEnd();
+        }
+        return this._catchHandler.handle({
+          url,
+          request,
+          event
+        });
+      }
+      throw err;
+    });
+    return responsePromise;
+  }
+  /**
+  * Checks a request and URL (and optionally an event) against the list of
+  * registered routes, and if there's a match, returns the corresponding
+  * route along with any params generated by the match.
+  *
+  * @param options
+  * @returns An object with `route` and `params` properties. They are populated
+  * if a matching route was found or `undefined` otherwise.
+  */
+  findMatchingRoute({ url, sameOrigin, request, event }) {
+    const routes = this._routes.get(request.method) || [];
+    for (const route of routes) {
+      let params;
+      const matchResult = route.match({
+        url,
+        sameOrigin,
+        request,
+        event
+      });
+      if (matchResult) {
+        if (true) {
+          if (matchResult instanceof Promise) logger.warn(`While routing ${getFriendlyURL(url)}, an async matchCallback function was used. Please convert the following route to use a synchronous matchCallback function:`, route);
+        }
+        params = matchResult;
+        if (Array.isArray(params) && params.length === 0) params = void 0;
+        else if (matchResult.constructor === Object && Object.keys(matchResult).length === 0) params = void 0;
+        else if (typeof matchResult === "boolean") params = void 0;
+        return {
+          route,
+          params
+        };
+      }
+    }
+    return {};
+  }
+};
+
+// node_modules/@serwist/next/dist/index.worker.mjs
+var defaultCache = true ? [{
+  matcher: /.*/i,
+  handler: new NetworkOnly()
+}] : [
+  {
+    matcher: /^https:\/\/fonts\.(?:gstatic)\.com\/.*/i,
+    handler: new CacheFirst({
+      cacheName: "google-fonts-webfonts",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 4,
+        maxAgeSeconds: 365 * 24 * 60 * 60,
+        maxAgeFrom: "last-used"
+      })]
+    })
+  },
+  {
+    matcher: /^https:\/\/fonts\.(?:googleapis)\.com\/.*/i,
+    handler: new StaleWhileRevalidate({
+      cacheName: "google-fonts-stylesheets",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 4,
+        maxAgeSeconds: 10080 * 60,
+        maxAgeFrom: "last-used"
+      })]
+    })
+  },
+  {
+    matcher: /\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i,
+    handler: new StaleWhileRevalidate({
+      cacheName: "static-font-assets",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 4,
+        maxAgeSeconds: 10080 * 60,
+        maxAgeFrom: "last-used"
+      })]
+    })
+  },
+  {
+    matcher: /\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i,
+    handler: new StaleWhileRevalidate({
+      cacheName: "static-image-assets",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 64,
+        maxAgeSeconds: 720 * 60 * 60,
+        maxAgeFrom: "last-used"
+      })]
+    })
+  },
+  {
+    matcher: /\/_next\/static.+\.js$/i,
+    handler: new CacheFirst({
+      cacheName: "next-static-js-assets",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 64,
+        maxAgeSeconds: 1440 * 60,
+        maxAgeFrom: "last-used"
+      })]
+    })
+  },
+  {
+    matcher: /\/_next\/image\?url=.+$/i,
+    handler: new StaleWhileRevalidate({
+      cacheName: "next-image",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 64,
+        maxAgeSeconds: 1440 * 60,
+        maxAgeFrom: "last-used"
+      })]
+    })
+  },
+  {
+    matcher: /\.(?:mp3|wav|ogg)$/i,
+    handler: new CacheFirst({
+      cacheName: "static-audio-assets",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 32,
+        maxAgeSeconds: 1440 * 60,
+        maxAgeFrom: "last-used"
+      }), new RangeRequestsPlugin()]
+    })
+  },
+  {
+    matcher: /\.(?:mp4|webm)$/i,
+    handler: new CacheFirst({
+      cacheName: "static-video-assets",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 32,
+        maxAgeSeconds: 1440 * 60,
+        maxAgeFrom: "last-used"
+      }), new RangeRequestsPlugin()]
+    })
+  },
+  {
+    matcher: /\.(?:js)$/i,
+    handler: new StaleWhileRevalidate({
+      cacheName: "static-js-assets",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 48,
+        maxAgeSeconds: 1440 * 60,
+        maxAgeFrom: "last-used"
+      })]
+    })
+  },
+  {
+    matcher: /\.(?:css|less)$/i,
+    handler: new StaleWhileRevalidate({
+      cacheName: "static-style-assets",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 32,
+        maxAgeSeconds: 1440 * 60,
+        maxAgeFrom: "last-used"
+      })]
+    })
+  },
+  {
+    matcher: /\/_next\/data\/.+\/.+\.json$/i,
+    handler: new NetworkFirst({
+      cacheName: "next-data",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 32,
+        maxAgeSeconds: 1440 * 60,
+        maxAgeFrom: "last-used"
+      })]
+    })
+  },
+  {
+    matcher: /\.(?:json|xml|csv)$/i,
+    handler: new NetworkFirst({
+      cacheName: "static-data-assets",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 32,
+        maxAgeSeconds: 1440 * 60,
+        maxAgeFrom: "last-used"
+      })]
+    })
+  },
+  {
+    matcher: /\/api\/auth\/.*/,
+    handler: new NetworkOnly({ networkTimeoutSeconds: 10 })
+  },
+  {
+    matcher: ({ sameOrigin, url: { pathname } }) => sameOrigin && pathname.startsWith("/api/"),
+    method: "GET",
+    handler: new NetworkFirst({
+      cacheName: "apis",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 16,
+        maxAgeSeconds: 1440 * 60,
+        maxAgeFrom: "last-used"
+      })],
+      networkTimeoutSeconds: 10
+    })
+  },
+  {
+    matcher: ({ request, url: { pathname }, sameOrigin }) => request.headers.get("RSC") === "1" && request.headers.get("Next-Router-Prefetch") === "1" && sameOrigin && !pathname.startsWith("/api/"),
+    handler: new NetworkFirst({
+      cacheName: PAGES_CACHE_NAME.rscPrefetch,
+      plugins: [new ExpirationPlugin({
+        maxEntries: 32,
+        maxAgeSeconds: 1440 * 60
+      })]
+    })
+  },
+  {
+    matcher: ({ request, url: { pathname }, sameOrigin }) => request.headers.get("RSC") === "1" && sameOrigin && !pathname.startsWith("/api/"),
+    handler: new NetworkFirst({
+      cacheName: PAGES_CACHE_NAME.rsc,
+      plugins: [new ExpirationPlugin({
+        maxEntries: 32,
+        maxAgeSeconds: 1440 * 60
+      })]
+    })
+  },
+  {
+    matcher: ({ request, url: { pathname }, sameOrigin }) => request.headers.get("Content-Type")?.includes("text/html") && sameOrigin && !pathname.startsWith("/api/"),
+    handler: new NetworkFirst({
+      cacheName: PAGES_CACHE_NAME.html,
+      plugins: [new ExpirationPlugin({
+        maxEntries: 32,
+        maxAgeSeconds: 1440 * 60
+      })]
+    })
+  },
+  {
+    matcher: ({ url: { pathname }, sameOrigin }) => sameOrigin && !pathname.startsWith("/api/"),
+    handler: new NetworkFirst({
+      cacheName: "others",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 32,
+        maxAgeSeconds: 1440 * 60
+      })]
+    })
+  },
+  {
+    matcher: ({ sameOrigin }) => !sameOrigin,
+    handler: new NetworkFirst({
+      cacheName: "cross-origin",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 32,
+        maxAgeSeconds: 3600
+      })],
+      networkTimeoutSeconds: 10
+    })
+  },
+  {
+    matcher: /.*/i,
+    method: "GET",
+    handler: new NetworkOnly()
+  }
+];
+
+// src/sw.ts
+var customRuntimeCaching = [
+  {
+    matcher: ({ url }) => url.pathname.startsWith("/api/") || url.pathname.startsWith("/owner") || url.pathname.startsWith("/clinic") || url.pathname.startsWith("/admin") || url.pathname.startsWith("/caregiver"),
+    handler: new NetworkOnly()
+  },
+  ...defaultCache
+];
+var serwist = new Serwist({
+  precacheEntries: void 0,
+  skipWaiting: true,
+  clientsClaim: true,
+  navigationPreload: true,
+  runtimeCaching: customRuntimeCaching,
+  fallbacks: {
+    entries: [
+      {
+        url: "/offline",
+        matcher({ request }) {
+          return request.destination === "document";
+        }
+      }
+    ]
+  }
+});
+serwist.addEventListeners();
+self.addEventListener("install", (event) => {
+  event.waitUntil(self.skipWaiting());
+});
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    (async () => {
+      await self.clients.claim();
+      const cacheNames2 = await self.caches.keys();
+      const sensitiveCachePrefixes = [
+        "apis",
+        "pages",
+        "pages-rsc",
+        "pages-rsc-prefetch",
+        "serwist-runtime"
+      ];
+      await Promise.all(
+        cacheNames2.map((cacheName) => {
+          if (sensitiveCachePrefixes.some((prefix) => cacheName.includes(prefix))) {
+            console.info(`[sw] Purging sensitive cache: ${cacheName}`);
+            return self.caches.delete(cacheName);
+          }
+          return Promise.resolve(true);
+        })
+      );
+    })()
+  );
+});
+self.addEventListener("push", (event) => {
+  if (!event.data) return;
+  let payload;
+  try {
+    payload = event.data.json();
+  } catch {
+    payload = { title: "Odi.Pet", body: event.data.text() };
+  }
+  const title = payload.title ?? "Odi.Pet";
+  const options = {
+    body: payload.body ?? "",
+    icon: payload.icon ?? "/icon-192.png",
+    badge: payload.badge ?? "/icon-192.png",
+    tag: payload.tag ?? `odi-${Date.now()}`,
+    renotify: true,
+    data: {
+      url: payload.url ?? "/owner/notifications"
+    }
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const data = event.notification.data;
+  let targetUrl = "/owner/notifications";
+  try {
+    const requestedUrl = new URL(data?.url ?? targetUrl, self.location.origin);
+    if (requestedUrl.origin === self.location.origin) {
+      targetUrl = `${requestedUrl.pathname}${requestedUrl.search}${requestedUrl.hash}`;
+    }
+  } catch {
+  }
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients) => {
+      for (const client of windowClients) {
+        if (client.url.includes(self.location.origin) && "focus" in client) {
+          return client.navigate(targetUrl).then(() => client.focus());
+        }
+      }
+      return self.clients.openWindow(targetUrl);
+    })
+  );
+});
 //# sourceMappingURL=sw.js.map
