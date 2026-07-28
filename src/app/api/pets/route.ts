@@ -5,6 +5,7 @@ import { revalidatePath, revalidateTag } from 'next/cache'
 import { generateVaccinationPlan } from '@/features/pets/vaccination-algorithm'
 import { logOnboardingEvent } from '@/lib/agents/dataQualityAgent'
 import { createVaccineNotifications } from '@/lib/notifications/createVaccineNotifications'
+import { createPetWithCompatibility } from '@/lib/pets/create-pet-with-compatibility'
 
 function str(fd: FormData, key: string): string | null {
   const v = fd.get(key) as string | null
@@ -139,10 +140,11 @@ export async function POST(req: NextRequest) {
 
 
 
-  const { data: rpcData, error } = await supabase.rpc(
-    'create_pet_with_primary_membership',
-    { p_payload: payload }
-  )
+  const {
+    data: rpcData,
+    error,
+    usedLegacyFallback,
+  } = await createPetWithCompatibility(supabase, user.id, payload)
 
   if (error) {
     console.error('[API/Pets] INSERT error:', JSON.stringify(error))
@@ -176,6 +178,10 @@ export async function POST(req: NextRequest) {
       { error: 'Kayıt oluşturuldu ancak yanıt doğrulanamadı.' },
       { status: 500 }
     )
+  }
+
+  if (usedLegacyFallback) {
+    console.warn('[API/Pets] Pet created through the remote-schema compatibility path.')
   }
 
   // ─── Katman 1: İlk Kilo ve Boy Kaydının Alınması ────────────────
