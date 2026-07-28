@@ -8,9 +8,10 @@ export default async function PetsPage() {
 
   const supabase = await createServerSupabaseClient()
   const { count } = await supabase
-    .from('pets')
+    .from('pet_memberships')
     .select('id', { count: 'exact', head: true })
-    .eq('owner_id', profile.id)
+    .eq('profile_id', profile.id)
+    .eq('status', 'active')
 
   if (count === 0) {
     redirect('/owner/pets/add')

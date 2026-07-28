@@ -27,6 +27,17 @@ export default async function OwnerDashboard() {
     await getCachedDashboardData(user.id)
 
   const supabase = await createServerSupabaseClient()
+
+  // Kullanıcının e-postasına gelen bekleyen bakım ekibi davetleri
+  const { data: pendingUserInvites } = user.email
+    ? await supabase
+        .from('pet_invites')
+        .select('id, token, role, created_at, expires_at, pets(id, name, species, breed, avatar_url, profiles(first_name, last_name))')
+        .eq('email', user.email)
+        .eq('status', 'pending')
+        .gt('expires_at', new Date().toISOString())
+    : { data: null }
+
   const { data: lostReportsRaw } = await supabase
     .from('lost_reports')
     .select('*, pets(name, avatar_url, species, breed, city)')
@@ -169,6 +180,7 @@ export default async function OwnerDashboard() {
             lostReports={lostReports}
             allWeightLogs={allWeightLogs}
             journalEntries={journalEntries || []}
+            pendingUserInvites={pendingUserInvites || []}
           />
         )}
       </div>

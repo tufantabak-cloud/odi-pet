@@ -9,6 +9,7 @@ import { calcAge } from '@/lib/pets/utils'
 import { getNowTR } from '@/lib/utils'
 import PetDetailClient from './PetDetailClient'
 import { getPlanDisplayTitle } from '@/lib/plans/utils'
+import { hasPetCapability } from '@/lib/pets/access'
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -22,15 +23,26 @@ export default async function PetDetailPage(props: PageProps) {
 
   const { id } = await props.params
   const isAdmin = profile.role === 'admin' || profile.role === 'founder'
-  
-  // Use admin client for admins/founders to bypass RLS, otherwise use server client
-  const supabase = isAdmin ? createAdminSupabaseClient() : await createServerSupabaseClient()
 
-  let petQuery = supabase.from('pets').select('*').eq('id', id)
+  // Pet erişimini legacy owner_id filtresi yerine kanonik üyelik yetkisiyle
+  // doğrula. Veri sorguları yine kullanıcının RLS kapsamındaki client'ı ile
+  // çalışır; admin/founder mevcut davranış gereği service client kullanır.
+  const serverSupabase = await createServerSupabaseClient()
   if (!isAdmin) {
-    petQuery = petQuery.eq('owner_id', profile.id)
+    const canViewPet = await hasPetCapability(
+      serverSupabase,
+      id,
+      'can_view_pet'
+    )
+    if (!canViewPet) redirect('/owner/dashboard')
   }
-  const { data: pet } = await petQuery.single()
+
+  const supabase = isAdmin ? createAdminSupabaseClient() : serverSupabase
+  const { data: pet } = await supabase
+    .from('pets')
+    .select('*')
+    .eq('id', id)
+    .single()
 
   if (!pet) redirect('/owner/dashboard')
 

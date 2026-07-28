@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -4020,14 +4020,21 @@ export type Database = {
       }
       parasite_records: {
         Row: {
+          active_ingredient: string | null
           administered_at: string
+          administration_place: string | null
+          amount: number | null
           application_method: string
+          applied_dose: string | null
           brand_free_text: string | null
           created_at: string
           created_by: string | null
+          currency: string
           document_storage_path: string | null
           id: string
           idempotency_key: string | null
+          institution_name: string | null
+          lot_number: string | null
           notes: string | null
           parasite_code: string
           parasite_product_id: string | null
@@ -4035,20 +4042,31 @@ export type Database = {
           parasite_type: string
           pet_id: string
           plan_id: string | null
+          product_expiry_at: string | null
           product_free_text: string | null
+          product_notes: string | null
           protection_duration_days: number
+          provider_name: string | null
+          reaction_observed: string | null
           source: string
           updated_at: string
         }
         Insert: {
+          active_ingredient?: string | null
           administered_at: string
+          administration_place?: string | null
+          amount?: number | null
           application_method: string
+          applied_dose?: string | null
           brand_free_text?: string | null
           created_at?: string
           created_by?: string | null
+          currency?: string
           document_storage_path?: string | null
           id?: string
           idempotency_key?: string | null
+          institution_name?: string | null
+          lot_number?: string | null
           notes?: string | null
           parasite_code: string
           parasite_product_id?: string | null
@@ -4056,20 +4074,31 @@ export type Database = {
           parasite_type: string
           pet_id: string
           plan_id?: string | null
+          product_expiry_at?: string | null
           product_free_text?: string | null
+          product_notes?: string | null
           protection_duration_days: number
+          provider_name?: string | null
+          reaction_observed?: string | null
           source: string
           updated_at?: string
         }
         Update: {
+          active_ingredient?: string | null
           administered_at?: string
+          administration_place?: string | null
+          amount?: number | null
           application_method?: string
+          applied_dose?: string | null
           brand_free_text?: string | null
           created_at?: string
           created_by?: string | null
+          currency?: string
           document_storage_path?: string | null
           id?: string
           idempotency_key?: string | null
+          institution_name?: string | null
+          lot_number?: string | null
           notes?: string | null
           parasite_code?: string
           parasite_product_id?: string | null
@@ -4077,8 +4106,12 @@ export type Database = {
           parasite_type?: string
           pet_id?: string
           plan_id?: string | null
+          product_expiry_at?: string | null
           product_free_text?: string | null
+          product_notes?: string | null
           protection_duration_days?: number
+          provider_name?: string | null
+          reaction_observed?: string | null
           source?: string
           updated_at?: string
         }
@@ -4124,32 +4157,38 @@ export type Database = {
         Row: {
           amount: number
           created_at: string | null
+          currency: string
           id: string
           notes: string | null
           payment_date: string | null
           payment_type: string | null
           pet_id: string | null
           record_id: string | null
+          record_type: string | null
         }
         Insert: {
           amount: number
           created_at?: string | null
+          currency?: string
           id?: string
           notes?: string | null
           payment_date?: string | null
           payment_type?: string | null
           pet_id?: string | null
           record_id?: string | null
+          record_type?: string | null
         }
         Update: {
           amount?: number
           created_at?: string | null
+          currency?: string
           id?: string
           notes?: string | null
           payment_date?: string | null
           payment_type?: string | null
           pet_id?: string | null
           record_id?: string | null
+          record_type?: string | null
         }
         Relationships: [
           {
@@ -4964,6 +5003,175 @@ export type Database = {
           },
           {
             foreignKeyName: "pet_members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pet_membership_events: {
+        Row: {
+          actor_profile_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          membership_id: string | null
+          new_role: Database["public"]["Enums"]["pet_membership_role"] | null
+          old_role: Database["public"]["Enums"]["pet_membership_role"] | null
+          pet_id: string
+          profile_id: string
+          reason: string | null
+          request_id: string | null
+          source: Database["public"]["Enums"]["pet_membership_source"]
+        }
+        Insert: {
+          actor_profile_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          membership_id?: string | null
+          new_role?: Database["public"]["Enums"]["pet_membership_role"] | null
+          old_role?: Database["public"]["Enums"]["pet_membership_role"] | null
+          pet_id: string
+          profile_id: string
+          reason?: string | null
+          request_id?: string | null
+          source: Database["public"]["Enums"]["pet_membership_source"]
+        }
+        Update: {
+          actor_profile_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          membership_id?: string | null
+          new_role?: Database["public"]["Enums"]["pet_membership_role"] | null
+          old_role?: Database["public"]["Enums"]["pet_membership_role"] | null
+          pet_id?: string
+          profile_id?: string
+          reason?: string | null
+          request_id?: string | null
+          source?: Database["public"]["Enums"]["pet_membership_source"]
+        }
+        Relationships: []
+      }
+      pet_membership_migration_issues: {
+        Row: {
+          created_at: string
+          details: Json
+          id: string
+          issue_type: string
+          pet_id: string | null
+          profile_id: string | null
+          resolution_status: string
+          resolved_at: string | null
+          resolved_by: string | null
+          source_record_id: string | null
+          source_table: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json
+          id?: string
+          issue_type: string
+          pet_id?: string | null
+          profile_id?: string | null
+          resolution_status?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source_record_id?: string | null
+          source_table: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json
+          id?: string
+          issue_type?: string
+          pet_id?: string | null
+          profile_id?: string | null
+          resolution_status?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source_record_id?: string | null
+          source_table?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pet_membership_migration_issues_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pet_memberships: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          id: string
+          invite_id: string | null
+          invited_by: string | null
+          pet_id: string
+          profile_id: string
+          revoked_at: string | null
+          role: Database["public"]["Enums"]["pet_membership_role"]
+          source: Database["public"]["Enums"]["pet_membership_source"]
+          status: Database["public"]["Enums"]["pet_membership_status"]
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          id?: string
+          invite_id?: string | null
+          invited_by?: string | null
+          pet_id: string
+          profile_id: string
+          revoked_at?: string | null
+          role: Database["public"]["Enums"]["pet_membership_role"]
+          source: Database["public"]["Enums"]["pet_membership_source"]
+          status?: Database["public"]["Enums"]["pet_membership_status"]
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          id?: string
+          invite_id?: string | null
+          invited_by?: string | null
+          pet_id?: string
+          profile_id?: string
+          revoked_at?: string | null
+          role?: Database["public"]["Enums"]["pet_membership_role"]
+          source?: Database["public"]["Enums"]["pet_membership_source"]
+          status?: Database["public"]["Enums"]["pet_membership_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pet_memberships_invite_id_fkey"
+            columns: ["invite_id"]
+            isOneToOne: false
+            referencedRelation: "pet_invites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pet_memberships_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pet_memberships_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pet_memberships_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -6798,11 +7006,14 @@ export type Database = {
       vaccine_records_v2: {
         Row: {
           administered_at: string | null
+          administration_place: string | null
           administration_route: string | null
+          amount: number | null
           brand_free_text: string | null
           brand_id: string | null
           confidence_level: string
           created_at: string | null
+          currency: string
           document_image_url: string | null
           document_storage_path: string | null
           dose_number: number | null
@@ -6810,12 +7021,15 @@ export type Database = {
           expiration_date: string | null
           id: string
           idempotency_key: string | null
+          institution_name: string | null
           lot_number: string | null
           manufacturer_free_text: string | null
           next_due_at: string | null
           notes: string | null
           pet_id: string
           plan_id: string | null
+          product_notes: string | null
+          provider_name: string | null
           reaction_observed: string | null
           source: string
           status: string
@@ -6826,11 +7040,14 @@ export type Database = {
         }
         Insert: {
           administered_at?: string | null
+          administration_place?: string | null
           administration_route?: string | null
+          amount?: number | null
           brand_free_text?: string | null
           brand_id?: string | null
           confidence_level?: string
           created_at?: string | null
+          currency?: string
           document_image_url?: string | null
           document_storage_path?: string | null
           dose_number?: number | null
@@ -6838,12 +7055,15 @@ export type Database = {
           expiration_date?: string | null
           id?: string
           idempotency_key?: string | null
+          institution_name?: string | null
           lot_number?: string | null
           manufacturer_free_text?: string | null
           next_due_at?: string | null
           notes?: string | null
           pet_id: string
           plan_id?: string | null
+          product_notes?: string | null
+          provider_name?: string | null
           reaction_observed?: string | null
           source?: string
           status?: string
@@ -6854,11 +7074,14 @@ export type Database = {
         }
         Update: {
           administered_at?: string | null
+          administration_place?: string | null
           administration_route?: string | null
+          amount?: number | null
           brand_free_text?: string | null
           brand_id?: string | null
           confidence_level?: string
           created_at?: string | null
+          currency?: string
           document_image_url?: string | null
           document_storage_path?: string | null
           dose_number?: number | null
@@ -6866,12 +7089,15 @@ export type Database = {
           expiration_date?: string | null
           id?: string
           idempotency_key?: string | null
+          institution_name?: string | null
           lot_number?: string | null
           manufacturer_free_text?: string | null
           next_due_at?: string | null
           notes?: string | null
           pet_id?: string
           plan_id?: string | null
+          product_notes?: string | null
+          provider_name?: string | null
           reaction_observed?: string | null
           source?: string
           status?: string
@@ -7191,6 +7417,7 @@ export type Database = {
       }
     }
     Functions: {
+      accept_pet_caregiver_invite: { Args: { p_token: string }; Returns: Json }
       backfill_pet_nutrition_profiles_to_assignments: {
         Args: never
         Returns: number
@@ -7199,6 +7426,24 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: number
       }
+      can_delete_pet: { Args: { p_pet_id: string }; Returns: boolean }
+      can_edit_pet_profile: { Args: { p_pet_id: string }; Returns: boolean }
+      can_manage_pet_billing: { Args: { p_pet_id: string }; Returns: boolean }
+      can_manage_pet_care: { Args: { p_pet_id: string }; Returns: boolean }
+      can_manage_pet_caregivers: {
+        Args: { p_pet_id: string }
+        Returns: boolean
+      }
+      can_manage_pet_ownership: { Args: { p_pet_id: string }; Returns: boolean }
+      can_publish_pet_lost_report: {
+        Args: { p_pet_id: string }
+        Returns: boolean
+      }
+      can_view_pet: { Args: { p_pet_id: string }; Returns: boolean }
+      change_pet_caregiver_role: {
+        Args: { p_pet_id: string; p_profile_id: string; p_role: string }
+        Returns: Json
+      }
       change_vet_review_requirement: {
         Args: {
           p_article_id: string
@@ -7206,6 +7451,10 @@ export type Database = {
           p_reason: string
         }
         Returns: Json
+      }
+      clinic_admin_can_view_profile: {
+        Args: { p_admin_id?: string; p_profile_id: string }
+        Returns: boolean
       }
       complete_parasite_plan: {
         Args: {
@@ -7274,6 +7523,10 @@ export type Database = {
         }
         Returns: Json
       }
+      create_pet_caregiver_invite: {
+        Args: { p_email: string; p_pet_id: string; p_role: string }
+        Returns: Json
+      }
       create_pet_notification: {
         Args: {
           p_body?: string
@@ -7286,7 +7539,19 @@ export type Database = {
         }
         Returns: undefined
       }
+      create_pet_with_primary_membership: {
+        Args: { p_payload: Json }
+        Returns: Json
+      }
+      current_pet_role: {
+        Args: { p_pet_id: string }
+        Returns: Database["public"]["Enums"]["pet_membership_role"]
+      }
       decrement_vet_load: { Args: { p_vet_id: string }; Returns: undefined }
+      delete_pet_with_memberships: {
+        Args: { p_pet_id: string; p_request_id?: string }
+        Returns: Json
+      }
       end_pet_food_assignment: {
         Args: {
           p_assignment_id: string
@@ -7303,9 +7568,18 @@ export type Database = {
       }
       increment_vet_load: { Args: { p_vet_id: string }; Returns: undefined }
       is_admin_or_founder: { Args: never; Returns: boolean }
+      is_clinic_admin_of: {
+        Args: { p_clinic_id: string; p_user_id?: string }
+        Returns: boolean
+      }
+      is_primary_pet_owner: { Args: { p_pet_id: string }; Returns: boolean }
       is_valid_method_array: { Args: { arr: string[] }; Returns: boolean }
       process_smart_scan_results: {
         Args: { p_parsed_data: Json; p_pet_id: string; p_record_type: string }
+        Returns: Json
+      }
+      remove_pet_caregiver: {
+        Args: { p_legacy_member_id: string; p_pet_id: string }
         Returns: Json
       }
       run_escalation_check: {
@@ -7326,6 +7600,14 @@ export type Database = {
         }
         Returns: Json
       }
+      transfer_pet_primary_owner: {
+        Args: {
+          p_new_profile_id: string
+          p_pet_id: string
+          p_request_id?: string
+        }
+        Returns: Json
+      }
       update_article_with_revision: {
         Args: {
           p_actor_id: string
@@ -7341,6 +7623,10 @@ export type Database = {
       }
       user_has_pet_access: { Args: { p_pet_id: string }; Returns: boolean }
       user_is_pet_member: { Args: { p_pet_id: string }; Returns: boolean }
+      user_owns_pet: {
+        Args: { p_pet_id: string; p_user_id?: string }
+        Returns: boolean
+      }
       user_pet_role: { Args: { p_pet_id: string }; Returns: string }
       verify_job_source_atomic: {
         Args: {
@@ -7356,6 +7642,19 @@ export type Database = {
     }
     Enums: {
       appointment_status: "pending" | "confirmed" | "cancelled" | "completed"
+      pet_membership_role:
+        | "primary_owner"
+        | "co_owner"
+        | "care_admin"
+        | "care_editor"
+        | "viewer"
+      pet_membership_source:
+        | "pet_creation"
+        | "invitation"
+        | "ownership_transfer"
+        | "migration"
+        | "admin_recovery"
+      pet_membership_status: "active" | "revoked"
       user_role:
         | "owner"
         | "vet"
@@ -7498,6 +7797,21 @@ export const Constants = {
   public: {
     Enums: {
       appointment_status: ["pending", "confirmed", "cancelled", "completed"],
+      pet_membership_role: [
+        "primary_owner",
+        "co_owner",
+        "care_admin",
+        "care_editor",
+        "viewer",
+      ],
+      pet_membership_source: [
+        "pet_creation",
+        "invitation",
+        "ownership_transfer",
+        "migration",
+        "admin_recovery",
+      ],
+      pet_membership_status: ["active", "revoked"],
       user_role: [
         "owner",
         "vet",

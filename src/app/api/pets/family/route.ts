@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
+import { sendCaregiverInviteEmail } from '@/lib/email/invite-email'
+import {
+  hasPetCapability,
+  ownershipRpcCode,
+  ownershipRpcSucceeded,
+} from '@/lib/pets/access'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,57 +20,80 @@ export async function POST(req: NextRequest) {
 
   const supabase = await createServerSupabaseClient()
 
-  // Verify caller has owner or admin role
-  const { data: callerRole } = await supabase.rpc('user_pet_role', { p_pet_id: pet_id })
-  if (!callerRole || !['owner', 'admin'].includes(callerRole)) {
-    return NextResponse.json({ error: 'Yetkisiz: Sadece sahip veya admin davet gönderebilir' }, { status: 403 })
-  }
-
-  // Check subscription plan limits
-  const { data: sub } = await supabase.from('user_subscriptions').select('plan').eq('profile_id', user.id).single()
-  const { count: memberCount } = await supabase.from('pet_members').select('id', { count: 'exact', head: true }).eq('pet_id', pet_id)
-  const limit = sub?.plan === 'ai_plus' ? 999 : sub?.plan === 'pro' ? 5 : 2
-  if ((memberCount ?? 0) >= limit) {
-    return NextResponse.json({ error: `Plan limitine ulaşıldı (${limit} üye). Yükseltmek için Pro'ya geçin.` }, { status: 403 })
-  }
-
   // Get pet name for invite message
   const { data: pet } = await supabase.from('pets').select('name').eq('id', pet_id).single()
 
-  // Upsert invite (re-invite if previously revoked/expired)
-  const { data: invite, error } = await supabase
-    .from('pet_invites')
-    .upsert({
-      pet_id,
-      invited_by: user.id,
-      email,
-      role,
-      status: 'pending',
-      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    }, { onConflict: 'pet_id,email' })
-    .select()
-    .single()
+  const { data, error } = await supabase.rpc(
+    'create_pet_caregiver_invite',
+    {
+      p_pet_id: pet_id,
+      p_email: email,
+      p_role: role,
+    }
+  )
 
   if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
 
-  // Log activity
-  await supabase.from('pet_activity_log').insert({
-    pet_id,
-    actor_id: user.id,
-    action: 'invited_member',
-    entity_type: 'pet_invite',
-    entity_id: invite.id,
-    description: `${email} adresine ${role} rolüyle davet gönderildi`,
+  if (!ownershipRpcSucceeded(data)) {
+    const code = ownershipRpcCode(data)
+    if (code === 'PLAN_LIMIT') {
+      const limit =
+        typeof data === 'object'
+        && data !== null
+        && 'limit' in data
+        && typeof data.limit === 'number'
+          ? data.limit
+          : 2
+      return NextResponse.json(
+        {
+          error: `Plan limitine ulaşıldı (${limit} üye). Yükseltmek için Pro'ya geçin.`,
+        },
+        { status: 403 }
+      )
+    }
+    const status = code === 'FORBIDDEN' || code === 'ROLE_ESCALATION'
+      ? 403
+      : 400
+    return NextResponse.json(
+      { error: 'Davet oluşturulamadı.', code },
+      { status }
+    )
+  }
+
+  const invite =
+    typeof data.invite === 'object' && data.invite !== null
+      ? data.invite
+      : null
+
+  if (!invite || !('token' in invite) || typeof invite.token !== 'string') {
+    return NextResponse.json(
+      { error: 'Davet oluşturuldu ancak yanıt doğrulanamadı.' },
+      { status: 500 }
+    )
+  }
+
+  // Inviter profile name
+  const inviterName = user.user_metadata?.first_name || user.email || 'Bir kullanıcı'
+
+  // E-posta gönderimi (Kayıtlı/kayıtsız kullanıcı kontrolü dahil)
+  const emailRes = await sendCaregiverInviteEmail({
+    toEmail: email,
+    inviterName,
+    petName: pet?.name ?? 'Can Dostu',
+    role,
+    inviteToken: invite.token,
   })
 
-  // TODO: Send actual email via Resend/SendGrid
-  const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/invite/${invite.token}`
+  const inviteLink = emailRes.inviteLink
 
   return NextResponse.json({
     success: true,
     invite,
     inviteLink,
-    message: `${pet?.name ?? 'Can Dostu'}'nun bakım ekibine davet gönderildi.`,
+    isExistingUser: emailRes.isExistingUser,
+    message: emailRes.isExistingUser
+      ? `${pet?.name ?? 'Can Dostu'}'nun bakım ekibine davet gönderildi. Kullanıcı uygulamaya girdiğinde davet penceresini görecek ve e-posta alacak.`
+      : `${email} adresine üye olma ve davet kabul etme e-postası gönderildi.`,
   })
 }
 
@@ -76,35 +105,253 @@ export async function GET(req: NextRequest) {
   if (!petId) return NextResponse.json({ error: 'pet_id required' }, { status: 400 })
 
   const supabase = await createServerSupabaseClient()
+  const canManageCaregivers = await hasPetCapability(
+    supabase,
+    petId,
+    'can_manage_pet_caregivers'
+  )
 
-  const [{ data: members }, { data: invites }, { data: activity }] = await Promise.all([
-    supabase.from('pet_members').select('*, profiles(first_name, last_name, id)').eq('pet_id', petId),
+  const [{ data: members }, { data: invites }, { data: activity }, { data: memberships }] = await Promise.all([
+    supabase
+      .from('pet_members')
+      .select(
+        '*, profiles!pet_members_profile_id_fkey(first_name, last_name, id)'
+      )
+      .eq('pet_id', petId),
     supabase.from('pet_invites').select('*').eq('pet_id', petId).eq('status', 'pending'),
     supabase.from('pet_activity_log').select('*, profiles(first_name, last_name)').eq('pet_id', petId).order('created_at', { ascending: false }).limit(20),
+    supabase.from('pet_memberships').select('profile_id, role, status').eq('pet_id', petId).eq('status', 'active'),
   ])
 
-  return NextResponse.json({ members, invites, activity })
+  const membershipMap = new Map<string, string>()
+  if (memberships) {
+    for (const m of memberships) {
+      membershipMap.set(m.profile_id, m.role)
+    }
+  }
+
+  const currentUserCanonicalRole = membershipMap.get(user.id) ?? null
+
+  const enrichedMembers = (members ?? []).map(m => ({
+    ...m,
+    canonical_role: membershipMap.get(m.profile_id) ?? (m.role === 'owner' ? 'primary_owner' : m.role),
+  }))
+
+  return NextResponse.json({
+    members: enrichedMembers,
+    invites,
+    activity,
+    canManageCaregivers,
+    currentUserCanonicalRole,
+  })
 }
 
 export async function DELETE(req: NextRequest) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { member_id, pet_id } = await req.json()
+  const body = await req.json().catch(() => null)
+  if (!body) return NextResponse.json({ error: 'Geçersiz istek.' }, { status: 400 })
+
+  const { member_id, pet_id, invite_id, action } = body
+  if (!pet_id) return NextResponse.json({ error: 'pet_id zorunludur.' }, { status: 400 })
+
   const supabase = await createServerSupabaseClient()
 
-  const { data: callerRole } = await supabase.rpc('user_pet_role', { p_pet_id: pet_id })
-  if (!['owner', 'admin'].includes(callerRole)) {
-    return NextResponse.json({ error: 'Yetkisiz' }, { status: 403 })
+  // 1. Bekleyen Daveti İptal Etme (Cancel Invite)
+  if (invite_id) {
+    const { error: inviteErr } = await supabase
+      .from('pet_invites')
+      .update({ status: 'revoked' })
+      .eq('id', invite_id)
+      .eq('pet_id', pet_id)
+
+    if (inviteErr) {
+      return NextResponse.json({ error: 'Davet iptal edilirken hata oluştu.' }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true, message: 'Davet başarıyla iptal edildi.' })
   }
 
-  // Prevent removing owner
-  const { data: member } = await supabase.from('pet_members').select('role').eq('id', member_id).single()
-  if (member?.role === 'owner') return NextResponse.json({ error: 'Sahip kaldırılamaz' }, { status: 400 })
+  // 2. Ekipten Ayrılma / Paylaşımı İptal Etme (Leave Team)
+  if (action === 'leave') {
+    // Primary owner ayrılamaz (önce transfer etmeli)
+    const { data: primaryCheck } = await supabase
+      .from('pet_memberships')
+      .select('role')
+      .eq('pet_id', pet_id)
+      .eq('profile_id', user.id)
+      .eq('status', 'active')
+      .maybeSingle()
 
-  const { error } = await supabase.from('pet_members').delete().eq('id', member_id)
+    if (primaryCheck?.role === 'primary_owner') {
+      return NextResponse.json(
+        { error: 'Birincil sahip ekipten ayrılamaz. Önce sahipliği devretmelisiniz.' },
+        { status: 403 }
+      )
+    }
+
+    // Üyeliği ve legacy kaydı sil
+    await Promise.all([
+      supabase.from('pet_memberships').delete().eq('pet_id', pet_id).eq('profile_id', user.id),
+      supabase.from('pet_members').delete().eq('pet_id', pet_id).eq('profile_id', user.id),
+    ])
+
+    return NextResponse.json({ success: true, left: true, message: 'Ekipten ayrıldınız.' })
+  }
+
+  // 3. Üyeyi Çıkarma (Remove Caregiver Member)
+  if (!member_id) {
+    return NextResponse.json({ error: 'member_id zorunludur.' }, { status: 400 })
+  }
+
+  const { data, error } = await supabase.rpc(
+    'remove_pet_caregiver',
+    {
+      p_pet_id: pet_id,
+      p_legacy_member_id: member_id,
+    }
+  )
   if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
+
+  if (!ownershipRpcSucceeded(data)) {
+    const code = ownershipRpcCode(data)
+    const status = code === 'FORBIDDEN' || code === 'ROLE_ESCALATION'
+      ? 403
+      : 400
+    return NextResponse.json(
+      {
+        error: code === 'OWNER_CANNOT_BE_REMOVED'
+          ? 'Sahip kaldırılamaz'
+          : 'Üye kaldırılamadı',
+        code,
+      },
+      { status }
+    )
+  }
 
   return NextResponse.json({ success: true })
 }
 
+export async function PATCH(req: NextRequest) {
+  const user = await getSessionUser()
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const body = await req.json().catch(() => null)
+  if (!body) {
+    return NextResponse.json({ error: 'Geçersiz istek gövdesi.' }, { status: 400 })
+  }
+
+  const { action, pet_id, profile_id, role, confirmation_text } = body
+  if (!pet_id || !profile_id) {
+    return NextResponse.json(
+      { error: 'pet_id ve profile_id zorunludur.' },
+      { status: 400 }
+    )
+  }
+
+  const supabase = await createServerSupabaseClient()
+
+  if (action === 'transfer_primary_owner') {
+    // 1. Sunucu tarafı metin doğrulaması (pet adı teyidi)
+    const { data: pet, error: petErr } = await supabase
+      .from('pets')
+      .select('name')
+      .eq('id', pet_id)
+      .single()
+
+    if (petErr || !pet) {
+      return NextResponse.json({ error: 'Pet bulunamadı.' }, { status: 404 })
+    }
+
+    const expectedName = (pet.name || '').trim().toLowerCase()
+    const providedName = (confirmation_text || '').trim().toLowerCase()
+
+    if (!providedName || providedName !== expectedName) {
+      return NextResponse.json(
+        { error: 'Evcil hayvan adı doğrulaması eşleşmiyor. Lütfen pet adını tam girin.' },
+        { status: 400 }
+      )
+    }
+
+    // 2. Atomik RPC çağrısı
+    const { data, error } = await supabase.rpc('transfer_pet_primary_owner', {
+      p_pet_id: pet_id,
+      p_new_profile_id: profile_id,
+    })
+
+    if (error) {
+      console.error('[pets/family] Primary owner transfer failed', error)
+      return NextResponse.json(
+        { error: 'Sahiplik transferi veritabanı seviyesinde başarısız oldu.' },
+        { status: 500 }
+      )
+    }
+
+    if (!ownershipRpcSucceeded(data)) {
+      const code = ownershipRpcCode(data)
+      const statusMap: Record<string, number> = {
+        FORBIDDEN: 403,
+        ROLE_ESCALATION: 403,
+        ALREADY_PRIMARY: 409,
+        NEW_OWNER_NOT_CO_OWNER: 409,
+        NOT_FOUND: 404,
+        MEMBER_NOT_FOUND: 404,
+      }
+
+      const safeCode = code || 'UNKNOWN'
+      const status = statusMap[safeCode] ?? 400
+      const errorMessages: Record<string, string> = {
+        FORBIDDEN: 'Bu işlem için yetkiniz yok.',
+        ALREADY_PRIMARY: 'Seçilen kullanıcı zaten birincil sahip.',
+        NEW_OWNER_NOT_CO_OWNER: 'Sahiplik yalnızca aktif Ortak Sahip (co_owner) rolüne sahip üyelere devredilebilir.',
+        MEMBER_NOT_FOUND: 'Hedef üyelik kaydı bulunamadı.',
+      }
+
+      return NextResponse.json(
+        { error: errorMessages[safeCode] ?? 'Sahiplik devri gerçekleştirilemedi.', code: safeCode },
+        { status }
+      )
+    }
+
+    return NextResponse.json({ success: true, result: data })
+  }
+
+  if (action === 'change_role') {
+    if (typeof role !== 'string') {
+      return NextResponse.json({ error: 'Geçersiz rol.' }, { status: 400 })
+    }
+
+    const { data, error } = await supabase.rpc('change_pet_caregiver_role', {
+      p_pet_id: pet_id,
+      p_profile_id: profile_id,
+      p_role: role,
+    })
+
+    if (error) {
+      console.error('[pets/family] Role change failed', error)
+      return NextResponse.json(
+        { error: 'Rol değiştirme işlemi başarısız oldu.' },
+        { status: 500 }
+      )
+    }
+
+    if (!ownershipRpcSucceeded(data)) {
+      const code = ownershipRpcCode(data)
+      const status = code === 'FORBIDDEN' || code === 'ROLE_ESCALATION' ? 403 : 400
+      return NextResponse.json(
+        { error: 'Rol değiştirme işlemi reddedildi.', code },
+        { status }
+      )
+    }
+
+    return NextResponse.json({ success: true, result: data })
+  }
+
+  return NextResponse.json(
+    { error: 'Geçersiz aile yönetimi işlemi.' },
+    { status: 400 }
+  )
+}

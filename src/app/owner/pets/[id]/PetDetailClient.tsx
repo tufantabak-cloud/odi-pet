@@ -318,6 +318,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
   const [showCoverSourceSheet, setShowCoverSourceSheet] = useState(false)
   const [showPositionModal, setShowPositionModal] = useState(false)
+  const [isShareModalOpen, setIsShareModalOpen] = useState(() => {
+    return tabParam === 'family' || tabParam === 'share'
+  })
   const [pendingCoverUrl, setPendingCoverUrl] = useState<string|null>(null)
   const [selectedPosition, setSelectedPosition] = useState<'top'|'center'|'bottom'>('center')
   const [selectedScale, setSelectedScale] = useState(1)
@@ -1513,11 +1516,12 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                     {/* Paylaş + Acil Durum */}
                     <div className="grid grid-cols-2 gap-3">
                       <button
-                        onClick={() => router.push(`/owner/pets/${pet.id}/share`)}
-                        className="relative w-full h-11 rounded-btn bg-white border border-border-main flex items-center justify-center gap-2 hover:bg-gray-50 active:scale-[0.98] transition-all duration-200 focus:outline-none cursor-pointer"
+                        type="button"
+                        onClick={() => setIsShareModalOpen(true)}
+                        className="relative w-full h-11 rounded-btn bg-white border border-border-main flex items-center justify-center gap-2 hover:bg-gray-50 active:scale-[0.98] transition-all duration-200 focus:outline-none cursor-pointer shadow-xs"
                       >
                         <Share2 size={18} className="text-primary" />
-                        <span className="text-[14px] font-bold text-text-primary">Paylaş</span>
+                        <span className="text-[14px] font-bold text-text-primary">Paylaş & Ekip</span>
                       </button>
                       <FloatingSOS
                         fullWidth={true}
@@ -2019,9 +2023,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                       </div>
                     </div>
 
-                    {module.name === 'Diğer' && (
-                      <FamilyTab petId={pet.id} petName={pet.name} plan={subscription?.plan ?? 'free'} initialSos={pet.sos_contacts} />
-                    )}
+                    {/* Family/Ownership management has been moved to the Paylaş & Ekip modal on Özet tab */}
 
                     {hasAnyTasks ? (
                       renderTabFiltersAndTasks(module.name)
@@ -2532,8 +2534,50 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           onCancel={() => setLostWizardOpen(false)}
         />
       )}
+      {/* Bakım Ekibi & Sahiplik Paylaşımı Modal */}
+      {isShareModalOpen && (
+        <div
+          className="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-fade-in"
+          onClick={() => setIsShareModalOpen(false)}
+        >
+          <div
+            className="bg-surface w-full max-w-2xl max-h-[90vh] rounded-[28px] shadow-2xl border border-border-main flex flex-col overflow-hidden animate-scale-up"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-5 border-b border-border-main flex items-center justify-between bg-bg-main/60 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center font-black text-xl shadow-xs">
+                  👨‍👩‍👧‍👦
+                </div>
+                <div>
+                  <h3 className="text-[17px] font-extrabold text-text-primary leading-tight">
+                    {pet.name}'nin Bakım Ekibi & Sahiplik
+                  </h3>
+                  <p className="text-[12px] text-text-secondary">Yetkili aile üyeleri, ortak sahiplik ve bekleyen davetler</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsShareModalOpen(false)}
+                className="w-9 h-9 rounded-full bg-bg-main hover:bg-border-main flex items-center justify-center text-text-secondary transition-colors font-bold text-sm"
+              >
+                ✕
+              </button>
+            </div>
 
-
+            {/* Modal Body with Scroll */}
+            <div className="p-5 overflow-y-auto flex-1">
+              <FamilyTab
+                petId={pet.id}
+                petName={pet.name}
+                plan={subscription?.plan ?? 'free'}
+                initialSos={pet.sos_contacts}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   )

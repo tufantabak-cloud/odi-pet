@@ -39,6 +39,7 @@ export async function POST(req: NextRequest) {
 
   const fd = await req.formData()
   const supabase = await createServerSupabaseClient()
+  const uploadedPaths: string[] = []
 
   // Diagnostic Log
   console.log('[API/Pets/POST] FormData keys:', Array.from(fd.keys()))
@@ -83,6 +84,7 @@ export async function POST(req: NextRequest) {
       console.error('[API/Pets] Avatar upload error:', uploadError)
       // Fotoğraf hatası kaydı durdurmaz — devam et
     } else {
+      uploadedPaths.push(path)
       const { data: urlData } = supabase.storage
         .from('pet-avatars')
         .getPublicUrl(path)
@@ -105,6 +107,7 @@ export async function POST(req: NextRequest) {
     if (uploadError) {
       console.error('[API/Pets] Cover upload error:', uploadError)
     } else {
+      uploadedPaths.push(path)
       const { data: urlData } = supabase.storage
         .from('pet-avatars')
         .getPublicUrl(path)
@@ -113,7 +116,6 @@ export async function POST(req: NextRequest) {
   }
 
   const payload = {
-    owner_id:      user.id,
     name,
     species,
     breed,
@@ -137,26 +139,44 @@ export async function POST(req: NextRequest) {
 
 
 
-  const { data, error } = await supabase
-    .from('pets')
-    .insert(payload)
-    .select('id, name')
-    .single()
+  const { data: rpcData, error } = await supabase.rpc(
+    'create_pet_with_primary_membership',
+    { p_payload: payload }
+  )
 
   if (error) {
     console.error('[API/Pets] INSERT error:', JSON.stringify(error))
+    if (uploadedPaths.length > 0) {
+      const { error: cleanupError } = await supabase.storage
+        .from('pet-avatars')
+        .remove(uploadedPaths)
+      if (cleanupError) {
+        console.error('[API/Pets] Upload cleanup error:', cleanupError)
+      }
+    }
     return NextResponse.json(
       { error: `Kayıt hatası: ${(error as any)?.message || (error instanceof Error ? error.message : String(error))} (kodu: ${(error as any)?.code || 'Bilinmiyor'})` },
       { status: 500 }
     )
   }
 
+  const data =
+    typeof rpcData === 'object'
+    && rpcData !== null
+    && 'id' in rpcData
+    && 'name' in rpcData
+    && typeof rpcData.id === 'string'
+    && typeof rpcData.name === 'string'
+      ? { id: rpcData.id, name: rpcData.name }
+      : null
 
-
-  // ─── Add Owner to pet_owners table ───────────────────────────
-  await supabase
-    .from('pet_owners')
-    .insert({ pet_id: data.id, profile_id: user.id, role: 'owner' })
+  if (!data) {
+    console.error('[API/Pets] RPC returned an invalid pet payload')
+    return NextResponse.json(
+      { error: 'Kayıt oluşturuldu ancak yanıt doğrulanamadı.' },
+      { status: 500 }
+    )
+  }
 
   // ─── Katman 1: İlk Kilo ve Boy Kaydının Alınması ────────────────
   const weightVal = str(fd, 'weight') || str(fd, 'weight_kg')

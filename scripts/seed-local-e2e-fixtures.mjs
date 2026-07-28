@@ -7,6 +7,8 @@ export const LOCAL_E2E_PASSWORD = 'OdiPetLocalE2E-2026!'
 export const LOCAL_E2E_PET_ID = '00000000-0000-4000-8000-000000000042'
 export const LOCAL_E2E_ADMIN_EMAIL = 'e2e-admin@odipet.local'
 export const LOCAL_E2E_ADMIN_PASSWORD = 'OdiPetLocalAdminE2E-2026!'
+export const LOCAL_E2E_CAREGIVER_EMAIL = 'e2e-caregiver@odipet.local'
+export const LOCAL_E2E_CAREGIVER_PASSWORD = 'OdiPetLocalCaregiverE2E-2026!'
 
 function assertLocalSupabase(apiUrl) {
   const url = new URL(apiUrl)
@@ -91,6 +93,13 @@ export async function seedLocalE2EFixtures({ apiUrl, serviceRoleKey }) {
     role: 'admin',
   })
 
+  const caregiverUser = await ensureLocalUser(admin, {
+    email: LOCAL_E2E_CAREGIVER_EMAIL,
+    password: LOCAL_E2E_CAREGIVER_PASSWORD,
+    firstName: 'E2E Caregiver',
+    role: 'owner',
+  })
+
   const { error: subscriptionError } = await admin
     .from('user_subscriptions')
     .upsert(
@@ -141,6 +150,9 @@ export async function seedLocalE2EFixtures({ apiUrl, serviceRoleKey }) {
     adminEmail: LOCAL_E2E_ADMIN_EMAIL,
     adminPassword: LOCAL_E2E_ADMIN_PASSWORD,
     adminUserId: adminUser.id,
+    caregiverEmail: LOCAL_E2E_CAREGIVER_EMAIL,
+    caregiverPassword: LOCAL_E2E_CAREGIVER_PASSWORD,
+    caregiverUserId: caregiverUser.id,
   }
 }
 

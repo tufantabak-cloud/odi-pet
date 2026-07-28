@@ -5,7 +5,7 @@ import { useHealthTracker, toDateKey, formatFrequency } from './useHealthTracker
 import { CategoryCard, toCategoryKey } from './CategoryCard';
 import { CategoryGroup, FlowEvent, TaskRow } from './types';
 import { buildPlanYapHref } from './lib/plan-link';
-import { buildCoverageIntervals, computeExpiryDateLabel, CoverageInterval } from './lib/coverage';
+import { buildCoverageIntervals, computeExpiryDateLabel, addDaysToDateKey, CoverageInterval } from './lib/coverage';
 
 interface HealthTrackerProps {
   petId: string;
@@ -301,6 +301,8 @@ function buildMissedIntervals(events: FlowEvent[]): MissedInterval[] {
 
   for (let i = 0; i < sorted.length; i++) {
     const curr = sorted[i];
+    
+    // 1. Doğrudan kaçırılmış (missed) durumdaki görevler
     if (curr.computedStatus === 'missed') {
       // Find the next done event after this missed event
       const nextDone = sorted.slice(i + 1).find(e => e.status === 'done' || e.status === 'completed' || e.computedStatus === 'done');
@@ -322,6 +324,30 @@ function buildMissedIntervals(events: FlowEvent[]): MissedInterval[] {
         intervals.push({
           startDateKey,
           endDateKey,
+          sourceEvent: curr
+        });
+      }
+    }
+
+    // 2. Tamamlanmış (done) ancak koruma süresi dolmuş ve yenilenmemiş görevler
+    if ((curr.status === 'done' || curr.computedStatus === 'done') && curr.coverage?.endDateKey) {
+      const nextDone = sorted.slice(i + 1).find(e => e.status === 'done' || e.status === 'completed' || e.computedStatus === 'done');
+      
+      const coverageEndKey = curr.coverage.endDateKey; // örn. 25.06.2027
+      const missedStartKey = addDaysToDateKey(coverageEndKey, 1); // örn. 26.06.2027
+
+      let missedEndKey = todayKey;
+      if (nextDone) {
+        const end = new Date(nextDone.due_date);
+        end.setDate(end.getDate() - 1);
+        const nextDoneEnd = toDateKey(end);
+        if (nextDoneEnd < missedEndKey) missedEndKey = nextDoneEnd;
+      }
+
+      if (missedStartKey <= missedEndKey) {
+        intervals.push({
+          startDateKey: missedStartKey,
+          endDateKey: missedEndKey,
           sourceEvent: curr
         });
       }
@@ -405,8 +431,8 @@ function TimelineRow({
               // tıklanınca YENİ kayıt açmak yerine o kaydın kendisi düzenlemeye açılır.
               if (coveringInterval) {
                 let statusLabel = 'Korumada';
-                let colors = 'border-[#86efac] bg-[#f0fdf4] text-[#166534]';
-                let iconBg = 'bg-[#22c55e]';
+                let colors = 'border-dashed border-[#bbf7d0]/70 bg-[#f0fdf4]/60 text-[#166534]/70';
+                let iconBg = 'bg-[#22c55e]/20 text-[#166534]';
                 let iconContent = (
                   <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M20 6 9 17l-5-5" />
@@ -421,17 +447,17 @@ function TimelineRow({
                   if (daysLeft <= 0) {
                     statusLabel = 'Bitti';
                     colors = 'border-[#fca5a5] bg-[#fef2f2] text-[#b91c1c]';
-                    iconBg = 'bg-[#ef4444]';
+                    iconBg = 'bg-[#ef4444] text-white';
                     iconContent = <span className="block text-[9px] font-black leading-none">!</span>;
                   } else if (daysLeft <= 3) {
                     statusLabel = 'Bitiyor';
                     colors = 'border-[#fca5a5] bg-[#fef2f2] text-[#b91c1c]';
-                    iconBg = 'bg-[#ef4444]';
+                    iconBg = 'bg-[#ef4444] text-white';
                     iconContent = <span className="block text-[9px] font-black leading-none">!</span>;
                   } else if (daysLeft <= 7) {
                     statusLabel = 'Azalıyor';
                     colors = 'border-[#fcd34d] bg-[#fffbeb] text-[#b45309]';
-                    iconBg = 'bg-[#f59e0b]';
+                    iconBg = 'bg-[#f59e0b] text-white';
                     iconContent = <span className="block text-[9px] font-black leading-none">!</span>;
                   } else {
                     statusLabel = 'Yeterli';
@@ -447,18 +473,18 @@ function TimelineRow({
                       onClick={() => onEdit(coveringInterval.sourceEvent)}
                       aria-label={`${formatShortDate(key)} — ${statusLabel}`}
                       title={`${formatShortDate(key)} — ${statusLabel}`}
-                      className={`w-[100px] h-[64px] min-h-[64px] shrink-0 rounded-2xl border ${colors} hover:scale-[1.05] active:scale-95 flex flex-col items-start text-left overflow-hidden p-2.5 transition-all duration-200`}
+                      className={`w-[100px] h-[64px] min-h-[64px] shrink-0 rounded-2xl border ${colors} ${isToday ? 'ring-2 ring-[#3b82f6] shadow-sm shadow-blue-500/20' : 'hover:scale-[1.05] active:scale-95'} flex flex-col items-start text-left overflow-hidden p-2.5 transition-all duration-200`}
                     >
                       <div className="w-full flex items-center justify-between">
-                        <div className={`w-5 h-5 shrink-0 rounded-full flex items-center justify-center ${iconBg} text-white`}>
+                        <div className={`w-5 h-5 shrink-0 rounded-full flex items-center justify-center ${iconBg}`}>
                           {iconContent}
                         </div>
                         <span className="text-[8.5px] font-bold uppercase tracking-wide opacity-70">
                           {statusLabel}
                         </span>
                       </div>
-                      <span className="text-[10.5px] font-extrabold mt-auto pt-1.5">
-                        {formatShortDate(key)}
+                      <span className={`text-[10.5px] font-extrabold mt-auto pt-1.5 ${isToday ? 'text-[#3b82f6]' : ''}`}>
+                        {isToday ? 'Bugün' : formatShortDate(key)}
                       </span>
                     </button>
                   </div>

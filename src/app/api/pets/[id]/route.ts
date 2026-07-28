@@ -5,6 +5,10 @@ import { revalidatePath, revalidateTag } from 'next/cache'
 import { generateVaccinationPlan } from '@/features/pets/vaccination-algorithm'
 import { createVaccineNotifications } from '@/lib/notifications/createVaccineNotifications'
 import { Database } from '@/lib/database.types'
+import {
+  hasPetCapability,
+  ownershipRpcSucceeded,
+} from '@/lib/pets/access'
 
 type PetUpdate = Database['public']['Tables']['pets']['Update']
 
@@ -34,15 +38,14 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 
   if (fetchError || !pet) return NextResponse.json({ error: 'Pet not found' }, { status: 404 })
 
-  // Check if user is an owner in pet_owners
-  const { data: ownerRecord } = await supabase
-    .from('pet_owners')
-    .select('role')
-    .eq('pet_id', id)
-    .eq('profile_id', user.id)
-    .single()
-
-  if (!ownerRecord) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const canEdit = await hasPetCapability(
+    supabase,
+    id,
+    'can_edit_pet_profile'
+  )
+  if (!canEdit) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+  }
 
   // Avatar Upload
   let avatarUrl = pet.avatar_url
@@ -148,44 +151,18 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
   const { id } = await context.params
   const supabase = await createServerSupabaseClient()
 
-
-
-  // Verify ownership via pet_owners table
-  const { data: ownerRecord, error: ownerError } = await supabase
-    .from('pet_owners')
-    .select('role')
-    .eq('pet_id', id)
-    .eq('profile_id', user.id)
-    .single()
-
-
-
-  if (!ownerRecord || ownerRecord.role !== 'owner') {
-    return NextResponse.json({ error: 'Sadece asıl sahip evcil hayvanı silebilir.' }, { status: 403 })
-  }
-
-  // First delete from pet_owners to avoid RLS issues on the pets table
-  await supabase.from('pet_owners').delete().eq('pet_id', id)
-
-  // Delete the pet itself (RLS: auth.uid() = owner_id)
-  const { error, count } = await supabase
-    .from('pets')
-    .delete({ count: 'exact' })
-    .eq('id', id)
-    .eq('owner_id', user.id)
-
-
-
+  const { data, error } = await supabase.rpc(
+    'delete_pet_with_memberships',
+    { p_pet_id: id }
+  )
   if (error) {
     return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
   }
 
-  // Check if any rows were actually deleted (RLS can silently block)
-  if (count === 0) {
-    console.error('[API/Pets/DELETE] RLS blocked delete or pet not found. Pet:', id, 'User:', user.id)
+  if (!ownershipRpcSucceeded(data)) {
     return NextResponse.json(
-      { error: 'Bu evcil hayvan silinemedi. Lütfen tekrar deneyin.' },
-      { status: 500 }
+      { error: 'Sadece asıl sahip evcil hayvanı silebilir.' },
+      { status: 403 }
     )
   }
 

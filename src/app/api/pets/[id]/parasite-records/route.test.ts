@@ -77,10 +77,10 @@ describe('Manual Parasite Record API Tests', () => {
     }).select().single()
     testPetIdOwned = petOwned!.id
 
-    await adminClient.from('pet_owners').insert({
+    await adminClient.from('pet_owners').upsert({
       pet_id: testPetIdOwned,
       profile_id: testUserId,
-    })
+    }, { onConflict: 'pet_id,profile_id' })
 
     const { data: petNotOwned } = await adminClient.from('pets').insert({
       name: 'Cat1',
@@ -91,10 +91,10 @@ describe('Manual Parasite Record API Tests', () => {
     }).select().single()
     testPetIdNotOwned = petNotOwned!.id
 
-    await adminClient.from('pet_owners').insert({
+    await adminClient.from('pet_owners').upsert({
       pet_id: testPetIdNotOwned,
       profile_id: otherUser.user!.id,
-    })
+    }, { onConflict: 'pet_id,profile_id' })
 
     const { data: protoDog, error: protoDogError } = await adminClient.from('parasite_protocols').insert({
       protocol_name: 'Dog Manual Proto',

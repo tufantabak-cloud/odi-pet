@@ -318,6 +318,44 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
             frequency_label: typeLabel,
           };
         }),
+        ...(vaccinesRes.data || []).map((item: any) => {
+          // ── Koruma süresi: valid_until > next_due_at > vaccine_protocols fallback > 365 ──
+          let protectionDays = 365; // son çare varsayılan
+          const administeredAt = item.administered_at;
+          const administeredMs = administeredAt ? new Date(administeredAt).getTime() : 0;
+
+          if (item.valid_until && administeredMs) {
+            const validUntilMs = new Date(item.valid_until).getTime();
+            if (!isNaN(validUntilMs) && validUntilMs > administeredMs) {
+              protectionDays = Math.max(1, Math.ceil((validUntilMs - administeredMs) / (1000 * 60 * 60 * 24)));
+            }
+          } else if (item.next_due_at && administeredMs) {
+            const nextDueMs = new Date(item.next_due_at).getTime();
+            if (!isNaN(nextDueMs) && nextDueMs > administeredMs) {
+              protectionDays = Math.max(1, Math.ceil((nextDueMs - administeredMs) / (1000 * 60 * 60 * 24)));
+            }
+          }
+          // vaccine_code ile template lookup (vaccineTemplateMap henüz state'te — group-events
+          // içinde de tekrar çözülecek, burada sadece ham gün sayısı yeterli)
+
+          return {
+            id: `vaccine_${item.id}`,
+            _plan_id: item.id,
+            _source: 'vaccine_records_v2',
+            pet_id: item.pet_id,
+            title: item.vaccine_name || 'Aşı Uygulaması',
+            due_date: administeredAt,
+            due_time: '12:00:00',
+            status: 'done',
+            category: 'Asi',
+            sub_category: null,  // mapDbToUI + vaccineTemplateMap çözecek
+            vaccines: { code: item.vaccine_code || null, name: item.vaccine_name },
+            notes: item.notes || '',
+            updated_at: item.created_at || administeredAt,
+            frequency_days: protectionDays,
+            frequency_label: null,
+          };
+        }),
         ...(weightLogsRes.data || []).map((item: any) => {
           const dateStr = item.measured_at ? item.measured_at.split('T')[0] : item.created_at?.split('T')[0];
           return {

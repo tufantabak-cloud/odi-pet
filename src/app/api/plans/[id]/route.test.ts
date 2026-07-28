@@ -32,6 +32,7 @@ vi.mock('@/lib/supabase/server', async () => {
 describe('Parasite Plan Completion API Tests', () => {
   const adminClient = createAdminSupabaseClient()
   let testUserId = ''
+  let otherUserId = ''
   let testPetIdOwned = ''
   let testPetIdNotOwned = ''
   let dogProtoId = ''
@@ -63,6 +64,30 @@ describe('Parasite Plan Completion API Tests', () => {
       userId = newUser.user.id
     }
     testUserId = userId
+
+    const { data: otherProfile } = await adminClient
+      .from('profiles')
+      .select('id')
+      .neq('id', testUserId)
+      .limit(1)
+      .maybeSingle()
+
+    if (otherProfile) {
+      otherUserId = otherProfile.id
+    } else {
+      const { data: otherUser, error: otherUserError } =
+        await adminClient.auth.admin.createUser({
+          email: `test-other-${Date.now()}@odi.pet`,
+          password: 'password123',
+          email_confirm: true
+        })
+      if (otherUserError || !otherUser?.user) {
+        throw new Error(
+          'Failed to create second test user: ' + otherUserError?.message
+        )
+      }
+      otherUserId = otherUser.user.id
+    }
 
     // Set default auth mock to test user
     mockSessionUser({ id: testUserId } as any)
@@ -118,7 +143,7 @@ describe('Parasite Plan Completion API Tests', () => {
     testPetIdOwned = petOwned.id
 
     const { data: petNotOwned, error: petNotOwnedError } = await adminClient.from('pets').insert({
-      owner_id: testUserId,
+      owner_id: otherUserId,
       name: 'VT Not Owned Dog',
       species: 'dog',
       gender: 'female',
@@ -130,11 +155,11 @@ describe('Parasite Plan Completion API Tests', () => {
     testPetIdNotOwned = petNotOwned.id
 
     // Insert ownership only for owned pet
-    const { error: ownerError } = await adminClient.from('pet_owners').insert({
+    const { error: ownerError } = await adminClient.from('pet_owners').upsert({
       pet_id: testPetIdOwned,
       profile_id: testUserId,
       role: 'owner'
-    })
+    }, { onConflict: 'pet_id,profile_id' })
     if (ownerError) {
       throw new Error('ownerError: ' + ownerError.message)
     }

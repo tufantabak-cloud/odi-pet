@@ -120,11 +120,35 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
         }
 
         /* ── Pets (KRİTİK) ──────────────────────────────── */
-        const { data: pets, error: petsError } = await supabase
-          .from('pets')
-          .select('*')
-          .eq('owner_id', uid)
-          .order('created_at', { ascending: false })
+        const { data: memberships, error: membershipsError } = await supabase
+          .from('pet_memberships')
+          .select('pet_id')
+          .eq('profile_id', uid)
+          .eq('status', 'active')
+
+        if (membershipsError) {
+          console.error(
+            '[dashboard] memberships fetch failed:',
+            membershipsError.message
+          )
+          throw new Error(
+            `Pet üyelik sorgu hatası: ${membershipsError.message}`
+          )
+        }
+
+        const membershipPetIds = Array.from(
+          new Set((memberships ?? []).map((membership) => membership.pet_id))
+        )
+
+        const petResult = membershipPetIds.length === 0
+          ? { data: [] as DashboardPet[], error: null }
+          : await supabase
+              .from('pets')
+              .select('*')
+              .in('id', membershipPetIds)
+              .order('created_at', { ascending: false })
+
+        const { data: pets, error: petsError } = petResult
 
         if (petsError) {
           console.error('[dashboard] pets fetch failed:', petsError.message)

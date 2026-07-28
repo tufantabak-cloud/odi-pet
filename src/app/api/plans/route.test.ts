@@ -128,11 +128,11 @@ describe('Plans Creation API - sub_type mismatch validation tests', () => {
     testPetIdOwned = petOwned.id
 
     // Insert ownership
-    await adminClient.from('pet_owners').insert({
+    await adminClient.from('pet_owners').upsert({
       pet_id: testPetIdOwned,
       profile_id: testUserId,
       role: 'owner'
-    })
+    }, { onConflict: 'pet_id,profile_id' })
   })
 
   afterAll(async () => {

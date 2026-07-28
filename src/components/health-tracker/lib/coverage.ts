@@ -20,7 +20,7 @@ export function buildFlowEvents(taskRows: TaskRow[]): FlowEvent[] {
 const COVERAGE_WARN_DAYS = 7;
 
 /** 'YYYY-MM-DD' tarih anahtarına gün ekler/çıkarır, sonucu yine 'YYYY-MM-DD' döner */
-function addDaysToDateKey(dateKey: string, days: number): string {
+export function addDaysToDateKey(dateKey: string, days: number): string {
   const d = new Date(dateKey + 'T00:00:00');
   d.setDate(d.getDate() + days);
   return toDateKey(d);

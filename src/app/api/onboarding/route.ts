@@ -99,26 +99,47 @@ export async function POST(req: NextRequest) {
 
     if (!existing) {
       // Create demo pet
-      const { data: demoPet } = await supabase.from('pets').insert({
-        owner_id: user.id,
-        name: '🐾 Demo - Bella',
-        species: 'dog',
-        breed: 'Golden Retriever',
-        birth_date: new Date(Date.now() - 2 * 365 * 86400000).toISOString().split('T')[0],
-        gender: 'female',
-        weight: 28,
-        is_demo: false, // Flagged but real row for full feature access
-      }).select().single()
+      const { data: demoPetData, error: demoPetError } = await supabase.rpc(
+        'create_pet_with_primary_membership',
+        {
+          p_payload: {
+            name: '🐾 Demo - Bella',
+            species: 'dog',
+            breed: 'Golden Retriever',
+            birth_date: new Date(Date.now() - 2 * 365 * 86400000)
+              .toISOString()
+              .split('T')[0],
+            gender: 'female',
+            is_demo: false,
+          },
+        }
+      )
+
+      if (demoPetError) {
+        console.error('[onboarding/demo] Pet creation failed', demoPetError)
+        return NextResponse.json(
+          { error: 'Demo pet oluşturulamadı.' },
+          { status: 500 }
+        )
+      }
+
+      const demoPet =
+        typeof demoPetData === 'object'
+        && demoPetData !== null
+        && 'id' in demoPetData
+        && typeof demoPetData.id === 'string'
+          ? { id: demoPetData.id }
+          : null
 
       if (demoPet) {
         const past = (d: number) => new Date(Date.now() - d * 86400000).toISOString().split('T')[0]
 
         await Promise.all([
-          // Add owner link
-          supabase.from('pet_owners').insert({
+          // Initial growth record
+          supabase.from('weight_logs').insert({
             pet_id: demoPet.id,
-            profile_id: user.id,
-            role: 'owner'
+            weight_kg: 28,
+            measured_at: new Date().toISOString(),
           }),
           // Overdue health task
           supabase.from('health_schedules').insert({

@@ -397,6 +397,27 @@ export default function WizardOrchestrator() {
     return () => { cancelled = true; };
   }, [logMode, categoryKey, wizardData.pet_id, wizardData.subCategory]);
 
+  // Evcil hayvanın mevcut tüm aktif planlarını çek (mükerrer plan önleme kontrolü için)
+  const [existingActivePlans, setExistingActivePlans] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!wizardData.pet_id) {
+      setExistingActivePlans([]);
+      return;
+    }
+    const supabase = createBrowserSupabaseClient();
+    let cancelled = false;
+    supabase
+      .from('plans')
+      .select('*')
+      .eq('pet_id', wizardData.pet_id)
+      .eq('status', 'active')
+      .then(({ data }: { data: any[] | null; error: unknown }) => {
+        if (!cancelled && data) setExistingActivePlans(data);
+      });
+    return () => { cancelled = true; };
+  }, [wizardData.pet_id]);
+
   // ── Fetch Vaccines / Products (Aşı veya Parazit ise) ────────────────
   useEffect(() => {
     const subCat = categoryKey === 'asi' ? 'Aşı' : wizardData.subCategory;
@@ -1743,49 +1764,109 @@ export default function WizardOrchestrator() {
                     <div className="flex flex-col gap-2">
                       {g.items.map((vaccine) => {
                         const isSelected = wizardData.selectedVaccine?.code === vaccine.code;
+                        
+                        // Bu aşı için aktif bir plan var mı kontrol et
+                        const activePlan = existingActivePlans.find((p) => {
+                          if (p.category !== 'asi') return false;
+                          const codeInPlan = p.extra_data?.vaccine_code || p.extra_data?.vaccine?.code;
+                          const nameInPlan = p.sub_type || p.extra_data?.vaccine?.name;
+                          if (codeInPlan && vaccine.code) {
+                            return codeInPlan.toUpperCase() === vaccine.code.toUpperCase();
+                          }
+                          if (nameInPlan && vaccine.name) {
+                            return nameInPlan.toLowerCase().trim() === vaccine.name.toLowerCase().trim();
+                          }
+                          return false;
+                        });
+
                         return (
-                          <button
+                          <div
                             key={`${vaccine.code}-${vaccine.name}`}
-                            onClick={() => {
-                              setStepData({ selectedVaccine: vaccine });
-                              if (vaccine.protection_duration_days) {
-                                 const d = new Date(wizardData.date || new Date());
-                                 d.setDate(d.getDate() + vaccine.protection_duration_days);
-                                 setStepData({ 
-                                   frequency: 'once', 
-                                   interval: 1, 
-                                   date: d.toISOString().split('T')[0] 
-                                 });
-                              }
-                              setTimeout(() => {
-                                if (currentStepIndex === totalSteps - 1) {
-                                  handleSubmit();
-                                } else {
-                                  nextStep();
-                                }
-                              }, 200);
-                            }}
-                            className={`flex items-start gap-3 p-3 rounded-xl border text-left transition-all ${
-                              isSelected ? 'border-indigo-500 bg-indigo-50 shadow-sm scale-[1.02]' : 'border-slate-200 bg-white hover:border-indigo-300'
+                            className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
+                              activePlan
+                                ? 'bg-slate-50/80 border-slate-200 opacity-75'
+                                : isSelected
+                                  ? 'border-indigo-500 bg-indigo-50 shadow-sm scale-[1.02]'
+                                  : 'border-slate-200 bg-white hover:border-indigo-300'
                             }`}
                           >
-                            <div className="w-10 h-10 rounded-lg shrink-0 overflow-hidden bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
-                              {vaccine.image_url ? (
-                                <Image src={vaccine.image_url} alt={vaccine.name} width={40} height={40} className="object-cover" />
-                              ) : (
-                                (vaccine.brand || vaccine.name).charAt(0).toUpperCase()
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-bold text-[13px] text-text-primary">{vaccine.name}</h4>
-                              {vaccine.nameTr && <p className="text-[11px] text-slate-500 font-medium">{vaccine.nameTr}</p>}
-                            </div>
-                            {isSelected && (
-                              <div className="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center text-white shrink-0 mt-2.5">
-                                <Check size={12} strokeWidth={3} />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (activePlan) {
+                                  // Plan zaten var uyarısı / aksiyonu
+                                  return;
+                                }
+                                setStepData({ selectedVaccine: vaccine });
+                                if (vaccine.protection_duration_days) {
+                                   const d = new Date(wizardData.date || new Date());
+                                   d.setDate(d.getDate() + vaccine.protection_duration_days);
+                                   setStepData({ 
+                                     frequency: 'once', 
+                                     interval: 1, 
+                                     date: d.toISOString().split('T')[0] 
+                                   });
+                                }
+                                setTimeout(() => {
+                                  if (currentStepIndex === totalSteps - 1) {
+                                    handleSubmit();
+                                  } else {
+                                    nextStep();
+                                  }
+                                }, 200);
+                              }}
+                              className="flex items-start gap-3 flex-1 min-w-0 text-left cursor-pointer"
+                            >
+                              <div className={`w-10 h-10 rounded-lg shrink-0 overflow-hidden flex items-center justify-center font-bold ${
+                                activePlan ? 'bg-slate-200 text-slate-500' : 'bg-indigo-100 text-indigo-600'
+                              }`}>
+                                {vaccine.image_url ? (
+                                  <Image src={vaccine.image_url} alt={vaccine.name} width={40} height={40} className="object-cover" />
+                                ) : (
+                                  (vaccine.brand || vaccine.name).charAt(0).toUpperCase()
+                                )}
                               </div>
-                            )}
-                          </button>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h4 className={`font-bold text-[13px] ${activePlan ? 'text-slate-500 line-through decoration-slate-300' : 'text-text-primary'}`}>
+                                    {vaccine.name}
+                                  </h4>
+                                  {activePlan && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                                      <CheckCircle2 size={11} className="text-amber-600" />
+                                      Plan Var
+                                    </span>
+                                  )}
+                                </div>
+                                {vaccine.nameTr && <p className="text-[11px] text-slate-500 font-medium">{vaccine.nameTr}</p>}
+                                {activePlan && (
+                                  <p className="text-[11px] text-amber-700 font-medium mt-0.5">
+                                    Aktif plan mevcut
+                                  </p>
+                                )}
+                              </div>
+                            </button>
+
+                            {/* Sağ Aksiyon: Aktif plan varsa Düzenle butonu, yoksa Seçim İkonu */}
+                            <div className="shrink-0 ml-2">
+                              {activePlan ? (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    router.push(`/owner/plan-yap/asi?editId=${activePlan.id}`);
+                                  }}
+                                  className="px-3 py-1.5 rounded-xl bg-white border border-indigo-200 text-indigo-600 hover:bg-indigo-50 text-[12px] font-bold shadow-xs transition-all flex items-center gap-1"
+                                >
+                                  Düzenle
+                                </button>
+                              ) : isSelected ? (
+                                <div className="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center text-white shrink-0">
+                                  <Check size={12} strokeWidth={3} />
+                                </div>
+                              ) : null}
+                            </div>
+                          </div>
                         );
                       })}
                     </div>
@@ -2519,8 +2600,19 @@ export default function WizardOrchestrator() {
           nextStep();
         }}
         onBack={() => {
+          if (stepIndex === 0) {
+            const queryPetId = searchParams.get('pet_id');
+            const mode = searchParams.get('mode');
+            const params = new URLSearchParams();
+            if (queryPetId) params.set('pet_id', queryPetId);
+            if (mode) params.set('mode', mode);
+            const queryStr = params.toString();
+            router.push(`/owner/plan-yap${queryStr ? `?${queryStr}` : ''}`);
+            return;
+          }
+
           const queryPetId = searchParams.get('pet_id');
-          if (queryPetId && stepIndex === 1) {
+          if (queryPetId && stepIndex === 1 && needsPetSelection) {
             router.push(`/owner/pets/${queryPetId}`);
           } else {
             prevStep();

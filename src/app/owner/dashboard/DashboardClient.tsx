@@ -11,6 +11,7 @@ import { getPlanDisplayTitle } from '@/lib/plans/utils'
 import OnboardingProgressCard from '@/components/OnboardingProgressCard'
 
 import PetRecommendationsCard from '@/components/dashboard/PetRecommendationsCard'
+import PendingInviteModal from '@/components/pets/family/PendingInviteModal'
 import { ShieldCheckIcon, BugIcon, ScaleIcon, UtensilsIcon, SparklesIcon, CalendarIcon, StethoscopeIcon } from '@/components/icons/PetIcons'
 
 export default function DashboardClient({
@@ -29,7 +30,8 @@ export default function DashboardClient({
   activePlans,
   lostReports,
   allWeightLogs,
-  journalEntries
+  journalEntries,
+  pendingUserInvites,
 }: any) {
   const [activePetId, setActivePetId] = useState(pets[0]?.id)
   const activePet = petsWithStats?.find((p: any) => p.id === activePetId) || pets?.find((p: any) => p.id === activePetId) || pets?.[0]
@@ -71,6 +73,7 @@ export default function DashboardClient({
 
   return (
     <>
+      <PendingInviteModal pendingInvites={pendingUserInvites} />
       {/* 1. Üst Header / Karşılama */}
       <div className="px-[var(--space-4)] pt-6 pb-1 flex items-center justify-between gap-4">
         <div className="flex flex-col gap-1">
