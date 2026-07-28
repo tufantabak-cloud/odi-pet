@@ -27,12 +27,24 @@ export async function hasPetCapability(
   })
 
   if (error) {
-    console.error('[pet-access] capability check failed', {
+    console.warn('[pet-access] capability RPC failed, falling back to owner_id / pet_members check:', {
       capability,
       petId,
       code: error.code,
+      message: error.message,
     })
-    return false
+
+    // Fallback logic for environments where RPC functions are not yet migrated
+    const { data: authData } = await supabase.auth.getUser()
+    if (!authData?.user) return false
+
+    const uid = authData.user.id
+    const [{ data: pet }, { data: member }] = await Promise.all([
+      supabase.from('pets').select('id').eq('id', petId).eq('owner_id', uid).maybeSingle(),
+      supabase.from('pet_members').select('id').eq('pet_id', petId).eq('profile_id', uid).maybeSingle(),
+    ])
+
+    return !!(pet || member)
   }
 
   return data === true
