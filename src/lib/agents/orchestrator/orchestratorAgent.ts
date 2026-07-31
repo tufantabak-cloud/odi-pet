@@ -5,6 +5,7 @@ import { emitVaccineDueEvents } from '@/lib/agents/petProfileAgent'
 import { runUserHealthScan } from '@/lib/agents/userHealthAgent'
 import { markOverduePlans } from '@/lib/plans/mark-overdue-plans'
 import { createOverdueVaccineNotifications } from '@/lib/notifications/create-overdue-vaccine-notifications'
+import { recoverOverdueNotifications } from '@/lib/notifications/recoverOverdueNotifications'
 import { expireSharedPetCards } from '@/lib/cron/expire-shared-pet-cards'
 import { createAdminSupabaseClient } from '@/lib/supabase/server'
 import { createEstrusNotifications } from '@/services/estrus/createEstrusNotifications'
@@ -102,7 +103,7 @@ export async function runOrchestratedPipeline(
   }
 
   // ADIM 4 — Overdue Plans (scheduled_at geçmiş 'active' planları 'overdue' yapar)
-  // + C.5.1 Recovery: bir önceki çalışmada bildirimi eksik kalmış overdue planları telafi eder.
+  // + X.4 / C.5.3 Recovery: eksik kalmış overdue planları modüler olarak telafi eder.
   try {
     const adminSupabase = createAdminSupabaseClient()
 
@@ -110,44 +111,15 @@ export async function runOrchestratedPipeline(
     const overdueResult = await markOverduePlans(adminSupabase, { dryRun })
     console.log('Overdue plans marked:', overdueResult.updated, dryRun ? `(dry-run, wouldUpdate=${overdueResult.wouldUpdate})` : '')
 
-    // 2. Önceki çalışmada bildirimi eksik kalan overdue planları bul
-    const missedPlansResult = await adminSupabase
-      .from('plans')
-      .select('id, pet_id, user_id, category, sub_type, scheduled_at')
-      .eq('status', 'overdue')
-      .eq('category', 'asi')
-
-    if (missedPlansResult.error) throw missedPlansResult.error
-    const missedPlans = missedPlansResult.data ?? []
-
-    const missedPlanIds = missedPlans
-      .map(p => p.id)
-      .filter((id): id is string => Boolean(id))
-
-    let existingNotifs: Array<{ plan_id: string | null }> = []
-    if (missedPlanIds.length > 0) {
-      const notifResult = await adminSupabase
-        .from('notifications')
-        .select('plan_id')
-        .eq('type', 'vaccine_overdue')
-        .in('plan_id', missedPlanIds)
-      if (notifResult.error) throw notifResult.error
-      existingNotifs = notifResult.data ?? []
+    // 2. Yeni overdue olan planlar için bildirim oluştur
+    if (!dryRun && overdueResult.plans.length > 0) {
+      const notifResult = await createOverdueVaccineNotifications(adminSupabase, overdueResult.plans)
+      console.log('Overdue notifications for new plans:', notifResult.notified, 'skipped:', notifResult.skipped)
     }
 
-    const notifiedIds = new Set(existingNotifs.map(n => n.plan_id))
-    const unnotified = missedPlans.filter(p => !notifiedIds.has(p.id))
-    const newOverdueIds = new Set(overdueResult.plans.map(p => p.id))
-    const recoveryPlans = unnotified.filter(p => !newOverdueIds.has(p.id))
-
-    // 3. Yeni + recovery planları birleştir
-    const allToNotify = [...overdueResult.plans, ...recoveryPlans]
-    if (!dryRun) {
-      const notifResult = await createOverdueVaccineNotifications(adminSupabase, allToNotify)
-      console.log('Overdue notifications:', notifResult.notified, 'skipped:', notifResult.skipped, '(recovery:', recoveryPlans.length, ')')
-    } else {
-      console.log('Overdue notifications skipped (dry-run). Would notify:', allToNotify.length, '(recovery:', recoveryPlans.length, ')')
-    }
+    // 3. X.4 / C.5.3 Recovery: Eksik kalan overdue planları telafi et
+    const recoveryResult = await recoverOverdueNotifications(adminSupabase, { dryRun })
+    console.log('Overdue recovery:', recoveryResult.recoveredCount, 'skipped:', recoveryResult.skippedCount, 'candidates:', recoveryResult.candidateCount)
 
     agents_succeeded.push('overdue_plans')
   } catch (err) {
