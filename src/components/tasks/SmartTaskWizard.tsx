@@ -9,6 +9,7 @@ import { TaskCategory, TASK_CATEGORIES, getSmartDefault } from '@/lib/tasks/task
 import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 import { SmartScanner } from '@/components/ui/SmartScanner';
 import { getPlanDisplayTitle } from '@/lib/plans/utils';
+import { createVaccineRecord } from '@/lib/vaccines/createVaccineRecord';
 
 interface SmartTaskWizardProps {
   petId: string;
@@ -564,33 +565,24 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
 
       const newSchedule = insertedSchedules[0];
 
-      // Eğer seçilen işlem bir Aşı ise, geçmiş onay verilirse (done olanlar için) vaccine_records_v2 tablosuna da ekle
+      // X.1 — Aşı kaydı: createVaccineRecord servisine delege edildi.
+      // Brand normalizasyonu ve protocol_name çözümlemesi servis içinde yapılır.
       if (isPastDate && selectedVaccine) {
-        // vaccine_name'e marka adı değil protokol adı yazılmalı — marka bilgisi brand_id'de tutulur.
-        // Fallback marka adına DEĞİL, vaccine_code'a düşer (protokol bulunamazsa bile marka adı sızmasın).
-        const { data: protocol } = await supabase
-          .from('vaccine_protocols')
-          .select('protocol_name')
-          .eq('vaccine_code', selectedVaccine.code)
-          .eq('is_active', true)
-          .maybeSingle();
-        const protocolName = protocol?.protocol_name ?? selectedVaccine.code;
-
         const doneInserts = insertedSchedules.filter((s: any) => s.status === 'done');
         for (const s of doneInserts) {
-           const { error: vrError } = await supabase
-            .from('vaccine_records_v2')
-            .insert({
-              pet_id: petId,
-              vaccine_code: selectedVaccine.code,
-              vaccine_name: protocolName,
-              brand_id: selectedVaccine.brandId ?? null,
-              administered_at: s.due_date,
-              status: 'completed',
-              confidence_level: 'verified',
-              source: 'user_quick_marked'
-            });
-           if (vrError) console.error('Aşı kaydı oluşturulurken hata:', vrError);
+          const result = await createVaccineRecord(supabase, {
+            pet_id: petId,
+            vaccine_code: selectedVaccine.code,
+            vaccine_name: selectedVaccine.name,
+            brand_id: selectedVaccine.brandId ?? null,
+            administered_at: s.due_date,
+            status: 'completed',
+            confidence_level: 'verified',
+            source: 'user_quick_marked',
+          });
+          if (!result.success) {
+            console.error('Aşı kaydı oluşturulurken hata:', result.error);
+          }
         }
       }
 

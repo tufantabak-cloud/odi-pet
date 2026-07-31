@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { normalizeSpecies } from '@/lib/species'
+import { createVaccineRecord } from '@/lib/vaccines/createVaccineRecord'
 
 import { detectRouteConflict } from '@/features/pets/vaccination-algorithm'
 import type { AdministrationRoute } from '@/lib/vaccines/vaccination-rules'
@@ -110,34 +111,32 @@ export async function POST(req: Request) {
       }
     }
 
-    // ── vaccine_records_v2'ye insert ────────────────────────────
+    // ── vaccine_records_v2'ye insert (X.1 — createVaccineRecord servisi) ────────────
     const isBrandSelected = !!brandId
-    const { data: record, error: insertError } = await supabase
-      .from('vaccine_records_v2')
-      .insert({
-        pet_id,
-        vaccine_name: parsed_data.title || parsed_data.vaccine_name || 'Aşı Kaydı',
-        vaccine_code: vaccineCode,
-        administered_at: parsed_data.date || null,
-        next_due_at: parsed_data.next_date || null,
-        lot_number: parsed_data.lot_number || null,
-        vet_name: parsed_data.vet_name || null,
-        brand_id: isBrandSelected ? brandId : null,
-        brand_free_text: isBrandSelected ? null : (parsed_data.brand || null),
-        status: 'completed',
-        confidence_level: 'user_reported',
-        source: 'imported_history',
-        administration_route: parsed_data.administration_route || null,
-        notes: parsed_data.vet_company ? `Klinik: ${parsed_data.vet_company}` : null,
-        document_storage_path: documentStoragePath,
-      })
-      .select()
-      .single()
+    const vaccineResult = await createVaccineRecord(supabase, {
+      pet_id,
+      vaccine_code: vaccineCode,
+      vaccine_name: parsed_data.title || parsed_data.vaccine_name || 'Aşı Kaydı',
+      administered_at: parsed_data.date || null,
+      next_due_at: parsed_data.next_date || null,
+      lot_number: parsed_data.lot_number || null,
+      vet_name: parsed_data.vet_name || null,
+      brand_id: isBrandSelected ? brandId : null,
+      brand_free_text: isBrandSelected ? null : (parsed_data.brand || null),
+      administration_route: parsed_data.administration_route || null,
+      document_storage_path: documentStoragePath,
+      notes: parsed_data.vet_company ? `Klinik: ${parsed_data.vet_company}` : null,
+      status: 'completed',
+      confidence_level: 'user_reported',
+      source: 'imported_history',
+    })
 
-    if (insertError) {
-      console.error('vaccine_records_v2 insert error:', insertError)
+    if (!vaccineResult.success) {
+      console.error('vaccine_records_v2 insert error:', vaccineResult.error)
       return NextResponse.json({ error: 'Veritabanına kaydedilirken bir hata oluştu.' }, { status: 500 })
     }
+
+    const record = vaccineResult.record
 
     // ── İlgili planı tamamlama ──────────────────────────────────
     let planCompleted = false
@@ -162,7 +161,7 @@ export async function POST(req: Request) {
           .from('plans')
           .update({
             status: 'completed',
-            extra_data: { ...(plan.extra_data || {}), vaccine_record_id: record.id },
+            extra_data: { ...(plan.extra_data || {}), vaccine_record_id: (record as any).id },
           })
           .eq('id', plan.id)
         planCompleted = true

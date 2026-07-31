@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { Database } from '@/lib/database.types'
 import { SupabaseClient } from '@supabase/supabase-js'
+import { createPetWithCompatibility } from '@/lib/pets/create-pet-with-compatibility'
 
 // GET: fetch completed onboarding steps
 export async function GET() {
@@ -99,19 +100,18 @@ export async function POST(req: NextRequest) {
 
     if (!existing) {
       // Create demo pet
-      const { data: demoPetData, error: demoPetError } = await supabase.rpc(
-        'create_pet_with_primary_membership',
+      const { data: demoPetData, error: demoPetError } = await createPetWithCompatibility(
+        supabase,
+        user.id,
         {
-          p_payload: {
-            name: '🐾 Demo - Bella',
-            species: 'dog',
-            breed: 'Golden Retriever',
-            birth_date: new Date(Date.now() - 2 * 365 * 86400000)
-              .toISOString()
-              .split('T')[0],
-            gender: 'female',
-            is_demo: false,
-          },
+          name: '🐾 Demo - Bella',
+          species: 'dog',
+          breed: 'Golden Retriever',
+          birth_date: new Date(Date.now() - 2 * 365 * 86400000)
+            .toISOString()
+            .split('T')[0],
+          gender: 'female',
+          is_demo: false,
         }
       )
 

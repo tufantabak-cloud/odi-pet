@@ -120,6 +120,8 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
         }
 
         /* ── Pets (KRİTİK) ──────────────────────────────── */
+        let membershipPetIds: string[] = []
+
         const { data: memberships, error: membershipsError } = await supabase
           .from('pet_memberships')
           .select('pet_id')
@@ -127,18 +129,24 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
           .eq('status', 'active')
 
         if (membershipsError) {
-          console.error(
-            '[dashboard] memberships fetch failed:',
+          console.warn(
+            '[dashboard] pet_memberships fetch failed, falling back to legacy pet_members / owner_id:',
             membershipsError.message
           )
-          throw new Error(
-            `Pet üyelik sorgu hatası: ${membershipsError.message}`
+
+          const [{ data: legacyMembers }, { data: ownedPets }] = await Promise.all([
+            supabase.from('pet_members').select('pet_id').eq('profile_id', uid),
+            supabase.from('pets').select('id').eq('owner_id', uid),
+          ])
+
+          const legacyIds = (legacyMembers ?? []).map((m: any) => m.pet_id)
+          const ownedIds = (ownedPets ?? []).map((p: any) => p.id)
+          membershipPetIds = Array.from(new Set([...legacyIds, ...ownedIds]))
+        } else {
+          membershipPetIds = Array.from(
+            new Set((memberships ?? []).map((membership) => membership.pet_id))
           )
         }
-
-        const membershipPetIds = Array.from(
-          new Set((memberships ?? []).map((membership) => membership.pet_id))
-        )
 
         const petResult = membershipPetIds.length === 0
           ? { data: [] as DashboardPet[], error: null }

@@ -7,13 +7,22 @@ export default async function PetsPage() {
   if (!profile) redirect('/login')
 
   const supabase = await createServerSupabaseClient()
-  const { count } = await supabase
+  const { count, error } = await supabase
     .from('pet_memberships')
     .select('id', { count: 'exact', head: true })
     .eq('profile_id', profile.id)
     .eq('status', 'active')
 
-  if (count === 0) {
+  if (error) {
+    const { count: legacyCount } = await supabase
+      .from('pets')
+      .select('id', { count: 'exact', head: true })
+      .eq('owner_id', profile.id)
+
+    if (!legacyCount || legacyCount === 0) {
+      redirect('/owner/pets/add')
+    }
+  } else if (count === 0) {
     redirect('/owner/pets/add')
   }
 

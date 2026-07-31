@@ -1,9 +1,12 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { calcAge } from '@/lib/pets/utils'
 import { DefaultCatAvatar, DefaultDogAvatar } from '@/components/icons/PetIcons'
+import catSpeciesImage from '@/assets/pet-species/cat.png'
+import dogSpeciesImage from '@/assets/pet-species/dog.png'
 import { StepperInput } from '@/components/ui/StepperInput'
 import { RulerPicker } from '@/components/ui/RulerPicker'
 import { BreedCombobox } from '@/components/ui/BreedCombobox'
@@ -61,36 +64,32 @@ function SpeciesSelector({ onSelect, onBack }: { onSelect: (s: Species) => void,
         {([
           {
             species: 'cat' as Species,
-            avatar: <DefaultCatAvatar width={90} height={90} />,
-            label: 'Kedi',
-            desc: 'Bağımsız, zarif',
-            gradient: 'from-violet-50 to-purple-50',
+            image: catSpeciesImage,
+            ariaLabel: 'Kedi seç',
             border: 'hover:border-violet-400',
-            badge: 'bg-violet-100 text-violet-700',
           },
           {
             species: 'dog' as Species,
-            avatar: <DefaultDogAvatar width={90} height={90} />,
-            label: 'Köpek',
-            desc: 'Sadık, enerjik',
-            gradient: 'from-amber-50 to-orange-50',
+            image: dogSpeciesImage,
+            ariaLabel: 'Köpek seç',
             border: 'hover:border-amber-400',
-            badge: 'bg-amber-100 text-amber-700',
           },
-        ]).map(({ species, avatar, label, desc, gradient, border, badge }) => (
+        ]).map(({ species, image, ariaLabel, border }) => (
           <button
             key={species}
             onClick={() => onSelect(species)}
+            aria-label={ariaLabel}
             data-testid={species === 'cat' ? 'pet-species-cat-button' : 'pet-species-dog-button'}
-            className={`flex flex-col items-center gap-4 p-6 sm:p-8 rounded-[24px] border-2 border-border-main bg-gradient-to-br ${gradient} ${border} hover:shadow-medium transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] group cursor-pointer`}
+            className={`relative aspect-square overflow-hidden rounded-[24px] border-2 border-border-main bg-white p-0 ${border} hover:shadow-medium transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] cursor-pointer`}
           >
-            <div className="flex items-center justify-center w-[90px] h-[90px] filter drop-shadow-md group-hover:scale-105 transition-transform duration-300">
-              {avatar}
-            </div>
-            <div className="flex flex-col items-center gap-1.5">
-              <span className="text-[22px] font-extrabold text-text-primary">{label}</span>
-              <span className={`text-[12px] font-bold px-3 py-1 rounded-full ${badge}`}>{desc}</span>
-            </div>
+            <Image
+              src={image}
+              alt=""
+              fill
+              sizes="(max-width: 640px) 45vw, 360px"
+              placeholder="blur"
+              className="object-cover"
+            />
           </button>
         ))}
       </div>
