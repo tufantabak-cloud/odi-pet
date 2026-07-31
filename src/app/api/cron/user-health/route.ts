@@ -1,74 +1,14 @@
-import { NextResponse } from 'next/server';
-import { calculateChurnRisk, emitHealthEvent } from '@/lib/agents/userHealthAgent';
-import { calculateCompleteness } from '@/lib/agents/dataQualityAgent';
+import { NextResponse } from 'next/server'
 import { authorizeCronRequest } from '@/lib/security/cron-auth'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 
-// Sadece Vercel Cron veya secret yetkisi ile tetiklenmesi için
-export const dynamic = 'force-dynamic'; 
+export const dynamic = 'force-dynamic'
 
-export async function GET(request: Request) {
-  const authorizationError = authorizeCronRequest(request)
+export async function GET(req: Request) {
+  const authorizationError = authorizeCronRequest(req)
   if (authorizationError) return authorizationError
 
-  try {
-    const cookieStore = await cookies()
-    // Hizmet rolü (Service Role) key'i gerekir çünkü admin işlemleri
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() { return cookieStore.getAll() },
-          setAll() {} // Read-only in this context
-        },
-      }
-    )
-
-    // Data Quality sisteminin tamamlandığı farz edilerek, mock veya genel profil datası alınır.
-    // Şimdilik test amaçlı aktif profilleri çekelim.
-    // Gerçekte: select id, completeness_score, updated_at from profiles
-    const { data: profiles, error } = await supabase
-      .from('profiles')
-      .select('id, updated_at');
-
-    if (error) throw error;
-    
-    let processed = 0;
-    let highRisks = 0;
-
-    for (const profile of profiles || []) {
-      // Data Quality Agent'dan gerçek Completeness Score
-      const { score: mockCompleteness } = await calculateCompleteness(profile.id);
-
-      // Risk Hesapla
-      const { segment, days_inactive } = calculateChurnRisk(mockCompleteness, profile.updated_at);
-
-      // Sadece Orta ve Yüksek riskte event at
-      if (segment === 'high' || segment === 'medium') {
-        const success = await emitHealthEvent(supabase, profile.id, segment, {
-          completeness_score: mockCompleteness,
-          days_inactive,
-          action_required: 'trigger_notification'
-        });
-
-        if (success && segment === 'high') highRisks++;
-      }
-      processed++;
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: 'User Health Analysis completed',
-      stats: {
-        total_processed: processed,
-        high_risk_detected: highRisks
-      }
-    });
-
-  } catch (error: any) {
-    console.error('Cron Error:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-  }
+  return NextResponse.json({
+    status: 'disabled',
+    reason: 'decommissioned_sprint_x'
+  })
 }
