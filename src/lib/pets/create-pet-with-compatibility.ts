@@ -6,6 +6,7 @@ type PetInsert = Database['public']['Tables']['pets']['Insert']
 type CreatedPet = {
   id: string
   name?: string
+  species?: string
 }
 
 type CreatePetResult = {
@@ -17,35 +18,56 @@ type CreatePetResult = {
   usedLegacyFallback: boolean
 }
 
-function isMissingCreatePetRpc(error: { code?: string; message?: string } | null): boolean {
+function isMissingAtomicPetRpc(error: { code?: string; message?: string } | null): boolean {
   return error?.code === 'PGRST202'
-    && Boolean(error.message?.includes('create_pet_with_primary_membership'))
+    && Boolean(error.message?.includes('create_pet_atomic') || error.message?.includes('create_pet_with_primary_membership'))
 }
 
 /**
- * Uses the canonical atomic RPC when available. The linked remote database can
- * temporarily lag behind the application migration, so only a confirmed
- * missing-RPC error falls back to the legacy schema.
+ * Uses the canonical atomic RPC `create_pet_atomic` for safe, single-transaction pet creation.
  */
 export async function createPetWithCompatibility(
   supabase: SupabaseClient<Database>,
   userId: string,
   payload: PetInsert
 ): Promise<CreatePetResult> {
-  const rpcResult = await supabase.rpc('create_pet_with_primary_membership', {
-    p_payload: payload,
+  // 1. Try primary atomic RPC
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rpcResult = await (supabase as any).rpc('create_pet_atomic', {
+    p_payload: payload as unknown as Json,
   })
 
-  if (!isMissingCreatePetRpc(rpcResult.error)) {
+  if (!rpcResult.error) {
     return {
-      data: rpcResult.data,
+      data: rpcResult.data as CreatedPet,
+      error: null,
+      usedLegacyFallback: false,
+    }
+  }
+
+  // 2. Try fallback canonical RPC
+  const secondaryRpcResult = await supabase.rpc('create_pet_with_primary_membership', {
+    p_payload: payload as unknown as Json,
+  })
+
+  if (!secondaryRpcResult.error) {
+    return {
+      data: secondaryRpcResult.data as CreatedPet,
+      error: null,
+      usedLegacyFallback: false,
+    }
+  }
+
+  if (!isMissingAtomicPetRpc(rpcResult.error)) {
+    return {
+      data: null,
       error: rpcResult.error,
       usedLegacyFallback: false,
     }
   }
 
   console.warn(
-    '[pet-create] Canonical RPC is missing; using the legacy owner_id-compatible insert.'
+    '[pet-create] Atomic RPC is missing; using legacy fallback insert.'
   )
 
   const legacyResult = await supabase
@@ -54,7 +76,7 @@ export async function createPetWithCompatibility(
       ...payload,
       owner_id: userId,
     })
-    .select('id, name')
+    .select('id, name, species')
     .single()
 
   if (legacyResult.error || !legacyResult.data) {
@@ -65,26 +87,20 @@ export async function createPetWithCompatibility(
     }
   }
 
-  // The existing pets trigger writes pet_members in the same transaction.
-  // Keep the second legacy ownership mirror aligned for older readers too.
-  const { error: ownerMirrorError } = await supabase
-    .from('pet_owners')
-    .upsert(
-      {
-        pet_id: legacyResult.data.id,
-        profile_id: userId,
-        role: 'owner',
-      },
-      { onConflict: 'pet_id,profile_id' }
-    )
+  // Keep pet_memberships & pet_owners aligned for legacy fallbacks
+  await supabase.from('pet_memberships').upsert({
+    pet_id: legacyResult.data.id,
+    profile_id: userId,
+    role: 'primary_owner',
+    status: 'active',
+    source: 'pet_creation',
+  }, { onConflict: 'pet_id,profile_id' })
 
-  if (ownerMirrorError) {
-    console.warn('[pet-create] Legacy pet_owners mirror could not be updated:', {
-      petId: legacyResult.data.id,
-      code: ownerMirrorError.code,
-      message: ownerMirrorError.message,
-    })
-  }
+  await supabase.from('pet_owners').upsert({
+    pet_id: legacyResult.data.id,
+    profile_id: userId,
+    role: 'primary_owner',
+  }, { onConflict: 'pet_id,profile_id' })
 
   return {
     data: legacyResult.data,
