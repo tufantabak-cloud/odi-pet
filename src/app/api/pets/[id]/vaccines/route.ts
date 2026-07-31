@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
 import { getCurrentProfile } from '@/lib/auth/get-current-profile'
+import { normalizeConfidenceLevel } from '@/lib/vaccines/confidenceLevels'
 
 export async function GET(request: Request, props: { params: Promise<{ id: string }> }) {
   try {
@@ -56,7 +57,7 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     }
 
     const body = await request.json()
-    const { vaccine_name, administered_at, next_due_at, notes, administered_by } = body
+    const { vaccine_name, administered_at, next_due_at, notes, administered_by, confidence_level } = body
 
     if (!vaccine_name) {
       return NextResponse.json({ error: 'Aşı adı zorunludur' }, { status: 400 })
@@ -72,7 +73,7 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
         notes: notes || null,
         administered_by: administered_by || null,
         status: 'done',
-        confidence_level: 'user_reported',
+        confidence_level: normalizeConfidenceLevel(confidence_level),
         source: 'manual',
         vaccine_code: 'CUSTOM'
       })
