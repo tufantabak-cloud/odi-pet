@@ -78,11 +78,23 @@ describe('createPetWithCompatibility', () => {
       breed: 'Pug',
       owner_id: 'user-1',
     })
-    expect(client.upsert).toHaveBeenCalledWith(
+    expect(client.upsert).toHaveBeenNthCalledWith(
+      1,
       {
         pet_id: 'pet-1',
         profile_id: 'user-1',
-        role: 'owner',
+        role: 'primary_owner',
+        status: 'active',
+        source: 'pet_creation',
+      },
+      { onConflict: 'pet_id,profile_id' }
+    )
+    expect(client.upsert).toHaveBeenNthCalledWith(
+      2,
+      {
+        pet_id: 'pet-1',
+        profile_id: 'user-1',
+        role: 'primary_owner',
       },
       { onConflict: 'pet_id,profile_id' }
     )
