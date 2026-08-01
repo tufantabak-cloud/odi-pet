@@ -12,6 +12,7 @@
     "audit:health": "npx tsx scripts/run-health-audit.mjs",
     "autofix:health": "npx tsx scripts/run-health-autofix.mjs",
     "autofix:execute": "npx tsx scripts/run-health-autofix-execute.mjs",
+    "health:history": "npx tsx scripts/run-health-history-report.mjs",
     "test:unit": "vitest run",
     "test:integration": "node scripts/run-local-integration-tests.mjs",
     "test:integration:fixtures": "node scripts/run-local-integration-tests.mjs vitest.fixtures.config.mts",
