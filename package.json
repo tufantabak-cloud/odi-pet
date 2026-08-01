@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "npm run test:unit",
     "check:architecture": "node scripts/check-architecture-guards.mjs",
+    "audit:health": "npx tsx scripts/run-health-audit.mjs",
     "test:unit": "vitest run",
     "test:integration": "node scripts/run-local-integration-tests.mjs",
     "test:integration:fixtures": "node scripts/run-local-integration-tests.mjs vitest.fixtures.config.mts",
