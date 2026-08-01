@@ -15,6 +15,8 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { validateVaccineRecord, type ValidationResult } from './validateVaccineRecord'
+import { normalizeConfidenceLevel } from './confidenceLevels'
 
 // ─── Input Types ────────────────────────────────────────────────────────────
 
@@ -99,12 +101,14 @@ export interface CreateVaccineRecordResult {
    * false ise vaccine_name input olduğu gibi yazıldı.
    */
   protocol_resolved: boolean
+  validation_result?: ValidationResult
 }
 
 export interface CreateVaccineRecordError {
   success: false
   error: string
   code?: string
+  validation_result?: ValidationResult
 }
 
 export type CreateVaccineRecordResponse = CreateVaccineRecordResult | CreateVaccineRecordError
@@ -123,6 +127,17 @@ export async function createVaccineRecord(
   input: CreateVaccineRecordInput
 ): Promise<CreateVaccineRecordResponse> {
   try {
+    // ── 0. Validation Engine ──────────────────────────────────────────────
+    const validationResult = validateVaccineRecord(input)
+    if (!validationResult.valid) {
+      return {
+        success: false,
+        error: validationResult.errors.map(e => e.message).join('; '),
+        code: validationResult.errors[0]?.code || 'VALIDATION_FAILED',
+        validation_result: validationResult,
+      }
+    }
+
     // ── 1. Brand normalizasyonu ────────────────────────────────────────────
     // Kural: brand_id VE brand_free_text aynı anda asla yazılmaz.
     const normalizedBrandId: string | null = input.brand_id ?? null
@@ -176,7 +191,7 @@ export async function createVaccineRecord(
         notes: input.notes ?? null,
         dose_number: input.dose_number ?? null,
         status: input.status ?? 'completed',
-        confidence_level: input.confidence_level ?? 'user_reported',
+        confidence_level: normalizeConfidenceLevel(input.confidence_level),
         source: input.source ?? 'manual',
         idempotency_key: input.idempotency_key ?? null,
       })
