@@ -1,0 +1,62 @@
+{
+  "id": "parasite-control",
+  "name": "Parazit Koruması",
+  "category": "parasite",
+  "module": "parasite",
+  "complexity": "M",
+  "theme_color": "parasite",
+  "title": {
+    "tr": "Parazit Koruması",
+    "en": "Parasite Protection"
+  },
+  "description": {
+    "tr": "OPOS Kurumsal Üretim Varlığı: Parazit Koruması",
+    "en": "OPOS Production Asset: Parasite Protection"
+  },
+  "screen_usage": [
+    "/owner/pets/[id]/parasite"
+  ],
+  "allowedContexts": [
+    "Dashboard",
+    "General",
+    "Mobile",
+    "Web"
+  ],
+  "forbiddenContexts": [],
+  "svg_path": "public/brand/illustrations/parasite/parasite-control/source.svg",
+  "preview_png": "public/brand/illustrations/parasite/parasite-control/preview.png",
+  "thumbnail_webp": "public/brand/illustrations/parasite/parasite-control/thumbnail.webp",
+  "exports": {
+    "png512": "public/brand/illustrations/parasite/parasite-control/export/512.png",
+    "png1024": "public/brand/illustrations/parasite/parasite-control/export/1024.png",
+    "png2048": "public/brand/illustrations/parasite/parasite-control/export/2048.png",
+    "webp": "public/brand/illustrations/parasite/parasite-control/export/preview.webp",
+    "avif": "public/brand/illustrations/parasite/parasite-control/export/preview.avif"
+  },
+  "dependencies": [
+    "PAW_SYMBOL",
+    "glass-card-grad",
+    "parasite-grad"
+  ],
+  "priority": "P0",
+  "fallback": "empty-state/empty-no-pets/source.svg",
+  "replacement_policy": "Standard OPOS Master Component",
+  "systemVersion": "1.6.0",
+  "assetVersion": "2.0.0",
+  "illustrationVersion": "2.0.0",
+  "last_update": "2026-08-01",
+  "aiMetadata": {
+    "prompt": "OPOS Corporate semi-3D pet illustration for Parazit Koruması",
+    "style": "glassmorphism",
+    "seed": 137,
+    "revision": 2
+  },
+  "governance": {
+    "creator": "OdiPet Design System",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "approvedBy": "Tufan",
+    "copyright": "Odi.Pet",
+    "license": "Proprietary",
+    "reviewState": "Approved"
+  }
+}

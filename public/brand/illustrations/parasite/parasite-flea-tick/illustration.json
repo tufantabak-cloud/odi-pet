@@ -1,0 +1,62 @@
+{
+  "id": "parasite-flea-tick",
+  "name": "Pire ve Kene Damlası",
+  "category": "parasite",
+  "module": "parasite",
+  "complexity": "M",
+  "theme_color": "parasite",
+  "title": {
+    "tr": "Dış Parazit Uygulaması",
+    "en": "Flea & Tick Treatment"
+  },
+  "description": {
+    "tr": "OPOS Kurumsal Üretim Varlığı: Dış Parazit Uygulaması",
+    "en": "OPOS Production Asset: Flea & Tick Treatment"
+  },
+  "screen_usage": [
+    "/owner/parasite/flea"
+  ],
+  "allowedContexts": [
+    "Dashboard",
+    "General",
+    "Mobile",
+    "Web"
+  ],
+  "forbiddenContexts": [],
+  "svg_path": "public/brand/illustrations/parasite/parasite-flea-tick/source.svg",
+  "preview_png": "public/brand/illustrations/parasite/parasite-flea-tick/preview.png",
+  "thumbnail_webp": "public/brand/illustrations/parasite/parasite-flea-tick/thumbnail.webp",
+  "exports": {
+    "png512": "public/brand/illustrations/parasite/parasite-flea-tick/export/512.png",
+    "png1024": "public/brand/illustrations/parasite/parasite-flea-tick/export/1024.png",
+    "png2048": "public/brand/illustrations/parasite/parasite-flea-tick/export/2048.png",
+    "webp": "public/brand/illustrations/parasite/parasite-flea-tick/export/preview.webp",
+    "avif": "public/brand/illustrations/parasite/parasite-flea-tick/export/preview.avif"
+  },
+  "dependencies": [
+    "PAW_SYMBOL",
+    "glass-card-grad",
+    "parasite-grad"
+  ],
+  "priority": "P1",
+  "fallback": "empty-state/empty-no-pets/source.svg",
+  "replacement_policy": "Standard OPOS Master Component",
+  "systemVersion": "1.6.0",
+  "assetVersion": "2.0.0",
+  "illustrationVersion": "2.0.0",
+  "last_update": "2026-08-01",
+  "aiMetadata": {
+    "prompt": "OPOS Corporate semi-3D pet illustration for Pire ve Kene Damlası",
+    "style": "glassmorphism",
+    "seed": 139,
+    "revision": 2
+  },
+  "governance": {
+    "creator": "OdiPet Design System",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "approvedBy": "Tufan",
+    "copyright": "Odi.Pet",
+    "license": "Proprietary",
+    "reviewState": "Approved"
+  }
+}

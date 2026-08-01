@@ -1,0 +1,62 @@
+{
+  "id": "offline-no-connection",
+  "name": "Çevrimdışı Mod",
+  "category": "offline",
+  "module": "common",
+  "complexity": "M",
+  "theme_color": "primary",
+  "title": {
+    "tr": "İnternet Bağlantısı Yok",
+    "en": "No Internet Connection"
+  },
+  "description": {
+    "tr": "OPOS Kurumsal Üretim Varlığı: İnternet Bağlantısı Yok",
+    "en": "OPOS Production Asset: No Internet Connection"
+  },
+  "screen_usage": [
+    "/offline"
+  ],
+  "allowedContexts": [
+    "Dashboard",
+    "General",
+    "Mobile",
+    "Web"
+  ],
+  "forbiddenContexts": [],
+  "svg_path": "public/brand/illustrations/offline/offline-no-connection/source.svg",
+  "preview_png": "public/brand/illustrations/offline/offline-no-connection/preview.png",
+  "thumbnail_webp": "public/brand/illustrations/offline/offline-no-connection/thumbnail.webp",
+  "exports": {
+    "png512": "public/brand/illustrations/offline/offline-no-connection/export/512.png",
+    "png1024": "public/brand/illustrations/offline/offline-no-connection/export/1024.png",
+    "png2048": "public/brand/illustrations/offline/offline-no-connection/export/2048.png",
+    "webp": "public/brand/illustrations/offline/offline-no-connection/export/preview.webp",
+    "avif": "public/brand/illustrations/offline/offline-no-connection/export/preview.avif"
+  },
+  "dependencies": [
+    "PAW_SYMBOL",
+    "glass-card-grad",
+    "primary-grad"
+  ],
+  "priority": "P0",
+  "fallback": "empty-state/empty-no-pets/source.svg",
+  "replacement_policy": "Standard OPOS Master Component",
+  "systemVersion": "1.6.0",
+  "assetVersion": "2.0.0",
+  "illustrationVersion": "2.0.0",
+  "last_update": "2026-08-01",
+  "aiMetadata": {
+    "prompt": "OPOS Corporate semi-3D pet illustration for Çevrimdışı Mod",
+    "style": "glassmorphism",
+    "seed": 166,
+    "revision": 2
+  },
+  "governance": {
+    "creator": "OdiPet Design System",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "approvedBy": "Tufan",
+    "copyright": "Odi.Pet",
+    "license": "Proprietary",
+    "reviewState": "Approved"
+  }
+}

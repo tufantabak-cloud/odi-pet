@@ -1,0 +1,62 @@
+{
+  "id": "grooming-care",
+  "name": "Bakım ve Hijyen",
+  "category": "grooming",
+  "module": "grooming",
+  "complexity": "M",
+  "theme_color": "grooming",
+  "title": {
+    "tr": "Bakım ve Hijyen",
+    "en": "Grooming & Care"
+  },
+  "description": {
+    "tr": "OPOS Kurumsal Üretim Varlığı: Bakım ve Hijyen",
+    "en": "OPOS Production Asset: Grooming & Care"
+  },
+  "screen_usage": [
+    "/owner/pets/[id]/grooming"
+  ],
+  "allowedContexts": [
+    "Dashboard",
+    "General",
+    "Mobile",
+    "Web"
+  ],
+  "forbiddenContexts": [],
+  "svg_path": "public/brand/illustrations/grooming/grooming-care/source.svg",
+  "preview_png": "public/brand/illustrations/grooming/grooming-care/preview.png",
+  "thumbnail_webp": "public/brand/illustrations/grooming/grooming-care/thumbnail.webp",
+  "exports": {
+    "png512": "public/brand/illustrations/grooming/grooming-care/export/512.png",
+    "png1024": "public/brand/illustrations/grooming/grooming-care/export/1024.png",
+    "png2048": "public/brand/illustrations/grooming/grooming-care/export/2048.png",
+    "webp": "public/brand/illustrations/grooming/grooming-care/export/preview.webp",
+    "avif": "public/brand/illustrations/grooming/grooming-care/export/preview.avif"
+  },
+  "dependencies": [
+    "PAW_SYMBOL",
+    "glass-card-grad",
+    "grooming-grad"
+  ],
+  "priority": "P0",
+  "fallback": "empty-state/empty-no-pets/source.svg",
+  "replacement_policy": "Standard OPOS Master Component",
+  "systemVersion": "1.6.0",
+  "assetVersion": "2.0.0",
+  "illustrationVersion": "2.0.0",
+  "last_update": "2026-08-01",
+  "aiMetadata": {
+    "prompt": "OPOS Corporate semi-3D pet illustration for Bakım ve Hijyen",
+    "style": "glassmorphism",
+    "seed": 146,
+    "revision": 2
+  },
+  "governance": {
+    "creator": "OdiPet Design System",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "approvedBy": "Tufan",
+    "copyright": "Odi.Pet",
+    "license": "Proprietary",
+    "reviewState": "Approved"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "id": "p2-blog-cover-guide",
+  "tier": "P2",
+  "category": "marketing",
+  "name": "Blog Cover Guide Header",
+  "screen_usage": [
+    "Blog"
+  ],
+  "priority": "P2",
+  "version": "2.0.0",
+  "reviewState": "Approved",
+  "license": "Odi.Pet Corporate Proprietary",
+  "exports": {
+    "svg": "public/brand/illustrations/marketing/p2-blog-cover-guide/source.svg",
+    "png512": "public/brand/illustrations/marketing/p2-blog-cover-guide/export/512.png",
+    "png1024": "public/brand/illustrations/marketing/p2-blog-cover-guide/export/1024.png",
+    "png2048": "public/brand/illustrations/marketing/p2-blog-cover-guide/export/2048.png",
+    "webp": "public/brand/illustrations/marketing/p2-blog-cover-guide/export/preview.webp",
+    "avif": "public/brand/illustrations/marketing/p2-blog-cover-guide/export/preview.avif"
+  },
+  "aiMetadata": {
+    "style": "OPOS Semi-3D Glassmorphic",
+    "generatedBy": "OPOS Phase 2 Asset Pipeline"
+  }
+}

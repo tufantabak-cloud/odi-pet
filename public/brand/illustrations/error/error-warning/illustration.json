@@ -1,0 +1,62 @@
+{
+  "id": "error-warning",
+  "name": "Bir Hata Oluştu",
+  "category": "error",
+  "module": "common",
+  "complexity": "M",
+  "theme_color": "health",
+  "title": {
+    "tr": "Bağlantı Uyarısı",
+    "en": "Connection Warning"
+  },
+  "description": {
+    "tr": "OPOS Kurumsal Üretim Varlığı: Bağlantı Uyarısı",
+    "en": "OPOS Production Asset: Connection Warning"
+  },
+  "screen_usage": [
+    "/error"
+  ],
+  "allowedContexts": [
+    "Dashboard",
+    "General",
+    "Mobile",
+    "Web"
+  ],
+  "forbiddenContexts": [],
+  "svg_path": "public/brand/illustrations/error/error-warning/source.svg",
+  "preview_png": "public/brand/illustrations/error/error-warning/preview.png",
+  "thumbnail_webp": "public/brand/illustrations/error/error-warning/thumbnail.webp",
+  "exports": {
+    "png512": "public/brand/illustrations/error/error-warning/export/512.png",
+    "png1024": "public/brand/illustrations/error/error-warning/export/1024.png",
+    "png2048": "public/brand/illustrations/error/error-warning/export/2048.png",
+    "webp": "public/brand/illustrations/error/error-warning/export/preview.webp",
+    "avif": "public/brand/illustrations/error/error-warning/export/preview.avif"
+  },
+  "dependencies": [
+    "PAW_SYMBOL",
+    "glass-card-grad",
+    "health-grad"
+  ],
+  "priority": "P0",
+  "fallback": "empty-state/empty-no-pets/source.svg",
+  "replacement_policy": "Standard OPOS Master Component",
+  "systemVersion": "1.6.0",
+  "assetVersion": "2.0.0",
+  "illustrationVersion": "2.0.0",
+  "last_update": "2026-08-01",
+  "aiMetadata": {
+    "prompt": "OPOS Corporate semi-3D pet illustration for Bir Hata Oluştu",
+    "style": "glassmorphism",
+    "seed": 165,
+    "revision": 2
+  },
+  "governance": {
+    "creator": "OdiPet Design System",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "approvedBy": "Tufan",
+    "copyright": "Odi.Pet",
+    "license": "Proprietary",
+    "reviewState": "Approved"
+  }
+}

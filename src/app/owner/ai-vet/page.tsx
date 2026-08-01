@@ -284,16 +284,7 @@ export default function AIVetPage() {
       <div className="flex-1 overflow-y-auto flex flex-col gap-4 pr-1 scrollbar-none">
         {messages.length === 0 && (
           <EmptyState
-            icon={
-              <svg viewBox="0 0 32 32" className="w-12 h-12 drop-shadow-sm mx-auto mb-2 text-primary">
-                <path d="M12 4h8v4h-8z" fill="#D1D5DB" />
-                <path d="M8 8h16v18a4 4 0 01-4 4H12a4 4 0 01-4-4V8z" fill="url(#ai-steth-grad)" />
-                <path d="M16 12v10M11 17h10" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" />
-                <defs>
-                  <linearGradient id="ai-steth-grad" x1="8" y1="8" x2="24" y2="30" gradientUnits="userSpaceOnUse"><stop stopColor="#3B82F6" /><stop offset="1" stopColor="#1D4ED8" /></linearGradient>
-                </defs>
-              </svg>
-            }
+            illustrationId="ai-vet-assistant"
             title="Odi AI Vet"
             message="Petinizin sağlığı hakkında bilgi alın. Unutmayın, kesin tanı vermez ve her zaman bir veteriner hekime danışmanızı önerir."
           />

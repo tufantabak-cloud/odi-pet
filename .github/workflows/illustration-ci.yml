@@ -1,0 +1,27 @@
+name: OPOS Illustration System CI
+
+on:
+  push:
+    paths:
+      - 'public/brand/illustrations/**'
+  pull_request:
+    paths:
+      - 'public/brand/illustrations/**'
+
+jobs:
+  validate-illustrations:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate OPOS Manifest & Architecture Guards
+        run: |
+          node scripts/build-opos-phase-1.6-enterprise-system.js
+          node scripts/check-architecture-guards.mjs

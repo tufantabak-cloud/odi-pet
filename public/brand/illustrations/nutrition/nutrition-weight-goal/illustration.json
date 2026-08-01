@@ -1,0 +1,62 @@
+{
+  "id": "nutrition-weight-goal",
+  "name": "Hedef Kilo Bandı",
+  "category": "nutrition",
+  "module": "nutrition",
+  "complexity": "M",
+  "theme_color": "nutrition",
+  "title": {
+    "tr": "İdeal Kilo Hedefi",
+    "en": "Ideal Weight Target"
+  },
+  "description": {
+    "tr": "OPOS Kurumsal Üretim Varlığı: İdeal Kilo Hedefi",
+    "en": "OPOS Production Asset: Ideal Weight Target"
+  },
+  "screen_usage": [
+    "/owner/nutrition/weight-goal"
+  ],
+  "allowedContexts": [
+    "Dashboard",
+    "General",
+    "Mobile",
+    "Web"
+  ],
+  "forbiddenContexts": [],
+  "svg_path": "public/brand/illustrations/nutrition/nutrition-weight-goal/source.svg",
+  "preview_png": "public/brand/illustrations/nutrition/nutrition-weight-goal/preview.png",
+  "thumbnail_webp": "public/brand/illustrations/nutrition/nutrition-weight-goal/thumbnail.webp",
+  "exports": {
+    "png512": "public/brand/illustrations/nutrition/nutrition-weight-goal/export/512.png",
+    "png1024": "public/brand/illustrations/nutrition/nutrition-weight-goal/export/1024.png",
+    "png2048": "public/brand/illustrations/nutrition/nutrition-weight-goal/export/2048.png",
+    "webp": "public/brand/illustrations/nutrition/nutrition-weight-goal/export/preview.webp",
+    "avif": "public/brand/illustrations/nutrition/nutrition-weight-goal/export/preview.avif"
+  },
+  "dependencies": [
+    "PAW_SYMBOL",
+    "glass-card-grad",
+    "nutrition-grad"
+  ],
+  "priority": "P1",
+  "fallback": "empty-state/empty-no-pets/source.svg",
+  "replacement_policy": "Standard OPOS Master Component",
+  "systemVersion": "1.6.0",
+  "assetVersion": "2.0.0",
+  "illustrationVersion": "2.0.0",
+  "last_update": "2026-08-01",
+  "aiMetadata": {
+    "prompt": "OPOS Corporate semi-3D pet illustration for Hedef Kilo Bandı",
+    "style": "glassmorphism",
+    "seed": 142,
+    "revision": 2
+  },
+  "governance": {
+    "creator": "OdiPet Design System",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "approvedBy": "Tufan",
+    "copyright": "Odi.Pet",
+    "license": "Proprietary",
+    "reviewState": "Approved"
+  }
+}

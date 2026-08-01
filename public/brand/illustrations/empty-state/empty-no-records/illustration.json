@@ -1,0 +1,62 @@
+{
+  "id": "empty-no-records",
+  "name": "Sağlık Kaydı Yok",
+  "category": "empty-state",
+  "module": "health",
+  "complexity": "M",
+  "theme_color": "health",
+  "title": {
+    "tr": "Geçmiş Kayıt Bulunamadı",
+    "en": "No Medical Records"
+  },
+  "description": {
+    "tr": "OPOS Kurumsal Üretim Varlığı: Geçmiş Kayıt Bulunamadı",
+    "en": "OPOS Production Asset: No Medical Records"
+  },
+  "screen_usage": [
+    "/owner/medical"
+  ],
+  "allowedContexts": [
+    "Dashboard",
+    "General",
+    "Mobile",
+    "Web"
+  ],
+  "forbiddenContexts": [],
+  "svg_path": "public/brand/illustrations/empty-state/empty-no-records/source.svg",
+  "preview_png": "public/brand/illustrations/empty-state/empty-no-records/preview.png",
+  "thumbnail_webp": "public/brand/illustrations/empty-state/empty-no-records/thumbnail.webp",
+  "exports": {
+    "png512": "public/brand/illustrations/empty-state/empty-no-records/export/512.png",
+    "png1024": "public/brand/illustrations/empty-state/empty-no-records/export/1024.png",
+    "png2048": "public/brand/illustrations/empty-state/empty-no-records/export/2048.png",
+    "webp": "public/brand/illustrations/empty-state/empty-no-records/export/preview.webp",
+    "avif": "public/brand/illustrations/empty-state/empty-no-records/export/preview.avif"
+  },
+  "dependencies": [
+    "PAW_SYMBOL",
+    "glass-card-grad",
+    "health-grad"
+  ],
+  "priority": "P1",
+  "fallback": "empty-state/empty-no-pets/source.svg",
+  "replacement_policy": "Standard OPOS Master Component",
+  "systemVersion": "1.6.0",
+  "assetVersion": "2.0.0",
+  "illustrationVersion": "2.0.0",
+  "last_update": "2026-08-01",
+  "aiMetadata": {
+    "prompt": "OPOS Corporate semi-3D pet illustration for Sağlık Kaydı Yok",
+    "style": "glassmorphism",
+    "seed": 103,
+    "revision": 2
+  },
+  "governance": {
+    "creator": "OdiPet Design System",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "approvedBy": "Tufan",
+    "copyright": "Odi.Pet",
+    "license": "Proprietary",
+    "reviewState": "Approved"
+  }
+}

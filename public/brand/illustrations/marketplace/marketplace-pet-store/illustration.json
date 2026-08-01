@@ -1,0 +1,62 @@
+{
+  "id": "marketplace-pet-store",
+  "name": "Veteriner Onaylı Mağaza",
+  "category": "marketplace",
+  "module": "marketplace",
+  "complexity": "M",
+  "theme_color": "primary",
+  "title": {
+    "tr": "Onaylı Mama ve Ürünler",
+    "en": "Approved Vet Food & Toys"
+  },
+  "description": {
+    "tr": "OPOS Kurumsal Üretim Varlığı: Onaylı Mama ve Ürünler",
+    "en": "OPOS Production Asset: Approved Vet Food & Toys"
+  },
+  "screen_usage": [
+    "/marketplace/store"
+  ],
+  "allowedContexts": [
+    "Dashboard",
+    "General",
+    "Mobile",
+    "Web"
+  ],
+  "forbiddenContexts": [],
+  "svg_path": "public/brand/illustrations/marketplace/marketplace-pet-store/source.svg",
+  "preview_png": "public/brand/illustrations/marketplace/marketplace-pet-store/preview.png",
+  "thumbnail_webp": "public/brand/illustrations/marketplace/marketplace-pet-store/thumbnail.webp",
+  "exports": {
+    "png512": "public/brand/illustrations/marketplace/marketplace-pet-store/export/512.png",
+    "png1024": "public/brand/illustrations/marketplace/marketplace-pet-store/export/1024.png",
+    "png2048": "public/brand/illustrations/marketplace/marketplace-pet-store/export/2048.png",
+    "webp": "public/brand/illustrations/marketplace/marketplace-pet-store/export/preview.webp",
+    "avif": "public/brand/illustrations/marketplace/marketplace-pet-store/export/preview.avif"
+  },
+  "dependencies": [
+    "PAW_SYMBOL",
+    "glass-card-grad",
+    "primary-grad"
+  ],
+  "priority": "P1",
+  "fallback": "empty-state/empty-no-pets/source.svg",
+  "replacement_policy": "Standard OPOS Master Component",
+  "systemVersion": "1.6.0",
+  "assetVersion": "2.0.0",
+  "illustrationVersion": "2.0.0",
+  "last_update": "2026-08-01",
+  "aiMetadata": {
+    "prompt": "OPOS Corporate semi-3D pet illustration for Veteriner Onaylı Mağaza",
+    "style": "glassmorphism",
+    "seed": 154,
+    "revision": 2
+  },
+  "governance": {
+    "creator": "OdiPet Design System",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "approvedBy": "Tufan",
+    "copyright": "Odi.Pet",
+    "license": "Proprietary",
+    "reviewState": "Approved"
+  }
+}

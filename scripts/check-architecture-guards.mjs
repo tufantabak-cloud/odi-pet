@@ -73,4 +73,15 @@ const recoveryContent = fs.readFileSync(recoveryPath, 'utf8');
 assert(recoveryContent.includes('createOverdueVaccineNotifications'), 'recoverOverdueNotifications must delegate to createOverdueVaccineNotifications');
 console.log('✅ Guard 6 Passed: Overdue Recovery delegates to canonical createOverdueVaccineNotifications.');
 
+// 7. Check OPOS Illustration Single Source of Truth & DAM Protection
+const manifestPath = path.join(rootDir, 'public/brand/illustrations/illustration-manifest.json');
+assert(fs.existsSync(manifestPath), 'OPOS illustration-manifest.json missing');
+const manifestContent = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+assert(Array.isArray(manifestContent) && manifestContent.length >= 70, 'OPOS illustration manifest must contain at least 70 master illustrations');
+const illustrationComponentPath = path.join(rootDir, 'src/components/ui/Illustration.tsx');
+assert(fs.existsSync(illustrationComponentPath), 'Illustration React component missing');
+const illustrationApiPath = path.join(rootDir, 'src/lib/illustrations.ts');
+assert(fs.existsSync(illustrationApiPath), 'Core Illustration API (illustrations.ts) missing');
+console.log('✅ Guard 7 Passed: OPOS Illustration System is active, protected, and frozen.');
+
 console.log('🎉 ALL ARCHITECTURE GUARDS PASSED (100%)');

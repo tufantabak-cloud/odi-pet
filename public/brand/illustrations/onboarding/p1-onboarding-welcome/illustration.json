@@ -1,0 +1,25 @@
+{
+  "id": "p1-onboarding-welcome",
+  "tier": "P1",
+  "category": "onboarding",
+  "name": "Onboarding Welcome Scene",
+  "screen_usage": [
+    "/onboarding/1"
+  ],
+  "priority": "P1",
+  "version": "2.0.0",
+  "reviewState": "Approved",
+  "license": "Odi.Pet Corporate Proprietary",
+  "exports": {
+    "svg": "public/brand/illustrations/onboarding/p1-onboarding-welcome/source.svg",
+    "png512": "public/brand/illustrations/onboarding/p1-onboarding-welcome/export/512.png",
+    "png1024": "public/brand/illustrations/onboarding/p1-onboarding-welcome/export/1024.png",
+    "png2048": "public/brand/illustrations/onboarding/p1-onboarding-welcome/export/2048.png",
+    "webp": "public/brand/illustrations/onboarding/p1-onboarding-welcome/export/preview.webp",
+    "avif": "public/brand/illustrations/onboarding/p1-onboarding-welcome/export/preview.avif"
+  },
+  "aiMetadata": {
+    "style": "OPOS Semi-3D Glassmorphic",
+    "generatedBy": "OPOS Phase 2 Asset Pipeline"
+  }
+}

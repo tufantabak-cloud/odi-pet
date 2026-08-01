@@ -1,0 +1,62 @@
+{
+  "id": "empty-no-notifications",
+  "name": "Bildirim Bulunmuyor",
+  "category": "empty-state",
+  "module": "notifications",
+  "complexity": "M",
+  "theme_color": "primary",
+  "title": {
+    "tr": "Yeni Bildirim Yok",
+    "en": "No Notifications"
+  },
+  "description": {
+    "tr": "OPOS Kurumsal Üretim Varlığı: Yeni Bildirim Yok",
+    "en": "OPOS Production Asset: No Notifications"
+  },
+  "screen_usage": [
+    "/notifications"
+  ],
+  "allowedContexts": [
+    "Dashboard",
+    "General",
+    "Mobile",
+    "Web"
+  ],
+  "forbiddenContexts": [],
+  "svg_path": "public/brand/illustrations/empty-state/empty-no-notifications/source.svg",
+  "preview_png": "public/brand/illustrations/empty-state/empty-no-notifications/preview.png",
+  "thumbnail_webp": "public/brand/illustrations/empty-state/empty-no-notifications/thumbnail.webp",
+  "exports": {
+    "png512": "public/brand/illustrations/empty-state/empty-no-notifications/export/512.png",
+    "png1024": "public/brand/illustrations/empty-state/empty-no-notifications/export/1024.png",
+    "png2048": "public/brand/illustrations/empty-state/empty-no-notifications/export/2048.png",
+    "webp": "public/brand/illustrations/empty-state/empty-no-notifications/export/preview.webp",
+    "avif": "public/brand/illustrations/empty-state/empty-no-notifications/export/preview.avif"
+  },
+  "dependencies": [
+    "PAW_SYMBOL",
+    "glass-card-grad",
+    "primary-grad"
+  ],
+  "priority": "P2",
+  "fallback": "empty-state/empty-no-pets/source.svg",
+  "replacement_policy": "Standard OPOS Master Component",
+  "systemVersion": "1.6.0",
+  "assetVersion": "2.0.0",
+  "illustrationVersion": "2.0.0",
+  "last_update": "2026-08-01",
+  "aiMetadata": {
+    "prompt": "OPOS Corporate semi-3D pet illustration for Bildirim Bulunmuyor",
+    "style": "glassmorphism",
+    "seed": 104,
+    "revision": 2
+  },
+  "governance": {
+    "creator": "OdiPet Design System",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "approvedBy": "Tufan",
+    "copyright": "Odi.Pet",
+    "license": "Proprietary",
+    "reviewState": "Approved"
+  }
+}

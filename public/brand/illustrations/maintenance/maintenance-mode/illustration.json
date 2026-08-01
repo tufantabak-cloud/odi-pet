@@ -1,0 +1,62 @@
+{
+  "id": "maintenance-mode",
+  "name": "Sistem Bakımda",
+  "category": "maintenance",
+  "module": "common",
+  "complexity": "M",
+  "theme_color": "primary",
+  "title": {
+    "tr": "Kısa Bir Mola",
+    "en": "Maintenance Mode"
+  },
+  "description": {
+    "tr": "OPOS Kurumsal Üretim Varlığı: Kısa Bir Mola",
+    "en": "OPOS Production Asset: Maintenance Mode"
+  },
+  "screen_usage": [
+    "/maintenance"
+  ],
+  "allowedContexts": [
+    "Dashboard",
+    "General",
+    "Mobile",
+    "Web"
+  ],
+  "forbiddenContexts": [],
+  "svg_path": "public/brand/illustrations/maintenance/maintenance-mode/source.svg",
+  "preview_png": "public/brand/illustrations/maintenance/maintenance-mode/preview.png",
+  "thumbnail_webp": "public/brand/illustrations/maintenance/maintenance-mode/thumbnail.webp",
+  "exports": {
+    "png512": "public/brand/illustrations/maintenance/maintenance-mode/export/512.png",
+    "png1024": "public/brand/illustrations/maintenance/maintenance-mode/export/1024.png",
+    "png2048": "public/brand/illustrations/maintenance/maintenance-mode/export/2048.png",
+    "webp": "public/brand/illustrations/maintenance/maintenance-mode/export/preview.webp",
+    "avif": "public/brand/illustrations/maintenance/maintenance-mode/export/preview.avif"
+  },
+  "dependencies": [
+    "PAW_SYMBOL",
+    "glass-card-grad",
+    "primary-grad"
+  ],
+  "priority": "P1",
+  "fallback": "empty-state/empty-no-pets/source.svg",
+  "replacement_policy": "Standard OPOS Master Component",
+  "systemVersion": "1.6.0",
+  "assetVersion": "2.0.0",
+  "illustrationVersion": "2.0.0",
+  "last_update": "2026-08-01",
+  "aiMetadata": {
+    "prompt": "OPOS Corporate semi-3D pet illustration for Sistem Bakımda",
+    "style": "glassmorphism",
+    "seed": 167,
+    "revision": 2
+  },
+  "governance": {
+    "creator": "OdiPet Design System",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "approvedBy": "Tufan",
+    "copyright": "Odi.Pet",
+    "license": "Proprietary",
+    "reviewState": "Approved"
+  }
+}

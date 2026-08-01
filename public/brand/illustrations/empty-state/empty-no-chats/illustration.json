@@ -1,0 +1,62 @@
+{
+  "id": "empty-no-chats",
+  "name": "Sohbet Geçmişi Yok",
+  "category": "empty-state",
+  "module": "ai",
+  "complexity": "M",
+  "theme_color": "primary",
+  "title": {
+    "tr": "Sohbet Başlatılmadı",
+    "en": "No Chat History"
+  },
+  "description": {
+    "tr": "OPOS Kurumsal Üretim Varlığı: Sohbet Başlatılmadı",
+    "en": "OPOS Production Asset: No Chat History"
+  },
+  "screen_usage": [
+    "/ai-vet"
+  ],
+  "allowedContexts": [
+    "Dashboard",
+    "General",
+    "Mobile",
+    "Web"
+  ],
+  "forbiddenContexts": [],
+  "svg_path": "public/brand/illustrations/empty-state/empty-no-chats/source.svg",
+  "preview_png": "public/brand/illustrations/empty-state/empty-no-chats/preview.png",
+  "thumbnail_webp": "public/brand/illustrations/empty-state/empty-no-chats/thumbnail.webp",
+  "exports": {
+    "png512": "public/brand/illustrations/empty-state/empty-no-chats/export/512.png",
+    "png1024": "public/brand/illustrations/empty-state/empty-no-chats/export/1024.png",
+    "png2048": "public/brand/illustrations/empty-state/empty-no-chats/export/2048.png",
+    "webp": "public/brand/illustrations/empty-state/empty-no-chats/export/preview.webp",
+    "avif": "public/brand/illustrations/empty-state/empty-no-chats/export/preview.avif"
+  },
+  "dependencies": [
+    "PAW_SYMBOL",
+    "glass-card-grad",
+    "primary-grad"
+  ],
+  "priority": "P2",
+  "fallback": "empty-state/empty-no-pets/source.svg",
+  "replacement_policy": "Standard OPOS Master Component",
+  "systemVersion": "1.6.0",
+  "assetVersion": "2.0.0",
+  "illustrationVersion": "2.0.0",
+  "last_update": "2026-08-01",
+  "aiMetadata": {
+    "prompt": "OPOS Corporate semi-3D pet illustration for Sohbet Geçmişi Yok",
+    "style": "glassmorphism",
+    "seed": 106,
+    "revision": 2
+  },
+  "governance": {
+    "creator": "OdiPet Design System",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "approvedBy": "Tufan",
+    "copyright": "Odi.Pet",
+    "license": "Proprietary",
+    "reviewState": "Approved"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "id": "services-emergency-sos",
+  "name": "Acil Nöbetçi Klinik (SOS)",
+  "category": "services",
+  "module": "services",
+  "complexity": "M",
+  "theme_color": "health",
+  "title": {
+    "tr": "7/24 Nöbetçi Veteriner SOS",
+    "en": "24/7 Emergency Vet SOS"
+  },
+  "description": {
+    "tr": "OPOS Kurumsal Üretim Varlığı: 7/24 Nöbetçi Veteriner SOS",
+    "en": "OPOS Production Asset: 24/7 Emergency Vet SOS"
+  },
+  "screen_usage": [
+    "/sos"
+  ],
+  "allowedContexts": [
+    "Dashboard",
+    "General",
+    "Mobile",
+    "Web"
+  ],
+  "forbiddenContexts": [],
+  "svg_path": "public/brand/illustrations/services/services-emergency-sos/source.svg",
+  "preview_png": "public/brand/illustrations/services/services-emergency-sos/preview.png",
+  "thumbnail_webp": "public/brand/illustrations/services/services-emergency-sos/thumbnail.webp",
+  "exports": {
+    "png512": "public/brand/illustrations/services/services-emergency-sos/export/512.png",
+    "png1024": "public/brand/illustrations/services/services-emergency-sos/export/1024.png",
+    "png2048": "public/brand/illustrations/services/services-emergency-sos/export/2048.png",
+    "webp": "public/brand/illustrations/services/services-emergency-sos/export/preview.webp",
+    "avif": "public/brand/illustrations/services/services-emergency-sos/export/preview.avif"
+  },
+  "dependencies": [
+    "PAW_SYMBOL",
+    "glass-card-grad",
+    "health-grad"
+  ],
+  "priority": "P0",
+  "fallback": "empty-state/empty-no-pets/source.svg",
+  "replacement_policy": "Standard OPOS Master Component",
+  "systemVersion": "1.6.0",
+  "assetVersion": "2.0.0",
+  "illustrationVersion": "2.0.0",
+  "last_update": "2026-08-01",
+  "aiMetadata": {
+    "prompt": "OPOS Corporate semi-3D pet illustration for Acil Nöbetçi Klinik (SOS)",
+    "style": "glassmorphism",
+    "seed": 157,
+    "revision": 2
+  },
+  "governance": {
+    "creator": "OdiPet Design System",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "approvedBy": "Tufan",
+    "copyright": "Odi.Pet",
+    "license": "Proprietary",
+    "reviewState": "Approved"
+  }
+}

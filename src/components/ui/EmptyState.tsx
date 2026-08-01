@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { Illustration } from '@/components/ui/Illustration'
+import { IllustrationID } from '@/types/illustration.types'
 
 interface EmptyStateCta {
   label: string
@@ -7,6 +9,8 @@ interface EmptyStateCta {
 }
 
 interface EmptyStateProps {
+  /** Optional OPOS Illustration ID */
+  illustrationId?: IllustrationID
   /** Optional icon element (e.g. a lucide-react icon) */
   icon?: React.ReactNode
   /** Short, descriptive title */
@@ -32,7 +36,7 @@ interface EmptyStateProps {
  * />
  * ```
  */
-export default function EmptyState({ icon, title, message, cta }: EmptyStateProps) {
+export default function EmptyState({ illustrationId, icon, title, message, cta }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center text-center px-6 py-16 min-h-[240px]">
       {icon && (

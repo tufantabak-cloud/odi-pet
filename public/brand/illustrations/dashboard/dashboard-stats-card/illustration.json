@@ -1,0 +1,62 @@
+{
+  "id": "dashboard-stats-card",
+  "name": "Genel İstatistik Kartı",
+  "category": "dashboard",
+  "module": "dashboard",
+  "complexity": "M",
+  "theme_color": "primary",
+  "title": {
+    "tr": "Aylık Bakım Metrikleri",
+    "en": "Monthly Care Metrics"
+  },
+  "description": {
+    "tr": "OPOS Kurumsal Üretim Varlığı: Aylık Bakım Metrikleri",
+    "en": "OPOS Production Asset: Monthly Care Metrics"
+  },
+  "screen_usage": [
+    "/owner/stats"
+  ],
+  "allowedContexts": [
+    "Dashboard",
+    "General",
+    "Mobile",
+    "Web"
+  ],
+  "forbiddenContexts": [],
+  "svg_path": "public/brand/illustrations/dashboard/dashboard-stats-card/source.svg",
+  "preview_png": "public/brand/illustrations/dashboard/dashboard-stats-card/preview.png",
+  "thumbnail_webp": "public/brand/illustrations/dashboard/dashboard-stats-card/thumbnail.webp",
+  "exports": {
+    "png512": "public/brand/illustrations/dashboard/dashboard-stats-card/export/512.png",
+    "png1024": "public/brand/illustrations/dashboard/dashboard-stats-card/export/1024.png",
+    "png2048": "public/brand/illustrations/dashboard/dashboard-stats-card/export/2048.png",
+    "webp": "public/brand/illustrations/dashboard/dashboard-stats-card/export/preview.webp",
+    "avif": "public/brand/illustrations/dashboard/dashboard-stats-card/export/preview.avif"
+  },
+  "dependencies": [
+    "PAW_SYMBOL",
+    "glass-card-grad",
+    "primary-grad"
+  ],
+  "priority": "P2",
+  "fallback": "empty-state/empty-no-pets/source.svg",
+  "replacement_policy": "Standard OPOS Master Component",
+  "systemVersion": "1.6.0",
+  "assetVersion": "2.0.0",
+  "illustrationVersion": "2.0.0",
+  "last_update": "2026-08-01",
+  "aiMetadata": {
+    "prompt": "OPOS Corporate semi-3D pet illustration for Genel İstatistik Kartı",
+    "style": "glassmorphism",
+    "seed": 123,
+    "revision": 2
+  },
+  "governance": {
+    "creator": "OdiPet Design System",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "approvedBy": "Tufan",
+    "copyright": "Odi.Pet",
+    "license": "Proprietary",
+    "reviewState": "Approved"
+  }
+}

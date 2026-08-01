@@ -1,0 +1,565 @@
+{
+  "version": "1.6.0",
+  "registry": [
+    {
+      "id": "empty-no-pets",
+      "alias": "empty-state-pets",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "empty-no-vaccines",
+      "alias": "empty-state-vaccines",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "empty-no-food",
+      "alias": "empty-state-nutrition",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "empty-no-records",
+      "alias": "empty-state-health",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "empty-no-notifications",
+      "alias": "empty-state-notifications",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "empty-no-search-results",
+      "alias": "empty-state-search",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "empty-no-chats",
+      "alias": "empty-state-ai",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "empty-no-appointments",
+      "alias": "empty-state-services",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "empty-no-favorites",
+      "alias": "empty-state-marketplace",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "empty-no-prescriptions",
+      "alias": "empty-state-health",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "onboarding-welcome",
+      "alias": "onboarding-onboarding",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "onboarding-pet-profile",
+      "alias": "onboarding-onboarding",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "onboarding-health-tracking",
+      "alias": "onboarding-health",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "onboarding-smartcard",
+      "alias": "onboarding-profile",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "onboarding-vaccine-setup",
+      "alias": "onboarding-vaccines",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "onboarding-parasite-setup",
+      "alias": "onboarding-parasite",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "onboarding-nutrition-setup",
+      "alias": "onboarding-nutrition",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "onboarding-premium-upgrade",
+      "alias": "onboarding-marketing",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "dashboard-hero",
+      "alias": "dashboard-dashboard",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "dashboard-daily-routine",
+      "alias": "dashboard-dashboard",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "dashboard-pet-switcher",
+      "alias": "dashboard-dashboard",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "dashboard-quick-actions",
+      "alias": "dashboard-dashboard",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "dashboard-timeline-overview",
+      "alias": "dashboard-dashboard",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "dashboard-stats-card",
+      "alias": "dashboard-dashboard",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "health-checkup",
+      "alias": "health-health",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "health-medical-history",
+      "alias": "health-health",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "health-vitals",
+      "alias": "health-health",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "health-allergies",
+      "alias": "health-health",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "health-symptom-tracker",
+      "alias": "health-health",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "health-lab-results",
+      "alias": "health-health",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "health-weight-tracker",
+      "alias": "health-health",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "health-medication-log",
+      "alias": "health-health",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "vaccine-schedule",
+      "alias": "vaccines-vaccines",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "vaccine-card-banner",
+      "alias": "vaccines-vaccines",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "vaccine-booster-reminder",
+      "alias": "vaccines-vaccines",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "vaccine-passport",
+      "alias": "vaccines-vaccines",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "vaccine-rabies-shot",
+      "alias": "vaccines-vaccines",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "parasite-control",
+      "alias": "parasite-parasite",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "parasite-calendar",
+      "alias": "parasite-parasite",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "parasite-flea-tick",
+      "alias": "parasite-parasite",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "parasite-deworming",
+      "alias": "parasite-parasite",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "nutrition-plan",
+      "alias": "nutrition-nutrition",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "nutrition-weight-goal",
+      "alias": "nutrition-nutrition",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "nutrition-food-calculator",
+      "alias": "nutrition-nutrition",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "nutrition-water-intake",
+      "alias": "nutrition-nutrition",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "nutrition-diet-history",
+      "alias": "nutrition-nutrition",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "grooming-care",
+      "alias": "grooming-grooming",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "grooming-appointment",
+      "alias": "grooming-grooming",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "grooming-hygiene-kit",
+      "alias": "grooming-grooming",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "grooming-nail-trimming",
+      "alias": "grooming-grooming",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "community-share",
+      "alias": "community-community",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "community-badge",
+      "alias": "community-community",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "community-forum-hero",
+      "alias": "community-community",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "marketplace-empty",
+      "alias": "marketplace-marketplace",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "marketplace-pet-store",
+      "alias": "marketplace-marketplace",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "marketplace-order-tracking",
+      "alias": "marketplace-marketplace",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "services-vet-finder",
+      "alias": "services-services",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "services-emergency-sos",
+      "alias": "services-services",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "services-clinic-booking",
+      "alias": "services-services",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "profile-pet-card",
+      "alias": "profile-profile",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "profile-owner-info",
+      "alias": "profile-profile",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "profile-microchip",
+      "alias": "profile-profile",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "ai-vet-assistant",
+      "alias": "ai-ai",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "notification-reminder",
+      "alias": "notifications-notifications",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "success-check",
+      "alias": "success-common",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "error-warning",
+      "alias": "error-common",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "offline-no-connection",
+      "alias": "offline-common",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "maintenance-mode",
+      "alias": "maintenance-common",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "document-health-report",
+      "alias": "documents-health",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    },
+    {
+      "id": "certificate-vaccine",
+      "alias": "certificates-vaccines",
+      "status": "active",
+      "deprecated": false,
+      "replacement": null,
+      "compatibility": ">=1.0.0"
+    }
+  ]
+}

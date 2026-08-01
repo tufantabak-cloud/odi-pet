@@ -1,0 +1,62 @@
+{
+  "id": "services-clinic-booking",
+  "name": "Klinik Randevu Sistemi",
+  "category": "services",
+  "module": "services",
+  "complexity": "M",
+  "theme_color": "vet",
+  "title": {
+    "tr": "Online Muayene Randevusu",
+    "en": "Online Vet Booking"
+  },
+  "description": {
+    "tr": "OPOS Kurumsal Üretim Varlığı: Online Muayene Randevusu",
+    "en": "OPOS Production Asset: Online Vet Booking"
+  },
+  "screen_usage": [
+    "/services/booking"
+  ],
+  "allowedContexts": [
+    "Dashboard",
+    "General",
+    "Mobile",
+    "Web"
+  ],
+  "forbiddenContexts": [],
+  "svg_path": "public/brand/illustrations/services/services-clinic-booking/source.svg",
+  "preview_png": "public/brand/illustrations/services/services-clinic-booking/preview.png",
+  "thumbnail_webp": "public/brand/illustrations/services/services-clinic-booking/thumbnail.webp",
+  "exports": {
+    "png512": "public/brand/illustrations/services/services-clinic-booking/export/512.png",
+    "png1024": "public/brand/illustrations/services/services-clinic-booking/export/1024.png",
+    "png2048": "public/brand/illustrations/services/services-clinic-booking/export/2048.png",
+    "webp": "public/brand/illustrations/services/services-clinic-booking/export/preview.webp",
+    "avif": "public/brand/illustrations/services/services-clinic-booking/export/preview.avif"
+  },
+  "dependencies": [
+    "PAW_SYMBOL",
+    "glass-card-grad",
+    "primary-grad"
+  ],
+  "priority": "P1",
+  "fallback": "empty-state/empty-no-pets/source.svg",
+  "replacement_policy": "Standard OPOS Master Component",
+  "systemVersion": "1.6.0",
+  "assetVersion": "2.0.0",
+  "illustrationVersion": "2.0.0",
+  "last_update": "2026-08-01",
+  "aiMetadata": {
+    "prompt": "OPOS Corporate semi-3D pet illustration for Klinik Randevu Sistemi",
+    "style": "glassmorphism",
+    "seed": 158,
+    "revision": 2
+  },
+  "governance": {
+    "creator": "OdiPet Design System",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "approvedBy": "Tufan",
+    "copyright": "Odi.Pet",
+    "license": "Proprietary",
+    "reviewState": "Approved"
+  }
+}

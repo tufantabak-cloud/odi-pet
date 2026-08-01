@@ -1,0 +1,62 @@
+{
+  "id": "dashboard-timeline-overview",
+  "name": "Zaman Akışı Özeti",
+  "category": "dashboard",
+  "module": "dashboard",
+  "complexity": "M",
+  "theme_color": "medical",
+  "title": {
+    "tr": "Son Sağlık ve Aktivite Akışı",
+    "en": "Recent Health & Activity Stream"
+  },
+  "description": {
+    "tr": "OPOS Kurumsal Üretim Varlığı: Son Sağlık ve Aktivite Akışı",
+    "en": "OPOS Production Asset: Recent Health & Activity Stream"
+  },
+  "screen_usage": [
+    "/owner/timeline"
+  ],
+  "allowedContexts": [
+    "Dashboard",
+    "General",
+    "Mobile",
+    "Web"
+  ],
+  "forbiddenContexts": [],
+  "svg_path": "public/brand/illustrations/dashboard/dashboard-timeline-overview/source.svg",
+  "preview_png": "public/brand/illustrations/dashboard/dashboard-timeline-overview/preview.png",
+  "thumbnail_webp": "public/brand/illustrations/dashboard/dashboard-timeline-overview/thumbnail.webp",
+  "exports": {
+    "png512": "public/brand/illustrations/dashboard/dashboard-timeline-overview/export/512.png",
+    "png1024": "public/brand/illustrations/dashboard/dashboard-timeline-overview/export/1024.png",
+    "png2048": "public/brand/illustrations/dashboard/dashboard-timeline-overview/export/2048.png",
+    "webp": "public/brand/illustrations/dashboard/dashboard-timeline-overview/export/preview.webp",
+    "avif": "public/brand/illustrations/dashboard/dashboard-timeline-overview/export/preview.avif"
+  },
+  "dependencies": [
+    "PAW_SYMBOL",
+    "glass-card-grad",
+    "medical-grad"
+  ],
+  "priority": "P1",
+  "fallback": "empty-state/empty-no-pets/source.svg",
+  "replacement_policy": "Standard OPOS Master Component",
+  "systemVersion": "1.6.0",
+  "assetVersion": "2.0.0",
+  "illustrationVersion": "2.0.0",
+  "last_update": "2026-08-01",
+  "aiMetadata": {
+    "prompt": "OPOS Corporate semi-3D pet illustration for Zaman Akışı Özeti",
+    "style": "glassmorphism",
+    "seed": 122,
+    "revision": 2
+  },
+  "governance": {
+    "creator": "OdiPet Design System",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "approvedBy": "Tufan",
+    "copyright": "Odi.Pet",
+    "license": "Proprietary",
+    "reviewState": "Approved"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "id": "empty-no-favorites",
+  "name": "Favori Ürün Yok",
+  "category": "empty-state",
+  "module": "marketplace",
+  "complexity": "M",
+  "theme_color": "grooming",
+  "title": {
+    "tr": "Favori Listesi Boş",
+    "en": "No Favorites"
+  },
+  "description": {
+    "tr": "OPOS Kurumsal Üretim Varlığı: Favori Listesi Boş",
+    "en": "OPOS Production Asset: No Favorites"
+  },
+  "screen_usage": [
+    "/marketplace/favorites"
+  ],
+  "allowedContexts": [
+    "Dashboard",
+    "General",
+    "Mobile",
+    "Web"
+  ],
+  "forbiddenContexts": [],
+  "svg_path": "public/brand/illustrations/empty-state/empty-no-favorites/source.svg",
+  "preview_png": "public/brand/illustrations/empty-state/empty-no-favorites/preview.png",
+  "thumbnail_webp": "public/brand/illustrations/empty-state/empty-no-favorites/thumbnail.webp",
+  "exports": {
+    "png512": "public/brand/illustrations/empty-state/empty-no-favorites/export/512.png",
+    "png1024": "public/brand/illustrations/empty-state/empty-no-favorites/export/1024.png",
+    "png2048": "public/brand/illustrations/empty-state/empty-no-favorites/export/2048.png",
+    "webp": "public/brand/illustrations/empty-state/empty-no-favorites/export/preview.webp",
+    "avif": "public/brand/illustrations/empty-state/empty-no-favorites/export/preview.avif"
+  },
+  "dependencies": [
+    "PAW_SYMBOL",
+    "glass-card-grad",
+    "grooming-grad"
+  ],
+  "priority": "P2",
+  "fallback": "empty-state/empty-no-pets/source.svg",
+  "replacement_policy": "Standard OPOS Master Component",
+  "systemVersion": "1.6.0",
+  "assetVersion": "2.0.0",
+  "illustrationVersion": "2.0.0",
+  "last_update": "2026-08-01",
+  "aiMetadata": {
+    "prompt": "OPOS Corporate semi-3D pet illustration for Favori Ürün Yok",
+    "style": "glassmorphism",
+    "seed": 108,
+    "revision": 2
+  },
+  "governance": {
+    "creator": "OdiPet Design System",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "approvedBy": "Tufan",
+    "copyright": "Odi.Pet",
+    "license": "Proprietary",
+    "reviewState": "Approved"
+  }
+}

@@ -23,7 +23,8 @@
     "test:e2e:smoke": "node scripts/run-local-e2e-tests.mjs e2e/main_flow.spec.ts",
     "test:ux": "playwright test tests/ux-persona-flow.spec.ts --headed",
     "test:ux:report": "playwright show-report",
-    "test:all": "npm run test:unit && npm run test:integration && npm run test:db && npm run test:e2e"
+    "test:all": "npm run test:unit && npm run test:integration && npm run test:db && npm run test:e2e",
+    "illustration:new": "node scripts/create-illustration-cli.mjs"
   },
   "dependencies": {
     "@fontsource-variable/plus-jakarta-sans": "5.3.0",

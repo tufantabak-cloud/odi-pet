@@ -1,0 +1,62 @@
+{
+  "id": "parasite-deworming",
+  "name": "İç Parazit Hapı",
+  "category": "parasite",
+  "module": "parasite",
+  "complexity": "M",
+  "theme_color": "parasite",
+  "title": {
+    "tr": "İç Parazit Tablet Takibi",
+    "en": "Internal Deworming Log"
+  },
+  "description": {
+    "tr": "OPOS Kurumsal Üretim Varlığı: İç Parazit Tablet Takibi",
+    "en": "OPOS Production Asset: Internal Deworming Log"
+  },
+  "screen_usage": [
+    "/owner/parasite/internal"
+  ],
+  "allowedContexts": [
+    "Dashboard",
+    "General",
+    "Mobile",
+    "Web"
+  ],
+  "forbiddenContexts": [],
+  "svg_path": "public/brand/illustrations/parasite/parasite-deworming/source.svg",
+  "preview_png": "public/brand/illustrations/parasite/parasite-deworming/preview.png",
+  "thumbnail_webp": "public/brand/illustrations/parasite/parasite-deworming/thumbnail.webp",
+  "exports": {
+    "png512": "public/brand/illustrations/parasite/parasite-deworming/export/512.png",
+    "png1024": "public/brand/illustrations/parasite/parasite-deworming/export/1024.png",
+    "png2048": "public/brand/illustrations/parasite/parasite-deworming/export/2048.png",
+    "webp": "public/brand/illustrations/parasite/parasite-deworming/export/preview.webp",
+    "avif": "public/brand/illustrations/parasite/parasite-deworming/export/preview.avif"
+  },
+  "dependencies": [
+    "PAW_SYMBOL",
+    "glass-card-grad",
+    "parasite-grad"
+  ],
+  "priority": "P1",
+  "fallback": "empty-state/empty-no-pets/source.svg",
+  "replacement_policy": "Standard OPOS Master Component",
+  "systemVersion": "1.6.0",
+  "assetVersion": "2.0.0",
+  "illustrationVersion": "2.0.0",
+  "last_update": "2026-08-01",
+  "aiMetadata": {
+    "prompt": "OPOS Corporate semi-3D pet illustration for İç Parazit Hapı",
+    "style": "glassmorphism",
+    "seed": 140,
+    "revision": 2
+  },
+  "governance": {
+    "creator": "OdiPet Design System",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "approvedBy": "Tufan",
+    "copyright": "Odi.Pet",
+    "license": "Proprietary",
+    "reviewState": "Approved"
+  }
+}

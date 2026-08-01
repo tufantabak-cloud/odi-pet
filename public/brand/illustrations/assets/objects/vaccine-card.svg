@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Aşı Kartı İkonu">
+      <rect x="15" y="20" width="70" height="60" rx="10" fill="url(#medical-grad)"/>
+      <rect x="25" y="30" width="50" height="40" rx="6" fill="#FFFFFF"/>
+      <line x1="30" y1="42" x2="60" y2="42" stroke="#3B9FE8" stroke-width="3" stroke-linecap="round"/>
+      <line x1="30" y1="52" x2="50" y2="52" stroke="#697386" stroke-width="2" stroke-linecap="round"/>
+    </svg>

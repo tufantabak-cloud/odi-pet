@@ -1,0 +1,4342 @@
+[
+  {
+    "id": "empty-no-pets",
+    "name": "Henüz Dost Eklenmedi",
+    "category": "empty-state",
+    "module": "pets",
+    "complexity": "M",
+    "theme_color": "primary",
+    "title": {
+      "tr": "Henüz Dost Eklenmedi",
+      "en": "No Pets Added Yet"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Henüz Dost Eklenmedi",
+      "en": "OPOS Production Asset: No Pets Added Yet"
+    },
+    "screen_usage": [
+      "/owner/dashboard"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/empty-state/empty-no-pets/source.svg",
+    "preview_png": "public/brand/illustrations/empty-state/empty-no-pets/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/empty-state/empty-no-pets/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/empty-state/empty-no-pets/export/512.png",
+      "png1024": "public/brand/illustrations/empty-state/empty-no-pets/export/1024.png",
+      "png2048": "public/brand/illustrations/empty-state/empty-no-pets/export/2048.png",
+      "webp": "public/brand/illustrations/empty-state/empty-no-pets/export/preview.webp",
+      "avif": "public/brand/illustrations/empty-state/empty-no-pets/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "primary-grad"
+    ],
+    "priority": "P0",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Henüz Dost Eklenmedi",
+      "style": "glassmorphism",
+      "seed": 100,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "empty-no-vaccines",
+    "name": "Aşı Kaydı Bulunmuyor",
+    "category": "empty-state",
+    "module": "vaccines",
+    "complexity": "M",
+    "theme_color": "medical",
+    "title": {
+      "tr": "Aşı Kaydı Bulunmuyor",
+      "en": "No Vaccine Records"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Aşı Kaydı Bulunmuyor",
+      "en": "OPOS Production Asset: No Vaccine Records"
+    },
+    "screen_usage": [
+      "/owner/pets/[id]/vaccines"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/empty-state/empty-no-vaccines/source.svg",
+    "preview_png": "public/brand/illustrations/empty-state/empty-no-vaccines/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/empty-state/empty-no-vaccines/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/empty-state/empty-no-vaccines/export/512.png",
+      "png1024": "public/brand/illustrations/empty-state/empty-no-vaccines/export/1024.png",
+      "png2048": "public/brand/illustrations/empty-state/empty-no-vaccines/export/2048.png",
+      "webp": "public/brand/illustrations/empty-state/empty-no-vaccines/export/preview.webp",
+      "avif": "public/brand/illustrations/empty-state/empty-no-vaccines/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "medical-grad"
+    ],
+    "priority": "P0",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Aşı Kaydı Bulunmuyor",
+      "style": "glassmorphism",
+      "seed": 101,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "empty-no-food",
+    "name": "Beslenme Planı Yok",
+    "category": "empty-state",
+    "module": "nutrition",
+    "complexity": "M",
+    "theme_color": "nutrition",
+    "title": {
+      "tr": "Mama Planı Yok",
+      "en": "No Meal Plan"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Mama Planı Yok",
+      "en": "OPOS Production Asset: No Meal Plan"
+    },
+    "screen_usage": [
+      "/owner/pets/[id]/nutrition"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/empty-state/empty-no-food/source.svg",
+    "preview_png": "public/brand/illustrations/empty-state/empty-no-food/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/empty-state/empty-no-food/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/empty-state/empty-no-food/export/512.png",
+      "png1024": "public/brand/illustrations/empty-state/empty-no-food/export/1024.png",
+      "png2048": "public/brand/illustrations/empty-state/empty-no-food/export/2048.png",
+      "webp": "public/brand/illustrations/empty-state/empty-no-food/export/preview.webp",
+      "avif": "public/brand/illustrations/empty-state/empty-no-food/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "nutrition-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Beslenme Planı Yok",
+      "style": "glassmorphism",
+      "seed": 102,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "empty-no-records",
+    "name": "Sağlık Kaydı Yok",
+    "category": "empty-state",
+    "module": "health",
+    "complexity": "M",
+    "theme_color": "health",
+    "title": {
+      "tr": "Geçmiş Kayıt Bulunamadı",
+      "en": "No Medical Records"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Geçmiş Kayıt Bulunamadı",
+      "en": "OPOS Production Asset: No Medical Records"
+    },
+    "screen_usage": [
+      "/owner/medical"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/empty-state/empty-no-records/source.svg",
+    "preview_png": "public/brand/illustrations/empty-state/empty-no-records/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/empty-state/empty-no-records/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/empty-state/empty-no-records/export/512.png",
+      "png1024": "public/brand/illustrations/empty-state/empty-no-records/export/1024.png",
+      "png2048": "public/brand/illustrations/empty-state/empty-no-records/export/2048.png",
+      "webp": "public/brand/illustrations/empty-state/empty-no-records/export/preview.webp",
+      "avif": "public/brand/illustrations/empty-state/empty-no-records/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "health-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Sağlık Kaydı Yok",
+      "style": "glassmorphism",
+      "seed": 103,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "empty-no-notifications",
+    "name": "Bildirim Bulunmuyor",
+    "category": "empty-state",
+    "module": "notifications",
+    "complexity": "M",
+    "theme_color": "primary",
+    "title": {
+      "tr": "Yeni Bildirim Yok",
+      "en": "No Notifications"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Yeni Bildirim Yok",
+      "en": "OPOS Production Asset: No Notifications"
+    },
+    "screen_usage": [
+      "/notifications"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/empty-state/empty-no-notifications/source.svg",
+    "preview_png": "public/brand/illustrations/empty-state/empty-no-notifications/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/empty-state/empty-no-notifications/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/empty-state/empty-no-notifications/export/512.png",
+      "png1024": "public/brand/illustrations/empty-state/empty-no-notifications/export/1024.png",
+      "png2048": "public/brand/illustrations/empty-state/empty-no-notifications/export/2048.png",
+      "webp": "public/brand/illustrations/empty-state/empty-no-notifications/export/preview.webp",
+      "avif": "public/brand/illustrations/empty-state/empty-no-notifications/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "primary-grad"
+    ],
+    "priority": "P2",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Bildirim Bulunmuyor",
+      "style": "glassmorphism",
+      "seed": 104,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "empty-no-search-results",
+    "name": "Arama Sonucu Bulunamadı",
+    "category": "empty-state",
+    "module": "search",
+    "complexity": "M",
+    "theme_color": "primary",
+    "title": {
+      "tr": "Sonuç Bulunamadı",
+      "en": "No Search Results"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Sonuç Bulunamadı",
+      "en": "OPOS Production Asset: No Search Results"
+    },
+    "screen_usage": [
+      "/search"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/empty-state/empty-no-search-results/source.svg",
+    "preview_png": "public/brand/illustrations/empty-state/empty-no-search-results/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/empty-state/empty-no-search-results/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/empty-state/empty-no-search-results/export/512.png",
+      "png1024": "public/brand/illustrations/empty-state/empty-no-search-results/export/1024.png",
+      "png2048": "public/brand/illustrations/empty-state/empty-no-search-results/export/2048.png",
+      "webp": "public/brand/illustrations/empty-state/empty-no-search-results/export/preview.webp",
+      "avif": "public/brand/illustrations/empty-state/empty-no-search-results/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "primary-grad"
+    ],
+    "priority": "P2",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Arama Sonucu Bulunamadı",
+      "style": "glassmorphism",
+      "seed": 105,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "empty-no-chats",
+    "name": "Sohbet Geçmişi Yok",
+    "category": "empty-state",
+    "module": "ai",
+    "complexity": "M",
+    "theme_color": "primary",
+    "title": {
+      "tr": "Sohbet Başlatılmadı",
+      "en": "No Chat History"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Sohbet Başlatılmadı",
+      "en": "OPOS Production Asset: No Chat History"
+    },
+    "screen_usage": [
+      "/ai-vet"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/empty-state/empty-no-chats/source.svg",
+    "preview_png": "public/brand/illustrations/empty-state/empty-no-chats/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/empty-state/empty-no-chats/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/empty-state/empty-no-chats/export/512.png",
+      "png1024": "public/brand/illustrations/empty-state/empty-no-chats/export/1024.png",
+      "png2048": "public/brand/illustrations/empty-state/empty-no-chats/export/2048.png",
+      "webp": "public/brand/illustrations/empty-state/empty-no-chats/export/preview.webp",
+      "avif": "public/brand/illustrations/empty-state/empty-no-chats/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "primary-grad"
+    ],
+    "priority": "P2",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Sohbet Geçmişi Yok",
+      "style": "glassmorphism",
+      "seed": 106,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "empty-no-appointments",
+    "name": "Randevu Bulunmuyor",
+    "category": "empty-state",
+    "module": "services",
+    "complexity": "M",
+    "theme_color": "vet",
+    "title": {
+      "tr": "Aktif Randevu Yok",
+      "en": "No Appointments"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Aktif Randevu Yok",
+      "en": "OPOS Production Asset: No Appointments"
+    },
+    "screen_usage": [
+      "/services"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/empty-state/empty-no-appointments/source.svg",
+    "preview_png": "public/brand/illustrations/empty-state/empty-no-appointments/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/empty-state/empty-no-appointments/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/empty-state/empty-no-appointments/export/512.png",
+      "png1024": "public/brand/illustrations/empty-state/empty-no-appointments/export/1024.png",
+      "png2048": "public/brand/illustrations/empty-state/empty-no-appointments/export/2048.png",
+      "webp": "public/brand/illustrations/empty-state/empty-no-appointments/export/preview.webp",
+      "avif": "public/brand/illustrations/empty-state/empty-no-appointments/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "primary-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Randevu Bulunmuyor",
+      "style": "glassmorphism",
+      "seed": 107,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "empty-no-favorites",
+    "name": "Favori Ürün Yok",
+    "category": "empty-state",
+    "module": "marketplace",
+    "complexity": "M",
+    "theme_color": "grooming",
+    "title": {
+      "tr": "Favori Listesi Boş",
+      "en": "No Favorites"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Favori Listesi Boş",
+      "en": "OPOS Production Asset: No Favorites"
+    },
+    "screen_usage": [
+      "/marketplace/favorites"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/empty-state/empty-no-favorites/source.svg",
+    "preview_png": "public/brand/illustrations/empty-state/empty-no-favorites/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/empty-state/empty-no-favorites/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/empty-state/empty-no-favorites/export/512.png",
+      "png1024": "public/brand/illustrations/empty-state/empty-no-favorites/export/1024.png",
+      "png2048": "public/brand/illustrations/empty-state/empty-no-favorites/export/2048.png",
+      "webp": "public/brand/illustrations/empty-state/empty-no-favorites/export/preview.webp",
+      "avif": "public/brand/illustrations/empty-state/empty-no-favorites/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "grooming-grad"
+    ],
+    "priority": "P2",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Favori Ürün Yok",
+      "style": "glassmorphism",
+      "seed": 108,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "empty-no-prescriptions",
+    "name": "Reçete Bulunmuyor",
+    "category": "empty-state",
+    "module": "health",
+    "complexity": "M",
+    "theme_color": "medical",
+    "title": {
+      "tr": "Kayıtlı Reçete Yok",
+      "en": "No Prescriptions"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Kayıtlı Reçete Yok",
+      "en": "OPOS Production Asset: No Prescriptions"
+    },
+    "screen_usage": [
+      "/owner/medical/prescriptions"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/empty-state/empty-no-prescriptions/source.svg",
+    "preview_png": "public/brand/illustrations/empty-state/empty-no-prescriptions/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/empty-state/empty-no-prescriptions/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/empty-state/empty-no-prescriptions/export/512.png",
+      "png1024": "public/brand/illustrations/empty-state/empty-no-prescriptions/export/1024.png",
+      "png2048": "public/brand/illustrations/empty-state/empty-no-prescriptions/export/2048.png",
+      "webp": "public/brand/illustrations/empty-state/empty-no-prescriptions/export/preview.webp",
+      "avif": "public/brand/illustrations/empty-state/empty-no-prescriptions/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "medical-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Reçete Bulunmuyor",
+      "style": "glassmorphism",
+      "seed": 109,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "onboarding-welcome",
+    "name": "Onboarding Welcome",
+    "category": "onboarding",
+    "module": "onboarding",
+    "complexity": "M",
+    "theme_color": "primary",
+    "title": {
+      "tr": "Odi.Pet'e Hoş Geldiniz",
+      "en": "Welcome to Odi.Pet"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Odi.Pet'e Hoş Geldiniz",
+      "en": "OPOS Production Asset: Welcome to Odi.Pet"
+    },
+    "screen_usage": [
+      "/onboarding/1"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/onboarding/onboarding-welcome/source.svg",
+    "preview_png": "public/brand/illustrations/onboarding/onboarding-welcome/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/onboarding/onboarding-welcome/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/onboarding/onboarding-welcome/export/512.png",
+      "png1024": "public/brand/illustrations/onboarding/onboarding-welcome/export/1024.png",
+      "png2048": "public/brand/illustrations/onboarding/onboarding-welcome/export/2048.png",
+      "webp": "public/brand/illustrations/onboarding/onboarding-welcome/export/preview.webp",
+      "avif": "public/brand/illustrations/onboarding/onboarding-welcome/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "primary-grad"
+    ],
+    "priority": "P0",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Onboarding Welcome",
+      "style": "glassmorphism",
+      "seed": 110,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "onboarding-pet-profile",
+    "name": "Pet Profil Kurulumu",
+    "category": "onboarding",
+    "module": "onboarding",
+    "complexity": "M",
+    "theme_color": "primary",
+    "title": {
+      "tr": "Dostunuzun Profilini Oluşturun",
+      "en": "Create Pet Profile"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Dostunuzun Profilini Oluşturun",
+      "en": "OPOS Production Asset: Create Pet Profile"
+    },
+    "screen_usage": [
+      "/onboarding/2"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/onboarding/onboarding-pet-profile/source.svg",
+    "preview_png": "public/brand/illustrations/onboarding/onboarding-pet-profile/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/onboarding/onboarding-pet-profile/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/onboarding/onboarding-pet-profile/export/512.png",
+      "png1024": "public/brand/illustrations/onboarding/onboarding-pet-profile/export/1024.png",
+      "png2048": "public/brand/illustrations/onboarding/onboarding-pet-profile/export/2048.png",
+      "webp": "public/brand/illustrations/onboarding/onboarding-pet-profile/export/preview.webp",
+      "avif": "public/brand/illustrations/onboarding/onboarding-pet-profile/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "primary-grad"
+    ],
+    "priority": "P0",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Pet Profil Kurulumu",
+      "style": "glassmorphism",
+      "seed": 111,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "onboarding-health-tracking",
+    "name": "Sağlık Takibi Rehberi",
+    "category": "onboarding",
+    "module": "health",
+    "complexity": "M",
+    "theme_color": "health",
+    "title": {
+      "tr": "Akıllı Sağlık Takibi",
+      "en": "Smart Health Tracking"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Akıllı Sağlık Takibi",
+      "en": "OPOS Production Asset: Smart Health Tracking"
+    },
+    "screen_usage": [
+      "/onboarding/3"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/onboarding/onboarding-health-tracking/source.svg",
+    "preview_png": "public/brand/illustrations/onboarding/onboarding-health-tracking/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/onboarding/onboarding-health-tracking/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/onboarding/onboarding-health-tracking/export/512.png",
+      "png1024": "public/brand/illustrations/onboarding/onboarding-health-tracking/export/1024.png",
+      "png2048": "public/brand/illustrations/onboarding/onboarding-health-tracking/export/2048.png",
+      "webp": "public/brand/illustrations/onboarding/onboarding-health-tracking/export/preview.webp",
+      "avif": "public/brand/illustrations/onboarding/onboarding-health-tracking/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "health-grad"
+    ],
+    "priority": "P0",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Sağlık Takibi Rehberi",
+      "style": "glassmorphism",
+      "seed": 112,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "onboarding-smartcard",
+    "name": "Pet SmartCard Tanıtımı",
+    "category": "onboarding",
+    "module": "profile",
+    "complexity": "M",
+    "theme_color": "primary",
+    "title": {
+      "tr": "Dijital Kimlik (SmartCard)",
+      "en": "Digital Pet SmartCard"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Dijital Kimlik (SmartCard)",
+      "en": "OPOS Production Asset: Digital Pet SmartCard"
+    },
+    "screen_usage": [
+      "/onboarding/4"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/onboarding/onboarding-smartcard/source.svg",
+    "preview_png": "public/brand/illustrations/onboarding/onboarding-smartcard/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/onboarding/onboarding-smartcard/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/onboarding/onboarding-smartcard/export/512.png",
+      "png1024": "public/brand/illustrations/onboarding/onboarding-smartcard/export/1024.png",
+      "png2048": "public/brand/illustrations/onboarding/onboarding-smartcard/export/2048.png",
+      "webp": "public/brand/illustrations/onboarding/onboarding-smartcard/export/preview.webp",
+      "avif": "public/brand/illustrations/onboarding/onboarding-smartcard/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "primary-grad"
+    ],
+    "priority": "P0",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Pet SmartCard Tanıtımı",
+      "style": "glassmorphism",
+      "seed": 113,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "onboarding-vaccine-setup",
+    "name": "Aşı Takvimi Tanıtımı",
+    "category": "onboarding",
+    "module": "vaccines",
+    "complexity": "M",
+    "theme_color": "medical",
+    "title": {
+      "tr": "Otomatik Aşı Hatırlatıcı",
+      "en": "Automated Vaccine Reminders"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Otomatik Aşı Hatırlatıcı",
+      "en": "OPOS Production Asset: Automated Vaccine Reminders"
+    },
+    "screen_usage": [
+      "/onboarding/5"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/onboarding/onboarding-vaccine-setup/source.svg",
+    "preview_png": "public/brand/illustrations/onboarding/onboarding-vaccine-setup/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/onboarding/onboarding-vaccine-setup/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/onboarding/onboarding-vaccine-setup/export/512.png",
+      "png1024": "public/brand/illustrations/onboarding/onboarding-vaccine-setup/export/1024.png",
+      "png2048": "public/brand/illustrations/onboarding/onboarding-vaccine-setup/export/2048.png",
+      "webp": "public/brand/illustrations/onboarding/onboarding-vaccine-setup/export/preview.webp",
+      "avif": "public/brand/illustrations/onboarding/onboarding-vaccine-setup/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "medical-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Aşı Takvimi Tanıtımı",
+      "style": "glassmorphism",
+      "seed": 114,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "onboarding-parasite-setup",
+    "name": "Parazit Takvimi Tanıtımı",
+    "category": "onboarding",
+    "module": "parasite",
+    "complexity": "M",
+    "theme_color": "parasite",
+    "title": {
+      "tr": "İç & Dış Parazit Koruması",
+      "en": "Parasite Protection Setup"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: İç & Dış Parazit Koruması",
+      "en": "OPOS Production Asset: Parasite Protection Setup"
+    },
+    "screen_usage": [
+      "/onboarding/6"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/onboarding/onboarding-parasite-setup/source.svg",
+    "preview_png": "public/brand/illustrations/onboarding/onboarding-parasite-setup/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/onboarding/onboarding-parasite-setup/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/onboarding/onboarding-parasite-setup/export/512.png",
+      "png1024": "public/brand/illustrations/onboarding/onboarding-parasite-setup/export/1024.png",
+      "png2048": "public/brand/illustrations/onboarding/onboarding-parasite-setup/export/2048.png",
+      "webp": "public/brand/illustrations/onboarding/onboarding-parasite-setup/export/preview.webp",
+      "avif": "public/brand/illustrations/onboarding/onboarding-parasite-setup/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "parasite-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Parazit Takvimi Tanıtımı",
+      "style": "glassmorphism",
+      "seed": 115,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "onboarding-nutrition-setup",
+    "name": "Mama Planı Tanıtımı",
+    "category": "onboarding",
+    "module": "nutrition",
+    "complexity": "M",
+    "theme_color": "nutrition",
+    "title": {
+      "tr": "Kişiselleştirilmiş Beslenme",
+      "en": "Personalized Nutrition"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Kişiselleştirilmiş Beslenme",
+      "en": "OPOS Production Asset: Personalized Nutrition"
+    },
+    "screen_usage": [
+      "/onboarding/7"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/onboarding/onboarding-nutrition-setup/source.svg",
+    "preview_png": "public/brand/illustrations/onboarding/onboarding-nutrition-setup/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/onboarding/onboarding-nutrition-setup/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/onboarding/onboarding-nutrition-setup/export/512.png",
+      "png1024": "public/brand/illustrations/onboarding/onboarding-nutrition-setup/export/1024.png",
+      "png2048": "public/brand/illustrations/onboarding/onboarding-nutrition-setup/export/2048.png",
+      "webp": "public/brand/illustrations/onboarding/onboarding-nutrition-setup/export/preview.webp",
+      "avif": "public/brand/illustrations/onboarding/onboarding-nutrition-setup/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "nutrition-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Mama Planı Tanıtımı",
+      "style": "glassmorphism",
+      "seed": 116,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "onboarding-premium-upgrade",
+    "name": "PRO Üyelik Avantajları",
+    "category": "onboarding",
+    "module": "marketing",
+    "complexity": "M",
+    "theme_color": "nutrition",
+    "title": {
+      "tr": "Odi.Pet PRO Deneyimi",
+      "en": "Odi.Pet PRO Experience"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Odi.Pet PRO Deneyimi",
+      "en": "OPOS Production Asset: Odi.Pet PRO Experience"
+    },
+    "screen_usage": [
+      "/onboarding/8"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/onboarding/onboarding-premium-upgrade/source.svg",
+    "preview_png": "public/brand/illustrations/onboarding/onboarding-premium-upgrade/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/onboarding/onboarding-premium-upgrade/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/onboarding/onboarding-premium-upgrade/export/512.png",
+      "png1024": "public/brand/illustrations/onboarding/onboarding-premium-upgrade/export/1024.png",
+      "png2048": "public/brand/illustrations/onboarding/onboarding-premium-upgrade/export/2048.png",
+      "webp": "public/brand/illustrations/onboarding/onboarding-premium-upgrade/export/preview.webp",
+      "avif": "public/brand/illustrations/onboarding/onboarding-premium-upgrade/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "nutrition-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for PRO Üyelik Avantajları",
+      "style": "glassmorphism",
+      "seed": 117,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "dashboard-hero",
+    "name": "Dashboard Hero Banner",
+    "category": "dashboard",
+    "module": "dashboard",
+    "complexity": "M",
+    "theme_color": "primary",
+    "title": {
+      "tr": "Günaydın, Tufan!",
+      "en": "Good morning, Tufan!"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Günaydın, Tufan!",
+      "en": "OPOS Production Asset: Good morning, Tufan!"
+    },
+    "screen_usage": [
+      "/owner/dashboard"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/dashboard/dashboard-hero/source.svg",
+    "preview_png": "public/brand/illustrations/dashboard/dashboard-hero/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/dashboard/dashboard-hero/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/dashboard/dashboard-hero/export/512.png",
+      "png1024": "public/brand/illustrations/dashboard/dashboard-hero/export/1024.png",
+      "png2048": "public/brand/illustrations/dashboard/dashboard-hero/export/2048.png",
+      "webp": "public/brand/illustrations/dashboard/dashboard-hero/export/preview.webp",
+      "avif": "public/brand/illustrations/dashboard/dashboard-hero/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "primary-grad"
+    ],
+    "priority": "P0",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Dashboard Hero Banner",
+      "style": "glassmorphism",
+      "seed": 118,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "dashboard-daily-routine",
+    "name": "Günlük Rutin Kartı",
+    "category": "dashboard",
+    "module": "dashboard",
+    "complexity": "M",
+    "theme_color": "parasite",
+    "title": {
+      "tr": "Bugünün Rutin Görevleri",
+      "en": "Today's Routine Tasks"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Bugünün Rutin Görevleri",
+      "en": "OPOS Production Asset: Today's Routine Tasks"
+    },
+    "screen_usage": [
+      "/owner/dashboard"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/dashboard/dashboard-daily-routine/source.svg",
+    "preview_png": "public/brand/illustrations/dashboard/dashboard-daily-routine/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/dashboard/dashboard-daily-routine/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/dashboard/dashboard-daily-routine/export/512.png",
+      "png1024": "public/brand/illustrations/dashboard/dashboard-daily-routine/export/1024.png",
+      "png2048": "public/brand/illustrations/dashboard/dashboard-daily-routine/export/2048.png",
+      "webp": "public/brand/illustrations/dashboard/dashboard-daily-routine/export/preview.webp",
+      "avif": "public/brand/illustrations/dashboard/dashboard-daily-routine/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "parasite-grad"
+    ],
+    "priority": "P0",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Günlük Rutin Kartı",
+      "style": "glassmorphism",
+      "seed": 119,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "dashboard-pet-switcher",
+    "name": "Dost Değiştirici İllüstrasyonu",
+    "category": "dashboard",
+    "module": "dashboard",
+    "complexity": "M",
+    "theme_color": "primary",
+    "title": {
+      "tr": "Dostlarınız Arasında Geçiş Yapın",
+      "en": "Switch Between Pets"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Dostlarınız Arasında Geçiş Yapın",
+      "en": "OPOS Production Asset: Switch Between Pets"
+    },
+    "screen_usage": [
+      "/owner/dashboard"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/dashboard/dashboard-pet-switcher/source.svg",
+    "preview_png": "public/brand/illustrations/dashboard/dashboard-pet-switcher/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/dashboard/dashboard-pet-switcher/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/dashboard/dashboard-pet-switcher/export/512.png",
+      "png1024": "public/brand/illustrations/dashboard/dashboard-pet-switcher/export/1024.png",
+      "png2048": "public/brand/illustrations/dashboard/dashboard-pet-switcher/export/2048.png",
+      "webp": "public/brand/illustrations/dashboard/dashboard-pet-switcher/export/preview.webp",
+      "avif": "public/brand/illustrations/dashboard/dashboard-pet-switcher/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "primary-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Dost Değiştirici İllüstrasyonu",
+      "style": "glassmorphism",
+      "seed": 120,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "dashboard-quick-actions",
+    "name": "Hızlı Eylem Kartı",
+    "category": "dashboard",
+    "module": "dashboard",
+    "complexity": "M",
+    "theme_color": "primary",
+    "title": {
+      "tr": "Hızlı İşlem Kısayolları",
+      "en": "Quick Action Shortcuts"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Hızlı İşlem Kısayolları",
+      "en": "OPOS Production Asset: Quick Action Shortcuts"
+    },
+    "screen_usage": [
+      "/owner/dashboard"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/dashboard/dashboard-quick-actions/source.svg",
+    "preview_png": "public/brand/illustrations/dashboard/dashboard-quick-actions/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/dashboard/dashboard-quick-actions/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/dashboard/dashboard-quick-actions/export/512.png",
+      "png1024": "public/brand/illustrations/dashboard/dashboard-quick-actions/export/1024.png",
+      "png2048": "public/brand/illustrations/dashboard/dashboard-quick-actions/export/2048.png",
+      "webp": "public/brand/illustrations/dashboard/dashboard-quick-actions/export/preview.webp",
+      "avif": "public/brand/illustrations/dashboard/dashboard-quick-actions/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "primary-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Hızlı Eylem Kartı",
+      "style": "glassmorphism",
+      "seed": 121,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "dashboard-timeline-overview",
+    "name": "Zaman Akışı Özeti",
+    "category": "dashboard",
+    "module": "dashboard",
+    "complexity": "M",
+    "theme_color": "medical",
+    "title": {
+      "tr": "Son Sağlık ve Aktivite Akışı",
+      "en": "Recent Health & Activity Stream"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Son Sağlık ve Aktivite Akışı",
+      "en": "OPOS Production Asset: Recent Health & Activity Stream"
+    },
+    "screen_usage": [
+      "/owner/timeline"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/dashboard/dashboard-timeline-overview/source.svg",
+    "preview_png": "public/brand/illustrations/dashboard/dashboard-timeline-overview/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/dashboard/dashboard-timeline-overview/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/dashboard/dashboard-timeline-overview/export/512.png",
+      "png1024": "public/brand/illustrations/dashboard/dashboard-timeline-overview/export/1024.png",
+      "png2048": "public/brand/illustrations/dashboard/dashboard-timeline-overview/export/2048.png",
+      "webp": "public/brand/illustrations/dashboard/dashboard-timeline-overview/export/preview.webp",
+      "avif": "public/brand/illustrations/dashboard/dashboard-timeline-overview/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "medical-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Zaman Akışı Özeti",
+      "style": "glassmorphism",
+      "seed": 122,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "dashboard-stats-card",
+    "name": "Genel İstatistik Kartı",
+    "category": "dashboard",
+    "module": "dashboard",
+    "complexity": "M",
+    "theme_color": "primary",
+    "title": {
+      "tr": "Aylık Bakım Metrikleri",
+      "en": "Monthly Care Metrics"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Aylık Bakım Metrikleri",
+      "en": "OPOS Production Asset: Monthly Care Metrics"
+    },
+    "screen_usage": [
+      "/owner/stats"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/dashboard/dashboard-stats-card/source.svg",
+    "preview_png": "public/brand/illustrations/dashboard/dashboard-stats-card/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/dashboard/dashboard-stats-card/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/dashboard/dashboard-stats-card/export/512.png",
+      "png1024": "public/brand/illustrations/dashboard/dashboard-stats-card/export/1024.png",
+      "png2048": "public/brand/illustrations/dashboard/dashboard-stats-card/export/2048.png",
+      "webp": "public/brand/illustrations/dashboard/dashboard-stats-card/export/preview.webp",
+      "avif": "public/brand/illustrations/dashboard/dashboard-stats-card/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "primary-grad"
+    ],
+    "priority": "P2",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Genel İstatistik Kartı",
+      "style": "glassmorphism",
+      "seed": 123,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "health-checkup",
+    "name": "Genel Sağlık Taraması",
+    "category": "health",
+    "module": "health",
+    "complexity": "M",
+    "theme_color": "health",
+    "title": {
+      "tr": "Sağlık Metrikleri",
+      "en": "Health Metrics"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Sağlık Metrikleri",
+      "en": "OPOS Production Asset: Health Metrics"
+    },
+    "screen_usage": [
+      "/owner/pets/[id]/health"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/health/health-checkup/source.svg",
+    "preview_png": "public/brand/illustrations/health/health-checkup/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/health/health-checkup/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/health/health-checkup/export/512.png",
+      "png1024": "public/brand/illustrations/health/health-checkup/export/1024.png",
+      "png2048": "public/brand/illustrations/health/health-checkup/export/2048.png",
+      "webp": "public/brand/illustrations/health/health-checkup/export/preview.webp",
+      "avif": "public/brand/illustrations/health/health-checkup/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "health-grad"
+    ],
+    "priority": "P0",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Genel Sağlık Taraması",
+      "style": "glassmorphism",
+      "seed": 124,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "health-medical-history",
+    "name": "Tıbbi Geçmiş Kartı",
+    "category": "health",
+    "module": "health",
+    "complexity": "M",
+    "theme_color": "health",
+    "title": {
+      "tr": "Geçmiş Muayeneler",
+      "en": "Past Medical Examinations"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Geçmiş Muayeneler",
+      "en": "OPOS Production Asset: Past Medical Examinations"
+    },
+    "screen_usage": [
+      "/owner/medical"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/health/health-medical-history/source.svg",
+    "preview_png": "public/brand/illustrations/health/health-medical-history/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/health/health-medical-history/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/health/health-medical-history/export/512.png",
+      "png1024": "public/brand/illustrations/health/health-medical-history/export/1024.png",
+      "png2048": "public/brand/illustrations/health/health-medical-history/export/2048.png",
+      "webp": "public/brand/illustrations/health/health-medical-history/export/preview.webp",
+      "avif": "public/brand/illustrations/health/health-medical-history/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "health-grad"
+    ],
+    "priority": "P0",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Tıbbi Geçmiş Kartı",
+      "style": "glassmorphism",
+      "seed": 125,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "health-vitals",
+    "name": "Vital Bulgu Kaydı",
+    "category": "health",
+    "module": "health",
+    "complexity": "M",
+    "theme_color": "health",
+    "title": {
+      "tr": "Nabız, Ateş ve Solunum",
+      "en": "Heart Rate & Temperature"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Nabız, Ateş ve Solunum",
+      "en": "OPOS Production Asset: Heart Rate & Temperature"
+    },
+    "screen_usage": [
+      "/owner/health/vitals"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/health/health-vitals/source.svg",
+    "preview_png": "public/brand/illustrations/health/health-vitals/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/health/health-vitals/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/health/health-vitals/export/512.png",
+      "png1024": "public/brand/illustrations/health/health-vitals/export/1024.png",
+      "png2048": "public/brand/illustrations/health/health-vitals/export/2048.png",
+      "webp": "public/brand/illustrations/health/health-vitals/export/preview.webp",
+      "avif": "public/brand/illustrations/health/health-vitals/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "health-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Vital Bulgu Kaydı",
+      "style": "glassmorphism",
+      "seed": 126,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "health-allergies",
+    "name": "Alerji Uyarısı Kartı",
+    "category": "health",
+    "module": "health",
+    "complexity": "M",
+    "theme_color": "health",
+    "title": {
+      "tr": "Hassasiyet ve Alerjiler",
+      "en": "Allergies & Sensitivities"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Hassasiyet ve Alerjiler",
+      "en": "OPOS Production Asset: Allergies & Sensitivities"
+    },
+    "screen_usage": [
+      "/owner/health/allergies"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/health/health-allergies/source.svg",
+    "preview_png": "public/brand/illustrations/health/health-allergies/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/health/health-allergies/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/health/health-allergies/export/512.png",
+      "png1024": "public/brand/illustrations/health/health-allergies/export/1024.png",
+      "png2048": "public/brand/illustrations/health/health-allergies/export/2048.png",
+      "webp": "public/brand/illustrations/health/health-allergies/export/preview.webp",
+      "avif": "public/brand/illustrations/health/health-allergies/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "health-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Alerji Uyarısı Kartı",
+      "style": "glassmorphism",
+      "seed": 127,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "health-symptom-tracker",
+    "name": "Semptom Takip Kartı",
+    "category": "health",
+    "module": "health",
+    "complexity": "M",
+    "theme_color": "health",
+    "title": {
+      "tr": "Günlük Semptom Kaydı",
+      "en": "Daily Symptom Log"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Günlük Semptom Kaydı",
+      "en": "OPOS Production Asset: Daily Symptom Log"
+    },
+    "screen_usage": [
+      "/owner/health/symptoms"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/health/health-symptom-tracker/source.svg",
+    "preview_png": "public/brand/illustrations/health/health-symptom-tracker/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/health/health-symptom-tracker/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/health/health-symptom-tracker/export/512.png",
+      "png1024": "public/brand/illustrations/health/health-symptom-tracker/export/1024.png",
+      "png2048": "public/brand/illustrations/health/health-symptom-tracker/export/2048.png",
+      "webp": "public/brand/illustrations/health/health-symptom-tracker/export/preview.webp",
+      "avif": "public/brand/illustrations/health/health-symptom-tracker/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "health-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Semptom Takip Kartı",
+      "style": "glassmorphism",
+      "seed": 128,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "health-lab-results",
+    "name": "Tahlil ve Lab Raporu",
+    "category": "health",
+    "module": "health",
+    "complexity": "M",
+    "theme_color": "medical",
+    "title": {
+      "tr": "Laboratuvar Test Sonuçları",
+      "en": "Lab Test Results"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Laboratuvar Test Sonuçları",
+      "en": "OPOS Production Asset: Lab Test Results"
+    },
+    "screen_usage": [
+      "/owner/health/labs"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/health/health-lab-results/source.svg",
+    "preview_png": "public/brand/illustrations/health/health-lab-results/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/health/health-lab-results/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/health/health-lab-results/export/512.png",
+      "png1024": "public/brand/illustrations/health/health-lab-results/export/1024.png",
+      "png2048": "public/brand/illustrations/health/health-lab-results/export/2048.png",
+      "webp": "public/brand/illustrations/health/health-lab-results/export/preview.webp",
+      "avif": "public/brand/illustrations/health/health-lab-results/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "medical-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Tahlil ve Lab Raporu",
+      "style": "glassmorphism",
+      "seed": 129,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "health-weight-tracker",
+    "name": "Kilo Takip Kartı",
+    "category": "health",
+    "module": "health",
+    "complexity": "M",
+    "theme_color": "nutrition",
+    "title": {
+      "tr": "Kilo Gelişim Grafiği",
+      "en": "Weight Growth Chart"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Kilo Gelişim Grafiği",
+      "en": "OPOS Production Asset: Weight Growth Chart"
+    },
+    "screen_usage": [
+      "/owner/health/weight"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/health/health-weight-tracker/source.svg",
+    "preview_png": "public/brand/illustrations/health/health-weight-tracker/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/health/health-weight-tracker/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/health/health-weight-tracker/export/512.png",
+      "png1024": "public/brand/illustrations/health/health-weight-tracker/export/1024.png",
+      "png2048": "public/brand/illustrations/health/health-weight-tracker/export/2048.png",
+      "webp": "public/brand/illustrations/health/health-weight-tracker/export/preview.webp",
+      "avif": "public/brand/illustrations/health/health-weight-tracker/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "nutrition-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Kilo Takip Kartı",
+      "style": "glassmorphism",
+      "seed": 130,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "health-medication-log",
+    "name": "İlaç Kullanım Kartı",
+    "category": "health",
+    "module": "health",
+    "complexity": "M",
+    "theme_color": "medical",
+    "title": {
+      "tr": "Aktif İlaç ve Doz Hatırlatıcı",
+      "en": "Medication & Dose Reminders"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Aktif İlaç ve Doz Hatırlatıcı",
+      "en": "OPOS Production Asset: Medication & Dose Reminders"
+    },
+    "screen_usage": [
+      "/owner/health/meds"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/health/health-medication-log/source.svg",
+    "preview_png": "public/brand/illustrations/health/health-medication-log/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/health/health-medication-log/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/health/health-medication-log/export/512.png",
+      "png1024": "public/brand/illustrations/health/health-medication-log/export/1024.png",
+      "png2048": "public/brand/illustrations/health/health-medication-log/export/2048.png",
+      "webp": "public/brand/illustrations/health/health-medication-log/export/preview.webp",
+      "avif": "public/brand/illustrations/health/health-medication-log/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "medical-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for İlaç Kullanım Kartı",
+      "style": "glassmorphism",
+      "seed": 131,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "vaccine-schedule",
+    "name": "Akıllı Aşı Takvimi",
+    "category": "vaccines",
+    "module": "vaccines",
+    "complexity": "M",
+    "theme_color": "medical",
+    "title": {
+      "tr": "Akıllı Aşı Takvimi",
+      "en": "Smart Vaccine Schedule"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Akıllı Aşı Takvimi",
+      "en": "OPOS Production Asset: Smart Vaccine Schedule"
+    },
+    "screen_usage": [
+      "/owner/pets/[id]/vaccines"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/vaccines/vaccine-schedule/source.svg",
+    "preview_png": "public/brand/illustrations/vaccines/vaccine-schedule/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/vaccines/vaccine-schedule/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/vaccines/vaccine-schedule/export/512.png",
+      "png1024": "public/brand/illustrations/vaccines/vaccine-schedule/export/1024.png",
+      "png2048": "public/brand/illustrations/vaccines/vaccine-schedule/export/2048.png",
+      "webp": "public/brand/illustrations/vaccines/vaccine-schedule/export/preview.webp",
+      "avif": "public/brand/illustrations/vaccines/vaccine-schedule/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "medical-grad"
+    ],
+    "priority": "P0",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Akıllı Aşı Takvimi",
+      "style": "glassmorphism",
+      "seed": 132,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "vaccine-card-banner",
+    "name": "Dijital Aşı Karnesi Banner",
+    "category": "vaccines",
+    "module": "vaccines",
+    "complexity": "M",
+    "theme_color": "medical",
+    "title": {
+      "tr": "Dijital Aşı Karnesi",
+      "en": "Digital Vaccine Passport"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Dijital Aşı Karnesi",
+      "en": "OPOS Production Asset: Digital Vaccine Passport"
+    },
+    "screen_usage": [
+      "/owner/vaccines"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/vaccines/vaccine-card-banner/source.svg",
+    "preview_png": "public/brand/illustrations/vaccines/vaccine-card-banner/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/vaccines/vaccine-card-banner/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/vaccines/vaccine-card-banner/export/512.png",
+      "png1024": "public/brand/illustrations/vaccines/vaccine-card-banner/export/1024.png",
+      "png2048": "public/brand/illustrations/vaccines/vaccine-card-banner/export/2048.png",
+      "webp": "public/brand/illustrations/vaccines/vaccine-card-banner/export/preview.webp",
+      "avif": "public/brand/illustrations/vaccines/vaccine-card-banner/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "medical-grad"
+    ],
+    "priority": "P0",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Dijital Aşı Karnesi Banner",
+      "style": "glassmorphism",
+      "seed": 133,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "vaccine-booster-reminder",
+    "name": "Hatırlatma Dozu Uyarısı",
+    "category": "vaccines",
+    "module": "vaccines",
+    "complexity": "M",
+    "theme_color": "nutrition",
+    "title": {
+      "tr": "Tekrar Dozu Vakti Geldi",
+      "en": "Booster Shot Due"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Tekrar Dozu Vakti Geldi",
+      "en": "OPOS Production Asset: Booster Shot Due"
+    },
+    "screen_usage": [
+      "/owner/vaccines/booster"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/vaccines/vaccine-booster-reminder/source.svg",
+    "preview_png": "public/brand/illustrations/vaccines/vaccine-booster-reminder/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/vaccines/vaccine-booster-reminder/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/vaccines/vaccine-booster-reminder/export/512.png",
+      "png1024": "public/brand/illustrations/vaccines/vaccine-booster-reminder/export/1024.png",
+      "png2048": "public/brand/illustrations/vaccines/vaccine-booster-reminder/export/2048.png",
+      "webp": "public/brand/illustrations/vaccines/vaccine-booster-reminder/export/preview.webp",
+      "avif": "public/brand/illustrations/vaccines/vaccine-booster-reminder/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "nutrition-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Hatırlatma Dozu Uyarısı",
+      "style": "glassmorphism",
+      "seed": 134,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "vaccine-passport",
+    "name": "Uluslararası Pasaport Aşıları",
+    "category": "vaccines",
+    "module": "vaccines",
+    "complexity": "M",
+    "theme_color": "medical",
+    "title": {
+      "tr": "Yurtdışı Seyahat Aşıları",
+      "en": "International Travel Vaccines"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Yurtdışı Seyahat Aşıları",
+      "en": "OPOS Production Asset: International Travel Vaccines"
+    },
+    "screen_usage": [
+      "/owner/vaccines/passport"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/vaccines/vaccine-passport/source.svg",
+    "preview_png": "public/brand/illustrations/vaccines/vaccine-passport/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/vaccines/vaccine-passport/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/vaccines/vaccine-passport/export/512.png",
+      "png1024": "public/brand/illustrations/vaccines/vaccine-passport/export/1024.png",
+      "png2048": "public/brand/illustrations/vaccines/vaccine-passport/export/2048.png",
+      "webp": "public/brand/illustrations/vaccines/vaccine-passport/export/preview.webp",
+      "avif": "public/brand/illustrations/vaccines/vaccine-passport/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "medical-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Uluslararası Pasaport Aşıları",
+      "style": "glassmorphism",
+      "seed": 135,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "vaccine-rabies-shot",
+    "name": "Kuduz Aşısı Kaydı",
+    "category": "vaccines",
+    "module": "vaccines",
+    "complexity": "M",
+    "theme_color": "parasite",
+    "title": {
+      "tr": "Resmi Kuduz Aşısı Onayı",
+      "en": "Official Rabies Shot Record"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Resmi Kuduz Aşısı Onayı",
+      "en": "OPOS Production Asset: Official Rabies Shot Record"
+    },
+    "screen_usage": [
+      "/owner/vaccines/rabies"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/vaccines/vaccine-rabies-shot/source.svg",
+    "preview_png": "public/brand/illustrations/vaccines/vaccine-rabies-shot/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/vaccines/vaccine-rabies-shot/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/vaccines/vaccine-rabies-shot/export/512.png",
+      "png1024": "public/brand/illustrations/vaccines/vaccine-rabies-shot/export/1024.png",
+      "png2048": "public/brand/illustrations/vaccines/vaccine-rabies-shot/export/2048.png",
+      "webp": "public/brand/illustrations/vaccines/vaccine-rabies-shot/export/preview.webp",
+      "avif": "public/brand/illustrations/vaccines/vaccine-rabies-shot/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "parasite-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Kuduz Aşısı Kaydı",
+      "style": "glassmorphism",
+      "seed": 136,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "parasite-control",
+    "name": "Parazit Koruması",
+    "category": "parasite",
+    "module": "parasite",
+    "complexity": "M",
+    "theme_color": "parasite",
+    "title": {
+      "tr": "Parazit Koruması",
+      "en": "Parasite Protection"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Parazit Koruması",
+      "en": "OPOS Production Asset: Parasite Protection"
+    },
+    "screen_usage": [
+      "/owner/pets/[id]/parasite"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/parasite/parasite-control/source.svg",
+    "preview_png": "public/brand/illustrations/parasite/parasite-control/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/parasite/parasite-control/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/parasite/parasite-control/export/512.png",
+      "png1024": "public/brand/illustrations/parasite/parasite-control/export/1024.png",
+      "png2048": "public/brand/illustrations/parasite/parasite-control/export/2048.png",
+      "webp": "public/brand/illustrations/parasite/parasite-control/export/preview.webp",
+      "avif": "public/brand/illustrations/parasite/parasite-control/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "parasite-grad"
+    ],
+    "priority": "P0",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Parazit Koruması",
+      "style": "glassmorphism",
+      "seed": 137,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "parasite-calendar",
+    "name": "Parazit Periyot Takvimi",
+    "category": "parasite",
+    "module": "parasite",
+    "complexity": "M",
+    "theme_color": "parasite",
+    "title": {
+      "tr": "30 Günlük Uygulama Takvimi",
+      "en": "30-Day Application Calendar"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: 30 Günlük Uygulama Takvimi",
+      "en": "OPOS Production Asset: 30-Day Application Calendar"
+    },
+    "screen_usage": [
+      "/owner/parasite/calendar"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/parasite/parasite-calendar/source.svg",
+    "preview_png": "public/brand/illustrations/parasite/parasite-calendar/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/parasite/parasite-calendar/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/parasite/parasite-calendar/export/512.png",
+      "png1024": "public/brand/illustrations/parasite/parasite-calendar/export/1024.png",
+      "png2048": "public/brand/illustrations/parasite/parasite-calendar/export/2048.png",
+      "webp": "public/brand/illustrations/parasite/parasite-calendar/export/preview.webp",
+      "avif": "public/brand/illustrations/parasite/parasite-calendar/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "parasite-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Parazit Periyot Takvimi",
+      "style": "glassmorphism",
+      "seed": 138,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "parasite-flea-tick",
+    "name": "Pire ve Kene Damlası",
+    "category": "parasite",
+    "module": "parasite",
+    "complexity": "M",
+    "theme_color": "parasite",
+    "title": {
+      "tr": "Dış Parazit Uygulaması",
+      "en": "Flea & Tick Treatment"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Dış Parazit Uygulaması",
+      "en": "OPOS Production Asset: Flea & Tick Treatment"
+    },
+    "screen_usage": [
+      "/owner/parasite/flea"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/parasite/parasite-flea-tick/source.svg",
+    "preview_png": "public/brand/illustrations/parasite/parasite-flea-tick/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/parasite/parasite-flea-tick/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/parasite/parasite-flea-tick/export/512.png",
+      "png1024": "public/brand/illustrations/parasite/parasite-flea-tick/export/1024.png",
+      "png2048": "public/brand/illustrations/parasite/parasite-flea-tick/export/2048.png",
+      "webp": "public/brand/illustrations/parasite/parasite-flea-tick/export/preview.webp",
+      "avif": "public/brand/illustrations/parasite/parasite-flea-tick/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "parasite-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Pire ve Kene Damlası",
+      "style": "glassmorphism",
+      "seed": 139,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "parasite-deworming",
+    "name": "İç Parazit Hapı",
+    "category": "parasite",
+    "module": "parasite",
+    "complexity": "M",
+    "theme_color": "parasite",
+    "title": {
+      "tr": "İç Parazit Tablet Takibi",
+      "en": "Internal Deworming Log"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: İç Parazit Tablet Takibi",
+      "en": "OPOS Production Asset: Internal Deworming Log"
+    },
+    "screen_usage": [
+      "/owner/parasite/internal"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/parasite/parasite-deworming/source.svg",
+    "preview_png": "public/brand/illustrations/parasite/parasite-deworming/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/parasite/parasite-deworming/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/parasite/parasite-deworming/export/512.png",
+      "png1024": "public/brand/illustrations/parasite/parasite-deworming/export/1024.png",
+      "png2048": "public/brand/illustrations/parasite/parasite-deworming/export/2048.png",
+      "webp": "public/brand/illustrations/parasite/parasite-deworming/export/preview.webp",
+      "avif": "public/brand/illustrations/parasite/parasite-deworming/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "parasite-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for İç Parazit Hapı",
+      "style": "glassmorphism",
+      "seed": 140,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "nutrition-plan",
+    "name": "Beslenme Yönetimi",
+    "category": "nutrition",
+    "module": "nutrition",
+    "complexity": "M",
+    "theme_color": "nutrition",
+    "title": {
+      "tr": "Beslenme Yönetimi",
+      "en": "Nutrition Management"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Beslenme Yönetimi",
+      "en": "OPOS Production Asset: Nutrition Management"
+    },
+    "screen_usage": [
+      "/owner/pets/[id]/nutrition"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/nutrition/nutrition-plan/source.svg",
+    "preview_png": "public/brand/illustrations/nutrition/nutrition-plan/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/nutrition/nutrition-plan/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/nutrition/nutrition-plan/export/512.png",
+      "png1024": "public/brand/illustrations/nutrition/nutrition-plan/export/1024.png",
+      "png2048": "public/brand/illustrations/nutrition/nutrition-plan/export/2048.png",
+      "webp": "public/brand/illustrations/nutrition/nutrition-plan/export/preview.webp",
+      "avif": "public/brand/illustrations/nutrition/nutrition-plan/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "nutrition-grad"
+    ],
+    "priority": "P0",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Beslenme Yönetimi",
+      "style": "glassmorphism",
+      "seed": 141,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "nutrition-weight-goal",
+    "name": "Hedef Kilo Bandı",
+    "category": "nutrition",
+    "module": "nutrition",
+    "complexity": "M",
+    "theme_color": "nutrition",
+    "title": {
+      "tr": "İdeal Kilo Hedefi",
+      "en": "Ideal Weight Target"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: İdeal Kilo Hedefi",
+      "en": "OPOS Production Asset: Ideal Weight Target"
+    },
+    "screen_usage": [
+      "/owner/nutrition/weight-goal"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/nutrition/nutrition-weight-goal/source.svg",
+    "preview_png": "public/brand/illustrations/nutrition/nutrition-weight-goal/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/nutrition/nutrition-weight-goal/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/nutrition/nutrition-weight-goal/export/512.png",
+      "png1024": "public/brand/illustrations/nutrition/nutrition-weight-goal/export/1024.png",
+      "png2048": "public/brand/illustrations/nutrition/nutrition-weight-goal/export/2048.png",
+      "webp": "public/brand/illustrations/nutrition/nutrition-weight-goal/export/preview.webp",
+      "avif": "public/brand/illustrations/nutrition/nutrition-weight-goal/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "nutrition-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Hedef Kilo Bandı",
+      "style": "glassmorphism",
+      "seed": 142,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "nutrition-food-calculator",
+    "name": "Mama Porsiyon Hesaplayıcı",
+    "category": "nutrition",
+    "module": "nutrition",
+    "complexity": "M",
+    "theme_color": "nutrition",
+    "title": {
+      "tr": "Günlük Gramaj Hesaplama",
+      "en": "Daily Portion Calculator"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Günlük Gramaj Hesaplama",
+      "en": "OPOS Production Asset: Daily Portion Calculator"
+    },
+    "screen_usage": [
+      "/owner/nutrition/calculator"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/nutrition/nutrition-food-calculator/source.svg",
+    "preview_png": "public/brand/illustrations/nutrition/nutrition-food-calculator/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/nutrition/nutrition-food-calculator/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/nutrition/nutrition-food-calculator/export/512.png",
+      "png1024": "public/brand/illustrations/nutrition/nutrition-food-calculator/export/1024.png",
+      "png2048": "public/brand/illustrations/nutrition/nutrition-food-calculator/export/2048.png",
+      "webp": "public/brand/illustrations/nutrition/nutrition-food-calculator/export/preview.webp",
+      "avif": "public/brand/illustrations/nutrition/nutrition-food-calculator/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "nutrition-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Mama Porsiyon Hesaplayıcı",
+      "style": "glassmorphism",
+      "seed": 143,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "nutrition-water-intake",
+    "name": "Su Tüketim Takibi",
+    "category": "nutrition",
+    "module": "nutrition",
+    "complexity": "M",
+    "theme_color": "hygiene",
+    "title": {
+      "tr": "Günlük Sıvı İhtiyacı",
+      "en": "Daily Water Intake"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Günlük Sıvı İhtiyacı",
+      "en": "OPOS Production Asset: Daily Water Intake"
+    },
+    "screen_usage": [
+      "/owner/nutrition/water"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/nutrition/nutrition-water-intake/source.svg",
+    "preview_png": "public/brand/illustrations/nutrition/nutrition-water-intake/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/nutrition/nutrition-water-intake/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/nutrition/nutrition-water-intake/export/512.png",
+      "png1024": "public/brand/illustrations/nutrition/nutrition-water-intake/export/1024.png",
+      "png2048": "public/brand/illustrations/nutrition/nutrition-water-intake/export/2048.png",
+      "webp": "public/brand/illustrations/nutrition/nutrition-water-intake/export/preview.webp",
+      "avif": "public/brand/illustrations/nutrition/nutrition-water-intake/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "medical-grad"
+    ],
+    "priority": "P2",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Su Tüketim Takibi",
+      "style": "glassmorphism",
+      "seed": 144,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "nutrition-diet-history",
+    "name": "Mama Marka Geçmişi",
+    "category": "nutrition",
+    "module": "nutrition",
+    "complexity": "M",
+    "theme_color": "nutrition",
+    "title": {
+      "tr": "Kullanılan Mamalar",
+      "en": "Diet Brand History"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Kullanılan Mamalar",
+      "en": "OPOS Production Asset: Diet Brand History"
+    },
+    "screen_usage": [
+      "/owner/nutrition/history"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/nutrition/nutrition-diet-history/source.svg",
+    "preview_png": "public/brand/illustrations/nutrition/nutrition-diet-history/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/nutrition/nutrition-diet-history/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/nutrition/nutrition-diet-history/export/512.png",
+      "png1024": "public/brand/illustrations/nutrition/nutrition-diet-history/export/1024.png",
+      "png2048": "public/brand/illustrations/nutrition/nutrition-diet-history/export/2048.png",
+      "webp": "public/brand/illustrations/nutrition/nutrition-diet-history/export/preview.webp",
+      "avif": "public/brand/illustrations/nutrition/nutrition-diet-history/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "nutrition-grad"
+    ],
+    "priority": "P2",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Mama Marka Geçmişi",
+      "style": "glassmorphism",
+      "seed": 145,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "grooming-care",
+    "name": "Bakım ve Hijyen",
+    "category": "grooming",
+    "module": "grooming",
+    "complexity": "M",
+    "theme_color": "grooming",
+    "title": {
+      "tr": "Bakım ve Hijyen",
+      "en": "Grooming & Care"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Bakım ve Hijyen",
+      "en": "OPOS Production Asset: Grooming & Care"
+    },
+    "screen_usage": [
+      "/owner/pets/[id]/grooming"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/grooming/grooming-care/source.svg",
+    "preview_png": "public/brand/illustrations/grooming/grooming-care/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/grooming/grooming-care/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/grooming/grooming-care/export/512.png",
+      "png1024": "public/brand/illustrations/grooming/grooming-care/export/1024.png",
+      "png2048": "public/brand/illustrations/grooming/grooming-care/export/2048.png",
+      "webp": "public/brand/illustrations/grooming/grooming-care/export/preview.webp",
+      "avif": "public/brand/illustrations/grooming/grooming-care/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "grooming-grad"
+    ],
+    "priority": "P0",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Bakım ve Hijyen",
+      "style": "glassmorphism",
+      "seed": 146,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "grooming-appointment",
+    "name": "Kuaför Randevusu",
+    "category": "grooming",
+    "module": "grooming",
+    "complexity": "M",
+    "theme_color": "grooming",
+    "title": {
+      "tr": "Pet Kuaför Randevusu",
+      "en": "Grooming Salon Booking"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Pet Kuaför Randevusu",
+      "en": "OPOS Production Asset: Grooming Salon Booking"
+    },
+    "screen_usage": [
+      "/owner/grooming/booking"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/grooming/grooming-appointment/source.svg",
+    "preview_png": "public/brand/illustrations/grooming/grooming-appointment/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/grooming/grooming-appointment/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/grooming/grooming-appointment/export/512.png",
+      "png1024": "public/brand/illustrations/grooming/grooming-appointment/export/1024.png",
+      "png2048": "public/brand/illustrations/grooming/grooming-appointment/export/2048.png",
+      "webp": "public/brand/illustrations/grooming/grooming-appointment/export/preview.webp",
+      "avif": "public/brand/illustrations/grooming/grooming-appointment/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "grooming-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Kuaför Randevusu",
+      "style": "glassmorphism",
+      "seed": 147,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "grooming-hygiene-kit",
+    "name": "Evde Bakım Seti",
+    "category": "grooming",
+    "module": "grooming",
+    "complexity": "M",
+    "theme_color": "grooming",
+    "title": {
+      "tr": "Banyo ve Tüy Taraması",
+      "en": "Home Bath & Brushing"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Banyo ve Tüy Taraması",
+      "en": "OPOS Production Asset: Home Bath & Brushing"
+    },
+    "screen_usage": [
+      "/owner/grooming/kit"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/grooming/grooming-hygiene-kit/source.svg",
+    "preview_png": "public/brand/illustrations/grooming/grooming-hygiene-kit/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/grooming/grooming-hygiene-kit/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/grooming/grooming-hygiene-kit/export/512.png",
+      "png1024": "public/brand/illustrations/grooming/grooming-hygiene-kit/export/1024.png",
+      "png2048": "public/brand/illustrations/grooming/grooming-hygiene-kit/export/2048.png",
+      "webp": "public/brand/illustrations/grooming/grooming-hygiene-kit/export/preview.webp",
+      "avif": "public/brand/illustrations/grooming/grooming-hygiene-kit/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "grooming-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Evde Bakım Seti",
+      "style": "glassmorphism",
+      "seed": 148,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "grooming-nail-trimming",
+    "name": "Tırnak Kesim Hatırlatıcı",
+    "category": "grooming",
+    "module": "grooming",
+    "complexity": "M",
+    "theme_color": "grooming",
+    "title": {
+      "tr": "Pati ve Tırnak Bakımı",
+      "en": "Paw & Nail Care"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Pati ve Tırnak Bakımı",
+      "en": "OPOS Production Asset: Paw & Nail Care"
+    },
+    "screen_usage": [
+      "/owner/grooming/nails"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/grooming/grooming-nail-trimming/source.svg",
+    "preview_png": "public/brand/illustrations/grooming/grooming-nail-trimming/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/grooming/grooming-nail-trimming/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/grooming/grooming-nail-trimming/export/512.png",
+      "png1024": "public/brand/illustrations/grooming/grooming-nail-trimming/export/1024.png",
+      "png2048": "public/brand/illustrations/grooming/grooming-nail-trimming/export/2048.png",
+      "webp": "public/brand/illustrations/grooming/grooming-nail-trimming/export/preview.webp",
+      "avif": "public/brand/illustrations/grooming/grooming-nail-trimming/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "grooming-grad"
+    ],
+    "priority": "P2",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Tırnak Kesim Hatırlatıcı",
+      "style": "glassmorphism",
+      "seed": 149,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "community-share",
+    "name": "Patili Topluluk",
+    "category": "community",
+    "module": "community",
+    "complexity": "M",
+    "theme_color": "primary",
+    "title": {
+      "tr": "Odi.Pet Topluluğu",
+      "en": "Odi.Pet Community"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Odi.Pet Topluluğu",
+      "en": "OPOS Production Asset: Odi.Pet Community"
+    },
+    "screen_usage": [
+      "/community"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/community/community-share/source.svg",
+    "preview_png": "public/brand/illustrations/community/community-share/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/community/community-share/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/community/community-share/export/512.png",
+      "png1024": "public/brand/illustrations/community/community-share/export/1024.png",
+      "png2048": "public/brand/illustrations/community/community-share/export/2048.png",
+      "webp": "public/brand/illustrations/community/community-share/export/preview.webp",
+      "avif": "public/brand/illustrations/community/community-share/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "primary-grad"
+    ],
+    "priority": "P0",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Patili Topluluk",
+      "style": "glassmorphism",
+      "seed": 150,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "community-badge",
+    "name": "Topluluk Rozetleri",
+    "category": "community",
+    "module": "community",
+    "complexity": "M",
+    "theme_color": "nutrition",
+    "title": {
+      "tr": "Kazanılan Başarı Rozetleri",
+      "en": "Earned Achievement Badges"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Kazanılan Başarı Rozetleri",
+      "en": "OPOS Production Asset: Earned Achievement Badges"
+    },
+    "screen_usage": [
+      "/community/badges"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/community/community-badge/source.svg",
+    "preview_png": "public/brand/illustrations/community/community-badge/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/community/community-badge/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/community/community-badge/export/512.png",
+      "png1024": "public/brand/illustrations/community/community-badge/export/1024.png",
+      "png2048": "public/brand/illustrations/community/community-badge/export/2048.png",
+      "webp": "public/brand/illustrations/community/community-badge/export/preview.webp",
+      "avif": "public/brand/illustrations/community/community-badge/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "nutrition-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Topluluk Rozetleri",
+      "style": "glassmorphism",
+      "seed": 151,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "community-forum-hero",
+    "name": "Soru & Cevap Forumu",
+    "category": "community",
+    "module": "community",
+    "complexity": "M",
+    "theme_color": "primary",
+    "title": {
+      "tr": "Deneyim Paylaşımı ve Soru-Cevap",
+      "en": "Q&A Experience Forum"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Deneyim Paylaşımı ve Soru-Cevap",
+      "en": "OPOS Production Asset: Q&A Experience Forum"
+    },
+    "screen_usage": [
+      "/community/forum"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/community/community-forum-hero/source.svg",
+    "preview_png": "public/brand/illustrations/community/community-forum-hero/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/community/community-forum-hero/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/community/community-forum-hero/export/512.png",
+      "png1024": "public/brand/illustrations/community/community-forum-hero/export/1024.png",
+      "png2048": "public/brand/illustrations/community/community-forum-hero/export/2048.png",
+      "webp": "public/brand/illustrations/community/community-forum-hero/export/preview.webp",
+      "avif": "public/brand/illustrations/community/community-forum-hero/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "primary-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Soru & Cevap Forumu",
+      "style": "glassmorphism",
+      "seed": 152,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "marketplace-empty",
+    "name": "Odi.Pet Pazaryeri",
+    "category": "marketplace",
+    "module": "marketplace",
+    "complexity": "M",
+    "theme_color": "primary",
+    "title": {
+      "tr": "Odi.Pet Pazaryeri",
+      "en": "Odi.Pet Marketplace"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Odi.Pet Pazaryeri",
+      "en": "OPOS Production Asset: Odi.Pet Marketplace"
+    },
+    "screen_usage": [
+      "/marketplace"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/marketplace/marketplace-empty/source.svg",
+    "preview_png": "public/brand/illustrations/marketplace/marketplace-empty/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/marketplace/marketplace-empty/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/marketplace/marketplace-empty/export/512.png",
+      "png1024": "public/brand/illustrations/marketplace/marketplace-empty/export/1024.png",
+      "png2048": "public/brand/illustrations/marketplace/marketplace-empty/export/2048.png",
+      "webp": "public/brand/illustrations/marketplace/marketplace-empty/export/preview.webp",
+      "avif": "public/brand/illustrations/marketplace/marketplace-empty/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "primary-grad"
+    ],
+    "priority": "P0",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Odi.Pet Pazaryeri",
+      "style": "glassmorphism",
+      "seed": 153,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "marketplace-pet-store",
+    "name": "Veteriner Onaylı Mağaza",
+    "category": "marketplace",
+    "module": "marketplace",
+    "complexity": "M",
+    "theme_color": "primary",
+    "title": {
+      "tr": "Onaylı Mama ve Ürünler",
+      "en": "Approved Vet Food & Toys"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Onaylı Mama ve Ürünler",
+      "en": "OPOS Production Asset: Approved Vet Food & Toys"
+    },
+    "screen_usage": [
+      "/marketplace/store"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/marketplace/marketplace-pet-store/source.svg",
+    "preview_png": "public/brand/illustrations/marketplace/marketplace-pet-store/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/marketplace/marketplace-pet-store/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/marketplace/marketplace-pet-store/export/512.png",
+      "png1024": "public/brand/illustrations/marketplace/marketplace-pet-store/export/1024.png",
+      "png2048": "public/brand/illustrations/marketplace/marketplace-pet-store/export/2048.png",
+      "webp": "public/brand/illustrations/marketplace/marketplace-pet-store/export/preview.webp",
+      "avif": "public/brand/illustrations/marketplace/marketplace-pet-store/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "primary-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Veteriner Onaylı Mağaza",
+      "style": "glassmorphism",
+      "seed": 154,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "marketplace-order-tracking",
+    "name": "Sipariş Takip Kartı",
+    "category": "marketplace",
+    "module": "marketplace",
+    "complexity": "M",
+    "theme_color": "primary",
+    "title": {
+      "tr": "Kargo ve Sipariş Durumu",
+      "en": "Order Delivery Tracking"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Kargo ve Sipariş Durumu",
+      "en": "OPOS Production Asset: Order Delivery Tracking"
+    },
+    "screen_usage": [
+      "/marketplace/orders"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/marketplace/marketplace-order-tracking/source.svg",
+    "preview_png": "public/brand/illustrations/marketplace/marketplace-order-tracking/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/marketplace/marketplace-order-tracking/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/marketplace/marketplace-order-tracking/export/512.png",
+      "png1024": "public/brand/illustrations/marketplace/marketplace-order-tracking/export/1024.png",
+      "png2048": "public/brand/illustrations/marketplace/marketplace-order-tracking/export/2048.png",
+      "webp": "public/brand/illustrations/marketplace/marketplace-order-tracking/export/preview.webp",
+      "avif": "public/brand/illustrations/marketplace/marketplace-order-tracking/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "primary-grad"
+    ],
+    "priority": "P2",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Sipariş Takip Kartı",
+      "style": "glassmorphism",
+      "seed": 155,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "services-vet-finder",
+    "name": "Veteriner Bulucu",
+    "category": "services",
+    "module": "services",
+    "complexity": "M",
+    "theme_color": "vet",
+    "title": {
+      "tr": "Veteriner Bulucu",
+      "en": "Vet Finder Map"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Veteriner Bulucu",
+      "en": "OPOS Production Asset: Vet Finder Map"
+    },
+    "screen_usage": [
+      "/services/vets"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/services/services-vet-finder/source.svg",
+    "preview_png": "public/brand/illustrations/services/services-vet-finder/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/services/services-vet-finder/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/services/services-vet-finder/export/512.png",
+      "png1024": "public/brand/illustrations/services/services-vet-finder/export/1024.png",
+      "png2048": "public/brand/illustrations/services/services-vet-finder/export/2048.png",
+      "webp": "public/brand/illustrations/services/services-vet-finder/export/preview.webp",
+      "avif": "public/brand/illustrations/services/services-vet-finder/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "primary-grad"
+    ],
+    "priority": "P0",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Veteriner Bulucu",
+      "style": "glassmorphism",
+      "seed": 156,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "services-emergency-sos",
+    "name": "Acil Nöbetçi Klinik (SOS)",
+    "category": "services",
+    "module": "services",
+    "complexity": "M",
+    "theme_color": "health",
+    "title": {
+      "tr": "7/24 Nöbetçi Veteriner SOS",
+      "en": "24/7 Emergency Vet SOS"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: 7/24 Nöbetçi Veteriner SOS",
+      "en": "OPOS Production Asset: 24/7 Emergency Vet SOS"
+    },
+    "screen_usage": [
+      "/sos"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/services/services-emergency-sos/source.svg",
+    "preview_png": "public/brand/illustrations/services/services-emergency-sos/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/services/services-emergency-sos/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/services/services-emergency-sos/export/512.png",
+      "png1024": "public/brand/illustrations/services/services-emergency-sos/export/1024.png",
+      "png2048": "public/brand/illustrations/services/services-emergency-sos/export/2048.png",
+      "webp": "public/brand/illustrations/services/services-emergency-sos/export/preview.webp",
+      "avif": "public/brand/illustrations/services/services-emergency-sos/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "health-grad"
+    ],
+    "priority": "P0",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Acil Nöbetçi Klinik (SOS)",
+      "style": "glassmorphism",
+      "seed": 157,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "services-clinic-booking",
+    "name": "Klinik Randevu Sistemi",
+    "category": "services",
+    "module": "services",
+    "complexity": "M",
+    "theme_color": "vet",
+    "title": {
+      "tr": "Online Muayene Randevusu",
+      "en": "Online Vet Booking"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Online Muayene Randevusu",
+      "en": "OPOS Production Asset: Online Vet Booking"
+    },
+    "screen_usage": [
+      "/services/booking"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/services/services-clinic-booking/source.svg",
+    "preview_png": "public/brand/illustrations/services/services-clinic-booking/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/services/services-clinic-booking/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/services/services-clinic-booking/export/512.png",
+      "png1024": "public/brand/illustrations/services/services-clinic-booking/export/1024.png",
+      "png2048": "public/brand/illustrations/services/services-clinic-booking/export/2048.png",
+      "webp": "public/brand/illustrations/services/services-clinic-booking/export/preview.webp",
+      "avif": "public/brand/illustrations/services/services-clinic-booking/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "primary-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Klinik Randevu Sistemi",
+      "style": "glassmorphism",
+      "seed": 158,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "profile-pet-card",
+    "name": "Pet SmartCard Kimlik",
+    "category": "profile",
+    "module": "profile",
+    "complexity": "M",
+    "theme_color": "primary",
+    "title": {
+      "tr": "Pet SmartCard",
+      "en": "Pet SmartCard Identity"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Pet SmartCard",
+      "en": "OPOS Production Asset: Pet SmartCard Identity"
+    },
+    "screen_usage": [
+      "/owner/pets/[id]"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/profile/profile-pet-card/source.svg",
+    "preview_png": "public/brand/illustrations/profile/profile-pet-card/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/profile/profile-pet-card/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/profile/profile-pet-card/export/512.png",
+      "png1024": "public/brand/illustrations/profile/profile-pet-card/export/1024.png",
+      "png2048": "public/brand/illustrations/profile/profile-pet-card/export/2048.png",
+      "webp": "public/brand/illustrations/profile/profile-pet-card/export/preview.webp",
+      "avif": "public/brand/illustrations/profile/profile-pet-card/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "primary-grad"
+    ],
+    "priority": "P0",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Pet SmartCard Kimlik",
+      "style": "glassmorphism",
+      "seed": 159,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "profile-owner-info",
+    "name": "Veli Bilgileri Kartı",
+    "category": "profile",
+    "module": "profile",
+    "complexity": "M",
+    "theme_color": "primary",
+    "title": {
+      "tr": "Evcil Hayvan Velisi Kimliği",
+      "en": "Pet Owner Identity"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Evcil Hayvan Velisi Kimliği",
+      "en": "OPOS Production Asset: Pet Owner Identity"
+    },
+    "screen_usage": [
+      "/profile"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/profile/profile-owner-info/source.svg",
+    "preview_png": "public/brand/illustrations/profile/profile-owner-info/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/profile/profile-owner-info/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/profile/profile-owner-info/export/512.png",
+      "png1024": "public/brand/illustrations/profile/profile-owner-info/export/1024.png",
+      "png2048": "public/brand/illustrations/profile/profile-owner-info/export/2048.png",
+      "webp": "public/brand/illustrations/profile/profile-owner-info/export/preview.webp",
+      "avif": "public/brand/illustrations/profile/profile-owner-info/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "primary-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Veli Bilgileri Kartı",
+      "style": "glassmorphism",
+      "seed": 160,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "profile-microchip",
+    "name": "Mikroçip ve Künye Kaydı",
+    "category": "profile",
+    "module": "profile",
+    "complexity": "M",
+    "theme_color": "primary",
+    "title": {
+      "tr": "Biyometrik Mikroçip Kodu",
+      "en": "Biometric Microchip Record"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Biyometrik Mikroçip Kodu",
+      "en": "OPOS Production Asset: Biometric Microchip Record"
+    },
+    "screen_usage": [
+      "/owner/pets/[id]/microchip"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/profile/profile-microchip/source.svg",
+    "preview_png": "public/brand/illustrations/profile/profile-microchip/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/profile/profile-microchip/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/profile/profile-microchip/export/512.png",
+      "png1024": "public/brand/illustrations/profile/profile-microchip/export/1024.png",
+      "png2048": "public/brand/illustrations/profile/profile-microchip/export/2048.png",
+      "webp": "public/brand/illustrations/profile/profile-microchip/export/preview.webp",
+      "avif": "public/brand/illustrations/profile/profile-microchip/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "primary-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Mikroçip ve Künye Kaydı",
+      "style": "glassmorphism",
+      "seed": 161,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "ai-vet-assistant",
+    "name": "Odi AI Vet Asistanı",
+    "category": "ai",
+    "module": "ai",
+    "complexity": "M",
+    "theme_color": "primary",
+    "title": {
+      "tr": "Odi AI Vet",
+      "en": "Odi AI Vet Assistant"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Odi AI Vet",
+      "en": "OPOS Production Asset: Odi AI Vet Assistant"
+    },
+    "screen_usage": [
+      "/ai-vet"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/ai/ai-vet-assistant/source.svg",
+    "preview_png": "public/brand/illustrations/ai/ai-vet-assistant/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/ai/ai-vet-assistant/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/ai/ai-vet-assistant/export/512.png",
+      "png1024": "public/brand/illustrations/ai/ai-vet-assistant/export/1024.png",
+      "png2048": "public/brand/illustrations/ai/ai-vet-assistant/export/2048.png",
+      "webp": "public/brand/illustrations/ai/ai-vet-assistant/export/preview.webp",
+      "avif": "public/brand/illustrations/ai/ai-vet-assistant/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "primary-grad"
+    ],
+    "priority": "P0",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Odi AI Vet Asistanı",
+      "style": "glassmorphism",
+      "seed": 162,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "notification-reminder",
+    "name": "Anlık Hatırlatıcı",
+    "category": "notifications",
+    "module": "notifications",
+    "complexity": "M",
+    "theme_color": "nutrition",
+    "title": {
+      "tr": "Anlık Bildirimler",
+      "en": "Instant Notifications"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Anlık Bildirimler",
+      "en": "OPOS Production Asset: Instant Notifications"
+    },
+    "screen_usage": [
+      "/notifications"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/notifications/notification-reminder/source.svg",
+    "preview_png": "public/brand/illustrations/notifications/notification-reminder/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/notifications/notification-reminder/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/notifications/notification-reminder/export/512.png",
+      "png1024": "public/brand/illustrations/notifications/notification-reminder/export/1024.png",
+      "png2048": "public/brand/illustrations/notifications/notification-reminder/export/2048.png",
+      "webp": "public/brand/illustrations/notifications/notification-reminder/export/preview.webp",
+      "avif": "public/brand/illustrations/notifications/notification-reminder/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "nutrition-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Anlık Hatırlatıcı",
+      "style": "glassmorphism",
+      "seed": 163,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "success-check",
+    "name": "İşlem Başarılı",
+    "category": "success",
+    "module": "common",
+    "complexity": "M",
+    "theme_color": "parasite",
+    "title": {
+      "tr": "Harika!",
+      "en": "Success!"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Harika!",
+      "en": "OPOS Production Asset: Success!"
+    },
+    "screen_usage": [
+      "/success"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/success/success-check/source.svg",
+    "preview_png": "public/brand/illustrations/success/success-check/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/success/success-check/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/success/success-check/export/512.png",
+      "png1024": "public/brand/illustrations/success/success-check/export/1024.png",
+      "png2048": "public/brand/illustrations/success/success-check/export/2048.png",
+      "webp": "public/brand/illustrations/success/success-check/export/preview.webp",
+      "avif": "public/brand/illustrations/success/success-check/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "parasite-grad"
+    ],
+    "priority": "P0",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for İşlem Başarılı",
+      "style": "glassmorphism",
+      "seed": 164,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "error-warning",
+    "name": "Bir Hata Oluştu",
+    "category": "error",
+    "module": "common",
+    "complexity": "M",
+    "theme_color": "health",
+    "title": {
+      "tr": "Bağlantı Uyarısı",
+      "en": "Connection Warning"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Bağlantı Uyarısı",
+      "en": "OPOS Production Asset: Connection Warning"
+    },
+    "screen_usage": [
+      "/error"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/error/error-warning/source.svg",
+    "preview_png": "public/brand/illustrations/error/error-warning/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/error/error-warning/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/error/error-warning/export/512.png",
+      "png1024": "public/brand/illustrations/error/error-warning/export/1024.png",
+      "png2048": "public/brand/illustrations/error/error-warning/export/2048.png",
+      "webp": "public/brand/illustrations/error/error-warning/export/preview.webp",
+      "avif": "public/brand/illustrations/error/error-warning/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "health-grad"
+    ],
+    "priority": "P0",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Bir Hata Oluştu",
+      "style": "glassmorphism",
+      "seed": 165,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "offline-no-connection",
+    "name": "Çevrimdışı Mod",
+    "category": "offline",
+    "module": "common",
+    "complexity": "M",
+    "theme_color": "primary",
+    "title": {
+      "tr": "İnternet Bağlantısı Yok",
+      "en": "No Internet Connection"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: İnternet Bağlantısı Yok",
+      "en": "OPOS Production Asset: No Internet Connection"
+    },
+    "screen_usage": [
+      "/offline"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/offline/offline-no-connection/source.svg",
+    "preview_png": "public/brand/illustrations/offline/offline-no-connection/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/offline/offline-no-connection/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/offline/offline-no-connection/export/512.png",
+      "png1024": "public/brand/illustrations/offline/offline-no-connection/export/1024.png",
+      "png2048": "public/brand/illustrations/offline/offline-no-connection/export/2048.png",
+      "webp": "public/brand/illustrations/offline/offline-no-connection/export/preview.webp",
+      "avif": "public/brand/illustrations/offline/offline-no-connection/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "primary-grad"
+    ],
+    "priority": "P0",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Çevrimdışı Mod",
+      "style": "glassmorphism",
+      "seed": 166,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "maintenance-mode",
+    "name": "Sistem Bakımda",
+    "category": "maintenance",
+    "module": "common",
+    "complexity": "M",
+    "theme_color": "primary",
+    "title": {
+      "tr": "Kısa Bir Mola",
+      "en": "Maintenance Mode"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Kısa Bir Mola",
+      "en": "OPOS Production Asset: Maintenance Mode"
+    },
+    "screen_usage": [
+      "/maintenance"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/maintenance/maintenance-mode/source.svg",
+    "preview_png": "public/brand/illustrations/maintenance/maintenance-mode/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/maintenance/maintenance-mode/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/maintenance/maintenance-mode/export/512.png",
+      "png1024": "public/brand/illustrations/maintenance/maintenance-mode/export/1024.png",
+      "png2048": "public/brand/illustrations/maintenance/maintenance-mode/export/2048.png",
+      "webp": "public/brand/illustrations/maintenance/maintenance-mode/export/preview.webp",
+      "avif": "public/brand/illustrations/maintenance/maintenance-mode/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "primary-grad"
+    ],
+    "priority": "P1",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Sistem Bakımda",
+      "style": "glassmorphism",
+      "seed": 167,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "document-health-report",
+    "name": "Resmi Sağlık Raporu PDF",
+    "category": "documents",
+    "module": "health",
+    "complexity": "M",
+    "theme_color": "primary",
+    "title": {
+      "tr": "Resmi Sağlık Raporu",
+      "en": "Official Medical Report"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Resmi Sağlık Raporu",
+      "en": "OPOS Production Asset: Official Medical Report"
+    },
+    "screen_usage": [
+      "/owner/reports"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/documents/document-health-report/source.svg",
+    "preview_png": "public/brand/illustrations/documents/document-health-report/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/documents/document-health-report/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/documents/document-health-report/export/512.png",
+      "png1024": "public/brand/illustrations/documents/document-health-report/export/1024.png",
+      "png2048": "public/brand/illustrations/documents/document-health-report/export/2048.png",
+      "webp": "public/brand/illustrations/documents/document-health-report/export/preview.webp",
+      "avif": "public/brand/illustrations/documents/document-health-report/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "primary-grad"
+    ],
+    "priority": "P0",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Resmi Sağlık Raporu PDF",
+      "style": "glassmorphism",
+      "seed": 168,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  },
+  {
+    "id": "certificate-vaccine",
+    "name": "Sağlık Sertifikası",
+    "category": "certificates",
+    "module": "vaccines",
+    "complexity": "M",
+    "theme_color": "nutrition",
+    "title": {
+      "tr": "Sağlık Sertifikası",
+      "en": "Health Certificate"
+    },
+    "description": {
+      "tr": "OPOS Kurumsal Üretim Varlığı: Sağlık Sertifikası",
+      "en": "OPOS Production Asset: Health Certificate"
+    },
+    "screen_usage": [
+      "/owner/certificates"
+    ],
+    "allowedContexts": [
+      "Dashboard",
+      "General",
+      "Mobile",
+      "Web"
+    ],
+    "forbiddenContexts": [],
+    "svg_path": "public/brand/illustrations/certificates/certificate-vaccine/source.svg",
+    "preview_png": "public/brand/illustrations/certificates/certificate-vaccine/preview.png",
+    "thumbnail_webp": "public/brand/illustrations/certificates/certificate-vaccine/thumbnail.webp",
+    "exports": {
+      "png512": "public/brand/illustrations/certificates/certificate-vaccine/export/512.png",
+      "png1024": "public/brand/illustrations/certificates/certificate-vaccine/export/1024.png",
+      "png2048": "public/brand/illustrations/certificates/certificate-vaccine/export/2048.png",
+      "webp": "public/brand/illustrations/certificates/certificate-vaccine/export/preview.webp",
+      "avif": "public/brand/illustrations/certificates/certificate-vaccine/export/preview.avif"
+    },
+    "dependencies": [
+      "PAW_SYMBOL",
+      "glass-card-grad",
+      "nutrition-grad"
+    ],
+    "priority": "P0",
+    "fallback": "empty-state/empty-no-pets/source.svg",
+    "replacement_policy": "Standard OPOS Master Component",
+    "systemVersion": "1.6.0",
+    "assetVersion": "2.0.0",
+    "illustrationVersion": "2.0.0",
+    "last_update": "2026-08-01",
+    "aiMetadata": {
+      "prompt": "OPOS Corporate semi-3D pet illustration for Sağlık Sertifikası",
+      "style": "glassmorphism",
+      "seed": 169,
+      "revision": 2
+    },
+    "governance": {
+      "creator": "OdiPet Design System",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "approvedBy": "Tufan",
+      "copyright": "Odi.Pet",
+      "license": "Proprietary",
+      "reviewState": "Approved"
+    }
+  }
+]

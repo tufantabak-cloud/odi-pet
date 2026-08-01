@@ -1,0 +1,62 @@
+{
+  "id": "health-vitals",
+  "name": "Vital Bulgu Kaydı",
+  "category": "health",
+  "module": "health",
+  "complexity": "M",
+  "theme_color": "health",
+  "title": {
+    "tr": "Nabız, Ateş ve Solunum",
+    "en": "Heart Rate & Temperature"
+  },
+  "description": {
+    "tr": "OPOS Kurumsal Üretim Varlığı: Nabız, Ateş ve Solunum",
+    "en": "OPOS Production Asset: Heart Rate & Temperature"
+  },
+  "screen_usage": [
+    "/owner/health/vitals"
+  ],
+  "allowedContexts": [
+    "Dashboard",
+    "General",
+    "Mobile",
+    "Web"
+  ],
+  "forbiddenContexts": [],
+  "svg_path": "public/brand/illustrations/health/health-vitals/source.svg",
+  "preview_png": "public/brand/illustrations/health/health-vitals/preview.png",
+  "thumbnail_webp": "public/brand/illustrations/health/health-vitals/thumbnail.webp",
+  "exports": {
+    "png512": "public/brand/illustrations/health/health-vitals/export/512.png",
+    "png1024": "public/brand/illustrations/health/health-vitals/export/1024.png",
+    "png2048": "public/brand/illustrations/health/health-vitals/export/2048.png",
+    "webp": "public/brand/illustrations/health/health-vitals/export/preview.webp",
+    "avif": "public/brand/illustrations/health/health-vitals/export/preview.avif"
+  },
+  "dependencies": [
+    "PAW_SYMBOL",
+    "glass-card-grad",
+    "health-grad"
+  ],
+  "priority": "P1",
+  "fallback": "empty-state/empty-no-pets/source.svg",
+  "replacement_policy": "Standard OPOS Master Component",
+  "systemVersion": "1.6.0",
+  "assetVersion": "2.0.0",
+  "illustrationVersion": "2.0.0",
+  "last_update": "2026-08-01",
+  "aiMetadata": {
+    "prompt": "OPOS Corporate semi-3D pet illustration for Vital Bulgu Kaydı",
+    "style": "glassmorphism",
+    "seed": 126,
+    "revision": 2
+  },
+  "governance": {
+    "creator": "OdiPet Design System",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "approvedBy": "Tufan",
+    "copyright": "Odi.Pet",
+    "license": "Proprietary",
+    "reviewState": "Approved"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "id": "dashboard-daily-routine",
+  "name": "Günlük Rutin Kartı",
+  "category": "dashboard",
+  "module": "dashboard",
+  "complexity": "M",
+  "theme_color": "parasite",
+  "title": {
+    "tr": "Bugünün Rutin Görevleri",
+    "en": "Today's Routine Tasks"
+  },
+  "description": {
+    "tr": "OPOS Kurumsal Üretim Varlığı: Bugünün Rutin Görevleri",
+    "en": "OPOS Production Asset: Today's Routine Tasks"
+  },
+  "screen_usage": [
+    "/owner/dashboard"
+  ],
+  "allowedContexts": [
+    "Dashboard",
+    "General",
+    "Mobile",
+    "Web"
+  ],
+  "forbiddenContexts": [],
+  "svg_path": "public/brand/illustrations/dashboard/dashboard-daily-routine/source.svg",
+  "preview_png": "public/brand/illustrations/dashboard/dashboard-daily-routine/preview.png",
+  "thumbnail_webp": "public/brand/illustrations/dashboard/dashboard-daily-routine/thumbnail.webp",
+  "exports": {
+    "png512": "public/brand/illustrations/dashboard/dashboard-daily-routine/export/512.png",
+    "png1024": "public/brand/illustrations/dashboard/dashboard-daily-routine/export/1024.png",
+    "png2048": "public/brand/illustrations/dashboard/dashboard-daily-routine/export/2048.png",
+    "webp": "public/brand/illustrations/dashboard/dashboard-daily-routine/export/preview.webp",
+    "avif": "public/brand/illustrations/dashboard/dashboard-daily-routine/export/preview.avif"
+  },
+  "dependencies": [
+    "PAW_SYMBOL",
+    "glass-card-grad",
+    "parasite-grad"
+  ],
+  "priority": "P0",
+  "fallback": "empty-state/empty-no-pets/source.svg",
+  "replacement_policy": "Standard OPOS Master Component",
+  "systemVersion": "1.6.0",
+  "assetVersion": "2.0.0",
+  "illustrationVersion": "2.0.0",
+  "last_update": "2026-08-01",
+  "aiMetadata": {
+    "prompt": "OPOS Corporate semi-3D pet illustration for Günlük Rutin Kartı",
+    "style": "glassmorphism",
+    "seed": 119,
+    "revision": 2
+  },
+  "governance": {
+    "creator": "OdiPet Design System",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "approvedBy": "Tufan",
+    "copyright": "Odi.Pet",
+    "license": "Proprietary",
+    "reviewState": "Approved"
+  }
+}

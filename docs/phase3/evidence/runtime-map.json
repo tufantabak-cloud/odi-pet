@@ -1,0 +1,50 @@
+{
+  "version": "3.0.0",
+  "scannedFiles": 773,
+  "activeUsages": [
+    {
+      "component": "NotificationsClient",
+      "route": "/owner/notifications",
+      "illustrationId": "notification-reminder",
+      "props": {
+        "id": "notification-reminder",
+        "size": "md"
+      },
+      "lazyState": "lazy (default)",
+      "responsiveState": "fluid max-w-64"
+    },
+    {
+      "component": "VetsPage",
+      "route": "/owner/vets",
+      "illustrationId": "services-vet-finder",
+      "props": {
+        "id": "services-vet-finder",
+        "size": "md",
+        "className": "mx-auto mb-4"
+      },
+      "lazyState": "lazy (default)",
+      "responsiveState": "fluid mx-auto"
+    },
+    {
+      "component": "AIVetPage",
+      "route": "/owner/ai-vet",
+      "illustrationId": "ai-vet-assistant",
+      "props": {
+        "id": "ai-vet-assistant"
+      },
+      "lazyState": "lazy (default)",
+      "responsiveState": "fluid max-w-64"
+    },
+    {
+      "component": "EmptyState",
+      "route": "Global Reusable UI Component",
+      "illustrationId": "dynamic (prop passed)",
+      "props": {
+        "illustrationId": "IllustrationID"
+      },
+      "lazyState": "lazy (default)",
+      "responsiveState": "fluid"
+    }
+  ],
+  "verificationDate": "2026-08-01T09:11:23.343Z"
+}

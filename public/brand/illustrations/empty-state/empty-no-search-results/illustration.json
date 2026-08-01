@@ -1,0 +1,62 @@
+{
+  "id": "empty-no-search-results",
+  "name": "Arama Sonucu Bulunamadı",
+  "category": "empty-state",
+  "module": "search",
+  "complexity": "M",
+  "theme_color": "primary",
+  "title": {
+    "tr": "Sonuç Bulunamadı",
+    "en": "No Search Results"
+  },
+  "description": {
+    "tr": "OPOS Kurumsal Üretim Varlığı: Sonuç Bulunamadı",
+    "en": "OPOS Production Asset: No Search Results"
+  },
+  "screen_usage": [
+    "/search"
+  ],
+  "allowedContexts": [
+    "Dashboard",
+    "General",
+    "Mobile",
+    "Web"
+  ],
+  "forbiddenContexts": [],
+  "svg_path": "public/brand/illustrations/empty-state/empty-no-search-results/source.svg",
+  "preview_png": "public/brand/illustrations/empty-state/empty-no-search-results/preview.png",
+  "thumbnail_webp": "public/brand/illustrations/empty-state/empty-no-search-results/thumbnail.webp",
+  "exports": {
+    "png512": "public/brand/illustrations/empty-state/empty-no-search-results/export/512.png",
+    "png1024": "public/brand/illustrations/empty-state/empty-no-search-results/export/1024.png",
+    "png2048": "public/brand/illustrations/empty-state/empty-no-search-results/export/2048.png",
+    "webp": "public/brand/illustrations/empty-state/empty-no-search-results/export/preview.webp",
+    "avif": "public/brand/illustrations/empty-state/empty-no-search-results/export/preview.avif"
+  },
+  "dependencies": [
+    "PAW_SYMBOL",
+    "glass-card-grad",
+    "primary-grad"
+  ],
+  "priority": "P2",
+  "fallback": "empty-state/empty-no-pets/source.svg",
+  "replacement_policy": "Standard OPOS Master Component",
+  "systemVersion": "1.6.0",
+  "assetVersion": "2.0.0",
+  "illustrationVersion": "2.0.0",
+  "last_update": "2026-08-01",
+  "aiMetadata": {
+    "prompt": "OPOS Corporate semi-3D pet illustration for Arama Sonucu Bulunamadı",
+    "style": "glassmorphism",
+    "seed": 105,
+    "revision": 2
+  },
+  "governance": {
+    "creator": "OdiPet Design System",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "approvedBy": "Tufan",
+    "copyright": "Odi.Pet",
+    "license": "Proprietary",
+    "reviewState": "Approved"
+  }
+}

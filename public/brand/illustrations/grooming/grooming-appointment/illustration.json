@@ -1,0 +1,62 @@
+{
+  "id": "grooming-appointment",
+  "name": "Kuaför Randevusu",
+  "category": "grooming",
+  "module": "grooming",
+  "complexity": "M",
+  "theme_color": "grooming",
+  "title": {
+    "tr": "Pet Kuaför Randevusu",
+    "en": "Grooming Salon Booking"
+  },
+  "description": {
+    "tr": "OPOS Kurumsal Üretim Varlığı: Pet Kuaför Randevusu",
+    "en": "OPOS Production Asset: Grooming Salon Booking"
+  },
+  "screen_usage": [
+    "/owner/grooming/booking"
+  ],
+  "allowedContexts": [
+    "Dashboard",
+    "General",
+    "Mobile",
+    "Web"
+  ],
+  "forbiddenContexts": [],
+  "svg_path": "public/brand/illustrations/grooming/grooming-appointment/source.svg",
+  "preview_png": "public/brand/illustrations/grooming/grooming-appointment/preview.png",
+  "thumbnail_webp": "public/brand/illustrations/grooming/grooming-appointment/thumbnail.webp",
+  "exports": {
+    "png512": "public/brand/illustrations/grooming/grooming-appointment/export/512.png",
+    "png1024": "public/brand/illustrations/grooming/grooming-appointment/export/1024.png",
+    "png2048": "public/brand/illustrations/grooming/grooming-appointment/export/2048.png",
+    "webp": "public/brand/illustrations/grooming/grooming-appointment/export/preview.webp",
+    "avif": "public/brand/illustrations/grooming/grooming-appointment/export/preview.avif"
+  },
+  "dependencies": [
+    "PAW_SYMBOL",
+    "glass-card-grad",
+    "grooming-grad"
+  ],
+  "priority": "P1",
+  "fallback": "empty-state/empty-no-pets/source.svg",
+  "replacement_policy": "Standard OPOS Master Component",
+  "systemVersion": "1.6.0",
+  "assetVersion": "2.0.0",
+  "illustrationVersion": "2.0.0",
+  "last_update": "2026-08-01",
+  "aiMetadata": {
+    "prompt": "OPOS Corporate semi-3D pet illustration for Kuaför Randevusu",
+    "style": "glassmorphism",
+    "seed": 147,
+    "revision": 2
+  },
+  "governance": {
+    "creator": "OdiPet Design System",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "approvedBy": "Tufan",
+    "copyright": "Odi.Pet",
+    "license": "Proprietary",
+    "reviewState": "Approved"
+  }
+}

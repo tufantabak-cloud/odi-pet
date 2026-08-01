@@ -1,0 +1,62 @@
+{
+  "id": "document-health-report",
+  "name": "Resmi Sağlık Raporu PDF",
+  "category": "documents",
+  "module": "health",
+  "complexity": "M",
+  "theme_color": "primary",
+  "title": {
+    "tr": "Resmi Sağlık Raporu",
+    "en": "Official Medical Report"
+  },
+  "description": {
+    "tr": "OPOS Kurumsal Üretim Varlığı: Resmi Sağlık Raporu",
+    "en": "OPOS Production Asset: Official Medical Report"
+  },
+  "screen_usage": [
+    "/owner/reports"
+  ],
+  "allowedContexts": [
+    "Dashboard",
+    "General",
+    "Mobile",
+    "Web"
+  ],
+  "forbiddenContexts": [],
+  "svg_path": "public/brand/illustrations/documents/document-health-report/source.svg",
+  "preview_png": "public/brand/illustrations/documents/document-health-report/preview.png",
+  "thumbnail_webp": "public/brand/illustrations/documents/document-health-report/thumbnail.webp",
+  "exports": {
+    "png512": "public/brand/illustrations/documents/document-health-report/export/512.png",
+    "png1024": "public/brand/illustrations/documents/document-health-report/export/1024.png",
+    "png2048": "public/brand/illustrations/documents/document-health-report/export/2048.png",
+    "webp": "public/brand/illustrations/documents/document-health-report/export/preview.webp",
+    "avif": "public/brand/illustrations/documents/document-health-report/export/preview.avif"
+  },
+  "dependencies": [
+    "PAW_SYMBOL",
+    "glass-card-grad",
+    "primary-grad"
+  ],
+  "priority": "P0",
+  "fallback": "empty-state/empty-no-pets/source.svg",
+  "replacement_policy": "Standard OPOS Master Component",
+  "systemVersion": "1.6.0",
+  "assetVersion": "2.0.0",
+  "illustrationVersion": "2.0.0",
+  "last_update": "2026-08-01",
+  "aiMetadata": {
+    "prompt": "OPOS Corporate semi-3D pet illustration for Resmi Sağlık Raporu PDF",
+    "style": "glassmorphism",
+    "seed": 168,
+    "revision": 2
+  },
+  "governance": {
+    "creator": "OdiPet Design System",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "approvedBy": "Tufan",
+    "copyright": "Odi.Pet",
+    "license": "Proprietary",
+    "reviewState": "Approved"
+  }
+}

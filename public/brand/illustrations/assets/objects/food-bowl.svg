@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Mama Kabı İkonu">
+      <ellipse cx="50" cy="55" rx="35" ry="15" fill="url(#nutrition-grad)"/>
+      <path d="M15 55 C15 75, 85 75, 85 55 Z" fill="url(#nutrition-grad)"/>
+      <ellipse cx="50" cy="55" rx="28" ry="10" fill="#D97706"/>
+    </svg>

@@ -1,0 +1,677 @@
+[
+  {
+    "id": "p0-dashboard-hero",
+    "tier": "P0",
+    "category": "dashboard",
+    "name": "Dashboard Core Hero",
+    "screen_usage": [
+      "/owner/dashboard"
+    ],
+    "priority": "P0",
+    "version": "2.0.0",
+    "reviewState": "Approved",
+    "license": "Odi.Pet Corporate Proprietary",
+    "exports": {
+      "svg": "public/brand/illustrations/dashboard/p0-dashboard-hero/source.svg",
+      "png512": "public/brand/illustrations/dashboard/p0-dashboard-hero/export/512.png",
+      "png1024": "public/brand/illustrations/dashboard/p0-dashboard-hero/export/1024.png",
+      "png2048": "public/brand/illustrations/dashboard/p0-dashboard-hero/export/2048.png",
+      "webp": "public/brand/illustrations/dashboard/p0-dashboard-hero/export/preview.webp",
+      "avif": "public/brand/illustrations/dashboard/p0-dashboard-hero/export/preview.avif"
+    },
+    "aiMetadata": {
+      "style": "OPOS Semi-3D Glassmorphic",
+      "generatedBy": "OPOS Phase 2 Asset Pipeline"
+    }
+  },
+  {
+    "id": "p0-medical-hero",
+    "tier": "P0",
+    "category": "health",
+    "name": "Medical Core Hero",
+    "screen_usage": [
+      "/owner/medical"
+    ],
+    "priority": "P0",
+    "version": "2.0.0",
+    "reviewState": "Approved",
+    "license": "Odi.Pet Corporate Proprietary",
+    "exports": {
+      "svg": "public/brand/illustrations/health/p0-medical-hero/source.svg",
+      "png512": "public/brand/illustrations/health/p0-medical-hero/export/512.png",
+      "png1024": "public/brand/illustrations/health/p0-medical-hero/export/1024.png",
+      "png2048": "public/brand/illustrations/health/p0-medical-hero/export/2048.png",
+      "webp": "public/brand/illustrations/health/p0-medical-hero/export/preview.webp",
+      "avif": "public/brand/illustrations/health/p0-medical-hero/export/preview.avif"
+    },
+    "aiMetadata": {
+      "style": "OPOS Semi-3D Glassmorphic",
+      "generatedBy": "OPOS Phase 2 Asset Pipeline"
+    }
+  },
+  {
+    "id": "p0-vaccine-hero",
+    "tier": "P0",
+    "category": "vaccines",
+    "name": "Vaccine Core Hero",
+    "screen_usage": [
+      "/owner/vaccines"
+    ],
+    "priority": "P0",
+    "version": "2.0.0",
+    "reviewState": "Approved",
+    "license": "Odi.Pet Corporate Proprietary",
+    "exports": {
+      "svg": "public/brand/illustrations/vaccines/p0-vaccine-hero/source.svg",
+      "png512": "public/brand/illustrations/vaccines/p0-vaccine-hero/export/512.png",
+      "png1024": "public/brand/illustrations/vaccines/p0-vaccine-hero/export/1024.png",
+      "png2048": "public/brand/illustrations/vaccines/p0-vaccine-hero/export/2048.png",
+      "webp": "public/brand/illustrations/vaccines/p0-vaccine-hero/export/preview.webp",
+      "avif": "public/brand/illustrations/vaccines/p0-vaccine-hero/export/preview.avif"
+    },
+    "aiMetadata": {
+      "style": "OPOS Semi-3D Glassmorphic",
+      "generatedBy": "OPOS Phase 2 Asset Pipeline"
+    }
+  },
+  {
+    "id": "p0-ai-vet-hero",
+    "tier": "P0",
+    "category": "ai",
+    "name": "AI Vet Core Hero",
+    "screen_usage": [
+      "/ai-vet"
+    ],
+    "priority": "P0",
+    "version": "2.0.0",
+    "reviewState": "Approved",
+    "license": "Odi.Pet Corporate Proprietary",
+    "exports": {
+      "svg": "public/brand/illustrations/ai/p0-ai-vet-hero/source.svg",
+      "png512": "public/brand/illustrations/ai/p0-ai-vet-hero/export/512.png",
+      "png1024": "public/brand/illustrations/ai/p0-ai-vet-hero/export/1024.png",
+      "png2048": "public/brand/illustrations/ai/p0-ai-vet-hero/export/2048.png",
+      "webp": "public/brand/illustrations/ai/p0-ai-vet-hero/export/preview.webp",
+      "avif": "public/brand/illustrations/ai/p0-ai-vet-hero/export/preview.avif"
+    },
+    "aiMetadata": {
+      "style": "OPOS Semi-3D Glassmorphic",
+      "generatedBy": "OPOS Phase 2 Asset Pipeline"
+    }
+  },
+  {
+    "id": "p0-timeline-hero",
+    "tier": "P0",
+    "category": "dashboard",
+    "name": "Timeline Hero",
+    "screen_usage": [
+      "/owner/timeline"
+    ],
+    "priority": "P0",
+    "version": "2.0.0",
+    "reviewState": "Approved",
+    "license": "Odi.Pet Corporate Proprietary",
+    "exports": {
+      "svg": "public/brand/illustrations/dashboard/p0-timeline-hero/source.svg",
+      "png512": "public/brand/illustrations/dashboard/p0-timeline-hero/export/512.png",
+      "png1024": "public/brand/illustrations/dashboard/p0-timeline-hero/export/1024.png",
+      "png2048": "public/brand/illustrations/dashboard/p0-timeline-hero/export/2048.png",
+      "webp": "public/brand/illustrations/dashboard/p0-timeline-hero/export/preview.webp",
+      "avif": "public/brand/illustrations/dashboard/p0-timeline-hero/export/preview.avif"
+    },
+    "aiMetadata": {
+      "style": "OPOS Semi-3D Glassmorphic",
+      "generatedBy": "OPOS Phase 2 Asset Pipeline"
+    }
+  },
+  {
+    "id": "p0-parasite-hero",
+    "tier": "P0",
+    "category": "parasite",
+    "name": "Parasite Control Hero",
+    "screen_usage": [
+      "/owner/parasite"
+    ],
+    "priority": "P0",
+    "version": "2.0.0",
+    "reviewState": "Approved",
+    "license": "Odi.Pet Corporate Proprietary",
+    "exports": {
+      "svg": "public/brand/illustrations/parasite/p0-parasite-hero/source.svg",
+      "png512": "public/brand/illustrations/parasite/p0-parasite-hero/export/512.png",
+      "png1024": "public/brand/illustrations/parasite/p0-parasite-hero/export/1024.png",
+      "png2048": "public/brand/illustrations/parasite/p0-parasite-hero/export/2048.png",
+      "webp": "public/brand/illustrations/parasite/p0-parasite-hero/export/preview.webp",
+      "avif": "public/brand/illustrations/parasite/p0-parasite-hero/export/preview.avif"
+    },
+    "aiMetadata": {
+      "style": "OPOS Semi-3D Glassmorphic",
+      "generatedBy": "OPOS Phase 2 Asset Pipeline"
+    }
+  },
+  {
+    "id": "p0-nutrition-hero",
+    "tier": "P0",
+    "category": "nutrition",
+    "name": "Nutrition Hero",
+    "screen_usage": [
+      "/owner/nutrition"
+    ],
+    "priority": "P0",
+    "version": "2.0.0",
+    "reviewState": "Approved",
+    "license": "Odi.Pet Corporate Proprietary",
+    "exports": {
+      "svg": "public/brand/illustrations/nutrition/p0-nutrition-hero/source.svg",
+      "png512": "public/brand/illustrations/nutrition/p0-nutrition-hero/export/512.png",
+      "png1024": "public/brand/illustrations/nutrition/p0-nutrition-hero/export/1024.png",
+      "png2048": "public/brand/illustrations/nutrition/p0-nutrition-hero/export/2048.png",
+      "webp": "public/brand/illustrations/nutrition/p0-nutrition-hero/export/preview.webp",
+      "avif": "public/brand/illustrations/nutrition/p0-nutrition-hero/export/preview.avif"
+    },
+    "aiMetadata": {
+      "style": "OPOS Semi-3D Glassmorphic",
+      "generatedBy": "OPOS Phase 2 Asset Pipeline"
+    }
+  },
+  {
+    "id": "p0-grooming-hero",
+    "tier": "P0",
+    "category": "grooming",
+    "name": "Grooming Care Hero",
+    "screen_usage": [
+      "/owner/grooming"
+    ],
+    "priority": "P0",
+    "version": "2.0.0",
+    "reviewState": "Approved",
+    "license": "Odi.Pet Corporate Proprietary",
+    "exports": {
+      "svg": "public/brand/illustrations/grooming/p0-grooming-hero/source.svg",
+      "png512": "public/brand/illustrations/grooming/p0-grooming-hero/export/512.png",
+      "png1024": "public/brand/illustrations/grooming/p0-grooming-hero/export/1024.png",
+      "png2048": "public/brand/illustrations/grooming/p0-grooming-hero/export/2048.png",
+      "webp": "public/brand/illustrations/grooming/p0-grooming-hero/export/preview.webp",
+      "avif": "public/brand/illustrations/grooming/p0-grooming-hero/export/preview.avif"
+    },
+    "aiMetadata": {
+      "style": "OPOS Semi-3D Glassmorphic",
+      "generatedBy": "OPOS Phase 2 Asset Pipeline"
+    }
+  },
+  {
+    "id": "p0-community-hero",
+    "tier": "P0",
+    "category": "community",
+    "name": "Community Forum Hero",
+    "screen_usage": [
+      "/community"
+    ],
+    "priority": "P0",
+    "version": "2.0.0",
+    "reviewState": "Approved",
+    "license": "Odi.Pet Corporate Proprietary",
+    "exports": {
+      "svg": "public/brand/illustrations/community/p0-community-hero/source.svg",
+      "png512": "public/brand/illustrations/community/p0-community-hero/export/512.png",
+      "png1024": "public/brand/illustrations/community/p0-community-hero/export/1024.png",
+      "png2048": "public/brand/illustrations/community/p0-community-hero/export/2048.png",
+      "webp": "public/brand/illustrations/community/p0-community-hero/export/preview.webp",
+      "avif": "public/brand/illustrations/community/p0-community-hero/export/preview.avif"
+    },
+    "aiMetadata": {
+      "style": "OPOS Semi-3D Glassmorphic",
+      "generatedBy": "OPOS Phase 2 Asset Pipeline"
+    }
+  },
+  {
+    "id": "p0-marketplace-hero",
+    "tier": "P0",
+    "category": "marketplace",
+    "name": "Marketplace Store Hero",
+    "screen_usage": [
+      "/marketplace"
+    ],
+    "priority": "P0",
+    "version": "2.0.0",
+    "reviewState": "Approved",
+    "license": "Odi.Pet Corporate Proprietary",
+    "exports": {
+      "svg": "public/brand/illustrations/marketplace/p0-marketplace-hero/source.svg",
+      "png512": "public/brand/illustrations/marketplace/p0-marketplace-hero/export/512.png",
+      "png1024": "public/brand/illustrations/marketplace/p0-marketplace-hero/export/1024.png",
+      "png2048": "public/brand/illustrations/marketplace/p0-marketplace-hero/export/2048.png",
+      "webp": "public/brand/illustrations/marketplace/p0-marketplace-hero/export/preview.webp",
+      "avif": "public/brand/illustrations/marketplace/p0-marketplace-hero/export/preview.avif"
+    },
+    "aiMetadata": {
+      "style": "OPOS Semi-3D Glassmorphic",
+      "generatedBy": "OPOS Phase 2 Asset Pipeline"
+    }
+  },
+  {
+    "id": "p1-onboarding-welcome",
+    "tier": "P1",
+    "category": "onboarding",
+    "name": "Onboarding Welcome Scene",
+    "screen_usage": [
+      "/onboarding/1"
+    ],
+    "priority": "P1",
+    "version": "2.0.0",
+    "reviewState": "Approved",
+    "license": "Odi.Pet Corporate Proprietary",
+    "exports": {
+      "svg": "public/brand/illustrations/onboarding/p1-onboarding-welcome/source.svg",
+      "png512": "public/brand/illustrations/onboarding/p1-onboarding-welcome/export/512.png",
+      "png1024": "public/brand/illustrations/onboarding/p1-onboarding-welcome/export/1024.png",
+      "png2048": "public/brand/illustrations/onboarding/p1-onboarding-welcome/export/2048.png",
+      "webp": "public/brand/illustrations/onboarding/p1-onboarding-welcome/export/preview.webp",
+      "avif": "public/brand/illustrations/onboarding/p1-onboarding-welcome/export/preview.avif"
+    },
+    "aiMetadata": {
+      "style": "OPOS Semi-3D Glassmorphic",
+      "generatedBy": "OPOS Phase 2 Asset Pipeline"
+    }
+  },
+  {
+    "id": "p1-onboarding-create-pet",
+    "tier": "P1",
+    "category": "onboarding",
+    "name": "Onboarding Create Pet",
+    "screen_usage": [
+      "/onboarding/2"
+    ],
+    "priority": "P1",
+    "version": "2.0.0",
+    "reviewState": "Approved",
+    "license": "Odi.Pet Corporate Proprietary",
+    "exports": {
+      "svg": "public/brand/illustrations/onboarding/p1-onboarding-create-pet/source.svg",
+      "png512": "public/brand/illustrations/onboarding/p1-onboarding-create-pet/export/512.png",
+      "png1024": "public/brand/illustrations/onboarding/p1-onboarding-create-pet/export/1024.png",
+      "png2048": "public/brand/illustrations/onboarding/p1-onboarding-create-pet/export/2048.png",
+      "webp": "public/brand/illustrations/onboarding/p1-onboarding-create-pet/export/preview.webp",
+      "avif": "public/brand/illustrations/onboarding/p1-onboarding-create-pet/export/preview.avif"
+    },
+    "aiMetadata": {
+      "style": "OPOS Semi-3D Glassmorphic",
+      "generatedBy": "OPOS Phase 2 Asset Pipeline"
+    }
+  },
+  {
+    "id": "p1-onboarding-vaccines",
+    "tier": "P1",
+    "category": "onboarding",
+    "name": "Onboarding Vaccine Setup",
+    "screen_usage": [
+      "/onboarding/3"
+    ],
+    "priority": "P1",
+    "version": "2.0.0",
+    "reviewState": "Approved",
+    "license": "Odi.Pet Corporate Proprietary",
+    "exports": {
+      "svg": "public/brand/illustrations/onboarding/p1-onboarding-vaccines/source.svg",
+      "png512": "public/brand/illustrations/onboarding/p1-onboarding-vaccines/export/512.png",
+      "png1024": "public/brand/illustrations/onboarding/p1-onboarding-vaccines/export/1024.png",
+      "png2048": "public/brand/illustrations/onboarding/p1-onboarding-vaccines/export/2048.png",
+      "webp": "public/brand/illustrations/onboarding/p1-onboarding-vaccines/export/preview.webp",
+      "avif": "public/brand/illustrations/onboarding/p1-onboarding-vaccines/export/preview.avif"
+    },
+    "aiMetadata": {
+      "style": "OPOS Semi-3D Glassmorphic",
+      "generatedBy": "OPOS Phase 2 Asset Pipeline"
+    }
+  },
+  {
+    "id": "p1-onboarding-parasites",
+    "tier": "P1",
+    "category": "onboarding",
+    "name": "Onboarding Parasite Setup",
+    "screen_usage": [
+      "/onboarding/4"
+    ],
+    "priority": "P1",
+    "version": "2.0.0",
+    "reviewState": "Approved",
+    "license": "Odi.Pet Corporate Proprietary",
+    "exports": {
+      "svg": "public/brand/illustrations/onboarding/p1-onboarding-parasites/source.svg",
+      "png512": "public/brand/illustrations/onboarding/p1-onboarding-parasites/export/512.png",
+      "png1024": "public/brand/illustrations/onboarding/p1-onboarding-parasites/export/1024.png",
+      "png2048": "public/brand/illustrations/onboarding/p1-onboarding-parasites/export/2048.png",
+      "webp": "public/brand/illustrations/onboarding/p1-onboarding-parasites/export/preview.webp",
+      "avif": "public/brand/illustrations/onboarding/p1-onboarding-parasites/export/preview.avif"
+    },
+    "aiMetadata": {
+      "style": "OPOS Semi-3D Glassmorphic",
+      "generatedBy": "OPOS Phase 2 Asset Pipeline"
+    }
+  },
+  {
+    "id": "p1-onboarding-nutrition",
+    "tier": "P1",
+    "category": "onboarding",
+    "name": "Onboarding Nutrition Setup",
+    "screen_usage": [
+      "/onboarding/5"
+    ],
+    "priority": "P1",
+    "version": "2.0.0",
+    "reviewState": "Approved",
+    "license": "Odi.Pet Corporate Proprietary",
+    "exports": {
+      "svg": "public/brand/illustrations/onboarding/p1-onboarding-nutrition/source.svg",
+      "png512": "public/brand/illustrations/onboarding/p1-onboarding-nutrition/export/512.png",
+      "png1024": "public/brand/illustrations/onboarding/p1-onboarding-nutrition/export/1024.png",
+      "png2048": "public/brand/illustrations/onboarding/p1-onboarding-nutrition/export/2048.png",
+      "webp": "public/brand/illustrations/onboarding/p1-onboarding-nutrition/export/preview.webp",
+      "avif": "public/brand/illustrations/onboarding/p1-onboarding-nutrition/export/preview.avif"
+    },
+    "aiMetadata": {
+      "style": "OPOS Semi-3D Glassmorphic",
+      "generatedBy": "OPOS Phase 2 Asset Pipeline"
+    }
+  },
+  {
+    "id": "p1-onboarding-ai-vet",
+    "tier": "P1",
+    "category": "onboarding",
+    "name": "Onboarding AI Vet Promo",
+    "screen_usage": [
+      "/onboarding/6"
+    ],
+    "priority": "P1",
+    "version": "2.0.0",
+    "reviewState": "Approved",
+    "license": "Odi.Pet Corporate Proprietary",
+    "exports": {
+      "svg": "public/brand/illustrations/onboarding/p1-onboarding-ai-vet/source.svg",
+      "png512": "public/brand/illustrations/onboarding/p1-onboarding-ai-vet/export/512.png",
+      "png1024": "public/brand/illustrations/onboarding/p1-onboarding-ai-vet/export/1024.png",
+      "png2048": "public/brand/illustrations/onboarding/p1-onboarding-ai-vet/export/2048.png",
+      "webp": "public/brand/illustrations/onboarding/p1-onboarding-ai-vet/export/preview.webp",
+      "avif": "public/brand/illustrations/onboarding/p1-onboarding-ai-vet/export/preview.avif"
+    },
+    "aiMetadata": {
+      "style": "OPOS Semi-3D Glassmorphic",
+      "generatedBy": "OPOS Phase 2 Asset Pipeline"
+    }
+  },
+  {
+    "id": "p1-onboarding-premium",
+    "tier": "P1",
+    "category": "onboarding",
+    "name": "Onboarding Premium Upgrade",
+    "screen_usage": [
+      "/onboarding/7"
+    ],
+    "priority": "P1",
+    "version": "2.0.0",
+    "reviewState": "Approved",
+    "license": "Odi.Pet Corporate Proprietary",
+    "exports": {
+      "svg": "public/brand/illustrations/onboarding/p1-onboarding-premium/source.svg",
+      "png512": "public/brand/illustrations/onboarding/p1-onboarding-premium/export/512.png",
+      "png1024": "public/brand/illustrations/onboarding/p1-onboarding-premium/export/1024.png",
+      "png2048": "public/brand/illustrations/onboarding/p1-onboarding-premium/export/2048.png",
+      "webp": "public/brand/illustrations/onboarding/p1-onboarding-premium/export/preview.webp",
+      "avif": "public/brand/illustrations/onboarding/p1-onboarding-premium/export/preview.avif"
+    },
+    "aiMetadata": {
+      "style": "OPOS Semi-3D Glassmorphic",
+      "generatedBy": "OPOS Phase 2 Asset Pipeline"
+    }
+  },
+  {
+    "id": "p2-app-store-header",
+    "tier": "P2",
+    "category": "marketing",
+    "name": "iOS App Store Banner",
+    "screen_usage": [
+      "App Store"
+    ],
+    "priority": "P2",
+    "version": "2.0.0",
+    "reviewState": "Approved",
+    "license": "Odi.Pet Corporate Proprietary",
+    "exports": {
+      "svg": "public/brand/illustrations/marketing/p2-app-store-header/source.svg",
+      "png512": "public/brand/illustrations/marketing/p2-app-store-header/export/512.png",
+      "png1024": "public/brand/illustrations/marketing/p2-app-store-header/export/1024.png",
+      "png2048": "public/brand/illustrations/marketing/p2-app-store-header/export/2048.png",
+      "webp": "public/brand/illustrations/marketing/p2-app-store-header/export/preview.webp",
+      "avif": "public/brand/illustrations/marketing/p2-app-store-header/export/preview.avif"
+    },
+    "aiMetadata": {
+      "style": "OPOS Semi-3D Glassmorphic",
+      "generatedBy": "OPOS Phase 2 Asset Pipeline"
+    }
+  },
+  {
+    "id": "p2-google-play-header",
+    "tier": "P2",
+    "category": "marketing",
+    "name": "Google Play Store Banner",
+    "screen_usage": [
+      "Google Play"
+    ],
+    "priority": "P2",
+    "version": "2.0.0",
+    "reviewState": "Approved",
+    "license": "Odi.Pet Corporate Proprietary",
+    "exports": {
+      "svg": "public/brand/illustrations/marketing/p2-google-play-header/source.svg",
+      "png512": "public/brand/illustrations/marketing/p2-google-play-header/export/512.png",
+      "png1024": "public/brand/illustrations/marketing/p2-google-play-header/export/1024.png",
+      "png2048": "public/brand/illustrations/marketing/p2-google-play-header/export/2048.png",
+      "webp": "public/brand/illustrations/marketing/p2-google-play-header/export/preview.webp",
+      "avif": "public/brand/illustrations/marketing/p2-google-play-header/export/preview.avif"
+    },
+    "aiMetadata": {
+      "style": "OPOS Semi-3D Glassmorphic",
+      "generatedBy": "OPOS Phase 2 Asset Pipeline"
+    }
+  },
+  {
+    "id": "p2-website-hero",
+    "tier": "P2",
+    "category": "marketing",
+    "name": "Website Landing Hero Scene",
+    "screen_usage": [
+      "Landing Page"
+    ],
+    "priority": "P2",
+    "version": "2.0.0",
+    "reviewState": "Approved",
+    "license": "Odi.Pet Corporate Proprietary",
+    "exports": {
+      "svg": "public/brand/illustrations/marketing/p2-website-hero/source.svg",
+      "png512": "public/brand/illustrations/marketing/p2-website-hero/export/512.png",
+      "png1024": "public/brand/illustrations/marketing/p2-website-hero/export/1024.png",
+      "png2048": "public/brand/illustrations/marketing/p2-website-hero/export/2048.png",
+      "webp": "public/brand/illustrations/marketing/p2-website-hero/export/preview.webp",
+      "avif": "public/brand/illustrations/marketing/p2-website-hero/export/preview.avif"
+    },
+    "aiMetadata": {
+      "style": "OPOS Semi-3D Glassmorphic",
+      "generatedBy": "OPOS Phase 2 Asset Pipeline"
+    }
+  },
+  {
+    "id": "p2-social-instagram-post",
+    "tier": "P2",
+    "category": "marketing",
+    "name": "Instagram Square Post",
+    "screen_usage": [
+      "Instagram"
+    ],
+    "priority": "P2",
+    "version": "2.0.0",
+    "reviewState": "Approved",
+    "license": "Odi.Pet Corporate Proprietary",
+    "exports": {
+      "svg": "public/brand/illustrations/marketing/p2-social-instagram-post/source.svg",
+      "png512": "public/brand/illustrations/marketing/p2-social-instagram-post/export/512.png",
+      "png1024": "public/brand/illustrations/marketing/p2-social-instagram-post/export/1024.png",
+      "png2048": "public/brand/illustrations/marketing/p2-social-instagram-post/export/2048.png",
+      "webp": "public/brand/illustrations/marketing/p2-social-instagram-post/export/preview.webp",
+      "avif": "public/brand/illustrations/marketing/p2-social-instagram-post/export/preview.avif"
+    },
+    "aiMetadata": {
+      "style": "OPOS Semi-3D Glassmorphic",
+      "generatedBy": "OPOS Phase 2 Asset Pipeline"
+    }
+  },
+  {
+    "id": "p2-blog-cover-guide",
+    "tier": "P2",
+    "category": "marketing",
+    "name": "Blog Cover Guide Header",
+    "screen_usage": [
+      "Blog"
+    ],
+    "priority": "P2",
+    "version": "2.0.0",
+    "reviewState": "Approved",
+    "license": "Odi.Pet Corporate Proprietary",
+    "exports": {
+      "svg": "public/brand/illustrations/marketing/p2-blog-cover-guide/source.svg",
+      "png512": "public/brand/illustrations/marketing/p2-blog-cover-guide/export/512.png",
+      "png1024": "public/brand/illustrations/marketing/p2-blog-cover-guide/export/1024.png",
+      "png2048": "public/brand/illustrations/marketing/p2-blog-cover-guide/export/2048.png",
+      "webp": "public/brand/illustrations/marketing/p2-blog-cover-guide/export/preview.webp",
+      "avif": "public/brand/illustrations/marketing/p2-blog-cover-guide/export/preview.avif"
+    },
+    "aiMetadata": {
+      "style": "OPOS Semi-3D Glassmorphic",
+      "generatedBy": "OPOS Phase 2 Asset Pipeline"
+    }
+  },
+  {
+    "id": "p2-email-newsletter-header",
+    "tier": "P2",
+    "category": "marketing",
+    "name": "Email Newsletter Header",
+    "screen_usage": [
+      "Email Campaign"
+    ],
+    "priority": "P2",
+    "version": "2.0.0",
+    "reviewState": "Approved",
+    "license": "Odi.Pet Corporate Proprietary",
+    "exports": {
+      "svg": "public/brand/illustrations/marketing/p2-email-newsletter-header/source.svg",
+      "png512": "public/brand/illustrations/marketing/p2-email-newsletter-header/export/512.png",
+      "png1024": "public/brand/illustrations/marketing/p2-email-newsletter-header/export/1024.png",
+      "png2048": "public/brand/illustrations/marketing/p2-email-newsletter-header/export/2048.png",
+      "webp": "public/brand/illustrations/marketing/p2-email-newsletter-header/export/preview.webp",
+      "avif": "public/brand/illustrations/marketing/p2-email-newsletter-header/export/preview.avif"
+    },
+    "aiMetadata": {
+      "style": "OPOS Semi-3D Glassmorphic",
+      "generatedBy": "OPOS Phase 2 Asset Pipeline"
+    }
+  },
+  {
+    "id": "p3-pdf-report-cover",
+    "tier": "P3",
+    "category": "documents",
+    "name": "Enterprise PDF Report Cover",
+    "screen_usage": [
+      "PDF Export"
+    ],
+    "priority": "P3",
+    "version": "2.0.0",
+    "reviewState": "Approved",
+    "license": "Odi.Pet Corporate Proprietary",
+    "exports": {
+      "svg": "public/brand/illustrations/documents/p3-pdf-report-cover/source.svg",
+      "png512": "public/brand/illustrations/documents/p3-pdf-report-cover/export/512.png",
+      "png1024": "public/brand/illustrations/documents/p3-pdf-report-cover/export/1024.png",
+      "png2048": "public/brand/illustrations/documents/p3-pdf-report-cover/export/2048.png",
+      "webp": "public/brand/illustrations/documents/p3-pdf-report-cover/export/preview.webp",
+      "avif": "public/brand/illustrations/documents/p3-pdf-report-cover/export/preview.avif"
+    },
+    "aiMetadata": {
+      "style": "OPOS Semi-3D Glassmorphic",
+      "generatedBy": "OPOS Phase 2 Asset Pipeline"
+    }
+  },
+  {
+    "id": "p3-vaccination-card-print",
+    "tier": "P3",
+    "category": "certificates",
+    "name": "Printable Vaccination Card",
+    "screen_usage": [
+      "Print"
+    ],
+    "priority": "P3",
+    "version": "2.0.0",
+    "reviewState": "Approved",
+    "license": "Odi.Pet Corporate Proprietary",
+    "exports": {
+      "svg": "public/brand/illustrations/certificates/p3-vaccination-card-print/source.svg",
+      "png512": "public/brand/illustrations/certificates/p3-vaccination-card-print/export/512.png",
+      "png1024": "public/brand/illustrations/certificates/p3-vaccination-card-print/export/1024.png",
+      "png2048": "public/brand/illustrations/certificates/p3-vaccination-card-print/export/2048.png",
+      "webp": "public/brand/illustrations/certificates/p3-vaccination-card-print/export/preview.webp",
+      "avif": "public/brand/illustrations/certificates/p3-vaccination-card-print/export/preview.avif"
+    },
+    "aiMetadata": {
+      "style": "OPOS Semi-3D Glassmorphic",
+      "generatedBy": "OPOS Phase 2 Asset Pipeline"
+    }
+  },
+  {
+    "id": "p3-health-clearance-cert",
+    "tier": "P3",
+    "category": "certificates",
+    "name": "Official Health Clearance Cert",
+    "screen_usage": [
+      "PDF Export"
+    ],
+    "priority": "P3",
+    "version": "2.0.0",
+    "reviewState": "Approved",
+    "license": "Odi.Pet Corporate Proprietary",
+    "exports": {
+      "svg": "public/brand/illustrations/certificates/p3-health-clearance-cert/source.svg",
+      "png512": "public/brand/illustrations/certificates/p3-health-clearance-cert/export/512.png",
+      "png1024": "public/brand/illustrations/certificates/p3-health-clearance-cert/export/1024.png",
+      "png2048": "public/brand/illustrations/certificates/p3-health-clearance-cert/export/2048.png",
+      "webp": "public/brand/illustrations/certificates/p3-health-clearance-cert/export/preview.webp",
+      "avif": "public/brand/illustrations/certificates/p3-health-clearance-cert/export/preview.avif"
+    },
+    "aiMetadata": {
+      "style": "OPOS Semi-3D Glassmorphic",
+      "generatedBy": "OPOS Phase 2 Asset Pipeline"
+    }
+  },
+  {
+    "id": "p3-qr-stand-banner",
+    "tier": "P3",
+    "category": "marketing",
+    "name": "Clinic QR Standee Banner",
+    "screen_usage": [
+      "Clinic Print"
+    ],
+    "priority": "P3",
+    "version": "2.0.0",
+    "reviewState": "Approved",
+    "license": "Odi.Pet Corporate Proprietary",
+    "exports": {
+      "svg": "public/brand/illustrations/marketing/p3-qr-stand-banner/source.svg",
+      "png512": "public/brand/illustrations/marketing/p3-qr-stand-banner/export/512.png",
+      "png1024": "public/brand/illustrations/marketing/p3-qr-stand-banner/export/1024.png",
+      "png2048": "public/brand/illustrations/marketing/p3-qr-stand-banner/export/2048.png",
+      "webp": "public/brand/illustrations/marketing/p3-qr-stand-banner/export/preview.webp",
+      "avif": "public/brand/illustrations/marketing/p3-qr-stand-banner/export/preview.avif"
+    },
+    "aiMetadata": {
+      "style": "OPOS Semi-3D Glassmorphic",
+      "generatedBy": "OPOS Phase 2 Asset Pipeline"
+    }
+  }
+]

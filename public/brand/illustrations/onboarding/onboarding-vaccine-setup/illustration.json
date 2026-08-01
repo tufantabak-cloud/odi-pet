@@ -1,0 +1,62 @@
+{
+  "id": "onboarding-vaccine-setup",
+  "name": "Aşı Takvimi Tanıtımı",
+  "category": "onboarding",
+  "module": "vaccines",
+  "complexity": "M",
+  "theme_color": "medical",
+  "title": {
+    "tr": "Otomatik Aşı Hatırlatıcı",
+    "en": "Automated Vaccine Reminders"
+  },
+  "description": {
+    "tr": "OPOS Kurumsal Üretim Varlığı: Otomatik Aşı Hatırlatıcı",
+    "en": "OPOS Production Asset: Automated Vaccine Reminders"
+  },
+  "screen_usage": [
+    "/onboarding/5"
+  ],
+  "allowedContexts": [
+    "Dashboard",
+    "General",
+    "Mobile",
+    "Web"
+  ],
+  "forbiddenContexts": [],
+  "svg_path": "public/brand/illustrations/onboarding/onboarding-vaccine-setup/source.svg",
+  "preview_png": "public/brand/illustrations/onboarding/onboarding-vaccine-setup/preview.png",
+  "thumbnail_webp": "public/brand/illustrations/onboarding/onboarding-vaccine-setup/thumbnail.webp",
+  "exports": {
+    "png512": "public/brand/illustrations/onboarding/onboarding-vaccine-setup/export/512.png",
+    "png1024": "public/brand/illustrations/onboarding/onboarding-vaccine-setup/export/1024.png",
+    "png2048": "public/brand/illustrations/onboarding/onboarding-vaccine-setup/export/2048.png",
+    "webp": "public/brand/illustrations/onboarding/onboarding-vaccine-setup/export/preview.webp",
+    "avif": "public/brand/illustrations/onboarding/onboarding-vaccine-setup/export/preview.avif"
+  },
+  "dependencies": [
+    "PAW_SYMBOL",
+    "glass-card-grad",
+    "medical-grad"
+  ],
+  "priority": "P1",
+  "fallback": "empty-state/empty-no-pets/source.svg",
+  "replacement_policy": "Standard OPOS Master Component",
+  "systemVersion": "1.6.0",
+  "assetVersion": "2.0.0",
+  "illustrationVersion": "2.0.0",
+  "last_update": "2026-08-01",
+  "aiMetadata": {
+    "prompt": "OPOS Corporate semi-3D pet illustration for Aşı Takvimi Tanıtımı",
+    "style": "glassmorphism",
+    "seed": 114,
+    "revision": 2
+  },
+  "governance": {
+    "creator": "OdiPet Design System",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "approvedBy": "Tufan",
+    "copyright": "Odi.Pet",
+    "license": "Proprietary",
+    "reviewState": "Approved"
+  }
+}

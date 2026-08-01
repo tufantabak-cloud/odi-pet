@@ -1,0 +1,57 @@
+{
+  "version": "1.6.0",
+  "semanticMappings": {
+    "empty": {
+      "token": "surface-dim",
+      "defaultIllustration": "empty-state/svg/empty-no-pets.svg"
+    },
+    "success": {
+      "token": "parasite",
+      "defaultIllustration": "success/svg/success-check.svg"
+    },
+    "warning": {
+      "token": "nutrition",
+      "defaultIllustration": "error/svg/error-warning.svg"
+    },
+    "error": {
+      "token": "health",
+      "defaultIllustration": "error/svg/error-warning.svg"
+    },
+    "medical": {
+      "token": "medical",
+      "defaultIllustration": "vaccines/svg/vaccine-schedule.svg"
+    },
+    "nutrition": {
+      "token": "nutrition",
+      "defaultIllustration": "nutrition/svg/nutrition-plan.svg"
+    },
+    "parasite": {
+      "token": "parasite",
+      "defaultIllustration": "parasite/svg/parasite-control.svg"
+    },
+    "community": {
+      "token": "primary",
+      "defaultIllustration": "community/svg/community-share.svg"
+    },
+    "marketplace": {
+      "token": "primary",
+      "defaultIllustration": "marketplace/svg/marketplace-empty.svg"
+    },
+    "certificate": {
+      "token": "nutrition",
+      "defaultIllustration": "certificates/svg/certificate-vaccine.svg"
+    },
+    "dashboard": {
+      "token": "primary",
+      "defaultIllustration": "dashboard/svg/dashboard-hero.svg"
+    },
+    "profile": {
+      "token": "primary",
+      "defaultIllustration": "profile/svg/profile-pet-card.svg"
+    },
+    "admin": {
+      "token": "primary",
+      "defaultIllustration": "admin/svg/admin-analytics.svg"
+    }
+  }
+}

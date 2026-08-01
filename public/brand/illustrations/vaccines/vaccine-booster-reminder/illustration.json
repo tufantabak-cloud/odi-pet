@@ -1,0 +1,62 @@
+{
+  "id": "vaccine-booster-reminder",
+  "name": "Hatırlatma Dozu Uyarısı",
+  "category": "vaccines",
+  "module": "vaccines",
+  "complexity": "M",
+  "theme_color": "nutrition",
+  "title": {
+    "tr": "Tekrar Dozu Vakti Geldi",
+    "en": "Booster Shot Due"
+  },
+  "description": {
+    "tr": "OPOS Kurumsal Üretim Varlığı: Tekrar Dozu Vakti Geldi",
+    "en": "OPOS Production Asset: Booster Shot Due"
+  },
+  "screen_usage": [
+    "/owner/vaccines/booster"
+  ],
+  "allowedContexts": [
+    "Dashboard",
+    "General",
+    "Mobile",
+    "Web"
+  ],
+  "forbiddenContexts": [],
+  "svg_path": "public/brand/illustrations/vaccines/vaccine-booster-reminder/source.svg",
+  "preview_png": "public/brand/illustrations/vaccines/vaccine-booster-reminder/preview.png",
+  "thumbnail_webp": "public/brand/illustrations/vaccines/vaccine-booster-reminder/thumbnail.webp",
+  "exports": {
+    "png512": "public/brand/illustrations/vaccines/vaccine-booster-reminder/export/512.png",
+    "png1024": "public/brand/illustrations/vaccines/vaccine-booster-reminder/export/1024.png",
+    "png2048": "public/brand/illustrations/vaccines/vaccine-booster-reminder/export/2048.png",
+    "webp": "public/brand/illustrations/vaccines/vaccine-booster-reminder/export/preview.webp",
+    "avif": "public/brand/illustrations/vaccines/vaccine-booster-reminder/export/preview.avif"
+  },
+  "dependencies": [
+    "PAW_SYMBOL",
+    "glass-card-grad",
+    "nutrition-grad"
+  ],
+  "priority": "P1",
+  "fallback": "empty-state/empty-no-pets/source.svg",
+  "replacement_policy": "Standard OPOS Master Component",
+  "systemVersion": "1.6.0",
+  "assetVersion": "2.0.0",
+  "illustrationVersion": "2.0.0",
+  "last_update": "2026-08-01",
+  "aiMetadata": {
+    "prompt": "OPOS Corporate semi-3D pet illustration for Hatırlatma Dozu Uyarısı",
+    "style": "glassmorphism",
+    "seed": 134,
+    "revision": 2
+  },
+  "governance": {
+    "creator": "OdiPet Design System",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "approvedBy": "Tufan",
+    "copyright": "Odi.Pet",
+    "license": "Proprietary",
+    "reviewState": "Approved"
+  }
+}

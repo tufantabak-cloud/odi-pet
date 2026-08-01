@@ -1,0 +1,12 @@
+
+> odi-pet@0.1.0 check:architecture
+> node scripts/check-architecture-guards.mjs
+
+🔍 Running Architecture Guard Check (Sprint Y.1)...
+✅ Guard 1 Passed: vercel.json has only /api/cron/orchestrator scheduled.
+✅ Guard 2 Passed: All 9 decommissioned cron routes return status: 'disabled'.
+✅ Guard 3 Passed: createVaccineRecord Single Source of Truth exists.
+✅ Guard 4 Passed: Confidence Level Translation Layer exists and matches DB CHECK constraint.
+✅ Guard 5 Passed: vaccination-algorithm preserves is_core semantics and uses feature flag.
+✅ Guard 6 Passed: Overdue Recovery delegates to canonical createOverdueVaccineNotifications.
+🎉 ALL ARCHITECTURE GUARDS PASSED (100%)

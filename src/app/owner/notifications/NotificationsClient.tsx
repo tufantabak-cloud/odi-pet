@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useWebPush } from '@/hooks/useWebPush'
 import { getTurkishGenitiveSuffix } from '@/lib/pets/utils'
+import { Illustration } from '@/components/ui/Illustration'
 
 type Notification = {
   id: string
@@ -208,10 +209,8 @@ export default function NotificationsClient({
 
       {/* Notification List */}
       {list.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
-          <div className="w-20 h-20 rounded-full bg-border-main/50 flex items-center justify-center text-[40px]">
-            🔔
-          </div>
+        <div className="flex flex-col items-center justify-center py-12 gap-4 text-center">
+          <Illustration id="notification-reminder" size="md" />
           <p className="text-[18px] font-extrabold text-text-primary">Henüz bildirim yok</p>
           <p className="text-[14px] text-text-secondary max-w-[280px] leading-relaxed">
             Aşı hatırlatmaları, randevu güncellemeleri ve diğer önemli bildirimler burada görünecek.

@@ -1,0 +1,62 @@
+{
+  "id": "vaccine-card-banner",
+  "name": "Dijital Aşı Karnesi Banner",
+  "category": "vaccines",
+  "module": "vaccines",
+  "complexity": "M",
+  "theme_color": "medical",
+  "title": {
+    "tr": "Dijital Aşı Karnesi",
+    "en": "Digital Vaccine Passport"
+  },
+  "description": {
+    "tr": "OPOS Kurumsal Üretim Varlığı: Dijital Aşı Karnesi",
+    "en": "OPOS Production Asset: Digital Vaccine Passport"
+  },
+  "screen_usage": [
+    "/owner/vaccines"
+  ],
+  "allowedContexts": [
+    "Dashboard",
+    "General",
+    "Mobile",
+    "Web"
+  ],
+  "forbiddenContexts": [],
+  "svg_path": "public/brand/illustrations/vaccines/vaccine-card-banner/source.svg",
+  "preview_png": "public/brand/illustrations/vaccines/vaccine-card-banner/preview.png",
+  "thumbnail_webp": "public/brand/illustrations/vaccines/vaccine-card-banner/thumbnail.webp",
+  "exports": {
+    "png512": "public/brand/illustrations/vaccines/vaccine-card-banner/export/512.png",
+    "png1024": "public/brand/illustrations/vaccines/vaccine-card-banner/export/1024.png",
+    "png2048": "public/brand/illustrations/vaccines/vaccine-card-banner/export/2048.png",
+    "webp": "public/brand/illustrations/vaccines/vaccine-card-banner/export/preview.webp",
+    "avif": "public/brand/illustrations/vaccines/vaccine-card-banner/export/preview.avif"
+  },
+  "dependencies": [
+    "PAW_SYMBOL",
+    "glass-card-grad",
+    "medical-grad"
+  ],
+  "priority": "P0",
+  "fallback": "empty-state/empty-no-pets/source.svg",
+  "replacement_policy": "Standard OPOS Master Component",
+  "systemVersion": "1.6.0",
+  "assetVersion": "2.0.0",
+  "illustrationVersion": "2.0.0",
+  "last_update": "2026-08-01",
+  "aiMetadata": {
+    "prompt": "OPOS Corporate semi-3D pet illustration for Dijital Aşı Karnesi Banner",
+    "style": "glassmorphism",
+    "seed": 133,
+    "revision": 2
+  },
+  "governance": {
+    "creator": "OdiPet Design System",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "approvedBy": "Tufan",
+    "copyright": "Odi.Pet",
+    "license": "Proprietary",
+    "reviewState": "Approved"
+  }
+}

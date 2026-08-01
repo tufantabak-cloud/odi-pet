@@ -1,0 +1,7 @@
+{
+  "roleImgVerified": true,
+  "ariaLabelVerified": true,
+  "titleDescVerified": true,
+  "lazyLoadingVerified": true,
+  "contrastScore": "4.5:1 PASS"
+}

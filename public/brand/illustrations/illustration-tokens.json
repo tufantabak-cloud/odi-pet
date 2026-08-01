@@ -1,0 +1,58 @@
+{
+  "version": "1.6.0",
+  "designSystem": "OPOS",
+  "tokens": {
+    "strokeWidth": {
+      "default": "2px",
+      "bold": "4px",
+      "heavy": "6px"
+    },
+    "cornerRadius": {
+      "sm": "8px",
+      "md": "16px",
+      "lg": "24px",
+      "xl": "28px",
+      "pill": "9999px"
+    },
+    "shadow": {
+      "soft": "0 12px 16px rgba(15, 23, 42, 0.08)",
+      "glowPurple": "0 8px 12px rgba(79, 45, 186, 0.25)",
+      "glowTeal": "0 8px 12px rgba(56, 189, 248, 0.25)"
+    },
+    "gradients": {
+      "primary": "linear-gradient(135deg, #4F2DBA 0%, #3800A4 100%)",
+      "medical": "linear-gradient(135deg, #38BDF8 0%, #3B9FE8 100%)",
+      "parasite": "linear-gradient(135deg, #4ADE80 0%, #34C97A 100%)",
+      "nutrition": "linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%)",
+      "grooming": "linear-gradient(135deg, #F472B6 0%, #F06292 100%)",
+      "health": "linear-gradient(135deg, #F87171 0%, #EF4444 100%)",
+      "vet": "linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)",
+      "glass": "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.7) 100%)"
+    },
+    "opacity": {
+      "glass": 0.95,
+      "overlay": 0.15,
+      "dim": 0.6
+    },
+    "blur": {
+      "glass": "8px",
+      "backdrop": "16px"
+    },
+    "background": "#FAF8FF",
+    "spacing": {
+      "unit": 4,
+      "xs": 4,
+      "sm": 8,
+      "md": 16,
+      "lg": 24,
+      "xl": 32
+    },
+    "safeArea": {
+      "bottomPadding": "128px"
+    },
+    "animation": {
+      "duration": "300ms",
+      "easing": "cubic-bezier(0.4, 0, 0.2, 1)"
+    }
+  }
+}

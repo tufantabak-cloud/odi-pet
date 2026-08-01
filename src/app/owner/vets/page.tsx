@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import citiesData from '@/lib/cities.json';
 import CoachMark from '@/components/ui/CoachMark';
+import { Illustration } from '@/components/ui/Illustration';
 
 interface Clinic {
   id: string;
@@ -292,6 +293,7 @@ export default function VetsPage() {
       {/* Header */}
       {!selectedClinic && (
         <div className="text-center mb-[48px] animate-fadeInUp relative">
+          <Illustration id="services-vet-finder" size="md" className="mx-auto mb-4" />
           <div className="inline-block relative">
             <CoachMark
               hintKey="vets_gps_intro"

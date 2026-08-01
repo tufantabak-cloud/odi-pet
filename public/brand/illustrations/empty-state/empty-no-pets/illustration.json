@@ -1,0 +1,62 @@
+{
+  "id": "empty-no-pets",
+  "name": "Henüz Dost Eklenmedi",
+  "category": "empty-state",
+  "module": "pets",
+  "complexity": "M",
+  "theme_color": "primary",
+  "title": {
+    "tr": "Henüz Dost Eklenmedi",
+    "en": "No Pets Added Yet"
+  },
+  "description": {
+    "tr": "OPOS Kurumsal Üretim Varlığı: Henüz Dost Eklenmedi",
+    "en": "OPOS Production Asset: No Pets Added Yet"
+  },
+  "screen_usage": [
+    "/owner/dashboard"
+  ],
+  "allowedContexts": [
+    "Dashboard",
+    "General",
+    "Mobile",
+    "Web"
+  ],
+  "forbiddenContexts": [],
+  "svg_path": "public/brand/illustrations/empty-state/empty-no-pets/source.svg",
+  "preview_png": "public/brand/illustrations/empty-state/empty-no-pets/preview.png",
+  "thumbnail_webp": "public/brand/illustrations/empty-state/empty-no-pets/thumbnail.webp",
+  "exports": {
+    "png512": "public/brand/illustrations/empty-state/empty-no-pets/export/512.png",
+    "png1024": "public/brand/illustrations/empty-state/empty-no-pets/export/1024.png",
+    "png2048": "public/brand/illustrations/empty-state/empty-no-pets/export/2048.png",
+    "webp": "public/brand/illustrations/empty-state/empty-no-pets/export/preview.webp",
+    "avif": "public/brand/illustrations/empty-state/empty-no-pets/export/preview.avif"
+  },
+  "dependencies": [
+    "PAW_SYMBOL",
+    "glass-card-grad",
+    "primary-grad"
+  ],
+  "priority": "P0",
+  "fallback": "empty-state/empty-no-pets/source.svg",
+  "replacement_policy": "Standard OPOS Master Component",
+  "systemVersion": "1.6.0",
+  "assetVersion": "2.0.0",
+  "illustrationVersion": "2.0.0",
+  "last_update": "2026-08-01",
+  "aiMetadata": {
+    "prompt": "OPOS Corporate semi-3D pet illustration for Henüz Dost Eklenmedi",
+    "style": "glassmorphism",
+    "seed": 100,
+    "revision": 2
+  },
+  "governance": {
+    "creator": "OdiPet Design System",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "approvedBy": "Tufan",
+    "copyright": "Odi.Pet",
+    "license": "Proprietary",
+    "reviewState": "Approved"
+  }
+}

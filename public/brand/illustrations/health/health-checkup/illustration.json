@@ -1,0 +1,62 @@
+{
+  "id": "health-checkup",
+  "name": "Genel Sağlık Taraması",
+  "category": "health",
+  "module": "health",
+  "complexity": "M",
+  "theme_color": "health",
+  "title": {
+    "tr": "Sağlık Metrikleri",
+    "en": "Health Metrics"
+  },
+  "description": {
+    "tr": "OPOS Kurumsal Üretim Varlığı: Sağlık Metrikleri",
+    "en": "OPOS Production Asset: Health Metrics"
+  },
+  "screen_usage": [
+    "/owner/pets/[id]/health"
+  ],
+  "allowedContexts": [
+    "Dashboard",
+    "General",
+    "Mobile",
+    "Web"
+  ],
+  "forbiddenContexts": [],
+  "svg_path": "public/brand/illustrations/health/health-checkup/source.svg",
+  "preview_png": "public/brand/illustrations/health/health-checkup/preview.png",
+  "thumbnail_webp": "public/brand/illustrations/health/health-checkup/thumbnail.webp",
+  "exports": {
+    "png512": "public/brand/illustrations/health/health-checkup/export/512.png",
+    "png1024": "public/brand/illustrations/health/health-checkup/export/1024.png",
+    "png2048": "public/brand/illustrations/health/health-checkup/export/2048.png",
+    "webp": "public/brand/illustrations/health/health-checkup/export/preview.webp",
+    "avif": "public/brand/illustrations/health/health-checkup/export/preview.avif"
+  },
+  "dependencies": [
+    "PAW_SYMBOL",
+    "glass-card-grad",
+    "health-grad"
+  ],
+  "priority": "P0",
+  "fallback": "empty-state/empty-no-pets/source.svg",
+  "replacement_policy": "Standard OPOS Master Component",
+  "systemVersion": "1.6.0",
+  "assetVersion": "2.0.0",
+  "illustrationVersion": "2.0.0",
+  "last_update": "2026-08-01",
+  "aiMetadata": {
+    "prompt": "OPOS Corporate semi-3D pet illustration for Genel Sağlık Taraması",
+    "style": "glassmorphism",
+    "seed": 124,
+    "revision": 2
+  },
+  "governance": {
+    "creator": "OdiPet Design System",
+    "createdAt": "2026-08-01T12:00:00Z",
+    "approvedBy": "Tufan",
+    "copyright": "Odi.Pet",
+    "license": "Proprietary",
+    "reviewState": "Approved"
+  }
+}

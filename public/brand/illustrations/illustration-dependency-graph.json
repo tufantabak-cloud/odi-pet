@@ -1,0 +1,705 @@
+{
+  "version": "1.6.0",
+  "graph": {
+    "empty-no-pets": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "primary-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "empty-no-vaccines": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "medical-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "empty-no-food": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "nutrition-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "empty-no-records": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "health-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "empty-no-notifications": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "primary-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "empty-no-search-results": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "primary-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "empty-no-chats": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "primary-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "empty-no-appointments": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "primary-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "empty-no-favorites": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "grooming-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "empty-no-prescriptions": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "medical-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "onboarding-welcome": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "primary-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "onboarding-pet-profile": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "primary-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "onboarding-health-tracking": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "health-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "onboarding-smartcard": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "primary-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "onboarding-vaccine-setup": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "medical-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "onboarding-parasite-setup": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "parasite-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "onboarding-nutrition-setup": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "nutrition-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "onboarding-premium-upgrade": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "nutrition-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "dashboard-hero": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "primary-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "dashboard-daily-routine": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "parasite-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "dashboard-pet-switcher": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "primary-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "dashboard-quick-actions": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "primary-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "dashboard-timeline-overview": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "medical-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "dashboard-stats-card": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "primary-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "health-checkup": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "health-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "health-medical-history": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "health-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "health-vitals": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "health-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "health-allergies": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "health-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "health-symptom-tracker": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "health-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "health-lab-results": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "medical-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "health-weight-tracker": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "nutrition-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "health-medication-log": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "medical-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "vaccine-schedule": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "medical-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "vaccine-card-banner": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "medical-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "vaccine-booster-reminder": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "nutrition-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "vaccine-passport": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "medical-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "vaccine-rabies-shot": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "parasite-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "parasite-control": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "parasite-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "parasite-calendar": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "parasite-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "parasite-flea-tick": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "parasite-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "parasite-deworming": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "parasite-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "nutrition-plan": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "nutrition-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "nutrition-weight-goal": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "nutrition-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "nutrition-food-calculator": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "nutrition-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "nutrition-water-intake": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "medical-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "nutrition-diet-history": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "nutrition-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "grooming-care": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "grooming-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "grooming-appointment": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "grooming-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "grooming-hygiene-kit": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "grooming-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "grooming-nail-trimming": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "grooming-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "community-share": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "primary-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "community-badge": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "nutrition-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "community-forum-hero": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "primary-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "marketplace-empty": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "primary-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "marketplace-pet-store": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "primary-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "marketplace-order-tracking": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "primary-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "services-vet-finder": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "primary-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "services-emergency-sos": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "health-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "services-clinic-booking": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "primary-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "profile-pet-card": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "primary-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "profile-owner-info": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "primary-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "profile-microchip": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "primary-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "ai-vet-assistant": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "primary-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "notification-reminder": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "nutrition-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "success-check": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "parasite-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "error-warning": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "health-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "offline-no-connection": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "primary-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "maintenance-mode": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "primary-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "document-health-report": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "primary-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    },
+    "certificate-vaccine": {
+      "sharedAssets": [
+        "PAW_SYMBOL"
+      ],
+      "gradients": [
+        "glass-card-grad",
+        "nutrition-grad"
+      ],
+      "logoDependency": "/public/brand/logos/primary/odi-logo-primary.svg"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "id": "p3-health-clearance-cert",
+  "tier": "P3",
+  "category": "certificates",
+  "name": "Official Health Clearance Cert",
+  "screen_usage": [
+    "PDF Export"
+  ],
+  "priority": "P3",
+  "version": "2.0.0",
+  "reviewState": "Approved",
+  "license": "Odi.Pet Corporate Proprietary",
+  "exports": {
+    "svg": "public/brand/illustrations/certificates/p3-health-clearance-cert/source.svg",
+    "png512": "public/brand/illustrations/certificates/p3-health-clearance-cert/export/512.png",
+    "png1024": "public/brand/illustrations/certificates/p3-health-clearance-cert/export/1024.png",
+    "png2048": "public/brand/illustrations/certificates/p3-health-clearance-cert/export/2048.png",
+    "webp": "public/brand/illustrations/certificates/p3-health-clearance-cert/export/preview.webp",
+    "avif": "public/brand/illustrations/certificates/p3-health-clearance-cert/export/preview.avif"
+  },
+  "aiMetadata": {
+    "style": "OPOS Semi-3D Glassmorphic",
+    "generatedBy": "OPOS Phase 2 Asset Pipeline"
+  }
+}
