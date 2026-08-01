@@ -471,3 +471,11 @@ When done, report:
 - Build status (`npm run build` result)
 - Visual QA results (any remaining discrepancies)
 - Any known gaps or limitations
+
+Kafandan varsayma. Emin değilsen sor, birden fazla ihtimal varsa
+hepsini söyle, sessizce birini seçip devam etme.
+En sade çözümö yap. tșe yaramayacak fazladan özellik ekleme,
+gereksiz karmaşıklaştırma.
+Sadece istenen yere dokun. Yan taraftaki çalişan kodu "şunu da
+düzelteyim" deyip bozma.
+Çalıştirmadan önce kontrol et. tsi bitirdim demeden önce, gerçekten istenen sey oldu mu diye bak.

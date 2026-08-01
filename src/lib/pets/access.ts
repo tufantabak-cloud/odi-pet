@@ -27,7 +27,17 @@ export async function hasPetCapability(
   })
 
   if (error) {
-    console.warn('[pet-access] capability RPC failed, falling back to owner_id / pet_members check:', {
+    if (capability !== 'can_view_pet') {
+      console.error('[pet-access] capability RPC failed (strict check):', {
+        capability,
+        petId,
+        code: error.code,
+        message: error.message,
+      })
+      return false
+    }
+
+    console.warn('[pet-access] can_view_pet RPC failed, falling back to legacy check:', {
       capability,
       petId,
       code: error.code,
@@ -39,12 +49,12 @@ export async function hasPetCapability(
     if (!authData?.user) return false
 
     const uid = authData.user.id
-    const [{ data: pet }, { data: member }] = await Promise.all([
+    const [{ data: pet }, { data: membership }] = await Promise.all([
       supabase.from('pets').select('id').eq('id', petId).eq('owner_id', uid).maybeSingle(),
-      supabase.from('pet_members').select('id').eq('pet_id', petId).eq('profile_id', uid).maybeSingle(),
+      supabase.from('pet_memberships').select('id').eq('pet_id', petId).eq('profile_id', uid).eq('status', 'active').maybeSingle(),
     ])
 
-    return !!(pet || member)
+    return !!(pet || membership)
   }
 
   return data === true

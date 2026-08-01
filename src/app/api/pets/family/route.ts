@@ -7,6 +7,7 @@ import {
   ownershipRpcCode,
   ownershipRpcSucceeded,
 } from '@/lib/pets/access'
+import { formatSupabaseError } from '@/lib/utils/error-handler'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,7 +33,10 @@ export async function POST(req: NextRequest) {
     }
   )
 
-  if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
+  if (error) {
+    const { message } = formatSupabaseError(error)
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
 
   if (!ownershipRpcSucceeded(data)) {
     const code = ownershipRpcCode(data)
@@ -160,14 +164,14 @@ export async function DELETE(req: NextRequest) {
 
   // 1. Bekleyen Daveti İptal Etme (Cancel Invite)
   if (invite_id) {
-    const { error: inviteErr } = await supabase
-      .from('pet_invites')
-      .update({ status: 'revoked' })
-      .eq('id', invite_id)
-      .eq('pet_id', pet_id)
+    const { error: inviteErr } = await supabase.rpc('revoke_pet_invite', {
+      p_invite_id: invite_id,
+      p_pet_id: pet_id,
+    })
 
     if (inviteErr) {
-      return NextResponse.json({ error: 'Davet iptal edilirken hata oluştu.' }, { status: 500 })
+      const { message } = formatSupabaseError(inviteErr, 'Davet iptal edilirken hata oluştu.')
+      return NextResponse.json({ error: message }, { status: 500 })
     }
 
     return NextResponse.json({ success: true, message: 'Davet başarıyla iptal edildi.' })
@@ -175,27 +179,25 @@ export async function DELETE(req: NextRequest) {
 
   // 2. Ekipten Ayrılma / Paylaşımı İptal Etme (Leave Team)
   if (action === 'leave') {
-    // Primary owner ayrılamaz (önce transfer etmeli)
-    const { data: primaryCheck } = await supabase
-      .from('pet_memberships')
-      .select('role')
-      .eq('pet_id', pet_id)
-      .eq('profile_id', user.id)
-      .eq('status', 'active')
-      .maybeSingle()
+    const { data: leaveData, error: leaveErr } = await supabase.rpc('leave_pet_team', {
+      p_pet_id: pet_id,
+    })
 
-    if (primaryCheck?.role === 'primary_owner') {
-      return NextResponse.json(
-        { error: 'Birincil sahip ekipten ayrılamaz. Önce sahipliği devretmelisiniz.' },
-        { status: 403 }
-      )
+    if (leaveErr) {
+      const { message } = formatSupabaseError(leaveErr, 'Ekipten ayrılma işlemi başarısız oldu.')
+      return NextResponse.json({ error: message }, { status: 500 })
     }
 
-    // Üyeliği ve legacy kaydı sil
-    await Promise.all([
-      supabase.from('pet_memberships').delete().eq('pet_id', pet_id).eq('profile_id', user.id),
-      supabase.from('pet_members').delete().eq('pet_id', pet_id).eq('profile_id', user.id),
-    ])
+    if (typeof leaveData === 'object' && leaveData !== null && !(leaveData as any).ok) {
+      const code = (leaveData as any).code
+      if (code === 'PRIMARY_OWNER_CANNOT_LEAVE') {
+        return NextResponse.json(
+          { error: 'Birincil sahip ekipten ayrılamaz. Önce sahipliği devretmelisiniz.' },
+          { status: 403 }
+        )
+      }
+      return NextResponse.json({ error: 'İşlem reddedildi.', code }, { status: 400 })
+    }
 
     return NextResponse.json({ success: true, left: true, message: 'Ekipten ayrıldınız.' })
   }
@@ -212,7 +214,10 @@ export async function DELETE(req: NextRequest) {
       p_legacy_member_id: member_id,
     }
   )
-  if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
+  if (error) {
+    const { message } = formatSupabaseError(error)
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
 
   if (!ownershipRpcSucceeded(data)) {
     const code = ownershipRpcCode(data)

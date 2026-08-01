@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { revalidatePath, revalidateTag } from 'next/cache'
-import { generateVaccinationPlan } from '@/features/pets/vaccination-algorithm'
-import { createVaccineNotifications } from '@/lib/notifications/createVaccineNotifications'
 import { Database } from '@/lib/database.types'
 import {
   hasPetCapability,
   ownershipRpcSucceeded,
 } from '@/lib/pets/access'
+import { formatSupabaseError } from '@/lib/utils/error-handler'
+import { deletePetStorageFiles } from '@/lib/storage/cleanup'
 
 type PetUpdate = Database['public']['Tables']['pets']['Update']
 
@@ -134,8 +134,6 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     }
   }
 
-  // Removed plan regeneration on birth_date change to isolate logic to /plan-yap/asi
-
   revalidatePath('/owner/dashboard')
   revalidateTag('dashboard', 'default')
   revalidatePath('/owner/pets')
@@ -151,12 +149,14 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
   const { id } = await context.params
   const supabase = await createServerSupabaseClient()
 
+  // 1. Delete DB pet and memberships
   const { data, error } = await supabase.rpc(
     'delete_pet_with_memberships',
     { p_pet_id: id }
   )
   if (error) {
-    return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
+    const { message } = formatSupabaseError(error)
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 
   if (!ownershipRpcSucceeded(data)) {
@@ -165,6 +165,11 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
       { status: 403 }
     )
   }
+
+  // 2. Cleanup physical storage binary files
+  await deletePetStorageFiles(supabase, id).catch((err) => {
+    console.error('Storage cleanup failed on pet delete:', err)
+  })
 
   revalidatePath('/owner/dashboard')
   revalidateTag('dashboard', 'default')

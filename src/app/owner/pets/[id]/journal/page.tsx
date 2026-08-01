@@ -58,8 +58,8 @@ export default async function PetJournalPage(props: PageProps) {
   // Filter out daily feeding_logs entries from journal entries if any exist
   const nonFeedingEntries = (entries || []).filter((e: any) => e.entry_type !== 'nutrition' || !e.data?.amount_grams);
 
-  // Merge and sort
-  const allTimelineItems = [
+  // Merge raw timeline items
+  const rawTimelineItems = [
     ...(nonFeedingEntries || []).map((e: any) => ({ ...e, source: 'journal', sortDate: new Date(e.created_at).getTime() })),
     ...(nonNutritionPlans || []).map((p: any) => ({ ...p, source: 'plan', sortDate: new Date(p.scheduled_at).getTime() })),
     ...(gallery || []).map((g: any) => ({ ...g, source: 'gallery', sortDate: new Date(g.taken_at || g.created_at).getTime() })),
@@ -76,7 +76,18 @@ export default async function PetJournalPage(props: PageProps) {
       linkHref: ne.linkHref,
       sortDate: ne.sortDate,
     }))
-  ].sort((a, b) => b.sortDate - a.sortDate)
+  ];
+
+  // Deduplicate items by composite dedupKey (source + id or timestamp)
+  const dedupMap = new Map<string, any>();
+  for (const item of rawTimelineItems) {
+    const key = `${item.source}_${item.id || item.created_at || item.sortDate}`;
+    if (!dedupMap.has(key)) {
+      dedupMap.set(key, item);
+    }
+  }
+
+  const allTimelineItems = Array.from(dedupMap.values()).sort((a, b) => b.sortDate - a.sortDate);
 
   return (
     <div className="flex flex-col gap-6 pb-20">

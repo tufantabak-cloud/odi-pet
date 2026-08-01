@@ -244,10 +244,19 @@ export default function EditPetForm({ pet }: { pet: any }) {
 
     try {
       const res = await fetch(`/api/pets/${pet.id}`, { method: 'PATCH', body: fd })
-      const data = await res.json()
+      let data: any = {}
+      try {
+        data = await res.json()
+      } catch {
+        // Sunucu HTTP hata sayfası döndürdüğünde HTML içeriği JSON parse edilemez
+      }
 
       if (!res.ok) {
-        setSubmitError(data.error || 'Güncelleme sırasında bir hata oluştu.')
+        if (res.status === 413) {
+          setSubmitError('Seçilen fotoğrafın boyutu çok yüksek. Lütfen daha küçük bir görsel seçin.')
+        } else {
+          setSubmitError(data.error || `Güncelleme sırasında bir hata oluştu (Hata kodu: ${res.status}).`)
+        }
         return
       }
 

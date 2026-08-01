@@ -912,12 +912,14 @@ function PetSOSStep({
               if (Array.isArray(contacts)) {
                 for (const c of contacts) {
                   if (c && c.name && c.phone) {
-                    const key = `${c.name.trim().toLowerCase()}-${c.phone.trim()}`
+                    const cleanPhone = c.phone.replace(/\D/g, '').slice(-10)
+                    const cleanName = c.name.trim().toLowerCase()
+                    const key = cleanPhone ? `${cleanName}-${cleanPhone}` : `${cleanName}-${c.phone.trim()}`
                     if (!seen.has(key)) {
                       seen.add(key)
                       list.push({
-                        name: c.name,
-                        phone: c.phone,
+                        name: c.name.trim(),
+                        phone: formatTurkishMobileInput(c.phone),
                         relation: c.relation || 'Diğer'
                       })
                     }
@@ -1361,8 +1363,22 @@ export default function AddPetPage() {
     }
     try {
       const res = await fetch('/api/pets', { method: 'POST', body: fd })
-      const data = await res.json()
-      if (!res.ok) { setSubmitError(data.error || 'Kayıt sırasında bir hata oluştu.'); return }
+      let data: any = {}
+      try {
+        data = await res.json()
+      } catch {
+        // Sunucu HTTP hata sayfası (ör. 413 Request Entity Too Large HTML) döndürdüğünde JSON parse edilemez
+      }
+
+      if (!res.ok) {
+        if (res.status === 413) {
+          setSubmitError('Seçilen fotoğrafın boyutu çok yüksek. Lütfen daha küçük bir görsel seçin.')
+        } else {
+          setSubmitError(data.error || `Kayıt sırasında bir hata oluştu (Hata kodu: ${res.status}).`)
+        }
+        return
+      }
+
       setCreatedPetId(data.pet.id)
       if (data.pet?.avatar_url) setCreatedPetAvatar(data.pet.avatar_url)
       setStep(4)

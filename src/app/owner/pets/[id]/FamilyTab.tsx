@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { QRCodeSVG } from 'qrcode.react'
 import ConfirmModal from '@/components/ui/ConfirmModal'
 import CoachMark from '@/components/ui/CoachMark'
 import TransferPrimaryOwnerModal from '@/components/pets/family/TransferPrimaryOwnerModal'
@@ -34,6 +35,8 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
   const [inviteToCancel, setInviteToCancel] = useState<string | null>(null)
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false)
   const [showInviteForm, setShowInviteForm] = useState(false)
+  const [inviteMode, setInviteMode] = useState<'email' | 'qr'>('qr')
+  const [showQrCode, setShowQrCode] = useState(true)
   const [email, setEmail] = useState('')
   const [role, setRole] = useState('editor')
   const [inviting, setInviting] = useState(false)
@@ -96,16 +99,33 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
     setInviteMsg(null)
     setInviteLink(null)
     setCopied(false)
+
+    const targetEmail = email.trim() || (inviteMode === 'qr' ? `qr-davet-${Math.random().toString(36).substring(2, 9)}@odipet.local` : '')
+
+    if (!targetEmail) {
+      setInviteMsg({ type: 'err', text: 'Lütfen geçerli bir e-posta adresi girin.' })
+      setInviting(false)
+      return
+    }
+
     try {
       const res = await fetch('/api/pets/family', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pet_id: petId, email, role }),
+        body: JSON.stringify({ pet_id: petId, email: targetEmail, role }),
       })
       const data = await res.json()
       if (!res.ok) { setInviteMsg({ type: 'err', text: data.error }); return }
-      setInviteMsg({ type: 'ok', text: data.message })
-      if (data.inviteLink) setInviteLink(data.inviteLink)
+      setInviteMsg({
+        type: 'ok',
+        text: inviteMode === 'qr'
+          ? '📱 Barkod / QR Kod başarıyla üretildi! İkinci kullanıcı okuttuğunda doğrudan yetkilendirilir.'
+          : data.message
+      })
+      if (data.inviteLink) {
+        setInviteLink(data.inviteLink)
+        setShowQrCode(true)
+      }
       setEmail('')
       setLoaded(false)
     } finally { setInviting(false) }
@@ -349,11 +369,11 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
         </div>
       )}
 
-      {/* Invite Form (Collapsible) */}
+      {/* Invite Form (Collapsible with QR & Email tabs) */}
       {canManageCaregivers && (showInviteForm || inviteLink || inviteMsg?.type === 'err') && (
         <div className="card-base p-5 animate-fade-in border-2 border-primary/20">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest">Üye Davet Et</h3>
+            <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest">Üye Davet Et & Yetkilendir</h3>
             <button
               type="button"
               onClick={() => setShowInviteForm(false)}
@@ -362,14 +382,84 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
               ✕ Gizle
             </button>
           </div>
+
+          {/* Mode Switcher */}
+          <div className="flex bg-bg-main p-1 rounded-2xl mb-4 border border-border-main">
+            <button
+              type="button"
+              onClick={() => setInviteMode('qr')}
+              className={`flex-1 py-2 px-3 rounded-xl text-[12px] font-bold transition-all flex items-center justify-center gap-1.5 ${
+                inviteMode === 'qr'
+                  ? 'bg-white text-purple-700 shadow-xs font-black'
+                  : 'text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              <span>📱</span> Barkod / QR Kod İle
+            </button>
+            <button
+              type="button"
+              onClick={() => setInviteMode('email')}
+              className={`flex-1 py-2 px-3 rounded-xl text-[12px] font-bold transition-all flex items-center justify-center gap-1.5 ${
+                inviteMode === 'email'
+                  ? 'bg-white text-primary shadow-xs font-black'
+                  : 'text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              <span>✉️</span> E-posta İle
+            </button>
+          </div>
+
           {inviteMsg && (
             <div className={`p-3 rounded-xs text-[13px] font-medium mb-4 ${inviteMsg.type === 'ok' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
               {inviteMsg.text}
             </div>
           )}
-          {inviteLink && (
+
+          {/* QR Code display card when generated */}
+          {inviteLink && showQrCode && (
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-50 border-2 border-purple-200 mb-4 flex flex-col items-center text-center gap-3 animate-fade-in shadow-xs">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">📱</span>
+                <h4 className="font-extrabold text-[14px] text-purple-950">Anında Yetkilendirme QR Kodu</h4>
+                <span className="px-2.5 py-0.5 rounded-full bg-purple-200 text-purple-800 text-[10px] font-black uppercase">
+                  {ROLE_LABELS[role]?.label ?? role}
+                </span>
+              </div>
+
+              {/* QR Code SVG */}
+              <div className="p-3.5 bg-white rounded-2xl shadow-md border border-purple-100 flex items-center justify-center">
+                <QRCodeSVG value={inviteLink} size={170} level="H" includeMargin={true} />
+              </div>
+
+              <p className="text-[12px] text-purple-900 leading-relaxed max-w-sm font-medium">
+                İkinci kullanıcı telefon kamerasını veya <strong>Odi.Pet Akıllı Tarayıcıyı</strong> bu QR koda tuttuğunda anında <strong>{petName}</strong> dostunuzun ekibine yetkili olarak katılır.
+              </p>
+
+              <div className="flex gap-2 w-full max-w-xs mt-1">
+                <button
+                  type="button"
+                  onClick={copyLink}
+                  className="flex-1 py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-[12px] transition-all shadow-xs flex items-center justify-center gap-1.5"
+                >
+                  {copied ? '✓ Kopyalandı' : '🔗 Bağlantıyı Kopyala'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Copyable Link fallback bar */}
+          {inviteLink && !showQrCode && (
             <div className="p-3 rounded-xs bg-blue-50 border border-blue-200 mb-4">
-              <p className="text-[11px] font-bold text-blue-600 uppercase tracking-wide mb-2">📎 Davet Bağlantısı</p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[11px] font-bold text-blue-600 uppercase tracking-wide">📎 Davet Bağlantısı</p>
+                <button
+                  type="button"
+                  onClick={() => setShowQrCode(true)}
+                  className="text-[11px] font-bold text-purple-700 hover:underline flex items-center gap-1"
+                >
+                  📱 QR Kodu Göster
+                </button>
+              </div>
               <div className="flex gap-2">
                 <input
                   id="invite-link-input"
@@ -394,26 +484,50 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
               <p className="text-[10px] text-blue-500 mt-1.5">Bu bağlantıyı davet ettiğiniz kişiye gönderin.</p>
             </div>
           )}
+
           <form onSubmit={sendInvite} className="flex flex-col gap-3">
+            {/* Rol Seçimi */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-bold text-text-secondary">E-posta Adresi</label>
+              <label className="text-[12px] font-bold text-text-secondary">Verilecek Yetki / Rol</label>
+              <select value={role} onChange={e => setRole(e.target.value)} className="input-base font-medium">
+                <option value="co_owner">Ortak Sahip — Tam Yönetim Yetkisi</option>
+                <option value="admin">Admin — Sağlık & Vet Yönetimi</option>
+                <option value="editor">Editör — Günlük Bakım Görevleri & Log</option>
+                <option value="viewer">Görüntüleyici — Salt Okunur</option>
+              </select>
+            </div>
+
+            {/* E-posta Alanı */}
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-[12px] font-bold text-text-secondary">
+                  E-posta Adresi {inviteMode === 'qr' && <span className="text-text-secondary font-normal">(İsteğe Bağlı)</span>}
+                </label>
+              </div>
               <input
-                type="email" required value={email}
+                type="email"
+                required={inviteMode === 'email'}
+                value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="ornek@email.com"
+                placeholder={inviteMode === 'qr' ? 'ornek@email.com (Boş bırakabilirsiniz)' : 'ornek@email.com'}
                 className="input-base"
               />
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-bold text-text-secondary">Rol</label>
-              <select value={role} onChange={e => setRole(e.target.value)} className="input-base">
-                <option value="admin">Admin — Sağlık & Vet yönetimi</option>
-                <option value="editor">Editör — Günlük bakım görevleri</option>
-                <option value="viewer">Görüntüleyici — Salt okunur</option>
-              </select>
-            </div>
-            <button type="submit" disabled={inviting} className="btn-primary py-3 text-[14px] mt-1">
-              {inviting ? 'Gönderiliyor...' : `${petName}'nin ekibine davet et →`}
+
+            <button
+              type="submit"
+              disabled={inviting}
+              className={`py-3 text-[14px] mt-1 rounded-2xl font-black text-white transition-all shadow-md ${
+                inviteMode === 'qr'
+                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700'
+                  : 'btn-primary'
+              }`}
+            >
+              {inviting
+                ? 'Üretiliyor...'
+                : inviteMode === 'qr'
+                ? `📱 ${petName} İçin QR Kod / Barkod Üret →`
+                : `${petName}'nin Ekibine Davet Et →`}
             </button>
           </form>
         </div>
