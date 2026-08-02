@@ -132,7 +132,7 @@ export function PetSlider({ pets, onActiveChange }: { pets: Pet[], onActiveChang
                       {pet.overdueCount > 0
                         ? 'Aşı zamanı'
                         : pet.weightVal
-                        ? `${pet.weightVal} kg`
+                        ? `${pet.weightVal.toString().replace(/kg/gi, '').trim()} kg`
                         : 'Sağlıklı ve Mutlu'}
                     </span>
                     <div
@@ -175,7 +175,7 @@ export function PetSlider({ pets, onActiveChange }: { pets: Pet[], onActiveChang
                       {pet.overdueCount > 0
                         ? 'Aşı zamanı'
                         : pet.weightVal
-                        ? `${pet.weightVal} kg`
+                        ? `${pet.weightVal.toString().replace(/kg/gi, '').trim()} kg`
                         : 'Sağlıklı ve Mutlu'}
                     </span>
                     <div

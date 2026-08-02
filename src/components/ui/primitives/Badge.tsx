@@ -1,6 +1,13 @@
-﻿import React from 'react'
+import React from 'react'
 
-type BadgeVariant = 'success' | 'warning' | 'danger' | 'info' | 'neutral' | 'primary'
+// OPOS v1.0 — bkz. docs/opos-design-system/22_component-library.md (OPBadge, #7)
+// Bu dosya hiçbir ekranda kullanılmıyor (unwired primitive) — sıfır regresyon riskiyle
+// kanonik prop interface'ine (variant: success|warning|error|primary|health) göre yeniden yazıldı.
+// Not: 'health' varyantı için ayrı bir renk spesifikasyonu yok; 04_color-tokens.md'deki
+// "Health/Urgent" domain triple'ından türetildi (danger metin + health-soft zemin) — icat değil,
+// mevcut dokümante edilmiş token'ların birleşimi.
+
+type BadgeVariant = 'success' | 'warning' | 'error' | 'primary' | 'health'
 
 interface BadgeProps {
   variant?: BadgeVariant
@@ -10,27 +17,26 @@ interface BadgeProps {
 }
 
 const variantStyles: Record<BadgeVariant, string> = {
-  success: 'bg-[var(--color-success-soft)] text-[var(--color-success)]',
-  warning: 'bg-[var(--color-warning-soft)] text-[var(--color-warning)]',
-  danger:  'bg-[var(--color-danger-soft)] text-[var(--color-danger)]',
-  info:    'bg-[var(--color-info-soft)] text-[var(--color-info)]',
-  neutral: 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)]',
-  primary: 'bg-[var(--color-primary-soft)] text-[var(--color-primary)]',
+  success: 'bg-success-soft text-success',
+  warning: 'bg-warning-soft text-warning',
+  error:   'bg-danger-soft text-danger',
+  primary: 'bg-primary-soft text-primary',
+  health:  'bg-[var(--color-health-soft)] text-danger', // 04_color-tokens.md → Health/Urgent domain triple
 }
 
 const dotStyles: Record<BadgeVariant, string> = {
-  success: 'bg-[var(--color-success)]',
-  warning: 'bg-[var(--color-warning)]',
-  danger:  'bg-[var(--color-danger)]',
-  info:    'bg-[var(--color-info)]',
-  neutral: 'bg-[var(--color-text-muted)]',
-  primary: 'bg-[var(--color-primary)]',
+  success: 'bg-success',
+  warning: 'bg-warning',
+  error:   'bg-danger',
+  primary: 'bg-primary',
+  health:  'bg-danger',
 }
 
-export default function Badge({ variant = 'neutral', children, dot = false, className = '' }: BadgeProps) {
+export default function Badge({ variant = 'primary', children, dot = false, className = '' }: BadgeProps) {
   return (
     <span className={[
-      'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[var(--radius-xs)] text-[11px] font-700 leading-none',
+      // 22_component-library.md matrix: "rounded-full text-[13px] font-bold"
+      'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[13px] font-bold leading-none',
       variantStyles[variant],
       className,
     ].join(' ')}>

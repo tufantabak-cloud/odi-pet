@@ -11,6 +11,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 
 const Turnstile = dynamic(() => import('@marsidev/react-turnstile').then(mod => mod.Turnstile), { ssr: false })
 import { updatePasswordSchema, type UpdatePasswordInput } from '@/lib/validations/auth'
+import { Button, Input, GlassCard } from '@/components/ui/primitives'
 
 const getPasswordStrength = (password: string) => {
   if (!password) return { score: 0, color: 'bg-border-main', text: '' }
@@ -97,14 +98,15 @@ export default function UpdatePasswordPage() {
   }
 
   return (
-    <div className="flex min-h-dvh w-full items-center justify-center p-4 bg-[#FAF8FF] font-montserrat">
-      <div className="bg-white rounded-2xl p-6 shadow-xl border border-border w-full max-w-sm relative overflow-hidden">
+    <div className="flex min-h-dvh w-full items-center justify-center p-4 bg-bg-main font-sans">
+      <GlassCard padding="lg" className="max-w-sm relative overflow-hidden">
         <div className="text-center mb-10">
           <div className="flex flex-col items-center mb-6">
-              <Image src="/logo.webp" alt="Odi.Pet" width={72} height={72} className="mb-2" priority />
+              <Image src="/brand/app-icons/odi-icon-512.png" alt="Odi.Pet Logo" width={72} height={72} className="mb-2" priority />
               <p className="text-[11px] text-text-muted font-medium">Can Dost Yaşam Platformu</p>
             </div>
-          <h1 className="text-[28px] font-black text-text-primary tracking-tighter">Yeni Şifre Belirle</h1>
+          {/* docs/opos-design-system/03_typography.md → text-h1 (24px/700/-0.02em/1.2) — "text-h1" utility globals.css'te tanımlı değil (frozen), kanonik ham değerler kullanıldı */}
+          <h1 className="text-[24px] font-bold tracking-[-0.02em] leading-[1.2] text-text-primary">Yeni Şifre Belirle</h1>
           <p className="text-[13px] text-text-secondary mt-2">Hesabınız için yeni ve güvenli bir şifre oluşturun.</p>
         </div>
 
@@ -133,30 +135,26 @@ export default function UpdatePasswordPage() {
             )}
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider ml-1" htmlFor="password">
-                Yeni Şifre
-              </label>
-              <div className="relative group">
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  autoFocus
-                  {...register('password')}
-                  autoComplete="new-password"
-                  aria-invalid={!!errors.password}
-                  aria-describedby={errors.password ? 'update-password-error' : undefined}
-                  className={`input-base py-3 text-[15px] pr-12 w-full ${errors.password ? 'border-error/50 focus:border-error focus:ring-error/20' : ''}`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? 'Şifreyi gizle' : 'Şifreyi göster'}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-text-secondary hover:text-primary transition-colors"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
+              <Input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                label="Yeni Şifre"
+                placeholder="••••••••"
+                autoFocus
+                {...register('password')}
+                autoComplete="new-password"
+                error={errors.password?.message}
+                rightIcon={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Şifreyi gizle' : 'Şifreyi göster'}
+                    className="w-11 h-11 flex items-center justify-center text-text-secondary hover:text-primary transition-colors -mr-2"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                }
+              />
 
               {/* Strength bar */}
               <div className="flex gap-1 h-1.5 mt-1 px-1">
@@ -182,54 +180,34 @@ export default function UpdatePasswordPage() {
                 </ul>
               )}
 
-              {errors.password && <span id="update-password-error" role="alert" className="text-error text-[11px] font-bold ml-1">{errors.password.message}</span>}
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider ml-1" htmlFor="confirmPassword">
-                Şifreyi Onayla
-              </label>
-              <div className="relative group">
-                <input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  {...register('confirmPassword')}
-                  autoComplete="new-password"
-                  aria-invalid={!!errors.confirmPassword}
-                  aria-describedby={errors.confirmPassword ? 'update-confirm-error' : undefined}
-                  className={`input-base py-3 text-[15px] pr-12 w-full ${errors.confirmPassword ? 'border-error/50 focus:border-error focus:ring-error/20' : ''}`}
-                />
+            <Input
+              id="confirmPassword"
+              type={showConfirmPassword ? 'text' : 'password'}
+              label="Şifreyi Onayla"
+              placeholder="••••••••"
+              {...register('confirmPassword')}
+              autoComplete="new-password"
+              error={errors.confirmPassword?.message}
+              rightIcon={
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   aria-label={showConfirmPassword ? 'Şifreyi gizle' : 'Şifreyi göster'}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-text-secondary hover:text-primary transition-colors"
+                  className="w-11 h-11 flex items-center justify-center text-text-secondary hover:text-primary transition-colors -mr-2"
                 >
                   {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
-              </div>
-              {errors.confirmPassword && <span id="update-confirm-error" role="alert" className="text-error text-[11px] font-bold ml-1">{errors.confirmPassword.message}</span>}
-            </div>
+              }
+            />
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-[#4726AF] text-white rounded-xl font-medium text-[15px] py-3 mt-1 hover:opacity-90 transition-opacity flex items-center justify-center shadow-md disabled:opacity-60"
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-3">
-                  <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-                  </svg>
-                  Güncelleniyor...
-                </span>
-              ) : 'Şifreyi Kaydet'}
-            </button>
+            <Button type="submit" variant="primary" size="lg" fullWidth isLoading={loading} disabled={loading}>
+              {loading ? 'Güncelleniyor...' : 'Şifreyi Kaydet'}
+            </Button>
           </form>
         )}
-      </div>
+      </GlassCard>
     </div>
   )
 }

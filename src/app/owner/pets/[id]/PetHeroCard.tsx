@@ -123,7 +123,7 @@ export default function PetHeroCard({
                 className="object-cover object-center w-full h-full"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-[32px] bg-slate-100">
+              <div className="w-full h-full flex items-center justify-center text-3xl bg-slate-100">
                 {getSpeciesEmoji(pet.species)}
               </div>
             )}
@@ -139,7 +139,7 @@ export default function PetHeroCard({
         <div className="flex items-center gap-3 flex-1 min-w-0 pb-1">
           {/* İsim */}
           <h1 
-            className="text-[24px] sm:text-[32px] font-black text-white leading-none truncate max-w-[130px] sm:max-w-none flex-shrink min-w-0"
+            className="text-2xl sm:text-3xl font-bold text-white leading-none truncate max-w-[130px] sm:max-w-none flex-shrink min-w-0"
             style={{ textShadow: '0 2px 6px rgba(0,0,0,0.8)' }}>
             {pet.name}
           </h1>
@@ -151,17 +151,17 @@ export default function PetHeroCard({
           <div 
             className="flex flex-col gap-0.5 min-w-0 flex-1 overflow-hidden text-white"
             style={{ textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
-            <p className="text-[11px] sm:text-[12px] font-semibold leading-tight truncate">
+            <p className="text-xs font-semibold leading-tight truncate">
               {pet.breed || 'Bilinmiyor'} 
               {pet.gender === 'male' 
                 ? ' • Erkek' 
                 : pet.gender === 'female' 
                 ? ' • Dişi' : ''}
             </p>
-            <p className="text-[10px] sm:text-[11px] text-white/90 leading-tight truncate font-medium">
+            <p className="text-2xs sm:text-xs text-white/90 leading-tight truncate font-medium">
               {age.text}
             </p>
-            <p className="text-[10px] sm:text-[11px] text-white/90 leading-tight truncate font-medium">
+            <p className="text-2xs sm:text-xs text-white/90 leading-tight truncate font-medium">
               {latestWeight && latestWeight !== '-' ? `${latestWeight} Kilo • ` : ''}
               {pet.is_neutered ? 'Kısırlaştırıldı' : 'Kısırlaştırılmamış'}
             </p>

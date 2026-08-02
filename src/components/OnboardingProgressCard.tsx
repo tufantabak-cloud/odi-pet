@@ -103,12 +103,12 @@ export default function OnboardingProgressCard({
           <div className="w-6 h-6 rounded-lg bg-[#EEEDFE] flex items-center justify-center text-[#534AB7]">
             <i className="ti ti-sparkles text-xs" />
           </div>
-          <span className="text-xs font-bold text-[#26215C]">
+          <span className="text-xs font-semibold text-[#26215C]">
             %{progress.percentage} · {petName} için Kurulum Rehberi
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] text-[#6F6B99]">Genişlet</span>
+          <span className="text-2xs text-[#6F6B99]">Genişlet</span>
           <i className="ti ti-chevron-down text-[#6F6B99] text-xs" />
         </div>
       </div>
@@ -125,7 +125,7 @@ export default function OnboardingProgressCard({
         {/* Header */}
         <div className="flex justify-between items-start mb-3">
           <div>
-            <h3 className="text-base font-bold text-[#26215C] mb-1">
+            <h3 className="text-base font-semibold text-[#26215C] mb-1">
               {petName} için Kurulum Rehberi
             </h3>
             <p className="text-xs text-[#6F6B99]">
@@ -135,7 +135,7 @@ export default function OnboardingProgressCard({
           <div className="flex items-center gap-3">
             {/* Otomatik Gizle Toggle */}
             <label className="flex items-center gap-1.5 cursor-pointer select-none" onClick={(e) => e.stopPropagation()}>
-              <span className="text-[10px] text-[#6F6B99] font-semibold">Otomatik Gizle</span>
+              <span className="text-2xs text-[#6F6B99] font-semibold">Otomatik Gizle</span>
               <div className="relative">
                 <input 
                   type="checkbox" 
@@ -146,7 +146,7 @@ export default function OnboardingProgressCard({
                 <div className="w-7 h-4 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-[#534AB7]"></div>
               </div>
             </label>
-            <span className="text-sm font-bold text-[#534AB7] bg-[#EEEDFE] px-2.5 py-1 rounded-full">
+            <span className="text-xs font-semibold text-[#534AB7] bg-[#EEEDFE] px-2.5 py-1 rounded-full">
               %{progress.percentage}
             </span>
           </div>

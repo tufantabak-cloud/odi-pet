@@ -8,5 +8,7 @@
 - **Guard 5:** Rabies vaccination algorithm `is_core` domain preservation.
 - **Guard 6:** Overdue notification recovery delegation.
 - **Guard 7:** OPOS Illustration Library protection & DAM Single Source of Truth check.
+- **Guard 8:** Canonical Data & Health Data Protection Governance Rules (Single Source of Truth, Read-Only Dashboard/Timeline, Health Data Archival Only).
 
-*Status: 7/7 Guards Active & Passing (100%)*
+*Status: 8/8 Guards Active & Passing (100%)*
+

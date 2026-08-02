@@ -84,4 +84,35 @@ const illustrationApiPath = path.join(rootDir, 'src/lib/illustrations.ts');
 assert(fs.existsSync(illustrationApiPath), 'Core Illustration API (illustrations.ts) missing');
 console.log('✅ Guard 7 Passed: OPOS Illustration System is active, protected, and frozen.');
 
+// 8. Check Canonical Data & Health Data Protection Governance Rules (Cilt 5 & 6)
+const agentsMdPath = path.join(rootDir, 'AGENTS.md');
+assert(fs.existsSync(agentsMdPath), 'AGENTS.md missing');
+const agentsContent = fs.readFileSync(agentsMdPath, 'utf8');
+assert(agentsContent.includes('Single Source of Truth & Kanonik Veri Modeli'), 'AGENTS.md must contain Single Source of Truth rule');
+assert(agentsContent.includes('Dashboard & Timeline Veri Üretmez'), 'AGENTS.md must contain Dashboard & Timeline Read-Only rule');
+assert(agentsContent.includes('Sağlık Verisi Silinemez, Sadece Arşivlenir'), 'AGENTS.md must contain Health Data Archival Only rule');
+
+const governanceHandbookPath = path.join(rootDir, 'docs/governance/governance-handbook.md');
+assert(fs.existsSync(governanceHandbookPath), 'governance-handbook.md missing');
+const handbookContent = fs.readFileSync(governanceHandbookPath, 'utf8');
+assert(handbookContent.includes('Rule 7 (Canonical Data Model)'), 'Governance handbook missing Rule 7');
+assert(handbookContent.includes('Rule 8 (Dashboard & Timeline Read-Only Aggregation)'), 'Governance handbook missing Rule 8');
+assert(handbookContent.includes('Rule 9 (Health Data Archival Only)'), 'Governance handbook missing Rule 9');
+console.log('✅ Guard 8 Passed: Canonical Data & Health Data Protection Rules registered and active.');
+
+// 9. Check AI Governance & Human-in-the-Loop Rules (Cilt 13)
+assert(agentsContent.includes('OPOS AI Governance & Human-in-the-Loop Kuralları (Cilt 13)'), 'AGENTS.md must contain AI Governance section');
+assert(agentsContent.includes('AI Görsel & İkon Standardı (Mor Yıldız / Sparkles Indicator - Cilt 13)'), 'AGENTS.md must contain AI Visual Indicator rule');
+assert(agentsContent.includes('Human-in-the-Loop & Onay Zorunluluğu'), 'AGENTS.md must contain Human-in-the-Loop rule');
+assert(agentsContent.includes('Confidence Score & Açıklanabilirlik'), 'AGENTS.md must contain Confidence Score rule');
+assert(agentsContent.includes('Yasal Sorumluluk & Tıbbi Sorumluluk Reddi'), 'AGENTS.md must contain Medical Disclaimer rule');
+
+assert(handbookContent.includes('Rule 10 (AI Visual Indicator Standard)'), 'Governance handbook missing Rule 10');
+assert(handbookContent.includes('Rule 11 (AI Human-in-the-Loop Confirmation)'), 'Governance handbook missing Rule 11');
+assert(handbookContent.includes('Rule 12 (AI Confidence Score & Explainability)'), 'Governance handbook missing Rule 12');
+assert(handbookContent.includes('Rule 13 (Medical Disclaimer & Legal Boundaries)'), 'Governance handbook missing Rule 13');
+console.log('✅ Guard 9 Passed: AI Governance & Human-in-the-Loop Rules registered and active.');
+
 console.log('🎉 ALL ARCHITECTURE GUARDS PASSED (100%)');
+
+

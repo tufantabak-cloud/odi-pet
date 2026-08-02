@@ -1499,7 +1499,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                     role="tab"
                     aria-selected={activeTab === tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex-shrink-0 px-4 min-h-[44px] inline-flex items-center text-[13px] font-bold whitespace-nowrap border-b-2 transition-colors cursor-pointer ${activeTab === tab.id ? 'border-primary text-primary font-black' : 'border-transparent text-text-secondary hover:text-text-primary'}`}
+                    className={`flex-shrink-0 px-4 min-h-[44px] inline-flex items-center text-xs font-semibold whitespace-nowrap border-b-2 transition-colors cursor-pointer ${activeTab === tab.id ? 'border-primary text-primary' : 'border-transparent text-text-secondary hover:text-text-primary'}`}
                   >
                     {tab.label}
                   </button>

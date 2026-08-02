@@ -106,23 +106,23 @@ function RecommendationCardItem({
         <div>
           {/* Rozet & Okuma Süresi */}
           <div className="flex items-center justify-between gap-2 mb-1">
-            <span className="text-[10px] font-800 text-[var(--color-primary)] bg-[var(--color-primary-soft)] px-2 py-0.5 rounded-md uppercase tracking-wider">
+            <span className="text-2xs font-semibold text-[var(--color-primary)] bg-[var(--color-primary-soft)] px-2 py-0.5 rounded-md uppercase tracking-wider">
               {badgeLabel}
             </span>
-            <span className="text-[10px] text-[var(--color-text-muted)] font-600">
+            <span className="text-2xs text-[var(--color-text-muted)] font-medium">
               {art.read_time_minutes || 3} dk okuma
             </span>
           </div>
 
-          <p className="text-[10px] text-[var(--color-text-secondary)] font-600 italic mb-1.5 truncate">
+          <p className="text-2xs text-[var(--color-text-secondary)] font-medium italic mb-1.5 truncate">
             {rec.reason}
           </p>
 
-          <h3 className="text-[14px] font-800 text-[var(--color-text-primary)] leading-snug line-clamp-1">
+          <h3 className="text-sm font-semibold text-[var(--color-text-primary)] leading-snug line-clamp-1">
             {art.title}
           </h3>
 
-          <p className="text-[11px] text-[var(--color-text-secondary)] font-500 line-clamp-2 mt-1 leading-relaxed">
+          <p className="text-xs text-[var(--color-text-secondary)] font-normal line-clamp-2 mt-1 leading-relaxed">
             {art.excerpt}
           </p>
         </div>
@@ -131,7 +131,7 @@ function RecommendationCardItem({
         <div className="flex items-center justify-between pt-2 border-t border-[var(--color-border)]/50">
           <Link
             href={`/owner/learn/${art.slug}?pet_id=${activePetId}`}
-            className="text-[11px] font-800 text-[var(--color-primary)] hover:underline flex items-center gap-1"
+            className="text-xs font-semibold text-[var(--color-primary)] hover:underline flex items-center gap-1"
           >
             Devamını Oku →
           </Link>
@@ -140,8 +140,8 @@ function RecommendationCardItem({
             {/* Kaydet */}
             <button
               onClick={() => onToggleSave(art.id)}
-              className={`text-[11px] font-700 flex items-center gap-1 transition-colors ${
-                isSaved ? 'text-amber-600 font-900' : 'text-[var(--color-text-secondary)] hover:text-amber-600'
+              className={`text-xs font-semibold flex items-center gap-1 transition-colors ${
+                isSaved ? 'text-amber-600' : 'text-[var(--color-text-secondary)] hover:text-amber-600'
               }`}
               title={isSaved ? 'Kaydı Kaldır' : 'Kaydet'}
             >
@@ -152,7 +152,7 @@ function RecommendationCardItem({
             {/* İlgilenmiyorum */}
             <button
               onClick={() => onDismiss(art.id)}
-              className="text-[11px] font-700 text-[var(--color-text-muted)] hover:text-rose-600 flex items-center gap-1 transition-colors"
+              className="text-xs font-semibold text-[var(--color-text-muted)] hover:text-rose-600 flex items-center gap-1 transition-colors"
               title="İlgilenmiyorum"
             >
               <i className="ti ti-eye-off" style={{ fontSize: '14px' }} />

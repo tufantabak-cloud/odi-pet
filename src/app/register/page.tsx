@@ -11,6 +11,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { registerSchema, type RegisterInput } from '@/lib/validations/auth'
 import ReferralCaptureListener from '@/components/ReferralCaptureListener'
+import { Button, Input, Checkbox, GlassCard } from '@/components/ui/primitives'
 
 const Turnstile = dynamic(() => import('@marsidev/react-turnstile').then(mod => mod.Turnstile), { ssr: false })
 
@@ -186,50 +187,52 @@ export default function RegisterPage() {
   // ── Başarı Ekranı ────────────────────────────────────────────
   if (success) {
     return (
-      <div className="flex min-h-dvh w-full items-center justify-center p-4 bg-[#FAF8FF] font-montserrat">
-        <div className="bg-white rounded-2xl p-6 shadow-xl border border-border w-full max-w-sm relative overflow-hidden">
-          
-          <div className="p-8 flex flex-col items-center text-center">
+      <div className="flex min-h-dvh w-full items-center justify-center p-4 bg-bg-main font-sans">
+        <GlassCard padding="lg" className="max-w-sm relative overflow-hidden">
+
+          <div className="flex flex-col items-center text-center">
             <div className="w-20 h-20 rounded-full bg-success/10 flex items-center justify-center mb-5 animate-in zoom-in duration-300">
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
             </div>
-            <h2 className="text-[26px] font-black text-text-primary tracking-tight mb-3">Aramıza Hoş Geldiniz!</h2>
+            {/* docs/opos-design-system/03_typography.md → text-h1 (24px/700/-0.02em/1.2) — "text-h1" utility globals.css'te tanımlı değil (frozen), kanonik ham değerler kullanıldı */}
+            <h2 className="text-[24px] font-bold tracking-[-0.02em] leading-[1.2] text-text-primary mb-3">Aramıza Hoş Geldiniz!</h2>
             <p className="text-[14px] text-text-secondary leading-relaxed mb-7 max-w-xs">
               Kaydınız başarıyla oluşturuldu. Lütfen hesabınızı etkinleştirmek için e-posta adresinize gönderilen doğrulama bağlantısına tıklayın. E-posta gelmezse spam klasörünüzü kontrol edebilirsiniz.
             </p>
-            <button
-              onClick={() => router.push('/login')}
-              className="w-full bg-[#4726AF] text-white rounded-xl font-medium text-[15px] py-3 mt-1 hover:opacity-90 transition-opacity flex items-center justify-center shadow-md disabled:opacity-60"
-            >
+            <Button variant="primary" size="lg" fullWidth onClick={() => router.push('/login')}>
               Giriş Sayfasına Git
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="md"
+              fullWidth
+              className="mt-3"
               onClick={handleResend}
+              isLoading={resendLoading}
               disabled={resendLoading || resendSuccess}
-              className="w-full mt-3 h-11 text-[14px] font-bold text-text-secondary hover:text-primary transition-colors disabled:opacity-50"
             >
-              {resendLoading ? 'Gönderiliyor…' : resendSuccess ? '✓ Tekrar Gönderildi' : 'E-postayı Tekrar Gönder'}
-            </button>
+              {resendSuccess ? '✓ Tekrar Gönderildi' : 'E-postayı Tekrar Gönder'}
+            </Button>
           </div>
-        </div>
+        </GlassCard>
       </div>
     )
   }
 
   // ── Ana Form ─────────────────────────────────────────────────
   return (
-    <div className="flex min-h-dvh w-full items-start justify-center p-4 overflow-y-auto bg-[#FAF8FF] font-montserrat">
+    <div className="flex min-h-dvh w-full items-start justify-center p-4 overflow-y-auto bg-bg-main font-sans">
 
       {/* Referral parametresini pasif olarak yakala */}
       <ReferralCaptureListener />
 
       <div className="w-full max-w-sm">
-        <div className="bg-white rounded-2xl p-6 shadow-xl border border-border w-full relative overflow-y-auto">
+        <GlassCard padding="lg" className="w-full overflow-y-auto">
 
           {/* Mor üst şerit */}
-          
+
 
           {/* Step 2: minimal başlık bar */}
           {step === 2 && (
@@ -254,7 +257,7 @@ export default function RegisterPage() {
             {/* ── Logo & Başlık (sadece adım 1) ── */}
             {step === 1 && (
               <div className="flex flex-col items-center mb-6">
-              <Image src="/logo.webp" alt="Odi.Pet" width={72} height={72} className="mb-2" priority />
+              <Image src="/brand/app-icons/odi-icon-512.png" alt="Odi.Pet Logo" width={72} height={72} className="mb-2" priority />
               <p className="text-[11px] text-text-muted font-medium">Can Dost Yaşam Platformu</p>
             </div>
             )}
@@ -290,79 +293,80 @@ export default function RegisterPage() {
 
                   {/* Sosyal butonlar */}
                   <div className="flex flex-col gap-3 mb-5">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="lg"
+                fullWidth
                 onClick={handleGoogleLogin}
+                isLoading={googleLoading}
                 disabled={googleLoading || appleLoading || loading}
-                className="w-full flex items-center justify-center gap-2 py-3 border border-border rounded-xl bg-white text-[13px] font-medium text-text-primary active:scale-[0.98] transition-all disabled:opacity-60"
-              >
-                {googleLoading ? (
-                  <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
-                ) : (
+                leftIcon={
                   <svg viewBox="0 0 24 24" width="18" height="18">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                   </svg>
-                )}
-                Google ile devam et
-              </button>
-
-              <button
-                type="button"
-                onClick={handleAppleLogin}
-                disabled={googleLoading || appleLoading || loading}
-                className="w-full flex items-center justify-center gap-2 py-3 border border-border rounded-xl bg-white text-[13px] font-medium text-text-primary active:scale-[0.98] transition-all disabled:opacity-60"
+                }
               >
-                {appleLoading ? (
-                  <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
-                ) : (
+                Google ile devam et
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                fullWidth
+                onClick={handleAppleLogin}
+                isLoading={appleLoading}
+                disabled={googleLoading || appleLoading || loading}
+                leftIcon={
                   <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
                     <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09z"/>
                     <path d="M15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/>
                   </svg>
-                )}
+                }
+              >
                 Apple ile devam et
-              </button>
+              </Button>
             </div>
             {/* Ayraç */}
                   <div className="relative flex items-center">
                     <div className="flex-grow h-px bg-border-main" />
-                    <span className="mx-3 px-2 text-[11px] font-black text-text-secondary/50 uppercase tracking-widest bg-white">veya</span>
+                    <span className="mx-3 px-2 text-[11px] font-black text-text-secondary/50 uppercase tracking-widest bg-surface">veya</span>
                     <div className="flex-grow h-px bg-border-main" />
                   </div>
 
                   {/* Ad Soyad */}
-                  <div className="flex flex-col gap-1.5">
-                    <label htmlFor="name" className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Ad Soyad</label>
-                    <input id="name" type="text" placeholder="Adınız ve Soyadınız" autoFocus
-                      {...register('name')}
-                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleNextStep() } }}
-                      aria-invalid={!!errors.name}
-                      data-testid="register-name-input"
-                      className={`input-base py-3 text-[15px] ${errors.name ? 'border-error/50 focus:border-error focus:ring-error/20' : ''}`} />
-                    {errors.name && <span role="alert" className="text-error text-[11px] font-bold">{errors.name.message}</span>}
-                  </div>
+                  <Input
+                    id="name"
+                    type="text"
+                    label="Ad Soyad"
+                    placeholder="Adınız ve Soyadınız"
+                    autoFocus
+                    {...register('name')}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleNextStep() } }}
+                    data-testid="register-name-input"
+                    error={errors.name?.message}
+                  />
 
                   {/* E-posta */}
-                  <div className="flex flex-col gap-1.5">
-                    <label htmlFor="reg-email" className="text-[11px] font-black text-text-secondary uppercase tracking-wider">E-Posta</label>
-                    <input id="reg-email" type="email" placeholder="E-posta adresiniz"
-                      {...register('email')}
-                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleNextStep() } }}
-                      aria-invalid={!!errors.email}
-                      data-testid="register-email-input"
-                      className={`input-base py-3 text-[15px] ${errors.email ? 'border-error/50 focus:border-error focus:ring-error/20' : ''}`} />
-                    {errors.email && <span role="alert" className="text-error text-[11px] font-bold">{errors.email.message}</span>}
-                  </div>
+                  <Input
+                    id="reg-email"
+                    type="email"
+                    label="E-Posta"
+                    placeholder="E-posta adresiniz"
+                    {...register('email')}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleNextStep() } }}
+                    data-testid="register-email-input"
+                    error={errors.email?.message}
+                  />
 
                   {/* İleri */}
-                  <button type="button" onClick={handleNextStep}
-                    data-testid="register-next-button"
-                    className="w-full bg-[#4726AF] text-white rounded-xl font-medium text-[15px] py-3 mt-1 hover:opacity-90 transition-opacity flex items-center justify-center shadow-md disabled:opacity-60">
+                  <Button type="button" variant="primary" size="lg" fullWidth onClick={handleNextStep} data-testid="register-next-button">
                     İleri
-                  </button>
+                  </Button>
 
                   <p className="text-center text-[14px] text-text-secondary font-medium mt-1">
                     Zaten hesabınız var mı?{' '}
@@ -376,19 +380,22 @@ export default function RegisterPage() {
 
                   {/* Şifre */}
                   <div className="flex flex-col gap-1.5">
-                    <label htmlFor="password" className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Şifre</label>
-                    <div className="relative">
-                      <input id="password" type={showPassword ? 'text' : 'password'} placeholder="••••••••"
-                        {...register('password')}
-                        aria-invalid={!!errors.password}
-                        data-testid="register-password-input"
-                        className={`input-base py-3 text-[15px] pr-11 w-full ${errors.password ? 'border-error/50 focus:border-error focus:ring-error/20' : ''}`} />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)}
-                        aria-label={showPassword ? 'Şifreyi gizle' : 'Şifreyi göster'}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-text-secondary hover:text-primary transition-colors">
-                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                      </button>
-                    </div>
+                    <Input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      label="Şifre"
+                      placeholder="••••••••"
+                      {...register('password')}
+                      data-testid="register-password-input"
+                      error={errors.password?.message}
+                      rightIcon={
+                        <button type="button" onClick={() => setShowPassword(!showPassword)}
+                          aria-label={showPassword ? 'Şifreyi gizle' : 'Şifreyi göster'}
+                          className="w-11 h-11 flex items-center justify-center text-text-secondary hover:text-primary transition-colors -mr-2">
+                          {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      }
+                    />
 
                     {/* Güç çubuğu */}
                     {passwordValue && (
@@ -411,55 +418,54 @@ export default function RegisterPage() {
                         </ul>
                       </>
                     )}
-                    {errors.password && <span role="alert" className="text-error text-[11px] font-bold">{errors.password.message}</span>}
                   </div>
 
                   {/* Şifre Tekrar */}
-                  <div className="flex flex-col gap-1.5">
-                    <label htmlFor="confirmPassword" className="text-[11px] font-black text-text-secondary uppercase tracking-wider">Şifre Tekrar</label>
-                    <div className="relative">
-                      <input id="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} placeholder="••••••••"
-                        {...register('confirmPassword')}
-                        aria-invalid={!!errors.confirmPassword}
-                        data-testid="register-password-confirm-input"
-                        className={`input-base py-3 text-[15px] pr-11 w-full ${errors.confirmPassword ? 'border-error/50 focus:border-error focus:ring-error/20' : ''}`} />
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    label="Şifre Tekrar"
+                    placeholder="••••••••"
+                    {...register('confirmPassword')}
+                    data-testid="register-password-confirm-input"
+                    error={errors.confirmPassword?.message}
+                    rightIcon={
                       <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         aria-label={showConfirmPassword ? 'Şifreyi gizle' : 'Şifreyi göster'}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-text-secondary hover:text-primary transition-colors">
+                        className="w-11 h-11 flex items-center justify-center text-text-secondary hover:text-primary transition-colors -mr-2">
                         {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                       </button>
-                    </div>
-                    {errors.confirmPassword && <span role="alert" className="text-error text-[11px] font-bold">{errors.confirmPassword.message}</span>}
-                  </div>
+                    }
+                  />
 
                   {/* KVKK */}
                   <div className="flex flex-col gap-1">
-                    <div className="flex items-start gap-3">
-                      <input type="checkbox" id="terms" {...register('terms')}
-                        data-testid="register-terms-checkbox"
-                        className="mt-0.5 w-4 h-4 rounded border-border-main text-primary focus:ring-primary shrink-0 cursor-pointer" />
-                      <label htmlFor="terms" className="text-[12px] text-text-secondary leading-snug cursor-pointer">
-                        <Link href="/legal/terms" target="_blank" className="font-bold text-primary hover:underline">Kullanım Koşullarını</Link>{' '}ve{' '}
-                        <Link href="/legal/kvkk" target="_blank" className="font-bold text-primary hover:underline">Gizlilik Politikası</Link>'nı okudum, onaylıyorum.
-                      </label>
-                    </div>
+                    <Checkbox
+                      id="terms"
+                      {...register('terms')}
+                      data-testid="register-terms-checkbox"
+                      label={
+                        <>
+                          <Link href="/legal/terms" target="_blank" className="font-bold text-primary hover:underline">Kullanım Koşullarını</Link>{' '}ve{' '}
+                          <Link href="/legal/kvkk" target="_blank" className="font-bold text-primary hover:underline">Gizlilik Politikası</Link>'nı okudum, onaylıyorum.
+                        </>
+                      }
+                    />
                     {errors.terms && <span role="alert" className="text-error text-[11px] font-bold">{errors.terms.message}</span>}
                   </div>
 
                   {/* Kayıt Ol */}
-                  <button type="submit" disabled={loading || googleLoading || appleLoading}
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="lg"
+                    fullWidth
+                    isLoading={loading}
+                    disabled={loading || googleLoading || appleLoading}
                     data-testid="register-submit-button"
-                    className="w-full bg-[#4726AF] text-white rounded-xl font-medium text-[15px] py-3 mt-1 hover:opacity-90 transition-opacity flex items-center justify-center shadow-md disabled:opacity-60">
-                    {loading ? (
-                      <span className="flex items-center gap-2.5">
-                        <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-                        </svg>
-                        Hesap Oluşturuluyor…
-                      </span>
-                    ) : 'Kayıt Ol ve Başla'}
-                  </button>
+                  >
+                    {loading ? 'Hesap Oluşturuluyor…' : 'Kayıt Ol ve Başla'}
+                  </Button>
 
                   {/* SSL/KVKK */}
                   <div className="flex items-center justify-center gap-5 pt-4 border-t border-border-main/40">
@@ -484,7 +490,7 @@ export default function RegisterPage() {
             </form>
 
           </div>{/* /p-6 */}
-        </div>{/* /kart */}
+        </GlassCard>
       </div>
     </div>
   )

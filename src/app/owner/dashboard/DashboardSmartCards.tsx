@@ -738,30 +738,36 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
     return (
       <div
         key={card.id}
-        className="flex items-center gap-2.5 p-3.5 rounded-2xl border border-[var(--color-border)] shadow-sm"
-        style={{ background: style.bg, borderLeft: `3px solid ${style.accentColor}` }}
+        className="relative flex items-center gap-3 p-3.5 rounded-2xl border border-[var(--color-border)] shadow-xs overflow-hidden bg-white"
+        style={{ background: style.bg }}
       >
+        {/* Sol Vurgu Çubuğu (Inset accent bar - rounded corners ile tam uyumlu) */}
         <div
-          className="w-[38px] h-[38px] rounded-[10px] flex items-center justify-center flex-shrink-0"
+          className="absolute left-0 top-0 bottom-0 w-[4px]"
+          style={{ backgroundColor: style.accentColor }}
+        />
+
+        <div
+          className="w-[40px] h-[40px] rounded-xl flex items-center justify-center flex-shrink-0 ml-1.5"
           style={{ background: style.iconBg }}
         >
           {renderIcon(card.type)}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[9px] font-800 uppercase tracking-wide" style={{ color: style.tagColor }}>
+          <p className="text-[9px] font-800 uppercase tracking-wide mb-0.5" style={{ color: style.tagColor }}>
             {card.dateInfo || style.tagText}
           </p>
-          <p className="text-[12px] font-800 text-[var(--color-text-primary)] truncate">
+          <p className="text-[12.5px] font-800 text-[var(--color-text-primary)] truncate leading-tight">
             {card.title}
           </p>
-          <p className="text-[10px] text-[var(--color-text-muted)] font-500 leading-normal line-clamp-2">
+          <p className="text-[11px] text-[var(--color-text-muted)] font-500 leading-snug line-clamp-2 mt-0.5">
             {card.subtitle}
           </p>
         </div>
-        <div className="flex flex-col gap-1.5 flex-shrink-0">
+        <div className="flex flex-col gap-1.5 flex-shrink-0 justify-center items-end">
           <button
             onClick={card.action}
-            className="px-3.5 py-1.5 rounded-[10px] text-[11px] font-800 text-white transition-all active:scale-[0.97] min-h-[44px]"
+            className="px-3.5 py-2 rounded-xl text-[11px] font-800 text-white transition-all active:scale-[0.97] shadow-xs"
             style={{ background: style.btnBg }}
           >
             {card.ctaLabel}
@@ -769,7 +775,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
           {isDismissible && (
             <button
               onClick={() => dismissCard(card.id)}
-              className="px-3.5 py-1 rounded-[10px] text-[10px] font-700 text-[var(--color-text-secondary)] border border-[var(--color-border)] hover:bg-[var(--color-surface)]/20 transition-all text-center min-h-[44px]"
+              className="px-2 py-0.5 rounded-lg text-[10px] font-700 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-all"
             >
               Sonra
             </button>
@@ -785,26 +791,30 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
     return (
       <div
         key={card.id}
-        className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border border-[var(--color-border)] shadow-xs"
-        style={{ background: style.bg, borderLeft: `3px solid ${style.accentColor}` }}
+        className="relative flex items-center justify-between gap-2.5 px-3.5 py-3 rounded-2xl border border-[var(--color-border)] shadow-xs overflow-hidden bg-white"
+        style={{ background: style.bg }}
       >
-        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+        <div
+          className="absolute left-0 top-0 bottom-0 w-[4px]"
+          style={{ backgroundColor: style.accentColor }}
+        />
+        <div className="flex items-center gap-2.5 min-w-0 flex-1 ml-1.5">
           <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
             style={{ background: style.iconBg }}
           >
             {renderIcon(card.type)}
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
-              <p className="text-[11.5px] font-800 text-[var(--color-text-primary)] truncate">
+              <p className="text-[12px] font-800 text-[var(--color-text-primary)] truncate">
                 {card.title}
               </p>
               <span className="text-[8.5px] font-800 px-1.5 py-0.5 rounded-full shrink-0" style={{ color: style.tagColor, backgroundColor: style.iconBg }}>
                 {card.dateInfo || style.tagText}
               </span>
             </div>
-            <p className="text-[10px] text-[var(--color-text-muted)] font-500 truncate">
+            <p className="text-[10.5px] text-[var(--color-text-muted)] font-500 truncate mt-0.5">
               {card.subtitle}
             </p>
           </div>
@@ -812,7 +822,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <button
             onClick={card.action}
-            className="px-3 py-1.5 rounded-[9px] text-[10.5px] font-800 text-white transition-all active:scale-[0.97] min-h-[44px]"
+            className="px-3 py-1.5 rounded-xl text-[11px] font-800 text-white transition-all active:scale-[0.97]"
             style={{ background: style.btnBg }}
           >
             {card.ctaLabel}
@@ -820,7 +830,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
           {isDismissible && (
             <button
               onClick={() => dismissCard(card.id)}
-              className="px-2 py-1 rounded-[8px] text-[10px] font-700 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-all min-h-[44px]"
+              className="w-6 h-6 rounded-full flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-all"
               title="Sonra"
             >
               <i className="ti ti-x text-[12px]" />
@@ -834,7 +844,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
   return (
     <div className="flex flex-col gap-2">
       {/* Başlık */}
-      <div className="flex items-center gap-2 px-[var(--space-4)] mb-1">
+      <div className="flex items-center gap-2 mb-1">
         <p className="text-[11px] font-800 text-[var(--color-text-primary)] uppercase tracking-[0.8px]">
           Bugünkü Odak
         </p>
@@ -846,7 +856,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
       </div>
 
       {/* Kart Listesi */}
-      <div className="flex flex-col gap-2 px-[var(--space-4)]">
+      <div className="flex flex-col gap-2">
         {/* 1. Bir Büyük Ana Kart */}
         {mainCard && renderMainCard(mainCard)}
 

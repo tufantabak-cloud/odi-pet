@@ -49,8 +49,8 @@ function PushPermissionCard({ onDismiss, pets = [] }: { onDismiss: () => void, p
       const reg = await navigator.serviceWorker.ready;
       reg.showNotification('🐾 Odi.Pet Test Bildirimi', {
         body: 'Harika! Telefon bildirimlerin ve Service Worker bağlantın başarıyla çalışıyor. 🌟',
-        icon: '/icon-192.png',
-        badge: '/icon-192.png',
+        icon: '/brand/app-icons/odi-icon-256.png',
+        badge: '/brand/app-icons/odi-icon-256.png',
         tag: 'test-notification',
         data: {
           url: '/owner/notifications'

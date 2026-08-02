@@ -173,25 +173,25 @@ export default function LearnClient({
         {/* Üst Bilgiler & Rozetler */}
         <div className="flex items-center justify-between gap-2 flex-wrap text-xs">
           <div className="flex items-center gap-2">
-            <span className="bg-purple-100 text-purple-800 px-2.5 py-0.5 rounded-full font-bold uppercase text-[10px]">
+            <span className="bg-purple-100 text-purple-800 px-2.5 py-0.5 rounded-full font-semibold uppercase text-2xs">
               {art.category || 'Rehber'}
             </span>
             {art.is_medical_content && (
-              <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold text-[10px]">
+              <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-semibold text-2xs">
                 Medikal Onaylı ✓
               </span>
             )}
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-[11px] text-gray-500 font-medium">
+            <span className="text-xs text-gray-500 font-medium">
               ⏱ {art.read_time_minutes || 3} dk okuma
             </span>
             <button
               onClick={() => handleToggleSave(art.id)}
               className={`p-1.5 rounded-xl transition-all ${
                 isSaved
-                  ? 'bg-purple-100 text-purple-700 font-bold'
+                  ? 'bg-purple-100 text-purple-700 font-semibold'
                   : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
               }`}
               title={isSaved ? 'Kaydedilenlerden Çıkar' : 'Kaydet'}
@@ -213,7 +213,7 @@ export default function LearnClient({
         <div>
           <Link
             href={`/owner/learn/${art.slug}`}
-            className="text-base font-extrabold text-gray-900 hover:text-[var(--color-primary)] transition-colors line-clamp-2"
+            className="text-base font-semibold text-gray-900 hover:text-[var(--color-primary)] transition-colors line-clamp-2"
           >
             {art.title}
           </Link>
@@ -223,7 +223,7 @@ export default function LearnClient({
         </div>
 
         {/* Alt Bilgi Barı */}
-        <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-500">
+        <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
           <div className="flex items-center gap-3">
             {reviewDate && <span>Son Kontrol: {reviewDate}</span>}
             {art.references_list && art.references_list.length > 0 && (
@@ -235,7 +235,7 @@ export default function LearnClient({
 
           <Link
             href={`/owner/learn/${art.slug}`}
-            className="text-[var(--color-primary)] font-extrabold hover:underline flex items-center gap-1"
+            className="text-[var(--color-primary)] font-semibold hover:underline flex items-center gap-1"
           >
             Detaylı Oku <i className="ti ti-arrow-right" />
           </Link>
@@ -248,7 +248,7 @@ export default function LearnClient({
     <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
       {/* Üst Başlık */}
       <div>
-        <h1 className="text-xl font-extrabold text-gray-900">Bilgi ve Rehber Kütüphanesi</h1>
+        <h1 className="text-xl font-bold text-gray-900">Bilgi ve Rehber Kütüphanesi</h1>
         <p className="text-xs text-gray-500 mt-1">
           Can dostunuzun sağlığı, bakımı ve gelişimi için bilimsel araştırmalara dayalı onaylı rehberler.
         </p>
@@ -265,28 +265,28 @@ export default function LearnClient({
           }`}
         >
           <span>✨ Petine Özel</span>
-          <span className="bg-white/20 px-1.5 py-0.5 rounded-md text-[10px]">
+          <span className="bg-white/20 px-1.5 py-0.5 rounded-md text-2xs">
             {personalizedArticles.length}
           </span>
         </button>
 
         <button
           onClick={() => setActiveTab('all')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+          className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 ${
             activeTab === 'all'
               ? 'bg-[var(--color-primary)] text-white shadow-xs'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
           }`}
         >
           <span>📚 Tüm Bilgiler</span>
-          <span className="bg-white/20 px-1.5 py-0.5 rounded-md text-[10px]">
+          <span className="bg-white/20 px-1.5 py-0.5 rounded-md text-2xs">
             {articles.length}
           </span>
         </button>
 
         <button
           onClick={() => setActiveTab('saved')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+          className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
             activeTab === 'saved'
               ? 'bg-[var(--color-primary)] text-white shadow-xs'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -302,12 +302,12 @@ export default function LearnClient({
           {/* Pet Seçici (Birden fazla pet varsa) */}
           {userPets.length > 1 && (
             <div className="flex items-center gap-2 overflow-x-auto py-1">
-              <span className="text-xs font-bold text-gray-500 whitespace-nowrap">Aktif Pet:</span>
+              <span className="text-xs font-semibold text-gray-500 whitespace-nowrap">Aktif Pet:</span>
               {userPets.map((pet) => (
                 <button
                   key={pet.id}
                   onClick={() => setSelectedPetId(pet.id)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap ${
                     selectedPetId === pet.id
                       ? 'bg-purple-100 text-purple-900 border border-purple-300'
                       : 'bg-gray-50 text-gray-600 border hover:bg-gray-100'
@@ -323,11 +323,11 @@ export default function LearnClient({
             <div className="p-10 text-center bg-gray-50 border border-dashed border-gray-300 rounded-2xl space-y-3">
               <i className="ti ti-sparkles text-3xl text-purple-400" />
               <div className="space-y-1">
-                <p className="text-xs font-bold text-gray-800">
+                <p className="text-xs font-semibold text-gray-800">
                   Petiniz için henüz kişiselleştirilmiş bir rehber bulunmuyor.
                 </p>
                 {articles.length > 0 && (
-                  <p className="text-[11px] text-gray-500">
+                  <p className="text-xs text-gray-500">
                     Tüm Bilgiler bölümünde {articles.length} rehber bulunuyor.
                   </p>
                 )}

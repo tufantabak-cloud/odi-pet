@@ -109,18 +109,18 @@ function NavLink({ href, label, icon }: { href: string; label: string; icon: Rea
   return (
     <Link
       href={href}
-      className={`flex items-center gap-3 px-4 py-2.5 rounded-[14px] text-[14px] font-semibold transition-all group
+      className={`flex items-center gap-3 px-4 py-2.5 rounded-[14px] text-sm font-semibold transition-all group
         ${isActive
-          ? 'bg-primary-soft text-[#5D3FD3]'
-          : 'text-[var(--color-text-muted)] hover:text-text-primary hover:bg-bg-main'
+          ? 'bg-primary-soft text-primary'
+          : 'text-text-secondary hover:text-text-primary hover:bg-bg-main'
         }`}
     >
-      <span className={`shrink-0 transition-colors ${isActive ? 'text-[#5D3FD3]' : 'group-hover:text-[#5D3FD3]'}`}>
+      <span className={`shrink-0 transition-colors ${isActive ? 'text-primary' : 'group-hover:text-primary'}`}>
         {icon}
       </span>
       {label}
       {isActive && (
-        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#5D3FD3]" />
+        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
       )}
     </Link>
   )
@@ -157,9 +157,9 @@ export default function SideNav({ actionMenuItems, bottomNavItems, menuDrawerIte
       <div className="relative mb-4">
         <button
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="w-full py-3 px-4 rounded-[14px] bg-gradient-to-r from-[#5D3FD3] to-[#8B5CF6] text-white font-bold text-[14px] flex items-center justify-center gap-2 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] transition-all duration-200"
+          className="w-full py-3 px-4 rounded-[14px] bg-primary text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary-hover hover:shadow-lg active:scale-[0.98] transition-all duration-200"
         >
-          <i className={`ti ti-plus text-[16px] transition-transform duration-200 ${isMenuOpen ? 'rotate-45' : ''}`} />
+          <i className={`ti ti-plus text-base transition-transform duration-200 ${isMenuOpen ? 'rotate-45' : ''}`} />
           <span>Hızlı Ekle</span>
         </button>
         
@@ -174,7 +174,7 @@ export default function SideNav({ actionMenuItems, bottomNavItems, menuDrawerIte
                     key={item.label}
                     href={href}
                     onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-[10px] text-[13px] font-semibold text-text-primary hover:bg-bg-main hover:text-[#5D3FD3] transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 rounded-[10px] text-xs font-semibold text-text-primary hover:bg-bg-main hover:text-primary transition-colors"
                   >
                     {item.icon && <span className="text-text-secondary">{getIcon(item.icon, 16)}</span>}
                     {item.label}
@@ -186,14 +186,14 @@ export default function SideNav({ actionMenuItems, bottomNavItems, menuDrawerIte
         )}
       </div>
 
-      <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest px-4 mb-2">
+      <p className="text-2xs font-semibold text-text-tertiary uppercase tracking-wider px-4 mb-2">
         ANA MENÜ
       </p>
       {activePrimaryItems.map((item) => (
         <NavLink key={item.href} {...item} />
       ))}
 
-      <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest px-4 mb-2 mt-6">
+      <p className="text-2xs font-semibold text-text-tertiary uppercase tracking-wider px-4 mb-2 mt-6">
         KISA YOLLAR
       </p>
       {activeShortcutItems.map((item) => (

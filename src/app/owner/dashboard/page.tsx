@@ -17,6 +17,7 @@ import SocialShortcuts from '@/components/dashboard/SocialShortcuts'
 import QuickJournalWidget from '@/components/dashboard/QuickJournalWidget'
 import { PetSlider } from '@/components/dashboard/PetSlider'
 import DashboardClient from './DashboardClient'
+import { GlassCard } from '@/components/ui/primitives'
 
 
 export default async function OwnerDashboard() {
@@ -149,7 +150,7 @@ export default async function OwnerDashboard() {
             <h1 className="text-[22px] font-black text-[var(--color-text-primary)] leading-tight tracking-tight">
               {greeting}, {firstName}
             </h1>
-            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] shadow-[var(--shadow-sm)] rounded-[24px] p-8 text-center flex flex-col items-center mt-4">
+            <GlassCard padding="lg" className="text-center flex flex-col items-center mt-4">
               <div className="text-5xl mb-4">🐾</div>
               <h2 className="text-[17px] font-black text-[var(--color-text-primary)] mb-2">
                 Hoş Geldiniz!
@@ -160,7 +161,7 @@ export default async function OwnerDashboard() {
               <Link href="/owner/pets/add" data-testid="add-first-pet-button" className="h-12 w-full max-w-[200px] flex items-center justify-center bg-[var(--color-primary)] text-white rounded-[18px] font-800 text-[14px] hover:scale-[1.02] active:scale-[0.98] transition-transform shadow-md shadow-primary/20">
                 İlk Dostumu Ekle 🐾
               </Link>
-            </div>
+            </GlassCard>
           </div>
         ) : (
           <DashboardClient

@@ -89,7 +89,7 @@ export function BiometricPrompt({ forceOpen = false }: { forceOpen?: boolean }) 
       </button>
 
       <div className="flex flex-col items-center text-center gap-3">
-        <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-[#4F2DBA] to-[#E05397] flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-[1.1] transition-transform duration-300">
+        <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-[#6D3DF5] to-[#E05397] flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-[1.1] transition-transform duration-300">
           <Fingerprint className="w-7 h-7 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
         </div>
         <div>
@@ -104,7 +104,7 @@ export function BiometricPrompt({ forceOpen = false }: { forceOpen?: boolean }) 
         <button
           onClick={handleRegisterPasskey}
           disabled={loading}
-          className="w-full mt-3 bg-gradient-to-r from-[#4F2DBA] to-[#E05397] hover:from-[#3C2096] hover:to-[#C03E7E] text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/25 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer disabled:opacity-50"
+          className="w-full mt-3 bg-gradient-to-r from-[#6D3DF5] to-[#E05397] hover:from-[#4E24C8] hover:to-[#C03E7E] text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/25 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer disabled:opacity-50"
         >
           {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Fingerprint className="w-5 h-5" />}
           <span>Biyometrik Girişi Aktif Et</span>

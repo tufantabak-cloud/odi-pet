@@ -68,4 +68,41 @@ describe('Sprint Y.1 — Architecture Guard Rails', () => {
     const content = fs.readFileSync(recoveryPath, 'utf8');
     expect(content).toContain('createOverdueVaccineNotifications');
   });
+
+  it('Guard 8: Canonical Data & Health Data Protection Governance Rules are active', () => {
+    const agentsMdPath = path.join(rootDir, 'AGENTS.md');
+    expect(fs.existsSync(agentsMdPath)).toBe(true);
+    const agentsContent = fs.readFileSync(agentsMdPath, 'utf8');
+    expect(agentsContent).toContain('Single Source of Truth & Kanonik Veri Modeli');
+    expect(agentsContent).toContain('Dashboard & Timeline Veri Üretmez');
+    expect(agentsContent).toContain('Sağlık Verisi Silinemez, Sadece Arşivlenir');
+
+    const handbookPath = path.join(rootDir, 'docs/governance/governance-handbook.md');
+    expect(fs.existsSync(handbookPath)).toBe(true);
+    const handbookContent = fs.readFileSync(handbookPath, 'utf8');
+    expect(handbookContent).toContain('Rule 7 (Canonical Data Model)');
+    expect(handbookContent).toContain('Rule 8 (Dashboard & Timeline Read-Only Aggregation)');
+    expect(handbookContent).toContain('Rule 9 (Health Data Archival Only)');
+  });
+
+  it('Guard 9: AI Governance & Human-in-the-Loop Rules (Cilt 13) are active', () => {
+    const agentsMdPath = path.join(rootDir, 'AGENTS.md');
+    expect(fs.existsSync(agentsMdPath)).toBe(true);
+    const agentsContent = fs.readFileSync(agentsMdPath, 'utf8');
+    expect(agentsContent).toContain('OPOS AI Governance & Human-in-the-Loop Kuralları (Cilt 13)');
+    expect(agentsContent).toContain('AI Görsel & İkon Standardı (Mor Yıldız / Sparkles Indicator - Cilt 13)');
+    expect(agentsContent).toContain('Human-in-the-Loop & Onay Zorunluluğu');
+    expect(agentsContent).toContain('Confidence Score & Açıklanabilirlik');
+    expect(agentsContent).toContain('Yasal Sorumluluk & Tıbbi Sorumluluk Reddi');
+
+    const handbookPath = path.join(rootDir, 'docs/governance/governance-handbook.md');
+    expect(fs.existsSync(handbookPath)).toBe(true);
+    const handbookContent = fs.readFileSync(handbookPath, 'utf8');
+    expect(handbookContent).toContain('Rule 10 (AI Visual Indicator Standard)');
+    expect(handbookContent).toContain('Rule 11 (AI Human-in-the-Loop Confirmation)');
+    expect(handbookContent).toContain('Rule 12 (AI Confidence Score & Explainability)');
+    expect(handbookContent).toContain('Rule 13 (Medical Disclaimer & Legal Boundaries)');
+  });
 });
+
+

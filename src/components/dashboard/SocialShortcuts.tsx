@@ -89,7 +89,7 @@ export default function SocialShortcuts({ lostReportsCount = 0 }: { lostReportsC
           const content = (
             <div className={`relative flex flex-col items-center justify-center gap-2 p-3 rounded-xl border bg-white transition-all ${s.borderColorClass} ${s.hoverBgClass} ${!s.comingSoon ? 'active:scale-95 shadow-sm' : 'opacity-80 grayscale-[0.2]'}`}>
               {s.badge !== null && (
-                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center text-[10px] font-black rounded-full border-2 border-white shadow-sm bg-[var(--color-danger)] text-white">
+                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center text-2xs font-semibold rounded-full border-2 border-white shadow-sm bg-[var(--color-danger)] text-white">
                   {s.badge > 9 ? '9+' : s.badge}
                 </span>
               )}
@@ -99,14 +99,14 @@ export default function SocialShortcuts({ lostReportsCount = 0 }: { lostReportsC
                 className="w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0"
                 style={{ background: s.bgTint }}
               >
-                <i className={`ti ${s.icon} text-[20px]`} style={{ color: s.color }} />
+                <i className={`ti ${s.icon} text-xl`} style={{ color: s.color }} />
               </div>
 
-              <span className={`text-[11px] font-extrabold tracking-tight text-center leading-tight ${s.comingSoon ? 'text-[var(--color-text-muted)]' : 'text-[var(--color-text-primary)]'}`}>
+              <span className={`text-xs font-semibold tracking-tight text-center leading-tight ${s.comingSoon ? 'text-text-tertiary' : 'text-text-primary'}`}>
                 {s.label}
               </span>
               {s.comingSoon && (
-                <span className="absolute bottom-1 bg-[var(--color-surface-2)] text-[var(--color-text-muted)] text-[7px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
+                <span className="absolute bottom-1 bg-surface-secondary text-text-tertiary text-2xs font-medium px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
                   Yakında
                 </span>
               )}

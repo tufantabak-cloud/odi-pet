@@ -109,8 +109,8 @@ self.addEventListener('push', (event: PushEvent) => {
   const title = payload.title ?? 'Odi.Pet';
   const options: NotificationOptions & { data: NotificationData } = {
     body: payload.body ?? '',
-    icon: payload.icon ?? '/icon-192.png',
-    badge: payload.badge ?? '/icon-192.png',
+    icon: payload.icon ?? '/brand/app-icons/odi-icon-256.png',
+    badge: payload.badge ?? '/brand/app-icons/odi-icon-256.png',
     tag: payload.tag ?? `odi-${Date.now()}`,
     renotify: true,
     data: {

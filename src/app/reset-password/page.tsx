@@ -9,6 +9,7 @@ import { useForm } from 'react-hook-form'
 const Turnstile = dynamic(() => import('@marsidev/react-turnstile').then(mod => mod.Turnstile), { ssr: false })
 import { zodResolver } from '@hookform/resolvers/zod'
 import { resetPasswordSchema, type ResetPasswordInput } from '@/lib/validations/auth'
+import { Button, Input, GlassCard } from '@/components/ui/primitives'
 
 export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false)
@@ -57,14 +58,15 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="flex min-h-dvh w-full items-center justify-center p-4 bg-[#FAF8FF] font-montserrat">
-      <div className="bg-white rounded-2xl p-6 shadow-xl border border-border w-full max-w-sm relative overflow-hidden">
+    <div className="flex min-h-dvh w-full items-center justify-center p-4 bg-bg-main font-sans">
+      <GlassCard padding="lg" className="max-w-sm relative overflow-hidden">
         <div className="text-center mb-10">
           <div className="flex flex-col items-center mb-6">
-              <Image src="/logo.webp" alt="Odi.Pet" width={72} height={72} className="mb-2" priority />
+              <Image src="/brand/app-icons/odi-icon-512.png" alt="Odi.Pet Logo" width={72} height={72} className="mb-2" priority />
               <p className="text-[11px] text-text-muted font-medium">Can Dost Yaşam Platformu</p>
             </div>
-          <h1 className="text-[28px] font-black text-text-primary tracking-tighter">Şifremi Unuttum</h1>
+          {/* docs/opos-design-system/03_typography.md → text-h1 (24px/700/-0.02em/1.2) — "text-h1" utility globals.css'te tanımlı değil (frozen), kanonik ham değerler kullanıldı */}
+          <h1 className="text-[24px] font-bold tracking-[-0.02em] leading-[1.2] text-text-primary">Şifremi Unuttum</h1>
           <p className="text-[13px] text-text-secondary mt-2">Hesabınıza kayıtlı e-posta adresini girin, size şifre sıfırlama bağlantısı gönderelim.</p>
         </div>
 
@@ -73,7 +75,7 @@ export default function ResetPasswordPage() {
             <div className="p-4 rounded-2xl bg-success/10 border border-success/20 text-success text-[14px] font-bold mb-6">
               ✅ Sıfırlama bağlantısı gönderildi! Lütfen e-posta kutunuzu (ve gerekiyorsa spam klasörünü) kontrol edin.
             </div>
-            <Link href="/login" className="w-full bg-[#4726AF] text-white rounded-xl font-medium text-[15px] py-3 mt-1 hover:opacity-90 transition-opacity flex items-center justify-center shadow-md disabled:opacity-60">
+            <Link href="/login" className="w-full bg-primary text-white rounded-xl font-medium text-[15px] py-3 mt-1 hover:opacity-90 transition-opacity flex items-center justify-center shadow-md disabled:opacity-60">
               Giriş Sayfasına Dön
             </Link>
           </div>
@@ -95,30 +97,19 @@ export default function ResetPasswordPage() {
               </div>
             )}
 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider ml-1" htmlFor="email">
-                E-posta Adresi
-              </label>
-              <input
-                id="email"
-                placeholder="ornek@email.com"
-                autoFocus
-                {...register('email')}
-                autoComplete="email"
-                aria-invalid={!!errors.email}
-                aria-describedby={errors.email ? 'reset-email-error' : undefined}
-                className={`input-base py-3 text-[15px] ${errors.email ? 'border-error/50 focus:border-error focus:ring-error/20' : ''}`}
-              />
-              {errors.email && <span id="reset-email-error" role="alert" className="text-error text-[11px] font-bold ml-1">{errors.email.message}</span>}
-            </div>
+            <Input
+              id="email"
+              label="E-posta Adresi"
+              placeholder="ornek@email.com"
+              autoFocus
+              {...register('email')}
+              autoComplete="email"
+              error={errors.email?.message}
+            />
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-[#4726AF] text-white rounded-xl font-medium text-[15px] py-3 mt-1 hover:opacity-90 transition-opacity flex items-center justify-center shadow-md disabled:opacity-60"
-            >
+            <Button type="submit" variant="primary" size="lg" fullWidth isLoading={loading} disabled={loading}>
               {loading ? 'Gönderiliyor...' : 'Bağlantı Gönder'}
-            </button>
+            </Button>
 
             <div className="text-center mt-4">
               <Link href="/login" className="text-[14px] font-bold text-text-secondary hover:text-primary transition-colors">
@@ -127,7 +118,7 @@ export default function ResetPasswordPage() {
             </div>
           </form>
         )}
-      </div>
+      </GlassCard>
     </div>
   )
 }

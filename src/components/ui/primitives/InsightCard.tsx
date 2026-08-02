@@ -13,8 +13,9 @@ export default function InsightCard({ text, dataDate, cta, className = '' }: Ins
   if (!text) return null
   return (
     <div className={[
-      'flex items-start gap-3 p-[var(--space-4)] rounded-[var(--radius-lg)]',
-      'bg-[var(--color-primary-soft)] border border-[#C4B5FD]',
+      // docs/opos-design-system/12_cards.md → "AI Insight Card (InsightCard)"
+      'flex items-start gap-4 p-4 rounded-2xl backdrop-blur-md',
+      'bg-primary-soft/60 border border-primary/20',
       className,
     ].join(' ')}>
       <div className="w-9 h-9 rounded-[10px] bg-[var(--color-primary)] flex items-center justify-center shrink-0 mt-0.5">
@@ -26,7 +27,7 @@ export default function InsightCard({ text, dataDate, cta, className = '' }: Ins
             {dataDate}
           </p>
         )}
-        <p className="text-[12px] font-500 text-[#4E24C8] leading-relaxed">{text}</p>
+        <p className="text-[12px] font-500 text-primary leading-relaxed">{text}</p>
         {cta && (
           <Link href={cta.href} className="text-[11px] font-700 text-[var(--color-primary)] mt-1.5 inline-block hover:underline">
             {cta.label} →

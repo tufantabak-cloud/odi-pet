@@ -38,13 +38,20 @@ export default function FormModal({
 
   if (!open || !mounted) return null
 
+  // OPOS v1.0 — bkz. docs/opos-design-system/09_glass-system.md (.glass-modal),
+  // 08_elevation.md (--shadow-floating), 22_component-library.md matrix:
+  // "OPBottomSheet | FormModal.tsx | rounded-t-[28px] bg-white/95".
+  // Not: Mobilde alta sabitlenen "drawer" konumlandırma davranışı (bottom-anchored sheet)
+  // hiçbir OPOS dokümanında tam breakpoint/pozisyon spesifikasyonuyla verilmemiş —
+  // MISSING OPOS SPECIFICATION. Mevcut ortalanmış (centered) yerleşim davranışı korundu,
+  // sadece yüzey token'ları (bg/blur/border/shadow) kanonik değerlere çekildi.
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain"
+      className="fixed inset-0 z-50 bg-[rgba(15,23,42,0.60)] backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain"
       onClick={onClose}
     >
       <div
-        className="relative bg-surface w-full max-w-sm sm:max-w-md rounded-modal shadow-2xl overflow-y-auto max-h-[90dvh] animate-in fade-in zoom-in-95 duration-200"
+        className="relative bg-white/95 backdrop-blur-2xl border border-white/60 w-full max-w-sm sm:max-w-md rounded-modal shadow-floating overflow-y-auto max-h-[90dvh] animate-in fade-in zoom-in-95 duration-200"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}

@@ -4,22 +4,28 @@
 @source "../lib/**/*.{js,ts,jsx,tsx}";
 
 @theme {
-  --color-primary: #4F2DBA;
-  --color-primary-hover: #3C2096;
-  --color-primary-soft: #F5F3FF;
-  
+  /* OPOS v1.0 — RENK SİSTEMİ v1.0 (RESMİ TEK KURAL DEĞERLERİ) */
+  --color-primary: #9C26AF;
+  --color-primary-hover: #B239C4;
+  --color-primary-soft: #F2E8FA;
+  --color-accent-purple: #6A189A;
+
   --color-success: #22C55E;
-  --color-warning: #FACC15;
+  --color-warning: #F59E0B;
   --color-error: #EF4444;
-  
-  --color-bg-main: #F8FAFC;
+  --color-danger: #EF4444;
+  --color-info: #3B82F6;
+
+  --color-bg-main: #F7F8FC;
   --color-surface: #FFFFFF;
-  --color-border-main: #F1F5F9;
-  
-  --color-text-primary: #0F172A;
-  --color-text-secondary: #64748B;
-  
-  --radius-card: 20px;
+  --color-border-main: #E9ECF1;
+
+  --color-text-primary: #1F2937;
+  --color-text-secondary: #6B7280;
+  --color-text-tertiary: #9CA3AF;
+  --color-text-disabled: #D1D5DB;
+
+  --radius-card: 16px; /* docs/opos-design-system/12_cards.md: OPGlassCard --radius-card = 16px (20px yalnızca PetHeroCard/--radius-lg için) */
   --radius-btn: 18px;
   --radius-input: 12px;
   --radius-modal: 28px;
@@ -29,18 +35,29 @@
   --shadow-soft: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
   --shadow-medium: 0 12px 32px -4px rgba(15, 23, 42, 0.08);
 
-  --font-sans: var(--font-inter);
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  /* OPOS Typography Scale Tokens */
+  --text-2xs: 10px;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 30px;
+  --text-4xl: 36px;
 }
 
 body {
-  background: radial-gradient(100% 100% at 50% 0%, rgba(79, 45, 186, 0.03) 0%, rgba(248, 250, 252, 1) 50%);
+  background: radial-gradient(100% 100% at 50% 0%, rgba(156, 38, 175, 0.04) 0%, rgba(247, 248, 252, 1) 50%);
   background-color: var(--color-bg-main);
   background-attachment: fixed;
   color: var(--color-text-primary);
   line-height: 1.5;
 }
 
-/* Premium Scrollbar â€” webkit fallback Ã¶nce, standart sonra (progressive enhancement) */
+/* Premium Scrollbar — webkit fallback önce, standart sonra (progressive enhancement) */
 *::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -55,61 +72,61 @@ body {
   scrollbar-color: #E2E8F0 transparent;
 }
 
-/* Gizli scrollbar â€” webkit + standart */
+/* Gizli scrollbar — webkit + standart */
 .scrollbar-none::-webkit-scrollbar { display: none; }
 .scrollbar-none { scrollbar-width: none; }
 
 @layer utilities {
-  /* â”€â”€ Buttons â”€â”€ */
+  /* ── Buttons ── */
   .btn-base {
     @apply rounded-btn font-semibold transition-all duration-300 cursor-pointer inline-flex items-center;
   }
   .btn-primary {
-    @apply bg-primary text-white rounded-btn px-7 py-3 font-semibold hover:bg-primary-hover hover:shadow-[0_8px_16px_rgba(79,45,186,0.2)] transition-all duration-300 flex justify-center items-center active:scale-[0.98] cursor-pointer;
+    @apply bg-primary text-white rounded-btn px-7 py-3 font-semibold hover:bg-primary-hover hover:shadow-[0_8px_16px_rgba(156,38,175,0.25)] transition-all duration-300 flex justify-center items-center active:scale-[0.98] cursor-pointer;
   }
   .btn-secondary {
     @apply border border-border-main text-text-primary bg-surface rounded-btn px-7 py-3 font-semibold hover:border-primary/30 hover:bg-primary-soft hover:text-primary transition-all duration-300 flex justify-center items-center shadow-sm cursor-pointer;
   }
   
-  /* â”€â”€ Inputs â”€â”€ */
+  /* ── Inputs ── */
   .input-base {
     @apply bg-surface/80 backdrop-blur-sm border border-border-main shadow-[0_2px_10px_rgba(0,0,0,0.02)] rounded-input px-5 py-3.5 outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 hover:border-[#CBD5E1] transition-all duration-300 text-text-primary placeholder:text-text-secondary/60;
     font-size: 16px;
   }
 
-  /* â”€â”€ Cards â”€â”€ */
+  /* ── Cards ── */
   .card-base {
     @apply bg-surface/90 backdrop-blur-xl rounded-card shadow-soft border border-white hover:shadow-medium hover:border-primary/10 transition-all duration-500;
   }
 
-  /* â”€â”€ Badges â”€â”€ */
+  /* ── Badges ── */
   .badge-success {
-    @apply bg-success/10 text-success px-3 py-1.5 rounded-full text-[13px] font-bold tracking-wide;
+    @apply bg-success/10 text-success px-3 py-1.5 rounded-full text-xs font-semibold tracking-wide;
   }
   .badge-warning {
-    @apply bg-warning/10 text-warning px-3 py-1.5 rounded-full text-[13px] font-bold tracking-wide;
+    @apply bg-warning/10 text-warning px-3 py-1.5 rounded-full text-xs font-semibold tracking-wide;
   }
   .badge-error {
-    @apply bg-error/10 text-error px-3 py-1.5 rounded-full text-[13px] font-bold tracking-wide;
+    @apply bg-error/10 text-error px-3 py-1.5 rounded-full text-xs font-semibold tracking-wide;
   }
   .badge-primary {
-    @apply bg-primary-soft text-primary px-3 py-1.5 rounded-full text-[13px] font-bold tracking-wide;
+    @apply bg-primary-soft text-primary px-3 py-1.5 rounded-full text-xs font-semibold tracking-wide;
   }
   .badge-health {
     background: var(--color-background-info, #e0f2fe);
     color: var(--color-text-info, #0284c7);
-    font-size: 11px;
-    font-weight: 500;
+    font-size: 12px;
+    font-weight: 600;
     padding: 2px 8px;
     border-radius: 4px;
   }
 
-  /* â”€â”€ Utility Helpers â”€â”€ */
+  /* ── Utility Helpers ── */
   .snap-x { scroll-snap-type: x mandatory; }
   .snap-start { scroll-snap-align: start; }
 }
 
-/* â”€â”€ Animations â”€â”€ */
+/* ── Animations ── */
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -137,9 +154,9 @@ body {
 }
 
 @keyframes pulseHighlight {
-  0% { box-shadow: inset 0 0 0 0px rgba(93, 63, 211, 0); border-color: var(--color-border); }
-  50% { box-shadow: inset 0 0 0 3px rgba(93, 63, 211, 0.25); border-color: #5D3FD3; background-color: rgba(93, 63, 211, 0.03); }
-  100% { box-shadow: inset 0 0 0 0px rgba(93, 63, 211, 0); border-color: var(--color-border); }
+  0% { box-shadow: inset 0 0 0 0px rgba(156, 38, 175, 0); border-color: var(--color-border); }
+  50% { box-shadow: inset 0 0 0 3px rgba(156, 38, 175, 0.25); border-color: #9C26AF; background-color: rgba(156, 38, 175, 0.03); }
+  100% { box-shadow: inset 0 0 0 0px rgba(156, 38, 175, 0); border-color: var(--color-border); }
 }
 .animate-pulseHighlight {
   animation: pulseHighlight 2s ease-in-out 2;
@@ -159,28 +176,33 @@ body {
    ============================================ */
 
 :root {
+  /* OPOS Renk Sistemi v1.0 — RESMİ TEK KURAL DEĞERLERİ */
   /* Primary */
-  --color-primary:        #6D3DF5;
-  --color-primary-dark:   #4E24C8;
-  --color-primary-soft:   #F2EEFF;
+  --color-primary:        #9C26AF;
+  --color-primary-dark:   #6A189A;
+  --color-primary-hover:  #B239C4;
+  --color-primary-soft:   #F2E8FA;
+  --color-accent-purple:  #6A189A;
 
   /* Backgrounds */
-  --color-bg-main:             #F6F7FA;
+  --color-bg-main:             #F7F8FC;
   --color-surface:             #FFFFFF;
   --color-surface-secondary:   #F0F2F6;
 
   /* Text */
-  --color-text-primary:   #161B2A;
-  --color-text-secondary: #697386;
-  --color-text-muted:     #9AA3B2;
-  --color-border:         #E6E9EF;
+  --color-text-primary:   #1F2937;
+  --color-text-secondary: #6B7280;
+  --color-text-tertiary:  #9CA3AF;
+  --color-text-disabled:  #D1D5DB;
+  --color-text-muted:     #9CA3AF;
+  --color-border:         #E9ECF1;
 
   /* Semantic */
-  --color-success:        #16A87A;
+  --color-success:        #22C55E;
   --color-success-soft:   #ECFDF5;
-  --color-warning:        #F2A23A;
+  --color-warning:        #F59E0B;
   --color-warning-soft:   #FFFBEB;
-  --color-danger:         #E4474F;
+  --color-danger:         #EF4444;
   --color-danger-soft:    #FEF2F2;
   --color-info:           #3B82F6;
   --color-info-soft:      #EFF6FF;

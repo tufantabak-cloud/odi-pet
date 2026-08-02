@@ -68,10 +68,10 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
       <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border-main bg-surface/80 backdrop-blur-lg px-5 lg:px-10">
         <Link href="/owner/dashboard" className="flex items-center gap-2.5 hover:scale-[1.02] transition-transform">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl overflow-hidden bg-[var(--color-primary)]">
-            <Image 
-              src="/logo.webp" 
-              alt="Odi Logo" 
-              width={40} 
+            <Image
+              src="/brand/app-icons/odi-icon-512.png"
+              alt="Odi Logo"
+              width={40}
               height={40}
               className="w-full h-full object-cover"
               priority

@@ -289,8 +289,8 @@ serve(async (req: Request) => {
           const payload = JSON.stringify({
             title: notif.title,
             body: notif.message,
-            icon: '/icon-192.png',
-            badge: '/icon-192.png',
+            icon: '/brand/app-icons/odi-icon-256.png',
+            badge: '/brand/app-icons/odi-icon-256.png',
             url: deepLinkUrl,
             tag: notif.id // unique tag to prevent duplicate alerts or group them
           })
@@ -429,8 +429,8 @@ serve(async (req: Request) => {
           const payload = JSON.stringify({
             title,
             body,
-            icon: 'https://odi.pet/icon-192.png',
-            badge: 'https://odi.pet/icon-192.png',
+            icon: 'https://odi.pet/brand/app-icons/odi-icon-256.png',
+            badge: 'https://odi.pet/brand/app-icons/odi-icon-256.png',
             url: `https://odi.pet${deepLink}`,
             tag: job.id
           })
