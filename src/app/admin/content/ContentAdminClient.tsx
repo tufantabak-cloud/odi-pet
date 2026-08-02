@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { AlertTriangle, BarChart2, AlertCircle } from 'lucide-react';
 
 // Irk seçenekleri kaynağı
 const ALL_BREEDS = [
@@ -783,7 +784,7 @@ export default function ContentAdminClient() {
       {reviewQueueAlerts.length > 0 && (
         <div className="bg-amber-50 border border-amber-300 text-amber-900 rounded-2xl p-4 space-y-2 shadow-xs">
           <div className="flex items-center gap-2 text-xs font-bold text-amber-900">
-            <i className="ti ti-alert-triangle text-amber-600 text-base" />
+            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
             <span>Kontrol Kuyruğu & Güncellik Uyarıları</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-xs">
@@ -801,7 +802,7 @@ export default function ContentAdminClient() {
       <div className="bg-gradient-to-r from-purple-900 to-indigo-900 text-white rounded-2xl p-5 shadow-sm space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-extrabold flex items-center gap-2">
-            <i className="ti ti-chart-dots" />
+            <BarChart2 className="w-4 h-4 text-purple-300 shrink-0" />
             İçerik Kapsamı & Eksiklik Analizi (Coverage Gaps)
           </h2>
           <span className="text-[11px] bg-white/20 px-2.5 py-0.5 rounded-full font-semibold">
@@ -813,7 +814,7 @@ export default function ContentAdminClient() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
             {coverageGaps.map((gap, i) => (
               <div key={i} className="flex items-center gap-2 bg-white/10 p-2.5 rounded-xl">
-                <i className="ti ti-alert-circle text-amber-300 shrink-0" />
+                <AlertCircle className="w-4 h-4 text-amber-300 shrink-0" />
                 <span className="text-purple-100 font-medium">{gap}</span>
               </div>
             ))}
@@ -1740,7 +1741,7 @@ export default function ContentAdminClient() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-amber-200">
             <div className="flex items-center gap-3 text-amber-600 font-extrabold text-base">
-              <i className="ti ti-alert-triangle text-2xl" />
+              <AlertTriangle className="w-6 h-6 shrink-0" />
               <span>Yayınlama Onayı</span>
             </div>
             <p className="text-xs text-gray-700 leading-relaxed font-semibold">

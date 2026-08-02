@@ -5,6 +5,22 @@ import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { getIcon } from '@/lib/navigation/iconMap'
 import { resolveActionHref } from '@/components/BottomNav'
+import {
+  LayoutGrid,
+  Bot,
+  Stethoscope,
+  Users,
+  BookOpen,
+  MessageCircle,
+  Wallet,
+  Calendar,
+  ShoppingBag,
+  MapPin,
+  Bell,
+  User,
+  HelpCircle,
+  Plus
+} from 'lucide-react'
 
 export type NavItem = {
   id: string
@@ -35,47 +51,47 @@ const primaryItems = [
   {
     href: '/owner/dashboard',
     label: 'Anasayfa',
-    icon: <i className="ti ti-layout-grid text-[18px]" />,
+    icon: <LayoutGrid className="w-[18px] h-[18px]" />,
   },
   {
     href: '/owner/ai-vet',
     label: 'AI VET',
-    icon: <i className="ti ti-robot text-[18px]" />,
+    icon: <Bot className="w-[18px] h-[18px]" />,
   },
   {
     href: '/owner/services',
     label: 'Hizmetler',
-    icon: <i className="ti ti-stethoscope text-[18px]" />,
+    icon: <Stethoscope className="w-[18px] h-[18px]" />,
   },
   {
     href: '/owner/social',
     label: 'Sosyal',
-    icon: <i className="ti ti-users text-[18px]" />,
+    icon: <Users className="w-[18px] h-[18px]" />,
   },
   {
     href: '/owner/learn',
     label: 'İçerikler',
-    icon: <i className="ti ti-book text-[18px]" />,
+    icon: <BookOpen className="w-[18px] h-[18px]" />,
   },
   {
     href: '/owner/messages',
     label: 'Mesajlar',
-    icon: <i className="ti ti-message-circle text-[18px]" />,
+    icon: <MessageCircle className="w-[18px] h-[18px]" />,
   },
   {
     href: '/owner/budget',
     label: 'Bütçe',
-    icon: <i className="ti ti-wallet text-[18px]" />,
+    icon: <Wallet className="w-[18px] h-[18px]" />,
   },
   {
     href: '/owner/events',
     label: 'Etkinlikler',
-    icon: <i className="ti ti-calendar text-[18px]" />,
+    icon: <Calendar className="w-[18px] h-[18px]" />,
   },
   {
     href: '/owner/marketplace',
     label: 'Mağaza',
-    icon: <i className="ti ti-shopping-bag text-[18px]" />,
+    icon: <ShoppingBag className="w-[18px] h-[18px]" />,
   },
 ]
 
@@ -83,22 +99,22 @@ const shortcutItems = [
   {
     href: '/owner/vets',
     label: 'Veteriner Bul',
-    icon: <i className="ti ti-map-pin text-[18px]" />,
+    icon: <MapPin className="w-[18px] h-[18px]" />,
   },
   {
     href: '/owner/notifications',
     label: 'Bildirimler',
-    icon: <i className="ti ti-bell text-[18px]" />,
+    icon: <Bell className="w-[18px] h-[18px]" />,
   },
   {
     href: '/owner/profile',
     label: 'Profilim',
-    icon: <i className="ti ti-user text-[18px]" />,
+    icon: <User className="w-[18px] h-[18px]" />,
   },
   {
     href: '/help.html',
     label: 'Yardım',
-    icon: <i className="ti ti-help-circle text-[18px]" />,
+    icon: <HelpCircle className="w-[18px] h-[18px]" />,
   },
 ]
 
@@ -159,7 +175,7 @@ export default function SideNav({ actionMenuItems, bottomNavItems, menuDrawerIte
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           className="w-full py-3 px-4 rounded-[14px] bg-primary text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary-hover hover:shadow-lg active:scale-[0.98] transition-all duration-200"
         >
-          <i className={`ti ti-plus text-base transition-transform duration-200 ${isMenuOpen ? 'rotate-45' : ''}`} />
+          <Plus className={`w-4 h-4 transition-transform duration-200 ${isMenuOpen ? 'rotate-45' : ''}`} />
           <span>Hızlı Ekle</span>
         </button>
         

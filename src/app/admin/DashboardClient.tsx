@@ -2,6 +2,19 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
+import {
+  LayoutDashboard,
+  UserPlus,
+  PawPrint,
+  Star,
+  AlertTriangle,
+  Users,
+  Smartphone,
+  Sparkles,
+  Stethoscope,
+  RotateCw,
+  LucideIcon
+} from 'lucide-react'
 
 type Period = 'today' | 'week' | 'month'
 
@@ -50,7 +63,7 @@ function PeriodToggle({ value, onChange }: { value: Period; onChange: (p: Period
         <button
           key={o.key}
           onClick={() => onChange(o.key)}
-          className={`h-11 px-4 rounded-lg text-[12px] font-bold transition-all active:scale-[0.97] flex items-center justify-center ${
+          className={`h-11 px-4 rounded-lg text-xs font-bold transition-all active:scale-[0.97] flex items-center justify-center ${
             value === o.key
               ? 'bg-primary text-white shadow-sm'
               : 'text-text-secondary hover:text-text-primary'
@@ -64,14 +77,14 @@ function PeriodToggle({ value, onChange }: { value: Period; onChange: (p: Period
 }
 
 function StatCard({
-  icon,
+  icon: Icon,
   label,
   value,
   sub,
   accent,
   href,
 }: {
-  icon: string
+  icon: LucideIcon
   label: string
   value: number | string
   sub?: string
@@ -95,12 +108,12 @@ function StatCard({
 
   const inner = (
     <div
-      className={`rounded-2xl border bg-gradient-to-b p-5 flex flex-col gap-1 transition-all hover:scale-[1.02] ${
+      className={`rounded-[24px] border bg-gradient-to-b p-5 flex flex-col gap-1 transition-all hover:scale-[1.02] ${
         accent ? accentMap[accent] : 'border-border-main bg-surface'
       } ${href ? 'cursor-pointer' : ''}`}
     >
       <div className="flex items-center justify-between mb-1">
-        <span className="text-[22px]">{icon}</span>
+        <Icon className={`w-6 h-6 ${accent ? textMap[accent] : 'text-primary'}`} />
         {accent && (
           <span
             className={`w-2 h-2 rounded-full animate-pulse ${
@@ -112,11 +125,11 @@ function StatCard({
           />
         )}
       </div>
-      <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest">{label}</p>
-      <p className={`text-3xl font-black ${accent ? textMap[accent] : 'text-text-primary'}`}>
+      <p className="text-xs font-semibold text-text-secondary uppercase tracking-widest">{label}</p>
+      <p className={`text-2xl font-bold ${accent ? textMap[accent] : 'text-text-primary'}`}>
         {typeof value === 'number' ? <AnimatedNumber value={value} /> : value}
       </p>
-      {sub && <p className="text-[11px] text-text-secondary mt-0.5">{sub}</p>}
+      {sub && <p className="text-xs text-text-secondary mt-0.5">{sub}</p>}
     </div>
   )
 
@@ -143,7 +156,7 @@ function roleChip(role: string | null) {
   }
   const cls = map[role ?? 'user'] ?? map['user']
   return (
-    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${cls}`}>
+    <span className={`text-2xs font-bold px-2 py-0.5 rounded-full ${cls}`}>
       {role ?? 'user'}
     </span>
   )
@@ -189,29 +202,24 @@ export default function DashboardClient({ initialData }: { initialData: Dashboar
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-text-primary flex items-center gap-2">
-            🏠 Panel
-            <span className="flex items-center gap-1.5">
+          <h1 className="text-2xl font-bold text-text-primary flex items-center gap-2">
+            <LayoutDashboard className="w-6 h-6 text-primary" />
+            Panel
+            <span className="flex items-center gap-1.5 ml-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[11px] font-bold text-emerald-600">CANLI</span>
+              <span className="text-xs font-semibold text-emerald-600">CANLI</span>
             </span>
           </h1>
-          <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[12px] text-text-secondary">
+          <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs text-text-secondary">
             <span>Son güncelleme: {mounted && lastRefresh ? lastRefresh.toLocaleTimeString('tr-TR') : '—'}</span>
             <span className="hidden sm:inline">·</span>
             <button
               onClick={() => refresh(false)}
-              className="inline-flex items-center justify-center min-h-[38px] sm:min-h-[44px] px-3 text-primary font-bold bg-primary/10 hover:bg-primary/20 rounded-lg transition-all active:scale-[0.97] disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-1.5 min-h-[38px] sm:min-h-[44px] px-3 text-primary font-semibold bg-primary/10 hover:bg-primary/20 rounded-lg transition-all active:scale-[0.97] disabled:opacity-50"
               disabled={loading}
             >
-              {loading ? (
-                <span className="flex items-center gap-1">
-                  <span className="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                  Yükleniyor…
-                </span>
-              ) : (
-                '🔄 Yenile'
-              )}
+              <RotateCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+              <span>{loading ? 'Yükleniyor…' : 'Yenile'}</span>
             </button>
           </div>
         </div>
@@ -221,7 +229,7 @@ export default function DashboardClient({ initialData }: { initialData: Dashboar
       {/* Main KPI grid */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <StatCard
-          icon="🧑‍💻"
+          icon={UserPlus}
           label="Yeni Kayıt"
           value={sig}
           sub={`Bu ${period === 'today' ? 'gün' : period === 'week' ? 'hafta' : 'ay'} ${sig} yeni kullanıcı`}
@@ -229,7 +237,7 @@ export default function DashboardClient({ initialData }: { initialData: Dashboar
           href="/admin/users"
         />
         <StatCard
-          icon="🐾"
+          icon={PawPrint}
           label="Yeni Pet"
           value={pet}
           sub={`Bu ${period === 'today' ? 'gün' : period === 'week' ? 'hafta' : 'ay'} ${pet} yeni evcil hayvan`}
@@ -237,14 +245,14 @@ export default function DashboardClient({ initialData }: { initialData: Dashboar
           href="/admin/pets"
         />
         <StatCard
-          icon="⭐"
+          icon={Star}
           label="Pro Abonelik Oranı"
           value={`%${data?.subscriptions.proRatePct ?? 0}`}
           sub={`Bu ay +${data?.subscriptions.proMonth ?? 0} · Toplam ${data?.subscriptions.proTotal ?? 0}`}
           accent="violet"
         />
         <StatCard
-          icon="⚠️"
+          icon={AlertTriangle}
           label="Gecikmiş Aşı"
           value={data?.overdueVaccines ?? 0}
           sub="Tüm hayvanlarda gecikmiş aşı durumu"
@@ -252,7 +260,7 @@ export default function DashboardClient({ initialData }: { initialData: Dashboar
           href="/admin/pets"
         />
         <StatCard
-          icon="👥"
+          icon={Users}
           label="Toplam Pro Üye"
           value={data?.subscriptions.proTotal ?? 0}
           sub="Aktif pro & ai_plus aboneler"
@@ -263,18 +271,18 @@ export default function DashboardClient({ initialData }: { initialData: Dashboar
       {/* Recent signups */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[15px] font-black text-text-primary">Son 5 Kayıt</h2>
+          <h2 className="text-base font-bold text-text-primary">Son 5 Kayıt</h2>
           <Link
             href="/admin/users"
-            className="text-[12px] font-bold text-primary hover:underline"
+            className="text-xs font-semibold text-primary hover:underline"
           >
             Tüm kullanıcılar →
           </Link>
         </div>
 
-        <div className="rounded-2xl border border-border-main bg-surface overflow-hidden">
+        <div className="rounded-[24px] border border-border-main bg-surface overflow-hidden shadow-soft">
           {!data?.recentUsers?.length ? (
-            <div className="p-8 text-center text-text-secondary text-[13px]">
+            <div className="p-8 text-center text-text-secondary text-sm">
               Henüz kullanıcı yok.
             </div>
           ) : (
@@ -301,21 +309,21 @@ export default function DashboardClient({ initialData }: { initialData: Dashboar
                   >
                     {/* Avatar */}
                     <div
-                      className={`w-9 h-9 rounded-full bg-gradient-to-br ${avatarColors[i]} flex items-center justify-center text-white text-[12px] font-black shrink-0`}
+                      className={`w-9 h-9 rounded-full bg-gradient-to-br ${avatarColors[i]} flex items-center justify-center text-white text-xs font-bold shrink-0`}
                     >
                       {initials}
                     </div>
                     {/* Info */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-bold text-text-primary truncate group-hover:text-primary transition-colors">
+                      <p className="text-sm font-semibold text-text-primary truncate group-hover:text-primary transition-colors">
                         {name}
                       </p>
-                      <p className="text-[11px] text-text-secondary truncate">{u.email}</p>
+                      <p className="text-xs text-text-secondary truncate">{u.email}</p>
                     </div>
                     {/* Role + time */}
                     <div className="flex flex-col items-end gap-1 shrink-0">
                       {roleChip(u.role)}
-                      <span className="text-[10px] text-text-secondary">
+                      <span className="text-2xs text-text-secondary">
                         {mounted ? timeAgo(u.created_at) : '—'}
                       </span>
                     </div>
@@ -329,32 +337,42 @@ export default function DashboardClient({ initialData }: { initialData: Dashboar
 
       {/* Quick actions */}
       <div>
-        <h2 className="text-[15px] font-black text-text-primary mb-4">Hızlı Eylemler</h2>
+        <h2 className="text-base font-bold text-text-primary mb-4">Hızlı Eylemler</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Link href="/admin/users" className="card-base p-5 hover:border-primary transition-all group">
-            <div className="text-[24px] mb-3">👥</div>
-            <h3 className="font-bold text-[14px] text-text-primary group-hover:text-primary">Kullanıcıları Yönet</h3>
-            <p className="text-[12px] text-text-secondary mt-1">Kayıtlı kullanıcıları görüntüle, düzenle veya engelle.</p>
+          <Link href="/admin/users" className="card-base p-5 hover:border-primary transition-all group rounded-[24px]">
+            <div className="w-10 h-10 rounded-xl bg-primary-soft flex items-center justify-center mb-3">
+              <Users className="w-5 h-5 text-primary" />
+            </div>
+            <h3 className="font-semibold text-sm text-text-primary group-hover:text-primary">Kullanıcıları Yönet</h3>
+            <p className="text-xs text-text-secondary mt-1">Kayıtlı kullanıcıları görüntüle, düzenle veya engelle.</p>
           </Link>
-          <Link href="/admin/pets" className="card-base p-5 hover:border-primary transition-all group">
-            <div className="text-[24px] mb-3">🐾</div>
-            <h3 className="font-bold text-[14px] text-text-primary group-hover:text-primary">Evcil Hayvanlar</h3>
-            <p className="text-[12px] text-text-secondary mt-1">Sistemdeki tüm kayıtlı evcil hayvanları görüntüle.</p>
+          <Link href="/admin/pets" className="card-base p-5 hover:border-primary transition-all group rounded-[24px]">
+            <div className="w-10 h-10 rounded-xl bg-primary-soft flex items-center justify-center mb-3">
+              <PawPrint className="w-5 h-5 text-primary" />
+            </div>
+            <h3 className="font-semibold text-sm text-text-primary group-hover:text-primary">Evcil Hayvanlar</h3>
+            <p className="text-xs text-text-secondary mt-1">Sistemdeki tüm kayıtlı evcil hayvanları görüntüle.</p>
           </Link>
-          <Link href="/admin/social" className="card-base p-5 hover:border-primary transition-all group">
-            <div className="text-[24px] mb-3">📱</div>
-            <h3 className="font-bold text-[14px] text-text-primary group-hover:text-primary">Sosyal Moderasyon</h3>
-            <p className="text-[12px] text-text-secondary mt-1">Kullanıcı gönderilerini ve sosyal etkileşimleri incele.</p>
+          <Link href="/admin/social" className="card-base p-5 hover:border-primary transition-all group rounded-[24px]">
+            <div className="w-10 h-10 rounded-xl bg-primary-soft flex items-center justify-center mb-3">
+              <Smartphone className="w-5 h-5 text-primary" />
+            </div>
+            <h3 className="font-semibold text-sm text-text-primary group-hover:text-primary">Sosyal Moderasyon</h3>
+            <p className="text-xs text-text-secondary mt-1">Kullanıcı gönderilerini ve sosyal etkileşimleri incele.</p>
           </Link>
-          <Link href="/admin/ai-vet" className="card-base p-5 hover:border-primary transition-all group">
-            <div className="text-[24px] mb-3">🤖</div>
-            <h3 className="font-bold text-[14px] text-text-primary group-hover:text-primary">AI-Vet Yönetimi</h3>
-            <p className="text-[12px] text-text-secondary mt-1">AI analizlerini ve sistem kullanım istatistiklerini gör.</p>
+          <Link href="/admin/ai-vet" className="card-base p-5 hover:border-primary transition-all group rounded-[24px]">
+            <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center mb-3">
+              <Sparkles className="w-5 h-5 text-purple-600" />
+            </div>
+            <h3 className="font-semibold text-sm text-text-primary group-hover:text-primary">AI-Vet Yönetimi</h3>
+            <p className="text-xs text-text-secondary mt-1">AI analizlerini ve sistem kullanım istatistiklerini gör.</p>
           </Link>
-          <Link href="/admin/vets" className="card-base p-5 hover:border-primary transition-all group">
-            <div className="text-[24px] mb-3">🩺</div>
-            <h3 className="font-bold text-[14px] text-text-primary group-hover:text-primary">Veteriner Onayları</h3>
-            <p className="text-[12px] text-text-secondary mt-1">Veteriner başvuru ve belge incelemelerini yönet.</p>
+          <Link href="/admin/vets" className="card-base p-5 hover:border-primary transition-all group rounded-[24px]">
+            <div className="w-10 h-10 rounded-xl bg-sky-100 flex items-center justify-center mb-3">
+              <Stethoscope className="w-5 h-5 text-sky-600" />
+            </div>
+            <h3 className="font-semibold text-sm text-text-primary group-hover:text-primary">Veteriner Onayları</h3>
+            <p className="text-xs text-text-secondary mt-1">Veteriner başvuru ve belge incelemelerini yönet.</p>
           </Link>
         </div>
       </div>

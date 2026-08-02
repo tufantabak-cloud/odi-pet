@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
+import { Bookmark, Sparkles, ArrowRight } from 'lucide-react';
 
 interface LearnClientProps {
   articles: any[];
@@ -196,7 +197,7 @@ export default function LearnClient({
               }`}
               title={isSaved ? 'Kaydedilenlerden Çıkar' : 'Kaydet'}
             >
-              <i className={`ti ${isSaved ? 'ti-bookmark-filled' : 'ti-bookmark'}`} />
+              <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-purple-700 text-purple-700' : 'text-gray-500'}`} />
             </button>
           </div>
         </div>
@@ -204,7 +205,7 @@ export default function LearnClient({
         {/* Eşleşme Gerekçesi (Pete Özel sekmesinde) */}
         {reason && (
           <div className="bg-purple-50/70 border border-purple-100 text-purple-900 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5">
-            <i className="ti ti-sparkles text-purple-600 text-sm" />
+            <Sparkles className="w-3.5 h-3.5 text-purple-600 shrink-0" />
             <span>{reason}</span>
           </div>
         )}
@@ -235,9 +236,10 @@ export default function LearnClient({
 
           <Link
             href={`/owner/learn/${art.slug}`}
-            className="text-[var(--color-primary)] font-semibold hover:underline flex items-center gap-1"
+            className="text-primary font-semibold hover:underline flex items-center gap-1 text-xs"
           >
-            Detaylı Oku <i className="ti ti-arrow-right" />
+            <span>Detaylı Oku</span>
+            <ArrowRight className="w-3.5 h-3.5 shrink-0" />
           </Link>
         </div>
       </div>
@@ -321,7 +323,7 @@ export default function LearnClient({
 
           {personalizedArticles.length === 0 ? (
             <div className="p-10 text-center bg-gray-50 border border-dashed border-gray-300 rounded-2xl space-y-3">
-              <i className="ti ti-sparkles text-3xl text-purple-400" />
+              <Sparkles className="w-8 h-8 text-purple-400 mx-auto" />
               <div className="space-y-1">
                 <p className="text-xs font-semibold text-gray-800">
                   Petiniz için henüz kişiselleştirilmiş bir rehber bulunmuyor.
@@ -334,10 +336,10 @@ export default function LearnClient({
               </div>
               <button
                 onClick={() => setActiveTab('all')}
-                className="mt-2 inline-flex items-center gap-1.5 bg-[var(--color-primary)] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-[var(--color-primary-hover)] transition-all shadow-xs"
+                className="mt-2 inline-flex items-center gap-1.5 bg-primary text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-primary-hover transition-all shadow-xs"
               >
                 <span>Tüm Bilgileri Gör</span>
-                <i className="ti ti-arrow-right" />
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
           ) : (
@@ -419,7 +421,7 @@ export default function LearnClient({
         <div className="space-y-4">
           {savedArticlesList.length === 0 ? (
             <div className="p-12 text-center bg-gray-50 border border-dashed rounded-2xl space-y-2">
-              <i className="ti ti-bookmark text-3xl text-gray-400" />
+              <Bookmark className="w-8 h-8 text-gray-400 mx-auto" />
               <p className="text-xs font-semibold text-gray-600">Henüz kaydettiğiniz bir rehber bulunmuyor.</p>
             </div>
           ) : (

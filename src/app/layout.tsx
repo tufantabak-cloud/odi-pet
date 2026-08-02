@@ -65,14 +65,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr" className="antialiased h-full">
-      <head>
-        {/* The versioned stylesheet is self-hosted in public/vendor. */}
-        {/* eslint-disable-next-line @next/next/no-css-tags */}
-        <link
-          rel="stylesheet"
-          href="/vendor/tabler-icons/tabler-icons.min.css"
-        />
-      </head>
+      <head />
       <body className="min-h-full flex flex-col font-sans text-[16px] bg-bg-main text-text-primary">
         <PwaEnforcer />
         <SplashScreen />
