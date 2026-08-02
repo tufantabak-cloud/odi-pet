@@ -322,15 +322,19 @@ export default function ReferralClient({
           </ul>
         </div>
 
-        {/* 8. Stats Card */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="card-base p-5 rounded-3xl bg-white border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] text-center">
-            <span className="text-2xl font-black text-text-primary">{referralCount}</span>
-            <p className="text-xs font-semibold text-text-secondary mt-1">Toplam Davet</p>
+        {/* 8. Stats Card (Toplam Davet, Nitelikli Davet, Kazanılan Süre) */}
+        <div className="grid grid-cols-3 gap-2.5">
+          <div className="card-base p-4 rounded-3xl bg-white border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] text-center">
+            <span className="text-xl sm:text-2xl font-black text-primary">{referralCount}</span>
+            <p className="text-3xs sm:text-2xs font-bold text-text-secondary uppercase tracking-wider mt-1">Toplam Davet</p>
           </div>
-          <div className="card-base p-5 rounded-3xl bg-white border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] text-center">
-            <span className="text-2xl font-black text-amber-500">+{earnedDays} Gün</span>
-            <p className="text-xs font-semibold text-text-secondary mt-1">Kazanılan Süre</p>
+          <div className="card-base p-4 rounded-3xl bg-white border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] text-center">
+            <span className="text-xl sm:text-2xl font-black text-emerald-600">{qualifiedCount}</span>
+            <p className="text-3xs sm:text-2xs font-bold text-text-secondary uppercase tracking-wider mt-1">Nitelikli Davet</p>
+          </div>
+          <div className="card-base p-4 rounded-3xl bg-white border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] text-center">
+            <span className="text-xl sm:text-2xl font-black text-amber-500">+{earnedDays} Gün</span>
+            <p className="text-3xs sm:text-2xs font-bold text-text-secondary uppercase tracking-wider mt-1">Kazanılan Süre</p>
           </div>
         </div>
 

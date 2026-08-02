@@ -28,11 +28,11 @@ export async function GET() {
   const earnedDays = (qualifiedCount * 30) + milestoneBonusDays
 
   const entitlement = await getEntitlement(user.id)
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://odi.pet'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://odi-petcare.vercel.app'
 
   return NextResponse.json({
     referralCode: profile?.referral_code ?? null,
-    referralUrl: `${appUrl}/register?ref=${profile?.referral_code}`,
+    referralUrl: `${appUrl}/?ref=${profile?.referral_code}`,
     referralCount: referralCount ?? 0,
     qualifiedCount,
     earnedDays,

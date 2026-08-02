@@ -32,9 +32,9 @@ export default async function ReferralPage() {
   const milestoneBonusDays = qualifiedCount >= 5 ? 60 : 0
   const earnedDays = (qualifiedCount * 30) + milestoneBonusDays
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://odi.pet'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://odi-petcare.vercel.app'
   const referralCode = profile?.referral_code ?? '—'
-  const referralUrl = `${appUrl}/register?ref=${referralCode}`
+  const referralUrl = `${appUrl}/?ref=${referralCode}`
 
   return (
     <div className="max-w-lg mx-auto p-4">
