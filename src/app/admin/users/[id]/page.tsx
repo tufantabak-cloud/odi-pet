@@ -72,7 +72,7 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
   ] = await Promise.all([
     supabase
       .from('profiles')
-      .select('id, first_name, last_name, email, role, phone, created_at')
+      .select('id, first_name, last_name, email, role, phone, created_at, premium_until, premium_tier')
       .eq('id', id)
       .single(),
     supabase
@@ -242,26 +242,47 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
         {/* RIGHT COLUMN */}
         <div className="space-y-6">
 
-          {/* Subscription */}
-          <div className="card-base p-5">
-            <h2 className="font-black text-[14px] text-text-primary mb-4 flex items-center gap-2">
-              ⭐ Abonelik
+          {/* Subscription & Pro Credit */}
+          <div className="card-base p-5 space-y-4">
+            <h2 className="font-black text-[14px] text-text-primary flex items-center justify-between">
+              <span className="flex items-center gap-2">⭐ Abonelik & Pro Kredisi</span>
+              <Link href="/admin/memberships" className="text-2xs font-bold text-primary hover:underline">
+                Kredi Yükle →
+              </Link>
             </h2>
-            {subscription ? (
-              <div className="space-y-3">
-                <SubBadge plan={subscription.plan} status={subscription.status} />
-                <div className="text-[12px] text-text-secondary space-y-1">
-                  <div>Başlangıç: {new Date(subscription.created_at).toLocaleDateString('tr-TR')}</div>
+
+            <div className="space-y-3">
+              {profile.premium_until && new Date(profile.premium_until).getTime() > Date.now() ? (
+                <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200/80 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-amber-800 flex items-center gap-1">
+                      👑 Odi Pro Aktif
+                    </span>
+                    <span className="text-xs font-black text-amber-900 bg-amber-200/60 px-2 py-0.5 rounded-full">
+                      {Math.ceil((new Date(profile.premium_until).getTime() - Date.now()) / (1000 * 60 * 60 * 24))} Gün Kaldı
+                    </span>
+                  </div>
+                  <div className="text-2xs text-amber-700 font-medium">
+                    Pro Bitiş Tarihi: {new Date(profile.premium_until).toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+                  <div className="text-xs font-bold text-slate-700">Ücretsiz Plan (Free)</div>
+                  <div className="text-2xs text-slate-500">Aktif Pro süresi bulunmuyor.</div>
+                </div>
+              )}
+
+              {subscription && (
+                <div className="pt-2 border-t border-border-main space-y-1 text-[12px] text-text-secondary">
+                  <div className="font-bold text-slate-800 mb-1">Stripe / Ödemeli Abonelik:</div>
+                  <SubBadge plan={subscription.plan} status={subscription.status} />
                   {subscription.ends_at && (
-                    <div>Bitiş: {new Date(subscription.ends_at).toLocaleDateString('tr-TR')}</div>
+                    <div className="mt-1 text-2xs">Bitiş: {new Date(subscription.ends_at).toLocaleDateString('tr-TR')}</div>
                   )}
                 </div>
-              </div>
-            ) : (
-              <div className="text-[13px] text-text-secondary">
-                Aktif abonelik yok — Ücretsiz plan
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Role Change */}

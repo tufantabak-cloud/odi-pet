@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
 
   let query = supabase
     .from('profiles')
-    .select('id, first_name, last_name, email, role, phone, created_at', { count: 'exact' })
+    .select('id, first_name, last_name, email, role, phone, created_at, premium_until, premium_tier', { count: 'exact' })
     .order('created_at', { ascending: false })
     .range(from, to)
 

@@ -15,6 +15,8 @@ interface User {
   role: string | null
   phone: string | null
   created_at: string
+  premium_until?: string | null
+  premium_tier?: string | null
 }
 
 interface UsersResponse {
@@ -24,6 +26,36 @@ interface UsersResponse {
   pageSize: number
   totalPages: number
   roleCounts: Record<string, number>
+}
+
+function SubscriptionBadge({ premiumUntil }: { premiumUntil?: string | null }) {
+  if (!premiumUntil) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-3xs font-extrabold bg-slate-100 text-slate-600 border border-slate-200">
+        Standart (Free)
+      </span>
+    )
+  }
+
+  const untilDate = new Date(premiumUntil)
+  const now = new Date()
+  const diffMs = untilDate.getTime() - now.getTime()
+  const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
+
+  if (daysLeft > 0) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-3xs font-black bg-amber-50 text-amber-700 border border-amber-300 shadow-xs">
+        <Crown className="w-3 h-3 text-amber-500 fill-amber-500" />
+        Odi Pro ({daysLeft} Gün)
+      </span>
+    )
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-3xs font-extrabold bg-rose-50 text-rose-700 border border-rose-200">
+      Süresi Doldu
+    </span>
+  )
 }
 
 // ── Role Config ───────────────────────────────────────────────────────────────
@@ -294,6 +326,7 @@ export default function AdminUsersClient() {
                 </th>
                 <th className="p-4">Kullanıcı</th>
                 <th className="p-4">Rol</th>
+                <th className="p-4 hidden sm:table-cell">Abonelik / Pro</th>
                 <th className="p-4 hidden sm:table-cell">Telefon</th>
                 <th className="p-4 hidden md:table-cell">Kayıt Tarihi</th>
                 <th className="p-4 text-right">Detay</th>
@@ -306,6 +339,7 @@ export default function AdminUsersClient() {
                       <td className="p-4"><div className="w-4 h-4 rounded bg-bg-main" /></td>
                       <td className="p-4"><div className="h-4 bg-bg-main rounded w-40" /></td>
                       <td className="p-4"><div className="h-5 bg-bg-main rounded w-16" /></td>
+                      <td className="p-4 hidden sm:table-cell"><div className="h-5 bg-bg-main rounded w-24" /></td>
                       <td className="p-4 hidden sm:table-cell"><div className="h-4 bg-bg-main rounded w-24" /></td>
                       <td className="p-4 hidden md:table-cell"><div className="h-4 bg-bg-main rounded w-20" /></td>
                       <td className="p-4"><div className="h-4 bg-bg-main rounded w-12 ml-auto" /></td>
@@ -336,6 +370,9 @@ export default function AdminUsersClient() {
                       <td className="p-4">
                         <RoleBadge role={user.role} />
                       </td>
+                      <td className="p-4 hidden sm:table-cell">
+                        <SubscriptionBadge premiumUntil={user.premium_until} />
+                      </td>
                       <td className="p-4 hidden sm:table-cell text-text-secondary text-[12px]">
                         {user.phone ?? '—'}
                       </td>
@@ -356,7 +393,7 @@ export default function AdminUsersClient() {
 
               {!loading && (!data?.users || data.users.length === 0) && (
                 <tr>
-                  <td colSpan={6} className="p-12 text-center">
+                  <td colSpan={7} className="p-12 text-center">
                     <div className="text-4xl mb-3">👥</div>
                     <p className="text-text-secondary font-bold text-[14px]">
                       Bu kritere uygun kullanıcı bulunamadı.
