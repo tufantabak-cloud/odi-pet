@@ -1,3 +1,3353 @@
-var m=[{revision:null,url:"/_next/static/media/marker-icon.1le94j_pe_ih1.png"},{revision:null,url:"/_next/static/media/layers.3muxcl8sz6330.png"},{revision:null,url:"/_next/static/media/layers-2x.23wrxu3xxu9-i.png"},{revision:null,url:"/_next/static/fdYBNJasBrT2QRa70CC7a/_ssgManifest.js"},{revision:null,url:"/_next/static/fdYBNJasBrT2QRa70CC7a/_clientMiddlewareManifest.js"},{revision:null,url:"/_next/static/fdYBNJasBrT2QRa70CC7a/_buildManifest.js"},{revision:null,url:"/_next/static/chunks/turbopack-0zbsc7kvk7il3.js"},{revision:null,url:"/_next/static/chunks/43p88uww30m0a.js"},{revision:null,url:"/_next/static/chunks/42lwc4f14gpt2.js"},{revision:null,url:"/_next/static/chunks/41tuk253_yqyv.css"},{revision:null,url:"/_next/static/chunks/41noc2uyj9n39.js"},{revision:null,url:"/_next/static/chunks/40q_h83-ez548.js"},{revision:null,url:"/_next/static/chunks/3ybxrraddsgk5.js"},{revision:null,url:"/_next/static/chunks/3xe-avnesrikx.js"},{revision:null,url:"/_next/static/chunks/3wu123ob063ob.js"},{revision:null,url:"/_next/static/chunks/3vpzesr_cmx4t.js"},{revision:null,url:"/_next/static/chunks/3vltj-53wsso-.js"},{revision:null,url:"/_next/static/chunks/3vbs6km8_4h24.js"},{revision:null,url:"/_next/static/chunks/3tdvfi1mirgnz.js"},{revision:null,url:"/_next/static/chunks/3s4lp87bp8y7y.js"},{revision:null,url:"/_next/static/chunks/3p-cof2aj3s__.js"},{revision:null,url:"/_next/static/chunks/3o5qylw7x1tko.js"},{revision:null,url:"/_next/static/chunks/3nsvm-sjtok-v.js"},{revision:null,url:"/_next/static/chunks/3j_hcqttmcupp.js"},{revision:null,url:"/_next/static/chunks/3imv7jeyobsim.js"},{revision:null,url:"/_next/static/chunks/3iiu3qgqw63cq.js"},{revision:null,url:"/_next/static/chunks/3gp6gsc3o6ll9.js"},{revision:null,url:"/_next/static/chunks/3gkg6_vlz9oe-.js"},{revision:null,url:"/_next/static/chunks/3cq78pbq9xkfj.js"},{revision:null,url:"/_next/static/chunks/3bdb_izzm8x0_.js"},{revision:null,url:"/_next/static/chunks/3aw48msz9_9f-.js"},{revision:null,url:"/_next/static/chunks/3auplyumj2330.js"},{revision:null,url:"/_next/static/chunks/3asg3op_7-8u-.js"},{revision:null,url:"/_next/static/chunks/3ajukf9y_tsnp.js"},{revision:null,url:"/_next/static/chunks/37kcjv3vdo6a6.js"},{revision:null,url:"/_next/static/chunks/35t3vk_yd34z0.js"},{revision:null,url:"/_next/static/chunks/35ip4ctshr802.js"},{revision:null,url:"/_next/static/chunks/33bn_amv22e_g.js"},{revision:null,url:"/_next/static/chunks/33a9s-6hgl1py.js"},{revision:null,url:"/_next/static/chunks/2vv_9cl0lb0e5.js"},{revision:null,url:"/_next/static/chunks/2ve1r4pdx0wk-.js"},{revision:null,url:"/_next/static/chunks/2unmg2mzch4do.js"},{revision:null,url:"/_next/static/chunks/2uf4al3d6v1b9.js"},{revision:null,url:"/_next/static/chunks/2s5cz7ew6xe62.js"},{revision:null,url:"/_next/static/chunks/2rr6cjq61n5ve.js"},{revision:null,url:"/_next/static/chunks/2nss7y3zs30z3.js"},{revision:null,url:"/_next/static/chunks/2mai08p4ff_mn.js"},{revision:null,url:"/_next/static/chunks/2lw92xneou4d3.js"},{revision:null,url:"/_next/static/chunks/2lonp7g-nxn2u.js"},{revision:null,url:"/_next/static/chunks/2l-83cviihluo.js"},{revision:null,url:"/_next/static/chunks/2k0bkrwyrsjbx.js"},{revision:null,url:"/_next/static/chunks/2jc59zcdq6wn1.js"},{revision:null,url:"/_next/static/chunks/2j83ycyhcmmgv.js"},{revision:null,url:"/_next/static/chunks/2hjjigcu8dhmg.js"},{revision:null,url:"/_next/static/chunks/269e0ed710-zf.js"},{revision:null,url:"/_next/static/chunks/25_etrvx-55lh.js"},{revision:null,url:"/_next/static/chunks/25wj5y2e3b2dj.js"},{revision:null,url:"/_next/static/chunks/24blv47ql5r0z.js"},{revision:null,url:"/_next/static/chunks/23nt09im27xms.js"},{revision:null,url:"/_next/static/chunks/23ihy22nlwyqt.js"},{revision:null,url:"/_next/static/chunks/20gj69a9ik2_7.css"},{revision:null,url:"/_next/static/chunks/1_at7j8pra_z9.js"},{revision:null,url:"/_next/static/chunks/1_0v6exngdege.js"},{revision:null,url:"/_next/static/chunks/1ymadmbr54who.js"},{revision:null,url:"/_next/static/chunks/1ppdg4dmpr9fd.js"},{revision:null,url:"/_next/static/chunks/1mug_gvcnrkf_.js"},{revision:null,url:"/_next/static/chunks/1mgxksde8mx8i.js"},{revision:null,url:"/_next/static/chunks/1mds0felc7ccw.js"},{revision:null,url:"/_next/static/chunks/1h96efrctb6hr.js"},{revision:null,url:"/_next/static/chunks/1ckhybdnqav1-.js"},{revision:null,url:"/_next/static/chunks/1ci78kxr0fmkx.js"},{revision:null,url:"/_next/static/chunks/1bplv737gd0t-.js"},{revision:null,url:"/_next/static/chunks/1apr6fgclitx3.js"},{revision:null,url:"/_next/static/chunks/18chu9cz4_lt_.js"},{revision:null,url:"/_next/static/chunks/17b5qt4oumxvb.js"},{revision:null,url:"/_next/static/chunks/173kqvzlsqr8d.js"},{revision:null,url:"/_next/static/chunks/15drc1q8ew6-9.js"},{revision:null,url:"/_next/static/chunks/1519hjti26-3y.js"},{revision:null,url:"/_next/static/chunks/15-xhwhpgiy6d.js"},{revision:null,url:"/_next/static/chunks/133bwx5as2mrx.js"},{revision:null,url:"/_next/static/chunks/11noe9lhatrb7.js"},{revision:null,url:"/_next/static/chunks/10nk9nlnjfua-.js"},{revision:null,url:"/_next/static/chunks/1-3c9ddfcqyd0.js"},{revision:null,url:"/_next/static/chunks/0vj_poxipdfht.js"},{revision:null,url:"/_next/static/chunks/0n8kzvw2z_6as.css"},{revision:null,url:"/_next/static/chunks/0jcn_9vg6dvfn.js"},{revision:null,url:"/_next/static/chunks/0j17954of77zn.js"},{revision:null,url:"/_next/static/chunks/0i00nliye4hsa.js"},{revision:null,url:"/_next/static/chunks/0hhul4kktqgxq.js"},{revision:null,url:"/_next/static/chunks/0f_w2nva9ssz-.js"},{revision:null,url:"/_next/static/chunks/0d7z5o1bxadqd.js"},{revision:null,url:"/_next/static/chunks/0cz1d0mv5g_q7.js"},{revision:null,url:"/_next/static/chunks/09v_niav-bx7w.js"},{revision:null,url:"/_next/static/chunks/09vhfd1n7hw4q.js"},{revision:null,url:"/_next/static/chunks/09iz4od4ia8r2.css"},{revision:null,url:"/_next/static/chunks/08dnuhddn7_yr.js"},{revision:null,url:"/_next/static/chunks/0788gwtggeehe.js"},{revision:null,url:"/_next/static/chunks/060o9pq6j_n98.js"},{revision:null,url:"/_next/static/chunks/0605rcjmuhu2t.js"},{revision:null,url:"/_next/static/chunks/04_-5a7j-hw3r.js"},{revision:null,url:"/_next/static/chunks/01t7wa4cv44p1.js"},{revision:null,url:"/_next/static/chunks/0178vfzt1ot9g.js"},{revision:null,url:"/_next/static/chunks/008q7369au9ta.js"},{revision:"2cf095b5d0bfd67737e9eeccdb8d22a7",url:"/splash.png"},{revision:"23e9b33e6f3df69ada20234ebecf4bf4",url:"/manifest.json"},{revision:"7dbb45526900cce878d89e5d1e4130a8",url:"/vendor/tabler-icons/tabler-icons.min.css"},{revision:"773c12d38d1fb8e4b902b248c05ec06f",url:"/vendor/tabler-icons/LICENSE"},{revision:"262ca05014f0b51081f398bc51623b39",url:"/vendor/tabler-icons/fonts/tabler-icons.woff2"},{revision:"44a526eed258222515aa21eaffd14a96",url:"/vendor/leaflet/marker-shadow.png"},{revision:"2273e3d8ad9264b7daa5bdbf8e6b47f8",url:"/vendor/leaflet/marker-icon.png"},{revision:"401d815dc206b8dc1b17cd0e37695975",url:"/vendor/leaflet/marker-icon-2x.png"},{revision:"c115291a497e22ae0e10bb594b948a45",url:"/vendor/leaflet/lost-pet-marker.svg"},{revision:"c27cac4095a6a31a8a4fb888bcdb04cb",url:"/generated/odi-og-image-1200x630.jpg"},{revision:"746de927e9d52fea9c80446bcab38a43",url:"/generated/odi-icon-512-maskable.png"},{revision:"dcc2c0b5299cf5aa758a86cee47a944e",url:"/brand/logos/watermark/odi-logo-white-dark-bg.png"},{revision:"6211480f3bfc9d4129271816d7b9ce41",url:"/brand/logos/splash/odi-splash-logo.png"},{revision:"3f5ef1600c12e5da5542c07a819139a7",url:"/brand/logos/social/odi-social-cover.svg"},{revision:"3f5ef1600c12e5da5542c07a819139a7",url:"/brand/logos/social/odi-social-avatar.svg"},{revision:"8655d31779d7dd1c14cf2a61ce3ed769",url:"/brand/logos/social/odi-social-avatar.png"},{revision:"01202565bcdc595af251a9415cc545aa",url:"/brand/logos/primary/odi-logo-vertical.svg"},{revision:"e6c50f6ecf1b2813bf24b608b916dbac",url:"/brand/logos/primary/odi-logo-vertical.png"},{revision:"dcbe97cb08863d5bac204b08c1672fe5",url:"/brand/logos/primary/odi-logo-primary.svg"},{revision:"f1bfa6eb713ee19b6cccaaa72fd793dc",url:"/brand/logos/primary/odi-logo-primary.png"},{revision:"191c162074478f2b60fdd02e7280c1b7",url:"/brand/logos/primary/odi-logo-horizontal.svg"},{revision:"d6c6e3d14d30a861c55aa05638cb6e24",url:"/brand/logos/primary/odi-logo-horizontal.png"},{revision:"b7c64b571462b422e364bf76d601ace1",url:"/brand/logos/primary/Horizontal Logo.svg"},{revision:"5521075c30cdb611b867d7eabf892e8a",url:"/brand/logos/monochrome/odi-logo-white.png"},{revision:"fbff912cf63bd1a24a787245ee1f2e4f",url:"/brand/logos/monochrome/odi-logo-one-color.png"},{revision:"b10cd17bec65f7315229e2a196efc805",url:"/brand/logos/icon/odi-icon.svg"},{revision:"6aee6b62353ab2bada16eea7576bcb0e",url:"/brand/logos/icon/odi-icon-96.png"},{revision:"a24ccd6a4a777af7dadc3ec3c0483a26",url:"/brand/logos/icon/odi-icon-72.png"},{revision:"15346ee50eb923a379c42831c590ce47",url:"/brand/logos/icon/odi-icon-64.png"},{revision:"55aa636cccaca2bad4925b91dff5b831",url:"/brand/logos/icon/odi-icon-512.png"},{revision:"9e918176b39f29ef37b6219ddc4b8f40",url:"/brand/logos/icon/odi-icon-48.png"},{revision:"0be985c553339358822b782a6373b507",url:"/brand/logos/icon/odi-icon-32.png"},{revision:"941eeb9a90c21c203369f90111c17a94",url:"/brand/logos/icon/odi-icon-256.png"},{revision:"de4ecda8b8b554c1bfc4b4e5f039190b",url:"/brand/logos/icon/odi-icon-180.png"},{revision:"82fe9ad6d5b419e047dbe7b397c0e89f",url:"/brand/logos/icon/odi-icon-16.png"},{revision:"16754cf1af0ef93d3ed86ad379953b57",url:"/brand/logos/icon/odi-icon-152.png"},{revision:"33ad49c0671bef278993aa125f29abfe",url:"/brand/logos/icon/odi-icon-144.png"},{revision:"642689dc12ec662ec2c756c8fc348f4b",url:"/brand/logos/icon/odi-icon-128.png"},{revision:"9de5e0f520187dbc9dda4b544401503a",url:"/brand/logos/icon/odi-icon-1024.png"},{revision:"4a3d246e9bada22de1736e0f2bfd7ec6",url:"/brand/illustrations/svg-optimization-report.md"},{revision:"0078d3620c097f841e85d996a401f0f2",url:"/brand/illustrations/qa-report.md"},{revision:"c6677db1a996222e7caf15b6235d8d62",url:"/brand/illustrations/production-manifest-phase2.json"},{revision:"c5b686783a13ffcb584d2131154ccb9d",url:"/brand/illustrations/preview-grid.svg"},{revision:"10625b91d3cf6711f1bae7a77ce14ecf",url:"/brand/illustrations/performance.md"},{revision:"5af06f22e5f143fce4eb351b22cb83f8",url:"/brand/illustrations/motion-spec.md"},{revision:"a033c4c926cc3a17d46ca298a7f992e1",url:"/brand/illustrations/illustration-usage-map.md"},{revision:"8cff28f302b68550b75ff9753ca2e48b",url:"/brand/illustrations/illustration-tokens.json"},{revision:"80f6bb5bc4a24ed6d98161e7e71ae1a9",url:"/brand/illustrations/illustration-tests.md"},{revision:"0d162d4a0bc601202051105f860da02b",url:"/brand/illustrations/illustration-semantic-map.json"},{revision:"42f9596c1bb80fed2475398c5c03d89d",url:"/brand/illustrations/illustration-regression.md"},{revision:"58fb729f3bc2d068a1fc6c3ae5d59382",url:"/brand/illustrations/illustration-registry.json"},{revision:"9033c5ecceca3b0d44d919da78c5eabc",url:"/brand/illustrations/illustration-performance-report.md"},{revision:"255bae323d68533fa5c162c58d0a480a",url:"/brand/illustrations/illustration-manifest.json"},{revision:"a1dfd1ebbbd9320042ad275100137334",url:"/brand/illustrations/illustration-lint.md"},{revision:"d5e876cdd04e46a22b1a31961624dfd3",url:"/brand/illustrations/illustration-integrity-report.md"},{revision:"ba7d98242b2a81942d4e156c2d6b25e5",url:"/brand/illustrations/illustration-freeze-readiness.md"},{revision:"dcd96d98993017384010418854a7d644",url:"/brand/illustrations/illustration-dependency-graph.json"},{revision:"1cd7dcfb542030c26f215c8602c805b0",url:"/brand/illustrations/illustration-compliance-report.md"},{revision:"ebf298da106c309d25470c15b8051c66",url:"/brand/illustrations/illustration-audit-report.md"},{revision:"8c2f721a16a84338cf1a6c2920cd6ae3",url:"/brand/illustrations/future-expansion-guide.md"},{revision:"1cb450e475b29450085ceb945a276c90",url:"/brand/illustrations/figma-governance.md"},{revision:"cc3af927f098173a61a643917dacd5da",url:"/brand/illustrations/export-pipeline.md"},{revision:"e28e409130b4c50eab4d91b4f25245b4",url:"/brand/illustrations/duplicate-detection-report.md"},{revision:"b22e15cfa58aa0bcb1a1878e0481f151",url:"/brand/illustrations/dark-mode-policy.md"},{revision:"21681ea72b2988302d55a72e225e978e",url:"/brand/illustrations/bundle-analysis.json"},{revision:"81bb22158604262a10147ac5aa6267d5",url:"/brand/illustrations/brand-compliance-report.md"},{revision:"1e9690d72b4ef74232eaa6d970741b30",url:"/brand/illustrations/asset-index.md"},{revision:"6a4dd7e07f615ca953392095ab292634",url:"/brand/illustrations/asset-delivery.md"},{revision:"7a932930e40f1335260697e0841849cc",url:"/brand/illustrations/asset-catalog.json"},{revision:"9d55a6a38bd0f3c0eaae56289f1c6fe7",url:"/brand/illustrations/wearables/README.md"},{revision:"7436b2932741ecde13b6b3127597252e",url:"/brand/illustrations/vaccines/vaccine-schedule.svg"},{revision:"00bcfff7eb463b733ed26e3c7e4543de",url:"/brand/illustrations/vaccines/README.md"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/vaccines/vaccine-schedule/thumbnail.webp"},{revision:"d9670edfcb418dff44a4959cc31d69b1",url:"/brand/illustrations/vaccines/vaccine-schedule/source.svg"},{revision:"5fa8a39c4e30820166136c5595076865",url:"/brand/illustrations/vaccines/vaccine-schedule/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/vaccines/vaccine-schedule/preview.png"},{revision:"26e7e77201af731f2be3094879870da7",url:"/brand/illustrations/vaccines/vaccine-schedule/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/vaccines/vaccine-schedule/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/vaccines/vaccine-schedule/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/vaccines/vaccine-schedule/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/vaccines/vaccine-schedule/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/vaccines/vaccine-schedule/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/vaccines/vaccine-rabies-shot/thumbnail.webp"},{revision:"bdb0e7f2b2217c94f8875931762a974b",url:"/brand/illustrations/vaccines/vaccine-rabies-shot/source.svg"},{revision:"c4395bbea3d095b8103f24da419102d6",url:"/brand/illustrations/vaccines/vaccine-rabies-shot/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/vaccines/vaccine-rabies-shot/preview.png"},{revision:"073fa193f287634672231a84c75b08c1",url:"/brand/illustrations/vaccines/vaccine-rabies-shot/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/vaccines/vaccine-rabies-shot/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/vaccines/vaccine-rabies-shot/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/vaccines/vaccine-rabies-shot/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/vaccines/vaccine-rabies-shot/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/vaccines/vaccine-rabies-shot/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/vaccines/vaccine-passport/thumbnail.webp"},{revision:"09586632626a0826d6feadda4fd92e93",url:"/brand/illustrations/vaccines/vaccine-passport/source.svg"},{revision:"9dc946a9bc5f5308f9091a9ef9433046",url:"/brand/illustrations/vaccines/vaccine-passport/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/vaccines/vaccine-passport/preview.png"},{revision:"7a8b06bf0741d25c7d26ff37360546b2",url:"/brand/illustrations/vaccines/vaccine-passport/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/vaccines/vaccine-passport/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/vaccines/vaccine-passport/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/vaccines/vaccine-passport/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/vaccines/vaccine-passport/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/vaccines/vaccine-passport/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/vaccines/vaccine-card-banner/thumbnail.webp"},{revision:"f47986b103f1e5d4cd0260b378a582ca",url:"/brand/illustrations/vaccines/vaccine-card-banner/source.svg"},{revision:"f480962449dc05de9eb0c404b5c22a90",url:"/brand/illustrations/vaccines/vaccine-card-banner/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/vaccines/vaccine-card-banner/preview.png"},{revision:"59170dea0dd295b8c97f3779248842a8",url:"/brand/illustrations/vaccines/vaccine-card-banner/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/vaccines/vaccine-card-banner/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/vaccines/vaccine-card-banner/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/vaccines/vaccine-card-banner/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/vaccines/vaccine-card-banner/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/vaccines/vaccine-card-banner/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/vaccines/vaccine-booster-reminder/thumbnail.webp"},{revision:"2442ecf64c81278c9532dd9ef3873729",url:"/brand/illustrations/vaccines/vaccine-booster-reminder/source.svg"},{revision:"034ffd83fcdc2ab3ba7f7bb4ffe13933",url:"/brand/illustrations/vaccines/vaccine-booster-reminder/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/vaccines/vaccine-booster-reminder/preview.png"},{revision:"0e6f2556ec3156373a55ef6b32c942c3",url:"/brand/illustrations/vaccines/vaccine-booster-reminder/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/vaccines/vaccine-booster-reminder/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/vaccines/vaccine-booster-reminder/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/vaccines/vaccine-booster-reminder/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/vaccines/vaccine-booster-reminder/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/vaccines/vaccine-booster-reminder/export/1024.png"},{revision:"af098eaa0b65bb449340737ed6af0795",url:"/brand/illustrations/vaccines/svg/vaccine-schedule.svg"},{revision:"f42d9e86486a008880b65b7eb5cc5530",url:"/brand/illustrations/vaccines/p0-vaccine-hero/source.svg"},{revision:"7869e83bdf4ea90616b477fcbbaf3e13",url:"/brand/illustrations/vaccines/p0-vaccine-hero/README.md"},{revision:"8edaba3d9ca90eaba0f00cd5bfcf48c5",url:"/brand/illustrations/vaccines/p0-vaccine-hero/illustration.json"},{revision:"34d66b85341c97b8c9b382531b988abd",url:"/brand/illustrations/training/README.md"},{revision:"94dbe08f1a4afa6364f2dac3c8d4cb12",url:"/brand/illustrations/success/success-check.svg"},{revision:"1bd17d73dca136f3a7b3bf8dd67a5b4b",url:"/brand/illustrations/success/README.md"},{revision:"4e0008aa88715e47f99e39c8d38f0e97",url:"/brand/illustrations/success/svg/success-check.svg"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/success/success-check/thumbnail.webp"},{revision:"2722ee43cc0f04e30150531a1563845c",url:"/brand/illustrations/success/success-check/source.svg"},{revision:"28c1fbc8abd248e1675f94e2bcc93cf9",url:"/brand/illustrations/success/success-check/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/success/success-check/preview.png"},{revision:"d20a1cd3884777969e5fb3b0b246900b",url:"/brand/illustrations/success/success-check/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/success/success-check/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/success/success-check/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/success/success-check/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/success/success-check/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/success/success-check/export/1024.png"},{revision:"671f57025690fdc68f57cbd4601d30e9",url:"/brand/illustrations/species/dog.png"},{revision:"a8da50a92a4b98428dc983beb4793d1b",url:"/brand/illustrations/source/README.md"},{revision:"58af23d3bf4135c977722dd5d905ef43",url:"/brand/illustrations/settings/settings-preferences.svg"},{revision:"07c80c6e15cd7217d012370f8d30d686",url:"/brand/illustrations/settings/README.md"},{revision:"d86ed6fdc97557f596c15fe5d76fd633",url:"/brand/illustrations/settings/svg/settings-preferences.svg"},{revision:"c929c2f9e227ff44d21766c28c73b287",url:"/brand/illustrations/services/services-vet-finder.svg"},{revision:"65f91379ff3f658c49b02820ae918ae5",url:"/brand/illustrations/services/README.md"},{revision:"15e55de1bb31db039731b9f47651e9f1",url:"/brand/illustrations/services/svg/services-vet-finder.svg"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/services/services-vet-finder/thumbnail.webp"},{revision:"09f8c80f36c8539bcb9b6250afef1c58",url:"/brand/illustrations/services/services-vet-finder/source.svg"},{revision:"38fce8d4403f6ac57fa41f5feedd9069",url:"/brand/illustrations/services/services-vet-finder/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/services/services-vet-finder/preview.png"},{revision:"d769cf8b71592eb3f41cd0053f7978db",url:"/brand/illustrations/services/services-vet-finder/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/services/services-vet-finder/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/services/services-vet-finder/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/services/services-vet-finder/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/services/services-vet-finder/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/services/services-vet-finder/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/services/services-emergency-sos/thumbnail.webp"},{revision:"8a059b26f00dbda12249af0f28f0a599",url:"/brand/illustrations/services/services-emergency-sos/source.svg"},{revision:"d6ab1e9591e815f67ab11090cb9273d9",url:"/brand/illustrations/services/services-emergency-sos/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/services/services-emergency-sos/preview.png"},{revision:"b177f69c69fa26a054f152acf00bbd15",url:"/brand/illustrations/services/services-emergency-sos/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/services/services-emergency-sos/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/services/services-emergency-sos/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/services/services-emergency-sos/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/services/services-emergency-sos/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/services/services-emergency-sos/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/services/services-clinic-booking/thumbnail.webp"},{revision:"54b214eea2ead02e559ceedea16982ae",url:"/brand/illustrations/services/services-clinic-booking/source.svg"},{revision:"479f4c3858b4d2d735395889828b4bd9",url:"/brand/illustrations/services/services-clinic-booking/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/services/services-clinic-booking/preview.png"},{revision:"06d746dbd2b04b574ff49d565419c9e5",url:"/brand/illustrations/services/services-clinic-booking/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/services/services-clinic-booking/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/services/services-clinic-booking/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/services/services-clinic-booking/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/services/services-clinic-booking/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/services/services-clinic-booking/export/1024.png"},{revision:"6279bfe541ede5821efa89088342d1c7",url:"/brand/illustrations/seasonal/seasonal-banner.svg"},{revision:"b2235092c2cf3c2469faaa4bfcf9cc4a",url:"/brand/illustrations/seasonal/README.md"},{revision:"3162c8a4839a950b617ce7d1340fac13",url:"/brand/illustrations/seasonal/svg/seasonal-banner.svg"},{revision:"b62bb0f510277234aac73c2942d8e9d4",url:"/brand/illustrations/profile/README.md"},{revision:"e05cc2b1a7104287beca0d7c7642ef4b",url:"/brand/illustrations/profile/profile-pet-card.svg"},{revision:"a7c7a3f20e6aeb1fffad3eafd23643ef",url:"/brand/illustrations/profile/svg/profile-pet-card.svg"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/profile/profile-pet-card/thumbnail.webp"},{revision:"1e97867878541710a4e2ad3cde406999",url:"/brand/illustrations/profile/profile-pet-card/source.svg"},{revision:"de9c37b67bc946e759f152f441a27d24",url:"/brand/illustrations/profile/profile-pet-card/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/profile/profile-pet-card/preview.png"},{revision:"eade86c54660d4ec34a640133ec9d250",url:"/brand/illustrations/profile/profile-pet-card/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/profile/profile-pet-card/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/profile/profile-pet-card/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/profile/profile-pet-card/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/profile/profile-pet-card/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/profile/profile-pet-card/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/profile/profile-owner-info/thumbnail.webp"},{revision:"793e0f85f003e91c30c161ddcffab10c",url:"/brand/illustrations/profile/profile-owner-info/source.svg"},{revision:"5ab8849ab13a4c485947fb1558c5ff9d",url:"/brand/illustrations/profile/profile-owner-info/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/profile/profile-owner-info/preview.png"},{revision:"5ba37fc82cfb3ef2b2e7d96f7bc2fe3e",url:"/brand/illustrations/profile/profile-owner-info/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/profile/profile-owner-info/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/profile/profile-owner-info/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/profile/profile-owner-info/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/profile/profile-owner-info/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/profile/profile-owner-info/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/profile/profile-microchip/thumbnail.webp"},{revision:"258af392583f55dab0da80fb3a3cbe38",url:"/brand/illustrations/profile/profile-microchip/source.svg"},{revision:"d91624b5607f23d4c8b764cb01a9ea1b",url:"/brand/illustrations/profile/profile-microchip/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/profile/profile-microchip/preview.png"},{revision:"5f4702075cf68ad8c1d475fb1dc134e3",url:"/brand/illustrations/profile/profile-microchip/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/profile/profile-microchip/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/profile/profile-microchip/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/profile/profile-microchip/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/profile/profile-microchip/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/profile/profile-microchip/export/1024.png"},{revision:"f7d74abc3a7ac9edf2480b60f22ebf55",url:"/brand/illustrations/pharmacy/README.md"},{revision:"1c3257eb697abd387da09e0d5305bd31",url:"/brand/illustrations/partners/README.md"},{revision:"e749f210ff44de9fa4a93b5cdc07cd22",url:"/brand/illustrations/parasite/README.md"},{revision:"baa32e9e47b6470f3b67ac792261fcc6",url:"/brand/illustrations/parasite/parasite-control.svg"},{revision:"ace21b2f90e1864df21af6da71c17d9e",url:"/brand/illustrations/parasite/svg/parasite-control.svg"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/parasite/parasite-flea-tick/thumbnail.webp"},{revision:"fd80a57fe2d66eaff8b82861adb5a9fb",url:"/brand/illustrations/parasite/parasite-flea-tick/source.svg"},{revision:"2b895bdb1a9c4e450678ec555626e460",url:"/brand/illustrations/parasite/parasite-flea-tick/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/parasite/parasite-flea-tick/preview.png"},{revision:"1744ee2c3447cbca34b1bfc58e031f2f",url:"/brand/illustrations/parasite/parasite-flea-tick/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/parasite/parasite-flea-tick/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/parasite/parasite-flea-tick/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/parasite/parasite-flea-tick/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/parasite/parasite-flea-tick/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/parasite/parasite-flea-tick/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/parasite/parasite-deworming/thumbnail.webp"},{revision:"fb9060d422c43fa94b398c2c30d9d217",url:"/brand/illustrations/parasite/parasite-deworming/source.svg"},{revision:"cb7c8ef04b96479ee58858ade65e5e27",url:"/brand/illustrations/parasite/parasite-deworming/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/parasite/parasite-deworming/preview.png"},{revision:"8cf44fd97426af206e693c56f58354e6",url:"/brand/illustrations/parasite/parasite-deworming/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/parasite/parasite-deworming/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/parasite/parasite-deworming/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/parasite/parasite-deworming/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/parasite/parasite-deworming/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/parasite/parasite-deworming/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/parasite/parasite-control/thumbnail.webp"},{revision:"f2dc918cfe8c93729513a4d423e783ff",url:"/brand/illustrations/parasite/parasite-control/source.svg"},{revision:"63d7d4753d77203e30cda57f618b6c07",url:"/brand/illustrations/parasite/parasite-control/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/parasite/parasite-control/preview.png"},{revision:"42baa5a646f40118cf0064e6b75774ab",url:"/brand/illustrations/parasite/parasite-control/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/parasite/parasite-control/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/parasite/parasite-control/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/parasite/parasite-control/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/parasite/parasite-control/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/parasite/parasite-control/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/parasite/parasite-calendar/thumbnail.webp"},{revision:"ce18a7421b09b33ca322a06bbea9139c",url:"/brand/illustrations/parasite/parasite-calendar/source.svg"},{revision:"5cc2c8f87872deb2a00668e12746c240",url:"/brand/illustrations/parasite/parasite-calendar/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/parasite/parasite-calendar/preview.png"},{revision:"98675bcce18d2cacc08874891336f81f",url:"/brand/illustrations/parasite/parasite-calendar/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/parasite/parasite-calendar/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/parasite/parasite-calendar/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/parasite/parasite-calendar/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/parasite/parasite-calendar/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/parasite/parasite-calendar/export/1024.png"},{revision:"1367e68b2dfb9046eba763ee349ba63b",url:"/brand/illustrations/parasite/p0-parasite-hero/source.svg"},{revision:"125032c5cf7991ff529950d22dbafa86",url:"/brand/illustrations/parasite/p0-parasite-hero/README.md"},{revision:"1d83e4edd27055903860dcf2f1d8ef98",url:"/brand/illustrations/parasite/p0-parasite-hero/illustration.json"},{revision:"4f8a3b5fc863e1070a42b32e4c4b1b91",url:"/brand/illustrations/organizations/README.md"},{revision:"abd91cce38c1549a6bb4b3efe830ff35",url:"/brand/illustrations/onboarding/README.md"},{revision:"f6a209844d2863992798fdad88b76646",url:"/brand/illustrations/onboarding/onboarding-welcome.svg"},{revision:"2cecbe78f60a241a67bdf647234dfc57",url:"/brand/illustrations/onboarding/svg/onboarding-welcome.svg"},{revision:"a5c44dbc48d0fc4fe6a8399569378729",url:"/brand/illustrations/onboarding/p1-onboarding-welcome/source.svg"},{revision:"68aa2a5ca7c545ea509cf18f95df1f0a",url:"/brand/illustrations/onboarding/p1-onboarding-welcome/README.md"},{revision:"d47cb9c464f640ee657b95bd04130b79",url:"/brand/illustrations/onboarding/p1-onboarding-welcome/illustration.json"},{revision:"6242e2889ecbc1f7cfa43e7e04ef9ae3",url:"/brand/illustrations/onboarding/p1-onboarding-vaccines/source.svg"},{revision:"d65506078ede1bff14862210980e8179",url:"/brand/illustrations/onboarding/p1-onboarding-vaccines/README.md"},{revision:"0aa912c0c13612441c949a4027d44d99",url:"/brand/illustrations/onboarding/p1-onboarding-vaccines/illustration.json"},{revision:"bce143698849645e56546359f03ebd2b",url:"/brand/illustrations/onboarding/p1-onboarding-premium/source.svg"},{revision:"d0aa378e5ac9c32019f67c053f16cf59",url:"/brand/illustrations/onboarding/p1-onboarding-premium/README.md"},{revision:"203a5999771dd7dcc574f853d171d6c5",url:"/brand/illustrations/onboarding/p1-onboarding-premium/illustration.json"},{revision:"dce1351597ad82c16d1f8215ef149288",url:"/brand/illustrations/onboarding/p1-onboarding-parasites/source.svg"},{revision:"c088d061b3ecf127906e0904eb2bf320",url:"/brand/illustrations/onboarding/p1-onboarding-parasites/README.md"},{revision:"b05f9d8acfb23a8274eb96e3f2d8c7e4",url:"/brand/illustrations/onboarding/p1-onboarding-parasites/illustration.json"},{revision:"68d13a64cc16b2e16eb57b5cb3bbdba2",url:"/brand/illustrations/onboarding/p1-onboarding-nutrition/source.svg"},{revision:"95188f1a4a316646ff0fd6442a87003f",url:"/brand/illustrations/onboarding/p1-onboarding-nutrition/README.md"},{revision:"33f07376b9b00378a37b216acea693fe",url:"/brand/illustrations/onboarding/p1-onboarding-nutrition/illustration.json"},{revision:"575ae98e7ab98bd7804a46ef05fa555e",url:"/brand/illustrations/onboarding/p1-onboarding-create-pet/source.svg"},{revision:"d4d6a593d38a73bb7f6ffa767f0d461c",url:"/brand/illustrations/onboarding/p1-onboarding-create-pet/README.md"},{revision:"bba5cb7d43057acdb77ffaa60ef2dddc",url:"/brand/illustrations/onboarding/p1-onboarding-create-pet/illustration.json"},{revision:"ef665e5a161c322c0116c08275a6db6e",url:"/brand/illustrations/onboarding/p1-onboarding-ai-vet/source.svg"},{revision:"6a90d39f2a98e726669a17c0df9f0908",url:"/brand/illustrations/onboarding/p1-onboarding-ai-vet/README.md"},{revision:"db73adb170503cea5d678dbf2cf65181",url:"/brand/illustrations/onboarding/p1-onboarding-ai-vet/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/onboarding/onboarding-welcome/thumbnail.webp"},{revision:"14115ee074258fcaf13c4f8a50d771e9",url:"/brand/illustrations/onboarding/onboarding-welcome/source.svg"},{revision:"1a412b2dcb9b4956de13662965f68325",url:"/brand/illustrations/onboarding/onboarding-welcome/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-welcome/preview.png"},{revision:"56ef9582790dd016d60442f6ca86ca35",url:"/brand/illustrations/onboarding/onboarding-welcome/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/onboarding/onboarding-welcome/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/onboarding/onboarding-welcome/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-welcome/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-welcome/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-welcome/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/onboarding/onboarding-vaccine-setup/thumbnail.webp"},{revision:"b519c77ccb199442696d7004f93b8b66",url:"/brand/illustrations/onboarding/onboarding-vaccine-setup/source.svg"},{revision:"9c4a90c396b11b10b9d32fe73f08c23d",url:"/brand/illustrations/onboarding/onboarding-vaccine-setup/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-vaccine-setup/preview.png"},{revision:"10afb39c6718b3b482114f652f837378",url:"/brand/illustrations/onboarding/onboarding-vaccine-setup/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/onboarding/onboarding-vaccine-setup/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/onboarding/onboarding-vaccine-setup/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-vaccine-setup/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-vaccine-setup/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-vaccine-setup/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/onboarding/onboarding-smartcard/thumbnail.webp"},{revision:"01b3149ea7b8b7d5f8de52b2c8a73ae5",url:"/brand/illustrations/onboarding/onboarding-smartcard/source.svg"},{revision:"f573af67ecfb052a0efa77cde2e860b4",url:"/brand/illustrations/onboarding/onboarding-smartcard/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-smartcard/preview.png"},{revision:"f732533e9c77aa94e995d2711be3de45",url:"/brand/illustrations/onboarding/onboarding-smartcard/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/onboarding/onboarding-smartcard/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/onboarding/onboarding-smartcard/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-smartcard/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-smartcard/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-smartcard/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/onboarding/onboarding-premium-upgrade/thumbnail.webp"},{revision:"5a2cca9100d5d0632b2ed823a3936746",url:"/brand/illustrations/onboarding/onboarding-premium-upgrade/source.svg"},{revision:"17057daddbaba27f601800b9fc082974",url:"/brand/illustrations/onboarding/onboarding-premium-upgrade/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-premium-upgrade/preview.png"},{revision:"d567ebfa614723bfb2e1a317187b6281",url:"/brand/illustrations/onboarding/onboarding-premium-upgrade/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/onboarding/onboarding-premium-upgrade/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/onboarding/onboarding-premium-upgrade/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-premium-upgrade/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-premium-upgrade/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-premium-upgrade/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/onboarding/onboarding-pet-profile/thumbnail.webp"},{revision:"fdd381fd16aa3ab3753ff966a1e9e52d",url:"/brand/illustrations/onboarding/onboarding-pet-profile/source.svg"},{revision:"b1da1bf71c2b2b22bbf786f4d927fbc1",url:"/brand/illustrations/onboarding/onboarding-pet-profile/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-pet-profile/preview.png"},{revision:"db83483f910272d8782e9eee628de13c",url:"/brand/illustrations/onboarding/onboarding-pet-profile/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/onboarding/onboarding-pet-profile/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/onboarding/onboarding-pet-profile/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-pet-profile/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-pet-profile/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-pet-profile/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/onboarding/onboarding-parasite-setup/thumbnail.webp"},{revision:"41462a58ab119b3a65a28d8ffefeef39",url:"/brand/illustrations/onboarding/onboarding-parasite-setup/source.svg"},{revision:"9717c1d22e6b816869e71e1d83992e71",url:"/brand/illustrations/onboarding/onboarding-parasite-setup/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-parasite-setup/preview.png"},{revision:"a29064ab08330c351df7e98697527467",url:"/brand/illustrations/onboarding/onboarding-parasite-setup/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/onboarding/onboarding-parasite-setup/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/onboarding/onboarding-parasite-setup/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-parasite-setup/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-parasite-setup/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-parasite-setup/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/onboarding/onboarding-nutrition-setup/thumbnail.webp"},{revision:"0e837b57fcd8b014ae61cb2054a42d4b",url:"/brand/illustrations/onboarding/onboarding-nutrition-setup/source.svg"},{revision:"533168edde45427588c2ffe8399f7102",url:"/brand/illustrations/onboarding/onboarding-nutrition-setup/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-nutrition-setup/preview.png"},{revision:"2c74ba83df3d37e4dc503dbae01db9d9",url:"/brand/illustrations/onboarding/onboarding-nutrition-setup/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/onboarding/onboarding-nutrition-setup/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/onboarding/onboarding-nutrition-setup/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-nutrition-setup/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-nutrition-setup/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-nutrition-setup/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/onboarding/onboarding-health-tracking/thumbnail.webp"},{revision:"53f02ed0534893674252c6cd7a222aea",url:"/brand/illustrations/onboarding/onboarding-health-tracking/source.svg"},{revision:"052984548e751a8b7e959547bd0fb74c",url:"/brand/illustrations/onboarding/onboarding-health-tracking/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-health-tracking/preview.png"},{revision:"cd9b9a3661d634a2c2f4ededfa16982e",url:"/brand/illustrations/onboarding/onboarding-health-tracking/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/onboarding/onboarding-health-tracking/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/onboarding/onboarding-health-tracking/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-health-tracking/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-health-tracking/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/onboarding/onboarding-health-tracking/export/1024.png"},{revision:"d95759f6dda4060ff0af59e30ebe9504",url:"/brand/illustrations/offline/README.md"},{revision:"851c987373beee1502c37a588de86cfa",url:"/brand/illustrations/offline/offline-no-connection.svg"},{revision:"0827f2d0f161c5d0e6d0b08ac7ac6cb5",url:"/brand/illustrations/offline/svg/offline-no-connection.svg"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/offline/offline-no-connection/thumbnail.webp"},{revision:"be39e68b3ecd2635dfb18db877a739d1",url:"/brand/illustrations/offline/offline-no-connection/source.svg"},{revision:"122b40319cfe9d7de9dee84394ce57ff",url:"/brand/illustrations/offline/offline-no-connection/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/offline/offline-no-connection/preview.png"},{revision:"d078f27fffb9689694ec08685715d8e6",url:"/brand/illustrations/offline/offline-no-connection/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/offline/offline-no-connection/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/offline/offline-no-connection/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/offline/offline-no-connection/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/offline/offline-no-connection/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/offline/offline-no-connection/export/1024.png"},{revision:"bced6850112a8e91d72cb8160673d8b2",url:"/brand/illustrations/nutrition/README.md"},{revision:"28cd52a3b884772e348f1f0a86f7db35",url:"/brand/illustrations/nutrition/nutrition-plan.svg"},{revision:"91fa1822e6f861d4d6f9975d406f4ebc",url:"/brand/illustrations/nutrition/svg/nutrition-plan.svg"},{revision:"610cda1488ed017cedecd3eeb147891c",url:"/brand/illustrations/nutrition/p0-nutrition-hero/source.svg"},{revision:"b1e3dbab5c1839a70447041af6ab9bf8",url:"/brand/illustrations/nutrition/p0-nutrition-hero/README.md"},{revision:"1590526494f121d07e449fd8b43b55fd",url:"/brand/illustrations/nutrition/p0-nutrition-hero/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/nutrition/nutrition-weight-goal/thumbnail.webp"},{revision:"eac6462f5c41317166c06be8a6d0cd63",url:"/brand/illustrations/nutrition/nutrition-weight-goal/source.svg"},{revision:"e6247033aa0f0ed01029e34d74ce6a2d",url:"/brand/illustrations/nutrition/nutrition-weight-goal/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/nutrition/nutrition-weight-goal/preview.png"},{revision:"38e156919833deed7d9ce1acc27cce58",url:"/brand/illustrations/nutrition/nutrition-weight-goal/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/nutrition/nutrition-weight-goal/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/nutrition/nutrition-weight-goal/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/nutrition/nutrition-weight-goal/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/nutrition/nutrition-weight-goal/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/nutrition/nutrition-weight-goal/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/nutrition/nutrition-water-intake/thumbnail.webp"},{revision:"47d8990b0e2733254c937cbe2bcd8624",url:"/brand/illustrations/nutrition/nutrition-water-intake/source.svg"},{revision:"6f26bb2a62520abf2d6af884750877b9",url:"/brand/illustrations/nutrition/nutrition-water-intake/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/nutrition/nutrition-water-intake/preview.png"},{revision:"5b2430ddca86ff68d44b6e9c95f3d5f6",url:"/brand/illustrations/nutrition/nutrition-water-intake/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/nutrition/nutrition-water-intake/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/nutrition/nutrition-water-intake/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/nutrition/nutrition-water-intake/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/nutrition/nutrition-water-intake/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/nutrition/nutrition-water-intake/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/nutrition/nutrition-plan/thumbnail.webp"},{revision:"b2109fb45001489881a1cb6ea71bc0eb",url:"/brand/illustrations/nutrition/nutrition-plan/source.svg"},{revision:"68f7f5dd47a48d615dabc82c03eddd83",url:"/brand/illustrations/nutrition/nutrition-plan/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/nutrition/nutrition-plan/preview.png"},{revision:"ccd469cb7fc915eababf7747ae588635",url:"/brand/illustrations/nutrition/nutrition-plan/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/nutrition/nutrition-plan/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/nutrition/nutrition-plan/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/nutrition/nutrition-plan/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/nutrition/nutrition-plan/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/nutrition/nutrition-plan/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/nutrition/nutrition-food-calculator/thumbnail.webp"},{revision:"e85f0e2da030ebe383a62d0130731c6c",url:"/brand/illustrations/nutrition/nutrition-food-calculator/source.svg"},{revision:"6066c9783b27324b00383fe9b1141d24",url:"/brand/illustrations/nutrition/nutrition-food-calculator/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/nutrition/nutrition-food-calculator/preview.png"},{revision:"d4b9949f1fb2ec2a4fb39c2f5d0e4806",url:"/brand/illustrations/nutrition/nutrition-food-calculator/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/nutrition/nutrition-food-calculator/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/nutrition/nutrition-food-calculator/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/nutrition/nutrition-food-calculator/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/nutrition/nutrition-food-calculator/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/nutrition/nutrition-food-calculator/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/nutrition/nutrition-diet-history/thumbnail.webp"},{revision:"d94f4a338967f6d82ded3f6693d3ef8d",url:"/brand/illustrations/nutrition/nutrition-diet-history/source.svg"},{revision:"e50cb88d609ee232ffa880c770b10975",url:"/brand/illustrations/nutrition/nutrition-diet-history/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/nutrition/nutrition-diet-history/preview.png"},{revision:"749f7cd43baa2d0dbc37c87f9b292276",url:"/brand/illustrations/nutrition/nutrition-diet-history/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/nutrition/nutrition-diet-history/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/nutrition/nutrition-diet-history/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/nutrition/nutrition-diet-history/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/nutrition/nutrition-diet-history/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/nutrition/nutrition-diet-history/export/1024.png"},{revision:"54ff79dea626e6a96a5bddc0e943ab37",url:"/brand/illustrations/notifications/README.md"},{revision:"4671fd2d3adac80a7b49fa57f293ea6f",url:"/brand/illustrations/notifications/notification-reminder.svg"},{revision:"613defa420f87cf4ff2124ed68994b63",url:"/brand/illustrations/notifications/svg/notification-reminder.svg"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/notifications/notification-reminder/thumbnail.webp"},{revision:"ecce62c6d5784e6ae9612cad1eec65b9",url:"/brand/illustrations/notifications/notification-reminder/source.svg"},{revision:"cd73dcb0e8c5dd540e4ab1fe30200504",url:"/brand/illustrations/notifications/notification-reminder/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/notifications/notification-reminder/preview.png"},{revision:"28275963d5ace0cc78a1b4bb54199e70",url:"/brand/illustrations/notifications/notification-reminder/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/notifications/notification-reminder/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/notifications/notification-reminder/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/notifications/notification-reminder/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/notifications/notification-reminder/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/notifications/notification-reminder/export/1024.png"},{revision:"5e232b940e8e3a0781b154146627cf5e",url:"/brand/illustrations/marketplace/README.md"},{revision:"81e177199b592af3369425bf97319900",url:"/brand/illustrations/marketplace/marketplace-empty.svg"},{revision:"e276cf28e742e590cab441998f625a72",url:"/brand/illustrations/marketplace/svg/marketplace-empty.svg"},{revision:"576fd156ef5253abb2b3bb3277383e97",url:"/brand/illustrations/marketplace/p0-marketplace-hero/source.svg"},{revision:"da8e3b4abb73d7f1a248c82d67aea380",url:"/brand/illustrations/marketplace/p0-marketplace-hero/README.md"},{revision:"31995f936ec4bdb5b772b6dcb33de33a",url:"/brand/illustrations/marketplace/p0-marketplace-hero/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/marketplace/marketplace-pet-store/thumbnail.webp"},{revision:"14685cd144c00816d39987d38dba9bce",url:"/brand/illustrations/marketplace/marketplace-pet-store/source.svg"},{revision:"bb566b97d0f3ac0dd5adfe85a189bda6",url:"/brand/illustrations/marketplace/marketplace-pet-store/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/marketplace/marketplace-pet-store/preview.png"},{revision:"06876ed4968c33f420a0b978712a1a01",url:"/brand/illustrations/marketplace/marketplace-pet-store/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/marketplace/marketplace-pet-store/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/marketplace/marketplace-pet-store/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/marketplace/marketplace-pet-store/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/marketplace/marketplace-pet-store/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/marketplace/marketplace-pet-store/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/marketplace/marketplace-order-tracking/thumbnail.webp"},{revision:"8328eea3037528fb1a9ac8d0730b28cd",url:"/brand/illustrations/marketplace/marketplace-order-tracking/source.svg"},{revision:"fcab49369e29e5935bd1487af879a647",url:"/brand/illustrations/marketplace/marketplace-order-tracking/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/marketplace/marketplace-order-tracking/preview.png"},{revision:"bec9c2561ed52d765073f873e2721bf0",url:"/brand/illustrations/marketplace/marketplace-order-tracking/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/marketplace/marketplace-order-tracking/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/marketplace/marketplace-order-tracking/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/marketplace/marketplace-order-tracking/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/marketplace/marketplace-order-tracking/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/marketplace/marketplace-order-tracking/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/marketplace/marketplace-empty/thumbnail.webp"},{revision:"d385ccff911a0465e7285090d155452b",url:"/brand/illustrations/marketplace/marketplace-empty/source.svg"},{revision:"2a978a51b5dea610a3a9a137f5f7964a",url:"/brand/illustrations/marketplace/marketplace-empty/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/marketplace/marketplace-empty/preview.png"},{revision:"47e6868548a3451d5f562b2a885cc71c",url:"/brand/illustrations/marketplace/marketplace-empty/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/marketplace/marketplace-empty/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/marketplace/marketplace-empty/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/marketplace/marketplace-empty/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/marketplace/marketplace-empty/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/marketplace/marketplace-empty/export/1024.png"},{revision:"15969901ee2c483c745286051105578a",url:"/brand/illustrations/marketing/README.md"},{revision:"2b4792d40d2e233c99a90dbf35e9a075",url:"/brand/illustrations/marketing/marketing-banner.svg"},{revision:"d1bc26137cdefd0d9c4cac9ca063fa6f",url:"/brand/illustrations/marketing/svg/marketing-banner.svg"},{revision:"71070557640faa969793d255b91e88bb",url:"/brand/illustrations/marketing/p3-qr-stand-banner/source.svg"},{revision:"5ba531204a1ca5f9a5f80a517b0f6521",url:"/brand/illustrations/marketing/p3-qr-stand-banner/README.md"},{revision:"f7436cfd427865e7e14d6b880a1a3fd1",url:"/brand/illustrations/marketing/p3-qr-stand-banner/illustration.json"},{revision:"064b31af471620f9d0970e5f65844a9f",url:"/brand/illustrations/marketing/p2-website-hero/source.svg"},{revision:"5ac1e10971086f884c10d972f4c65e8c",url:"/brand/illustrations/marketing/p2-website-hero/README.md"},{revision:"6c999479462210b1463d6ac27a3032b6",url:"/brand/illustrations/marketing/p2-website-hero/illustration.json"},{revision:"39a4d9c713714392b2017a61b6ce1025",url:"/brand/illustrations/marketing/p2-social-instagram-post/source.svg"},{revision:"8913d493a5c6052b36f1d15a68f269ea",url:"/brand/illustrations/marketing/p2-social-instagram-post/README.md"},{revision:"995d39032cd600db366548921e7e76ce",url:"/brand/illustrations/marketing/p2-social-instagram-post/illustration.json"},{revision:"03bfd329fc0a0ea642ab9d3fbec2d138",url:"/brand/illustrations/marketing/p2-google-play-header/source.svg"},{revision:"0aa4d484ca375a0ffb2527765b933c1d",url:"/brand/illustrations/marketing/p2-google-play-header/README.md"},{revision:"c532c9662dade845e7adee6f1fc57e22",url:"/brand/illustrations/marketing/p2-google-play-header/illustration.json"},{revision:"5d631d49ba2bbeb176826317a79bb0b4",url:"/brand/illustrations/marketing/p2-email-newsletter-header/source.svg"},{revision:"3e2f25a52893de33bb11d7890d8e3345",url:"/brand/illustrations/marketing/p2-email-newsletter-header/README.md"},{revision:"e3a120685c02c509a5fbe36de262b756",url:"/brand/illustrations/marketing/p2-email-newsletter-header/illustration.json"},{revision:"5ddb594fdc34633d87cb3c22a222c6fa",url:"/brand/illustrations/marketing/p2-blog-cover-guide/source.svg"},{revision:"01af7699821134ca5fe87e00843bd27d",url:"/brand/illustrations/marketing/p2-blog-cover-guide/README.md"},{revision:"46e3d293e385ea3f14e9c48f0a535221",url:"/brand/illustrations/marketing/p2-blog-cover-guide/illustration.json"},{revision:"20ee8f15ef6c05eb8c32aaf36e0ad9aa",url:"/brand/illustrations/marketing/p2-app-store-header/source.svg"},{revision:"4468b22884f2cc51f488a3de7c15c060",url:"/brand/illustrations/marketing/p2-app-store-header/README.md"},{revision:"9e76a7cdd0dd522923af6cbd2c853e29",url:"/brand/illustrations/marketing/p2-app-store-header/illustration.json"},{revision:"c4713977f3671ef64e95a641534832fb",url:"/brand/illustrations/maintenance/README.md"},{revision:"aaeb30196b1ed32418913331ebabe63e",url:"/brand/illustrations/maintenance/maintenance-mode.svg"},{revision:"07ac58b7a382916af6262c1f3dda6218",url:"/brand/illustrations/maintenance/svg/maintenance-mode.svg"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/maintenance/maintenance-mode/thumbnail.webp"},{revision:"887600bfcccaeba416587b73c960161b",url:"/brand/illustrations/maintenance/maintenance-mode/source.svg"},{revision:"aaf6a0646462dbd30cf7b56bd2f6d2e1",url:"/brand/illustrations/maintenance/maintenance-mode/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/maintenance/maintenance-mode/preview.png"},{revision:"05e48cdb4b01c5a387c82b25130dd645",url:"/brand/illustrations/maintenance/maintenance-mode/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/maintenance/maintenance-mode/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/maintenance/maintenance-mode/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/maintenance/maintenance-mode/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/maintenance/maintenance-mode/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/maintenance/maintenance-mode/export/1024.png"},{revision:"1b8fe3c20d1426b8cd1b69a78c99c754",url:"/brand/illustrations/labs/README.md"},{revision:"136b3fa45824311d9fedbc1fa3fcdf85",url:"/brand/illustrations/iot/README.md"},{revision:"0b02ebc45862327f9178d6fb2dea350e",url:"/brand/illustrations/insurance/README.md"},{revision:"db488afac29601ee0d304cbefaa5aca9",url:"/brand/illustrations/health/README.md"},{revision:"80f72df71cf8d56676db1ec6f076900e",url:"/brand/illustrations/health/health-checkup.svg"},{revision:"66a04e115fe3fddd9c8e68bccd8c298d",url:"/brand/illustrations/health/svg/health-checkup.svg"},{revision:"fb139dcb8363595af59d5052c6a7767c",url:"/brand/illustrations/health/p0-medical-hero/source.svg"},{revision:"94b5388b800f8d9a30d9d67ff8897878",url:"/brand/illustrations/health/p0-medical-hero/README.md"},{revision:"a7ad1e26853aaa09fb242becbbdf9884",url:"/brand/illustrations/health/p0-medical-hero/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/health/health-weight-tracker/thumbnail.webp"},{revision:"2c7dd040d6ef5e6968176a477a2bb8f3",url:"/brand/illustrations/health/health-weight-tracker/source.svg"},{revision:"6106dd03536fb17342ce34b6dcad8eb2",url:"/brand/illustrations/health/health-weight-tracker/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-weight-tracker/preview.png"},{revision:"39e09706035c094e58bb158279895811",url:"/brand/illustrations/health/health-weight-tracker/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/health/health-weight-tracker/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/health/health-weight-tracker/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-weight-tracker/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-weight-tracker/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-weight-tracker/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/health/health-vitals/thumbnail.webp"},{revision:"7e6792a42e5f03eeae0081024ec74540",url:"/brand/illustrations/health/health-vitals/source.svg"},{revision:"4fc6e07992a4cf8de3f7331a79141ca9",url:"/brand/illustrations/health/health-vitals/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-vitals/preview.png"},{revision:"8a8db8728537d734a9cdb1304f9bd2f9",url:"/brand/illustrations/health/health-vitals/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/health/health-vitals/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/health/health-vitals/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-vitals/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-vitals/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-vitals/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/health/health-symptom-tracker/thumbnail.webp"},{revision:"433ca45fb6d3715aea08d8f5e01c40c5",url:"/brand/illustrations/health/health-symptom-tracker/source.svg"},{revision:"f4096a297246f17ef2f4a027cf88783e",url:"/brand/illustrations/health/health-symptom-tracker/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-symptom-tracker/preview.png"},{revision:"53a74584522e521e5ce1b4a0f5a8ab00",url:"/brand/illustrations/health/health-symptom-tracker/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/health/health-symptom-tracker/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/health/health-symptom-tracker/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-symptom-tracker/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-symptom-tracker/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-symptom-tracker/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/health/health-medication-log/thumbnail.webp"},{revision:"b11c9f311986b356460e868c9a6e0c2d",url:"/brand/illustrations/health/health-medication-log/source.svg"},{revision:"49ab6ce38dd3ca5de5a82589f4f47919",url:"/brand/illustrations/health/health-medication-log/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-medication-log/preview.png"},{revision:"d607114bc0654cf767abd0aea8d23568",url:"/brand/illustrations/health/health-medication-log/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/health/health-medication-log/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/health/health-medication-log/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-medication-log/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-medication-log/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-medication-log/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/health/health-medical-history/thumbnail.webp"},{revision:"97049e8699b1c05796cd8fcbe76b81e3",url:"/brand/illustrations/health/health-medical-history/source.svg"},{revision:"ad55d6410f7e38c36c6d7ab969e21d39",url:"/brand/illustrations/health/health-medical-history/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-medical-history/preview.png"},{revision:"8722b287c5f16be7dd39c098e17c9bf1",url:"/brand/illustrations/health/health-medical-history/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/health/health-medical-history/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/health/health-medical-history/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-medical-history/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-medical-history/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-medical-history/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/health/health-lab-results/thumbnail.webp"},{revision:"4a9cc2de2859014048db6af18ae4a9b7",url:"/brand/illustrations/health/health-lab-results/source.svg"},{revision:"724d5086750e9eb54fec4f296137d5db",url:"/brand/illustrations/health/health-lab-results/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-lab-results/preview.png"},{revision:"5f35cea093bb53d8e145ff2a55f9121e",url:"/brand/illustrations/health/health-lab-results/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/health/health-lab-results/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/health/health-lab-results/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-lab-results/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-lab-results/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-lab-results/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/health/health-checkup/thumbnail.webp"},{revision:"1b9170b16d50638e25a043f76680081b",url:"/brand/illustrations/health/health-checkup/source.svg"},{revision:"d8437236563ea1cd8c21451ba1dc18a4",url:"/brand/illustrations/health/health-checkup/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-checkup/preview.png"},{revision:"9e7599537424ccd71c5a51961118f51a",url:"/brand/illustrations/health/health-checkup/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/health/health-checkup/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/health/health-checkup/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-checkup/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-checkup/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-checkup/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/health/health-allergies/thumbnail.webp"},{revision:"aca586040afdb47ca1ecf1f6bc21ae36",url:"/brand/illustrations/health/health-allergies/source.svg"},{revision:"5fb0fb7a542260625c108b70d5511a8a",url:"/brand/illustrations/health/health-allergies/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-allergies/preview.png"},{revision:"e37c465e4f4aedb5228647cd996fdffa",url:"/brand/illustrations/health/health-allergies/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/health/health-allergies/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/health/health-allergies/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-allergies/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-allergies/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/health/health-allergies/export/1024.png"},{revision:"cdd09415b1cd51cee2498f8cdb901ffc",url:"/brand/illustrations/grooming/README.md"},{revision:"a83d347e0af8cb62f10e2e89fae5fab8",url:"/brand/illustrations/grooming/grooming-care.svg"},{revision:"0b3ac7d6e066c37be8275a59ab18d1b5",url:"/brand/illustrations/grooming/svg/grooming-care.svg"},{revision:"00df199310a4a3f6e7c238ce0293bf49",url:"/brand/illustrations/grooming/p0-grooming-hero/source.svg"},{revision:"a95ac25947446e3dce444b9e2fd0073d",url:"/brand/illustrations/grooming/p0-grooming-hero/README.md"},{revision:"a8c7b76978b96f3284fcb828095aefe1",url:"/brand/illustrations/grooming/p0-grooming-hero/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/grooming/grooming-nail-trimming/thumbnail.webp"},{revision:"e613db0893aba00e0e8aa11b59b03316",url:"/brand/illustrations/grooming/grooming-nail-trimming/source.svg"},{revision:"9c995adfafaf04388aab0cccbc7d2524",url:"/brand/illustrations/grooming/grooming-nail-trimming/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/grooming/grooming-nail-trimming/preview.png"},{revision:"0ea24b786be19939c0be7ea19e202484",url:"/brand/illustrations/grooming/grooming-nail-trimming/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/grooming/grooming-nail-trimming/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/grooming/grooming-nail-trimming/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/grooming/grooming-nail-trimming/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/grooming/grooming-nail-trimming/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/grooming/grooming-nail-trimming/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/grooming/grooming-hygiene-kit/thumbnail.webp"},{revision:"c1a3324491c1abaf8a82d7f1475a31a3",url:"/brand/illustrations/grooming/grooming-hygiene-kit/source.svg"},{revision:"447599ef9ef91647a8326f09e1d03441",url:"/brand/illustrations/grooming/grooming-hygiene-kit/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/grooming/grooming-hygiene-kit/preview.png"},{revision:"3229291b935283f4948ee1804d812105",url:"/brand/illustrations/grooming/grooming-hygiene-kit/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/grooming/grooming-hygiene-kit/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/grooming/grooming-hygiene-kit/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/grooming/grooming-hygiene-kit/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/grooming/grooming-hygiene-kit/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/grooming/grooming-hygiene-kit/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/grooming/grooming-care/thumbnail.webp"},{revision:"3d871a712e55d4f1792f5e3150a63cc5",url:"/brand/illustrations/grooming/grooming-care/source.svg"},{revision:"a70d049759a7b64c1215c065234b67ab",url:"/brand/illustrations/grooming/grooming-care/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/grooming/grooming-care/preview.png"},{revision:"cc08c9d8668ef32b1551bb0773ffcc3d",url:"/brand/illustrations/grooming/grooming-care/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/grooming/grooming-care/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/grooming/grooming-care/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/grooming/grooming-care/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/grooming/grooming-care/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/grooming/grooming-care/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/grooming/grooming-appointment/thumbnail.webp"},{revision:"2e4ba7f69a0892f03044c3d55e9f5c77",url:"/brand/illustrations/grooming/grooming-appointment/source.svg"},{revision:"dff8c4e6b9d6b00d1a7fa86dc7bebb72",url:"/brand/illustrations/grooming/grooming-appointment/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/grooming/grooming-appointment/preview.png"},{revision:"9a7ce7e3369fb6200028dca65317f476",url:"/brand/illustrations/grooming/grooming-appointment/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/grooming/grooming-appointment/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/grooming/grooming-appointment/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/grooming/grooming-appointment/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/grooming/grooming-appointment/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/grooming/grooming-appointment/export/1024.png"},{revision:"c8549aaa373519c125ad1b1bb97030f4",url:"/brand/illustrations/genetics/README.md"},{revision:"29bae0eab9c388613ae0e68629619b87",url:"/brand/illustrations/error/README.md"},{revision:"409c974d50a232accf4f1c75bbafa109",url:"/brand/illustrations/error/error-warning.svg"},{revision:"c29f6c709333aea13dcc968a98147e87",url:"/brand/illustrations/error/svg/error-warning.svg"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/error/error-warning/thumbnail.webp"},{revision:"dd18db42af67cd69dae29df9522340c5",url:"/brand/illustrations/error/error-warning/source.svg"},{revision:"a2d725cf08d509b8c6b422fdff85bb49",url:"/brand/illustrations/error/error-warning/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/error/error-warning/preview.png"},{revision:"a3bfcaf70436a7103172740abec91305",url:"/brand/illustrations/error/error-warning/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/error/error-warning/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/error/error-warning/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/error/error-warning/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/error/error-warning/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/error/error-warning/export/1024.png"},{revision:"bdf0f07c4218b26a5476a96dac5edc6a",url:"/brand/illustrations/empty-state/README.md"},{revision:"38c13ffa636b293e5f5e6f8baa47d197",url:"/brand/illustrations/empty-state/empty-no-vaccines.svg"},{revision:"f9a58944f72de765b925e957e70de4a2",url:"/brand/illustrations/empty-state/empty-no-pets.svg"},{revision:"555f41cb431299e2779edb8049cb6e91",url:"/brand/illustrations/empty-state/empty-no-food.svg"},{revision:"2203bc895eb62bf0a5fc9e4fc59646fa",url:"/brand/illustrations/empty-state/svg/empty-no-vaccines.svg"},{revision:"02aa56efefb2c1689f0fcc12a51a759e",url:"/brand/illustrations/empty-state/svg/empty-no-pets.svg"},{revision:"64cecf2c0b0b542c3db12dd4f53e13f6",url:"/brand/illustrations/empty-state/svg/empty-no-food.svg"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/empty-state/empty-no-vaccines/thumbnail.webp"},{revision:"5e3e217e6af015ea6c03794d87e023a1",url:"/brand/illustrations/empty-state/empty-no-vaccines/source.svg"},{revision:"f399d6abcd89b59be32ab38c42ca8eb1",url:"/brand/illustrations/empty-state/empty-no-vaccines/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-vaccines/preview.png"},{revision:"9526ea230519f65e4f8ed86fa93519ad",url:"/brand/illustrations/empty-state/empty-no-vaccines/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/empty-state/empty-no-vaccines/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/empty-state/empty-no-vaccines/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-vaccines/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-vaccines/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-vaccines/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/empty-state/empty-no-search-results/thumbnail.webp"},{revision:"ee4cf4989d17cb9e2a3b244fc5c5aa9c",url:"/brand/illustrations/empty-state/empty-no-search-results/source.svg"},{revision:"24b62d4695accff5d25af2b55a9f6c41",url:"/brand/illustrations/empty-state/empty-no-search-results/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-search-results/preview.png"},{revision:"4a23153d2df0c5d8d4317ebf828f2743",url:"/brand/illustrations/empty-state/empty-no-search-results/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/empty-state/empty-no-search-results/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/empty-state/empty-no-search-results/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-search-results/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-search-results/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-search-results/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/empty-state/empty-no-records/thumbnail.webp"},{revision:"4accc212cc6bd16ebcf22b284a367ae5",url:"/brand/illustrations/empty-state/empty-no-records/source.svg"},{revision:"dd8066a9f384c12b82edefa8763b24de",url:"/brand/illustrations/empty-state/empty-no-records/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-records/preview.png"},{revision:"099556ebcac693255ebe7ab347d64605",url:"/brand/illustrations/empty-state/empty-no-records/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/empty-state/empty-no-records/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/empty-state/empty-no-records/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-records/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-records/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-records/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/empty-state/empty-no-prescriptions/thumbnail.webp"},{revision:"cb2d3055f8fc1df084b4495d20e1335a",url:"/brand/illustrations/empty-state/empty-no-prescriptions/source.svg"},{revision:"13e45b92d71d4d03e83b1595952c05f0",url:"/brand/illustrations/empty-state/empty-no-prescriptions/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-prescriptions/preview.png"},{revision:"c0a2d210786e9c1aa30a29cc5c4dc16b",url:"/brand/illustrations/empty-state/empty-no-prescriptions/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/empty-state/empty-no-prescriptions/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/empty-state/empty-no-prescriptions/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-prescriptions/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-prescriptions/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-prescriptions/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/empty-state/empty-no-pets/thumbnail.webp"},{revision:"9e1ceaca32861e76d5e18117bb8941d8",url:"/brand/illustrations/empty-state/empty-no-pets/source.svg"},{revision:"14f927f1a1526714ea5e01ff20e1b88a",url:"/brand/illustrations/empty-state/empty-no-pets/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-pets/preview.png"},{revision:"094752e20b959632cc3a78440b8da70a",url:"/brand/illustrations/empty-state/empty-no-pets/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/empty-state/empty-no-pets/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/empty-state/empty-no-pets/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-pets/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-pets/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-pets/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/empty-state/empty-no-notifications/thumbnail.webp"},{revision:"a14a6ab111673155ec353bebe352171d",url:"/brand/illustrations/empty-state/empty-no-notifications/source.svg"},{revision:"ad04e80f7f888d2b27bb2583358f59db",url:"/brand/illustrations/empty-state/empty-no-notifications/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-notifications/preview.png"},{revision:"1549973ff68fcd99f11a27d01aff405e",url:"/brand/illustrations/empty-state/empty-no-notifications/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/empty-state/empty-no-notifications/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/empty-state/empty-no-notifications/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-notifications/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-notifications/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-notifications/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/empty-state/empty-no-food/thumbnail.webp"},{revision:"dab7d7ae54763855e4ce53ef0e512f58",url:"/brand/illustrations/empty-state/empty-no-food/source.svg"},{revision:"f44d77d52caf8f7fea601ba9f9b69930",url:"/brand/illustrations/empty-state/empty-no-food/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-food/preview.png"},{revision:"0487e61aea14673e77632557d144dccb",url:"/brand/illustrations/empty-state/empty-no-food/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/empty-state/empty-no-food/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/empty-state/empty-no-food/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-food/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-food/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-food/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/empty-state/empty-no-favorites/thumbnail.webp"},{revision:"37dd092519b4590ac226ad3226cfdc92",url:"/brand/illustrations/empty-state/empty-no-favorites/source.svg"},{revision:"f56b68ab169783d1163aaced83ba093c",url:"/brand/illustrations/empty-state/empty-no-favorites/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-favorites/preview.png"},{revision:"05b3987059384d99cd7745cc3064344f",url:"/brand/illustrations/empty-state/empty-no-favorites/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/empty-state/empty-no-favorites/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/empty-state/empty-no-favorites/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-favorites/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-favorites/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-favorites/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/empty-state/empty-no-chats/thumbnail.webp"},{revision:"db84bd91ca58391b43e543440acbf206",url:"/brand/illustrations/empty-state/empty-no-chats/source.svg"},{revision:"784b563d49bf17752786342ae784d5cb",url:"/brand/illustrations/empty-state/empty-no-chats/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-chats/preview.png"},{revision:"36f592b0d45e153174cd96512b23c985",url:"/brand/illustrations/empty-state/empty-no-chats/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/empty-state/empty-no-chats/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/empty-state/empty-no-chats/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-chats/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-chats/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-chats/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/empty-state/empty-no-appointments/thumbnail.webp"},{revision:"a97bddf77fccb77ffff601603f463c42",url:"/brand/illustrations/empty-state/empty-no-appointments/source.svg"},{revision:"111c0bddb2faeefc3cc47cb09a080bfa",url:"/brand/illustrations/empty-state/empty-no-appointments/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-appointments/preview.png"},{revision:"0884a955e151bc833ec48e9b9b3422c5",url:"/brand/illustrations/empty-state/empty-no-appointments/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/empty-state/empty-no-appointments/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/empty-state/empty-no-appointments/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-appointments/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-appointments/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/empty-state/empty-no-appointments/export/1024.png"},{revision:"dfdba2fdbecc3250043f13e7d11d4fff",url:"/brand/illustrations/emergency/README.md"},{revision:"28f517ad745e69d9a7238872b210237e",url:"/brand/illustrations/documents/README.md"},{revision:"5c33c086193de75493e0bff8040a3fb4",url:"/brand/illustrations/documents/document-health-report.svg"},{revision:"fe46f50fc99a868a755afee0c77d22ec",url:"/brand/illustrations/documents/svg/document-health-report.svg"},{revision:"bc3569b6cdff5f245185f4797f3090dc",url:"/brand/illustrations/documents/p3-pdf-report-cover/source.svg"},{revision:"f4090bdcb0310219efa46e02283611ae",url:"/brand/illustrations/documents/p3-pdf-report-cover/README.md"},{revision:"519ad1d583cc9e9f08020bd0946b401e",url:"/brand/illustrations/documents/p3-pdf-report-cover/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/documents/document-health-report/thumbnail.webp"},{revision:"25e0b4b528c9889a0ecd12d16c118067",url:"/brand/illustrations/documents/document-health-report/source.svg"},{revision:"39aa78fa2d21d5a5d2f278722936e286",url:"/brand/illustrations/documents/document-health-report/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/documents/document-health-report/preview.png"},{revision:"c2176fed88d27ee2be0ea974f1480c44",url:"/brand/illustrations/documents/document-health-report/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/documents/document-health-report/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/documents/document-health-report/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/documents/document-health-report/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/documents/document-health-report/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/documents/document-health-report/export/1024.png"},{revision:"1ea5773c7d7bc19bb0bd102620a2658f",url:"/brand/illustrations/decorations/README.md"},{revision:"a5521fec6ab2179af8c4dc380e6ee5fd",url:"/brand/illustrations/decorations/decoration-paw-pattern.svg"},{revision:"2223cdd4ab90edcba7e11075b46d3d12",url:"/brand/illustrations/decorations/svg/decoration-paw-pattern.svg"},{revision:"2b762bddf7b5045801791fc62d348076",url:"/brand/illustrations/dashboard/README.md"},{revision:"1e459003e915b4af50f825dcb8d9c385",url:"/brand/illustrations/dashboard/dashboard-hero.svg"},{revision:"76ba94fbd84d5a5aacd9d9ca36352552",url:"/brand/illustrations/dashboard/svg/dashboard-hero.svg"},{revision:"9fd3b39ef910e7abbd9559bf0b34ab12",url:"/brand/illustrations/dashboard/p0-timeline-hero/source.svg"},{revision:"d28b05f069760a7010c3a73abde19f45",url:"/brand/illustrations/dashboard/p0-timeline-hero/README.md"},{revision:"b0d694020057f02f2c5334283a02d331",url:"/brand/illustrations/dashboard/p0-timeline-hero/illustration.json"},{revision:"b452725c019ba051500cb3f14cda06c0",url:"/brand/illustrations/dashboard/p0-dashboard-hero/source.svg"},{revision:"9da76a711f02e198fd0e280c5452d159",url:"/brand/illustrations/dashboard/p0-dashboard-hero/README.md"},{revision:"fbc7ac87e803b19d189d1cc26b8cf19c",url:"/brand/illustrations/dashboard/p0-dashboard-hero/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/dashboard/dashboard-timeline-overview/thumbnail.webp"},{revision:"ccf9965c4cacd77f22ef5dfcd769ef44",url:"/brand/illustrations/dashboard/dashboard-timeline-overview/source.svg"},{revision:"effa19c54416cf980a7c54b27f0dc30f",url:"/brand/illustrations/dashboard/dashboard-timeline-overview/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/dashboard/dashboard-timeline-overview/preview.png"},{revision:"efff56999da3c42d35441ef7fc827a5c",url:"/brand/illustrations/dashboard/dashboard-timeline-overview/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/dashboard/dashboard-timeline-overview/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/dashboard/dashboard-timeline-overview/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/dashboard/dashboard-timeline-overview/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/dashboard/dashboard-timeline-overview/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/dashboard/dashboard-timeline-overview/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/dashboard/dashboard-stats-card/thumbnail.webp"},{revision:"3ae8134ff5069206af016cd7cf39ac8b",url:"/brand/illustrations/dashboard/dashboard-stats-card/source.svg"},{revision:"f756bacf2ec56c6c9dc6997b74c586b4",url:"/brand/illustrations/dashboard/dashboard-stats-card/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/dashboard/dashboard-stats-card/preview.png"},{revision:"7acc3fb1903b00904371cda176b0c1f5",url:"/brand/illustrations/dashboard/dashboard-stats-card/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/dashboard/dashboard-stats-card/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/dashboard/dashboard-stats-card/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/dashboard/dashboard-stats-card/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/dashboard/dashboard-stats-card/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/dashboard/dashboard-stats-card/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/dashboard/dashboard-quick-actions/thumbnail.webp"},{revision:"2b4b4da881eadb0d3ee2fff12d644946",url:"/brand/illustrations/dashboard/dashboard-quick-actions/source.svg"},{revision:"effba65eb66d5dd723b99bcd5ca23ec6",url:"/brand/illustrations/dashboard/dashboard-quick-actions/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/dashboard/dashboard-quick-actions/preview.png"},{revision:"4a2f70388b4765dee1aaeab1b89c9044",url:"/brand/illustrations/dashboard/dashboard-quick-actions/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/dashboard/dashboard-quick-actions/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/dashboard/dashboard-quick-actions/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/dashboard/dashboard-quick-actions/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/dashboard/dashboard-quick-actions/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/dashboard/dashboard-quick-actions/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/dashboard/dashboard-pet-switcher/thumbnail.webp"},{revision:"18522941f0dd983938661c5ad38c2002",url:"/brand/illustrations/dashboard/dashboard-pet-switcher/source.svg"},{revision:"d7ad7865f9911c1dcdff23651facf503",url:"/brand/illustrations/dashboard/dashboard-pet-switcher/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/dashboard/dashboard-pet-switcher/preview.png"},{revision:"fa5f615fb3bfe6d3942796ac9a7f8dfa",url:"/brand/illustrations/dashboard/dashboard-pet-switcher/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/dashboard/dashboard-pet-switcher/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/dashboard/dashboard-pet-switcher/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/dashboard/dashboard-pet-switcher/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/dashboard/dashboard-pet-switcher/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/dashboard/dashboard-pet-switcher/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/dashboard/dashboard-hero/thumbnail.webp"},{revision:"6dadf01b830513d41b2f9794027121ce",url:"/brand/illustrations/dashboard/dashboard-hero/source.svg"},{revision:"a9801308edaffc012fcd9cd4bad96197",url:"/brand/illustrations/dashboard/dashboard-hero/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/dashboard/dashboard-hero/preview.png"},{revision:"00acec54f0d58890b2bebb664ca2e4da",url:"/brand/illustrations/dashboard/dashboard-hero/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/dashboard/dashboard-hero/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/dashboard/dashboard-hero/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/dashboard/dashboard-hero/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/dashboard/dashboard-hero/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/dashboard/dashboard-hero/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/dashboard/dashboard-daily-routine/thumbnail.webp"},{revision:"7712dd1c775224cef710f0f404f4790d",url:"/brand/illustrations/dashboard/dashboard-daily-routine/source.svg"},{revision:"af5f889205a0aa31f1f1102f58cb6fba",url:"/brand/illustrations/dashboard/dashboard-daily-routine/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/dashboard/dashboard-daily-routine/preview.png"},{revision:"421a39eec06ecd73a480d477ee351ca0",url:"/brand/illustrations/dashboard/dashboard-daily-routine/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/dashboard/dashboard-daily-routine/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/dashboard/dashboard-daily-routine/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/dashboard/dashboard-daily-routine/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/dashboard/dashboard-daily-routine/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/dashboard/dashboard-daily-routine/export/1024.png"},{revision:"cbb2697dc0e80a73b19fb7a55c6d57f0",url:"/brand/illustrations/community/README.md"},{revision:"5924e9982d47a0b2547c868fa1e1fb8c",url:"/brand/illustrations/community/community-share.svg"},{revision:"0b376c6d3e53f043a431d650bbebd355",url:"/brand/illustrations/community/svg/community-share.svg"},{revision:"c4df756c6fa709473c76dcebf851dd24",url:"/brand/illustrations/community/p0-community-hero/source.svg"},{revision:"878ce598b5ad43c6b4e8155a1435e6ff",url:"/brand/illustrations/community/p0-community-hero/README.md"},{revision:"1e97b61b74d6b8ae4666c99f83d41db4",url:"/brand/illustrations/community/p0-community-hero/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/community/community-share/thumbnail.webp"},{revision:"f323186ac5874df1c02f53623cc50ecc",url:"/brand/illustrations/community/community-share/source.svg"},{revision:"946f521638d26ef17054440cc4ef1d04",url:"/brand/illustrations/community/community-share/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/community/community-share/preview.png"},{revision:"2c813000d02ae007ce186299363aae30",url:"/brand/illustrations/community/community-share/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/community/community-share/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/community/community-share/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/community/community-share/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/community/community-share/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/community/community-share/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/community/community-forum-hero/thumbnail.webp"},{revision:"8ce403005bab1a322d7b2ed0bf816bc1",url:"/brand/illustrations/community/community-forum-hero/source.svg"},{revision:"6c91bb89a8f5d4e87857c617d7db8f2d",url:"/brand/illustrations/community/community-forum-hero/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/community/community-forum-hero/preview.png"},{revision:"d6dbf4742418ac46693ff6e5fd15378b",url:"/brand/illustrations/community/community-forum-hero/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/community/community-forum-hero/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/community/community-forum-hero/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/community/community-forum-hero/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/community/community-forum-hero/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/community/community-forum-hero/export/1024.png"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/community/community-badge/thumbnail.webp"},{revision:"dd6dbd801232087376ed0f1bcad705af",url:"/brand/illustrations/community/community-badge/source.svg"},{revision:"60984072d44f93fe257af5f37191d814",url:"/brand/illustrations/community/community-badge/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/community/community-badge/preview.png"},{revision:"486ff8f78c15e74d411e98b94ac6f2d9",url:"/brand/illustrations/community/community-badge/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/community/community-badge/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/community/community-badge/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/community/community-badge/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/community/community-badge/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/community/community-badge/export/1024.png"},{revision:"95a52b53c6fa1f589bd37e9b5d7292a3",url:"/brand/illustrations/charity/README.md"},{revision:"9838397c5621ab6943b7922b89c72665",url:"/brand/illustrations/certificates/README.md"},{revision:"19cd71b501add8b3b0303d53556abc90",url:"/brand/illustrations/certificates/certificate-vaccine.svg"},{revision:"b60f7c7998b353fe8cfeffdc9a5453a2",url:"/brand/illustrations/certificates/svg/certificate-vaccine.svg"},{revision:"4bd9c7a22a344c2a6a8818f5247a6b50",url:"/brand/illustrations/certificates/p3-vaccination-card-print/source.svg"},{revision:"f03b0c13993aafb49eb2e96314fc4b66",url:"/brand/illustrations/certificates/p3-vaccination-card-print/README.md"},{revision:"0a67ac3abcf5f55eefce4219473ba694",url:"/brand/illustrations/certificates/p3-vaccination-card-print/illustration.json"},{revision:"d1a70cb5f9fea339ad6375b65169e77b",url:"/brand/illustrations/certificates/p3-health-clearance-cert/source.svg"},{revision:"f8a9eab2860f7a2071fd30b0f752daeb",url:"/brand/illustrations/certificates/p3-health-clearance-cert/README.md"},{revision:"fb9b606c59c10ea77065343429bec590",url:"/brand/illustrations/certificates/p3-health-clearance-cert/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/certificates/certificate-vaccine/thumbnail.webp"},{revision:"ee0339a7ae220621d463d27d55a88bf6",url:"/brand/illustrations/certificates/certificate-vaccine/source.svg"},{revision:"f3e953606d1d26cfc18029a25f76aba3",url:"/brand/illustrations/certificates/certificate-vaccine/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/certificates/certificate-vaccine/preview.png"},{revision:"cc1bc5636ce783713a389a4d1f18c6a2",url:"/brand/illustrations/certificates/certificate-vaccine/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/certificates/certificate-vaccine/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/certificates/certificate-vaccine/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/certificates/certificate-vaccine/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/certificates/certificate-vaccine/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/certificates/certificate-vaccine/export/1024.png"},{revision:"31689d1110b08949ac37f1d774684ae7",url:"/brand/illustrations/breeding/README.md"},{revision:"b260423e8dd1cb8889d61688702cef9e",url:"/brand/illustrations/behavior/README.md"},{revision:"de1a876d859d0150412139aaf6b65587",url:"/brand/illustrations/backgrounds/README.md"},{revision:"3115eea9f15df12867ef21bcdb2e4fd7",url:"/brand/illustrations/backgrounds/background-lilac-glow.svg"},{revision:"db6af0a8574a3221087dd2e09b15117e",url:"/brand/illustrations/backgrounds/svg/background-lilac-glow.svg"},{revision:"6676fb90d8e64f13068d0977b6765bff",url:"/brand/illustrations/assets/ui/glass-card.svg"},{revision:"16b9cf4cd03bc14bbc4478bf72c03c76",url:"/brand/illustrations/assets/pets/dog-sitting.svg"},{revision:"995d13b09384142d32a207127bc24bff",url:"/brand/illustrations/assets/pets/cat-sleeping.svg"},{revision:"341c6c77b32211f42a5fc187bc21b45b",url:"/brand/illustrations/assets/objects/vaccine-card.svg"},{revision:"edb715d2c5636cb0f1064a7ff568c484",url:"/brand/illustrations/assets/objects/food-bowl.svg"},{revision:"b8121bd4e0940af8ae32bbc80d5dc90c",url:"/brand/illustrations/assets/effects/shadow-soft.svg"},{revision:"4128f30c0660c1a9fff97a5aaf7131ff",url:"/brand/illustrations/analytics/README.md"},{revision:"6d4e3c785f494a97c5304e28fb080d8b",url:"/brand/illustrations/ai/README.md"},{revision:"84ad02ee92ac8ce381b4e3871b22a0b1",url:"/brand/illustrations/ai/ai-vet-assistant.svg"},{revision:"6be7dbe88803f4efed365eaf59ef920d",url:"/brand/illustrations/ai/svg/ai-vet-assistant.svg"},{revision:"414a0ed4aebf4dd8d911361c1c05c6fc",url:"/brand/illustrations/ai/p0-ai-vet-hero/source.svg"},{revision:"91bb7b230618bf2401c2390d76891c62",url:"/brand/illustrations/ai/p0-ai-vet-hero/README.md"},{revision:"05cbaf89220f15157d85a63d99f05262",url:"/brand/illustrations/ai/p0-ai-vet-hero/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/ai/ai-vet-assistant/thumbnail.webp"},{revision:"7b8fcacd090899e45b989133cd297aa4",url:"/brand/illustrations/ai/ai-vet-assistant/source.svg"},{revision:"fb9dd9e70166c0b93c33aadd313b4a77",url:"/brand/illustrations/ai/ai-vet-assistant/README.md"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/ai/ai-vet-assistant/preview.png"},{revision:"62f1361096df9bbf3a96e7bc18201586",url:"/brand/illustrations/ai/ai-vet-assistant/illustration.json"},{revision:"b292ca232a2558573e9063d832b75c68",url:"/brand/illustrations/ai/ai-vet-assistant/export/preview.webp"},{revision:"5e25dfd822d00c69b494be28e4e0df24",url:"/brand/illustrations/ai/ai-vet-assistant/export/preview.avif"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/ai/ai-vet-assistant/export/512.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/ai/ai-vet-assistant/export/2048.png"},{revision:"d763181bba71f1de5c30d263a64110da",url:"/brand/illustrations/ai/ai-vet-assistant/export/1024.png"},{revision:"8faa531009aca752c1bde94e3349521c",url:"/brand/illustrations/adoption/README.md"},{revision:"093f18eb10aff61837a379de34ef687f",url:"/brand/illustrations/admin/README.md"},{revision:"af891a0e829cce85bc851330497de78e",url:"/brand/illustrations/admin/admin-analytics.svg"},{revision:"8192eb7e57df941e3833a04a71c0d00a",url:"/brand/illustrations/admin/svg/admin-analytics.svg"},{revision:"29852200e2a257e5d6c7a787127847dd",url:"/brand/favicon/FAVICON.ico"},{revision:"87da795d84b75bf66636464ab818792e",url:"/brand/favicon/favicon-48.png"},{revision:"7bfe403f732d065eb1c82f1e835d77ed",url:"/brand/favicon/favicon-32.png"},{revision:"e678b582388167ecf517eee5a0a4d079",url:"/brand/favicon/favicon-16.png"},{revision:"b10cd17bec65f7315229e2a196efc805",url:"/brand/app-icons/odi-icon.svg"},{revision:"6aee6b62353ab2bada16eea7576bcb0e",url:"/brand/app-icons/odi-icon-96.png"},{revision:"a24ccd6a4a777af7dadc3ec3c0483a26",url:"/brand/app-icons/odi-icon-72.png"},{revision:"15346ee50eb923a379c42831c590ce47",url:"/brand/app-icons/odi-icon-64.png"},{revision:"55aa636cccaca2bad4925b91dff5b831",url:"/brand/app-icons/odi-icon-512.png"},{revision:"9e918176b39f29ef37b6219ddc4b8f40",url:"/brand/app-icons/odi-icon-48.png"},{revision:"0be985c553339358822b782a6373b507",url:"/brand/app-icons/odi-icon-32.png"},{revision:"941eeb9a90c21c203369f90111c17a94",url:"/brand/app-icons/odi-icon-256.png"},{revision:"de4ecda8b8b554c1bfc4b4e5f039190b",url:"/brand/app-icons/odi-icon-180.png"},{revision:"82fe9ad6d5b419e047dbe7b397c0e89f",url:"/brand/app-icons/odi-icon-16.png"},{revision:"16754cf1af0ef93d3ed86ad379953b57",url:"/brand/app-icons/odi-icon-152.png"},{revision:"33ad49c0671bef278993aa125f29abfe",url:"/brand/app-icons/odi-icon-144.png"},{revision:"642689dc12ec662ec2c756c8fc348f4b",url:"/brand/app-icons/odi-icon-128.png"},{revision:"9de5e0f520187dbc9dda4b544401503a",url:"/brand/app-icons/odi-icon-1024.png"},{revision:"cabf143c08cabbf4ee17e6521b62dac8",url:"/assets/splash2.jpg"},{revision:"e9abee44d9b19b551ec809a4ed0902d1",url:"/assets/splash1.jpg"},{revision:"c3a30798c0c4fc08fec496067a3f314f",url:"/offline"}];var v={googleAnalytics:"googleAnalytics",precache:"precache-v2",prefix:"serwist",runtime:"runtime",suffix:typeof registration<"u"?registration.scope:""},I=e=>[v.prefix,e,v.suffix].filter(r=>r&&r.length>0).join("-"),Be=e=>{for(let r of Object.keys(v))e(r)},w={updateDetails:e=>{Be(r=>{let a=e[r];typeof a=="string"&&(v[r]=a)})},getGoogleAnalyticsName:e=>e||I(v.googleAnalytics),getPrecacheName:e=>e||I(v.precache),getPrefix:()=>v.prefix,getRuntimeName:e=>e||I(v.runtime),getSuffix:()=>v.suffix},D;function ae(){if(D===void 0){let e=new Response("");if("body"in e)try{new Response(e.body),D=!0}catch{D=!1}D=!1}return D}var We=(e,...r)=>{let a=e;return r.length>0&&(a+=` :: ${JSON.stringify(r)}`),a};var Ke=We,d=class extends Error{details;constructor(e,r){let a=Ke(e,r);super(a),this.name=e,this.details=r}};var ie=e=>new URL(String(e),location.href).href.replace(new RegExp(`^${location.origin}`),"");function A(e){return new Promise(r=>setTimeout(r,e))}var L=new Set;function re(e,r){let a=new URL(e);for(let i of r)a.searchParams.delete(i);return a.href}async function te(e,r,a,i){let t=re(r.url,a);if(r.url===t)return e.match(r,i);let n={...i,ignoreSearch:!0},s=await e.keys(r,n);for(let o of s)if(t===re(o.url,a))return e.match(o,i)}var ne=class{promise;resolve;reject;constructor(){this.promise=new Promise((e,r)=>{this.resolve=e,this.reject=r})}},se=async()=>{for(let e of L)await e()},He="-precache-",Ge=async(e,r=He)=>{let a=(await self.caches.keys()).filter(i=>i.includes(r)&&i.includes(self.registration.scope)&&i!==e);return await Promise.all(a.map(i=>self.caches.delete(i))),a},oe=e=>{self.addEventListener("activate",r=>{r.waitUntil(Ge(w.getPrecacheName(e)).then(a=>{}))})},le=()=>{self.addEventListener("activate",()=>self.clients.claim())},V=(e,r)=>{let a=r();return e.waitUntil(a),a};var W=(e,r)=>r.some(a=>e instanceof a),de,ce;function ze(){return de||(de=[IDBDatabase,IDBObjectStore,IDBIndex,IDBCursor,IDBTransaction])}function Qe(){return ce||(ce=[IDBCursor.prototype.advance,IDBCursor.prototype.continue,IDBCursor.prototype.continuePrimaryKey])}var K=new WeakMap,F=new WeakMap,T=new WeakMap;function Je(e){let r=new Promise((a,i)=>{let t=()=>{e.removeEventListener("success",n),e.removeEventListener("error",s)},n=()=>{a(x(e.result)),t()},s=()=>{i(e.error),t()};e.addEventListener("success",n),e.addEventListener("error",s)});return T.set(r,e),r}function Ye(e){if(K.has(e))return;let r=new Promise((a,i)=>{let t=()=>{e.removeEventListener("complete",n),e.removeEventListener("error",s),e.removeEventListener("abort",s)},n=()=>{a(),t()},s=()=>{i(e.error||new DOMException("AbortError","AbortError")),t()};e.addEventListener("complete",n),e.addEventListener("error",s),e.addEventListener("abort",s)});K.set(e,r)}var H={get(e,r,a){if(e instanceof IDBTransaction){if(r==="done")return K.get(e);if(r==="store")return a.objectStoreNames[1]?void 0:a.objectStore(a.objectStoreNames[0])}return x(e[r])},set(e,r,a){return e[r]=a,!0},has(e,r){return e instanceof IDBTransaction&&(r==="done"||r==="store")?!0:r in e}};function fe(e){H=e(H)}function Xe(e){return Qe().includes(e)?function(...r){return e.apply(G(this),r),x(this.request)}:function(...r){return x(e.apply(G(this),r))}}function Ze(e){return typeof e=="function"?Xe(e):(e instanceof IDBTransaction&&Ye(e),W(e,ze())?new Proxy(e,H):e)}function x(e){if(e instanceof IDBRequest)return Je(e);if(F.has(e))return F.get(e);let r=Ze(e);return r!==e&&(F.set(e,r),T.set(r,e)),r}var G=e=>T.get(e);function M(e,r,{blocked:a,upgrade:i,blocking:t,terminated:n}={}){let s=indexedDB.open(e,r),o=x(s);return i&&s.addEventListener("upgradeneeded",l=>{i(x(s.result),l.oldVersion,l.newVersion,x(s.transaction),l)}),a&&s.addEventListener("blocked",l=>a(l.oldVersion,l.newVersion,l)),o.then(l=>{n&&l.addEventListener("close",()=>n()),t&&l.addEventListener("versionchange",c=>t(c.oldVersion,c.newVersion,c))}).catch(()=>{}),o}function he(e,{blocked:r}={}){let a=indexedDB.deleteDatabase(e);return r&&a.addEventListener("blocked",i=>r(i.oldVersion,i)),x(a).then(()=>{})}var er=["get","getKey","getAll","getAllKeys","count"],rr=["put","add","delete","clear"],B=new Map;function ue(e,r){if(!(e instanceof IDBDatabase&&!(r in e)&&typeof r=="string"))return;if(B.get(r))return B.get(r);let a=r.replace(/FromIndex$/,""),i=r!==a,t=rr.includes(a);if(!(a in(i?IDBIndex:IDBObjectStore).prototype)||!(t||er.includes(a)))return;let n=async function(s,...o){let l=this.transaction(s,t?"readwrite":"readonly"),c=l.store;return i&&(c=c.index(o.shift())),(await Promise.all([c[a](...o),t&&l.done]))[0]};return B.set(r,n),n}fe(e=>({...e,get:(r,a,i)=>ue(r,a)||e.get(r,a,i),has:(r,a)=>!!ue(r,a)||e.has(r,a)}));var ar=["continue","continuePrimaryKey","advance"],be={},z=new WeakMap,ge=new WeakMap,ir={get(e,r){if(!ar.includes(r))return e[r];let a=be[r];return a||(a=be[r]=function(...i){z.set(this,ge.get(this)[r](...i))}),a}};async function*tr(...e){let r=this;if(r instanceof IDBCursor||(r=await r.openCursor(...e)),!r)return;r=r;let a=new Proxy(r,ir);for(ge.set(a,r),T.set(a,G(r));r;)yield a,r=await(z.get(a)||r.continue()),z.delete(a)}function pe(e,r){return r===Symbol.asyncIterator&&W(e,[IDBIndex,IDBObjectStore,IDBCursor])||r==="iterate"&&W(e,[IDBIndex,IDBObjectStore])}fe(e=>({...e,get(r,a,i){return pe(r,a)?tr:e.get(r,a,i)},has(r,a){return pe(r,a)||e.has(r,a)}}));var ye=async(e,r)=>{let a=null;if(e.url&&(a=new URL(e.url).origin),a!==self.location.origin)throw new d("cross-origin-copy-response",{origin:a});let i=e.clone(),t={headers:new Headers(i.headers),status:i.status,statusText:i.statusText},n=r?r(t):t,s=ae()?i.body:await i.blob();return new Response(s,n)},Ee=()=>{self.__WB_DISABLE_DEV_LOGS=!0},me=3,nr="serwist-background-sync",y="requests",q="queueName",sr=class{_db=null;async addEntry(e){let r=(await this.getDb()).transaction(y,"readwrite",{durability:"relaxed"});await r.store.add(e),await r.done}async getFirstEntryId(){return(await(await this.getDb()).transaction(y).store.openCursor())?.value.id}async getAllEntriesByQueueName(e){let r=await(await this.getDb()).getAllFromIndex(y,q,IDBKeyRange.only(e));return r||[]}async getEntryCountByQueueName(e){return(await this.getDb()).countFromIndex(y,q,IDBKeyRange.only(e))}async deleteEntry(e){await(await this.getDb()).delete(y,e)}async getFirstEntryByQueueName(e){return await this.getEndEntryFromIndex(IDBKeyRange.only(e),"next")}async getLastEntryByQueueName(e){return await this.getEndEntryFromIndex(IDBKeyRange.only(e),"prev")}async getEndEntryFromIndex(e,r){return(await(await this.getDb()).transaction(y).store.index(q).openCursor(e,r))?.value}async getDb(){return this._db||(this._db=await M(nr,me,{upgrade:this._upgradeDb})),this._db}_upgradeDb(e,r){r>0&&r<me&&e.objectStoreNames.contains(y)&&e.deleteObjectStore(y),e.createObjectStore(y,{autoIncrement:!0,keyPath:"id"}).createIndex(q,q,{unique:!1})}},xe=class{_queueName;_queueDb;constructor(e){this._queueName=e,this._queueDb=new sr}async pushEntry(e){delete e.id,e.queueName=this._queueName,await this._queueDb.addEntry(e)}async unshiftEntry(e){let r=await this._queueDb.getFirstEntryId();r?e.id=r-1:delete e.id,e.queueName=this._queueName,await this._queueDb.addEntry(e)}async popEntry(){return this._removeEntry(await this._queueDb.getLastEntryByQueueName(this._queueName))}async shiftEntry(){return this._removeEntry(await this._queueDb.getFirstEntryByQueueName(this._queueName))}async getAll(){return await this._queueDb.getAllEntriesByQueueName(this._queueName)}async size(){return await this._queueDb.getEntryCountByQueueName(this._queueName)}async deleteEntry(e){await this._queueDb.deleteEntry(e)}async _removeEntry(e){return e&&await this.deleteEntry(e.id),e}},or=["method","referrer","referrerPolicy","mode","credentials","cache","redirect","integrity","keepalive"],Y=class J{_requestData;static async fromRequest(r){let a={url:r.url,headers:{}};r.method!=="GET"&&(a.body=await r.clone().arrayBuffer()),r.headers.forEach((i,t)=>{a.headers[t]=i});for(let i of or)r[i]!==void 0&&(a[i]=r[i]);return new J(a)}constructor(r){r.mode==="navigate"&&(r.mode="same-origin"),this._requestData=r}toObject(){let r=Object.assign({},this._requestData);return r.headers=Object.assign({},this._requestData.headers),r.body&&(r.body=r.body.slice(0)),r}toRequest(){return new Request(this._requestData.url,this._requestData)}clone(){return new J(this.toObject())}},ve="serwist-background-sync",lr=1440*7,Q=new Set,we=e=>{let r={request:new Y(e.requestData).toRequest(),timestamp:e.timestamp};return e.metadata&&(r.metadata=e.metadata),r},_e=class{_name;_onSync;_maxRetentionTime;_queueStore;_forceSyncFallback;_syncInProgress=!1;_requestsAddedDuringSync=!1;constructor(e,{forceSyncFallback:r,onSync:a,maxRetentionTime:i}={}){if(Q.has(e))throw new d("duplicate-queue-name",{name:e});Q.add(e),this._name=e,this._onSync=a||this.replayRequests,this._maxRetentionTime=i||lr,this._forceSyncFallback=!!r,this._queueStore=new xe(this._name),this._addSyncListener()}get name(){return this._name}async pushRequest(e){await this._addRequest(e,"push")}async unshiftRequest(e){await this._addRequest(e,"unshift")}async popRequest(){return this._removeRequest("pop")}async shiftRequest(){return this._removeRequest("shift")}async getAll(){let e=await this._queueStore.getAll(),r=Date.now(),a=[];for(let i of e){let t=this._maxRetentionTime*60*1e3;r-i.timestamp>t?await this._queueStore.deleteEntry(i.id):a.push(we(i))}return a}async size(){return await this._queueStore.size()}async _addRequest({request:e,metadata:r,timestamp:a=Date.now()},i){let t={requestData:(await Y.fromRequest(e.clone())).toObject(),timestamp:a};switch(r&&(t.metadata=r),i){case"push":await this._queueStore.pushEntry(t);break;case"unshift":await this._queueStore.unshiftEntry(t);break}this._syncInProgress?this._requestsAddedDuringSync=!0:await this.registerSync()}async _removeRequest(e){let r=Date.now(),a;switch(e){case"pop":a=await this._queueStore.popEntry();break;case"shift":a=await this._queueStore.shiftEntry();break}if(a){let i=this._maxRetentionTime*60*1e3;return r-a.timestamp>i?this._removeRequest(e):we(a)}}async replayRequests(){let e;for(;e=await this.shiftRequest();)try{await fetch(e.request.clone())}catch{throw await this.unshiftRequest(e),new d("queue-replay-failed",{name:this._name})}}async registerSync(){if("sync"in self.registration&&!this._forceSyncFallback)try{await self.registration.sync.register(`${ve}:${this._name}`)}catch{}}_addSyncListener(){"sync"in self.registration&&!this._forceSyncFallback?self.addEventListener("sync",e=>{if(e.tag===`${ve}:${this._name}`){let r=async()=>{this._syncInProgress=!0;let a;try{await this._onSync({queue:this})}catch(i){if(i instanceof Error)throw a=i,a}finally{this._requestsAddedDuringSync&&!(a&&!e.lastChance)&&await this.registerSync(),this._syncInProgress=!1,this._requestsAddedDuringSync=!1}};e.waitUntil(r())}}):this._onSync({queue:this})}static get _queueNames(){return Q}},Ne=class{_queue;constructor(e,r){this._queue=new _e(e,r)}async fetchDidFail({request:e}){await this._queue.pushRequest({request:e})}},X={cacheWillUpdate:async({response:e})=>e.status===200||e.status===0?e:null};function O(e){return typeof e=="string"?new Request(e):e}var ke=class{event;request;url;params;_cacheKeys={};_strategy;_handlerDeferred;_extendLifetimePromises;_plugins;_pluginStateMap;constructor(e,r){this.event=r.event,this.request=r.request,r.url&&(this.url=r.url,this.params=r.params),this._strategy=e,this._handlerDeferred=new ne,this._extendLifetimePromises=[],this._plugins=[...e.plugins],this._pluginStateMap=new Map;for(let a of this._plugins)this._pluginStateMap.set(a,{});this.event.waitUntil(this._handlerDeferred.promise)}async fetch(e){let{event:r}=this,a=O(e),i=await this.getPreloadResponse();if(i)return i;let t=this.hasCallback("fetchDidFail")?a.clone():null;try{for(let s of this.iterateCallbacks("requestWillFetch"))a=await s({request:a.clone(),event:r})}catch(s){if(s instanceof Error)throw new d("plugin-error-request-will-fetch",{thrownErrorMessage:s.message})}let n=a.clone();try{let s;s=await fetch(a,a.mode==="navigate"?void 0:this._strategy.fetchOptions);for(let o of this.iterateCallbacks("fetchDidSucceed"))s=await o({event:r,request:n,response:s});return s}catch(s){throw t&&await this.runCallbacks("fetchDidFail",{error:s,event:r,originalRequest:t.clone(),request:n.clone()}),s}}async fetchAndCachePut(e){let r=await this.fetch(e),a=r.clone();return this.waitUntil(this.cachePut(e,a)),r}async cacheMatch(e){let r=O(e),a,{cacheName:i,matchOptions:t}=this._strategy,n=await this.getCacheKey(r,"read"),s={...t,cacheName:i};a=await caches.match(n,s);for(let o of this.iterateCallbacks("cachedResponseWillBeUsed"))a=await o({cacheName:i,matchOptions:t,cachedResponse:a,request:n,event:this.event})||void 0;return a}async cachePut(e,r){let a=O(e);await A(0);let i=await this.getCacheKey(a,"write");if(!r)throw new d("cache-put-with-no-response",{url:ie(i.url)});let t=await this._ensureResponseSafeToCache(r);if(!t)return!1;let{cacheName:n,matchOptions:s}=this._strategy,o=await self.caches.open(n),l=this.hasCallback("cacheDidUpdate"),c=l?await te(o,i.clone(),["__WB_REVISION__"],s):null;try{await o.put(i,l?t.clone():t)}catch(b){if(b instanceof Error)throw b.name==="QuotaExceededError"&&await se(),b}for(let b of this.iterateCallbacks("cacheDidUpdate"))await b({cacheName:n,oldResponse:c,newResponse:t.clone(),request:i,event:this.event});return!0}async getCacheKey(e,r){let a=`${e.url} | ${r}`;if(!this._cacheKeys[a]){let i=e;for(let t of this.iterateCallbacks("cacheKeyWillBeUsed"))i=O(await t({mode:r,request:i,event:this.event,params:this.params}));this._cacheKeys[a]=i}return this._cacheKeys[a]}hasCallback(e){for(let r of this._strategy.plugins)if(e in r)return!0;return!1}async runCallbacks(e,r){for(let a of this.iterateCallbacks(e))await a(r)}*iterateCallbacks(e){for(let r of this._strategy.plugins)if(typeof r[e]=="function"){let a=this._pluginStateMap.get(r);yield t=>{let n={...t,state:a};return r[e](n)}}}waitUntil(e){return this._extendLifetimePromises.push(e),e}async doneWaiting(){let e;for(;e=this._extendLifetimePromises.shift();)await e}destroy(){this._handlerDeferred.resolve(null)}async getPreloadResponse(){if(this.event instanceof FetchEvent&&this.event.request.mode==="navigate"&&"preloadResponse"in this.event)try{let e=await this.event.preloadResponse;if(e)return e}catch{return}}async _ensureResponseSafeToCache(e){let r=e,a=!1;for(let i of this.iterateCallbacks("cacheWillUpdate"))if(r=await i({request:this.request,response:r,event:this.event})||void 0,a=!0,!r)break;return a||r&&r.status!==200&&(r=void 0),r}},N=class{cacheName;plugins;fetchOptions;matchOptions;constructor(e={}){this.cacheName=w.getRuntimeName(e.cacheName),this.plugins=e.plugins||[],this.fetchOptions=e.fetchOptions,this.matchOptions=e.matchOptions}handle(e){let[r]=this.handleAll(e);return r}handleAll(e){e instanceof FetchEvent&&(e={event:e,request:e.request});let r=e.event,a=typeof e.request=="string"?new Request(e.request):e.request,i=new ke(this,e.url?{event:r,request:a,url:e.url,params:e.params}:{event:r,request:a}),t=this._getResponse(i,a,r);return[t,this._awaitComplete(t,i,a,r)]}async _getResponse(e,r,a){await e.runCallbacks("handlerWillStart",{event:a,request:r});let i;try{if(i=await this._handle(r,e),i===void 0||i.type==="error")throw new d("no-response",{url:r.url})}catch(t){if(t instanceof Error){for(let n of e.iterateCallbacks("handlerDidError"))if(i=await n({error:t,event:a,request:r}),i!==void 0)break}if(!i)throw t}for(let t of e.iterateCallbacks("handlerWillRespond"))i=await t({event:a,request:r,response:i});return i}async _awaitComplete(e,r,a,i){let t,n;try{t=await e}catch{}try{await r.runCallbacks("handlerDidRespond",{event:i,request:a,response:t}),await r.doneWaiting()}catch(s){s instanceof Error&&(n=s)}if(await r.runCallbacks("handlerDidComplete",{event:i,request:a,response:t,error:n}),r.destroy(),n)throw n}};var p=class extends N{_networkTimeoutSeconds;constructor(e={}){super(e),this.plugins.some(r=>"cacheWillUpdate"in r)||this.plugins.unshift(X),this._networkTimeoutSeconds=e.networkTimeoutSeconds||0}async _handle(e,r){let a=[],i=[],t;if(this._networkTimeoutSeconds){let{id:o,promise:l}=this._getTimeoutPromise({request:e,logs:a,handler:r});t=o,i.push(l)}let n=this._getNetworkPromise({timeoutId:t,request:e,logs:a,handler:r});i.push(n);let s=await r.waitUntil((async()=>await r.waitUntil(Promise.race(i))||await n)());if(!s)throw new d("no-response",{url:e.url});return s}_getTimeoutPromise({request:e,logs:r,handler:a}){let i;return{promise:new Promise(t=>{i=setTimeout(async()=>{t(await a.cacheMatch(e))},this._networkTimeoutSeconds*1e3)}),id:i}}async _getNetworkPromise({timeoutId:e,request:r,logs:a,handler:i}){let t,n;try{n=await i.fetchAndCachePut(r)}catch(s){s instanceof Error&&(t=s)}return e&&clearTimeout(e),(t||!n)&&(n=await i.cacheMatch(r)),n}},k=class extends N{_networkTimeoutSeconds;constructor(e={}){super(e),this._networkTimeoutSeconds=e.networkTimeoutSeconds||0}async _handle(e,r){let a,i;try{let t=[r.fetch(e)];if(this._networkTimeoutSeconds){let n=A(this._networkTimeoutSeconds*1e3);t.push(n)}if(i=await Promise.race(t),!i)throw new Error(`Timed out the network response after ${this._networkTimeoutSeconds} seconds.`)}catch(t){t instanceof Error&&(a=t)}if(!i)throw new d("no-response",{url:e.url,error:a});return i}};var j=e=>e&&typeof e=="object"?e:{handle:e},f=class{handler;match;method;catchHandler;constructor(e,r,a="GET"){this.handler=j(r),this.match=e,this.method=a}setCatchHandler(e){this.catchHandler=j(e)}},Re=class S extends N{_fallbackToNetwork;static defaultPrecacheCacheabilityPlugin={async cacheWillUpdate({response:r}){return!r||r.status>=400?null:r}};static copyRedirectedCacheableResponsesPlugin={async cacheWillUpdate({response:r}){return r.redirected?await ye(r):r}};constructor(r={}){r.cacheName=w.getPrecacheName(r.cacheName),super(r),this._fallbackToNetwork=r.fallbackToNetwork!==!1,this.plugins.push(S.copyRedirectedCacheableResponsesPlugin)}async _handle(r,a){let i=await a.getPreloadResponse();if(i)return i;let t=await a.cacheMatch(r);return t||(a.event&&a.event.type==="install"?await this._handleInstall(r,a):await this._handleFetch(r,a))}async _handleFetch(r,a){let i,t=a.params||{};if(this._fallbackToNetwork){let n=t.integrity,s=r.integrity,o=!s||s===n;if(i=await a.fetch(new Request(r,{integrity:r.mode!=="no-cors"?s||n:void 0})),n&&o&&r.mode!=="no-cors"){this._useDefaultCacheabilityPluginIfNeeded();let l=await a.cachePut(r,i.clone())}}else throw new d("missing-precache-entry",{cacheName:this.cacheName,url:r.url});return i}async _handleInstall(r,a){this._useDefaultCacheabilityPluginIfNeeded();let i=await a.fetch(r);if(!await a.cachePut(r,i.clone()))throw new d("bad-precaching-response",{url:r.url,status:i.status});return i}_useDefaultCacheabilityPluginIfNeeded(){let r=null,a=0;for(let[i,t]of this.plugins.entries())t!==S.copyRedirectedCacheableResponsesPlugin&&(t===S.defaultPrecacheCacheabilityPlugin&&(r=i),t.cacheWillUpdate&&a++);a===0?this.plugins.push(S.defaultPrecacheCacheabilityPlugin):a>1&&r!==null&&this.plugins.splice(r,1)}},De=class extends f{_allowlist;_denylist;constructor(e,{allowlist:r=[/./],denylist:a=[]}={}){super(i=>this._match(i),e),this._allowlist=r,this._denylist=a}_match({url:e,request:r}){if(r&&r.mode!=="navigate")return!1;let a=e.pathname+e.search;for(let i of this._denylist)if(i.test(a))return!1;return!!this._allowlist.some(i=>i.test(a))}},Ae=()=>!!self.registration?.navigationPreload,qe=e=>{Ae()&&self.addEventListener("activate",r=>{r.waitUntil(self.registration.navigationPreload.enable().then(()=>{e&&self.registration.navigationPreload.setHeaderValue(e)}))})};var dr=(e,r=[])=>{for(let a of[...e.searchParams.keys()])r.some(i=>i.test(a))&&e.searchParams.delete(a);return e};function*Se(e,{directoryIndex:r="index.html",ignoreURLParametersMatching:a=[/^utm_/,/^fbclid$/],cleanURLs:i=!0,urlManipulation:t}={}){let n=new URL(e,location.href);n.hash="",yield n.href;let s=dr(n,a);if(yield s.href,r&&s.pathname.endsWith("/")){let o=new URL(s.href);o.pathname+=r,yield o.href}if(i){let o=new URL(s.href);o.pathname+=".html",yield o.href}if(t){let o=t({url:n});for(let l of o)yield l.href}}var je=class extends f{constructor(e,r,a){let i=({url:t})=>{let n=e.exec(t.href);if(n&&!(t.origin!==location.origin&&n.index!==0))return n.slice(1)};super(i,r,a)}},Ce=e=>{w.updateDetails(e)},cr="__WB_REVISION__",Te=e=>{if(!e)throw new d("add-to-cache-list-unexpected-type",{entry:e});if(typeof e=="string"){let n=new URL(e,location.href);return{cacheKey:n.href,url:n.href}}let{revision:r,url:a}=e;if(!a)throw new d("add-to-cache-list-unexpected-type",{entry:e});if(!r){let n=new URL(a,location.href);return{cacheKey:n.href,url:n.href}}let i=new URL(a,location.href),t=new URL(a,location.href);return i.searchParams.set(cr,r),{cacheKey:i.href,url:t.href}},Me=class{updatedURLs=[];notUpdatedURLs=[];handlerWillStart=async({request:e,state:r})=>{r&&(r.originalRequest=e)};cachedResponseWillBeUsed=async({event:e,state:r,cachedResponse:a})=>{if(e.type==="install"&&r?.originalRequest&&r.originalRequest instanceof Request){let i=r.originalRequest.url;a?this.notUpdatedURLs.push(i):this.updatedURLs.push(i)}return a}},Oe=(e,r,a)=>{if(typeof e=="string"){let i=new URL(e,location.href),t=({url:n})=>n.href===i.href;return new f(t,r,a)}if(e instanceof RegExp)return new je(e,r,a);if(typeof e=="function")return new f(e,r,a);if(e instanceof f)return e;throw new d("unsupported-route-type",{moduleName:"serwist",funcName:"parseRoute",paramName:"capture"})};var Pe=async(e,r,a)=>{let i=r.map((s,o)=>({index:o,item:s})),t=async s=>{let o=[];for(;;){let l=i.pop();if(!l)return s(o);let c=await a(l.item);o.push({result:c,index:l.index})}},n=Array.from({length:e},()=>new Promise(t));return(await Promise.all(n)).flat().sort((s,o)=>s.index<o.index?-1:1).map(s=>s.result)};var Ea=typeof navigator<"u"&&/^((?!chrome|android).)*safari/i.test(navigator.userAgent);var ur="serwist-expiration",P="cache-entries",Ue=e=>{let r=new URL(e,location.href);return r.hash="",r.href},br=class{_cacheName;_db=null;constructor(e){this._cacheName=e}_getId(e){return`${this._cacheName}|${Ue(e)}`}_upgradeDb(e){let r=e.createObjectStore(P,{keyPath:"id"});r.createIndex("cacheName","cacheName",{unique:!1}),r.createIndex("timestamp","timestamp",{unique:!1})}_upgradeDbAndDeleteOldDbs(e){this._upgradeDb(e),this._cacheName&&he(this._cacheName)}async setTimestamp(e,r){e=Ue(e);let a={id:this._getId(e),cacheName:this._cacheName,url:e,timestamp:r},i=(await this.getDb()).transaction(P,"readwrite",{durability:"relaxed"});await i.store.put(a),await i.done}async getTimestamp(e){return(await(await this.getDb()).get(P,this._getId(e)))?.timestamp}async expireEntries(e,r){let a=await(await this.getDb()).transaction(P,"readwrite").store.index("timestamp").openCursor(null,"prev"),i=[],t=0;for(;a;){let n=a.value;n.cacheName===this._cacheName&&(e&&n.timestamp<e||r&&t>=r?(a.delete(),i.push(n.url)):t++),a=await a.continue()}return i}async getDb(){return this._db||(this._db=await M(ur,1,{upgrade:this._upgradeDbAndDeleteOldDbs.bind(this)})),this._db}},pr=class{_isRunning=!1;_rerunRequested=!1;_maxEntries;_maxAgeSeconds;_matchOptions;_cacheName;_timestampModel;constructor(e,r={}){this._maxEntries=r.maxEntries,this._maxAgeSeconds=r.maxAgeSeconds,this._matchOptions=r.matchOptions,this._cacheName=e,this._timestampModel=new br(e)}async expireEntries(){if(this._isRunning){this._rerunRequested=!0;return}this._isRunning=!0;let e=this._maxAgeSeconds?Date.now()-this._maxAgeSeconds*1e3:0,r=await this._timestampModel.expireEntries(e,this._maxEntries),a=await self.caches.open(this._cacheName);for(let i of r)await a.delete(i,this._matchOptions);this._isRunning=!1,this._rerunRequested&&(this._rerunRequested=!1,this.expireEntries())}async updateTimestamp(e){await this._timestampModel.setTimestamp(e,Date.now())}async isURLExpired(e){if(!this._maxAgeSeconds)return!1;let r=await this._timestampModel.getTimestamp(e),a=Date.now()-this._maxAgeSeconds*1e3;return r!==void 0?r<a:!0}async delete(){this._rerunRequested=!1,await this._timestampModel.expireEntries(Number.POSITIVE_INFINITY)}},fr=e=>{L.add(e)},u=class{_config;_cacheExpirations;constructor(e={}){this._config=e,this._cacheExpirations=new Map,this._config.maxAgeFrom||(this._config.maxAgeFrom="last-fetched"),this._config.purgeOnQuotaError&&fr(()=>this.deleteCacheAndMetadata())}_getCacheExpiration(e){if(e===w.getRuntimeName())throw new d("expire-custom-caches-only");let r=this._cacheExpirations.get(e);return r||(r=new pr(e,this._config),this._cacheExpirations.set(e,r)),r}cachedResponseWillBeUsed({event:e,cacheName:r,request:a,cachedResponse:i}){if(!i)return null;let t=this._isResponseDateFresh(i),n=this._getCacheExpiration(r),s=this._config.maxAgeFrom==="last-used",o=(async()=>{s&&await n.updateTimestamp(a.url),await n.expireEntries()})();try{e.waitUntil(o)}catch{}return t?i:null}_isResponseDateFresh(e){if(this._config.maxAgeFrom==="last-used")return!0;let r=Date.now();if(!this._config.maxAgeSeconds)return!0;let a=this._getDateHeaderTimestamp(e);return a===null?!0:a>=r-this._config.maxAgeSeconds*1e3}_getDateHeaderTimestamp(e){if(!e.headers.has("date"))return null;let r=e.headers.get("date"),a=new Date(r).getTime();return Number.isNaN(a)?null:a}async cacheDidUpdate({cacheName:e,request:r}){let a=this._getCacheExpiration(e);await a.updateTimestamp(r.url),await a.expireEntries()}async deleteCacheAndMetadata(){for(let[e,r]of this._cacheExpirations)await self.caches.delete(e),await r.delete();this._cacheExpirations=new Map}},hr="serwist-google-analytics",gr=2880,mr=/^\/(\w+\/)?collect/,vr=e=>async({queue:r})=>{let a;for(;a=await r.shiftRequest();){let{request:i,timestamp:t}=a,n=new URL(i.url);try{let s=i.method==="POST"?new URLSearchParams(await i.clone().text()):n.searchParams,o=t-(Number(s.get("qt"))||0),l=Date.now()-o;if(s.set("qt",String(l)),e.parameterOverrides)for(let c of Object.keys(e.parameterOverrides)){let b=e.parameterOverrides[c];s.set(c,b)}typeof e.hitFilter=="function"&&e.hitFilter.call(null,s),await fetch(new Request(n.origin+n.pathname,{body:s.toString(),method:"POST",mode:"cors",credentials:"omit",headers:{"Content-Type":"text/plain"}}))}catch(s){throw await r.unshiftRequest(a),s}}},wr=e=>{let r=({url:i})=>i.hostname==="www.google-analytics.com"&&mr.test(i.pathname),a=new k({plugins:[e]});return[new f(r,a,"GET"),new f(r,a,"POST")]},yr=e=>{let r=({url:a})=>a.hostname==="www.google-analytics.com"&&a.pathname==="/analytics.js";return new f(r,new p({cacheName:e}),"GET")},Er=e=>{let r=({url:a})=>a.hostname==="www.googletagmanager.com"&&a.pathname==="/gtag/js";return new f(r,new p({cacheName:e}),"GET")},xr=e=>{let r=({url:a})=>a.hostname==="www.googletagmanager.com"&&a.pathname==="/gtm.js";return new f(r,new p({cacheName:e}),"GET")},$e=({serwist:e,cacheName:r,...a})=>{let i=w.getGoogleAnalyticsName(r),t=new Ne(hr,{maxRetentionTime:gr,onSync:vr(a)}),n=[xr(i),yr(i),Er(i),...wr(t)];for(let s of n)e.registerRoute(s)},_r=class{_fallbackUrls;_serwist;constructor({fallbackUrls:e,serwist:r}){this._fallbackUrls=e,this._serwist=r}async handlerDidError(e){for(let r of this._fallbackUrls)if(typeof r=="string"){let a=await this._serwist.matchPrecache(r);if(a!==void 0)return a}else if(r.matcher(e)){let a=await this._serwist.matchPrecache(r.url);if(a!==void 0)return a}}},Nr=(e,r,a)=>{let i=e.size;if(a&&a>i||r&&r<0)throw new d("range-not-satisfiable",{size:i,end:a,start:r});let t,n;return r!==void 0&&a!==void 0?(t=r,n=a+1):r!==void 0&&a===void 0?(t=r,n=i):a!==void 0&&r===void 0&&(t=i-a,n=i),{start:t,end:n}},kr=e=>{let r=e.trim().toLowerCase();if(!r.startsWith("bytes="))throw new d("unit-must-be-bytes",{normalizedRangeHeader:r});if(r.includes(","))throw new d("single-range-only",{normalizedRangeHeader:r});let a=/(\d*)-(\d*)/.exec(r);if(!a||!(a[1]||a[2]))throw new d("invalid-range-values",{normalizedRangeHeader:r});return{start:a[1]===""?void 0:Number(a[1]),end:a[2]===""?void 0:Number(a[2])}},Rr=async(e,r)=>{try{if(r.status===206)return r;let a=e.headers.get("range");if(!a)throw new d("no-range-header");let i=kr(a),t=await r.blob(),n=Nr(t,i.start,i.end),s=t.slice(n.start,n.end),o=s.size,l=new Response(s,{status:206,statusText:"Partial Content",headers:r.headers});return l.headers.set("Content-Length",String(o)),l.headers.set("Content-Range",`bytes ${n.start}-${n.end-1}/${t.size}`),l}catch{return new Response("",{status:416,statusText:"Range Not Satisfiable"})}},Z=class{cachedResponseWillBeUsed=async({request:e,cachedResponse:r})=>r&&e.headers.has("range")?await Rr(e,r):r},C=class extends N{async _handle(e,r){let a=[],i=await r.cacheMatch(e),t;if(!i)try{i=await r.fetchAndCachePut(e)}catch(n){n instanceof Error&&(t=n)}if(!i)throw new d("no-response",{url:e.url,error:t});return i}};var R=class extends N{constructor(e={}){super(e),this.plugins.some(r=>"cacheWillUpdate"in r)||this.plugins.unshift(X)}async _handle(e,r){let a=[],i=r.fetchAndCachePut(e).catch(()=>{});r.waitUntil(i);let t=await r.cacheMatch(e),n;if(!t)try{t=await i}catch(s){s instanceof Error&&(n=s)}if(!t)throw new d("no-response",{url:e.url,error:n});return t}},Dr=class extends f{constructor(e,r){let a=({request:i})=>{let t=e.getUrlsToPrecacheKeys();for(let n of Se(i.url,r)){let s=t.get(n);if(s)return{cacheKey:s,integrity:e.getIntegrityForPrecacheKey(s)}}};super(a,e.precacheStrategy)}},Ar=class{_precacheController;constructor({precacheController:e}){this._precacheController=e}cacheKeyWillBeUsed=async({request:e,params:r})=>{let a=r?.cacheKey||this._precacheController.getPrecacheKeyForUrl(e.url);return a?new Request(a,{headers:e.headers}):e}},qr=(e,r={})=>{let{cacheName:a,plugins:i=[],fetchOptions:t,matchOptions:n,fallbackToNetwork:s,directoryIndex:o,ignoreURLParametersMatching:l,cleanURLs:c,urlManipulation:b,cleanupOutdatedCaches:g,concurrency:_=10,navigateFallback:U,navigateFallbackAllowlist:E,navigateFallbackDenylist:h}=r??{};return{precacheStrategyOptions:{cacheName:w.getPrecacheName(a),plugins:[...i,new Ar({precacheController:e})],fetchOptions:t,matchOptions:n,fallbackToNetwork:s},precacheRouteOptions:{directoryIndex:o,ignoreURLParametersMatching:l,cleanURLs:c,urlManipulation:b},precacheMiscOptions:{cleanupOutdatedCaches:g,concurrency:_,navigateFallback:U,navigateFallbackAllowlist:E,navigateFallbackDenylist:h}}},Ie=class{_urlsToCacheKeys=new Map;_urlsToCacheModes=new Map;_cacheKeysToIntegrities=new Map;_concurrentPrecaching;_precacheStrategy;_routes;_defaultHandlerMap;_catchHandler;_requestRules;constructor({precacheEntries:e,precacheOptions:r,skipWaiting:a=!1,importScripts:i,navigationPreload:t=!1,cacheId:n,clientsClaim:s=!1,runtimeCaching:o,offlineAnalyticsConfig:l,disableDevLogs:c=!1,fallbacks:b,requestRules:g}={}){let{precacheStrategyOptions:_,precacheRouteOptions:U,precacheMiscOptions:E}=qr(this,r);if(this._concurrentPrecaching=E.concurrency,this._precacheStrategy=new Re(_),this._routes=new Map,this._defaultHandlerMap=new Map,this._requestRules=g,this.handleInstall=this.handleInstall.bind(this),this.handleActivate=this.handleActivate.bind(this),this.handleFetch=this.handleFetch.bind(this),this.handleCache=this.handleCache.bind(this),i&&i.length>0&&self.importScripts(...i),t&&qe(),n!==void 0&&Ce({prefix:n}),a?self.skipWaiting():self.addEventListener("message",h=>{h.data&&h.data.type==="SKIP_WAITING"&&self.skipWaiting()}),s&&le(),e&&e.length>0&&this.addToPrecacheList(e),E.cleanupOutdatedCaches&&oe(_.cacheName),this.registerRoute(new Dr(this,U)),E.navigateFallback&&this.registerRoute(new De(this.createHandlerBoundToUrl(E.navigateFallback),{allowlist:E.navigateFallbackAllowlist,denylist:E.navigateFallbackDenylist})),l!==void 0&&(typeof l=="boolean"?l&&$e({serwist:this}):$e({...l,serwist:this})),o!==void 0){if(b!==void 0){let h=new _r({fallbackUrls:b.entries,serwist:this});o.forEach($=>{$.handler instanceof N&&!$.handler.plugins.some(Ve=>"handlerDidError"in Ve)&&$.handler.plugins.push(h)})}for(let h of o)this.registerCapture(h.matcher,h.handler,h.method)}c&&Ee()}get precacheStrategy(){return this._precacheStrategy}get routes(){return this._routes}addEventListeners(){self.addEventListener("install",this.handleInstall),self.addEventListener("activate",this.handleActivate),self.addEventListener("fetch",this.handleFetch),self.addEventListener("message",this.handleCache)}addToPrecacheList(e){let r=[];for(let a of e){typeof a=="string"?r.push(a):a&&!a.integrity&&a.revision===void 0&&r.push(a.url);let{cacheKey:i,url:t}=Te(a),n=typeof a!="string"&&a.revision?"reload":"default";if(this._urlsToCacheKeys.has(t)&&this._urlsToCacheKeys.get(t)!==i)throw new d("add-to-cache-list-conflicting-entries",{firstEntry:this._urlsToCacheKeys.get(t),secondEntry:i});if(typeof a!="string"&&a.integrity){if(this._cacheKeysToIntegrities.has(i)&&this._cacheKeysToIntegrities.get(i)!==a.integrity)throw new d("add-to-cache-list-conflicting-integrities",{url:t});this._cacheKeysToIntegrities.set(i,a.integrity)}this._urlsToCacheKeys.set(t,i),this._urlsToCacheModes.set(t,n)}if(r.length>0){let a=`Serwist is precaching URLs without revision info: ${r.join(", ")}
-This is generally NOT safe. Learn more at https://bit.ly/wb-precache`;console.warn(a)}}handleInstall(e){return this.registerRequestRules(e),V(e,async()=>{let r=new Me;this.precacheStrategy.plugins.push(r),await Pe(this._concurrentPrecaching,Array.from(this._urlsToCacheKeys.entries()),async([t,n])=>{let s=this._cacheKeysToIntegrities.get(n),o=this._urlsToCacheModes.get(t),l=new Request(t,{integrity:s,cache:o,credentials:"same-origin"});await Promise.all(this.precacheStrategy.handleAll({event:e,request:l,url:new URL(l.url),params:{cacheKey:n}}))});let{updatedURLs:a,notUpdatedURLs:i}=r;return{updatedURLs:a,notUpdatedURLs:i}})}async registerRequestRules(e){if(this._requestRules&&e?.addRoutes)try{await e.addRoutes(this._requestRules),this._requestRules=void 0}catch(r){throw r}}handleActivate(e){return V(e,async()=>{let r=await self.caches.open(this.precacheStrategy.cacheName),a=await r.keys(),i=new Set(this._urlsToCacheKeys.values()),t=[];for(let n of a)i.has(n.url)||(await r.delete(n),t.push(n.url));return{deletedCacheRequests:t}})}handleFetch(e){let{request:r}=e,a=this.handleRequest({request:r,event:e});a&&e.respondWith(a)}handleCache(e){if(e.data&&e.data.type==="CACHE_URLS"){let{payload:r}=e.data,a=Promise.all(r.urlsToCache.map(i=>{let t;return typeof i=="string"?t=new Request(i):t=new Request(...i),this.handleRequest({request:t,event:e})}));e.waitUntil(a),e.ports?.[0]&&a.then(()=>e.ports[0].postMessage(!0))}}setDefaultHandler(e,r="GET"){this._defaultHandlerMap.set(r,j(e))}setCatchHandler(e){this._catchHandler=j(e)}registerCapture(e,r,a){let i=Oe(e,r,a);return this.registerRoute(i),i}registerRoute(e){this._routes.has(e.method)||this._routes.set(e.method,[]),this._routes.get(e.method).push(e)}unregisterRoute(e){if(!this._routes.has(e.method))throw new d("unregister-route-but-not-found-with-method",{method:e.method});let r=this._routes.get(e.method).indexOf(e);if(r>-1)this._routes.get(e.method).splice(r,1);else throw new d("unregister-route-route-not-registered")}getUrlsToPrecacheKeys(){return this._urlsToCacheKeys}getPrecachedUrls(){return[...this._urlsToCacheKeys.keys()]}getPrecacheKeyForUrl(e){let r=new URL(e,location.href);return this._urlsToCacheKeys.get(r.href)}getIntegrityForPrecacheKey(e){return this._cacheKeysToIntegrities.get(e)}async matchPrecache(e){let r=e instanceof Request?e.url:e,a=this.getPrecacheKeyForUrl(r);if(a)return(await self.caches.open(this.precacheStrategy.cacheName)).match(a)}createHandlerBoundToUrl(e){let r=this.getPrecacheKeyForUrl(e);if(!r)throw new d("non-precached-url",{url:e});return a=>(a.request=new Request(e),a.params={cacheKey:r,...a.params},this.precacheStrategy.handle(a))}handleRequest({request:e,event:r}){let a=new URL(e.url,location.href);if(!a.protocol.startsWith("http"))return;let i=a.origin===location.origin,{params:t,route:n}=this.findMatchingRoute({event:r,request:e,sameOrigin:i,url:a}),s=n?.handler,o=[],l=e.method;if(!s&&this._defaultHandlerMap.has(l)&&(s=this._defaultHandlerMap.get(l)),!s)return;let c;try{c=s.handle({url:a,request:e,event:r,params:t})}catch(g){c=Promise.reject(g)}let b=n?.catchHandler;return c instanceof Promise&&(this._catchHandler||b)&&(c=c.catch(async g=>{if(b)try{return await b.handle({url:a,request:e,event:r,params:t})}catch(_){_ instanceof Error&&(g=_)}if(this._catchHandler)return this._catchHandler.handle({url:a,request:e,event:r});throw g})),c}findMatchingRoute({url:e,sameOrigin:r,request:a,event:i}){let t=this._routes.get(a.method)||[];for(let n of t){let s,o=n.match({url:e,sameOrigin:r,request:a,event:i});if(o)return s=o,(Array.isArray(s)&&s.length===0||o.constructor===Object&&Object.keys(o).length===0||typeof o=="boolean")&&(s=void 0),{route:n,params:s}}return{}}};var ee={rscPrefetch:"pages-rsc-prefetch",rsc:"pages-rsc",html:"pages"},Le=[{matcher:/^https:\/\/fonts\.(?:gstatic)\.com\/.*/i,handler:new C({cacheName:"google-fonts-webfonts",plugins:[new u({maxEntries:4,maxAgeSeconds:365*24*60*60,maxAgeFrom:"last-used"})]})},{matcher:/^https:\/\/fonts\.(?:googleapis)\.com\/.*/i,handler:new R({cacheName:"google-fonts-stylesheets",plugins:[new u({maxEntries:4,maxAgeSeconds:10080*60,maxAgeFrom:"last-used"})]})},{matcher:/\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i,handler:new R({cacheName:"static-font-assets",plugins:[new u({maxEntries:4,maxAgeSeconds:10080*60,maxAgeFrom:"last-used"})]})},{matcher:/\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i,handler:new R({cacheName:"static-image-assets",plugins:[new u({maxEntries:64,maxAgeSeconds:720*60*60,maxAgeFrom:"last-used"})]})},{matcher:/\/_next\/static.+\.js$/i,handler:new C({cacheName:"next-static-js-assets",plugins:[new u({maxEntries:64,maxAgeSeconds:1440*60,maxAgeFrom:"last-used"})]})},{matcher:/\/_next\/image\?url=.+$/i,handler:new R({cacheName:"next-image",plugins:[new u({maxEntries:64,maxAgeSeconds:1440*60,maxAgeFrom:"last-used"})]})},{matcher:/\.(?:mp3|wav|ogg)$/i,handler:new C({cacheName:"static-audio-assets",plugins:[new u({maxEntries:32,maxAgeSeconds:1440*60,maxAgeFrom:"last-used"}),new Z]})},{matcher:/\.(?:mp4|webm)$/i,handler:new C({cacheName:"static-video-assets",plugins:[new u({maxEntries:32,maxAgeSeconds:1440*60,maxAgeFrom:"last-used"}),new Z]})},{matcher:/\.(?:js)$/i,handler:new R({cacheName:"static-js-assets",plugins:[new u({maxEntries:48,maxAgeSeconds:1440*60,maxAgeFrom:"last-used"})]})},{matcher:/\.(?:css|less)$/i,handler:new R({cacheName:"static-style-assets",plugins:[new u({maxEntries:32,maxAgeSeconds:1440*60,maxAgeFrom:"last-used"})]})},{matcher:/\/_next\/data\/.+\/.+\.json$/i,handler:new p({cacheName:"next-data",plugins:[new u({maxEntries:32,maxAgeSeconds:1440*60,maxAgeFrom:"last-used"})]})},{matcher:/\.(?:json|xml|csv)$/i,handler:new p({cacheName:"static-data-assets",plugins:[new u({maxEntries:32,maxAgeSeconds:1440*60,maxAgeFrom:"last-used"})]})},{matcher:/\/api\/auth\/.*/,handler:new k({networkTimeoutSeconds:10})},{matcher:({sameOrigin:e,url:{pathname:r}})=>e&&r.startsWith("/api/"),method:"GET",handler:new p({cacheName:"apis",plugins:[new u({maxEntries:16,maxAgeSeconds:1440*60,maxAgeFrom:"last-used"})],networkTimeoutSeconds:10})},{matcher:({request:e,url:{pathname:r},sameOrigin:a})=>e.headers.get("RSC")==="1"&&e.headers.get("Next-Router-Prefetch")==="1"&&a&&!r.startsWith("/api/"),handler:new p({cacheName:ee.rscPrefetch,plugins:[new u({maxEntries:32,maxAgeSeconds:1440*60})]})},{matcher:({request:e,url:{pathname:r},sameOrigin:a})=>e.headers.get("RSC")==="1"&&a&&!r.startsWith("/api/"),handler:new p({cacheName:ee.rsc,plugins:[new u({maxEntries:32,maxAgeSeconds:1440*60})]})},{matcher:({request:e,url:{pathname:r},sameOrigin:a})=>e.headers.get("Content-Type")?.includes("text/html")&&a&&!r.startsWith("/api/"),handler:new p({cacheName:ee.html,plugins:[new u({maxEntries:32,maxAgeSeconds:1440*60})]})},{matcher:({url:{pathname:e},sameOrigin:r})=>r&&!e.startsWith("/api/"),handler:new p({cacheName:"others",plugins:[new u({maxEntries:32,maxAgeSeconds:1440*60})]})},{matcher:({sameOrigin:e})=>!e,handler:new p({cacheName:"cross-origin",plugins:[new u({maxEntries:32,maxAgeSeconds:3600})],networkTimeoutSeconds:10})},{matcher:/.*/i,method:"GET",handler:new k}];var Sr=[{matcher:({url:e})=>e.pathname.startsWith("/api/")||e.pathname.startsWith("/owner")||e.pathname.startsWith("/clinic")||e.pathname.startsWith("/admin")||e.pathname.startsWith("/caregiver"),handler:new k},...Le],jr=new Ie({precacheEntries:m,skipWaiting:!0,clientsClaim:!0,navigationPreload:!1,runtimeCaching:Sr,fallbacks:{entries:[{url:"/offline",matcher({request:e}){return e.destination==="document"}}]}});jr.addEventListeners();self.addEventListener("install",e=>{e.waitUntil(self.skipWaiting())});self.addEventListener("activate",e=>{e.waitUntil((async()=>{await self.clients.claim();let r=await self.caches.keys(),a=["apis","pages","pages-rsc","pages-rsc-prefetch","serwist-runtime"];await Promise.all(r.map(i=>a.some(t=>i.includes(t))?(console.info(`[sw] Purging sensitive cache: ${i}`),self.caches.delete(i)):Promise.resolve(!0)))})())});self.addEventListener("push",e=>{if(!e.data)return;let r;try{r=e.data.json()}catch{r={title:"Odi.Pet",body:e.data.text()}}let a=r.title??"Odi.Pet",i={body:r.body??"",icon:r.icon??"/brand/app-icons/odi-icon-256.png",badge:r.badge??"/brand/app-icons/odi-icon-256.png",tag:r.tag??`odi-${Date.now()}`,renotify:!0,data:{url:r.url??"/owner/notifications"}};e.waitUntil(self.registration.showNotification(a,i))});self.addEventListener("notificationclick",e=>{e.notification.close();let r=e.notification.data,a="/owner/notifications";try{let i=new URL(r?.url??a,self.location.origin);i.origin===self.location.origin&&(a=`${i.pathname}${i.search}${i.hash}`)}catch{}e.waitUntil(self.clients.matchAll({type:"window",includeUncontrolled:!0}).then(i=>{for(let t of i)if(t.url.includes(self.location.origin)&&"focus"in t)return t.navigate(a).then(()=>t.focus());return self.clients.openWindow(a)}))});
+// node_modules/serwist/dist/chunks/waitUntil-BHDx3Rgo.js
+var _cacheNameDetails = {
+  googleAnalytics: "googleAnalytics",
+  precache: "precache-v2",
+  prefix: "serwist",
+  runtime: "runtime",
+  suffix: typeof registration !== "undefined" ? registration.scope : ""
+};
+var _createCacheName = (cacheName) => {
+  return [
+    _cacheNameDetails.prefix,
+    cacheName,
+    _cacheNameDetails.suffix
+  ].filter((value) => value && value.length > 0).join("-");
+};
+var eachCacheNameDetail = (fn) => {
+  for (const key of Object.keys(_cacheNameDetails)) fn(key);
+};
+var cacheNames = {
+  updateDetails: (details) => {
+    eachCacheNameDetail((key) => {
+      const detail = details[key];
+      if (typeof detail === "string") _cacheNameDetails[key] = detail;
+    });
+  },
+  getGoogleAnalyticsName: (userCacheName) => {
+    return userCacheName || _createCacheName(_cacheNameDetails.googleAnalytics);
+  },
+  getPrecacheName: (userCacheName) => {
+    return userCacheName || _createCacheName(_cacheNameDetails.precache);
+  },
+  getPrefix: () => {
+    return _cacheNameDetails.prefix;
+  },
+  getRuntimeName: (userCacheName) => {
+    return userCacheName || _createCacheName(_cacheNameDetails.runtime);
+  },
+  getSuffix: () => {
+    return _cacheNameDetails.suffix;
+  }
+};
+var supportStatus;
+function canConstructResponseFromBodyStream() {
+  if (supportStatus === void 0) {
+    const testResponse = new Response("");
+    if ("body" in testResponse) try {
+      new Response(testResponse.body);
+      supportStatus = true;
+    } catch {
+      supportStatus = false;
+    }
+    supportStatus = false;
+  }
+  return supportStatus;
+}
+var messages = {
+  "invalid-value": ({ paramName, validValueDescription, value }) => {
+    if (!paramName || !validValueDescription) throw new Error(`Unexpected input to 'invalid-value' error.`);
+    return `The '${paramName}' parameter was given a value with an unexpected value. ${validValueDescription} Received a value of ${JSON.stringify(value)}.`;
+  },
+  "not-an-array": ({ moduleName, className, funcName, paramName }) => {
+    if (!moduleName || !className || !funcName || !paramName) throw new Error(`Unexpected input to 'not-an-array' error.`);
+    return `The parameter '${paramName}' passed into '${moduleName}.${className}.${funcName}()' must be an array.`;
+  },
+  "incorrect-type": ({ expectedType, paramName, moduleName, className, funcName }) => {
+    if (!expectedType || !paramName || !moduleName || !funcName) throw new Error(`Unexpected input to 'incorrect-type' error.`);
+    return `The parameter '${paramName}' passed into '${moduleName}.${className ? `${className}.` : ""}${funcName}()' must be of type ${expectedType}.`;
+  },
+  "incorrect-class": ({ expectedClassName, paramName, moduleName, className, funcName, isReturnValueProblem }) => {
+    if (!expectedClassName || !moduleName || !funcName) throw new Error(`Unexpected input to 'incorrect-class' error.`);
+    const classNameStr = className ? `${className}.` : "";
+    if (isReturnValueProblem) return `The return value from '${moduleName}.${classNameStr}${funcName}()' must be an instance of class ${expectedClassName}.`;
+    return `The parameter '${paramName}' passed into '${moduleName}.${classNameStr}${funcName}()' must be an instance of class ${expectedClassName}.`;
+  },
+  "missing-a-method": ({ expectedMethod, paramName, moduleName, className, funcName }) => {
+    if (!expectedMethod || !paramName || !moduleName || !className || !funcName) throw new Error(`Unexpected input to 'missing-a-method' error.`);
+    return `${moduleName}.${className}.${funcName}() expected the '${paramName}' parameter to expose a '${expectedMethod}' method.`;
+  },
+  "add-to-cache-list-unexpected-type": ({ entry }) => {
+    return `An unexpected entry was passed to 'serwist.Serwist.addToPrecacheList()' The entry '${JSON.stringify(entry)}' isn't supported. You must supply an array of strings with one or more characters, objects with a url property or Request objects.`;
+  },
+  "add-to-cache-list-conflicting-entries": ({ firstEntry, secondEntry }) => {
+    if (!firstEntry || !secondEntry) throw new Error("Unexpected input to 'add-to-cache-list-duplicate-entries' error.");
+    return `Two of the entries passed to 'serwist.Serwist.addToPrecacheList()' had the URL ${firstEntry} but different revision details. Serwist is unable to cache and version the asset correctly. Please remove one of the entries.`;
+  },
+  "plugin-error-request-will-fetch": ({ thrownErrorMessage }) => {
+    if (!thrownErrorMessage) throw new Error("Unexpected input to 'plugin-error-request-will-fetch', error.");
+    return `An error was thrown by a plugin's 'requestWillFetch()' method. The thrown error message was: '${thrownErrorMessage}'.`;
+  },
+  "invalid-cache-name": ({ cacheNameId, value }) => {
+    if (!cacheNameId) throw new Error(`Expected a 'cacheNameId' for error 'invalid-cache-name'`);
+    return `You must provide a name containing at least one character for setCacheDetails({${cacheNameId}: '...'}). Received a value of '${JSON.stringify(value)}'`;
+  },
+  "unregister-route-but-not-found-with-method": ({ method }) => {
+    if (!method) throw new Error("Unexpected input to 'unregister-route-but-not-found-with-method' error.");
+    return `The route you're trying to unregister was not  previously registered for the method type '${method}'.`;
+  },
+  "unregister-route-route-not-registered": () => {
+    return "The route you're trying to unregister was not previously registered.";
+  },
+  "queue-replay-failed": ({ name }) => {
+    return `Replaying the background sync queue '${name}' failed.`;
+  },
+  "duplicate-queue-name": ({ name }) => {
+    return `The queue name '${name}' is already being used. All instances of 'serwist.BackgroundSyncQueue' must be given unique names.`;
+  },
+  "expired-test-without-max-age": ({ methodName, paramName }) => {
+    return `The '${methodName}()' method can only be used when the '${paramName}' is used in the constructor.`;
+  },
+  "unsupported-route-type": ({ moduleName, className, funcName, paramName }) => {
+    return `The supplied '${paramName}' parameter was an unsupported type. Please check the docs for ${moduleName}.${className}.${funcName} for valid input types.`;
+  },
+  "not-array-of-class": ({ value, expectedClass, moduleName, className, funcName, paramName }) => {
+    return `The supplied '${paramName}' parameter must be an array of '${expectedClass}' objects. Received '${JSON.stringify(value)},'. Please check the call to ${moduleName}.${className}.${funcName}() to fix the issue.`;
+  },
+  "max-entries-or-age-required": ({ moduleName, className, funcName }) => {
+    return `You must define either 'config.maxEntries' or 'config.maxAgeSeconds' in '${moduleName}.${className}.${funcName}'`;
+  },
+  "statuses-or-headers-required": ({ moduleName, className, funcName }) => {
+    return `You must define either 'config.statuses' or 'config.headers' in '${moduleName}.${className}.${funcName}'`;
+  },
+  "invalid-string": ({ moduleName, funcName, paramName }) => {
+    if (!paramName || !moduleName || !funcName) throw new Error(`Unexpected input to 'invalid-string' error.`);
+    return `When using strings, the '${paramName}' parameter must start with 'http' (for cross-origin matches) or '/' (for same-origin matches). Please see the docs for ${moduleName}.${funcName}() for more info.`;
+  },
+  "channel-name-required": () => {
+    return "You must provide a channelName to construct a BroadcastCacheUpdate instance.";
+  },
+  "invalid-responses-are-same-args": () => {
+    return "The arguments passed into responsesAreSame() appear to be invalid. Please ensure valid Responses are used.";
+  },
+  "expire-custom-caches-only": () => {
+    return "You must provide a 'cacheName' property when using the expiration plugin with a runtime caching strategy.";
+  },
+  "unit-must-be-bytes": ({ normalizedRangeHeader }) => {
+    if (!normalizedRangeHeader) throw new Error(`Unexpected input to 'unit-must-be-bytes' error.`);
+    return `The 'unit' portion of the Range header must be set to 'bytes'. The Range header provided was "${normalizedRangeHeader}"`;
+  },
+  "single-range-only": ({ normalizedRangeHeader }) => {
+    if (!normalizedRangeHeader) throw new Error(`Unexpected input to 'single-range-only' error.`);
+    return `Multiple ranges are not supported. Please use a  single start value, and optional end value. The Range header provided was "${normalizedRangeHeader}"`;
+  },
+  "invalid-range-values": ({ normalizedRangeHeader }) => {
+    if (!normalizedRangeHeader) throw new Error(`Unexpected input to 'invalid-range-values' error.`);
+    return `The Range header is missing both start and end values. At least one of those values is needed. The Range header provided was "${normalizedRangeHeader}"`;
+  },
+  "no-range-header": () => {
+    return "No Range header was found in the Request provided.";
+  },
+  "range-not-satisfiable": ({ size, start, end }) => {
+    return `The start (${start}) and end (${end}) values in the Range are not satisfiable by the cached response, which is ${size} bytes.`;
+  },
+  "attempt-to-cache-non-get-request": ({ url, method }) => {
+    return `Unable to cache '${url}' because it is a '${method}' request and only 'GET' requests can be cached.`;
+  },
+  "cache-put-with-no-response": ({ url }) => {
+    return `There was an attempt to cache '${url}' but the response was not defined.`;
+  },
+  "no-response": ({ url, error }) => {
+    let message = `The strategy could not generate a response for '${url}'.`;
+    if (error) message += ` The underlying error is ${error}.`;
+    return message;
+  },
+  "bad-precaching-response": ({ url, status }) => {
+    return `The precaching request for '${url}' failed${status ? ` with an HTTP status of ${status}.` : "."}`;
+  },
+  "non-precached-url": ({ url }) => {
+    return `'createHandlerBoundToURL("${url}")' was called, but that URL is not precached. Please pass in a URL that is precached instead.`;
+  },
+  "add-to-cache-list-conflicting-integrities": ({ url }) => {
+    return `Two of the entries passed to 'serwist.Serwist.addToPrecacheList()' had the URL ${url} with different integrity values. Please remove one of them.`;
+  },
+  "missing-precache-entry": ({ cacheName, url }) => {
+    return `Unable to find a precached response in ${cacheName} for ${url}.`;
+  },
+  "cross-origin-copy-response": ({ origin }) => {
+    return `'@serwist/core.copyResponse()' can only be used with same-origin responses. It was passed a response with origin ${origin}.`;
+  },
+  "opaque-streams-source": ({ type }) => {
+    const message = `One of the '@serwist/streams' sources resulted in an '${type}' response.`;
+    if (type === "opaqueredirect") return `${message} Please do not use a navigation request that results in a redirect as a source.`;
+    return `${message} Please ensure your sources are CORS-enabled.`;
+  }
+};
+var generatorFunction = (code, details = {}) => {
+  const message = messages[code];
+  if (!message) throw new Error(`Unable to find message for code '${code}'.`);
+  return message(details);
+};
+var messageGenerator = false ? fallback : generatorFunction;
+var SerwistError = class extends Error {
+  details;
+  /**
+  *
+  * @param errorCode The error code that
+  * identifies this particular error.
+  * @param details Any relevant arguments
+  * that will help developers identify issues should
+  * be added as a key on the context object.
+  */
+  constructor(errorCode, details) {
+    const message = messageGenerator(errorCode, details);
+    super(message);
+    this.name = errorCode;
+    this.details = details;
+  }
+};
+var isArray = (value, details) => {
+  if (!Array.isArray(value)) throw new SerwistError("not-an-array", details);
+};
+var hasMethod = (object, expectedMethod, details) => {
+  if (typeof object[expectedMethod] !== "function") {
+    details.expectedMethod = expectedMethod;
+    throw new SerwistError("missing-a-method", details);
+  }
+};
+var isType = (object, expectedType, details) => {
+  if (typeof object !== expectedType) {
+    details.expectedType = expectedType;
+    throw new SerwistError("incorrect-type", details);
+  }
+};
+var isInstance = (object, expectedClass, details) => {
+  if (!(object instanceof expectedClass)) {
+    details.expectedClassName = expectedClass.name;
+    throw new SerwistError("incorrect-class", details);
+  }
+};
+var isOneOf = (value, validValues, details) => {
+  if (!validValues.includes(value)) {
+    details.validValueDescription = `Valid values are ${JSON.stringify(validValues)}.`;
+    throw new SerwistError("invalid-value", details);
+  }
+};
+var isArrayOfClass = (value, expectedClass, details) => {
+  const error = new SerwistError("not-array-of-class", details);
+  if (!Array.isArray(value)) throw error;
+  for (const item of value) if (!(item instanceof expectedClass)) throw error;
+};
+var finalAssertExports = false ? null : {
+  hasMethod,
+  isArray,
+  isInstance,
+  isOneOf,
+  isType,
+  isArrayOfClass
+};
+var getFriendlyURL = (url) => {
+  return new URL(String(url), location.href).href.replace(new RegExp(`^${location.origin}`), "");
+};
+var logger = typeof self === "undefined" ? null : (() => {
+  if (!("__WB_DISABLE_DEV_LOGS" in globalThis)) self.__WB_DISABLE_DEV_LOGS = false;
+  let inGroup = false;
+  const methodToColorMap = {
+    debug: "#7f8c8d",
+    log: "#2ecc71",
+    warn: "#f39c12",
+    error: "#c0392b",
+    groupCollapsed: "#3498db",
+    groupEnd: null
+  };
+  const print = (method, args) => {
+    if (self.__WB_DISABLE_DEV_LOGS) return;
+    if (method === "groupCollapsed") {
+      if (typeof navigator !== "undefined" && /^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
+        console[method](...args);
+        return;
+      }
+    }
+    const styles = [
+      `background: ${methodToColorMap[method]}`,
+      "border-radius: 0.5em",
+      "color: white",
+      "font-weight: bold",
+      "padding: 2px 0.5em"
+    ];
+    const logPrefix = inGroup ? [] : ["%cserwist", styles.join(";")];
+    console[method](...logPrefix, ...args);
+    if (method === "groupCollapsed") inGroup = true;
+    if (method === "groupEnd") inGroup = false;
+  };
+  return Object.keys(methodToColorMap).reduce((api, method) => {
+    api[method] = (...args) => {
+      print(method, args);
+    };
+    return api;
+  }, {});
+})();
+function timeout(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+var quotaErrorCallbacks = /* @__PURE__ */ new Set();
+function stripParams(fullURL, ignoreParams) {
+  const strippedURL = new URL(fullURL);
+  for (const param of ignoreParams) strippedURL.searchParams.delete(param);
+  return strippedURL.href;
+}
+async function cacheMatchIgnoreParams(cache, request, ignoreParams, matchOptions) {
+  const strippedRequestURL = stripParams(request.url, ignoreParams);
+  if (request.url === strippedRequestURL) return cache.match(request, matchOptions);
+  const keysOptions = {
+    ...matchOptions,
+    ignoreSearch: true
+  };
+  const cacheKeys = await cache.keys(request, keysOptions);
+  for (const cacheKey of cacheKeys) if (strippedRequestURL === stripParams(cacheKey.url, ignoreParams)) return cache.match(cacheKey, matchOptions);
+}
+var Deferred = class {
+  promise;
+  resolve;
+  reject;
+  /**
+  * Creates a promise and exposes its resolve and reject functions as methods.
+  */
+  constructor() {
+    this.promise = new Promise((resolve, reject) => {
+      this.resolve = resolve;
+      this.reject = reject;
+    });
+  }
+};
+var executeQuotaErrorCallbacks = async () => {
+  if (true) logger.log(`About to run ${quotaErrorCallbacks.size} callbacks to clean up caches.`);
+  for (const callback of quotaErrorCallbacks) {
+    await callback();
+    if (true) logger.log(callback, "is complete.");
+  }
+  if (true) logger.log("Finished running callbacks.");
+};
+var SUBSTRING_TO_FIND = "-precache-";
+var deleteOutdatedCaches = async (currentPrecacheName, substringToFind = SUBSTRING_TO_FIND) => {
+  const cacheNamesToDelete = (await self.caches.keys()).filter((cacheName) => {
+    return cacheName.includes(substringToFind) && cacheName.includes(self.registration.scope) && cacheName !== currentPrecacheName;
+  });
+  await Promise.all(cacheNamesToDelete.map((cacheName) => self.caches.delete(cacheName)));
+  return cacheNamesToDelete;
+};
+var cleanupOutdatedCaches = (cacheName) => {
+  self.addEventListener("activate", (event) => {
+    event.waitUntil(deleteOutdatedCaches(cacheNames.getPrecacheName(cacheName)).then((cachesDeleted) => {
+      if (true) {
+        if (cachesDeleted.length > 0) logger.log("The following out-of-date precaches were cleaned up automatically:", cachesDeleted);
+      }
+    }));
+  });
+};
+var clientsClaim = () => {
+  self.addEventListener("activate", () => self.clients.claim());
+};
+var waitUntil = (event, asyncFn) => {
+  const returnPromise = asyncFn();
+  event.waitUntil(returnPromise);
+  return returnPromise;
+};
+
+// node_modules/idb/build/index.js
+var instanceOfAny = (object, constructors) => constructors.some((c) => object instanceof c);
+var idbProxyableTypes;
+var cursorAdvanceMethods;
+function getIdbProxyableTypes() {
+  return idbProxyableTypes || (idbProxyableTypes = [
+    IDBDatabase,
+    IDBObjectStore,
+    IDBIndex,
+    IDBCursor,
+    IDBTransaction
+  ]);
+}
+function getCursorAdvanceMethods() {
+  return cursorAdvanceMethods || (cursorAdvanceMethods = [
+    IDBCursor.prototype.advance,
+    IDBCursor.prototype.continue,
+    IDBCursor.prototype.continuePrimaryKey
+  ]);
+}
+var transactionDoneMap = /* @__PURE__ */ new WeakMap();
+var transformCache = /* @__PURE__ */ new WeakMap();
+var reverseTransformCache = /* @__PURE__ */ new WeakMap();
+function promisifyRequest(request) {
+  const promise = new Promise((resolve, reject) => {
+    const unlisten = () => {
+      request.removeEventListener("success", success);
+      request.removeEventListener("error", error);
+    };
+    const success = () => {
+      resolve(wrap(request.result));
+      unlisten();
+    };
+    const error = () => {
+      reject(request.error);
+      unlisten();
+    };
+    request.addEventListener("success", success);
+    request.addEventListener("error", error);
+  });
+  reverseTransformCache.set(promise, request);
+  return promise;
+}
+function cacheDonePromiseForTransaction(tx) {
+  if (transactionDoneMap.has(tx))
+    return;
+  const done = new Promise((resolve, reject) => {
+    const unlisten = () => {
+      tx.removeEventListener("complete", complete);
+      tx.removeEventListener("error", error);
+      tx.removeEventListener("abort", error);
+    };
+    const complete = () => {
+      resolve();
+      unlisten();
+    };
+    const error = () => {
+      reject(tx.error || new DOMException("AbortError", "AbortError"));
+      unlisten();
+    };
+    tx.addEventListener("complete", complete);
+    tx.addEventListener("error", error);
+    tx.addEventListener("abort", error);
+  });
+  transactionDoneMap.set(tx, done);
+}
+var idbProxyTraps = {
+  get(target, prop, receiver) {
+    if (target instanceof IDBTransaction) {
+      if (prop === "done")
+        return transactionDoneMap.get(target);
+      if (prop === "store") {
+        return receiver.objectStoreNames[1] ? void 0 : receiver.objectStore(receiver.objectStoreNames[0]);
+      }
+    }
+    return wrap(target[prop]);
+  },
+  set(target, prop, value) {
+    target[prop] = value;
+    return true;
+  },
+  has(target, prop) {
+    if (target instanceof IDBTransaction && (prop === "done" || prop === "store")) {
+      return true;
+    }
+    return prop in target;
+  }
+};
+function replaceTraps(callback) {
+  idbProxyTraps = callback(idbProxyTraps);
+}
+function wrapFunction(func) {
+  if (getCursorAdvanceMethods().includes(func)) {
+    return function(...args) {
+      func.apply(unwrap(this), args);
+      return wrap(this.request);
+    };
+  }
+  return function(...args) {
+    return wrap(func.apply(unwrap(this), args));
+  };
+}
+function transformCachableValue(value) {
+  if (typeof value === "function")
+    return wrapFunction(value);
+  if (value instanceof IDBTransaction)
+    cacheDonePromiseForTransaction(value);
+  if (instanceOfAny(value, getIdbProxyableTypes()))
+    return new Proxy(value, idbProxyTraps);
+  return value;
+}
+function wrap(value) {
+  if (value instanceof IDBRequest)
+    return promisifyRequest(value);
+  if (transformCache.has(value))
+    return transformCache.get(value);
+  const newValue = transformCachableValue(value);
+  if (newValue !== value) {
+    transformCache.set(value, newValue);
+    reverseTransformCache.set(newValue, value);
+  }
+  return newValue;
+}
+var unwrap = (value) => reverseTransformCache.get(value);
+function openDB(name, version, { blocked, upgrade, blocking, terminated } = {}) {
+  const request = indexedDB.open(name, version);
+  const openPromise = wrap(request);
+  if (upgrade) {
+    request.addEventListener("upgradeneeded", (event) => {
+      upgrade(wrap(request.result), event.oldVersion, event.newVersion, wrap(request.transaction), event);
+    });
+  }
+  if (blocked) {
+    request.addEventListener("blocked", (event) => blocked(
+      // Casting due to https://github.com/microsoft/TypeScript-DOM-lib-generator/pull/1405
+      event.oldVersion,
+      event.newVersion,
+      event
+    ));
+  }
+  openPromise.then((db) => {
+    if (terminated)
+      db.addEventListener("close", () => terminated());
+    if (blocking) {
+      db.addEventListener("versionchange", (event) => blocking(event.oldVersion, event.newVersion, event));
+    }
+  }).catch(() => {
+  });
+  return openPromise;
+}
+var readMethods = ["get", "getKey", "getAll", "getAllKeys", "count"];
+var writeMethods = ["put", "add", "delete", "clear"];
+var cachedMethods = /* @__PURE__ */ new Map();
+function getMethod(target, prop) {
+  if (!(target instanceof IDBDatabase && !(prop in target) && typeof prop === "string")) {
+    return;
+  }
+  if (cachedMethods.get(prop))
+    return cachedMethods.get(prop);
+  const targetFuncName = prop.replace(/FromIndex$/, "");
+  const useIndex = prop !== targetFuncName;
+  const isWrite = writeMethods.includes(targetFuncName);
+  if (
+    // Bail if the target doesn't exist on the target. Eg, getAll isn't in Edge.
+    !(targetFuncName in (useIndex ? IDBIndex : IDBObjectStore).prototype) || !(isWrite || readMethods.includes(targetFuncName))
+  ) {
+    return;
+  }
+  const method = async function(storeName, ...args) {
+    const tx = this.transaction(storeName, isWrite ? "readwrite" : "readonly");
+    let target2 = tx.store;
+    if (useIndex)
+      target2 = target2.index(args.shift());
+    return (await Promise.all([
+      target2[targetFuncName](...args),
+      isWrite && tx.done
+    ]))[0];
+  };
+  cachedMethods.set(prop, method);
+  return method;
+}
+replaceTraps((oldTraps) => ({
+  ...oldTraps,
+  get: (target, prop, receiver) => getMethod(target, prop) || oldTraps.get(target, prop, receiver),
+  has: (target, prop) => !!getMethod(target, prop) || oldTraps.has(target, prop)
+}));
+var advanceMethodProps = ["continue", "continuePrimaryKey", "advance"];
+var methodMap = {};
+var advanceResults = /* @__PURE__ */ new WeakMap();
+var ittrProxiedCursorToOriginalProxy = /* @__PURE__ */ new WeakMap();
+var cursorIteratorTraps = {
+  get(target, prop) {
+    if (!advanceMethodProps.includes(prop))
+      return target[prop];
+    let cachedFunc = methodMap[prop];
+    if (!cachedFunc) {
+      cachedFunc = methodMap[prop] = function(...args) {
+        advanceResults.set(this, ittrProxiedCursorToOriginalProxy.get(this)[prop](...args));
+      };
+    }
+    return cachedFunc;
+  }
+};
+async function* iterate(...args) {
+  let cursor = this;
+  if (!(cursor instanceof IDBCursor)) {
+    cursor = await cursor.openCursor(...args);
+  }
+  if (!cursor)
+    return;
+  cursor = cursor;
+  const proxiedCursor = new Proxy(cursor, cursorIteratorTraps);
+  ittrProxiedCursorToOriginalProxy.set(proxiedCursor, cursor);
+  reverseTransformCache.set(proxiedCursor, unwrap(cursor));
+  while (cursor) {
+    yield proxiedCursor;
+    cursor = await (advanceResults.get(proxiedCursor) || cursor.continue());
+    advanceResults.delete(proxiedCursor);
+  }
+}
+function isIteratorProp(target, prop) {
+  return prop === Symbol.asyncIterator && instanceOfAny(target, [IDBIndex, IDBObjectStore, IDBCursor]) || prop === "iterate" && instanceOfAny(target, [IDBIndex, IDBObjectStore]);
+}
+replaceTraps((oldTraps) => ({
+  ...oldTraps,
+  get(target, prop, receiver) {
+    if (isIteratorProp(target, prop))
+      return iterate;
+    return oldTraps.get(target, prop, receiver);
+  },
+  has(target, prop) {
+    return isIteratorProp(target, prop) || oldTraps.has(target, prop);
+  }
+}));
+
+// node_modules/serwist/dist/chunks/printInstallDetails-c9A08ZVZ.js
+var copyResponse = async (response, modifier) => {
+  let origin = null;
+  if (response.url) origin = new URL(response.url).origin;
+  if (origin !== self.location.origin) throw new SerwistError("cross-origin-copy-response", { origin });
+  const clonedResponse = response.clone();
+  const responseInit = {
+    headers: new Headers(clonedResponse.headers),
+    status: clonedResponse.status,
+    statusText: clonedResponse.statusText
+  };
+  const modifiedResponseInit = modifier ? modifier(responseInit) : responseInit;
+  const body = canConstructResponseFromBodyStream() ? clonedResponse.body : await clonedResponse.blob();
+  return new Response(body, modifiedResponseInit);
+};
+var disableDevLogs = () => {
+  self.__WB_DISABLE_DEV_LOGS = true;
+};
+var BACKGROUND_SYNC_DB_VERSION = 3;
+var BACKGROUND_SYNC_DB_NAME = "serwist-background-sync";
+var REQUEST_OBJECT_STORE_NAME = "requests";
+var QUEUE_NAME_INDEX = "queueName";
+var BackgroundSyncQueueDb = class {
+  _db = null;
+  /**
+  * Add QueueStoreEntry to underlying db.
+  *
+  * @param entry
+  */
+  async addEntry(entry) {
+    const tx = (await this.getDb()).transaction(REQUEST_OBJECT_STORE_NAME, "readwrite", { durability: "relaxed" });
+    await tx.store.add(entry);
+    await tx.done;
+  }
+  /**
+  * Returns the first entry id in the ObjectStore.
+  *
+  * @returns
+  */
+  async getFirstEntryId() {
+    return (await (await this.getDb()).transaction(REQUEST_OBJECT_STORE_NAME).store.openCursor())?.value.id;
+  }
+  /**
+  * Get all the entries filtered by index
+  *
+  * @param queueName
+  * @returns
+  */
+  async getAllEntriesByQueueName(queueName) {
+    const results = await (await this.getDb()).getAllFromIndex(REQUEST_OBJECT_STORE_NAME, QUEUE_NAME_INDEX, IDBKeyRange.only(queueName));
+    return results ? results : [];
+  }
+  /**
+  * Returns the number of entries filtered by index
+  *
+  * @param queueName
+  * @returns
+  */
+  async getEntryCountByQueueName(queueName) {
+    return (await this.getDb()).countFromIndex(REQUEST_OBJECT_STORE_NAME, QUEUE_NAME_INDEX, IDBKeyRange.only(queueName));
+  }
+  /**
+  * Deletes a single entry by id.
+  *
+  * @param id the id of the entry to be deleted
+  */
+  async deleteEntry(id) {
+    await (await this.getDb()).delete(REQUEST_OBJECT_STORE_NAME, id);
+  }
+  /**
+  *
+  * @param queueName
+  * @returns
+  */
+  async getFirstEntryByQueueName(queueName) {
+    return await this.getEndEntryFromIndex(IDBKeyRange.only(queueName), "next");
+  }
+  /**
+  *
+  * @param queueName
+  * @returns
+  */
+  async getLastEntryByQueueName(queueName) {
+    return await this.getEndEntryFromIndex(IDBKeyRange.only(queueName), "prev");
+  }
+  /**
+  * Returns either the first or the last entries, depending on direction.
+  * Filtered by index.
+  *
+  * @param direction
+  * @param query
+  * @returns
+  * @private
+  */
+  async getEndEntryFromIndex(query, direction) {
+    return (await (await this.getDb()).transaction(REQUEST_OBJECT_STORE_NAME).store.index(QUEUE_NAME_INDEX).openCursor(query, direction))?.value;
+  }
+  /**
+  * Returns an open connection to the database.
+  *
+  * @private
+  */
+  async getDb() {
+    if (!this._db) this._db = await openDB(BACKGROUND_SYNC_DB_NAME, BACKGROUND_SYNC_DB_VERSION, { upgrade: this._upgradeDb });
+    return this._db;
+  }
+  /**
+  * Upgrades QueueDB
+  *
+  * @param db
+  * @param oldVersion
+  * @private
+  */
+  _upgradeDb(db, oldVersion) {
+    if (oldVersion > 0 && oldVersion < BACKGROUND_SYNC_DB_VERSION) {
+      if (db.objectStoreNames.contains(REQUEST_OBJECT_STORE_NAME)) db.deleteObjectStore(REQUEST_OBJECT_STORE_NAME);
+    }
+    db.createObjectStore(REQUEST_OBJECT_STORE_NAME, {
+      autoIncrement: true,
+      keyPath: "id"
+    }).createIndex(QUEUE_NAME_INDEX, QUEUE_NAME_INDEX, { unique: false });
+  }
+};
+var BackgroundSyncQueueStore = class {
+  _queueName;
+  _queueDb;
+  /**
+  * Associates this instance with a Queue instance, so entries added can be
+  * identified by their queue name.
+  *
+  * @param queueName
+  */
+  constructor(queueName) {
+    this._queueName = queueName;
+    this._queueDb = new BackgroundSyncQueueDb();
+  }
+  /**
+  * Append an entry last in the queue.
+  *
+  * @param entry
+  */
+  async pushEntry(entry) {
+    if (true) {
+      finalAssertExports.isType(entry, "object", {
+        moduleName: "serwist",
+        className: "BackgroundSyncQueueStore",
+        funcName: "pushEntry",
+        paramName: "entry"
+      });
+      finalAssertExports.isType(entry.requestData, "object", {
+        moduleName: "serwist",
+        className: "BackgroundSyncQueueStore",
+        funcName: "pushEntry",
+        paramName: "entry.requestData"
+      });
+    }
+    delete entry.id;
+    entry.queueName = this._queueName;
+    await this._queueDb.addEntry(entry);
+  }
+  /**
+  * Prepend an entry first in the queue.
+  *
+  * @param entry
+  */
+  async unshiftEntry(entry) {
+    if (true) {
+      finalAssertExports.isType(entry, "object", {
+        moduleName: "serwist",
+        className: "BackgroundSyncQueueStore",
+        funcName: "unshiftEntry",
+        paramName: "entry"
+      });
+      finalAssertExports.isType(entry.requestData, "object", {
+        moduleName: "serwist",
+        className: "BackgroundSyncQueueStore",
+        funcName: "unshiftEntry",
+        paramName: "entry.requestData"
+      });
+    }
+    const firstId = await this._queueDb.getFirstEntryId();
+    if (firstId) entry.id = firstId - 1;
+    else delete entry.id;
+    entry.queueName = this._queueName;
+    await this._queueDb.addEntry(entry);
+  }
+  /**
+  * Removes and returns the last entry in the queue matching the `queueName`.
+  *
+  * @returns
+  */
+  async popEntry() {
+    return this._removeEntry(await this._queueDb.getLastEntryByQueueName(this._queueName));
+  }
+  /**
+  * Removes and returns the first entry in the queue matching the `queueName`.
+  *
+  * @returns
+  */
+  async shiftEntry() {
+    return this._removeEntry(await this._queueDb.getFirstEntryByQueueName(this._queueName));
+  }
+  /**
+  * Returns all entries in the store matching the `queueName`.
+  *
+  * @returns
+  */
+  async getAll() {
+    return await this._queueDb.getAllEntriesByQueueName(this._queueName);
+  }
+  /**
+  * Returns the number of entries in the store matching the `queueName`.
+  *
+  * @returns
+  */
+  async size() {
+    return await this._queueDb.getEntryCountByQueueName(this._queueName);
+  }
+  /**
+  * Deletes the entry for the given ID.
+  *
+  * WARNING: this method does not ensure the deleted entry belongs to this
+  * queue (i.e. matches the `queueName`). But this limitation is acceptable
+  * as this class is not publicly exposed. An additional check would make
+  * this method slower than it needs to be.
+  *
+  * @param id
+  */
+  async deleteEntry(id) {
+    await this._queueDb.deleteEntry(id);
+  }
+  /**
+  * Removes and returns the first or last entry in the queue (based on the
+  * `direction` argument) matching the `queueName`.
+  *
+  * @returns
+  * @private
+  */
+  async _removeEntry(entry) {
+    if (entry) await this.deleteEntry(entry.id);
+    return entry;
+  }
+};
+var serializableProperties = [
+  "method",
+  "referrer",
+  "referrerPolicy",
+  "mode",
+  "credentials",
+  "cache",
+  "redirect",
+  "integrity",
+  "keepalive"
+];
+var StorableRequest = class StorableRequest2 {
+  _requestData;
+  /**
+  * Converts a Request object to a plain object that can be structured
+  * cloned or stringified to JSON.
+  *
+  * @param request
+  * @returns
+  */
+  static async fromRequest(request) {
+    const requestData = {
+      url: request.url,
+      headers: {}
+    };
+    if (request.method !== "GET") requestData.body = await request.clone().arrayBuffer();
+    request.headers.forEach((value, key) => {
+      requestData.headers[key] = value;
+    });
+    for (const prop of serializableProperties) if (request[prop] !== void 0) requestData[prop] = request[prop];
+    return new StorableRequest2(requestData);
+  }
+  /**
+  * Accepts an object of request data that can be used to construct a
+  * `Request` object but can also be stored in IndexedDB.
+  *
+  * @param requestData An object of request data that includes the `url` plus any relevant property of
+  * [`requestInit`](https://fetch.spec.whatwg.org/#requestinit).
+  */
+  constructor(requestData) {
+    if (true) {
+      finalAssertExports.isType(requestData, "object", {
+        moduleName: "serwist",
+        className: "StorableRequest",
+        funcName: "constructor",
+        paramName: "requestData"
+      });
+      finalAssertExports.isType(requestData.url, "string", {
+        moduleName: "serwist",
+        className: "StorableRequest",
+        funcName: "constructor",
+        paramName: "requestData.url"
+      });
+    }
+    if (requestData.mode === "navigate") requestData.mode = "same-origin";
+    this._requestData = requestData;
+  }
+  /**
+  * Returns a deep clone of the instance's `requestData` object.
+  *
+  * @returns
+  */
+  toObject() {
+    const requestData = Object.assign({}, this._requestData);
+    requestData.headers = Object.assign({}, this._requestData.headers);
+    if (requestData.body) requestData.body = requestData.body.slice(0);
+    return requestData;
+  }
+  /**
+  * Converts this instance to a Request.
+  *
+  * @returns
+  */
+  toRequest() {
+    return new Request(this._requestData.url, this._requestData);
+  }
+  /**
+  * Creates and returns a deep clone of the instance.
+  *
+  * @returns
+  */
+  clone() {
+    return new StorableRequest2(this.toObject());
+  }
+};
+var TAG_PREFIX = "serwist-background-sync";
+var MAX_RETENTION_TIME = 1440 * 7;
+var queueNames = /* @__PURE__ */ new Set();
+var convertEntry = (queueStoreEntry) => {
+  const queueEntry = {
+    request: new StorableRequest(queueStoreEntry.requestData).toRequest(),
+    timestamp: queueStoreEntry.timestamp
+  };
+  if (queueStoreEntry.metadata) queueEntry.metadata = queueStoreEntry.metadata;
+  return queueEntry;
+};
+var BackgroundSyncQueue = class {
+  _name;
+  _onSync;
+  _maxRetentionTime;
+  _queueStore;
+  _forceSyncFallback;
+  _syncInProgress = false;
+  _requestsAddedDuringSync = false;
+  /**
+  * Creates an instance of Queue with the given options
+  *
+  * @param name The unique name for this queue. This name must be
+  * unique as it's used to register sync events and store requests
+  * in IndexedDB specific to this instance. An error will be thrown if
+  * a duplicate name is detected.
+  * @param options
+  */
+  constructor(name, { forceSyncFallback, onSync, maxRetentionTime } = {}) {
+    if (queueNames.has(name)) throw new SerwistError("duplicate-queue-name", { name });
+    queueNames.add(name);
+    this._name = name;
+    this._onSync = onSync || this.replayRequests;
+    this._maxRetentionTime = maxRetentionTime || MAX_RETENTION_TIME;
+    this._forceSyncFallback = Boolean(forceSyncFallback);
+    this._queueStore = new BackgroundSyncQueueStore(this._name);
+    this._addSyncListener();
+  }
+  /**
+  * @returns
+  */
+  get name() {
+    return this._name;
+  }
+  /**
+  * Stores the passed request in IndexedDB (with its timestamp and any
+  * metadata) at the end of the queue.
+  *
+  * @param entry
+  */
+  async pushRequest(entry) {
+    if (true) {
+      finalAssertExports.isType(entry, "object", {
+        moduleName: "serwist",
+        className: "BackgroundSyncQueue",
+        funcName: "pushRequest",
+        paramName: "entry"
+      });
+      finalAssertExports.isInstance(entry.request, Request, {
+        moduleName: "serwist",
+        className: "BackgroundSyncQueue",
+        funcName: "pushRequest",
+        paramName: "entry.request"
+      });
+    }
+    await this._addRequest(entry, "push");
+  }
+  /**
+  * Stores the passed request in IndexedDB (with its timestamp and any
+  * metadata) at the beginning of the queue.
+  *
+  * @param entry
+  */
+  async unshiftRequest(entry) {
+    if (true) {
+      finalAssertExports.isType(entry, "object", {
+        moduleName: "serwist",
+        className: "BackgroundSyncQueue",
+        funcName: "unshiftRequest",
+        paramName: "entry"
+      });
+      finalAssertExports.isInstance(entry.request, Request, {
+        moduleName: "serwist",
+        className: "BackgroundSyncQueue",
+        funcName: "unshiftRequest",
+        paramName: "entry.request"
+      });
+    }
+    await this._addRequest(entry, "unshift");
+  }
+  /**
+  * Removes and returns the last request in the queue (along with its
+  * timestamp and any metadata).
+  *
+  * @returns
+  */
+  async popRequest() {
+    return this._removeRequest("pop");
+  }
+  /**
+  * Removes and returns the first request in the queue (along with its
+  * timestamp and any metadata).
+  *
+  * @returns
+  */
+  async shiftRequest() {
+    return this._removeRequest("shift");
+  }
+  /**
+  * Returns all the entries that have not expired (per `maxRetentionTime`).
+  * Any expired entries are removed from the queue.
+  *
+  * @returns
+  */
+  async getAll() {
+    const allEntries = await this._queueStore.getAll();
+    const now = Date.now();
+    const unexpiredEntries = [];
+    for (const entry of allEntries) {
+      const maxRetentionTimeInMs = this._maxRetentionTime * 60 * 1e3;
+      if (now - entry.timestamp > maxRetentionTimeInMs) await this._queueStore.deleteEntry(entry.id);
+      else unexpiredEntries.push(convertEntry(entry));
+    }
+    return unexpiredEntries;
+  }
+  /**
+  * Returns the number of entries present in the queue.
+  * Note that expired entries (per `maxRetentionTime`) are also included in this count.
+  *
+  * @returns
+  */
+  async size() {
+    return await this._queueStore.size();
+  }
+  /**
+  * Adds the entry to the QueueStore and registers for a sync event.
+  *
+  * @param entry
+  * @param operation
+  * @private
+  */
+  async _addRequest({ request, metadata, timestamp = Date.now() }, operation) {
+    const entry = {
+      requestData: (await StorableRequest.fromRequest(request.clone())).toObject(),
+      timestamp
+    };
+    if (metadata) entry.metadata = metadata;
+    switch (operation) {
+      case "push":
+        await this._queueStore.pushEntry(entry);
+        break;
+      case "unshift":
+        await this._queueStore.unshiftEntry(entry);
+        break;
+    }
+    if (true) logger.log(`Request for '${getFriendlyURL(request.url)}' has been added to background sync queue '${this._name}'.`);
+    if (this._syncInProgress) this._requestsAddedDuringSync = true;
+    else await this.registerSync();
+  }
+  /**
+  * Removes and returns the first or last (depending on `operation`) entry
+  * from the {@linkcode BackgroundSyncQueueStore} that's not older than the `maxRetentionTime`.
+  *
+  * @param operation
+  * @returns
+  * @private
+  */
+  async _removeRequest(operation) {
+    const now = Date.now();
+    let entry;
+    switch (operation) {
+      case "pop":
+        entry = await this._queueStore.popEntry();
+        break;
+      case "shift":
+        entry = await this._queueStore.shiftEntry();
+        break;
+    }
+    if (entry) {
+      const maxRetentionTimeInMs = this._maxRetentionTime * 60 * 1e3;
+      if (now - entry.timestamp > maxRetentionTimeInMs) return this._removeRequest(operation);
+      return convertEntry(entry);
+    }
+  }
+  /**
+  * Loops through each request in the queue and attempts to re-fetch it.
+  * If any request fails to re-fetch, it's put back in the same position in
+  * the queue (which registers a retry for the next sync event).
+  */
+  async replayRequests() {
+    let entry;
+    while (entry = await this.shiftRequest()) try {
+      await fetch(entry.request.clone());
+      if (true) logger.log(`Request for '${getFriendlyURL(entry.request.url)}' has been replayed in queue '${this._name}'`);
+    } catch {
+      await this.unshiftRequest(entry);
+      if (true) logger.log(`Request for '${getFriendlyURL(entry.request.url)}' failed to replay, putting it back in queue '${this._name}'`);
+      throw new SerwistError("queue-replay-failed", { name: this._name });
+    }
+    if (true) logger.log(`All requests in queue '${this.name}' have successfully replayed; the queue is now empty!`);
+  }
+  /**
+  * Registers a sync event with a tag unique to this instance.
+  */
+  async registerSync() {
+    if ("sync" in self.registration && !this._forceSyncFallback) try {
+      await self.registration.sync.register(`${TAG_PREFIX}:${this._name}`);
+    } catch (err) {
+      if (true) logger.warn(`Unable to register sync event for '${this._name}'.`, err);
+    }
+  }
+  /**
+  * In sync-supporting browsers, this adds a listener for the sync event.
+  * In non-sync-supporting browsers, or if _forceSyncFallback is true, this
+  * will retry the queue on service worker startup.
+  *
+  * @private
+  */
+  _addSyncListener() {
+    if ("sync" in self.registration && !this._forceSyncFallback) self.addEventListener("sync", (event) => {
+      if (event.tag === `${TAG_PREFIX}:${this._name}`) {
+        if (true) logger.log(`Background sync for tag '${event.tag}' has been received`);
+        const syncComplete = async () => {
+          this._syncInProgress = true;
+          let syncError;
+          try {
+            await this._onSync({ queue: this });
+          } catch (error) {
+            if (error instanceof Error) {
+              syncError = error;
+              throw syncError;
+            }
+          } finally {
+            if (this._requestsAddedDuringSync && !(syncError && !event.lastChance)) await this.registerSync();
+            this._syncInProgress = false;
+            this._requestsAddedDuringSync = false;
+          }
+        };
+        event.waitUntil(syncComplete());
+      }
+    });
+    else {
+      if (true) logger.log("Background sync replaying without background sync event");
+      this._onSync({ queue: this });
+    }
+  }
+  /**
+  * Returns the set of queue names. This is primarily used to reset the list
+  * of queue names in tests.
+  *
+  * @returns
+  * @private
+  */
+  static get _queueNames() {
+    return queueNames;
+  }
+};
+var BackgroundSyncPlugin = class {
+  _queue;
+  /**
+  * @param name See the {@linkcode BackgroundSyncQueue}
+  * documentation for parameter details.
+  * @param options See the {@linkcode BackgroundSyncQueue}
+  * documentation for parameter details.
+  * @see https://serwist.pages.dev/docs/serwist/core/background-sync-queue
+  */
+  constructor(name, options) {
+    this._queue = new BackgroundSyncQueue(name, options);
+  }
+  /**
+  * @param options
+  * @private
+  */
+  async fetchDidFail({ request }) {
+    await this._queue.pushRequest({ request });
+  }
+};
+var cacheOkAndOpaquePlugin = {
+  /**
+  * Returns a valid response (to allow caching) if the status is 200 (OK) or
+  * 0 (opaque).
+  *
+  * @param options
+  * @returns
+  * @private
+  */
+  cacheWillUpdate: async ({ response }) => {
+    if (response.status === 200 || response.status === 0) return response;
+    return null;
+  }
+};
+function toRequest(input) {
+  return typeof input === "string" ? new Request(input) : input;
+}
+var StrategyHandler = class {
+  /**
+  * The event associated with this request.
+  */
+  event;
+  /**
+  * The request the strategy is processing (passed to the strategy's
+  * `handle()` or `handleAll()` method).
+  */
+  request;
+  /**
+  * A `URL` instance of `request.url` (if passed to the strategy's
+  * `handle()` or `handleAll()` method).
+  * Note: the `url` param will be present if the strategy is invoked
+  * from a {@linkcode Route} object.
+  */
+  url;
+  /**
+  * Some additional params (if passed to the strategy's
+  * `handle()` or `handleAll()` method).
+  *
+  * Note: the `params` param will be present if the strategy is invoked
+  * from a {@linkcode Route} object and that route's matcher returned a truthy
+  * value (it will be that value).
+  */
+  params;
+  _cacheKeys = {};
+  _strategy;
+  _handlerDeferred;
+  _extendLifetimePromises;
+  _plugins;
+  _pluginStateMap;
+  /**
+  * Creates a new instance associated with the passed strategy and event
+  * that's handling the request.
+  *
+  * The constructor also initializes the state that will be passed to each of
+  * the plugins handling this request.
+  *
+  * @param strategy
+  * @param options
+  */
+  constructor(strategy, options) {
+    if (true) {
+      finalAssertExports.isInstance(options.event, ExtendableEvent, {
+        moduleName: "serwist",
+        className: "StrategyHandler",
+        funcName: "constructor",
+        paramName: "options.event"
+      });
+      finalAssertExports.isInstance(options.request, Request, {
+        moduleName: "serwist",
+        className: "StrategyHandler",
+        funcName: "constructor",
+        paramName: "options.request"
+      });
+    }
+    this.event = options.event;
+    this.request = options.request;
+    if (options.url) {
+      this.url = options.url;
+      this.params = options.params;
+    }
+    this._strategy = strategy;
+    this._handlerDeferred = new Deferred();
+    this._extendLifetimePromises = [];
+    this._plugins = [...strategy.plugins];
+    this._pluginStateMap = /* @__PURE__ */ new Map();
+    for (const plugin of this._plugins) this._pluginStateMap.set(plugin, {});
+    this.event.waitUntil(this._handlerDeferred.promise);
+  }
+  /**
+  * Fetches a given request (and invokes any applicable plugin callback
+  * methods), taking the `fetchOptions` (for non-navigation requests) and
+  * `plugins` provided to the {@linkcode Strategy} object into account.
+  *
+  * The following plugin lifecycle methods are invoked when using this method:
+  * - `requestWillFetch()`
+  * - `fetchDidSucceed()`
+  * - `fetchDidFail()`
+  *
+  * @param input The URL or request to fetch.
+  * @returns
+  */
+  async fetch(input) {
+    const { event } = this;
+    let request = toRequest(input);
+    const preloadResponse = await this.getPreloadResponse();
+    if (preloadResponse) return preloadResponse;
+    const originalRequest = this.hasCallback("fetchDidFail") ? request.clone() : null;
+    try {
+      for (const cb of this.iterateCallbacks("requestWillFetch")) request = await cb({
+        request: request.clone(),
+        event
+      });
+    } catch (err) {
+      if (err instanceof Error) throw new SerwistError("plugin-error-request-will-fetch", { thrownErrorMessage: err.message });
+    }
+    const pluginFilteredRequest = request.clone();
+    try {
+      let fetchResponse;
+      fetchResponse = await fetch(request, request.mode === "navigate" ? void 0 : this._strategy.fetchOptions);
+      if (true) logger.debug(`Network request for '${getFriendlyURL(request.url)}' returned a response with status '${fetchResponse.status}'.`);
+      for (const callback of this.iterateCallbacks("fetchDidSucceed")) fetchResponse = await callback({
+        event,
+        request: pluginFilteredRequest,
+        response: fetchResponse
+      });
+      return fetchResponse;
+    } catch (error) {
+      if (true) logger.log(`Network request for '${getFriendlyURL(request.url)}' threw an error.`, error);
+      if (originalRequest) await this.runCallbacks("fetchDidFail", {
+        error,
+        event,
+        originalRequest: originalRequest.clone(),
+        request: pluginFilteredRequest.clone()
+      });
+      throw error;
+    }
+  }
+  /**
+  * Calls `this.fetch()` and (in the background) caches the generated response.
+  *
+  * The call to `this.cachePut()` automatically invokes `this.waitUntil()`,
+  * so you do not have to call `waitUntil()` yourself.
+  *
+  * @param input The request or URL to fetch and cache.
+  * @returns
+  */
+  async fetchAndCachePut(input) {
+    const response = await this.fetch(input);
+    const responseClone = response.clone();
+    this.waitUntil(this.cachePut(input, responseClone));
+    return response;
+  }
+  /**
+  * Matches a request from the cache (and invokes any applicable plugin
+  * callback method) using the `cacheName`, `matchOptions`, and `plugins`
+  * provided to the `Strategy` object.
+  *
+  * The following lifecycle methods are invoked when using this method:
+  * - `cacheKeyWillBeUsed`
+  * - `cachedResponseWillBeUsed`
+  *
+  * @param key The `Request` or `URL` object to use as the cache key.
+  * @returns A matching response, if found.
+  */
+  async cacheMatch(key) {
+    const request = toRequest(key);
+    let cachedResponse;
+    const { cacheName, matchOptions } = this._strategy;
+    const effectiveRequest = await this.getCacheKey(request, "read");
+    const multiMatchOptions = {
+      ...matchOptions,
+      cacheName
+    };
+    cachedResponse = await caches.match(effectiveRequest, multiMatchOptions);
+    if (true) if (cachedResponse) logger.debug(`Found a cached response in '${cacheName}'.`);
+    else logger.debug(`No cached response found in '${cacheName}'.`);
+    for (const callback of this.iterateCallbacks("cachedResponseWillBeUsed")) cachedResponse = await callback({
+      cacheName,
+      matchOptions,
+      cachedResponse,
+      request: effectiveRequest,
+      event: this.event
+    }) || void 0;
+    return cachedResponse;
+  }
+  /**
+  * Puts a request/response pair into the cache (and invokes any applicable
+  * plugin callback method) using the `cacheName` and `plugins` provided to
+  * the {@linkcode Strategy} object.
+  *
+  * The following plugin lifecycle methods are invoked when using this method:
+  * - `cacheKeyWillBeUsed`
+  * - `cacheWillUpdate`
+  * - `cacheDidUpdate`
+  *
+  * @param key The request or URL to use as the cache key.
+  * @param response The response to cache.
+  * @returns `false` if a `cacheWillUpdate` caused the response to
+  * not be cached, and `true` otherwise.
+  */
+  async cachePut(key, response) {
+    const request = toRequest(key);
+    await timeout(0);
+    const effectiveRequest = await this.getCacheKey(request, "write");
+    if (true) {
+      if (effectiveRequest.method && effectiveRequest.method !== "GET") throw new SerwistError("attempt-to-cache-non-get-request", {
+        url: getFriendlyURL(effectiveRequest.url),
+        method: effectiveRequest.method
+      });
+    }
+    if (!response) {
+      if (true) logger.error(`Cannot cache non-existent response for '${getFriendlyURL(effectiveRequest.url)}'.`);
+      throw new SerwistError("cache-put-with-no-response", { url: getFriendlyURL(effectiveRequest.url) });
+    }
+    const responseToCache = await this._ensureResponseSafeToCache(response);
+    if (!responseToCache) {
+      if (true) logger.debug(`Response '${getFriendlyURL(effectiveRequest.url)}' will not be cached.`, responseToCache);
+      return false;
+    }
+    const { cacheName, matchOptions } = this._strategy;
+    const cache = await self.caches.open(cacheName);
+    if (true) {
+      const vary = response.headers.get("Vary");
+      if (vary && matchOptions?.ignoreVary !== true) logger.debug(`The response for ${getFriendlyURL(effectiveRequest.url)} has a 'Vary: ${vary}' header. Consider setting the {ignoreVary: true} option on your strategy to ensure cache matching and deletion works as expected.`);
+    }
+    const hasCacheUpdateCallback = this.hasCallback("cacheDidUpdate");
+    const oldResponse = hasCacheUpdateCallback ? await cacheMatchIgnoreParams(cache, effectiveRequest.clone(), ["__WB_REVISION__"], matchOptions) : null;
+    if (true) logger.debug(`Updating the '${cacheName}' cache with a new Response for ${getFriendlyURL(effectiveRequest.url)}.`);
+    try {
+      await cache.put(effectiveRequest, hasCacheUpdateCallback ? responseToCache.clone() : responseToCache);
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.name === "QuotaExceededError") await executeQuotaErrorCallbacks();
+        throw error;
+      }
+    }
+    for (const callback of this.iterateCallbacks("cacheDidUpdate")) await callback({
+      cacheName,
+      oldResponse,
+      newResponse: responseToCache.clone(),
+      request: effectiveRequest,
+      event: this.event
+    });
+    return true;
+  }
+  /**
+  * Checks the `plugins` provided to the {@linkcode Strategy} object for `cacheKeyWillBeUsed`
+  * callbacks and executes found callbacks in sequence. The final `Request`
+  * object returned by the last plugin is treated as the cache key for cache
+  * reads and/or writes. If no `cacheKeyWillBeUsed` plugin callbacks have
+  * been registered, the passed request is returned unmodified.
+  *
+  * @param request
+  * @param mode
+  * @returns
+  */
+  async getCacheKey(request, mode) {
+    const key = `${request.url} | ${mode}`;
+    if (!this._cacheKeys[key]) {
+      let effectiveRequest = request;
+      for (const callback of this.iterateCallbacks("cacheKeyWillBeUsed")) effectiveRequest = toRequest(await callback({
+        mode,
+        request: effectiveRequest,
+        event: this.event,
+        params: this.params
+      }));
+      this._cacheKeys[key] = effectiveRequest;
+    }
+    return this._cacheKeys[key];
+  }
+  /**
+  * Returns `true` if the strategy has at least one plugin with the given
+  * callback.
+  *
+  * @param name The name of the callback to check for.
+  * @returns
+  */
+  hasCallback(name) {
+    for (const plugin of this._strategy.plugins) if (name in plugin) return true;
+    return false;
+  }
+  /**
+  * Runs all plugin callbacks matching the given name, in order, passing the
+  * given param object as the only argument.
+  *
+  * Note: since this method runs all plugins, it's not suitable for cases
+  * where the return value of a callback needs to be applied prior to calling
+  * the next callback. See {@linkcode StrategyHandler.iterateCallbacks} for how to handle that case.
+  *
+  * @param name The name of the callback to run within each plugin.
+  * @param param The object to pass as the first (and only) param when executing each callback. This object will be merged with the
+  * current plugin state prior to callback execution.
+  */
+  async runCallbacks(name, param) {
+    for (const callback of this.iterateCallbacks(name)) await callback(param);
+  }
+  /**
+  * Accepts a callback name and returns an iterable of matching plugin callbacks.
+  *
+  * @param name The name fo the callback to run
+  * @returns
+  */
+  *iterateCallbacks(name) {
+    for (const plugin of this._strategy.plugins) if (typeof plugin[name] === "function") {
+      const state = this._pluginStateMap.get(plugin);
+      const statefulCallback = (param) => {
+        const statefulParam = {
+          ...param,
+          state
+        };
+        return plugin[name](statefulParam);
+      };
+      yield statefulCallback;
+    }
+  }
+  /**
+  * Adds a promise to the
+  * [extend lifetime promises](https://w3c.github.io/ServiceWorker/#extendableevent-extend-lifetime-promises)
+  * of the event event associated with the request being handled (usually a `FetchEvent`).
+  *
+  * Note: you can await {@linkcode StrategyHandler.doneWaiting} to know when all added promises have settled.
+  *
+  * @param promise A promise to add to the extend lifetime promises of
+  * the event that triggered the request.
+  */
+  waitUntil(promise) {
+    this._extendLifetimePromises.push(promise);
+    return promise;
+  }
+  /**
+  * Returns a promise that resolves once all promises passed to
+  * `this.waitUntil()` have settled.
+  *
+  * Note: any work done after `doneWaiting()` settles should be manually
+  * passed to an event's `waitUntil()` method (not `this.waitUntil()`), otherwise
+  * the service worker thread may be killed prior to your work completing.
+  */
+  async doneWaiting() {
+    let promise;
+    while (promise = this._extendLifetimePromises.shift()) await promise;
+  }
+  /**
+  * Stops running the strategy and immediately resolves any pending
+  * `waitUntil()` promise.
+  */
+  destroy() {
+    this._handlerDeferred.resolve(null);
+  }
+  /**
+  * This method checks if the navigation preload `Response` is available.
+  *
+  * @param request
+  * @param event
+  * @returns
+  */
+  async getPreloadResponse() {
+    if (this.event instanceof FetchEvent && this.event.request.mode === "navigate" && "preloadResponse" in this.event) try {
+      const possiblePreloadResponse = await this.event.preloadResponse;
+      if (possiblePreloadResponse) {
+        if (true) logger.log(`Using a preloaded navigation response for '${getFriendlyURL(this.event.request.url)}'`);
+        return possiblePreloadResponse;
+      }
+    } catch (error) {
+      if (true) logger.error(error);
+      return;
+    }
+  }
+  /**
+  * This method will call `cacheWillUpdate` on the available plugins (or use
+  * status === 200) to determine if the response is safe and valid to cache.
+  *
+  * @param response
+  * @returns
+  * @private
+  */
+  async _ensureResponseSafeToCache(response) {
+    let responseToCache = response;
+    let pluginsUsed = false;
+    for (const callback of this.iterateCallbacks("cacheWillUpdate")) {
+      responseToCache = await callback({
+        request: this.request,
+        response: responseToCache,
+        event: this.event
+      }) || void 0;
+      pluginsUsed = true;
+      if (!responseToCache) break;
+    }
+    if (!pluginsUsed) {
+      if (responseToCache && responseToCache.status !== 200) {
+        if (true) if (responseToCache.status === 0) logger.warn(`The response for '${this.request.url}' is an opaque response. The caching strategy that you're using will not cache opaque responses by default.`);
+        else logger.debug(`The response for '${this.request.url}' returned a status code of '${response.status}' and won't be cached as a result.`);
+        responseToCache = void 0;
+      }
+    }
+    return responseToCache;
+  }
+};
+var Strategy = class {
+  cacheName;
+  plugins;
+  fetchOptions;
+  matchOptions;
+  /**
+  * Creates a new instance of the strategy and sets all documented option
+  * properties as public instance properties.
+  *
+  * Note: if a custom strategy class extends the base Strategy class and does
+  * not need more than these properties, it does not need to define its own
+  * constructor.
+  *
+  * @param options
+  */
+  constructor(options = {}) {
+    this.cacheName = cacheNames.getRuntimeName(options.cacheName);
+    this.plugins = options.plugins || [];
+    this.fetchOptions = options.fetchOptions;
+    this.matchOptions = options.matchOptions;
+  }
+  /**
+  * Performs a request strategy and returns a promise that will resolve to
+  * a response, invoking all relevant plugin callbacks.
+  *
+  * When a strategy instance is registered with a route, this method is automatically
+  * called when the route matches.
+  *
+  * Alternatively, this method can be used in a standalone `fetch` event
+  * listener by passing it to `event.respondWith()`.
+  *
+  * @param options A `FetchEvent` or an object with the properties listed below.
+  * @param options.request A request to run this strategy for.
+  * @param options.event The event associated with the request.
+  * @param options.url
+  * @param options.params
+  */
+  handle(options) {
+    const [responseDone] = this.handleAll(options);
+    return responseDone;
+  }
+  /**
+  * Similar to `handle()`, but instead of just returning a promise that
+  * resolves to a response, it will return an tuple of `[response, done]` promises,
+  * where `response` is equivalent to what `handle()` returns, and `done` is a
+  * promise that will resolve once all promises added to `event.waitUntil()` as a part
+  * of performing the strategy have completed.
+  *
+  * You can await the `done` promise to ensure any extra work performed by
+  * the strategy (usually caching responses) completes successfully.
+  *
+  * @param options A `FetchEvent` or `HandlerCallbackOptions` object.
+  * @returns A tuple of [response, done] promises that can be used to determine when the response resolves as
+  * well as when the handler has completed all its work.
+  */
+  handleAll(options) {
+    if (options instanceof FetchEvent) options = {
+      event: options,
+      request: options.request
+    };
+    const event = options.event;
+    const request = typeof options.request === "string" ? new Request(options.request) : options.request;
+    const handler = new StrategyHandler(this, options.url ? {
+      event,
+      request,
+      url: options.url,
+      params: options.params
+    } : {
+      event,
+      request
+    });
+    const responseDone = this._getResponse(handler, request, event);
+    return [responseDone, this._awaitComplete(responseDone, handler, request, event)];
+  }
+  async _getResponse(handler, request, event) {
+    await handler.runCallbacks("handlerWillStart", {
+      event,
+      request
+    });
+    let response;
+    try {
+      response = await this._handle(request, handler);
+      if (response === void 0 || response.type === "error") throw new SerwistError("no-response", { url: request.url });
+    } catch (error) {
+      if (error instanceof Error) for (const callback of handler.iterateCallbacks("handlerDidError")) {
+        response = await callback({
+          error,
+          event,
+          request
+        });
+        if (response !== void 0) break;
+      }
+      if (!response) throw error;
+      if (true) throw logger.log(`While responding to '${getFriendlyURL(request.url)}', an ${error instanceof Error ? error.toString() : ""} error occurred. Using a fallback response provided by a handlerDidError plugin.`);
+    }
+    for (const callback of handler.iterateCallbacks("handlerWillRespond")) response = await callback({
+      event,
+      request,
+      response
+    });
+    return response;
+  }
+  async _awaitComplete(responseDone, handler, request, event) {
+    let response;
+    let error;
+    try {
+      response = await responseDone;
+    } catch {
+    }
+    try {
+      await handler.runCallbacks("handlerDidRespond", {
+        event,
+        request,
+        response
+      });
+      await handler.doneWaiting();
+    } catch (waitUntilError) {
+      if (waitUntilError instanceof Error) error = waitUntilError;
+    }
+    await handler.runCallbacks("handlerDidComplete", {
+      event,
+      request,
+      response,
+      error
+    });
+    handler.destroy();
+    if (error) throw error;
+  }
+};
+var messages2 = {
+  strategyStart: (strategyName, request) => `Using ${strategyName} to respond to '${getFriendlyURL(request.url)}'`,
+  printFinalResponse: (response) => {
+    if (response) {
+      logger.groupCollapsed("View the final response here.");
+      logger.log(response || "[No response returned]");
+      logger.groupEnd();
+    }
+  }
+};
+var NetworkFirst = class extends Strategy {
+  _networkTimeoutSeconds;
+  /**
+  * @param options
+  * This option can be used to combat
+  * "[lie-fi](https://developers.google.com/web/fundamentals/performance/poor-connectivity/#lie-fi)"
+  * scenarios.
+  */
+  constructor(options = {}) {
+    super(options);
+    if (!this.plugins.some((p) => "cacheWillUpdate" in p)) this.plugins.unshift(cacheOkAndOpaquePlugin);
+    this._networkTimeoutSeconds = options.networkTimeoutSeconds || 0;
+    if (true) {
+      if (this._networkTimeoutSeconds) finalAssertExports.isType(this._networkTimeoutSeconds, "number", {
+        moduleName: "serwist",
+        className: this.constructor.name,
+        funcName: "constructor",
+        paramName: "networkTimeoutSeconds"
+      });
+    }
+  }
+  /**
+  * @private
+  * @param request A request to run this strategy for.
+  * @param handler The event that triggered the request.
+  * @returns
+  */
+  async _handle(request, handler) {
+    const logs = [];
+    if (true) finalAssertExports.isInstance(request, Request, {
+      moduleName: "serwist",
+      className: this.constructor.name,
+      funcName: "handle",
+      paramName: "makeRequest"
+    });
+    const promises = [];
+    let timeoutId;
+    if (this._networkTimeoutSeconds) {
+      const { id, promise } = this._getTimeoutPromise({
+        request,
+        logs,
+        handler
+      });
+      timeoutId = id;
+      promises.push(promise);
+    }
+    const networkPromise = this._getNetworkPromise({
+      timeoutId,
+      request,
+      logs,
+      handler
+    });
+    promises.push(networkPromise);
+    const response = await handler.waitUntil((async () => {
+      return await handler.waitUntil(Promise.race(promises)) || await networkPromise;
+    })());
+    if (true) {
+      logger.groupCollapsed(messages2.strategyStart(this.constructor.name, request));
+      for (const log of logs) logger.log(log);
+      messages2.printFinalResponse(response);
+      logger.groupEnd();
+    }
+    if (!response) throw new SerwistError("no-response", { url: request.url });
+    return response;
+  }
+  /**
+  * @param options
+  * @returns
+  * @private
+  */
+  _getTimeoutPromise({ request, logs, handler }) {
+    let timeoutId;
+    return {
+      promise: new Promise((resolve) => {
+        const onNetworkTimeout = async () => {
+          if (true) logs.push(`Timing out the network response at ${this._networkTimeoutSeconds} seconds.`);
+          resolve(await handler.cacheMatch(request));
+        };
+        timeoutId = setTimeout(onNetworkTimeout, this._networkTimeoutSeconds * 1e3);
+      }),
+      id: timeoutId
+    };
+  }
+  /**
+  * @param options
+  * @param options.timeoutId
+  * @param options.request
+  * @param options.logs A reference to the logs Array.
+  * @param options.event
+  * @returns
+  *
+  * @private
+  */
+  async _getNetworkPromise({ timeoutId, request, logs, handler }) {
+    let error;
+    let response;
+    try {
+      response = await handler.fetchAndCachePut(request);
+    } catch (fetchError) {
+      if (fetchError instanceof Error) error = fetchError;
+    }
+    if (timeoutId) clearTimeout(timeoutId);
+    if (true) if (response) logs.push("Got response from network.");
+    else logs.push("Unable to get a response from the network. Will respond with a cached response.");
+    if (error || !response) {
+      response = await handler.cacheMatch(request);
+      if (true) if (response) logs.push(`Found a cached response in the '${this.cacheName}' cache.`);
+      else logs.push(`No response found in the '${this.cacheName}' cache.`);
+    }
+    return response;
+  }
+};
+var NetworkOnly = class extends Strategy {
+  _networkTimeoutSeconds;
+  /**
+  * @param options
+  */
+  constructor(options = {}) {
+    super(options);
+    this._networkTimeoutSeconds = options.networkTimeoutSeconds || 0;
+  }
+  /**
+  * @private
+  * @param request A request to run this strategy for.
+  * @param handler The event that triggered the request.
+  * @returns
+  */
+  async _handle(request, handler) {
+    if (true) finalAssertExports.isInstance(request, Request, {
+      moduleName: "serwist",
+      className: this.constructor.name,
+      funcName: "_handle",
+      paramName: "request"
+    });
+    let error;
+    let response;
+    try {
+      const promises = [handler.fetch(request)];
+      if (this._networkTimeoutSeconds) {
+        const timeoutPromise = timeout(this._networkTimeoutSeconds * 1e3);
+        promises.push(timeoutPromise);
+      }
+      response = await Promise.race(promises);
+      if (!response) throw new Error(`Timed out the network response after ${this._networkTimeoutSeconds} seconds.`);
+    } catch (err) {
+      if (err instanceof Error) error = err;
+    }
+    if (true) {
+      logger.groupCollapsed(messages2.strategyStart(this.constructor.name, request));
+      if (response) logger.log("Got response from network.");
+      else logger.log("Unable to get a response from the network.");
+      messages2.printFinalResponse(response);
+      logger.groupEnd();
+    }
+    if (!response) throw new SerwistError("no-response", {
+      url: request.url,
+      error
+    });
+    return response;
+  }
+};
+var validMethods = [
+  "DELETE",
+  "GET",
+  "HEAD",
+  "PATCH",
+  "POST",
+  "PUT"
+];
+var normalizeHandler = (handler) => {
+  if (handler && typeof handler === "object") {
+    if (true) finalAssertExports.hasMethod(handler, "handle", {
+      moduleName: "serwist",
+      className: "Route",
+      funcName: "constructor",
+      paramName: "handler"
+    });
+    return handler;
+  }
+  if (true) finalAssertExports.isType(handler, "function", {
+    moduleName: "serwist",
+    className: "Route",
+    funcName: "constructor",
+    paramName: "handler"
+  });
+  return { handle: handler };
+};
+var Route = class {
+  handler;
+  match;
+  method;
+  catchHandler;
+  /**
+  * Constructor for Route class.
+  *
+  * @param match A callback function that determines whether the
+  * route matches a given `fetch` event by returning a truthy value.
+  * @param handler A callback function that returns a `Promise` resolving
+  * to a `Response`.
+  * @param method The HTTP method to match the route against. Defaults
+  * to `GET`.
+  */
+  constructor(match, handler, method = "GET") {
+    if (true) {
+      finalAssertExports.isType(match, "function", {
+        moduleName: "serwist",
+        className: "Route",
+        funcName: "constructor",
+        paramName: "match"
+      });
+      if (method) finalAssertExports.isOneOf(method, validMethods, { paramName: "method" });
+    }
+    this.handler = normalizeHandler(handler);
+    this.match = match;
+    this.method = method;
+  }
+  /**
+  *
+  * @param handler A callback function that returns a Promise resolving
+  * to a Response.
+  */
+  setCatchHandler(handler) {
+    this.catchHandler = normalizeHandler(handler);
+  }
+};
+var PrecacheStrategy = class PrecacheStrategy2 extends Strategy {
+  _fallbackToNetwork;
+  static defaultPrecacheCacheabilityPlugin = { async cacheWillUpdate({ response }) {
+    if (!response || response.status >= 400) return null;
+    return response;
+  } };
+  static copyRedirectedCacheableResponsesPlugin = { async cacheWillUpdate({ response }) {
+    return response.redirected ? await copyResponse(response) : response;
+  } };
+  /**
+  * @param options
+  */
+  constructor(options = {}) {
+    options.cacheName = cacheNames.getPrecacheName(options.cacheName);
+    super(options);
+    this._fallbackToNetwork = options.fallbackToNetwork !== false;
+    this.plugins.push(PrecacheStrategy2.copyRedirectedCacheableResponsesPlugin);
+  }
+  /**
+  * @private
+  * @param request A request to run this strategy for.
+  * @param handler The event that triggered the request.
+  * @returns
+  */
+  async _handle(request, handler) {
+    const preloadResponse = await handler.getPreloadResponse();
+    if (preloadResponse) return preloadResponse;
+    const response = await handler.cacheMatch(request);
+    if (response) return response;
+    if (handler.event && handler.event.type === "install") return await this._handleInstall(request, handler);
+    return await this._handleFetch(request, handler);
+  }
+  async _handleFetch(request, handler) {
+    let response;
+    const params = handler.params || {};
+    if (this._fallbackToNetwork) {
+      if (true) logger.warn(`The precached response for ${getFriendlyURL(request.url)} in ${this.cacheName} was not found. Falling back to the network.`);
+      const integrityInManifest = params.integrity;
+      const integrityInRequest = request.integrity;
+      const noIntegrityConflict = !integrityInRequest || integrityInRequest === integrityInManifest;
+      response = await handler.fetch(new Request(request, { integrity: request.mode !== "no-cors" ? integrityInRequest || integrityInManifest : void 0 }));
+      if (integrityInManifest && noIntegrityConflict && request.mode !== "no-cors") {
+        this._useDefaultCacheabilityPluginIfNeeded();
+        const wasCached = await handler.cachePut(request, response.clone());
+        if (true) {
+          if (wasCached) logger.log(`A response for ${getFriendlyURL(request.url)} was used to "repair" the precache.`);
+        }
+      }
+    } else throw new SerwistError("missing-precache-entry", {
+      cacheName: this.cacheName,
+      url: request.url
+    });
+    if (true) {
+      const cacheKey = params.cacheKey || await handler.getCacheKey(request, "read");
+      logger.groupCollapsed(`Precaching is responding to: ${getFriendlyURL(request.url)}`);
+      logger.log(`Serving the precached url: ${getFriendlyURL(cacheKey instanceof Request ? cacheKey.url : cacheKey)}`);
+      logger.groupCollapsed("View request details here.");
+      logger.log(request);
+      logger.groupEnd();
+      logger.groupCollapsed("View response details here.");
+      logger.log(response);
+      logger.groupEnd();
+      logger.groupEnd();
+    }
+    return response;
+  }
+  async _handleInstall(request, handler) {
+    this._useDefaultCacheabilityPluginIfNeeded();
+    const response = await handler.fetch(request);
+    if (!await handler.cachePut(request, response.clone())) throw new SerwistError("bad-precaching-response", {
+      url: request.url,
+      status: response.status
+    });
+    return response;
+  }
+  /**
+  * This method is complex, as there a number of things to account for:
+  *
+  * The `plugins` array can be set at construction, and/or it might be added to
+  * to at any time before the strategy is used.
+  *
+  * At the time the strategy is used (i.e. during an `install` event), there
+  * needs to be at least one plugin that implements `cacheWillUpdate` in the
+  * array, other than `copyRedirectedCacheableResponsesPlugin`.
+  *
+  * - If this method is called and there are no suitable `cacheWillUpdate`
+  * plugins, we need to add `defaultPrecacheCacheabilityPlugin`.
+  *
+  * - If this method is called and there is exactly one `cacheWillUpdate`, then
+  * we don't have to do anything (this might be a previously added
+  * `defaultPrecacheCacheabilityPlugin`, or it might be a custom plugin).
+  *
+  * - If this method is called and there is more than one `cacheWillUpdate`,
+  * then we need to check if one is `defaultPrecacheCacheabilityPlugin`. If so,
+  * we need to remove it. (This situation is unlikely, but it could happen if
+  * the strategy is used multiple times, the first without a `cacheWillUpdate`,
+  * and then later on after manually adding a custom `cacheWillUpdate`.)
+  *
+  * See https://github.com/GoogleChrome/workbox/issues/2737 for more context.
+  *
+  * @private
+  */
+  _useDefaultCacheabilityPluginIfNeeded() {
+    let defaultPluginIndex = null;
+    let cacheWillUpdatePluginCount = 0;
+    for (const [index, plugin] of this.plugins.entries()) {
+      if (plugin === PrecacheStrategy2.copyRedirectedCacheableResponsesPlugin) continue;
+      if (plugin === PrecacheStrategy2.defaultPrecacheCacheabilityPlugin) defaultPluginIndex = index;
+      if (plugin.cacheWillUpdate) cacheWillUpdatePluginCount++;
+    }
+    if (cacheWillUpdatePluginCount === 0) this.plugins.push(PrecacheStrategy2.defaultPrecacheCacheabilityPlugin);
+    else if (cacheWillUpdatePluginCount > 1 && defaultPluginIndex !== null) this.plugins.splice(defaultPluginIndex, 1);
+  }
+};
+var NavigationRoute = class extends Route {
+  _allowlist;
+  _denylist;
+  /**
+  * If both `denylist` and `allowlist` are provided, `denylist` will
+  * take precedence.
+  *
+  * The regular expressions in `allowlist` and `denylist`
+  * are matched against the concatenated
+  * [`pathname`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLHyperlinkElementUtils/pathname)
+  * and [`search`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLHyperlinkElementUtils/search)
+  * portions of the requested URL.
+  *
+  * *Note*: These RegExps may be evaluated against every destination URL during
+  * a navigation. Avoid using
+  * [complex RegExps](https://github.com/GoogleChrome/workbox/issues/3077),
+  * or else your users may see delays when navigating your site.
+  *
+  * @param handler A callback function that returns a `Promise` resulting in a `Response`.
+  * @param options
+  */
+  constructor(handler, { allowlist = [/./], denylist = [] } = {}) {
+    if (true) {
+      finalAssertExports.isArrayOfClass(allowlist, RegExp, {
+        moduleName: "serwist",
+        className: "NavigationRoute",
+        funcName: "constructor",
+        paramName: "options.allowlist"
+      });
+      finalAssertExports.isArrayOfClass(denylist, RegExp, {
+        moduleName: "serwist",
+        className: "NavigationRoute",
+        funcName: "constructor",
+        paramName: "options.denylist"
+      });
+    }
+    super((options) => this._match(options), handler);
+    this._allowlist = allowlist;
+    this._denylist = denylist;
+  }
+  /**
+  * Routes match handler.
+  *
+  * @param options
+  * @returns
+  * @private
+  */
+  _match({ url, request }) {
+    if (request && request.mode !== "navigate") return false;
+    const pathnameAndSearch = url.pathname + url.search;
+    for (const regExp of this._denylist) if (regExp.test(pathnameAndSearch)) {
+      if (true) logger.log(`The navigation route ${pathnameAndSearch} is not being used, since the URL matches this denylist pattern: ${regExp.toString()}`);
+      return false;
+    }
+    if (this._allowlist.some((regExp) => regExp.test(pathnameAndSearch))) {
+      if (true) logger.debug(`The navigation route ${pathnameAndSearch} is being used.`);
+      return true;
+    }
+    if (true) logger.log(`The navigation route ${pathnameAndSearch} is not being used, since the URL being navigated to doesn't match the allowlist.`);
+    return false;
+  }
+};
+var isNavigationPreloadSupported = () => {
+  return Boolean(self.registration?.navigationPreload);
+};
+var enableNavigationPreload = (headerValue) => {
+  if (isNavigationPreloadSupported()) self.addEventListener("activate", (event) => {
+    event.waitUntil(self.registration.navigationPreload.enable().then(() => {
+      if (headerValue) self.registration.navigationPreload.setHeaderValue(headerValue);
+      if (true) logger.log("Navigation preloading is enabled.");
+    }));
+  });
+  else if (true) logger.log("Navigation preloading is not supported in this browser.");
+};
+var removeIgnoredSearchParams = (urlObject, ignoreURLParametersMatching = []) => {
+  for (const paramName of [...urlObject.searchParams.keys()]) if (ignoreURLParametersMatching.some((regExp) => regExp.test(paramName))) urlObject.searchParams.delete(paramName);
+  return urlObject;
+};
+function* generateURLVariations(url, { directoryIndex = "index.html", ignoreURLParametersMatching = [/^utm_/, /^fbclid$/], cleanURLs = true, urlManipulation } = {}) {
+  const urlObject = new URL(url, location.href);
+  urlObject.hash = "";
+  yield urlObject.href;
+  const urlWithoutIgnoredParams = removeIgnoredSearchParams(urlObject, ignoreURLParametersMatching);
+  yield urlWithoutIgnoredParams.href;
+  if (directoryIndex && urlWithoutIgnoredParams.pathname.endsWith("/")) {
+    const directoryURL = new URL(urlWithoutIgnoredParams.href);
+    directoryURL.pathname += directoryIndex;
+    yield directoryURL.href;
+  }
+  if (cleanURLs) {
+    const cleanURL = new URL(urlWithoutIgnoredParams.href);
+    cleanURL.pathname += ".html";
+    yield cleanURL.href;
+  }
+  if (urlManipulation) {
+    const additionalURLs = urlManipulation({ url: urlObject });
+    for (const urlToAttempt of additionalURLs) yield urlToAttempt.href;
+  }
+}
+var RegExpRoute = class extends Route {
+  /**
+  * If the regular expression contains
+  * [capture groups](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp#grouping-back-references),
+  * the captured values will be passed to the `params` argument.
+  *
+  * @param regExp The regular expression to match against URLs.
+  * @param handler A callback function that returns a `Promise` resulting in a `Response`.
+  * @param method The HTTP method to match the {@linkcode Route} against. Defaults to `GET`.
+  * against.
+  */
+  constructor(regExp, handler, method) {
+    if (true) finalAssertExports.isInstance(regExp, RegExp, {
+      moduleName: "serwist",
+      className: "RegExpRoute",
+      funcName: "constructor",
+      paramName: "pattern"
+    });
+    const match = ({ url }) => {
+      const result = regExp.exec(url.href);
+      if (!result) return;
+      if (url.origin !== location.origin && result.index !== 0) {
+        if (true) logger.debug(`The regular expression '${regExp.toString()}' only partially matched against the cross-origin URL '${url.toString()}'. RegExpRoute's will only handle cross-origin requests if they match the entire URL.`);
+        return;
+      }
+      return result.slice(1);
+    };
+    super(match, handler, method);
+  }
+};
+var setCacheNameDetails = (details) => {
+  if (true) {
+    for (const key of Object.keys(details)) finalAssertExports.isType(details[key], "string", {
+      moduleName: "@serwist/core",
+      funcName: "setCacheNameDetails",
+      paramName: `details.${key}`
+    });
+    if (details.precache?.length === 0) throw new SerwistError("invalid-cache-name", {
+      cacheNameId: "precache",
+      value: details.precache
+    });
+    if (details.runtime?.length === 0) throw new SerwistError("invalid-cache-name", {
+      cacheNameId: "runtime",
+      value: details.runtime
+    });
+    if (details.googleAnalytics?.length === 0) throw new SerwistError("invalid-cache-name", {
+      cacheNameId: "googleAnalytics",
+      value: details.googleAnalytics
+    });
+  }
+  cacheNames.updateDetails(details);
+};
+var REVISION_SEARCH_PARAM = "__WB_REVISION__";
+var createCacheKey = (entry) => {
+  if (!entry) throw new SerwistError("add-to-cache-list-unexpected-type", { entry });
+  if (typeof entry === "string") {
+    const urlObject = new URL(entry, location.href);
+    return {
+      cacheKey: urlObject.href,
+      url: urlObject.href
+    };
+  }
+  const { revision, url } = entry;
+  if (!url) throw new SerwistError("add-to-cache-list-unexpected-type", { entry });
+  if (!revision) {
+    const urlObject = new URL(url, location.href);
+    return {
+      cacheKey: urlObject.href,
+      url: urlObject.href
+    };
+  }
+  const cacheKeyURL = new URL(url, location.href);
+  const originalURL = new URL(url, location.href);
+  cacheKeyURL.searchParams.set(REVISION_SEARCH_PARAM, revision);
+  return {
+    cacheKey: cacheKeyURL.href,
+    url: originalURL.href
+  };
+};
+var PrecacheInstallReportPlugin = class {
+  updatedURLs = [];
+  notUpdatedURLs = [];
+  handlerWillStart = async ({ request, state }) => {
+    if (state) state.originalRequest = request;
+  };
+  cachedResponseWillBeUsed = async ({ event, state, cachedResponse }) => {
+    if (event.type === "install") {
+      if (state?.originalRequest && state.originalRequest instanceof Request) {
+        const url = state.originalRequest.url;
+        if (cachedResponse) this.notUpdatedURLs.push(url);
+        else this.updatedURLs.push(url);
+      }
+    }
+    return cachedResponse;
+  };
+};
+var parseRoute = (capture, handler, method) => {
+  if (typeof capture === "string") {
+    const captureUrl = new URL(capture, location.href);
+    if (true) {
+      if (!(capture.startsWith("/") || capture.startsWith("http"))) throw new SerwistError("invalid-string", {
+        moduleName: "serwist",
+        funcName: "parseRoute",
+        paramName: "capture"
+      });
+      const valueToCheck = capture.startsWith("http") ? captureUrl.pathname : capture;
+      const wildcards = "[*:?+]";
+      if (new RegExp(`${wildcards}`).exec(valueToCheck)) logger.debug(`The '$capture' parameter contains an Express-style wildcard character (${wildcards}). Strings are now always interpreted as exact matches; use a RegExp for partial or wildcard matches.`);
+    }
+    const matchCallback = ({ url }) => {
+      if (true) {
+        if (url.pathname === captureUrl.pathname && url.origin !== captureUrl.origin) logger.debug(`${capture} only partially matches the cross-origin URL ${url.toString()}. This route will only handle cross-origin requests if they match the entire URL.`);
+      }
+      return url.href === captureUrl.href;
+    };
+    return new Route(matchCallback, handler, method);
+  }
+  if (capture instanceof RegExp) return new RegExpRoute(capture, handler, method);
+  if (typeof capture === "function") return new Route(capture, handler, method);
+  if (capture instanceof Route) return capture;
+  throw new SerwistError("unsupported-route-type", {
+    moduleName: "serwist",
+    funcName: "parseRoute",
+    paramName: "capture"
+  });
+};
+var logGroup = (groupTitle, deletedURLs) => {
+  logger.groupCollapsed(groupTitle);
+  for (const url of deletedURLs) logger.log(url);
+  logger.groupEnd();
+};
+var printCleanupDetails = (deletedURLs) => {
+  const deletionCount = deletedURLs.length;
+  if (deletionCount > 0) {
+    logger.groupCollapsed(`During precaching cleanup, ${deletionCount} cached request${deletionCount === 1 ? " was" : "s were"} deleted.`);
+    logGroup("Deleted Cache Requests", deletedURLs);
+    logger.groupEnd();
+  }
+};
+function _nestedGroup(groupTitle, urls) {
+  if (urls.length === 0) return;
+  logger.groupCollapsed(groupTitle);
+  for (const url of urls) logger.log(url);
+  logger.groupEnd();
+}
+var printInstallDetails = (urlsToPrecache, urlsAlreadyPrecached) => {
+  const precachedCount = urlsToPrecache.length;
+  const alreadyPrecachedCount = urlsAlreadyPrecached.length;
+  if (precachedCount || alreadyPrecachedCount) {
+    let message = `Precaching ${precachedCount} file${precachedCount === 1 ? "" : "s"}.`;
+    if (alreadyPrecachedCount > 0) message += ` ${alreadyPrecachedCount} file${alreadyPrecachedCount === 1 ? " is" : "s are"} already cached.`;
+    logger.groupCollapsed(message);
+    _nestedGroup("View newly precached URLs.", urlsToPrecache);
+    _nestedGroup("View previously precached URLs.", urlsAlreadyPrecached);
+    logger.groupEnd();
+  }
+};
+
+// node_modules/@serwist/utils/dist/index.mjs
+var parallel = async (limit, array, func) => {
+  const work = array.map((item, index) => ({
+    index,
+    item
+  }));
+  const processor = async (res) => {
+    const results = [];
+    while (true) {
+      const next = work.pop();
+      if (!next) return res(results);
+      const result = await func(next.item);
+      results.push({
+        result,
+        index: next.index
+      });
+    }
+  };
+  const queues = Array.from({ length: limit }, () => new Promise(processor));
+  return (await Promise.all(queues)).flat().sort((a, b) => a.index < b.index ? -1 : 1).map((res) => res.result);
+};
+
+// node_modules/serwist/dist/index.mjs
+var isSafari = typeof navigator !== "undefined" && /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+var QUEUE_NAME = "serwist-google-analytics";
+var MAX_RETENTION_TIME2 = 2880;
+var COLLECT_PATHS_REGEX = /^\/(\w+\/)?collect/;
+var createOnSyncCallback = (config) => {
+  return async ({ queue }) => {
+    let entry;
+    while (entry = await queue.shiftRequest()) {
+      const { request, timestamp } = entry;
+      const url = new URL(request.url);
+      try {
+        const params = request.method === "POST" ? new URLSearchParams(await request.clone().text()) : url.searchParams;
+        const originalHitTime = timestamp - (Number(params.get("qt")) || 0);
+        const queueTime = Date.now() - originalHitTime;
+        params.set("qt", String(queueTime));
+        if (config.parameterOverrides) for (const param of Object.keys(config.parameterOverrides)) {
+          const value = config.parameterOverrides[param];
+          params.set(param, value);
+        }
+        if (typeof config.hitFilter === "function") config.hitFilter.call(null, params);
+        await fetch(new Request(url.origin + url.pathname, {
+          body: params.toString(),
+          method: "POST",
+          mode: "cors",
+          credentials: "omit",
+          headers: { "Content-Type": "text/plain" }
+        }));
+        if (true) logger.log(`Request for '${getFriendlyURL(url.href)}' has been replayed`);
+      } catch (err) {
+        await queue.unshiftRequest(entry);
+        if (true) logger.log(`Request for '${getFriendlyURL(url.href)}' failed to replay, putting it back in the queue.`);
+        throw err;
+      }
+    }
+    if (true) logger.log("All Google Analytics request successfully replayed; the queue is now empty!");
+  };
+};
+var createCollectRoutes = (bgSyncPlugin) => {
+  const match = ({ url }) => url.hostname === "www.google-analytics.com" && COLLECT_PATHS_REGEX.test(url.pathname);
+  const handler = new NetworkOnly({ plugins: [bgSyncPlugin] });
+  return [new Route(match, handler, "GET"), new Route(match, handler, "POST")];
+};
+var createAnalyticsJsRoute = (cacheName) => {
+  const match = ({ url }) => url.hostname === "www.google-analytics.com" && url.pathname === "/analytics.js";
+  return new Route(match, new NetworkFirst({ cacheName }), "GET");
+};
+var createGtagJsRoute = (cacheName) => {
+  const match = ({ url }) => url.hostname === "www.googletagmanager.com" && url.pathname === "/gtag/js";
+  return new Route(match, new NetworkFirst({ cacheName }), "GET");
+};
+var createGtmJsRoute = (cacheName) => {
+  const match = ({ url }) => url.hostname === "www.googletagmanager.com" && url.pathname === "/gtm.js";
+  return new Route(match, new NetworkFirst({ cacheName }), "GET");
+};
+var initializeGoogleAnalytics = ({ serwist: serwist2, cacheName, ...options }) => {
+  const resolvedCacheName = cacheNames.getGoogleAnalyticsName(cacheName);
+  const bgSyncPlugin = new BackgroundSyncPlugin(QUEUE_NAME, {
+    maxRetentionTime: MAX_RETENTION_TIME2,
+    onSync: createOnSyncCallback(options)
+  });
+  const routes = [
+    createGtmJsRoute(resolvedCacheName),
+    createAnalyticsJsRoute(resolvedCacheName),
+    createGtagJsRoute(resolvedCacheName),
+    ...createCollectRoutes(bgSyncPlugin)
+  ];
+  for (const route of routes) serwist2.registerRoute(route);
+};
+var PrecacheFallbackPlugin = class {
+  _fallbackUrls;
+  _serwist;
+  /**
+  * Constructs a new instance with the associated `fallbackUrls`.
+  *
+  * @param config
+  */
+  constructor({ fallbackUrls, serwist: serwist2 }) {
+    this._fallbackUrls = fallbackUrls;
+    this._serwist = serwist2;
+  }
+  /**
+  * @returns The precache response for one of the fallback URLs, or `undefined` if
+  * nothing satisfies the conditions.
+  * @private
+  */
+  async handlerDidError(param) {
+    for (const fallback of this._fallbackUrls) if (typeof fallback === "string") {
+      const fallbackResponse = await this._serwist.matchPrecache(fallback);
+      if (fallbackResponse !== void 0) return fallbackResponse;
+    } else if (fallback.matcher(param)) {
+      const fallbackResponse = await this._serwist.matchPrecache(fallback.url);
+      if (fallbackResponse !== void 0) return fallbackResponse;
+    }
+  }
+};
+var PrecacheRoute = class extends Route {
+  /**
+  * @param serwist A {@linkcode Serwist} instance.
+  * @param options Options to control how requests are matched
+  * against the list of precached URLs.
+  */
+  constructor(serwist2, options) {
+    const match = ({ request }) => {
+      const urlsToCacheKeys = serwist2.getUrlsToPrecacheKeys();
+      for (const possibleURL of generateURLVariations(request.url, options)) {
+        const cacheKey = urlsToCacheKeys.get(possibleURL);
+        if (cacheKey) return {
+          cacheKey,
+          integrity: serwist2.getIntegrityForPrecacheKey(cacheKey)
+        };
+      }
+      if (true) logger.debug(`Precaching did not find a match for ${getFriendlyURL(request.url)}.`);
+    };
+    super(match, serwist2.precacheStrategy);
+  }
+};
+var PrecacheCacheKeyPlugin = class {
+  _precacheController;
+  constructor({ precacheController }) {
+    this._precacheController = precacheController;
+  }
+  cacheKeyWillBeUsed = async ({ request, params }) => {
+    const cacheKey = params?.cacheKey || this._precacheController.getPrecacheKeyForUrl(request.url);
+    return cacheKey ? new Request(cacheKey, { headers: request.headers }) : request;
+  };
+};
+var parsePrecacheOptions = (serwist2, precacheOptions = {}) => {
+  const { cacheName: precacheCacheName, plugins: precachePlugins = [], fetchOptions: precacheFetchOptions, matchOptions: precacheMatchOptions, fallbackToNetwork: precacheFallbackToNetwork, directoryIndex: precacheDirectoryIndex, ignoreURLParametersMatching: precacheIgnoreUrls, cleanURLs: precacheCleanUrls, urlManipulation: precacheUrlManipulation, cleanupOutdatedCaches: cleanupOutdatedCaches2, concurrency = 10, navigateFallback, navigateFallbackAllowlist, navigateFallbackDenylist } = precacheOptions ?? {};
+  return {
+    precacheStrategyOptions: {
+      cacheName: cacheNames.getPrecacheName(precacheCacheName),
+      plugins: [...precachePlugins, new PrecacheCacheKeyPlugin({ precacheController: serwist2 })],
+      fetchOptions: precacheFetchOptions,
+      matchOptions: precacheMatchOptions,
+      fallbackToNetwork: precacheFallbackToNetwork
+    },
+    precacheRouteOptions: {
+      directoryIndex: precacheDirectoryIndex,
+      ignoreURLParametersMatching: precacheIgnoreUrls,
+      cleanURLs: precacheCleanUrls,
+      urlManipulation: precacheUrlManipulation
+    },
+    precacheMiscOptions: {
+      cleanupOutdatedCaches: cleanupOutdatedCaches2,
+      concurrency,
+      navigateFallback,
+      navigateFallbackAllowlist,
+      navigateFallbackDenylist
+    }
+  };
+};
+var Serwist = class {
+  _urlsToCacheKeys = /* @__PURE__ */ new Map();
+  _urlsToCacheModes = /* @__PURE__ */ new Map();
+  _cacheKeysToIntegrities = /* @__PURE__ */ new Map();
+  _concurrentPrecaching;
+  _precacheStrategy;
+  _routes;
+  _defaultHandlerMap;
+  _catchHandler;
+  _requestRules;
+  constructor({ precacheEntries, precacheOptions, skipWaiting = false, importScripts, navigationPreload = false, cacheId, clientsClaim: clientsClaim$1 = false, runtimeCaching, offlineAnalyticsConfig, disableDevLogs: disableDevLogs$1 = false, fallbacks, requestRules } = {}) {
+    const { precacheStrategyOptions, precacheRouteOptions, precacheMiscOptions } = parsePrecacheOptions(this, precacheOptions);
+    this._concurrentPrecaching = precacheMiscOptions.concurrency;
+    this._precacheStrategy = new PrecacheStrategy(precacheStrategyOptions);
+    this._routes = /* @__PURE__ */ new Map();
+    this._defaultHandlerMap = /* @__PURE__ */ new Map();
+    this._requestRules = requestRules;
+    this.handleInstall = this.handleInstall.bind(this);
+    this.handleActivate = this.handleActivate.bind(this);
+    this.handleFetch = this.handleFetch.bind(this);
+    this.handleCache = this.handleCache.bind(this);
+    if (!!importScripts && importScripts.length > 0) self.importScripts(...importScripts);
+    if (navigationPreload) enableNavigationPreload();
+    if (cacheId !== void 0) setCacheNameDetails({ prefix: cacheId });
+    if (skipWaiting) self.skipWaiting();
+    else self.addEventListener("message", (event) => {
+      if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();
+    });
+    if (clientsClaim$1) clientsClaim();
+    if (!!precacheEntries && precacheEntries.length > 0) this.addToPrecacheList(precacheEntries);
+    if (precacheMiscOptions.cleanupOutdatedCaches) cleanupOutdatedCaches(precacheStrategyOptions.cacheName);
+    this.registerRoute(new PrecacheRoute(this, precacheRouteOptions));
+    if (precacheMiscOptions.navigateFallback) this.registerRoute(new NavigationRoute(this.createHandlerBoundToUrl(precacheMiscOptions.navigateFallback), {
+      allowlist: precacheMiscOptions.navigateFallbackAllowlist,
+      denylist: precacheMiscOptions.navigateFallbackDenylist
+    }));
+    if (offlineAnalyticsConfig !== void 0) if (typeof offlineAnalyticsConfig === "boolean") offlineAnalyticsConfig && initializeGoogleAnalytics({ serwist: this });
+    else initializeGoogleAnalytics({
+      ...offlineAnalyticsConfig,
+      serwist: this
+    });
+    if (runtimeCaching !== void 0) {
+      if (fallbacks !== void 0) {
+        const fallbackPlugin = new PrecacheFallbackPlugin({
+          fallbackUrls: fallbacks.entries,
+          serwist: this
+        });
+        runtimeCaching.forEach((cacheEntry) => {
+          if (cacheEntry.handler instanceof Strategy && !cacheEntry.handler.plugins.some((plugin) => "handlerDidError" in plugin)) cacheEntry.handler.plugins.push(fallbackPlugin);
+        });
+      }
+      for (const entry of runtimeCaching) this.registerCapture(entry.matcher, entry.handler, entry.method);
+    }
+    if (disableDevLogs$1) disableDevLogs();
+  }
+  /**
+  * The strategy used to precache assets and respond to `fetch` events.
+  */
+  get precacheStrategy() {
+    return this._precacheStrategy;
+  }
+  /**
+  * A `Map` of HTTP method name (`'GET'`, etc.) to an array of all corresponding registered {@linkcode Route}
+  * instances.
+  */
+  get routes() {
+    return this._routes;
+  }
+  /**
+  * Adds Serwist's event listeners for you. Before calling it, add your own listeners should you need to.
+  */
+  addEventListeners() {
+    self.addEventListener("install", this.handleInstall);
+    self.addEventListener("activate", this.handleActivate);
+    self.addEventListener("fetch", this.handleFetch);
+    self.addEventListener("message", this.handleCache);
+  }
+  /**
+  * Adds items to the precache list, removing duplicates and ensuring the information is valid.
+  *
+  * @param entries Array of entries to precache.
+  */
+  addToPrecacheList(entries) {
+    if (true) finalAssertExports.isArray(entries, {
+      moduleName: "serwist",
+      className: "Serwist",
+      funcName: "addToCacheList",
+      paramName: "entries"
+    });
+    const urlsToWarnAbout = [];
+    for (const entry of entries) {
+      if (typeof entry === "string") urlsToWarnAbout.push(entry);
+      else if (entry && !entry.integrity && entry.revision === void 0) urlsToWarnAbout.push(entry.url);
+      const { cacheKey, url } = createCacheKey(entry);
+      const cacheMode = typeof entry !== "string" && entry.revision ? "reload" : "default";
+      if (this._urlsToCacheKeys.has(url) && this._urlsToCacheKeys.get(url) !== cacheKey) throw new SerwistError("add-to-cache-list-conflicting-entries", {
+        firstEntry: this._urlsToCacheKeys.get(url),
+        secondEntry: cacheKey
+      });
+      if (typeof entry !== "string" && entry.integrity) {
+        if (this._cacheKeysToIntegrities.has(cacheKey) && this._cacheKeysToIntegrities.get(cacheKey) !== entry.integrity) throw new SerwistError("add-to-cache-list-conflicting-integrities", { url });
+        this._cacheKeysToIntegrities.set(cacheKey, entry.integrity);
+      }
+      this._urlsToCacheKeys.set(url, cacheKey);
+      this._urlsToCacheModes.set(url, cacheMode);
+    }
+    if (urlsToWarnAbout.length > 0) {
+      const warningMessage = `Serwist is precaching URLs without revision info: ${urlsToWarnAbout.join(", ")}
+This is generally NOT safe. Learn more at https://bit.ly/wb-precache`;
+      if (false) console.warn(warningMessage);
+      else logger.warn(warningMessage);
+    }
+  }
+  /**
+  * Precaches new and updated assets. Call this method from the service worker's
+  * `install` event.
+  *
+  * Note: this method calls `event.waitUntil()` for you, so you do not need
+  * to call it yourself in your event handlers.
+  *
+  * @param event
+  * @returns
+  */
+  handleInstall(event) {
+    this.registerRequestRules(event);
+    return waitUntil(event, async () => {
+      const installReportPlugin = new PrecacheInstallReportPlugin();
+      this.precacheStrategy.plugins.push(installReportPlugin);
+      await parallel(this._concurrentPrecaching, Array.from(this._urlsToCacheKeys.entries()), async ([url, cacheKey]) => {
+        const integrity = this._cacheKeysToIntegrities.get(cacheKey);
+        const cacheMode = this._urlsToCacheModes.get(url);
+        const request = new Request(url, {
+          integrity,
+          cache: cacheMode,
+          credentials: "same-origin"
+        });
+        await Promise.all(this.precacheStrategy.handleAll({
+          event,
+          request,
+          url: new URL(request.url),
+          params: { cacheKey }
+        }));
+      });
+      const { updatedURLs, notUpdatedURLs } = installReportPlugin;
+      if (true) printInstallDetails(updatedURLs, notUpdatedURLs);
+      return {
+        updatedURLs,
+        notUpdatedURLs
+      };
+    });
+  }
+  /**
+  * Registers request rules using the experimental `InstallEvent.addRoutes()` API.
+  * These rules allow bypassing the service worker for specific requests to improve performance.
+  *
+  * @param event The event object of an `install` event handler.
+  * @throws {Error} When the route rules are invalid
+  */
+  async registerRequestRules(event) {
+    if (!this._requestRules) return;
+    if (!event?.addRoutes) {
+      if (true) logger.warn("Request rules ignored as the Static Routing API is not supported in this browser. See https://caniuse.com/mdn-api_installevent_addroutes for more information.");
+      return;
+    }
+    try {
+      if (true) logger.warn("Request rules may not be supported in all browsers as the Static Routing API is experimental. This feature allows bypassing the service worker for specific requests to improve performance. See https://developer.mozilla.org/en-US/docs/Web/API/InstallEvent/addRoutes for more information.");
+      await event.addRoutes(this._requestRules);
+      this._requestRules = void 0;
+    } catch (error) {
+      if (true) logger.error(`Failed to register request rules: ${error instanceof Error ? error.message : String(error)}. This may occur if the browser doesn't support the Static Routing API or if the request rules are invalid.`);
+      throw error;
+    }
+  }
+  /**
+  * Deletes assets that are no longer present in the current precache manifest.
+  * Call this method from the service worker's `activate` event.
+  *
+  * Note: this method calls `event.waitUntil()` for you, so you do not need
+  * to call it yourself in your event handlers.
+  *
+  * @param event
+  * @returns
+  */
+  handleActivate(event) {
+    return waitUntil(event, async () => {
+      const cache = await self.caches.open(this.precacheStrategy.cacheName);
+      const currentlyCachedRequests = await cache.keys();
+      const expectedCacheKeys = new Set(this._urlsToCacheKeys.values());
+      const deletedCacheRequests = [];
+      for (const request of currentlyCachedRequests) if (!expectedCacheKeys.has(request.url)) {
+        await cache.delete(request);
+        deletedCacheRequests.push(request.url);
+      }
+      if (true) printCleanupDetails(deletedCacheRequests);
+      return { deletedCacheRequests };
+    });
+  }
+  /**
+  * Gets a `Response` from an appropriate `Route`'s handler. Call this method
+  * from the service worker's `fetch` event.
+  * @param event
+  */
+  handleFetch(event) {
+    const { request } = event;
+    const responsePromise = this.handleRequest({
+      request,
+      event
+    });
+    if (responsePromise) event.respondWith(responsePromise);
+  }
+  /**
+  * Caches new URLs on demand. Call this method from the service worker's
+  * `message` event. To trigger the handler, send a message of type `"CACHE_URLS"`
+  * alongside a list of URLs that should be cached as `urlsToCache`.
+  * @param event
+  */
+  handleCache(event) {
+    if (event.data && event.data.type === "CACHE_URLS") {
+      const { payload } = event.data;
+      if (true) logger.debug("Caching URLs from the window", payload.urlsToCache);
+      const requestPromises = Promise.all(payload.urlsToCache.map((entry) => {
+        let request;
+        if (typeof entry === "string") request = new Request(entry);
+        else request = new Request(...entry);
+        return this.handleRequest({
+          request,
+          event
+        });
+      }));
+      event.waitUntil(requestPromises);
+      if (event.ports?.[0]) requestPromises.then(() => event.ports[0].postMessage(true));
+    }
+  }
+  /**
+  * Define a default handler that's called when no routes explicitly
+  * match the incoming request.
+  *
+  * Each HTTP method (`'GET'`, `'POST'`, etc.) gets its own default handler.
+  *
+  * Without a default handler, unmatched requests will go against the
+  * network as if there were no service worker present.
+  *
+  * @param handler A callback function that returns a `Promise` resulting in a `Response`.
+  * @param method The HTTP method to associate with this default handler. Each method
+  * has its own default. Defaults to `'GET'`.
+  */
+  setDefaultHandler(handler, method = "GET") {
+    this._defaultHandlerMap.set(method, normalizeHandler(handler));
+  }
+  /**
+  * If a {@linkcode Route} throws an error while handling a request, this handler
+  * will be called and given a chance to provide a response.
+  *
+  * @param handler A callback function that returns a `Promise` resulting
+  * in a `Response`.
+  */
+  setCatchHandler(handler) {
+    this._catchHandler = normalizeHandler(handler);
+  }
+  /**
+  * Registers a `RegExp`, string, or function with a caching
+  * strategy to the router.
+  *
+  * @param capture If the capture param is a {@linkcode Route} object, all other arguments will be ignored.
+  * @param handler A callback function that returns a `Promise` resulting in a `Response`.
+  * This parameter is required if `capture` is not a {@linkcode Route} object.
+  * @param method The HTTP method to match the route against. Defaults to `'GET'`.
+  * @returns The generated {@linkcode Route} object.
+  */
+  registerCapture(capture, handler, method) {
+    const route = parseRoute(capture, handler, method);
+    this.registerRoute(route);
+    return route;
+  }
+  /**
+  * Registers a {@linkcode Route} with the router.
+  *
+  * @param route The {@linkcode Route} to register.
+  */
+  registerRoute(route) {
+    if (true) {
+      finalAssertExports.isType(route, "object", {
+        moduleName: "serwist",
+        className: "Serwist",
+        funcName: "registerRoute",
+        paramName: "route"
+      });
+      finalAssertExports.hasMethod(route, "match", {
+        moduleName: "serwist",
+        className: "Serwist",
+        funcName: "registerRoute",
+        paramName: "route"
+      });
+      finalAssertExports.isType(route.handler, "object", {
+        moduleName: "serwist",
+        className: "Serwist",
+        funcName: "registerRoute",
+        paramName: "route"
+      });
+      finalAssertExports.hasMethod(route.handler, "handle", {
+        moduleName: "serwist",
+        className: "Serwist",
+        funcName: "registerRoute",
+        paramName: "route.handler"
+      });
+      finalAssertExports.isType(route.method, "string", {
+        moduleName: "serwist",
+        className: "Serwist",
+        funcName: "registerRoute",
+        paramName: "route.method"
+      });
+    }
+    if (!this._routes.has(route.method)) this._routes.set(route.method, []);
+    this._routes.get(route.method).push(route);
+  }
+  /**
+  * Unregisters a route from the router.
+  *
+  * @param route The {@linkcode Route} object to unregister.
+  */
+  unregisterRoute(route) {
+    if (!this._routes.has(route.method)) throw new SerwistError("unregister-route-but-not-found-with-method", { method: route.method });
+    const routeIndex = this._routes.get(route.method).indexOf(route);
+    if (routeIndex > -1) this._routes.get(route.method).splice(routeIndex, 1);
+    else throw new SerwistError("unregister-route-route-not-registered");
+  }
+  /**
+  * Returns a mapping of a precached URL to the corresponding cache key, taking
+  * into account the revision information for the URL.
+  *
+  * @returns A URL to cache key mapping.
+  */
+  getUrlsToPrecacheKeys() {
+    return this._urlsToCacheKeys;
+  }
+  /**
+  * Returns a list of all the URLs that have been precached by the current
+  * service worker.
+  *
+  * @returns The precached URLs.
+  */
+  getPrecachedUrls() {
+    return [...this._urlsToCacheKeys.keys()];
+  }
+  /**
+  * Returns the cache key used for storing a given URL. If that URL is
+  * unversioned, like "/index.html", then the cache key will be the original
+  * URL with a search parameter appended to it.
+  *
+  * @param url A URL whose cache key you want to look up.
+  * @returns The versioned URL that corresponds to a cache key
+  * for the original URL, or undefined if that URL isn't precached.
+  */
+  getPrecacheKeyForUrl(url) {
+    const urlObject = new URL(url, location.href);
+    return this._urlsToCacheKeys.get(urlObject.href);
+  }
+  /**
+  * @param url A cache key whose SRI you want to look up.
+  * @returns The subresource integrity associated with the cache key,
+  * or undefined if it's not set.
+  */
+  getIntegrityForPrecacheKey(cacheKey) {
+    return this._cacheKeysToIntegrities.get(cacheKey);
+  }
+  /**
+  * This acts as a drop-in replacement for
+  * [`cache.match()`](https://developer.mozilla.org/en-US/docs/Web/API/Cache/match)
+  * with the following differences:
+  *
+  * - It knows what the name of the precache is, and only checks in that cache.
+  * - It allows you to pass in an "original" URL without versioning parameters,
+  * and it will automatically look up the correct cache key for the currently
+  * active revision of that URL.
+  *
+  * E.g., `matchPrecache('index.html')` will find the correct precached
+  * response for the currently active service worker, even if the actual cache
+  * key is `'/index.html?__WB_REVISION__=1234abcd'`.
+  *
+  * @param request The key (without revisioning parameters)
+  * to look up in the precache.
+  * @returns
+  */
+  async matchPrecache(request) {
+    const url = request instanceof Request ? request.url : request;
+    const cacheKey = this.getPrecacheKeyForUrl(url);
+    if (cacheKey) return (await self.caches.open(this.precacheStrategy.cacheName)).match(cacheKey);
+  }
+  /**
+  * Returns a function that looks up `url` in the precache (taking into
+  * account revision information), and returns the corresponding `Response`.
+  *
+  * @param url The precached URL which will be used to lookup the response.
+  * @return
+  */
+  createHandlerBoundToUrl(url) {
+    const cacheKey = this.getPrecacheKeyForUrl(url);
+    if (!cacheKey) throw new SerwistError("non-precached-url", { url });
+    return (options) => {
+      options.request = new Request(url);
+      options.params = {
+        cacheKey,
+        ...options.params
+      };
+      return this.precacheStrategy.handle(options);
+    };
+  }
+  /**
+  * Applies the routing rules to a `FetchEvent` object to get a response from an
+  * appropriate route.
+  *
+  * @param options
+  * @returns A promise is returned if a registered route can handle the request.
+  * If there is no matching route and there's no default handler, `undefined`
+  * is returned.
+  */
+  handleRequest({ request, event }) {
+    if (true) finalAssertExports.isInstance(request, Request, {
+      moduleName: "serwist",
+      className: "Serwist",
+      funcName: "handleRequest",
+      paramName: "options.request"
+    });
+    const url = new URL(request.url, location.href);
+    if (!url.protocol.startsWith("http")) {
+      if (true) logger.debug("Router only supports URLs that start with 'http'.");
+      return;
+    }
+    const sameOrigin = url.origin === location.origin;
+    const { params, route } = this.findMatchingRoute({
+      event,
+      request,
+      sameOrigin,
+      url
+    });
+    let handler = route?.handler;
+    const debugMessages = [];
+    if (true) {
+      if (handler) {
+        debugMessages.push(["Found a route to handle this request:", route]);
+        if (params) debugMessages.push([`Passing the following params to the route's handler:`, params]);
+      }
+    }
+    const method = request.method;
+    if (!handler && this._defaultHandlerMap.has(method)) {
+      if (true) debugMessages.push(`Failed to find a matching route. Falling back to the default handler for ${method}.`);
+      handler = this._defaultHandlerMap.get(method);
+    }
+    if (!handler) {
+      if (true) logger.debug(`No route found for: ${getFriendlyURL(url)}`);
+      return;
+    }
+    if (true) {
+      logger.groupCollapsed(`Router is responding to: ${getFriendlyURL(url)}`);
+      for (const msg of debugMessages) if (Array.isArray(msg)) logger.log(...msg);
+      else logger.log(msg);
+      logger.groupEnd();
+    }
+    let responsePromise;
+    try {
+      responsePromise = handler.handle({
+        url,
+        request,
+        event,
+        params
+      });
+    } catch (err) {
+      responsePromise = Promise.reject(err);
+    }
+    const catchHandler = route?.catchHandler;
+    if (responsePromise instanceof Promise && (this._catchHandler || catchHandler)) responsePromise = responsePromise.catch(async (err) => {
+      if (catchHandler) {
+        if (true) {
+          logger.groupCollapsed(`Error thrown when responding to:  ${getFriendlyURL(url)}. Falling back to route's Catch Handler.`);
+          logger.error("Error thrown by:", route);
+          logger.error(err);
+          logger.groupEnd();
+        }
+        try {
+          return await catchHandler.handle({
+            url,
+            request,
+            event,
+            params
+          });
+        } catch (catchErr) {
+          if (catchErr instanceof Error) err = catchErr;
+        }
+      }
+      if (this._catchHandler) {
+        if (true) {
+          logger.groupCollapsed(`Error thrown when responding to:  ${getFriendlyURL(url)}. Falling back to global Catch Handler.`);
+          logger.error("Error thrown by:", route);
+          logger.error(err);
+          logger.groupEnd();
+        }
+        return this._catchHandler.handle({
+          url,
+          request,
+          event
+        });
+      }
+      throw err;
+    });
+    return responsePromise;
+  }
+  /**
+  * Checks a request and URL (and optionally an event) against the list of
+  * registered routes, and if there's a match, returns the corresponding
+  * route along with any params generated by the match.
+  *
+  * @param options
+  * @returns An object with `route` and `params` properties. They are populated
+  * if a matching route was found or `undefined` otherwise.
+  */
+  findMatchingRoute({ url, sameOrigin, request, event }) {
+    const routes = this._routes.get(request.method) || [];
+    for (const route of routes) {
+      let params;
+      const matchResult = route.match({
+        url,
+        sameOrigin,
+        request,
+        event
+      });
+      if (matchResult) {
+        if (true) {
+          if (matchResult instanceof Promise) logger.warn(`While routing ${getFriendlyURL(url)}, an async matchCallback function was used. Please convert the following route to use a synchronous matchCallback function:`, route);
+        }
+        params = matchResult;
+        if (Array.isArray(params) && params.length === 0) params = void 0;
+        else if (matchResult.constructor === Object && Object.keys(matchResult).length === 0) params = void 0;
+        else if (typeof matchResult === "boolean") params = void 0;
+        return {
+          route,
+          params
+        };
+      }
+    }
+    return {};
+  }
+};
+
+// node_modules/@serwist/next/dist/index.worker.mjs
+var defaultCache = true ? [{
+  matcher: /.*/i,
+  handler: new NetworkOnly()
+}] : [
+  {
+    matcher: /^https:\/\/fonts\.(?:gstatic)\.com\/.*/i,
+    handler: new CacheFirst({
+      cacheName: "google-fonts-webfonts",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 4,
+        maxAgeSeconds: 365 * 24 * 60 * 60,
+        maxAgeFrom: "last-used"
+      })]
+    })
+  },
+  {
+    matcher: /^https:\/\/fonts\.(?:googleapis)\.com\/.*/i,
+    handler: new StaleWhileRevalidate({
+      cacheName: "google-fonts-stylesheets",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 4,
+        maxAgeSeconds: 10080 * 60,
+        maxAgeFrom: "last-used"
+      })]
+    })
+  },
+  {
+    matcher: /\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i,
+    handler: new StaleWhileRevalidate({
+      cacheName: "static-font-assets",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 4,
+        maxAgeSeconds: 10080 * 60,
+        maxAgeFrom: "last-used"
+      })]
+    })
+  },
+  {
+    matcher: /\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i,
+    handler: new StaleWhileRevalidate({
+      cacheName: "static-image-assets",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 64,
+        maxAgeSeconds: 720 * 60 * 60,
+        maxAgeFrom: "last-used"
+      })]
+    })
+  },
+  {
+    matcher: /\/_next\/static.+\.js$/i,
+    handler: new CacheFirst({
+      cacheName: "next-static-js-assets",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 64,
+        maxAgeSeconds: 1440 * 60,
+        maxAgeFrom: "last-used"
+      })]
+    })
+  },
+  {
+    matcher: /\/_next\/image\?url=.+$/i,
+    handler: new StaleWhileRevalidate({
+      cacheName: "next-image",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 64,
+        maxAgeSeconds: 1440 * 60,
+        maxAgeFrom: "last-used"
+      })]
+    })
+  },
+  {
+    matcher: /\.(?:mp3|wav|ogg)$/i,
+    handler: new CacheFirst({
+      cacheName: "static-audio-assets",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 32,
+        maxAgeSeconds: 1440 * 60,
+        maxAgeFrom: "last-used"
+      }), new RangeRequestsPlugin()]
+    })
+  },
+  {
+    matcher: /\.(?:mp4|webm)$/i,
+    handler: new CacheFirst({
+      cacheName: "static-video-assets",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 32,
+        maxAgeSeconds: 1440 * 60,
+        maxAgeFrom: "last-used"
+      }), new RangeRequestsPlugin()]
+    })
+  },
+  {
+    matcher: /\.(?:js)$/i,
+    handler: new StaleWhileRevalidate({
+      cacheName: "static-js-assets",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 48,
+        maxAgeSeconds: 1440 * 60,
+        maxAgeFrom: "last-used"
+      })]
+    })
+  },
+  {
+    matcher: /\.(?:css|less)$/i,
+    handler: new StaleWhileRevalidate({
+      cacheName: "static-style-assets",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 32,
+        maxAgeSeconds: 1440 * 60,
+        maxAgeFrom: "last-used"
+      })]
+    })
+  },
+  {
+    matcher: /\/_next\/data\/.+\/.+\.json$/i,
+    handler: new NetworkFirst({
+      cacheName: "next-data",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 32,
+        maxAgeSeconds: 1440 * 60,
+        maxAgeFrom: "last-used"
+      })]
+    })
+  },
+  {
+    matcher: /\.(?:json|xml|csv)$/i,
+    handler: new NetworkFirst({
+      cacheName: "static-data-assets",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 32,
+        maxAgeSeconds: 1440 * 60,
+        maxAgeFrom: "last-used"
+      })]
+    })
+  },
+  {
+    matcher: /\/api\/auth\/.*/,
+    handler: new NetworkOnly({ networkTimeoutSeconds: 10 })
+  },
+  {
+    matcher: ({ sameOrigin, url: { pathname } }) => sameOrigin && pathname.startsWith("/api/"),
+    method: "GET",
+    handler: new NetworkFirst({
+      cacheName: "apis",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 16,
+        maxAgeSeconds: 1440 * 60,
+        maxAgeFrom: "last-used"
+      })],
+      networkTimeoutSeconds: 10
+    })
+  },
+  {
+    matcher: ({ request, url: { pathname }, sameOrigin }) => request.headers.get("RSC") === "1" && request.headers.get("Next-Router-Prefetch") === "1" && sameOrigin && !pathname.startsWith("/api/"),
+    handler: new NetworkFirst({
+      cacheName: PAGES_CACHE_NAME.rscPrefetch,
+      plugins: [new ExpirationPlugin({
+        maxEntries: 32,
+        maxAgeSeconds: 1440 * 60
+      })]
+    })
+  },
+  {
+    matcher: ({ request, url: { pathname }, sameOrigin }) => request.headers.get("RSC") === "1" && sameOrigin && !pathname.startsWith("/api/"),
+    handler: new NetworkFirst({
+      cacheName: PAGES_CACHE_NAME.rsc,
+      plugins: [new ExpirationPlugin({
+        maxEntries: 32,
+        maxAgeSeconds: 1440 * 60
+      })]
+    })
+  },
+  {
+    matcher: ({ request, url: { pathname }, sameOrigin }) => request.headers.get("Content-Type")?.includes("text/html") && sameOrigin && !pathname.startsWith("/api/"),
+    handler: new NetworkFirst({
+      cacheName: PAGES_CACHE_NAME.html,
+      plugins: [new ExpirationPlugin({
+        maxEntries: 32,
+        maxAgeSeconds: 1440 * 60
+      })]
+    })
+  },
+  {
+    matcher: ({ url: { pathname }, sameOrigin }) => sameOrigin && !pathname.startsWith("/api/"),
+    handler: new NetworkFirst({
+      cacheName: "others",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 32,
+        maxAgeSeconds: 1440 * 60
+      })]
+    })
+  },
+  {
+    matcher: ({ sameOrigin }) => !sameOrigin,
+    handler: new NetworkFirst({
+      cacheName: "cross-origin",
+      plugins: [new ExpirationPlugin({
+        maxEntries: 32,
+        maxAgeSeconds: 3600
+      })],
+      networkTimeoutSeconds: 10
+    })
+  },
+  {
+    matcher: /.*/i,
+    method: "GET",
+    handler: new NetworkOnly()
+  }
+];
+
+// src/sw.ts
+var customRuntimeCaching = [
+  {
+    matcher: ({ url }) => url.pathname.startsWith("/api/") || url.pathname.startsWith("/owner") || url.pathname.startsWith("/clinic") || url.pathname.startsWith("/admin") || url.pathname.startsWith("/caregiver"),
+    handler: new NetworkOnly()
+  },
+  ...defaultCache
+];
+var serwist = new Serwist({
+  precacheEntries: void 0,
+  skipWaiting: true,
+  clientsClaim: true,
+  navigationPreload: false,
+  runtimeCaching: customRuntimeCaching,
+  fallbacks: {
+    entries: [
+      {
+        url: "/offline",
+        matcher({ request }) {
+          return request.destination === "document";
+        }
+      }
+    ]
+  }
+});
+serwist.addEventListeners();
+self.addEventListener("install", (event) => {
+  event.waitUntil(self.skipWaiting());
+});
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    (async () => {
+      await self.clients.claim();
+      const cacheNames2 = await self.caches.keys();
+      const sensitiveCachePrefixes = [
+        "apis",
+        "pages",
+        "pages-rsc",
+        "pages-rsc-prefetch",
+        "serwist-runtime"
+      ];
+      await Promise.all(
+        cacheNames2.map((cacheName) => {
+          if (sensitiveCachePrefixes.some((prefix) => cacheName.includes(prefix))) {
+            console.info(`[sw] Purging sensitive cache: ${cacheName}`);
+            return self.caches.delete(cacheName);
+          }
+          return Promise.resolve(true);
+        })
+      );
+    })()
+  );
+});
+self.addEventListener("push", (event) => {
+  if (!event.data) return;
+  let payload;
+  try {
+    payload = event.data.json();
+  } catch {
+    payload = { title: "Odi.Pet", body: event.data.text() };
+  }
+  const title = payload.title ?? "Odi.Pet";
+  const options = {
+    body: payload.body ?? "",
+    icon: payload.icon ?? "/brand/app-icons/odi-icon-256.png",
+    badge: payload.badge ?? "/brand/app-icons/odi-icon-256.png",
+    tag: payload.tag ?? `odi-${Date.now()}`,
+    renotify: true,
+    data: {
+      url: payload.url ?? "/owner/notifications"
+    }
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const data = event.notification.data;
+  let targetUrl = "/owner/notifications";
+  try {
+    const requestedUrl = new URL(data?.url ?? targetUrl, self.location.origin);
+    if (requestedUrl.origin === self.location.origin) {
+      targetUrl = `${requestedUrl.pathname}${requestedUrl.search}${requestedUrl.hash}`;
+    }
+  } catch {
+  }
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients) => {
+      for (const client of windowClients) {
+        if (client.url.includes(self.location.origin) && "focus" in client) {
+          return client.navigate(targetUrl).then(() => client.focus());
+        }
+      }
+      return self.clients.openWindow(targetUrl);
+    })
+  );
+});
 //# sourceMappingURL=sw.js.map

@@ -137,6 +137,7 @@ export async function POST(req: NextRequest) {
     lifestyle:     str(fd, 'lifestyle')     || null,
   }
 
+
   const {
     data: rpcData,
     error,
