@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { StepperInput } from '@/components/ui/StepperInput'
+import { Syringe, PawPrint, Dog, Cat, Star, AlertTriangle, Scale, Pill, Plus, CheckCircle2, XCircle } from 'lucide-react'
 
 // ─── Tipler ──────────────────────────────────────────────────────────────────
 
@@ -25,16 +26,16 @@ interface VaccineProtocol {
 type FilterSpecies  = 'all' | 'dog' | 'cat'
 type FilterCategory = 'all' | 'core' | 'risk_based' | 'legal' | 'optional'
 
-const SPECIES_LABEL:  Record<string, string> = { dog: '🐕 Köpek', cat: '🐈 Kedi', both: '🐾 Her İkisi' }
+const SPECIES_LABEL:  Record<string, string> = { dog: 'Köpek', cat: 'Kedi', both: 'Her İkisi' }
 const CATEGORY_LABEL: Record<string, string> = {
-  core: '⭐ Temel', risk_based: '⚠️ Risk Bazlı',
-  legal: '⚖️ Yasal', optional: '💊 Opsiyonel'
+  core: 'Temel', risk_based: 'Risk Bazlı',
+  legal: 'Yasal', optional: 'Opsiyonel'
 }
 const CATEGORY_COLOR: Record<string, string> = {
-  core:       'bg-blue-100 text-blue-700',
-  risk_based: 'bg-orange-100 text-orange-700',
-  legal:      'bg-red-100 text-red-700',
-  optional:   'bg-gray-100 text-gray-600',
+  core:       'bg-blue-100 text-blue-700 border-blue-200',
+  risk_based: 'bg-orange-100 text-orange-700 border-orange-200',
+  legal:      'bg-red-100 text-red-700 border-red-200',
+  optional:   'bg-slate-100 text-slate-700 border-slate-200',
 }
 
 // ─── Boş form ────────────────────────────────────────────────────────────────
@@ -194,61 +195,71 @@ export default function AdminVaccinesClient() {
       {/* Başlık */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">💉 Aşı Protokolleri</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {total} protokol · vaccine_protocols tablosu
+          <h1 className="text-2xl font-black text-text-primary flex items-center gap-2.5">
+            <Syringe className="w-6 h-6 text-purple-600 shrink-0" />
+            <span>Aşı Protokolleri</span>
+          </h1>
+          <p className="text-xs text-text-secondary mt-1">
+            {total} protokol · vaccine_protocols kanonik tablosu
           </p>
         </div>
         <button
           onClick={openNew}
-          className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-purple-700 transition-colors"
+          className="bg-purple-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-purple-700 transition-all active:scale-[0.98] shadow-xs flex items-center gap-1.5"
         >
-          + Yeni Protokol
+          <Plus className="w-4 h-4" />
+          <span>Yeni Protokol</span>
         </button>
       </div>
 
       {/* Filtreler */}
-      <div className="flex gap-2 mb-4 flex-wrap">
-        {(['all','dog','cat'] as FilterSpecies[]).map(s => (
-          <button
-            key={s}
-            onClick={() => { setFilterSpecies(s); setPage(1) }}
-            className={[
-              'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
-              filterSpecies === s
-                ? 'bg-purple-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            ].join(' ')}
-          >
-            {s === 'all' ? '🐾 Tümü' : SPECIES_LABEL[s]}
-          </button>
-        ))}
-        <div className="w-px bg-gray-200 mx-1" />
-        {(['all','core','risk_based','legal','optional'] as FilterCategory[]).map(c => (
-          <button
-            key={c}
-            onClick={() => { setFilterCategory(c); setPage(1) }}
-            className={[
-              'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
-              filterCategory === c
-                ? 'bg-purple-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            ].join(' ')}
-          >
-            {c === 'all' ? 'Tüm Kategoriler' : CATEGORY_LABEL[c]}
-          </button>
-        ))}
+      <div className="flex gap-2 mb-4 flex-wrap items-center">
+        {(['all','dog','cat'] as FilterSpecies[]).map(s => {
+          const IconComp = s === 'dog' ? Dog : s === 'cat' ? Cat : PawPrint
+          return (
+            <button
+              key={s}
+              onClick={() => { setFilterSpecies(s); setPage(1) }}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all active:scale-[0.98] ${
+                filterSpecies === s
+                  ? 'bg-purple-600 text-white shadow-xs'
+                  : 'bg-bg-main text-text-secondary hover:bg-border-main/50'
+              }`}
+            >
+              <IconComp className="w-3.5 h-3.5" />
+              <span>{s === 'all' ? 'Tümü' : SPECIES_LABEL[s]}</span>
+            </button>
+          )
+        })}
+        <div className="w-px h-5 bg-border-main mx-1" />
+        {(['all','core','risk_based','legal','optional'] as FilterCategory[]).map(c => {
+          const CatIcon = c === 'core' ? Star : c === 'risk_based' ? AlertTriangle : c === 'legal' ? Scale : Pill
+          return (
+            <button
+              key={c}
+              onClick={() => { setFilterCategory(c); setPage(1) }}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all active:scale-[0.98] ${
+                filterCategory === c
+                  ? 'bg-purple-600 text-white shadow-xs'
+                  : 'bg-bg-main text-text-secondary hover:bg-border-main/50'
+              }`}
+            >
+              {c !== 'all' && <CatIcon className="w-3.5 h-3.5" />}
+              <span>{c === 'all' ? 'Tüm Kategoriler' : CATEGORY_LABEL[c]}</span>
+            </button>
+          )
+        })}
       </div>
 
       {/* Hata */}
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
           {error}
         </div>
       )}
 
       {/* Tablo */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="card-base rounded-3xl overflow-hidden shadow-xs border border-border-main">
         {loading ? (
           <div className="p-8 text-center text-gray-400 text-sm">Yükleniyor…</div>
         ) : protocols.length === 0 ? (

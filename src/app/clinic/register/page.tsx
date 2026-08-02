@@ -75,18 +75,18 @@ export default function ClinicRegisterPage() {
     <div className="flex min-h-dvh w-full items-center justify-center p-4 bg-bg-main bg-gradient-to-tr from-primary/5 via-transparent to-primary/5">
       <div className="w-full max-w-[420px] card-base p-8 sm:p-10 animate-in fade-in slide-in-from-bottom-4 duration-500 my-8">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center justify-center w-24 h-24 rounded-[24px] overflow-hidden shadow-2xl shadow-primary/20 mb-6 hover:scale-105 transition-transform bg-white p-0.5">
+          <Link href="/" className="inline-flex items-center justify-center w-24 h-24 rounded-3xl overflow-hidden shadow-soft mb-6 hover:scale-105 transition-transform bg-white p-0.5">
             <Image
               src="/brand/app-icons/odi-icon-512.png"
               alt="Odi Logo"
               width={96}
               height={96}
-              className="w-full h-full object-cover rounded-[22px]"
+              className="w-full h-full object-cover rounded-2xl"
               priority
             />
           </Link>
-          <h1 className="text-[30px] font-black text-text-primary tracking-tighter">Klinik Kaydı</h1>
-          <p className="text-[15px] font-bold text-text-secondary/80 mt-1 uppercase tracking-widest text-[10px]">Odi.Pet Veteriner Ağına Katılın</p>
+          <h1 className="text-3xl font-black text-text-primary tracking-tighter">Klinik Kaydı</h1>
+          <p className="text-sm font-bold text-text-secondary/80 mt-1 uppercase tracking-widest text-2xs">Odi.Pet Veteriner Ağına Katılın</p>
         </div>
 
         <form className="flex flex-col gap-5" onSubmit={handleSubmit}>

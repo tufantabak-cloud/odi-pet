@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import { getAge, translateSpecies } from '@/lib/utils/petLabels'
+import { AlertTriangle, Clock, MapPin, Share2, Phone, Calendar } from 'lucide-react'
 
 export interface LostFeedCardProps {
   report: {
@@ -28,7 +29,6 @@ export function LostFeedCard({ report }: { report: any }) {
 
   const ageText = pet.birth_date ? getAge(pet.birth_date) : ''
   const speciesLabel = translateSpecies(pet.species)
-  const speciesIcon = pet.species?.toLowerCase() === 'kedi' || pet.species?.toLowerCase() === 'cat' ? '🐱' : '🐶'
   const breedText = pet.breed
 
   const getUrgencyBadge = () => {
@@ -38,20 +38,20 @@ export function LostFeedCard({ report }: { report: any }) {
 
     if (diffDays <= 0) {
       return (
-        <span className="inline-flex items-center gap-1 bg-red-50 text-red-600 border border-red-200 text-[10px] font-black px-2 py-0.5 rounded-md animate-pulse">
-          🔴 Bugün Kayboldu
+        <span className="inline-flex items-center gap-1 bg-rose-50 text-rose-600 border border-rose-200 text-xs font-semibold px-2.5 py-1 rounded-lg animate-pulse">
+          <AlertTriangle className="w-3.5 h-3.5 stroke-[2]" /> Bugün Kayboldu
         </span>
       )
     } else if (diffDays <= 3) {
       return (
-        <span className="inline-flex items-center gap-1 bg-orange-50 text-orange-600 border border-orange-200 text-[10px] font-black px-2 py-0.5 rounded-md">
-          ⚠️ {diffDays} Gün Önce
+        <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200 text-xs font-semibold px-2.5 py-1 rounded-lg">
+          <Clock className="w-3.5 h-3.5 stroke-[2]" /> {diffDays} Gün Önce
         </span>
       )
     } else {
       return (
-        <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-600 border border-amber-200 text-[10px] font-black px-2 py-0.5 rounded-md">
-          📅 {diffDays} Gün Önce
+        <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-600 border border-slate-200 text-xs font-semibold px-2.5 py-1 rounded-lg">
+          <Calendar className="w-3.5 h-3.5 stroke-[2]" /> {diffDays} Gün Önce
         </span>
       )
     }
@@ -76,80 +76,81 @@ export function LostFeedCard({ report }: { report: any }) {
   }
 
   return (
-    <div className="card-base bg-white border border-red-100 p-5 flex flex-col gap-4 shadow-sm relative overflow-hidden group">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-red-50 to-transparent rounded-bl-full opacity-50 -z-10 transition-transform group-hover:scale-110" />
+    <div className="rounded-3xl bg-white border border-rose-100/80 p-5 flex flex-col gap-4 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] relative overflow-hidden group">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-rose-100/60 to-transparent rounded-bl-full opacity-60 -z-10 transition-transform group-hover:scale-110" />
 
       <div className="flex gap-4 items-center">
         {pet.avatar_url ? (
-          <div className="relative w-[60px] h-[60px] rounded-md overflow-hidden shadow-sm shrink-0">
+          <div className="relative w-14 h-14 rounded-2xl overflow-hidden shadow-sm shrink-0">
             <Image
               src={pet.avatar_url}
               alt={pet.name || 'Pet'}
               fill
               className="object-cover"
-              sizes="60px"
+              sizes="56px"
             />
           </div>
         ) : (
-          <div className="w-[60px] h-[60px] rounded-md bg-gradient-to-tr from-red-100 to-rose-50 flex items-center justify-center shadow-sm shrink-0">
-            <span className="text-2xl">{speciesIcon}</span>
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-100 to-red-50 text-rose-600 flex items-center justify-center shadow-sm shrink-0">
+            <AlertTriangle className="w-7 h-7 stroke-[1.75]" />
           </div>
         )}
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
-            <h3 className="font-black text-text-primary text-[17px] truncate">{pet.name}</h3>
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <h3 className="font-bold text-slate-900 text-lg truncate">{pet.name}</h3>
             {urgencyBadge}
           </div>
           
-          <p className="text-[13px] text-text-secondary font-medium truncate flex items-center gap-1.5">
-            <span className="inline-flex items-center justify-center w-4 h-4 rounded bg-slate-100 text-[10px]">
-              {speciesIcon === '🐱' ? '🐈' : '🐕'}
-            </span>
-            {speciesLabel} {breedText ? ` • ${breedText}` : ''} {ageText ? ` • ${ageText}` : ''}
+          <p className="text-xs text-slate-500 font-medium truncate flex items-center gap-1.5">
+            <span>{speciesLabel}</span>
+            {breedText && <span>• {breedText}</span>}
+            {ageText && <span>• {ageText}</span>}
           </p>
         </div>
       </div>
 
-      <div className="bg-slate-50/80 rounded-sm p-3.5 border border-slate-100/50 flex flex-col gap-2">
-        <p className="text-[13px] text-text-primary">
-          <span className="font-bold text-red-600">📍 Son Görülme:</span> {report.last_seen_location}
+      <div className="bg-slate-50/80 rounded-2xl p-3.5 border border-slate-100/60 flex flex-col gap-1.5">
+        <p className="text-xs text-slate-800 flex items-center gap-1.5 font-medium">
+          <MapPin className="w-4 h-4 text-rose-600 shrink-0 stroke-[2]" />
+          <span className="font-semibold text-rose-950">Son Görülme:</span> {report.last_seen_location}
         </p>
         {report.last_seen_at && (
-          <p className="text-[12px] text-text-secondary">
-            <span className="font-bold">🕒 Zaman:</span> {new Date(report.last_seen_at).toLocaleString('tr-TR')}
+          <p className="text-xs text-slate-500 flex items-center gap-1.5 font-normal">
+            <Clock className="w-4 h-4 text-slate-400 shrink-0 stroke-[2]" />
+            <span className="font-medium text-slate-700">Zaman:</span> {new Date(report.last_seen_at).toLocaleString('tr-TR')}
           </p>
         )}
       </div>
 
-      <div className="flex flex-col gap-3 mt-1 pt-4 border-t border-border-main/50">
+      <div className="flex flex-col gap-3 mt-1 pt-3.5 border-t border-slate-100">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] text-text-secondary font-medium">
-            {pet.city || 'Şehir bilinmiyor'}
+          <span className="text-xs text-slate-500 font-medium flex items-center gap-1">
+            <MapPin className="w-3.5 h-3.5 text-slate-400 stroke-[2]" />
+            {pet.city || 'Şehir belirtilmemiş'}
           </span>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={handleShare}
-            className="flex items-center justify-center gap-2 p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-btn font-bold text-[13px] transition-all active:scale-95 shrink-0"
+            className="flex items-center justify-center gap-2 p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-semibold text-xs transition-all active:scale-[0.98] shrink-0"
             title="İlanı Paylaş"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-            </svg>
+            <Share2 className="w-4 h-4 stroke-[2]" />
           </button>
           
           {hasPhone ? (
             <a
               href={`tel:${report.contact_phone}`}
-              className="btn-primary flex-1 justify-center py-2.5 px-4 text-[13px] font-bold bg-red-600 hover:bg-red-700 text-white rounded-btn shadow-sm shadow-red-600/20 active:scale-95 transition-all"
+              className="inline-flex items-center justify-center gap-2 flex-1 py-2.5 px-4 text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white rounded-2xl shadow-sm shadow-rose-600/20 active:scale-[0.98] transition-all"
             >
-              İletişime Geç →
+              <Phone className="w-4 h-4 stroke-[2]" />
+              İletişime Geç
             </a>
           ) : (
             <button
               disabled
-              className="btn-primary flex-1 justify-center py-2.5 px-4 text-[13px] font-bold bg-slate-100 border border-slate-200 text-slate-400 rounded-btn cursor-not-allowed shadow-none"
+              className="inline-flex items-center justify-center gap-2 flex-1 py-2.5 px-4 text-xs font-semibold bg-slate-100 border border-slate-200 text-slate-400 rounded-2xl cursor-not-allowed"
             >
               İletişim Yok
             </button>
@@ -159,3 +160,4 @@ export function LostFeedCard({ report }: { report: any }) {
     </div>
   )
 }
+

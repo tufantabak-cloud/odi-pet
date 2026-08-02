@@ -9,15 +9,28 @@ import { LostFeedCard } from './LostFeedCard'
 import { BreedingApplicationsManager } from './BreedingApplicationsManager'
 import { AdoptionApplicationsManager } from './AdoptionApplicationsManager'
 import { CreateListingPetSelectorModal } from './CreateListingPetSelectorModal'
+import PaywallCard from '@/components/subscription/PaywallCard'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import citiesData from '@/lib/cities.json'
 import { TURKIYE_ILLER } from '@/lib/utils/turkiyeIller'
 import dynamic from 'next/dynamic'
-import { AlertTriangle, Plus } from 'lucide-react'
-import { normalizeSpecies, getSpeciesEmoji, getSpeciesLabel } from '@/lib/species';
+import { 
+  Home, AlertTriangle, Heart, Megaphone, PawPrint, ClipboardList, 
+  Plus, Inbox, Search, Sparkles, MapPin, Calendar, Filter, 
+  CheckCircle2, XCircle, Compass, List, Map, ChevronDown, ChevronUp, 
+  X, Check, Eye, Clock
+} from 'lucide-react'
+import { normalizeSpecies, getSpeciesLabel } from '@/lib/species'
 import { useSearchParams } from 'next/navigation'
 
-const LostMapView = dynamic(() => import('./LostMapView'), { ssr: false, loading: () => <div className="w-full h-[500px] bg-bg-main animate-pulse rounded-2xl flex items-center justify-center font-normal text-text-secondary">Harita Yükleniyor...</div> })
+const LostMapView = dynamic(() => import('./LostMapView'), { 
+  ssr: false, 
+  loading: () => (
+    <div className="w-full h-[500px] bg-slate-100 animate-pulse rounded-3xl flex items-center justify-center font-normal text-slate-500 text-xs">
+      Harita Yükleniyor...
+    </div>
+  ) 
+})
 
 type Tab = 'adoption' | 'lost' | 'match'
 
@@ -40,21 +53,18 @@ const getExperienceBadge = (level: string) => {
   switch(level) {
     case 'experienced': 
       return { 
-        icon: '⭐', 
         label: 'Deneyimli', 
         color: 'bg-amber-50 text-amber-700 border-amber-200' 
       }
     case 'expert': 
       return { 
-        icon: '🏆', 
         label: 'Çok Deneyimli', 
         color: 'bg-violet-50 text-violet-700 border-violet-200' 
       }
     default: 
       return { 
-        icon: '🌱', 
         label: 'İlk Deneyim', 
-        color: 'bg-green-50 text-green-700 border-green-200' 
+        color: 'bg-emerald-50 text-emerald-700 border-emerald-200' 
       }
   }
 }
@@ -73,12 +83,49 @@ export function SocialTabs({
   const initialTab = (urlTab && TAB_MAP[urlTab]) || 'adoption'
   
   const [activeTab, setActiveTab] = useState<Tab>(initialTab)
+  const [isPremium, setIsPremium] = useState<boolean>(false)
+  const [daysLeft, setDaysLeft] = useState<number>(0)
 
   useEffect(() => {
     if (urlTab && TAB_MAP[urlTab]) {
       setActiveTab(TAB_MAP[urlTab])
     }
   }, [urlTab])
+
+  useEffect(() => {
+    const checkUserEntitlement = async () => {
+      const supabase = createBrowserSupabaseClient()
+      const { data: userData } = await supabase.auth.getUser()
+      if (userData.user?.id) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('premium_until')
+          .eq('id', userData.user.id)
+          .maybeSingle()
+
+        if (profile?.premium_until) {
+          const until = new Date(profile.premium_until)
+          const now = new Date()
+          if (until > now) {
+            setIsPremium(true)
+            setDaysLeft(Math.ceil((until.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+            return
+          }
+        }
+
+        const { data: sub } = await supabase
+          .from('user_subscriptions')
+          .select('plan, status')
+          .eq('profile_id', userData.user.id)
+          .maybeSingle()
+
+        if (sub && (sub.status === 'active' || sub.status === 'trialing') && (sub.plan === 'pro' || sub.plan === 'ai_plus')) {
+          setIsPremium(true)
+        }
+      }
+    }
+    checkUserEntitlement()
+  }, [])
 
   const [matches, setMatches] = useState<any[]>(initialMatches || [])
   const [loadingMatches, setLoadingMatches] = useState(false)
@@ -309,74 +356,63 @@ export function SocialTabs({
   }
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="flex flex-col gap-5">
       {/* Tab Switcher */}
-      <div className="flex bg-white rounded-2xl p-1.5 border border-border-main shadow-sm mb-2">
+      <div className="flex bg-slate-100/80 rounded-2xl p-1.5 border border-slate-200/60 shadow-sm">
         <button
           onClick={() => setActiveTab('adoption')}
-          className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 rounded-xl transition-all ${
+          className={`flex-1 flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl transition-all active:scale-[0.98] ${
             activeTab === 'adoption' 
-              ? 'bg-violet-50 text-violet-700 shadow-sm' 
-              : 'text-text-secondary hover:bg-surface'
+              ? 'bg-white text-violet-700 shadow-sm border border-violet-100 font-semibold' 
+              : 'text-slate-500 hover:text-slate-900 font-medium'
           }`}
         >
-          <span className="text-base">🏠</span>
-          <span className="text-[10px] font-medium leading-tight text-center">Sahiplendirme</span>
+          <Home className="w-4 h-4 stroke-[2]" />
+          <span className="text-xs leading-tight text-center">Sahiplendirme</span>
         </button>
+
         <button
           onClick={() => setActiveTab('lost')}
-          className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 rounded-xl transition-all ${
+          className={`flex-1 flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl transition-all active:scale-[0.98] ${
             activeTab === 'lost' 
-              ? 'bg-red-50 text-red-700 shadow-sm' 
-              : 'text-text-secondary hover:bg-surface'
+              ? 'bg-white text-rose-700 shadow-sm border border-rose-100 font-semibold' 
+              : 'text-slate-500 hover:text-slate-900 font-medium'
           }`}
         >
-          <span className="text-base">🚨</span>
-          <span className="text-[10px] font-medium leading-tight text-center">Kayıp İlanları</span>
+          <AlertTriangle className="w-4 h-4 stroke-[2]" />
+          <span className="text-xs leading-tight text-center">Kayıp İlanları</span>
         </button>
+
         <button
           onClick={() => setActiveTab('match')}
-          className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 rounded-xl transition-all ${
+          className={`flex-1 flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl transition-all active:scale-[0.98] ${
             activeTab === 'match' 
-              ? 'bg-pink-50 text-pink-700 shadow-sm' 
-              : 'text-text-secondary hover:bg-surface'
+              ? 'bg-white text-pink-700 shadow-sm border border-pink-100 font-semibold' 
+              : 'text-slate-500 hover:text-slate-900 font-medium'
           }`}
         >
-          <span className="text-base">❤️</span>
-          <span className="text-[10px] font-medium leading-tight text-center">Eşleştirme</span>
+          <Heart className="w-4 h-4 stroke-[2]" />
+          <span className="text-xs leading-tight text-center">Eşleştirme</span>
         </button>
       </div>
 
       {/* Adoption Tab Content */}
       {activeTab === 'adoption' && (() => {
         const filteredAdoptions = adoptions.filter(adoption => {
-          // Tür filtresi
           if (adoptionSpeciesFilter !== 'all') {
             const species = adoption.pet?.species?.toLowerCase()
-            if (adoptionSpeciesFilter === 'cat' && 
-                normalizeSpecies(species) !== 'cat') 
-              return false
-            if (adoptionSpeciesFilter === 'dog' && 
-                normalizeSpecies(species) !== 'dog') 
-              return false
+            if (adoptionSpeciesFilter === 'cat' && normalizeSpecies(species) !== 'cat') return false
+            if (adoptionSpeciesFilter === 'dog' && normalizeSpecies(species) !== 'dog') return false
           }
-          // Şehir filtresi
           if (adoptionCityFilter) {
             const city = (adoption.pet?.city || '').toLowerCase()
-            if (!city.includes(adoptionCityFilter.toLowerCase())) 
-              return false
+            if (!city.includes(adoptionCityFilter.toLowerCase())) return false
           }
-          // Tarih filtresi
           if (adoptionDateFilter !== 'all') {
             if (!adoption.created_at) return false
-            const days = Math.floor(
-              (Date.now() - new Date(adoption.created_at).getTime()) 
-              / (1000 * 60 * 60 * 24)
-            )
-            if (adoptionDateFilter === '7days' && days > 7) 
-              return false
-            if (adoptionDateFilter === '30days' && days > 30) 
-              return false
+            const days = Math.floor((Date.now() - new Date(adoption.created_at).getTime()) / (1000 * 60 * 60 * 24))
+            if (adoptionDateFilter === '7days' && days > 7) return false
+            if (adoptionDateFilter === '30days' && days > 30) return false
           }
           return true
         })
@@ -384,75 +420,76 @@ export function SocialTabs({
         return (
           <div className="flex flex-col gap-4 animate-fadeIn">
             {myAdoptionListings.length > 0 && (
-              <div className="mb-2 flex flex-col gap-4">
+              <div className="flex flex-col gap-4">
                 {myAdoptionListings.map(listing => {
                   const pet = listing.pets
-                  const speciesIcon = getSpeciesEmoji(pet?.species)
                   
                   return (
                     <div key={listing.id} className="flex flex-col gap-3">
-                      <div className="card-base bg-white border-2 border-violet-200 p-5 rounded-2xl shadow-sm relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-violet-50 to-transparent rounded-bl-full opacity-50 -z-10 animate-pulse" />
+                      <div className="bg-white border border-violet-100 p-5 rounded-3xl shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-violet-50 to-transparent rounded-bl-full opacity-60 -z-10" />
                         
                         <div className="flex justify-between items-start mb-3">
-                          <span className="inline-flex items-center gap-1 bg-violet-50 text-violet-700 border border-violet-100 text-[10px] font-black px-2 py-0.5 rounded-md">
-                            📢 AKTİF SAHİPLENDİRME İLANINIZ
+                          <span className="inline-flex items-center gap-1.5 bg-violet-50 text-violet-700 border border-violet-100 text-2xs font-semibold px-2.5 py-1 rounded-lg">
+                            <Megaphone className="w-3 h-3 stroke-[2]" /> AKTİF SAHİPLENDİRME İLANINIZ
                           </span>
                         </div>
 
                         <div className="flex gap-4 items-center">
-                          <div className="w-14 h-14 rounded-xl bg-bg-main overflow-hidden relative shrink-0">
+                          <div className="w-14 h-14 rounded-2xl bg-slate-100 overflow-hidden relative shrink-0">
                             {pet?.avatar_url ? (
                               <Image src={pet.avatar_url} alt={pet?.name || 'Pet'} fill sizes="56px" className="object-cover" />
                             ) : (
-                              <span className="flex items-center justify-center w-full h-full text-2xl">🐾</span>
+                              <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs font-semibold">🐾</div>
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-black text-text-primary text-[16px] truncate">{pet?.name}</h4>
-                            <p className="text-[12px] text-text-secondary font-normal truncate flex items-center gap-1">
-                              <span>{speciesIcon}</span>
-                              {pet?.breed ? `• ${pet.breed}` : ''} {pet?.city ? `• ${pet.city}` : ''}
+                            <h4 className="font-bold text-slate-900 text-base truncate">{pet?.name}</h4>
+                            <p className="text-xs text-slate-500 font-normal truncate flex items-center gap-1 mt-0.5">
+                              {pet?.breed || pet?.species} {pet?.city ? `• ${pet.city}` : ''}
                             </p>
                           </div>
                         </div>
 
-                        <div className="flex gap-2 mt-4 pt-4 border-t border-violet-100">
-                          <Link href={`/owner/pets/${listing.pet_id}/adoption`} className="w-full text-center py-2.5 text-[13px] font-bold text-white bg-violet-600 rounded-xl hover:bg-violet-700 transition-colors shadow-sm shadow-violet-600/20">
+                        <div className="flex gap-2 mt-4 pt-3.5 border-t border-violet-100">
+                          <Link 
+                            href={`/owner/pets/${listing.pet_id}/adoption`} 
+                            className="w-full text-center py-2.5 text-xs font-semibold text-white bg-violet-600 rounded-2xl hover:bg-violet-700 active:scale-[0.98] transition-all shadow-sm shadow-violet-600/20"
+                          >
                             İlanı Yönet & Düzenle →
                           </Link>
                         </div>
                       </div>
 
-                      <h3 className="font-black text-text-primary text-[15px] flex items-center gap-2 px-1">
-                        <span>📋</span> Başvurular Yönetimi ({pet?.name})
+                      <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2 px-1">
+                        <ClipboardList className="w-4 h-4 text-violet-600 stroke-[2]" /> 
+                        Başvurular Yönetimi ({pet?.name})
                       </h3>
                       <AdoptionApplicationsManager listingId={listing.id} petId={listing.pet_id} />
                       
-                      <div className="h-px bg-border-main my-4 w-full max-w-[200px] mx-auto" />
+                      <div className="h-px bg-slate-200/80 my-3 w-full max-w-[200px] mx-auto" />
                     </div>
                   )
                 })}
               </div>
             )}
 
-
-
-            <div className="flex flex-wrap gap-2 mb-4">
+            {/* Filter controls */}
+            <div className="flex flex-wrap gap-2.5 mb-1">
               <select 
                 value={adoptionSpeciesFilter}
                 onChange={e => setAdoptionSpeciesFilter(e.target.value as any)}
-                className="input-base text-[13px] py-2"
+                className="px-3 py-2 bg-white border border-slate-200 rounded-2xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all"
               >
                 <option value="all">Tüm Türler</option>
-                <option value="cat">{getSpeciesEmoji('cat')} {getSpeciesLabel('cat')}</option>
-                <option value="dog">{getSpeciesEmoji('dog')} {getSpeciesLabel('dog')}</option>
+                <option value="cat">Kedi</option>
+                <option value="dog">Köpek</option>
               </select>
 
               <select
                 value={adoptionCityFilter}
                 onChange={e => setAdoptionCityFilter(e.target.value)}
-                className="input-base text-[13px] py-2"
+                className="px-3 py-2 bg-white border border-slate-200 rounded-2xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all"
               >
                 <option value="">Tüm Şehirler</option>
                 {Object.keys(TURKIYE_ILLER).sort().map(city => (
@@ -463,7 +500,7 @@ export function SocialTabs({
               <select
                 value={adoptionDateFilter}
                 onChange={e => setAdoptionDateFilter(e.target.value as any)}
-                className="input-base text-[13px] py-2"
+                className="px-3 py-2 bg-white border border-slate-200 rounded-2xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all"
               >
                 <option value="all">Tüm Zamanlar</option>
                 <option value="7days">Son 7 Gün</option>
@@ -472,17 +509,19 @@ export function SocialTabs({
             </div>
 
             {filteredAdoptions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 gap-3">
-                <span className="text-4xl">🏠</span>
-                <p className="text-[14px] font-medium text-text-primary text-center">
+              <div className="rounded-3xl bg-white border border-slate-100 p-10 text-center flex flex-col items-center justify-center gap-3 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)]">
+                <div className="w-12 h-12 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center">
+                  <Home className="w-6 h-6 stroke-[1.75]" />
+                </div>
+                <p className="text-sm font-semibold text-slate-900 text-center">
                   Aktif sahiplendirme ilanı yok
                 </p>
-                <p className="text-[12px] text-text-secondary text-center">
+                <p className="text-xs text-slate-500 text-center font-normal">
                   Pet detay sayfasından sahiplendirme ilanı verebilirsin
                 </p>
                 <Link
                   href="/owner/dashboard"
-                  className="text-[12px] text-primary font-medium underline underline-offset-2"
+                  className="text-xs text-violet-600 font-semibold underline underline-offset-4 hover:text-violet-800 transition-colors mt-1"
                 >
                   Petlerime git →
                 </Link>
@@ -501,18 +540,13 @@ export function SocialTabs({
       {/* Lost Pets Tab Content */}
       {activeTab === 'lost' && (() => {
         const filteredLostPets = lostPets.filter(report => {
-          if (myLostReports.some(r => r.id === report.id)) {
-            return false
-          }
-
+          if (myLostReports.some(r => r.id === report.id)) return false
           const pet = report.pet
           if (!pet) return false
 
           if (lostSpeciesFilter !== 'Tümü') {
             const matchSpecies = lostSpeciesFilter === 'Kedi' ? 'cat' : 'dog'
-                if (normalizeSpecies(pet.species) !== matchSpecies) {
-              return false
-            }
+            if (normalizeSpecies(pet.species) !== matchSpecies) return false
           }
 
           if (lostCityFilter.trim() !== '') {
@@ -537,39 +571,39 @@ export function SocialTabs({
           <div className="flex flex-col gap-4 animate-fadeIn">
             {/* Kendi Aktif Kayıp İlanınız */}
             {myLostReports.length > 0 && (
-              <div className="mb-2 flex flex-col gap-4">
+              <div className="flex flex-col gap-4">
                 {myLostReports.map(report => {
                   const pet = report.pets
                   return (
-                    <div key={report.id} className="card-base bg-white border-2 border-red-200 p-5 rounded-2xl shadow-sm relative overflow-hidden group">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-red-50 to-transparent rounded-bl-full opacity-50 -z-10" />
+                    <div key={report.id} className="bg-white border border-rose-200 p-5 rounded-3xl shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-rose-50 to-transparent rounded-bl-full opacity-60 -z-10" />
                       
                       <div className="flex justify-between items-start mb-3">
-                        <span className="inline-flex items-center gap-1 bg-red-50 text-red-700 border border-red-100 text-[10px] font-black px-2 py-0.5 rounded-md">
-                          📢 AKTİF KAYIP İLANINIZ
+                        <span className="inline-flex items-center gap-1.5 bg-rose-50 text-rose-700 border border-rose-100 text-2xs font-semibold px-2.5 py-1 rounded-lg">
+                          <Megaphone className="w-3 h-3 stroke-[2]" /> AKTİF KAYIP İLANINIZ
                         </span>
                       </div>
 
                       <div className="flex gap-4 items-center">
-                        <div className="w-14 h-14 rounded-xl bg-bg-main overflow-hidden relative shrink-0">
+                        <div className="w-14 h-14 rounded-2xl bg-slate-100 overflow-hidden relative shrink-0">
                           {pet?.avatar_url ? (
                             <Image src={pet.avatar_url} alt={pet?.name || 'Pet'} fill sizes="56px" className="object-cover" />
                           ) : (
-                            <span className="flex items-center justify-center w-full h-full text-2xl">🐾</span>
+                            <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs font-semibold">🐾</div>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-black text-text-primary text-[16px] truncate">{pet?.name}</h4>
-                          <p className="text-[12px] text-text-secondary font-normal truncate flex items-center gap-1.5 mt-0.5">
-                            <span>🚨</span> Son Görülme: {report.last_seen_location}
+                          <h4 className="font-bold text-slate-900 text-base truncate">{pet?.name}</h4>
+                          <p className="text-xs text-slate-500 font-normal truncate flex items-center gap-1.5 mt-0.5">
+                            <MapPin className="w-3.5 h-3.5 text-rose-500 stroke-[2]" /> Son Görülme: {report.last_seen_location}
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex gap-2 mt-4 pt-4 border-t border-red-100">
+                      <div className="flex gap-2 mt-4 pt-3.5 border-t border-rose-100">
                         <button 
                           onClick={() => handleMarkLostReportFound(pet.id)}
-                          className="w-full text-center py-2.5 text-[13px] font-bold text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors shadow-sm shadow-red-600/20"
+                          className="w-full text-center py-2.5 text-xs font-semibold text-white bg-rose-600 rounded-2xl hover:bg-rose-700 active:scale-[0.98] transition-all shadow-sm shadow-rose-600/20"
                         >
                           Bulundu Olarak İşaretle ✓
                         </button>
@@ -577,46 +611,71 @@ export function SocialTabs({
                     </div>
                   )
                 })}
-                <div className="h-px bg-border-main my-2 w-full max-w-[200px] mx-auto" />
+                <div className="h-px bg-slate-200/80 my-1 w-full max-w-[200px] mx-auto" />
               </div>
             )}
 
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-[15px] font-bold text-text-primary">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-bold text-slate-900">
                 Kayıp İlanları
               </h2>
               <Link
                 href="/owner/lost-report"
-                className="flex items-center gap-1.5 bg-red-500 text-white text-[12px] font-medium px-3 py-1.5 rounded-full"
+                className="inline-flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold px-4 py-2 rounded-2xl active:scale-[0.98] transition-all shadow-sm shadow-rose-600/20"
               >
-                <AlertTriangle size={13} />
+                <AlertTriangle className="w-3.5 h-3.5 stroke-[2]" />
                 Kayıp İlanı Ver
               </Link>
             </div>
 
             {/* Filtre Bar */}
-            <div className="bg-white border border-border-main p-4 rounded-2xl shadow-sm flex flex-col gap-3">
+            <div className="bg-white border border-slate-100 p-4 rounded-3xl shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] flex flex-col gap-3">
               <div className="flex justify-between items-center">
-                <h4 className="text-[12px] font-bold text-text-secondary uppercase tracking-wider">Kayıp İlanı Filtrele</h4>
-                <div className="flex bg-bg-main p-1 rounded-lg">
-                  <button onClick={() => setLostViewMode('list')} className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${lostViewMode === 'list' ? 'bg-white shadow-sm text-text-primary' : 'text-text-secondary hover:text-text-primary'}`}>Liste</button>
-                  <button onClick={() => setLostViewMode('map')} className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${lostViewMode === 'map' ? 'bg-white shadow-sm text-text-primary' : 'text-text-secondary hover:text-text-primary'}`}>🗺️ Harita</button>
+                <h4 className="text-2xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Filter className="w-3.5 h-3.5 stroke-[2]" /> Kayıp İlanı Filtrele
+                </h4>
+                <div className="flex bg-slate-100 p-1 rounded-xl">
+                  <button 
+                    onClick={() => setLostViewMode('list')} 
+                    className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1 ${
+                      lostViewMode === 'list' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-900'
+                    }`}
+                  >
+                    <List className="w-3.5 h-3.5 stroke-[2]" /> Liste
+                  </button>
+                  <button 
+                    onClick={() => setLostViewMode('map')} 
+                    className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1 ${
+                      lostViewMode === 'map' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-900'
+                    }`}
+                  >
+                    <Map className="w-3.5 h-3.5 stroke-[2]" /> Harita
+                  </button>
                 </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <select className="input-base text-[13px] py-2 bg-white" value={lostSpeciesFilter} onChange={e => setLostSpeciesFilter(e.target.value)}>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <select 
+                  className="px-3 py-2 bg-white border border-slate-200 rounded-2xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all" 
+                  value={lostSpeciesFilter} 
+                  onChange={e => setLostSpeciesFilter(e.target.value)}
+                >
                   <option value="Tümü">Tüm Türler</option>
-                  <option value="Kedi">🐱 Kedi</option>
-                  <option value="Köpek">🐶 Köpek</option>
+                  <option value="Kedi">Kedi</option>
+                  <option value="Köpek">Köpek</option>
                 </select>
                 <input 
                   type="text" 
                   placeholder="Şehir Ara..." 
-                  className="input-base text-[13px] py-2" 
+                  className="px-3 py-2 bg-white border border-slate-200 rounded-2xl text-xs font-normal text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all placeholder:text-slate-400" 
                   value={lostCityFilter}
                   onChange={e => setLostCityFilter(e.target.value)}
                 />
-                <select className="input-base text-[13px] py-2 bg-white" value={lostDateFilter} onChange={e => setLostDateFilter(e.target.value)}>
+                <select 
+                  className="px-3 py-2 bg-white border border-slate-200 rounded-2xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all" 
+                  value={lostDateFilter} 
+                  onChange={e => setLostDateFilter(e.target.value)}
+                >
                   <option value="Tümü">Tüm Zamanlar</option>
                   <option value="Bugün">Bugün</option>
                   <option value="Son 3 Gün">Son 3 Gün</option>
@@ -629,13 +688,15 @@ export function SocialTabs({
             {!myLostReportsLoaded ? (
               <div className="flex flex-col gap-3">
                 {[1, 2, 3].map(i => (
-                  <div key={i} className="h-32 rounded-2xl bg-bg-main animate-pulse" />
+                  <div key={i} className="h-32 rounded-3xl bg-slate-100 animate-pulse" />
                 ))}
               </div>
             ) : filteredLostPets.length === 0 ? (
-              <div className="card-base bg-white border border-border-main p-10 text-center flex flex-col items-center gap-3">
-                <span className="text-[36px]">🚨</span>
-                <p className="text-[14px] text-text-secondary font-normal">Aranan kriterlere uygun aktif kayıp ilanı bulunmuyor.</p>
+              <div className="rounded-3xl bg-white border border-slate-100 p-10 text-center flex flex-col items-center gap-3 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)]">
+                <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
+                  <AlertTriangle className="w-6 h-6 stroke-[1.75]" />
+                </div>
+                <p className="text-xs text-slate-500 font-normal">Aranan kriterlere uygun aktif kayıp ilanı bulunmuyor.</p>
               </div>
             ) : lostViewMode === 'map' ? (
               <LostMapView reports={filteredLostPets} />
@@ -652,42 +713,48 @@ export function SocialTabs({
 
       {/* Match Tab Content */}
       {activeTab === 'match' && (
+        !isPremium ? (
+          <PaywallCard
+            title="Eşleştirme Modülü Pro Özelliğidir"
+            description="Evcil hayvanınız için uygun ırk ve sağlık şartlarındaki eş adaylarını keşfetmek ve iletişime geçmek Odi Pro aboneliği ile mümkündür."
+            featureName="Eşleştirme & Çiftleştirme"
+            daysLeft={daysLeft}
+          />
+        ) : (
         <div className="flex flex-col gap-4 animate-fadeIn">
           
           {myListings.length > 0 ? (
-            <div className="mb-2 flex flex-col gap-4">
+            <div className="flex flex-col gap-4">
               {myListings.map(listing => {
                 const pet = listing.pets
-                const speciesIcon = getSpeciesEmoji(pet?.species)
                 const exp = getExperienceBadge(listing.experience_level)
                 
                 return (
                   <div key={listing.id} className="flex flex-col gap-3">
-                    <div className="card-base bg-white border-2 border-violet-200 p-5 rounded-2xl shadow-sm relative overflow-hidden group">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-violet-50 to-transparent rounded-bl-full opacity-50 -z-10 animate-pulse" />
+                    <div className="bg-white border border-pink-100 p-5 rounded-3xl shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-pink-50 to-transparent rounded-bl-full opacity-60 -z-10" />
                       
                       <div className="flex justify-between items-start mb-3">
-                        <span className="inline-flex items-center gap-1 bg-violet-50 text-violet-700 border border-violet-100 text-[10px] font-black px-2 py-0.5 rounded-md">
-                          📢 AKTİF İLANINIZ
+                        <span className="inline-flex items-center gap-1.5 bg-pink-50 text-pink-700 border border-pink-100 text-2xs font-semibold px-2.5 py-1 rounded-lg">
+                          <Megaphone className="w-3 h-3 stroke-[2]" /> AKTİF İLANINIZ
                         </span>
                       </div>
 
                       <div className="flex gap-4 items-center">
-                        <div className="w-14 h-14 rounded-xl bg-bg-main overflow-hidden relative shrink-0">
+                        <div className="w-14 h-14 rounded-2xl bg-slate-100 overflow-hidden relative shrink-0">
                           {pet?.avatar_url ? (
                             <Image src={pet.avatar_url} alt={pet?.name || 'Pet'} fill sizes="56px" className="object-cover" />
                           ) : (
-                            <span className="flex items-center justify-center w-full h-full text-2xl">🐾</span>
+                            <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs font-semibold">🐾</div>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                            <h4 className="font-black text-text-primary text-[16px] truncate">{listing.title}</h4>
-                            {pet?.gender === 'male' && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-100 shrink-0">♂ Erkek</span>}
-                            {pet?.gender === 'female' && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-pink-50 text-pink-600 border border-pink-100 shrink-0">♀ Dişi</span>}
+                            <h4 className="font-bold text-slate-900 text-base truncate">{listing.title}</h4>
+                            {pet?.gender === 'male' && <span className="text-2xs font-semibold px-2 py-0.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 shrink-0">♂ Erkek</span>}
+                            {pet?.gender === 'female' && <span className="text-2xs font-semibold px-2 py-0.5 rounded-lg bg-pink-50 text-pink-600 border border-pink-100 shrink-0">♀ Dişi</span>}
                           </div>
-                          <p className="text-[12px] text-text-secondary font-normal truncate flex items-center gap-1">
-                            <span>{speciesIcon}</span>
+                          <p className="text-xs text-slate-500 font-normal truncate flex items-center gap-1">
                             {pet?.name} {pet?.breed ? `• ${pet.breed}` : ''} {pet?.birth_date ? `• ${getAge(pet.birth_date)}` : ''} {pet?.city ? `• ${pet.city}` : ''}
                           </p>
                         </div>
@@ -696,44 +763,53 @@ export function SocialTabs({
                       {listing.requirements && listing.requirements.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 mt-3">
                           {listing.requirements.map((req: string) => (
-                            <span key={req} className="px-2 py-0.5 bg-surface border border-border-main text-text-secondary rounded-md text-[9px] font-bold">
+                            <span key={req} className="px-2.5 py-1 bg-slate-50 border border-slate-200/80 text-slate-600 rounded-lg text-2xs font-semibold">
                               {req}
                             </span>
                           ))}
-                          <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold border flex items-center gap-0.5 ${exp.color}`}>
-                            {exp.icon} {exp.label}
+                          <span className={`px-2.5 py-1 rounded-lg text-2xs font-semibold border flex items-center gap-1 ${exp.color}`}>
+                            <Sparkles className="w-3 h-3 stroke-[2]" /> {exp.label}
                           </span>
                         </div>
                       )}
 
-                      <div className="flex gap-2 mt-4 pt-4 border-t border-violet-100">
-                        <Link href={`/owner/pets/${listing.pet_id}/match`} className="w-full text-center py-2.5 text-[13px] font-bold text-white bg-violet-600 rounded-xl hover:bg-violet-700 transition-colors shadow-sm shadow-violet-600/20">
+                      <div className="flex gap-2 mt-4 pt-3.5 border-t border-pink-100">
+                        <Link 
+                          href={`/owner/pets/${listing.pet_id}/match`} 
+                          className="w-full text-center py-2.5 text-xs font-semibold text-white bg-pink-500 rounded-2xl hover:bg-pink-600 active:scale-[0.98] transition-all shadow-sm shadow-pink-500/20"
+                        >
                           İlanı Yönet & Düzenle →
                         </Link>
                       </div>
                     </div>
 
-                    <h3 className="font-black text-text-primary text-[15px] flex items-center gap-2 px-1">
-                      <span>📋</span> Gelen Başvurular ({pet?.name})
+                    <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2 px-1">
+                      <ClipboardList className="w-4 h-4 text-pink-500 stroke-[2]" /> Gelen Başvurular ({pet?.name})
                     </h3>
                     <BreedingApplicationsManager listingId={listing.id} />
                     
-                    <div className="h-px bg-border-main my-4 w-full max-w-[200px] mx-auto" />
+                    <div className="h-px bg-slate-200/80 my-3 w-full max-w-[200px] mx-auto" />
                   </div>
                 )
               })}
             </div>
           ) : (
-            <div className="mb-2">
-              <div className="card-base bg-white border border-border-main p-6 rounded-2xl shadow-sm text-center flex flex-col items-center gap-3">
-                <span className="text-3xl">➕</span>
-                <h3 className="font-black text-text-primary text-[16px]">Üreme İlanı Oluştur</h3>
-                <p className="text-[13px] text-text-secondary">Dostunuza uygun bir eş bulmak için hemen bir ilan verin.</p>
-                <button onClick={() => setShowCreateModal(true)} className="btn-primary py-2.5 px-6 text-[14px] mt-2 w-full max-w-[200px]">
+            <div className="mb-1">
+              <div className="rounded-3xl bg-white border border-slate-100 p-8 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] text-center flex flex-col items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-pink-50 text-pink-500 flex items-center justify-center">
+                  <Plus className="w-6 h-6 stroke-[2]" />
+                </div>
+                <h3 className="font-bold text-slate-900 text-base">Üreme İlanı Oluştur</h3>
+                <p className="text-xs text-slate-500 font-normal">Dostunuza uygun bir eş bulmak için hemen bir ilan verin.</p>
+                <button 
+                  onClick={() => setShowCreateModal(true)} 
+                  className="inline-flex items-center justify-center gap-2 bg-pink-500 hover:bg-pink-600 text-white font-semibold text-xs py-2.5 px-6 rounded-2xl active:scale-[0.98] transition-all shadow-sm shadow-pink-500/20 mt-1 w-full max-w-[200px]"
+                >
+                  <Plus className="w-4 h-4 stroke-[2]" />
                   İlan Oluştur
                 </button>
               </div>
-              <div className="h-px bg-border-main mt-6 w-full max-w-[200px] mx-auto" />
+              <div className="h-px bg-slate-200/80 my-6 w-full max-w-[200px] mx-auto" />
             </div>
           )}
 
@@ -745,9 +821,9 @@ export function SocialTabs({
 
           {/* BAŞVURULARIM (Applicant Side) */}
           {userApplications.length > 0 && (
-            <div className="mb-2 flex flex-col gap-3">
-              <h3 className="font-black text-text-primary text-[15px] flex items-center gap-2 px-1">
-                <span>📬</span> Başvurularım
+            <div className="flex flex-col gap-3">
+              <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2 px-1">
+                <Inbox className="w-4 h-4 text-pink-500 stroke-[2]" /> Başvurularım
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {userApplications.map(app => {
@@ -757,74 +833,76 @@ export function SocialTabs({
                   let statusBadge = null
                   switch(app.status) {
                     case 'pending':
-                      statusBadge = <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-600 border border-amber-200">⏳ Bekliyor</span>
+                      statusBadge = <span className="text-2xs font-semibold px-2 py-0.5 rounded-lg bg-amber-50 text-amber-700 border border-amber-200/60 flex items-center gap-1"><Clock className="w-3 h-3 stroke-[2]" /> Bekliyor</span>
                       break
                     case 'approved':
-                      statusBadge = <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-green-50 text-green-600 border border-green-200">✅ Onaylandı</span>
+                      statusBadge = <span className="text-2xs font-semibold px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200/60 flex items-center gap-1"><CheckCircle2 className="w-3 h-3 stroke-[2]" /> Onaylandı</span>
                       break
                     case 'rejected':
-                      statusBadge = <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-red-50 text-red-600 border border-red-200">❌ Reddedildi</span>
+                      statusBadge = <span className="text-2xs font-semibold px-2 py-0.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-200/60 flex items-center gap-1"><XCircle className="w-3 h-3 stroke-[2]" /> Reddedildi</span>
                       break
                     default:
-                      statusBadge = <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-surface text-text-secondary border border-border-main">{app.status}</span>
+                      statusBadge = <span className="text-2xs font-semibold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 border border-slate-200">{app.status}</span>
                   }
 
                   return (
-                    <div key={app.id} className="card-base bg-white border border-border-main p-3.5 rounded-xl shadow-sm flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-bg-main overflow-hidden relative shrink-0">
+                    <div key={app.id} className="bg-white border border-slate-100 p-4 rounded-2xl shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden relative shrink-0">
                         {pet?.avatar_url ? (
                           <Image src={pet.avatar_url} alt={pet?.name || 'Pet'} fill sizes="40px" className="object-cover" />
                         ) : (
-                          <span className="flex items-center justify-center w-full h-full text-lg">🐾</span>
+                          <div className="w-full h-full flex items-center justify-center text-slate-400 text-2xs">🐾</div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2 mb-0.5">
-                          <h4 className="font-bold text-text-primary text-[13px] truncate">{pet?.name}</h4>
+                          <h4 className="font-semibold text-slate-900 text-xs truncate">{pet?.name}</h4>
                           {statusBadge}
                         </div>
-                        <p className="text-[11px] text-text-secondary truncate">
-                          İlan: <span className="font-normal text-text-primary">{listingTitle}</span>
+                        <p className="text-2xs text-slate-500 truncate font-normal">
+                          İlan: <span className="font-medium text-slate-800">{listingTitle}</span>
                         </p>
                       </div>
                     </div>
                   )
                 })}
               </div>
-              <div className="h-px bg-border-main my-2 w-full max-w-[200px] mx-auto" />
+              <div className="h-px bg-slate-200/80 my-3 w-full max-w-[200px] mx-auto" />
             </div>
           )}
 
-          {/* BÖLÜM 4: ADAY KEŞFET */}
-          <div className="mb-4 rounded-2xl border border-pink-100 bg-pink-50/30 p-4 shadow-sm">
+          {/* ADAY KEŞFET */}
+          <div className="rounded-3xl border border-pink-100 bg-pink-50/40 p-5 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-[17px]">🔍</span>
-                <h3 className="font-bold text-[14px] text-text-primary">
+                <Compass className="w-4 h-4 text-pink-600 stroke-[2]" />
+                <h3 className="font-bold text-sm text-slate-900">
                   Aday Keşfet
                 </h3>
               </div>
               <button
                 onClick={() => setShowDiscover(!showDiscover)}
-                className="text-[12px] text-pink-500 font-bold hover:text-pink-700 transition-colors"
+                className="text-xs text-pink-600 font-semibold hover:text-pink-800 transition-colors flex items-center gap-1"
               >
-                {showDiscover ? 'Gizle ▲' : 'Göster ▼'}
+                {showDiscover ? <>Gizle <ChevronUp className="w-3.5 h-3.5 stroke-[2.5]" /></> : <>Göster <ChevronDown className="w-3.5 h-3.5 stroke-[2.5]" /></>}
               </button>
             </div>
 
             {showDiscover && (
               <div className="mt-3 flex flex-col gap-3 animate-fadeIn">
                 {!currentPetId ? (
-                  <div className="text-center py-4 bg-white/50 border border-dashed border-pink-200 rounded-xl p-3">
-                    <p className="text-[12px] text-pink-600 font-bold">
+                  <div className="text-center py-4 bg-white/60 border border-dashed border-pink-200 rounded-2xl p-4">
+                    <p className="text-xs text-pink-700 font-semibold">
                       Adayları keşfetmek için önce aktif bir ilan oluşturmanız gerekmektedir.
                     </p>
                   </div>
                 ) : mutualMatch ? (
-                  <div className="flex flex-col items-center justify-center p-6 text-center bg-white rounded-xl border border-pink-100 animate-fadeInUp">
-                    <div className="text-[48px] mb-2">🎉</div>
-                    <h4 className="text-[17px] font-black text-rose-500 mb-1">Eşleşme Sağlandı!</h4>
-                    <p className="text-text-secondary text-[12px] mb-4">Sen ve {mutualMatch.name} birbirinizi beğendiniz!</p>
+                  <div className="flex flex-col items-center justify-center p-6 text-center bg-white rounded-3xl border border-pink-100 animate-fadeInUp">
+                    <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center mb-2">
+                      <Sparkles className="w-6 h-6 stroke-[2]" />
+                    </div>
+                    <h4 className="text-base font-extrabold text-rose-600 mb-1">Eşleşme Sağlandı!</h4>
+                    <p className="text-slate-600 text-xs mb-4 font-normal">Sen ve {mutualMatch.name} birbirinizi beğendiniz!</p>
                     <div className="flex items-center gap-3 mb-5">
                       <div className="w-16 h-16 rounded-full bg-rose-50 flex items-center justify-center overflow-hidden border-2 border-rose-200 relative shrink-0">
                         {myListings[0]?.pets?.avatar_url ? (
@@ -833,7 +911,7 @@ export function SocialTabs({
                           <span className="text-xl">🐾</span>
                         )}
                       </div>
-                      <div className="text-[20px] text-rose-400">❤️</div>
+                      <Heart className="w-5 h-5 text-rose-500 fill-rose-500 animate-bounce" />
                       <div className="w-16 h-16 rounded-full bg-rose-50 flex items-center justify-center overflow-hidden border-2 border-rose-200 relative shrink-0">
                         {mutualMatch.avatar_url ? (
                           <Image src={mutualMatch.avatar_url} alt={mutualMatch.name} fill className="object-cover" sizes="64px" />
@@ -844,26 +922,26 @@ export function SocialTabs({
                     </div>
                     <button 
                       onClick={() => setMutualMatch(null)} 
-                      className="btn-primary py-2 px-6 text-[12px] font-bold bg-pink-500 hover:bg-pink-600 text-white rounded-xl"
+                      className="inline-flex items-center justify-center bg-pink-500 hover:bg-pink-600 text-white font-semibold text-xs py-2 px-6 rounded-2xl active:scale-[0.98] transition-all"
                     >
                       Aramaya Devam Et
                     </button>
                   </div>
                 ) : (
                   <>
-                    <p className="text-[12px] text-text-secondary">
+                    <p className="text-xs text-slate-500 font-normal">
                       Petiniz için şehir seçerek uygun eşleşme adaylarını listeleyin.
                     </p>
 
                     <div className="flex flex-wrap gap-1.5 mb-1.5">
                       {selectedCities.map(city => (
-                        <span key={city} className="inline-flex items-center gap-1 px-2.5 py-1 bg-rose-100 text-rose-700 text-[11px] font-bold rounded-full">
+                        <span key={city} className="inline-flex items-center gap-1 px-2.5 py-1 bg-rose-100/80 text-rose-800 text-2xs font-semibold rounded-full">
                           {city}
                           <button 
                             onClick={() => setSelectedCities(prev => prev.filter(c => c !== city))} 
-                            className="w-3.5 h-3.5 rounded-full hover:bg-rose-200 flex items-center justify-center transition-colors text-[9px]"
+                            className="w-3.5 h-3.5 rounded-full hover:bg-rose-200 flex items-center justify-center transition-colors text-2xs"
                           >
-                            ✕
+                            <X className="w-2.5 h-2.5 stroke-[2.5]" />
                           </button>
                         </span>
                       ))}
@@ -878,7 +956,7 @@ export function SocialTabs({
                           }
                           e.target.value = ''
                         }}
-                        className="input-base text-[12px] py-1.5 flex-1 bg-white"
+                        className="px-3 py-2 text-xs bg-white border border-slate-200 rounded-2xl flex-1 focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-all font-semibold text-slate-700"
                         defaultValue=""
                       >
                         <option value="" disabled>+ Şehir Ekle</option>
@@ -891,48 +969,48 @@ export function SocialTabs({
                       <button
                         onClick={handleDiscover}
                         disabled={selectedCities.length === 0}
-                        className="btn-primary py-2 px-5 text-[12px] font-bold shrink-0 disabled:opacity-50"
+                        className="inline-flex items-center justify-center gap-1.5 bg-pink-500 hover:bg-pink-600 text-white font-semibold text-xs py-2 px-5 rounded-2xl disabled:opacity-50 active:scale-[0.98] transition-all shrink-0"
                       >
-                        Adayları Bul
+                        <Search className="w-3.5 h-3.5 stroke-[2]" /> Adayları Bul
                       </button>
                     </div>
 
                     {discoverError && (
-                      <p className="text-red-500 text-[12px] font-bold mt-1">{discoverError}</p>
+                      <p className="text-rose-600 text-xs font-medium mt-1">{discoverError}</p>
                     )}
 
                     {/* Sonuç Listesi / Swipe Kartı */}
                     {discoverLoading ? (
                       <div className="grid grid-cols-1 gap-3 mt-2 animate-pulse">
-                        <div className="bg-bg-main h-32 rounded-xl" />
+                        <div className="bg-slate-200/60 h-32 rounded-2xl" />
                       </div>
                     ) : candidates.length > 0 && currentIndex < candidates.length ? (
                       (() => {
                         const candidate = candidates[currentIndex]
                         return (
                           <div className="mt-3 flex flex-col gap-3 animate-fadeInUp">
-                            <div className="bg-white rounded-2xl border border-border-main overflow-hidden shadow-sm flex flex-col sm:flex-row">
-                              <div className="w-full sm:w-[150px] aspect-square relative bg-surface shrink-0">
+                            <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm flex flex-col sm:flex-row">
+                              <div className="w-full sm:w-[150px] aspect-square relative bg-slate-50 shrink-0">
                                 {candidate.avatar_url ? (
                                   <Image src={candidate.avatar_url} alt={candidate.name} fill className="object-cover" sizes="150px" />
                                 ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-3xl bg-bg-main">🐾</div>
+                                  <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs font-semibold">🐾</div>
                                 )}
                               </div>
                               <div className="p-4 flex-1 flex flex-col justify-between">
                                 <div>
                                   <div className="flex items-center justify-between mb-1.5">
-                                    <h4 className="font-extrabold text-[16px] text-text-primary">{candidate.name}</h4>
-                                    <span className="text-[10px] font-bold px-2 py-0.5 bg-bg-main rounded-md text-text-secondary">
+                                    <h4 className="font-bold text-base text-slate-900">{candidate.name}</h4>
+                                    <span className="text-2xs font-semibold px-2 py-0.5 bg-slate-100 rounded-lg text-slate-600">
                                       {candidate.gender === 'male' ? 'Erkek' : 'Dişi'}
                                     </span>
                                   </div>
-                                  <p className="text-[12px] text-text-secondary font-normal">{candidate.breed}</p>
-                                  <p className="text-[11px] text-text-secondary mt-1 flex items-center gap-1">
-                                    📍 {candidate.city}
+                                  <p className="text-xs text-slate-500 font-normal">{candidate.breed}</p>
+                                  <p className="text-2xs text-slate-500 mt-1 flex items-center gap-1 font-normal">
+                                    <MapPin className="w-3 h-3 text-rose-500 stroke-[2]" /> {candidate.city}
                                   </p>
                                   {candidate.breeding_listing?.notes && (
-                                    <p className="text-[12px] text-text-secondary italic mt-2 line-clamp-2 bg-surface p-2 rounded-lg border border-border-main">
+                                    <p className="text-xs text-slate-600 italic mt-2 line-clamp-2 bg-slate-50 p-2.5 rounded-2xl border border-slate-100 font-normal">
                                       "{candidate.breeding_listing.notes}"
                                     </p>
                                   )}
@@ -941,15 +1019,15 @@ export function SocialTabs({
                                 <div className="flex gap-2 justify-end mt-4">
                                   <button 
                                     onClick={() => handleDiscoverAction('skip')}
-                                    className="px-4 py-2 bg-white border border-border-main text-text-secondary font-bold text-[12px] rounded-xl hover:bg-surface transition-colors"
+                                    className="px-4 py-2 bg-white border border-slate-200 text-slate-600 font-semibold text-xs rounded-2xl hover:bg-slate-50 active:scale-[0.98] transition-all"
                                   >
                                     Geç ✕
                                   </button>
                                   <button 
                                     onClick={() => handleDiscoverAction('like')}
-                                    className="px-5 py-2 bg-pink-500 text-white font-bold text-[12px] rounded-xl hover:bg-pink-600 shadow-md shadow-pink-500/20 transition-colors"
+                                    className="px-5 py-2 bg-pink-500 text-white font-semibold text-xs rounded-2xl hover:bg-pink-600 shadow-sm shadow-pink-500/20 active:scale-[0.98] transition-all flex items-center gap-1"
                                   >
-                                    Beğen ❤️
+                                    <Heart className="w-3.5 h-3.5 fill-white stroke-none" /> Beğen
                                   </button>
                                 </div>
                               </div>
@@ -958,8 +1036,8 @@ export function SocialTabs({
                         )
                       })()
                     ) : searchedDiscover ? (
-                      <div className="text-center py-6 bg-white/50 border border-dashed border-pink-200 rounded-xl p-3 mt-2">
-                        <p className="text-[12px] text-text-secondary">Seçtiğiniz şehirlerde yeni bir aday bulunmuyor.</p>
+                      <div className="text-center py-6 bg-white/60 border border-dashed border-pink-200 rounded-2xl p-4 mt-2">
+                        <p className="text-xs text-slate-500 font-normal">Seçtiğiniz şehirlerde yeni bir aday bulunmuyor.</p>
                       </div>
                     ) : null}
                   </>
@@ -968,26 +1046,28 @@ export function SocialTabs({
             )}
           </div>
 
-          <div className="bg-white border border-border-main p-4 rounded-2xl shadow-sm flex flex-col gap-3">
+          <div className="bg-white border border-slate-100 p-4 rounded-3xl shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] flex flex-col gap-3">
             <div className="flex justify-between items-center flex-wrap gap-2">
-              <h4 className="text-[12px] font-bold text-text-secondary uppercase tracking-wider">İlan Filtrele</h4>
+              <h4 className="text-2xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Filter className="w-3.5 h-3.5 stroke-[2]" /> İlan Filtrele
+              </h4>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setEstrusOnly(!estrusOnly)}
-                  className={`px-3 py-1.5 rounded-full text-[11px] font-bold border transition-all ${
+                  className={`px-3 py-1.5 rounded-full text-2xs font-semibold border transition-all ${
                     estrusOnly 
-                      ? 'bg-pink-500 text-white border-pink-500' 
-                      : 'bg-white text-pink-500 border-pink-200 hover:bg-pink-50'
+                      ? 'bg-pink-500 text-white border-pink-500 shadow-sm' 
+                      : 'bg-white text-pink-600 border-pink-200 hover:bg-pink-50'
                   }`}
                 >
                   🌸 Aktif Kızgınlık
                 </button>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-bold text-text-secondary whitespace-nowrap">📍 Mesafe:</span>
+                  <span className="text-2xs font-semibold text-slate-500 whitespace-nowrap">Mesafe:</span>
                   <select
                     value={maxDistance ?? ''}
                     onChange={e => setMaxDistance(e.target.value ? Number(e.target.value) : null)}
-                    className="text-[11px] border border-border-main rounded-xl px-2 py-1.5 bg-white font-bold text-text-primary"
+                    className="text-2xs border border-slate-200 rounded-xl px-2 py-1.5 bg-white font-semibold text-slate-800 focus:outline-none"
                   >
                     <option value="">Tüm Türkiye</option>
                     <option value="50">50 km</option>
@@ -999,13 +1079,14 @@ export function SocialTabs({
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <select className="input-base text-[13px] py-2" value={speciesFilter} onChange={e => setSpeciesFilter(e.target.value)}>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+              <select className="px-3 py-2 bg-white border border-slate-200 rounded-2xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-all" value={speciesFilter} onChange={e => setSpeciesFilter(e.target.value)}>
                 <option value="Tümü">Tüm Türler</option>
-                <option value="Kedi">🐱 Kedi</option>
-                <option value="Köpek">🐶 Köpek</option>
+                <option value="Kedi">Kedi</option>
+                <option value="Köpek">Köpek</option>
               </select>
-              <select className="input-base text-[13px] py-2" value={genderFilter} onChange={e => setGenderFilter(e.target.value)}>
+              <select className="px-3 py-2 bg-white border border-slate-200 rounded-2xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-all" value={genderFilter} onChange={e => setGenderFilter(e.target.value)}>
                 <option value="Tümü">Tüm Cinsiyetler</option>
                 <option value="Erkek">♂ Erkek</option>
                 <option value="Dişi">♀ Dişi</option>
@@ -1013,14 +1094,14 @@ export function SocialTabs({
               <input 
                 type="text" 
                 placeholder="Şehir Ara..." 
-                className="input-base text-[13px] py-2" 
+                className="px-3 py-2 bg-white border border-slate-200 rounded-2xl text-xs font-normal text-slate-900 focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-all placeholder:text-slate-400" 
                 value={cityFilter}
                 onChange={e => setCityFilter(e.target.value)}
               />
               <input 
                 type="text" 
                 placeholder="Irk Ara..." 
-                className="input-base text-[13px] py-2" 
+                className="px-3 py-2 bg-white border border-slate-200 rounded-2xl text-xs font-normal text-slate-900 focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-all placeholder:text-slate-400" 
                 value={breedFilter}
                 onChange={e => setBreedFilter(e.target.value)}
               />
@@ -1028,11 +1109,13 @@ export function SocialTabs({
           </div>
 
           {loadingMatches ? (
-            <div className="p-10 text-center text-text-secondary text-[13px] animate-pulse">İlanlar aranıyor...</div>
+            <div className="p-10 text-center text-slate-400 text-xs animate-pulse font-normal">İlanlar aranıyor...</div>
           ) : matches.length === 0 ? (
-            <div className="card-base bg-white border border-border-main p-10 text-center flex flex-col items-center gap-3">
-              <span className="text-4xl">❤️</span>
-              <p className="text-[14px] text-text-secondary font-normal">Bu kriterlere uygun aktif üreme ilanı bulunmuyor.</p>
+            <div className="rounded-3xl bg-white border border-slate-100 p-10 text-center flex flex-col items-center gap-3 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)]">
+              <div className="w-12 h-12 rounded-2xl bg-pink-50 text-pink-500 flex items-center justify-center">
+                <Heart className="w-6 h-6 stroke-[1.75]" />
+              </div>
+              <p className="text-xs text-slate-500 font-normal">Bu kriterlere uygun aktif üreme ilanı bulunmuyor.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1042,7 +1125,9 @@ export function SocialTabs({
             </div>
           )}
         </div>
+        )
       )}
     </section>
   )
 }
+

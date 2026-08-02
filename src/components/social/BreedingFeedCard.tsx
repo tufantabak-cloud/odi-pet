@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { useState } from 'react'
 import { PetSelectorModal } from './PetSelectorModal'
+import { Heart, Sparkles, Calendar, MapPin, Check, ChevronRight } from 'lucide-react'
 
 export function BreedingFeedCard({ listing, userApplications = [] }: { listing: any, userApplications?: any[] }) {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -31,10 +32,10 @@ export function BreedingFeedCard({ listing, userApplications = [] }: { listing: 
 
   const getExperienceBadge = (level: string) => {
     switch(level) {
-      case 'experienced': return { icon: '⭐', label: 'Deneyimli', color: 'bg-amber-50 text-amber-700 border-amber-200' }
-      case 'expert': return { icon: '🏆', label: 'Çok Deneyimli', color: 'bg-violet-50 text-violet-700 border-violet-200' }
+      case 'experienced': return { label: 'Deneyimli', color: 'bg-amber-50 text-amber-700 border-amber-200' }
+      case 'expert': return { label: 'Çok Deneyimli', color: 'bg-violet-50 text-violet-700 border-violet-200' }
       case 'beginner':
-      default: return { icon: '🌱', label: 'İlk Deneyim', color: 'bg-green-50 text-green-700 border-green-200' }
+      default: return { label: 'İlk Deneyim', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' }
     }
   }
   const exp = getExperienceBadge(experience_level)
@@ -43,85 +44,96 @@ export function BreedingFeedCard({ listing, userApplications = [] }: { listing: 
   const hasApplied = userApplications.some(app => app.listing?.id === listing.id)
 
   return (
-    <div className="card-base bg-white border border-border-main p-5 flex flex-col gap-4 shadow-sm relative overflow-hidden transition-all hover:shadow-md group">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-pink-100 to-transparent rounded-bl-full opacity-50 -z-10 transition-transform group-hover:scale-110" />
+    <div className="rounded-3xl bg-white border border-slate-100 p-5 flex flex-col gap-4 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] relative overflow-hidden transition-all hover:shadow-md group">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-pink-100/60 to-transparent rounded-bl-full opacity-60 -z-10 transition-transform group-hover:scale-110" />
 
       <div className="flex gap-4 items-center">
         {displayPhoto ? (
-          <div className="relative w-[60px] h-[60px] rounded-md overflow-hidden shadow-sm shrink-0">
+          <div className="relative w-14 h-14 rounded-2xl overflow-hidden shadow-sm shrink-0">
             <Image
               src={displayPhoto}
               alt={pet.name || 'Pet Avatar'}
               fill
               className="object-cover"
-              sizes="60px"
+              sizes="56px"
             />
           </div>
         ) : (
-          <div className="w-[60px] h-[60px] rounded-md bg-gradient-to-tr from-pink-100 to-rose-50 flex items-center justify-center shadow-sm shrink-0">
-            <span className="text-2xl">❤️</span>
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-pink-100 to-rose-50 flex items-center justify-center text-pink-600 shadow-sm shrink-0">
+            <Heart className="w-7 h-7 stroke-[1.75]" />
           </div>
         )}
         
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-            <h3 className="font-black text-text-primary text-[17px] truncate">{pet.name}</h3>
-            {pet.gender === 'male' && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-100 shrink-0">♂ Erkek</span>}
-            {pet.gender === 'female' && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-pink-50 text-pink-600 border border-pink-100 shrink-0">♀ Dişi</span>}
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${exp.color} shrink-0 flex items-center gap-1`}><span>{exp.icon}</span> {exp.label}</span>
-          </div>
-          <p className="text-[13px] text-text-secondary font-medium truncate flex items-center gap-1.5">
-            <span className="inline-flex items-center justify-center w-4 h-4 rounded bg-slate-100 text-[10px]">
-              {pet.species === 'Kedi' ? '🐱' : pet.species === 'Köpek' ? '🐶' : '🐾'}
+            <h3 className="font-bold text-slate-900 text-lg truncate">{pet.name}</h3>
+            {pet.gender === 'male' && <span className="text-2xs font-semibold px-2 py-0.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 shrink-0">♂ Erkek</span>}
+            {pet.gender === 'female' && <span className="text-2xs font-semibold px-2 py-0.5 rounded-lg bg-pink-50 text-pink-600 border border-pink-100 shrink-0">♀ Dişi</span>}
+            <span className={`text-2xs font-semibold px-2 py-0.5 rounded-lg border ${exp.color} shrink-0 flex items-center gap-1`}>
+              <Sparkles className="w-3 h-3 stroke-[2]" /> {exp.label}
             </span>
-            {pet.species} {pet.breed ? ` • ${pet.breed}` : ''} {ageText ? ` • ${ageText}` : ''} {pet.city ? ` • ${pet.city}` : ''}
+          </div>
+          <p className="text-xs text-slate-500 font-medium truncate flex items-center gap-1.5">
+            <span>{pet.species}</span>
+            {pet.breed && <span>• {pet.breed}</span>}
+            {ageText && <span>• {ageText}</span>}
+            {pet.city && (
+              <span className="inline-flex items-center gap-0.5">
+                • <MapPin className="w-3 h-3 stroke-[2]" /> {pet.city}
+              </span>
+            )}
           </p>
         </div>
       </div>
 
-      <div className="bg-rose-50/80 rounded-sm p-3.5 border border-rose-100/50">
-        <h4 className="font-bold text-[14px] text-rose-900 mb-1">{title}</h4>
+      <div className="bg-rose-50/70 rounded-2xl p-3.5 border border-rose-100/60">
+        <h4 className="font-bold text-sm text-rose-950 mb-1">{title}</h4>
         {notes && (
-          <p className="text-[13px] text-text-primary leading-relaxed line-clamp-2">
+          <p className="text-xs text-slate-700 leading-relaxed line-clamp-2">
             {notes}
           </p>
         )}
         {dateRange && (
-          <p className="text-[12px] text-rose-700 font-medium mt-2 flex items-center gap-1">
-            🗓️ Tercih: {dateRange}
+          <p className="text-xs text-rose-700 font-medium mt-2 flex items-center gap-1">
+            <Calendar className="w-3.5 h-3.5 stroke-[2]" /> Tercih: {dateRange}
           </p>
         )}
       </div>
 
       {requirements && requirements.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-1">
+        <div className="flex flex-wrap gap-2 mt-0.5">
           {requirements.map((req: string, i: number) => (
-            <span key={i} className="px-2.5 py-1 bg-pink-50 text-pink-700 text-[11px] font-bold rounded-xs border border-pink-100/50 flex items-center gap-1">
-              <span className="w-1 h-1 rounded-full bg-pink-400" />
+            <span key={i} className="px-2.5 py-1 bg-pink-50 text-pink-700 text-xs font-semibold rounded-lg border border-pink-100/50 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-pink-400" />
               {req}
             </span>
           ))}
         </div>
       )}
 
-      <div className="flex items-center justify-between mt-1 pt-4 border-t border-border-main/50">
+      <div className="flex items-center justify-between mt-1 pt-3.5 border-t border-slate-100">
         <div className="flex flex-col gap-0.5">
-          <span className="text-[11px] text-text-secondary font-medium">
+          <span className="text-xs text-slate-400 font-normal flex items-center gap-1">
+            <Calendar className="w-3.5 h-3.5 stroke-[2]" />
             {new Date(created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} eklendi
           </span>
           {distance_km !== undefined && (
-            <span className="text-[10px] text-text-muted flex items-center gap-0.5 font-bold">
-              📍 ~{Math.round(distance_km)} km uzakta
+            <span className="text-2xs text-slate-400 flex items-center gap-1 font-medium">
+              <MapPin className="w-3 h-3 stroke-[2]" /> ~{Math.round(distance_km)} km uzakta
             </span>
           )}
         </div>
         {hasApplied ? (
-          <button disabled className="btn-primary py-2 px-4 text-[13px] font-bold bg-slate-100 text-slate-500 border border-slate-200 rounded-btn cursor-not-allowed shadow-none">
-            ✓ Başvuruldu
+          <button disabled className="inline-flex items-center justify-center gap-1 bg-slate-100 text-slate-500 font-semibold text-xs py-2 px-4 rounded-2xl cursor-not-allowed border border-slate-200">
+            <Check className="w-4 h-4 stroke-[2.5]" />
+            Başvuruldu
           </button>
         ) : (
-          <button onClick={() => setIsModalOpen(true)} className="btn-primary py-2 px-4 text-[13px] font-bold bg-pink-500 hover:bg-pink-600 rounded-btn shadow-sm shadow-pink-500/20 active:scale-95 transition-all">
-            Eşleşme İste →
+          <button 
+            onClick={() => setIsModalOpen(true)} 
+            className="inline-flex items-center justify-center gap-1 bg-pink-500 hover:bg-pink-600 text-white font-semibold text-xs py-2 px-4 rounded-2xl active:scale-[0.98] transition-all shadow-sm shadow-pink-500/20"
+          >
+            Eşleşme İste <ChevronRight className="w-4 h-4 stroke-[2]" />
           </button>
         )}
       </div>
@@ -136,3 +148,4 @@ export function BreedingFeedCard({ listing, userApplications = [] }: { listing: 
     </div>
   )
 }
+

@@ -83,7 +83,6 @@ export async function POST(req: NextRequest) {
 
     if (uploadError) {
       console.error('[API/Pets] Avatar upload error:', uploadError)
-      // Fotoğraf hatası kaydı durdurmaz — devam et
     } else {
       uploadedPaths.push(path)
       const { data: urlData } = supabase.storage
@@ -137,8 +136,6 @@ export async function POST(req: NextRequest) {
     is_neutered:   str(fd, 'is_neutered') === 'true',
     lifestyle:     str(fd, 'lifestyle')     || null,
   }
-
-
 
   const {
     data: rpcData,
@@ -211,32 +208,32 @@ export async function POST(req: NextRequest) {
       const isOutdoor = str(fd, 'lifestyle') === 'outdoor'
       const generatedTasks = await generateVaccinationPlan(birthDate, species, supabase, { isOutdoor })
       if (generatedTasks.length > 0) {
-      const plansPayload = generatedTasks.map(t => ({
-        user_id: user.id,
-        pet_id: data.id,
-        category: t.category,
-        sub_type: t.sub_type,
-        scheduled_at: t.scheduled_at,
-        extra_data: t.extra_data
-      }))
+        const plansPayload = generatedTasks.map(t => ({
+          user_id: user.id,
+          pet_id: data.id,
+          category: t.category,
+          sub_type: t.sub_type,
+          scheduled_at: t.scheduled_at,
+          extra_data: t.extra_data
+        }))
 
-      const { data: insertedPlans, error: planError } = await supabase
-        .from('plans')
-        .insert(plansPayload)
-        .select()
+        const { data: insertedPlans, error: planError } = await supabase
+          .from('plans')
+          .insert(plansPayload)
+          .select()
 
-      if (planError) {
-        console.error('[API/Pets] Plan generation error:', planError)
-      } else {
-        const { count: notifCount, error: notifError } = await createVaccineNotifications(
-          user.id,
-          data.id,
-          insertedPlans ?? [],
-          supabase
-        )
-        if (notifError) console.error('[API/Pets] Notifications insert error:', notifError)
-        else console.log('[API/Pets] Notifications inserted successfully. count:', notifCount)
-      }
+        if (planError) {
+          console.error('[API/Pets] Plan generation error:', planError)
+        } else {
+          const { count: notifCount, error: notifError } = await createVaccineNotifications(
+            user.id,
+            data.id,
+            insertedPlans ?? [],
+            supabase
+          )
+          if (notifError) console.error('[API/Pets] Notifications insert error:', notifError)
+          else console.log('[API/Pets] Notifications inserted successfully. count:', notifCount)
+        }
       }
     }
   }
@@ -258,6 +255,34 @@ export async function POST(req: NextRequest) {
     });
   
   if (autoPlanError) console.error('[API/Pets] Auto plan error:', autoPlanError);
+
+  // ─── Her bir pet için Bonus Pro Kredisi (+90 Gün veya Admin Ayarlı) ──
+  try {
+    const { createAdminSupabaseClient } = await import('@/lib/supabase/server')
+    const adminSupabase = createAdminSupabaseClient()
+    let perPetDays = 90
+    const { data: settingsRow } = await adminSupabase
+      .from('system_settings')
+      .select('value')
+      .eq('key', 'membership_rules')
+      .maybeSingle()
+
+    if (settingsRow?.value?.per_pet_credit_days !== undefined) {
+      perPetDays = Number(settingsRow.value.per_pet_credit_days)
+    }
+
+    if (perPetDays > 0) {
+      await adminSupabase.rpc('grant_membership_credit', {
+        p_profile_id: user.id,
+        p_days: perPetDays,
+        p_reason: 'pet_added',
+        p_idempotency_key: `pet_added:${data.id}`,
+        p_metadata: { pet_id: data.id, days: perPetDays }
+      })
+    }
+  } catch (creditErr) {
+    console.error('[API/Pets] Per pet credit grant error:', creditErr)
+  }
 
   revalidatePath('/owner/dashboard')
   // @ts-expect-error

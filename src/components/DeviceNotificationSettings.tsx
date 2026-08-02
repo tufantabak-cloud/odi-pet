@@ -39,7 +39,7 @@ export default function DeviceNotificationSettings({ onSave, onCancel }: DeviceN
         {/* Section Wrapper - 32px spacing from screen title achieved via mb-8 (32px) */}
         <div className="flex flex-col mb-8">
           {/* Section Title */}
-          <h3 className="text-[14px] font-black text-[#2A4B7C] uppercase tracking-wider mb-4">
+          <h3 className="text-[14px] font-black text-primary uppercase tracking-wider mb-4">
             Hareket Bildirimleri
           </h3>
 
@@ -55,7 +55,7 @@ export default function DeviceNotificationSettings({ onSave, onCancel }: DeviceN
                 type="button"
                 onClick={() => setMotionAlerts(!motionAlerts)}
                 className={`w-12 h-6 rounded-full p-0.5 transition-colors duration-300 focus:outline-none flex items-center shrink-0 ${
-                  motionAlerts ? 'bg-[#2A4B7C]' : 'bg-[#E5E5EA]'
+                  motionAlerts ? 'bg-primary' : 'bg-slate-200 dark:bg-slate-700'
                 }`}
                 aria-label="Bildirimleri Aç/Kapa"
               >
@@ -75,7 +75,7 @@ export default function DeviceNotificationSettings({ onSave, onCancel }: DeviceN
               <select
                 value={sensitivity}
                 onChange={(e) => setSensitivity(e.target.value)}
-                className="w-full input-base py-3 px-4 text-[14px] bg-white border border-border-main rounded-xl cursor-pointer focus:outline-none focus:border-[#2A4B7C] transition-all"
+                className="w-full input-base py-3 px-4 text-[14px] bg-white dark:bg-slate-900 border border-border-main rounded-xl cursor-pointer focus:outline-none focus:border-primary transition-all"
               >
                 <option value="low">Düşük</option>
                 <option value="medium">Orta (Önerilen)</option>
@@ -88,7 +88,7 @@ export default function DeviceNotificationSettings({ onSave, onCancel }: DeviceN
 
         {/* System Notifications Section */}
         <div className="flex flex-col">
-          <h3 className="text-[14px] font-black text-[#2A4B7C] uppercase tracking-wider mb-4">
+          <h3 className="text-[14px] font-black text-primary uppercase tracking-wider mb-4">
             Sistem Bildirimleri
           </h3>
           
@@ -101,7 +101,7 @@ export default function DeviceNotificationSettings({ onSave, onCancel }: DeviceN
                 type="button"
                 onClick={() => setQuietHours(!quietHours)}
                 className={`w-12 h-6 rounded-full p-0.5 transition-colors duration-300 focus:outline-none flex items-center shrink-0 ${
-                  quietHours ? 'bg-[#2A4B7C]' : 'bg-[#E5E5EA]'
+                  quietHours ? 'bg-primary' : 'bg-slate-200 dark:bg-slate-700'
                 }`}
                 aria-label="Sessiz Saatleri Aç/Kapa"
               >
@@ -122,8 +122,7 @@ export default function DeviceNotificationSettings({ onSave, onCancel }: DeviceN
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="w-full text-white font-bold rounded-xl py-3.5 px-4 active:scale-[0.98] transition-all text-[15px] text-center shadow-md"
-          style={{ backgroundColor: '#2A4B7C' }}
+          className="w-full bg-primary hover:bg-primary/90 text-white font-bold rounded-xl py-3.5 px-4 active:scale-[0.98] transition-all text-[15px] text-center shadow-md"
         >
           {isSaving ? 'Kaydediliyor...' : 'Ayarları Kaydet'}
         </button>

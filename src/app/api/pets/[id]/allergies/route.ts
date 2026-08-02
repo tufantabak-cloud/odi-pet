@@ -109,7 +109,10 @@ export async function DELETE(request: Request, props: { params: Promise<{ id: st
 
     const { error } = await supabase
       .from('health_allergies')
-      .delete()
+      .update({
+        is_archived: true,
+        archived_at: new Date().toISOString()
+      })
       .eq('id', allergy_id)
       .eq('pet_id', id) // Extra safety check
 

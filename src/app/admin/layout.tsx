@@ -5,6 +5,7 @@ import { requireRole } from '@/lib/auth/get-current-profile'
 import { logout } from '@/features/auth/actions'
 import MobileAdminHeader from './MobileAdminHeader'
 import AdminSidebarNav from './AdminSidebarNav'
+import { ShieldCheck, UserCheck, ArrowLeft, LogOut } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Admin Console — ODI Pet',
@@ -18,19 +19,21 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const roleBadge = profile.role === 'founder' ? 'FOUNDER' : 'ADMIN'
   const roleBadgeColor =
     profile.role === 'founder'
-      ? 'bg-purple-100 text-purple-700'
-      : 'bg-amber-100 text-amber-700'
+      ? 'bg-purple-100 text-purple-700 border-purple-200'
+      : 'bg-amber-100 text-amber-700 border-amber-200'
 
   return (
     <div className="min-h-dvh bg-bg-main flex">
       {/* Admin Sidebar */}
       <aside className="w-64 bg-surface border-r border-border-main flex flex-col hidden md:flex sticky top-0 h-screen">
         <div className="p-6 border-b border-border-main flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-[20px]">🔭</span>
-            <span className="font-black text-text-primary text-[15px]">Odi Admin</span>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-purple-600/10 text-purple-600 flex items-center justify-center">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <span className="font-bold text-text-primary text-base">Odi Admin</span>
           </div>
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${roleBadgeColor}`}>
+          <span className={`text-2xs font-bold px-2.5 py-0.5 rounded-full border ${roleBadgeColor}`}>
             {roleBadge}
           </span>
         </div>
@@ -38,17 +41,20 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         {/* Dynamic Interactive Active Route Nav */}
         <AdminSidebarNav />
 
-        <div className="p-4 border-t border-border-main space-y-1">
+        <div className="p-4 border-t border-border-main space-y-1.5">
           {/* Current operator badge */}
-          <div className="px-3 py-2 rounded-xl bg-bg-main text-[12px] text-text-secondary font-semibold truncate">
-            🧑‍💻 {profile.first_name ?? profile.email ?? 'Unknown'}
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-bg-main text-xs text-text-secondary font-semibold truncate">
+            <UserCheck className="w-4 h-4 text-purple-600 shrink-0" />
+            <span className="truncate">{profile.first_name ?? profile.email ?? 'Operatör'}</span>
           </div>
-          <Link href="/owner/dashboard" className="flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all">
-            <span>←</span> Uygulamaya Dön
+          <Link href="/owner/dashboard" className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-text-secondary hover:text-primary hover:bg-bg-main rounded-xl transition-all active:scale-[0.98]">
+            <ArrowLeft className="w-4 h-4 shrink-0" />
+            <span>Uygulamaya Dön</span>
           </Link>
-          <form action={logout} className="w-full mt-1">
-            <button type="submit" className="w-full flex items-center gap-3 px-3 py-2 text-[13px] font-semibold text-error hover:bg-error/10 rounded-xl transition-all">
-              <span>🚪</span> Çıkış Yap
+          <form action={logout} className="w-full">
+            <button type="submit" className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-error hover:bg-error/10 rounded-xl transition-all active:scale-[0.98]">
+              <LogOut className="w-4 h-4 shrink-0" />
+              <span>Çıkış Yap</span>
             </button>
           </form>
         </div>
@@ -64,3 +70,4 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     </div>
   )
 }
+

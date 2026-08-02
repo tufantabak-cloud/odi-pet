@@ -34,7 +34,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
   const { id } = await context.params
   const body = await req.json().catch(() => ({}))
-  const { last_seen_location, contact_phone, last_seen_at, city, latitude, longitude } = body
+  const { last_seen_location, contact_phone, last_seen_at, city, district, province, latitude, longitude } = body
   const supabase = await createServerSupabaseClient()
 
   // Validation
@@ -85,12 +85,16 @@ export async function POST(req: NextRequest, context: RouteContext) {
     validLastSeenAt = dateObj.toISOString()
   }
 
+  const selectedProvince = province || city
+
   const { error } = await supabase
     .from('lost_reports')
     .insert({
       pet_id: id,
       last_seen_location: loc,
       contact_phone: phone,
+      ...(selectedProvince && { province: String(selectedProvince).trim() }),
+      ...(district && { district: String(district).trim() }),
       ...(validLastSeenAt && { last_seen_at: validLastSeenAt }),
       ...(latitude !== undefined && { latitude }),
       ...(longitude !== undefined && { longitude }),

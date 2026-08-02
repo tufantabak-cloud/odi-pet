@@ -250,6 +250,7 @@ export default function DashboardClient({ initialData }: { initialData: Dashboar
           value={`%${data?.subscriptions.proRatePct ?? 0}`}
           sub={`Bu ay +${data?.subscriptions.proMonth ?? 0} · Toplam ${data?.subscriptions.proTotal ?? 0}`}
           accent="violet"
+          href="/admin/memberships"
         />
         <StatCard
           icon={AlertTriangle}
@@ -265,6 +266,7 @@ export default function DashboardClient({ initialData }: { initialData: Dashboar
           value={data?.subscriptions.proTotal ?? 0}
           sub="Aktif pro & ai_plus aboneler"
           accent="violet"
+          href="/admin/memberships"
         />
       </div>
 
@@ -339,35 +341,35 @@ export default function DashboardClient({ initialData }: { initialData: Dashboar
       <div>
         <h2 className="text-base font-bold text-text-primary mb-4">Hızlı Eylemler</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Link href="/admin/users" className="card-base p-5 hover:border-primary transition-all group rounded-[24px]">
+          <Link href="/admin/users" className="card-base p-5 hover:border-primary transition-all active:scale-[0.98] group rounded-3xl">
             <div className="w-10 h-10 rounded-xl bg-primary-soft flex items-center justify-center mb-3">
               <Users className="w-5 h-5 text-primary" />
             </div>
             <h3 className="font-semibold text-sm text-text-primary group-hover:text-primary">Kullanıcıları Yönet</h3>
             <p className="text-xs text-text-secondary mt-1">Kayıtlı kullanıcıları görüntüle, düzenle veya engelle.</p>
           </Link>
-          <Link href="/admin/pets" className="card-base p-5 hover:border-primary transition-all group rounded-[24px]">
+          <Link href="/admin/pets" className="card-base p-5 hover:border-primary transition-all active:scale-[0.98] group rounded-3xl">
             <div className="w-10 h-10 rounded-xl bg-primary-soft flex items-center justify-center mb-3">
               <PawPrint className="w-5 h-5 text-primary" />
             </div>
             <h3 className="font-semibold text-sm text-text-primary group-hover:text-primary">Evcil Hayvanlar</h3>
             <p className="text-xs text-text-secondary mt-1">Sistemdeki tüm kayıtlı evcil hayvanları görüntüle.</p>
           </Link>
-          <Link href="/admin/social" className="card-base p-5 hover:border-primary transition-all group rounded-[24px]">
+          <Link href="/admin/social" className="card-base p-5 hover:border-primary transition-all active:scale-[0.98] group rounded-3xl">
             <div className="w-10 h-10 rounded-xl bg-primary-soft flex items-center justify-center mb-3">
               <Smartphone className="w-5 h-5 text-primary" />
             </div>
             <h3 className="font-semibold text-sm text-text-primary group-hover:text-primary">Sosyal Moderasyon</h3>
             <p className="text-xs text-text-secondary mt-1">Kullanıcı gönderilerini ve sosyal etkileşimleri incele.</p>
           </Link>
-          <Link href="/admin/ai-vet" className="card-base p-5 hover:border-primary transition-all group rounded-[24px]">
+          <Link href="/admin/ai-vet" className="card-base p-5 hover:border-primary transition-all active:scale-[0.98] group rounded-3xl">
             <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center mb-3">
               <Sparkles className="w-5 h-5 text-purple-600" />
             </div>
             <h3 className="font-semibold text-sm text-text-primary group-hover:text-primary">AI-Vet Yönetimi</h3>
             <p className="text-xs text-text-secondary mt-1">AI analizlerini ve sistem kullanım istatistiklerini gör.</p>
           </Link>
-          <Link href="/admin/vets" className="card-base p-5 hover:border-primary transition-all group rounded-[24px]">
+          <Link href="/admin/vets" className="card-base p-5 hover:border-primary transition-all active:scale-[0.98] group rounded-3xl">
             <div className="w-10 h-10 rounded-xl bg-sky-100 flex items-center justify-center mb-3">
               <Stethoscope className="w-5 h-5 text-sky-600" />
             </div>

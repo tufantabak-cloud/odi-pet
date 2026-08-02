@@ -1,5 +1,6 @@
 import { getCurrentProfile, getSessionUser } from '@/lib/auth/get-current-profile'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { getEntitlement } from '@/lib/subscription/entitlement'
 import Link from 'next/link'
 import { logout } from '@/features/auth/actions'
 import PetCardActions from './PetCardActions'
@@ -7,28 +8,58 @@ import NotificationSettings from './NotificationSettings'
 import CoachMark from '@/components/ui/CoachMark'
 import { BiometricPrompt } from '@/components/BiometricPrompt'
 import { BiometricSettingsRow } from '@/components/BiometricSettingsRow'
-import { UtensilsIcon } from '@/components/icons/PetIcons'
-export default async function ProfileMenuPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+import {
+  ChevronLeft,
+  ChevronRight,
+  Star,
+  CheckCircle2,
+  Calendar,
+  Syringe,
+  Activity,
+  Package,
+  Palette,
+  Settings,
+  ShieldCheck,
+  KeyRound,
+  Lock,
+  Download,
+  Trash2,
+  HelpCircle,
+  Headphones,
+  LogOut,
+  FileText,
+  Utensils,
+  Plus,
+  Sparkles,
+  CreditCard,
+} from 'lucide-react'
+
+export default async function ProfileMenuPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
   const profile = await getCurrentProfile()
   const user = await getSessionUser()
   const supabase = await createServerSupabaseClient()
   const params = await searchParams
   const showBiometricPrompt = params.biometric === 'true'
-  
+
   const { data: pets } = await supabase
     .from('pets')
     .select('*')
     .eq('owner_id', profile?.id ?? '')
-    
-  const { data: subscription } = await supabase
-    .from('user_subscriptions')
-    .select('*')
-    .eq('profile_id', profile?.id ?? '')
-    .single()
 
-  const planName = subscription?.plan === 'pro' ? 'Odi Pro' : subscription?.plan === 'ai_plus' ? 'Odi AI+' : 'Odi Free'
-  const isPremium = subscription?.plan === 'pro' || subscription?.plan === 'ai_plus'
-  
+  const entitlement = await getEntitlement(profile?.id ?? '')
+
+  const planName =
+    entitlement.tier === 'pro'
+      ? 'Odi Pro'
+      : entitlement.tier === 'ai_plus'
+      ? 'Odi AI+'
+      : 'Odi Free'
+  const isPremium = entitlement.isPremium
+
   let hasVaccineRecords = false
   if (pets && pets.length > 0) {
     const { count } = await supabase
@@ -45,7 +76,6 @@ export default async function ProfileMenuPage({ searchParams }: { searchParams: 
     .eq('user_id', user?.id ?? '')
 
   // Calculate Profile Completion Tasks
-  // Her check bir "slot" temsil eder; totalTasks = olası maksimum slot sayısı
   const completionChecks = [
     { done: !!(user?.phone || (profile as any)?.phone), label: 'Telefon Ekle', action: '+ Telefon Ekle', link: '/owner/profile/edit' },
     { done: (passkeyCount ?? 0) > 0, label: 'Biyometrik Giriş Tanımla', action: '+ Şifresiz Giriş', link: '/owner/profile?biometric=true' },
@@ -57,47 +87,49 @@ export default async function ProfileMenuPage({ searchParams }: { searchParams: 
   const tasks = completionChecks.filter(c => !c.done)
   const totalTasks = completionChecks.length
   const completedTasks = completionChecks.filter(c => c.done).length
-  // %100 tamamlandıysa tam göster; aksi hâlde minimum %15 (kullanıcıyı cesaretlendirmek için)
   const progress = completedTasks === totalTasks ? 100 : Math.max(15, Math.round((completedTasks / totalTasks) * 100))
 
   return (
-    <div className="flex flex-col gap-8 pb-20 w-full mx-auto font-sans">
-
+    <div className="flex flex-col gap-6 pb-20 w-full mx-auto font-sans">
       {/* Back Link */}
-      <div className="flex items-center px-2 -mb-4">
-        <Link href="/owner/dashboard" className="flex items-center gap-2 text-text-secondary hover:text-primary transition-colors text-[14px] font-bold group">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:-translate-x-0.5 transition-transform">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
+      <div className="flex items-center px-1 -mb-2">
+        <Link
+          href="/owner/dashboard"
+          className="flex items-center gap-2 text-text-secondary hover:text-primary transition-all text-sm font-semibold group active:scale-[0.98]"
+        >
+          <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
           Ana Sayfa'ya Dön
         </Link>
       </div>
 
       {/* 1. Header / Identity Layer */}
-      <section className="card-base overflow-hidden relative shadow-lg shadow-primary/5">
-        <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-primary to-primary-hover"/>
-        
+      <section className="bg-white rounded-3xl overflow-hidden relative border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)]">
+        <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-primary to-primary-hover" />
+
         <div className="px-6 pt-12 pb-6 relative z-10 flex flex-col items-center">
-          <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center text-primary text-[40px] font-black ring-[6px] ring-white shadow-xl mb-4 relative">
+          <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center text-primary text-3xl font-black ring-4 ring-white shadow-lg mb-3 relative">
             {profile?.first_name?.charAt(0) ?? 'U'}
-            <div className={`absolute bottom-0 right-0 w-7 h-7 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-bold ${isPremium ? 'bg-amber-400 text-white' : 'bg-gray-300 text-gray-600'}`}>
-              {isPremium ? 'PRO' : 'FREE'}
+            <div
+              className={`absolute bottom-0 right-0 px-2 h-7 rounded-full border-2 border-white flex items-center justify-center text-2xs font-bold ${
+                isPremium ? 'bg-amber-400 text-white' : 'bg-slate-200 text-slate-600'
+              }`}
+            >
+              {isPremium ? (entitlement.source === 'credit' ? `PRO · ${entitlement.daysLeft} gün` : 'PRO') : 'FREE'}
             </div>
           </div>
-          
-          <h1 className="text-[26px] font-extrabold text-text-primary tracking-tight">
+
+          <h1 className="text-2xl font-extrabold text-text-primary tracking-tight">
             {profile?.first_name} {profile?.last_name ?? ''}
           </h1>
-          <p className="text-text-secondary text-[15px] font-medium">{user?.email}</p>
-          
-          <div className="flex items-center gap-2 mt-4 bg-bg-main px-4 py-2 rounded-full border border-border-main">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"/>
-            <span className="text-[12px] font-bold text-text-secondary uppercase tracking-widest">{planName} Üyesi</span>
-            {isPremium && subscription?.current_period_end && (
-              <span className="text-[11px] text-text-secondary ml-1">• Yenilenme: {new Date(subscription.current_period_end).toLocaleDateString('tr-TR')}</span>
-            )}
+          <p className="text-text-secondary text-sm font-medium mt-0.5">{user?.email}</p>
+
+          <div className="flex items-center gap-2 mt-3 bg-bg-main px-4 py-1.5 rounded-full border border-border-main">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs font-bold text-text-secondary uppercase tracking-wider">
+              {entitlement.source === 'credit' ? `Odi Pro · ${entitlement.daysLeft} gün kaldı` : `${planName} Üyesi`}
+            </span>
           </div>
-          
+
           {/* Profile Completion Bar */}
           {progress < 100 && (
             <div className="w-full max-w-sm mt-6 relative">
@@ -108,17 +140,24 @@ export default async function ProfileMenuPage({ searchParams }: { searchParams: 
                 icon="🚀"
                 position="top"
               />
-              <div className="flex justify-between text-[12px] font-bold mb-2">
+              <div className="flex justify-between text-xs font-bold mb-2">
                 <span className="text-text-secondary">%{progress} Profil Tamamlandı</span>
-                {tasks.length > 0 && <span className="text-primary cursor-pointer hover:underline">Tamamla</span>}
+                {tasks.length > 0 && <span className="text-primary hover:underline">Tamamla</span>}
               </div>
               <div className="h-2.5 w-full bg-bg-main rounded-full overflow-hidden">
-                <div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: `${progress}%` }} />
+                <div
+                  className="h-full bg-primary rounded-full transition-all duration-1000"
+                  style={{ width: `${progress}%` }}
+                />
               </div>
               {tasks.length > 0 && (
                 <div className="flex gap-2 mt-3 overflow-x-auto pb-1 hide-scrollbar">
                   {tasks.map((task, i) => (
-                    <Link key={i} href={task.link} className="px-3 py-1.5 rounded-lg bg-bg-main text-[11px] font-semibold text-text-secondary border border-border-main shrink-0 cursor-pointer hover:bg-border-main hover:text-text-primary transition-colors">
+                    <Link
+                      key={i}
+                      href={task.link}
+                      className="px-3 py-1.5 rounded-xl bg-bg-main text-xs font-semibold text-text-secondary border border-border-main shrink-0 cursor-pointer hover:bg-border-main hover:text-text-primary transition-all active:scale-[0.98]"
+                    >
                       {task.action}
                     </Link>
                   ))}
@@ -130,94 +169,125 @@ export default async function ProfileMenuPage({ searchParams }: { searchParams: 
       </section>
 
       {/* 2. Subscription Command Center */}
-      <section className="flex flex-col gap-3">
-        <h2 className="text-[12px] font-black text-text-secondary uppercase tracking-widest px-2">Abonelik Yönetimi</h2>
-        <div className="card-base p-6 border-l-4 border-l-amber-400">
-          <div className="flex justify-between items-start mb-6">
+      <section className="flex flex-col gap-2">
+        <h2 className="text-xs font-bold text-text-secondary uppercase tracking-wider px-2">Abonelik Yönetimi</h2>
+        <div className="bg-white rounded-3xl p-6 border-l-4 border-l-amber-400 border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)]">
+          <div className="flex justify-between items-start mb-5">
             <div>
-              <h3 className="text-[20px] font-extrabold text-text-primary flex items-center gap-2">
+              <h3 className="text-xl font-extrabold text-text-primary flex items-center gap-2">
                 {planName}
-                {isPremium && (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-amber-400">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                  </svg>
-                )}
+                {isPremium && <Star className="w-5 h-5 text-amber-400 fill-amber-400" />}
               </h3>
-              <p className="text-[14px] text-text-secondary mt-1">{isPremium ? 'Tüm Pro avantajları aktif' : 'Ücretsiz plana devam ediyorsunuz'}</p>
+              <p className="text-sm text-text-secondary mt-1">
+                {isPremium ? 'Tüm Pro avantajları aktif' : 'Ücretsiz plana devam ediyorsunuz'}
+              </p>
             </div>
             {isPremium ? (
-              <span className="px-3 py-1 bg-green-100 text-green-700 text-[11px] font-bold rounded-full">Otomatik Yenileme Açık</span>
+              <span className="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full">
+                Otomatik Yenileme Açık
+              </span>
             ) : (
-              <span className="px-3 py-1 bg-gray-100 text-gray-600 text-[11px] font-bold rounded-full">Ücretsiz Sürüm</span>
+              <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-full">
+                Ücretsiz Sürüm
+              </span>
             )}
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-            <div className="flex items-center gap-2 text-[13px] font-semibold text-text-primary">
-              <div className="w-5 h-5 rounded-full bg-primary-soft text-primary flex items-center justify-center">✓</div> Vet Chat
+            <div className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+              <div className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+              </div>
+              Vet Chat & AI Asistan
             </div>
-            <div className="flex items-center gap-2 text-[13px] font-semibold text-text-primary">
-              <div className="w-5 h-5 rounded-full bg-primary-soft text-primary flex items-center justify-center">✓</div> Predictive Analytics
+            <div className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+              <div className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+              </div>
+              Tahminsel Analitik & Risk Uyarısı
             </div>
-            <div className="flex items-center gap-2 text-[13px] font-semibold text-text-primary">
-              <div className="w-5 h-5 rounded-full bg-primary-soft text-primary flex items-center justify-center">✓</div> Premium İçerik
+            <div className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+              <div className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+              </div>
+              Premium Rehber & Sağlık İçeriği
             </div>
-            <div className="flex items-center gap-2 text-[13px] font-medium text-text-secondary opacity-50">
-              <div className="w-5 h-5 rounded-full bg-bg-main text-text-secondary flex items-center justify-center border border-border-main">✗</div> Nutrition Insights
+            <div className="flex items-center gap-2 text-sm font-medium text-text-secondary opacity-60">
+              <div className="w-5 h-5 rounded-full bg-bg-main text-text-secondary flex items-center justify-center border border-border-main">
+                <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+              </div>
+              Gelişmiş Beslenme Raporları
             </div>
           </div>
-          
-      <div className="flex flex-wrap gap-3">
-            <Link href="/owner/profile/subscription" className={`btn-${isPremium ? 'secondary' : 'primary'} text-[13px] py-2 px-5`}>
+
+          <div className="flex flex-wrap gap-3 items-center">
+            <Link
+              href="/owner/profile/subscription"
+              className={`rounded-2xl text-sm font-semibold py-2.5 px-5 transition-all active:scale-[0.98] ${
+                isPremium ? 'btn-secondary' : 'btn-primary'
+              }`}
+            >
               {isPremium ? 'Aboneliği Yönet →' : 'Pro\'ya Yükselt →'}
             </Link>
-            <Link href="/owner/profile/subscription" className="btn-secondary text-[13px] py-2 px-5">Fatura Geçmişi</Link>
-            {isPremium && <button className="text-error text-[13px] font-bold ml-auto hover:underline">Aboneliği İptal Et</button>}
+            <Link
+              href="/owner/profile/subscription"
+              className="btn-secondary text-sm font-semibold py-2.5 px-5 rounded-2xl active:scale-[0.98]"
+            >
+              Fatura Geçmişi
+            </Link>
           </div>
         </div>
       </section>
 
       {/* 3. Pet Ecosystem Management */}
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-2">
         <div className="flex justify-between items-center px-2">
-          <h2 className="text-[12px] font-black text-text-secondary uppercase tracking-widest">Can Dostlarım</h2>
+          <h2 className="text-xs font-bold text-text-secondary uppercase tracking-wider">Can Dostlarım</h2>
+          <Link
+            href="/owner/pets/add"
+            className="text-xs font-bold text-primary flex items-center gap-1 hover:underline active:scale-[0.98]"
+          >
+            <Plus className="w-3.5 h-3.5" /> Yeni Dost Ekle
+          </Link>
         </div>
-        
+
         <div className="grid grid-cols-1 gap-3">
           {pets?.map(pet => (
-            <div key={pet.id} className="card-base p-4 flex items-center gap-4 hover:border-primary/30 transition-colors">
-              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary-soft to-primary/20 flex items-center justify-center text-primary font-black text-[20px] shrink-0">
+            <div
+              key={pet.id}
+              className="bg-white rounded-3xl p-4 flex items-center gap-4 border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] hover:border-primary/30 transition-all"
+            >
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center text-primary font-black text-xl shrink-0">
                 {pet.name.charAt(0)}
               </div>
               <div className="flex-1">
-                <h3 className="text-[16px] font-bold text-text-primary">{pet.name}</h3>
-                <p className="text-[13px] text-text-secondary font-medium">{pet.species} • {pet.breed || 'Bilinmiyor'}</p>
+                <h3 className="text-base font-bold text-text-primary">{pet.name}</h3>
+                <p className="text-sm text-text-secondary font-medium">
+                  {pet.species} • {pet.breed || 'Bilinmiyor'}
+                </p>
               </div>
               <div className="flex flex-col items-end gap-2">
-
                 <PetCardActions pet={pet} />
               </div>
             </div>
           ))}
           {(!pets || pets.length === 0) && (
-            <div className="card-base p-6 text-center text-text-secondary text-[14px]">
+            <div className="bg-white rounded-3xl p-6 text-center text-text-secondary text-sm font-medium border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)]">
               Henüz kayıtlı bir can dostunuz yok.
             </div>
           )}
         </div>
       </section>
 
-
-
       {/* 4. Notification Intelligence Center */}
       <NotificationSettings />
 
-      {/* 6. Billing History */}
-      <section className="flex flex-col gap-3">
-        <h2 className="text-[12px] font-black text-text-secondary uppercase tracking-widest px-2">Ödeme Geçmişi</h2>
-        <div className="card-base overflow-hidden">
-          <table className="w-full text-left text-[13px]">
-            <thead className="bg-bg-main text-text-secondary font-bold text-[11px] uppercase tracking-wider">
+      {/* 5. Billing History */}
+      <section className="flex flex-col gap-2">
+        <h2 className="text-xs font-bold text-text-secondary uppercase tracking-wider px-2">Ödeme Geçmişi</h2>
+        <div className="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)]">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-bg-main text-text-secondary font-bold text-xs uppercase tracking-wider">
               <tr>
                 <th className="p-4 py-3">Tarih</th>
                 <th className="p-4 py-3">Tutar</th>
@@ -226,161 +296,205 @@ export default async function ProfileMenuPage({ searchParams }: { searchParams: 
               </tr>
             </thead>
             <tbody className="divide-y divide-border-main font-medium">
-              <tr>
+              <tr className="hover:bg-slate-50/50 transition-colors">
                 <td className="p-4 text-text-primary">01 May 2026</td>
                 <td className="p-4 text-text-primary">₺149.00</td>
-                <td className="p-4"><span className="text-green-600 bg-green-50 px-2 py-0.5 rounded text-[11px] font-bold">Ödendi</span></td>
-                <td className="p-4 text-right"><span className="text-primary cursor-pointer hover:underline">PDF</span></td>
+                <td className="p-4">
+                  <span className="text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg text-xs font-bold">Ödendi</span>
+                </td>
+                <td className="p-4 text-right">
+                  <span className="text-primary font-semibold cursor-pointer hover:underline">PDF</span>
+                </td>
               </tr>
-              <tr>
+              <tr className="hover:bg-slate-50/50 transition-colors">
                 <td className="p-4 text-text-primary">01 Nis 2026</td>
                 <td className="p-4 text-text-primary">₺149.00</td>
-                <td className="p-4"><span className="text-green-600 bg-green-50 px-2 py-0.5 rounded text-[11px] font-bold">Ödendi</span></td>
-                <td className="p-4 text-right"><span className="text-primary cursor-pointer hover:underline">PDF</span></td>
+                <td className="p-4">
+                  <span className="text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg text-xs font-bold">Ödendi</span>
+                </td>
+                <td className="p-4 text-right">
+                  <span className="text-primary font-semibold cursor-pointer hover:underline">PDF</span>
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
       </section>
 
-      {/* App Settings */}
-      <section className="flex flex-col gap-3">
-        <h2 className="text-[12px] font-black text-text-secondary uppercase tracking-widest px-2">Uygulama Ayarları</h2>
-        <div className="card-base divide-y divide-border-main text-[14px] font-semibold text-text-primary">
-
-          <Link href="/owner/profile/task-settings" className="block p-4 hover:bg-bg-main transition-colors flex justify-between items-center">
+      {/* 6. App Settings */}
+      <section className="flex flex-col gap-2">
+        <h2 className="text-xs font-bold text-text-secondary uppercase tracking-wider px-2">Uygulama Ayarları</h2>
+        <div className="bg-white rounded-3xl divide-y divide-border-main text-sm font-semibold text-text-primary border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] overflow-hidden">
+          <Link
+            href="/owner/profile/task-settings"
+            className="p-4 hover:bg-bg-main transition-all flex justify-between items-center active:scale-[0.99]"
+          >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
+              <div className="w-9 h-9 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+                <Calendar className="w-5 h-5" />
               </div>
               Görev & Hatırlatıcı Ayarları
             </div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-secondary"><polyline points="9 18 15 12 9 6"/></svg>
+            <ChevronRight className="w-4 h-4 text-text-secondary" />
           </Link>
-          <Link href="/owner/profile/vaccine-settings" className="block p-4 hover:bg-bg-main transition-colors flex justify-between items-center border-t border-border-main">
+
+          <Link
+            href="/owner/profile/vaccine-settings"
+            className="p-4 hover:bg-bg-main transition-all flex justify-between items-center active:scale-[0.99]"
+          >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              <div className="w-9 h-9 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                <Syringe className="w-5 h-5" />
               </div>
               Aşı & Parazit Şablonları
             </div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-secondary"><polyline points="9 18 15 12 9 6"/></svg>
+            <ChevronRight className="w-4 h-4 text-text-secondary" />
           </Link>
-          <Link href="/owner/profile/symptom-settings" className="block p-4 hover:bg-bg-main transition-colors flex justify-between items-center border-t border-border-main">
+
+          <Link
+            href="/owner/profile/symptom-settings"
+            className="p-4 hover:bg-bg-main transition-all flex justify-between items-center active:scale-[0.99]"
+          >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              <div className="w-9 h-9 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+                <Activity className="w-5 h-5" />
               </div>
               Semptom Şablonları
             </div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-secondary"><polyline points="9 18 15 12 9 6"/></svg>
+            <ChevronRight className="w-4 h-4 text-text-secondary" />
           </Link>
-          <Link href="/owner/profile/product-settings" className="block p-4 hover:bg-bg-main transition-colors flex justify-between items-center border-t border-border-main">
+
+          <Link
+            href="/owner/profile/product-settings"
+            className="p-4 hover:bg-bg-main transition-all flex justify-between items-center active:scale-[0.99]"
+          >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+              <div className="w-9 h-9 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                <Package className="w-5 h-5" />
               </div>
               Ürün Şablonları
             </div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-secondary"><polyline points="9 18 15 12 9 6"/></svg>
+            <ChevronRight className="w-4 h-4 text-text-secondary" />
           </Link>
-          <Link href="/owner/profile/feeding-templates" className="block p-4 hover:bg-bg-main transition-colors flex justify-between items-center">
+
+          <Link
+            href="/owner/profile/feeding-templates"
+            className="p-4 hover:bg-bg-main transition-all flex justify-between items-center active:scale-[0.99]"
+          >
             <div className="flex items-center gap-3">
-              <UtensilsIcon badgeSize="sm" size={18} />
+              <div className="w-9 h-9 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                <Utensils className="w-5 h-5" />
+              </div>
               Beslenme & Porsiyon Şablonları
             </div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-secondary"><polyline points="9 18 15 12 9 6"/></svg>
+            <ChevronRight className="w-4 h-4 text-text-secondary" />
           </Link>
-          <Link href="/owner/profile/appearance" className="block p-4 hover:bg-bg-main transition-colors flex justify-between items-center">
+
+          <Link
+            href="/owner/profile/appearance"
+            className="p-4 hover:bg-bg-main transition-all flex justify-between items-center active:scale-[0.99]"
+          >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 2.7l3 9h9l-7.3 5.4 2.8 8.9L12 20.6l-7.5 5.4 2.8-8.9L0 11.7h9z"/>
-                </svg>
+              <div className="w-9 h-9 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
+                <Palette className="w-5 h-5" />
               </div>
               Tema & Görüntüleme Seçenekleri
             </div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-secondary"><polyline points="9 18 15 12 9 6"/></svg>
+            <ChevronRight className="w-4 h-4 text-text-secondary" />
           </Link>
-          <Link href="/owner/profile/unit-preferences" className="block p-4 hover:bg-bg-main transition-colors flex justify-between items-center">
+
+          <Link
+            href="/owner/profile/unit-preferences"
+            className="p-4 hover:bg-bg-main transition-all flex justify-between items-center active:scale-[0.99]"
+          >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-                </svg>
+              <div className="w-9 h-9 rounded-2xl bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+                <Settings className="w-5 h-5" />
               </div>
               Birim & Ölçü Tercihleri
             </div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-secondary"><polyline points="9 18 15 12 9 6"/></svg>
+            <ChevronRight className="w-4 h-4 text-text-secondary" />
           </Link>
         </div>
       </section>
 
-      {/* 5. Data & Privacy Hub & 8. Support Center */}
+      {/* 7. Data & Privacy Hub & Support Center */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <section className="flex flex-col gap-3">
-          <h2 className="text-[12px] font-black text-text-secondary uppercase tracking-widest px-2">Veri & Güvenlik</h2>
-          <div className="card-base divide-y divide-border-main text-[14px] font-semibold text-text-primary">
-            <Link href="/owner/profile/edit" className="block p-4 hover:bg-bg-main transition-colors flex justify-between items-center">
+        <section className="flex flex-col gap-2">
+          <h2 className="text-xs font-bold text-text-secondary uppercase tracking-wider px-2">Veri & Güvenlik</h2>
+          <div className="bg-white rounded-3xl divide-y divide-border-main text-sm font-semibold text-text-primary border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] overflow-hidden">
+            <Link
+              href="/owner/profile/edit"
+              className="p-4 hover:bg-bg-main transition-all flex justify-between items-center active:scale-[0.99]"
+            >
               Profil Bilgilerini Düzenle
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-secondary"><polyline points="9 18 15 12 9 6"/></svg>
+              <ChevronRight className="w-4 h-4 text-text-secondary" />
             </Link>
             <BiometricSettingsRow initialHasPasskey={(passkeyCount ?? 0) > 0} />
-            <div className="p-4 hover:bg-bg-main transition-colors cursor-pointer flex justify-between items-center">
+            <div className="p-4 hover:bg-bg-main transition-all cursor-pointer flex justify-between items-center active:scale-[0.99]">
               Şifre Değiştir
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-secondary"><polyline points="9 18 15 12 9 6"/></svg>
+              <ChevronRight className="w-4 h-4 text-text-secondary" />
             </div>
-            <div className="p-4 hover:bg-bg-main transition-colors cursor-pointer flex justify-between items-center">
+            <div className="p-4 hover:bg-bg-main transition-all cursor-pointer flex justify-between items-center active:scale-[0.99]">
               Tüm Verilerimi İndir
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-secondary"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3"/></svg>
+              <Download className="w-4 h-4 text-text-secondary" />
             </div>
-            <div className="p-4 hover:bg-error/5 transition-colors cursor-pointer text-error flex justify-between items-center">
+            <div className="p-4 hover:bg-rose-50/50 transition-all cursor-pointer text-error flex justify-between items-center active:scale-[0.99]">
               Hesabı Sil
+              <Trash2 className="w-4 h-4 text-error" />
             </div>
           </div>
         </section>
 
-        <section className="flex flex-col gap-3">
-          <h2 className="text-[12px] font-black text-text-secondary uppercase tracking-widest px-2">Destek Merkezi</h2>
-          <div className="card-base divide-y divide-border-main text-[14px] font-semibold text-text-primary">
-            <div className="p-4 hover:bg-bg-main transition-colors cursor-pointer flex justify-between items-center">
+        <section className="flex flex-col gap-2">
+          <h2 className="text-xs font-bold text-text-secondary uppercase tracking-wider px-2">Destek Merkezi</h2>
+          <div className="bg-white rounded-3xl divide-y divide-border-main text-sm font-semibold text-text-primary border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] overflow-hidden">
+            <div className="p-4 hover:bg-bg-main transition-all cursor-pointer flex justify-between items-center active:scale-[0.99]">
               Yardım Merkezi (SSS)
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-secondary"><polyline points="9 18 15 12 9 6"/></svg>
+              <HelpCircle className="w-4 h-4 text-text-secondary" />
             </div>
-            <div className="p-4 hover:bg-bg-main transition-colors cursor-pointer flex justify-between items-center">
+            <div className="p-4 hover:bg-bg-main transition-all cursor-pointer flex justify-between items-center active:scale-[0.99]">
               Canlı Destek
-              <span className="w-2 h-2 rounded-full bg-green-500"></span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
             </div>
-            <div className="p-4 hover:bg-bg-main transition-colors cursor-pointer flex justify-between items-center">
+            <div className="p-4 hover:bg-bg-main transition-all cursor-pointer flex justify-between items-center active:scale-[0.99]">
               Yeni Özellik İste
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-secondary"><polyline points="9 18 15 12 9 6"/></svg>
+              <ChevronRight className="w-4 h-4 text-text-secondary" />
             </div>
             <div className="p-4 bg-bg-main/50 flex justify-between items-center">
               Sistem Durumu
-              <span className="text-[12px] font-bold text-green-600 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-green-500"/> Operasyonel</span>
+              <span className="text-xs font-bold text-emerald-600 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Operasyonel
+              </span>
             </div>
           </div>
         </section>
       </div>
 
-
-
-      {/* Logout & 9. Legal */}
-      <div className="flex flex-col items-center gap-6 mt-4">
+      {/* Logout & Legal */}
+      <div className="flex flex-col items-center gap-5 mt-2">
         <form action={logout} className="w-full">
-          <button type="submit" className="w-full card-base p-4 text-center font-bold text-error hover:bg-error/5 transition-colors border-error/20">
+          <button
+            type="submit"
+            className="w-full bg-white rounded-3xl p-4 text-center text-sm font-bold text-error hover:bg-rose-50/50 transition-all border border-rose-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] flex items-center justify-center gap-2 active:scale-[0.98]"
+          >
+            <LogOut className="w-4 h-4 text-error" />
             Hesaptan Çıkış Yap
           </button>
         </form>
-        
-        <div className="flex items-center gap-4 text-[11px] font-bold text-text-secondary uppercase tracking-widest">
-          <Link href="/legal/terms" className="hover:text-primary transition-colors">Kullanım Koşulları</Link>
+
+        <div className="flex items-center gap-4 text-xs font-semibold text-text-secondary tracking-wider">
+          <Link href="/legal/terms" className="hover:text-primary transition-colors">
+            Kullanım Koşulları
+          </Link>
           <span>•</span>
-          <Link href="/legal/kvkk" className="hover:text-primary transition-colors">Gizlilik (KVKK)</Link>
+          <Link href="/legal/kvkk" className="hover:text-primary transition-colors">
+            Gizlilik (KVKK)
+          </Link>
           <span>•</span>
-          <Link href="/legal/kvkk" className="hover:text-primary transition-colors">Lisanslar</Link>
+          <Link href="/legal/kvkk" className="hover:text-primary transition-colors">
+            Lisanslar
+          </Link>
         </div>
       </div>
 

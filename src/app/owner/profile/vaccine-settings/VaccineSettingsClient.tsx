@@ -6,6 +6,20 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { normalizeSpecies } from '@/lib/species'
+import {
+  ArrowLeft,
+  Syringe,
+  Shield,
+  Lock,
+  CheckCircle2,
+  AlertCircle,
+  Plus,
+  Calendar,
+  Cat,
+  Dog,
+  X,
+  Sparkles,
+} from 'lucide-react'
 
 type Pet = { id: string; name: string; species: string | null; avatar_url: string | null }
 
@@ -81,10 +95,10 @@ function translateError(errorMsg: string): string {
 
 function SkeletonCard() {
   return (
-    <div className="bg-white p-4 rounded-2xl border border-border-main shadow-sm animate-pulse flex flex-col gap-3">
+    <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] animate-pulse flex flex-col gap-3">
       <div className="h-4 bg-slate-200 rounded w-2/3" />
       <div className="h-3 bg-slate-200 rounded w-1/3" />
-      <div className="h-10 bg-slate-100 rounded w-full" />
+      <div className="h-10 bg-slate-100 rounded-2xl w-full" />
     </div>
   )
 }
@@ -267,15 +281,20 @@ export default function VaccineSettingsClient({ pets }: { pets: Pet[] }) {
   }
 
   return (
-    <div className="min-h-screen bg-bg-main pb-24 pt-6 px-4 max-w-lg mx-auto">
+    <div className="min-h-screen bg-bg-main pb-24 pt-6 px-1 max-w-lg mx-auto font-sans">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-[20px] font-black text-text-primary">Sağlık Planı Ayarları</h1>
-        <Link href="/owner/profile" className="text-[13px] font-bold text-text-secondary">Geri</Link>
+        <h1 className="text-xl font-extrabold text-text-primary">Sağlık Planı Ayarları</h1>
+        <Link
+          href="/owner/profile"
+          className="text-xs font-bold text-text-secondary hover:text-primary transition-all flex items-center gap-1 active:scale-[0.98]"
+        >
+          <ArrowLeft className="w-4 h-4" /> Geri
+        </Link>
       </div>
 
       {pets.length === 0 && (
-        <div className="bg-white p-6 rounded-2xl border border-border-main text-center shadow-sm">
-          <p className="text-text-secondary text-[13px] font-bold">Önce bir pet eklemelisiniz.</p>
+        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] text-center">
+          <p className="text-text-secondary text-sm font-bold">Önce bir pet eklemelisiniz.</p>
         </div>
       )}
 
@@ -287,8 +306,10 @@ export default function VaccineSettingsClient({ pets }: { pets: Pet[] }) {
               <button
                 key={pet.id}
                 onClick={() => setSelectedPetId(pet.id)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-2xl border-2 shrink-0 transition-all ${
-                  selectedPetId === pet.id ? 'border-primary bg-primary/10 text-primary' : 'border-border-main text-text-secondary bg-white'
+                className={`flex items-center gap-2 px-3 py-2 rounded-2xl border-2 shrink-0 transition-all active:scale-[0.98] ${
+                  selectedPetId === pet.id
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-slate-200 text-text-secondary bg-white'
                 }`}
               >
                 <div className="w-7 h-7 rounded-full bg-slate-100 overflow-hidden relative shrink-0">
@@ -296,21 +317,25 @@ export default function VaccineSettingsClient({ pets }: { pets: Pet[] }) {
                     <Image src={pet.avatar_url} alt={pet.name} fill className="object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-sm">
-                      {normalizeSpecies(pet.species) === 'dog' ? '🐶' : '🐱'}
+                      {normalizeSpecies(pet.species) === 'dog' ? (
+                        <Dog className="w-4 h-4 text-amber-600" />
+                      ) : (
+                        <Cat className="w-4 h-4 text-purple-600" />
+                      )}
                     </div>
                   )}
                 </div>
-                <span className="text-[13px] font-bold">{pet.name}</span>
+                <span className="text-xs font-bold">{pet.name}</span>
               </button>
             ))}
           </div>
 
           {/* Sekme Seçimi */}
-          <div className="flex border-b border-border-main mb-6">
+          <div className="flex border-b border-slate-200 mb-6">
             <button
               type="button"
               onClick={() => setActiveTab('vaccines')}
-              className={`flex-1 py-3 text-center text-[15px] font-bold transition-all relative ${
+              className={`flex-1 py-3 text-center text-sm font-bold transition-all relative active:scale-[0.98] ${
                 activeTab === 'vaccines' ? 'text-primary' : 'text-text-secondary'
               }`}
             >
@@ -322,7 +347,7 @@ export default function VaccineSettingsClient({ pets }: { pets: Pet[] }) {
             <button
               type="button"
               onClick={() => setActiveTab('parasites')}
-              className={`flex-1 py-3 text-center text-[15px] font-bold transition-all relative ${
+              className={`flex-1 py-3 text-center text-sm font-bold transition-all relative active:scale-[0.98] ${
                 activeTab === 'parasites' ? 'text-primary' : 'text-text-secondary'
               }`}
             >
@@ -336,13 +361,15 @@ export default function VaccineSettingsClient({ pets }: { pets: Pet[] }) {
       )}
 
       {error && (
-        <div className="bg-red-50 text-red-600 p-3 rounded-xl border border-red-200 text-[13px] font-normal mb-4">
+        <div className="bg-rose-50 text-error p-3.5 rounded-2xl border border-rose-200 text-xs font-semibold mb-4 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />
           {error}
         </div>
       )}
 
       {toast && (
-        <div className="bg-emerald-50 text-emerald-700 p-3 rounded-xl border border-emerald-200 text-[13px] font-bold mb-4">
+        <div className="bg-emerald-50 text-emerald-700 p-3.5 rounded-2xl border border-emerald-200 text-xs font-bold mb-4 flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 shrink-0" />
           {toast}
         </div>
       )}
@@ -361,8 +388,10 @@ export default function VaccineSettingsClient({ pets }: { pets: Pet[] }) {
           {activeTab === 'vaccines' && (
             <div className="flex flex-col gap-3">
               {protocols.length === 0 && (
-                <div className="bg-white p-6 rounded-2xl border border-border-main text-center shadow-sm">
-                  <p className="text-text-secondary text-[13px]">Bu evcil hayvan için aşı protokolü bulunamadı.</p>
+                <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] text-center">
+                  <p className="text-text-secondary text-xs font-medium">
+                    Bu evcil hayvan için aşı protokolü bulunamadı.
+                  </p>
                 </div>
               )}
               {protocols.map(protocol => {
@@ -375,31 +404,33 @@ export default function VaccineSettingsClient({ pets }: { pets: Pet[] }) {
                 return (
                   <div
                     key={protocol.vaccine_code}
-                    className={`bg-white p-4 rounded-2xl border shadow-sm flex flex-col gap-3 relative overflow-hidden transition-all ${
-                      locked ? 'border-primary/30 ring-1 ring-primary/5' : 'border-border-main'
+                    className={`bg-white p-4 rounded-3xl border shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] flex flex-col gap-3 relative overflow-hidden transition-all ${
+                      locked ? 'border-primary/30 ring-1 ring-primary/5' : 'border-slate-100'
                     }`}
                   >
                     {locked && (
-                      <div className="absolute top-0 right-0 bg-primary text-white text-[9px] font-black px-2 py-0.5 rounded-bl-lg flex items-center gap-1">
-                        <span>🔒</span> ZORUNLU
+                      <div className="absolute top-0 right-0 bg-primary text-white text-2xs font-bold px-2.5 py-1 rounded-bl-xl flex items-center gap-1 uppercase tracking-wider">
+                        <Lock className="w-3 h-3" /> ZORUNLU
                       </div>
                     )}
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1">
-                        <h3 className="font-extrabold text-text-primary text-[15px]">{protocol.protocol_name}</h3>
+                        <h3 className="font-extrabold text-text-primary text-base">{protocol.protocol_name}</h3>
                         <div className="flex gap-1.5 mt-1 flex-wrap">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                            locked ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-text-secondary'
-                          }`}>
+                          <span
+                            className={`text-2xs font-bold px-2 py-0.5 rounded-md uppercase ${
+                              locked ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-text-secondary'
+                            }`}
+                          >
                             {CATEGORY_LABEL[protocol.category] || protocol.category}
                           </span>
                         </div>
                         {locked ? (
-                          <p className="text-[12px] text-primary font-bold mt-2 flex items-center gap-1">
-                            <span>💡</span> Zorunlu olarak aktif
+                          <p className="text-xs text-primary font-bold mt-2 flex items-center gap-1">
+                            <Lock className="w-3.5 h-3.5" /> Zorunlu olarak aktif
                           </p>
                         ) : (
-                          <p className="text-[12px] text-text-secondary mt-2 leading-relaxed">
+                          <p className="text-xs text-text-secondary mt-2 leading-relaxed font-medium">
                             Bu aşının yapılması için tercihinizi ayarlayabilirsiniz.
                           </p>
                         )}
@@ -408,43 +439,53 @@ export default function VaccineSettingsClient({ pets }: { pets: Pet[] }) {
                       <div className="flex items-center min-h-[44px]">
                         {locked ? (
                           <div className="w-12 h-7 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs">
-                            🔒
+                            <Lock className="w-4 h-4" />
                           </div>
                         ) : (
                           <button
                             type="button"
                             disabled={isBusy}
                             onClick={() => handleVaccineToggle(protocol.vaccine_code, enabled)}
-                            className={`shrink-0 w-12 h-7 rounded-full transition-colors relative ${enabled ? 'bg-primary' : 'bg-slate-200'} disabled:opacity-50`}
+                            className={`shrink-0 w-12 h-7 rounded-full transition-colors relative active:scale-[0.95] ${
+                              enabled ? 'bg-primary' : 'bg-slate-200'
+                            } disabled:opacity-50`}
                           >
-                            <span className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform ${enabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                            <span
+                              className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform ${
+                                enabled ? 'translate-x-5' : 'translate-x-0.5'
+                              }`}
+                            />
                           </button>
                         )}
                       </div>
                     </div>
 
                     {!locked && enabled && (
-                      <label className="flex items-center gap-2 text-[12px] font-bold text-text-secondary cursor-pointer min-h-[36px]">
+                      <label className="flex items-center gap-2 text-xs font-bold text-text-secondary cursor-pointer min-h-[36px]">
                         <input
                           type="checkbox"
                           checked={pref?.vet_recommended ?? false}
                           disabled={isBusy}
-                          onChange={(e) => updateVetRecommended(protocol.vaccine_code, e.target.checked)}
-                          className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                          onChange={e => updateVetRecommended(protocol.vaccine_code, e.target.checked)}
+                          className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
                         />
                         Veterinerim önerdi
                       </label>
                     )}
 
-                    <div className="flex items-center justify-between pt-2 border-t border-border-main">
-                      <span className={`text-[12px] font-bold ${hasActivePlan ? 'text-emerald-600' : 'text-text-secondary'}`}>
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                      <span
+                        className={`text-xs font-bold ${
+                          hasActivePlan ? 'text-emerald-700' : 'text-text-secondary'
+                        }`}
+                      >
                         {hasActivePlan ? '✓ Aktif plan var' : 'Plan oluşturulmadı'}
                       </span>
                       <button
                         type="button"
                         disabled={!enabled || hasActivePlan || isBusy}
                         onClick={() => handleCreatePlan(protocol.vaccine_code)}
-                        className="text-[12px] font-bold text-primary disabled:text-text-secondary disabled:opacity-50 px-3 py-1.5 rounded-lg border border-primary disabled:border-border-main"
+                        className="text-xs font-bold text-primary disabled:text-text-secondary disabled:opacity-50 px-3 py-1.5 rounded-xl border border-primary disabled:border-slate-200 active:scale-[0.98]"
                       >
                         Hemen Plan Oluştur
                       </button>
@@ -459,8 +500,10 @@ export default function VaccineSettingsClient({ pets }: { pets: Pet[] }) {
           {activeTab === 'parasites' && (
             <div className="flex flex-col gap-3">
               {parasiteProtocols.length === 0 && (
-                <div className="bg-white p-6 rounded-2xl border border-border-main text-center shadow-sm">
-                  <p className="text-text-secondary text-[13px]">Bu evcil hayvan için parazit protokolü bulunamadı.</p>
+                <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] text-center">
+                  <p className="text-text-secondary text-xs font-medium">
+                    Bu evcil hayvan için parazit protokolü bulunamadı.
+                  </p>
                 </div>
               )}
               {parasiteProtocols.map(protocol => {
@@ -470,20 +513,23 @@ export default function VaccineSettingsClient({ pets }: { pets: Pet[] }) {
                 return (
                   <div
                     key={protocol.id}
-                    className="bg-white p-4 rounded-2xl border border-border-main shadow-sm flex flex-col gap-3"
+                    className="bg-white p-4 rounded-3xl border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] flex flex-col gap-3"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1">
-                        <h3 className="font-extrabold text-text-primary text-[15px]">{protocol.protocol_name}</h3>
+                        <h3 className="font-extrabold text-text-primary text-base">{protocol.protocol_name}</h3>
                         <div className="flex gap-1.5 mt-1.5 flex-wrap">
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-text-secondary">
+                          <span className="text-2xs font-bold px-2 py-0.5 rounded-md bg-slate-100 text-text-secondary uppercase">
                             {PARASITE_TYPE_LABEL[protocol.parasite_type] || protocol.parasite_type}
                           </span>
                         </div>
-                        <div className="mt-2 text-[12px] text-text-secondary flex flex-col gap-0.5">
+                        <div className="mt-2 text-xs text-text-secondary flex flex-col gap-0.5 font-medium">
                           <span>⏱ Koruma Süresi: {protocol.default_protection_duration_days} gün</span>
                           <span>👶 Min. Yaş: {protocol.min_age_weeks} haftalık</span>
-                          <span>⚙️ Yöntemler: {protocol.allowed_application_methods.map(m => METHOD_LABEL[m] || m).join(', ')}</span>
+                          <span>
+                            ⚙️ Yöntemler:{' '}
+                            {protocol.allowed_application_methods.map(m => METHOD_LABEL[m] || m).join(', ')}
+                          </span>
                         </div>
                       </div>
 
@@ -492,9 +538,15 @@ export default function VaccineSettingsClient({ pets }: { pets: Pet[] }) {
                           type="button"
                           disabled={isBusy}
                           onClick={() => handleParasiteToggle(protocol.id, enabled)}
-                          className={`shrink-0 w-12 h-7 rounded-full transition-colors relative ${enabled ? 'bg-primary' : 'bg-slate-200'} disabled:opacity-50`}
+                          className={`shrink-0 w-12 h-7 rounded-full transition-colors relative active:scale-[0.95] ${
+                            enabled ? 'bg-primary' : 'bg-slate-200'
+                          } disabled:opacity-50`}
                         >
-                          <span className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform ${enabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                          <span
+                            className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform ${
+                              enabled ? 'translate-x-5' : 'translate-x-0.5'
+                            }`}
+                          />
                         </button>
                       </div>
                     </div>
@@ -509,15 +561,20 @@ export default function VaccineSettingsClient({ pets }: { pets: Pet[] }) {
       {confirmDisableCode && (
         <div
           role="dialog"
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4"
           onClick={() => setConfirmDisableCode(null)}
         >
-          <div className="bg-white w-full max-w-sm rounded-[24px] p-6 flex flex-col gap-3" onClick={e => e.stopPropagation()}>
-            <h3 className="font-black text-text-primary text-[16px]">Bu aşı için aktif bir plan var</h3>
-            <p className="text-[13px] text-text-secondary">Tercihi kapatmak istediğinize emin misiniz? Mevcut planı korumayı veya iptal etmeyi seçebilirsiniz.</p>
+          <div
+            className="bg-white w-full max-w-sm rounded-3xl p-6 flex flex-col gap-3 shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className="font-extrabold text-text-primary text-base">Bu aşı için aktif bir plan var</h3>
+            <p className="text-xs text-text-secondary font-medium">
+              Tercihi kapatmak istediğinize emin misiniz? Mevcut planı korumayı veya iptal etmeyi seçebilirsiniz.
+            </p>
             <button
               type="button"
-              className="w-full py-3 rounded-xl border border-border-main text-text-primary font-bold text-sm"
+              className="w-full py-3 rounded-2xl border border-border-main text-text-primary font-bold text-sm active:scale-[0.98]"
               onClick={async () => {
                 const code = confirmDisableCode
                 setConfirmDisableCode(null)
@@ -528,7 +585,7 @@ export default function VaccineSettingsClient({ pets }: { pets: Pet[] }) {
             </button>
             <button
               type="button"
-              className="w-full py-3 rounded-xl bg-red-50 text-red-600 font-bold text-sm"
+              className="w-full py-3 rounded-2xl bg-rose-50 text-error font-bold text-sm active:scale-[0.98]"
               onClick={async () => {
                 const code = confirmDisableCode
                 setConfirmDisableCode(null)
@@ -540,7 +597,7 @@ export default function VaccineSettingsClient({ pets }: { pets: Pet[] }) {
             </button>
             <button
               type="button"
-              className="w-full py-3 text-text-secondary font-bold text-sm"
+              className="w-full py-3 text-text-secondary font-bold text-sm active:scale-[0.98]"
               onClick={() => setConfirmDisableCode(null)}
             >
               Vazgeç

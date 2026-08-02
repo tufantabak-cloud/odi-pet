@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ConfirmModal from '@/components/ui/ConfirmModal'
+import { Edit3, MoreVertical, Eraser, Trash2, X } from 'lucide-react'
 
 type ConfirmState = {
   open: boolean
@@ -36,18 +37,19 @@ export default function PetCardActions({ pet }: { pet: any }) {
     setShowMenu(false)
     openConfirm({
       title: 'Sağlık Verilerini Temizle',
-      message: `DİKKAT: ${pet.name} adlı dostunuzun TÜM sağlık geçmişini (aşılar, ölçümler, notlar vb.) silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
+      message: `DİKKAT: ${pet.name} adlı dostunuzun TÜM sağlık geçmişini (aşılar, ölçümler, notlar vb.) temizlemek istediğinizden emin misiniz? Bu işlem arşivlenecek/arındırılacaktır.`,
       confirmLabel: 'Evet, Temizle',
-      onConfirm: () => startTransition(async () => {
-        try {
-          const res = await fetch(`/api/pets/${pet.id}/reset`, { method: 'POST' })
-          if (!res.ok) throw new Error('Veriler silinemedi')
-          setStatusMessage({ type: 'ok', text: 'Sağlık verileri başarıyla temizlendi.' })
-          router.refresh()
-        } catch (e: any) {
-          setStatusMessage({ type: 'err', text: 'Hata: ' + e.message })
-        }
-      }),
+      onConfirm: () =>
+        startTransition(async () => {
+          try {
+            const res = await fetch(`/api/pets/${pet.id}/reset`, { method: 'POST' })
+            if (!res.ok) throw new Error('Veriler silinemedi')
+            setStatusMessage({ type: 'ok', text: 'Sağlık verileri başarıyla temizlendi.' })
+            router.refresh()
+          } catch (e: any) {
+            setStatusMessage({ type: 'err', text: 'Hata: ' + e.message })
+          }
+        }),
     })
   }
 
@@ -55,71 +57,71 @@ export default function PetCardActions({ pet }: { pet: any }) {
     setShowMenu(false)
     openConfirm({
       title: 'Profili Kalıcı Olarak Sil',
-      message: `DİKKAT: ${pet.name} adlı dostunuzun profilini TAMAMEN silmek üzeresiniz. Tüm fotoğraflar, veriler ve ayarlar kalıcı olarak yok edilecektir. Onayluyor musunuz?`,
+      message: `DİKKAT: ${pet.name} adlı dostunuzun profilini silmek üzeresiniz. Onaylıyor musunuz?`,
       confirmLabel: 'Evet, Sil',
-      onConfirm: () => startTransition(async () => {
-        try {
-          const res = await fetch(`/api/pets/${pet.id}`, { method: 'DELETE' })
-          const data = await res.json()
-          if (!res.ok) throw new Error(data.error || 'Profil silinemedi')
-          router.push('/owner/dashboard')
-          router.refresh()
-        } catch (e: any) {
-          setStatusMessage({ type: 'err', text: 'Hata: ' + e.message })
-        }
-      }),
+      onConfirm: () =>
+        startTransition(async () => {
+          try {
+            const res = await fetch(`/api/pets/${pet.id}`, { method: 'DELETE' })
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error || 'Profil silinemedi')
+            router.push('/owner/dashboard')
+            router.refresh()
+          } catch (e: any) {
+            setStatusMessage({ type: 'err', text: 'Hata: ' + e.message })
+          }
+        }),
     })
   }
 
   return (
     <div className="relative">
       {statusMessage && (
-        <div className={`mb-2 px-3 py-2 rounded-xl text-[12px] font-semibold border ${
-          statusMessage.type === 'ok'
-            ? 'bg-success/10 text-success border-success/20'
-            : 'bg-error/10 text-error border-error/20'
-        }`}>
-          {statusMessage.text}
-          <button onClick={() => setStatusMessage(null)} className="ml-2 font-bold opacity-60 hover:opacity-100">×</button>
+        <div
+          className={`mb-2 px-3 py-2 rounded-xl text-xs font-semibold border flex items-center justify-between gap-2 ${
+            statusMessage.type === 'ok'
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+              : 'bg-rose-50 text-error border-rose-200'
+          }`}
+        >
+          <span>{statusMessage.text}</span>
+          <button onClick={() => setStatusMessage(null)} className="font-bold opacity-60 hover:opacity-100 p-0.5">
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
 
-      <div className="flex items-center gap-3">
-        <Link 
-          href={`/owner/pets/${pet.id}/edit`} 
-          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-bg-main text-text-secondary hover:text-primary transition-colors"
+      <div className="flex items-center gap-2">
+        <Link
+          href={`/owner/pets/${pet.id}/edit`}
+          className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-bg-main text-text-secondary hover:text-primary transition-all active:scale-[0.95]"
           title="Düzenle"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 20h9"/>
-            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-          </svg>
+          <Edit3 className="w-4 h-4" />
         </Link>
-        <button 
+        <button
           onClick={() => setShowMenu(!showMenu)}
-          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-bg-main text-text-secondary transition-colors"
+          className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-bg-main text-text-secondary transition-all active:scale-[0.95]"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
-          </svg>
+          <MoreVertical className="w-4 h-4" />
         </button>
       </div>
 
       {showMenu && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-          <div className="absolute right-0 bottom-full mb-2 w-48 bg-white border border-border-main rounded-2xl shadow-xl z-50 py-2 animate-in fade-in zoom-in duration-200 origin-bottom-right">
-            <button 
+          <div className="absolute right-0 bottom-full mb-2 w-52 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 py-2 animate-in fade-in zoom-in duration-200 origin-bottom-right">
+            <button
               onClick={handleResetData}
-              className="w-full text-left px-4 py-2 text-[13px] font-semibold text-amber-600 hover:bg-amber-50 flex items-center gap-2"
+              className="w-full text-left px-4 py-2.5 text-xs font-semibold text-amber-700 hover:bg-amber-50 flex items-center gap-2.5 transition-colors"
             >
-              🧹 Sağlık Verilerini Temizle
+              <Eraser className="w-4 h-4 text-amber-600" /> Sağlık Verilerini Temizle
             </button>
-            <button 
+            <button
               onClick={handleDeletePet}
-              className="w-full text-left px-4 py-2 text-[13px] font-semibold text-error hover:bg-error/5 flex items-center gap-2"
+              className="w-full text-left px-4 py-2.5 text-xs font-semibold text-error hover:bg-rose-50 flex items-center gap-2.5 transition-colors"
             >
-              🗑️ Profili Kalıcı Olarak Sil
+              <Trash2 className="w-4 h-4 text-error" /> Profili Kalıcı Olarak Sil
             </button>
           </div>
         </>
@@ -132,7 +134,10 @@ export default function PetCardActions({ pet }: { pet: any }) {
         confirmLabel={confirmState.confirmLabel || 'Onayla'}
         cancelLabel="İptal"
         variant="danger"
-        onConfirm={() => { closeConfirm(); confirmState.onConfirm() }}
+        onConfirm={() => {
+          closeConfirm()
+          confirmState.onConfirm()
+        }}
         onCancel={closeConfirm}
       />
     </div>

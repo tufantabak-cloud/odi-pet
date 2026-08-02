@@ -5,6 +5,7 @@ import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 import Image from 'next/image';
 import { Database } from '@/types';
 import { z } from 'zod';
+import PaywallCard from '@/components/subscription/PaywallCard';
 
 export const CategorySchema = z.enum(['general', 'health', 'document', 'memory', 'daily']);
 export type CategoryType = z.infer<typeof CategorySchema>;
@@ -27,6 +28,8 @@ export default function GalleryTab({ pet }: { pet: PetWithCover }) {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<any | null>(null);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
   
   // New Form States
   const [caption, setCaption] = useState('');
@@ -36,8 +39,21 @@ export default function GalleryTab({ pet }: { pet: PetWithCover }) {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const supabase = createBrowserSupabaseClient();
+
   const fetchPhotos = async () => {
     setLoading(true);
+    const { data: userData } = await supabase.auth.getUser();
+    if (userData.user?.id) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('premium_until')
+        .eq('id', userData.user.id)
+        .maybeSingle();
+      if (profile?.premium_until && new Date(profile.premium_until) > new Date()) {
+        setIsPremium(true);
+      }
+    }
+
     const { data, error } = await supabase
       .from('pet_gallery')
       .select('*')
@@ -54,11 +70,17 @@ export default function GalleryTab({ pet }: { pet: PetWithCover }) {
     fetchPhotos();
   }, [pet.id]);
 
-
+  const maxPhotosAllowed = isPremium ? 200 : 10;
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (photos.length >= maxPhotosAllowed) {
+      setShowPaywall(true);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
 
     setUploading(true);
     setErrorMsg(null);
@@ -205,13 +227,21 @@ export default function GalleryTab({ pet }: { pet: PetWithCover }) {
           onChange={handleFileChange} 
           className="hidden" 
         />
-        <button 
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-          className="w-full btn-primary py-3.5 text-[14px] font-black rounded-2xl transition-all active:scale-95 disabled:opacity-50"
-        >
-          {uploading ? 'Yükleniyor...' : '+ Fotoğraf Seç ve Yükle'}
-        </button>
+        {photos.length >= maxPhotosAllowed || showPaywall ? (
+          <PaywallCard
+            title="Galeri Yükleme Limitine Ulaşıldı"
+            description={`Ücretsiz planda evcil hayvan başına en fazla ${maxPhotosAllowed} fotoğraflık alan sunulur. Odi Pro ile 200 fotoğrafa kadar yükleyebilirsiniz.`}
+            featureName="Galeri Kapasitesi"
+          />
+        ) : (
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="w-full btn-primary py-3.5 text-[14px] font-black rounded-2xl transition-all active:scale-95 disabled:opacity-50"
+          >
+            {uploading ? 'Yükleniyor...' : `+ Fotoğraf Seç ve Yükle (${photos.length}/${maxPhotosAllowed})`}
+          </button>
+        )}
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">

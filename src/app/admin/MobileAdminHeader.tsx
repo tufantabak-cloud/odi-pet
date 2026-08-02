@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { logout } from '@/features/auth/actions'
 import AdminSidebarNav from './AdminSidebarNav'
-import { ShieldCheck, User, LogOut, Menu, X } from 'lucide-react'
+import { ShieldCheck, User, LogOut, Menu, X, ArrowLeft } from 'lucide-react'
 
 interface MobileAdminHeaderProps {
   profile: any
@@ -35,8 +35,9 @@ export default function MobileAdminHeader({ profile, roleBadgeColor, roleBadge }
             </span>
           </div>
         </div>
-        <Link href="/owner/dashboard" className="text-xs font-semibold text-text-secondary hover:text-primary transition-colors p-2">
-          ← App
+        <Link href="/owner/dashboard" className="inline-flex items-center gap-1.5 text-xs font-semibold text-text-secondary hover:text-primary transition-colors p-2 active:scale-[0.98]">
+          <ArrowLeft className="w-4 h-4" />
+          <span>App</span>
         </Link>
       </div>
 

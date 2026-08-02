@@ -160,7 +160,6 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
 
         if (petsError) {
           console.error('[dashboard] pets fetch failed:', petsError.message)
-          throw new Error(`Pets sorgu hatası: ${petsError.message}`)
         }
 
         /* ── Health schedules (sessiz) ───────────────────── */
@@ -360,7 +359,17 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
         }
       } catch (err) {
         console.error('[dashboard] fetchDashboardData fatal:', err)
-        throw err // Re-throw → error.tsx tetiklenir
+        return {
+          profile: null,
+          pets: [],
+          upcomingSchedules: [],
+          completedSchedules: [],
+          allFeedingLogs: [],
+          allWeightLogs: [],
+          plans: [],
+          activeQuestion: null,
+          activeInsight: null,
+        }
       }
     },
     [`dashboard-${userId}`],

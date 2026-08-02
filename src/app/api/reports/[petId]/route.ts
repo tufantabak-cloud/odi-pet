@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
+import { getEntitlement } from '@/lib/subscription/entitlement'
 
 type RouteContext = {
   params: Promise<{ petId: string }>
@@ -54,18 +55,12 @@ export async function POST(req: NextRequest, context: RouteContext) {
     const dateRange = body?.date_range || 'last_12_months'
 
     // 3. Subscription plan verification
-    const { data: subData } = await supabase
-      .from('user_subscriptions')
-      .select('plan')
-      .eq('profile_id', user.id)
-      .single()
-
-    const userPlan = subData?.plan || 'free'
+    const entitlement = await getEntitlement(user.id)
 
     const planRank: Record<string, number> = { free: 0, pro: 1, ai_plus: 2 }
     const requiredRank: Record<string, number> = { summary: 0, medical_timeline: 1, travel_pack: 2 }
 
-    const userRank = planRank[userPlan] ?? 0
+    const userRank = planRank[entitlement.tier] ?? 0
     const reportRank = requiredRank[reportType] ?? 0
 
     if (reportRank > userRank) {

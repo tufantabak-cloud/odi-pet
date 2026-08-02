@@ -4,18 +4,17 @@ export const revalidate = 0
 import { getCurrentProfile } from '@/lib/auth/get-current-profile'
 import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
 import { calcAge } from '@/lib/pets/utils'
 import { getNowTR } from '@/lib/utils'
 import PetDetailClient from './PetDetailClient'
 import { getPlanDisplayTitle } from '@/lib/plans/utils'
 import { hasPetCapability } from '@/lib/pets/access'
+import { getEntitlement } from '@/lib/subscription/entitlement'
+import OnboardingGate from '@/components/onboarding/OnboardingGate'
 
 type PageProps = {
   params: Promise<{ id: string }>;
 };
-
-import OnboardingGate from '@/components/onboarding/OnboardingGate'
 
 export default async function PetDetailPage(props: PageProps) {
   const profile = await getCurrentProfile()
@@ -24,9 +23,6 @@ export default async function PetDetailPage(props: PageProps) {
   const { id } = await props.params
   const isAdmin = profile.role === 'admin' || profile.role === 'founder'
 
-  // Pet erişimini legacy owner_id filtresi yerine kanonik üyelik yetkisiyle
-  // doğrula. Veri sorguları yine kullanıcının RLS kapsamındaki client'ı ile
-  // çalışır; admin/founder mevcut davranış gereği service client kullanır.
   const serverSupabase = await createServerSupabaseClient()
   if (!isAdmin) {
     const canViewPet = await hasPetCapability(
@@ -97,7 +93,6 @@ export default async function PetDetailPage(props: PageProps) {
     supabase.from('vaccine_records_v2').select('vaccine_name, administered_at, status').eq('pet_id', id).not('administered_at', 'is', null).in('status', ['completed', 'done']).order('administered_at', { ascending: false }).limit(1).maybeSingle()
   ])
 
-  // plans tablosundaki kayıtları health_schedules formatına dönüştür
   const PLAN_CATEGORY_MAP: Record<string, string> = {
     saglik: 'Saglik',
     asi: 'Asi',
@@ -146,15 +141,12 @@ export default async function PetDetailPage(props: PageProps) {
     }
   })
 
-  // Merge: health_schedules + plans (duplicate'leri önle)
-  // Strateji 1: plan_id eşleşmesi (health_schedule, plans tablosundaki bir plan'ı bağladıysa)
   const existingPlanIds = new Set(
     (schedules ?? [])
       .map((s: any) => s.plan_id)
       .filter(Boolean)
   )
 
-  // Strateji 2: sub_category + due_date bileşik anahtarı (plan_id bağlantısı olmayan standalone kayıtlar için)
   const existingSubCategoryDateKeys = new Set(
     (schedules ?? [])
       .filter((s: any) => s.sub_category && s.due_date)
@@ -206,10 +198,11 @@ export default async function PetDetailPage(props: PageProps) {
     score = Math.max(0, score - (overdue * 25))
   }
 
-  const [{ data: sub }, { count: passkeyCount }] = await Promise.all([
-    supabase.from('user_subscriptions').select('plan').eq('profile_id', pet.owner_id).maybeSingle(),
+  const [entitlement, { count: passkeyCount }] = await Promise.all([
+    getEntitlement(pet.owner_id),
     supabase.from('passkeys').select('id', { count: 'exact', head: true }).eq('user_id', profile.id),
   ])
+  const sub = { plan: entitlement.tier }
 
   return (
     <OnboardingGate>

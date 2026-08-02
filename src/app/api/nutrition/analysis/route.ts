@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
-import { checkSubscription } from '@/lib/subscription/check'
+import { getEntitlement } from '@/lib/subscription/entitlement'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
@@ -9,10 +9,10 @@ export async function GET(req: NextRequest) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const isPremium = await checkSubscription(user.id)
+  const entitlement = await getEntitlement(user.id)
   
   // GATING LOGIC
-  if (!isPremium) {
+  if (!entitlement.isPremium) {
     return NextResponse.json({
       locked: true,
       message: "Beslenme analizi için Premium gerekli"

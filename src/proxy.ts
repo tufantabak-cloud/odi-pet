@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+import { isBlockedPath } from '@/lib/modules/registry'
 import {
   classifyApiRequest,
   isAdminBoundaryPath,
@@ -24,6 +25,11 @@ function validateSameOrigin(request: NextRequest): NextResponse | null {
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
+
+  if (isBlockedPath(pathname)) {
+    return NextResponse.rewrite(new URL('/404', request.url), { status: 404 })
+  }
+
   const isLoginPage = pathname === '/login'
   const isApiRequest = pathname === '/api' || pathname.startsWith('/api/')
   const apiAccessMode = isApiRequest
@@ -154,5 +160,17 @@ export const config = {
     '/clinic/:path*',
     '/api/:path*',
     '/login',
+    '/sos/:path*',
+    // Profesyonel modül iskeletleri: gerçek sayfalar /groomer/dashboard gibi
+    // alt yollarda duruyor. Yalnızca '/groomer' yazmak alt yolları KAPSAMAZ,
+    // bu yüzden hem kökü hem alt yolları eşleştiriyoruz.
+    '/groomer',
+    '/groomer/:path*',
+    '/hotel',
+    '/hotel/:path*',
+    '/sitter',
+    '/sitter/:path*',
+    '/trainer',
+    '/trainer/:path*',
   ],
 }

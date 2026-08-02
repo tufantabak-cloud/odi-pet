@@ -13,18 +13,20 @@ export default function SplashScreen() {
   const [phase, setPhase] = useState<1 | 2>(1);
 
   useEffect(() => {
-    // E2E test veya otomatik test ortamı denetimi
-    const isTestEnv =
-      typeof window !== "undefined" &&
-      (window.navigator.userAgent.includes("Playwright") ||
+    if (typeof window !== "undefined") {
+      const alreadySeen = sessionStorage.getItem("odi_splash_seen") === "true";
+      const isDevOrLocal =
+        window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1";
+      const isTestEnv =
+        window.navigator.userAgent.includes("Playwright") ||
         window.location.search.includes("test=true") ||
-        ((window.location.hostname === "localhost" ||
-          window.location.hostname === "127.0.0.1") &&
-          window.location.pathname.startsWith("/admin")));
+        isDevOrLocal;
 
-    if (isTestEnv) {
-      setIsVisible(false);
-      return;
+      if (alreadySeen || isTestEnv) {
+        setIsVisible(false);
+        return;
+      }
     }
 
     // Faz 1 -> Faz 2 geçişi (1000ms)
@@ -39,6 +41,9 @@ export default function SplashScreen() {
 
     // Ekrandan tamamen kaldırma (3500ms)
     const endTimer = setTimeout(() => {
+      try {
+        sessionStorage.setItem("odi_splash_seen", "true");
+      } catch {}
       setIsVisible(false);
     }, TOTAL_SPLASH_DURATION_MS + FADE_OUT_DURATION_MS);
 
@@ -68,9 +73,14 @@ export default function SplashScreen() {
   }, [isVisible, isFadingOut]);
 
   const dismissSplash = () => {
+    try {
+      sessionStorage.setItem("odi_splash_seen", "true");
+    } catch {}
     if (phase === 2 && !isFadingOut) {
       setIsFadingOut(true);
       setTimeout(() => setIsVisible(false), FADE_OUT_DURATION_MS);
+    } else {
+      setIsVisible(false);
     }
   };
 
@@ -78,7 +88,7 @@ export default function SplashScreen() {
 
   return (
     <div
-      className={`fixed inset-0 z-[99999] bg-[#3E1EA3] transition-opacity duration-500 ease-out ${
+      className={`fixed inset-0 z-[99999] bg-[#3B0764] transition-opacity duration-500 ease-out ${
         isFadingOut ? "opacity-0 pointer-events-none" : "opacity-100"
       } ${phase === 2 ? "cursor-pointer" : ""}`}
       role={phase === 2 ? "button" : undefined}
@@ -92,35 +102,37 @@ export default function SplashScreen() {
         }
       }}
     >
-      {/* Faz 2 — Resmi OPOS Slogan / Ana Logo Varlığı */}
+      {/* Faz 2 — Kusursuz Ortalı & Taşmasız OPOS Splash Görseli (PNG) */}
       <div
-        className={`absolute inset-0 flex items-center justify-center p-8 transition-opacity duration-500 ease-in-out ${
+        className={`absolute inset-0 flex items-center justify-center p-6 sm:p-12 transition-opacity duration-500 ease-in-out ${
           phase === 2 ? "opacity-100" : "opacity-0"
         }`}
       >
-        <div className="relative w-64 h-64 sm:w-80 sm:h-80">
+        <div className="relative w-full h-full max-w-[85vw] max-h-[75vh] sm:max-w-[70vw] sm:max-h-[80vh]">
           <Image
-            src="/brand/logos/primary/odi-logo-primary.png"
+            src="/brand/logos/splash/odi-splash-logo.png"
             alt="Odi.Pet — Can Dostunun Yaşam Platformu"
             fill
-            style={{ objectFit: "contain" }}
+            sizes="(max-width: 768px) 85vw, 70vw"
+            className="object-contain object-center"
             priority
           />
         </div>
       </div>
 
-      {/* Faz 1 — Resmi OPOS Açılış Logosu Varlığı */}
+      {/* Faz 1 — Kusursuz Ortalı & Taşmasız OPOS Vektörel Splash Görseli (SVG) */}
       <div
-        className={`absolute inset-0 flex items-center justify-center p-8 transition-opacity duration-500 ease-in-out ${
+        className={`absolute inset-0 flex items-center justify-center p-6 sm:p-12 transition-opacity duration-500 ease-in-out ${
           phase === 1 ? "opacity-100" : "opacity-0"
         }`}
       >
-        <div className="relative w-64 h-64 sm:w-80 sm:h-80">
+        <div className="relative w-full h-full max-w-[85vw] max-h-[75vh] sm:max-w-[70vw] sm:max-h-[80vh]">
           <Image
-            src="/brand/logos/splash/odi-splash-logo.png"
+            src="/brand/logos/splash/odi-splash-logo.svg"
             alt="Odi.Pet — Logo"
             fill
-            style={{ objectFit: "contain" }}
+            sizes="(max-width: 768px) 85vw, 70vw"
+            className="object-contain object-center"
             priority
           />
         </div>

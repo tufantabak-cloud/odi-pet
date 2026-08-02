@@ -5,16 +5,16 @@ import Image from 'next/image'
 export default function OfflinePage() {
   return (
     <div className="flex min-h-dvh w-full items-center justify-center p-4 bg-bg-main bg-gradient-to-tr from-primary/5 via-transparent to-primary/5">
-      <div className="w-full max-w-sm bg-white rounded-[32px] p-8 shadow-2xl shadow-primary/5 border border-border-main/50 text-center">
+      <div className="w-full max-w-sm bg-white rounded-3xl p-8 shadow-soft border border-border-main/50 text-center">
 
         {/* Logo */}
-        <div className="inline-flex items-center justify-center w-24 h-24 rounded-[24px] overflow-hidden shadow-2xl shadow-primary/20 mb-8 bg-white p-0.5 mx-auto">
+        <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl overflow-hidden shadow-soft mb-8 bg-white p-0.5 mx-auto">
           <Image
             src="/brand/app-icons/odi-icon-512.png"
             alt="Odi Logo"
             width={96}
             height={96}
-            className="w-full h-full object-cover rounded-[22px]"
+            className="w-full h-full object-cover rounded-2xl"
             priority
           />
         </div>
@@ -27,26 +27,26 @@ export default function OfflinePage() {
         </div>
 
         {/* Title */}
-        <h1 className="text-[22px] font-black text-text-primary tracking-tight mb-3">
+        <h1 className="text-xl font-black text-text-primary tracking-tight mb-3">
           İnternet bağlantısı yok
         </h1>
 
         {/* Description */}
-        <p className="text-[14px] text-text-secondary font-medium leading-relaxed mb-8">
+        <p className="text-sm text-text-secondary font-medium leading-relaxed mb-8">
           Bağlantınız kesildi. Lütfen ağ ayarlarınızı kontrol edin.
         </p>
 
         {/* Retry Button */}
         <button
           onClick={() => window.location.reload()}
-          className="btn-primary w-full py-4 text-[15px] font-black shadow-xl shadow-primary/20 hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
+          className="btn-primary w-full py-4 text-sm font-black shadow-soft hover:scale-[1.02] active:scale-[0.98] transition-all"
         >
           Tekrar Dene
         </button>
 
         {/* Footer */}
-        <div className="flex items-center justify-center gap-2 mt-8 pt-6 border-t border-border-main/50 text-[11px] font-bold text-text-secondary">
-          <span className="text-[14px]">📶</span>
+        <div className="flex items-center justify-center gap-2 mt-8 pt-6 border-t border-border-main/50 text-xs font-bold text-text-secondary">
+          <span className="text-sm">📶</span>
           <span>Çevrimdışı Mod</span>
         </div>
       </div>

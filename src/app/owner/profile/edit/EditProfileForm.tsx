@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+import { CheckCircle2, AlertCircle } from 'lucide-react'
 
 export default function EditProfileForm({ profile }: { profile: any }) {
   const router = useRouter()
@@ -27,7 +28,7 @@ export default function EditProfileForm({ profile }: { profile: any }) {
           first_name: firstName,
           last_name: lastName,
           phone: phone || null,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', profile.id)
 
@@ -45,57 +46,60 @@ export default function EditProfileForm({ profile }: { profile: any }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5 pb-32 pb-safe">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5 pb-12">
       {successToast && (
         <div
           role="status"
           aria-live="polite"
-          className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-3 rounded-[14px] bg-green-500 text-white text-[14px] font-bold shadow-xl animate-scaleIn"
+          className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-3 rounded-2xl bg-emerald-600 text-white text-sm font-bold shadow-xl animate-scaleIn"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
+          <CheckCircle2 className="w-5 h-5 shrink-0" />
           Bilgiler başarıyla güncellendi.
         </div>
       )}
 
       {error && (
-        <div role="alert" aria-live="assertive" className="p-3 rounded-lg bg-error/10 text-error text-[13px] font-medium border border-error/20">
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="p-3 rounded-xl bg-rose-50 text-error text-xs font-semibold border border-rose-200 flex items-center gap-2"
+        >
+          <AlertCircle className="w-4 h-4 shrink-0" />
           {error}
         </div>
       )}
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-[13px] font-bold text-text-secondary ml-1">Adınız</label>
+        <label className="text-xs font-bold text-text-secondary ml-1">Adınız</label>
         <input
           type="text"
           value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
+          onChange={e => setFirstName(e.target.value)}
           required
-          className="input-base"
+          className="input-base rounded-2xl"
           placeholder="Adınız"
         />
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-[13px] font-bold text-text-secondary ml-1">Soyadınız</label>
+        <label className="text-xs font-bold text-text-secondary ml-1">Soyadınız</label>
         <input
           type="text"
           value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
+          onChange={e => setLastName(e.target.value)}
           required
-          className="input-base"
+          className="input-base rounded-2xl"
           placeholder="Soyadınız"
         />
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-[13px] font-bold text-text-secondary ml-1">Telefon Numarası</label>
+        <label className="text-xs font-bold text-text-secondary ml-1">Telefon Numarası</label>
         <input
           type="tel"
           value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          className="input-base"
+          onChange={e => setPhone(e.target.value)}
+          className="input-base rounded-2xl"
           placeholder="0555 555 5555"
         />
       </div>
@@ -104,14 +108,14 @@ export default function EditProfileForm({ profile }: { profile: any }) {
         <button
           type="button"
           onClick={() => router.back()}
-          className="btn-secondary flex-1 min-h-[50px] flex items-center justify-center"
+          className="btn-secondary flex-1 min-h-[48px] rounded-2xl flex items-center justify-center text-sm font-semibold active:scale-[0.98]"
           disabled={isSubmitting}
         >
           İptal
         </button>
         <button
           type="submit"
-          className="btn-primary flex-1 min-h-[50px] flex items-center justify-center"
+          className="btn-primary flex-1 min-h-[48px] rounded-2xl flex items-center justify-center text-sm font-semibold active:scale-[0.98]"
           disabled={isSubmitting}
         >
           {isSubmitting ? 'Kaydediliyor...' : 'Kaydet'}

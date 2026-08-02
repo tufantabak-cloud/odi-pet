@@ -29,7 +29,10 @@ export async function DELETE(
 
   const { error } = await supabase
     .from('health_records')
-    .delete()
+    .update({
+      is_archived: true,
+      archived_at: new Date().toISOString()
+    })
     .eq('id', recordId)
     .eq('pet_id', id)
 

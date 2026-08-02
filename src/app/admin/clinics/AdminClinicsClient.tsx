@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { Building2, Calendar, Mail, Phone, Stethoscope, Search, X, CheckCircle2, Clock, AlertTriangle, XCircle, RotateCw } from 'lucide-react'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface ClinicMember {
@@ -55,7 +56,7 @@ const COLOR_MAP: Record<string, { active: string; inactive: string }> = {
 function StatusBadge({ isPublic }: { isPublic: boolean }) {
   return isPublic ? (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[11px] font-bold bg-emerald-100 text-emerald-700 border-emerald-200">
-      ✅ Aktif
+      <CheckCircle2 className="w-3 h-3" /> Aktif
     </span>
   ) : (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[11px] font-bold bg-amber-100 text-amber-700 border-amber-200">

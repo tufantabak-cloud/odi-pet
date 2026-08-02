@@ -8,7 +8,7 @@ export interface CoachMarkProps {
   hintKey: string;
   title: string;
   message: string;
-  icon: string;
+  icon: React.ReactNode;
   position: CoachMarkPosition;
   delay?: number;
   condition?: boolean;

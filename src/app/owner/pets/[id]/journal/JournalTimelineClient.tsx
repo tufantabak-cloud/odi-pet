@@ -77,12 +77,12 @@ type FilterKey = 'all' | 'health' | 'care' | 'mood' | 'appetite' | 'nutrition' |
 
 const FILTERS: { key: FilterKey; label: string }[] = [
   { key: 'all',       label: 'Tümü' },
-  { key: 'health',    label: '💉 Sağlık & Aşı' },
-  { key: 'care',      label: '🛁 Bakım & Hijyen' },
-  { key: 'mood',      label: '🎭 Ruh Hali' },
-  { key: 'appetite',  label: '🥣 İştah' },
-  { key: 'nutrition', label: '🥩 Beslenme' },
-  { key: 'activity',  label: '🦴 Aktivite' },
+  { key: 'health',    label: 'Sağlık & Aşı' },
+  { key: 'care',      label: 'Bakım & Hijyen' },
+  { key: 'mood',      label: 'Ruh Hali' },
+  { key: 'appetite',  label: 'İştah' },
+  { key: 'nutrition', label: 'Beslenme' },
+  { key: 'activity',  label: 'Aktivite' },
 ]
 
 // ── Tarih Grup Yardımcıları (T3) ────────────────────────────────────────────
@@ -117,28 +117,43 @@ function groupByDate(items: JournalItem[]): { label: string; items: JournalItem[
     .map(g => ({ label: g, items: map.get(g)! }))
 }
 
+import { 
+  Utensils, 
+  Home, 
+  AlertTriangle, 
+  Camera, 
+  Syringe, 
+  Sparkles, 
+  UtensilsCrossed, 
+  Activity, 
+  Calendar, 
+  Smile, 
+  FileText, 
+  Pin 
+} from 'lucide-react'
+
 // ── İkon & Başlık Yardımcıları ───────────────────────────────────────────────
 
-function getIcon(item: JournalItem): string {
-  if (item.source === 'nutrition_norm') return '🥣'
-  if (item.source === 'adoption') return '🏠'
-  if (item.source === 'lost') return '🚨'
-  if (item.source === 'gallery') return '📸'
+function getIcon(item: JournalItem): React.ReactNode {
+  if (item.source === 'nutrition_norm') return <Utensils className="w-5 h-5 text-amber-500" />
+  if (item.source === 'adoption') return <Home className="w-5 h-5 text-purple-500" />
+  if (item.source === 'lost') return <AlertTriangle className="w-5 h-5 text-rose-500" />
+  if (item.source === 'gallery') return <Camera className="w-5 h-5 text-sky-500" />
   if (item.source === 'plan') {
     const p = item as PlanItem
-    if (['saglik', 'asi', 'parazit'].includes(p.category)) return '💉'
-    if (['bakim', 'hijyen'].includes(p.category)) return '🛁'
-    if (p.category === 'beslenme') return '🥩'
-    if (p.category === 'aktivite') return '🦴'
-    return '📅'
+    if (['saglik', 'asi', 'parazit'].includes(p.category)) return <Syringe className="w-5 h-5 text-rose-500" />
+    if (['bakim', 'hijyen'].includes(p.category)) return <Sparkles className="w-5 h-5 text-teal-500" />
+    if (p.category === 'beslenme') return <UtensilsCrossed className="w-5 h-5 text-amber-500" />
+    if (p.category === 'aktivite') return <Activity className="w-5 h-5 text-emerald-500" />
+    return <Calendar className="w-5 h-5 text-indigo-500" />
   }
   switch ((item as JournalEntry).entry_type) {
-    case 'appetite':  return '🥣'
-    case 'mood':      return '🎭'
-    case 'nutrition': return '🥩'
-    case 'activity':  return '🦴'
-    case 'note':      return '📝'
-    default:          return '📌'
+    case 'appetite':  return <Utensils className="w-5 h-5 text-amber-500" />
+    case 'mood':      return <Smile className="w-5 h-5 text-purple-500" />
+    case 'nutrition': return <UtensilsCrossed className="w-5 h-5 text-amber-500" />
+    case 'activity':  return <Activity className="w-5 h-5 text-emerald-500" />
+    case 'note':      return <FileText className="w-5 h-5 text-blue-500" />
+    default:          return <Pin className="w-5 h-5 text-slate-500" />
   }
 }
 
@@ -257,17 +272,17 @@ export default function JournalTimelineClient({
     <div className="flex flex-col gap-5">
 
       {/* AI Summary Section */}
-      <div className="bg-gradient-to-br from-[#f8f9fc] to-[#f1f4f9] rounded-[24px] p-5 border border-primary/10 shadow-sm relative overflow-hidden">
+      <div className="bg-gradient-to-br from-indigo-50/50 to-purple-50/50 dark:from-slate-900 dark:to-slate-800 rounded-[24px] p-5 border border-primary/10 shadow-sm relative overflow-hidden">
         <div className="absolute -right-4 -top-4 text-primary/5 text-[100px] font-black select-none pointer-events-none">✨</div>
         <div className="relative z-10 flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-[15px] font-extrabold text-[#2A4B7C] flex items-center gap-2">
+            <h2 className="text-[15px] font-extrabold text-primary flex items-center gap-2">
               <span className="text-[18px]">✨</span> AI Durum Özeti
             </h2>
             <button
               onClick={handleGenerateSummary}
               disabled={loadingSummary}
-              className="bg-white text-[#2A4B7C] text-[12px] font-bold py-1.5 px-3 rounded-lg shadow-sm border border-[#2A4B7C]/20 hover:bg-[#2A4B7C]/5 active:scale-[0.98] transition-all disabled:opacity-50"
+              className="bg-white dark:bg-slate-800 text-primary text-[12px] font-bold py-1.5 px-3 rounded-lg shadow-sm border border-primary/20 hover:bg-primary/5 active:scale-[0.98] transition-all disabled:opacity-50"
             >
               {loadingSummary ? 'Üretiliyor...' : 'Özet Oluştur'}
             </button>
@@ -280,7 +295,7 @@ export default function JournalTimelineClient({
           )}
 
           {summary && (
-            <div className="bg-white/80 rounded-[16px] p-4 text-[14px] text-[#2A4B7C] leading-relaxed border border-white font-medium shadow-sm animate-fade-in flex flex-col gap-4">
+            <div className="bg-white/80 dark:bg-slate-900/80 rounded-[16px] p-4 text-[14px] text-text-primary leading-relaxed border border-white dark:border-slate-800 font-medium shadow-sm animate-fade-in flex flex-col gap-4">
               <p>{summary}</p>
               <Link
                 href="/owner/vets"
@@ -310,7 +325,7 @@ export default function JournalTimelineClient({
             onClick={() => setFilter(f.key)}
             className={`whitespace-nowrap px-4 py-2 rounded-xl text-[13px] font-bold transition-all border ${
               filter === f.key
-                ? 'bg-[#34495E] text-white border-[#34495E]'
+                ? 'bg-slate-800 text-white border-slate-800 dark:bg-slate-700 dark:border-slate-700'
                 : 'bg-surface text-text-secondary border-border-main hover:bg-bg-main'
             }`}
           >

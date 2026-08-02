@@ -961,7 +961,7 @@ export default function NutritionClient({
               hintKey="nutrition_intro"
               title="Mama bilgisini gir"
               message="Mama markası ve günlük miktarı gir — sistem kalori ve porsiyon takibini otomatik hesaplasın."
-              icon="🍗"
+              icon={<UtensilsIcon className="w-5 h-5 text-amber-500" />}
               position="bottom"
             />
             <div className="relative w-16 h-16 rounded-[20px] bg-gradient-to-br from-primary-soft to-white border-2 border-primary/20 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
@@ -983,7 +983,7 @@ export default function NutritionClient({
             title="MAMA PORSİYONU HESAPLAMA"
             message={`${pet.name}'in günlük beslenme porsiyonunu hesaplayabilmemiz için hangi marka ve tip mama kullanıyorsun?`}
             ctaText="Akıllı Tarama ile Ekle"
-            icon="🍗"
+            icon={<UtensilsIcon className="w-5 h-5 text-amber-500" />}
             gradient="from-amber-50 to-orange-50"
             iconBg="bg-amber-100 text-amber-700"
             onClick={() => {
@@ -1019,8 +1019,8 @@ export default function NutritionClient({
           {/* Active Primary Food OR Empty State */}
           {!activePrimary ? (
             <div className="card-base p-6 text-center flex flex-col items-center gap-3 border-2 border-dashed border-border-main bg-surface/50">
-              <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-[28px]">
-                🥣
+              <div className="w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 flex items-center justify-center shadow-sm">
+                <UtensilsIcon className="w-7 h-7 text-amber-600 dark:text-amber-400" />
               </div>
               <div>
                 <h3 className="font-extrabold text-[18px] text-text-primary">Mama bilgilerini ekle</h3>

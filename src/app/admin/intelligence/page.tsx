@@ -203,20 +203,20 @@ export default function FounderIntelligencePage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-black text-text-primary">Founder Console</h1>
-            <p className="text-[13px] text-text-secondary mt-0.5">
-              Last refresh: {lastRefresh.toLocaleTimeString()}
+            <p className="text-xs text-text-secondary mt-0.5">
+              Son güncelleme: {lastRefresh.toLocaleTimeString('tr-TR')}
             </p>
           </div>
           <div className="flex gap-3">
             <button onClick={load} disabled={loading}
-              className="btn-secondary text-[13px] px-4 py-2">
-              {loading ? '...' : '↻ Refresh'}
+              className="btn-secondary text-xs px-4 py-2 font-bold active:scale-[0.98]">
+              {loading ? 'Yükleniyor…' : '↻ Yenile'}
             </button>
-            <Link href="/admin/outreach" className="btn-secondary text-[13px] px-4 py-2">
-              📋 Pipeline
+            <Link href="/admin/outreach" className="btn-secondary text-xs px-4 py-2 font-bold active:scale-[0.98]">
+              Pipeline
             </Link>
-            <Link href="/owner/dashboard" className="btn-primary text-[13px] px-4 py-2">
-              ← Panel
+            <Link href="/owner/dashboard" className="btn-primary text-xs px-4 py-2 font-bold active:scale-[0.98]">
+              ← Uygulama
             </Link>
           </div>
         </div>

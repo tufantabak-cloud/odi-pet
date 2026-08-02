@@ -6,7 +6,7 @@ interface SmartCardBannerProps {
   title: string
   message: string
   ctaText: string
-  icon?: string
+  icon?: React.ReactNode
   onClick: () => void
   onDismiss?: () => void
   gradient?: string

@@ -54,7 +54,7 @@ export class AppointmentReadHandler implements AgendaReadHandler {
   }
 
   normalizeActualRecord(record: any, context: AgendaNormalizationContext): PetAgendaEvent {
-    const appAt = record.appointment_date || record.created_at;
+    const appAt = record.scheduled_at || record.appointment_date || record.created_at;
     const dateKey = deriveDateKey(appAt, context.timeZone);
 
     return {
@@ -97,7 +97,7 @@ export class AppointmentReadHandler implements AgendaReadHandler {
   }
 
   getIdentity(input: any, context: AgendaNormalizationContext): AgendaIdentity {
-    const appAt = input.appointment_date || input.scheduled_at;
+    const appAt = input.scheduled_at || input.appointment_date || input.created_at;
     const dateKey = deriveDateKey(appAt, context.timeZone);
 
     return {

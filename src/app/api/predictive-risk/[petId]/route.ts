@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
-import { checkSubscription } from '@/lib/subscription/check'
+import { getEntitlement } from '@/lib/subscription/entitlement'
 import { Database } from '@/lib/database.types'
 
 type VetRow = Database['public']['Tables']['vets']['Row']
@@ -111,9 +111,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ petI
   const force = searchParams.get('force') === 'true'
 
 
-  const { data: subData } = await supabase.from('user_subscriptions').select('plan').eq('profile_id', user.id).single()
-  const isPremium = subData?.plan === 'pro' || subData?.plan === 'ai_plus'
-  const isAIPlus = subData?.plan === 'ai_plus'
+  const entitlement = await getEntitlement(user.id)
+  const isPremium = entitlement.isPremium
+  const isAIPlus = entitlement.hasAiPlus
 
   // Helper to fetch vet status
   const fetchVetStatus = async (riskId: string) => {

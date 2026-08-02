@@ -76,9 +76,9 @@ export default function TreatmentsClient({ pet }: { pet: any }) {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {activePlans.map(plan => (
-              <div key={plan.id} className="card-base p-5 flex flex-col gap-2">
+              <div key={plan.id} className="card-base p-5 flex flex-col gap-2 border-l-4 border-l-emerald-500 dark:border-l-emerald-400">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">🩺</div>
+                  <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">🩺</div>
                   <div>
                     <h3 className="font-bold text-text-primary text-[15px]">{plan.sub_type}</h3>
                     <p className="text-[12px] text-text-secondary">{plan.repeat_rule === 'daily' ? 'Günlük' : plan.repeat_rule === 'weekly' ? 'Haftalık' : plan.repeat_rule === 'monthly' ? 'Aylık' : 'Tek Seferlik'}</p>
@@ -97,7 +97,7 @@ export default function TreatmentsClient({ pet }: { pet: any }) {
           <h2 className="text-lg font-bold text-text-primary mb-4">Tamamlanmış Tedaviler</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 opacity-70">
             {completedPlans.map(plan => (
-              <div key={plan.id} className="card-base p-5 flex flex-col gap-2 bg-gray-50">
+              <div key={plan.id} className="card-base p-5 flex flex-col gap-2 bg-slate-50 dark:bg-slate-900 border-l-4 border-l-slate-400 dark:border-l-slate-600">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold">✓</div>
                   <div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { getIcon, ICON_MAP } from '@/lib/navigation/iconMap'
+import { Compass, Smartphone, Zap, Menu, FileText, Lock, CheckCircle2, Plus } from 'lucide-react'
 
 type NavItem = {
   id: string
@@ -427,8 +428,11 @@ export default function AdminNavigationPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-text-primary tracking-tight">🧭 Navigasyon Yönetimi</h1>
-          <p className="text-[14px] text-text-secondary mt-1">Uygulamanın alt menüsünü ve aksiyon menülerini yönetin.</p>
+          <h1 className="text-2xl md:text-3xl font-black text-text-primary tracking-tight flex items-center gap-2.5">
+            <Compass className="w-7 h-7 text-purple-600 shrink-0" />
+            <span>Navigasyon Yönetimi</span>
+          </h1>
+          <p className="text-xs text-text-secondary mt-1">Uygulamanın alt menüsünü ve aksiyon menülerini yönetin.</p>
         </div>
       </div>
 
@@ -436,35 +440,39 @@ export default function AdminNavigationPage() {
       <div className="flex border-b border-border-main gap-2 overflow-x-auto pb-px">
         <button
           onClick={() => setActiveTab('bottom')}
-          className={`px-5 py-3 text-[14px] font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+          className={`flex items-center gap-2 px-5 py-3 text-xs font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap active:scale-[0.98] ${
             activeTab === 'bottom' ? 'border-primary text-primary' : 'border-transparent text-text-secondary hover:text-text-primary'
           }`}
         >
-          📱 Bottom Nav
+          <Smartphone className="w-4 h-4 shrink-0" />
+          <span>Alt Navigasyon (Bottom Nav)</span>
         </button>
         <button
           onClick={() => setActiveTab('actions')}
-          className={`px-5 py-3 text-[14px] font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+          className={`flex items-center gap-2 px-5 py-3 text-xs font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap active:scale-[0.98] ${
             activeTab === 'actions' ? 'border-primary text-primary' : 'border-transparent text-text-secondary hover:text-text-primary'
           }`}
         >
-          ⚡ + Aksiyonlar
+          <Zap className="w-4 h-4 shrink-0" />
+          <span>+ Hızlı Aksiyonlar</span>
         </button>
         <button
           onClick={() => setActiveTab('drawer')}
-          className={`px-5 py-3 text-[14px] font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+          className={`flex items-center gap-2 px-5 py-3 text-xs font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap active:scale-[0.98] ${
             activeTab === 'drawer' ? 'border-primary text-primary' : 'border-transparent text-text-secondary hover:text-text-primary'
           }`}
         >
-          🍔 Menü Drawer
+          <Menu className="w-4 h-4 shrink-0" />
+          <span>Menü Çekmecesi (Drawer)</span>
         </button>
         <button
           onClick={() => setActiveTab('pages')}
-          className={`px-5 py-3 text-[14px] font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+          className={`flex items-center gap-2 px-5 py-3 text-xs font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap active:scale-[0.98] ${
             activeTab === 'pages' ? 'border-primary text-primary' : 'border-transparent text-text-secondary hover:text-text-primary'
           }`}
         >
-          📄 Sayfa Havuzu
+          <FileText className="w-4 h-4 shrink-0" />
+          <span>Sayfa Havuzu</span>
         </button>
       </div>
 
@@ -483,28 +491,28 @@ export default function AdminNavigationPage() {
       {/* Page Picker Modal */}
       {showPagePickerForSlot && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-surface rounded-2xl w-full max-w-lg shadow-xl overflow-hidden flex flex-col max-h-[80vh]">
+          <div className="bg-surface rounded-3xl w-full max-w-lg shadow-xl overflow-hidden flex flex-col max-h-[80vh] border border-border-main">
             <div className="p-5 border-b border-border-main flex justify-between items-center">
-              <h3 className="font-black text-[16px] text-text-primary">Sayfa Seç</h3>
-              <button onClick={() => setShowPagePickerForSlot(null)} className="text-text-secondary hover:text-text-primary text-[24px] leading-none">&times;</button>
+              <h3 className="font-black text-base text-text-primary">Sayfa Seç</h3>
+              <button onClick={() => setShowPagePickerForSlot(null)} className="text-text-secondary hover:text-text-primary text-xl leading-none">&times;</button>
             </div>
             <div className="p-5 overflow-y-auto flex-1 space-y-2">
               {pages.map(page => (
                 <button
                   key={page.id}
                   onClick={() => addOrUpdateItemFromPage(page, showPagePickerForSlot.slot, showPagePickerForSlot.editingItemId)}
-                  className="w-full flex items-center gap-4 p-4 rounded-xl border border-border-main hover:border-primary hover:bg-primary/5 transition-all text-left"
+                  className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border-main hover:border-primary hover:bg-primary/5 transition-all text-left active:scale-[0.98]"
                 >
-                  <div className="text-primary flex items-center justify-center p-2 bg-primary/10 rounded-lg">
-                    {getIcon(page.icon, 24)}
+                  <div className="text-primary flex items-center justify-center p-2 bg-primary/10 rounded-xl">
+                    {getIcon(page.icon, 20)}
                   </div>
                   <div>
-                    <h4 className="text-[14px] font-bold text-text-primary">{page.label}</h4>
-                    <p className="text-[11px] text-text-secondary font-mono mt-0.5">{page.href}</p>
+                    <h4 className="text-sm font-bold text-text-primary">{page.label}</h4>
+                    <p className="text-2xs text-text-secondary font-mono mt-0.5">{page.href}</p>
                   </div>
                 </button>
               ))}
-              {pages.length === 0 && <p className="text-[13px] text-center text-text-secondary">Seçilebilecek sayfa yok.</p>}
+              {pages.length === 0 && <p className="text-xs text-center text-text-secondary">Seçilebilecek sayfa yok.</p>}
             </div>
           </div>
         </div>
@@ -513,8 +521,8 @@ export default function AdminNavigationPage() {
       {/* Floating Success Toast */}
       {showToast && (
         <div className="fixed bottom-6 right-6 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-medium flex items-center gap-3 border border-border-main animate-scaleIn z-[9999]">
-          <span className="text-[18px]">✨</span>
-          <span className="text-[13px] font-bold">{toastMessage}</span>
+          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+          <span className="text-xs font-bold">{toastMessage}</span>
         </div>
       )}
     </div>

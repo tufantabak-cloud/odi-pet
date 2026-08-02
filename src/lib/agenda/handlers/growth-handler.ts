@@ -53,7 +53,11 @@ export class GrowthMeasurementReadHandler implements AgendaReadHandler {
   }
 
   normalizeActualRecord(record: any, context: AgendaNormalizationContext): PetAgendaEvent {
-    const recAt = record.recorded_at ? `${record.recorded_at}T12:00:00.000Z` : record.created_at;
+    const recAt = record.measured_at
+      ? record.measured_at
+      : record.recorded_at
+        ? `${record.recorded_at}T12:00:00.000Z`
+        : record.created_at;
     const dateKey = deriveDateKey(recAt, context.timeZone);
 
     return {

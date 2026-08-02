@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
+import { getEntitlement } from '@/lib/subscription/entitlement'
 import { revalidatePath, revalidateTag } from 'next/cache'
 
 type RouteContext = {
@@ -22,18 +23,9 @@ export async function GET(req: NextRequest, context: RouteContext) {
   const supabase = await createServerSupabaseClient()
 
   // Premium kontrolü
-  const { data: subscription } = await supabase
-    .from('user_subscriptions')
-    .select('plan, status')
-    .eq('profile_id', user.id)
-    .eq('status', 'active')
-    .single()
+  const entitlement = await getEntitlement(user.id)
 
-  const isPremium = subscription?.plan 
-    && ['premium', 'pro', 'founder']
-      .includes(subscription.plan)
-
-  if (!isPremium) {
+  if (!entitlement.isPremium) {
     return NextResponse.json(
       { error: 'Bu özellik premium üyelere özeldir.' },
       { status: 403 }

@@ -71,6 +71,20 @@ function createAdminClient(options?: {
       return query
     }
 
+    if (table === 'profiles') {
+      const query = {
+        select: vi.fn(),
+        eq: vi.fn(),
+        maybeSingle: vi.fn().mockResolvedValue({
+          data: null,
+          error: null,
+        }),
+      }
+      query.select.mockReturnValue(query)
+      query.eq.mockReturnValue(query)
+      return query
+    }
+
     throw new Error(`Unexpected table: ${table}`)
   })
 

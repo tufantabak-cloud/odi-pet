@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AlertTriangle, BarChart2, AlertCircle } from 'lucide-react';
+import { AlertTriangle, BarChart2, AlertCircle, BookOpen } from 'lucide-react';
 
 // Irk seçenekleri kaynağı
 const ALL_BREEDS = [
@@ -764,17 +764,18 @@ export default function ContentAdminClient() {
       {/* Üst Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-[var(--color-border)] pb-4">
         <div>
-          <h1 className="text-2xl font-black text-[var(--color-text-main)] flex items-center gap-2">
-            <span>📚</span> İçerik Yönetimi & Yaşam Döngüsü
+          <h1 className="text-2xl font-black text-[var(--color-text-main)] flex items-center gap-2.5">
+            <BookOpen className="w-6 h-6 text-primary shrink-0" />
+            <span>İçerik Yönetimi & Yaşam Döngüsü</span>
           </h1>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-text-secondary mt-1">
             Evcil hayvanlar için doğrulanan kaynaklara dayalı kişiselleştirilmiş rehber kataloğu ve AI taslak kuyruğu.
           </p>
         </div>
 
         <button
           onClick={handleOpenCreateModal}
-          className="bg-[var(--color-primary)] text-white px-4 py-2.5 rounded-xl font-bold text-xs hover:bg-[var(--color-primary-hover)] transition-colors shadow-sm self-start md:self-auto"
+          className="bg-[var(--color-primary)] text-white px-4 py-2.5 rounded-xl font-bold text-xs hover:bg-[var(--color-primary-hover)] transition-all active:scale-[0.98] shadow-xs self-start md:self-auto"
         >
           + Yeni İçerik Ekle
         </button>

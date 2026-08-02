@@ -37,24 +37,18 @@ export async function hasPetCapability(
       return false
     }
 
-    console.warn('[pet-access] can_view_pet RPC failed, falling back to legacy check:', {
-      capability,
-      petId,
-      code: error.code,
-      message: error.message,
-    })
-
     // Fallback logic for environments where RPC functions are not yet migrated
     const { data: authData } = await supabase.auth.getUser()
     if (!authData?.user) return false
 
     const uid = authData.user.id
-    const [{ data: pet }, { data: membership }] = await Promise.all([
+    const [{ data: pet }, { data: legacyMember }, { data: membership }] = await Promise.all([
       supabase.from('pets').select('id').eq('id', petId).eq('owner_id', uid).maybeSingle(),
+      supabase.from('pet_members').select('id').eq('pet_id', petId).eq('profile_id', uid).maybeSingle(),
       supabase.from('pet_memberships').select('id').eq('pet_id', petId).eq('profile_id', uid).eq('status', 'active').maybeSingle(),
     ])
 
-    return !!(pet || membership)
+    return !!(pet || legacyMember || membership)
   }
 
   return data === true

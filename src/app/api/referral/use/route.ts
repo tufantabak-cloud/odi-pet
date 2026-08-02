@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
+import { qualifyReferral } from '@/lib/referral/qualifyReferral'
 
 export async function POST(req: NextRequest) {
   const user = await getSessionUser()
@@ -22,16 +23,18 @@ export async function POST(req: NextRequest) {
   if (referrer.id === user.id) return NextResponse.json({ error: 'Kendi kodunu kullanamazsın' }, { status: 400 })
 
   // Referral kaydı oluştur (zaten varsa upsert ile hata engelle)
-  const { error } = await supabase.from('referrals').upsert({
+  const { data: referralRecord, error } = await supabase.from('referrals').upsert({
     referrer_id: referrer.id,
     referred_id: user.id,
     referral_code: referralCode.toUpperCase(),
-  }, { onConflict: 'referred_id', ignoreDuplicates: true })
+    status: 'pending',
+  }, { onConflict: 'referred_id', ignoreDuplicates: true }).select('id').single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Rozet kontrolü — referrer için
-  const { count } = await supabase
+  // Service role client ile rozet güncellemelerini güvenli şekilde yap (RLS engeline takılmasın)
+  const adminSupabase = createAdminSupabaseClient()
+  const { count } = await adminSupabase
     .from('referrals')
     .select('*', { count: 'exact', head: true })
     .eq('referrer_id', referrer.id)
@@ -44,11 +47,18 @@ export async function POST(req: NextRequest) {
 
   for (const badge of badgesToCheck) {
     if ((count ?? 0) >= badge.threshold) {
-      await supabase.from('user_badges').upsert(
+      await adminSupabase.from('user_badges').upsert(
         { user_id: referrer.id, badge_key: badge.key },
         { onConflict: 'user_id, badge_key', ignoreDuplicates: true }
       )
     }
+  }
+
+  // Davetin nitelikli (qualified) şartlarını arka planda değerlendir
+  if (referralRecord?.id) {
+    qualifyReferral(referralRecord.id).catch(err => {
+      console.error('[Referral] qualifyReferral error:', err)
+    })
   }
 
   return NextResponse.json({ success: true })

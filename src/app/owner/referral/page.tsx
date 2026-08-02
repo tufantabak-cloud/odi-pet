@@ -1,66 +1,51 @@
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { redirect } from 'next/navigation'
 import ReferralClient from './ReferralClient'
-
-interface ReferralData {
-  referralCode: string
-  referralUrl: string
-  referralCount: number
-}
-
-interface BadgeData {
-  key: string
-  label: string
-  emoji: string
-  threshold: number
-  earned: boolean
-  earnedAt: string | null
-  progress: number
-}
-
-// Sunucu tarafında fetch yardımcısı — auth cookie'yi taşır
-async function fetchWithAuth(path: string) {
-  const { cookies } = await import('next/headers')
-  const cookieStore = await cookies()
-  const cookieHeader = cookieStore.getAll().map(c => `${c.name}=${c.value}`).join('; ')
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://odi-petcare.vercel.app'
-
-  const res = await fetch(`${baseUrl}${path}`, {
-    headers: { Cookie: cookieHeader },
-    cache: 'no-store',
-  })
-  if (!res.ok) return null
-  return res.json()
-}
+import { getEntitlement } from '@/lib/subscription/entitlement'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 export const metadata = {
   title: 'Arkadaşını Davet Et — Odi.Pet',
-  description: 'Referral kodunla arkadaşlarını Odi.Pet\'e davet et, rozetler kazan!',
+  description: 'Referral kodunla arkadaşlarını Odi.Pet\'e davet et, Pro süreni uzat!',
 }
 
 export default async function ReferralPage() {
   const user = await getSessionUser()
   if (!user) redirect('/login')
 
-  // Paralel fetch
-  const [referralData, badgesData] = await Promise.all([
-    fetchWithAuth('/api/referral') as Promise<ReferralData | null>,
-    fetchWithAuth('/api/referral/badges') as Promise<{ referralCount: number; badges: BadgeData[] } | null>,
-  ])
+  const supabase = await createServerSupabaseClient()
+  const entitlement = await getEntitlement(user.id)
 
-  // Referral kodu yoksa ya da hata varsa, fallback değerler
-  const referralCode = referralData?.referralCode ?? '—'
-  const referralUrl = referralData?.referralUrl ?? 'https://odi-petcare.vercel.app'
-  const referralCount = badgesData?.referralCount ?? referralData?.referralCount ?? 0
-  const badges = badgesData?.badges ?? []
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('referral_code')
+    .eq('id', user.id)
+    .single()
+
+  const { data: invitesList, count: referralCount } = await supabase
+    .from('referrals')
+    .select('id, referred_id, status, created_at, qualified_at', { count: 'exact' })
+    .eq('referrer_id', user.id)
+    .order('created_at', { ascending: false })
+
+  const qualifiedCount = invitesList?.filter(i => i.status === 'qualified').length ?? 0
+  const milestoneBonusDays = qualifiedCount >= 5 ? 60 : 0
+  const earnedDays = (qualifiedCount * 30) + milestoneBonusDays
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://odi.pet'
+  const referralCode = profile?.referral_code ?? '—'
+  const referralUrl = `${appUrl}/register?ref=${referralCode}`
 
   return (
-    <div className="max-w-lg mx-auto">
+    <div className="max-w-lg mx-auto p-4">
       <ReferralClient
         referralCode={referralCode}
         referralUrl={referralUrl}
-        referralCount={referralCount}
-        badges={badges}
+        referralCount={referralCount ?? 0}
+        qualifiedCount={qualifiedCount}
+        earnedDays={earnedDays}
+        daysLeft={entitlement.daysLeft || 90}
+        invitesList={invitesList ?? []}
       />
     </div>
   )

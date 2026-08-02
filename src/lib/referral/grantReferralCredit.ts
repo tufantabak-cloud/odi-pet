@@ -1,0 +1,108 @@
+import { createAdminSupabaseClient } from '@/lib/supabase/server'
+import { DEFAULT_SETTINGS } from '@/app/api/admin/memberships/settings/route'
+
+export async function grantReferralCredit(referralId: string) {
+  const adminSupabase = createAdminSupabaseClient()
+
+  // 1. Dinamik ayarları veritabanından çek (veya varsayılan kuralları yükle)
+  let settings = { ...DEFAULT_SETTINGS }
+
+  try {
+    const { data: settingsRow } = await adminSupabase
+      .from('system_settings')
+      .select('value')
+      .eq('key', 'membership_rules')
+      .maybeSingle()
+
+    if (settingsRow?.value) {
+      settings = { ...DEFAULT_SETTINGS, ...settingsRow.value }
+    }
+  } catch {
+    // Fallback default values
+  }
+
+  // 2. Referral detayını çek
+  const { data: referral, error: refError } = await adminSupabase
+    .from('referrals')
+    .select('*')
+    .eq('id', referralId)
+    .single()
+
+  if (refError || !referral) {
+    throw new Error(`Referral record not found: ${referralId}`)
+  }
+
+  const referrerId = referral.referrer_id
+  const refereeId = referral.referred_id
+
+  // 3. Aylık davet sınırı kontrolü
+  const now = new Date()
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+
+  const { count: monthlyCount } = await adminSupabase
+    .from('referrals')
+    .select('id', { count: 'exact', head: true })
+    .eq('referrer_id', referrerId)
+    .eq('status', 'qualified')
+    .gte('qualified_at', startOfMonth)
+
+  if ((monthlyCount ?? 0) >= settings.monthly_invite_cap) {
+    console.warn(`Referrer ${referrerId} reached monthly qualified invite limit (${settings.monthly_invite_cap}). Credit skipped.`)
+    return { success: false, reason: 'MONTHLY_LIMIT_REACHED' }
+  }
+
+  // 4. Davet edenin toplam nitelikli davet sayısını bul (bu davet dahil)
+  const { count: totalQualifiedCount } = await adminSupabase
+    .from('referrals')
+    .select('id', { count: 'exact', head: true })
+    .eq('referrer_id', referrerId)
+    .eq('status', 'qualified')
+
+  const inviteIndex = (totalQualifiedCount ?? 0) + 1 // 1-indexed (1. Davet, 2. Davet, 3. Davet...)
+
+  // 5. Kademeli davet kredisi hesaplama:
+  // 1. Yeni Üye: 30 Gün
+  // 2. Yeni Üye: 30 + 30 = 60 Gün
+  // 3. Yeni Üye: 30 + 60 = 90 Gün
+  // 4. Yeni Üye: 30 + 120 = 150 Gün
+  // 5. Yeni Üye: 30 + 300 = 330 Gün
+  let referrerCreditDays = settings.referral_tier_1_days
+
+  if (inviteIndex === 2) {
+    referrerCreditDays += settings.referral_tier_2_bonus
+  } else if (inviteIndex === 3) {
+    referrerCreditDays += settings.referral_tier_3_bonus
+  } else if (inviteIndex === 4) {
+    referrerCreditDays += settings.referral_tier_4_bonus
+  } else if (inviteIndex >= 5) {
+    referrerCreditDays += settings.referral_tier_5_bonus
+  }
+
+  // 6. Davet Edene Kademeli Kredi Tanımla (grant_membership_credit RPC)
+  await adminSupabase.rpc('grant_membership_credit', {
+    p_profile_id: referrerId,
+    p_days: referrerCreditDays,
+    p_reason: 'referral_referrer',
+    p_idempotency_key: `referral:${referralId}:referrer`,
+    p_metadata: { referral_id: referralId, role: 'referrer', invite_index: inviteIndex, days: referrerCreditDays },
+  })
+
+  // 7. Davet Edilene (Yeni Üye) Kredi Tanımla (grant_membership_credit RPC)
+  await adminSupabase.rpc('grant_membership_credit', {
+    p_profile_id: refereeId,
+    p_days: settings.referee_welcome_days,
+    p_reason: 'referral_referee',
+    p_idempotency_key: `referral:${referralId}:referee`,
+    p_metadata: { referral_id: referralId, role: 'referee', days: settings.referee_welcome_days },
+  })
+
+  // 8. 5. Davette Kurucu Üye Rozeti ekle
+  if (inviteIndex >= 5) {
+    await adminSupabase.from('user_badges').upsert(
+      { user_id: referrerId, badge_key: 'founder_member' },
+      { onConflict: 'user_id, badge_key', ignoreDuplicates: true }
+    )
+  }
+
+  return { success: true, referrerDays: referrerCreditDays, refereeDays: settings.referee_welcome_days }
+}

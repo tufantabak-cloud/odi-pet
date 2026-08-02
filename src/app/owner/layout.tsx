@@ -11,6 +11,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import SpotlightTour from '@/components/onboarding/SpotlightTour'
 import DashboardPendingReferral from '@/components/DashboardPendingReferral'
 import FloatingHelp from '@/components/FloatingHelp'
+import { filterNavItems, resolveNavItems } from '@/lib/modules/registry'
 
 export default async function OwnerLayout({ children }: { children: ReactNode }) {
   const profile = await requireRole(['owner', 'admin', 'founder'])
@@ -49,17 +50,23 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
     .eq('is_active', true)
     .order('order_index')
 
-  const bottomNavItems = navItems?.filter(
-    i => i.slot === 'bottom_nav'
-  ) ?? []
+  // Modül kaydı (src/lib/modules/registry.ts) tek yetkili kaynaktır:
+  // kapalı modüle işaret eden navigation_items satırları düşürülür, DB'de
+  // karşılığı olmayan canlı modüller (ör. Takvim) eklenir.
+  const bottomNavItems = resolveNavItems(
+    navItems?.filter(i => i.slot === 'bottom_nav'),
+    'bottom_nav'
+  )
 
-  const actionMenuItems = navItems?.filter(
-    i => i.slot === 'action_menu'
-  ) ?? []
+  const menuDrawerItems = resolveNavItems(
+    navItems?.filter(i => i.slot === 'menu_drawer'),
+    'side_shortcut'
+  )
 
-  const menuDrawerItems = navItems?.filter(
-    i => i.slot === 'menu_drawer'
-  ) ?? []
+  // Hızlı ekle menüsü modül kaydında tanımlı değil; yalnızca süzülür.
+  const actionMenuItems = filterNavItems(
+    navItems?.filter(i => i.slot === 'action_menu')
+  )
 
   return (
     <div className="flex min-h-dvh flex-col font-sans">

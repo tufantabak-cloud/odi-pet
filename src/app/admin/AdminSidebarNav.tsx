@@ -6,6 +6,7 @@ import {
   Home,
   Users,
   PawPrint,
+  Award,
   BookOpen,
   Sparkles,
   Syringe,
@@ -37,7 +38,8 @@ const navSections: NavSection[] = [
     title: 'Yönetim',
     items: [
       { href: '/admin/users', label: 'Kullanıcılar', icon: Users },
-      { href: '/admin/pets', label: 'Evcil Hayvanlar', icon: PawPrint }
+      { href: '/admin/pets', label: 'Evcil Hayvanlar', icon: PawPrint },
+      { href: '/admin/memberships', label: 'Üyelik & Abonelikler', icon: Award }
     ]
   },
   {
@@ -82,7 +84,7 @@ export default function AdminSidebarNav() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2.5 text-sm font-semibold rounded-xl transition-all ${
+                  className={`flex items-center gap-3 px-3 py-2.5 text-sm font-semibold rounded-xl transition-all active:scale-[0.98] ${
                     isActive
                       ? 'bg-purple-100 text-purple-900 shadow-xs border border-purple-200/80 font-bold'
                       : 'text-text-secondary hover:text-primary hover:bg-bg-main'

@@ -30,7 +30,10 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
 
   const { error } = await supabase
     .from('weight_logs')
-    .delete()
+    .update({
+      is_archived: true,
+      archived_at: new Date().toISOString()
+    })
     .eq('id', logId)
     .eq('pet_id', id)
 

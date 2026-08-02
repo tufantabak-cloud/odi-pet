@@ -6,6 +6,7 @@ interface BulkActionBarProps {
   selectedCount: number
   onClear: () => void
   onExport?: () => void
+  onGrantCredit?: () => void
   onLabel?: () => void
   onDelete?: () => void
 }
@@ -14,6 +15,7 @@ export default function BulkActionBar({
   selectedCount,
   onClear,
   onExport,
+  onGrantCredit,
   onLabel,
   onDelete,
 }: BulkActionBarProps) {
@@ -39,20 +41,20 @@ export default function BulkActionBar({
 
         {/* Actions */}
         <div className="flex items-center gap-2">
+          {onGrantCredit && (
+            <button
+              onClick={onGrantCredit}
+              className="px-3 py-2 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl text-[12px] font-bold text-amber-800 transition-colors flex items-center gap-1.5"
+            >
+              🎁 +30 Gün Kredi Yükle
+            </button>
+          )}
           {onExport && (
             <button
               onClick={onExport}
               className="px-3 py-2 bg-bg-main hover:bg-slate-100 border border-border-main rounded-xl text-[12px] font-bold text-text-primary transition-colors flex items-center gap-1.5"
             >
-              ⬇️ Dışa Aktar
-            </button>
-          )}
-          {onLabel && (
-            <button
-              onClick={onLabel}
-              className="px-3 py-2 bg-bg-main hover:bg-slate-100 border border-border-main rounded-xl text-[12px] font-bold text-text-primary transition-colors flex items-center gap-1.5"
-            >
-              🏷️ Etiketle
+              ⬇️ Dışa Aktar (CSV)
             </button>
           )}
           {onDelete && (

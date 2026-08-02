@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { getIcon } from '@/lib/navigation/iconMap'
 import { resolveActionHref } from '@/components/BottomNav'
+import { getNavModules, type ModuleEntry } from '@/lib/modules/registry'
 import {
   LayoutGrid,
   Bot,
@@ -47,76 +48,35 @@ const fallbackActionMenuItems = [
   { label: 'Durum Kaydet',  href: '/owner/pets', icon: 'notebook' },
 ]
 
-const primaryItems = [
-  {
-    href: '/owner/dashboard',
-    label: 'Anasayfa',
-    icon: <LayoutGrid className="w-[18px] h-[18px]" />,
-  },
-  {
-    href: '/owner/ai-vet',
-    label: 'AI VET',
-    icon: <Bot className="w-[18px] h-[18px]" />,
-  },
-  {
-    href: '/owner/services',
-    label: 'Hizmetler',
-    icon: <Stethoscope className="w-[18px] h-[18px]" />,
-  },
-  {
-    href: '/owner/social',
-    label: 'Sosyal',
-    icon: <Users className="w-[18px] h-[18px]" />,
-  },
-  {
-    href: '/owner/learn',
-    label: 'İçerikler',
-    icon: <BookOpen className="w-[18px] h-[18px]" />,
-  },
-  {
-    href: '/owner/messages',
-    label: 'Mesajlar',
-    icon: <MessageCircle className="w-[18px] h-[18px]" />,
-  },
-  {
-    href: '/owner/budget',
-    label: 'Bütçe',
-    icon: <Wallet className="w-[18px] h-[18px]" />,
-  },
-  {
-    href: '/owner/events',
-    label: 'Etkinlikler',
-    icon: <Calendar className="w-[18px] h-[18px]" />,
-  },
-  {
-    href: '/owner/marketplace',
-    label: 'Mağaza',
-    icon: <ShoppingBag className="w-[18px] h-[18px]" />,
-  },
-]
+// Kenar menüsü ikonları — anahtarlar modül kaydındaki `key` ile eşleşir.
+const MODULE_ICONS: Record<string, React.ReactNode> = {
+  dashboard:     <LayoutGrid className="w-[18px] h-[18px]" />,
+  'ai-vet':      <Bot className="w-[18px] h-[18px]" />,
+  services:      <Stethoscope className="w-[18px] h-[18px]" />,
+  social:        <Users className="w-[18px] h-[18px]" />,
+  learn:         <BookOpen className="w-[18px] h-[18px]" />,
+  messages:      <MessageCircle className="w-[18px] h-[18px]" />,
+  budget:        <Wallet className="w-[18px] h-[18px]" />,
+  events:        <Calendar className="w-[18px] h-[18px]" />,
+  takvim:        <Calendar className="w-[18px] h-[18px]" />,
+  marketplace:   <ShoppingBag className="w-[18px] h-[18px]" />,
+  vets:          <MapPin className="w-[18px] h-[18px]" />,
+  notifications: <Bell className="w-[18px] h-[18px]" />,
+  profile:       <User className="w-[18px] h-[18px]" />,
+  help:          <HelpCircle className="w-[18px] h-[18px]" />,
+}
 
-const shortcutItems = [
-  {
-    href: '/owner/vets',
-    label: 'Veteriner Bul',
-    icon: <MapPin className="w-[18px] h-[18px]" />,
-  },
-  {
-    href: '/owner/notifications',
-    label: 'Bildirimler',
-    icon: <Bell className="w-[18px] h-[18px]" />,
-  },
-  {
-    href: '/owner/profile',
-    label: 'Profilim',
-    icon: <User className="w-[18px] h-[18px]" />,
-  },
-  {
-    href: '/help.html',
-    label: 'Yardım',
-    icon: <HelpCircle className="w-[18px] h-[18px]" />,
-  },
-]
+// Yedek menüler modül kaydından üretilir (src/lib/modules/registry.ts).
+// Kapalı modüller getNavModules tarafından zaten elenir — burada elle
+// liste tutulmaz, böylece bir modülü açmak/kapatmak tek dosyada kalır.
+const toNavEntry = (m: ModuleEntry) => ({
+  href: m.href,
+  label: m.label,
+  icon: MODULE_ICONS[m.key] ?? <LayoutGrid className="w-[18px] h-[18px]" />,
+})
+
+const primaryItems = getNavModules('side_primary').map(toNavEntry)
+const shortcutItems = getNavModules('side_shortcut').map(toNavEntry)
 
 function NavLink({ href, label, icon }: { href: string; label: string; icon: React.ReactNode }) {
   const pathname = usePathname()

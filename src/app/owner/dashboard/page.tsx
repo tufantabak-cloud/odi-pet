@@ -1,4 +1,3 @@
-"use no memo"
 export const dynamic = 'force-dynamic'
 
 import { getSessionUser } from '@/lib/auth/get-current-profile'

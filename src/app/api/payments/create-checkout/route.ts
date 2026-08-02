@@ -143,6 +143,21 @@ export async function POST(request: Request) {
       }
     }
 
+    const { data: userProfile } = await admin
+      .from('profiles')
+      .select('premium_until')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    let trialEndTimestamp: number | undefined = undefined
+    if (userProfile?.premium_until) {
+      const untilMs = new Date(userProfile.premium_until).getTime()
+      const diffHours = (untilMs - Date.now()) / (1000 * 60 * 60)
+      if (diffHours >= 48) {
+        trialEndTimestamp = Math.floor(untilMs / 1000)
+      }
+    }
+
     const metadata = {
       profile_id: user.id,
       plan_key: input.plan,
@@ -160,6 +175,7 @@ export async function POST(request: Request) {
       metadata,
       subscription_data: {
         metadata,
+        ...(trialEndTimestamp ? { trial_end: trialEndTimestamp } : {}),
       },
     })
 

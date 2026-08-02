@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { computeInsuranceEligibility } from '@/lib/insurance/eligibility-engine'
+import { getEntitlement } from '@/lib/subscription/entitlement'
 import { Database } from '@/lib/database.types'
 
 
@@ -19,9 +20,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ petI
   const force = req.nextUrl.searchParams.get('force') === 'true'
 
   // Plan gate — free gets teaser only
-  const { data: sub } = await supabase.from('user_subscriptions').select('plan').eq('profile_id', user.id).single()
-  const plan = sub?.plan ?? 'free'
-  if (plan === 'free') {
+  const entitlement = await getEntitlement(user.id)
+  const plan = entitlement.tier
+  if (!entitlement.isPremium) {
     return NextResponse.json({ locked: true, plan, message: 'Insurance Readiness Pro plan ile açılır' })
   }
 

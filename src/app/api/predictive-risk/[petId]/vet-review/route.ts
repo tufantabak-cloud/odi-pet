@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
+import { getEntitlement } from '@/lib/subscription/entitlement'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ petId: string }> }) {
   const user = await getSessionUser()
@@ -13,8 +14,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pet
   const { petId } = await params
 
   // Security: Ensure user is AI+
-  const { data: subData } = await supabase.from('user_subscriptions').select('plan').eq('profile_id', user.id).single()
-  if (subData?.plan !== 'ai_plus') {
+  const entitlement = await getEntitlement(user.id)
+  if (!entitlement.hasAiPlus) {
     return NextResponse.json({ error: 'AI+ plan required' }, { status: 403 })
   }
 

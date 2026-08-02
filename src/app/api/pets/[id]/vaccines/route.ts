@@ -116,7 +116,10 @@ export async function DELETE(request: Request, props: { params: Promise<{ id: st
 
     const { error } = await supabase
       .from('vaccine_records_v2')
-      .delete()
+      .update({
+        is_archived: true,
+        archived_at: new Date().toISOString()
+      })
       .eq('id', recordId)
       .eq('pet_id', id) // Extra safety check
 

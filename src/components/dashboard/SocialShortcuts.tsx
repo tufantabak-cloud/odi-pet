@@ -1,129 +1,141 @@
 import Link from 'next/link'
+import { HeartHandshake, Megaphone, Heart, Bone, MessageSquare, Calendar, LucideIcon } from 'lucide-react'
 
 interface ShortcutItem {
-  icon: string
-  label: React.ReactNode
+  id: string
+  icon: LucideIcon
+  label: string
   href: string
   badge: number | null
   comingSoon: boolean
-  color: string
-  bgTint: string
+  iconColorClass: string
+  bgTintClass: string
   borderColorClass: string
-  hoverBgClass: string
 }
 
 export default function SocialShortcuts({ lostReportsCount = 0 }: { lostReportsCount: number }) {
   const shortcuts: ShortcutItem[] = [
     {
-      icon: 'ti-home-heart',
-      label: <>Sahiplendirme<br/>İlanları</>,
+      id: 'sahiplendir',
+      icon: HeartHandshake,
+      label: 'Sahiplendirme',
       href: '/owner/social?tab=sahiplendir',
       badge: null,
       comingSoon: false,
-      color: 'var(--color-primary)',
-      bgTint: 'rgba(93, 63, 211, 0.12)',
-      borderColorClass: 'border-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/40',
-      hoverBgClass: 'hover:bg-[var(--color-primary)]/5'
+      iconColorClass: 'text-purple-600',
+      bgTintClass: 'bg-purple-50',
+      borderColorClass: 'border-purple-100/80 hover:border-purple-200'
     },
     {
-      icon: 'ti-alert-triangle',
-      label: <>Kayıp<br/>İlanları</>,
+      id: 'lost',
+      icon: Megaphone,
+      label: 'Kayıp İlanları',
       href: '/owner/social?tab=lost',
       badge: lostReportsCount > 0 ? lostReportsCount : null,
       comingSoon: false,
-      color: 'var(--color-danger)',
-      bgTint: 'rgba(255, 107, 107, 0.12)',
-      borderColorClass: 'border-[var(--color-danger)]/20 hover:border-[var(--color-danger)]/40',
-      hoverBgClass: 'hover:bg-[var(--color-danger)]/5'
+      iconColorClass: 'text-rose-600',
+      bgTintClass: 'bg-rose-50',
+      borderColorClass: 'border-rose-100/80 hover:border-rose-200'
     },
     {
-      icon: 'ti-heart',
-      label: <>Eşleştirme<br/>İlanları</>,
+      id: 'eslestirme',
+      icon: Heart,
+      label: 'Eşleştirme',
       href: '/owner/social?tab=eslestirme',
       badge: null,
       comingSoon: false,
-      color: 'var(--color-success)',
-      bgTint: 'rgba(78, 205, 196, 0.12)',
-      borderColorClass: 'border-[var(--color-success)]/20 hover:border-[var(--color-success)]/40',
-      hoverBgClass: 'hover:bg-[var(--color-success)]/5'
+      iconColorClass: 'text-teal-600',
+      bgTintClass: 'bg-teal-50',
+      borderColorClass: 'border-teal-100/80 hover:border-teal-200'
     },
     {
-      icon: 'ti-paw',
+      id: 'playdate',
+      icon: Bone,
       label: 'Playdate',
       href: '#',
       badge: null,
       comingSoon: true,
-      color: '#94a3b8',
-      bgTint: 'rgba(148, 163, 184, 0.12)',
-      borderColorClass: 'border-[var(--color-border)]',
-      hoverBgClass: 'hover:bg-[var(--color-surface)]'
+      iconColorClass: 'text-amber-600',
+      bgTintClass: 'bg-amber-50/80',
+      borderColorClass: 'border-slate-100'
     },
     {
-      icon: 'ti-messages',
+      id: 'forumlar',
+      icon: MessageSquare,
       label: 'Forumlar',
       href: '#',
       badge: null,
       comingSoon: true,
-      color: '#94a3b8',
-      bgTint: 'rgba(148, 163, 184, 0.12)',
-      borderColorClass: 'border-[var(--color-border)]',
-      hoverBgClass: 'hover:bg-[var(--color-surface)]'
+      iconColorClass: 'text-sky-600',
+      bgTintClass: 'bg-sky-50/80',
+      borderColorClass: 'border-slate-100'
     },
     {
-      icon: 'ti-trophy',
+      id: 'etkinlikler',
+      icon: Calendar,
       label: 'Etkinlikler',
       href: '#',
       badge: null,
       comingSoon: true,
-      color: '#94a3b8',
-      bgTint: 'rgba(148, 163, 184, 0.12)',
-      borderColorClass: 'border-[var(--color-border)]',
-      hoverBgClass: 'hover:bg-[var(--color-surface)]'
+      iconColorClass: 'text-indigo-600',
+      bgTintClass: 'bg-indigo-50/80',
+      borderColorClass: 'border-slate-100'
     }
   ]
 
   return (
     <div className="px-[var(--space-4)]">
       <div className="grid grid-cols-3 gap-3">
-        {shortcuts.map((s, idx) => {
-          const content = (
-            <div className={`relative flex flex-col items-center justify-center gap-2 p-3 rounded-xl border bg-white transition-all ${s.borderColorClass} ${s.hoverBgClass} ${!s.comingSoon ? 'active:scale-95 shadow-sm' : 'opacity-80 grayscale-[0.2]'}`}>
+        {shortcuts.map((s) => {
+          const Icon = s.icon
+
+          const cardContent = (
+            <div
+              className={`relative flex flex-col items-center justify-between p-3.5 min-h-[116px] rounded-[24px] bg-white border ${s.borderColorClass} shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] transition-all duration-200 ease-out group ${
+                !s.comingSoon
+                  ? 'hover:scale-[1.02] active:scale-[0.98] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.08)]'
+                  : 'opacity-85 hover:opacity-100'
+              }`}
+            >
+              {/* Notification Badge */}
               {s.badge !== null && (
-                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center text-2xs font-semibold rounded-full border-2 border-white shadow-sm bg-[var(--color-danger)] text-white">
+                <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1.5 flex items-center justify-center text-[10px] font-bold rounded-full border-2 border-white bg-rose-500 text-white shadow-sm animate-pulse">
                   {s.badge > 9 ? '9+' : s.badge}
                 </span>
               )}
-              
-              {/* İkon Yuvarlağı (%12 Opaklık Tint) */}
+
+              {/* OPOS Lucide Icon Container */}
               <div
-                className="w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0"
-                style={{ background: s.bgTint }}
+                className={`w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 ${s.bgTintClass} ${s.iconColorClass} transition-transform duration-200 group-hover:scale-110`}
               >
-                <i className={`ti ${s.icon} text-xl`} style={{ color: s.color }} />
+                <Icon className="w-5 h-5 stroke-[2]" />
               </div>
 
-              <span className={`text-xs font-semibold tracking-tight text-center leading-tight ${s.comingSoon ? 'text-text-tertiary' : 'text-text-primary'}`}>
-                {s.label}
-              </span>
-              {s.comingSoon && (
-                <span className="absolute bottom-1 bg-surface-secondary text-text-tertiary text-2xs font-medium px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
-                  Yakında
+              {/* Label & Status */}
+              <div className="flex flex-col items-center gap-1 w-full mt-1.5">
+                <span className={`text-xs font-semibold tracking-tight text-center leading-tight ${s.comingSoon ? 'text-slate-500' : 'text-slate-800'}`}>
+                  {s.label}
                 </span>
-              )}
+                {s.comingSoon && (
+                  <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    Yakında
+                  </span>
+                )}
+              </div>
             </div>
           )
 
           if (s.comingSoon) {
             return (
-              <div key={idx} className="cursor-not-allowed">
-                {content}
+              <div key={s.id} className="cursor-not-allowed">
+                {cardContent}
               </div>
             )
           }
 
           return (
-            <Link key={idx} href={s.href} className="block">
-              {content}
+            <Link key={s.id} href={s.href} className="block group">
+              {cardContent}
             </Link>
           )
         })}
@@ -131,3 +143,4 @@ export default function SocialShortcuts({ lostReportsCount = 0 }: { lostReportsC
     </div>
   )
 }
+

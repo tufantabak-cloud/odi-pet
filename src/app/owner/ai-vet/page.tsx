@@ -35,24 +35,24 @@ function QuickUpdateModal({ petId, config, onClose, onDone }: QuickUpdateModalPr
 
   return (
     <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-surface w-full max-w-sm rounded-modal p-6 shadow-2xl overflow-hidden animate-fade-in" onClick={e => e.stopPropagation()}>
-        <h3 className="text-[17px] font-extrabold text-text-primary mb-1">{config.title}</h3>
-        <p className="text-[13px] text-text-secondary mb-5 leading-relaxed">{config.desc}</p>
+      <div className="bg-surface w-full max-w-sm rounded-3xl p-6 shadow-soft overflow-hidden animate-fade-in" onClick={e => e.stopPropagation()}>
+        <h3 className="text-lg font-extrabold text-text-primary mb-1">{config.title}</h3>
+        <p className="text-xs text-text-secondary mb-5 leading-relaxed">{config.desc}</p>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {config.fields.map((f) => (
              <div key={f.name} className="flex flex-col gap-1.5">
-               <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider">{f.label}</label>
+               <label className="text-xs font-black text-text-secondary uppercase tracking-wider">{f.label}</label>
                {f.type === 'file' ? (
-                 <input name={f.name} type="file" accept="image/*" className="input-base py-2.5 text-[13px]" required={f.required} />
+                 <input name={f.name} type="file" accept="image/*" className="input-base py-2.5 text-xs" required={f.required} />
                ) : (
-                 <input name={f.name} type={f.type} step={f.type === 'number' ? 'any' : undefined} placeholder={f.placeholder} className="input-base py-3 text-[14px]" required={f.required} />
+                 <input name={f.name} type={f.type} step={f.type === 'number' ? 'any' : undefined} placeholder={f.placeholder} className="input-base py-3 text-sm" required={f.required} />
                )}
              </div>
           ))}
-          {error && <p className="text-[12px] text-error font-bold p-2 bg-error/10 rounded-lg text-center mt-1">{error}</p>}
+          {error && <p className="text-xs text-error font-bold p-2 bg-error/10 rounded-lg text-center mt-1">{error}</p>}
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="btn-secondary flex-1 py-3.5 text-[14px]">İptal</button>
-            <button type="submit" disabled={loading} className="flex-[2] btn-primary py-3.5 disabled:opacity-50 shadow-sm text-[14px]">{loading ? 'Kaydediliyor...' : 'Kaydet ✓'}</button>
+            <button type="button" onClick={onClose} className="btn-secondary flex-1 py-3.5 text-sm">İptal</button>
+            <button type="submit" disabled={loading} className="flex-[2] btn-primary py-3.5 disabled:opacity-50 shadow-sm text-sm">{loading ? 'Kaydediliyor...' : 'Kaydet ✓'}</button>
           </div>
         </form>
       </div>
@@ -71,24 +71,24 @@ interface Message {
 const SEV_CONFIG: Record<string, { label: string; color: string; bar: string; emoji: string; bg: string }> = {
   critical: {
     label: 'Kritik',
-    color: 'text-error',
-    bar: 'bg-error',
+    color: 'text-rose-600 dark:text-rose-400 font-bold',
+    bar: 'bg-rose-500 dark:bg-rose-400',
     emoji: '🚨',
-    bg: 'bg-error/10 border-error/20',
+    bg: 'bg-rose-500/10 dark:bg-rose-500/20 border-rose-500/20 dark:border-rose-500/40 text-rose-900 dark:text-rose-100',
   },
   medium: {
     label: 'Orta Risk',
-    color: 'text-warning',
-    bar: 'bg-warning',
+    color: 'text-amber-600 dark:text-amber-400 font-bold',
+    bar: 'bg-amber-500 dark:bg-amber-400',
     emoji: '⚠️',
-    bg: 'bg-warning/10 border-warning/20',
+    bg: 'bg-amber-500/10 dark:bg-amber-500/20 border-amber-500/20 dark:border-amber-500/40 text-amber-900 dark:text-amber-100',
   },
   low: {
     label: 'Düşük Risk',
-    color: 'text-success',
-    bar: 'bg-success',
+    color: 'text-emerald-600 dark:text-emerald-400 font-bold',
+    bar: 'bg-emerald-500 dark:bg-emerald-400',
     emoji: '✅',
-    bg: 'bg-success/10 border-success/20',
+    bg: 'bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/20 dark:border-emerald-500/40 text-emerald-900 dark:text-emerald-100',
   },
 }
 
@@ -332,8 +332,8 @@ export default function AIVetPage() {
                       />
                     </div>
                     {msg.poweredBy === 'heuristic' && (
-                      <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl flex flex-col gap-2">
-                        <p className="text-[11px] font-normal text-amber-800 leading-snug">
+                      <div className="mt-3 p-3 bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/20 dark:border-amber-500/40 rounded-xl flex flex-col gap-2">
+                        <p className="text-[11px] font-normal text-amber-900 dark:text-amber-100 leading-snug">
                           <span className="font-bold">⚠️ Sistem Yoğunluğu:</span> Şu an AI sunucularımızda aşırı yoğunluk yaşanıyor. Bu yüzden size yapay zeka ile kişiselleştirilmiş bir yanıt veremedik. Lütfen sorunuzu birazdan tekrar gönderin.
                         </p>
                         <button 
@@ -341,7 +341,7 @@ export default function AIVetPage() {
                             const prevUserMsg = messages[i - 1]?.text;
                             if (prevUserMsg) send(prevUserMsg);
                           }}
-                          className="text-[11px] font-bold text-amber-700 bg-amber-100/50 hover:bg-amber-200 py-1.5 px-3 rounded-lg transition-colors self-start flex items-center gap-1.5"
+                          className="text-[11px] font-bold text-amber-800 dark:text-amber-200 bg-amber-500/20 hover:bg-amber-500/30 py-1.5 px-3 rounded-lg transition-colors self-start flex items-center gap-1.5 active:scale-[0.98]"
                         >
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                           Yapay Zeka ile Tekrar Dene
@@ -449,7 +449,7 @@ export default function AIVetPage() {
               <button
                 key={idx}
                 onClick={() => send(p.text)}
-                className="text-[12px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5"
+                className="text-[12px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-full transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center gap-1.5"
               >
                 <span>{p.icon}</span> {p.text}
               </button>
@@ -464,7 +464,7 @@ export default function AIVetPage() {
               <button
                 key={idx}
                 onClick={() => send(chip)}
-                className="text-[12px] font-bold text-text-secondary bg-surface hover:bg-primary/10 hover:text-primary border border-border-main px-3 py-1.5 rounded-full transition-colors"
+                className="text-[12px] font-bold text-text-secondary bg-surface hover:bg-primary/10 hover:text-primary border border-border-main px-3 py-1.5 rounded-full transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 {chip}
               </button>

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
+import { getEntitlement } from '@/lib/subscription/entitlement'
 
 export async function GET() {
   const user = await getSessionUser()
@@ -8,23 +9,35 @@ export async function GET() {
 
   const supabase = await createServerSupabaseClient()
 
-  // Referral kodunu al
+  // 1. Referral kodunu al
   const { data: profile } = await supabase
     .from('profiles')
-    .select('referral_code, first_name')
+    .select('referral_code, first_name, premium_until')
     .eq('id', user.id)
     .single()
 
-  // Kaç kişiyi davet ettiğini say
-  const { count: referralCount } = await supabase
+  // 2. Davet listesini ve sayılarını al
+  const { data: invitesList, count: referralCount } = await supabase
     .from('referrals')
-    .select('*', { count: 'exact', head: true })
+    .select('id, referred_id, status, created_at, qualified_at', { count: 'exact' })
     .eq('referrer_id', user.id)
+    .order('created_at', { ascending: false })
+
+  const qualifiedCount = invitesList?.filter(i => i.status === 'qualified').length ?? 0
+  const milestoneBonusDays = qualifiedCount >= 5 ? 60 : 0
+  const earnedDays = (qualifiedCount * 30) + milestoneBonusDays
+
+  const entitlement = await getEntitlement(user.id)
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://odi.pet'
 
   return NextResponse.json({
     referralCode: profile?.referral_code ?? null,
-    referralUrl: `https://odi-petcare.vercel.app/register?ref=${profile?.referral_code}`,
+    referralUrl: `${appUrl}/register?ref=${profile?.referral_code}`,
     referralCount: referralCount ?? 0,
+    qualifiedCount,
+    earnedDays,
+    entitlement,
+    invitesList: invitesList ?? [],
     firstName: profile?.first_name ?? ''
   })
 }

@@ -318,7 +318,7 @@ export default function VetsPage() {
           {/* Back button */}
           <button 
             onClick={closeClinicDetail}
-            className="inline-flex items-center gap-2 min-h-[44px] text-text-secondary hover:text-[#34495E] font-bold text-[14px] transition-colors group mb-8 self-start cursor-pointer"
+            className="inline-flex items-center gap-2 min-h-[44px] text-text-secondary hover:text-slate-800 dark:hover:text-slate-200 font-bold text-[14px] transition-colors group mb-8 self-start cursor-pointer"
           >
             <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
@@ -412,7 +412,7 @@ export default function VetsPage() {
               {selectedClinicDetails?.phone ? (
                 <a 
                   href={`tel:${selectedClinicDetails.phone.replace(/\s+/g, '')}`}
-                  className="flex-1 text-center bg-[#34495E] hover:bg-[#2C3E50] text-white text-[16px] font-bold py-[16px] px-[20px] rounded-btn transition-all duration-300 active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                  className="flex-1 text-center bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white text-[16px] font-bold py-[16px] px-[20px] rounded-btn transition-all duration-300 active:scale-[0.98] hover:scale-[1.02] flex items-center justify-center gap-2 cursor-pointer shadow-sm"
                 >
                   <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
                     <path d="M6.62 10.79a15.15 15.15 0 006.59 6.59l2.2-2.2a1 1 0 011.11-.27 11.72 11.72 0 003.79.6 1 1 0 011 1v3.5a1 1 0 01-1 1A16 16 0 013 5a1 1 0 011-1h3.5a1 1 0 011 1 11.72 11.72 0 00.6 3.79 1 1 0 01-.27 1.11l-2.2 2.2z" />
@@ -422,7 +422,7 @@ export default function VetsPage() {
               ) : (
                 <button 
                   disabled
-                  className="flex-1 text-center bg-[#34495E] text-white/50 text-[16px] font-bold py-[16px] px-[20px] rounded-btn flex items-center justify-center gap-2 opacity-50 cursor-not-allowed shadow-sm"
+                  className="flex-1 text-center bg-slate-800 text-white/50 text-[16px] font-bold py-[16px] px-[20px] rounded-btn flex items-center justify-center gap-2 opacity-50 cursor-not-allowed shadow-sm"
                 >
                   <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
                     <path d="M6.62 10.79a15.15 15.15 0 006.59 6.59l2.2-2.2a1 1 0 011.11-.27 11.72 11.72 0 003.79.6 1 1 0 011 1v3.5a1 1 0 01-1 1A16 16 0 013 5a1 1 0 011-1h3.5a1 1 0 011 1 11.72 11.72 0 00.6 3.79 1 1 0 01-.27 1.11l-2.2 2.2z" />
@@ -435,7 +435,7 @@ export default function VetsPage() {
                 href={`https://www.google.com/maps/dir/?api=1&destination=${selectedClinic.latitude},${selectedClinic.longitude}&destination_place_id=${selectedClinic.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 text-center bg-[#34495E] hover:bg-[#2C3E50] text-white text-[16px] font-bold py-[16px] px-[20px] rounded-btn transition-all duration-300 active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                className="flex-1 text-center bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white text-[16px] font-bold py-[16px] px-[20px] rounded-btn transition-all duration-300 active:scale-[0.98] hover:scale-[1.02] flex items-center justify-center gap-2 cursor-pointer shadow-sm"
               >
                 <svg className="w-5 h-5 fill-current" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -463,7 +463,7 @@ export default function VetsPage() {
                   citySelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
               }}
-              className="w-full sm:w-auto bg-[#34495E] hover:bg-[#2C3E50] text-white text-[16px] min-h-[50px] flex items-center justify-center font-bold px-[24px] rounded-btn transition-all duration-300 active:scale-[0.98] cursor-pointer"
+              className="w-full sm:w-auto bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white text-[16px] min-h-[50px] flex items-center justify-center font-bold px-[24px] rounded-btn transition-all duration-300 active:scale-[0.98] cursor-pointer"
             >
               Şehir Seç
             </button>
@@ -544,7 +544,7 @@ export default function VetsPage() {
             <button 
               onClick={handleManualSearch} 
               disabled={!selectedCity || loading} 
-              className="bg-[#34495E] hover:bg-[#2C3E50] text-white min-h-[50px] flex items-center justify-center font-bold px-[32px] rounded-btn transition-all duration-300 active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white min-h-[50px] flex items-center justify-center font-bold px-[32px] rounded-btn transition-all duration-300 active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Ara
             </button>
@@ -600,7 +600,7 @@ export default function VetsPage() {
                     >
                       <div className="flex-1">
                         <div className="flex flex-wrap items-center gap-2 mb-2">
-                          <h4 className="text-xl font-bold group-hover:text-[#34495E] transition-colors">{clinic.name}</h4>
+                          <h4 className="text-xl font-bold group-hover:text-slate-800 dark:group-hover:text-slate-200 transition-colors">{clinic.name}</h4>
                           {clinic.rating && (
                             <div className="flex items-center gap-1 bg-amber-50 text-amber-600 px-2 py-0.5 rounded text-xs font-bold border border-amber-200">
                               <svg className="w-3 h-3 fill-current" viewBox="0 0 20 20">
@@ -636,7 +636,7 @@ export default function VetsPage() {
                       </div>
                       
                       {/* Detaylar Butonu/Link */}
-                      <div className="flex items-center gap-[8px] text-text-secondary group-hover:text-[#34495E] transition-colors font-bold text-[14px]">
+                      <div className="flex items-center gap-[8px] text-text-secondary group-hover:text-slate-800 dark:group-hover:text-slate-200 transition-colors font-bold text-[14px]">
                         <span>Detaylar</span>
                         <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
@@ -665,7 +665,7 @@ export default function VetsPage() {
                           citySelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }
                       }}
-                      className="mt-[24px] bg-[#34495E] hover:bg-[#2C3E50] text-white text-[14px] min-h-[50px] flex items-center justify-center font-bold px-[24px] rounded-btn transition-all duration-300 active:scale-[0.98] cursor-pointer"
+                      className="mt-[24px] bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white text-[14px] min-h-[50px] flex items-center justify-center font-bold px-[24px] rounded-btn transition-all duration-300 active:scale-[0.98] cursor-pointer"
                     >
                       Şehir Seç
                     </button>

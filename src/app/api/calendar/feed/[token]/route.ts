@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { getEntitlement } from '@/lib/subscription/entitlement'
 import { Database } from '@/lib/database.types'
 
 type PetRow = Database['public']['Tables']['pets']['Row']
@@ -86,12 +87,8 @@ export async function GET(
     .then(() => {})
 
   // 2. Get plan for scope enforcement
-  const { data: sub } = await supabase
-    .from('user_subscriptions')
-    .select('plan')
-    .eq('profile_id', profileId)
-    .single()
-  const plan = sub?.plan ?? 'free'
+  const entitlement = await getEntitlement(profileId)
+  const plan = entitlement.tier
 
   // Plan limits
   const effectiveDays = plan === 'free' ? 7 : daysAhead

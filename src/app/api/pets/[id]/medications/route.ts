@@ -30,7 +30,10 @@ export async function DELETE(request: Request, props: { params: Promise<{ id: st
 
     const { error } = await supabase
       .from('health_medications')
-      .delete()
+      .update({
+        is_archived: true,
+        archived_at: new Date().toISOString()
+      })
       .eq('id', medication_id)
       .eq('pet_id', id)
 
