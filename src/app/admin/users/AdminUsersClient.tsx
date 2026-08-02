@@ -235,11 +235,13 @@ export default function AdminUsersClient() {
       .finally(() => setLoading(false))
   }, [role, page, debouncedSearch])
 
-  // Sync search → URL (reset page)
+  // Sync search → URL (only when search input changes)
   useEffect(() => {
-    setParam({ search: debouncedSearch, page: '1' })
-     
-  }, [debouncedSearch])
+    const currentSearchParam = searchParams.get('search') ?? ''
+    if (debouncedSearch !== currentSearchParam) {
+      setParam({ search: debouncedSearch, page: '1' })
+    }
+  }, [debouncedSearch, searchParams, setParam])
 
   const counts = data?.roleCounts ?? {}
 

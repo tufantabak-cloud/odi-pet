@@ -35,7 +35,33 @@ export async function GET(req: NextRequest) {
     query = query.or(`email.ilike.%${search}%,first_name.ilike.%${search}%,last_name.ilike.%${search}%`)
   }
 
-  const { data: users, error, count } = await query
+  let { data: users, error, count } = await query
+
+  // Fallback to basic profile columns if schema cache lags behind on optional premium columns
+  if (error) {
+    console.warn('[API/admin/users] Schema query error, executing fallback basic profiles query:', error)
+
+    let fallbackQuery = supabase
+      .from('profiles')
+      .select('id, first_name, last_name, email, role, phone, created_at', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to)
+
+    if (role !== 'all' && ALLOWED_ROLES.includes(role as typeof ALLOWED_ROLES[number])) {
+      fallbackQuery = fallbackQuery.eq('role', role)
+    }
+
+    if (search) {
+      fallbackQuery = fallbackQuery.or(`email.ilike.%${search}%,first_name.ilike.%${search}%,last_name.ilike.%${search}%`)
+    }
+
+    const fallbackRes = await fallbackQuery
+    if (!fallbackRes.error) {
+      users = fallbackRes.data as any[]
+      count = fallbackRes.count
+      error = null
+    }
+  }
 
   if (error) {
     return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
