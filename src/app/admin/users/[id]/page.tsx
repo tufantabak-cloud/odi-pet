@@ -63,18 +63,29 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
 
   const supabase = createAdminSupabaseClient()
 
-  // Load all data in parallel
+  // Load profile with fallback if optional premium columns fail
+  let { data: profile } = await supabase
+    .from('profiles')
+    .select('id, first_name, last_name, email, role, phone, created_at, premium_until, premium_tier')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (!profile) {
+    const { data: fallbackProfile } = await supabase
+      .from('profiles')
+      .select('id, first_name, last_name, email, role, phone, created_at')
+      .eq('id', id)
+      .maybeSingle()
+
+    profile = fallbackProfile as any
+  }
+
+  // Load other details in parallel
   const [
-    { data: profile },
     { data: pets },
     { data: subscriptionRaw },
     { data: events },
   ] = await Promise.all([
-    supabase
-      .from('profiles')
-      .select('id, first_name, last_name, email, role, phone, created_at, premium_until, premium_tier')
-      .eq('id', id)
-      .single(),
     supabase
       .from('pets')
       .select('id, name, species, breed, birth_date, created_at')
