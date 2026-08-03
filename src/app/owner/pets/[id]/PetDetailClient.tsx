@@ -2515,7 +2515,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                 />
               )}
 
-              <div className="w-full flex justify-between items-center bg-[#FAF6F2] border border-slate-200/50 rounded-2xl p-4 mt-2">
+              <div className="w-full flex justify-between items-center bg-white/50 border border-slate-200/50 rounded-2xl p-4 mt-2">
                 <span className="text-sm font-bold text-slate-600">Saat</span>
                 <span className="text-base font-bold text-slate-800">{medicationActionTask.due_time?.slice(0, 5) || '12:00'}</span>
               </div>
