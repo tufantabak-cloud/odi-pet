@@ -192,14 +192,14 @@ export default function ReferralClient({
                       : 'bg-slate-50 border-slate-200 text-slate-500 font-medium'
                   }`}
                 >
-                  <span className="text-3xs font-extrabold uppercase">
+                  <span className="text-2xs font-extrabold uppercase">
                     {tier.step}. Davet
                   </span>
                   <span className="text-xs font-black">
                     +{tier.days}G {tier.isCrown ? '👑' : ''}
                   </span>
                   {isAchieved && (
-                    <span className="text-3xs text-emerald-600 font-bold">✓ Alındı</span>
+                    <span className="text-2xs text-emerald-600 font-bold">✓ Alındı</span>
                   )}
                 </div>
               )
@@ -326,15 +326,15 @@ export default function ReferralClient({
         <div className="grid grid-cols-3 gap-2.5">
           <div className="card-base p-4 rounded-3xl bg-white border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] text-center">
             <span className="text-xl sm:text-2xl font-black text-primary">{referralCount}</span>
-            <p className="text-3xs sm:text-2xs font-bold text-text-secondary uppercase tracking-wider mt-1">Toplam Davet</p>
+            <p className="text-2xs sm:text-2xs font-bold text-text-secondary uppercase tracking-wider mt-1">Toplam Davet</p>
           </div>
           <div className="card-base p-4 rounded-3xl bg-white border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] text-center">
             <span className="text-xl sm:text-2xl font-black text-emerald-600">{qualifiedCount}</span>
-            <p className="text-3xs sm:text-2xs font-bold text-text-secondary uppercase tracking-wider mt-1">Nitelikli Davet</p>
+            <p className="text-2xs sm:text-2xs font-bold text-text-secondary uppercase tracking-wider mt-1">Nitelikli Davet</p>
           </div>
           <div className="card-base p-4 rounded-3xl bg-white border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] text-center">
             <span className="text-xl sm:text-2xl font-black text-amber-500">+{earnedDays} Gün</span>
-            <p className="text-3xs sm:text-2xs font-bold text-text-secondary uppercase tracking-wider mt-1">Kazanılan Süre</p>
+            <p className="text-2xs sm:text-2xs font-bold text-text-secondary uppercase tracking-wider mt-1">Kazanılan Süre</p>
           </div>
         </div>
 
