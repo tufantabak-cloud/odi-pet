@@ -1,34 +1,25 @@
 import { getCurrentProfile } from '@/lib/auth/get-current-profile'
 import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
+import { hasPetCapability } from '@/lib/pets/access'
 import { redirect } from 'next/navigation'
 import NutritionClient from './NutritionClient'
 
 import { Suspense } from 'react'
 
 export default async function PetNutritionPage({ params }: { params: Promise<{ id: string }> }) {
-  let profile = await getCurrentProfile()
-  if (!profile) {
-    const adminSupabase = createAdminSupabaseClient()
-    const { data: devOwner } = await adminSupabase.from('profiles').select('*').eq('email', 'tufan.tabak@gmail.com').maybeSingle()
-    if (devOwner) profile = devOwner
-  }
+  const profile = await getCurrentProfile()
   if (!profile) redirect('/login')
 
   const { id } = await params
-  const isAdmin = true
-  const supabase = createAdminSupabaseClient()
+  const isAdmin = profile.role === 'admin' || profile.role === 'founder'
 
+  const serverSupabase = await createServerSupabaseClient()
   if (!isAdmin) {
-    // Ensure owner access
-    const { data: isOwner } = await supabase
-      .from('pet_owners')
-      .select('role')
-      .eq('pet_id', id)
-      .eq('profile_id', profile.id)
-      .single()
-
-    if (!isOwner) redirect('/owner/dashboard')
+    const canView = await hasPetCapability(serverSupabase, id, 'can_view_pet')
+    if (!canView) redirect('/owner/dashboard')
   }
+
+  const supabase = isAdmin ? createAdminSupabaseClient() : serverSupabase
 
   const [
     { data: pet },
