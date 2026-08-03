@@ -100,7 +100,7 @@ export default async function PetDetailPage(props: PageProps) {
     bakim: 'Bakım',
     beslenme: 'Beslenme',
     hijyen: 'Hijyen',
-    aktivite: 'Aktivite',
+    aktivite: 'Aktiviteler',
   }
 
   const plansAsSchedules = (plans ?? []).map((p: any) => {

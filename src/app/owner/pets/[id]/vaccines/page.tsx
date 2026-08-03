@@ -6,5 +6,5 @@ type PageProps = {
 
 export default async function PetVaccinesPage(props: PageProps) {
   const { id } = await props.params;
-  redirect(`/owner/pets/${id}?tab=vaccines`);
+  redirect(`/owner/pets/${id}`);
 }

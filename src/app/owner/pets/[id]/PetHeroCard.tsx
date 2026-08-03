@@ -1,22 +1,20 @@
 'use client'
 
-import Link from 'next/link'
 import Image from 'next/image'
-import FloatingSOS from '@/components/FloatingSOS'
 import { RefObject } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, Pencil, MoreVertical, Camera } from 'lucide-react'
+import { ChevronLeft, MoreVertical, Camera, AlertTriangle } from 'lucide-react'
 import { getSpeciesEmoji, getSpeciesLabel } from '@/lib/species';
 
 export interface PetHeroCardProps {
   pet: any
-  score: number
+  score?: number
   age: { text: string; label: string }
-  coverInputRef: RefObject<HTMLInputElement | null>
+  coverInputRef?: RefObject<HTMLInputElement | null>
   avatarInputRef?: RefObject<HTMLInputElement | null>
   activeLostReport?: any
-  onLostReport: () => void
-  onMarkFound: () => void
+  onLostReport?: () => void
+  onMarkFound?: () => void
   latestWeight?: string | null
   onMenuOpen?: () => void
   onChangeCoverClick?: () => void
@@ -85,7 +83,7 @@ export default function PetHeroCard({
         )}
       </div>
 
-      {/* Üst Butonlar — Sol: Geri | Sağ: Yalnızca Tek 3 Nokta Menü Butonu */}
+      {/* Üst Butonlar — Sol: Geri | Orta: Kayıp Rozeti | Sağ: 3 Nokta Menü */}
       <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-20">
         <button
           onClick={() => router.back()}
@@ -93,6 +91,17 @@ export default function PetHeroCard({
           className="w-[42px] h-[42px] min-w-[42px] min-h-[42px] rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center cursor-pointer hover:bg-black/60 transition-all active:scale-95 shadow-md">
           <ChevronLeft size={20} className="text-white" />
         </button>
+
+        {activeLostReport && (
+          <button
+            onClick={onMarkFound}
+            aria-label="Kayıp İlanı Aktif"
+            className="px-3 py-1.5 rounded-full bg-red-600/90 text-white text-[12px] font-bold backdrop-blur-md border border-red-400/30 flex items-center gap-1.5 shadow-lg animate-pulse hover:bg-red-700 transition-colors"
+          >
+            <AlertTriangle size={14} className="text-white" />
+            <span>Kayıp İlanı Aktif</span>
+          </button>
+        )}
 
         {/* Sağ Üst — TEK ÜÇ NOKTA (...) MENÜSÜ */}
         <button

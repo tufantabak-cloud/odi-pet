@@ -32,6 +32,7 @@ import { PetTaskModals, TaskModalType } from '@/components/pets/PetTaskModals'
 import ParasitePlanCompletionModal from '@/components/pets/ParasitePlanCompletionModal'
 
 import { getPlanDisplayCategory } from '@/lib/plans/utils'
+import { getTurkishGenitiveSuffix } from '@/lib/pets/utils'
 function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -166,33 +167,6 @@ function getTabCtaInfo(species: string | undefined): Record<string, { icon: Reac
     'Diğer':     { icon: <HouseIcon width={28} height={28} />, btnLabel: 'Diğer Görev Planla', desc: 'Diğer kategori görevleri ve hatırlatmaları oluşturun.', title: 'Diğer Görevler', gradient: 'from-gray-100 to-slate-50' },
   };
 }
-
-const getTurkishGenitiveSuffix = (name: string) => {
-  if (!name) return 'nin';
-  const vowels = 'aıoueiöü';
-  const lastChar = name.slice(-1).toLowerCase();
-  const isVowel = vowels.includes(lastChar);
-  
-  let lastVowel = 'e';
-  for (let i = name.length - 1; i >= 0; i--) {
-    const char = name[i].toLowerCase();
-    if (vowels.includes(char)) {
-      lastVowel = char;
-      break;
-    }
-  }
-  
-  const isBack = 'aıou'.includes(lastVowel);
-  const isRounded = 'ouöü'.includes(lastVowel);
-  
-  if (isVowel) {
-    if (isBack) return isRounded ? 'nun' : 'nın';
-    return isRounded ? 'nün' : 'nin';
-  } else {
-    if (isBack) return isRounded ? 'un' : 'ın';
-    return isRounded ? 'ün' : 'in';
-  }
-};
 
 export interface PetDetailProps {
   pet: any;
@@ -702,7 +676,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   const handleMedicationSnooze = async (task: any) => {
     setLocalSchedules(prev => prev.map(s => {
       if (s.id !== task.id) return s;
-      const d = new Date(s.due_date + 'T' + s.due_time);
+      const d = getTaskDateTime(s);
       d.setMinutes(d.getMinutes() + 30);
       
       const dueDate = d.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' });
@@ -717,7 +691,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     }));
     
     if (!task.id.toString().startsWith('mock-')) {
-      const d = new Date(task.due_date + 'T' + task.due_time);
+      const d = getTaskDateTime(task);
       d.setMinutes(d.getMinutes() + 30);
       try {
         const planId = getRealPlanId(task.id);
@@ -726,7 +700,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ scheduled_at: d.toISOString() })
         });
-      } catch {}
+      } catch (err) {
+        console.error('[handleMedicationSnooze] Error:', err);
+      }
     }
     setMedicationActionTask(null);
     setMedicationNote('');
@@ -1043,28 +1019,37 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   }
 
   const handlePostpone = async (id: string) => {
+    const item = localSchedules.find(s => s.id === id)
+    if (!item) return
+
+    const d = getTaskDateTime(item)
+    d.setDate(d.getDate() + 1)
+
+    const newDueDate = d.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
+    const preservedTime = item.due_time || '12:00:00'
+
     setLocalSchedules(prev => prev.map(s => {
       if (s.id !== id) return s
-      const d = new Date(s.due_date)
-      d.setDate(d.getDate() + 1)
-      return { ...s, due_date: d.toISOString() }
+      return { ...s, due_date: newDueDate, due_time: preservedTime }
     }))
     setActiveMenuId(null)
-    const item = localSchedules.find(s => s.id === id)
-    if (item && !id.toString().startsWith('mock-')) {
-      const d = new Date(item.due_date); d.setDate(d.getDate() + 1)
+
+    if (!id.toString().startsWith('mock-')) {
       try {
         if (isPlanSource(id)) {
+          const scheduledAtIso = new Date(`${newDueDate}T${preservedTime}`).toISOString()
           await fetch(`/api/plans/${getRealPlanId(id)}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ scheduled_at: d.toISOString() })
+            body: JSON.stringify({ scheduled_at: scheduledAtIso })
           })
         } else {
-          await createBrowserSupabaseClient().from('health_schedules').update({ due_date: d.toISOString() }).eq('id', id)
+          await createBrowserSupabaseClient().from('health_schedules').update({ due_date: newDueDate }).eq('id', id)
         }
         router.refresh()
-      } catch {}
+      } catch (err) {
+        console.error('[handlePostpone] Error:', err)
+      }
     }
     setTrackerRefreshKey(prev => prev + 1)
   }
@@ -2552,7 +2537,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                 </div>
                 <div>
                   <h3 className="text-[17px] font-extrabold text-text-primary leading-tight">
-                    {pet.name}'nin Bakım Ekibi & Sahiplik
+                    {pet.name}'{getTurkishGenitiveSuffix(pet.name)} Bakım Ekibi & Sahiplik
                   </h3>
                   <p className="text-[12px] text-text-secondary">Yetkili aile üyeleri, ortak sahiplik ve bekleyen davetler</p>
                 </div>

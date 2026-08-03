@@ -144,7 +144,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
         body: JSON.stringify({
           title: titleToUse,
           type: uploadType,
-          document_path: uploadData.url,
+          document_path: uploadData.path || uploadData.url,
           date: new Date().toISOString(),
         })
       })
@@ -292,8 +292,8 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
                     <div key={p.id} className="flex justify-between items-center py-2.5">
                       <div>
                         <p className="text-[13px] font-semibold text-text-primary">{p.description || 'Ödeme'}</p>
-                        {p.paid_at && (
-                          <p className="text-[11px] text-text-secondary">{new Date(p.paid_at).toLocaleDateString('tr-TR')}</p>
+                        {p.payment_date && (
+                          <p className="text-[11px] text-text-secondary">{new Date(p.payment_date).toLocaleDateString('tr-TR')}</p>
                         )}
                       </div>
                       <span className="text-[14px] font-bold text-text-primary">₺{parseFloat(p.amount || 0).toFixed(2)}</span>

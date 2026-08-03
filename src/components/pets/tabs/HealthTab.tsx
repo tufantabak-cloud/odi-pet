@@ -37,14 +37,20 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
 
   const loadHealthRecords = useCallback(async () => {
     setLoadingHealth(true);
-    const { data } = await supabase
-      .from('health_records')
-      .select('*')
-      .eq('pet_id', petId)
-      .order('date', { ascending: false });
-    setHealthRecords(data || []);
-    setLoadingHealth(false);
-  }, [supabase, petId]);
+    try {
+      const res = await fetch(`/api/pets/${petId}/records`);
+      if (res.ok) {
+        const data = await res.json();
+        setHealthRecords(Array.isArray(data) ? data : []);
+      } else {
+        setHealthRecords([]);
+      }
+    } catch {
+      setHealthRecords([]);
+    } finally {
+      setLoadingHealth(false);
+    }
+  }, [petId]);
 
   const loadVaccines = useCallback(async () => {
     setLoadingVaccines(true);

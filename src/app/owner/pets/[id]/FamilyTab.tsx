@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { QRCodeSVG } from 'qrcode.react'
 import ConfirmModal from '@/components/ui/ConfirmModal'
@@ -91,7 +91,9 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
     } finally { setLoading(false) }
   }
 
-  if (!loaded && !loading) { load() }
+  useEffect(() => {
+    if (!loaded && !loading) { load() }
+  }, [loaded, loading])
 
   async function sendInvite(e: React.FormEvent) {
     e.preventDefault()

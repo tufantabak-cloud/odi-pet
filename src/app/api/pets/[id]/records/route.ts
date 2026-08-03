@@ -46,7 +46,31 @@ export async function GET(
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json(data)
+  const recordsWithSignedUrls = await Promise.all(
+    (data ?? []).map(async (record: any) => {
+      if (!record.document_path) return record
+
+      let storagePath = record.document_path
+      if (storagePath.startsWith('http')) {
+        const parts = storagePath.split('/pet-documents/')
+        if (parts.length > 1) {
+          storagePath = parts[1]
+        }
+      }
+
+      const { data: signed } = await supabase.storage
+        .from('pet-documents')
+        .createSignedUrl(storagePath, 3600)
+
+      return {
+        ...record,
+        document_path: signed?.signedUrl || record.document_path,
+        raw_storage_path: storagePath
+      }
+    })
+  )
+
+  return NextResponse.json(recordsWithSignedUrls)
 }
 
 export async function POST(
