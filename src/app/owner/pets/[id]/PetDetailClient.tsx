@@ -88,18 +88,18 @@ function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {config.fields.map((f: any) => (
              <div key={f.name} className="flex flex-col gap-1.5">
-               <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider">{f.label}</label>
+               <label className="text-xs font-black text-text-secondary uppercase tracking-wider">{f.label}</label>
                {f.type === 'file' ? (
                  <input name={f.name} type="file" accept="image/*" className="input-base py-2.5 text-[13px]" required={f.required} />
                ) : (
-                 <input name={f.name} type={f.type} step={f.type === 'number' ? 'any' : undefined} placeholder={f.placeholder} defaultValue={f.defaultValue} className="input-base py-3 text-[14px]" required={f.required} />
+                 <input name={f.name} type={f.type} step={f.type === 'number' ? 'any' : undefined} placeholder={f.placeholder} defaultValue={f.defaultValue} className="input-base py-3 text-sm" required={f.required} />
                )}
              </div>
           ))}
-          {error && <p className="text-[12px] text-error font-bold p-2 bg-error/10 rounded-xs text-center mt-1">{error}</p>}
+          {error && <p className="text-xs text-error font-bold p-2 bg-error/10 rounded-xs text-center mt-1">{error}</p>}
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-3.5 rounded-btn border-2 border-border-main text-text-secondary font-bold text-[14px]">İptal</button>
-            <button type="submit" disabled={loading} className="flex-[2] btn-primary py-3.5 disabled:opacity-50 shadow-sm text-[14px]">{loading ? 'Kaydediliyor...' : 'Kaydet ✓'}</button>
+            <button type="button" onClick={onClose} className="flex-1 py-3.5 rounded-btn border-2 border-border-main text-text-secondary font-bold text-sm">İptal</button>
+            <button type="submit" disabled={loading} className="flex-[2] btn-primary py-3.5 disabled:opacity-50 shadow-sm text-sm">{loading ? 'Kaydediliyor...' : 'Kaydet ✓'}</button>
           </div>
         </form>
       </div>
@@ -1156,7 +1156,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
     return (
       <div className="flex flex-col gap-3">
-        {title && <h4 className="text-[12px] font-black text-text-secondary uppercase tracking-widest px-1">{title}</h4>}
+        {title && <h4 className="text-xs font-black text-text-secondary uppercase tracking-widest px-1">{title}</h4>}
         {(!list || list.length === 0) ? (
           customEmptyContent ? customEmptyContent : (
             <div className="py-6 bg-bg-main/50 rounded-card border border-dashed border-border-main text-center flex flex-col items-center gap-2">
@@ -1176,7 +1176,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           return (
             <div key={item.id} onClick={() => handleTaskClick(item)} className={`flex items-center justify-between p-4 ${cardStyle.bg} ${cardStyle.hoverBg} rounded-card transition-colors cursor-pointer`}>
               <div className="flex-1 min-w-0 pr-3">
-                <p className={`font-extrabold text-[14px] line-clamp-2 break-words ${cardStyle.textTitle}`}>
+                <p className={`font-extrabold text-sm line-clamp-2 break-words ${cardStyle.textTitle}`}>
                   {item.title || item.vaccines?.name || 'Görev'}
                   {item.sub_category === 'Zorunlu Aşılar' && (
                     <span className="font-normal opacity-80 ml-1">/ {formatFrequency(item.vaccines?.frequency_days, item.vaccines?.frequency_label || item.frequency_label)}</span>
@@ -1200,11 +1200,11 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                 </button>
                 {activeMenuId === item.id && (
                   <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-md shadow-xl border border-border-main/50 py-2 z-[200]">
-                    <button onClick={(e) => { e.stopPropagation(); handleMarkCompleted(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-success hover:bg-success/5 flex items-center gap-2 cursor-pointer">✓ Tamamlandı İşaretle</button>
-                    <button onClick={(e) => { e.stopPropagation(); handlePostpone(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary-soft flex items-center gap-2 cursor-pointer">📅 1 Gün Ertele</button>
+                    <button onClick={(e) => { e.stopPropagation(); handleMarkCompleted(item.id) }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-success hover:bg-success/5 flex items-center gap-2 cursor-pointer">✓ Tamamlandı İşaretle</button>
+                    <button onClick={(e) => { e.stopPropagation(); handlePostpone(item.id) }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary-soft flex items-center gap-2 cursor-pointer">📅 1 Gün Ertele</button>
                     <div className="border-t border-border-main/30 mx-2 my-1"/>
-                    <button onClick={(e) => { e.stopPropagation(); handleEditTask(item); setActiveMenuId(null); }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
-                    <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(item.id) }} className="w-full text-left px-4 py-2.5 text-[12px] font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer">❌ Sil</button>
+                    <button onClick={(e) => { e.stopPropagation(); handleEditTask(item); setActiveMenuId(null); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
+                    <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(item.id) }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer">❌ Sil</button>
                   </div>
                 )}
               </div>
@@ -1308,7 +1308,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> Filtrele</h3>
               <button 
                 onClick={() => setFilterSheetType('planned')}
-                className="text-[12px] font-bold text-primary bg-primary-soft px-3 py-1.5 rounded-btn border border-primary/20 flex items-center gap-1.5 hover:bg-primary hover:text-white transition-colors"
+                className="text-xs font-bold text-primary bg-primary-soft px-3 py-1.5 rounded-btn border border-primary/20 flex items-center gap-1.5 hover:bg-primary hover:text-white transition-colors"
               >
                 {plannedTimeFilter === 'Tümü' ? 'Tüm Zamanlar' : plannedTimeFilter}
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
@@ -1318,7 +1318,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
                 <button
                   onClick={() => setPlannedSubCatFilter('Tümü')}
-                  className={`shrink-0 px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-colors border ${plannedSubCatFilter === 'Tümü' ? 'bg-primary text-white border-primary shadow-sm' : 'bg-bg-main text-text-secondary border-border-main hover:text-primary hover:border-primary/30'}`}
+                  className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold transition-colors border ${plannedSubCatFilter === 'Tümü' ? 'bg-primary text-white border-primary shadow-sm' : 'bg-bg-main text-text-secondary border-border-main hover:text-primary hover:border-primary/30'}`}
                 >
                   Tüm Kategoriler
                 </button>
@@ -1326,7 +1326,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                   <button
                     key={cat}
                     onClick={() => setPlannedSubCatFilter(cat)}
-                    className={`shrink-0 px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-colors border ${plannedSubCatFilter === cat ? 'bg-primary text-white border-primary shadow-sm' : 'bg-bg-main text-text-secondary border-border-main hover:text-primary hover:border-primary/30'}`}
+                    className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold transition-colors border ${plannedSubCatFilter === cat ? 'bg-primary text-white border-primary shadow-sm' : 'bg-bg-main text-text-secondary border-border-main hover:text-primary hover:border-primary/30'}`}
                   >
                     {cat}
                   </button>
@@ -1366,7 +1366,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                       <h3 className="text-[13px] font-black text-[#3c6b65] uppercase tracking-widest flex items-center gap-1.5"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> Filtrele</h3>
                       <button 
                         onClick={() => setFilterSheetType('completed')}
-                        className="text-[12px] font-bold text-[#3c6b65] bg-[#edf7f6] px-3 py-1.5 rounded-btn border border-[#3c6b65]/30 flex items-center gap-1.5 hover:bg-[#3c6b65] hover:text-white transition-colors"
+                        className="text-xs font-bold text-[#3c6b65] bg-[#edf7f6] px-3 py-1.5 rounded-btn border border-[#3c6b65]/30 flex items-center gap-1.5 hover:bg-[#3c6b65] hover:text-white transition-colors"
                       >
                         {completedTimeFilter === 'Tümü' ? 'Tüm Zamanlar' : completedTimeFilter}
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
@@ -1376,7 +1376,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                       <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
                         <button
                           onClick={() => setCompletedSubCatFilter('Tümü')}
-                          className={`shrink-0 px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-colors border ${completedSubCatFilter === 'Tümü' ? 'bg-[#3c6b65] text-white border-[#3c6b65] shadow-sm' : 'bg-bg-main text-text-secondary border-border-main hover:text-[#3c6b65] hover:border-[#3c6b65]/40'}`}
+                          className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold transition-colors border ${completedSubCatFilter === 'Tümü' ? 'bg-[#3c6b65] text-white border-[#3c6b65] shadow-sm' : 'bg-bg-main text-text-secondary border-border-main hover:text-[#3c6b65] hover:border-[#3c6b65]/40'}`}
                         >
                           Tüm Kategoriler
                         </button>
@@ -1384,7 +1384,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                           <button
                             key={cat}
                             onClick={() => setCompletedSubCatFilter(cat)}
-                            className={`shrink-0 px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-colors border ${completedSubCatFilter === cat ? 'bg-[#3c6b65] text-white border-[#3c6b65] shadow-sm' : 'bg-bg-main text-text-secondary border-border-main hover:text-[#3c6b65] hover:border-[#3c6b65]/40'}`}
+                            className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold transition-colors border ${completedSubCatFilter === cat ? 'bg-[#3c6b65] text-white border-[#3c6b65] shadow-sm' : 'bg-bg-main text-text-secondary border-border-main hover:text-[#3c6b65] hover:border-[#3c6b65]/40'}`}
                           >
                             {cat}
                           </button>
@@ -1438,7 +1438,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           {pet.owner_id && (
             <Link 
               href={`/admin/users/${pet.owner_id}`}
-              className="bg-white/20 hover:bg-white/30 active:scale-[0.98] transition-all px-4 py-2 rounded-btn text-[12px] font-black tracking-tight self-stretch sm:self-auto text-center"
+              className="bg-white/20 hover:bg-white/30 active:scale-[0.98] transition-all px-4 py-2 rounded-btn text-xs font-black tracking-tight self-stretch sm:self-auto text-center"
             >
               Sahip Profiline Dön
             </Link>
@@ -1551,7 +1551,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                         className="relative w-full h-11 rounded-btn bg-white border border-border-main flex items-center justify-center gap-2 hover:bg-gray-50 active:scale-[0.98] transition-all duration-200 focus:outline-none cursor-pointer shadow-xs"
                       >
                         <Share2 size={18} className="text-primary" />
-                        <span className="text-[14px] font-bold text-text-primary">Paylaş & Ekip</span>
+                        <span className="text-sm font-bold text-text-primary">Paylaş & Ekip</span>
                       </button>
                       <FloatingSOS
                         fullWidth={true}
@@ -1628,9 +1628,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                                     <p className="text-[13px] font-600 text-[var(--color-text-primary)] truncate group-hover:text-[var(--color-primary)] transition-colors">
                                       {plan.title || (plan as any).vaccines?.name || 'Sağlık İşlemi'}
                                     </p>
-                                    <p className="text-[10px] text-[var(--color-text-muted)] mt-0.5">{getPlanDisplayCategory(plan.category, plan.sub_category)}</p>
+                                    <p className="text-2xs text-[var(--color-text-muted)] mt-0.5">{getPlanDisplayCategory(plan.category, plan.sub_category)}</p>
                                   </div>
-                                  <span className="text-[10px] font-700 px-2 py-1 rounded-xs shrink-0 whitespace-nowrap"
+                                  <span className="text-2xs font-700 px-2 py-1 rounded-xs shrink-0 whitespace-nowrap"
                                     style={{ background: badgeBg, color: badgeColor }}>
                                     {badge}
                                   </span>
@@ -1638,19 +1638,19 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                                 {isActionsOpen && (
                                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 px-4 pb-3 pt-1 animate-in fade-in slide-in-from-top-1">
                                     <button onClick={() => handleMarkCompleted(plan.id)}
-                                      className="min-h-[44px] px-2 py-2 text-[12px] font-bold text-success bg-success/10 hover:bg-success/20 rounded-xl transition-colors flex items-center justify-center cursor-pointer">
+                                      className="min-h-[44px] px-2 py-2 text-xs font-bold text-success bg-success/10 hover:bg-success/20 rounded-xl transition-colors flex items-center justify-center cursor-pointer">
                                       ✓ Tamamlandı
                                     </button>
                                     <button onClick={() => handlePostpone(plan.id)}
-                                      className="min-h-[44px] px-2 py-2 text-[12px] font-bold text-text-secondary bg-text-secondary/10 hover:bg-text-secondary/20 rounded-xl transition-colors flex items-center justify-center cursor-pointer">
+                                      className="min-h-[44px] px-2 py-2 text-xs font-bold text-text-secondary bg-text-secondary/10 hover:bg-text-secondary/20 rounded-xl transition-colors flex items-center justify-center cursor-pointer">
                                       📅 +1 Gün
                                     </button>
                                     <button onClick={() => { setActiveMenuId(null); handleEditTask(plan); }}
-                                      className="min-h-[44px] px-2 py-2 text-[12px] font-bold text-primary bg-primary/10 hover:bg-primary/20 rounded-xl transition-colors flex items-center justify-center cursor-pointer">
+                                      className="min-h-[44px] px-2 py-2 text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 rounded-xl transition-colors flex items-center justify-center cursor-pointer">
                                       ✏️ Düzenle
                                     </button>
                                     <button onClick={() => handleDeleteTask(plan.id)}
-                                      className="min-h-[44px] px-2 py-2 text-[12px] font-bold text-error bg-error/10 hover:bg-error/20 rounded-xl transition-colors flex items-center justify-center cursor-pointer">
+                                      className="min-h-[44px] px-2 py-2 text-xs font-bold text-error bg-error/10 hover:bg-error/20 rounded-xl transition-colors flex items-center justify-center cursor-pointer">
                                       ❌ Sil
                                     </button>
                                   </div>
@@ -1720,7 +1720,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                       ].map((m) => (
                         <div key={m.label} className="bg-surface rounded-card p-3 flex flex-col items-center text-center border border-border-main/60 shadow-soft min-w-0">
                           <div className="flex items-baseline gap-0.5 max-w-full truncate">
-                            <span className="text-[16px] xs:text-[18px] font-extrabold text-text-primary leading-none tabular-nums truncate">{m.value}</span>
+                            <span className="text-base xs:text-lg font-extrabold text-text-primary leading-none tabular-nums truncate">{m.value}</span>
                             {m.unit && <span className="text-[11px] font-bold text-text-secondary ml-0.5">{m.unit}</span>}
                           </div>
                           <span className="text-[11px] font-semibold text-text-secondary mt-1 truncate max-w-full">{m.label}</span>
@@ -1735,22 +1735,22 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
                     {/* Temel Bilgiler Kartı */}
                     <div className="bg-surface rounded-card p-4 border border-border-main/60 shadow-soft flex flex-col gap-3">
-                      <h3 className="text-[14px] font-extrabold text-text-primary flex items-center gap-2">
+                      <h3 className="text-sm font-extrabold text-text-primary flex items-center gap-2">
                         <ShieldCheck size={16} className="text-primary" />
                         Temel Bilgiler
                       </h3>
                       <div className="flex flex-col gap-2.5 divide-y divide-border-main/40">
                         <div className="flex items-center justify-between pt-1">
-                          <span className="text-[12px] font-semibold text-text-secondary">Mikroçip No</span>
-                          <span className="text-[12px] font-bold text-text-primary font-mono">{pet.microchip_no || 'Henüz girilmedi'}</span>
+                          <span className="text-xs font-semibold text-text-secondary">Mikroçip No</span>
+                          <span className="text-xs font-bold text-text-primary font-mono">{pet.microchip_no || 'Henüz girilmedi'}</span>
                         </div>
                         <div className="flex items-center justify-between pt-2.5">
-                          <span className="text-[12px] font-semibold text-text-secondary">Veteriner</span>
-                          <span className="text-[12px] font-bold text-text-primary truncate max-w-[180px]">{pet.vet_company || pet.vet_name || 'Kayıtlı veteriner yok'}</span>
+                          <span className="text-xs font-semibold text-text-secondary">Veteriner</span>
+                          <span className="text-xs font-bold text-text-primary truncate max-w-[180px]">{pet.vet_company || pet.vet_name || 'Kayıtlı veteriner yok'}</span>
                         </div>
                         <div className="flex items-center justify-between pt-2.5">
-                          <span className="text-[12px] font-semibold text-text-secondary">Beslenme</span>
-                          <span className="text-[12px] font-bold text-text-primary truncate max-w-[180px]">{nutritionLogs?.[0]?.food_brand || assignments?.[0]?.food_product_family?.official_name || 'Mama tanımlanmadı'}</span>
+                          <span className="text-xs font-semibold text-text-secondary">Beslenme</span>
+                          <span className="text-xs font-bold text-text-primary truncate max-w-[180px]">{nutritionLogs?.[0]?.food_brand || assignments?.[0]?.food_product_family?.official_name || 'Mama tanımlanmadı'}</span>
                         </div>
                       </div>
                     </div>
@@ -1934,7 +1934,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       {(activeTab === 'saglik' || activeTab === 'bakim') && (
       <div className="p-4 flex flex-col gap-3">
         <div className="flex flex-col gap-2">
-          <h2 className="text-[16px] font-black text-text-primary px-1">
+          <h2 className="text-base font-black text-text-primary px-1">
             {activeTab === 'saglik' ? 'Sağlık ve Bakım' : 'Bakım'}
           </h2>
           {activeTab === 'saglik' && (
@@ -1943,20 +1943,20 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               className="card-base p-4 bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-white border border-amber-200/80 rounded-2xl flex items-center justify-between gap-3 group hover:border-amber-400/80 transition-all shadow-sm"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-[20px] shadow-sm shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-xl shadow-sm shrink-0">
                   ⚖️
                 </div>
                 <div>
-                  <h4 className="text-[14px] font-black text-text-primary group-hover:text-amber-700 transition-colors flex items-center gap-1.5">
+                  <h4 className="text-sm font-black text-text-primary group-hover:text-amber-700 transition-colors flex items-center gap-1.5">
                     Kilo & Gelişim Takibi
-                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Beslenme Modülünde</span>
+                    <span className="text-2xs font-extrabold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Beslenme Modülünde</span>
                   </h4>
-                  <p className="text-[12px] text-text-secondary font-medium mt-0.5">
+                  <p className="text-xs text-text-secondary font-medium mt-0.5">
                     Kilo değişimi (gr), gram farkları, ideal kilo hedefi ve geçmiş ölçümler Beslenme modülünde takip edilmektedir.
                   </p>
                 </div>
               </div>
-              <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-[14px] group-hover:translate-x-1 transition-transform shrink-0">
+              <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-sm group-hover:translate-x-1 transition-transform shrink-0">
                 →
               </div>
             </Link>
@@ -2021,20 +2021,20 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                       <div className="flex items-center gap-3">
                         {module.headerIcon}
                         <div>
-                          <h3 className="font-extrabold text-text-primary text-[16px]">{module.title}</h3>
-                          <p className="text-[12px] text-text-secondary">{module.desc}</p>
+                          <h3 className="font-extrabold text-text-primary text-base">{module.title}</h3>
+                          <p className="text-xs text-text-secondary">{module.desc}</p>
                         </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
                         <Link
                           href={module.planUrl}
-                          className={`min-h-[44px] px-4 py-2.5 rounded-xl ${module.planBtnBg} text-white font-bold text-[12px] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xs inline-flex items-center gap-1.5`}
+                          className={`min-h-[44px] px-4 py-2.5 rounded-xl ${module.planBtnBg} text-white font-bold text-xs hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xs inline-flex items-center gap-1.5`}
                         >
                           {module.planBtnLabel}
                         </Link>
                         <Link
                           href={module.logUrl}
-                          className="min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-[12px] hover:bg-emerald-700 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xs inline-flex items-center gap-1.5"
+                          className="min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xs inline-flex items-center gap-1.5"
                         >
                           📋 {module.logBtnLabel}
                         </Link>
@@ -2050,8 +2050,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                         <div className={`w-12 h-12 rounded-2xl ${module.bg} ${module.color} flex items-center justify-center font-bold text-xl shadow-xs`}>
                           {module.icon}
                         </div>
-                        <p className="text-[14px] text-text-primary font-bold">Henüz {module.name} Kaydı Yok</p>
-                        <p className="text-[12px] text-text-secondary/80 max-w-sm leading-relaxed mb-1">
+                        <p className="text-sm text-text-primary font-bold">Henüz {module.name} Kaydı Yok</p>
+                        <p className="text-xs text-text-secondary/80 max-w-sm leading-relaxed mb-1">
                           {module.emptyDesc}
                         </p>
                       </div>
@@ -2076,7 +2076,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       <div className="p-4 flex flex-col gap-3">
       {/* ── Ek Bilgiler ve Araçlar ── */}
       <div className="flex flex-col gap-3">
-        <h2 className="text-[16px] font-black text-text-primary px-1">Ek Bilgiler ve Araçlar</h2>
+        <h2 className="text-base font-black text-text-primary px-1">Ek Bilgiler ve Araçlar</h2>
         <div className="grid grid-cols-2 gap-3">
           {([
             { id: 'Galeri', label: 'Galeri', icon: <Camera size={22} className="text-white" />, gradient: 'from-blue-500 to-indigo-500' },
@@ -2113,10 +2113,10 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                 data-testid={item.id === 'Bütçe' ? 'budget-module-button' : item.id === 'Raporlar' ? 'health-card-button' : undefined}
                 className={`relative overflow-hidden rounded-[20px] p-4 flex flex-col items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-sm border ${isActive ? 'ring-2 ring-primary border-primary/20 bg-primary/5' : 'border-border-main/50 bg-white hover:bg-slate-50'}`}
               >
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-[24px] bg-gradient-to-br ${item.gradient} text-white shadow-inner`}>
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl bg-gradient-to-br ${item.gradient} text-white shadow-inner`}>
                   {item.icon}
                 </div>
-                <span className={`text-[12px] font-black tracking-tight ${isActive ? 'text-primary' : 'text-text-secondary'}`}>{item.label}</span>
+                <span className={`text-xs font-black tracking-tight ${isActive ? 'text-primary' : 'text-text-secondary'}`}>{item.label}</span>
               </button>
             )
           })}
@@ -2127,25 +2127,25 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           <div className="card-base p-5">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest">Veteriner Bilgileri</h3>
-              <button onClick={handleEditVetInfo} className="text-[12px] font-bold text-primary hover:underline">Düzenle</button>
+              <button onClick={handleEditVetInfo} className="text-xs font-bold text-primary hover:underline">Düzenle</button>
             </div>
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 text-[20px] shrink-0">🩺</div>
+              <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 text-xl shrink-0">🩺</div>
               <div>
                 {pet.vet_company && <p className="font-bold text-text-primary">{pet.vet_company}</p>}
-                {pet.vet_name && <p className="font-semibold text-text-secondary text-[14px]">{pet.vet_name}</p>}
-                {pet.vet_phone && <a href={`tel:${pet.vet_phone}`} className="text-[14px] text-primary font-semibold hover:underline block mt-0.5">{pet.vet_phone}</a>}
-                {pet.vet_email && <a href={`mailto:${pet.vet_email}`} className="text-[14px] text-primary font-semibold hover:underline block">{pet.vet_email}</a>}
+                {pet.vet_name && <p className="font-semibold text-text-secondary text-sm">{pet.vet_name}</p>}
+                {pet.vet_phone && <a href={`tel:${pet.vet_phone}`} className="text-sm text-primary font-semibold hover:underline block mt-0.5">{pet.vet_phone}</a>}
+                {pet.vet_email && <a href={`mailto:${pet.vet_email}`} className="text-sm text-primary font-semibold hover:underline block">{pet.vet_email}</a>}
               </div>
             </div>
           </div>
         ) : (
           <div className="card-base p-5 border border-dashed border-border-main hover:border-primary/50 transition-colors cursor-pointer group" onClick={handleEditVetInfo}>
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-slate-50 group-hover:bg-primary-soft flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors text-[20px] shrink-0">🩺</div>
+              <div className="w-12 h-12 rounded-full bg-slate-50 group-hover:bg-primary-soft flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors text-xl shrink-0">🩺</div>
               <div>
                 <h3 className="text-[13px] font-black text-text-primary mb-0.5">Veteriner Ekle</h3>
-                <p className="text-[12px] text-text-secondary">Aşı, muayene ve acil durumlar için hekiminizi kaydedin.</p>
+                <p className="text-xs text-text-secondary">Aşı, muayene ve acil durumlar için hekiminizi kaydedin.</p>
               </div>
             </div>
           </div>
@@ -2166,7 +2166,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex justify-center items-end" onClick={() => setFilterSheetType(null)}>
           <div className="bg-white w-full max-w-md rounded-t-[32px] p-6 shadow-2xl animate-fade-in relative" onClick={e => e.stopPropagation()}>
             <div className="w-12 h-1.5 bg-border-main rounded-full mx-auto mb-6 opacity-50"></div>
-            <h3 className="text-[18px] font-black text-center text-text-primary mb-6 flex items-center justify-center gap-2">
+            <h3 className="text-lg font-black text-center text-text-primary mb-6 flex items-center justify-center gap-2">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
               {filterSheetType === 'planned' ? 'Zaman Filtresi' : 'Tamamlanmış Zaman Filtresi'}
             </h3>
@@ -2222,7 +2222,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             onClick={e => e.stopPropagation()}>
             
             <div className="w-12 h-1.5 bg-border rounded-full mx-auto mb-4" />
-            <p className="text-[16px] font-black text-text-primary mb-5 text-center flex items-center justify-center gap-2">
+            <p className="text-base font-black text-text-primary mb-5 text-center flex items-center justify-center gap-2">
               <span>🐾</span> {pet.name} Profil Yönetimi
             </p>
 
@@ -2233,7 +2233,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                   setShowPetMenuSheet(false)
                   setShowCoverSourceSheet(true)
                 }}
-                className="w-full py-3.5 px-4 rounded-xl bg-surface-1 hover:bg-surface-2 border border-border text-[14px] font-bold text-text-primary flex items-center justify-between transition-colors">
+                className="w-full py-3.5 px-4 rounded-xl bg-surface-1 hover:bg-surface-2 border border-border text-sm font-bold text-text-primary flex items-center justify-between transition-colors">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center">
                     <Camera size={18} />
@@ -2252,7 +2252,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                     setZoom(1.0)
                     setPan({ x: 0, y: 0 })
                   }}
-                  className="w-full py-3.5 px-4 rounded-xl bg-surface-1 hover:bg-surface-2 border border-border text-[14px] font-bold text-text-primary flex items-center justify-between transition-colors">
+                  className="w-full py-3.5 px-4 rounded-xl bg-surface-1 hover:bg-surface-2 border border-border text-sm font-bold text-text-primary flex items-center justify-between transition-colors">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center">
                       <TargetIcon size={18} />
@@ -2269,7 +2269,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                   setShowPetMenuSheet(false)
                   avatarInputRef.current?.click()
                 }}
-                className="w-full py-3.5 px-4 rounded-xl bg-surface-1 hover:bg-surface-2 border border-border text-[14px] font-bold text-text-primary flex items-center justify-between transition-colors">
+                className="w-full py-3.5 px-4 rounded-xl bg-surface-1 hover:bg-surface-2 border border-border text-sm font-bold text-text-primary flex items-center justify-between transition-colors">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center">
                     <ImageIcon size={18} />
@@ -2283,7 +2283,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               <Link
                 href={`/owner/pets/${pet.id}/edit`}
                 onClick={() => setShowPetMenuSheet(false)}
-                className="w-full py-3.5 px-4 rounded-xl bg-surface-1 hover:bg-surface-2 border border-border text-[14px] font-bold text-text-primary flex items-center justify-between transition-colors">
+                className="w-full py-3.5 px-4 rounded-xl bg-surface-1 hover:bg-surface-2 border border-border text-sm font-bold text-text-primary flex items-center justify-between transition-colors">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
                     <Pencil size={18} />
@@ -2296,7 +2296,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               {/* İptal */}
               <button
                 onClick={() => setShowPetMenuSheet(false)}
-                className="w-full py-3.5 rounded-xl border border-border text-[14px] font-bold text-text-secondary mt-2 hover:bg-surface-1 transition-colors">
+                className="w-full py-3.5 rounded-xl border border-border text-sm font-bold text-text-secondary mt-2 hover:bg-surface-1 transition-colors">
                 Kapat
               </button>
             </div>
@@ -2375,8 +2375,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         <div className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex flex-col items-center justify-center p-4">
           <div className="bg-surface w-full max-w-md rounded-[28px] overflow-hidden shadow-2xl animate-fade-in border border-white/10">
             <div className="p-4 border-b border-border text-center">
-              <h3 className="text-[16px] font-black text-text-primary">Kapak Fotoğrafı Konumlandır</h3>
-              <p className="text-[12px] text-text-secondary mt-0.5">Fotoğrafı sürükleyerek görünmesini istediğiniz merkezi belirleyin</p>
+              <h3 className="text-base font-black text-text-primary">Kapak Fotoğrafı Konumlandır</h3>
+              <p className="text-xs text-text-secondary mt-0.5">Fotoğrafı sürükleyerek görünmesini istediğiniz merkezi belirleyin</p>
             </div>
 
             {/* Sürükleme Çerçevesi */}
@@ -2400,7 +2400,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               />
               
               {/* İpucu Katmanı */}
-              <div className="absolute top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/65 text-white text-[10px] font-semibold backdrop-blur-sm pointer-events-none flex items-center gap-1.5 shadow-md">
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/65 text-white text-2xs font-semibold backdrop-blur-sm pointer-events-none flex items-center gap-1.5 shadow-md">
                 <span>✋</span> Parmağınızla veya fareyle kaydırın
               </div>
             </div>
@@ -2413,19 +2413,19 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                   <button
                     type="button"
                     onClick={() => setPan({ x: 0, y: 35 })}
-                    className="py-2 rounded-xl bg-surface-1 hover:bg-surface-2 border border-border text-[12px] font-bold text-text-primary transition-colors">
+                    className="py-2 rounded-xl bg-surface-1 hover:bg-surface-2 border border-border text-xs font-bold text-text-primary transition-colors">
                     Üst Odağı
                   </button>
                   <button
                     type="button"
                     onClick={() => { setPan({ x: 0, y: 0 }); setZoom(1.0); }}
-                    className="py-2 rounded-xl bg-surface-1 hover:bg-surface-2 border border-border text-[12px] font-bold text-text-primary transition-colors">
+                    className="py-2 rounded-xl bg-surface-1 hover:bg-surface-2 border border-border text-xs font-bold text-text-primary transition-colors">
                     Tam Orta (Sıfırla)
                   </button>
                   <button
                     type="button"
                     onClick={() => setPan({ x: 0, y: -35 })}
-                    className="py-2 rounded-xl bg-surface-1 hover:bg-surface-2 border border-border text-[12px] font-bold text-text-primary transition-colors">
+                    className="py-2 rounded-xl bg-surface-1 hover:bg-surface-2 border border-border text-xs font-bold text-text-primary transition-colors">
                     Alt Odağı
                   </button>
                 </div>
@@ -2443,7 +2443,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                   onChange={e => setZoom(parseFloat(e.target.value))}
                   className="w-full accent-primary cursor-pointer"
                 />
-                <div className="flex justify-between text-[10px] text-text-muted mt-1 font-medium">
+                <div className="flex justify-between text-2xs text-text-muted mt-1 font-medium">
                   <span>%100 (Varsayılan Tam Sığdır)</span>
                   <span>%250 (Yakınlaştır)</span>
                 </div>
@@ -2454,13 +2454,13 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                 <button
                   type="button"
                   onClick={() => setCoverAdjustingUrl(null)}
-                  className="flex-1 py-3 rounded-xl border border-border text-text-secondary font-bold text-[14px] hover:bg-surface-1 transition-colors"
+                  className="flex-1 py-3 rounded-xl border border-border text-text-secondary font-bold text-sm hover:bg-surface-1 transition-colors"
                 >İptal</button>
                 <button
                   type="button"
                   onClick={saveCoverAdjustment}
                   disabled={savingAdjust}
-                  className="flex-[2] btn-primary py-3 disabled:opacity-50 text-[14px] shadow-md"
+                  className="flex-[2] btn-primary py-3 disabled:opacity-50 text-sm shadow-md"
                 >{savingAdjust ? 'Kaydediliyor...' : 'Konumu Kaydet ✓'}</button>
               </div>
             </div>
@@ -2481,7 +2481,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
             <div className="flex flex-col items-center gap-4 text-center mt-2">
               {medicationActionTask.extra_data?.medication?.stock_enabled && (
-                <div className="text-[12px] font-bold text-slate-500 bg-slate-200/40 px-3 py-1 rounded-full">
+                <div className="text-xs font-bold text-slate-500 bg-slate-200/40 px-3 py-1 rounded-full">
                   {medicationActionTask.extra_data.medication.stock} {medicationActionTask.extra_data.medication.unit} kaldı
                 </div>
               )}
@@ -2491,7 +2491,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               </div>
 
               <div>
-                <h4 className="text-[20px] font-black text-slate-800">{medicationActionTask.title}</h4>
+                <h4 className="text-xl font-black text-slate-800">{medicationActionTask.title}</h4>
                 <div className="flex items-center justify-center gap-2 mt-2">
                   <span className="text-[13px] font-extrabold px-3 py-1 bg-white border border-slate-200 text-slate-700 rounded-full shadow-sm">
                      {medicationActionTask.extra_data?.medication?.dosage_string || medicationActionTask.extra_data?.medication?.dose || '1 Doz'}
@@ -2524,19 +2524,19 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             <div className="grid grid-cols-3 gap-3 mt-4">
               <button
                 onClick={() => handleMedicationSkip(medicationActionTask)}
-                className="py-3.5 bg-red-50 hover:bg-red-100 text-red-700 font-extrabold text-[14px] rounded-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
+                className="py-3.5 bg-red-50 hover:bg-red-100 text-red-700 font-extrabold text-sm rounded-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
               >
                 <span>❌ Atla</span>
               </button>
               <button
                 onClick={() => handleMedicationSnooze(medicationActionTask)}
-                className="py-3.5 bg-[#FAF1E6] hover:bg-[#F3E5D4] text-[#8C6239] font-extrabold text-[14px] rounded-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
+                className="py-3.5 bg-[#FAF1E6] hover:bg-[#F3E5D4] text-[#8C6239] font-extrabold text-sm rounded-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
               >
                 <span>🔔 Ertele</span>
               </button>
               <button
                 onClick={() => handleMedicationConfirm(medicationActionTask, medicationNote)}
-                className="py-3.5 bg-[#10B981] hover:bg-[#059669] text-white font-extrabold text-[14px] rounded-2xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
+                className="py-3.5 bg-[#10B981] hover:bg-[#059669] text-white font-extrabold text-sm rounded-2xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
               >
                 <span>✓ Onayla</span>
               </button>
@@ -2584,7 +2584,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                   <h3 className="text-[17px] font-extrabold text-text-primary leading-tight">
                     {pet.name}'{getTurkishGenitiveSuffix(pet.name)} Bakım Ekibi & Sahiplik
                   </h3>
-                  <p className="text-[12px] text-text-secondary">Yetkili aile üyeleri, ortak sahiplik ve bekleyen davetler</p>
+                  <p className="text-xs text-text-secondary">Yetkili aile üyeleri, ortak sahiplik ve bekleyen davetler</p>
                 </div>
               </div>
               <button

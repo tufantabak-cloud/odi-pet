@@ -61,7 +61,7 @@ export default async function PetNutritionPage({ params }: { params: Promise<{ i
   if (!pet) redirect('/owner/dashboard')
 
   return (
-    <Suspense fallback={<div className="p-8 text-center text-text-secondary text-[14px] font-medium">Beslenme Modülü Yükleniyor...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-text-secondary text-sm font-medium">Beslenme Modülü Yükleniyor...</div>}>
       <NutritionClient
         pet={pet}
         profile={nutritionProfile ?? null}

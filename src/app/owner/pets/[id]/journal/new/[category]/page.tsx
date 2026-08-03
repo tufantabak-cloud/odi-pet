@@ -36,7 +36,7 @@ export default async function JournalCategoryFormPage(props: PageProps) {
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
         <SmartBackButton fallbackHref={`/owner/pets/${id}/journal`} />
-        <h1 className="text-[24px] font-extrabold text-text-primary leading-none">{title}</h1>
+        <h1 className="text-2xl font-extrabold text-text-primary leading-none">{title}</h1>
       </div>
 
       <JournalFormClient petId={id} category={category} />

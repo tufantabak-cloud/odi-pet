@@ -305,7 +305,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
                           <p className="text-[11px] text-text-secondary">{new Date(p.payment_date).toLocaleDateString('tr-TR')}</p>
                         )}
                       </div>
-                      <span className="text-[14px] font-bold text-text-primary">₺{parseFloat(p.amount || 0).toFixed(2)}</span>
+                      <span className="text-sm font-bold text-text-primary">₺{parseFloat(p.amount || 0).toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
@@ -320,7 +320,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
 
           {/* Report type selector */}
           <div className="flex flex-col gap-3">
-            <h3 className="text-[12px] font-black text-text-secondary uppercase tracking-widest">Rapor Türü</h3>
+            <h3 className="text-xs font-black text-text-secondary uppercase tracking-widest">Rapor Türü</h3>
             {REPORT_TYPES.map(rt => {
               const locked = planRank[rt.plan] > userRank
               return (
@@ -338,7 +338,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
                         <span className={`text-[11px] font-black px-2 py-0.5 rounded-full ${rt.badgeColor}`}>{rt.badge}</span>
                         {locked && <span className="text-[11px] text-text-secondary">🔒 Kilidi Aç</span>}
                       </div>
-                      <p className="text-[12px] text-text-secondary mt-0.5">{rt.desc}</p>
+                      <p className="text-xs text-text-secondary mt-0.5">{rt.desc}</p>
                     </div>
                     {selectedType === rt.id && !locked && (
                       <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center shrink-0">
@@ -353,11 +353,11 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
 
           {/* Date range */}
           <div>
-            <label className="text-[12px] font-black text-text-secondary uppercase tracking-widest block mb-2">Tarih Aralığı</label>
+            <label className="text-xs font-black text-text-secondary uppercase tracking-widest block mb-2">Tarih Aralığı</label>
             <div className="flex flex-wrap gap-2">
               {DATE_RANGES.map(dr => (
                 <button key={dr.value} onClick={() => setDateRange(dr.value)}
-                  className={`px-3 py-1.5 rounded-sm border text-[12px] font-bold transition-all ${dateRange === dr.value ? 'border-primary bg-primary-soft text-primary' : 'border-border-main text-text-secondary hover:border-primary/40'}`}>
+                  className={`px-3 py-1.5 rounded-sm border text-xs font-bold transition-all ${dateRange === dr.value ? 'border-primary bg-primary-soft text-primary' : 'border-border-main text-text-secondary hover:border-primary/40'}`}>
                   {dr.label}
                 </button>
               ))}
@@ -390,8 +390,8 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
               <div className="p-5">
                 <div className="flex items-start justify-between gap-3 mb-4">
                   <div>
-                    <p className="font-black text-text-primary text-[16px]">Rapor Hazır ✓</p>
-                    <p className="text-[12px] text-text-secondary mt-0.5">
+                    <p className="font-black text-text-primary text-base">Rapor Hazır ✓</p>
+                    <p className="text-xs text-text-secondary mt-0.5">
                       ID: <span className="font-mono">{report.verificationHash}</span>
                     </p>
                     <p className="text-[11px] text-text-secondary">
@@ -417,7 +417,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
                 {/* Actions */}
                 <div className="flex flex-col gap-2">
                   <button onClick={openPrint}
-                    className="btn-primary py-3 text-[14px] flex items-center justify-center gap-2">
+                    className="btn-primary py-3 text-sm flex items-center justify-center gap-2">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
                     </svg>
@@ -446,7 +446,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
               </div>
               <div>
                 <h3 className="font-extrabold text-text-primary text-[15px]">Dijital Belge Kasası</h3>
-                <p className="text-[12px] text-text-secondary">Resmi evraklar, aşı kartı, sigorta ve tahliller</p>
+                <p className="text-xs text-text-secondary">Resmi evraklar, aşı kartı, sigorta ve tahliller</p>
               </div>
             </div>
 
@@ -519,7 +519,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
                             <div>
                               <div className="flex items-center gap-2 flex-wrap">
                                 <p className="text-sm font-bold text-text-primary line-clamp-1">{record.title}</p>
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200/70 text-slate-700">
+                                <span className="text-2xs font-bold px-2 py-0.5 rounded-full bg-slate-200/70 text-slate-700">
                                   {matchedType ? matchedType.label : record.type}
                                 </span>
                               </div>
@@ -528,7 +528,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
                           </div>
                           <div className="flex items-center gap-2">
                             {record.document_path && (
-                              <a href={record.document_path} target="_blank" rel="noopener noreferrer" className="text-[12px] font-semibold text-primary hover:underline px-3 py-1.5 bg-primary-soft rounded-btn">
+                              <a href={record.document_path} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-primary hover:underline px-3 py-1.5 bg-primary-soft rounded-btn">
                                 Görüntüle
                               </a>
                             )}

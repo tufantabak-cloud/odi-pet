@@ -298,13 +298,13 @@ export default function EditPetForm({ pet }: { pet: any }) {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
         </button>
         <div className="flex flex-col flex-1">
-          <h1 className="text-[20px] font-extrabold text-text-primary tracking-tight">{pet.name} Profil Ayarları</h1>
-          <p className="text-[12px] text-text-secondary font-normal">Bilgileri güncelleyip aşağıdan kaydedin.</p>
+          <h1 className="text-xl font-extrabold text-text-primary tracking-tight">{pet.name} Profil Ayarları</h1>
+          <p className="text-xs text-text-secondary font-normal">Bilgileri güncelleyip aşağıdan kaydedin.</p>
         </div>
       </div>
 
       {successToast && (
-        <div role="status" aria-live="polite" className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-3 rounded-[14px] bg-green-500 text-white text-[14px] font-bold shadow-xl animate-scaleIn">
+        <div role="status" aria-live="polite" className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-3 rounded-[14px] bg-green-500 text-white text-sm font-bold shadow-xl animate-scaleIn">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           Bilgiler başarıyla güncellendi.
         </div>
@@ -343,7 +343,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
                 <span className="text-[40px]">{species === 'cat' ? '🐱' : '🐶'}</span>
               )}
             </div>
-            <label className="text-[12px] font-bold text-primary bg-primary/10 px-4 py-2 rounded-full cursor-pointer hover:bg-primary/20 transition-colors">
+            <label className="text-xs font-bold text-primary bg-primary/10 px-4 py-2 rounded-full cursor-pointer hover:bg-primary/20 transition-colors">
               Fotoğrafı Değiştir
               <input type="file" accept="image/*" className="sr-only" onChange={e => {
                 const file = e.target.files?.[0]
@@ -565,7 +565,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
                     <select
                       value={size}
                       onChange={e => setSize(e.target.value)}
-                      className="text-[12px] font-bold border border-primary/30 rounded-[10px] px-2 py-1 bg-white text-primary focus:outline-none"
+                      className="text-xs font-bold border border-primary/30 rounded-[10px] px-2 py-1 bg-white text-primary focus:outline-none"
                     >
                       {species === 'dog' && <option value="toy">🧸 Oyuncak / Ekstra Küçük</option>}
                       <option value="small">🐩 Küçük</option>
@@ -691,7 +691,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
             {!showDocScanner && (
               <button type="button"
                 onClick={() => setShowDocScanner(true)}
-                className="flex items-center gap-2 px-4 py-2 text-[12px] font-bold
+                className="flex items-center gap-2 px-4 py-2 text-xs font-bold
                            text-primary bg-primary/5 border border-primary/20 rounded-xl
                            hover:bg-primary/10 transition-all">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -773,7 +773,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
         >
 
           <h2 className="text-[15px] font-black text-text-primary border-b border-border-main pb-3">4. Acil Durum Ağı</h2>
-          <p className="text-[12px] text-text-secondary">Evcil dostunuza bir şey olursa aranacak kişiler.</p>
+          <p className="text-xs text-text-secondary">Evcil dostunuza bir şey olursa aranacak kişiler.</p>
 
           {sosMsg && (
             <div className={`p-3 rounded-xl text-[13px] font-bold border ${sosMsg.type === 'ok' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-error/10 text-error border-error/20'}`}>
@@ -788,21 +788,21 @@ export default function EditPetForm({ pet }: { pet: any }) {
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="flex flex-col gap-1">
-                  <label className="text-[12px] font-bold text-text-secondary">Ad Soyad</label>
+                  <label className="text-xs font-bold text-text-secondary">Ad Soyad</label>
                   <input type="text" className="input-base"
                     value={sosContacts[i]?.name || ''}
                     onChange={e => { const c = [...sosContacts]; c[i] = {...c[i], name: e.target.value}; setSosContacts(c) }}
                     placeholder="Örn: Ali Yılmaz" />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label className="text-[12px] font-bold text-text-secondary">Telefon</label>
+                  <label className="text-xs font-bold text-text-secondary">Telefon</label>
                   <input type="tel" className="input-base"
                     value={sosContacts[i]?.phone || ''}
                     onChange={e => { const c = [...sosContacts]; c[i] = {...c[i], phone: e.target.value}; setSosContacts(c) }}
                     placeholder="05XX XXX XX XX" />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label className="text-[12px] font-bold text-text-secondary">Yakınlık</label>
+                  <label className="text-xs font-bold text-text-secondary">Yakınlık</label>
                   <select 
                     className="input-base bg-white"
                     value={sosContacts[i]?.relation || ''}
@@ -826,7 +826,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
           ))}
 
           <button type="button" onClick={handleSaveSos} disabled={sosSaving}
-            className="btn-secondary w-full sm:w-auto h-[50px] flex items-center justify-center text-[14px] font-bold disabled:opacity-50">
+            className="btn-secondary w-full sm:w-auto h-[50px] flex items-center justify-center text-sm font-bold disabled:opacity-50">
             {sosSaving ? 'Kaydediliyor...' : '🆘 Acil Durum Ağını Kaydet'}
           </button>
         </section>
@@ -852,7 +852,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
                   font-bold text-text-primary">
                   Profili Zenginleştir
                 </h3>
-                <span className="text-[12px] 
+                <span className="text-xs 
                   text-text-secondary">
                   % {Math.round(
                     ((totalFields - enrichTasks.length) 

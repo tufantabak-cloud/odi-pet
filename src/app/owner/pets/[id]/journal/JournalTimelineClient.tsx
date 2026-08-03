@@ -277,12 +277,12 @@ export default function JournalTimelineClient({
         <div className="relative z-10 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <h2 className="text-[15px] font-extrabold text-primary flex items-center gap-2">
-              <span className="text-[18px]">✨</span> AI Durum Özeti
+              <span className="text-lg">✨</span> AI Durum Özeti
             </h2>
             <button
               onClick={handleGenerateSummary}
               disabled={loadingSummary}
-              className="bg-white dark:bg-slate-800 text-primary text-[12px] font-bold py-1.5 px-3 rounded-lg shadow-sm border border-primary/20 hover:bg-primary/5 active:scale-[0.98] transition-all disabled:opacity-50"
+              className="bg-white dark:bg-slate-800 text-primary text-xs font-bold py-1.5 px-3 rounded-lg shadow-sm border border-primary/20 hover:bg-primary/5 active:scale-[0.98] transition-all disabled:opacity-50"
             >
               {loadingSummary ? 'Üretiliyor...' : 'Özet Oluştur'}
             </button>
@@ -295,11 +295,11 @@ export default function JournalTimelineClient({
           )}
 
           {summary && (
-            <div className="bg-white/80 dark:bg-slate-900/80 rounded-[16px] p-4 text-[14px] text-text-primary leading-relaxed border border-white dark:border-slate-800 font-medium shadow-sm animate-fade-in flex flex-col gap-4">
+            <div className="bg-white/80 dark:bg-slate-900/80 rounded-[16px] p-4 text-sm text-text-primary leading-relaxed border border-white dark:border-slate-800 font-medium shadow-sm animate-fade-in flex flex-col gap-4">
               <p>{summary}</p>
               <Link
                 href="/owner/vets"
-                className="bg-error text-white font-bold py-3 px-4 rounded-xl text-center text-[14px] shadow-md hover:bg-error/90 active:scale-95 transition-all flex items-center justify-center gap-2"
+                className="bg-error text-white font-bold py-3 px-4 rounded-xl text-center text-sm shadow-md hover:bg-error/90 active:scale-95 transition-all flex items-center justify-center gap-2"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.6 19.79 19.79 0 0 1 1.62 5.05 2 2 0 0 1 3.6 2.87h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 10.4a16 16 0 0 0 6 6l.88-.88a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 18z"/>
@@ -337,7 +337,7 @@ export default function JournalTimelineClient({
       {/* Timeline — Tarih Gruplandırmalı (T3) */}
       <div className="flex flex-col gap-5">
         {filteredItems.length === 0 ? (
-          <div className="text-center py-10 text-text-secondary text-[14px]">
+          <div className="text-center py-10 text-text-secondary text-sm">
             Henüz bir kayıt yok. Pet&apos;inizin sağlık hikayesini birlikte oluşturalım.
           </div>
         ) : (
@@ -355,15 +355,15 @@ export default function JournalTimelineClient({
               <div className="flex flex-col gap-2">
                 {group.items.map(item => (
                   <div key={item.id} className={`card-base p-4 flex gap-4 ${getCardStyle(item)}`}>
-                    <div className="w-12 h-12 rounded-2xl bg-bg-main flex items-center justify-center shrink-0 text-[20px] shadow-sm">
+                    <div className="w-12 h-12 rounded-2xl bg-bg-main flex items-center justify-center shrink-0 text-xl shadow-sm">
                       {getIcon(item)}
                     </div>
                     <div className="flex flex-col justify-center min-w-0 flex-1">
-                      <p className="text-[14px] font-extrabold text-text-primary leading-tight mb-1">
+                      <p className="text-sm font-extrabold text-text-primary leading-tight mb-1">
                         {getTitle(item)}
                       </p>
                       {item.source === 'plan' && (item as PlanItem).status === 'active' && new Date((item as PlanItem).scheduled_at).getTime() < new Date().getTime() && (
-                        <p className="text-[12px] font-bold text-error">⚠️ Gecikmiş Görev</p>
+                        <p className="text-xs font-bold text-error">⚠️ Gecikmiş Görev</p>
                       )}
                       {item.source !== 'gallery' && 'note' in item && item.note && (
                         <p className="text-[13px] text-text-secondary leading-snug mb-1 line-clamp-2">

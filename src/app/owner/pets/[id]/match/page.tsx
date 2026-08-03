@@ -61,7 +61,7 @@ export default async function MatchPage(props: PageProps) {
           
           <Link 
             href="/owner/social?tab=eslestirme"
-            className="inline-flex items-center justify-center gap-2 btn-primary px-6 py-3 rounded-xl text-[14px] font-bold w-full sm:w-auto"
+            className="inline-flex items-center justify-center gap-2 btn-primary px-6 py-3 rounded-xl text-sm font-bold w-full sm:w-auto"
           >
             ❤️ Eşleştirme Alanına Git →
           </Link>

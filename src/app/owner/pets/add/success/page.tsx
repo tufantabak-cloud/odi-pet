@@ -105,7 +105,7 @@ function SuccessContent() {
       {/* 6 Adımlı Wizard Göstergesi */}
       <div className="w-full flex flex-col gap-2 pb-3 border-b border-border/60">
         <div className="flex items-center justify-between">
-          <span className="text-[12px] font-extrabold text-primary uppercase tracking-wider">
+          <span className="text-xs font-extrabold text-primary uppercase tracking-wider">
             {activeStep === 5 ? 'Adım 5 / 6 • Bildirim Onayı' : 'Adım 6 / 6 • Sağlık Geçmişi'}
           </span>
           <span className="text-[11px] font-bold text-text-tertiary">
@@ -140,7 +140,7 @@ function SuccessContent() {
         </div>
 
         <div>
-          <h1 className="text-[24px] sm:text-[26px] font-black text-text-primary mb-1 leading-tight">
+          <h1 className="text-2xl sm:text-[26px] font-black text-text-primary mb-1 leading-tight">
             {activeStep === 5 ? `Aramıza Hoş Geldin, ${petName}! 🎉` : `${petName} İçin Son Adım! 🐾`}
           </h1>
           <p className="text-[13px] text-text-secondary px-2">
@@ -155,7 +155,7 @@ function SuccessContent() {
       {activeStep === 5 && (
         <div className="w-full flex flex-col gap-4 animate-fadeIn text-left">
           <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4.5">
-            <div className="flex items-center gap-2 mb-2 text-amber-700 font-extrabold text-[14px]">
+            <div className="flex items-center gap-2 mb-2 text-amber-700 font-extrabold text-sm">
               <span className="text-lg">🔔</span>
               <span>5. Adım: Akıllı Bildirim İzni</span>
             </div>
@@ -164,7 +164,7 @@ function SuccessContent() {
               Odi.Pet&apos;in temel amacı <strong className="text-primary">{petName}</strong>&apos;in aşı tarihlerini, parazit damlalarını ve veteriner kontrollerini zamanı geldiğinde size anlık hatırlatmaktır.
             </p>
 
-            <div className="p-3 bg-white/80 rounded-xl border border-amber-500/20 text-[12px] text-amber-900 font-semibold space-y-1.5">
+            <div className="p-3 bg-white/80 rounded-xl border border-amber-500/20 text-xs text-amber-900 font-semibold space-y-1.5">
               <div className="flex items-center gap-1.5">
                 <span className="text-amber-600 font-bold">⚠️</span>
                 <span>Bildirimlere izin vermezseniz zamanında uyarı alamazsınız.</span>
@@ -184,12 +184,12 @@ function SuccessContent() {
 
           {isSubscribed ? (
             <div className="flex flex-col gap-3">
-              <p className="text-[14px] text-success font-bold p-3 bg-success-soft/30 rounded-xl border border-success/15 text-center animate-scaleIn">
+              <p className="text-sm text-success font-bold p-3 bg-success-soft/30 rounded-xl border border-success/15 text-center animate-scaleIn">
                 ✓ Bildirimler başarıyla etkinleştirildi!
               </p>
               <button
                 onClick={() => setActiveStep(6)}
-                className="w-full bg-primary text-white py-3.5 text-[14px] font-bold shadow-md flex items-center justify-center gap-2 hover:bg-primary-hover transition-all rounded-xl cursor-pointer"
+                className="w-full bg-primary text-white py-3.5 text-sm font-bold shadow-md flex items-center justify-center gap-2 hover:bg-primary-hover transition-all rounded-xl cursor-pointer"
               >
                 Sonraki Adım: Sağlık Geçmişi (6/6) →
               </button>
@@ -227,19 +227,19 @@ function SuccessContent() {
                 </button>
               ) : (
                 <div className="p-3.5 bg-red-500/10 border border-red-500/30 rounded-xl text-center space-y-2 animate-fadeIn">
-                  <p className="text-[12px] text-red-600 font-bold">
+                  <p className="text-xs text-red-600 font-bold">
                     ⚠️ Bildirimleri açmazsanız aşı ve bakım zamanlarını kaçırabilirsiniz. Yine de devam etmek istiyor musunuz?
                   </p>
                   <div className="flex items-center justify-center gap-2 pt-1">
                     <button
                       onClick={handleSubscribe}
-                      className="px-3.5 py-2 bg-primary text-white text-[12px] font-bold rounded-lg shadow-xs cursor-pointer"
+                      className="px-3.5 py-2 bg-primary text-white text-xs font-bold rounded-lg shadow-xs cursor-pointer"
                     >
                       Vazgeç, Bildirim Aç
                     </button>
                     <button
                       onClick={handleSkipToStep6}
-                      className="px-3.5 py-2 bg-surface-2 text-text-secondary hover:text-text-primary text-[12px] font-bold rounded-lg border border-border cursor-pointer"
+                      className="px-3.5 py-2 bg-surface-2 text-text-secondary hover:text-text-primary text-xs font-bold rounded-lg border border-border cursor-pointer"
                     >
                       Yine de 6. Adıma Geç
                     </button>
@@ -263,26 +263,26 @@ function SuccessContent() {
                 </div>
                 <div>
                   <p className="text-[15px] font-bold text-text-primary">6. Adım: Sağlık Geçmişini Ekle</p>
-                  <p className="text-[12px] text-text-secondary mt-0.5">
+                  <p className="text-xs text-text-secondary mt-0.5">
                     Yaklaşık 2 dakika sürer. <strong className="text-text-primary">Sadece bir kez yapılır</strong> — bundan sonrası otomatik.
                   </p>
                 </div>
               </div>
-              <div className="flex flex-col gap-2 mb-4 pb-4 border-b border-border text-[12px] text-text-secondary">
+              <div className="flex flex-col gap-2 mb-4 pb-4 border-b border-border text-xs text-text-secondary">
                 <div className="flex items-center gap-2">
-                  <span className="text-success text-[14px]">✓</span> Geçmiş aşıları sisteme tanıtırsınız
+                  <span className="text-success text-sm">✓</span> Geçmiş aşıları sisteme tanıtırsınız
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-success text-[14px]">✓</span> Gelecek hatırlatıcılar doğru tarihlere planlanır
+                  <span className="text-success text-sm">✓</span> Gelecek hatırlatıcılar doğru tarihlere planlanır
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-success text-[14px]">✓</span> Sistem otomatik takip eder
+                  <span className="text-success text-sm">✓</span> Sistem otomatik takip eder
                 </div>
               </div>
               
               <button
                 onClick={() => router.push(`/owner/plan-yap/asi?pet_id=${petId}&mode=log`)}
-                className="w-full bg-primary text-white border-none rounded-xl py-3.5 text-[14px] font-bold cursor-pointer hover:bg-primary-hover transition-all shadow-md"
+                className="w-full bg-primary text-white border-none rounded-xl py-3.5 text-sm font-bold cursor-pointer hover:bg-primary-hover transition-all shadow-md"
               >
                 Şimdi Ekle (2 dk) →
               </button>
@@ -297,14 +297,14 @@ function SuccessContent() {
                 </div>
                 <div>
                   <p className="text-[15px] font-bold text-text-primary">6. Adım: Aşı Takibini Başlat</p>
-                  <p className="text-[12px] text-text-secondary mt-0.5">
+                  <p className="text-xs text-text-secondary mt-0.5">
                     {petName} için aşı planı oluşturun; zamanı gelince biz hatırlatalım.
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => router.push(`/owner/plan-yap/asi?pet_id=${petId}`)}
-                className="w-full bg-primary text-white border-none rounded-xl py-3.5 text-[14px] font-bold cursor-pointer hover:bg-primary-hover transition-all shadow-md"
+                className="w-full bg-primary text-white border-none rounded-xl py-3.5 text-sm font-bold cursor-pointer hover:bg-primary-hover transition-all shadow-md"
               >
                 Aşı Planı Oluştur →
               </button>
@@ -321,14 +321,14 @@ function SuccessContent() {
             <button
               id="btn-goto-profile"
               onClick={handleFinalProfileGo}
-              className="w-full bg-surface-2 text-text-primary border border-border hover:bg-surface-3 py-3.5 text-[14px] font-bold rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full bg-surface-2 text-text-primary border border-border hover:bg-surface-3 py-3.5 text-sm font-bold rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
             >
               Tamamla ve Profile Git →
             </button>
             
             <button
               onClick={() => setActiveStep(5)}
-              className="text-[12px] text-text-secondary hover:text-text-primary underline text-center cursor-pointer mt-1"
+              className="text-xs text-text-secondary hover:text-text-primary underline text-center cursor-pointer mt-1"
             >
               ← Önceki Adıma Dön (5. Adım: Bildirim Onayı)
             </button>

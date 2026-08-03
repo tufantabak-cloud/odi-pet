@@ -96,7 +96,7 @@ export default function PetHeroCard({
           <button
             onClick={onMarkFound}
             aria-label="Kayıp İlanı Aktif"
-            className="px-3 py-1.5 rounded-full bg-red-600/90 text-white text-[12px] font-bold backdrop-blur-md border border-red-400/30 flex items-center gap-1.5 shadow-lg animate-pulse hover:bg-red-700 transition-colors"
+            className="px-3 py-1.5 rounded-full bg-red-600/90 text-white text-xs font-bold backdrop-blur-md border border-red-400/30 flex items-center gap-1.5 shadow-lg animate-pulse hover:bg-red-700 transition-colors"
           >
             <AlertTriangle size={14} className="text-white" />
             <span>Kayıp İlanı Aktif</span>

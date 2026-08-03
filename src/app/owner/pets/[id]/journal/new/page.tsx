@@ -108,11 +108,11 @@ export default async function NewJournalEntryPage(props: PageProps) {
         <Link href={`/owner/pets/${id}/journal`} className="w-11 h-11 bg-surface rounded-xl flex items-center justify-center shadow-sm border border-border-main text-text-secondary hover:text-text-primary transition-colors">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
         </Link>
-        <h1 className="text-[24px] font-extrabold text-text-primary leading-none">Yeni Kayıt</h1>
+        <h1 className="text-2xl font-extrabold text-text-primary leading-none">Yeni Kayıt</h1>
       </div>
 
       <div className="flex flex-col gap-3">
-        <p className="text-[14px] text-text-secondary mb-2">Hangi durumu kaydetmek istiyorsunuz?</p>
+        <p className="text-sm text-text-secondary mb-2">Hangi durumu kaydetmek istiyorsunuz?</p>
         
         {CATEGORIES.map(cat => (
           <Link key={cat.id} href={`/owner/pets/${id}/journal/new/${cat.id}`} className="card-base p-4 flex items-center gap-4 border border-border-main hover:border-primary/40 hover:shadow-md transition-all group bg-surface">
@@ -120,7 +120,7 @@ export default async function NewJournalEntryPage(props: PageProps) {
               {cat.icon}
             </div>
             <div className="flex-1">
-              <h2 className="text-[16px] font-extrabold text-text-primary group-hover:text-primary transition-colors">{cat.label}</h2>
+              <h2 className="text-base font-extrabold text-text-primary group-hover:text-primary transition-colors">{cat.label}</h2>
               <p className="text-[13px] text-text-secondary">{cat.desc}</p>
             </div>
             <div className="text-text-secondary group-hover:text-primary transition-colors">

@@ -974,7 +974,7 @@ export default function NutritionClient({
       {/* Header */}
       {!embedded && (
         <>
-          <Link href={`/owner/pets/${pet.id}`} className="flex items-center gap-2 text-[14px] font-bold text-text-secondary hover:text-primary transition-colors group -mb-2">
+          <Link href={`/owner/pets/${pet.id}`} className="flex items-center gap-2 text-sm font-bold text-text-secondary hover:text-primary transition-colors group -mb-2">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:-translate-x-0.5 transition-transform"><polyline points="15 18 9 12 15 6"/></svg>
             Profile Dön
           </Link>
@@ -1019,7 +1019,7 @@ export default function NutritionClient({
       )}
 
       {showBanner && (
-        <div className="p-4 rounded-xl border-l-4 font-medium text-[14px] bg-red-50 border-red-500 text-red-800">
+        <div className="p-4 rounded-xl border-l-4 font-medium text-sm bg-red-50 border-red-500 text-red-800">
           🚨 Mama stoğunuz azalıyor! Tahmini <strong>{refillStatus.daysLeft} gün</strong> yetecek mama kaldı.
         </div>
       )}
@@ -1046,7 +1046,7 @@ export default function NutritionClient({
                 <UtensilsIcon className="w-7 h-7 text-amber-600 dark:text-amber-400" />
               </div>
               <div>
-                <h3 className="font-extrabold text-[18px] text-text-primary">Mama bilgilerini ekle</h3>
+                <h3 className="font-extrabold text-lg text-text-primary">Mama bilgilerini ekle</h3>
                 <p className="text-[13px] text-text-secondary mt-1 max-w-sm">
                   Öğün düzenini oluşturmak ve ileride stok takibi yapmak için kullandığı mamayı ekleyin.
                 </p>
@@ -1056,7 +1056,7 @@ export default function NutritionClient({
                   setShowAddModal(true)
                   setAddMode('search')
                 }}
-                className="btn-primary min-h-[48px] px-8 text-[14px] font-bold mt-2 shadow-md shadow-primary/20"
+                className="btn-primary min-h-[48px] px-8 text-sm font-bold mt-2 shadow-md shadow-primary/20"
               >
                 Mama ekle
               </button>
@@ -1068,7 +1068,7 @@ export default function NutritionClient({
                   <span className="bg-primary/10 text-primary text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                     Aktif Mama
                   </span>
-                  <h3 className="font-extrabold text-text-primary text-[18px] mt-1 leading-tight">
+                  <h3 className="font-extrabold text-text-primary text-lg mt-1 leading-tight">
                     {activePrimary.food_product_family?.brand?.display_name || activePrimary.brand_free_text || 'Mama'}
                   </h3>
                   <p className="text-[13px] text-text-secondary font-medium">
@@ -1077,7 +1077,7 @@ export default function NutritionClient({
                 </div>
                 <details className="relative group">
                   <summary className="px-4 py-2 bg-bg-main hover:bg-border-main text-text-primary font-bold text-[13px] rounded-xl transition-colors min-h-[44px] flex items-center cursor-pointer list-none select-none">
-                    İşlemler <span className="ml-1 text-[10px]">▼</span>
+                    İşlemler <span className="ml-1 text-2xs">▼</span>
                   </summary>
                   <div className="absolute right-0 top-[110%] w-52 bg-white rounded-xl shadow-lg border border-border-main py-1.5 z-50 flex flex-col">
                     <button
@@ -1108,20 +1108,20 @@ export default function NutritionClient({
 
               <div className="grid grid-cols-3 gap-2 bg-bg-main p-3 rounded-xl mt-1">
                 <div>
-                  <p className="text-[10px] font-bold text-text-secondary uppercase">Form</p>
-                  <p className="text-[12px] font-extrabold text-text-primary truncate">
+                  <p className="text-2xs font-bold text-text-secondary uppercase">Form</p>
+                  <p className="text-xs font-extrabold text-text-primary truncate">
                     {getFoodFormLabel(activePrimary.food_product_family?.food_form || activePrimary.food_form)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-text-secondary uppercase">Günlük Hedef</p>
-                  <p className="text-[12px] font-extrabold text-text-primary">
+                  <p className="text-2xs font-bold text-text-secondary uppercase">Günlük Hedef</p>
+                  <p className="text-xs font-extrabold text-text-primary">
                     {activePrimary.daily_target_grams || 0} g
                   </p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-text-secondary uppercase">Öğün Başı</p>
-                  <p className="text-[12px] font-extrabold text-text-primary">
+                  <p className="text-2xs font-bold text-text-secondary uppercase">Öğün Başı</p>
+                  <p className="text-xs font-extrabold text-text-primary">
                     {Math.round((activePrimary.daily_target_grams || 0) / (activePrimary.meals_per_day || 1))} g ({activePrimary.meals_per_day || 1} öğün)
                   </p>
                 </div>
@@ -1137,7 +1137,7 @@ export default function NutritionClient({
                 <p className="font-bold text-text-primary text-[15px] leading-tight">
                   {activePrimary?.food_product_family?.brand?.display_name || activePrimary?.brand_free_text || 'Eklenmedi'}
                 </p>
-                <p className="text-[12px] text-text-secondary mt-0.5">
+                <p className="text-xs text-text-secondary mt-0.5">
                   {activePrimary?.food_product_family?.official_name || activePrimary?.product_free_text || ''}
                 </p>
               </div>
@@ -1149,13 +1149,13 @@ export default function NutritionClient({
                 {!hasInventory ? (
                   <div>
                     <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest mb-1">Kalan Stok</p>
-                    <p className="font-black text-[18px] text-text-secondary">Stok bilgisi girilmedi</p>
+                    <p className="font-black text-lg text-text-secondary">Stok bilgisi girilmedi</p>
                     <p className="text-[11px] font-bold text-text-secondary mt-0.5">Stok ve bitiş tarihini takip edin</p>
                   </div>
                 ) : stockStatus === 'paused' ? (
                   <div>
                     <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest mb-1">Kalan Stok</p>
-                    <p className="font-black text-[20px] text-amber-500">
+                    <p className="font-black text-xl text-amber-500">
                       {estimatedRemainingGrams >= 1000 ? `${(estimatedRemainingGrams / 1000).toFixed(1)} kg` : `${estimatedRemainingGrams} g`}
                     </p>
                     <p className="text-[11px] font-bold text-amber-600">Stok takibi duraklatıldı (Aktif mama yok)</p>
@@ -1184,7 +1184,7 @@ export default function NutritionClient({
                 {!hasInventory ? (
                   <button
                     onClick={() => openStockModal('set_stock')}
-                    className="btn-primary w-full py-2 text-[12px] font-bold min-h-[38px] flex items-center justify-center gap-1 shadow-sm"
+                    className="btn-primary w-full py-2 text-xs font-bold min-h-[38px] flex items-center justify-center gap-1 shadow-sm"
                   >
                     <span>➕</span> Başlangıç Stoğunu Ekle
                   </button>
@@ -1192,25 +1192,25 @@ export default function NutritionClient({
                   <div className="grid grid-cols-2 gap-2 w-full">
                     <button
                       onClick={() => openStockModal('add_package')}
-                      className="btn-primary py-2 text-[12px] font-bold min-h-[36px] flex items-center justify-center gap-1 shadow-sm"
+                      className="btn-primary py-2 text-xs font-bold min-h-[36px] flex items-center justify-center gap-1 shadow-sm"
                     >
                       <span>📦</span> Yeni Paket Ekle
                     </button>
                     <button
                       onClick={() => openStockModal('set_stock')}
-                      className="btn-secondary py-2 text-[12px] font-bold min-h-[36px] flex items-center justify-center gap-1"
+                      className="btn-secondary py-2 text-xs font-bold min-h-[36px] flex items-center justify-center gap-1"
                     >
                       <span>✏️</span> Stok Miktarını Düzelt
                     </button>
                     <button
                       onClick={() => setShowMarkDepletedModal(true)}
-                      className="px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl text-[12px] font-bold min-h-[36px] flex items-center justify-center gap-1 border border-amber-200 transition-colors"
+                      className="px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl text-xs font-bold min-h-[36px] flex items-center justify-center gap-1 border border-amber-200 transition-colors"
                     >
                       <span>🛑</span> Mama Bitti
                     </button>
                     <button
                       onClick={() => setShowClearStockModal(true)}
-                      className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-[12px] font-bold min-h-[36px] flex items-center justify-center gap-1 border border-red-200 transition-colors"
+                      className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold min-h-[36px] flex items-center justify-center gap-1 border border-red-200 transition-colors"
                     >
                       <span>🗑️</span> Stok Bilgisini Kaldır
                     </button>
@@ -1223,12 +1223,12 @@ export default function NutritionClient({
           {/* Alerji & Hassasiyet Bilgileri (Korunan Profil Alanı) */}
           <div className="card-base p-5 flex flex-col gap-3">
             <div className="flex items-center gap-2">
-              <span className="text-[18px]">⚠️</span>
+              <span className="text-lg">⚠️</span>
               <h3 className="font-extrabold text-[15px] text-text-primary">Alerji ve Hassasiyet Notları</h3>
             </div>
             <form onSubmit={handleSaveAllergies} className="flex flex-col gap-3">
               <div>
-                <label className="text-[12px] font-bold text-text-secondary">Bilinen Alerjiler (Virgülle Ayırın)</label>
+                <label className="text-xs font-bold text-text-secondary">Bilinen Alerjiler (Virgülle Ayırın)</label>
                 <input
                   name="allergy_info"
                   defaultValue={Array.isArray(profile?.allergy_info) ? profile.allergy_info.join(', ') : profile?.allergy_info || ''}
@@ -1237,7 +1237,7 @@ export default function NutritionClient({
                 />
               </div>
               <div>
-                <label className="text-[12px] font-bold text-text-secondary">Özel Hassasiyet / Sindirim Notları</label>
+                <label className="text-xs font-bold text-text-secondary">Özel Hassasiyet / Sindirim Notları</label>
                 <textarea
                   name="sensitivity_notes"
                   defaultValue={profile?.sensitivity_notes || ''}
@@ -1266,10 +1266,10 @@ export default function NutritionClient({
           >
             <div className="flex items-center justify-between relative z-10">
               <div className="flex items-center gap-3">
-                <span className="text-[24px]">📷</span>
+                <span className="text-2xl">📷</span>
                 <div>
                   <h3 className="font-extrabold text-[15px]">Barkod ile Mama Ekle</h3>
-                  <p className="text-[12px] text-white/90 font-medium">Paket üzerindeki barkodu okutarak mamayı saniyeler içinde ekleyin</p>
+                  <p className="text-xs text-white/90 font-medium">Paket üzerindeki barkodu okutarak mamayı saniyeler içinde ekleyin</p>
                 </div>
               </div>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
@@ -1286,7 +1286,7 @@ export default function NutritionClient({
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="font-extrabold text-[15px] text-text-primary">Beslenme Hatırlatıcıları</h3>
-                <p className="text-[12px] text-text-secondary">Ajanda ve Takvim ile senkronize mama/düzen hatırlatmaları</p>
+                <p className="text-xs text-text-secondary">Ajanda ve Takvim ile senkronize mama/düzen hatırlatmaları</p>
               </div>
               <button
                 type="button"
@@ -1298,7 +1298,7 @@ export default function NutritionClient({
                   setReminderRepeat('daily')
                   setShowReminderModal(true)
                 }}
-                className="btn-primary text-[12px] py-2 px-3 shadow-xs"
+                className="btn-primary text-xs py-2 px-3 shadow-xs"
               >
                 + Yeni Hatırlatıcı
               </button>
@@ -1325,7 +1325,7 @@ export default function NutritionClient({
                           {isDone ? '✓' : '⏰'}
                         </div>
                         <div>
-                          <h4 className="font-bold text-text-primary text-[14px]">
+                          <h4 className="font-bold text-text-primary text-sm">
                             {plan.sub_type || 'Mama Saati'}
                           </h4>
                           <p className="text-[11px] text-text-secondary">
@@ -1400,14 +1400,14 @@ export default function NutritionClient({
           <div className="card-base overflow-hidden">
             <h3 className="p-4 font-bold border-b border-border-main bg-surface/50">Son Öğünler</h3>
             {feedingLogs.length === 0 ? (
-              <p className="p-6 text-center text-text-secondary text-[14px]">Henüz kayıt yok.</p>
+              <p className="p-6 text-center text-text-secondary text-sm">Henüz kayıt yok.</p>
             ) : (
               <div className="divide-y divide-border-main">
                 {feedingLogs.slice(0, 10).map(l => (
                   <div key={l.id} className="p-4 flex items-center justify-between hover:bg-bg-main transition-colors">
                     <div>
-                      <p className="font-bold text-text-primary text-[14px]">{l.amount_grams}g tüketildi</p>
-                      <p className="text-[12px] text-text-secondary">{new Date(l.meal_time).toLocaleString('tr-TR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })}</p>
+                      <p className="font-bold text-text-primary text-sm">{l.amount_grams}g tüketildi</p>
+                      <p className="text-xs text-text-secondary">{new Date(l.meal_time).toLocaleString('tr-TR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })}</p>
                     </div>
                     <div className="flex gap-0.5">
                       {[1,2,3,4,5].map(s => (
@@ -1426,11 +1426,11 @@ export default function NutritionClient({
       <Modal isOpen={showReminderModal} onClose={() => setShowReminderModal(false)} title={editingReminderId ? "Hatırlatıcıyı Düzenle" : "Yeni Beslenme Hatırlatıcısı"}>
         <form onSubmit={handleSaveReminder} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <label className="text-[12px] font-bold text-text-secondary">Hatırlatıcı Türü</label>
+            <label className="text-xs font-bold text-text-secondary">Hatırlatıcı Türü</label>
             <select
               value={reminderSubType}
               onChange={(e) => setReminderSubType(e.target.value)}
-              className="input-base py-2.5 text-[14px]"
+              className="input-base py-2.5 text-sm"
             >
               <option value="Mama Saati">Mama Saati</option>
               <option value="Su Tazeleme">Su Tazeleme</option>
@@ -1442,13 +1442,13 @@ export default function NutritionClient({
 
           {reminderSubType === 'Özel' && (
             <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-bold text-text-secondary">Hatırlatıcı Adı</label>
+              <label className="text-xs font-bold text-text-secondary">Hatırlatıcı Adı</label>
               <input
                 type="text"
                 value={customReminderTitle}
                 onChange={(e) => setCustomReminderTitle(e.target.value)}
                 placeholder="Örn: Ödül Maması Saati"
-                className="input-base py-2.5 text-[14px]"
+                className="input-base py-2.5 text-sm"
                 required
               />
             </div>
@@ -1456,33 +1456,33 @@ export default function NutritionClient({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-bold text-text-secondary">Tarih</label>
+              <label className="text-xs font-bold text-text-secondary">Tarih</label>
               <input
                 type="date"
                 value={reminderDate}
                 onChange={(e) => setReminderDate(e.target.value)}
-                className="input-base py-2.5 text-[14px]"
+                className="input-base py-2.5 text-sm"
                 required
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-bold text-text-secondary">Saat</label>
+              <label className="text-xs font-bold text-text-secondary">Saat</label>
               <input
                 type="time"
                 value={reminderTime}
                 onChange={(e) => setReminderTime(e.target.value)}
-                className="input-base py-2.5 text-[14px]"
+                className="input-base py-2.5 text-sm"
                 required
               />
             </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-[12px] font-bold text-text-secondary">Tekrar</label>
+            <label className="text-xs font-bold text-text-secondary">Tekrar</label>
             <select
               value={reminderRepeat}
               onChange={(e) => setReminderRepeat(e.target.value)}
-              className="input-base py-2.5 text-[14px]"
+              className="input-base py-2.5 text-sm"
             >
               <option value="none">Tek Seferlik</option>
               <option value="daily">Her Gün</option>
@@ -1537,11 +1537,11 @@ export default function NutritionClient({
           <div className="flex flex-col gap-4 animate-fadeIn">
             {/* Form */}
             <form onSubmit={handleAddWeight} className="card-base p-6 flex flex-col gap-4">
-              <h3 className="font-extrabold text-[16px] text-text-primary">Yeni Kilo & Boy Ölçüm Kaydı</h3>
+              <h3 className="font-extrabold text-base text-text-primary">Yeni Kilo & Boy Ölçüm Kaydı</h3>
               
               {weightError && (
                 <div className="p-3.5 bg-red-50 border border-red-200 text-red-700 text-[13px] rounded-xl font-medium flex items-start gap-2 animate-fadeIn">
-                  <span className="text-[16px] shrink-0">⚠️</span>
+                  <span className="text-base shrink-0">⚠️</span>
                   <span>{weightError}</span>
                 </div>
               )}
@@ -1621,7 +1621,7 @@ export default function NutritionClient({
                     name="measured_at"
                     defaultValue={new Date().toISOString().split('T')[0]}
                     max={new Date().toISOString().split('T')[0]}
-                    className="input-base text-[14px] py-2 px-3 min-h-[42px]"
+                    className="input-base text-sm py-2 px-3 min-h-[42px]"
                   />
                 </div>
                 <button type="submit" disabled={loading} className="btn-primary px-8 min-h-[46px] w-full sm:w-auto flex items-center justify-center shrink-0 shadow-md shadow-primary/20">
@@ -1684,7 +1684,7 @@ export default function NutritionClient({
                           {w.weight_kg} kg
                           {w.height_cm ? <span className="text-[13px] text-text-secondary font-semibold ml-2">· {w.height_cm} cm</span> : null}
                         </p>
-                        <p className="text-[12px] text-text-secondary">
+                        <p className="text-xs text-text-secondary">
                           {new Date(w.measured_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
                         </p>
                       </div>
@@ -1698,7 +1698,7 @@ export default function NutritionClient({
                             const d = new Date(w.measured_at)
                             setEditWeightDate(d.toISOString().split('T')[0])
                           }}
-                          className="px-3 py-1.5 rounded-xl text-[12px] font-bold bg-slate-100 text-slate-700 hover:bg-amber-100 hover:text-amber-800 transition-colors flex items-center gap-1 min-h-[36px]"
+                          className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-amber-100 hover:text-amber-800 transition-colors flex items-center gap-1 min-h-[36px]"
                           title="Ölçümü Düzenle"
                         >
                           ✏️ <span>Düzenle</span>
@@ -1707,7 +1707,7 @@ export default function NutritionClient({
                           type="button"
                           onClick={() => handleDeleteWeightLog(w.id)}
                           disabled={isDeletingWeight === w.id}
-                          className="px-3 py-1.5 rounded-xl text-[12px] font-bold bg-slate-100 text-red-600 hover:bg-red-100 transition-colors flex items-center gap-1 min-h-[36px]"
+                          className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-red-600 hover:bg-red-100 transition-colors flex items-center gap-1 min-h-[36px]"
                           title="Ölçümü Sil"
                         >
                           🗑️ <span>{isDeletingWeight === w.id ? '...' : 'Sil'}</span>
@@ -1790,19 +1790,19 @@ export default function NutritionClient({
           <div className="flex bg-bg-main p-1 rounded-xl border border-border-main">
             <button
               onClick={() => { setAddMode('search'); setSelectedCatalogItem(null); setBarcodeResult(null) }}
-              className={`flex-1 py-2 text-[12px] font-bold rounded-lg transition-colors min-h-[44px] ${addMode === 'search' ? 'bg-white text-primary shadow-sm' : 'text-text-secondary'}`}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors min-h-[44px] ${addMode === 'search' ? 'bg-white text-primary shadow-sm' : 'text-text-secondary'}`}
             >
               🔍 Mamayı Ara
             </button>
             <button
               onClick={() => { setAddMode('barcode'); setSelectedCatalogItem(null); setBarcodeResult(null) }}
-              className={`flex-1 py-2 text-[12px] font-bold rounded-lg transition-colors min-h-[44px] ${addMode === 'barcode' ? 'bg-white text-primary shadow-sm' : 'text-text-secondary'}`}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors min-h-[44px] ${addMode === 'barcode' ? 'bg-white text-primary shadow-sm' : 'text-text-secondary'}`}
             >
               📷 Barkod ile Bul
             </button>
             <button
               onClick={() => { setAddMode('manual'); setSelectedCatalogItem(null); setBarcodeResult(null) }}
-              className={`flex-1 py-2 text-[12px] font-bold rounded-lg transition-colors min-h-[44px] ${addMode === 'manual' ? 'bg-white text-primary shadow-sm' : 'text-text-secondary'}`}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors min-h-[44px] ${addMode === 'manual' ? 'bg-white text-primary shadow-sm' : 'text-text-secondary'}`}
             >
               ✍️ Listede Yok / Elle
             </button>
@@ -1822,7 +1822,7 @@ export default function NutritionClient({
                 value={searchQuery}
                 onChange={e => handleSearch(e.target.value)}
                 placeholder="Mama markası veya ürün adı yazın..."
-                className="input-base min-h-[48px] text-[14px]"
+                className="input-base min-h-[48px] text-sm"
               />
 
               {isSearching && <p className="text-[13px] text-text-secondary font-bold text-center py-4">Katalog aranıyor...</p>}
@@ -1834,7 +1834,7 @@ export default function NutritionClient({
                       <span>🏷️</span>
                       <h4>{matchedBrands[0].display_name} markası bulundu</h4>
                     </div>
-                    <p className="text-[12px] text-amber-800 font-medium">
+                    <p className="text-xs text-amber-800 font-medium">
                       Bu markanın seçtiğiniz ürünü henüz doğrulanmış katalogda bulunmuyor. Ürün adını elle ekleyebilirsiniz.
                     </p>
                     <button
@@ -1869,9 +1869,9 @@ export default function NutritionClient({
                     onClick={() => setSelectedCatalogItem(item)}
                     className="p-3 border border-border-main rounded-xl hover:border-primary/50 cursor-pointer bg-white transition-colors"
                   >
-                    <p className="font-extrabold text-[14px] text-text-primary">{item.brand?.display_name}</p>
-                    <p className="text-[12px] text-text-secondary font-medium">{item.official_name}</p>
-                    <span className="inline-block mt-1 text-[10px] font-bold px-2 py-0.5 bg-primary/10 text-primary rounded-md">
+                    <p className="font-extrabold text-sm text-text-primary">{item.brand?.display_name}</p>
+                    <p className="text-xs text-text-secondary font-medium">{item.official_name}</p>
+                    <span className="inline-block mt-1 text-2xs font-bold px-2 py-0.5 bg-primary/10 text-primary rounded-md">
                       {getFoodFormLabel(item.food_form)}
                     </span>
                   </div>
@@ -1889,7 +1889,7 @@ export default function NutritionClient({
                   value={barcodeInput}
                   onChange={e => setBarcodeInput(e.target.value)}
                   placeholder="Barkod numarasını girin..."
-                  className="input-base flex-1 min-h-[48px] text-[14px]"
+                  className="input-base flex-1 min-h-[48px] text-sm"
                 />
                 <button
                   onClick={() => handleBarcodeLookup(barcodeInput)}
@@ -1933,13 +1933,13 @@ export default function NutritionClient({
                 <p className="font-black text-[15px] text-text-primary">
                   {selectedCatalogItem?.brand?.display_name || barcodeResult?.brand?.display_name}
                 </p>
-                <p className="text-[12px] text-text-secondary">
+                <p className="text-xs text-text-secondary">
                   {selectedCatalogItem?.official_name || barcodeResult?.product_family?.official_name}
                 </p>
               </div>
               <button
                 onClick={() => { setSelectedCatalogItem(null); setBarcodeResult(null) }}
-                className="text-[12px] text-red-500 font-bold hover:underline min-h-[44px] px-2"
+                className="text-xs text-red-500 font-bold hover:underline min-h-[44px] px-2"
               >
                 Değiştir
               </button>
@@ -1950,7 +1950,7 @@ export default function NutritionClient({
           {addMode === 'manual' && (
             <div className="flex flex-col gap-3">
               <div>
-                <label className="text-[12px] font-bold text-text-secondary">Mama Markası *</label>
+                <label className="text-xs font-bold text-text-secondary">Mama Markası *</label>
                 <input
                   type="text"
                   value={brandText}
@@ -1969,7 +1969,7 @@ export default function NutritionClient({
                 />
               </div>
               <div className="relative">
-                <label className="text-[12px] font-bold text-text-secondary">Ürün / Çeşit Adı</label>
+                <label className="text-xs font-bold text-text-secondary">Ürün / Çeşit Adı</label>
                 <input
                   type="text"
                   value={productText}
@@ -1996,7 +1996,7 @@ export default function NutritionClient({
                 {showSuggestionsDropdown && (
                   <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-border-main rounded-xl shadow-xl z-50 max-h-52 overflow-y-auto divide-y divide-border-main">
                     {isFetchingSuggestions ? (
-                      <div className="p-3 text-[12px] text-text-secondary text-center font-bold animate-pulse">
+                      <div className="p-3 text-xs text-text-secondary text-center font-bold animate-pulse">
                         Ürünler yükleniyor…
                       </div>
                     ) : productSuggestions.length > 0 ? (
@@ -2013,11 +2013,11 @@ export default function NutritionClient({
                                 {item.official_name}
                               </span>
                               {isPending ? (
-                                <span className="text-[10px] font-bold px-2 py-0.5 bg-amber-100 text-amber-800 rounded-md shrink-0">
+                                <span className="text-2xs font-bold px-2 py-0.5 bg-amber-100 text-amber-800 rounded-md shrink-0">
                                   ⏳ Doğrulama bekliyor
                                 </span>
                               ) : (
-                                <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-md shrink-0">
+                                <span className="text-2xs font-bold px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-md shrink-0">
                                   ✓ Doğrulanmış
                                 </span>
                               )}
@@ -2031,7 +2031,7 @@ export default function NutritionClient({
                         )
                       })
                     ) : (
-                      <div className="p-3 text-[12px] text-text-secondary text-center font-medium">
+                      <div className="p-3 text-xs text-text-secondary text-center font-medium">
                         Bu marka için ürün önerisi bulunamadı
                       </div>
                     )}
@@ -2039,7 +2039,7 @@ export default function NutritionClient({
                 )}
               </div>
               <div>
-                <label className="text-[12px] font-bold text-text-secondary">Mama Formu *</label>
+                <label className="text-xs font-bold text-text-secondary">Mama Formu *</label>
                 <select
                   value={foodForm}
                   onChange={e => setFoodForm(e.target.value)}
@@ -2057,19 +2057,19 @@ export default function NutritionClient({
           {(selectedCatalogItem || barcodeResult || addMode === 'manual') && modalStep === 1 && (
             <form onSubmit={handleNextStep} className="flex flex-col gap-4 border-t border-border-main pt-4">
               <div className="flex flex-col gap-2">
-                <label className="text-[12px] font-bold text-text-secondary">Miktar Giriş Tipi</label>
+                <label className="text-xs font-bold text-text-secondary">Miktar Giriş Tipi</label>
                 <div className="flex bg-bg-main p-1 rounded-lg">
                   <button
                     type="button"
                     onClick={() => setPortionMode('daily')}
-                    className={`flex-1 py-1.5 text-[12px] font-bold rounded-md min-h-[44px] ${portionMode === 'daily' ? 'bg-white text-primary shadow-sm' : 'text-text-secondary'}`}
+                    className={`flex-1 py-1.5 text-xs font-bold rounded-md min-h-[44px] ${portionMode === 'daily' ? 'bg-white text-primary shadow-sm' : 'text-text-secondary'}`}
                   >
                     Günlük Toplam Gram
                   </button>
                   <button
                     type="button"
                     onClick={() => setPortionMode('meal')}
-                    className={`flex-1 py-1.5 text-[12px] font-bold rounded-md min-h-[44px] ${portionMode === 'meal' ? 'bg-white text-primary shadow-sm' : 'text-text-secondary'}`}
+                    className={`flex-1 py-1.5 text-xs font-bold rounded-md min-h-[44px] ${portionMode === 'meal' ? 'bg-white text-primary shadow-sm' : 'text-text-secondary'}`}
                   >
                     Öğün Başı Gram
                   </button>
@@ -2078,7 +2078,7 @@ export default function NutritionClient({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[12px] font-bold text-text-secondary">
+                  <label className="text-xs font-bold text-text-secondary">
                     {portionMode === 'daily' ? 'Günlük Gramaj *' : 'Öğün Başı Gram *'}
                   </label>
                   <input
@@ -2091,7 +2091,7 @@ export default function NutritionClient({
                   />
                 </div>
                 <div>
-                  <label className="text-[12px] font-bold text-text-secondary">Günlük Öğün Sayısı *</label>
+                  <label className="text-xs font-bold text-text-secondary">Günlük Öğün Sayısı *</label>
                   <input
                     type="number"
                     min="1"
@@ -2111,7 +2111,7 @@ export default function NutritionClient({
 
               <button
                 type="submit"
-                className="btn-primary min-h-[48px] w-full text-[14px] font-bold shadow-md shadow-primary/20"
+                className="btn-primary min-h-[48px] w-full text-sm font-bold shadow-md shadow-primary/20"
               >
                 İleri: Stok Durumu
               </button>
@@ -2124,12 +2124,12 @@ export default function NutritionClient({
               
               <div className="flex flex-col gap-3">
                 <div>
-                  <label className="text-[12px] font-bold text-text-secondary">Paket Boyu (gram)</label>
+                  <label className="text-xs font-bold text-text-secondary">Paket Boyu (gram)</label>
                   <input type="number" min="1" value={packageSize} onChange={e => setPackageSize(e.target.value ? Number(e.target.value) : '')} className="input-base" placeholder="Örn: 3000" />
                 </div>
 
                 <div>
-                  <label className="text-[12px] font-bold text-text-secondary">Kalan Miktar</label>
+                  <label className="text-xs font-bold text-text-secondary">Kalan Miktar</label>
                   <select value={stockRemainingType} onChange={e => setStockRemainingType(e.target.value as any)} className="input-base">
                     <option value="unknown">Şimdi bilmiyorum</option>
                     <option value="full">Yeni açıldı / Dolu</option>
@@ -2142,14 +2142,14 @@ export default function NutritionClient({
 
                 {stockRemainingType === 'exact' && (
                   <div>
-                    <label className="text-[12px] font-bold text-text-secondary">Gram cinsinden miktar</label>
+                    <label className="text-xs font-bold text-text-secondary">Gram cinsinden miktar</label>
                     <input type="number" min="1" value={exactGrams} onChange={e => setExactGrams(e.target.value ? Number(e.target.value) : '')} className="input-base" />
                   </div>
                 )}
 
                 {stockRemainingType !== 'unknown' && stockRemainingType !== 'exact' && (
                   <div>
-                    <label className="text-[12px] font-bold text-text-secondary">Açılmamış paket sayısı (isteğe bağlı)</label>
+                    <label className="text-xs font-bold text-text-secondary">Açılmamış paket sayısı (isteğe bağlı)</label>
                     <input type="number" min="0" value={unopenedCount} onChange={e => setUnopenedCount(e.target.value ? Number(e.target.value) : '')} className="input-base" placeholder="0" />
                   </div>
                 )}
@@ -2178,13 +2178,13 @@ export default function NutritionClient({
 
             <div>
               <p className="text-[11px] font-bold text-text-secondary uppercase">Mama Bilgisi</p>
-              <p className="font-extrabold text-[16px] text-text-primary">
+              <p className="font-extrabold text-base text-text-primary">
                 {editingAssignment.food_product_family?.brand?.display_name || editingAssignment.brand_free_text || 'Mama'}
               </p>
             </div>
 
             <div>
-              <label className="text-[12px] font-bold text-text-secondary">Günlük Toplam Gram *</label>
+              <label className="text-xs font-bold text-text-secondary">Günlük Toplam Gram *</label>
               <input
                 type="number"
                 min="1"
@@ -2196,7 +2196,7 @@ export default function NutritionClient({
             </div>
 
             <div>
-              <label className="text-[12px] font-bold text-text-secondary">Günlük Öğün Sayısı *</label>
+              <label className="text-xs font-bold text-text-secondary">Günlük Öğün Sayısı *</label>
               <input
                 type="number"
                 min="1"
@@ -2211,7 +2211,7 @@ export default function NutritionClient({
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary min-h-[48px] w-full text-[14px] font-bold mt-2"
+              className="btn-primary min-h-[48px] w-full text-sm font-bold mt-2"
             >
               {loading ? 'Güncelleniyor...' : 'Değişiklikleri Kaydet'}
             </button>
@@ -2238,7 +2238,7 @@ export default function NutritionClient({
                 Evdeki yeni ambalajı stoğa ekleyin. Eklenen miktar mevcut tahmini stoğunuzun üzerine ilave edilecektir.
               </p>
               <div>
-                <label className="text-[12px] font-bold text-text-secondary">Paket Boyu (gram) *</label>
+                <label className="text-xs font-bold text-text-secondary">Paket Boyu (gram) *</label>
                 <input
                   type="number"
                   min="1"
@@ -2250,7 +2250,7 @@ export default function NutritionClient({
                 />
               </div>
               <div>
-                <label className="text-[12px] font-bold text-text-secondary">Paket Adedi *</label>
+                <label className="text-xs font-bold text-text-secondary">Paket Adedi *</label>
                 <input
                   type="number"
                   min="1"
@@ -2270,7 +2270,7 @@ export default function NutritionClient({
                 <button
                   type="button"
                   onClick={() => setStockInputMode('ratio')}
-                  className={`flex-1 py-2 text-[12px] font-bold rounded-lg transition-all ${
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
                     stockInputMode === 'ratio' ? 'bg-white text-primary shadow-sm' : 'text-text-secondary'
                   }`}
                 >
@@ -2279,7 +2279,7 @@ export default function NutritionClient({
                 <button
                   type="button"
                   onClick={() => setStockInputMode('exact')}
-                  className={`flex-1 py-2 text-[12px] font-bold rounded-lg transition-all ${
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
                     stockInputMode === 'exact' ? 'bg-white text-primary shadow-sm' : 'text-text-secondary'
                   }`}
                 >
@@ -2290,7 +2290,7 @@ export default function NutritionClient({
               {stockInputMode === 'ratio' ? (
                 <>
                   <div>
-                    <label className="text-[12px] font-bold text-text-secondary">Paket Boyu (gram)</label>
+                    <label className="text-xs font-bold text-text-secondary">Paket Boyu (gram)</label>
                     <input
                       type="number"
                       min="1"
@@ -2301,7 +2301,7 @@ export default function NutritionClient({
                     />
                   </div>
                   <div>
-                    <label className="text-[12px] font-bold text-text-secondary">Açılmış Paket Kalanı</label>
+                    <label className="text-xs font-bold text-text-secondary">Açılmış Paket Kalanı</label>
                     <select
                       value={setRatioType}
                       onChange={e => setSetRatioType(e.target.value as any)}
@@ -2314,7 +2314,7 @@ export default function NutritionClient({
                     </select>
                   </div>
                   <div>
-                    <label className="text-[12px] font-bold text-text-secondary">Açılmamış Paket Sayısı (isteğe bağlı)</label>
+                    <label className="text-xs font-bold text-text-secondary">Açılmamış Paket Sayısı (isteğe bağlı)</label>
                     <input
                       type="number"
                       min="0"
@@ -2327,7 +2327,7 @@ export default function NutritionClient({
                 </>
               ) : (
                 <div>
-                  <label className="text-[12px] font-bold text-text-secondary">Mevcut Toplam Stok (gram)</label>
+                  <label className="text-xs font-bold text-text-secondary">Mevcut Toplam Stok (gram)</label>
                   <input
                     type="number"
                     min="0"
@@ -2454,7 +2454,7 @@ export default function NutritionClient({
           </p>
 
           <div className="flex flex-col gap-2 bg-bg-main p-3.5 rounded-xl border border-border-main">
-            <p className="text-[12px] font-black text-text-primary uppercase tracking-wide">Kalan Stok Ne Yapılsın?</p>
+            <p className="text-xs font-black text-text-primary uppercase tracking-wide">Kalan Stok Ne Yapılsın?</p>
             
             <label className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-surface cursor-pointer text-[13px] font-bold text-text-primary">
               <input

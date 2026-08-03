@@ -57,7 +57,7 @@ function SpeciesSelector({ onSelect, onBack }: { onSelect: (s: Species) => void,
       </div>
       <div className="text-center">
         <h1 className="text-[32px] font-extrabold text-text-primary tracking-tight">Can Dostun Kim?</h1>
-        <p className="text-text-secondary mt-2 text-[16px]">Devam etmek için önce tür seçin</p>
+        <p className="text-text-secondary mt-2 text-base">Devam etmek için önce tür seçin</p>
       </div>
 
       <div className="grid grid-cols-2 gap-5 w-full">
@@ -203,9 +203,9 @@ function PetForm({
         <div className="flex flex-col flex-1">
           <div className="flex items-center gap-2">
             <span className="flex items-center justify-center w-9 h-9">{AvatarHeader}</span>
-            <h1 className="text-[20px] font-extrabold text-text-primary tracking-tight">Temel Kimlik Bilgileri</h1>
+            <h1 className="text-xl font-extrabold text-text-primary tracking-tight">Temel Kimlik Bilgileri</h1>
           </div>
-          <p className="text-[12px] text-text-secondary font-medium">Bu bilgilerle anında profili oluşturulacaktır.</p>
+          <p className="text-xs text-text-secondary font-medium">Bu bilgilerle anında profili oluşturulacaktır.</p>
         </div>
       </div>
 
@@ -362,7 +362,7 @@ function PetForm({
           <label className="text-[13px] font-bold text-text-primary">Kısırlaştırılma Durumu</label>
           <label className="flex items-center justify-between gap-2 p-3.5 border-2 border-border-main rounded-[14px] cursor-pointer hover:border-primary/50 transition-all text-[13px] font-bold text-text-secondary has-[:checked]:border-primary has-[:checked]:bg-primary-soft/30 group">
             <div className="flex items-center gap-2">
-              <span className="text-[16px] group-hover:scale-110 transition-transform">✂️</span>
+              <span className="text-base group-hover:scale-110 transition-transform">✂️</span>
               <span className="group-has-[:checked]:text-primary">Kısırlaştırıldı</span>
             </div>
             <input type="checkbox" checked={isNeutered} onChange={e => setIsNeutered(e.target.checked)} className="w-5 h-5 text-primary focus:ring-primary rounded-[6px] border-border-main bg-white cursor-pointer"/>
@@ -512,8 +512,8 @@ function CameraModal({
       <div className="bg-white rounded-3xl p-5 max-w-md w-full flex flex-col gap-4 shadow-2xl">
         <div className="flex justify-between items-center border-b border-gray-100 pb-3">
           <div className="flex items-center gap-2">
-            <span className="text-[18px]">📸</span>
-            <h3 className="text-[16px] font-extrabold text-text-primary">Fotoğraf Çek</h3>
+            <span className="text-lg">📸</span>
+            <h3 className="text-base font-extrabold text-text-primary">Fotoğraf Çek</h3>
           </div>
           <button 
             type="button" 
@@ -643,8 +643,8 @@ function PetPhotoStep({
           </svg>
         </button>
         <div className="flex flex-col flex-1">
-          <h1 className="text-[20px] font-extrabold text-text-primary tracking-tight">Fotoğraf Ekle</h1>
-          <p className="text-[12px] text-text-secondary font-medium">{petName} dostumuz için profil ve kapak fotoğrafı seçebilirsiniz.</p>
+          <h1 className="text-xl font-extrabold text-text-primary tracking-tight">Fotoğraf Ekle</h1>
+          <p className="text-xs text-text-secondary font-medium">{petName} dostumuz için profil ve kapak fotoğrafı seçebilirsiniz.</p>
         </div>
       </div>
 
@@ -659,8 +659,8 @@ function PetPhotoStep({
         <div className="flex flex-col items-center gap-4 p-6 rounded-2xl bg-slate-50/60 border border-slate-200/80 w-full text-center">
           <div className="flex items-center justify-between w-full border-b border-slate-200/60 pb-3">
             <div className="flex items-center gap-2">
-              <span className="text-[16px]">📷</span>
-              <span className="text-[14px] font-extrabold text-text-primary">Profil Fotoğrafı</span>
+              <span className="text-base">📷</span>
+              <span className="text-sm font-extrabold text-text-primary">Profil Fotoğrafı</span>
             </div>
             {hasPhoto ? (
               <span className="text-[11px] font-black px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 flex items-center gap-1">
@@ -739,7 +739,7 @@ function PetPhotoStep({
           </div>
 
           {!hasPhoto && (
-            <p className="text-[12px] text-rose-600 font-semibold mt-1 animate-pulse">
+            <p className="text-xs text-rose-600 font-semibold mt-1 animate-pulse">
               * Devam edebilmek için lütfen {petName} için bir profil fotoğrafı seçin veya çekin.
             </p>
           )}
@@ -749,8 +749,8 @@ function PetPhotoStep({
         <div className="flex flex-col gap-4 p-5 rounded-2xl bg-slate-50/60 border border-slate-200/80 w-full">
           <div className="flex items-center justify-between w-full border-b border-slate-200/60 pb-3">
             <div className="flex items-center gap-2">
-              <span className="text-[16px]">🖼️</span>
-              <span className="text-[14px] font-extrabold text-text-primary">Kapak Fotoğrafı</span>
+              <span className="text-base">🖼️</span>
+              <span className="text-sm font-extrabold text-text-primary">Kapak Fotoğrafı</span>
             </div>
             <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-600">
               Opsiyonel
@@ -769,7 +769,7 @@ function PetPhotoStep({
                     <polyline points="21 15 16 10 5 21"/>
                   </svg>
                 </div>
-                <p className="text-[12px] font-bold text-text-primary">Kapak Fotoğrafı Yükle</p>
+                <p className="text-xs font-bold text-text-primary">Kapak Fotoğrafı Yükle</p>
                 <p className="text-[11px] text-text-secondary">Göz alıcı bir arka plan görseli ekleyebilirsiniz.</p>
               </div>
             )}
@@ -778,7 +778,7 @@ function PetPhotoStep({
           <div className="flex flex-wrap gap-2.5 items-center justify-between">
             <div className="flex flex-wrap gap-2 items-center">
               {/* Galeriden Kapak Seç */}
-              <label className="text-[12px] font-bold px-3.5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 cursor-pointer transition-all active:scale-[0.97] inline-flex items-center gap-1.5">
+              <label className="text-xs font-bold px-3.5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 cursor-pointer transition-all active:scale-[0.97] inline-flex items-center gap-1.5">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                 <span>{coverPreview ? 'Galeriden Değiştir' : 'Fotoğraf Seç'}</span>
                 <input 
@@ -800,7 +800,7 @@ function PetPhotoStep({
               <button
                 type="button"
                 onClick={() => setActiveCameraTarget('cover')}
-                className="text-[12px] font-bold px-3.5 py-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary cursor-pointer transition-all active:scale-[0.97] inline-flex items-center gap-1.5"
+                className="text-xs font-bold px-3.5 py-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary cursor-pointer transition-all active:scale-[0.97] inline-flex items-center gap-1.5"
                 data-testid="pet-cover-camera-button"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
@@ -815,7 +815,7 @@ function PetPhotoStep({
                   setCoverFile(null)
                   setCoverPreview('')
                 }}
-                className="text-[12px] font-bold px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 transition-all"
+                className="text-xs font-bold px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 transition-all"
               >
                 Kaldır
               </button>
@@ -831,8 +831,8 @@ function PetPhotoStep({
 
         {/* Dynamic Tip Card */}
         <div className="w-full border border-primary/10 bg-primary-soft/20 rounded-2xl p-4 flex gap-3 text-left items-center">
-          <span className="text-[20px] shrink-0">✨</span>
-          <p className="text-[12px] text-text-secondary leading-relaxed">
+          <span className="text-xl shrink-0">✨</span>
+          <p className="text-xs text-text-secondary leading-relaxed">
             Profil fotoğrafı zorunludur. Görsel eklendikten sonra <strong>Devam Et</strong> butonu aktifleşecektir.
           </p>
         </div>
@@ -842,7 +842,7 @@ function PetPhotoStep({
           <button 
             type="button" 
             onClick={onBack}
-            className="text-[14px] font-bold text-text-secondary hover:text-text-primary px-4 py-2 transition-colors order-2 sm:order-1"
+            className="text-sm font-bold text-text-secondary hover:text-text-primary px-4 py-2 transition-colors order-2 sm:order-1"
           >
             ← Geri
           </button>
@@ -971,8 +971,8 @@ function PetSOSStep({
       {/* Header */}
       <div className="flex items-center gap-4 mb-6 border-b border-border-main pb-4">
         <div className="flex flex-col flex-1">
-          <h1 className="text-[20px] font-extrabold text-text-primary tracking-tight">Acil Durum Ağı 🆘</h1>
-          <p className="text-[12px] text-text-secondary font-medium">Evcil dostunuza bir şey olursa kiminle iletişime geçelim? (Birincil kişi zorunludur)</p>
+          <h1 className="text-xl font-extrabold text-text-primary tracking-tight">Acil Durum Ağı 🆘</h1>
+          <p className="text-xs text-text-secondary font-medium">Evcil dostunuza bir şey olursa kiminle iletişime geçelim? (Birincil kişi zorunludur)</p>
         </div>
       </div>
 
@@ -1027,10 +1027,10 @@ function PetSOSStep({
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-bold text-text-secondary">Ad Soyad *</label>
+              <label className="text-xs font-bold text-text-secondary">Ad Soyad *</label>
               <input 
                 type="text" 
-                className={`input-base text-[14px] py-3 px-4 bg-white ${
+                className={`input-base text-sm py-3 px-4 bg-white ${
                   showValidation && primaryNameMissing ? 'border-error focus:border-error focus:ring-error/20' : ''
                 }`}
                 placeholder="Örn: Ali Yılmaz" 
@@ -1045,13 +1045,13 @@ function PetSOSStep({
               )}
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-bold text-text-secondary">Telefon *</label>
+              <label className="text-xs font-bold text-text-secondary">Telefon *</label>
               <input 
                 type="tel" 
                 inputMode="numeric"
                 autoComplete="tel-national"
                 maxLength={14}
-                className={`input-base text-[14px] py-3 px-4 bg-white ${
+                className={`input-base text-sm py-3 px-4 bg-white ${
                   (touchedPhones[0] || showValidation) && primaryPhoneInvalid
                     ? 'border-error focus:border-error focus:ring-error/20'
                     : ''
@@ -1079,9 +1079,9 @@ function PetSOSStep({
               )}
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-bold text-text-secondary">Yakınlık *</label>
+              <label className="text-xs font-bold text-text-secondary">Yakınlık *</label>
               <select 
-                className={`input-base text-[14px] py-3 px-4 bg-white ${
+                className={`input-base text-sm py-3 px-4 bg-white ${
                   showValidation && primaryRelationMissing ? 'border-error focus:border-error focus:ring-error/20' : ''
                 }`}
                 value={sosContacts[0]?.relation || ''} 
@@ -1144,10 +1144,10 @@ function PetSOSStep({
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-bold text-text-secondary">Ad Soyad</label>
+              <label className="text-xs font-bold text-text-secondary">Ad Soyad</label>
               <input 
                 type="text" 
-                className={`input-base text-[14px] py-3 px-4 bg-white ${
+                className={`input-base text-sm py-3 px-4 bg-white ${
                   showValidation && secondaryNameMissing ? 'border-error focus:border-error focus:ring-error/20' : ''
                 }`}
                 placeholder="Örn: Ayşe Yılmaz" 
@@ -1160,13 +1160,13 @@ function PetSOSStep({
               )}
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-bold text-text-secondary">Telefon</label>
+              <label className="text-xs font-bold text-text-secondary">Telefon</label>
               <input 
                 type="tel" 
                 inputMode="numeric"
                 autoComplete="tel-national"
                 maxLength={14}
-                className={`input-base text-[14px] py-3 px-4 bg-white ${
+                className={`input-base text-sm py-3 px-4 bg-white ${
                   (touchedPhones[1] || showValidation) && secondaryPhoneInvalid
                     ? 'border-error focus:border-error focus:ring-error/20'
                     : ''
@@ -1192,9 +1192,9 @@ function PetSOSStep({
               )}
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-bold text-text-secondary">Yakınlık</label>
+              <label className="text-xs font-bold text-text-secondary">Yakınlık</label>
               <select 
-                className={`input-base text-[14px] py-3 px-4 bg-white ${
+                className={`input-base text-sm py-3 px-4 bg-white ${
                   showValidation && secondaryRelationMissing ? 'border-error focus:border-error focus:ring-error/20' : ''
                 }`}
                 value={sosContacts[1]?.relation || ''} 
@@ -1432,7 +1432,7 @@ export default function AddPetPage() {
       <div data-testid="wizard-step-indicator" className="w-full flex flex-col gap-2.5 mb-2 mt-2 px-1">
         {/* Top Progress & Active Title Bar */}
         <div className="flex items-center justify-between">
-          <span className="text-[12px] font-extrabold text-primary uppercase tracking-wider">
+          <span className="text-xs font-extrabold text-primary uppercase tracking-wider">
             Adım {step} / {WIZARD_TOTAL_STEPS} • {WIZARD_STEPS.find(s => s.id === step)?.label || ''}
           </span>
           <span className="text-[11px] font-extrabold text-text-tertiary bg-surface-2 px-2.5 py-0.5 rounded-full border border-border/40">
@@ -1455,8 +1455,8 @@ export default function AddPetPage() {
             const isCompleted = step > s.id
             return (
               <div key={s.id} className="flex items-center gap-2 flex-1">
-                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[12px] font-bold transition-all duration-300 w-full justify-center ${isCurrent ? 'bg-primary-soft/50 border-primary text-primary scale-[1.02] shadow-xs' : isCompleted ? 'bg-green-50 border-green-200 text-green-700' : 'bg-surface border-border-main text-text-secondary'}`}>
-                  <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-extrabold ${isCurrent ? 'bg-primary text-white' : isCompleted ? 'bg-green-500 text-white' : 'bg-gray-200 text-text-secondary'}`}>
+                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold transition-all duration-300 w-full justify-center ${isCurrent ? 'bg-primary-soft/50 border-primary text-primary scale-[1.02] shadow-xs' : isCompleted ? 'bg-green-50 border-green-200 text-green-700' : 'bg-surface border-border-main text-text-secondary'}`}>
+                  <div className={`w-4 h-4 rounded-full flex items-center justify-center text-2xs font-extrabold ${isCurrent ? 'bg-primary text-white' : isCompleted ? 'bg-green-500 text-white' : 'bg-gray-200 text-text-secondary'}`}>
                     {isCompleted ? '✓' : s.id}
                   </div>
                   <span className="truncate">{s.label}</span>
