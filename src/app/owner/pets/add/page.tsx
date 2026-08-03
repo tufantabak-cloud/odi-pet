@@ -56,7 +56,7 @@ function SpeciesSelector({ onSelect, onBack }: { onSelect: (s: Species) => void,
         </button>
       </div>
       <div className="text-center">
-        <h1 className="text-[32px] font-extrabold text-text-primary tracking-tight">Can Dostun Kim?</h1>
+        <h1 className="text-3xl font-extrabold text-text-primary tracking-tight">Can Dostun Kim?</h1>
         <p className="text-text-secondary mt-2 text-base">Devam etmek için önce tür seçin</p>
       </div>
 

@@ -52,10 +52,10 @@ export default function CareClient({ pet }: { pet: any }) {
           position="bottom"
         />
         <div className="relative w-16 h-16 rounded-[20px] bg-gradient-to-br from-primary-soft to-white border-2 border-primary/20 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
-          {pet.avatar_url ? <Image src={pet.avatar_url} alt="" fill={true} className="object-cover" sizes="64px" /> : <span className="text-[28px]">🛁</span>}
+          {pet.avatar_url ? <Image src={pet.avatar_url} alt="" fill={true} className="object-cover" sizes="64px" /> : <span className="text-3xl">🛁</span>}
         </div>
         <div>
-          <h1 className="text-[28px] font-extrabold text-text-primary tracking-tight">Kişisel Bakım</h1>
+          <h1 className="text-3xl font-extrabold text-text-primary tracking-tight">Kişisel Bakım</h1>
           <p className="text-text-secondary font-medium">Toplam {activePlans.length} aktif rutin</p>
         </div>
       </div>

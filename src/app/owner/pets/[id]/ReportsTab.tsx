@@ -292,7 +292,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between p-4 bg-primary-soft rounded-sm border border-primary/20">
                   <span className="text-[13px] font-black text-text-primary uppercase tracking-wide">Toplam Harcama</span>
-                  <span className="text-[22px] font-black text-primary">
+                  <span className="text-2xl font-black text-primary">
                     ₺{payments.reduce((sum: number, p: any) => sum + (parseFloat(p.amount) || 0), 0).toFixed(2)}
                   </span>
                 </div>
@@ -312,7 +312,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
               </div>
             ) : (
               <div className="text-center py-6 text-text-secondary text-[13px]">
-                <p className="text-[32px] mb-2">📭</p>
+                <p className="text-3xl mb-2">📭</p>
                 <p>Henüz kayıtlı harcama bulunmuyor.</p>
               </div>
             )}
@@ -331,7 +331,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
                   className={`p-4 rounded-sm border-2 text-left transition-all ${selectedType === rt.id ? 'border-primary bg-primary-soft' : rt.color} ${locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-[28px]">{rt.icon}</span>
+                    <span className="text-3xl">{rt.icon}</span>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-bold text-text-primary text-[15px]">{rt.label}</p>
@@ -408,7 +408,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
                     { label: 'Randevu', value: report.appointments?.length ?? 0 },
                   ].map(s => (
                     <div key={s.label} className="p-3 bg-bg-main rounded-sm text-center border border-border-main">
-                      <p className="text-[22px] font-black text-text-primary">{s.value}</p>
+                      <p className="text-2xl font-black text-text-primary">{s.value}</p>
                       <p className="text-[11px] font-bold text-text-secondary uppercase">{s.label}</p>
                     </div>
                   ))}

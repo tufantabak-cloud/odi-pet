@@ -993,7 +993,7 @@ export default function NutritionClient({
               )}
             </div>
             <div>
-              <h1 className="text-[28px] font-extrabold text-text-primary tracking-tight">Beslenme Planı</h1>
+              <h1 className="text-3xl font-extrabold text-text-primary tracking-tight">Beslenme Planı</h1>
               <p className="text-text-secondary font-medium">Mama, stok ve öğün takibi</p>
             </div>
           </div>

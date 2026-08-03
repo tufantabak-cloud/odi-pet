@@ -140,7 +140,7 @@ function SuccessContent() {
         </div>
 
         <div>
-          <h1 className="text-2xl sm:text-[26px] font-black text-text-primary mb-1 leading-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-text-primary mb-1 leading-tight">
             {activeStep === 5 ? `Aramıza Hoş Geldin, ${petName}! 🎉` : `${petName} İçin Son Adım! 🐾`}
           </h1>
           <p className="text-[13px] text-text-secondary px-2">

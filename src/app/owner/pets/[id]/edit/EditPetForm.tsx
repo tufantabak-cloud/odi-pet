@@ -340,7 +340,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
                   <img src={photoPreview} alt="Önizleme" className="w-full h-full object-cover" />
                 )
               ) : (
-                <span className="text-[40px]">{species === 'cat' ? '🐱' : '🐶'}</span>
+                <span className="text-4xl">{species === 'cat' ? '🐱' : '🐶'}</span>
               )}
             </div>
             <label className="text-xs font-bold text-primary bg-primary/10 px-4 py-2 rounded-full cursor-pointer hover:bg-primary/20 transition-colors">

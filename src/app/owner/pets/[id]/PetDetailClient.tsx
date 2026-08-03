@@ -83,7 +83,7 @@ function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
   return (
     <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" onClick={onClose}>
       <div className="bg-surface w-full max-w-sm rounded-modal p-6 shadow-2xl overflow-hidden animate-fade-in" onClick={e => e.stopPropagation()}>
-        <h3 className="text-[17px] font-extrabold text-text-primary mb-1">{config.title}</h3>
+        <h3 className="text-lg font-extrabold text-text-primary mb-1">{config.title}</h3>
         <p className="text-[13px] text-text-secondary mb-5 leading-relaxed">{config.desc}</p>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {config.fields.map((f: any) => (
@@ -2475,7 +2475,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               <button onClick={() => setMedicationActionTask(null)} className="w-8 h-8 rounded-full bg-slate-200/50 hover:bg-slate-200/80 flex items-center justify-center text-slate-700 transition-colors">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
-              <h3 className="text-[17px] font-black text-slate-800">İlaç</h3>
+              <h3 className="text-lg font-black text-slate-800">İlaç</h3>
               <div className="w-8" />
             </div>
 
@@ -2581,7 +2581,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                   👨‍👩‍👧‍👦
                 </div>
                 <div>
-                  <h3 className="text-[17px] font-extrabold text-text-primary leading-tight">
+                  <h3 className="text-lg font-extrabold text-text-primary leading-tight">
                     {pet.name}'{getTurkishGenitiveSuffix(pet.name)} Bakım Ekibi & Sahiplik
                   </h3>
                   <p className="text-xs text-text-secondary">Yetkili aile üyeleri, ortak sahiplik ve bekleyen davetler</p>
