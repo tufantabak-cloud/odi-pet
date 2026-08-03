@@ -1,5 +1,6 @@
 import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
 import { getCurrentProfile } from '@/lib/auth/get-current-profile'
+import { hasPetCapability } from '@/lib/pets/access'
 import { redirect, notFound } from 'next/navigation'
 import TreatmentsClient from './TreatmentsClient'
 
@@ -13,21 +14,15 @@ export default async function TreatmentsPage(props: PageProps) {
   if (!profile) redirect('/login')
 
   const isAdmin = profile.role === 'admin' || profile.role === 'founder'
-  
-  // Use admin client for admins/founders to bypass RLS, otherwise use server client
-  const supabase = isAdmin ? createAdminSupabaseClient() : await createServerSupabaseClient()
+  const serverSupabase = await createServerSupabaseClient()
 
   if (!isAdmin) {
-    // Verify ownership
-    const { data: ownership } = await supabase
-      .from('pet_owners')
-      .select('pet_id')
-      .eq('pet_id', id)
-      .eq('profile_id', profile.id)
-      .single()
-
-    if (!ownership) notFound()
+    const canView = await hasPetCapability(serverSupabase, id, 'can_view_pet')
+    if (!canView) redirect('/owner/dashboard')
   }
+
+  // Use admin client for admins/founders to bypass RLS, otherwise use server client
+  const supabase = isAdmin ? createAdminSupabaseClient() : serverSupabase
 
   // Fetch pet
   const { data: pet } = await supabase

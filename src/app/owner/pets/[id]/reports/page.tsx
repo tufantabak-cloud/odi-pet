@@ -1,5 +1,6 @@
 import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
 import { getCurrentProfile } from '@/lib/auth/get-current-profile'
+import { hasPetCapability } from '@/lib/pets/access'
 import { getEntitlement } from '@/lib/subscription/entitlement'
 import { redirect } from 'next/navigation'
 import ReportsTab from '../ReportsTab'
@@ -15,13 +16,16 @@ export default async function ReportsPage(props: PageProps) {
   if (!profile) redirect('/login')
 
   const isAdmin = profile.role === 'admin' || profile.role === 'founder'
-  const supabase = isAdmin ? createAdminSupabaseClient() : await createServerSupabaseClient()
+  const serverSupabase = await createServerSupabaseClient()
 
-  let petQuery = supabase.from('pets').select('*').eq('id', id)
   if (!isAdmin) {
-    petQuery = petQuery.eq('owner_id', profile.id)
+    const canView = await hasPetCapability(serverSupabase, id, 'can_view_pet')
+    if (!canView) redirect('/owner/dashboard')
   }
-  const { data: pet } = await petQuery.single()
+
+  const supabase = isAdmin ? createAdminSupabaseClient() : serverSupabase
+
+  const { data: pet } = await supabase.from('pets').select('*').eq('id', id).single()
 
   if (!pet) redirect('/owner/dashboard')
 
