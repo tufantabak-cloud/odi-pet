@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { calcAge } from '@/lib/pets/utils'
-import { DefaultCatAvatar, DefaultDogAvatar } from '@/components/icons/PetIcons'
+import { DefaultCatAvatar, DefaultDogAvatar, RulerIcon } from '@/components/icons/PetIcons'
+import { AlertTriangle, Sparkles, Scissors, Scale, Camera, X, Image as ImageIcon, Info, Siren } from 'lucide-react'
 const catSpeciesImage = '/brand/illustrations/species/cat.png'
 const dogSpeciesImage = '/brand/illustrations/species/dog.png'
 import { StepperInput } from '@/components/ui/StepperInput'
@@ -212,8 +213,8 @@ function PetForm({
       <form onSubmit={onSubmit} className="card-base p-6 sm:p-8 flex flex-col gap-6">
         
         {submitError && (
-          <div role="alert" aria-live="assertive" className="p-3 bg-error/10 text-error text-[13px] font-bold rounded-xl border border-error/20">
-            ⚠️ {submitError}
+          <div role="alert" aria-live="assertive" className="p-3 bg-error/10 text-error text-[13px] font-bold rounded-xl border border-error/20 flex items-center gap-1.5">
+            <AlertTriangle size={16} className="w-4 h-4 text-error shrink-0" aria-hidden="true" /> {submitError}
           </div>
         )}
 
@@ -250,7 +251,7 @@ function PetForm({
           <div className="flex flex-col gap-2">
             <label className="text-[13px] font-bold text-text-primary">Cinsiyet *</label>
             <div className="flex gap-3">
-              {([['male', '♂ Erkek', 'sky'], ['female', '♀ Dişi', 'pink']] as const).map(([v, l, theme]) => {
+              {([['male', 'Erkek', 'sky'], ['female', 'Dişi', 'pink']] as const).map(([v, l, theme]) => {
                 const isSelected = gender === v
                 const themeClasses = theme === 'sky'
                   ? (isSelected ? 'border-sky-500 bg-sky-50/80 text-sky-700 shadow-sm scale-[1.02]' : 'hover:border-sky-300 text-text-secondary')
@@ -350,7 +351,7 @@ function PetForm({
 
             {birthDate && (
               <div className="text-[13px] font-bold text-primary bg-primary-soft/40 px-4 py-2.5 rounded-input border border-primary/20 mt-1 animate-scaleIn flex items-center gap-2">
-                <span>✨</span>
+                <Sparkles size={16} className="w-4 h-4 text-primary" aria-hidden="true" />
                 <span>Hesaplanan Yaş: <strong>{calcAge(birthDate).text}</strong> ({calcAge(birthDate).label})</span>
               </div>
             )}
@@ -362,7 +363,7 @@ function PetForm({
           <label className="text-[13px] font-bold text-text-primary">Kısırlaştırılma Durumu</label>
           <label className="flex items-center justify-between gap-2 p-3.5 border-2 border-border-main rounded-input cursor-pointer hover:border-primary/50 transition-all text-[13px] font-bold text-text-secondary has-[:checked]:border-primary has-[:checked]:bg-primary-soft/30 group">
             <div className="flex items-center gap-2">
-              <span className="text-base group-hover:scale-110 transition-transform">✂️</span>
+              <Scissors size={16} className="w-4 h-4 text-primary shrink-0" aria-hidden="true" />
               <span className="group-has-[:checked]:text-primary">Kısırlaştırıldı</span>
             </div>
             <input type="checkbox" checked={isNeutered} onChange={e => setIsNeutered(e.target.checked)} className="w-5 h-5 text-primary focus:ring-primary rounded-md border-border-main bg-white cursor-pointer"/>
@@ -383,7 +384,7 @@ function PetForm({
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
-                <span>⚖️ Kilo (kg) *</span>
+                <Scale size={16} className="w-4 h-4 text-white" aria-hidden="true" /> <span>Kilo (kg) *</span>
                 {weight && <span className="px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-medium">{weight} kg</span>}
               </button>
 
@@ -396,7 +397,7 @@ function PetForm({
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
-                <span>📏 Boy (cm)</span>
+                <RulerIcon width={16} height={16} className="w-4 h-4 text-white" aria-hidden="true" /> <span>Boy (cm)</span>
                 <span className="text-[11px] opacity-80">(Opsiyonel)</span>
                 {height && <span className="px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-medium">{height} cm</span>}
               </button>
@@ -512,7 +513,7 @@ function CameraModal({
       <div className="bg-white rounded-3xl p-5 max-w-md w-full flex flex-col gap-4 shadow-2xl">
         <div className="flex justify-between items-center border-b border-gray-100 pb-3">
           <div className="flex items-center gap-2">
-            <span className="text-lg">📸</span>
+            <Camera size={20} className="w-5 h-5 text-primary" aria-hidden="true" />
             <h3 className="text-base font-extrabold text-text-primary">Fotoğraf Çek</h3>
           </div>
           <button 
@@ -523,7 +524,7 @@ function CameraModal({
             }}
             className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:text-gray-800"
           >
-            ✕
+            <X size={16} className="w-4 h-4 text-gray-500" aria-hidden="true" />
           </button>
         </div>
 
@@ -554,7 +555,7 @@ function CameraModal({
               onClick={takePhoto}
               className="px-6 py-2.5 rounded-xl bg-primary text-white font-extrabold text-[13px] shadow-md shadow-primary/20 hover:scale-[1.02] transition-all flex items-center gap-2"
             >
-              <span>📸 Fotoğrafı Çek</span>
+              <Camera size={16} className="w-4 h-4 text-white" aria-hidden="true" /> Fotoğrafı Çek
             </button>
           )}
         </div>
@@ -650,8 +651,8 @@ function PetPhotoStep({
 
       <div className="card-base p-6 sm:p-8 flex flex-col gap-8">
         {submitError && (
-          <div role="alert" aria-live="assertive" className="w-full p-3 bg-error/10 text-error text-[13px] font-bold rounded-xl border border-error/20">
-            ⚠️ {submitError}
+          <div role="alert" aria-live="assertive" className="w-full p-3 bg-error/10 text-error text-[13px] font-bold rounded-xl border border-error/20 flex items-center gap-1.5">
+            <AlertTriangle size={16} className="w-4 h-4 text-error shrink-0" aria-hidden="true" /> {submitError}
           </div>
         )}
 
@@ -659,7 +660,7 @@ function PetPhotoStep({
         <div className="flex flex-col items-center gap-4 p-6 rounded-2xl bg-slate-50/60 border border-slate-200/80 w-full text-center">
           <div className="flex items-center justify-between w-full border-b border-slate-200/60 pb-3">
             <div className="flex items-center gap-2">
-              <span className="text-base">📷</span>
+              <Camera size={16} className="w-4 h-4 text-primary" aria-hidden="true" />
               <span className="text-sm font-extrabold text-text-primary">Profil Fotoğrafı</span>
             </div>
             {hasPhoto ? (
@@ -749,7 +750,7 @@ function PetPhotoStep({
         <div className="flex flex-col gap-4 p-5 rounded-2xl bg-slate-50/60 border border-slate-200/80 w-full">
           <div className="flex items-center justify-between w-full border-b border-slate-200/60 pb-3">
             <div className="flex items-center gap-2">
-              <span className="text-base">🖼️</span>
+              <ImageIcon size={16} className="w-4 h-4 text-primary" aria-hidden="true" />
               <span className="text-sm font-extrabold text-text-primary">Kapak Fotoğrafı</span>
             </div>
             <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-600">
@@ -824,14 +825,14 @@ function PetPhotoStep({
 
           {!coverPreview && (
             <p className="text-[11px] text-text-secondary leading-relaxed bg-amber-50/60 p-2.5 rounded-xl border border-amber-200/50">
-              💡 <strong>Bilgi:</strong> Kapak fotoğrafı eklemezseniz profiliniz varsayılan görsel ile oluşturulur ve profil tamamlama listenize görev olarak eklenir.
+              <strong>Bilgi:</strong> Kapak fotoğrafı eklemezseniz profiliniz varsayılan görsel ile oluşturulur ve profil tamamlama listenize görev olarak eklenir.
             </p>
           )}
         </div>
 
         {/* Dynamic Tip Card */}
         <div className="w-full border border-primary/10 bg-primary-soft/20 rounded-2xl p-4 flex gap-3 text-left items-center">
-          <span className="text-xl shrink-0">✨</span>
+          <Info size={20} className="w-5 h-5 text-primary shrink-0" aria-hidden="true" />
           <p className="text-xs text-text-secondary leading-relaxed">
             Profil fotoğrafı zorunludur. Görsel eklendikten sonra <strong>Devam Et</strong> butonu aktifleşecektir.
           </p>
@@ -971,7 +972,7 @@ function PetSOSStep({
       {/* Header */}
       <div className="flex items-center gap-4 mb-6 border-b border-border-main pb-4">
         <div className="flex flex-col flex-1">
-          <h1 className="text-xl font-extrabold text-text-primary tracking-tight">Acil Durum Ağı 🆘</h1>
+          <h1 className="text-xl font-extrabold text-text-primary tracking-tight flex items-center gap-1.5">Acil Durum Ağı <Siren size={20} className="w-5 h-5 text-error shrink-0" aria-hidden="true" /></h1>
           <p className="text-xs text-text-secondary font-medium">Evcil dostunuza bir şey olursa kiminle iletişime geçelim? (Birincil kişi zorunludur)</p>
         </div>
       </div>
@@ -983,8 +984,8 @@ function PetSOSStep({
         </p>
 
         {submitError && (
-          <div role="alert" aria-live="assertive" className="p-3 bg-error/10 text-error text-[13px] font-bold rounded-xl border border-error/20">
-            ⚠️ {submitError}
+          <div role="alert" aria-live="assertive" className="p-3 bg-error/10 text-error text-[13px] font-bold rounded-xl border border-error/20 flex items-center gap-1.5">
+            <AlertTriangle size={16} className="w-4 h-4 text-error shrink-0" aria-hidden="true" /> {submitError}
           </div>
         )}
 

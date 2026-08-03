@@ -121,6 +121,8 @@ import {
   Utensils, 
   Home, 
   AlertTriangle, 
+  AlertCircle,
+  CheckCircle2,
   Camera, 
   Syringe, 
   Sparkles, 
@@ -277,7 +279,7 @@ export default function JournalTimelineClient({
         <div className="relative z-10 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-extrabold text-primary flex items-center gap-2">
-              <span className="text-lg">✨</span> AI Durum Özeti
+              <Sparkles size={18} className="w-4.5 h-4.5 text-primary" aria-hidden="true" /> AI Durum Özeti
             </h2>
             <button
               onClick={handleGenerateSummary}
@@ -363,7 +365,7 @@ export default function JournalTimelineClient({
                         {getTitle(item)}
                       </p>
                       {item.source === 'plan' && (item as PlanItem).status === 'active' && new Date((item as PlanItem).scheduled_at).getTime() < new Date().getTime() && (
-                        <p className="text-xs font-bold text-error">⚠️ Gecikmiş Görev</p>
+                        <p className="text-xs font-bold text-error flex items-center gap-1"><AlertTriangle size={14} className="w-3.5 h-3.5 text-danger" aria-hidden="true" /> Gecikmiş Görev</p>
                       )}
                       {item.source !== 'gallery' && 'note' in item && item.note && (
                         <p className="text-[13px] text-text-secondary leading-snug mb-1 line-clamp-2">
@@ -391,10 +393,10 @@ export default function JournalTimelineClient({
                         </div>
                       )}
                       {item.source === 'lost' && (
-                        <div className="mt-1 text-xs text-red-500 font-medium">
+                        <div className="mt-1 text-xs text-red-500 font-medium flex items-center gap-1">
                           {(item as LostItem).status === 'active' 
-                            ? '🔴 Aktif kayıp ilanı' 
-                            : '✅ Bulundu / Kapatıldı'}
+                            ? <><AlertCircle size={14} className="w-3.5 h-3.5 text-danger" aria-hidden="true" /> Aktif kayıp ilanı</> 
+                            : <><CheckCircle2 size={14} className="w-3.5 h-3.5 text-success" aria-hidden="true" /> Bulundu / Kapatıldı</>}
                         </div>
                       )}
                       <p className="text-[11px] font-medium text-text-secondary">

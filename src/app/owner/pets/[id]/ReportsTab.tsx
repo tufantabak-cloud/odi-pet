@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { trackEvent } from '@/lib/analytics/track'
-import { Upload, Plus, Trash2, Loader2, FileText, Check } from 'lucide-react'
+import { Upload, Plus, Trash2, Loader2, FileText, Check, Sparkles, Folder, Wallet, Inbox, Lock, AlertTriangle, CheckCircle2, Link as LinkIcon, Plane, Printer } from 'lucide-react'
 import { FirstAidIcon } from '@/components/icons/PetIcons'
 import ConfirmModal from '@/components/ui/ConfirmModal'
 import { Database } from '@/types'
@@ -27,7 +27,7 @@ const DOCUMENT_TYPES = [
 const REPORT_TYPES = [
   {
     id: 'summary',
-    icon: '📋',
+    icon: <FileText size={24} className="w-6 h-6 text-primary" aria-hidden="true" />,
     label: 'Hızlı Özet',
     desc: 'Pet profili, aktif uyarılar ve yaklaşan görevler',
     plan: 'free',
@@ -37,7 +37,7 @@ const REPORT_TYPES = [
   },
   {
     id: 'medical_timeline',
-    icon: '🩺',
+    icon: <FirstAidIcon width={24} height={24} className="w-6 h-6 text-info" />,
     label: 'Medikal Timeline',
     desc: 'Tüm aşılar, hastalıklar, ilaçlar, randevular — veteriner için kronolojik geçmiş',
     plan: 'pro',
@@ -47,7 +47,7 @@ const REPORT_TYPES = [
   },
   {
     id: 'travel_pack',
-    icon: '✈️',
+    icon: <Plane size={24} className="w-6 h-6 text-primary" aria-hidden="true" />,
     label: 'Seyahat Paketi',
     desc: 'Pasaport, kuduz durumu, mikroçip, acil iletişim — boarding & seyahat için',
     plan: 'ai_plus',
@@ -271,15 +271,15 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
       <div className="flex bg-slate-100/80 p-1.5 rounded-md border border-border-main/50">
         <button
           onClick={() => setActiveTab('reports')}
-          className={`flex-1 py-3 text-center text-[13px] font-semibold rounded-sm transition-all duration-200 ${activeTab === 'reports' ? 'bg-white text-primary shadow-sm scale-[1.02]' : 'text-text-secondary hover:text-text-primary'}`}
+          className={`flex-1 py-3 text-center text-[13px] font-semibold rounded-sm transition-all duration-200 flex items-center justify-center gap-1.5 ${activeTab === 'reports' ? 'bg-white text-primary shadow-sm scale-[1.02]' : 'text-text-secondary hover:text-text-primary'}`}
         >
-          ✨ AI Raporları
+          <Sparkles size={16} className="w-4 h-4 text-primary" aria-hidden="true" /> AI Raporları
         </button>
         <button
           onClick={() => setActiveTab('vault')}
-          className={`flex-1 py-3 text-center text-[13px] font-semibold rounded-sm transition-all duration-200 ${activeTab === 'vault' ? 'bg-white text-primary shadow-sm scale-[1.02]' : 'text-text-secondary hover:text-text-primary'}`}
+          className={`flex-1 py-3 text-center text-[13px] font-semibold rounded-sm transition-all duration-200 flex items-center justify-center gap-1.5 ${activeTab === 'vault' ? 'bg-white text-primary shadow-sm scale-[1.02]' : 'text-text-secondary hover:text-text-primary'}`}
         >
-          📂 Belge Kasası
+          <Folder size={16} className="w-4 h-4 text-primary" aria-hidden="true" /> Belge Kasası
         </button>
       </div>
 
@@ -287,7 +287,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
         <>
           {/* ── Harcama Özeti ── */}
           <div className="card-base p-5">
-            <h3 className="text-[13px] font-semibold text-text-secondary uppercase tracking-widest mb-4">💰 Harcama Özeti</h3>
+            <h3 className="text-[13px] font-semibold text-text-secondary uppercase tracking-widest mb-4 flex items-center gap-1.5"><Wallet size={18} className="w-4.5 h-4.5 text-success" aria-hidden="true" /> Harcama Özeti</h3>
             {payments && payments.length > 0 ? (
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between p-4 bg-primary-soft rounded-sm border border-primary/20">
@@ -311,8 +311,8 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
                 </div>
               </div>
             ) : (
-              <div className="text-center py-6 text-text-secondary text-[13px]">
-                <p className="text-3xl mb-2">📭</p>
+              <div className="text-center py-6 text-text-secondary text-[13px] flex flex-col items-center">
+                <Inbox size={32} className="w-8 h-8 text-text-secondary mb-2 opacity-60" aria-hidden="true" />
                 <p>Henüz kayıtlı harcama bulunmuyor.</p>
               </div>
             )}
@@ -336,7 +336,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-bold text-text-primary text-base">{rt.label}</p>
                         <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${rt.badgeColor}`}>{rt.badge}</span>
-                        {locked && <span className="text-[11px] text-text-secondary">🔒 Kilidi Aç</span>}
+                        {locked && <span className="text-[11px] text-text-secondary flex items-center gap-1"><Lock size={14} className="w-3.5 h-3.5 text-text-secondary" aria-hidden="true" /> Kilidi Aç</span>}
                       </div>
                       <p className="text-xs text-text-secondary mt-0.5">{rt.desc}</p>
                     </div>
@@ -366,8 +366,8 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
 
           {/* Error */}
           {error && (
-            <div className="p-4 rounded-xs bg-red-50 border border-red-200 text-red-700 text-[13px] font-medium">
-              ⚠️ {error}
+            <div role="alert" className="p-4 rounded-xs bg-red-50 border border-red-200 text-red-700 text-[13px] font-medium flex items-center gap-1.5">
+              <AlertTriangle size={16} className="w-4 h-4 text-danger shrink-0" aria-hidden="true" /> {error}
               {error.includes('Pro') || error.includes('AI+') ? (
                 <Link href="/owner/profile/subscription" className="ml-2 underline font-bold">Yükselt →</Link>
               ) : null}
@@ -379,7 +379,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
             className="btn-primary py-3.5 text-base font-bold flex items-center justify-center gap-2">
             {generating
               ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/> Rapor Hazırlanıyor...</>
-              : `${REPORT_TYPES.find(r => r.id === selectedType)?.icon} ${petName} için Rapor Oluştur`
+              : <>{REPORT_TYPES.find(r => r.id === selectedType)?.icon} {petName} için Rapor Oluştur</>
             }
           </button>
 
@@ -390,7 +390,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
               <div className="p-5">
                 <div className="flex items-start justify-between gap-3 mb-4">
                   <div>
-                    <p className="font-semibold text-text-primary text-base">Rapor Hazır ✓</p>
+                    <p className="font-semibold text-text-primary text-base flex items-center gap-1.5"><CheckCircle2 size={16} className="w-4 h-4 text-success" aria-hidden="true" /> Rapor Hazır</p>
                     <p className="text-xs text-text-secondary mt-0.5">
                       ID: <span className="font-mono">{report.verificationHash}</span>
                     </p>
@@ -418,14 +418,12 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
                 <div className="flex flex-col gap-2">
                   <button onClick={openPrint}
                     className="btn-primary py-3 text-sm flex items-center justify-center gap-2">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
-                    </svg>
+                    <Printer size={16} />
                     PDF Olarak İndir / Yazdır
                   </button>
                   <button onClick={copyShareLink}
-                    className={`btn-secondary py-2.5 text-[13px] transition-all ${copied ? 'text-green-600 border-green-300 bg-green-50' : ''}`}>
-                    {copied ? '✓ Bağlantı kopyalandı!' : '🔗 Paylaşım Bağlantısı Oluştur'}
+                    className={`btn-secondary py-2.5 text-[13px] transition-all flex items-center justify-center gap-1.5 ${copied ? 'text-green-600 border-green-300 bg-green-50' : ''}`}>
+                    {copied ? <><CheckCircle2 size={16} className="w-4 h-4 text-green-600" aria-hidden="true" /> Bağlantı kopyalandı!</> : <><LinkIcon size={16} className="w-4 h-4 text-primary" aria-hidden="true" /> Paylaşım Bağlantısı Oluştur</>}
                   </button>
                 </div>
 
@@ -452,8 +450,8 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
 
             {/* Error Message if Any */}
             {error && (
-              <div className="p-4 mb-4 rounded-xs bg-red-50 border border-red-200 text-red-700 text-[13px] font-medium">
-                ⚠️ {error}
+              <div className="p-4 mb-4 rounded-xs bg-red-50 border border-red-200 text-red-700 text-[13px] font-medium flex items-center gap-1.5">
+                <AlertTriangle size={16} className="w-4 h-4 text-red-600 shrink-0" aria-hidden="true" /> {error}
               </div>
             )}
 

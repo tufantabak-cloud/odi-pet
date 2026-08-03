@@ -2,14 +2,14 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Share2, Phone, Camera, ImageIcon, FileImage, Wallet, Home, FileText, AlertTriangle, Heart, ShieldCheck, Pencil } from 'lucide-react'
+import { Share2, Phone, Camera, ImageIcon, FileImage, Wallet, Home, FileText, AlertTriangle, Heart, ShieldCheck, Pencil, Inbox, Key, Scale, Move, Users, Bell, X, Lock, Check, Calendar } from 'lucide-react'
 import FamilyTab from './FamilyTab'
 import HealthTab from '@/components/pets/tabs/HealthTab'
 
 import SmartTaskWizard from '@/components/tasks/SmartTaskWizard'
 import { TaskCategory } from '@/lib/tasks/taskDefaults'
 import { AlertCircleIcon, CalendarClockIcon, CheckCircle2Icon, CheckCircleIcon, ChevronRightIcon, HeartPulseIcon, ShieldAlertIcon, SmileIcon, StarIcon, TrophyIcon, ActivityIcon, PlusIcon, FileTextIcon, HistoryIcon, MapPinIcon, BabyIcon, FileLineChartIcon, HelpCircleIcon, DownloadIcon, PillIcon, DogIcon, CatIcon, IdCardIcon, TargetIcon, DropletsIcon } from 'lucide-react'
-import { VaccineIcon, ParasiteIcon, ShampooIcon, BowlIcon, CarrierIcon, BoneIcon, ScoopIcon, FirstAidIcon } from '@/components/icons/PetIcons'
+import { VaccineIcon, ParasiteIcon, ShampooIcon, BowlIcon, CarrierIcon, BoneIcon, ScoopIcon, FirstAidIcon, StethoscopeIcon } from '@/components/icons/PetIcons'
 import NutritionClient from './nutrition/NutritionClient'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -881,13 +881,13 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         if (diffMins < 60) {
           const mins = Math.max(1, diffMins)
           // Minor delay (0-60 min): Amber warning
-          badge = <span className="text-amber-800 bg-amber-100/90 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">⚠️ {mins} dk gecikti</span>
+          badge = <span className="text-amber-800 bg-amber-100/90 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm flex items-center gap-1"><AlertTriangle size={14} className="w-3.5 h-3.5 text-amber-700" aria-hidden="true" /> {mins} dk gecikti</span>
         } else if (diffMins < 1440) { // 24 hours
           const hours = Math.floor(diffMins / 60)
-          badge = <span className="text-error bg-error/10 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">⚠️ {hours} saat gecikti</span>
+          badge = <span className="text-error bg-error/10 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm flex items-center gap-1"><AlertTriangle size={14} className="w-3.5 h-3.5 text-error" aria-hidden="true" /> {hours} saat gecikti</span>
         } else {
           const days = Math.floor(diffMins / 1440)
-          badge = <span className="text-error bg-error/10 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">⚠️ {days} gün gecikti</span>
+          badge = <span className="text-error bg-error/10 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm flex items-center gap-1"><AlertTriangle size={14} className="w-3.5 h-3.5 text-error" aria-hidden="true" /> {days} gün gecikti</span>
         }
       } else {
         const today = new Date()
@@ -896,12 +896,12 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         targetDate.setHours(0,0,0,0)
         const diffDays = Math.round((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
         
-        if (diffDays === 0) badge = <span className="text-orange-700 bg-orange-100/80 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">⏳ Bugün</span>;
-        else if (diffDays === 1) badge = <span className="text-orange-700 bg-orange-100/80 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">⏳ Yarın</span>;
-        else if (diffDays === -1) badge = <span className="text-error bg-error/10 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">⚠️ Dün</span>;
-        else if (diffDays < -1) badge = <span className="text-error bg-error/10 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">⚠️ {Math.abs(diffDays)} gün gecikti</span>;
-        else if (diffDays <= 3) badge = <span className="text-orange-700 bg-orange-100/80 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">⏳ {diffDays} gün kaldı</span>;
-        else badge = <span className="text-primary bg-primary/10 px-2 py-0.5 rounded-md font-bold tracking-wide">🗓️ {diffDays} gün kaldı</span>;
+        if (diffDays === 0) badge = <span className="text-orange-700 bg-orange-100/80 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">Bugün</span>;
+        else if (diffDays === 1) badge = <span className="text-orange-700 bg-orange-100/80 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">Yarın</span>;
+        else if (diffDays === -1) badge = <span className="text-error bg-error/10 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm flex items-center gap-1"><AlertTriangle size={14} className="w-3.5 h-3.5 text-error" aria-hidden="true" /> Dün</span>;
+        else if (diffDays < -1) badge = <span className="text-error bg-error/10 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm flex items-center gap-1"><AlertTriangle size={14} className="w-3.5 h-3.5 text-error" aria-hidden="true" /> {Math.abs(diffDays)} gün gecikti</span>;
+        else if (diffDays <= 3) badge = <span className="text-orange-700 bg-orange-100/80 px-2 py-0.5 rounded-md font-bold tracking-wide shadow-sm">{diffDays} gün kaldı</span>;
+        else badge = <span className="text-primary bg-primary/10 px-2 py-0.5 rounded-md font-bold tracking-wide flex items-center gap-1"><Calendar size={14} className="w-3.5 h-3.5 text-primary" aria-hidden="true" /> {diffDays} gün kaldı</span>;
       }
       
       return (
@@ -1148,7 +1148,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     return `${days} Günde Bir`;
   };
 
-  const renderTaskList = (title: string, list: any[], emptyMessage?: string, customEmptyContent?: React.ReactNode, emptyIcon: string = '✨') => {
+  const renderTaskList = (title: string, list: any[], emptyMessage?: string, customEmptyContent?: React.ReactNode) => {
     if ((!list || list.length === 0) && !emptyMessage && !customEmptyContent) return null;
     
     const today = new Date();
@@ -1160,7 +1160,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         {(!list || list.length === 0) ? (
           customEmptyContent ? customEmptyContent : (
             <div className="py-6 bg-bg-main/50 rounded-card border border-dashed border-border-main text-center flex flex-col items-center gap-2">
-              <span className="text-2xl opacity-80">{emptyIcon}</span>
+              <Inbox size={24} className="w-6 h-6 opacity-80 text-text-secondary" aria-hidden="true" />
               <p className="text-[13px] font-bold text-text-secondary">{emptyMessage}</p>
             </div>
           )
@@ -1200,11 +1200,11 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                 </button>
                 {activeMenuId === item.id && (
                   <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-md shadow-xl border border-border-main/50 py-2 z-[200]">
-                    <button onClick={(e) => { e.stopPropagation(); handleMarkCompleted(item.id) }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-success hover:bg-success/5 flex items-center gap-2 cursor-pointer">✓ Tamamlandı İşaretle</button>
-                    <button onClick={(e) => { e.stopPropagation(); handlePostpone(item.id) }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary-soft flex items-center gap-2 cursor-pointer">📅 1 Gün Ertele</button>
+                    <button onClick={(e) => { e.stopPropagation(); handleMarkCompleted(item.id) }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-success hover:bg-success/5 flex items-center gap-2 cursor-pointer"><Check size={16} className="w-4 h-4 text-success" aria-hidden="true" /> Tamamlandı İşaretle</button>
+                    <button onClick={(e) => { e.stopPropagation(); handlePostpone(item.id) }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary-soft flex items-center gap-2 cursor-pointer"><Calendar size={16} className="w-4 h-4 text-primary" aria-hidden="true" /> 1 Gün Ertele</button>
                     <div className="border-t border-border-main/30 mx-2 my-1"/>
-                    <button onClick={(e) => { e.stopPropagation(); handleEditTask(item); setActiveMenuId(null); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer">✏️ Düzenle</button>
-                    <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(item.id) }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer">❌ Sil</button>
+                    <button onClick={(e) => { e.stopPropagation(); handleEditTask(item); setActiveMenuId(null); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer"><Pencil size={16} className="w-4 h-4 text-primary" aria-hidden="true" /> Düzenle</button>
+                    <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(item.id) }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer"><X size={16} className="w-4 h-4 text-error" aria-hidden="true" /> Sil</button>
                   </div>
                 )}
               </div>
@@ -1250,7 +1250,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       customEmptyContent = (
         <div className="flex flex-col gap-4">
           <div className="py-6 bg-bg-main/50 rounded-card border border-dashed border-border-main text-center flex flex-col items-center gap-2 px-4">
-            <span className="text-2xl opacity-80">✨</span>
+            <Inbox size={24} className="w-6 h-6 opacity-80 text-text-secondary" aria-hidden="true" />
             <p className="text-[13px] font-bold text-text-secondary leading-relaxed">
               Bugün için planlı göreviniz yok. İleri tarihli <span className="text-primary font-bold">{upcomingTasks.length}</span> görevinizi görmek için filtreyi &apos;Tüm Zamanlar&apos; olarak değiştirin.
             </p>
@@ -1283,7 +1283,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         <div className="flex flex-col gap-4 w-full">
           <div className="py-8 px-4 bg-bg-main/50 rounded-card border border-dashed border-border-main text-center flex flex-col items-center gap-3">
             <div className={`w-12 h-12 bg-gradient-to-tr ${cta?.gradient || 'from-slate-200 to-slate-300'} rounded-xs flex items-center justify-center shadow-sm mb-1`}>
-              <span className="text-2xl">🗓️</span>
+              <Calendar size={24} className="w-6 h-6 text-primary" aria-hidden="true" />
             </div>
             <h3 className="font-extrabold text-text-primary text-base">Henüz görev planlanmamış</h3>
             <p className="text-[13px] text-text-secondary max-w-[260px] leading-relaxed mb-2">{cta?.desc || 'Bu kategoride henüz bir görev planlamadınız.'}</p>
@@ -1338,14 +1338,12 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
         {(() => {
           let plannedEmptyMessage = 'Bu filtrelere uygun planlanmış görev bulunmuyor.';
-          let plannedEmptyIcon = '✨';
 
           if (plannedTasks.length === 0 && completedTasks.length > 0) {
             plannedEmptyMessage = 'Harika! Tüm görevler tamamlandı';
-            plannedEmptyIcon = '✅';
           }
 
-          return renderTaskList('', filteredPlanned, plannedEmptyMessage, customEmptyContent, plannedEmptyIcon);
+          return renderTaskList('', filteredPlanned, plannedEmptyMessage, customEmptyContent);
         })()}
         
         {completedTasks.length > 0 && (
@@ -1432,7 +1430,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       {isAdminView && (
         <div className="bg-gradient-to-r from-violet-600 via-indigo-600 to-primary text-white text-[13px] font-bold px-5 py-4 rounded-sheet flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg shadow-indigo-500/15 border border-white/10 animate-fade-in">
           <div className="flex items-center gap-2">
-            <span className="text-lg animate-bounce">🔑</span>
+            <Key size={18} className="w-4.5 h-4.5 text-amber-300 animate-bounce shrink-0" aria-hidden="true" />
             <span>Yönetici Görünümü: Bu evcil hayvanın bilgilerini görüntülüyorsunuz.</span>
           </div>
           {pet.owner_id && (
@@ -1638,20 +1636,20 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                                 {isActionsOpen && (
                                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 px-4 pb-3 pt-1 animate-in fade-in slide-in-from-top-1">
                                     <button onClick={() => handleMarkCompleted(plan.id)}
-                                      className="min-h-[44px] px-2 py-2 text-xs font-bold text-success bg-success/10 hover:bg-success/20 rounded-xl transition-colors flex items-center justify-center cursor-pointer">
-                                      ✓ Tamamlandı
+                                      className="min-h-[44px] px-2 py-2 text-xs font-bold text-success bg-success/10 hover:bg-success/20 rounded-xl transition-colors flex items-center justify-center gap-1 cursor-pointer">
+                                      <Check size={14} className="w-3.5 h-3.5 text-success" aria-hidden="true" /> Tamamlandı
                                     </button>
                                     <button onClick={() => handlePostpone(plan.id)}
-                                      className="min-h-[44px] px-2 py-2 text-xs font-bold text-text-secondary bg-text-secondary/10 hover:bg-text-secondary/20 rounded-xl transition-colors flex items-center justify-center cursor-pointer">
-                                      📅 +1 Gün
+                                      className="min-h-[44px] px-2 py-2 text-xs font-bold text-text-secondary bg-text-secondary/10 hover:bg-text-secondary/20 rounded-xl transition-colors flex items-center justify-center gap-1 cursor-pointer">
+                                      <Calendar size={14} className="w-3.5 h-3.5 text-text-secondary" aria-hidden="true" /> +1 Gün
                                     </button>
                                     <button onClick={() => { setActiveMenuId(null); handleEditTask(plan); }}
-                                      className="min-h-[44px] px-2 py-2 text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 rounded-xl transition-colors flex items-center justify-center cursor-pointer">
-                                      ✏️ Düzenle
+                                      className="min-h-[44px] px-2 py-2 text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 rounded-xl transition-colors flex items-center justify-center gap-1 cursor-pointer">
+                                      <Pencil size={14} className="w-3.5 h-3.5 text-primary" aria-hidden="true" /> Düzenle
                                     </button>
                                     <button onClick={() => handleDeleteTask(plan.id)}
-                                      className="min-h-[44px] px-2 py-2 text-xs font-bold text-error bg-error/10 hover:bg-error/20 rounded-xl transition-colors flex items-center justify-center cursor-pointer">
-                                      ❌ Sil
+                                      className="min-h-[44px] px-2 py-2 text-xs font-bold text-error bg-error/10 hover:bg-error/20 rounded-xl transition-colors flex items-center justify-center gap-1 cursor-pointer">
+                                      <X size={14} className="w-3.5 h-3.5 text-error" aria-hidden="true" /> Sil
                                     </button>
                                   </div>
                                 )}
@@ -1943,8 +1941,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               className="card-base p-4 bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-white border border-amber-200/80 rounded-2xl flex items-center justify-between gap-3 group hover:border-amber-400/80 transition-all shadow-sm"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-xl shadow-sm shrink-0">
-                  ⚖️
+                <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-sm shrink-0">
+                  <Scale size={20} className="w-5 h-5 text-white" aria-hidden="true" />
                 </div>
                 <div>
                   <h4 className="text-sm font-semibold text-text-primary group-hover:text-amber-700 transition-colors flex items-center gap-1.5">
@@ -2036,7 +2034,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                           href={module.logUrl}
                           className="min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xs inline-flex items-center gap-1.5"
                         >
-                          📋 {module.logBtnLabel}
+                          <FileText size={16} className="w-4 h-4 text-white" aria-hidden="true" /> {module.logBtnLabel}
                         </Link>
                       </div>
                     </div>
@@ -2130,7 +2128,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               <button onClick={handleEditVetInfo} className="text-xs font-bold text-primary hover:underline">Düzenle</button>
             </div>
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 text-xl shrink-0">🩺</div>
+              <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 shrink-0">
+                <StethoscopeIcon width={24} height={24} className="w-6 h-6 text-amber-500" />
+              </div>
               <div>
                 {pet.vet_company && <p className="font-bold text-text-primary">{pet.vet_company}</p>}
                 {pet.vet_name && <p className="font-semibold text-text-secondary text-sm">{pet.vet_name}</p>}
@@ -2142,7 +2142,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         ) : (
           <div className="card-base p-5 border border-dashed border-border-main hover:border-primary/50 transition-colors cursor-pointer group" onClick={handleEditVetInfo}>
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-slate-50 group-hover:bg-primary-soft flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors text-xl shrink-0">🩺</div>
+              <div className="w-12 h-12 rounded-full bg-slate-50 group-hover:bg-primary-soft flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors shrink-0">
+                <StethoscopeIcon width={24} height={24} className="w-6 h-6 text-slate-400 group-hover:text-primary transition-colors" />
+              </div>
               <div>
                 <h3 className="text-[13px] font-semibold text-text-primary mb-0.5">Veteriner Ekle</h3>
                 <p className="text-xs text-text-secondary">Aşı, muayene ve acil durumlar için hekiminizi kaydedin.</p>
@@ -2223,7 +2225,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             
             <div className="w-12 h-1.5 bg-border rounded-full mx-auto mb-4" />
             <p className="text-base font-semibold text-text-primary mb-5 text-center flex items-center justify-center gap-2">
-              <span>🐾</span> {pet.name} Profil Yönetimi
+              <DogIcon className="w-5 h-5 text-primary shrink-0" /> {pet.name} Profil Yönetimi
             </p>
 
             <div className="flex flex-col gap-2.5">
@@ -2401,7 +2403,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               
               {/* İpucu Katmanı */}
               <div className="absolute top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/65 text-white text-2xs font-semibold backdrop-blur-sm pointer-events-none flex items-center gap-1.5 shadow-md">
-                <span>✋</span> Parmağınızla veya fareyle kaydırın
+                Parmağınızla veya fareyle kaydırın
               </div>
             </div>
 
@@ -2486,8 +2488,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                 </div>
               )}
               
-              <div className="w-16 h-16 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-3xl shadow-inner animate-pulse">
-                💊
+              <div className="w-16 h-16 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center shadow-inner animate-pulse">
+                <PillIcon className="w-8 h-8 text-indigo-600" />
               </div>
 
               <div>
@@ -2526,19 +2528,19 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                 onClick={() => handleMedicationSkip(medicationActionTask)}
                 className="py-3.5 bg-red-50 hover:bg-red-100 text-red-700 font-extrabold text-sm rounded-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
               >
-                <span>❌ Atla</span>
+                <X size={16} className="w-4 h-4 text-red-700" aria-hidden="true" /> <span>Atla</span>
               </button>
               <button
                 onClick={() => handleMedicationSnooze(medicationActionTask)}
                 className="py-3.5 bg-[#FAF1E6] hover:bg-[#F3E5D4] text-[#8C6239] font-extrabold text-sm rounded-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
               >
-                <span>🔔 Ertele</span>
+                <Bell size={16} className="w-4 h-4 text-[#8C6239]" aria-hidden="true" /> <span>Ertele</span>
               </button>
               <button
                 onClick={() => handleMedicationConfirm(medicationActionTask, medicationNote)}
                 className="py-3.5 bg-[#10B981] hover:bg-[#059669] text-white font-extrabold text-sm rounded-2xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
               >
-                <span>✓ Onayla</span>
+                <Check size={16} className="w-4 h-4 text-white" aria-hidden="true" /> <span>Onayla</span>
               </button>
             </div>
           </div>
@@ -2577,8 +2579,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             {/* Modal Header */}
             <div className="p-5 border-b border-border-main flex items-center justify-between bg-bg-main/60 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xl shadow-xs">
-                  👨‍👩‍👧‍👦
+                <div className="w-10 h-10 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center shadow-xs">
+                  <Users size={20} className="w-5 h-5 text-purple-700" aria-hidden="true" />
                 </div>
                 <div>
                   <h3 className="text-lg font-extrabold text-text-primary leading-tight">
@@ -2590,9 +2592,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               <button
                 type="button"
                 onClick={() => setIsShareModalOpen(false)}
-                className="w-9 h-9 rounded-full bg-bg-main hover:bg-border-main flex items-center justify-center text-text-secondary transition-colors font-bold text-sm"
+                className="w-9 h-9 rounded-full bg-bg-main hover:bg-border-main flex items-center justify-center text-text-secondary transition-colors"
               >
-                ✕
+                <X size={16} className="w-4 h-4 text-text-secondary" aria-hidden="true" />
               </button>
             </div>
 

@@ -5,6 +5,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import CoachMark from '@/components/ui/CoachMark'
+import { ShampooIcon } from '@/components/icons/PetIcons'
+import { Check } from 'lucide-react'
 
 export default function CareClient({ pet }: { pet: any }) {
   const [plans, setPlans] = useState<any[]>([])
@@ -48,11 +50,11 @@ export default function CareClient({ pet }: { pet: any }) {
           hintKey="care_routine_intro"
           title="Bakım Rutini"
           message="Plan Yap üzerinden eklediğiniz bakım rutinlerini burada görebilirsiniz."
-          icon="🛁"
+          icon={<ShampooIcon width={24} height={24} className="w-6 h-6 text-rose-500" />}
           position="bottom"
         />
         <div className="relative w-16 h-16 rounded-[20px] bg-gradient-to-br from-primary-soft to-white border-2 border-primary/20 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
-          {pet.avatar_url ? <Image src={pet.avatar_url} alt="" fill={true} className="object-cover" sizes="64px" /> : <span className="text-3xl">🛁</span>}
+          {pet.avatar_url ? <Image src={pet.avatar_url} alt="" fill={true} className="object-cover" sizes="64px" /> : <ShampooIcon width={32} height={32} className="w-8 h-8 text-rose-500" />}
         </div>
         <div>
           <h1 className="text-3xl font-extrabold text-text-primary tracking-tight">Kişisel Bakım</h1>
@@ -76,7 +78,7 @@ export default function CareClient({ pet }: { pet: any }) {
             {activePlans.map(plan => (
               <div key={plan.id} className="card-base p-5 flex flex-col gap-2">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">🛁</div>
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold"><ShampooIcon width={20} height={20} className="w-5 h-5 text-rose-500" /></div>
                   <div>
                     <h3 className="font-bold text-text-primary text-base">{plan.sub_type}</h3>
                     <p className="text-xs text-text-secondary">{plan.repeat_rule === 'daily' ? 'Günlük' : plan.repeat_rule === 'weekly' ? 'Haftalık' : plan.repeat_rule === 'monthly' ? 'Aylık' : 'Tek Seferlik'}</p>
@@ -96,7 +98,7 @@ export default function CareClient({ pet }: { pet: any }) {
             {completedPlans.map(plan => (
               <div key={plan.id} className="card-base p-5 flex flex-col gap-2 bg-gray-50">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold">✓</div>
+                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold"><Check size={16} className="w-4 h-4 text-success" /></div>
                   <div>
                     <h3 className="font-bold text-text-primary text-base">{plan.sub_type}</h3>
                     <p className="text-xs text-text-secondary">{new Date(plan.updated_at || plan.scheduled_at).toLocaleDateString('tr-TR')}</p>

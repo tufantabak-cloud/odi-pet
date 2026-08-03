@@ -5,6 +5,7 @@ import { redirect, notFound } from 'next/navigation'
 import BreedingListingManager from '@/components/pets/BreedingListingManager'
 import PageHeader from '@/components/ui/primitives/PageHeader'
 import Link from 'next/link'
+import { Heart } from 'lucide-react'
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -48,7 +49,7 @@ export default async function MatchPage(props: PageProps) {
         
         <div className="mt-4 rounded-2xl border-2 border-dashed border-violet-200 bg-violet-50/50 p-6 text-center animate-fadeInUp">
           <div className="w-12 h-12 bg-violet-100 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
-            ❤️
+            <Heart size={20} className="w-5 h-5 text-rose-500" aria-hidden="true" />
           </div>
           
           <h3 className="font-bold text-text-primary text-base mb-1">
@@ -63,7 +64,7 @@ export default async function MatchPage(props: PageProps) {
             href="/owner/social?tab=eslestirme"
             className="inline-flex items-center justify-center gap-2 btn-primary px-6 py-3 rounded-xl text-sm font-bold w-full sm:w-auto"
           >
-            ❤️ Eşleştirme Alanına Git →
+            <Heart size={16} className="w-4 h-4 text-white" aria-hidden="true" /> Eşleştirme Alanına Git →
           </Link>
           
           <p className="text-[11px] text-text-muted mt-3 font-medium">

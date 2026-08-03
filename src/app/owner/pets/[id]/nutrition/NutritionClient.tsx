@@ -16,7 +16,8 @@ import { Modal } from '@/components/ui/Modal'
 import WeightChangeChart from '@/components/pets/WeightChangeChart'
 import WeightGoalBand from '@/components/pets/WeightGoalBand'
 import { assessWeight } from '@/lib/vetStandards/weightStandards'
-import { ScaleIcon, UtensilsIcon } from '@/components/icons/PetIcons'
+import { ScaleIcon, UtensilsIcon, BowlIcon, RulerIcon } from '@/components/icons/PetIcons'
+import { Pencil, AlertTriangle, Plus, Package, Trash2, Camera, Check, Clock, Scale, Search, QrCode, Edit3, Tag, ArrowRight, CheckCircle2 } from 'lucide-react'
 import StockTimeline from '@/components/nutrition/StockTimeline'
 
 // Tabs
@@ -885,7 +886,7 @@ export default function NutritionClient({
 
     if (hasLogForSelectedDate) {
       const formattedDate = new Date(selectedDateStr + 'T00:00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
-      setWeightError(`${formattedDate} tarihi için zaten bir kilo/boy ölçüm kaydı bulunmaktadır. Bir günde en fazla 1 kayıt eklenebilir. Mevcut kaydı değiştirmek isterseniz aşağıdaki "Geçmiş Ölçümler" listesindeki Düzenle (✏️) butonunu kullanabilirsiniz.`)
+      setWeightError(`${formattedDate} tarihi için zaten bir kilo/boy ölçüm kaydı bulunmaktadır. Bir günde en fazla 1 kayıt eklenebilir. Mevcut kaydı değiştirmek isterseniz aşağıdaki "Geçmiş Ölçümler" listesindeki Düzenle butonunu kullanabilirsiniz.`)
       return
     }
 
@@ -1019,8 +1020,8 @@ export default function NutritionClient({
       )}
 
       {showBanner && (
-        <div className="p-4 rounded-xl border-l-4 font-medium text-sm bg-red-50 border-red-500 text-red-800">
-          🚨 Mama stoğunuz azalıyor! Tahmini <strong>{refillStatus.daysLeft} gün</strong> yetecek mama kaldı.
+        <div className="p-4 rounded-xl border-l-4 font-medium text-sm bg-red-50 border-red-500 text-red-800 flex items-center gap-1.5">
+          <AlertTriangle size={18} className="w-4.5 h-4.5 text-red-600 shrink-0" aria-hidden="true" /> Mama stoğunuz azalıyor! Tahmini <strong>{refillStatus.daysLeft} gün</strong> yetecek mama kaldı.
         </div>
       )}
 
@@ -1186,7 +1187,7 @@ export default function NutritionClient({
                     onClick={() => openStockModal('set_stock')}
                     className="btn-primary w-full py-2 text-xs font-bold min-h-[38px] flex items-center justify-center gap-1 shadow-sm"
                   >
-                    <span>➕</span> Başlangıç Stoğunu Ekle
+                    <Plus size={16} className="w-4 h-4 text-white" aria-hidden="true" /> Başlangıç Stoğunu Ekle
                   </button>
                 ) : (
                   <div className="grid grid-cols-2 gap-2 w-full">
@@ -1194,25 +1195,25 @@ export default function NutritionClient({
                       onClick={() => openStockModal('add_package')}
                       className="btn-primary py-2 text-xs font-bold min-h-[36px] flex items-center justify-center gap-1 shadow-sm"
                     >
-                      <span>📦</span> Yeni Paket Ekle
+                      <Package size={16} className="w-4 h-4 text-white" aria-hidden="true" /> Yeni Paket Ekle
                     </button>
                     <button
                       onClick={() => openStockModal('set_stock')}
                       className="btn-secondary py-2 text-xs font-bold min-h-[36px] flex items-center justify-center gap-1"
                     >
-                      <span>✏️</span> Stok Miktarını Düzelt
+                      <Pencil size={16} className="w-4 h-4 text-primary" aria-hidden="true" /> Stok Miktarını Düzelt
                     </button>
                     <button
                       onClick={() => setShowMarkDepletedModal(true)}
                       className="px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl text-xs font-bold min-h-[36px] flex items-center justify-center gap-1 border border-amber-200 transition-colors"
                     >
-                      <span>🛑</span> Mama Bitti
+                      <AlertTriangle size={16} className="w-4 h-4 text-amber-700" aria-hidden="true" /> Mama Bitti
                     </button>
                     <button
                       onClick={() => setShowClearStockModal(true)}
                       className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold min-h-[36px] flex items-center justify-center gap-1 border border-red-200 transition-colors"
                     >
-                      <span>🗑️</span> Stok Bilgisini Kaldır
+                      <Trash2 size={16} className="w-4 h-4 text-red-600" aria-hidden="true" /> Stok Bilgisini Kaldır
                     </button>
                   </div>
                 )}
@@ -1223,7 +1224,7 @@ export default function NutritionClient({
           {/* Alerji & Hassasiyet Bilgileri (Korunan Profil Alanı) */}
           <div className="card-base p-5 flex flex-col gap-3">
             <div className="flex items-center gap-2">
-              <span className="text-lg">⚠️</span>
+              <AlertTriangle size={18} className="w-4.5 h-4.5 text-warning" aria-hidden="true" />
               <h3 className="font-extrabold text-base text-text-primary">Alerji ve Hassasiyet Notları</h3>
             </div>
             <form onSubmit={handleSaveAllergies} className="flex flex-col gap-3">
@@ -1266,7 +1267,7 @@ export default function NutritionClient({
           >
             <div className="flex items-center justify-between relative z-10">
               <div className="flex items-center gap-3">
-                <span className="text-2xl">📷</span>
+                <Camera size={24} className="w-6 h-6 text-white" aria-hidden="true" />
                 <div>
                   <h3 className="font-extrabold text-base">Barkod ile Mama Ekle</h3>
                   <p className="text-xs text-white/90 font-medium">Paket üzerindeki barkodu okutarak mamayı saniyeler içinde ekleyin</p>
@@ -1322,7 +1323,7 @@ export default function NutritionClient({
                     <div key={plan.id} className="py-3 flex flex-wrap items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${isDone ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'}`}>
-                          {isDone ? '✓' : '⏰'}
+                          {isDone ? <Check size={14} className="w-3.5 h-3.5 text-emerald-700" aria-hidden="true" /> : <Clock size={14} className="w-3.5 h-3.5 text-orange-700" aria-hidden="true" />}
                         </div>
                         <div>
                           <h4 className="font-bold text-text-primary text-sm">
@@ -1338,9 +1339,9 @@ export default function NutritionClient({
                           <button
                             type="button"
                             onClick={() => handleCompleteReminder(plan.id)}
-                            className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors"
+                            className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors flex items-center gap-1"
                           >
-                            ✓ Tamamla
+                            <Check size={14} className="w-3.5 h-3.5 text-emerald-700" aria-hidden="true" /> Tamamla
                           </button>
                         )}
                         <button
@@ -1362,7 +1363,7 @@ export default function NutritionClient({
                           }}
                           className="px-2 py-1 rounded-lg text-[11px] font-bold bg-slate-100 text-text-secondary hover:bg-slate-200 transition-colors"
                         >
-                          ✏️
+                          <Pencil size={14} className="w-3.5 h-3.5 text-text-secondary" aria-hidden="true" />
                         </button>
                         <button
                           type="button"
@@ -1503,9 +1504,9 @@ export default function NutritionClient({
             <button
               type="submit"
               disabled={reminderSubmitting}
-              className="flex-[2] btn-primary py-3 text-[13px] font-bold"
+              className="flex-[2] btn-primary py-3 text-[13px] font-bold flex items-center justify-center gap-1.5"
             >
-              {reminderSubmitting ? 'Kaydediliyor...' : 'Kaydet ✓'}
+              {reminderSubmitting ? 'Kaydediliyor...' : <><Check size={16} className="w-4 h-4 text-white" aria-hidden="true" /> Kaydet</>}
             </button>
           </div>
         </form>
@@ -1541,7 +1542,7 @@ export default function NutritionClient({
               
               {weightError && (
                 <div className="p-3.5 bg-red-50 border border-red-200 text-red-700 text-[13px] rounded-xl font-medium flex items-start gap-2 animate-fadeIn">
-                  <span className="text-base shrink-0">⚠️</span>
+                  <AlertTriangle size={16} className="w-4 h-4 text-danger shrink-0" aria-hidden="true" />
                   <span>{weightError}</span>
                 </div>
               )}
@@ -1562,7 +1563,7 @@ export default function NutritionClient({
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
-                    <span>⚖️ Kilo (kg) *</span>
+                    <Scale size={16} className="w-4 h-4 text-white" aria-hidden="true" /> <span>Kilo (kg) *</span>
                     {newWeightKg !== '' && <span className="px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-medium">{newWeightKg} kg</span>}
                   </button>
 
@@ -1575,7 +1576,7 @@ export default function NutritionClient({
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
-                    <span>📏 Boy (cm)</span>
+                    <RulerIcon width={16} height={16} className="w-4 h-4 text-white" aria-hidden="true" /> <span>Boy (cm)</span>
                     <span className="text-[11px] opacity-80">(Opsiyonel)</span>
                     {newHeightCm !== '' && <span className="px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-medium">{newHeightCm} cm</span>}
                   </button>
@@ -1599,23 +1600,22 @@ export default function NutritionClient({
               ) : (
                 <RulerPicker
                   id="nutrition-height-ruler"
-                  label="Boy / Uzunluk"
-                  sublabel="Burundan kuyruk sokumuna veya omuza boy (Opsiyonel)"
-                  isOptional
+                  label="Güncel Boy (Omuz Yüksekliği)"
+                  sublabel="Cetveli kaydırarak veya sayıya dokunarak boyu belirleyin"
                   unit="cm"
-                  min={5}
-                  max={180}
+                  min={1}
+                  max={200}
                   step={1}
-                  value={typeof newHeightCm === 'number' ? newHeightCm : parseFloat(newHeightCm as string) || (pet?.species === 'cat' ? 25 : 45)}
+                  value={typeof newHeightCm === 'number' ? newHeightCm : parseFloat(newHeightCm as string) || (pet?.species === 'cat' ? 25 : 40)}
                   onChange={(val) => setNewHeightCm(val)}
-                  presets={pet?.species === 'cat' ? [20, 25, 30, 35] : [30, 45, 60, 80]}
+                  presets={pet?.species === 'cat' ? [20, 25, 30, 35] : [20, 35, 50, 65, 80]}
                 />
               )}
 
               {/* Alt Kontroller: Ölçüm Tarihi ve Kaydet Butonu */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-3 border-t border-border-main/60 mt-1">
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <label className="text-[13px] font-bold text-text-primary whitespace-nowrap">Ölçüm Tarihi:</label>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-4 pt-2 border-t border-border-main/60">
+                <div className="flex flex-col gap-1 flex-1">
+                  <label className="text-xs font-bold text-text-secondary">Ölçüm Tarihi</label>
                   <input
                     type="date"
                     name="measured_at"
@@ -1624,8 +1624,8 @@ export default function NutritionClient({
                     className="input-base text-sm py-2 px-3 min-h-[42px]"
                   />
                 </div>
-                <button type="submit" disabled={loading} className="btn-primary px-8 min-h-[46px] w-full sm:w-auto flex items-center justify-center shrink-0 shadow-md shadow-primary/20">
-                  Ölçümü Kaydet ✓
+                <button type="submit" disabled={loading} className="btn-primary px-8 min-h-[46px] w-full sm:w-auto flex items-center justify-center gap-1.5 shrink-0 shadow-md shadow-primary/20">
+                  <Check size={16} className="w-4 h-4 text-white" aria-hidden="true" /> Ölçümü Kaydet
                 </button>
               </div>
             </form>
@@ -1647,9 +1647,9 @@ export default function NutritionClient({
                 <button
                   type="button"
                   onClick={() => handleCompleteReminder(upcomingWeightTask.id)}
-                  className="px-3.5 py-1.5 rounded-xl text-[11px] font-bold bg-amber-600 text-white hover:bg-amber-700 transition-colors shadow-sm shrink-0"
+                  className="px-3.5 py-1.5 rounded-xl text-[11px] font-bold bg-amber-600 text-white hover:bg-amber-700 transition-colors shadow-sm shrink-0 flex items-center gap-1"
                 >
-                  Tamamla ✓
+                  <Check size={14} className="w-3.5 h-3.5 text-white" aria-hidden="true" /> Tamamla
                 </button>
               </div>
             )}
@@ -1701,7 +1701,7 @@ export default function NutritionClient({
                           className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-amber-100 hover:text-amber-800 transition-colors flex items-center gap-1 min-h-[36px]"
                           title="Ölçümü Düzenle"
                         >
-                          ✏️ <span>Düzenle</span>
+                          <Pencil size={14} className="w-3.5 h-3.5 text-slate-700" aria-hidden="true" /> <span>Düzenle</span>
                         </button>
                         <button
                           type="button"
@@ -1710,7 +1710,7 @@ export default function NutritionClient({
                           className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-red-600 hover:bg-red-100 transition-colors flex items-center gap-1 min-h-[36px]"
                           title="Ölçümü Sil"
                         >
-                          🗑️ <span>{isDeletingWeight === w.id ? '...' : 'Sil'}</span>
+                          <Trash2 size={14} className="w-3.5 h-3.5 text-red-600" aria-hidden="true" /> <span>{isDeletingWeight === w.id ? '...' : 'Sil'}</span>
                         </button>
                       </div>
                     </div>
@@ -1790,27 +1790,27 @@ export default function NutritionClient({
           <div className="flex bg-bg-main p-1 rounded-xl border border-border-main">
             <button
               onClick={() => { setAddMode('search'); setSelectedCatalogItem(null); setBarcodeResult(null) }}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors min-h-[44px] ${addMode === 'search' ? 'bg-white text-primary shadow-sm' : 'text-text-secondary'}`}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors min-h-[44px] flex items-center justify-center gap-1.5 ${addMode === 'search' ? 'bg-white text-primary shadow-sm' : 'text-text-secondary'}`}
             >
-              🔍 Mamayı Ara
+              <Search size={16} className="w-4 h-4 text-primary" aria-hidden="true" /> Mamayı Ara
             </button>
             <button
               onClick={() => { setAddMode('barcode'); setSelectedCatalogItem(null); setBarcodeResult(null) }}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors min-h-[44px] ${addMode === 'barcode' ? 'bg-white text-primary shadow-sm' : 'text-text-secondary'}`}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors min-h-[44px] flex items-center justify-center gap-1.5 ${addMode === 'barcode' ? 'bg-white text-primary shadow-sm' : 'text-text-secondary'}`}
             >
-              📷 Barkod ile Bul
+              <QrCode size={16} className="w-4 h-4 text-primary" aria-hidden="true" /> Barkod ile Bul
             </button>
             <button
               onClick={() => { setAddMode('manual'); setSelectedCatalogItem(null); setBarcodeResult(null) }}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors min-h-[44px] ${addMode === 'manual' ? 'bg-white text-primary shadow-sm' : 'text-text-secondary'}`}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors min-h-[44px] flex items-center justify-center gap-1.5 ${addMode === 'manual' ? 'bg-white text-primary shadow-sm' : 'text-text-secondary'}`}
             >
-              ✍️ Listede Yok / Elle
+              <Edit3 size={16} className="w-4 h-4 text-primary" aria-hidden="true" /> Listede Yok / Elle
             </button>
           </div>
 
           {apiErrorMessage && (
-            <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-[13px] font-bold rounded-xl">
-              ⚠️ {apiErrorMessage}
+            <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-[13px] font-bold rounded-xl flex items-center gap-1.5">
+              <AlertTriangle size={16} className="w-4 h-4 text-danger shrink-0" aria-hidden="true" /> {apiErrorMessage}
             </div>
           )}
 
@@ -1831,7 +1831,7 @@ export default function NutritionClient({
                 matchedBrands.length > 0 ? (
                   <div className="p-4 text-center bg-amber-50/80 border border-amber-200 rounded-xl flex flex-col items-center gap-2 animate-fadeIn">
                     <div className="flex items-center gap-2 text-amber-900 font-extrabold text-base">
-                      <span>🏷️</span>
+                      <Tag size={16} className="w-4 h-4 text-amber-900" aria-hidden="true" />
                       <h4>{matchedBrands[0].display_name} markası bulundu</h4>
                     </div>
                     <p className="text-xs text-amber-800 font-medium">
@@ -1843,9 +1843,9 @@ export default function NutritionClient({
                         setAddMode('manual')
                         setBrandText(matchedBrands[0].display_name)
                       }}
-                      className="btn-primary text-[13px] font-bold py-2.5 px-5 min-h-[44px] mt-1 shadow-sm"
+                      className="btn-primary text-[13px] font-bold py-2.5 px-5 min-h-[44px] mt-1 shadow-sm flex items-center gap-1.5"
                     >
-                      {matchedBrands[0].display_name} ile devam et ✍️
+                      {matchedBrands[0].display_name} ile devam et <ArrowRight size={16} className="w-4 h-4 text-white" aria-hidden="true" />
                     </button>
                   </div>
                 ) : (
@@ -1854,9 +1854,9 @@ export default function NutritionClient({
                     <button
                       type="button"
                       onClick={() => { setAddMode('manual'); setBrandText(searchQuery) }}
-                      className="btn-secondary text-[13px] font-bold py-2 px-4 min-h-[44px]"
+                      className="btn-secondary text-[13px] font-bold py-2 px-4 min-h-[44px] flex items-center gap-1.5"
                     >
-                      Listede yok, elle ekle ✍️
+                      Listede yok, elle ekle <Edit3 size={16} className="w-4 h-4 text-slate-700" aria-hidden="true" />
                     </button>
                   </div>
                 )
@@ -1906,7 +1906,7 @@ export default function NutritionClient({
                 onClick={() => setShowBarcodeCamera(true)}
                 className="btn-secondary min-h-[44px] flex items-center justify-center gap-2 text-[13px] font-bold"
               >
-                📷 Kamerayı Aç ve EAN/UPC Barkodu Tara
+                <Camera size={16} className="w-4 h-4 text-slate-700" aria-hidden="true" /> Kamerayı Aç ve EAN/UPC Barkodu Tara
               </button>
 
               {isBarcodeSearching && <p className="text-[13px] text-text-secondary font-bold text-center py-4">Barkod sorgulanıyor...</p>}
@@ -1916,9 +1916,9 @@ export default function NutritionClient({
                   <p className="text-[13px] text-amber-800 font-medium">{barcodeError}</p>
                   <button
                     onClick={() => setAddMode('manual')}
-                    className="btn-primary text-[13px] font-bold py-2 px-4 min-h-[44px]"
+                    className="btn-primary text-[13px] font-bold py-2 px-4 min-h-[44px] flex items-center gap-1.5"
                   >
-                    Listede Yok, Elle Ekle ✍️
+                    Listede Yok, Elle Ekle <Edit3 size={16} className="w-4 h-4 text-white" aria-hidden="true" />
                   </button>
                 </div>
               )}
@@ -2013,12 +2013,12 @@ export default function NutritionClient({
                                 {item.official_name}
                               </span>
                               {isPending ? (
-                                <span className="text-2xs font-bold px-2 py-0.5 bg-amber-100 text-amber-800 rounded-md shrink-0">
-                                  ⏳ Doğrulama bekliyor
+                                <span className="text-2xs font-bold px-2 py-0.5 bg-amber-100 text-amber-800 rounded-md shrink-0 flex items-center gap-1">
+                                  <Clock size={12} className="w-3 h-3 text-amber-800" aria-hidden="true" /> Doğrulama bekliyor
                                 </span>
                               ) : (
-                                <span className="text-2xs font-bold px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-md shrink-0">
-                                  ✓ Doğrulanmış
+                                <span className="text-2xs font-bold px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-md shrink-0 flex items-center gap-1">
+                                  <CheckCircle2 size={12} className="w-3 h-3 text-emerald-800" aria-hidden="true" /> Doğrulanmış
                                 </span>
                               )}
                             </div>
@@ -2171,8 +2171,8 @@ export default function NutritionClient({
         {editingAssignment && (
           <form onSubmit={handleUpdateAssignment} className="flex flex-col gap-4">
             {apiErrorMessage && (
-              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-[13px] font-bold rounded-xl">
-                ⚠️ {apiErrorMessage}
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-[13px] font-bold rounded-xl flex items-center gap-1.5">
+                <AlertTriangle size={16} className="w-4 h-4 text-danger shrink-0" aria-hidden="true" /> {apiErrorMessage}
               </div>
             )}
 
@@ -2227,8 +2227,8 @@ export default function NutritionClient({
       >
         <form onSubmit={handleStockModalSubmit} className="flex flex-col gap-4">
           {apiErrorMessage && (
-            <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-[13px] font-bold rounded-xl">
-              ⚠️ {apiErrorMessage}
+            <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-[13px] font-bold rounded-xl flex items-center gap-1.5">
+              <AlertTriangle size={16} className="w-4 h-4 text-danger shrink-0" aria-hidden="true" /> {apiErrorMessage}
             </div>
           )}
 

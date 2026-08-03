@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { QRCodeSVG } from 'qrcode.react'
+import { LogOut, Users, Crown, Mail, QrCode, X, Check, Link as LinkIcon } from 'lucide-react'
 import ConfirmModal from '@/components/ui/ConfirmModal'
 import CoachMark from '@/components/ui/CoachMark'
 import TransferPrimaryOwnerModal from '@/components/pets/family/TransferPrimaryOwnerModal'
@@ -121,7 +122,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
       setInviteMsg({
         type: 'ok',
         text: inviteMode === 'qr'
-          ? '📱 Barkod / QR Kod başarıyla üretildi! İkinci kullanıcı okuttuğunda doğrudan yetkilendirilir.'
+          ? 'Barkod / QR Kod başarıyla üretildi! İkinci kullanıcı okuttuğunda doğrudan yetkilendirilir.'
           : data.message
       })
       if (data.inviteLink) {
@@ -230,7 +231,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
                 onClick={() => setIsLeaveModalOpen(true)}
                 className="px-2.5 py-1 text-[11px] font-bold text-red-600 hover:bg-red-50 rounded-lg border border-red-200 transition-colors flex items-center gap-1"
               >
-                <span>🚪</span> Ekipten Ayrıl
+                <LogOut size={14} className="w-3.5 h-3.5 text-red-600" aria-hidden="true" /> Ekipten Ayrıl
               </button>
             )}
           </div>
@@ -242,8 +243,8 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
           </div>
         ) : members.length === 0 ? (
           <div className="p-6 text-center flex flex-col items-center justify-center gap-2 bg-bg-main/30">
-            <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-xl shadow-xs mb-1">
-              👨‍👩‍👧‍👦
+            <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shadow-xs mb-1">
+              <Users size={24} className="w-6 h-6 text-purple-600" aria-hidden="true" />
             </div>
             <p className="text-sm text-text-primary font-bold">Henüz Bakım Ekibi Üyesi Yok</p>
             <p className="text-xs text-text-secondary/80 max-w-sm leading-relaxed">
@@ -311,10 +312,10 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
                         })
                         setIsTransferModalOpen(true)
                       }}
-                      className="rounded-lg bg-purple-50 px-2.5 py-1 text-[11px] font-bold text-purple-700 hover:bg-purple-100 transition border border-purple-200 shrink-0"
+                      className="rounded-lg bg-purple-50 px-2.5 py-1 text-[11px] font-bold text-purple-700 hover:bg-purple-100 transition border border-purple-200 shrink-0 flex items-center gap-1"
                       title="Birincil Sahipliği Devret"
                     >
-                      👑 Sahipliği Devret
+                      <Crown size={14} className="w-3.5 h-3.5 text-purple-700" aria-hidden="true" /> Sahipliği Devret
                     </button>
                   )}
 
@@ -346,7 +347,9 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
           <div className="divide-y divide-border-main">
             {invites.map((inv: any) => (
               <div key={inv.id} className="flex items-center gap-4 p-4">
-                <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 text-lg shrink-0">✉️</div>
+                <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 text-lg shrink-0">
+                  <Mail size={16} className="w-4 h-4 text-amber-600" aria-hidden="true" />
+                </div>
                 <div className="flex-1">
                   <p className="font-bold text-text-primary text-sm">{inv.email}</p>
                   <p className="text-[11px] text-text-secondary">
@@ -396,7 +399,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
                   : 'text-text-secondary hover:text-text-primary'
               }`}
             >
-              <span>📱</span> Barkod / QR Kod İle
+              <QrCode size={16} className="w-4 h-4 text-purple-700" aria-hidden="true" /> Barkod / QR Kod İle
             </button>
             <button
               type="button"
@@ -407,7 +410,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
                   : 'text-text-secondary hover:text-text-primary'
               }`}
             >
-              <span>✉️</span> E-posta İle
+              <Mail size={16} className="w-4 h-4 text-primary" aria-hidden="true" /> E-posta İle
             </button>
           </div>
 
@@ -421,7 +424,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
           {inviteLink && showQrCode && (
             <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-50 border-2 border-purple-200 mb-4 flex flex-col items-center text-center gap-3 animate-fade-in shadow-xs">
               <div className="flex items-center gap-2">
-                <span className="text-xl">📱</span>
+                <QrCode size={20} className="w-5 h-5 text-purple-700 shrink-0" aria-hidden="true" />
                 <h4 className="font-extrabold text-sm text-purple-950">Anında Yetkilendirme QR Kodu</h4>
                 <span className="px-2.5 py-0.5 rounded-full bg-purple-200 text-purple-800 text-2xs font-medium uppercase">
                   {ROLE_LABELS[role]?.label ?? role}
@@ -443,7 +446,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
                   onClick={copyLink}
                   className="flex-1 py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition-all shadow-xs flex items-center justify-center gap-1.5"
                 >
-                  {copied ? '✓ Kopyalandı' : '🔗 Bağlantıyı Kopyala'}
+                  {copied ? 'Kopyalandı' : 'Bağlantıyı Kopyala'}
                 </button>
               </div>
             </div>
@@ -453,13 +456,13 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
           {inviteLink && !showQrCode && (
             <div className="p-3 rounded-xs bg-blue-50 border border-blue-200 mb-4">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-[11px] font-bold text-blue-600 uppercase tracking-wide">📎 Davet Bağlantısı</p>
+                <p className="text-[11px] font-bold text-blue-600 uppercase tracking-wide">Davet Bağlantısı</p>
                 <button
                   type="button"
                   onClick={() => setShowQrCode(true)}
                   className="text-[11px] font-bold text-purple-700 hover:underline flex items-center gap-1"
                 >
-                  📱 QR Kodu Göster
+                  QR Kodu Göster
                 </button>
               </div>
               <div className="flex gap-2">
@@ -480,7 +483,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
                       : 'bg-blue-500 hover:bg-blue-600 text-white'
                   }`}
                 >
-                  {copied ? '✓ Kopyalandı' : 'Kopyala'}
+                  {copied ? 'Kopyalandı' : 'Kopyala'}
                 </button>
               </div>
               <p className="text-2xs text-blue-500 mt-1.5">Bu bağlantıyı davet ettiğiniz kişiye gönderin.</p>
@@ -528,7 +531,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
               {inviting
                 ? 'Üretiliyor...'
                 : inviteMode === 'qr'
-                ? `📱 ${petName} İçin QR Kod / Barkod Üret →`
+                ? `${petName} İçin QR Kod / Barkod Üret →`
                 : `${petName}'nin Ekibine Davet Et →`}
             </button>
           </form>
@@ -559,7 +562,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
 
       {/* Referral Growth Hook */}
       <div className="p-4 rounded-sm bg-gradient-to-br from-primary/10 to-transparent border border-primary/20 text-center">
-        <p className="text-sm font-bold text-text-primary mb-1">🎁 Davet Ödülü</p>
+        <p className="text-sm font-bold text-text-primary mb-1">Davet Ödülü</p>
         <p className="text-xs text-text-secondary">
           Davet ettiğin kişi kabul edince <strong className="text-primary">+50 Care Point</strong> kazanırsın!
         </p>

@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense, useState, useEffect } from 'react'
 import { useWebPush } from '@/hooks/useWebPush'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+import { Camera, Bell, AlertTriangle, CheckCircle2, MessageSquare, PawPrint, Clock, Check, ShieldCheck } from 'lucide-react'
 
 function SuccessContent() {
   const router = useRouter()
@@ -133,15 +134,16 @@ function SuccessContent() {
               />
             ) : (
               <div className="w-full h-full bg-surface-2 flex items-center justify-center text-text-secondary text-3xl">
-                📷
+                <Camera size={24} className="w-6 h-6 text-text-secondary" aria-hidden="true" />
               </div>
             )}
           </div>
         </div>
 
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-text-primary mb-1 leading-tight">
-            {activeStep === 5 ? `Aramıza Hoş Geldin, ${petName}! 🎉` : `${petName} İçin Son Adım! 🐾`}
+          <h1 className="text-2xl sm:text-3xl font-bold text-text-primary mb-1 leading-tight flex items-center justify-center gap-2">
+            <CheckCircle2 size={28} className="w-7 h-7 text-success shrink-0" aria-hidden="true" />
+            {activeStep === 5 ? `Aramıza Hoş Geldin, ${petName}!` : `${petName} İçin Son Adım!`}
           </h1>
           <p className="text-[13px] text-text-secondary px-2">
             {activeStep === 5
@@ -156,7 +158,7 @@ function SuccessContent() {
         <div className="w-full flex flex-col gap-4 animate-fadeIn text-left">
           <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4.5">
             <div className="flex items-center gap-2 mb-2 text-amber-700 font-extrabold text-sm">
-              <span className="text-lg">🔔</span>
+              <Bell size={18} className="w-4.5 h-4.5 text-amber-700" aria-hidden="true" />
               <span>5. Adım: Akıllı Bildirim İzni</span>
             </div>
             
@@ -166,26 +168,26 @@ function SuccessContent() {
 
             <div className="p-3 bg-white/80 rounded-xl border border-amber-500/20 text-xs text-amber-900 font-semibold space-y-1.5">
               <div className="flex items-center gap-1.5">
-                <span className="text-amber-600 font-bold">⚠️</span>
+                <AlertTriangle size={14} className="w-3.5 h-3.5 text-amber-600 shrink-0" aria-hidden="true" />
                 <span>Bildirimlere izin vermezseniz zamanında uyarı alamazsınız.</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-amber-600 font-bold">⚠️</span>
+                <AlertTriangle size={14} className="w-3.5 h-3.5 text-amber-600 shrink-0" aria-hidden="true" />
                 <span>Uygulama temel amacına uygun çalışamaz.</span>
               </div>
             </div>
           </div>
 
           {errorMsg && (
-            <div className="p-3 bg-error/10 text-error text-[13px] font-bold rounded-xl border border-error/20 w-full animate-scaleIn">
-              ⚠️ {errorMsg}
+            <div className="p-3 bg-error/10 text-error text-[13px] font-bold rounded-xl border border-error/20 w-full animate-scaleIn flex items-center gap-1.5">
+              <AlertTriangle size={16} className="w-4 h-4 text-danger shrink-0" aria-hidden="true" /> {errorMsg}
             </div>
           )}
 
           {isSubscribed ? (
             <div className="flex flex-col gap-3">
-              <p className="text-sm text-success font-bold p-3 bg-success-soft/30 rounded-xl border border-success/15 text-center animate-scaleIn">
-                ✓ Bildirimler başarıyla etkinleştirildi!
+              <p className="text-sm text-success font-bold p-3 bg-success-soft/30 rounded-xl border border-success/15 text-center animate-scaleIn flex items-center justify-center gap-1.5">
+                <Check size={16} className="w-4 h-4 text-success" aria-hidden="true" /> Bildirimler başarıyla etkinleştirildi!
               </p>
               <button
                 onClick={() => setActiveStep(6)}
@@ -207,13 +209,12 @@ function SuccessContent() {
                     {isInitializing ? 'Bildirim durumu kontrol ediliyor...' : 'Etkinleştiriliyor...'}
                   </span>
                 ) : (
-                  <>
-                    <span>
-                      🔔 {permission === 'granted'
-                        ? 'Cihaz Kaydını Tamamla ve Devam Et'
-                        : 'Bildirimleri Etkinleştir ve Devam Et'} →
-                    </span>
-                  </>
+                  <span className="flex items-center justify-center gap-1.5">
+                    <Bell size={16} className="w-4 h-4 text-white" aria-hidden="true" />
+                    {permission === 'granted'
+                      ? 'Cihaz Kaydını Tamamla ve Devam Et'
+                      : 'Bildirimleri Etkinleştir ve Devam Et'} →
+                  </span>
                 )}
               </button>
 
@@ -227,8 +228,8 @@ function SuccessContent() {
                 </button>
               ) : (
                 <div className="p-3.5 bg-red-500/10 border border-red-500/30 rounded-xl text-center space-y-2 animate-fadeIn">
-                  <p className="text-xs text-red-600 font-bold">
-                    ⚠️ Bildirimleri açmazsanız aşı ve bakım zamanlarını kaçırabilirsiniz. Yine de devam etmek istiyor musunuz?
+                  <p className="text-xs text-red-600 font-bold flex items-center justify-center gap-1.5">
+                    <AlertTriangle size={14} className="w-3.5 h-3.5 text-danger shrink-0" aria-hidden="true" /> Bildirimleri açmazsanız aşı ve bakım zamanlarını kaçırabilirsiniz. Yine de devam etmek istiyor musunuz?
                   </p>
                   <div className="flex items-center justify-center gap-2 pt-1">
                     <button
@@ -259,7 +260,7 @@ function SuccessContent() {
             <div className="w-full bg-surface-1 border border-border rounded-input p-5 text-left shadow-xs">
               <div className="flex items-start gap-3 mb-3">
                 <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5 font-bold">
-                  ⏱️
+                  <Clock size={16} className="w-4 h-4 text-primary" aria-hidden="true" />
                 </div>
                 <div>
                   <p className="text-base font-bold text-text-primary">6. Adım: Sağlık Geçmişini Ekle</p>
@@ -270,13 +271,13 @@ function SuccessContent() {
               </div>
               <div className="flex flex-col gap-2 mb-4 pb-4 border-b border-border text-xs text-text-secondary">
                 <div className="flex items-center gap-2">
-                  <span className="text-success text-sm">✓</span> Geçmiş aşıları sisteme tanıtırsınız
+                  <Check size={14} className="w-3.5 h-3.5 text-success" aria-hidden="true" /> Geçmiş aşıları sisteme tanıtırsınız
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-success text-sm">✓</span> Gelecek hatırlatıcılar doğru tarihlere planlanır
+                  <Check size={14} className="w-3.5 h-3.5 text-success" aria-hidden="true" /> Gelecek hatırlatıcılar doğru tarihlere planlanır
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-success text-sm">✓</span> Sistem otomatik takip eder
+                  <Check size={14} className="w-3.5 h-3.5 text-success" aria-hidden="true" /> Sistem otomatik takip eder
                 </div>
               </div>
               
@@ -293,7 +294,7 @@ function SuccessContent() {
             <div className="w-full bg-surface-1 border border-border rounded-input p-5 text-left shadow-xs">
               <div className="flex items-start gap-3 mb-3">
                 <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5 font-bold">
-                  🛡️
+                  <ShieldCheck size={16} className="w-4 h-4 text-primary" aria-hidden="true" />
                 </div>
                 <div>
                   <p className="text-base font-bold text-text-primary">6. Adım: Aşı Takibini Başlat</p>
@@ -313,7 +314,9 @@ function SuccessContent() {
 
           {!showHealthHistoryCard && !showVaccinePlanCard && (
             <div className="p-4 bg-success-soft/30 rounded-xl border border-success/20 text-center">
-              <p className="text-xs text-success font-bold">✓ Bütün adımlar başarıyla tamamlandı!</p>
+              <p className="text-xs text-success font-bold flex items-center justify-center gap-1.5">
+                <Check size={14} className="w-3.5 h-3.5 text-success" aria-hidden="true" /> Bütün adımlar başarıyla tamamlandı!
+              </p>
             </div>
           )}
 

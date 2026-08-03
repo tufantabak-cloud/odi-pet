@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import CoachMark from '@/components/ui/CoachMark'
+import { FirstAidIcon } from '@/components/icons/PetIcons'
+import { Stethoscope, Check } from 'lucide-react'
 
 export default function TreatmentsClient({ pet }: { pet: any }) {
   const [plans, setPlans] = useState<any[]>([])
@@ -48,12 +50,12 @@ export default function TreatmentsClient({ pet }: { pet: any }) {
           hintKey="treatments_intro"
           title="Sağlık Sürecini Yönet"
           message="Hastalık süreçlerini, ilaç alım saatlerini ve veteriner randevularını artık Plan Yap sihirbazı üzerinden ekleyebilirsiniz."
-          icon="🩺"
+          icon={<FirstAidIcon width={24} height={24} className="w-6 h-6 text-info" />}
           position="bottom"
         />
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-soft to-primary/20 flex items-center justify-center shrink-0">
-            <span className="text-2xl">🩺</span>
+            <FirstAidIcon width={24} height={24} className="w-6 h-6 text-info" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-text-primary">Sağlık Takip Modülü</h1>
@@ -78,7 +80,7 @@ export default function TreatmentsClient({ pet }: { pet: any }) {
             {activePlans.map(plan => (
               <div key={plan.id} className="card-base p-5 flex flex-col gap-2 border-l-4 border-l-emerald-500 dark:border-l-emerald-400">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">🩺</div>
+                  <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold"><Stethoscope size={20} className="w-5 h-5 text-info" /></div>
                   <div>
                     <h3 className="font-bold text-text-primary text-base">{plan.sub_type}</h3>
                     <p className="text-xs text-text-secondary">{plan.repeat_rule === 'daily' ? 'Günlük' : plan.repeat_rule === 'weekly' ? 'Haftalık' : plan.repeat_rule === 'monthly' ? 'Aylık' : 'Tek Seferlik'}</p>
@@ -99,7 +101,7 @@ export default function TreatmentsClient({ pet }: { pet: any }) {
             {completedPlans.map(plan => (
               <div key={plan.id} className="card-base p-5 flex flex-col gap-2 bg-slate-50 dark:bg-slate-900 border-l-4 border-l-slate-400 dark:border-l-slate-600">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold">✓</div>
+                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold"><Check size={16} className="w-4 h-4 text-success" /></div>
                   <div>
                     <h3 className="font-bold text-text-primary text-base">{plan.sub_type}</h3>
                     <p className="text-xs text-text-secondary">{new Date(plan.updated_at || plan.scheduled_at).toLocaleDateString('tr-TR')}</p>

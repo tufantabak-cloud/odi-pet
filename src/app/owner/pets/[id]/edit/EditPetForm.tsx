@@ -8,6 +8,8 @@ import { calcAge } from '@/lib/pets/utils'
 import { SmartScanner } from '@/components/ui/SmartScanner'
 import { StepperInput } from '@/components/ui/StepperInput'
 import { RulerPicker } from '@/components/ui/RulerPicker'
+import { DefaultCatAvatar, DefaultDogAvatar, FirstAidIcon, RulerIcon } from '@/components/icons/PetIcons'
+import { PawPrint, Camera, AlertTriangle, Siren, Image as ImageIcon, CreditCard, Stethoscope, Scale, Sparkles } from 'lucide-react'
 
 const CAT_BREEDS = [
   'British Shorthair', 'Scottish Fold', 'Scottish Straight',
@@ -311,8 +313,8 @@ export default function EditPetForm({ pet }: { pet: any }) {
       )}
 
       {submitError && (
-        <div role="alert" aria-live="assertive" className="mb-4 p-3 rounded-input bg-error/10 border border-error/20 text-error text-[13px] font-bold text-center">
-          ⚠️ {submitError}
+        <div role="alert" aria-live="assertive" className="mb-4 p-3 rounded-input bg-error/10 border border-error/20 text-error text-[13px] font-bold text-center flex items-center justify-center gap-1.5">
+          <AlertTriangle size={16} className="w-4 h-4 text-error shrink-0" aria-hidden="true" /> {submitError}
         </div>
       )}
 
@@ -320,7 +322,9 @@ export default function EditPetForm({ pet }: { pet: any }) {
 
         {/* ─── BÖLÜM 1: Temel Kimlik ─── */}
         <section id="temel-section" className="card-base p-6 sm:p-8 flex flex-col gap-6">
-          <h2 className="text-base font-semibold text-text-primary border-b border-border-main pb-3">1. Temel Kimlik ve Fotoğraf</h2>
+          <h2 className="text-base font-semibold text-text-primary border-b border-border-main pb-3 flex items-center gap-2">
+            <PawPrint size={18} className="w-4.5 h-4.5 text-primary" aria-hidden="true" /> 1. Temel Kimlik ve Fotoğraf
+          </h2>
           
           <div 
             data-highlight="photo"
@@ -340,7 +344,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
                   <img src={photoPreview} alt="Önizleme" className="w-full h-full object-cover" />
                 )
               ) : (
-                <span className="text-4xl">{species === 'cat' ? '🐱' : '🐶'}</span>
+                species === 'cat' ? <DefaultCatAvatar className="w-16 h-16" /> : <DefaultDogAvatar className="w-16 h-16" />
               )}
             </div>
             <label className="text-xs font-bold text-primary bg-primary/10 px-4 py-2 rounded-full cursor-pointer hover:bg-primary/20 transition-colors">
@@ -376,7 +380,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
             <div className="flex flex-col gap-2">
               <label className="text-[13px] font-bold text-text-primary">Cinsiyet</label>
               <div className="flex gap-2">
-                {[['male', '♂ Erkek'], ['female', '♀ Dişi']].map(([v, l]) => (
+                {[['male', 'Erkek'], ['female', 'Dişi']].map(([v, l]) => (
                   <label key={v} className={`flex-1 flex items-center justify-center p-3 border-2 rounded-input cursor-pointer text-[13px] font-bold transition-all ${gender === v ? 'border-primary bg-primary-soft/30 text-primary' : 'border-border-main text-text-secondary'}`}>
                     <input type="radio" name="gender" value={v} checked={gender === v} onChange={() => setGender(v)} className="sr-only"/>
                     {l}
@@ -485,7 +489,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
 
                {birthDate && (
                  <div className="text-[13px] font-bold text-primary bg-primary-soft/40 px-4 py-2.5 rounded-input border border-primary/20 mt-1 animate-scaleIn flex items-center gap-2">
-                   <span>✨</span>
+                   <Sparkles size={16} className="w-4 h-4 text-primary" aria-hidden="true" />
                    <span>Hesaplanan Yaş: <strong>{calcAge(birthDate).text}</strong> ({calcAge(birthDate).label})</span>
                  </div>
                )}
@@ -504,7 +508,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
-                    <span>⚖️ Kilo (kg) *</span>
+                    <Scale size={16} className="w-4 h-4 text-white" aria-hidden="true" /> <span>Kilo (kg) *</span>
                     {weightKg && <span className="px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-medium">{weightKg} kg</span>}
                   </button>
 
@@ -517,7 +521,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
-                    <span>📏 Boy (cm)</span>
+                    <RulerIcon width={16} height={16} className="w-4 h-4 text-white" aria-hidden="true" /> <span>Boy (cm)</span>
                     <span className="text-[11px] opacity-80">(Opsiyonel)</span>
                     {heightCm && <span className="px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-medium">{heightCm} cm</span>}
                   </button>
@@ -567,19 +571,19 @@ export default function EditPetForm({ pet }: { pet: any }) {
                       onChange={e => setSize(e.target.value)}
                       className="text-xs font-bold border border-primary/30 rounded-lg px-2 py-1 bg-white text-primary focus:outline-none"
                     >
-                      {species === 'dog' && <option value="toy">🧸 Oyuncak / Ekstra Küçük</option>}
-                      <option value="small">🐩 Küçük</option>
-                      <option value="medium">🐕 Orta</option>
-                      <option value="large">🦮 Büyük</option>
-                      {species === 'dog' && <option value="giant">🦁 Dev</option>}
+                      {species === 'dog' && <option value="toy">Oyuncak / Ekstra Küçük</option>}
+                      <option value="small">Küçük</option>
+                      <option value="medium">Orta</option>
+                      <option value="large">Büyük</option>
+                      {species === 'dog' && <option value="giant">Dev</option>}
                     </select>
                   ) : (
                     <span className="px-4 py-1.5 rounded-full text-[13px] font-medium bg-primary text-white flex items-center gap-1.5 shadow-sm">
-                      {size === 'toy' && '🧸 Oyuncak / Ekstra Küçük'}
-                      {size === 'small' && '🐩 Küçük'}
-                      {size === 'medium' && '🐕 Orta'}
-                      {size === 'large' && '🦮 Büyük'}
-                      {size === 'giant' && '🦁 Dev'}
+                      {size === 'toy' && 'Oyuncak / Ekstra Küçük'}
+                      {size === 'small' && 'Küçük'}
+                      {size === 'medium' && 'Orta'}
+                      {size === 'large' && 'Büyük'}
+                      {size === 'giant' && 'Dev'}
                       {!size && 'Kilo Girilmelidir'}
                     </span>
                   )}
@@ -650,7 +654,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
 
               <label className="text-[13px] font-bold text-text-primary">Kısırlaştırma Durumu</label>
               <div className="flex gap-2">
-                {[[true, '✂️ Kısırlaştırıldı'], [false, '❤️ Kısırlaştırılmadı']].map(([v, l]) => (
+                {[[true, 'Kısırlaştırıldı'], [false, 'Kısırlaştırılmadı']].map(([v, l]) => (
                   <button
                     key={String(v)}
                     type="button"
@@ -672,7 +676,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
             <div className="flex flex-col gap-2 mt-2">
               <label className="text-[13px] font-bold text-text-primary">Yaşam Alanı</label>
               <div className="flex gap-3">
-                {[['indoor', '🏠 Tamamen Kapalı'], ['outdoor', '🌳 Dışarı Çıkan']].map(([v, l]) => (
+                {[['indoor', 'Tamamen Kapalı'], ['outdoor', 'Dışarı Çıkan']].map(([v, l]) => (
                   <label key={v} className={`flex-1 flex items-center justify-center p-3 border-2 rounded-input cursor-pointer text-[13px] font-bold transition-all ${lifestyle === v ? 'border-primary bg-primary-soft/30 text-primary' : 'border-border-main text-text-secondary'}`}>
                     <input type="radio" name="lifestyle" value={v} checked={lifestyle === v} onChange={() => setLifestyle(v)} className="sr-only"/>
                     {l}
@@ -826,19 +830,19 @@ export default function EditPetForm({ pet }: { pet: any }) {
           ))}
 
           <button type="button" onClick={handleSaveSos} disabled={sosSaving}
-            className="btn-secondary w-full sm:w-auto h-[50px] flex items-center justify-center text-sm font-bold disabled:opacity-50">
-            {sosSaving ? 'Kaydediliyor...' : '🆘 Acil Durum Ağını Kaydet'}
+            className="btn-secondary w-full sm:w-auto h-[50px] flex items-center justify-center gap-2 text-sm font-bold disabled:opacity-50">
+            {sosSaving ? 'Kaydediliyor...' : <><Siren size={16} className="w-4 h-4 text-white" aria-hidden="true" /> Acil Durum Ağını Kaydet</>}
           </button>
         </section>
 
         {(() => {
-          const enrichTasks: { label: string; icon: string }[] = []
-          if (!pet.avatar_url) enrichTasks.push({ label: 'Profil Fotoğrafı Ekle', icon: '📷' })
-          if (!pet.cover_url) enrichTasks.push({ label: 'Kapak Fotoğrafı Ekle', icon: '🖼️' })
-          if (!pet.breed) enrichTasks.push({ label: 'Irk Bilgisi Gir', icon: '🐾' })
-          if (!pet.microchip_no) enrichTasks.push({ label: 'Mikroçip Numarası Ekle', icon: '🆔' })
-          if (!pet.vet_name) enrichTasks.push({ label: 'Veteriner Bilgisi Gir', icon: '🩺' })
-          if (!pet.sos_contacts || !(pet.sos_contacts as any)?.[0]?.phone) enrichTasks.push({ label: 'Acil Durum (SOS) Ağı Kur', icon: '🆘' })
+          const enrichTasks: { label: string; icon: React.ReactNode }[] = []
+          if (!pet.avatar_url) enrichTasks.push({ label: 'Profil Fotoğrafı Ekle', icon: <Camera size={18} className="w-4.5 h-4.5 text-primary" aria-hidden="true" /> })
+          if (!pet.cover_url) enrichTasks.push({ label: 'Kapak Fotoğrafı Ekle', icon: <ImageIcon size={18} className="w-4.5 h-4.5 text-primary" aria-hidden="true" /> })
+          if (!pet.breed) enrichTasks.push({ label: 'Irk Bilgisi Gir', icon: <PawPrint size={18} className="w-4.5 h-4.5 text-primary" aria-hidden="true" /> })
+          if (!pet.microchip_no) enrichTasks.push({ label: 'Mikroçip Numarası Ekle', icon: <CreditCard size={18} className="w-4.5 h-4.5 text-primary" aria-hidden="true" /> })
+          if (!pet.vet_name) enrichTasks.push({ label: 'Veteriner Bilgisi Gir', icon: <Stethoscope size={18} className="w-4.5 h-4.5 text-primary" aria-hidden="true" /> })
+          if (!pet.sos_contacts || !(pet.sos_contacts as any)?.[0]?.phone) enrichTasks.push({ label: 'Acil Durum (SOS) Ağı Kur', icon: <Siren size={18} className="w-4.5 h-4.5 text-danger" aria-hidden="true" /> })
           const totalFields = 6;
 
           return enrichTasks.length > 0 && (
