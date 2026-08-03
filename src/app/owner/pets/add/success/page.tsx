@@ -199,7 +199,7 @@ function SuccessContent() {
               <button
                 onClick={handleSubscribe}
                 disabled={isLoading || isInitializing}
-                className="w-full bg-gradient-to-r from-primary to-indigo-600 text-white py-4 text-[15px] font-black shadow-lg hover:shadow-xl flex items-center justify-center gap-2.5 hover:scale-[1.01] active:scale-[0.99] transition-all rounded-xl cursor-pointer"
+                className="w-full bg-gradient-to-r from-primary to-indigo-600 text-white py-4 text-base font-black shadow-lg hover:shadow-xl flex items-center justify-center gap-2.5 hover:scale-[1.01] active:scale-[0.99] transition-all rounded-xl cursor-pointer"
               >
                 {isLoading || isInitializing ? (
                   <span className="flex items-center gap-2 justify-center">
@@ -262,7 +262,7 @@ function SuccessContent() {
                   ⏱️
                 </div>
                 <div>
-                  <p className="text-[15px] font-bold text-text-primary">6. Adım: Sağlık Geçmişini Ekle</p>
+                  <p className="text-base font-bold text-text-primary">6. Adım: Sağlık Geçmişini Ekle</p>
                   <p className="text-xs text-text-secondary mt-0.5">
                     Yaklaşık 2 dakika sürer. <strong className="text-text-primary">Sadece bir kez yapılır</strong> — bundan sonrası otomatik.
                   </p>
@@ -296,7 +296,7 @@ function SuccessContent() {
                   🛡️
                 </div>
                 <div>
-                  <p className="text-[15px] font-bold text-text-primary">6. Adım: Aşı Takibini Başlat</p>
+                  <p className="text-base font-bold text-text-primary">6. Adım: Aşı Takibini Başlat</p>
                   <p className="text-xs text-text-secondary mt-0.5">
                     {petName} için aşı planı oluşturun; zamanı gelince biz hatırlatalım.
                   </p>

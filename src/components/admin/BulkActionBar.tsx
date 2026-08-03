@@ -44,9 +44,9 @@ export default function BulkActionBar({
           {onGrantCredit && (
             <button
               onClick={onGrantCredit}
-              className="px-3 py-2 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl text-[12px] font-bold text-amber-800 transition-colors flex items-center gap-1.5"
+              className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 border border-amber-300 rounded-xl text-[12px] font-black text-amber-900 transition-all active:scale-[0.98] shadow-2xs flex items-center gap-1.5"
             >
-              🎁 +30 Gün Kredi Yükle
+              👑 Toplu Pro Yap / Gün Yükle
             </button>
           )}
           {onExport && (

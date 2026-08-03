@@ -32,6 +32,14 @@ import {
   Plus,
   Sparkles,
   CreditCard,
+  Crown,
+  Gift,
+  Users,
+  MapPin,
+  ShieldAlert,
+  Stethoscope,
+  Phone,
+  User,
 } from 'lucide-react'
 
 export default async function ProfileMenuPage({
@@ -45,10 +53,29 @@ export default async function ProfileMenuPage({
   const params = await searchParams
   const showBiometricPrompt = params.biometric === 'true'
 
-  const { data: pets } = await supabase
-    .from('pets')
-    .select('*')
-    .eq('owner_id', profile?.id ?? '')
+  const [
+    { data: pets },
+    { data: userCredits },
+    { data: userReferrals },
+  ] = await Promise.all([
+    supabase
+      .from('pets')
+      .select('*')
+      .eq('owner_id', profile?.id ?? ''),
+    supabase
+      .from('membership_credits')
+      .select('credit_days, reason, created_at')
+      .eq('profile_id', profile?.id ?? '')
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('referrals')
+      .select('id, status, created_at')
+      .eq('referrer_id', profile?.id ?? ''),
+  ])
+
+  const totalCreditDays = (userCredits || []).reduce((acc, c) => acc + (c.credit_days || 0), 0)
+  const totalReferredUsers = userReferrals?.length ?? 0
+  const qualifiedReferrals = userReferrals?.filter(r => r.status === 'qualified').length ?? 0
 
   const entitlement = await getEntitlement(profile?.id ?? '')
 
@@ -78,6 +105,8 @@ export default async function ProfileMenuPage({
   // Calculate Profile Completion Tasks
   const completionChecks = [
     { done: !!(user?.phone || (profile as any)?.phone), label: 'Telefon Ekle', action: '+ Telefon Ekle', link: '/owner/profile/edit' },
+    { done: !!((profile as any)?.emergency_contact_name), label: 'Acil İletişim Kişisi Ekle', action: '+ Acil Kişi', link: '/owner/profile/edit' },
+    { done: !!((profile as any)?.city), label: 'Konum Bilgisi Ekle', action: '+ Konum Ekle', link: '/owner/profile/edit' },
     { done: (passkeyCount ?? 0) > 0, label: 'Biyometrik Giriş Tanımla', action: '+ Şifresiz Giriş', link: '/owner/profile?biometric=true' },
     { done: isPremium, label: 'Ödeme Yöntemi Ekle', action: '+ Ödeme Yöntemi Ekle', link: '/owner/profile/subscription' },
     { done: !!(pets && pets.length > 0), label: 'İlk Can Dostunu Ekle', action: '+ Can Dost Ekle', link: '/owner/pets/add' },
@@ -168,23 +197,132 @@ export default async function ProfileMenuPage({
         </div>
       </section>
 
+      {/* Enriched Owner Details & Emergency Contact Card */}
+      <section className="bg-white rounded-3xl p-5 border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-bold text-text-secondary uppercase tracking-wider flex items-center gap-1.5">
+            <User className="w-4 h-4 text-primary" />
+            Ebeveyn Profil Detayları
+          </h2>
+          <Link
+            href="/owner/profile/edit"
+            className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
+          >
+            Düzenle
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* Item 1: Location */}
+          <div className="p-3.5 rounded-2xl bg-teal-50/60 border border-teal-100 flex items-start gap-3">
+            <div className="w-8 h-8 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center shrink-0 mt-0.5">
+              <MapPin className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-3xs font-bold text-teal-800 uppercase tracking-wider">Konum</div>
+              <div className="text-sm font-extrabold text-slate-800 mt-0.5">
+                {(profile as any)?.city
+                  ? `${(profile as any).city}${(profile as any)?.district ? `, ${(profile as any).district}` : ''}${(profile as any)?.neighborhood ? ` (${(profile as any).neighborhood})` : ''}`
+                  : 'Belirtilmedi'}
+              </div>
+            </div>
+          </div>
+
+          {/* Item 2: Emergency Contact */}
+          <div className="p-3.5 rounded-2xl bg-rose-50/60 border border-rose-100 flex items-start gap-3">
+            <div className="w-8 h-8 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0 mt-0.5">
+              <ShieldAlert className="w-4 h-4" />
+            </div>
+            <div className="flex flex-col gap-1 w-full">
+              <div className="text-3xs font-bold text-rose-800 uppercase tracking-wider">Acil Durum Kişileri</div>
+              <div>
+                <div className="text-sm font-extrabold text-slate-800">
+                  {(profile as any)?.emergency_contact_name || 'Tanımlanmadı'}
+                </div>
+                {(profile as any)?.emergency_contact_phone && (
+                  <div className="text-xs font-semibold text-rose-700 flex items-center gap-1">
+                    <Phone className="w-3 h-3 shrink-0" />
+                    {(profile as any).emergency_contact_phone}
+                    {(profile as any)?.emergency_contact_relation && ` (${(profile as any).emergency_contact_relation})`}
+                  </div>
+                )}
+              </div>
+              {(profile as any)?.emergency_contact2_name && (
+                <div className="pt-1.5 border-t border-rose-200/50">
+                  <div className="text-xs font-bold text-slate-800">
+                    2. {(profile as any).emergency_contact2_name}
+                  </div>
+                  {(profile as any)?.emergency_contact2_phone && (
+                    <div className="text-2xs font-semibold text-rose-700 flex items-center gap-1">
+                      <Phone className="w-2.5 h-2.5 shrink-0" />
+                      {(profile as any).emergency_contact2_phone}
+                      {(profile as any)?.emergency_contact2_relation && ` (${(profile as any).emergency_contact2_relation})`}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Item 3: Preferred Vet */}
+          <div className="p-3.5 rounded-2xl bg-indigo-50/60 border border-indigo-100 flex items-start gap-3">
+            <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0 mt-0.5">
+              <Stethoscope className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-3xs font-bold text-indigo-800 uppercase tracking-wider">Kayıtlı Veteriner</div>
+              <div className="text-sm font-extrabold text-slate-800 mt-0.5">
+                {(profile as any)?.preferred_vet_name || 'Tanımlanmadı'}
+              </div>
+              {(profile as any)?.preferred_vet_phone && (
+                <div className="text-xs font-semibold text-indigo-700 mt-0.5 flex items-center gap-1">
+                  <Phone className="w-3 h-3" />
+                  {(profile as any).preferred_vet_phone}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {(profile as any)?.bio && (
+          <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 text-xs font-medium text-slate-600">
+            <span className="font-bold text-slate-700">Hakkımda: </span>
+            {(profile as any).bio}
+          </div>
+        )}
+      </section>
+
       {/* 2. Subscription Command Center */}
       <section className="flex flex-col gap-2">
-        <h2 className="text-xs font-bold text-text-secondary uppercase tracking-wider px-2">Abonelik Yönetimi</h2>
-        <div className="bg-white rounded-3xl p-6 border-l-4 border-l-amber-400 border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)]">
-          <div className="flex justify-between items-start mb-5">
+        <h2 className="text-xs font-bold text-text-secondary uppercase tracking-wider px-2">Abonelik & Kredi Durum Merkezi</h2>
+        <div className="bg-white rounded-3xl p-6 border-l-4 border-l-amber-400 border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] space-y-5">
+          <div className="flex justify-between items-start flex-wrap gap-3">
             <div>
               <h3 className="text-xl font-extrabold text-text-primary flex items-center gap-2">
                 {planName}
                 {isPremium && <Star className="w-5 h-5 text-amber-400 fill-amber-400" />}
               </h3>
-              <p className="text-sm text-text-secondary mt-1">
-                {isPremium ? 'Tüm Pro avantajları aktif' : 'Ücretsiz plana devam ediyorsunuz'}
+              <p className="text-sm font-semibold text-text-secondary mt-1">
+                {isPremium ? (
+                  entitlement.daysLeft >= 3650 ? (
+                    <span className="text-amber-700 font-bold flex items-center gap-1">
+                      👑 Ömür Boyu Sonsuz Pro Kullanım (Süresiz ♾️)
+                    </span>
+                  ) : (
+                    <span className="text-amber-700 font-bold flex items-center gap-1">
+                      👑 Aktif Pro Kullanıcı ({entitlement.daysLeft} Gün Kaldı
+                      {entitlement.validUntil && ` · Bitiş: ${new Date(entitlement.validUntil).toLocaleDateString('tr-TR')}`})
+                    </span>
+                  )
+                ) : (
+                  'Ücretsiz (Free) plana devam ediyorsunuz'
+                )}
               </p>
             </div>
             {isPremium ? (
-              <span className="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full">
-                Otomatik Yenileme Açık
+              <span className="px-3.5 py-1 bg-amber-50 text-amber-800 text-xs font-black rounded-full border border-amber-200/80 flex items-center gap-1">
+                <Crown className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
+                {entitlement.daysLeft >= 3650 ? 'Sonsuz ♾️ Pro' : `${entitlement.daysLeft} Gün Aktif`}
               </span>
             ) : (
               <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-full">
@@ -193,7 +331,53 @@ export default async function ProfileMenuPage({
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+          {/* 3 Metric Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* Stat 1: Status / Days Left */}
+            <div className="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200/70 space-y-1">
+              <div className="text-2xs font-extrabold text-amber-800 uppercase tracking-wider flex items-center gap-1">
+                <Crown className="w-3.5 h-3.5 text-amber-600" />
+                Abonelik Durumu
+              </div>
+              <div className="text-base font-black text-amber-950">
+                {isPremium ? (entitlement.daysLeft >= 3650 ? 'Sonsuz ♾️' : `${entitlement.daysLeft} Gün Kaldı`) : 'Free (Ücretsiz)'}
+              </div>
+              <div className="text-3xs font-semibold text-amber-700">
+                {isPremium ? (entitlement.daysLeft >= 3650 ? 'Sınırsız Ömür Boyu Erişim' : `Son Gün: ${new Date(entitlement.validUntil!).toLocaleDateString('tr-TR')}`) : 'Pro avantajlar pasif'}
+              </div>
+            </div>
+
+            {/* Stat 2: Total Credits Earned */}
+            <div className="p-3.5 rounded-2xl bg-purple-50/60 border border-purple-200/70 space-y-1">
+              <div className="text-2xs font-extrabold text-purple-800 uppercase tracking-wider flex items-center gap-1">
+                <Gift className="w-3.5 h-3.5 text-purple-600" />
+                Kazanılan Krediler
+              </div>
+              <div className="text-base font-black text-purple-950">
+                +{totalCreditDays >= 36500 ? 'Sonsuz ♾️' : `${totalCreditDays} Gün`}
+              </div>
+              <div className="text-3xs font-semibold text-purple-700">
+                {userCredits?.length ?? 0} İşlem / Promosyon Hediye
+              </div>
+            </div>
+
+            {/* Stat 3: Referred Users */}
+            <div className="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-200/70 space-y-1">
+              <div className="text-2xs font-extrabold text-emerald-800 uppercase tracking-wider flex items-center gap-1">
+                <Users className="w-3.5 h-3.5 text-emerald-600" />
+                Davet Edilen Üyeler
+              </div>
+              <div className="text-base font-black text-emerald-950">
+                {totalReferredUsers} Kişi
+              </div>
+              <div className="text-3xs font-semibold text-emerald-700">
+                {qualifiedReferrals > 0 ? `${qualifiedReferrals} Nitelikli Kayıt Bonusu` : 'Arkadaşlarını davet et Pro kazan'}
+              </div>
+            </div>
+          </div>
+
+          {/* Feature Badges */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
             <div className="flex items-center gap-2 text-sm font-semibold text-text-primary">
               <div className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center">
                 <CheckCircle2 className="w-3.5 h-3.5" />
@@ -212,15 +396,15 @@ export default async function ProfileMenuPage({
               </div>
               Premium Rehber & Sağlık İçeriği
             </div>
-            <div className="flex items-center gap-2 text-sm font-medium text-text-secondary opacity-60">
-              <div className="w-5 h-5 rounded-full bg-bg-main text-text-secondary flex items-center justify-center border border-border-main">
-                <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+            <div className="flex items-center gap-2 text-sm font-medium text-text-secondary">
+              <div className="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center">
+                <Sparkles className="w-3.5 h-3.5" />
               </div>
-              Gelişmiş Beslenme Raporları
+              Gelişmiş Beslenme & Sağlık Raporları
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-3 items-center">
+          <div className="flex flex-wrap gap-3 items-center pt-2">
             <Link
               href="/owner/profile/subscription"
               className={`rounded-2xl text-sm font-semibold py-2.5 px-5 transition-all active:scale-[0.98] ${
@@ -230,10 +414,11 @@ export default async function ProfileMenuPage({
               {isPremium ? 'Aboneliği Yönet →' : 'Pro\'ya Yükselt →'}
             </Link>
             <Link
-              href="/owner/profile/subscription"
-              className="btn-secondary text-sm font-semibold py-2.5 px-5 rounded-2xl active:scale-[0.98]"
+              href="/referral"
+              className="btn-secondary text-sm font-semibold py-2.5 px-5 rounded-2xl active:scale-[0.98] flex items-center gap-1.5"
             >
-              Fatura Geçmişi
+              <Users className="w-4 h-4 text-emerald-600" />
+              <span>Arkadaşlarını Davet Et (+30 Gün)</span>
             </Link>
           </div>
         </div>
@@ -282,44 +467,7 @@ export default async function ProfileMenuPage({
       {/* 4. Notification Intelligence Center */}
       <NotificationSettings />
 
-      {/* 5. Billing History */}
-      <section className="flex flex-col gap-2">
-        <h2 className="text-xs font-bold text-text-secondary uppercase tracking-wider px-2">Ödeme Geçmişi</h2>
-        <div className="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)]">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-bg-main text-text-secondary font-bold text-xs uppercase tracking-wider">
-              <tr>
-                <th className="p-4 py-3">Tarih</th>
-                <th className="p-4 py-3">Tutar</th>
-                <th className="p-4 py-3">Durum</th>
-                <th className="p-4 py-3 text-right">Belge</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border-main font-medium">
-              <tr className="hover:bg-slate-50/50 transition-colors">
-                <td className="p-4 text-text-primary">01 May 2026</td>
-                <td className="p-4 text-text-primary">₺149.00</td>
-                <td className="p-4">
-                  <span className="text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg text-xs font-bold">Ödendi</span>
-                </td>
-                <td className="p-4 text-right">
-                  <span className="text-primary font-semibold cursor-pointer hover:underline">PDF</span>
-                </td>
-              </tr>
-              <tr className="hover:bg-slate-50/50 transition-colors">
-                <td className="p-4 text-text-primary">01 Nis 2026</td>
-                <td className="p-4 text-text-primary">₺149.00</td>
-                <td className="p-4">
-                  <span className="text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg text-xs font-bold">Ödendi</span>
-                </td>
-                <td className="p-4 text-right">
-                  <span className="text-primary font-semibold cursor-pointer hover:underline">PDF</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
+
 
       {/* 6. App Settings */}
       <section className="flex flex-col gap-2">

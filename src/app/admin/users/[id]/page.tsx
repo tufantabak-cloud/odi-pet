@@ -5,8 +5,12 @@ import { createAdminSupabaseClient } from '@/lib/supabase/server'
 import RoleChangeForm from './RoleChangeForm'
 import DeleteUserButton from './DeleteUserButton'
 import DeletePetButton from './DeletePetButton'
+import QuickGrantUserButton from './QuickGrantUserButton'
+import ProCountdownCard from './ProCountdownCard'
+import SubscriptionCreditsLedger from './SubscriptionCreditsLedger'
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -66,18 +70,22 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
   // Load profile with fallback if optional premium columns fail
   let { data: profile } = await supabase
     .from('profiles')
-    .select('id, first_name, last_name, email, role, phone, created_at, premium_until, premium_tier')
+    .select('id, first_name, last_name, email, role, phone, created_at, premium_until, pro_trial_until, premium_tier')
     .eq('id', id)
     .maybeSingle()
 
   if (!profile) {
     const { data: fallbackProfile } = await supabase
       .from('profiles')
-      .select('id, first_name, last_name, email, role, phone, created_at')
+      .select('id, first_name, last_name, email, role, phone, created_at, pro_trial_until')
       .eq('id', id)
       .maybeSingle()
 
     profile = fallbackProfile as any
+  }
+
+  if (profile) {
+    profile.premium_until = profile.premium_until || (profile as any).pro_trial_until || null
   }
 
   // Load other details in parallel
@@ -85,6 +93,7 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
     { data: pets },
     { data: subscriptionRaw },
     { data: events },
+    { data: creditHistory },
   ] = await Promise.all([
     supabase
       .from('pets')
@@ -100,10 +109,15 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
       .maybeSingle(),
     supabase
       .from('event_stream')
-      .select('id, event, ts, payload')
+      .select('id, event, event_type, ts, created_at, payload, metadata')
       .eq('profile_id', id)
-      .order('ts', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(20),
+    supabase
+      .from('membership_credits')
+      .select('id, credit_days, reason, metadata, created_at')
+      .eq('profile_id', id)
+      .order('created_at', { ascending: false }),
   ])
 
   const subscription = subscriptionRaw ? {
@@ -220,16 +234,18 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
               </div>
             ) : (
               <div className="divide-y divide-border-main max-h-[480px] overflow-y-auto">
-                {(events ?? []).map((ev) => {
-                  const ts = new Date(ev.ts)
-                  const payload = ev.payload as Record<string, unknown> | null
+                {(events ?? []).map((ev: any) => {
+                  const eventName = ev.event || ev.event_type || 'Etkinlik Kaydı'
+                  const eventTime = ev.ts || ev.created_at
+                  const ts = eventTime ? new Date(eventTime) : new Date()
+                  const payload = (ev.payload && Object.keys(ev.payload).length > 0 ? ev.payload : ev.metadata) as Record<string, unknown> | null
                   return (
                     <div key={ev.id} className="px-6 py-3.5 flex items-start gap-3">
                       <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
                           <code className="text-[12px] font-mono text-text-primary font-semibold">
-                            {ev.event}
+                            {eventName}
                           </code>
                           <span className="text-[11px] text-text-secondary flex-shrink-0">
                             {ts.toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' })}{' '}
@@ -248,6 +264,9 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
               </div>
             )}
           </div>
+
+          {/* Subscription Credits Ledger */}
+          <SubscriptionCreditsLedger credits={creditHistory ?? []} />
         </div>
 
         {/* RIGHT COLUMN */}
@@ -263,26 +282,7 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
             </h2>
 
             <div className="space-y-3">
-              {profile.premium_until && new Date(profile.premium_until).getTime() > Date.now() ? (
-                <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200/80 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-amber-800 flex items-center gap-1">
-                      👑 Odi Pro Aktif
-                    </span>
-                    <span className="text-xs font-black text-amber-900 bg-amber-200/60 px-2 py-0.5 rounded-full">
-                      {Math.ceil((new Date(profile.premium_until).getTime() - Date.now()) / (1000 * 60 * 60 * 24))} Gün Kaldı
-                    </span>
-                  </div>
-                  <div className="text-2xs text-amber-700 font-medium">
-                    Pro Bitiş Tarihi: {new Date(profile.premium_until).toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' })}
-                  </div>
-                </div>
-              ) : (
-                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
-                  <div className="text-xs font-bold text-slate-700">Ücretsiz Plan (Free)</div>
-                  <div className="text-2xs text-slate-500">Aktif Pro süresi bulunmuyor.</div>
-                </div>
-              )}
+              <ProCountdownCard premiumUntil={profile.premium_until} />
 
               {subscription && (
                 <div className="pt-2 border-t border-border-main space-y-1 text-[12px] text-text-secondary">
@@ -293,6 +293,8 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
                   )}
                 </div>
               )}
+
+              <QuickGrantUserButton userId={profile.id} userName={fullName} />
             </div>
           </div>
 

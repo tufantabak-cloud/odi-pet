@@ -17,7 +17,7 @@ export default function ServicesInsuranceWrapper({ pets, plan }: { pets: any[]; 
           🛡️
         </div>
         <div className="flex-1">
-          <h3 className="text-[15px] font-extrabold text-text-primary">Can Dostu Sigortası</h3>
+          <h3 className="text-base font-extrabold text-text-primary">Can Dostu Sigortası</h3>
           <p className="text-[13px] text-text-secondary mt-0.5">Petinizin sigorta uygunluk skorunu öğrenin.</p>
         </div>
         <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 font-bold transition-transform group-hover:scale-110">

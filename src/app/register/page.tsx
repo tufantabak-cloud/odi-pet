@@ -247,7 +247,7 @@ export default function RegisterPage() {
                 </svg>
                 Geri Dön
               </button>
-              <span className="mx-auto text-[15px] font-extrabold text-text-primary">Hesap Oluştur</span>
+              <span className="mx-auto text-base font-extrabold text-text-primary">Hesap Oluştur</span>
               <div className="w-16" />{/* Dengeleyici */}
             </div>
           )}

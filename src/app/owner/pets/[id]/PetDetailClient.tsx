@@ -1285,7 +1285,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             <div className={`w-12 h-12 bg-gradient-to-tr ${cta?.gradient || 'from-slate-200 to-slate-300'} rounded-xs flex items-center justify-center shadow-sm mb-1`}>
               <span className="text-2xl">🗓️</span>
             </div>
-            <h3 className="font-extrabold text-text-primary text-[15px]">Henüz görev planlanmamış</h3>
+            <h3 className="font-extrabold text-text-primary text-base">Henüz görev planlanmamış</h3>
             <p className="text-[13px] text-text-secondary max-w-[260px] leading-relaxed mb-2">{cta?.desc || 'Bu kategoride henüz bir görev planlamadınız.'}</p>
             {cta && (
               <button
@@ -1902,7 +1902,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       <div className="p-4 flex flex-col gap-3">
       {/* Timeline - Görev Takibi */}
       <div className="mt-4">
-        <h3 className="text-[15px] font-bold text-text-primary mb-3">
+        <h3 className="text-base font-bold text-text-primary mb-3">
           Görev Takibi
         </h3>
         <HealthTracker refreshTrigger={trackerRefreshKey} petId={pet.id} onEditTask={(t) => handleEditTask(t)} />
@@ -2183,7 +2183,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                   }}
                   className={`flex items-center justify-between py-4 border-b border-border-main/40 last:border-0 ${isActive ? 'text-primary' : 'text-text-secondary hover:text-text-primary'}`}
                 >
-                  <span className={`text-[15px] ${isActive ? 'font-black' : 'font-bold'}`}>{opt}</span>
+                  <span className={`text-base ${isActive ? 'font-black' : 'font-bold'}`}>{opt}</span>
                   <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isActive ? 'border-primary bg-primary-soft' : 'border-border-main'}`}>
                     {isActive && <div className="w-2.5 h-2.5 bg-primary rounded-full"></div>}
                   </div>
@@ -2310,7 +2310,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           <div className="bg-surface w-full rounded-t-[24px] p-6 pb-[calc(24px+env(safe-area-inset-bottom,0px))]"
             onClick={e => e.stopPropagation()}>
             
-            <p className="text-[15px] font-bold text-text-primary mb-4 text-center">
+            <p className="text-base font-bold text-text-primary mb-4 text-center">
               Kapak Fotoğrafı
             </p>
 

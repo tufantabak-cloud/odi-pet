@@ -30,7 +30,7 @@ export default function SmartCardBanner({
       </div>
       
       <div className="flex-1 flex flex-col gap-1">
-        <h4 className="text-[15px] font-extrabold text-text-primary">{title}</h4>
+        <h4 className="text-base font-extrabold text-text-primary">{title}</h4>
         <p className="text-[13px] text-text-secondary font-medium leading-snug">{message}</p>
       </div>
 

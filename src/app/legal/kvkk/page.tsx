@@ -17,7 +17,7 @@ export default function KVKKPage() {
         <h1 className="text-[28px] font-black text-text-primary mb-2">Gizlilik Politikası (KVKK)</h1>
         <p className="text-[13px] text-text-secondary mb-8 border-b border-border-main pb-4">Son Güncelleme: 18 Mayıs 2026</p>
 
-        <div className="prose prose-sm max-w-none text-text-primary text-[15px] leading-relaxed flex flex-col gap-6">
+        <div className="prose prose-sm max-w-none text-text-primary text-base leading-relaxed flex flex-col gap-6">
           <section>
             <h2 className="text-[18px] font-extrabold text-primary mb-3">1. Veri Sorumlusu</h2>
             <p>Odi.Pet (Bundan böyle "Platform" veya "Şirket" olarak anılacaktır) olarak, 6698 Sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") kapsamında veri sorumlusu sıfatıyla kişisel verilerinizin güvenliğine büyük önem vermekteyiz.</p>

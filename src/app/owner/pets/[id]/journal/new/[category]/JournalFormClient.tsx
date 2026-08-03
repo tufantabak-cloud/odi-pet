@@ -197,7 +197,7 @@ export default function JournalFormClient({ petId, category }: { petId: string, 
         </div>
       )}
 
-      <button type="submit" disabled={loading} className="btn-primary min-h-[50px] flex items-center justify-center py-3.5 text-[15px] shadow-sm disabled:opacity-50 mt-2">
+      <button type="submit" disabled={loading} className="btn-primary min-h-[50px] flex items-center justify-center py-3.5 text-base shadow-sm disabled:opacity-50 mt-2">
         {loading ? 'Kaydediliyor...' : 'Kaydı Tamamla'}
       </button>
     </form>

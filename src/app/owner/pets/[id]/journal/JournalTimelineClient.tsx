@@ -276,7 +276,7 @@ export default function JournalTimelineClient({
         <div className="absolute -right-4 -top-4 text-primary/5 text-[100px] font-black select-none pointer-events-none">✨</div>
         <div className="relative z-10 flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-[15px] font-extrabold text-primary flex items-center gap-2">
+            <h2 className="text-base font-extrabold text-primary flex items-center gap-2">
               <span className="text-lg">✨</span> AI Durum Özeti
             </h2>
             <button

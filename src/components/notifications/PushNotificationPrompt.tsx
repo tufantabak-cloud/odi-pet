@@ -96,7 +96,7 @@ export default function PushNotificationPrompt() {
               </svg>
             </div>
             <div className="flex-1">
-              <h3 className="font-bold text-text-primary text-[15px]">Bildirimlere İzin Verin</h3>
+              <h3 className="font-bold text-text-primary text-base">Bildirimlere İzin Verin</h3>
               <p className="text-[13px] text-text-secondary mt-0.5 leading-snug max-w-sm">
                 Hatırlatıcıları ve görevleri zamanında alabilmek için cihaz bildirimlerinizi açın.
               </p>
@@ -147,7 +147,7 @@ export default function PushNotificationPrompt() {
             {/* Button */}
             <button
               onClick={dismissBatteryGuide}
-              className="w-full py-3 rounded-xl bg-primary text-white font-bold text-[15px] hover:bg-primary/90 active:scale-[0.98] transition-all shadow-sm"
+              className="w-full py-3 rounded-xl bg-primary text-white font-bold text-base hover:bg-primary/90 active:scale-[0.98] transition-all shadow-sm"
             >
               Tamam
             </button>

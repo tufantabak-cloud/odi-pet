@@ -657,7 +657,7 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
             <div className="flex flex-col gap-1 relative z-10">
               <div className="flex items-center gap-2">
                 <span className="bg-white/20 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider backdrop-blur-sm">Odi Premium</span>
-                <h3 className="font-extrabold text-[15px] leading-tight">Akıllı Tarama ile Hızlı Planla</h3>
+                <h3 className="font-extrabold text-base leading-tight">Akıllı Tarama ile Hızlı Planla</h3>
               </div>
               <p className="text-[11px] text-white/90 font-medium max-w-[85%] leading-relaxed">
                 Mama paketini okutun, hem stoğu hem de bitiş tarihine göre planlamayı Odi Asistan halletsin.

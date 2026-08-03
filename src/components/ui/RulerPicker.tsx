@@ -174,7 +174,7 @@ export const RulerPicker: React.FC<RulerPickerProps> = ({
                 <span className="text-[32px] font-black tracking-tight text-primary leading-none">
                   {numericValue > 0 ? numericValue : '--'}
                 </span>
-                <span className="text-[15px] font-bold text-primary/80">{unit}</span>
+                <span className="text-base font-bold text-primary/80">{unit}</span>
                 <span className="text-[11px] text-text-secondary opacity-0 group-hover:opacity-100 transition-opacity ml-1">✏️</span>
               </div>
             )}

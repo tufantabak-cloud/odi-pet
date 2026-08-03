@@ -28,7 +28,7 @@ export function StepChip({ category, chips, value, onChange }: StepChipProps) {
             key={chip.id}
             onClick={() => onChange(chip.id)}
             className={`
-              px-5 py-3 rounded-full font-semibold text-[15px] transition-all duration-200 border-2
+              px-5 py-3 rounded-full font-semibold text-base transition-all duration-200 border-2
               ${isSelected 
                 ? 'text-white border-transparent shadow-md transform scale-105' 
                 : 'text-slate-600 bg-white border-slate-200 hover:bg-slate-50'

@@ -9,10 +9,10 @@ export default function NotFound() {
       </div>
       <h1 className="text-[120px] font-black text-primary leading-none tracking-tighter mb-2">404</h1>
       <h2 className="text-[24px] font-extrabold text-text-primary mb-4">Sayfa Bulunamadı</h2>
-      <p className="text-[15px] text-text-secondary mb-8 max-w-[400px]">
+      <p className="text-base text-text-secondary mb-8 max-w-[400px]">
         Aradığınız sayfayı bulamadık. Sayfa kaldırılmış, adı değiştirilmiş veya geçici olarak kullanılamıyor olabilir.
       </p>
-      <Link href="/" className="btn-primary py-3.5 px-8 shadow-lg shadow-primary/30 text-[15px] inline-flex">
+      <Link href="/" className="btn-primary py-3.5 px-8 shadow-lg shadow-primary/30 text-base inline-flex">
         Ana Sayfaya Dön
       </Link>
     </div>

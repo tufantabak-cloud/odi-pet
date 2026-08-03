@@ -202,7 +202,7 @@ export default function BreedingListingManager({ pet, initialListing }: { pet: P
           ✂️
         </div>
         <div>
-          <h3 className="font-bold text-text-primary text-[15px]">Kısırlaştırılmış Profil</h3>
+          <h3 className="font-bold text-text-primary text-base">Kısırlaştırılmış Profil</h3>
           <p className="text-[13px] text-text-secondary mt-1 max-w-[280px]">
             Petinizin profilinde &apos;Kısırlaştırılmış&apos; seçili olduğundan üreme ilanı oluşturamazsınız. Bu bilgide hata varsa profilinizi güncelleyebilirsiniz.
           </p>

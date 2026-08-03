@@ -320,7 +320,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
 
         {/* ─── BÖLÜM 1: Temel Kimlik ─── */}
         <section id="temel-section" className="card-base p-6 sm:p-8 flex flex-col gap-6">
-          <h2 className="text-[15px] font-black text-text-primary border-b border-border-main pb-3">1. Temel Kimlik ve Fotoğraf</h2>
+          <h2 className="text-base font-black text-text-primary border-b border-border-main pb-3">1. Temel Kimlik ve Fotoğraf</h2>
           
           <div 
             data-highlight="photo"
@@ -609,7 +609,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
 
         {/* ─── BÖLÜM 2: Fiziksel Özellikler ─── */}
         <section id="fiziksel-section" className="card-base p-6 sm:p-8 flex flex-col gap-6">
-          <h2 className="text-[15px] font-black text-text-primary border-b border-border-main pb-3">2. Fiziksel ve Yaşam Alanı</h2>
+          <h2 className="text-base font-black text-text-primary border-b border-border-main pb-3">2. Fiziksel ve Yaşam Alanı</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div className="flex flex-col gap-2">
               <label className="text-[13px] font-bold text-text-primary">Renk / Desen</label>
@@ -685,7 +685,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
 
         {/* ─── BÖLÜM 3: Evrak ve Veteriner ─── */}
         <section id="veteriner-section" className="card-base p-6 sm:p-8 flex flex-col gap-6">
-          <h2 className="text-[15px] font-black text-text-primary border-b border-border-main pb-3 flex items-center justify-between flex-wrap gap-2">
+          <h2 className="text-base font-black text-text-primary border-b border-border-main pb-3 flex items-center justify-between flex-wrap gap-2">
             <span>3. Evrak & Veteriner Bilgisi</span>
             
             {!showDocScanner && (
@@ -772,7 +772,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
           }`}
         >
 
-          <h2 className="text-[15px] font-black text-text-primary border-b border-border-main pb-3">4. Acil Durum Ağı</h2>
+          <h2 className="text-base font-black text-text-primary border-b border-border-main pb-3">4. Acil Durum Ağı</h2>
           <p className="text-xs text-text-secondary">Evcil dostunuza bir şey olursa aranacak kişiler.</p>
 
           {sosMsg && (
@@ -848,7 +848,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
                 flex flex-col gap-4">
               <div className="flex items-center 
                 justify-between">
-                <h3 className="text-[15px] 
+                <h3 className="text-base 
                   font-bold text-text-primary">
                   Profili Zenginleştir
                 </h3>
@@ -900,7 +900,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
 
 
         <div className="flex flex-col sm:flex-row justify-end gap-4 pt-2">
-          <button type="submit" disabled={loading} className="btn-primary w-full sm:w-auto min-w-[200px] h-[50px] flex items-center justify-center text-[15px] shadow-2xl shadow-primary/40 disabled:opacity-50">
+          <button type="submit" disabled={loading} className="btn-primary w-full sm:w-auto min-w-[200px] h-[50px] flex items-center justify-center text-base shadow-2xl shadow-primary/40 disabled:opacity-50">
             {loading ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
           </button>
         </div>

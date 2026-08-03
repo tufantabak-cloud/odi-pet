@@ -84,7 +84,7 @@ function PushPermissionCard({ onDismiss, pets = [] }: { onDismiss: () => void, p
         🎉
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-extrabold text-[15px] text-success">Bildirimleriniz Aktif!</p>
+        <p className="font-extrabold text-base text-success">Bildirimleriniz Aktif!</p>
         <p className="text-[13px] text-text-secondary mt-1 leading-relaxed">
           {firstPet ? `${displayName} aşı, ilaç ve beslenme hatırlatmaları artık telefonunuza anında gelecek.` : 'Can dostunuzun aşı, ilaç ve beslenme hatırlatmaları artık telefonunuza anında gelecek.'}
         </p>
@@ -113,7 +113,7 @@ function PushPermissionCard({ onDismiss, pets = [] }: { onDismiss: () => void, p
         🔔
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-extrabold text-[15px] text-text-primary">Aşı hatırlatmaları almak ister misin?</p>
+        <p className="font-extrabold text-base text-text-primary">Aşı hatırlatmaları almak ister misin?</p>
         <p className="text-[13px] text-text-secondary mt-1 leading-relaxed">
           {firstPet ? `"${displayName} Kuduz aşısına 3 gün kaldı" gibi bildirimleri tarayıcıya gönderelim.` : '"Can dostunuzun Kuduz aşısına 3 gün kaldı" gibi bildirimleri tarayıcıya gönderelim.'}
         </p>
@@ -186,7 +186,7 @@ export default function NotificationsClient({
           </button>
           <div>
             <h1 className="text-[28px] font-extrabold text-text-primary tracking-tight">Bildirimler</h1>
-            <p className="text-text-secondary mt-1 text-[15px] font-medium">
+            <p className="text-text-secondary mt-1 text-base font-medium">
               {unreadCount > 0 ? `${unreadCount} okunmamış` : 'Tümü okundu'}
             </p>
           </div>
@@ -259,7 +259,7 @@ export default function NotificationsClient({
                 </div>
                 <div className="flex flex-col flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
-                    <p className={`font-extrabold text-text-primary text-[15px] ${!notif.is_read ? '' : 'font-semibold'}`}>
+                    <p className={`font-extrabold text-text-primary text-base ${!notif.is_read ? '' : 'font-semibold'}`}>
                       {notif.title}
                     </p>
                     {!notif.is_read && (

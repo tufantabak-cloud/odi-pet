@@ -51,7 +51,7 @@ export default async function MatchPage(props: PageProps) {
             ❤️
           </div>
           
-          <h3 className="font-bold text-text-primary text-[15px] mb-1">
+          <h3 className="font-bold text-text-primary text-base mb-1">
             Eşleşme Adaylarını Keşfet
           </h3>
           

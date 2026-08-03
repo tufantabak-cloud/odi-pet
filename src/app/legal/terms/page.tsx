@@ -17,7 +17,7 @@ export default function TermsPage() {
         <h1 className="text-[28px] font-black text-text-primary mb-2">Kullanım Koşulları</h1>
         <p className="text-[13px] text-text-secondary mb-8 border-b border-border-main pb-4">Son Güncelleme: 18 Mayıs 2026</p>
 
-        <div className="prose prose-sm max-w-none text-text-primary text-[15px] leading-relaxed flex flex-col gap-6">
+        <div className="prose prose-sm max-w-none text-text-primary text-base leading-relaxed flex flex-col gap-6">
           <section>
             <h2 className="text-[18px] font-extrabold text-primary mb-3">1. Genel Kurallar</h2>
             <p>Odi.Pet platformuna kayıt olarak bu kullanım koşullarını kabul etmiş sayılırsınız. Platform, evcil hayvan sahiplerine yönelik bir bilgi takip ve asistanlık hizmetidir.</p>

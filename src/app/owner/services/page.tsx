@@ -101,7 +101,7 @@ export default async function ServicesPage() {
             <h1 className="text-[28px] md:text-[34px] font-black text-text-primary tracking-tight leading-none mb-3">
               Hizmetler & Rezervasyon
             </h1>
-            <p className="text-text-secondary text-[15px] md:text-[16px] font-medium leading-relaxed">
+            <p className="text-text-secondary text-base md:text-[16px] font-medium leading-relaxed">
               Odi.Pet ailesi olarak can dostunuzun tüm bakım, otel, gezdirme, eğitim ve alışveriş ihtiyaçlarını tek çatı altında topluyoruz. Seçkin üyelerimiz ile rezervasyon ve sipariş kurgusu en kısa sürede burada olacak.
             </p>
           </div>

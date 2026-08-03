@@ -210,7 +210,7 @@ export default function WeightChangeChart({ weightLogs, onAddRecord }: WeightCha
         <div className="flex items-center gap-2.5">
           <ScaleIcon badgeSize="md" size={20} />
           <div>
-            <h3 className="text-[14px] sm:text-[15px] font-black text-text-primary flex items-center gap-2 flex-wrap">
+            <h3 className="text-[14px] sm:text-base font-black text-text-primary flex items-center gap-2 flex-wrap">
               Kilo Değişim Grafiği
               <span className="text-[10px] sm:text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-[#EEECFE] text-[#5955D8] border border-[#5955D8]/20">
                 {points.length} Ölçüm
@@ -298,7 +298,7 @@ export default function WeightChangeChart({ weightLogs, onAddRecord }: WeightCha
                   {stats.netGrams > 0 ? `+${stats.netGrams}` : stats.netGrams} gr
                 </span>
               </div>
-              <div className="text-[15px] shrink-0">
+              <div className="text-base shrink-0">
                 {stats.netGrams > 0 ? '📈' : stats.netGrams < 0 ? '📉' : '⚖️'}
               </div>
             </div>

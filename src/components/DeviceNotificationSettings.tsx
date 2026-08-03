@@ -122,7 +122,7 @@ export default function DeviceNotificationSettings({ onSave, onCancel }: DeviceN
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="w-full bg-primary hover:bg-primary/90 text-white font-bold rounded-xl py-3.5 px-4 active:scale-[0.98] transition-all text-[15px] text-center shadow-md"
+          className="w-full bg-primary hover:bg-primary/90 text-white font-bold rounded-xl py-3.5 px-4 active:scale-[0.98] transition-all text-base text-center shadow-md"
         >
           {isSaving ? 'Kaydediliyor...' : 'Ayarları Kaydet'}
         </button>

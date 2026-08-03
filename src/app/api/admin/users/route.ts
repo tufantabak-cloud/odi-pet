@@ -3,6 +3,7 @@ import { createAdminSupabaseClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth/get-current-profile'
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 const PAGE_SIZE = 20
 const ALLOWED_ROLES = ['owner', 'vet', 'admin', 'founder', 'all'] as const
@@ -23,7 +24,7 @@ export async function GET(req: NextRequest) {
 
   let query = supabase
     .from('profiles')
-    .select('id, first_name, last_name, email, role, phone, created_at, premium_until, premium_tier', { count: 'exact' })
+    .select('id, first_name, last_name, email, role, phone, created_at, premium_until, pro_trial_until, premium_tier', { count: 'exact' })
     .order('created_at', { ascending: false })
     .range(from, to)
 
@@ -35,7 +36,7 @@ export async function GET(req: NextRequest) {
     query = query.or(`email.ilike.%${search}%,first_name.ilike.%${search}%,last_name.ilike.%${search}%`)
   }
 
-  let { data: users, error, count } = await query
+  let { data: rawUsers, error, count } = await query
 
   // Fallback to basic profile columns if schema cache lags behind on optional premium columns
   if (error) {
@@ -43,7 +44,7 @@ export async function GET(req: NextRequest) {
 
     let fallbackQuery = supabase
       .from('profiles')
-      .select('id, first_name, last_name, email, role, phone, created_at', { count: 'exact' })
+      .select('id, first_name, last_name, email, role, phone, created_at, pro_trial_until', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(from, to)
 
@@ -57,7 +58,7 @@ export async function GET(req: NextRequest) {
 
     const fallbackRes = await fallbackQuery
     if (!fallbackRes.error) {
-      users = fallbackRes.data as any[]
+      rawUsers = fallbackRes.data as any[]
       count = fallbackRes.count
       error = null
     }
@@ -66,6 +67,11 @@ export async function GET(req: NextRequest) {
   if (error) {
     return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
   }
+
+  const users = (rawUsers || []).map((u: any) => ({
+    ...u,
+    premium_until: u.premium_until || u.pro_trial_until || null,
+  }))
 
   // Role counts for tab badges
   const roleCounts: Record<string, number> = {}
@@ -86,7 +92,7 @@ export async function GET(req: NextRequest) {
   roleCounts['all'] = totalCount ?? 0
 
   return NextResponse.json({
-    users: users ?? [],
+    users,
     total: count ?? 0,
     page,
     pageSize: PAGE_SIZE,

@@ -44,7 +44,7 @@ export function WizardStep({ title, description, children, isActive }: WizardSte
     >
       <h2 className="text-2xl font-bold text-slate-800 tracking-tight">{title}</h2>
       {description && (
-        <p className="text-slate-500 mt-2 text-[15px] leading-relaxed">
+        <p className="text-slate-500 mt-2 text-base leading-relaxed">
           {description}
         </p>
       )}

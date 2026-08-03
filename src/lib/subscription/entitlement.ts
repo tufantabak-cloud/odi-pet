@@ -55,20 +55,22 @@ export const getEntitlement = cache(async (userId: string): Promise<Entitlement>
     }
   }
 
-  // 2. Kredi kontrolü (profiles.premium_until)
+  // 2. Kredi kontrolü (profiles.premium_until & pro_trial_until)
   const { data: profileData } = await supabase
     .from('profiles')
-    .select('premium_until, premium_tier')
+    .select('premium_until, pro_trial_until, premium_tier')
     .eq('id', userId)
     .maybeSingle()
 
-  if (profileData?.premium_until) {
-    const validUntil = new Date(profileData.premium_until)
+  const rawUntil = profileData?.premium_until || (profileData as any)?.pro_trial_until
+
+  if (rawUntil) {
+    const validUntil = new Date(rawUntil)
     const now = new Date()
     if (validUntil > now) {
       const diffMs = validUntil.getTime() - now.getTime()
       const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
-      const tier: EntitlementTier = (profileData.premium_tier as EntitlementTier) || 'pro'
+      const tier: EntitlementTier = (profileData?.premium_tier as EntitlementTier) || 'pro'
 
       return {
         tier,

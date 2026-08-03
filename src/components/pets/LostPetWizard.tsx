@@ -183,7 +183,7 @@ export default function LostPetWizard({ pet, ownerPhone, onComplete, onCancel }:
                   {pet.avatar_url ? <Image src={pet.avatar_url} fill={true} className="object-cover" alt={pet.name} /> : (pet.species === 'Kedi' ? <DefaultCatAvatar width={36} height={36} /> : <DefaultDogAvatar width={36} height={36} />)}
                 </div>
                 <div>
-                  <p className="font-extrabold text-text-primary text-[15px]">{pet.name}</p>
+                  <p className="font-extrabold text-text-primary text-base">{pet.name}</p>
                   <p className="text-text-secondary text-[12px] font-medium">{pet.species} • {pet.breed || 'Bilinmiyor'}</p>
                 </div>
               </div>
@@ -259,11 +259,11 @@ export default function LostPetWizard({ pet, ownerPhone, onComplete, onCancel }:
 
         <div className="mt-8 flex flex-col gap-3 relative z-10">
           {step === 1 ? (
-            <button onClick={handleNext} disabled={!contactPhone.trim()} className="w-full bg-text-primary text-white font-bold rounded-xl py-3.5 px-4 active:scale-[0.98] transition-all text-[15px] text-center shadow-md disabled:opacity-50">
+            <button onClick={handleNext} disabled={!contactPhone.trim()} className="w-full bg-text-primary text-white font-bold rounded-xl py-3.5 px-4 active:scale-[0.98] transition-all text-base text-center shadow-md disabled:opacity-50">
               Devam Et
             </button>
           ) : (
-            <button onClick={handleSubmit} disabled={loading || !location.trim() || !selectedCity || !selectedDistrict} className="w-full bg-error text-white font-bold rounded-xl py-3.5 px-4 active:scale-[0.98] transition-all text-[15px] text-center shadow-md disabled:opacity-50">
+            <button onClick={handleSubmit} disabled={loading || !location.trim() || !selectedCity || !selectedDistrict} className="w-full bg-error text-white font-bold rounded-xl py-3.5 px-4 active:scale-[0.98] transition-all text-base text-center shadow-md disabled:opacity-50">
               {loading ? 'Yayınlanıyor...' : 'İlanı Yayınla'}
             </button>
           )}

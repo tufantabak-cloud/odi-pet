@@ -57,7 +57,7 @@ export default function ClinicRegisterPage() {
             ✓
           </div>
           <h2 className="text-[24px] font-black text-text-primary mb-3">Başvurunuz Alındı!</h2>
-          <p className="text-[15px] text-text-secondary mb-8 leading-relaxed">
+          <p className="text-base text-text-secondary mb-8 leading-relaxed">
             Klinik kayıt işleminiz başarıyla tamamlandı. E-posta adresinize bir doğrulama bağlantısı gönderildi. Lütfen giriş yapmadan önce gelen kutunuzu kontrol edin.
           </p>
           <button 
@@ -114,7 +114,7 @@ export default function ClinicRegisterPage() {
               type="text"
               placeholder="Örn: Dr. Ahmet Yılmaz"
               required
-              className="input-base py-3 text-[15px]"
+              className="input-base py-3 text-base"
             />
           </div>
 
@@ -128,7 +128,7 @@ export default function ClinicRegisterPage() {
               type="text"
               placeholder="Örn: Can Dost Veteriner Kliniği"
               required
-              className="input-base py-3 text-[15px]"
+              className="input-base py-3 text-base"
             />
           </div>
 
@@ -141,7 +141,7 @@ export default function ClinicRegisterPage() {
               name="clinicPhone"
               type="tel"
               placeholder="Örn: 0212 555 55 55"
-              className="input-base py-3 text-[15px]"
+              className="input-base py-3 text-base"
             />
           </div>
 
@@ -155,7 +155,7 @@ export default function ClinicRegisterPage() {
               type="email"
               placeholder="ornek@klinik.com"
               required
-              className="input-base py-3 text-[15px]"
+              className="input-base py-3 text-base"
             />
           </div>
 
@@ -170,7 +170,7 @@ export default function ClinicRegisterPage() {
                 type={showPassword ? 'text' : 'password'}
                 placeholder="••••••••"
                 required
-                className="input-base py-3 text-[15px] pr-12 w-full"
+                className="input-base py-3 text-base pr-12 w-full"
               />
               <button
                 type="button"
@@ -193,7 +193,7 @@ export default function ClinicRegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="btn-primary w-full mt-4 py-4 text-[15px] font-black shadow-xl shadow-primary/20 hover:shadow-primary/40 disabled:opacity-60 transition-all active:scale-[0.98]"
+            className="btn-primary w-full mt-4 py-4 text-base font-black shadow-xl shadow-primary/20 hover:shadow-primary/40 disabled:opacity-60 transition-all active:scale-[0.98]"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-3">

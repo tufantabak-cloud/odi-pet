@@ -30,7 +30,7 @@ export default async function ClinicNotificationsPage() {
     <div className="flex flex-col gap-6 pb-10 w-full max-w-xl mx-auto">
       <div className="border-b border-border-main pb-4">
         <h1 className="text-[28px] font-extrabold text-text-primary tracking-tight">Klinik Bildirimleri</h1>
-        <p className="text-text-secondary mt-1 text-[15px] font-medium">
+        <p className="text-text-secondary mt-1 text-base font-medium">
           {list.filter((n: any) => !n.is_read).length} okunmamış
         </p>
       </div>
@@ -54,7 +54,7 @@ export default async function ClinicNotificationsPage() {
                 {iconFor(notif.title)}
               </div>
               <div className="flex flex-col flex-1">
-                <p className={`font-extrabold text-text-primary text-[15px] ${!notif.is_read ? '' : 'font-semibold'}`}>{notif.title}</p>
+                <p className={`font-extrabold text-text-primary text-base ${!notif.is_read ? '' : 'font-semibold'}`}>{notif.title}</p>
                 <p className="text-[13px] text-text-secondary mt-1 leading-relaxed">{notif.message}</p>
                 <p className="text-[12px] text-text-secondary/60 font-semibold mt-2">{timeAgo(notif.created_at)}</p>
               </div>

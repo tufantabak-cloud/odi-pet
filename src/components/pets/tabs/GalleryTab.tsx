@@ -273,7 +273,7 @@ export default function GalleryTab({ pet }: { pet: PetWithCover }) {
           <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm text-3xl mb-1">
             🎁
           </div>
-          <h4 className="text-[15px] font-black text-violet-700">İlk Fotoğrafı Yükle!</h4>
+          <h4 className="text-base font-black text-violet-700">İlk Fotoğrafı Yükle!</h4>
           <p className="text-[13px] text-violet-600/80 leading-tight">Patili dostunun en güzel anlarını burada biriktirmeye başla.</p>
         </div>
       ) : (

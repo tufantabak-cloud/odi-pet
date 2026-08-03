@@ -118,8 +118,10 @@ export async function writeEvent<T extends OdiEventType>(
   }
   const { error } = await supabase.from('event_stream').insert({
     profile_id,
+    event: event_type,
     event_type,
     metadata,
+    payload: metadata as any,
   })
   return { error }
 }

@@ -1466,7 +1466,7 @@ export default function WizardOrchestrator() {
               <div className="flex items-center justify-between">
                 <div>
                   <span className="bg-surface/20 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider">Odi Premium</span>
-                  <h3 className="font-extrabold text-[15px] mt-1">Akıllı Paket Tarama</h3>
+                  <h3 className="font-extrabold text-base mt-1">Akıllı Paket Tarama</h3>
                   <p className="text-[12px] text-white/90 font-normal leading-relaxed mt-0.5">
                     Mama paketini okutun, içeriği ve stok planını otomatik dolduralım.
                   </p>
@@ -2303,7 +2303,7 @@ export default function WizardOrchestrator() {
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
             <div className="p-4 bg-surface border border-border-main rounded-2xl">
               <p className="text-[11px] font-bold text-text-secondary uppercase tracking-wider mb-1">Planlı Görev</p>
-              <p className="text-[15px] font-extrabold text-text-primary">{linkedPlan.sub_type}</p>
+              <p className="text-base font-extrabold text-text-primary">{linkedPlan.sub_type}</p>
               <p className="text-[12px] text-text-secondary mt-0.5">
                 {(() => { try { return new Date(linkedPlan.scheduled_at).toLocaleDateString('tr-TR', { day: '2-digit', month: 'long' }); } catch { return ''; } })()}
                 {recurring ? ` • Her ${linkedPlan.extra_data?.interval || 1} ${FREQ_LABEL[linkedPlan.repeat_rule] || ''}`.trimEnd() : ' • Tek seferlik'}

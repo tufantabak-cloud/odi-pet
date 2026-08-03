@@ -127,7 +127,7 @@ export default function HealthHistoryWizard({ pet, templates }: { pet: any, temp
             <div className="w-12 h-12 rounded-full bg-[var(--color-bg-success)] flex items-center justify-center mx-auto mb-2">
               <i className="ti ti-rosette text-[22px] text-[var(--color-text-success)]" />
             </div>
-            <p className="text-[15px] font-bold text-[var(--color-text-primary)]">Sağlık geçmişi tamamlandı</p>
+            <p className="text-base font-bold text-[var(--color-text-primary)]">Sağlık geçmişi tamamlandı</p>
             <p className="text-[12px] text-[var(--color-text-secondary)] mt-1">Bundan sonra her şey otomatik — hatırlatıcılar doğru tarihlerde gelecek.</p>
             <div className="inline-flex items-center gap-1.5 bg-[var(--color-bg-success)] text-[var(--color-text-success)] border border-[var(--color-text-success)]/20 rounded-[8px] px-3 py-1.5 text-[12px] font-bold mt-3">
               <i className="ti ti-star text-[14px]" /> +50 puan kazandınız

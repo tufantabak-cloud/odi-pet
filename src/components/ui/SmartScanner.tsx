@@ -336,7 +336,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
               value={value || ""}
               onChange={(e) => setParsedData({ ...parsedData, [key]: e.target.value })}
               onBlur={() => setEditingField(null)}
-              className={`w-full font-extrabold text-[15px] bg-transparent focus:outline-none focus:border-b-2 ${highlight ? 'text-primary border-primary' : 'text-text-primary border-border-main'}`}
+              className={`w-full font-extrabold text-base bg-transparent focus:outline-none focus:border-b-2 ${highlight ? 'text-primary border-primary' : 'text-text-primary border-border-main'}`}
             >
               {options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </select>
@@ -348,11 +348,11 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
               onChange={(e) => setParsedData({ ...parsedData, [key]: e.target.value })}
               onBlur={() => setEditingField(null)}
               onKeyDown={(e) => e.key === 'Enter' && setEditingField(null)}
-              className={`w-full font-extrabold text-[15px] bg-transparent focus:outline-none focus:border-b-2 ${highlight ? 'text-primary border-primary' : 'text-text-primary border-border-main'}`}
+              className={`w-full font-extrabold text-base bg-transparent focus:outline-none focus:border-b-2 ${highlight ? 'text-primary border-primary' : 'text-text-primary border-border-main'}`}
             />
           )
         ) : (
-          <div className={`w-full font-extrabold text-[15px] truncate ${highlight ? 'text-primary' : 'text-text-primary'}`}>
+          <div className={`w-full font-extrabold text-base truncate ${highlight ? 'text-primary' : 'text-text-primary'}`}>
             {value ? (options ? options.find(o => o.value === value)?.label || value : value) : <span className="opacity-40 italic">Belirtilmemiş</span>}
           </div>
         )}
@@ -463,7 +463,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
                     vaccine_code: chosen?.vaccine_code,
                   });
                 }}
-                className="w-full font-extrabold text-[15px] bg-white border border-amber-300 rounded-xl p-2 focus:outline-none"
+                className="w-full font-extrabold text-base bg-white border border-amber-300 rounded-xl p-2 focus:outline-none"
               >
                 <option value="">Seçiniz</option>
                 {brandCandidates.map(c => (
@@ -821,7 +821,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
             <div className="bg-white p-4 rounded-2xl border border-border-main shadow-sm flex items-center justify-between mb-6">
               <div>
                 <span className="text-[12px] font-bold text-text-secondary block mb-1">Algılanan Kategori</span>
-                <span className="font-extrabold text-primary text-[15px]">{
+                <span className="font-extrabold text-primary text-base">{
                   recordType === 'vaccine_card' ? '💉 Aşı Karnesi' :
                   recordType === 'medicine_packaging' ? '💊 İlaç Ambalajı' :
                   recordType === 'food_packaging' ? '🍖 Mama Ambalajı' : 

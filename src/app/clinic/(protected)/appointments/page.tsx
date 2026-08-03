@@ -54,7 +54,7 @@ export default async function ClinicAppointmentsPage() {
 
             {/* Pet info */}
             <Link href={`/clinic/pets/${apt.pets?.id}`} className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
-              <div className="w-10 h-10 rounded-full bg-primary-soft text-primary font-extrabold flex items-center justify-center text-[15px] shrink-0">
+              <div className="w-10 h-10 rounded-full bg-primary-soft text-primary font-extrabold flex items-center justify-center text-base shrink-0">
                 {apt.pets?.name?.charAt(0) ?? '?'}
               </div>
               <div className="min-w-0">

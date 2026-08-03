@@ -75,7 +75,7 @@ export default function ResetPasswordPage() {
             <div className="p-4 rounded-2xl bg-success/10 border border-success/20 text-success text-[14px] font-bold mb-6">
               ✅ Sıfırlama bağlantısı gönderildi! Lütfen e-posta kutunuzu (ve gerekiyorsa spam klasörünü) kontrol edin.
             </div>
-            <Link href="/login" className="w-full bg-primary text-white rounded-xl font-medium text-[15px] py-3 mt-1 hover:opacity-90 transition-opacity flex items-center justify-center shadow-md disabled:opacity-60">
+            <Link href="/login" className="w-full bg-primary text-white rounded-xl font-medium text-base py-3 mt-1 hover:opacity-90 transition-opacity flex items-center justify-center shadow-md disabled:opacity-60">
               Giriş Sayfasına Dön
             </Link>
           </div>

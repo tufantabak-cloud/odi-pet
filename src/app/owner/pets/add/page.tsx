@@ -439,7 +439,7 @@ function PetForm({
             type="submit" 
             disabled={!isFormValid}
             data-testid="pet-save-button"
-            className="btn-primary min-w-[200px] py-3.5 text-[15px] shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+            className="btn-primary min-w-[200px] py-3.5 text-base shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
           >
             <span>Devam Et →</span>
           </button>
@@ -853,7 +853,7 @@ function PetPhotoStep({
               onClick={onSubmit} 
               disabled={loading} 
               data-testid="pet-profile-create-button"
-              className="btn-primary min-w-[200px] py-3.5 text-[15px] shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none hover:-translate-y-0.5 transition-transform w-full sm:w-auto order-1 sm:order-2"
+              className="btn-primary min-w-[200px] py-3.5 text-base shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none hover:-translate-y-0.5 transition-transform w-full sm:w-auto order-1 sm:order-2"
             >
               {loading ? (
                 <span className="flex items-center gap-2 justify-center">
@@ -1227,7 +1227,7 @@ function PetSOSStep({
             onClick={handleSave}
             disabled={loading}
             data-testid="emergency-contact-save-button"
-            className="btn-primary min-w-[200px] w-full sm:w-auto py-3.5 text-[15px] shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+            className="btn-primary min-w-[200px] w-full sm:w-auto py-3.5 text-base shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
           >
             {loading ? (
               <span className="flex items-center gap-2 justify-center">

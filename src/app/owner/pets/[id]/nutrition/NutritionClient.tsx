@@ -1134,7 +1134,7 @@ export default function NutritionClient({
             <div className="card-base p-5 border-l-4 border-l-amber-500 flex flex-col justify-between">
               <div>
                 <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest mb-1">Mevcut Mama</p>
-                <p className="font-bold text-text-primary text-[15px] leading-tight">
+                <p className="font-bold text-text-primary text-base leading-tight">
                   {activePrimary?.food_product_family?.brand?.display_name || activePrimary?.brand_free_text || 'Eklenmedi'}
                 </p>
                 <p className="text-xs text-text-secondary mt-0.5">
@@ -1224,7 +1224,7 @@ export default function NutritionClient({
           <div className="card-base p-5 flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <span className="text-lg">⚠️</span>
-              <h3 className="font-extrabold text-[15px] text-text-primary">Alerji ve Hassasiyet Notları</h3>
+              <h3 className="font-extrabold text-base text-text-primary">Alerji ve Hassasiyet Notları</h3>
             </div>
             <form onSubmit={handleSaveAllergies} className="flex flex-col gap-3">
               <div>
@@ -1268,7 +1268,7 @@ export default function NutritionClient({
               <div className="flex items-center gap-3">
                 <span className="text-2xl">📷</span>
                 <div>
-                  <h3 className="font-extrabold text-[15px]">Barkod ile Mama Ekle</h3>
+                  <h3 className="font-extrabold text-base">Barkod ile Mama Ekle</h3>
                   <p className="text-xs text-white/90 font-medium">Paket üzerindeki barkodu okutarak mamayı saniyeler içinde ekleyin</p>
                 </div>
               </div>
@@ -1285,7 +1285,7 @@ export default function NutritionClient({
           <div className="card-base p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="font-extrabold text-[15px] text-text-primary">Beslenme Hatırlatıcıları</h3>
+                <h3 className="font-extrabold text-base text-text-primary">Beslenme Hatırlatıcıları</h3>
                 <p className="text-xs text-text-secondary">Ajanda ve Takvim ile senkronize mama/düzen hatırlatmaları</p>
               </div>
               <button
@@ -1380,7 +1380,7 @@ export default function NutritionClient({
           </div>
 
           <form onSubmit={handleAddLog} className="card-base p-6">
-            <h3 className="font-extrabold text-[15px] text-text-primary mb-4">Öğün Kaydet</h3>
+            <h3 className="font-extrabold text-base text-text-primary mb-4">Öğün Kaydet</h3>
             <div className="flex flex-col gap-4">
               <div className="flex gap-4">
                 <div className="flex flex-col gap-2">
@@ -1680,7 +1680,7 @@ export default function NutritionClient({
                   {weightLogs.map(w => (
                     <div key={w.id} className="p-4 flex items-center justify-between hover:bg-bg-main transition-colors group">
                       <div>
-                        <p className="font-bold text-text-primary text-[15px]">
+                        <p className="font-bold text-text-primary text-base">
                           {w.weight_kg} kg
                           {w.height_cm ? <span className="text-[13px] text-text-secondary font-semibold ml-2">· {w.height_cm} cm</span> : null}
                         </p>
@@ -1830,7 +1830,7 @@ export default function NutritionClient({
               {!isSearching && searchQuery.trim().length >= 2 && searchResults.length === 0 && (
                 matchedBrands.length > 0 ? (
                   <div className="p-4 text-center bg-amber-50/80 border border-amber-200 rounded-xl flex flex-col items-center gap-2 animate-fadeIn">
-                    <div className="flex items-center gap-2 text-amber-900 font-extrabold text-[15px]">
+                    <div className="flex items-center gap-2 text-amber-900 font-extrabold text-base">
                       <span>🏷️</span>
                       <h4>{matchedBrands[0].display_name} markası bulundu</h4>
                     </div>
@@ -1930,7 +1930,7 @@ export default function NutritionClient({
             <div className="p-3 bg-primary/5 border border-primary/20 rounded-xl flex justify-between items-center">
               <div>
                 <p className="text-[11px] font-bold text-primary uppercase">Seçilen Katalog Ürünü</p>
-                <p className="font-black text-[15px] text-text-primary">
+                <p className="font-black text-base text-text-primary">
                   {selectedCatalogItem?.brand?.display_name || barcodeResult?.brand?.display_name}
                 </p>
                 <p className="text-xs text-text-secondary">
@@ -2120,7 +2120,7 @@ export default function NutritionClient({
 
           {modalStep === 2 && (
             <form onSubmit={handleSaveAll} className="flex flex-col gap-4 border-t border-border-main pt-4">
-              <h3 className="font-extrabold text-[15px] text-text-primary">Evde ne kadar mama var?</h3>
+              <h3 className="font-extrabold text-base text-text-primary">Evde ne kadar mama var?</h3>
               
               <div className="flex flex-col gap-3">
                 <div>

@@ -17,12 +17,12 @@ export default function GlobalError({
             </div>
           </div>
           <h2 className="text-[24px] font-extrabold text-gray-900 mb-4">Kritik Bir Hata Oluştu</h2>
-          <p className="text-[15px] text-gray-600 mb-8 max-w-[400px] mx-auto">
+          <p className="text-base text-gray-600 mb-8 max-w-[400px] mx-auto">
             Sistemsel bir hata meydana geldi. Sayfayı yenilemeyi deneyin.
           </p>
           <button
             onClick={() => reset()}
-            className="bg-black text-white rounded-full py-3.5 px-8 font-bold shadow-lg text-[15px]"
+            className="bg-black text-white rounded-full py-3.5 px-8 font-bold shadow-lg text-base"
           >
             Sayfayı Yenile
           </button>

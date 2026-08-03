@@ -141,7 +141,7 @@ export default function InviteAcceptPage({ params }: { params: Promise<{ token: 
 
             <button
               onClick={() => router.push(`/owner/pets/${state.pet?.id}`)}
-              className="btn-primary w-full py-3.5 text-[15px] font-bold"
+              className="btn-primary w-full py-3.5 text-base font-bold"
             >
               {state.pet?.name}'nin Sayfasına Git →
             </button>
@@ -198,7 +198,7 @@ export default function InviteAcceptPage({ params }: { params: Promise<{ token: 
           <button
             onClick={handleAccept}
             disabled={isAccepting}
-            className="btn-primary w-full py-3.5 text-[15px] font-bold"
+            className="btn-primary w-full py-3.5 text-base font-bold"
           >
             {isAccepting
               ? <span className="flex items-center justify-center gap-2"><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>Kabul Ediliyor...</span>

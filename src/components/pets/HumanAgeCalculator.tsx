@@ -144,7 +144,7 @@ export default function HumanAgeCalculator({ species, birthDate, weightKg, petNa
                       </span>
                     )}
                   </div>
-                  <div className={`text-right pr-2 text-[15px] font-black ${isCurrent ? 'text-primary' : 'text-text-secondary'}`}>
+                  <div className={`text-right pr-2 text-base font-black ${isCurrent ? 'text-primary' : 'text-text-secondary'}`}>
                     {ageVal}
                   </div>
                 </div>

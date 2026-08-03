@@ -40,6 +40,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
       relation: typeof contact.relation === 'string' ? contact.relation.trim() : '',
     })
   }
+
   const supabase = await createServerSupabaseClient()
 
   // Verify ownership or admin role
@@ -54,6 +55,42 @@ export async function POST(req: NextRequest, context: RouteContext) {
     .eq('id', id)
 
   if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
+
+  // 1. ve 2. Acil durum kişisi eklendiğinde, sahibin profil verisiyle otomatik eşle
+  const primaryContact = normalizedContacts[0]
+  const secondaryContact = normalizedContacts[1]
+
+  if (primaryContact?.phone || secondaryContact?.phone) {
+    try {
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('phone, emergency_contact_name, emergency_contact_phone, emergency_contact_relation, emergency_contact2_name, emergency_contact2_phone, emergency_contact2_relation')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      const updates: Record<string, any> = {}
+      if (primaryContact?.phone) {
+        if (!prof?.phone) updates.phone = primaryContact.phone
+        if (!prof?.emergency_contact_phone) {
+          updates.emergency_contact_name = primaryContact.name
+          updates.emergency_contact_phone = primaryContact.phone
+          updates.emergency_contact_relation = primaryContact.relation
+        }
+      }
+      if (secondaryContact?.phone) {
+        if (!prof?.emergency_contact2_phone) {
+          updates.emergency_contact2_name = secondaryContact.name
+          updates.emergency_contact2_phone = secondaryContact.phone
+          updates.emergency_contact2_relation = secondaryContact.relation
+        }
+      }
+      if (Object.keys(updates).length > 0) {
+        await supabase.from('profiles').update(updates).eq('id', user.id)
+      }
+    } catch (e) {
+      console.error('Failed to sync emergency contacts to owner profile:', e)
+    }
+  }
 
   // Acil durum kişisi başarıyla eklendiğinde onboarding adımını true olarak işaretle
   try {

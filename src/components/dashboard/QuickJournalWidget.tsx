@@ -146,7 +146,7 @@ export default function QuickJournalWidget({ pets, activePet, onSuccess }: Quick
             {activePet?.name || 'Pet'} için
           </p>
         </div>
-        <i className="ti ti-pencil ml-auto text-[var(--color-text-muted)] text-[15px]" />
+        <i className="ti ti-pencil ml-auto text-[var(--color-text-muted)] text-base" />
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">

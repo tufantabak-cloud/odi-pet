@@ -334,7 +334,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
                     <span className="text-3xl">{rt.icon}</span>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-bold text-text-primary text-[15px]">{rt.label}</p>
+                        <p className="font-bold text-text-primary text-base">{rt.label}</p>
                         <span className={`text-[11px] font-black px-2 py-0.5 rounded-full ${rt.badgeColor}`}>{rt.badge}</span>
                         {locked && <span className="text-[11px] text-text-secondary">🔒 Kilidi Aç</span>}
                       </div>
@@ -376,7 +376,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
 
           {/* Generate button */}
           <button onClick={generate} disabled={generating}
-            className="btn-primary py-3.5 text-[15px] font-bold flex items-center justify-center gap-2">
+            className="btn-primary py-3.5 text-base font-bold flex items-center justify-center gap-2">
             {generating
               ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/> Rapor Hazırlanıyor...</>
               : `${REPORT_TYPES.find(r => r.id === selectedType)?.icon} ${petName} için Rapor Oluştur`
@@ -445,7 +445,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
                 <FirstAidIcon width={24} height={24} />
               </div>
               <div>
-                <h3 className="font-extrabold text-text-primary text-[15px]">Dijital Belge Kasası</h3>
+                <h3 className="font-extrabold text-text-primary text-base">Dijital Belge Kasası</h3>
                 <p className="text-xs text-text-secondary">Resmi evraklar, aşı kartı, sigorta ve tahliller</p>
               </div>
             </div>

@@ -268,7 +268,7 @@ export default function PwaEnforcer() {
             <h1 className="text-2xl font-bold bg-gradient-to-r from-white via-violet-200 to-white bg-clip-text text-transparent mb-4">
               Yükleme Tamamlanıyor...
             </h1>
-            <p className="text-[15px] text-zinc-300 mb-8 leading-relaxed max-w-[280px]">
+            <p className="text-base text-zinc-300 mb-8 leading-relaxed max-w-[280px]">
               Yükleme işlemi tamamlandığında, lütfen telefonunuzun <strong className="text-white">ana ekranından</strong> Odi.Pet uygulamasına tıklayarak giriş yapınız.
             </p>
 
@@ -290,7 +290,7 @@ export default function PwaEnforcer() {
                     1
                   </div>
                   <div>
-                    <h3 className="font-bold text-[15px] text-zinc-100 flex items-center gap-1.5">
+                    <h3 className="font-bold text-base text-zinc-100 flex items-center gap-1.5">
                       Paylaş Menüsünü Açın
                     </h3>
                     <p className="text-[13px] text-zinc-400 mt-1">
@@ -303,7 +303,7 @@ export default function PwaEnforcer() {
                     2
                   </div>
                   <div>
-                    <h3 className="font-bold text-[15px] text-zinc-100">
+                    <h3 className="font-bold text-base text-zinc-100">
                       Ana Ekrana Ekleyin
                     </h3>
                     <p className="text-[13px] text-zinc-400 mt-1">

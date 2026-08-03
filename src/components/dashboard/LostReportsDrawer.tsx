@@ -57,7 +57,7 @@ export default function LostReportsDrawer({ reports }: LostReportsDrawerProps) {
                   <Megaphone size={16} />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-[15px] text-text-primary leading-none">Bölgendeki Kayıp İlanları</h3>
+                  <h3 className="font-extrabold text-base text-text-primary leading-none">Bölgendeki Kayıp İlanları</h3>
                   <span className="text-[10px] text-text-secondary font-semibold mt-1 block">Bulunduğun şehirde aktif arama ilanları</span>
                 </div>
               </div>

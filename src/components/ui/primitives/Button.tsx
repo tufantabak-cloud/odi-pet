@@ -33,7 +33,7 @@ const variantStyles: Record<ButtonVariant, string> = {
 // 10_buttons.md → "Button Size Scale Matrix"
 const sizeStyles: Record<ButtonSize, string> = {
   sm: 'h-9 px-4 text-[13px]',
-  md: 'h-12 px-6 text-[15px]',
+  md: 'h-12 px-6 text-base',
   lg: 'h-14 px-8 text-[16px]',
 }
 

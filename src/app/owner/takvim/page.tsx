@@ -83,7 +83,9 @@ export default async function TakvimPage() {
   if (vacsRes.error) console.error('[takvim] vaccine_records_v2 fetch failed:', vacsRes.error.message)
   if (parasitesRes.error) console.error('[takvim] parasite_records fetch failed:', parasitesRes.error.message)
   if (schedulesRes.error) console.error('[takvim] health_schedules fetch failed:', schedulesRes.error.message)
-  if (growthRes.error) console.error('[takvim] growth_records fetch failed:', growthRes.error.message)
+  if (growthRes.error && !growthRes.error.message?.includes('schema cache') && growthRes.error?.code !== 'PGRST200') {
+    console.error('[takvim] growth_records fetch failed:', growthRes.error.message)
+  }
   if (weightLogsRes.error) console.error('[takvim] weight_logs fetch failed:', weightLogsRes.error.message)
   if (appointmentsRes.error) console.error('[takvim] appointments fetch failed:', appointmentsRes.error.message)
   if (medsRes.error) console.error('[takvim] health_medications fetch failed:', medsRes.error.message)

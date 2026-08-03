@@ -22,12 +22,12 @@ export default function Error({
         </div>
       </div>
       <h2 className="text-[24px] font-extrabold text-text-primary mb-4">Bir Sorun Oluştu</h2>
-      <p className="text-[15px] text-text-secondary mb-8 max-w-[400px]">
+      <p className="text-base text-text-secondary mb-8 max-w-[400px]">
         Beklenmeyen bir hata meydana geldi. Sorunu çözmek için çalışıyoruz.
       </p>
       <button
         onClick={() => reset()}
-        className="btn-primary py-3.5 px-8 shadow-lg shadow-primary/30 text-[15px]"
+        className="btn-primary py-3.5 px-8 shadow-lg shadow-primary/30 text-base"
       >
         Tekrar Dene
       </button>

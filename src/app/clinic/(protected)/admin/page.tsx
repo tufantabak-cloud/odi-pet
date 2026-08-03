@@ -42,7 +42,7 @@ export default async function ClinicAdminPage() {
     <div className="flex flex-col gap-8 pb-10 w-full">
       <div className="border-b border-border-main pb-4">
         <h1 className="text-[32px] font-extrabold text-text-primary tracking-tight">Klinik Yönetimi</h1>
-        <p className="text-text-secondary mt-1 text-[15px] font-medium">Admin — {clinic?.name ?? '—'}</p>
+        <p className="text-text-secondary mt-1 text-base font-medium">Admin — {clinic?.name ?? '—'}</p>
       </div>
 
       {/* Clinic Info Card */}
@@ -111,7 +111,7 @@ export default async function ClinicAdminPage() {
               const isAdmin = m.is_clinic_admin === true
               return (
                 <div key={m.id} className="flex items-center gap-4 p-4 rounded-[16px] border border-border-main bg-surface hover:border-primary/20 transition-colors">
-                  <div className="w-11 h-11 rounded-full bg-primary-soft flex items-center justify-center text-primary font-extrabold text-[15px] shrink-0">
+                  <div className="w-11 h-11 rounded-full bg-primary-soft flex items-center justify-center text-primary font-extrabold text-base shrink-0">
                     {p?.first_name?.charAt(0) ?? '?'}
                   </div>
                   <div className="flex flex-col flex-1">

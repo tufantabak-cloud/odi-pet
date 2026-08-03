@@ -87,7 +87,7 @@ export function WizardShell({
             >
               <ChevronLeft className="w-6 h-6 text-slate-700" />
             </button>
-            <div className="text-[15px] font-semibold text-slate-700 absolute left-1/2 -translate-x-1/2">
+            <div className="text-base font-semibold text-slate-700 absolute left-1/2 -translate-x-1/2">
               Planı Düzenle
             </div>
             <div className="w-10"></div>
@@ -116,7 +116,7 @@ export function WizardShell({
             <button
               onClick={onSubmit}
               disabled={isNextDisabled || isSubmitting}
-              className={`w-full py-3.5 rounded-xl font-bold text-[15px] transition-all
+              className={`w-full py-3.5 rounded-xl font-bold text-base transition-all
                 ${isNextDisabled || isSubmitting
                   ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
                   : 'text-white hover:opacity-90 active:scale-[0.98] shadow-md'
@@ -151,7 +151,7 @@ export function WizardShell({
             <ChevronLeft className="w-6 h-6 text-slate-700" />
           </button>
 
-          <div className="text-[15px] font-semibold text-slate-500 absolute left-1/2 -translate-x-1/2">
+          <div className="text-base font-semibold text-slate-500 absolute left-1/2 -translate-x-1/2">
             Adım {currentStep + 1} / {totalSteps}
           </div>
 

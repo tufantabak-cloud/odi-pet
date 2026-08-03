@@ -44,7 +44,7 @@ export default async function ClinicCarePlansPage() {
           <p className="text-[11px] font-bold text-text-secondary">{new Date(plan.due_date).toLocaleString('tr-TR', { month: 'short' })}</p>
         </div>
         <div className="flex flex-col flex-1 min-w-0">
-          <p className="font-extrabold text-text-primary text-[15px]">{plan.title}</p>
+          <p className="font-extrabold text-text-primary text-base">{plan.title}</p>
           <p className="text-[13px] text-text-secondary mt-0.5">
             {plan.pets?.name} &bull; {plan.pets?.species}
           </p>
@@ -60,7 +60,7 @@ export default async function ClinicCarePlansPage() {
       <div className="flex items-end justify-between flex-wrap gap-4 border-b border-border-main pb-4">
         <div>
           <h1 className="text-[32px] font-extrabold text-text-primary tracking-tight">Aşı & Bakım Takvimi</h1>
-          <p className="text-text-secondary mt-1 text-[15px] font-medium">
+          <p className="text-text-secondary mt-1 text-base font-medium">
             {overdue.length > 0 && <span className="text-error font-bold">{overdue.length} gecikmiş • </span>}
             {thisWeek.length} bu hafta • {planned.length} planlı
           </p>
@@ -70,7 +70,7 @@ export default async function ClinicCarePlansPage() {
       {/* Overdue */}
       {overdue.length > 0 && (
         <div className="flex flex-col gap-3">
-          <h2 className="text-[15px] font-extrabold text-error flex items-center gap-2">
+          <h2 className="text-base font-extrabold text-error flex items-center gap-2">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             Gecikmiş ({overdue.length})
           </h2>
@@ -81,7 +81,7 @@ export default async function ClinicCarePlansPage() {
       {/* This Week */}
       {thisWeek.length > 0 && (
         <div className="flex flex-col gap-3">
-          <h2 className="text-[15px] font-extrabold text-warning flex items-center gap-2">
+          <h2 className="text-base font-extrabold text-warning flex items-center gap-2">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             Bu Hafta ({thisWeek.length})
           </h2>
@@ -92,7 +92,7 @@ export default async function ClinicCarePlansPage() {
       {/* Planned */}
       {planned.length > 0 && (
         <div className="flex flex-col gap-3">
-          <h2 className="text-[15px] font-extrabold text-success flex items-center gap-2">
+          <h2 className="text-base font-extrabold text-success flex items-center gap-2">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             İleriki Planlar ({planned.length})
           </h2>

@@ -78,7 +78,7 @@ export default function CareClient({ pet }: { pet: any }) {
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">🛁</div>
                   <div>
-                    <h3 className="font-bold text-text-primary text-[15px]">{plan.sub_type}</h3>
+                    <h3 className="font-bold text-text-primary text-base">{plan.sub_type}</h3>
                     <p className="text-xs text-text-secondary">{plan.repeat_rule === 'daily' ? 'Günlük' : plan.repeat_rule === 'weekly' ? 'Haftalık' : plan.repeat_rule === 'monthly' ? 'Aylık' : 'Tek Seferlik'}</p>
                   </div>
                 </div>
@@ -98,7 +98,7 @@ export default function CareClient({ pet }: { pet: any }) {
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold">✓</div>
                   <div>
-                    <h3 className="font-bold text-text-primary text-[15px]">{plan.sub_type}</h3>
+                    <h3 className="font-bold text-text-primary text-base">{plan.sub_type}</h3>
                     <p className="text-xs text-text-secondary">{new Date(plan.updated_at || plan.scheduled_at).toLocaleDateString('tr-TR')}</p>
                   </div>
                 </div>
