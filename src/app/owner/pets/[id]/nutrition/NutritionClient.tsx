@@ -90,6 +90,15 @@ export default function NutritionClient({
   const [dismissedBanner, setDismissedBanner] = useState(false)
   const [weightError, setWeightError] = useState<string | null>(null)
 
+  // OPOS Cilt 3: native alert()/confirm() yerine inline hata + ConfirmModal.
+  const [uiError, setUiError] = useState<string | null>(null)
+  const [reminderToDelete, setReminderToDelete] = useState<string | null>(null)
+  const [weightLogToDelete, setWeightLogToDelete] = useState<string | null>(null)
+  const showApiError = (message: string) => {
+    setUiError(message)
+    setTimeout(() => setUiError(null), 5000)
+  }
+
   // Ruler / Wheel Picker State for Weight & Height
   const [newWeightKg, setNewWeightKg] = useState<number | string>(() =>
     weightLogs && weightLogs.length > 0 && weightLogs[0].weight_kg != null ? weightLogs[0].weight_kg : (pet?.species === 'cat' ? 4.0 : 10.0)
@@ -142,7 +151,7 @@ export default function NutritionClient({
       setEditingReminderId(null)
       router.refresh()
     } catch (err: any) {
-      alert(err.message || 'Bir hata oluştu')
+      showApiError(err.message || 'Bir hata oluştu')
     } finally {
       setReminderSubmitting(false)
     }
@@ -158,12 +167,19 @@ export default function NutritionClient({
       if (!res.ok) throw new Error('Hatırlatıcı tamamlanamadı')
       router.refresh()
     } catch (err: any) {
-      alert(err.message || 'Bir hata oluştu')
+      showApiError(err.message || 'Bir hata oluştu')
     }
   }
 
-  async function handleDeleteReminder(planId: string) {
-    if (!confirm('Bu hatırlatıcıyı silmek istediğinize emin misiniz?')) return
+  // OPOS Cilt 3: native confirm() yerine ConfirmModal.
+  function handleDeleteReminder(planId: string) {
+    setReminderToDelete(planId)
+  }
+
+  async function confirmDeleteReminder() {
+    const planId = reminderToDelete
+    setReminderToDelete(null)
+    if (!planId) return
     try {
       const res = await fetch(`/api/plans/${planId}`, {
         method: 'DELETE'
@@ -171,7 +187,7 @@ export default function NutritionClient({
       if (!res.ok) throw new Error('Hatırlatıcı silinemedi')
       router.refresh()
     } catch (err: any) {
-      alert(err.message || 'Bir hata oluştu')
+      showApiError(err.message || 'Bir hata oluştu')
     }
   }
 
@@ -905,8 +921,15 @@ export default function NutritionClient({
     }
   }
 
-  async function handleDeleteWeightLog(logId: string) {
-    if (!confirm('Bu kilo kaydını silmek istediğinize emin misiniz?')) return
+  // OPOS Cilt 3: native confirm() yerine ConfirmModal.
+  function handleDeleteWeightLog(logId: string) {
+    setWeightLogToDelete(logId)
+  }
+
+  async function confirmDeleteWeightLog() {
+    const logId = weightLogToDelete
+    setWeightLogToDelete(null)
+    if (!logId) return
     setIsDeletingWeight(logId)
     try {
       const res = await fetch(`/api/pets/${pet.id}/nutrition/weight/${logId}`, {
@@ -915,7 +938,7 @@ export default function NutritionClient({
       if (!res.ok) throw new Error('Kilo kaydı silinemedi')
       router.refresh()
     } catch (err: any) {
-      alert(err.message || 'Silme işlemi sırasında hata oluştu')
+      showApiError(err.message || 'Silme işlemi sırasında hata oluştu')
     } finally {
       setIsDeletingWeight(null)
     }
@@ -940,7 +963,7 @@ export default function NutritionClient({
       setEditingWeightLog(null)
       router.refresh()
     } catch (err: any) {
-      alert(err.message || 'Güncelleme sırasında hata oluştu')
+      showApiError(err.message || 'Güncelleme sırasında hata oluştu')
     } finally {
       setIsSavingWeightEdit(false)
     }
@@ -2384,6 +2407,40 @@ export default function NutritionClient({
         onConfirm={handleMarkDepletedConfirm}
         onCancel={() => setShowMarkDepletedModal(false)}
       />
+
+      {/* Confirm Modal: Hatırlatıcı Sil (native confirm yerine — OPOS Cilt 3) */}
+      <ConfirmModal
+        open={reminderToDelete !== null}
+        title="Hatırlatıcıyı Sil"
+        message="Bu hatırlatıcıyı silmek istediğinize emin misiniz?"
+        confirmLabel="Evet, Sil"
+        cancelLabel="Vazgeç"
+        variant="danger"
+        onConfirm={confirmDeleteReminder}
+        onCancel={() => setReminderToDelete(null)}
+      />
+
+      {/* Confirm Modal: Kilo Kaydı Sil (native confirm yerine — OPOS Cilt 3) */}
+      <ConfirmModal
+        open={weightLogToDelete !== null}
+        title="Kilo Kaydını Sil"
+        message="Bu kilo kaydını silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
+        confirmLabel="Evet, Sil"
+        cancelLabel="Vazgeç"
+        variant="danger"
+        onConfirm={confirmDeleteWeightLog}
+        onCancel={() => setWeightLogToDelete(null)}
+      />
+
+      {/* Inline hata göstergesi (native alert yerine — OPOS Cilt 3) */}
+      {uiError && (
+        <div
+          role="alert"
+          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[300] max-w-md w-[calc(100%-32px)] px-4 py-3 rounded-2xl bg-error/10 border border-error/20 text-error text-[13px] font-bold text-center shadow-lg backdrop-blur-md"
+        >
+          {uiError}
+        </div>
+      )}
 
       {/* Modal: End Assignment with Stock Decision */}
       <Modal

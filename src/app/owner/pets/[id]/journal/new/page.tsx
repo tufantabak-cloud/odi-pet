@@ -1,4 +1,6 @@
 import { getSessionUser } from '@/lib/auth/get-current-profile'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { hasPetCapability } from '@/lib/pets/access'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 
@@ -94,6 +96,11 @@ export default async function NewJournalEntryPage(props: PageProps) {
   const user = await getSessionUser()
   const { id } = await props.params
   if (!user) redirect('/login')
+
+  // Kayıt ekleme bir bakım işlemidir: viewer rolü hariç tutulur.
+  const supabase = await createServerSupabaseClient()
+  const canManageCare = await hasPetCapability(supabase, id, 'can_manage_pet_care')
+  if (!canManageCare) redirect('/owner/dashboard')
 
   return (
     <div className="flex flex-col gap-6">

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { trackEvent } from '@/lib/analytics/track'
 import { Upload, Plus, Trash2, Loader2, FileText, Check } from 'lucide-react'
 import { FirstAidIcon } from '@/components/icons/PetIcons'
+import ConfirmModal from '@/components/ui/ConfirmModal'
 import { Database } from '@/types'
 
 type PaymentRow = Database['public']['Tables']['payments']['Row']
@@ -78,6 +79,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
   const [uploadTitle, setUploadTitle] = useState('')
   const [uploadType, setUploadType] = useState('tahlil')
   const [isUploading, setIsUploading] = useState(false)
+  const [recordToDelete, setRecordToDelete] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const fetchRecords = async () => {
@@ -177,8 +179,14 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
     }
   }
 
-  const handleDeleteRecord = async (recordId: string) => {
-    if (!confirm('Bu belgeyi silmek istediğinizden emin misiniz?')) return
+  // OPOS Cilt 3: native confirm()/alert() yerine ConfirmModal + inline hata.
+  const handleDeleteRecord = (recordId: string) => setRecordToDelete(recordId)
+
+  const confirmDeleteRecord = async () => {
+    const recordId = recordToDelete
+    setRecordToDelete(null)
+    if (!recordId) return
+    setError(null)
     try {
       const res = await fetch(`/api/pets/${petId}/records/${recordId}`, {
         method: 'DELETE'
@@ -186,11 +194,12 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
       if (res.ok) {
         fetchRecords()
       } else {
-        const data = await res.json()
-        alert(data.error || 'Silme işlemi başarısız.')
+        const data = await res.json().catch(() => ({}))
+        setError(data.error || 'Silme işlemi başarısız.')
       }
     } catch (err) {
       console.error(err)
+      setError('Belge silinemedi. Lütfen tekrar deneyin.')
     }
   }
 
@@ -541,6 +550,18 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
           </div>
         </div>
       )}
+
+      {/* Belge silme onayı — OPOS Cilt 3 (native confirm yerine) */}
+      <ConfirmModal
+        open={recordToDelete !== null}
+        title="Belgeyi Sil"
+        message="Bu belgeyi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
+        confirmLabel="Evet, Sil"
+        cancelLabel="İptal"
+        variant="danger"
+        onConfirm={confirmDeleteRecord}
+        onCancel={() => setRecordToDelete(null)}
+      />
     </div>
   )
 }

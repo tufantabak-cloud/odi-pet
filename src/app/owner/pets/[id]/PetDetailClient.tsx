@@ -30,6 +30,7 @@ import { PetMicroTaskCard } from '@/components/micro-tasks/PetMicroTaskCard'
 import { useDismissedMicroTasks } from '@/hooks/useDismissedMicroTasks'
 import { PetTaskModals, TaskModalType } from '@/components/pets/PetTaskModals'
 import ParasitePlanCompletionModal from '@/components/pets/ParasitePlanCompletionModal'
+import ConfirmModal from '@/components/ui/ConfirmModal'
 
 import { getPlanDisplayCategory } from '@/lib/plans/utils'
 import { getTurkishGenitiveSuffix } from '@/lib/pets/utils'
@@ -447,7 +448,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       setCoverAdjustingUrl(null)
       router.refresh()
     } catch (err: any) {
-      alert("Kapak fotoğrafı ayarlanırken hata oluştu: " + err.message)
+      setGeneralError("Kapak fotoğrafı ayarlanamadı: " + err.message)
+      setTimeout(() => setGeneralError(null), 5000)
     } finally {
       setSavingAdjust(false)
     }
@@ -481,7 +483,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       setPan({ x: 0, y: 0 })
       setCoverAdjustingUrl(publicUrl)
     } catch (err: any) {
-      alert("Kapak fotoğrafı yüklenirken hata oluştu: " + err.message)
+      setGeneralError("Kapak fotoğrafı yüklenemedi: " + err.message)
+      setTimeout(() => setGeneralError(null), 5000)
     } finally {
       setCoverUploading(false)
       if (coverInputRef.current) coverInputRef.current.value = ''
@@ -518,7 +521,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
       router.refresh()
     } catch (err: any) {
-      alert("Profil fotoğrafı yüklenirken hata oluştu: " + err.message)
+      setGeneralError("Profil fotoğrafı yüklenemedi: " + err.message)
+      setTimeout(() => setGeneralError(null), 5000)
     } finally {
       setAvatarUploading(false)
       if (avatarInputRef.current) avatarInputRef.current.value = ''
@@ -528,6 +532,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   const [lostWizardOpen, setLostWizardOpen] = useState(false)
   const [markFoundLoading, setMarkFoundLoading] = useState(false)
   const [generalError, setGeneralError] = useState<string | null>(null)
+  const [markFoundConfirmOpen, setMarkFoundConfirmOpen] = useState(false)
 
 
 
@@ -555,8 +560,11 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     })
   }
 
-  const handleMarkFound = async () => {
-    if (!confirm('Dostunuz bulundu mu? İlan kapatılacaktır.')) return;
+  // OPOS Cilt 3: native confirm() yerine ConfirmModal kullanılır.
+  const handleMarkFound = () => setMarkFoundConfirmOpen(true)
+
+  const confirmMarkFound = async () => {
+    setMarkFoundConfirmOpen(false)
     setMarkFoundLoading(true)
     setGeneralError(null)
     try {
@@ -639,6 +647,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   }
 
   const handleMedicationConfirm = async (task: any, noteText: string) => {
+    const previous = localSchedules
     setLocalSchedules(prev => prev.map(s => s.id === task.id ? { ...s, status: 'done', notes: noteText || s.notes } : s));
     if (!task.id.toString().startsWith('mock-')) {
       try {
@@ -658,12 +667,20 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           };
         }
 
-        await fetch(`/api/plans/${planId}`, {
+        const res = await fetch(`/api/plans/${planId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-      } catch {}
+        if (!res.ok) throw new Error('İlaç kaydı güncellenemedi')
+      } catch (err: any) {
+        setLocalSchedules(previous)
+        setGeneralError('İlaç kaydı güncellenemedi. Lütfen tekrar deneyin.')
+        setTimeout(() => setGeneralError(null), 4000)
+        console.error('[PetDetailClient] handleMedicationConfirm:', err)
+        setMedicationActionTask(null);
+        return
+      }
     }
     setMedicationActionTask(null);
     setMedicationNote('');
@@ -711,16 +728,25 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   };
 
   const handleMedicationSkip = async (task: any) => {
+    const previous = localSchedules
     setLocalSchedules(prev => prev.map(s => s.id === task.id ? { ...s, status: 'done' } : s));
     if (!task.id.toString().startsWith('mock-')) {
       try {
         const planId = getRealPlanId(task.id);
-        await fetch(`/api/plans/${planId}`, {
+        const res = await fetch(`/api/plans/${planId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: 'cancelled' })
         });
-      } catch {}
+        if (!res.ok) throw new Error('İlaç görevi atlanamadı')
+      } catch (err: any) {
+        setLocalSchedules(previous)
+        setGeneralError('İşlem kaydedilemedi. Lütfen tekrar deneyin.')
+        setTimeout(() => setGeneralError(null), 4000)
+        console.error('[PetDetailClient] handleMedicationSkip:', err)
+        setMedicationActionTask(null);
+        return
+      }
     }
     setMedicationActionTask(null);
     setMedicationNote('');
@@ -904,17 +930,27 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   }
 
   const handleDeleteTask = async (id: string) => {
+    const previous = localSchedules
     setLocalSchedules(prev => prev.filter(s => s.id !== id))
     setActiveMenuId(null)
     if (!id.toString().startsWith('mock-')) {
       try {
         if (isPlanSource(id)) {
-          await fetch(`/api/plans/${getRealPlanId(id)}`, { method: 'DELETE' })
+          const res = await fetch(`/api/plans/${getRealPlanId(id)}`, { method: 'DELETE' })
+          if (!res.ok) throw new Error('Görev silinemedi')
         } else {
-          await createBrowserSupabaseClient().from('health_schedules').delete().eq('id', id)
+          const { error } = await createBrowserSupabaseClient().from('health_schedules').delete().eq('id', id)
+          if (error) throw new Error(error.message)
         }
         router.refresh()
-      } catch {}
+      } catch (err: any) {
+        // Sessiz yutma yok: iyimser güncellemeyi geri al ve kullanıcıyı bilgilendir.
+        setLocalSchedules(previous)
+        setGeneralError('Görev silinemedi. Lütfen tekrar deneyin.')
+        setTimeout(() => setGeneralError(null), 4000)
+        console.error('[PetDetailClient] handleDeleteTask:', err)
+        return
+      }
     }
     setTrackerRefreshKey(prev => prev + 1)
   }
@@ -930,6 +966,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     }
 
     const completeTaskInDb = async () => {
+      const previous = localSchedules
       setLocalSchedules(prev => prev.map(s => s.id === id ? { ...s, status: 'done' } : s));
       if (!id.toString().startsWith('mock-')) {
         try {
@@ -949,16 +986,25 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               };
             }
 
-            await fetch(`/api/plans/${planId}`, {
+            const res = await fetch(`/api/plans/${planId}`, {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(payload)
             })
+            if (!res.ok) throw new Error('Görev tamamlanamadı')
           } else {
-            await createBrowserSupabaseClient().from('health_schedules').update({ status: 'completed' }).eq('id', id);
+            const { error } = await createBrowserSupabaseClient().from('health_schedules').update({ status: 'completed' }).eq('id', id);
+            if (error) throw new Error(error.message)
           }
           router.refresh();
-        } catch {}
+        } catch (err: any) {
+          // Sessiz yutma yok: aksi halde görev tamamlanmış görünür ama DB'de değişmez.
+          setLocalSchedules(previous)
+          setGeneralError('Görev tamamlanamadı. Lütfen tekrar deneyin.')
+          setTimeout(() => setGeneralError(null), 4000)
+          console.error('[PetDetailClient] completeTaskInDb:', err)
+          return
+        }
       }
       setTrackerRefreshKey(prev => prev + 1);
     };
@@ -1631,15 +1677,18 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                             onDirectAction={(action) => setActiveTaskModal(action as TaskModalType)}
                           />
                         ))}
-                        <PetTaskModals
-                          petId={pet.id}
-                          petName={pet.name}
-                          activeModal={activeTaskModal}
-                          onClose={() => setActiveTaskModal(null)}
-                          onSuccess={() => router.refresh()}
-                        />
                       </div>
                     )}
+
+                    {/* Modal, microTasks listesinden bağımsız render edilir:
+                        aksi halde modal açıkken liste boşalırsa modal da kaybolur. */}
+                    <PetTaskModals
+                      petId={pet.id}
+                      petName={pet.name}
+                      activeModal={activeTaskModal}
+                      onClose={() => setActiveTaskModal(null)}
+                      onSuccess={() => router.refresh()}
+                    />
                   </div>
 
                   {/* SAĞ SÜTUN (Masaüstü: lg:col-span-5) */}
@@ -2497,12 +2546,24 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       )}
 
       {lostWizardOpen && (
-        <LostPetWizard 
+        <LostPetWizard
           pet={pet}
           onComplete={() => { setLostWizardOpen(false); router.refresh(); }}
           onCancel={() => setLostWizardOpen(false)}
         />
       )}
+
+      {/* Kayıp ilanını kapatma onayı — OPOS Cilt 3 (native confirm yerine) */}
+      <ConfirmModal
+        open={markFoundConfirmOpen}
+        title="Dostunuz Bulundu mu?"
+        message={`${pet.name} bulundu olarak işaretlenecek ve kayıp ilanı kapatılacaktır.`}
+        confirmLabel="Evet, Bulundu"
+        cancelLabel="İptal"
+        variant="default"
+        onConfirm={confirmMarkFound}
+        onCancel={() => setMarkFoundConfirmOpen(false)}
+      />
       {/* Bakım Ekibi & Sahiplik Paylaşımı Modal */}
       {isShareModalOpen && (
         <div

@@ -1,6 +1,7 @@
 import React from 'react'
 import { getCurrentProfile } from '@/lib/auth/get-current-profile'
 import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
+import { hasPetCapability } from '@/lib/pets/access'
 import { redirect } from 'next/navigation'
 import EditPetForm from './EditPetForm'
 import FloatingSOS from '@/components/FloatingSOS'
@@ -11,16 +12,18 @@ export default async function EditPetPage({ params }: { params: Promise<{ id: st
 
   const { id } = await params
   const isAdmin = profile.role === 'admin' || profile.role === 'founder'
-  
-  // Use admin client for admins/founders to bypass RLS, otherwise use server client
-  const supabase = isAdmin ? createAdminSupabaseClient() : await createServerSupabaseClient()
 
-  // Auth: simple owner_id check (bypassed for admins/founders)
-  let petQuery = supabase.from('pets').select('*').eq('id', id)
+  // Kanonik yetki: birincil sahip + ortak sahip. Ortak sahipler artık dışlanmıyor.
+  const serverSupabase = await createServerSupabaseClient()
   if (!isAdmin) {
-    petQuery = petQuery.eq('owner_id', profile.id)
+    const canEdit = await hasPetCapability(serverSupabase, id, 'can_edit_pet_profile')
+    if (!canEdit) redirect('/owner/dashboard')
   }
-  const { data: pet } = await petQuery.single()
+
+  // Use admin client for admins/founders to bypass RLS, otherwise use server client
+  const supabase = isAdmin ? createAdminSupabaseClient() : serverSupabase
+
+  const { data: pet } = await supabase.from('pets').select('*').eq('id', id).single()
 
   if (!pet) redirect('/owner/dashboard')
 

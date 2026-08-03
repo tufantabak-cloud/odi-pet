@@ -37,7 +37,6 @@ const eslintConfig = defineConfig([
     "test-*.js",
     "test_*.js",
     "update_*.js",
-    "src/**/run_db_migration.js",
   ]),
   {
     files: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"],
@@ -57,6 +56,22 @@ const eslintConfig = defineConfig([
       "react-hooks/immutability": "off",
       "react-hooks/incompatible-library": "off",
       "prefer-const": "off"
+    }
+  },
+  // ── OPOS DoD 7-8 kalite kapısı: kademeli açılım ──────────────────────────
+  // Kurallar repo genelinde kapalı (yukarıdaki blok). Denetimden geçmiş
+  // /owner/pets modülünde "warn" olarak açılıyor ki yeni ihlal eklenmesin.
+  // Mevcut birikim `--max-warnings` baseline'ı ile sabitlenir; baseline
+  // düşürüldükçe kural repo geneline yayılabilir.
+  {
+    files: ["src/app/owner/pets/**/*.ts", "src/app/owner/pets/**/*.tsx"],
+    rules: {
+      "@typescript-eslint/no-unused-vars": "warn",
+      "no-unused-vars": "warn",
+      "react-hooks/exhaustive-deps": "warn",
+      "react-hooks/set-state-in-effect": "warn",
+      "@next/next/no-img-element": "warn",
+      "prefer-const": "warn"
     }
   }
 ]);

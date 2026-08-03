@@ -36,9 +36,9 @@ export default function PetCardActions({ pet }: { pet: any }) {
   const handleResetData = () => {
     setShowMenu(false)
     openConfirm({
-      title: 'Sağlık Verilerini Temizle',
-      message: `DİKKAT: ${pet.name} adlı dostunuzun TÜM sağlık geçmişini (aşılar, ölçümler, notlar vb.) temizlemek istediğinizden emin misiniz? Bu işlem arşivlenecek/arındırılacaktır.`,
-      confirmLabel: 'Evet, Temizle',
+      title: 'Sağlık Verilerini Kalıcı Olarak Sil',
+      message: `DİKKAT: ${pet.name} adlı dostunuzun TÜM sağlık geçmişi (aşılar, parazit kayıtları, ölçümler, ilaçlar, alerjiler, notlar) KALICI OLARAK SİLİNECEKTİR. Bu işlem geri alınamaz ve veriler arşivlenmez.`,
+      confirmLabel: 'Evet, Kalıcı Olarak Sil',
       onConfirm: () =>
         startTransition(async () => {
           try {

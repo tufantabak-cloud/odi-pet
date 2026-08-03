@@ -87,7 +87,6 @@ function SpeciesSelector({ onSelect, onBack }: { onSelect: (s: Species) => void,
               alt=""
               fill
               sizes="(max-width: 640px) 45vw, 360px"
-              placeholder="blur"
               className="object-cover"
             />
           </button>
@@ -1266,6 +1265,13 @@ const WIZARD_STEPS = [
   { id: 6, label: 'Sağlık Geçmişi' },
 ]
 
+/**
+ * Sihirbaz 6 adımdır: 1-4 bu sayfada, 5-6 /add/success sayfasında.
+ * İlerleme yüzdesi iki sayfada da aynı toplam üzerinden hesaplanmalıdır,
+ * aksi halde 4. adımda %100 gösterilip success sayfasında %83'e düşer.
+ */
+const WIZARD_TOTAL_STEPS = WIZARD_STEPS.length
+
 export default function AddPetPage() {
   const router = useRouter()
   const [step, setStep] = useState(1)
@@ -1308,17 +1314,6 @@ export default function AddPetPage() {
   const handleStep2Next = (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitError('')
-    
-    // Geçici console.log("submit tetiklendi", formData) eklendi
-    console.log("submit tetiklendi", {
-      name: petName,
-      breed: selectedBreed,
-      gender,
-      birthDate,
-      weight,
-      height,
-      isNeutered
-    })
 
     if (!petName.trim()) {
       setSubmitError('Lütfen can dostunuzun ismini girin.')
@@ -1438,10 +1433,10 @@ export default function AddPetPage() {
         {/* Top Progress & Active Title Bar */}
         <div className="flex items-center justify-between">
           <span className="text-[12px] font-extrabold text-primary uppercase tracking-wider">
-            Adım {step} / 4 • {WIZARD_STEPS.find(s => s.id === step)?.label || ''}
+            Adım {step} / {WIZARD_TOTAL_STEPS} • {WIZARD_STEPS.find(s => s.id === step)?.label || ''}
           </span>
           <span className="text-[11px] font-extrabold text-text-tertiary bg-surface-2 px-2.5 py-0.5 rounded-full border border-border/40">
-            %{Math.round((step / 4) * 100)} Tamamlandı
+            %{Math.round((step / WIZARD_TOTAL_STEPS) * 100)} Tamamlandı
           </span>
         </div>
 
@@ -1449,7 +1444,7 @@ export default function AddPetPage() {
         <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-border-main/50">
           <div
             className="bg-gradient-to-r from-primary via-indigo-600 to-primary h-full rounded-full transition-all duration-500 shadow-xs"
-            style={{ width: `${(step / 4) * 100}%` }}
+            style={{ width: `${(step / WIZARD_TOTAL_STEPS) * 100}%` }}
           />
         </div>
 

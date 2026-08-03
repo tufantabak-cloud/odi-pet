@@ -7,6 +7,7 @@
     "build": "next build && serwist build serwist.config.mjs --no-update-notifier",
     "start": "next start",
     "lint": "eslint",
+    "lint:pets": "eslint src/app/owner/pets --max-warnings 183",
     "test": "npm run test:unit",
     "check:architecture": "node scripts/check-architecture-guards.mjs",
     "audit:health": "npx tsx scripts/run-health-audit.mjs",
