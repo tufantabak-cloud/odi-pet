@@ -9,7 +9,7 @@ import HealthTab from '@/components/pets/tabs/HealthTab'
 import SmartTaskWizard from '@/components/tasks/SmartTaskWizard'
 import { TaskCategory } from '@/lib/tasks/taskDefaults'
 import { AlertCircleIcon, CalendarClockIcon, CheckCircle2Icon, CheckCircleIcon, ChevronRightIcon, HeartPulseIcon, ShieldAlertIcon, SmileIcon, StarIcon, TrophyIcon, ActivityIcon, PlusIcon, FileTextIcon, HistoryIcon, MapPinIcon, BabyIcon, FileLineChartIcon, HelpCircleIcon, DownloadIcon, PillIcon, DogIcon, CatIcon, IdCardIcon, TargetIcon, DropletsIcon } from 'lucide-react'
-import { VaccineIcon, ParasiteIcon, ShampooIcon, BowlIcon, CarrierIcon, HouseIcon, BoneIcon, ScoopIcon, FirstAidIcon } from '@/components/icons/PetIcons'
+import { VaccineIcon, ParasiteIcon, ShampooIcon, BowlIcon, CarrierIcon, BoneIcon, ScoopIcon, FirstAidIcon } from '@/components/icons/PetIcons'
 import NutritionClient from './nutrition/NutritionClient'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -164,7 +164,6 @@ function getTabCtaInfo(species: string | undefined): Record<string, { icon: Reac
     'Hijyen':    { icon: <ScoopIcon width={28} height={28} />, btnLabel: 'Hijyen Görevi Planla', desc: isDog ? 'Çiş pedi temizliği, yatak ve ortam hijyeni planlayın.' : 'Kum kabı temizleme, yatak ve ortam hijyeni planlayın.', title: 'Hijyen Takibi', gradient: 'from-teal-100 to-emerald-50' },
     'Aktivite':  { icon: <BoneIcon width={28} height={28} />, btnLabel: 'Aktivite Görevi Planla', desc: isDog ? 'Yürüyüş, dışarı tuvalet eğitimi, oyun ve egzersiz rutinleri oluşturun.' : 'Kedi tuvalet eğitimi, oyun ve eğitim seansları planlayın.', title: 'Aktivite Planı', gradient: 'from-green-100 to-lime-50' },
     'Veteriner': { icon: <CarrierIcon width={28} height={28} />, btnLabel: 'Veteriner Görevi Planla', desc: 'Genel kontrol and takip randevuları oluşturun.', title: 'Veteriner Takibi', gradient: 'from-purple-100 to-indigo-50' },
-    'Diğer':     { icon: <HouseIcon width={28} height={28} />, btnLabel: 'Diğer Görev Planla', desc: 'Diğer kategori görevleri ve hatırlatmaları oluşturun.', title: 'Diğer Görevler', gradient: 'from-gray-100 to-slate-50' },
   };
 }
 
@@ -1961,21 +1960,6 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                   planUrl: `/owner/plan-yap/aktivite?pet_id=${pet.id}`,
                   logUrl: `/owner/plan-yap/aktivite?pet_id=${pet.id}&mode=log`,
                   emptyDesc: 'Aktivite ve egzersiz takvimi oluşturmak için "Aktivite Planla" veya tamamlanan aktiviteyi kaydetmek için "Aktivite Kaydı Ekle" butonunu kullanabilirsiniz.'
-                },
-                {
-                  name: 'Diğer',
-                  title: 'Diğer Görevler',
-                  desc: `${pet.name} için diğer genel bakım ve özel görev kayıtları`,
-                  icon: <HouseIcon width={24} height={24} />,
-                  headerIcon: <HouseIcon width={22} height={22} />,
-                  color: 'text-slate-600',
-                  bg: 'bg-slate-100',
-                  planBtnLabel: 'Diğer Planla',
-                  planBtnBg: 'bg-slate-700 hover:bg-slate-800',
-                  logBtnLabel: 'Diğer Kaydı Ekle',
-                  planUrl: `/owner/plan-yap/diger?pet_id=${pet.id}`,
-                  logUrl: `/owner/plan-yap/diger?pet_id=${pet.id}&mode=log`,
-                  emptyDesc: 'Genel görev ve hatırlatma oluşturmak için "Diğer Planla" veya tamamlanan görevi kaydetmek için "Diğer Kaydı Ekle" butonunu kullanabilirsiniz.'
                 }
               ].map((module) => {
                 const pending = getSchedulesForTab(module.name);
