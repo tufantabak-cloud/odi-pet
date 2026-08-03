@@ -25,7 +25,7 @@ export default function OnboardingProgressCard({
 
   if (!progress) {
     return (
-      <div className="bg-white border border-border-main rounded-sheet p-5 mb-4 animate-pulse">
+      <div className="bg-white border border-slate-100 rounded-[24px] p-5 mb-4 animate-pulse">
         <div className="h-4 bg-gray-200 rounded w-1/3 mb-2" />
         <div className="h-2 bg-gray-100 rounded w-full" />
       </div>
@@ -51,21 +51,21 @@ export default function OnboardingProgressCard({
 
   if (isCollapsed) {
     return (
-      <div 
+      <div
         onClick={() => setIsCollapsed(false)}
-        className="bg-white border border-[#E2E0FA] rounded-xl p-3 mb-4 cursor-pointer shadow-sm hover:border-primary transition-all flex items-center justify-between"
+        className="bg-white border border-slate-100 rounded-2xl p-3 mb-4 cursor-pointer shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] hover:border-slate-200 hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.08)] transition-all duration-200 flex items-center justify-between"
       >
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-primary-soft flex items-center justify-center text-primary">
+          <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
             <Sparkles className="w-3.5 h-3.5 shrink-0" />
           </div>
-          <span className="text-xs font-semibold text-[#26215C]">
+          <span className="text-xs font-semibold text-text-primary">
             %{progress.percentage} · {petName} için Kurulum Rehberi
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-2xs text-[#6F6B99]">Genişlet</span>
-          <ChevronDown className="w-3.5 h-3.5 text-[#6F6B99]" />
+          <span className="text-2xs text-text-secondary">Genişlet</span>
+          <ChevronDown className="w-3.5 h-3.5 text-text-secondary" />
         </div>
       </div>
     );
@@ -73,11 +73,11 @@ export default function OnboardingProgressCard({
 
   return (
     <>
-      <div className="bg-white border border-[#E2E0FA] rounded-sheet p-5 mb-4 shadow-sm">
+      <div className="bg-white border border-slate-100 rounded-[24px] p-5 mb-4 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)]">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-purple-600" />
-            <h3 className="text-sm font-semibold text-[#26215C]">
+            <h3 className="text-sm font-semibold text-text-primary">
               {petName} için Kurulum Rehberi
             </h3>
           </div>
@@ -86,8 +86,8 @@ export default function OnboardingProgressCard({
           </span>
         </div>
 
-        <div className="w-full bg-[#F5F5FC] h-2 rounded-full mb-4 overflow-hidden">
-          <div 
+        <div className="w-full bg-slate-100 h-1.5 rounded-full mb-4 overflow-hidden">
+          <div
             className="bg-primary h-full rounded-full transition-all duration-300"
             style={{ width: `${progress.percentage}%` }}
           />
@@ -98,11 +98,11 @@ export default function OnboardingProgressCard({
             <div
               key={step.id}
               onClick={() => router.push(step.route)}
-              className="flex items-center justify-between p-3 rounded-xl hover:bg-[#F5F5FC] cursor-pointer transition-colors"
+              className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors duration-150 min-h-[44px]"
             >
               <div className="flex items-center gap-3">
                 <span className={`text-sm ${
-                  step.done ? 'text-[#8E8BBA] line-through' : 'text-[#26215C] font-medium'
+                  step.done ? 'text-text-secondary line-through' : 'text-text-primary font-medium'
                 }`}>
                   {step.label}
                 </span>
@@ -111,7 +111,7 @@ export default function OnboardingProgressCard({
                 {step.done ? (
                   <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                 ) : (
-                  <Circle className="w-5 h-5 text-[#C5C2E6] hover:text-primary" />
+                  <Circle className="w-5 h-5 text-slate-300 hover:text-primary transition-colors" />
                 )}
               </div>
             </div>
@@ -121,7 +121,7 @@ export default function OnboardingProgressCard({
         <div className="flex gap-2">
           <button
             onClick={handleSnooze}
-            className="flex-1 py-2.5 px-4 rounded-xl border border-[#D5D2F2] text-xs font-semibold text-primary hover:bg-primary-soft transition-colors min-h-[44px]"
+            className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-xs font-semibold text-primary hover:bg-primary/5 transition-colors duration-150 min-h-[44px]"
           >
             Daha sonra hatırlat
           </button>
@@ -129,7 +129,7 @@ export default function OnboardingProgressCard({
             <button
               onClick={() => router.push(nextStepForCta.route)}
               data-testid="next-step-primary-button"
-              className="flex-1 py-2.5 px-4 rounded-xl bg-primary text-xs font-semibold text-white hover:bg-primary-hover transition-colors min-h-[44px]"
+              className="flex-1 py-2.5 px-4 rounded-xl bg-primary text-xs font-semibold text-white hover:opacity-90 transition-all duration-150 active:scale-[0.98] min-h-[44px]"
             >
               Sıradaki Adım
             </button>

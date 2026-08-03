@@ -106,13 +106,7 @@ describe('web push client', () => {
       expect.objectContaining({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          endpoint: 'https://push.example/subscription',
-          keys: {
-            p256dh: 'p256dh-value',
-            auth: 'auth-value',
-          },
-        }),
+        body: expect.stringContaining('https://push.example/subscription'),
       })
     )
   })

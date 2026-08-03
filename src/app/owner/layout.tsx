@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import SpotlightTour from '@/components/onboarding/SpotlightTour'
 import DashboardPendingReferral from '@/components/DashboardPendingReferral'
+import { Gift } from 'lucide-react'
 import { filterNavItems, resolveNavItems } from '@/lib/modules/registry'
 
 export default async function OwnerLayout({ children }: { children: ReactNode }) {
@@ -99,7 +100,7 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
             aria-label="Arkadaşını davet et"
             className="w-11 h-11 rounded-full flex items-center justify-center border border-border-main bg-surface hover:bg-bg-main text-text-secondary transition-all cursor-pointer shadow-sm active:scale-95"
           >
-            <i className="ti ti-gift text-[18px]" />
+            <Gift className="w-5 h-5 text-text-secondary" />
           </Link>
 
           {/* Notifications */}

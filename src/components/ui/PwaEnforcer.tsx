@@ -5,6 +5,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useWebPush } from "@/hooks/useWebPush";
 import { shouldShowGlobalNotificationGate } from "@/lib/notifications/pwa-enforcer-policy";
+import { Share, PlusSquare, Compass } from "lucide-react";
 
 export default function PwaEnforcer() {
   const pathname = usePathname();
@@ -13,6 +14,7 @@ export default function PwaEnforcer() {
   const [dismissed, setDismissed] = useState(false);
   const [enforceType, setEnforceType] = useState<"pwa" | "notification">("pwa");
   const [os, setOs] = useState<"ios" | "android" | "other">("other");
+  const [isInApp, setIsInApp] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showIosGuide, setShowIosGuide] = useState(false);
   const [showPostInstallGuide, setShowPostInstallGuide] = useState(false);
@@ -76,10 +78,18 @@ export default function PwaEnforcer() {
       return;
     }
 
-    // Determine OS
-    if (/iphone|ipad|ipod/i.test(userAgent.toLowerCase())) {
+    // Determine OS & In-App Browser
+    const lowerUa = userAgent.toLowerCase();
+    const isIosDevice = /iphone|ipad|ipod/i.test(lowerUa);
+    const isSafariBrowser = /^((?!chrome|android|crios|fxios|opera|biambrowser).)*safari/i.test(lowerUa);
+    const inAppDetected = /fban|fbav|instagram|micromessenger|line\/|twitter|telegram|linkedin|crios|fxios|wv/i.test(lowerUa) || (isIosDevice && !isSafariBrowser);
+    
+    setIsInApp(inAppDetected);
+
+    if (isIosDevice) {
       setOs("ios");
-    } else if (/android/i.test(userAgent.toLowerCase())) {
+      setShowIosGuide(true);
+    } else if (/android/i.test(lowerUa)) {
       setOs("android");
     } else {
       setOs("other");
@@ -285,29 +295,48 @@ export default function PwaEnforcer() {
 
             {showIosGuide && os === 'ios' ? (
               <div className="w-full text-left space-y-4 mb-6 animate-in slide-in-from-top-4 duration-300">
+                {isInApp && (
+                  <div className="p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-left space-y-1.5 mb-3">
+                    <div className="flex items-center gap-2 text-amber-300 font-bold text-[13px]">
+                      <Compass className="w-4 h-4 shrink-0 text-amber-400" />
+                      Safari ile Açmanız Gerekmektedir
+                    </div>
+                    <p className="text-[12px] text-zinc-300 leading-relaxed">
+                      Şu an bir uygulama içi tarayıcıdasınız. iOS kuralları gereği uygulamayı yüklemek için ekranın altındaki <strong className="text-white">üç nokta (...)</strong> menüsüne basıp <strong className="text-amber-200">'Safari'de Aç'</strong> demeniz gereklidir.
+                    </p>
+                  </div>
+                )}
+
                 <div className="flex items-start gap-4 bg-white/[0.02] border border-white/[0.04] p-4 rounded-2xl">
                   <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-violet-600/30 flex items-center justify-center text-violet-400 font-bold text-[13px]">
                     1
                   </div>
-                  <div>
-                    <h3 className="font-bold text-base text-zinc-100 flex items-center gap-1.5">
-                      Paylaş Menüsünü Açın
+                  <div className="flex-1">
+                    <h3 className="font-bold text-base text-zinc-100 flex items-center gap-2">
+                      Paylaş Simgesine Dokunun
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                        <Share className="w-3.5 h-3.5" />
+                      </span>
                     </h3>
-                    <p className="text-[13px] text-zinc-400 mt-1">
-                      Alt bardaki <strong className="text-zinc-200">Paylaş</strong> butonuna dokunun.
+                    <p className="text-[13px] text-zinc-400 mt-1 leading-relaxed">
+                      Safari'nin alt barında yer alan <strong className="text-zinc-200">Paylaş</strong> <span className="inline-block px-1.5 py-0.5 rounded bg-white/10 text-[11px] font-mono text-violet-300">⎋ (Kare & Yukarı Ok)</span> simgesine dokunun.
                     </p>
                   </div>
                 </div>
+
                 <div className="flex items-start gap-4 bg-white/[0.02] border border-white/[0.04] p-4 rounded-2xl">
                   <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-violet-600/30 flex items-center justify-center text-violet-400 font-bold text-[13px]">
                     2
                   </div>
-                  <div>
-                    <h3 className="font-bold text-base text-zinc-100">
+                  <div className="flex-1">
+                    <h3 className="font-bold text-base text-zinc-100 flex items-center gap-2">
                       Ana Ekrana Ekleyin
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                        <PlusSquare className="w-3.5 h-3.5" />
+                      </span>
                     </h3>
-                    <p className="text-[13px] text-zinc-400 mt-1">
-                      Seçeneklerden <strong className="text-zinc-200">"Ana Ekrana Ekle"</strong>ye dokunun.
+                    <p className="text-[13px] text-zinc-400 mt-1 leading-relaxed">
+                      Açılan menüyü aşağı kaydırıp <strong className="text-zinc-200">"Ana Ekrana Ekle"</strong> seçeneğine dokunun.
                     </p>
                   </div>
                 </div>

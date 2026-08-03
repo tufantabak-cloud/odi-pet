@@ -12,8 +12,8 @@ import OnboardingProgressCard from '@/components/OnboardingProgressCard'
 
 import PetRecommendationsCard from '@/components/dashboard/PetRecommendationsCard'
 import PendingInviteModal from '@/components/pets/family/PendingInviteModal'
-import { ShieldCheckIcon, BugIcon, ScaleIcon, UtensilsIcon, SparklesIcon, CalendarIcon, StethoscopeIcon } from '@/components/icons/PetIcons'
-import { Badge, GlassCard } from '@/components/ui/primitives'
+import { Stethoscope, Shield, Calendar, Sparkles, ChevronRight, Gift, Scan } from 'lucide-react'
+import { Badge } from '@/components/ui/primitives'
 
 export default function DashboardClient({
   greeting,
@@ -96,7 +96,7 @@ export default function DashboardClient({
       {petsWithStats && petsWithStats.length > 0 && (
         <div className="flex flex-col gap-3 pt-2">
           <div className="flex items-center justify-between px-[var(--space-4)]">
-            <h2 className="text-xs font-semibold text-text-tertiary uppercase tracking-wider">Petlerim</h2>
+            <h2 className="text-xs font-bold text-text-primary uppercase tracking-wider">Petlerim</h2>
             <Link href="/owner/pets/add" data-testid="add-first-pet-button" className="text-xs font-semibold text-primary">
               + Ekle
             </Link>
@@ -123,7 +123,7 @@ export default function DashboardClient({
       {/* 4. Ajanda (Yaklaşan Etkinlikler & Aktif Planlar Birleşimi) */}
       <div className="flex flex-col gap-2.5 px-[var(--space-4)] pt-2" id="section-ajanda">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-semibold text-text-tertiary uppercase tracking-wider">Ajanda</h2>
+          <h2 className="text-xs font-bold text-text-primary uppercase tracking-wider">Ajanda</h2>
         </div>
 
         {(upcomingEvents.length > 0 || activePlans.length > 0) ? (
@@ -132,9 +132,11 @@ export default function DashboardClient({
             {upcomingEvents.map((event: any) => {
               const eventDate = new Date(event.due_date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })
               return (
-                <GlassCard key={event.id} variant="interactive" padding="sm" className="flex items-center justify-between">
+                <div key={event.id} className="flex items-center justify-between p-4 rounded-[24px] border border-slate-100 bg-white shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] transition-all duration-200">
                   <div className="flex items-center gap-3 min-w-0">
-                    <ShieldCheckIcon badgeSize="sm" size={18} />
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-primary/10 text-primary">
+                      <Shield className="w-4 h-4 stroke-[2]" />
+                    </div>
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-text-primary truncate">{event.title || event.vaccines?.name || 'Sağlık Takibi'}</p>
                       <p className="text-2xs text-text-secondary font-medium truncate">{event.pets?.name || 'Pet'}</p>
@@ -144,7 +146,7 @@ export default function DashboardClient({
                     <span className="text-xs font-semibold text-text-primary">{eventDate}</span>
                     {event.due_time && <p className="text-2xs text-text-tertiary mt-0.5">{event.due_time.substring(0, 5)}</p>}
                   </div>
-                </GlassCard>
+                </div>
               )
             })}
 
@@ -152,9 +154,11 @@ export default function DashboardClient({
             {activePlans.slice(0, 3).map((plan: any) => {
               const planDate = plan.next_run ? new Date(plan.next_run).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }) : 'Belirtilmemiş'
               return (
-                <GlassCard key={plan.id} variant="interactive" padding="sm" className="flex items-center justify-between">
+                <div key={plan.id} className="flex items-center justify-between p-4 rounded-[24px] border border-slate-100 bg-white shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] transition-all duration-200">
                   <div className="flex items-center gap-3 min-w-0">
-                    <SparklesIcon badgeSize="sm" size={18} />
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-violet-100 text-violet-600">
+                      <Sparkles className="w-4 h-4 stroke-[2]" />
+                    </div>
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-text-primary truncate">{getPlanDisplayTitle(plan)}</p>
                       <p className="text-2xs text-text-secondary font-medium truncate">{plan.pets?.name || 'Pet'}</p>
@@ -164,12 +168,12 @@ export default function DashboardClient({
                     <span className="text-xs font-semibold text-text-primary">{planDate}</span>
                     <p className="text-2xs text-text-tertiary mt-0.5">Sıradaki</p>
                   </div>
-                </GlassCard>
+                </div>
               )
             })}
           </div>
         ) : (
-          <div className="p-4 rounded-2xl bg-surface border border-dashed border-border-main text-center">
+          <div className="p-4 rounded-[24px] border border-dashed border-slate-200 bg-white text-center">
             <i className="ti ti-calendar-event block mb-1 text-xl text-text-tertiary" />
             <p className="text-xs text-text-tertiary font-medium">Yakın zamanda planlanmış bir ajanda öğesi yok</p>
           </div>
@@ -186,64 +190,56 @@ export default function DashboardClient({
       {/* 5. Hızlı Erişim (Mobilde 2 sütun · 4 işlem görünür) */}
       {pets && pets.length > 0 && (
         <div className="flex flex-col gap-2 pt-2">
-          <h2 className="text-xs font-semibold text-text-tertiary uppercase tracking-wider px-[var(--space-4)]">
+          <h2 className="text-xs font-bold text-text-primary uppercase tracking-wider px-[var(--space-4)]">
             Hızlı Erişim
           </h2>
           <div className="grid grid-cols-2 gap-2 px-[var(--space-4)]">
 
             {/* AI Vet — Primary */}
             <Link href="/owner/ai-vet" prefetch={false}
-              className="flex flex-col items-center justify-center gap-2 p-4 rounded-card min-h-[90px] cursor-pointer bg-surface/90 backdrop-blur-xl border border-white shadow-soft hover:shadow-medium hover:border-primary/10 transition-all duration-300 active:scale-[0.98]">
-              <StethoscopeIcon badgeSize="md" size={20} />
+              className="flex flex-col items-center justify-center gap-2.5 p-4 rounded-[24px] min-h-[96px] cursor-pointer bg-white border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.08)] hover:border-slate-200 hover:scale-[1.02] transition-all duration-200 active:scale-[0.98]">
+              <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                <Stethoscope className="w-5 h-5 stroke-[2]" />
+              </div>
               <div className="text-center">
-                <div className="text-xs font-semibold text-text-primary leading-tight">
-                  Odi AI Vet
-                </div>
-                <div className="text-2xs text-text-secondary mt-0.5 leading-tight">
-                  Yapay zeka asistanı
-                </div>
+                <div className="text-xs font-semibold text-text-primary leading-tight">Odi AI Vet</div>
+                <div className="text-2xs text-text-secondary mt-0.5 leading-tight">Yapay zeka asistanı</div>
               </div>
             </Link>
 
             {/* Akıllı Tarama */}
             <Link href="/owner/scanner" prefetch={false}
-              className="flex flex-col items-center justify-center gap-2 p-4 rounded-card min-h-[90px] cursor-pointer bg-surface/90 backdrop-blur-xl border border-white shadow-soft hover:shadow-medium hover:border-primary/10 transition-all duration-300 active:scale-[0.98]">
-              <ShieldCheckIcon badgeSize="md" size={20} />
+              className="flex flex-col items-center justify-center gap-2.5 p-4 rounded-[24px] min-h-[96px] cursor-pointer bg-white border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.08)] hover:border-slate-200 hover:scale-[1.02] transition-all duration-200 active:scale-[0.98]">
+              <div className="w-11 h-11 rounded-2xl bg-violet-100 flex items-center justify-center text-violet-600">
+                <Scan className="w-5 h-5 stroke-[2]" />
+              </div>
               <div className="text-center">
-                <div className="text-xs font-semibold text-text-primary leading-tight">
-                  Akıllı Tarama
-                </div>
-                <div className="text-2xs text-text-secondary mt-0.5 leading-tight">
-                  Fotoğrafla tara
-                </div>
+                <div className="text-xs font-semibold text-text-primary leading-tight">Akıllı Tarama</div>
+                <div className="text-2xs text-text-secondary mt-0.5 leading-tight">Fotoğrafla tara</div>
               </div>
             </Link>
 
             {/* Vet Bul */}
             <Link href="/owner/vets"
-              className="flex flex-col items-center justify-center gap-2 p-4 rounded-card min-h-[90px] cursor-pointer bg-surface/90 backdrop-blur-xl border border-white shadow-soft hover:shadow-medium hover:border-primary/10 transition-all duration-300 active:scale-[0.98]">
-              <StethoscopeIcon badgeSize="md" size={20} />
+              className="flex flex-col items-center justify-center gap-2.5 p-4 rounded-[24px] min-h-[96px] cursor-pointer bg-white border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.08)] hover:border-slate-200 hover:scale-[1.02] transition-all duration-200 active:scale-[0.98]">
+              <div className="w-11 h-11 rounded-2xl bg-teal-100 flex items-center justify-center text-teal-600">
+                <Stethoscope className="w-5 h-5 stroke-[2]" />
+              </div>
               <div className="text-center">
-                <div className="text-xs font-semibold text-text-primary leading-tight">
-                  Vet Bul
-                </div>
-                <div className="text-2xs text-text-secondary mt-0.5 leading-tight">
-                  En yakın klinik
-                </div>
+                <div className="text-xs font-semibold text-text-primary leading-tight">Vet Bul</div>
+                <div className="text-2xs text-text-secondary mt-0.5 leading-tight">En yakın klinik</div>
               </div>
             </Link>
 
             {/* Rutin Planla */}
             <Link href="/owner/plan-yap" prefetch={false}
-              className="flex flex-col items-center justify-center gap-2 p-4 rounded-card min-h-[90px] cursor-pointer bg-surface/90 backdrop-blur-xl border border-white shadow-soft hover:shadow-medium hover:border-primary/10 transition-all duration-300 active:scale-[0.98]">
-              <CalendarIcon badgeSize="md" size={20} />
+              className="flex flex-col items-center justify-center gap-2.5 p-4 rounded-[24px] min-h-[96px] cursor-pointer bg-white border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.08)] hover:border-slate-200 hover:scale-[1.02] transition-all duration-200 active:scale-[0.98]">
+              <div className="w-11 h-11 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-600">
+                <Calendar className="w-5 h-5 stroke-[2]" />
+              </div>
               <div className="text-center">
-                <div className="text-xs font-semibold text-text-primary leading-tight">
-                  Rutin Planla
-                </div>
-                <div className="text-2xs text-text-secondary mt-0.5 leading-tight">
-                  Yeni plan oluştur
-                </div>
+                <div className="text-xs font-semibold text-text-primary leading-tight">Rutin Planla</div>
+                <div className="text-2xs text-text-secondary mt-0.5 leading-tight">Yeni plan oluştur</div>
               </div>
             </Link>
 
@@ -273,7 +269,7 @@ export default function DashboardClient({
       {/* 8. Sağlık Geçmişi Sihirbazı Hatırlatıcısı */}
       {showHealthWizardForActivePet && activePet && (
         <div key={`health-wizard-${activePet.id}`} className="px-[var(--space-4)] pt-3 pb-1">
-          <Link href={`/owner/plan-yap/asi?pet_id=${activePet.id}&mode=log`} className="block w-full bg-surface/90 backdrop-blur-xl border border-white rounded-card p-4 text-left shadow-soft hover:shadow-medium hover:border-primary/10 transition-all duration-300 active:scale-[0.98]">
+          <Link href={`/owner/plan-yap/asi?pet_id=${activePet.id}&mode=log`} className="block w-full bg-white border border-slate-100 rounded-[24px] p-4 text-left shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.08)] hover:border-slate-200 transition-all duration-200 active:scale-[0.98]">
             <div className="flex items-start gap-3">
               <i className="ti ti-clock text-xl text-primary mt-0.5 shrink-0" />
               <div>
@@ -296,15 +292,15 @@ export default function DashboardClient({
       {/* 10. Davet Et (Mini Banner) */}
       {pets && pets.length > 0 && (
         <div className="px-[var(--space-4)] pt-2">
-          <Link href="/owner/referral" className="rounded-card border border-border-main bg-surface px-4 py-3 flex items-center gap-3 hover:border-primary/30 transition-all duration-200 active:scale-[0.98]">
-            <div className="w-8 h-8 bg-primary-soft rounded-lg flex items-center justify-center flex-shrink-0">
-              <i className="ti ti-gift text-primary text-base" />
+          <Link href="/owner/referral" className="rounded-[24px] border border-slate-100 bg-white px-4 py-3 flex items-center gap-3 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.08)] hover:border-slate-200 transition-all duration-200 active:scale-[0.98]">
+            <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <Gift className="w-5 h-5 stroke-[2] text-primary" />
             </div>
             <div className="flex-1">
               <p className="text-xs font-semibold text-text-primary">Arkadaşını davet et</p>
               <p className="text-2xs text-text-secondary">Bir dostuna öner, o da can dostuna daha iyi baksın</p>
             </div>
-            <i className="ti ti-chevron-right text-text-tertiary text-sm" />
+            <ChevronRight className="w-4 h-4 text-text-secondary shrink-0" />
           </Link>
         </div>
       )}

@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
+  detectPlatformAndBrowser,
+  getDeviceId,
   getOrCreatePushSubscription,
+  NotificationState,
   persistPushSubscription,
   pushSubscriptionMatchesApplicationServerKey,
   WebPushSetupError,
@@ -11,6 +14,7 @@ import {
 
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ''
 const PUSH_OPERATION_TIMEOUT_MS = 15_000
+const SOFT_PROMPT_REMIND_DAYS = 14
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
@@ -44,6 +48,8 @@ function getUserMessage(error: unknown): string {
       case 'PUSH_SUBSCRIPTION_INVALID':
       case 'PUSH_SYNC_FAILED':
         return 'Bildirim izni verildi ancak cihaz kaydı tamamlanamadı. Lütfen tekrar deneyin.'
+      case 'IOS_PWA_REQUIRED':
+        return 'iOS cihazlarda bildirim alabilmek için lütfen Odi.Pet web uygulamasını Safari menüsünden "Ana Ekrana Ekle" butonuna dokunarak yükleyin.'
     }
   }
 
@@ -62,24 +68,41 @@ function getUserMessage(error: unknown): string {
 export type PushPermission = 'default' | 'granted' | 'denied' | 'unsupported'
 
 export function useWebPush() {
+  const [state, setState] = useState<NotificationState>('default')
   const [permission, setPermission] = useState<PushPermission>('default')
   const [isSubscribed, setIsSubscribed] = useState(false)
   const [isInitializing, setIsInitializing] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showSoftPrompt, setShowSoftPrompt] = useState(false)
   const [showBatteryGuide, setShowBatteryGuide] = useState(false)
   const swRegRef = useRef<ServiceWorkerRegistration | null>(null)
 
+  // 1. Initial State & Auto-Sync
   useEffect(() => {
     let cancelled = false
 
+    const { isIos, isStandalone } = detectPlatformAndBrowser()
+
     if (!isWebPushSupported()) {
+      if (isIos && !isStandalone) {
+        setState('ios_pwa_required')
+      } else {
+        setState('unsupported')
+      }
       setPermission('unsupported')
       setIsInitializing(false)
       return
     }
 
-    setPermission(Notification.permission as PushPermission)
+    const currentPermission = Notification.permission as PushPermission
+    setPermission(currentPermission)
+
+    if (currentPermission === 'denied') {
+      setState('blocked')
+      setIsInitializing(false)
+      return
+    }
 
     async function initializePushState() {
       try {
@@ -100,15 +123,17 @@ export function useWebPush() {
         )
 
         if (!existingSubscription) {
-          if (!cancelled) setIsSubscribed(false)
+          if (!cancelled) {
+            setIsSubscribed(false)
+            setState(currentPermission === 'granted' ? 'sync_required' : 'default')
+            checkSoftPromptEligibility(currentPermission)
+          }
           return
         }
 
         if (!VAPID_PUBLIC_KEY) {
-          throw new WebPushSetupError(
-            'PUSH_SUBSCRIPTION_INVALID',
-            'MISSING_VAPID_PUBLIC_KEY'
-          )
+          if (!cancelled) setState('expired')
+          return
         }
 
         const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
@@ -118,30 +143,39 @@ export function useWebPush() {
             applicationServerKey
           )
         ) {
-          throw new WebPushSetupError(
-            'PUSH_SUBSCRIPTION_INVALID',
-            'VAPID_KEY_MISMATCH'
+          if (!cancelled) setState('vapid_changed')
+          await getOrCreatePushSubscription(
+            readyRegistration,
+            applicationServerKey,
+            PUSH_OPERATION_TIMEOUT_MS
+          )
+          await persistPushSubscription(
+            existingSubscription,
+            fetch,
+            PUSH_OPERATION_TIMEOUT_MS
+          )
+        } else {
+          await persistPushSubscription(
+            existingSubscription,
+            fetch,
+            PUSH_OPERATION_TIMEOUT_MS
           )
         }
 
-        await persistPushSubscription(
-          existingSubscription,
-          fetch,
-          PUSH_OPERATION_TIMEOUT_MS
-        )
-
         if (!cancelled) {
           setIsSubscribed(true)
+          setState('subscribed')
           setError(null)
         }
       } catch (initializationError) {
         if (!cancelled) {
           setIsSubscribed(false)
           if (Notification.permission === 'granted') {
+            setState('sync_required')
             setError(getUserMessage(initializationError))
           }
         }
-        console.warn('[useWebPush] Push state initialization failed:', initializationError)
+        console.warn('[useWebPush] Initialization sync error:', initializationError)
       } finally {
         if (!cancelled) setIsInitializing(false)
       }
@@ -154,19 +188,48 @@ export function useWebPush() {
     }
   }, [])
 
+  // 2. Contextual Soft Prompt Check
+  const checkSoftPromptEligibility = (perm: PushPermission) => {
+    if (perm !== 'default') return
+    const dismissedAt = localStorage.getItem('odi_soft_prompt_dismissed_at')
+    if (dismissedAt) {
+      const daysPassed = (Date.now() - parseInt(dismissedAt, 10)) / (1000 * 60 * 60 * 24)
+      if (daysPassed < SOFT_PROMPT_REMIND_DAYS) return
+    }
+    setShowSoftPrompt(true)
+  }
+
+  const dismissSoftPrompt = useCallback(() => {
+    setShowSoftPrompt(false)
+    localStorage.setItem('odi_soft_prompt_dismissed_at', Date.now().toString())
+  }, [])
+
+  const dismissBatteryGuide = useCallback(() => {
+    setShowBatteryGuide(false)
+  }, [])
+
+  // 3. User Gesture Subscribe Pipeline
   const subscribe = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
     setError(null)
+
+    const { isIos, isStandalone } = detectPlatformAndBrowser()
+    if (isIos && !isStandalone) {
+      const message = getUserMessage(new WebPushSetupError('IOS_PWA_REQUIRED'))
+      setState('ios_pwa_required')
+      setError(message)
+      return { success: false, error: message }
+    }
 
     if (!VAPID_PUBLIC_KEY) {
       const message = 'Bildirim servisi yapılandırılmamış. Lütfen yöneticinize başvurun.'
       setError(message)
-      console.error('[useWebPush] Missing NEXT_PUBLIC_VAPID_PUBLIC_KEY')
       return { success: false, error: message }
     }
 
     if (!isWebPushSupported()) {
       const message = 'Bu tarayıcı veya cihaz push bildirimlerini desteklemiyor.'
       setPermission('unsupported')
+      setState('unsupported')
       setError(message)
       return { success: false, error: message }
     }
@@ -181,7 +244,8 @@ export function useWebPush() {
       setPermission(permissionResult as PushPermission)
       if (permissionResult !== 'granted') {
         setIsSubscribed(false)
-        return { success: false }
+        setState('blocked')
+        return { success: false, error: 'Bildirim izni reddedildi.' }
       }
 
       let registration = swRegRef.current
@@ -211,6 +275,8 @@ export function useWebPush() {
       )
 
       setIsSubscribed(true)
+      setState('subscribed')
+      setShowSoftPrompt(false)
       setError(null)
 
       if (!localStorage.getItem('notif_guide_shown')) {
@@ -231,6 +297,7 @@ export function useWebPush() {
     }
   }, [])
 
+  // 4. Session Cleanup Unsubscribe
   const unsubscribe = useCallback(async (): Promise<boolean> => {
     setIsLoading(true)
     setError(null)
@@ -245,31 +312,28 @@ export function useWebPush() {
         PUSH_OPERATION_TIMEOUT_MS,
         'PUSH_SUBSCRIPTION_TIMEOUT'
       )
-      if (!subscription) {
-        setIsSubscribed(false)
-        return true
-      }
 
-      const response = await withTimeout(
-        fetch('/api/notifications/subscribe', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ endpoint: subscription.endpoint }),
+      const deviceId = getDeviceId()
+
+      await fetch('/api/notifications/subscribe', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          endpoint: subscription?.endpoint,
+          device_id: deviceId
         }),
-        PUSH_OPERATION_TIMEOUT_MS,
-        'PUSH_SYNC_TIMEOUT'
-      )
+      })
 
-      if (!response.ok) {
-        throw new WebPushSetupError('PUSH_SYNC_FAILED')
+      if (subscription) {
+        await withTimeout(
+          subscription.unsubscribe(),
+          PUSH_OPERATION_TIMEOUT_MS,
+          'PUSH_SUBSCRIPTION_TIMEOUT'
+        )
       }
 
-      await withTimeout(
-        subscription.unsubscribe(),
-        PUSH_OPERATION_TIMEOUT_MS,
-        'PUSH_SUBSCRIPTION_TIMEOUT'
-      )
       setIsSubscribed(false)
+      setState('default')
       return true
     } catch (unsubscribeError) {
       const message = getUserMessage(unsubscribeError)
@@ -281,19 +345,18 @@ export function useWebPush() {
     }
   }, [])
 
-  const dismissBatteryGuide = useCallback(() => {
-    setShowBatteryGuide(false)
-  }, [])
-
   return {
+    state,
     permission,
     isSubscribed,
     isInitializing,
     isLoading,
     error,
-    subscribe,
-    unsubscribe,
+    showSoftPrompt,
+    dismissSoftPrompt,
     showBatteryGuide,
     dismissBatteryGuide,
+    subscribe,
+    unsubscribe,
   }
 }

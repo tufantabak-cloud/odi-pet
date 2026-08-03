@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { ShieldCheckIcon, BugIcon, ScaleIcon, UtensilsIcon, SparklesIcon, PawIcon, HouseIcon } from '@/components/icons/PetIcons'
+import { ShieldCheck, Bug, Scale, Utensils, Sparkles, Phone, X } from 'lucide-react'
 import QuickJournalWidget from '@/components/dashboard/QuickJournalWidget'
 import { buildPetMicroTasks } from '@/lib/microTasks/petMicroTasks'
 import { PetMicroTaskCard } from '@/components/micro-tasks/PetMicroTaskCard'
@@ -622,17 +622,18 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
   const nonCriticalCards = sorted.length > 1 ? sorted.slice(1).filter((c: any) => !c.isCritical) : []
 
   const renderIcon = (type: string) => {
+    const iconClass = "w-5 h-5 stroke-[2]"
     switch (type) {
-      case 'vaccine': return <ShieldCheckIcon size={20} badgeSize="md" />
-      case 'parasite': return <BugIcon size={20} badgeSize="md" />
-      case 'appetite': return <UtensilsIcon size={20} badgeSize="md" />
+      case 'vaccine': return <ShieldCheck className={iconClass} />
+      case 'parasite': return <Bug className={iconClass} />
+      case 'appetite': return <Utensils className={iconClass} />
       case 'weight-first':
-      case 'weight-routine': return <ScaleIcon size={20} badgeSize="md" />
-      case 'health-task': return <ShieldCheckIcon size={20} badgeSize="md" />
-      case 'emergency-contact': return <ShieldCheckIcon size={20} badgeSize="md" />
-      case 'journal': return <SparklesIcon size={20} badgeSize="md" />
+      case 'weight-routine': return <Scale className={iconClass} />
+      case 'health-task': return <ShieldCheck className={iconClass} />
+      case 'emergency-contact': return <Phone className={iconClass} />
+      case 'journal': return <Sparkles className={iconClass} />
       case 'positive':
-      default: return <ShieldCheckIcon size={20} badgeSize="md" />
+      default: return <ShieldCheck className={iconClass} />
     }
   }
 
@@ -641,92 +642,102 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
       case 'emergency-contact':
         return {
           accentColor: '#F59E0B',
-          bg: 'rgba(245,158,11,0.04)',
-          iconBg: 'rgba(245,158,11,0.12)',
+          bg: 'rgba(245,158,11,0.03)',
+          iconBg: 'rgba(245,158,11,0.10)',
+          iconColor: '#D97706',
           btnBg: '#F59E0B',
           tagColor: '#D97706',
           tagText: 'Güvenlik · Eksik'
         }
       case 'vaccine':
         return {
-          accentColor: 'var(--color-primary)',
-          bg: 'rgba(93,63,211,0.04)',
-          iconBg: 'rgba(93,63,211,0.12)',
-          btnBg: 'var(--color-primary)',
-          tagColor: 'var(--color-primary)',
+          accentColor: 'var(--color-primary, #5D3EBD)',
+          bg: 'rgba(93,63,211,0.03)',
+          iconBg: 'rgba(93,63,211,0.10)',
+          iconColor: 'var(--color-primary, #5D3EBD)',
+          btnBg: 'var(--color-primary, #5D3EBD)',
+          tagColor: 'var(--color-primary, #5D3EBD)',
           tagText: 'Tıbbi · Sağlık'
         }
       case 'parasite':
         return {
-          accentColor: 'var(--color-success)',
-          bg: 'rgba(78,205,196,0.04)',
-          iconBg: 'rgba(78,205,196,0.12)',
-          btnBg: 'var(--color-success)',
+          accentColor: '#0F8F84',
+          bg: 'rgba(78,205,196,0.03)',
+          iconBg: 'rgba(78,205,196,0.10)',
+          iconColor: '#0F8F84',
+          btnBg: '#0F8F84',
           tagColor: '#0F8F84',
           tagText: 'Rutin Sağlık'
         }
       case 'appetite':
         return {
-          accentColor: 'var(--color-danger)',
-          bg: 'rgba(255,107,107,0.04)',
-          iconBg: 'rgba(255,107,107,0.12)',
-          btnBg: 'var(--color-danger)',
-          tagColor: 'var(--color-danger)',
+          accentColor: '#EF4444',
+          bg: 'rgba(239,68,68,0.03)',
+          iconBg: 'rgba(239,68,68,0.10)',
+          iconColor: '#EF4444',
+          btnBg: '#EF4444',
+          tagColor: '#EF4444',
           tagText: 'Takip · Bugün'
         }
       case 'weight-first':
         return {
-          accentColor: 'var(--color-danger)',
-          bg: 'rgba(255,107,107,0.04)',
-          iconBg: 'rgba(255,107,107,0.12)',
-          btnBg: 'var(--color-danger)',
-          tagColor: 'var(--color-danger)',
+          accentColor: '#EF4444',
+          bg: 'rgba(239,68,68,0.03)',
+          iconBg: 'rgba(239,68,68,0.10)',
+          iconColor: '#EF4444',
+          btnBg: '#EF4444',
+          tagColor: '#EF4444',
           tagText: 'Profil · Eksik'
         }
       case 'weight-routine':
         return {
-          accentColor: 'var(--color-success)',
-          bg: 'rgba(78,205,196,0.04)',
-          iconBg: 'rgba(78,205,196,0.12)',
-          btnBg: 'var(--color-success)',
+          accentColor: '#0F8F84',
+          bg: 'rgba(78,205,196,0.03)',
+          iconBg: 'rgba(78,205,196,0.10)',
+          iconColor: '#0F8F84',
+          btnBg: '#0F8F84',
           tagColor: '#0F8F84',
           tagText: 'Rutin · Aylık'
         }
       case 'journal':
         return {
-          accentColor: 'var(--color-danger)',
-          bg: 'rgba(255,107,107,0.04)',
-          iconBg: 'rgba(255,107,107,0.12)',
-          btnBg: 'var(--color-danger)',
-          tagColor: 'var(--color-danger)',
+          accentColor: '#EF4444',
+          bg: 'rgba(239,68,68,0.03)',
+          iconBg: 'rgba(239,68,68,0.10)',
+          iconColor: '#EF4444',
+          btnBg: '#EF4444',
+          tagColor: '#EF4444',
           tagText: 'Aktivite · Takip'
         }
       case 'health-task':
         return {
           accentColor: '#E05C97',
-          bg: 'rgba(224,92,151,0.04)',
-          iconBg: 'rgba(224,92,151,0.12)',
+          bg: 'rgba(224,92,151,0.03)',
+          iconBg: 'rgba(224,92,151,0.10)',
+          iconColor: '#E05C97',
           btnBg: '#E05C97',
           tagColor: '#E05C97',
           tagText: 'Sağlık · Görev'
         }
       case 'positive':
         return {
-          accentColor: 'var(--color-success)',
-          bg: 'rgba(78,205,196,0.04)',
-          iconBg: 'rgba(78,205,196,0.12)',
-          btnBg: 'var(--color-primary)',
+          accentColor: '#0F8F84',
+          bg: 'rgba(78,205,196,0.03)',
+          iconBg: 'rgba(78,205,196,0.10)',
+          iconColor: '#0F8F84',
+          btnBg: 'var(--color-primary, #5D3EBD)',
           tagColor: '#0F8F84',
           tagText: 'Durum · Harika'
         }
       case 'venues':
       default:
         return {
-          accentColor: 'var(--color-primary)',
-          bg: 'var(--color-primary-soft)',
-          iconBg: 'rgba(93,63,211,0.12)',
-          btnBg: 'var(--color-primary)',
-          tagColor: 'var(--color-primary)',
+          accentColor: 'var(--color-primary, #5D3EBD)',
+          bg: 'rgba(93,63,211,0.03)',
+          iconBg: 'rgba(93,63,211,0.10)',
+          iconColor: 'var(--color-primary, #5D3EBD)',
+          btnBg: 'var(--color-primary, #5D3EBD)',
+          tagColor: 'var(--color-primary, #5D3EBD)',
           tagText: 'Yaşam · Bilgi'
         }
     }
@@ -738,36 +749,41 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
     return (
       <div
         key={card.id}
-        className="relative flex items-center gap-3 p-3.5 rounded-2xl border border-[var(--color-border)] shadow-xs overflow-hidden bg-white"
+        className="relative flex items-center justify-between gap-3 p-4 rounded-[24px] border border-slate-100 bg-white shadow-xs overflow-hidden transition-all duration-200 select-none"
         style={{ background: style.bg }}
       >
         {/* Sol Vurgu Çubuğu (Inset accent bar - rounded corners ile tam uyumlu) */}
         <div
-          className="absolute left-0 top-0 bottom-0 w-[4px]"
+          className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-[24px]"
           style={{ backgroundColor: style.accentColor }}
         />
 
+        {/* İkon Kapsayıcı */}
         <div
-          className="w-[40px] h-[40px] rounded-xl flex items-center justify-center flex-shrink-0 ml-1.5"
-          style={{ background: style.iconBg }}
+          className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ml-1"
+          style={{ background: style.iconBg, color: style.iconColor }}
         >
           {renderIcon(card.type)}
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[9px] font-800 uppercase tracking-wide mb-0.5" style={{ color: style.tagColor }}>
+
+        {/* Metin İçeriği */}
+        <div className="flex-1 min-w-0 py-0.5">
+          <p className="text-2xs font-semibold uppercase tracking-wider mb-0.5" style={{ color: style.tagColor }}>
             {card.dateInfo || style.tagText}
           </p>
-          <p className="text-[12.5px] font-800 text-[var(--color-text-primary)] truncate leading-tight">
+          <h4 className="text-sm font-semibold text-text-primary leading-snug truncate">
             {card.title}
-          </p>
-          <p className="text-[11px] text-[var(--color-text-muted)] font-500 leading-snug line-clamp-2 mt-0.5">
+          </h4>
+          <p className="text-xs font-normal text-text-secondary leading-normal line-clamp-2 mt-0.5">
             {card.subtitle}
           </p>
         </div>
-        <div className="flex flex-col gap-1.5 flex-shrink-0 justify-center items-end">
+
+        {/* Aksiyon Alanı (Yatay Hizalı) */}
+        <div className="flex items-center gap-2 flex-shrink-0">
           <button
             onClick={card.action}
-            className="px-3.5 py-2 rounded-xl text-[11px] font-800 text-white transition-all active:scale-[0.97] shadow-xs"
+            className="px-4 py-2 rounded-xl text-xs font-semibold text-white transition-all duration-200 active:scale-[0.97] shadow-xs"
             style={{ background: style.btnBg }}
           >
             {card.ctaLabel}
@@ -775,9 +791,10 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
           {isDismissible && (
             <button
               onClick={() => dismissCard(card.id)}
-              className="px-2 py-0.5 rounded-lg text-[10px] font-700 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-all"
+              className="w-8 h-8 rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-slate-100 transition-colors"
+              title="Sonra"
             >
-              Sonra
+              <X className="w-4 h-4" />
             </button>
           )}
         </div>
@@ -791,38 +808,34 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
     return (
       <div
         key={card.id}
-        className="relative flex items-center justify-between gap-2.5 px-3.5 py-3 rounded-2xl border border-[var(--color-border)] shadow-xs overflow-hidden bg-white"
+        className="relative flex items-center justify-between gap-3 p-4 rounded-[24px] border border-slate-100 bg-white shadow-xs overflow-hidden transition-all duration-200 select-none"
         style={{ background: style.bg }}
       >
         <div
-          className="absolute left-0 top-0 bottom-0 w-[4px]"
+          className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-[24px]"
           style={{ backgroundColor: style.accentColor }}
         />
-        <div className="flex items-center gap-2.5 min-w-0 flex-1 ml-1.5">
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ background: style.iconBg }}
-          >
-            {renderIcon(card.type)}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5">
-              <p className="text-[12px] font-800 text-[var(--color-text-primary)] truncate">
-                {card.title}
-              </p>
-              <span className="text-[8.5px] font-800 px-1.5 py-0.5 rounded-full shrink-0" style={{ color: style.tagColor, backgroundColor: style.iconBg }}>
-                {card.dateInfo || style.tagText}
-              </span>
-            </div>
-            <p className="text-[10.5px] text-[var(--color-text-muted)] font-500 truncate mt-0.5">
-              {card.subtitle}
-            </p>
-          </div>
+        <div
+          className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ml-1"
+          style={{ background: style.iconBg, color: style.iconColor }}
+        >
+          {renderIcon(card.type)}
         </div>
-        <div className="flex items-center gap-1.5 flex-shrink-0">
+        <div className="flex-1 min-w-0 py-0.5">
+          <p className="text-2xs font-semibold uppercase tracking-wider mb-0.5" style={{ color: style.tagColor }}>
+            {card.dateInfo || style.tagText}
+          </p>
+          <h4 className="text-sm font-semibold text-text-primary leading-snug truncate">
+            {card.title}
+          </h4>
+          <p className="text-xs font-normal text-text-secondary leading-normal truncate mt-0.5">
+            {card.subtitle}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
           <button
             onClick={card.action}
-            className="px-3 py-1.5 rounded-xl text-[11px] font-800 text-white transition-all active:scale-[0.97]"
+            className="px-4 py-2 rounded-xl text-xs font-semibold text-white transition-all duration-200 active:scale-[0.97]"
             style={{ background: style.btnBg }}
           >
             {card.ctaLabel}
@@ -830,10 +843,10 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
           {isDismissible && (
             <button
               onClick={() => dismissCard(card.id)}
-              className="w-6 h-6 rounded-full flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-all"
+              className="w-8 h-8 rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-slate-100 transition-colors"
               title="Sonra"
             >
-              <i className="ti ti-x text-[12px]" />
+              <X className="w-4 h-4" />
             </button>
           )}
         </div>
@@ -844,12 +857,12 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
   return (
     <div className="flex flex-col gap-2">
       {/* Başlık */}
-      <div className="flex items-center gap-2 mb-1">
-        <p className="text-[11px] font-800 text-[var(--color-text-primary)] uppercase tracking-[0.8px]">
+      <div className="flex items-center gap-2 mb-1 px-1">
+        <p className="text-xs font-bold text-text-primary uppercase tracking-wider">
           Bugünkü Odak
         </p>
         {sorted.length > 0 && sorted[0].type !== 'positive' && (
-          <span className="text-[9px] font-800 bg-[var(--color-surface-2)] text-[var(--color-text-muted)] px-[7px] py-[2px] rounded-full">
+          <span className="text-2xs font-semibold bg-slate-100 text-text-secondary px-2 py-0.5 rounded-full">
             1 / {sorted.length}
           </span>
         )}
@@ -1005,42 +1018,45 @@ export function SixMonthDashboardCard({ alert, onDismiss }: SixMonthDashboardCar
   
   return (
     <div
-      className="relative p-4 rounded-2xl border border-[var(--color-border)] shadow-sm flex flex-col gap-3"
+      className="relative p-4 rounded-[24px] border border-slate-100 shadow-xs flex flex-col gap-3 overflow-hidden bg-white"
       style={{
-        background: 'var(--color-primary-soft, rgba(93,63,211,0.04))',
-        borderLeft: '3px solid var(--color-primary, #5D3FD3)',
+        background: 'rgba(93,63,211,0.03)',
       }}
     >
+      <div
+        className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-[24px]"
+        style={{ backgroundColor: 'var(--color-primary, #5D3EBD)' }}
+      />
       <button
         onClick={() => onDismiss(alert.petId)}
         aria-label="Kapat"
-        className="absolute top-3 right-3 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors text-[14px]"
+        className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-slate-100 transition-colors"
       >
-        ✕
+        <X className="w-4 h-4" />
       </button>
 
-      <div className="flex flex-col gap-1 pr-6">
+      <div className="flex flex-col gap-1 pr-8 pl-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-[13px] font-800 text-[var(--color-text-primary)]">
+          <p className="text-sm font-semibold text-text-primary">
             {alert.petName} · 6 aylık aşı değerlendirmesi
           </p>
-          <span className="text-[9px] font-800 bg-[rgba(93,63,211,0.12)] text-[var(--color-primary, #5D3FD3)] px-2 py-0.5 rounded-full">
+          <span className="text-2xs font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
             WSAVA 2024 önerisi
           </span>
         </div>
-        <p className="text-[11px] text-[var(--color-text-secondary)] leading-relaxed">
+        <p className="text-xs text-text-secondary leading-relaxed">
           Son yavru dozu {alert.weeksSinceLastDose} hafta önce yapıldı. Kullanılan ürüne göre veterineriniz ek doz gerekip gerekmediğini değerlendirebilir.
         </p>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1 pl-1">
         <button
           onClick={() => router.push(`/owner/plan-yap/asi?pet_id=${alert.petId}`)}
-          className="self-start px-4 py-2 rounded-xl text-[11px] font-800 text-white bg-[var(--color-primary, #5D3FD3)] hover:opacity-90 transition-all active:scale-[0.97]"
+          className="self-start px-4 py-2 rounded-xl text-xs font-semibold text-white bg-primary hover:opacity-90 transition-all active:scale-[0.97]"
         >
           Aşı sayfasına git →
         </button>
-        <p className="text-[9px] text-[var(--color-text-muted)] italic leading-tight">
+        <p className="text-2xs text-text-secondary italic leading-tight">
           Veteriner kararının yerine geçmez. Türkiye&apos;de standart protokol değildir.
         </p>
       </div>

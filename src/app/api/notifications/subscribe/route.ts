@@ -9,10 +9,15 @@ const subscriptionSchema = z.object({
     p256dh: z.string().min(1).max(512),
     auth: z.string().min(1).max(512),
   }).strict(),
+  device_id: z.string().optional(),
+  platform: z.string().optional(),
+  browser: z.string().optional(),
+  app_version: z.string().optional(),
 }).strict()
 
 const unsubscribeSchema = z.object({
-  endpoint: z.string().url().max(4096),
+  endpoint: z.string().url().max(4096).optional(),
+  device_id: z.string().optional(),
 }).strict()
 
 async function readJson(request: Request): Promise<unknown | null> {
@@ -39,24 +44,28 @@ export async function POST(request: Request) {
       )
     }
 
-    console.info('[push/subscribe] Saving device subscription')
+    console.info('[push/subscribe] Saving device subscription for user:', user.id)
 
     const supabase = await createServerSupabaseClient()
     const userAgent = request.headers.get('user-agent') ?? ''
-    const { endpoint, keys } = parsed.data
+    const { endpoint, keys, device_id, platform, browser, app_version } = parsed.data
+
+    const subscriptionData: Record<string, unknown> = {
+      profile_id: user.id,
+      endpoint,
+      p256dh: keys.p256dh,
+      auth_key: keys.auth,
+      user_agent: userAgent,
+    }
+
+    if (device_id) subscriptionData.device_id = device_id
+    if (platform) subscriptionData.platform = platform
+    if (browser) subscriptionData.browser = browser
+    if (app_version) subscriptionData.app_version = app_version
 
     const { error } = await supabase
       .from('push_subscriptions')
-      .upsert(
-        {
-          profile_id: user.id,
-          endpoint,
-          p256dh: keys.p256dh,
-          auth_key: keys.auth,
-          user_agent: userAgent,
-        },
-        { onConflict: 'profile_id,endpoint' }
-      )
+      .upsert(subscriptionData, { onConflict: 'profile_id,endpoint' })
 
     if (error) {
       console.error('[push/subscribe] Database save failed:', {
@@ -69,7 +78,18 @@ export async function POST(request: Request) {
       )
     }
 
-    console.info('[push/subscribe] Device subscription saved')
+    // Safely attempt observability log insert
+    try {
+      await supabase.from('notification_delivery_logs').insert({
+        profile_id: user.id,
+        event_type: 'subscription_created',
+        metadata: { platform: platform ?? 'unknown', browser: browser ?? 'unknown', device_id: device_id ?? null }
+      })
+    } catch {
+      // Non-blocking log insertion failure
+    }
+
+    console.info('[push/subscribe] Device subscription saved successfully')
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('[push/subscribe] Unexpected failure:', error)
@@ -97,11 +117,18 @@ export async function DELETE(request: Request) {
     }
 
     const supabase = await createServerSupabaseClient()
-    const { error } = await supabase
-      .from('push_subscriptions')
-      .delete()
-      .eq('profile_id', user.id)
-      .eq('endpoint', parsed.data.endpoint)
+    const { endpoint, device_id } = parsed.data
+
+    let query = supabase.from('push_subscriptions').delete().eq('profile_id', user.id)
+    if (endpoint) {
+      query = query.eq('endpoint', endpoint)
+    } else if (device_id) {
+      query = query.eq('device_id', device_id)
+    } else {
+      return NextResponse.json({ error: 'ENDPOINT_OR_DEVICE_ID_REQUIRED' }, { status: 400 })
+    }
+
+    const { error } = await query
 
     if (error) {
       console.error('[push/unsubscribe] Database delete failed:', {
@@ -112,6 +139,16 @@ export async function DELETE(request: Request) {
         { error: 'PUSH_SUBSCRIPTION_DELETE_FAILED' },
         { status: 500 }
       )
+    }
+
+    try {
+      await supabase.from('notification_delivery_logs').insert({
+        profile_id: user.id,
+        event_type: 'subscription_removed',
+        metadata: { endpoint: endpoint ?? null, device_id: device_id ?? null }
+      })
+    } catch {
+      // Non-blocking log insertion failure
     }
 
     return NextResponse.json({ success: true })

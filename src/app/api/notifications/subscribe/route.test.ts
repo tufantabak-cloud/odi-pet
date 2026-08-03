@@ -36,9 +36,15 @@ function createRequest(body: unknown): Request {
 
 function mockSupabase(upsertError: unknown = null) {
   const upsert = vi.fn().mockResolvedValue({ error: upsertError })
-  const from = vi.fn(() => ({ upsert }))
+  const insert = vi.fn().mockResolvedValue({ error: null })
+  const from = vi.fn((table: string) => {
+    if (table === 'notification_delivery_logs') {
+      return { insert }
+    }
+    return { upsert }
+  })
   mocks.createServerSupabaseClient.mockResolvedValue({ from })
-  return { from, upsert }
+  return { from, upsert, insert }
 }
 
 describe('POST /api/notifications/subscribe', () => {

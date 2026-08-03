@@ -4,6 +4,9 @@ export type WebPushSetupErrorCode =
   | 'PUSH_SUBSCRIPTION_INVALID'
   | 'PUSH_SYNC_TIMEOUT'
   | 'PUSH_SYNC_FAILED'
+  | 'PUSH_UNSUPPORTED'
+  | 'IOS_PWA_REQUIRED'
+  | 'UNAUTHORIZED'
 
 export class WebPushSetupError extends Error {
   constructor(
@@ -13,6 +16,53 @@ export class WebPushSetupError extends Error {
     super(message)
     this.name = 'WebPushSetupError'
   }
+}
+
+export type NotificationState =
+  | 'unsupported'
+  | 'ios_browser'
+  | 'ios_pwa_required'
+  | 'default'
+  | 'granted'
+  | 'subscribed'
+  | 'expired'
+  | 'vapid_changed'
+  | 'blocked'
+  | 'sync_required'
+
+export function getDeviceId(): string {
+  if (typeof window === 'undefined') return 'server-side'
+  let deviceId = localStorage.getItem('odi_device_id')
+  if (!deviceId) {
+    deviceId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `dev-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+    localStorage.setItem('odi_device_id', deviceId)
+  }
+  return deviceId
+}
+
+export function detectPlatformAndBrowser(): { platform: string; browser: string; isIos: boolean; isStandalone: boolean } {
+  if (typeof window === 'undefined') {
+    return { platform: 'unknown', browser: 'unknown', isIos: false, isStandalone: false }
+  }
+
+  const ua = navigator.userAgent || ''
+  const isIos = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  const isStandalone = (typeof window.matchMedia === 'function' && window.matchMedia('(display-mode: standalone)').matches) || ('standalone' in navigator && (navigator as unknown as { standalone: boolean }).standalone === true)
+
+  let platform = 'desktop'
+  if (isIos) platform = 'ios'
+  else if (/Android/.test(ua)) platform = 'android'
+  else if (/Macintosh/.test(ua)) platform = 'macos'
+  else if (/Windows/.test(ua)) platform = 'windows'
+  else if (/Linux/.test(ua)) platform = 'linux'
+
+  let browser = 'other'
+  if (/Edg/.test(ua)) browser = 'edge'
+  else if (/Chrome/.test(ua)) browser = 'chrome'
+  else if (/Firefox/.test(ua)) browser = 'firefox'
+  else if (/Safari/.test(ua)) browser = 'safari'
+
+  return { platform, browser, isIos, isStandalone }
 }
 
 export async function withTimeout<T>(
@@ -104,6 +154,8 @@ export async function persistPushSubscription(
     throw new WebPushSetupError('PUSH_SUBSCRIPTION_INVALID')
   }
 
+  const deviceId = getDeviceId()
+  const { platform, browser } = detectPlatformAndBrowser()
   const controller = new AbortController()
 
   try {
@@ -114,6 +166,10 @@ export async function persistPushSubscription(
         body: JSON.stringify({
           endpoint: json.endpoint,
           keys: json.keys,
+          device_id: deviceId,
+          platform,
+          browser,
+          app_version: '1.0.0'
         }),
         signal: controller.signal,
       }),
@@ -127,7 +183,7 @@ export async function persistPushSubscription(
         const body = await response.json()
         if (typeof body?.error === 'string') serverCode = body.error
       } catch {
-        // The status code is enough when the response is not JSON.
+        // Status code is enough when response is not JSON
       }
 
       throw new WebPushSetupError(

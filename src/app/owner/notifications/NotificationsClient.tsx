@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useWebPush } from '@/hooks/useWebPush'
 import { getTurkishGenitiveSuffix } from '@/lib/pets/utils'
@@ -31,14 +31,28 @@ function iconFor(type: string) {
   return { icon: '🔔', bg: 'bg-border-main text-text-secondary' }
 }
 
-// ── Web Push Smart Card (Progressive Profiling) ─────────────────
-function PushPermissionCard({ onDismiss, pets = [] }: { onDismiss: () => void, pets?: { id: string, name: string }[] }) {
-  const { permission, isSubscribed, isLoading, error, subscribe } = useWebPush()
+// ── Two-Stage Permission Funnel & Soft Prompt Card (v3.2 Certified) ────
+function PushPermissionCard({
+  pets = []
+}: {
+  pets?: { id: string, name: string }[]
+}) {
+  const {
+    state,
+    permission,
+    isSubscribed,
+    isLoading,
+    error,
+    showSoftPrompt,
+    dismissSoftPrompt,
+    subscribe
+  } = useWebPush()
+
   const [result, setResult] = useState<'idle' | 'success' | 'error'>('idle')
   const [testSending, setTestSending] = useState(false)
 
   const firstPet = pets && pets.length > 0 ? pets[0] : null
-  const displayName = firstPet 
+  const displayName = firstPet
     ? `${firstPet.name}'${getTurkishGenitiveSuffix(firstPet.name)}`
     : 'Can dostunuzun'
 
@@ -49,12 +63,10 @@ function PushPermissionCard({ onDismiss, pets = [] }: { onDismiss: () => void, p
       const reg = await navigator.serviceWorker.ready;
       reg.showNotification('🐾 Odi.Pet Test Bildirimi', {
         body: 'Harika! Telefon bildirimlerin ve Service Worker bağlantın başarıyla çalışıyor. 🌟',
-        icon: '/brand/app-icons/odi-icon-256.png',
-        badge: '/brand/app-icons/odi-icon-256.png',
+        icon: 'https://odi.pet/brand/app-icons/odi-icon-256.png',
+        badge: 'https://odi.pet/brand/app-icons/odi-icon-256.png',
         tag: 'test-notification',
-        data: {
-          url: '/owner/notifications'
-        }
+        data: { url: '/owner/notifications' }
       });
     } catch (err) {
       console.error('Test bildirimi gönderilemedi:', err);
@@ -63,46 +75,68 @@ function PushPermissionCard({ onDismiss, pets = [] }: { onDismiss: () => void, p
     }
   };
 
-  if (permission === 'unsupported') return null
+  // State Machine Handling
+  if (state === 'unsupported') return null
 
-  if (permission === 'denied') return (
-    <div suppressHydrationWarning={true} className="p-4 bg-warning/10 border border-warning/20 rounded-2xl flex gap-3 items-start">
-      <span className="text-[20px] shrink-0">⚠️</span>
-      <div className="flex-1">
-        <p className="text-[13px] font-bold text-warning">Bildirimler engellenmiş</p>
-        <p className="text-[12px] text-text-secondary mt-1">
-          Tarayıcı ayarlarından Odi.Pet için bildirimlere izin verin.
-        </p>
-      </div>
-      <button onClick={onDismiss} className="text-[12px] text-text-secondary hover:text-text-primary shrink-0">✕</button>
-    </div>
-  )
-
-  if (isSubscribed || result === 'success') return (
-    <div className="p-5 bg-success/5 border border-success/20 rounded-2xl flex gap-4 items-start animate-in fade-in duration-300">
-      <div className="w-12 h-12 rounded-xl bg-success/15 flex items-center justify-center text-[24px] shrink-0">
-        🎉
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="font-extrabold text-base text-success">Bildirimleriniz Aktif!</p>
-        <p className="text-[13px] text-text-secondary mt-1 leading-relaxed">
-          {firstPet ? `${displayName} aşı, ilaç ve beslenme hatırlatmaları artık telefonunuza anında gelecek.` : 'Can dostunuzun aşı, ilaç ve beslenme hatırlatmaları artık telefonunuza anında gelecek.'}
-        </p>
-        <div className="flex gap-2 mt-3">
-          <button
-            onClick={triggerLocalTestNotification}
-            disabled={testSending}
-            className="px-4 py-2 bg-success text-white font-bold text-[13px] rounded-xl hover:bg-success/90 transition-colors flex items-center gap-2 cursor-pointer shadow-sm active:scale-95"
-          >
-            {testSending ? (
-              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : '🔔'}
-            Test Bildirimi Gönder
-          </button>
+  if (state === 'ios_pwa_required') {
+    return (
+      <div className="p-5 bg-gradient-to-br from-purple-900/10 to-primary/10 border border-primary/20 rounded-2xl flex gap-4 items-start animate-in slide-in-from-top-2">
+        <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center text-[24px] shrink-0">
+          📱
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-extrabold text-base text-text-primary">iOS Bildirimleri İçin Yükleme Gerekli</p>
+          <p className="text-[13px] text-text-secondary mt-1 leading-relaxed">
+            iPhone cihazınızda aşı ve sağlık bildirimleri alabilmek için Safari alt menüsündeki <strong>Paylaş (Share)</strong> ikonuna dokunup <strong>"Ana Ekrana Ekle"</strong> butonuna basarak uygulamayı yükleyin.
+          </p>
         </div>
       </div>
-    </div>
-  )
+    )
+  }
+
+  if (state === 'blocked' || permission === 'denied') {
+    return (
+      <div className="p-4 bg-warning/10 border border-warning/20 rounded-2xl flex gap-3 items-start">
+        <span className="text-[20px] shrink-0">⚠️</span>
+        <div className="flex-1">
+          <p className="text-[13px] font-bold text-warning">Bildirimler Engellenmiş</p>
+          <p className="text-[12px] text-text-secondary mt-1 leading-relaxed">
+            Tarayıcı veya cihaz ayarlarından Odi.Pet için bildirim iznini yeniden <strong>"İzin Ver"</strong> olarak değiştirerek aşı hatırlatmalarını açabilirsiniz.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  if (isSubscribed || state === 'subscribed' || result === 'success') {
+    return (
+      <div className="p-5 bg-success/5 border border-success/20 rounded-2xl flex gap-4 items-start animate-in fade-in duration-300">
+        <div className="w-12 h-12 rounded-xl bg-success/15 flex items-center justify-center text-[24px] shrink-0">
+          🎉
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-extrabold text-base text-success">Bildirimleriniz Aktif!</p>
+          <p className="text-[13px] text-text-secondary mt-1 leading-relaxed">
+            {firstPet ? `${displayName} aşı, ilaç ve beslenme hatırlatmaları artık telefonunuza anında gelecek.` : 'Can dostunuzun aşı, ilaç ve beslenme hatırlatmaları artık telefonunuza anında gelecek.'}
+          </p>
+          <div className="flex gap-2 mt-3">
+            <button
+              onClick={triggerLocalTestNotification}
+              disabled={testSending}
+              className="px-4 py-2 bg-success text-white font-bold text-[13px] rounded-xl hover:bg-success/90 transition-colors flex items-center gap-2 cursor-pointer shadow-sm active:scale-95"
+            >
+              {testSending ? (
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : '🔔'}
+              Test Bildirimi Gönder
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!showSoftPrompt && state !== 'sync_required') return null
 
   return (
     <div
@@ -110,33 +144,34 @@ function PushPermissionCard({ onDismiss, pets = [] }: { onDismiss: () => void, p
       className="p-5 bg-gradient-to-br from-primary/8 to-purple-500/5 border border-primary/20 rounded-2xl flex gap-4 items-start animate-in slide-in-from-top-2"
     >
       <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center text-[24px] shrink-0">
-        🔔
+        🐶
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-extrabold text-base text-text-primary">Aşı hatırlatmaları almak ister misin?</p>
+        <p className="font-extrabold text-base text-text-primary">Aşı ve Sağlık Uyarılarını Kaçırmayın</p>
         <p className="text-[13px] text-text-secondary mt-1 leading-relaxed">
-          {firstPet ? `"${displayName} Kuduz aşısına 3 gün kaldı" gibi bildirimleri tarayıcıya gönderelim.` : '"Can dostunuzun Kuduz aşısına 3 gün kaldı" gibi bildirimleri tarayıcıya gönderelim.'}
+          {firstPet ? `"${displayName} Kuduz aşısına 3 gün kaldı" gibi kritik hatırlatmaları telefonunuza ulaştıralım.` : '"Can dostunuzun Kuduz aşısına 3 gün kaldı" gibi kritik hatırlatmaları telefonunuza ulaştıralım.'}
         </p>
         <div className="flex gap-2 mt-3 flex-wrap">
           <button
             id="push-enable-btn"
             onClick={async () => {
+              // Direct user-gesture click pipeline
               const subscriptionResult = await subscribe()
               setResult(subscriptionResult.success ? 'success' : 'error')
             }}
             disabled={isLoading}
-            className="btn-primary flex items-center gap-2 text-[13px]"
+            className="btn-primary flex items-center gap-2 text-[13px] active:scale-95 transition-transform"
           >
             {isLoading ? (
               <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : '✓'}
-            {permission === 'granted' ? 'Cihaz Kaydını Tamamla' : 'Bildirimleri Aç'}
+            Bildirimleri Aç
           </button>
           <button
-            onClick={onDismiss}
+            onClick={dismissSoftPrompt}
             className="btn-secondary text-[13px]"
           >
-            Şimdi Değil
+            Şimdilik Değil
           </button>
         </div>
         {result === 'error' && error && (
@@ -149,7 +184,7 @@ function PushPermissionCard({ onDismiss, pets = [] }: { onDismiss: () => void, p
   )
 }
 
-// ── Main Notifications Client ───────────────────────────────────
+// ── Main Notifications Client Component ─────────────────────────
 export default function NotificationsClient({
   initialNotifications,
   pets = []
@@ -159,8 +194,23 @@ export default function NotificationsClient({
 }) {
   const router = useRouter()
   const [list, setList] = useState(initialNotifications)
-  const [showPushCard, setShowPushCard] = useState(true)
-  const [, startTransition] = useTransition()
+
+  // Live Foreground Sync (postMessage from Service Worker)
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+
+    const handleServiceWorkerMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'REFRESH_NOTIFICATIONS') {
+        console.log('[SW Message] Refreshing notifications in foreground...')
+        router.refresh()
+      }
+    }
+
+    navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage)
+    return () => {
+      navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage)
+    }
+  }, [router])
 
   const unreadCount = list.filter((n) => !n.is_read).length
 
@@ -202,10 +252,8 @@ export default function NotificationsClient({
         )}
       </div>
 
-      {/* Progressive Profiling: Push Notification Smart Card */}
-      {showPushCard && (
-        <PushPermissionCard onDismiss={() => setShowPushCard(false)} pets={pets} />
-      )}
+      {/* Two-Stage Soft Prompt Permission Funnel */}
+      <PushPermissionCard pets={pets} />
 
       {/* Notification List */}
       {list.length === 0 ? (
