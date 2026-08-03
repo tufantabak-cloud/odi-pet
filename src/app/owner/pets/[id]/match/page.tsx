@@ -42,7 +42,7 @@ export default async function MatchPage(props: PageProps) {
     .maybeSingle()
 
   return (
-    <div className="bg-bg-main min-h-screen pb-[120px]">
+    <div className="bg-bg-main min-h-screen pb-30">
       <PageHeader title="Eşleştirme" backHref={`/owner/pets/${id}`} />
       <div className="p-4 pt-6 max-w-lg mx-auto">
         <BreedingListingManager pet={pet} initialListing={initialListing !== undefined ? initialListing : null} />

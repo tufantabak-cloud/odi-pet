@@ -29,7 +29,7 @@ export default async function BudgetPage(props: PageProps) {
   if (!pet) redirect('/owner/dashboard')
 
   return (
-    <div className="bg-bg-main min-h-screen pb-[120px]">
+    <div className="bg-bg-main min-h-screen pb-30">
       <PageHeader title="Bütçe Yönetimi" backHref={`/owner/pets/${id}`} />
       <div className="p-4 pt-6 max-w-lg mx-auto">
         <BudgetTab pet={pet} />

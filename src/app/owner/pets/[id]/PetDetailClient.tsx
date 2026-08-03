@@ -1419,7 +1419,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   )
 
   return (
-    <div className="flex flex-col gap-6 pb-[100px] pb-safe w-full max-w-6xl mx-auto">
+    <div className="flex flex-col gap-6 pb-26 pb-safe w-full max-w-6xl mx-auto">
       {generalError && (
         <div role="alert" className="p-3 bg-error/10 text-error text-[13px] font-bold rounded-xs text-center border border-error/20 mx-4 mt-4">
           {generalError}
