@@ -1026,7 +1026,10 @@ export default function NutritionClient({
       )}
 
       {/* Tabs */}
-      <div className={`relative sticky ${embedded ? 'top-26 z-10' : 'top-16 z-20'} after:content-[''] after:absolute after:right-0 after:top-0 after:h-full after:w-8 after:bg-gradient-to-l after:from-bg-main after:to-transparent after:pointer-events-none after:z-10`}>
+      {/* 108px = sticky header (64px, top-16) + sekme çubuğu (44px, min-h-[44px]). */}
+      {/* 8pt katı değil ama keyfi de değil: üstteki iki yapışkan katmanın toplamı. */}
+      {/* Yuvarlamak filtre çubuğunu sekme çubuğunun altına sokar (z-20 vs z-10). */}
+      <div className={`relative sticky ${embedded ? 'top-[108px] z-10' : 'top-16 z-20'} after:content-[''] after:absolute after:right-0 after:top-0 after:h-full after:w-8 after:bg-gradient-to-l after:from-bg-main after:to-transparent after:pointer-events-none after:z-10`}>
         <div className="flex gap-1 bg-bg-main p-1 rounded-2xl border border-border-main overflow-x-auto hide-scrollbar">
           {TABS.map(t => (
             <button key={t} onClick={() => setActiveTab(t)}
