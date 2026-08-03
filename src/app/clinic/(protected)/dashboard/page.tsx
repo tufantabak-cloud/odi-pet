@@ -99,7 +99,7 @@ export default async function ClinicDashboard() {
         </div>
 
         {(!todayAppointments || todayAppointments.length === 0) ? (
-          <div className="bg-bg-main rounded-[16px] border border-border-main p-10 text-center">
+          <div className="bg-bg-main rounded-card border border-border-main p-10 text-center">
             <p className="text-text-secondary font-normal">Bugün için planlanmış randevu bulunmuyor.</p>
           </div>
         ) : (
@@ -115,8 +115,8 @@ export default async function ClinicDashboard() {
               const s = statusConfig[apt.status] ?? statusConfig.pending
 
               return (
-                <div key={apt.id} className="flex items-center gap-5 p-4 rounded-[16px] border border-border-main bg-surface hover:border-primary/20 hover:shadow-soft transition-all group">
-                  <div className="bg-primary-soft text-primary font-extrabold text-[16px] px-4 py-3 rounded-[12px] shrink-0 min-w-[60px] text-center">
+                <div key={apt.id} className="flex items-center gap-5 p-4 rounded-card border border-border-main bg-surface hover:border-primary/20 hover:shadow-soft transition-all group">
+                  <div className="bg-primary-soft text-primary font-extrabold text-[16px] px-4 py-3 rounded-input shrink-0 min-w-[60px] text-center">
                     {time}
                   </div>
                   <div className="flex flex-col flex-1 min-w-0">
@@ -144,7 +144,7 @@ export default async function ClinicDashboard() {
           </h2>
           <div className="flex flex-col gap-3">
             {overduePlans.map(plan => (
-              <div key={plan.id} className="flex items-center justify-between p-4 rounded-[14px] bg-error/5 border border-error/20">
+              <div key={plan.id} className="flex items-center justify-between p-4 rounded-input bg-error/5 border border-error/20">
                 <div>
                   <p className="font-bold text-text-primary">{plan.pets?.name} — {plan.title}</p>
                   <p className="text-[13px] text-error font-bold mt-0.5">Vade: {new Date(plan.due_date).toLocaleDateString('tr-TR')}</p>

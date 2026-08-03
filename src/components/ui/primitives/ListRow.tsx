@@ -43,7 +43,7 @@ export default function ListRow({
     >
       {icon && (
         <div
-          className="w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0"
+          className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
           style={{ background: iconBg, color: iconColor }}
         >
           {icon}

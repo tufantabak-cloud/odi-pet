@@ -67,7 +67,7 @@ export default async function ClinicAdminPage() {
               { label: 'Telefon', value: clinic.contact_phone ?? '—' },
               { label: 'Adres', value: clinic.address ?? '—' },
             ].map(({ label, value }) => (
-              <div key={label} className="p-4 bg-bg-main rounded-[14px] border border-border-main">
+              <div key={label} className="p-4 bg-bg-main rounded-input border border-border-main">
                 <p className="text-[11px] font-bold text-text-secondary uppercase tracking-widest mb-1">{label}</p>
                 <p className="font-semibold text-text-primary">{value}</p>
               </div>
@@ -110,7 +110,7 @@ export default async function ClinicAdminPage() {
               const p = m.profiles
               const isAdmin = m.is_clinic_admin === true
               return (
-                <div key={m.id} className="flex items-center gap-4 p-4 rounded-[16px] border border-border-main bg-surface hover:border-primary/20 transition-colors">
+                <div key={m.id} className="flex items-center gap-4 p-4 rounded-card border border-border-main bg-surface hover:border-primary/20 transition-colors">
                   <div className="w-11 h-11 rounded-full bg-primary-soft flex items-center justify-center text-primary font-extrabold text-base shrink-0">
                     {p?.first_name?.charAt(0) ?? '?'}
                   </div>

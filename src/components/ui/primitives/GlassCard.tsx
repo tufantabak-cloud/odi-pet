@@ -28,7 +28,7 @@ const paddingStyles: Record<CardPadding, string> = {
 // 12_cards.md → "Master Card Specs & Variant Matrix"
 const variantStyles: Record<CardVariant, string> = {
   default: 'bg-surface/90 backdrop-blur-xl rounded-card border border-white shadow-soft hover:shadow-medium hover:border-primary/10',
-  hero: 'bg-gradient-to-br from-primary-soft/80 via-white/90 to-white/95 backdrop-blur-2xl rounded-[20px] border border-white/60 shadow-medium overflow-hidden',
+  hero: 'bg-gradient-to-br from-primary-soft/80 via-white/90 to-white/95 backdrop-blur-2xl rounded-card border border-white/60 shadow-medium overflow-hidden',
   insight: 'bg-primary-soft/60 backdrop-blur-md rounded-2xl border border-primary/20',
   interactive: 'bg-surface/90 backdrop-blur-xl rounded-card border border-white shadow-soft hover:shadow-medium hover:border-primary/10 hover:-translate-y-0.5 cursor-pointer',
 }

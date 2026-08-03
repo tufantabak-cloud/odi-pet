@@ -2009,7 +2009,7 @@ export default function WizardOrchestrator() {
                     onChange={(e) => setStepData({ interval: parseInt(e.target.value) || 1 })}
                     className="w-full sm:w-fit"
                   />
-                  <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-[16px] w-full sm:w-auto">
+                  <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-card w-full sm:w-auto">
                     {unitOptions.map(opt => {
                       const isSelected = wizardData.frequency === opt.value;
                       return (
@@ -2017,7 +2017,7 @@ export default function WizardOrchestrator() {
                           key={opt.value}
                           type="button"
                           onClick={() => setStepData({ frequency: opt.value })}
-                          className={`flex-1 sm:flex-none px-3.5 py-2 rounded-[12px] text-[12px] font-bold transition-all ${
+                          className={`flex-1 sm:flex-none px-3.5 py-2 rounded-input text-[12px] font-bold transition-all ${
                             isSelected 
                               ? 'bg-white text-slate-900 shadow-sm' 
                               : 'text-slate-500 hover:text-slate-800'

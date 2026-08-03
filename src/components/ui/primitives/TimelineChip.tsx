@@ -20,7 +20,7 @@ const chipStyles: Record<ChipStatus, string> = {
 
 export default function TimelineChip({ date, label, status, className = '' }: TimelineChipProps) {
   return (
-    <div className={`shrink-0 rounded-[10px] px-2.5 py-1.5 min-w-[64px] text-center ${chipStyles[status]} ${className}`}>
+    <div className={`shrink-0 rounded-lg px-2.5 py-1.5 min-w-[64px] text-center ${chipStyles[status]} ${className}`}>
       <p className="text-[10px] font-700 leading-none mb-1 tabular-nums">{date}</p>
       <p className="text-[9px] font-600 leading-none">{label}</p>
     </div>

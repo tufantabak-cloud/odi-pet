@@ -39,7 +39,7 @@ export default async function ClinicPetsPage() {
 
       {pets.length === 0 ? (
         <div className="card-base p-16 text-center flex flex-col items-center">
-          <div className="w-20 h-20 bg-primary-soft rounded-[24px] flex items-center justify-center mb-5 rotate-3 shadow-sm border border-primary/20">
+          <div className="w-20 h-20 bg-primary-soft rounded-sheet flex items-center justify-center mb-5 rotate-3 shadow-sm border border-primary/20">
             <svg viewBox="0 0 32 32" className="w-12 h-12 drop-shadow-md"><circle cx="16" cy="16" r="14" fill="url(#clinic-grad)"/><path d="M16 8v16M8 16h16" stroke="#fff" strokeWidth="4" strokeLinecap="round"/><defs><linearGradient id="clinic-grad" x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse"><stop stopColor="#3B82F6"/><stop offset="1" stopColor="#1E3A8A"/></linearGradient></defs></svg>
           </div>
           <h3 className="text-[18px] font-bold text-text-primary">Henüz hasta kaydı yok</h3>
@@ -56,7 +56,7 @@ export default async function ClinicPetsPage() {
               <Link key={pet.id} href={`/clinic/pets/${pet.id}`}
                 className="card-base p-6 group cursor-pointer hover:border-primary/20 hover:shadow-medium hover:scale-[1.02] transition-all duration-300">
                 <div className="flex items-center gap-4 mb-4 pb-4 border-b border-border-main/60">
-                  <div className="relative w-14 h-14 rounded-[16px] bg-gradient-to-tr from-primary-soft to-white flex items-center justify-center text-primary text-[22px] font-black shadow-sm group-hover:bg-primary group-hover:text-white transition-all duration-300 overflow-hidden shrink-0">
+                  <div className="relative w-14 h-14 rounded-card bg-gradient-to-tr from-primary-soft to-white flex items-center justify-center text-primary text-[22px] font-black shadow-sm group-hover:bg-primary group-hover:text-white transition-all duration-300 overflow-hidden shrink-0">
                     {pet.avatar_url
                       ? <Image src={pet.avatar_url} fill={true} className="object-cover" alt={pet.name}/>
                       : pet.name.charAt(0)

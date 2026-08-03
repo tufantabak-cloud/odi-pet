@@ -86,7 +86,7 @@ export default function PushNotificationPrompt() {
       )}
 
       {shouldRenderPrompt && (
-        <div id="onb-notifications" className="bg-primary-soft/30 border border-primary/20 rounded-[20px] p-4 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-500 mb-2 relative overflow-hidden">
+        <div id="onb-notifications" className="bg-primary-soft/30 border border-primary/20 rounded-card p-4 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-500 mb-2 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none" />
           <div className="flex items-center gap-4 z-10 w-full sm:w-auto">
             <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm border border-border-main text-primary">

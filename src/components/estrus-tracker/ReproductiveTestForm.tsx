@@ -267,14 +267,14 @@ export function ReproductiveTestForm({
       <div className="flex justify-end gap-3 pt-2">
         <button 
           onClick={onCancel}
-          className="px-5 py-2.5 rounded-[12px] text-[14px] font-bold text-text-secondary hover:bg-bg-main transition-colors"
+          className="px-5 py-2.5 rounded-input text-[14px] font-bold text-text-secondary hover:bg-bg-main transition-colors"
         >
           İptal
         </button>
         <button 
           onClick={handleSubmit}
           disabled={submitting || uploading}
-          className="btn-primary px-6 py-2.5 rounded-[12px] text-[14px] disabled:opacity-50"
+          className="btn-primary px-6 py-2.5 rounded-input text-[14px] disabled:opacity-50"
         >
           {uploading ? 'Belge Yükleniyor...' : submitting ? 'Kaydediliyor...' : (initialData ? 'Değişiklikleri Kaydet' : 'Kaydet')}
         </button>

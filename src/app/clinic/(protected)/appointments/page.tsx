@@ -47,7 +47,7 @@ export default async function ClinicAppointmentsPage() {
         return (
           <div key={apt.id} className="card-base flex flex-col sm:flex-row sm:items-center gap-4 p-5 group">
             {/* Time */}
-            <div className="flex sm:flex-col items-center sm:text-center gap-3 bg-bg-main rounded-[14px] px-4 py-3 border border-border-main shrink-0 min-w-[90px]">
+            <div className="flex sm:flex-col items-center sm:text-center gap-3 bg-bg-main rounded-input px-4 py-3 border border-border-main shrink-0 min-w-[90px]">
               <p className="text-[20px] font-black text-text-primary leading-none">{time}</p>
               <p className="text-[12px] font-semibold text-text-secondary">{date}</p>
             </div>

@@ -24,7 +24,7 @@ export default function SmartCardBanner({
   iconBg = 'bg-violet-100 text-violet-700',
 }: SmartCardBannerProps) {
   return (
-    <div className={`relative w-full rounded-[20px] border border-primary/10 bg-gradient-to-br ${gradient} p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4 hover:shadow-md transition-all duration-300 group`}>
+    <div className={`relative w-full rounded-card border border-primary/10 bg-gradient-to-br ${gradient} p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4 hover:shadow-md transition-all duration-300 group`}>
       <div className={`w-12 h-12 shrink-0 rounded-2xl ${iconBg} flex items-center justify-center text-[24px] shadow-sm group-hover:scale-105 transition-transform`}>
         {icon}
       </div>

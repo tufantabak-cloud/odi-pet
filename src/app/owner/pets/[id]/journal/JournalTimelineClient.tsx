@@ -272,7 +272,7 @@ export default function JournalTimelineClient({
     <div className="flex flex-col gap-5">
 
       {/* AI Summary Section */}
-      <div className="bg-gradient-to-br from-indigo-50/50 to-purple-50/50 dark:from-slate-900 dark:to-slate-800 rounded-[24px] p-5 border border-primary/10 shadow-sm relative overflow-hidden">
+      <div className="bg-gradient-to-br from-indigo-50/50 to-purple-50/50 dark:from-slate-900 dark:to-slate-800 rounded-sheet p-5 border border-primary/10 shadow-sm relative overflow-hidden">
         <div className="absolute -right-4 -top-4 text-primary/5 text-[100px] font-black select-none pointer-events-none">✨</div>
         <div className="relative z-10 flex flex-col gap-3">
           <div className="flex items-center justify-between">
@@ -295,7 +295,7 @@ export default function JournalTimelineClient({
           )}
 
           {summary && (
-            <div className="bg-white/80 dark:bg-slate-900/80 rounded-[16px] p-4 text-sm text-text-primary leading-relaxed border border-white dark:border-slate-800 font-medium shadow-sm animate-fade-in flex flex-col gap-4">
+            <div className="bg-white/80 dark:bg-slate-900/80 rounded-card p-4 text-sm text-text-primary leading-relaxed border border-white dark:border-slate-800 font-medium shadow-sm animate-fade-in flex flex-col gap-4">
               <p>{summary}</p>
               <Link
                 href="/owner/vets"

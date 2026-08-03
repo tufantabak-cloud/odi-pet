@@ -80,7 +80,7 @@ function SpeciesSelector({ onSelect, onBack }: { onSelect: (s: Species) => void,
             onClick={() => onSelect(species)}
             aria-label={ariaLabel}
             data-testid={species === 'cat' ? 'pet-species-cat-button' : 'pet-species-dog-button'}
-            className={`relative aspect-square overflow-hidden rounded-[24px] border-2 border-border-main bg-white p-0 ${border} hover:shadow-medium transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] cursor-pointer`}
+            className={`relative aspect-square overflow-hidden rounded-sheet border-2 border-border-main bg-white p-0 ${border} hover:shadow-medium transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] cursor-pointer`}
           >
             <Image
               src={image}
@@ -257,7 +257,7 @@ function PetForm({
                   : (isSelected ? 'border-pink-500 bg-pink-50/80 text-pink-700 shadow-sm scale-[1.02]' : 'hover:border-pink-300 text-text-secondary')
 
                 return (
-                  <label key={v} className={`flex-1 flex items-center justify-center gap-2 p-3.5 border-2 border-border-main rounded-[16px] cursor-pointer transition-all duration-200 text-[13px] font-extrabold ${themeClasses}`}>
+                  <label key={v} className={`flex-1 flex items-center justify-center gap-2 p-3.5 border-2 border-border-main rounded-card cursor-pointer transition-all duration-200 text-[13px] font-extrabold ${themeClasses}`}>
                     <input type="radio" name="gender" value={v} checked={gender === v} onChange={() => setGender(v)} className="sr-only"/>
                     {l}
                   </label>
@@ -334,7 +334,7 @@ function PetForm({
                   placeholder="Yaş (Örn: 1)"
                   value={approxYears}
                   onChange={e => handleApproxChange(e.target.value, approxMonths)}
-                  className="w-full h-14 !rounded-[16px] border-primary/20 bg-surface"
+                  className="w-full h-14 !rounded-card border-primary/20 bg-surface"
                 />
 
                 {/* Ay Girişi */}
@@ -343,13 +343,13 @@ function PetForm({
                   placeholder="Ay (Örn: 4)"
                   value={approxMonths}
                   onChange={e => handleApproxChange(approxYears, e.target.value)}
-                  className="w-full h-14 !rounded-[16px] border-primary/20 bg-surface"
+                  className="w-full h-14 !rounded-card border-primary/20 bg-surface"
                 />
               </div>
             )}
 
             {birthDate && (
-              <div className="text-[13px] font-bold text-primary bg-primary-soft/40 px-4 py-2.5 rounded-[14px] border border-primary/20 mt-1 animate-scaleIn flex items-center gap-2">
+              <div className="text-[13px] font-bold text-primary bg-primary-soft/40 px-4 py-2.5 rounded-input border border-primary/20 mt-1 animate-scaleIn flex items-center gap-2">
                 <span>✨</span>
                 <span>Hesaplanan Yaş: <strong>{calcAge(birthDate).text}</strong> ({calcAge(birthDate).label})</span>
               </div>
@@ -360,12 +360,12 @@ function PetForm({
         {/* Kısırlaştırılma Durumu */}
         <div className="flex flex-col gap-2">
           <label className="text-[13px] font-bold text-text-primary">Kısırlaştırılma Durumu</label>
-          <label className="flex items-center justify-between gap-2 p-3.5 border-2 border-border-main rounded-[14px] cursor-pointer hover:border-primary/50 transition-all text-[13px] font-bold text-text-secondary has-[:checked]:border-primary has-[:checked]:bg-primary-soft/30 group">
+          <label className="flex items-center justify-between gap-2 p-3.5 border-2 border-border-main rounded-input cursor-pointer hover:border-primary/50 transition-all text-[13px] font-bold text-text-secondary has-[:checked]:border-primary has-[:checked]:bg-primary-soft/30 group">
             <div className="flex items-center gap-2">
               <span className="text-base group-hover:scale-110 transition-transform">✂️</span>
               <span className="group-has-[:checked]:text-primary">Kısırlaştırıldı</span>
             </div>
-            <input type="checkbox" checked={isNeutered} onChange={e => setIsNeutered(e.target.checked)} className="w-5 h-5 text-primary focus:ring-primary rounded-[6px] border-border-main bg-white cursor-pointer"/>
+            <input type="checkbox" checked={isNeutered} onChange={e => setIsNeutered(e.target.checked)} className="w-5 h-5 text-primary focus:ring-primary rounded-md border-border-main bg-white cursor-pointer"/>
           </label>
         </div>
 
@@ -673,7 +673,7 @@ function PetPhotoStep({
             )}
           </div>
 
-          <div className={`relative w-[140px] h-[140px] rounded-[32px] bg-gradient-to-br ${gradientClass} border-2 border-dashed flex items-center justify-center overflow-hidden shadow-md group transition-all duration-300 hover:scale-[1.02]`}>
+          <div className={`relative w-[140px] h-[140px] rounded-modal bg-gradient-to-br ${gradientClass} border-2 border-dashed flex items-center justify-center overflow-hidden shadow-md group transition-all duration-300 hover:scale-[1.02]`}>
             {photoPreview ? (
               <img src={photoPreview} alt="Profil Önizleme" className="w-full h-full object-cover animate-scaleIn" />
             ) : (

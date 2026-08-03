@@ -140,7 +140,7 @@ export function EstrusTracker({ petId, petSpecies }: { petId: string, petSpecies
     <div className={`card-base p-6 mt-6 ${(isNewModalOpen || isHistoricalModalOpen || isEndModalOpen) ? 'relative z-50' : ''}`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-[14px] bg-pink-100 flex items-center justify-center text-pink-500 shadow-inner">
+          <div className="w-10 h-10 rounded-input bg-pink-100 flex items-center justify-center text-pink-500 shadow-inner">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
             </svg>
@@ -161,7 +161,7 @@ export function EstrusTracker({ petId, petSpecies }: { petId: string, petSpecies
           
           {/* Aktif Dönem Kartı */}
           {activeCycle ? (
-            <div className="p-4 rounded-[16px] border bg-pink-50 border-pink-200">
+            <div className="p-4 rounded-card border bg-pink-50 border-pink-200">
               <div className="flex items-center gap-3 mb-3">
                 <span className="text-[24px]">🌸</span>
                 <div className="flex-1">
@@ -191,7 +191,7 @@ export function EstrusTracker({ petId, petSpecies }: { petId: string, petSpecies
                 <button onClick={() => {
                   setEndDate(todayStr);
                   setIsEndModalOpen(true);
-                }} className="flex-1 min-w-[120px] min-h-[44px] bg-white border border-pink-200 text-pink-600 text-[13px] font-bold rounded-[12px] shadow-sm hover:bg-pink-50 transition-colors flex items-center justify-center">
+                }} className="flex-1 min-w-[120px] min-h-[44px] bg-white border border-pink-200 text-pink-600 text-[13px] font-bold rounded-input shadow-sm hover:bg-pink-50 transition-colors flex items-center justify-center">
                   Dönemi Bitir
                 </button>
               </div>
@@ -218,7 +218,7 @@ export function EstrusTracker({ petId, petSpecies }: { petId: string, petSpecies
                   setStartDate(todayStr);
                   setIsNewModalOpen(true);
                 }}
-                className="btn-primary py-2 px-6 text-[13px] min-h-[44px] rounded-[12px] shadow-sm flex items-center justify-center"
+                className="btn-primary py-2 px-6 text-[13px] min-h-[44px] rounded-input shadow-sm flex items-center justify-center"
               >
                 Dönemi Başlat
               </button>
@@ -251,7 +251,7 @@ export function EstrusTracker({ petId, petSpecies }: { petId: string, petSpecies
             <div className="flex flex-col gap-3 mt-2">
               <h4 className="text-[12px] font-black text-text-secondary uppercase tracking-wider mb-1">Geçmiş Dönemler</h4>
               {pastCycles.map(cycle => (
-                <div key={cycle.id} className="p-4 rounded-[16px] bg-white border border-border-main flex flex-col gap-3 transition-all hover:border-primary/30">
+                <div key={cycle.id} className="p-4 rounded-card bg-white border border-border-main flex flex-col gap-3 transition-all hover:border-primary/30">
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="text-[14px] font-black text-text-primary">
@@ -291,7 +291,7 @@ export function EstrusTracker({ petId, petSpecies }: { petId: string, petSpecies
       {/* Yeni Aktif Dönem Modal */}
       {isNewModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full max-w-md bg-white rounded-[24px] shadow-2xl overflow-hidden animate-scaleIn flex flex-col max-h-[90vh]">
+          <div className="w-full max-w-md bg-white rounded-sheet shadow-2xl overflow-hidden animate-scaleIn flex flex-col max-h-[90vh]">
             <div className="px-6 py-4 border-b border-border-main flex justify-between items-center bg-surface">
               <h3 className="text-[16px] font-black text-text-primary">Dönemi Başlat</h3>
               <button 
@@ -345,14 +345,14 @@ export function EstrusTracker({ petId, petSpecies }: { petId: string, petSpecies
             <div className="px-6 py-4 border-t border-border-main bg-surface flex justify-end gap-3">
               <button 
                 onClick={() => setIsNewModalOpen(false)}
-                className="px-5 py-2.5 rounded-[12px] text-[14px] font-bold text-text-secondary hover:bg-bg-main transition-colors"
+                className="px-5 py-2.5 rounded-input text-[14px] font-bold text-text-secondary hover:bg-bg-main transition-colors"
               >
                 İptal
               </button>
               <button 
                 onClick={handleSaveNew}
                 disabled={!startDate || submitting}
-                className="btn-primary px-6 py-2.5 rounded-[12px] text-[14px] disabled:opacity-50"
+                className="btn-primary px-6 py-2.5 rounded-input text-[14px] disabled:opacity-50"
               >
                 {submitting ? 'Kaydediliyor...' : 'Dönemi Başlat'}
               </button>
@@ -364,7 +364,7 @@ export function EstrusTracker({ petId, petSpecies }: { petId: string, petSpecies
       {/* Geçmiş Dönem Ekleme Modal */}
       {isHistoricalModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full max-w-md bg-white rounded-[24px] shadow-2xl overflow-hidden animate-scaleIn flex flex-col max-h-[90vh]">
+          <div className="w-full max-w-md bg-white rounded-sheet shadow-2xl overflow-hidden animate-scaleIn flex flex-col max-h-[90vh]">
             <div className="px-6 py-4 border-b border-border-main flex justify-between items-center bg-surface">
               <h3 className="text-[16px] font-black text-text-primary">Geçmiş Dönemi Ekle</h3>
               <button 
@@ -422,14 +422,14 @@ export function EstrusTracker({ petId, petSpecies }: { petId: string, petSpecies
             <div className="px-6 py-4 border-t border-border-main bg-surface flex justify-end gap-3">
               <button 
                 onClick={() => setIsHistoricalModalOpen(false)}
-                className="px-5 py-2.5 rounded-[12px] text-[14px] font-bold text-text-secondary hover:bg-bg-main transition-colors"
+                className="px-5 py-2.5 rounded-input text-[14px] font-bold text-text-secondary hover:bg-bg-main transition-colors"
               >
                 İptal
               </button>
               <button 
                 onClick={handleSaveHistorical}
                 disabled={!startDate || !endDate || submitting}
-                className="btn-primary px-6 py-2.5 rounded-[12px] text-[14px] disabled:opacity-50"
+                className="btn-primary px-6 py-2.5 rounded-input text-[14px] disabled:opacity-50"
               >
                 {submitting ? 'Kaydediliyor...' : 'Kaydet'}
               </button>
@@ -441,7 +441,7 @@ export function EstrusTracker({ petId, petSpecies }: { petId: string, petSpecies
       {/* Dönemi Bitir Modal */}
       {isEndModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full max-w-md bg-white rounded-[24px] shadow-2xl overflow-hidden animate-scaleIn flex flex-col max-h-[90vh]">
+          <div className="w-full max-w-md bg-white rounded-sheet shadow-2xl overflow-hidden animate-scaleIn flex flex-col max-h-[90vh]">
             <div className="px-6 py-4 border-b border-border-main flex justify-between items-center bg-surface">
               <h3 className="text-[16px] font-black text-text-primary">Dönemi Bitir</h3>
               <button 
@@ -470,14 +470,14 @@ export function EstrusTracker({ petId, petSpecies }: { petId: string, petSpecies
             <div className="px-6 py-4 border-t border-border-main bg-surface flex justify-end gap-3">
               <button 
                 onClick={() => setIsEndModalOpen(false)}
-                className="px-5 py-2.5 rounded-[12px] text-[14px] font-bold text-text-secondary hover:bg-bg-main transition-colors"
+                className="px-5 py-2.5 rounded-input text-[14px] font-bold text-text-secondary hover:bg-bg-main transition-colors"
               >
                 İptal
               </button>
               <button 
                 onClick={handleEndCycle}
                 disabled={!endDate || submitting}
-                className="btn-primary px-6 py-2.5 rounded-[12px] text-[14px] disabled:opacity-50"
+                className="btn-primary px-6 py-2.5 rounded-input text-[14px] disabled:opacity-50"
               >
                 {submitting ? 'Güncelleniyor...' : 'Dönemi Bitir'}
               </button>

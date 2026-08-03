@@ -93,7 +93,7 @@ export default function AllergyManager({ petId, initialAllergies }: AllergyManag
       </div>
 
       {isAdding && (
-        <div className="mb-5 p-4 bg-slate-50 rounded-[20px] border border-border-main animate-fadeInUp">
+        <div className="mb-5 p-4 bg-slate-50 rounded-card border border-border-main animate-fadeInUp">
           <h4 className="text-[14px] font-black text-text-primary mb-3">Yeni Alerji Ekle</h4>
           <form onSubmit={handleAdd} className="flex flex-col gap-3">
             <div>
@@ -148,7 +148,7 @@ export default function AllergyManager({ petId, initialAllergies }: AllergyManag
 
       <div className="flex flex-col gap-3">
         {allergies.map((a: any) => (
-          <div key={a.id} className="p-3.5 rounded-[16px] bg-red-50 border border-red-100 flex items-start justify-between group relative">
+          <div key={a.id} className="p-3.5 rounded-card bg-red-50 border border-red-100 flex items-start justify-between group relative">
             <div>
               <h4 className="text-[14px] font-black text-red-700">{a.trigger_name}</h4>
               {a.symptoms && <p className="text-[12px] text-red-600/80 font-medium mt-1"><span className="font-bold opacity-70">Belirti:</span> {a.symptoms}</p>}

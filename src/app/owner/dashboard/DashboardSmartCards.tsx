@@ -898,7 +898,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
 
       {quickUpdateConfig && quickUpdateConfig.type === 'journal' ? (
         <div className="fixed inset-0 z-[10000] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-fade-in" onClick={() => setQuickUpdateConfig(null)}>
-          <div className="bg-surface w-full max-w-sm rounded-[24px] p-5 shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+          <div className="bg-surface w-full max-w-sm rounded-sheet p-5 shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
             <QuickJournalWidget
               pets={pets}
               activePet={pets.find(p => p.id === quickUpdateConfig.petId)}

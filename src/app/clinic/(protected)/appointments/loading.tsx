@@ -8,7 +8,7 @@ export default function Loading() {
       <div className="flex flex-col gap-4">
         {[1,2,3,4].map(i => (
           <div key={i} className="card-base p-5 flex items-center gap-4">
-            <div className="w-14 h-14 bg-border-main rounded-[12px] shrink-0 flex flex-col items-center justify-center gap-1">
+            <div className="w-14 h-14 bg-border-main rounded-input shrink-0 flex flex-col items-center justify-center gap-1">
               <div className="h-4 w-8 bg-border-main/70 rounded"/>
               <div className="h-3 w-6 bg-border-main/70 rounded"/>
             </div>

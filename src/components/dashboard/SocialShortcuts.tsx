@@ -91,7 +91,7 @@ export default function SocialShortcuts({ lostReportsCount = 0 }: { lostReportsC
 
           const cardContent = (
             <div
-              className={`relative flex flex-col items-center justify-between p-3.5 min-h-[116px] rounded-[24px] bg-white border ${s.borderColorClass} shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] transition-all duration-200 ease-out group ${
+              className={`relative flex flex-col items-center justify-between p-3.5 min-h-[116px] rounded-sheet bg-white border ${s.borderColorClass} shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] transition-all duration-200 ease-out group ${
                 !s.comingSoon
                   ? 'hover:scale-[1.02] active:scale-[0.98] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.08)]'
                   : 'opacity-85 hover:opacity-100'

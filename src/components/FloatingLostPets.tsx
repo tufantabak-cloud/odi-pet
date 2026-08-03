@@ -75,7 +75,7 @@ export default function FloatingLostPets({ userCities }: { userCities: string[] 
       onClick={() => setOpen(false)}
     >
       <div
-        className="w-full max-w-sm bg-surface rounded-[24px] p-7 shadow-soft border border-white/60 mb-0 sm:mb-20 animate-fade-in"
+        className="w-full max-w-sm bg-surface rounded-sheet p-7 shadow-soft border border-white/60 mb-0 sm:mb-20 animate-fade-in"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-3 mb-5">
@@ -92,12 +92,12 @@ export default function FloatingLostPets({ userCities }: { userCities: string[] 
           {lostReports.map((report) => (
             <div
               key={report.id}
-              className="border border-red-200 bg-red-50/50 rounded-[20px] p-4 flex flex-col gap-3 relative shadow-sm"
+              className="border border-red-200 bg-red-50/50 rounded-card p-4 flex flex-col gap-3 relative shadow-sm"
             >
               <div className="absolute top-4 right-4 w-3 h-3 bg-red-500 rounded-full animate-ping opacity-75" />
               <div className="flex items-center gap-3">
                 {report.pets?.avatar_url ? (
-                  <div className="w-12 h-12 relative rounded-[14px] bg-white shadow-sm overflow-hidden border border-red-100 shrink-0">
+                  <div className="w-12 h-12 relative rounded-input bg-white shadow-sm overflow-hidden border border-red-100 shrink-0">
                     <Image src={report.pets.avatar_url} alt={report.pets.name} fill className="object-cover" />
                   </div>
                 ) : (
@@ -112,7 +112,7 @@ export default function FloatingLostPets({ userCities }: { userCities: string[] 
                   </p>
                 </div>
               </div>
-              <div className="bg-white rounded-[12px] p-2.5 border border-red-100">
+              <div className="bg-white rounded-input p-2.5 border border-red-100">
                 <p className="text-2xs text-text-secondary mb-0.5">Son Görülme</p>
                 <p className="text-xs font-semibold text-text-primary leading-tight line-clamp-2">
                   {report.last_seen_location}

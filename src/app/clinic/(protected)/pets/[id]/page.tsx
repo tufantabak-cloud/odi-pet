@@ -61,9 +61,9 @@ export default async function ClinicPetDetailPage({ params }: { params: Promise<
       <div className="card-base overflow-hidden">
         <div className="h-2 bg-gradient-to-r from-success to-success/40"/>
         <div className="p-6 sm:p-8 flex flex-col sm:flex-row gap-6 items-start sm:items-center">
-          <div className="relative w-20 h-20 rounded-[22px] bg-gradient-to-br from-primary-soft to-white flex items-center justify-center text-primary text-[36px] font-black shadow-sm ring-2 ring-border-main/50 shrink-0">
+          <div className="relative w-20 h-20 rounded-sheet bg-gradient-to-br from-primary-soft to-white flex items-center justify-center text-primary text-[36px] font-black shadow-sm ring-2 ring-border-main/50 shrink-0">
             {pet.avatar_url
-              ? <Image src={pet.avatar_url} fill={true} className="rounded-[20px] object-cover" alt={pet.name}/>
+              ? <Image src={pet.avatar_url} fill={true} className="rounded-card object-cover" alt={pet.name}/>
               : pet.name.charAt(0)
             }
           </div>
@@ -105,8 +105,8 @@ export default async function ClinicPetDetailPage({ params }: { params: Promise<
               {appointments.map(apt => {
                 const dt = new Date(apt.scheduled_at)
                 return (
-                  <div key={apt.id} className="flex gap-4 p-4 rounded-[16px] border border-border-main bg-surface hover:border-primary/20 transition-colors">
-                    <div className="flex flex-col items-center bg-bg-main rounded-[12px] px-3 py-2 shrink-0 min-w-[52px] text-center border border-border-main">
+                  <div key={apt.id} className="flex gap-4 p-4 rounded-card border border-border-main bg-surface hover:border-primary/20 transition-colors">
+                    <div className="flex flex-col items-center bg-bg-main rounded-input px-3 py-2 shrink-0 min-w-[52px] text-center border border-border-main">
                       <p className="text-[16px] font-black text-text-primary leading-none">{dt.getDate()}</p>
                       <p className="text-[10px] font-bold text-text-secondary">{dt.toLocaleString('tr-TR', { month: 'short' })}</p>
                       <p className="text-[10px] font-bold text-text-secondary">{dt.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</p>
@@ -141,14 +141,14 @@ export default async function ClinicPetDetailPage({ params }: { params: Promise<
               Bakım Takvimi
             </h2>
             {(!carePlans || carePlans.length === 0) ? (
-              <p className="text-[13px] text-text-secondary bg-bg-main rounded-[12px] p-4 border border-border-main">Henüz plan eklenmemiş.</p>
+              <p className="text-[13px] text-text-secondary bg-bg-main rounded-input p-4 border border-border-main">Henüz plan eklenmemiş.</p>
             ) : (
               <div className="flex flex-col gap-2">
                 {carePlans.map(plan => {
                   const due = new Date(plan.due_date)
                   const overdue = due.getTime() < Date.now()
                   return (
-                    <div key={plan.id} className={`p-3 rounded-[12px] border ${overdue ? 'border-error/30 bg-error/5' : 'border-border-main bg-surface'}`}>
+                    <div key={plan.id} className={`p-3 rounded-input border ${overdue ? 'border-error/30 bg-error/5' : 'border-border-main bg-surface'}`}>
                       <p className="font-bold text-text-primary text-[13px]">{plan.title}</p>
                       <p className={`text-[11px] font-bold mt-0.5 ${overdue ? 'text-error' : 'text-text-secondary'}`}>
                         {due.toLocaleDateString('tr-TR')}

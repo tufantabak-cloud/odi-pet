@@ -103,7 +103,7 @@ export default function PendingInviteModal({ pendingInvites }: PendingInviteModa
   if (successState) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-        <div className="bg-white rounded-[28px] max-w-md w-full p-6 text-center shadow-2xl border border-primary/20 flex flex-col items-center gap-4">
+        <div className="bg-white rounded-modal max-w-md w-full p-6 text-center shadow-2xl border border-primary/20 flex flex-col items-center gap-4">
           <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center text-4xl shadow-inner">
             🎉
           </div>
@@ -144,16 +144,16 @@ export default function PendingInviteModal({ pendingInvites }: PendingInviteModa
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-md animate-fade-in">
-      <div className="bg-white rounded-[32px] max-w-md w-full overflow-hidden shadow-2xl border border-purple-100 animate-scale-up">
+      <div className="bg-white rounded-modal max-w-md w-full overflow-hidden shadow-2xl border border-purple-100 animate-scale-up">
         {/* Top Decorative Gradient */}
         <div className="h-2 bg-gradient-to-r from-purple-600 via-indigo-500 to-pink-500" />
 
         <div className="p-7 flex flex-col items-center text-center gap-5">
           {/* Avatar / Icon */}
           <div className="relative">
-            <div className="w-20 h-20 rounded-[24px] bg-gradient-to-br from-purple-100 to-indigo-50 flex items-center justify-center text-primary text-4xl font-black shadow-md border border-purple-200">
+            <div className="w-20 h-20 rounded-sheet bg-gradient-to-br from-purple-100 to-indigo-50 flex items-center justify-center text-primary text-4xl font-black shadow-md border border-purple-200">
               {pet?.avatar_url ? (
-                <img src={pet.avatar_url} alt={pet.name} className="w-full h-full object-cover rounded-[24px]" />
+                <img src={pet.avatar_url} alt={pet.name} className="w-full h-full object-cover rounded-sheet" />
               ) : (
                 pet?.name?.charAt(0) ?? '🐾'
               )}

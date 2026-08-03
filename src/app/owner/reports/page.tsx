@@ -49,7 +49,7 @@ export default function LostReportsListPage() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 sm:p-6 lg:p-8">
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Header Section */}
-        <div className="bg-gradient-to-r from-rose-500 to-amber-500 rounded-[24px] p-6 text-white shadow-[0_4px_20px_-2px_rgba(244,63,94,0.3)]">
+        <div className="bg-gradient-to-r from-rose-500 to-amber-500 rounded-sheet p-6 text-white shadow-[0_4px_20px_-2px_rgba(244,63,94,0.3)]">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-white/20 backdrop-blur-md rounded-xl">
               <AlertTriangle className="w-6 h-6 text-white" />
@@ -97,16 +97,16 @@ export default function LostReportsListPage() {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-44 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-[24px]" />
+              <div key={i} className="h-44 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-sheet" />
             ))}
           </div>
         ) : error ? (
-          <div className="p-6 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-[24px] text-center text-rose-600 dark:text-rose-400">
+          <div className="p-6 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-sheet text-center text-rose-600 dark:text-rose-400">
             {error}
           </div>
         ) : filteredReports.length === 0 ? (
           /* 07.13 Empty State Standard */
-          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-[24px] p-8 text-center shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] space-y-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-sheet p-8 text-center shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] space-y-4">
             <div className="w-16 h-16 bg-rose-50 dark:bg-rose-950/40 text-rose-500 dark:text-rose-400 rounded-full flex items-center gap-1 justify-center mx-auto">
               <Search className="w-8 h-8" />
             </div>
@@ -138,7 +138,7 @@ export default function LostReportsListPage() {
               return (
                 <div
                   key={report.id}
-                  className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-[24px] p-5 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] hover:scale-[1.02] transition-all duration-200 group flex flex-col justify-between"
+                  className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-sheet p-5 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] hover:scale-[1.02] transition-all duration-200 group flex flex-col justify-between"
                 >
                   <div className="space-y-3">
                     <div className="flex items-start justify-between gap-3">

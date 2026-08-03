@@ -340,15 +340,15 @@ export default function VetsPage() {
             {/* Açık/Kapalı durumu */}
             <div className="flex items-center">
               {isOpenNow === true ? (
-                <span className="bg-[#EAF2EC] text-[#556B5D] px-[12px] py-[6px] text-[14px] font-semibold rounded-[6px] inline-flex items-center select-none border border-[#EAF2EC]">
+                <span className="bg-[#EAF2EC] text-[#556B5D] px-[12px] py-[6px] text-[14px] font-semibold rounded-md inline-flex items-center select-none border border-[#EAF2EC]">
                   Açık
                 </span>
               ) : isOpenNow === false ? (
-                <span className="bg-[#F8EAEB] text-[#8C5D61] px-[12px] py-[6px] text-[14px] font-semibold rounded-[6px] inline-flex items-center select-none border border-[#F8EAEB]">
+                <span className="bg-[#F8EAEB] text-[#8C5D61] px-[12px] py-[6px] text-[14px] font-semibold rounded-md inline-flex items-center select-none border border-[#F8EAEB]">
                   Kapalı
                 </span>
               ) : (
-                <span className="bg-slate-100 text-slate-600 px-[12px] py-[6px] text-[14px] font-semibold rounded-[6px] inline-flex items-center select-none border border-slate-200">
+                <span className="bg-slate-100 text-slate-600 px-[12px] py-[6px] text-[14px] font-semibold rounded-md inline-flex items-center select-none border border-slate-200">
                   Durum Bilgisi Yok
                 </span>
               )}

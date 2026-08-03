@@ -137,7 +137,7 @@ export const RulerPicker: React.FC<RulerPickerProps> = ({
       )}
 
       {/* Ana Cetvel Kartı */}
-      <div className="card-base p-4 bg-gradient-to-b from-white to-slate-50/50 border border-border-main/80 shadow-sm rounded-[24px] flex flex-col gap-3.5 select-none relative overflow-hidden">
+      <div className="card-base p-4 bg-gradient-to-b from-white to-slate-50/50 border border-border-main/80 shadow-sm rounded-sheet flex flex-col gap-3.5 select-none relative overflow-hidden">
         {/* Değer Göstergesi ve Ince Ayar Düğmeleri */}
         <div className="flex items-center justify-between px-2 pt-1">
           {/* Eksiltme Düğmesi */}

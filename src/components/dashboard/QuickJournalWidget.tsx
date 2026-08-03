@@ -126,7 +126,7 @@ export default function QuickJournalWidget({ pets, activePet, onSuccess }: Quick
       {/* Header */}
       <div className="flex items-center gap-2.5 pb-3 mb-3 border-b border-[var(--color-border)]">
         {/* Pet avatar */}
-        <div className="w-[34px] h-[34px] rounded-[10px] overflow-hidden flex-shrink-0"
+        <div className="w-[34px] h-[34px] rounded-lg overflow-hidden flex-shrink-0"
              style={{background: 'linear-gradient(160deg,#c7bef7,#5D3FD3)'}}>
           {activePet?.avatar_url ? (
             <Image src={activePet.avatar_url} alt={activePet.name}

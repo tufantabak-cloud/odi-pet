@@ -121,7 +121,7 @@ export default function HealthHistoryWizard({ pet, templates }: { pet: any, temp
 
   if (isFinished) {
     return (
-      <div className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-[12px] overflow-hidden mb-6">
+      <div className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-input overflow-hidden mb-6">
         <div className="p-5">
           <div className="text-center mb-4 pb-4 border-b border-[var(--color-border)]">
             <div className="w-12 h-12 rounded-full bg-[var(--color-bg-success)] flex items-center justify-center mx-auto mb-2">
@@ -129,14 +129,14 @@ export default function HealthHistoryWizard({ pet, templates }: { pet: any, temp
             </div>
             <p className="text-base font-bold text-[var(--color-text-primary)]">Sağlık geçmişi tamamlandı</p>
             <p className="text-[12px] text-[var(--color-text-secondary)] mt-1">Bundan sonra her şey otomatik — hatırlatıcılar doğru tarihlerde gelecek.</p>
-            <div className="inline-flex items-center gap-1.5 bg-[var(--color-bg-success)] text-[var(--color-text-success)] border border-[var(--color-text-success)]/20 rounded-[8px] px-3 py-1.5 text-[12px] font-bold mt-3">
+            <div className="inline-flex items-center gap-1.5 bg-[var(--color-bg-success)] text-[var(--color-text-success)] border border-[var(--color-text-success)]/20 rounded-lg px-3 py-1.5 text-[12px] font-bold mt-3">
               <i className="ti ti-star text-[14px]" /> +50 puan kazandınız
             </div>
           </div>
           
           <button 
             onClick={() => router.push(`/owner/pets/${pet.id}`)}
-            className="w-full bg-[var(--color-primary)] text-white border-none rounded-[8px] py-3 text-[14px] font-bold cursor-pointer hover:bg-[var(--color-primary-hover)] transition-colors"
+            className="w-full bg-[var(--color-primary)] text-white border-none rounded-lg py-3 text-[14px] font-bold cursor-pointer hover:bg-[var(--color-primary-hover)] transition-colors"
           >
             Profile Dön
           </button>
@@ -151,7 +151,7 @@ export default function HealthHistoryWizard({ pet, templates }: { pet: any, temp
 
   return (
     <div className="mb-6">
-      <div className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-[12px] overflow-hidden">
+      <div className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-input overflow-hidden">
         <div className="px-5 py-3.5 border-b border-[var(--color-border)] bg-[var(--color-surface-1)]">
           <div className="flex justify-between items-center mb-1.5">
             <p className="text-[13px] font-bold text-[var(--color-text-primary)]">Aşı {currentStep + 1} / {totalSteps}</p>
@@ -164,7 +164,7 @@ export default function HealthHistoryWizard({ pet, templates }: { pet: any, temp
 
         <div className="p-5">
           <div className="flex items-center gap-3 mb-4 pb-4 border-b border-[var(--color-border)]">
-            <div className="w-9 h-9 rounded-[8px] bg-[var(--color-bg-accent)] flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-lg bg-[var(--color-bg-accent)] flex items-center justify-center shrink-0">
               <i className="ti ti-needle text-[18px] text-[var(--color-text-accent)]" />
             </div>
             <div>
@@ -183,13 +183,13 @@ export default function HealthHistoryWizard({ pet, templates }: { pet: any, temp
           <div className="flex gap-2 mb-4">
             <button 
               onClick={() => { setCurrentChoice('yes'); setVetReminder(false); setApproximate(false); }}
-              className={`flex-1 py-2.5 px-2 text-[13px] font-600 border rounded-[8px] transition-colors ${currentChoice === 'yes' ? 'bg-[var(--color-bg-accent)] border-[var(--color-border-accent)] text-[var(--color-text-accent)]' : 'bg-transparent border-[var(--color-border-strong)] text-[var(--color-text-primary)]'}`}
+              className={`flex-1 py-2.5 px-2 text-[13px] font-600 border rounded-lg transition-colors ${currentChoice === 'yes' ? 'bg-[var(--color-bg-accent)] border-[var(--color-border-accent)] text-[var(--color-text-accent)]' : 'bg-transparent border-[var(--color-border-strong)] text-[var(--color-text-primary)]'}`}
             >
               Evet, yaptırdım
             </button>
             <button 
               onClick={() => { setCurrentChoice('no_or_unknown'); setUserDate(''); setVetReminder(false); setApproximate(false); }}
-              className={`flex-1 py-2.5 px-2 text-[13px] font-600 border rounded-[8px] transition-colors ${currentChoice === 'no_or_unknown' ? 'bg-[var(--color-bg-warning)] border-[var(--color-border-warning)] text-[var(--color-text-warning)]' : 'bg-transparent border-[var(--color-border-strong)] text-[var(--color-text-primary)]'}`}
+              className={`flex-1 py-2.5 px-2 text-[13px] font-600 border rounded-lg transition-colors ${currentChoice === 'no_or_unknown' ? 'bg-[var(--color-bg-warning)] border-[var(--color-border-warning)] text-[var(--color-text-warning)]' : 'bg-transparent border-[var(--color-border-strong)] text-[var(--color-text-primary)]'}`}
             >
               Hayır / bilmiyorum
             </button>
@@ -203,13 +203,13 @@ export default function HealthHistoryWizard({ pet, templates }: { pet: any, temp
                   type="date" 
                   value={userDate}
                   onChange={(e) => { setUserDate(e.target.value); setApproximate(false); setVetReminder(false); }}
-                  className="flex-1 min-w-[150px] text-[13px] p-2 border border-[var(--color-border-strong)] rounded-[8px] bg-[var(--color-surface-2)] text-[var(--color-text-primary)]"
+                  className="flex-1 min-w-[150px] text-[13px] p-2 border border-[var(--color-border-strong)] rounded-lg bg-[var(--color-surface-2)] text-[var(--color-text-primary)]"
                 />
               </div>
               <div className="flex gap-1.5 flex-wrap mb-2">
                 <button 
                   onClick={() => { setVetReminder(true); setUserDate(''); setApproximate(false); }}
-                  className={`text-[12px] px-2.5 py-1.5 border rounded-[8px] flex items-center gap-1 transition-colors ${vetReminder ? 'bg-[var(--color-surface-2)] border-[var(--color-border-strong)] text-[var(--color-text-primary)] shadow-sm' : 'bg-[var(--color-surface-1)] border-[var(--color-border)] text-[var(--color-text-secondary)]'}`}
+                  className={`text-[12px] px-2.5 py-1.5 border rounded-lg flex items-center gap-1 transition-colors ${vetReminder ? 'bg-[var(--color-surface-2)] border-[var(--color-border-strong)] text-[var(--color-text-primary)] shadow-sm' : 'bg-[var(--color-surface-1)] border-[var(--color-border)] text-[var(--color-text-secondary)]'}`}
                 >
                   <i className="ti ti-stethoscope text-[13px]" /> Veterinere soracağım
                 </button>
@@ -222,17 +222,17 @@ export default function HealthHistoryWizard({ pet, templates }: { pet: any, temp
               </div>
 
               {userDate && !vetReminder && !approximate && (
-                <div className="p-2 rounded-[8px] text-[12px] bg-[var(--color-bg-success)] text-[var(--color-text-success)] mb-2 animate-in fade-in">
+                <div className="p-2 rounded-lg text-[12px] bg-[var(--color-bg-success)] text-[var(--color-text-success)] mb-2 animate-in fade-in">
                   ✓ Tarih kaydedildi. Gelecek tekrarı bu tarihe göre planlanacak.
                 </div>
               )}
               {vetReminder && (
-                <div className="p-2 rounded-[8px] text-[12px] bg-[var(--color-bg-warning)] text-[var(--color-text-warning)] mb-2 animate-in fade-in">
+                <div className="p-2 rounded-lg text-[12px] bg-[var(--color-bg-warning)] text-[var(--color-text-warning)] mb-2 animate-in fade-in">
                   1 hafta sonraya "Karnemi veterinere sor" hatırlatması eklenecek.
                 </div>
               )}
               {approximate && (
-                <div className="p-2 rounded-[8px] text-[12px] bg-[var(--color-surface-1)] border border-[var(--color-border)] text-[var(--color-text-secondary)] mb-2 animate-in fade-in">
+                <div className="p-2 rounded-lg text-[12px] bg-[var(--color-surface-1)] border border-[var(--color-border)] text-[var(--color-text-secondary)] mb-2 animate-in fade-in">
                   Tarih bilinmiyor — bugün + 1 yıl olarak atanacak. Sonradan düzenleyebilirsiniz.
                 </div>
               )}
@@ -240,7 +240,7 @@ export default function HealthHistoryWizard({ pet, templates }: { pet: any, temp
           )}
 
           {currentChoice === 'no_or_unknown' && (
-            <div className="p-2 rounded-[8px] text-[12px] bg-[var(--color-surface-1)] border border-[var(--color-border)] text-[var(--color-text-secondary)] mb-2 animate-in fade-in flex items-start gap-1.5">
+            <div className="p-2 rounded-lg text-[12px] bg-[var(--color-surface-1)] border border-[var(--color-border)] text-[var(--color-text-secondary)] mb-2 animate-in fade-in flex items-start gap-1.5">
               <i className="ti ti-info-circle text-[14px] shrink-0 mt-0.5" />
               Tüm doz serisi bugünden başlatılarak planlanacak. Veteriner ziyareti önerilir.
             </div>
@@ -258,7 +258,7 @@ export default function HealthHistoryWizard({ pet, templates }: { pet: any, temp
               <button 
                 onClick={handleNext}
                 disabled={isSubmitting || (currentChoice === 'yes' && !userDate && !vetReminder && !approximate)}
-                className="bg-[var(--color-primary)] text-white border-none rounded-[8px] px-5 py-2 text-[13px] font-bold cursor-pointer hover:bg-[var(--color-primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-[var(--color-primary)] text-white border-none rounded-lg px-5 py-2 text-[13px] font-bold cursor-pointer hover:bg-[var(--color-primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Kaydediliyor...' : (currentStep === totalSteps - 1 ? 'Tamamla ✓' : 'Sonraki aşı →')}
               </button>

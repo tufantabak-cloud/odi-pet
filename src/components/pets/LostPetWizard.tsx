@@ -155,7 +155,7 @@ export default function LostPetWizard({ pet, ownerPhone, onComplete, onCancel }:
 
   return (
     <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={onCancel}>
-      <div className="w-full max-w-md mx-auto bg-surface rounded-[28px] border border-border-main/60 p-6 shadow-2xl flex flex-col justify-between min-h-[480px] transition-all duration-300 relative overflow-hidden animate-fade-in" onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-md mx-auto bg-surface rounded-modal border border-border-main/60 p-6 shadow-2xl flex flex-col justify-between min-h-[480px] transition-all duration-300 relative overflow-hidden animate-fade-in" onClick={e => e.stopPropagation()}>
         
         <div className="absolute top-0 right-0 w-32 h-32 bg-error/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -178,8 +178,8 @@ export default function LostPetWizard({ pet, ownerPhone, onComplete, onCancel }:
           {step === 1 ? (
             <div className="flex flex-col gap-5 mt-2">
               {/* Pet Info ReadOnly */}
-              <div className="flex items-center gap-4 p-4 border border-border-main rounded-[16px] bg-bg-main">
-                <div className="w-14 h-14 bg-gradient-to-br from-primary-soft to-white rounded-[14px] flex items-center justify-center text-[24px] overflow-hidden relative shadow-sm">
+              <div className="flex items-center gap-4 p-4 border border-border-main rounded-card bg-bg-main">
+                <div className="w-14 h-14 bg-gradient-to-br from-primary-soft to-white rounded-input flex items-center justify-center text-[24px] overflow-hidden relative shadow-sm">
                   {pet.avatar_url ? <Image src={pet.avatar_url} fill={true} className="object-cover" alt={pet.name} /> : (pet.species === 'Kedi' ? <DefaultCatAvatar width={36} height={36} /> : <DefaultDogAvatar width={36} height={36} />)}
                 </div>
                 <div>

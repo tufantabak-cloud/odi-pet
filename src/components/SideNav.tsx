@@ -85,7 +85,7 @@ function NavLink({ href, label, icon }: { href: string; label: string; icon: Rea
   return (
     <Link
       href={href}
-      className={`flex items-center gap-3 px-4 py-2.5 rounded-[14px] text-sm font-semibold transition-all group
+      className={`flex items-center gap-3 px-4 py-2.5 rounded-input text-sm font-semibold transition-all group
         ${isActive
           ? 'bg-primary-soft text-primary'
           : 'text-text-secondary hover:text-text-primary hover:bg-bg-main'
@@ -133,7 +133,7 @@ export default function SideNav({ actionMenuItems, bottomNavItems, menuDrawerIte
       <div className="relative mb-4">
         <button
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="w-full py-3 px-4 rounded-[14px] bg-primary text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary-hover hover:shadow-lg active:scale-[0.98] transition-all duration-200"
+          className="w-full py-3 px-4 rounded-input bg-primary text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary-hover hover:shadow-lg active:scale-[0.98] transition-all duration-200"
         >
           <Plus className={`w-4 h-4 transition-transform duration-200 ${isMenuOpen ? 'rotate-45' : ''}`} />
           <span>Hızlı Ekle</span>
@@ -142,7 +142,7 @@ export default function SideNav({ actionMenuItems, bottomNavItems, menuDrawerIte
         {isMenuOpen && (
           <>
             <div className="fixed inset-0 z-[9990]" onClick={() => setIsMenuOpen(false)} />
-            <div className="absolute left-0 right-0 mt-2 bg-surface border border-border-main rounded-[14px] shadow-xl p-2 z-[9991] flex flex-col gap-1 animate-in fade-in slide-in-from-top-2 duration-150">
+            <div className="absolute left-0 right-0 mt-2 bg-surface border border-border-main rounded-input shadow-xl p-2 z-[9991] flex flex-col gap-1 animate-in fade-in slide-in-from-top-2 duration-150">
               {activeActionMenuItems.map((item) => {
                 const href = resolveActionHref(item)
                 return (
@@ -150,7 +150,7 @@ export default function SideNav({ actionMenuItems, bottomNavItems, menuDrawerIte
                     key={item.label}
                     href={href}
                     onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-[10px] text-xs font-semibold text-text-primary hover:bg-bg-main hover:text-primary transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-text-primary hover:bg-bg-main hover:text-primary transition-colors"
                   >
                     {item.icon && <span className="text-text-secondary">{getIcon(item.icon, 16)}</span>}
                     {item.label}

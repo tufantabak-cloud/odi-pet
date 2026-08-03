@@ -28,7 +28,7 @@ export default function DeviceNotificationSettings({ onSave, onCancel }: DeviceN
   }
 
   return (
-    <div className="w-full max-w-md mx-auto bg-surface rounded-[28px] border border-border-main/60 p-6 shadow-xl flex flex-col justify-between min-h-[450px] transition-all duration-300">
+    <div className="w-full max-w-md mx-auto bg-surface rounded-modal border border-border-main/60 p-6 shadow-xl flex flex-col justify-between min-h-[450px] transition-all duration-300">
       {/* Upper Section */}
       <div className="flex flex-col">
         {/* Screen Title */}

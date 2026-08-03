@@ -256,7 +256,7 @@ function SuccessContent() {
         <div className="w-full flex flex-col gap-4 animate-fadeIn text-left">
           
           {showHealthHistoryCard && (
-            <div className="w-full bg-surface-1 border border-border rounded-[14px] p-5 text-left shadow-xs">
+            <div className="w-full bg-surface-1 border border-border rounded-input p-5 text-left shadow-xs">
               <div className="flex items-start gap-3 mb-3">
                 <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5 font-bold">
                   ⏱️
@@ -290,7 +290,7 @@ function SuccessContent() {
           )}
 
           {showVaccinePlanCard && (
-            <div className="w-full bg-surface-1 border border-border rounded-[14px] p-5 text-left shadow-xs">
+            <div className="w-full bg-surface-1 border border-border rounded-input p-5 text-left shadow-xs">
               <div className="flex items-start gap-3 mb-3">
                 <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5 font-bold">
                   🛡️

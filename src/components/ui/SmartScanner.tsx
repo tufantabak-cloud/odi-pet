@@ -632,7 +632,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
               </div>
               
               {/* Target Frame Box */}
-              <div className="w-[85%] aspect-[3/4] max-h-[280px] border-2 border-dashed border-white/80 rounded-[24px] self-center relative shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]">
+              <div className="w-[85%] aspect-[3/4] max-h-[280px] border-2 border-dashed border-white/80 rounded-sheet self-center relative shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]">
                 {/* L-corners for aesthetic camera overlay feel */}
                 <div className="absolute -top-1.5 -left-1.5 w-6 h-6 border-t-4 border-l-4 border-primary rounded-tl-lg" />
                 <div className="absolute -top-1.5 -right-1.5 w-6 h-6 border-t-4 border-r-4 border-primary rounded-tr-lg" />
@@ -694,7 +694,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
               onTouchMove={handleTouchMove}
               onTouchEnd={handleMouseUp}
               style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
-              className="w-full aspect-[3/4] max-h-[300px] overflow-hidden rounded-[24px] border border-border-main bg-surface relative shadow-inner mb-4 select-none touch-none"
+              className="w-full aspect-[3/4] max-h-[300px] overflow-hidden rounded-sheet border border-border-main bg-surface relative shadow-inner mb-4 select-none touch-none"
             >
               {/* Image element with rotation, scale and translation applied */}
               <Image 
@@ -710,7 +710,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
               
               {/* Outer Crop Indicator Guide (Yine 3:4 oranlı kadraj overlay'i) */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none p-4 z-10">
-                <div className="w-[85%] aspect-[3/4] border-2 border-dashed border-primary rounded-[20px] relative shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]">
+                <div className="w-[85%] aspect-[3/4] border-2 border-dashed border-primary rounded-card relative shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]">
                   {/* L Corners */}
                   <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-white rounded-tl-md" />
                   <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-white rounded-tr-md" />

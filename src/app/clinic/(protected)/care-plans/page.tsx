@@ -39,7 +39,7 @@ export default async function ClinicCarePlansPage() {
 
     return (
       <div className={`card-base border-l-4 ${s.cls} flex items-center gap-5 p-5`}>
-        <div className="flex flex-col items-center bg-surface rounded-[12px] px-3 py-2.5 shrink-0 min-w-[52px] text-center border border-border-main">
+        <div className="flex flex-col items-center bg-surface rounded-input px-3 py-2.5 shrink-0 min-w-[52px] text-center border border-border-main">
           <p className="text-[18px] font-black text-text-primary leading-none">{new Date(plan.due_date).getDate()}</p>
           <p className="text-[11px] font-bold text-text-secondary">{new Date(plan.due_date).toLocaleString('tr-TR', { month: 'short' })}</p>
         </div>

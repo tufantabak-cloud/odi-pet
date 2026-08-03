@@ -25,7 +25,7 @@ export default function OnboardingProgressCard({
 
   if (!progress) {
     return (
-      <div className="bg-white border border-border-main rounded-[24px] p-5 mb-4 animate-pulse">
+      <div className="bg-white border border-border-main rounded-sheet p-5 mb-4 animate-pulse">
         <div className="h-4 bg-gray-200 rounded w-1/3 mb-2" />
         <div className="h-2 bg-gray-100 rounded w-full" />
       </div>
@@ -73,7 +73,7 @@ export default function OnboardingProgressCard({
 
   return (
     <>
-      <div className="bg-white border border-[#E2E0FA] rounded-[24px] p-5 mb-4 shadow-sm">
+      <div className="bg-white border border-[#E2E0FA] rounded-sheet p-5 mb-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-purple-600" />

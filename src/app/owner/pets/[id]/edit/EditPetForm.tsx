@@ -304,14 +304,14 @@ export default function EditPetForm({ pet }: { pet: any }) {
       </div>
 
       {successToast && (
-        <div role="status" aria-live="polite" className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-3 rounded-[14px] bg-green-500 text-white text-sm font-bold shadow-xl animate-scaleIn">
+        <div role="status" aria-live="polite" className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-3 rounded-input bg-green-500 text-white text-sm font-bold shadow-xl animate-scaleIn">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           Bilgiler başarıyla güncellendi.
         </div>
       )}
 
       {submitError && (
-        <div role="alert" aria-live="assertive" className="mb-4 p-3 rounded-[12px] bg-error/10 border border-error/20 text-error text-[13px] font-bold text-center">
+        <div role="alert" aria-live="assertive" className="mb-4 p-3 rounded-input bg-error/10 border border-error/20 text-error text-[13px] font-bold text-center">
           ⚠️ {submitError}
         </div>
       )}
@@ -330,7 +330,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
                 : ''
             }`}
           >
-            <div className="relative w-[120px] h-[120px] rounded-[28px] bg-gradient-to-br from-primary-soft to-white border-2 border-dashed border-primary/30 flex items-center justify-center overflow-hidden shadow-sm">
+            <div className="relative w-[120px] h-[120px] rounded-modal bg-gradient-to-br from-primary-soft to-white border-2 border-dashed border-primary/30 flex items-center justify-center overflow-hidden shadow-sm">
 
               {photoPreview ? (
                 photoPreview.startsWith('http') ? (
@@ -377,7 +377,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
               <label className="text-[13px] font-bold text-text-primary">Cinsiyet</label>
               <div className="flex gap-2">
                 {[['male', '♂ Erkek'], ['female', '♀ Dişi']].map(([v, l]) => (
-                  <label key={v} className={`flex-1 flex items-center justify-center p-3 border-2 rounded-[14px] cursor-pointer text-[13px] font-bold transition-all ${gender === v ? 'border-primary bg-primary-soft/30 text-primary' : 'border-border-main text-text-secondary'}`}>
+                  <label key={v} className={`flex-1 flex items-center justify-center p-3 border-2 rounded-input cursor-pointer text-[13px] font-bold transition-all ${gender === v ? 'border-primary bg-primary-soft/30 text-primary' : 'border-border-main text-text-secondary'}`}>
                     <input type="radio" name="gender" value={v} checked={gender === v} onChange={() => setGender(v)} className="sr-only"/>
                     {l}
                   </label>
@@ -469,7 +469,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
                      placeholder="Yaş (Örn: 1)"
                      value={approxYears}
                      onChange={e => handleApproxChange(e.target.value, approxMonths)}
-                     className="w-full h-14 !rounded-[16px] border-primary/20 bg-surface"
+                     className="w-full h-14 !rounded-card border-primary/20 bg-surface"
                    />
 
                    {/* Ay Girişi */}
@@ -478,13 +478,13 @@ export default function EditPetForm({ pet }: { pet: any }) {
                      placeholder="Ay (Örn: 4)"
                      value={approxMonths}
                      onChange={e => handleApproxChange(approxYears, e.target.value)}
-                     className="w-full h-14 !rounded-[16px] border-primary/20 bg-surface"
+                     className="w-full h-14 !rounded-card border-primary/20 bg-surface"
                    />
                  </div>
                )}
 
                {birthDate && (
-                 <div className="text-[13px] font-bold text-primary bg-primary-soft/40 px-4 py-2.5 rounded-[14px] border border-primary/20 mt-1 animate-scaleIn flex items-center gap-2">
+                 <div className="text-[13px] font-bold text-primary bg-primary-soft/40 px-4 py-2.5 rounded-input border border-primary/20 mt-1 animate-scaleIn flex items-center gap-2">
                    <span>✨</span>
                    <span>Hesaplanan Yaş: <strong>{calcAge(birthDate).text}</strong> ({calcAge(birthDate).label})</span>
                  </div>
@@ -556,7 +556,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
 
             <div className="flex flex-col gap-2 col-span-1 sm:col-span-2 mt-2">
               <label className="text-[13px] font-bold text-text-primary">Otomatik Hesaplanan Beden Büyüklüğü</label>
-              <div className="p-4 bg-primary-soft/20 border border-primary/20 rounded-[16px] flex items-center justify-between gap-3 animate-scaleIn flex-wrap">
+              <div className="p-4 bg-primary-soft/20 border border-primary/20 rounded-card flex items-center justify-between gap-3 animate-scaleIn flex-wrap">
                 <span className="text-[13px] font-bold text-text-secondary">
                   {breedSizeLabel(selectedBreed, species)}
                 </span>
@@ -565,7 +565,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
                     <select
                       value={size}
                       onChange={e => setSize(e.target.value)}
-                      className="text-xs font-bold border border-primary/30 rounded-[10px] px-2 py-1 bg-white text-primary focus:outline-none"
+                      className="text-xs font-bold border border-primary/30 rounded-lg px-2 py-1 bg-white text-primary focus:outline-none"
                     >
                       {species === 'dog' && <option value="toy">🧸 Oyuncak / Ekstra Küçük</option>}
                       <option value="small">🐩 Küçük</option>
@@ -655,7 +655,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
                     key={String(v)}
                     type="button"
                     onClick={() => setIsNeutered(v as boolean)}
-                    className={`flex-1 flex items-center justify-center p-3 border-2 rounded-[14px] cursor-pointer text-[13px] font-bold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+                    className={`flex-1 flex items-center justify-center p-3 border-2 rounded-input cursor-pointer text-[13px] font-bold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
                       isNeutered === v 
                         ? 'border-primary bg-primary-soft/30 text-primary' 
                         : 'border-border-main text-text-secondary'
@@ -673,7 +673,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
               <label className="text-[13px] font-bold text-text-primary">Yaşam Alanı</label>
               <div className="flex gap-3">
                 {[['indoor', '🏠 Tamamen Kapalı'], ['outdoor', '🌳 Dışarı Çıkan']].map(([v, l]) => (
-                  <label key={v} className={`flex-1 flex items-center justify-center p-3 border-2 rounded-[14px] cursor-pointer text-[13px] font-bold transition-all ${lifestyle === v ? 'border-primary bg-primary-soft/30 text-primary' : 'border-border-main text-text-secondary'}`}>
+                  <label key={v} className={`flex-1 flex items-center justify-center p-3 border-2 rounded-input cursor-pointer text-[13px] font-bold transition-all ${lifestyle === v ? 'border-primary bg-primary-soft/30 text-primary' : 'border-border-main text-text-secondary'}`}>
                     <input type="radio" name="lifestyle" value={v} checked={lifestyle === v} onChange={() => setLifestyle(v)} className="sr-only"/>
                     {l}
                   </label>

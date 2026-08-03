@@ -33,7 +33,7 @@ export default function Skeleton({ variant = 'text', lines = 3, className = '' }
       <div className={`flex flex-col ${className}`}>
         {Array.from({ length: lines }).map((_, i) => (
           <div key={i} className="flex items-center gap-3 px-4 py-3 border-b border-[var(--color-border)]">
-            <div className={`${pulse} w-9 h-9 rounded-[10px] shrink-0`} />
+            <div className={`${pulse} w-9 h-9 rounded-lg shrink-0`} />
             <div className="flex-1 flex flex-col gap-2">
               <SkeletonLine w="w-3/4" h="h-3" />
               <SkeletonLine w="w-1/2" h="h-2" />

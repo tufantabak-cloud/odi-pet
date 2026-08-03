@@ -116,7 +116,7 @@ export default function InviteAcceptPage({ params }: { params: Promise<{ token: 
         <div className="card-base max-w-md w-full overflow-hidden">
           <div className="h-1.5 bg-gradient-to-r from-primary to-primary-hover"/>
           <div className="p-8 flex flex-col items-center text-center gap-5">
-            <div className="w-20 h-20 rounded-[24px] bg-gradient-to-br from-primary-soft to-white flex items-center justify-center text-primary text-[40px] font-black shadow-md">
+            <div className="w-20 h-20 rounded-sheet bg-gradient-to-br from-primary-soft to-white flex items-center justify-center text-primary text-[40px] font-black shadow-md">
               {state.pet?.name?.charAt(0) ?? '🐾'}
             </div>
             <div>
@@ -166,7 +166,7 @@ export default function InviteAcceptPage({ params }: { params: Promise<{ token: 
         <div className="h-1.5 bg-gradient-to-r from-primary to-primary-hover"/>
         <div className="p-8 flex flex-col items-center text-center gap-5">
           {/* Pet Avatar */}
-          <div className="w-24 h-24 rounded-[24px] bg-gradient-to-br from-primary-soft to-white flex items-center justify-center text-primary text-[48px] font-black shadow-md ring-2 ring-border-main">
+          <div className="w-24 h-24 rounded-sheet bg-gradient-to-br from-primary-soft to-white flex items-center justify-center text-primary text-[48px] font-black shadow-md ring-2 ring-border-main">
             {invite?.pets?.name?.charAt(0) ?? '🐾'}
           </div>
 
