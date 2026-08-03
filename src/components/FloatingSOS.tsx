@@ -1,8 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useParams } from 'next/navigation'
+import dynamic from 'next/dynamic'
+
+const DynamicExperienceEngine = dynamic(
+  () => import('@/components/orchestrator/DynamicExperienceEngine'),
+  { ssr: false }
+)
 
 export default function FloatingSOS({
   petId,
@@ -28,10 +34,30 @@ export default function FloatingSOS({
   const [lostReport, setLostReport] = useState<any>(null)
   const [locating, setLocating] = useState(false)
 
+  // Orchestrator state
+  const [orchestratorActive, setOrchestratorActive] = useState(false)
+  const [orchestratorDone, setOrchestratorDone] = useState(false)
+
   const params = useParams()
   const activePetId = (params?.id as string) || petId
 
   useEffect(() => { setMounted(true) }, [])
+
+  // When orchestrator finishes (submitted or dismissed), open SOS modal
+  const handleOrchestratorDone = useCallback(() => {
+    setOrchestratorActive(false)
+    setOrchestratorDone(true)
+    setOpen(true)
+  }, [])
+
+  // Main handler for the SOS button
+  const handleSOSClick = useCallback(() => {
+    // Always activate the orchestrator first.
+    // If no campaign matches click_emergency_button, it renders nothing
+    // and we immediately fall through to the SOS modal.
+    setOrchestratorDone(false)
+    setOrchestratorActive(true)
+  }, [])
 
   useEffect(() => {
     if (open && activePetId) {
@@ -272,9 +298,19 @@ export default function FloatingSOS({
   if (fullWidth) {
     return (
       <>
+        {/* Orchestrator Engine — click_emergency_button trigger */}
+        {orchestratorActive && mounted && (
+          <DynamicExperienceEngine
+            contextTags={['emergency', 'sos']}
+            triggerEvent="click_emergency_button"
+            petId={activePetId ?? undefined}
+            onDone={handleOrchestratorDone}
+          />
+        )}
+        {/* If orchestrator had nothing to show, open SOS modal immediately */}
         {open && mounted && createPortal(modalContent, document.body)}
         <button
-          onClick={() => setOpen(true)}
+          onClick={handleSOSClick}
           className="relative w-full h-11 rounded-btn bg-[#fff0f0] border border-[#ffcccc] flex items-center justify-center gap-2 hover:bg-[#ffe5e5] active:scale-[0.98] transition-all duration-200 focus:outline-none overflow-hidden"
           aria-label="Acil SOS"
         >
@@ -289,9 +325,18 @@ export default function FloatingSOS({
 
   return (
     <>
+      {/* Orchestrator Engine — click_emergency_button trigger */}
+      {orchestratorActive && mounted && (
+        <DynamicExperienceEngine
+          contextTags={['emergency', 'sos']}
+          triggerEvent="click_emergency_button"
+          petId={activePetId ?? undefined}
+          onDone={handleOrchestratorDone}
+        />
+      )}
       {open && mounted && createPortal(modalContent, document.body)}
       <button
-        onClick={() => setOpen(true)}
+        onClick={handleSOSClick}
         className="relative w-12 h-12 rounded-full bg-error flex items-center justify-center shadow-md hover:bg-error/90 transition-all duration-300 hover:scale-105 active:scale-95 focus:outline-none"
         aria-label="Acil SOS"
       >

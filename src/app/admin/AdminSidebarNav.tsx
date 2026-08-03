@@ -15,6 +15,7 @@ import {
   BarChart3,
   Settings,
   Compass,
+  Wand2,
   LucideIcon
 } from 'lucide-react';
 
@@ -46,6 +47,7 @@ const navSections: NavSection[] = [
     title: 'Platform Servisleri',
     items: [
       { href: '/admin/content', label: 'İçerik Yönetimi', icon: BookOpen },
+      { href: '/admin/orchestrator', label: 'Deneyim Orkestratörü', icon: Wand2 },
       { href: '/admin/ai-vet', label: 'AI-Vet Analiz', icon: Sparkles },
       { href: '/admin/vaccines', label: 'Aşı Protokolleri', icon: Syringe },
       { href: '/admin/parasite-products', label: 'Parazit Ürünleri', icon: Bug }
