@@ -597,10 +597,16 @@ export default async function ProfileMenuPage({
         <section className="flex flex-col gap-2">
           <h2 className="text-xs font-bold text-text-secondary uppercase tracking-wider px-2">Destek Merkezi</h2>
           <div className="bg-white rounded-3xl divide-y divide-border-main text-sm font-semibold text-text-primary border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] overflow-hidden">
-            <div className="p-4 hover:bg-bg-main transition-all cursor-pointer flex justify-between items-center active:scale-[0.99]">
+            {/* /help.html public klasöründeki statik sayfa — Next Link değil <a> kullanılır. */}
+            <a
+              href="/help.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-4 hover:bg-bg-main transition-all cursor-pointer flex justify-between items-center active:scale-[0.99]"
+            >
               Yardım Merkezi (SSS)
               <HelpCircle className="w-4 h-4 text-text-secondary" />
-            </div>
+            </a>
             <div className="p-4 hover:bg-bg-main transition-all cursor-pointer flex justify-between items-center active:scale-[0.99]">
               Canlı Destek
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
