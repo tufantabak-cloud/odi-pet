@@ -265,7 +265,7 @@ export default function EditProfileForm({
               <Mail className="w-3.5 h-3.5 text-text-secondary" />
               E-posta Adresi
             </label>
-            <span className="text-3xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
+            <span className="text-2xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
               🔒 Oturum Hesabı
             </span>
           </div>
@@ -292,7 +292,7 @@ export default function EditProfileForm({
             placeholder="0555 555 5555"
           />
           {!phone && (
-            <p className="text-3xs font-medium text-amber-700 bg-amber-50 px-3 py-1 rounded-xl border border-amber-200/60 w-fit ml-1 mt-0.5">
+            <p className="text-2xs font-medium text-amber-700 bg-amber-50 px-3 py-1 rounded-xl border border-amber-200/60 w-fit ml-1 mt-0.5">
               💡 Veritabanınızda henüz kayıtlı bir telefon numarası bulunmuyor. Numaranızı yazıp <strong>"Değişiklikleri Kaydet"</strong> butonuna bastığınızda profilde saklanacaktır.
             </p>
           )}
@@ -421,7 +421,7 @@ export default function EditProfileForm({
                   <button
                     type="button"
                     onClick={handleCopyOwnerPhone}
-                    className="text-3xs font-bold text-rose-600 hover:underline bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100 transition-colors"
+                    className="text-2xs font-bold text-rose-600 hover:underline bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100 transition-colors"
                   >
                     Kendi Telefonumu Kullan
                   </button>
@@ -440,7 +440,7 @@ export default function EditProfileForm({
                 className="input-base rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 outline-none transition-all bg-white"
                 placeholder="0542 369 47 18"
               />
-              <p className="text-3xs font-medium text-slate-500 ml-1">
+              <p className="text-2xs font-medium text-slate-500 ml-1">
                 💡 Acil iletişim numarası kaydedildiğinde, Temel Kimlik Bilgilerindeki telefon kaydı olarak da otomatik kabul edilip eşlenir.
               </p>
             </div>

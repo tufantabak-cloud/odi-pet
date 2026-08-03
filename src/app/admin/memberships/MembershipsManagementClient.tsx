@@ -417,7 +417,7 @@ export default function MembershipsManagementClient({ riskUsers }: Props) {
                 />
                 <span className="text-2xs font-bold text-slate-500">Gün</span>
               </div>
-              <span className="text-3xs font-extrabold text-primary block text-center mt-1">
+              <span className="text-2xs font-extrabold text-primary block text-center mt-1">
                 Toplam: +{settings.referral_tier_1_days} Gün
               </span>
             </div>
@@ -436,7 +436,7 @@ export default function MembershipsManagementClient({ riskUsers }: Props) {
                 />
                 <span className="text-2xs font-bold text-slate-500">Bonus</span>
               </div>
-              <span className="text-3xs font-extrabold text-amber-600 block text-center mt-1">
+              <span className="text-2xs font-extrabold text-amber-600 block text-center mt-1">
                 Toplam: +{settings.referral_tier_1_days + settings.referral_tier_2_bonus} Gün
               </span>
             </div>
@@ -455,7 +455,7 @@ export default function MembershipsManagementClient({ riskUsers }: Props) {
                 />
                 <span className="text-2xs font-bold text-slate-500">Bonus</span>
               </div>
-              <span className="text-3xs font-extrabold text-amber-600 block text-center mt-1">
+              <span className="text-2xs font-extrabold text-amber-600 block text-center mt-1">
                 Toplam: +{settings.referral_tier_1_days + settings.referral_tier_3_bonus} Gün
               </span>
             </div>
@@ -474,7 +474,7 @@ export default function MembershipsManagementClient({ riskUsers }: Props) {
                 />
                 <span className="text-2xs font-bold text-slate-500">Bonus</span>
               </div>
-              <span className="text-3xs font-extrabold text-amber-600 block text-center mt-1">
+              <span className="text-2xs font-extrabold text-amber-600 block text-center mt-1">
                 Toplam: +{settings.referral_tier_1_days + settings.referral_tier_4_bonus} Gün
               </span>
             </div>
@@ -493,7 +493,7 @@ export default function MembershipsManagementClient({ riskUsers }: Props) {
                 />
                 <span className="text-2xs font-bold text-amber-800">Bonus</span>
               </div>
-              <span className="text-3xs font-black text-amber-700 block text-center mt-1">
+              <span className="text-2xs font-black text-amber-700 block text-center mt-1">
                 Toplam: +{settings.referral_tier_1_days + settings.referral_tier_5_bonus} Gün 👑
               </span>
             </div>
@@ -522,7 +522,7 @@ export default function MembershipsManagementClient({ riskUsers }: Props) {
 
           {/* Toplu Gruplar */}
           <div className="space-y-1.5">
-            <span className="text-3xs font-extrabold text-slate-400 uppercase tracking-widest block">
+            <span className="text-2xs font-extrabold text-slate-400 uppercase tracking-widest block">
               1. Toplu Kitle Grupları
             </span>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
@@ -595,7 +595,7 @@ export default function MembershipsManagementClient({ riskUsers }: Props) {
 
           {/* Seçmeli & Tekil İşlemler */}
           <div className="space-y-1.5 pt-1">
-            <span className="text-3xs font-extrabold text-slate-400 uppercase tracking-widest block">
+            <span className="text-2xs font-extrabold text-slate-400 uppercase tracking-widest block">
               2. Özel Seçim ve Tekil Gönderimler
             </span>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -759,15 +759,15 @@ export default function MembershipsManagementClient({ riskUsers }: Props) {
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-3xs font-extrabold uppercase">
+                        <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-2xs font-extrabold uppercase">
                           {u.role || 'owner'}
                         </span>
                         {u.premium_until && new Date(u.premium_until) > new Date() ? (
-                          <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 text-3xs font-extrabold">
+                          <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 text-2xs font-extrabold">
                             PRO
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-3xs font-bold">
+                          <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-2xs font-bold">
                             FREE
                           </span>
                         )}

@@ -219,7 +219,7 @@ export default async function ProfileMenuPage({
               <MapPin className="w-4 h-4" />
             </div>
             <div>
-              <div className="text-3xs font-bold text-teal-800 uppercase tracking-wider">Konum</div>
+              <div className="text-2xs font-bold text-teal-800 uppercase tracking-wider">Konum</div>
               <div className="text-sm font-extrabold text-slate-800 mt-0.5">
                 {(profile as any)?.city
                   ? `${(profile as any).city}${(profile as any)?.district ? `, ${(profile as any).district}` : ''}${(profile as any)?.neighborhood ? ` (${(profile as any).neighborhood})` : ''}`
@@ -234,7 +234,7 @@ export default async function ProfileMenuPage({
               <ShieldAlert className="w-4 h-4" />
             </div>
             <div className="flex flex-col gap-1 w-full">
-              <div className="text-3xs font-bold text-rose-800 uppercase tracking-wider">Acil Durum Kişileri</div>
+              <div className="text-2xs font-bold text-rose-800 uppercase tracking-wider">Acil Durum Kişileri</div>
               <div>
                 <div className="text-sm font-extrabold text-slate-800">
                   {(profile as any)?.emergency_contact_name || 'Tanımlanmadı'}
@@ -270,7 +270,7 @@ export default async function ProfileMenuPage({
               <Stethoscope className="w-4 h-4" />
             </div>
             <div>
-              <div className="text-3xs font-bold text-indigo-800 uppercase tracking-wider">Kayıtlı Veteriner</div>
+              <div className="text-2xs font-bold text-indigo-800 uppercase tracking-wider">Kayıtlı Veteriner</div>
               <div className="text-sm font-extrabold text-slate-800 mt-0.5">
                 {(profile as any)?.preferred_vet_name || 'Tanımlanmadı'}
               </div>
@@ -342,7 +342,7 @@ export default async function ProfileMenuPage({
               <div className="text-base font-black text-amber-950">
                 {isPremium ? (entitlement.daysLeft >= 3650 ? 'Sonsuz ♾️' : `${entitlement.daysLeft} Gün Kaldı`) : 'Free (Ücretsiz)'}
               </div>
-              <div className="text-3xs font-semibold text-amber-700">
+              <div className="text-2xs font-semibold text-amber-700">
                 {isPremium ? (entitlement.daysLeft >= 3650 ? 'Sınırsız Ömür Boyu Erişim' : `Son Gün: ${new Date(entitlement.validUntil!).toLocaleDateString('tr-TR')}`) : 'Pro avantajlar pasif'}
               </div>
             </div>
@@ -356,7 +356,7 @@ export default async function ProfileMenuPage({
               <div className="text-base font-black text-purple-950">
                 +{totalCreditDays >= 36500 ? 'Sonsuz ♾️' : `${totalCreditDays} Gün`}
               </div>
-              <div className="text-3xs font-semibold text-purple-700">
+              <div className="text-2xs font-semibold text-purple-700">
                 {userCredits?.length ?? 0} İşlem / Promosyon Hediye
               </div>
             </div>
@@ -370,7 +370,7 @@ export default async function ProfileMenuPage({
               <div className="text-base font-black text-emerald-950">
                 {totalReferredUsers} Kişi
               </div>
-              <div className="text-3xs font-semibold text-emerald-700">
+              <div className="text-2xs font-semibold text-emerald-700">
                 {qualifiedReferrals > 0 ? `${qualifiedReferrals} Nitelikli Kayıt Bonusu` : 'Arkadaşlarını davet et Pro kazan'}
               </div>
             </div>

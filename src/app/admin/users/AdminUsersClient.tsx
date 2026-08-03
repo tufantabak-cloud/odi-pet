@@ -45,7 +45,7 @@ interface UsersResponse {
 function SubscriptionBadge({ premiumUntil }: { premiumUntil?: string | null }) {
   if (!premiumUntil) {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-3xs font-extrabold bg-slate-100 text-slate-600 border border-slate-200">
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-2xs font-extrabold bg-slate-100 text-slate-600 border border-slate-200">
         Standart (Free)
       </span>
     )
@@ -59,7 +59,7 @@ function SubscriptionBadge({ premiumUntil }: { premiumUntil?: string | null }) {
   if (daysLeft > 0) {
     const isInfinite = daysLeft >= 3650
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-3xs font-black bg-amber-50 text-amber-700 border border-amber-300 shadow-xs">
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-2xs font-black bg-amber-50 text-amber-700 border border-amber-300 shadow-xs">
         <Crown className="w-3 h-3 text-amber-500 fill-amber-500" />
         Odi Pro ({isInfinite ? 'Sonsuz ♾️' : `${daysLeft} Gün`})
       </span>
@@ -67,7 +67,7 @@ function SubscriptionBadge({ premiumUntil }: { premiumUntil?: string | null }) {
   }
 
   return (
-    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-3xs font-extrabold bg-rose-50 text-rose-700 border border-rose-200">
+    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-2xs font-extrabold bg-rose-50 text-rose-700 border border-rose-200">
       Süresi Doldu
     </span>
   )
@@ -464,7 +464,7 @@ export default function AdminUsersClient() {
                           <button
                             type="button"
                             onClick={() => openSingleGrantModal(user)}
-                            className="px-2.5 py-1 rounded-lg text-3xs font-black bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 transition-all active:scale-[0.98] shadow-2xs flex items-center gap-1 shrink-0"
+                            className="px-2.5 py-1 rounded-lg text-2xs font-black bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 transition-all active:scale-[0.98] shadow-2xs flex items-center gap-1 shrink-0"
                             title="Kullanıcıya Hediye Pro Gün Yükle"
                           >
                             <Crown className="w-3 h-3 text-amber-600 fill-amber-500" />
