@@ -63,7 +63,7 @@ export default async function ClinicPetDetailPage({ params }: { params: Promise<
         <div className="p-6 sm:p-8 flex flex-col sm:flex-row gap-6 items-start sm:items-center">
           <div className="relative w-20 h-20 rounded-sheet bg-gradient-to-br from-primary-soft to-white flex items-center justify-center text-primary text-[36px] font-black shadow-sm ring-2 ring-border-main/50 shrink-0">
             {pet.avatar_url
-              ? <Image src={pet.avatar_url} fill={true} className="rounded-card object-cover" alt={pet.name}/>
+              ? <Image src={pet.avatar_url} fill={true} className="rounded-[20px] object-cover" alt={pet.name}/>
               : pet.name.charAt(0)
             }
           </div>

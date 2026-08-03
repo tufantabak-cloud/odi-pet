@@ -106,7 +106,7 @@ export default function MedicationManager({ petId, initialMedications }: Medicat
           const isLowStock = med.stock_enabled && med.stock !== null && med.stock !== undefined && med.stock <= (med.alert_threshold ?? 5);
           
           return (
-            <div key={med.id} className="p-4 bg-slate-50/70 border border-border-main rounded-card hover:bg-slate-50 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 group">
+            <div key={med.id} className="p-4 bg-slate-50/70 border border-border-main rounded-[20px] hover:bg-slate-50 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 group">
               <div className="flex items-start gap-3">
                 {med.photo_url ? (
                   <img src={med.photo_url} alt={med.medication_name} className="w-12 h-12 rounded-xl object-cover border border-slate-200 shrink-0" />

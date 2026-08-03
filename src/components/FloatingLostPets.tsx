@@ -92,7 +92,7 @@ export default function FloatingLostPets({ userCities }: { userCities: string[] 
           {lostReports.map((report) => (
             <div
               key={report.id}
-              className="border border-red-200 bg-red-50/50 rounded-card p-4 flex flex-col gap-3 relative shadow-sm"
+              className="border border-red-200 bg-red-50/50 rounded-[20px] p-4 flex flex-col gap-3 relative shadow-sm"
             >
               <div className="absolute top-4 right-4 w-3 h-3 bg-red-500 rounded-full animate-ping opacity-75" />
               <div className="flex items-center gap-3">

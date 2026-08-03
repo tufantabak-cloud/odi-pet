@@ -710,7 +710,7 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
               
               {/* Outer Crop Indicator Guide (Yine 3:4 oranlı kadraj overlay'i) */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none p-4 z-10">
-                <div className="w-[85%] aspect-[3/4] border-2 border-dashed border-primary rounded-card relative shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]">
+                <div className="w-[85%] aspect-[3/4] border-2 border-dashed border-primary rounded-[20px] relative shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]">
                   {/* L Corners */}
                   <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-white rounded-tl-md" />
                   <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-white rounded-tr-md" />

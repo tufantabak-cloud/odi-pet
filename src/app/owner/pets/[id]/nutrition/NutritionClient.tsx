@@ -987,7 +987,7 @@ export default function NutritionClient({
               icon={<UtensilsIcon className="w-5 h-5 text-amber-500" />}
               position="bottom"
             />
-            <div className="relative w-16 h-16 rounded-card bg-gradient-to-br from-primary-soft to-white border-2 border-primary/20 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+            <div className="relative w-16 h-16 rounded-[20px] bg-gradient-to-br from-primary-soft to-white border-2 border-primary/20 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
               {pet.avatar_url ? <Image src={pet.avatar_url} fill={true} className="object-cover" alt="" /> : (
                 <svg viewBox="0 0 32 32" className="w-8 h-8 drop-shadow-sm"><path d="M12 10c0-3.3 5.4-3.3 5.4 0 0 3.3 5.3 3.3 5.3 6.6S16 26 12 26 2.7 20 2.7 16.6C2.7 13.3 12 13.3 12 10z" fill="url(#nut-grad)" /><path d="M26 8c-2 0-3 2-3 4h6c0-2-1-4-3-4z" fill="#D1D5DB" /><defs><linearGradient id="nut-grad" x1="2" y1="8" x2="28" y2="28" gradientUnits="userSpaceOnUse"><stop stopColor="#EF4444" /><stop offset="1" stopColor="#B91C1C" /></linearGradient></defs></svg>
               )}

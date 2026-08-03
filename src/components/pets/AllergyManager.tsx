@@ -93,7 +93,7 @@ export default function AllergyManager({ petId, initialAllergies }: AllergyManag
       </div>
 
       {isAdding && (
-        <div className="mb-5 p-4 bg-slate-50 rounded-card border border-border-main animate-fadeInUp">
+        <div className="mb-5 p-4 bg-slate-50 rounded-[20px] border border-border-main animate-fadeInUp">
           <h4 className="text-[14px] font-black text-text-primary mb-3">Yeni Alerji Ekle</h4>
           <form onSubmit={handleAdd} className="flex flex-col gap-3">
             <div>

@@ -51,7 +51,7 @@ export default function CareClient({ pet }: { pet: any }) {
           icon="🛁"
           position="bottom"
         />
-        <div className="relative w-16 h-16 rounded-card bg-gradient-to-br from-primary-soft to-white border-2 border-primary/20 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+        <div className="relative w-16 h-16 rounded-[20px] bg-gradient-to-br from-primary-soft to-white border-2 border-primary/20 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
           {pet.avatar_url ? <Image src={pet.avatar_url} alt="" fill={true} className="object-cover" sizes="64px" /> : <span className="text-3xl">🛁</span>}
         </div>
         <div>

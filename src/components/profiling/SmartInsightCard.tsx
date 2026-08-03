@@ -26,7 +26,7 @@ export default function SmartInsightCard({ insight }: SmartInsightCardProps) {
   };
 
   return (
-    <div className="mb-6 animate-in fade-in slide-in-from-top-4 duration-500 shadow-[0_0_20px_rgba(239,68,68,0.1)] rounded-card">
+    <div className="mb-6 animate-in fade-in slide-in-from-top-4 duration-500 shadow-[0_0_20px_rgba(239,68,68,0.1)] rounded-[20px]">
       <SmartCardBanner
         title={insight.title}
         message={insight.message}

@@ -71,7 +71,7 @@ export const StepperInput = forwardRef<HTMLInputElement, StepperInputProps>(({
   };
 
   return (
-    <div className={`flex items-center p-1 border border-border-main rounded-card bg-white w-full sm:w-fit shadow-sm ${disabled ? 'opacity-60 pointer-events-none' : ''} ${className || ''}`}>
+    <div className={`flex items-center p-1 border border-border-main rounded-[20px] bg-white w-full sm:w-fit shadow-sm ${disabled ? 'opacity-60 pointer-events-none' : ''} ${className || ''}`}>
       <button 
         type="button" 
         onClick={handleDec} 

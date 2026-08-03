@@ -260,7 +260,7 @@ export default function PwaEnforcer() {
       <div className="relative w-full max-w-md bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-modal p-6 md:p-8 shadow-2xl flex flex-col items-center text-center">
         
         <div className="w-24 h-24 rounded-modal mb-6 shadow-[0_8px_32px_rgba(0,0,0,0.5)] animate-in fade-in zoom-in duration-500 flex items-center justify-center bg-white overflow-hidden p-1">
-          <Image src="/brand/app-icons/odi-icon-512.png" alt="Odi.Pet Logo" width={96} height={96} className="w-full h-full object-contain rounded-card" />
+          <Image src="/brand/app-icons/odi-icon-512.png" alt="Odi.Pet Logo" width={96} height={96} className="w-full h-full object-contain rounded-[20px]" />
         </div>
 
         {showPostInstallGuide ? (

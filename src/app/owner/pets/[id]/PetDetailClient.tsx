@@ -2111,7 +2111,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                   }
                 }}
                 data-testid={item.id === 'Bütçe' ? 'budget-module-button' : item.id === 'Raporlar' ? 'health-card-button' : undefined}
-                className={`relative overflow-hidden rounded-card p-4 flex flex-col items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-sm border ${isActive ? 'ring-2 ring-primary border-primary/20 bg-primary/5' : 'border-border-main/50 bg-white hover:bg-slate-50'}`}
+                className={`relative overflow-hidden rounded-[20px] p-4 flex flex-col items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-sm border ${isActive ? 'ring-2 ring-primary border-primary/20 bg-primary/5' : 'border-border-main/50 bg-white hover:bg-slate-50'}`}
               >
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl bg-gradient-to-br ${item.gradient} text-white shadow-inner`}>
                   {item.icon}
