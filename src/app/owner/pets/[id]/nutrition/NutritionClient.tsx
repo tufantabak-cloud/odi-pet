@@ -1065,7 +1065,7 @@ export default function NutritionClient({
             <div className="card-base p-5 border-l-4 border-l-primary flex flex-col gap-3 relative">
               <div className="flex items-start justify-between">
                 <div>
-                  <span className="bg-primary/10 text-primary text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                  <span className="bg-primary/10 text-primary text-[11px] font-medium px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                     Aktif Mama
                   </span>
                   <h3 className="font-extrabold text-text-primary text-lg mt-1 leading-tight">
@@ -1133,7 +1133,7 @@ export default function NutritionClient({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="card-base p-5 border-l-4 border-l-amber-500 flex flex-col justify-between">
               <div>
-                <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest mb-1">Mevcut Mama</p>
+                <p className="text-[11px] font-medium text-text-secondary uppercase tracking-widest mb-1">Mevcut Mama</p>
                 <p className="font-bold text-text-primary text-base leading-tight">
                   {activePrimary?.food_product_family?.brand?.display_name || activePrimary?.brand_free_text || 'Eklenmedi'}
                 </p>
@@ -1148,14 +1148,14 @@ export default function NutritionClient({
                 {/* Stok bilgisi girilmemişse veya duraklatılmışsa eski metin gösterim */}
                 {!hasInventory ? (
                   <div>
-                    <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest mb-1">Kalan Stok</p>
-                    <p className="font-black text-lg text-text-secondary">Stok bilgisi girilmedi</p>
+                    <p className="text-[11px] font-medium text-text-secondary uppercase tracking-widest mb-1">Kalan Stok</p>
+                    <p className="font-medium text-lg text-text-secondary">Stok bilgisi girilmedi</p>
                     <p className="text-[11px] font-bold text-text-secondary mt-0.5">Stok ve bitiş tarihini takip edin</p>
                   </div>
                 ) : stockStatus === 'paused' ? (
                   <div>
-                    <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest mb-1">Kalan Stok</p>
-                    <p className="font-black text-xl text-amber-500">
+                    <p className="text-[11px] font-medium text-text-secondary uppercase tracking-widest mb-1">Kalan Stok</p>
+                    <p className="font-bold text-xl text-amber-500">
                       {estimatedRemainingGrams >= 1000 ? `${(estimatedRemainingGrams / 1000).toFixed(1)} kg` : `${estimatedRemainingGrams} g`}
                     </p>
                     <p className="text-[11px] font-bold text-amber-600">Stok takibi duraklatıldı (Aktif mama yok)</p>
@@ -1563,7 +1563,7 @@ export default function NutritionClient({
                     }`}
                   >
                     <span>⚖️ Kilo (kg) *</span>
-                    {newWeightKg !== '' && <span className="px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-black">{newWeightKg} kg</span>}
+                    {newWeightKg !== '' && <span className="px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-medium">{newWeightKg} kg</span>}
                   </button>
 
                   <button
@@ -1577,7 +1577,7 @@ export default function NutritionClient({
                   >
                     <span>📏 Boy (cm)</span>
                     <span className="text-[11px] opacity-80">(Opsiyonel)</span>
-                    {newHeightCm !== '' && <span className="px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-black">{newHeightCm} cm</span>}
+                    {newHeightCm !== '' && <span className="px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-medium">{newHeightCm} cm</span>}
                   </button>
                 </div>
               </div>
@@ -1930,7 +1930,7 @@ export default function NutritionClient({
             <div className="p-3 bg-primary/5 border border-primary/20 rounded-xl flex justify-between items-center">
               <div>
                 <p className="text-[11px] font-bold text-primary uppercase">Seçilen Katalog Ürünü</p>
-                <p className="font-black text-base text-text-primary">
+                <p className="font-semibold text-base text-text-primary">
                   {selectedCatalogItem?.brand?.display_name || barcodeResult?.brand?.display_name}
                 </p>
                 <p className="text-xs text-text-secondary">
@@ -2454,7 +2454,7 @@ export default function NutritionClient({
           </p>
 
           <div className="flex flex-col gap-2 bg-bg-main p-3.5 rounded-xl border border-border-main">
-            <p className="text-xs font-black text-text-primary uppercase tracking-wide">Kalan Stok Ne Yapılsın?</p>
+            <p className="text-xs font-semibold text-text-primary uppercase tracking-wide">Kalan Stok Ne Yapılsın?</p>
             
             <label className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-surface cursor-pointer text-[13px] font-bold text-text-primary">
               <input

@@ -271,13 +271,13 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
       <div className="flex bg-slate-100/80 p-1.5 rounded-md border border-border-main/50">
         <button
           onClick={() => setActiveTab('reports')}
-          className={`flex-1 py-3 text-center text-[13px] font-black rounded-sm transition-all duration-200 ${activeTab === 'reports' ? 'bg-white text-primary shadow-sm scale-[1.02]' : 'text-text-secondary hover:text-text-primary'}`}
+          className={`flex-1 py-3 text-center text-[13px] font-semibold rounded-sm transition-all duration-200 ${activeTab === 'reports' ? 'bg-white text-primary shadow-sm scale-[1.02]' : 'text-text-secondary hover:text-text-primary'}`}
         >
           ✨ AI Raporları
         </button>
         <button
           onClick={() => setActiveTab('vault')}
-          className={`flex-1 py-3 text-center text-[13px] font-black rounded-sm transition-all duration-200 ${activeTab === 'vault' ? 'bg-white text-primary shadow-sm scale-[1.02]' : 'text-text-secondary hover:text-text-primary'}`}
+          className={`flex-1 py-3 text-center text-[13px] font-semibold rounded-sm transition-all duration-200 ${activeTab === 'vault' ? 'bg-white text-primary shadow-sm scale-[1.02]' : 'text-text-secondary hover:text-text-primary'}`}
         >
           📂 Belge Kasası
         </button>
@@ -287,12 +287,12 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
         <>
           {/* ── Harcama Özeti ── */}
           <div className="card-base p-5">
-            <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest mb-4">💰 Harcama Özeti</h3>
+            <h3 className="text-[13px] font-semibold text-text-secondary uppercase tracking-widest mb-4">💰 Harcama Özeti</h3>
             {payments && payments.length > 0 ? (
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between p-4 bg-primary-soft rounded-sm border border-primary/20">
-                  <span className="text-[13px] font-black text-text-primary uppercase tracking-wide">Toplam Harcama</span>
-                  <span className="text-2xl font-black text-primary">
+                  <span className="text-[13px] font-semibold text-text-primary uppercase tracking-wide">Toplam Harcama</span>
+                  <span className="text-2xl font-bold text-primary">
                     ₺{payments.reduce((sum: number, p: any) => sum + (parseFloat(p.amount) || 0), 0).toFixed(2)}
                   </span>
                 </div>
@@ -320,7 +320,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
 
           {/* Report type selector */}
           <div className="flex flex-col gap-3">
-            <h3 className="text-xs font-black text-text-secondary uppercase tracking-widest">Rapor Türü</h3>
+            <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-widest">Rapor Türü</h3>
             {REPORT_TYPES.map(rt => {
               const locked = planRank[rt.plan] > userRank
               return (
@@ -335,7 +335,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
                     <div className="flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-bold text-text-primary text-base">{rt.label}</p>
-                        <span className={`text-[11px] font-black px-2 py-0.5 rounded-full ${rt.badgeColor}`}>{rt.badge}</span>
+                        <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${rt.badgeColor}`}>{rt.badge}</span>
                         {locked && <span className="text-[11px] text-text-secondary">🔒 Kilidi Aç</span>}
                       </div>
                       <p className="text-xs text-text-secondary mt-0.5">{rt.desc}</p>
@@ -353,7 +353,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
 
           {/* Date range */}
           <div>
-            <label className="text-xs font-black text-text-secondary uppercase tracking-widest block mb-2">Tarih Aralığı</label>
+            <label className="text-xs font-medium text-text-secondary uppercase tracking-widest block mb-2">Tarih Aralığı</label>
             <div className="flex flex-wrap gap-2">
               {DATE_RANGES.map(dr => (
                 <button key={dr.value} onClick={() => setDateRange(dr.value)}
@@ -390,7 +390,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
               <div className="p-5">
                 <div className="flex items-start justify-between gap-3 mb-4">
                   <div>
-                    <p className="font-black text-text-primary text-base">Rapor Hazır ✓</p>
+                    <p className="font-semibold text-text-primary text-base">Rapor Hazır ✓</p>
                     <p className="text-xs text-text-secondary mt-0.5">
                       ID: <span className="font-mono">{report.verificationHash}</span>
                     </p>
@@ -408,7 +408,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
                     { label: 'Randevu', value: report.appointments?.length ?? 0 },
                   ].map(s => (
                     <div key={s.label} className="p-3 bg-bg-main rounded-sm text-center border border-border-main">
-                      <p className="text-2xl font-black text-text-primary">{s.value}</p>
+                      <p className="text-2xl font-bold text-text-primary">{s.value}</p>
                       <p className="text-[11px] font-bold text-text-secondary uppercase">{s.label}</p>
                     </div>
                   ))}

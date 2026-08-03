@@ -320,7 +320,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
 
         {/* ─── BÖLÜM 1: Temel Kimlik ─── */}
         <section id="temel-section" className="card-base p-6 sm:p-8 flex flex-col gap-6">
-          <h2 className="text-base font-black text-text-primary border-b border-border-main pb-3">1. Temel Kimlik ve Fotoğraf</h2>
+          <h2 className="text-base font-semibold text-text-primary border-b border-border-main pb-3">1. Temel Kimlik ve Fotoğraf</h2>
           
           <div 
             data-highlight="photo"
@@ -505,7 +505,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
                     }`}
                   >
                     <span>⚖️ Kilo (kg) *</span>
-                    {weightKg && <span className="px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-black">{weightKg} kg</span>}
+                    {weightKg && <span className="px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-medium">{weightKg} kg</span>}
                   </button>
 
                   <button
@@ -519,7 +519,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
                   >
                     <span>📏 Boy (cm)</span>
                     <span className="text-[11px] opacity-80">(Opsiyonel)</span>
-                    {heightCm && <span className="px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-black">{heightCm} cm</span>}
+                    {heightCm && <span className="px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-medium">{heightCm} cm</span>}
                   </button>
                 </div>
               </div>
@@ -574,7 +574,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
                       {species === 'dog' && <option value="giant">🦁 Dev</option>}
                     </select>
                   ) : (
-                    <span className="px-4 py-1.5 rounded-full text-[13px] font-black bg-primary text-white flex items-center gap-1.5 shadow-sm">
+                    <span className="px-4 py-1.5 rounded-full text-[13px] font-medium bg-primary text-white flex items-center gap-1.5 shadow-sm">
                       {size === 'toy' && '🧸 Oyuncak / Ekstra Küçük'}
                       {size === 'small' && '🐩 Küçük'}
                       {size === 'medium' && '🐕 Orta'}
@@ -609,7 +609,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
 
         {/* ─── BÖLÜM 2: Fiziksel Özellikler ─── */}
         <section id="fiziksel-section" className="card-base p-6 sm:p-8 flex flex-col gap-6">
-          <h2 className="text-base font-black text-text-primary border-b border-border-main pb-3">2. Fiziksel ve Yaşam Alanı</h2>
+          <h2 className="text-base font-semibold text-text-primary border-b border-border-main pb-3">2. Fiziksel ve Yaşam Alanı</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div className="flex flex-col gap-2">
               <label className="text-[13px] font-bold text-text-primary">Renk / Desen</label>
@@ -685,7 +685,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
 
         {/* ─── BÖLÜM 3: Evrak ve Veteriner ─── */}
         <section id="veteriner-section" className="card-base p-6 sm:p-8 flex flex-col gap-6">
-          <h2 className="text-base font-black text-text-primary border-b border-border-main pb-3 flex items-center justify-between flex-wrap gap-2">
+          <h2 className="text-base font-semibold text-text-primary border-b border-border-main pb-3 flex items-center justify-between flex-wrap gap-2">
             <span>3. Evrak & Veteriner Bilgisi</span>
             
             {!showDocScanner && (
@@ -772,7 +772,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
           }`}
         >
 
-          <h2 className="text-base font-black text-text-primary border-b border-border-main pb-3">4. Acil Durum Ağı</h2>
+          <h2 className="text-base font-semibold text-text-primary border-b border-border-main pb-3">4. Acil Durum Ağı</h2>
           <p className="text-xs text-text-secondary">Evcil dostunuza bir şey olursa aranacak kişiler.</p>
 
           {sosMsg && (
@@ -783,7 +783,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
 
           {[0, 1].map(i => (
             <div key={i} className="flex flex-col gap-3 p-4 bg-bg-main rounded-2xl border border-border-main">
-              <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest">
+              <p className="text-[11px] font-medium text-text-secondary uppercase tracking-widest">
                 {i === 0 ? 'Kişi 1 (Birincil)' : 'Kişi 2 (Yedek Bağlantı)'}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

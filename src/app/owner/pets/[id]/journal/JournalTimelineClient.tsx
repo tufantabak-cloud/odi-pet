@@ -273,7 +273,7 @@ export default function JournalTimelineClient({
 
       {/* AI Summary Section */}
       <div className="bg-gradient-to-br from-indigo-50/50 to-purple-50/50 dark:from-slate-900 dark:to-slate-800 rounded-sheet p-5 border border-primary/10 shadow-sm relative overflow-hidden">
-        <div className="absolute -right-4 -top-4 text-primary/5 text-[100px] font-black select-none pointer-events-none">✨</div>
+        <div className="absolute -right-4 -top-4 text-primary/5 text-[100px] font-bold select-none pointer-events-none">✨</div>
         <div className="relative z-10 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-extrabold text-primary flex items-center gap-2">
@@ -345,7 +345,7 @@ export default function JournalTimelineClient({
             <div key={group.label} className="flex flex-col gap-2">
               {/* Grup Başlığı */}
               <div className="flex items-center gap-3 px-1">
-                <span className="text-[11px] font-black text-text-secondary uppercase tracking-widest">
+                <span className="text-[11px] font-medium text-text-secondary uppercase tracking-widest">
                   {group.label}
                 </span>
                 <div className="flex-1 h-px bg-border-main/50" />

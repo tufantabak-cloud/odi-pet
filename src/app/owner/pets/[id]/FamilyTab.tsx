@@ -213,7 +213,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
       {/* Members List */}
       <div className="card-base overflow-hidden">
         <div className="px-5 py-3 bg-bg-main border-b border-border-main flex items-center justify-between">
-          <h3 className="text-xs font-black text-text-secondary uppercase tracking-widest">Bakım Ekibi</h3>
+          <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-widest">Bakım Ekibi</h3>
           <div className="flex items-center gap-2">
             {canManageCaregivers && (
               <button
@@ -268,7 +268,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
 
               return (
                 <div key={m.id} className="flex items-center gap-4 p-4 hover:bg-bg-main/50 transition-colors">
-                  <div className="w-10 h-10 rounded-full bg-primary-soft flex items-center justify-center text-primary font-black text-sm shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-primary-soft flex items-center justify-center text-primary font-semibold text-sm shrink-0">
                     {initials}
                   </div>
                   <div className="flex-1">
@@ -294,7 +294,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
                       <option value="viewer">Görüntüleyici</option>
                     </select>
                   ) : (
-                    <span className={`text-[11px] font-black px-2.5 py-1 rounded-full ${roleInfo.color}`}>
+                    <span className={`text-[11px] font-medium px-2.5 py-1 rounded-full ${roleInfo.color}`}>
                       {roleInfo.label}
                     </span>
                   )}
@@ -341,7 +341,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
       {invites.length > 0 && (
         <div className="card-base overflow-hidden">
           <div className="px-5 py-3 bg-bg-main border-b border-border-main">
-            <h3 className="text-xs font-black text-text-secondary uppercase tracking-widest">Bekleyen Davetler</h3>
+            <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-widest">Bekleyen Davetler</h3>
           </div>
           <div className="divide-y divide-border-main">
             {invites.map((inv: any) => (
@@ -354,7 +354,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-black px-2.5 py-1 rounded-full bg-amber-100 text-amber-700">Bekliyor</span>
+                  <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-amber-100 text-amber-700">Bekliyor</span>
                   {canManageCaregivers && (
                     <button
                       type="button"
@@ -375,7 +375,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
       {canManageCaregivers && (showInviteForm || inviteLink || inviteMsg?.type === 'err') && (
         <div className="card-base p-5 animate-fade-in border-2 border-primary/20">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-[13px] font-black text-text-secondary uppercase tracking-widest">Üye Davet Et & Yetkilendir</h3>
+            <h3 className="text-[13px] font-semibold text-text-secondary uppercase tracking-widest">Üye Davet Et & Yetkilendir</h3>
             <button
               type="button"
               onClick={() => setShowInviteForm(false)}
@@ -392,7 +392,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
               onClick={() => setInviteMode('qr')}
               className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                 inviteMode === 'qr'
-                  ? 'bg-white text-purple-700 shadow-xs font-black'
+                  ? 'bg-white text-purple-700 shadow-xs font-semibold'
                   : 'text-text-secondary hover:text-text-primary'
               }`}
             >
@@ -403,7 +403,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
               onClick={() => setInviteMode('email')}
               className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                 inviteMode === 'email'
-                  ? 'bg-white text-primary shadow-xs font-black'
+                  ? 'bg-white text-primary shadow-xs font-semibold'
                   : 'text-text-secondary hover:text-text-primary'
               }`}
             >
@@ -423,7 +423,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
               <div className="flex items-center gap-2">
                 <span className="text-xl">📱</span>
                 <h4 className="font-extrabold text-sm text-purple-950">Anında Yetkilendirme QR Kodu</h4>
-                <span className="px-2.5 py-0.5 rounded-full bg-purple-200 text-purple-800 text-2xs font-black uppercase">
+                <span className="px-2.5 py-0.5 rounded-full bg-purple-200 text-purple-800 text-2xs font-medium uppercase">
                   {ROLE_LABELS[role]?.label ?? role}
                 </span>
               </div>
@@ -519,7 +519,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
             <button
               type="submit"
               disabled={inviting}
-              className={`py-3 text-sm mt-1 rounded-2xl font-black text-white transition-all shadow-md ${
+              className={`py-3 text-sm mt-1 rounded-2xl font-semibold text-white transition-all shadow-md ${
                 inviteMode === 'qr'
                   ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700'
                   : 'btn-primary'
@@ -539,7 +539,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
       {activity.length > 0 && (
         <div className="card-base overflow-hidden">
           <div className="px-5 py-3 bg-bg-main border-b border-border-main">
-            <h3 className="text-xs font-black text-text-secondary uppercase tracking-widest">Ekip Aktivitesi</h3>
+            <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-widest">Ekip Aktivitesi</h3>
           </div>
           <div className="divide-y divide-border-main">
             {activity.map((a: any) => (

@@ -140,7 +140,7 @@ function SuccessContent() {
         </div>
 
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-text-primary mb-1 leading-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold text-text-primary mb-1 leading-tight">
             {activeStep === 5 ? `Aramıza Hoş Geldin, ${petName}! 🎉` : `${petName} İçin Son Adım! 🐾`}
           </h1>
           <p className="text-[13px] text-text-secondary px-2">
@@ -199,7 +199,7 @@ function SuccessContent() {
               <button
                 onClick={handleSubscribe}
                 disabled={isLoading || isInitializing}
-                className="w-full bg-gradient-to-r from-primary to-indigo-600 text-white py-4 text-base font-black shadow-lg hover:shadow-xl flex items-center justify-center gap-2.5 hover:scale-[1.01] active:scale-[0.99] transition-all rounded-xl cursor-pointer"
+                className="w-full bg-gradient-to-r from-primary to-indigo-600 text-white py-4 text-base font-semibold shadow-lg hover:shadow-xl flex items-center justify-center gap-2.5 hover:scale-[1.01] active:scale-[0.99] transition-all rounded-xl cursor-pointer"
               >
                 {isLoading || isInitializing ? (
                   <span className="flex items-center gap-2 justify-center">

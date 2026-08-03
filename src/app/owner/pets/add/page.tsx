@@ -384,7 +384,7 @@ function PetForm({
                 }`}
               >
                 <span>⚖️ Kilo (kg) *</span>
-                {weight && <span className="px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-black">{weight} kg</span>}
+                {weight && <span className="px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-medium">{weight} kg</span>}
               </button>
 
               <button
@@ -398,7 +398,7 @@ function PetForm({
               >
                 <span>📏 Boy (cm)</span>
                 <span className="text-[11px] opacity-80">(Opsiyonel)</span>
-                {height && <span className="px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-black">{height} cm</span>}
+                {height && <span className="px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-medium">{height} cm</span>}
               </button>
             </div>
           </div>
@@ -663,11 +663,11 @@ function PetPhotoStep({
               <span className="text-sm font-extrabold text-text-primary">Profil Fotoğrafı</span>
             </div>
             {hasPhoto ? (
-              <span className="text-[11px] font-black px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 flex items-center gap-1">
+              <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 flex items-center gap-1">
                 <span>✓</span> Seçildi
               </span>
             ) : (
-              <span className="text-[11px] font-black px-2.5 py-1 rounded-full bg-rose-100 text-rose-700">
+              <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-rose-100 text-rose-700">
                 * Zorunlu
               </span>
             )}
@@ -991,7 +991,7 @@ function PetSOSStep({
         <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-3 p-5 bg-error/[0.02] rounded-2xl border border-error/10 hover:border-error/30 transition-colors">
             <div className="flex justify-between items-center flex-wrap gap-2 mb-1">
-              <p className="text-[11px] font-black text-error uppercase tracking-widest">Kişi 1 (Birincil) *</p>
+              <p className="text-[11px] font-medium text-error uppercase tracking-widest">Kişi 1 (Birincil) *</p>
               
               <div className="flex items-center gap-1.5">
                 <span className="text-[11px] font-bold text-primary">Kişilerimden Seç:</span>
@@ -1108,7 +1108,7 @@ function PetSOSStep({
 
           <div className="flex flex-col gap-3 p-5 bg-bg-main rounded-2xl border border-border-main hover:border-text-secondary/30 transition-colors">
             <div className="flex justify-between items-center flex-wrap gap-2 mb-1">
-              <p className="text-[11px] font-black text-text-secondary uppercase tracking-widest">Kişi 2 (Yedek Bağlantı)</p>
+              <p className="text-[11px] font-medium text-text-secondary uppercase tracking-widest">Kişi 2 (Yedek Bağlantı)</p>
               
               <div className="flex items-center gap-1.5">
                 <span className="text-[11px] font-bold text-primary">Kişilerimden Seç:</span>

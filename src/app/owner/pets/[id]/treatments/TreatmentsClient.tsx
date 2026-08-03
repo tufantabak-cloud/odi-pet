@@ -56,7 +56,7 @@ export default function TreatmentsClient({ pet }: { pet: any }) {
             <span className="text-2xl">🩺</span>
           </div>
           <div>
-            <h1 className="text-2xl font-black text-text-primary">Sağlık Takip Modülü</h1>
+            <h1 className="text-2xl font-bold text-text-primary">Sağlık Takip Modülü</h1>
             <p className="text-sm text-text-secondary font-medium">{pet.name} için hastalık ve tedavi geçmişi</p>
           </div>
         </div>
