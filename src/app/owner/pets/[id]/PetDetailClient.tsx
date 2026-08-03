@@ -99,7 +99,7 @@ function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
           {error && <p className="text-xs text-error font-bold p-2 bg-error/10 rounded-xs text-center mt-1">{error}</p>}
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="flex-1 py-3.5 rounded-btn border-2 border-border-main text-text-secondary font-bold text-sm">İptal</button>
-            <button type="submit" disabled={loading} className="flex-[2] btn-primary py-3.5 disabled:opacity-50 shadow-sm text-sm">{loading ? 'Kaydediliyor...' : 'Kaydet ✓'}</button>
+            <button type="submit" disabled={loading} className="flex-[2] btn-primary py-3.5 disabled:opacity-50 shadow-sm text-sm flex items-center justify-center gap-1">{loading ? 'Kaydediliyor...' : <>Kaydet <Check size={14} className="w-3.5 h-3.5 text-white" aria-hidden="true" /></>}</button>
           </div>
         </form>
       </div>
@@ -860,7 +860,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         return (
           <span className="inline-flex items-center flex-wrap gap-1.5">
             <span>{dateText}</span>
-            <span className="text-success bg-success/10 px-2 py-0.5 rounded-md font-bold tracking-wide">✓ Tamamlandı</span>
+            <span className="text-success bg-success/10 px-2 py-0.5 rounded-md font-bold tracking-wide flex items-center gap-1"><Check size={12} className="w-3 h-3 text-success" aria-hidden="true" /> Tamamlandı</span>
           </span>
         )
       }
@@ -2462,8 +2462,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                   type="button"
                   onClick={saveCoverAdjustment}
                   disabled={savingAdjust}
-                  className="flex-[2] btn-primary py-3 disabled:opacity-50 text-sm shadow-md"
-                >{savingAdjust ? 'Kaydediliyor...' : 'Konumu Kaydet ✓'}</button>
+                  className="flex-[2] btn-primary py-3 disabled:opacity-50 text-sm shadow-md flex items-center justify-center gap-1"
+                >{savingAdjust ? 'Kaydediliyor...' : <>Konumu Kaydet <Check size={14} className="w-3.5 h-3.5 text-white" aria-hidden="true" /></>}</button>
               </div>
             </div>
           </div>

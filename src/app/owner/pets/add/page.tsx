@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { calcAge } from '@/lib/pets/utils'
 import { DefaultCatAvatar, DefaultDogAvatar, RulerIcon } from '@/components/icons/PetIcons'
-import { AlertTriangle, Sparkles, Scissors, Scale, Camera, X, Image as ImageIcon, Info, Siren } from 'lucide-react'
+import { AlertTriangle, Sparkles, Scissors, Scale, Camera, X, Image as ImageIcon, Info, Siren, Check } from 'lucide-react'
 const catSpeciesImage = '/brand/illustrations/species/cat.png'
 const dogSpeciesImage = '/brand/illustrations/species/dog.png'
 import { StepperInput } from '@/components/ui/StepperInput'
@@ -665,7 +665,7 @@ function PetPhotoStep({
             </div>
             {hasPhoto ? (
               <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 flex items-center gap-1">
-                <span>✓</span> Seçildi
+                <Check size={14} className="w-3.5 h-3.5 text-emerald-700" aria-hidden="true" /> Seçildi
               </span>
             ) : (
               <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-rose-100 text-rose-700">
@@ -1236,8 +1236,8 @@ function PetSOSStep({
                 Kaydediliyor...
               </span>
             ) : (
-              <span className="flex items-center justify-center gap-2">
-                Kaydet ve Tamamla ✓
+              <span className="flex items-center justify-center gap-1.5">
+                Kaydet ve Tamamla <Check size={16} className="w-4 h-4 text-white" aria-hidden="true" />
               </span>
             )}
           </button>
@@ -1458,7 +1458,7 @@ export default function AddPetPage() {
               <div key={s.id} className="flex items-center gap-2 flex-1">
                 <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold transition-all duration-300 w-full justify-center ${isCurrent ? 'bg-primary-soft/50 border-primary text-primary scale-[1.02] shadow-xs' : isCompleted ? 'bg-green-50 border-green-200 text-green-700' : 'bg-surface border-border-main text-text-secondary'}`}>
                   <div className={`w-4 h-4 rounded-full flex items-center justify-center text-2xs font-extrabold ${isCurrent ? 'bg-primary text-white' : isCompleted ? 'bg-green-500 text-white' : 'bg-gray-200 text-text-secondary'}`}>
-                    {isCompleted ? '✓' : s.id}
+                    {isCompleted ? <Check size={12} className="w-3 h-3 text-white" aria-hidden="true" /> : s.id}
                   </div>
                   <span className="truncate">{s.label}</span>
                 </div>

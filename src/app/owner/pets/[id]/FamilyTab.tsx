@@ -222,7 +222,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
                 onClick={() => setShowInviteForm(prev => !prev)}
                 className="px-3 py-1.5 text-xs font-bold text-primary bg-primary-soft hover:bg-primary/20 rounded-xl transition-all flex items-center gap-1 shadow-xs"
               >
-                <span>{showInviteForm ? '✕ Kapat' : '+ Üye Davet Et'}</span>
+                <span className="flex items-center gap-1">{showInviteForm ? <><X size={14} className="w-3.5 h-3.5" aria-hidden="true" /> Kapat</> : '+ Üye Davet Et'}</span>
               </button>
             )}
             {currentUserCanonicalRole && currentUserCanonicalRole !== 'primary_owner' && (
@@ -382,9 +382,9 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
             <button
               type="button"
               onClick={() => setShowInviteForm(false)}
-              className="text-[11px] font-bold text-text-secondary hover:text-text-primary px-2 py-1 rounded-lg hover:bg-bg-main"
+              className="text-[11px] font-bold text-text-secondary hover:text-text-primary px-2 py-1 rounded-lg hover:bg-bg-main flex items-center gap-1"
             >
-              ✕ Gizle
+              <X size={14} className="w-3.5 h-3.5" aria-hidden="true" /> Gizle
             </button>
           </div>
 
