@@ -37,7 +37,7 @@
 
   --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 
-  /* OPOS Typography Scale Tokens */
+  /* OPOS Typography Scale Tokens — sayısal ölçek (Tailwind uyumlu) */
   --text-2xs: 10px;
   --text-xs: 12px;
   --text-sm: 14px;
@@ -47,6 +47,59 @@
   --text-2xl: 24px;
   --text-3xl: 30px;
   --text-4xl: 36px;
+
+  /* ── OPOS Semantik Tipografi Ölçeği ────────────────────────────────────────
+     Kaynak: docs/opos-design-system/03_typography.md (GOVERNANCE LOCKED).
+     Rol tabanlı ölçek; yukarıdaki sayısal ölçeğin YERİNE değil YANINA eklendi.
+
+     ⚠️ ADLANDIRMA İSTİSNASI: 03_typography.md 11px token'ına "text-xs" adını
+     veriyor. Bu ad Tailwind'in yerleşik text-xs'i (12px) ile çakışıyor ve
+     uygulamada 866 kullanımı var; spec'i harfiyen uygulamak tüm uygulamada
+     metin küçültürdü. Çakışmayı önlemek için 11px token'ı "text-micro" olarak
+     adlandırıldı. Spec dokümanının buna göre güncellenmesi gerekiyor. */
+  --text-display: 32px;
+  --text-display--line-height: 1.15;
+  --text-display--letter-spacing: -0.025em;
+
+  --text-h1: 24px;
+  --text-h1--line-height: 1.2;
+  --text-h1--letter-spacing: -0.02em;
+
+  --text-h2: 20px;
+  --text-h2--line-height: 1.25;
+  --text-h2--letter-spacing: -0.015em;
+
+  --text-h3: 18px;
+  --text-h3--line-height: 1.3;
+  --text-h3--letter-spacing: -0.01em;
+
+  --text-h4: 16px;
+  --text-h4--line-height: 1.35;
+
+  --text-body-lg: 16px;
+  --text-body-lg--line-height: 1.5;
+
+  --text-body: 14px;
+  --text-body--line-height: 1.5;
+
+  --text-input: 16px;
+  --text-input--line-height: 1.5;
+
+  --text-label: 13px;
+  --text-label--line-height: 1.4;
+  --text-label--letter-spacing: 0.01em;
+
+  --text-button: 15px;
+  --text-button--line-height: 1;
+  --text-button--letter-spacing: 0.01em;
+
+  --text-caption: 12px;
+  --text-caption--line-height: 1.4;
+  --text-caption--letter-spacing: 0.02em;
+
+  --text-micro: 11px;
+  --text-micro--line-height: 1.3;
+  --text-micro--letter-spacing: 0.02em;
 }
 
 body {

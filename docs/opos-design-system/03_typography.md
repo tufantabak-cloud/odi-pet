@@ -60,7 +60,14 @@ Text scales follow a harmonized modular ratio. Headings use tight line heights (
 | **`text-label`** | `13px` (`0.8125rem`)| Semibold (`600`)| `1.4` (`18px`) | `0.01em` | Form field labels, Button text (compact) |
 | **`text-button`** | `15px` (`0.9375rem`)| Semibold (`600`)| `1.0` (`15px`) | `0.01em` | Standard OPButton text |
 | **`text-caption`** | `12px` (`0.75rem`)| Medium (`500`) | `1.4` (`17px`) | `0.02em` | Timestamps, Footers, Sub-badges |
-| **`text-xs`** | `11px` (`0.6875rem`)| Medium (`500`) | `1.3` (`14px`) | `0.02em` | Tiny status tags, Pill badges |
+| **`text-micro`** | `11px` (`0.6875rem`)| Medium (`500`) | `1.3` (`14px`) | `0.02em` | Tiny status tags, Pill badges |
+
+> **Adlandırma Notu (`text-micro`):** Bu token önceki sürümde `text-xs` adını
+> taşıyordu. Tailwind CSS'in yerleşik `text-xs` utility'si 12px olduğu ve
+> uygulamada 866 kullanımı bulunduğu için ad çakışması yaşanıyordu; spec'in
+> harfiyen uygulanması tüm uygulamada metin boyutunu küçültecekti. Token
+> `text-micro` olarak yeniden adlandırıldı. Uygulama karşılığı
+> `src/app/globals.css` `@theme` bloğunda `--text-micro: 11px` olarak tanımlıdır.
 
 ---
 
@@ -111,7 +118,7 @@ Text scales follow a harmonized modular ratio. Headings use tight line heights (
 - Apply `tracking-tight` (`-0.02em`) to large bold titles.
 
 ### DON'T
-- DO NOT use `text-xs` (12px or 11px) on form inputs or main body copy.
+- DO NOT use `text-caption` (12px) or `text-micro` (11px) on form inputs or main body copy.
 - DO NOT mix font families (e.g. Times New Roman, Comic Sans, ad-hoc Google Fonts).
 - DO NOT use pure black (`#000000`) for text; always use OPOS Navy (`#161B2A` / `var(--color-text-primary)`).
 
