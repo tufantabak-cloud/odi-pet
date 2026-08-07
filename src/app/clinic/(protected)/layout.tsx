@@ -1,6 +1,5 @@
 import { ReactNode } from 'react'
 import { requireRole } from '@/lib/auth/get-current-profile'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 
@@ -15,18 +14,7 @@ export default async function ClinicLayout({ children }: { children: ReactNode }
   const profile = await requireRole(['vet', 'admin', 'founder'])
   if (!profile) redirect('/login')
 
-  const supabase = await createServerSupabaseClient()
-  const { data: membership } = await supabase
-    .from('clinic_memberships')
-    .select('is_clinic_admin')
-    .eq('profile_id', profile.id)
-    .limit(1)
-    .maybeSingle()
-
-  const isAdmin =
-    profile.role === 'admin'
-    || profile.role === 'founder'
-    || membership?.is_clinic_admin === true
+  const isAdmin = profile.role === 'admin' || profile.role === 'founder'
   const initial = profile.first_name?.charAt(0)?.toUpperCase() ?? 'D'
 
   return (

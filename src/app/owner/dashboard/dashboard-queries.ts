@@ -120,18 +120,18 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
         }
 
         /* ── Pets (KRİTİK) ──────────────────────────────── */
-        let membershipPetIds: string[] = []
+        let petMembershipPetIds: string[] = []
 
-        const { data: memberships, error: membershipsError } = await supabase
-          .from('pet_memberships')
+        const { data: petMemberships, error: petMembershipsError } = await supabase
+          .from('pet_petMemberships')
           .select('pet_id')
           .eq('profile_id', uid)
           .eq('status', 'active')
 
-        if (membershipsError) {
+        if (petMembershipsError) {
           console.warn(
-            '[dashboard] pet_memberships fetch failed, falling back to legacy pet_members / owner_id:',
-            membershipsError.message
+            '[dashboard] pet_petMemberships fetch failed, falling back to legacy pet_members / owner_id:',
+            petMembershipsError.message
           )
 
           const [{ data: legacyMembers }, { data: ownedPets }] = await Promise.all([
@@ -141,19 +141,19 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
 
           const legacyIds = (legacyMembers ?? []).map((m: any) => m.pet_id)
           const ownedIds = (ownedPets ?? []).map((p: any) => p.id)
-          membershipPetIds = Array.from(new Set([...legacyIds, ...ownedIds]))
+          petMembershipPetIds = Array.from(new Set([...legacyIds, ...ownedIds]))
         } else {
-          membershipPetIds = Array.from(
-            new Set((memberships ?? []).map((membership) => membership.pet_id))
+          petMembershipPetIds = Array.from(
+            new Set((petMemberships ?? []).map((petMembership) => petMembership.pet_id))
           )
         }
 
-        const petResult = membershipPetIds.length === 0
+        const petResult = petMembershipPetIds.length === 0
           ? { data: [] as DashboardPet[], error: null }
           : await supabase
               .from('pets')
               .select('*')
-              .in('id', membershipPetIds)
+              .in('id', petMembershipPetIds)
               .order('created_at', { ascending: false })
 
         const { data: pets, error: petsError } = petResult

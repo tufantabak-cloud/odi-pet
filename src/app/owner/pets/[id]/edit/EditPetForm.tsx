@@ -9,7 +9,7 @@ import { SmartScanner } from '@/components/ui/SmartScanner'
 import { StepperInput } from '@/components/ui/StepperInput'
 import { RulerPicker } from '@/components/ui/RulerPicker'
 import { DefaultCatAvatar, DefaultDogAvatar, FirstAidIcon, RulerIcon } from '@/components/icons/PetIcons'
-import { PawPrint, Camera, AlertTriangle, Siren, Image as ImageIcon, CreditCard, Stethoscope, Scale, Sparkles } from 'lucide-react'
+import { PawPrint, Camera, AlertTriangle, Siren, Image as ImageIcon, CreditCard, Stethoscope, Scale, Sparkles, Building2 } from 'lucide-react'
 
 const CAT_BREEDS = [
   'British Shorthair', 'Scottish Fold', 'Scottish Straight',
@@ -154,6 +154,25 @@ export default function EditPetForm({ pet }: { pet: any }) {
   const [vetPhone, setVetPhone] = useState(pet.vet_phone || '')
   const [vetEmail, setVetEmail] = useState(pet.vet_email || '')
 
+  const [registrationCity, setRegistrationCity] = useState(pet.registration_city || '')
+  const [registrationDistrict, setRegistrationDistrict] = useState(pet.registration_district || '')
+  const [agricultureDirectorate, setAgricultureDirectorate] = useState(pet.agriculture_directorate || '')
+
+  const handleRegistrationCityChange = (city: string) => {
+    setRegistrationCity(city)
+    setRegistrationDistrict('')
+    setAgricultureDirectorate('')
+  }
+
+  const handleRegistrationDistrictChange = (district: string) => {
+    setRegistrationDistrict(district)
+    if (district) {
+      setAgricultureDirectorate(`${district} İlçe Tarım ve Orman Müdürlüğü`)
+    } else {
+      setAgricultureDirectorate('')
+    }
+  }
+
   const [sosContacts, setSosContacts] = useState<{name:string; phone:string; relation:string}[]>(
     pet.sos_contacts && pet.sos_contacts.length > 0
       ? pet.sos_contacts
@@ -238,6 +257,10 @@ export default function EditPetForm({ pet }: { pet: any }) {
     if (vetEmail) fd.set('vet_email', vetEmail)
     if (photoFile) fd.set('avatar', photoFile)
     
+    if (registrationCity) fd.set('registration_city', registrationCity)
+    if (registrationDistrict) fd.set('registration_district', registrationDistrict)
+    if (agricultureDirectorate) fd.set('agriculture_directorate', agricultureDirectorate)
+
     if (selectedCity) fd.set('city', selectedCity)
     if (selectedDistrict) fd.set('district', selectedDistrict)
     fd.set('is_neutered', String(isNeutered))
@@ -687,10 +710,10 @@ export default function EditPetForm({ pet }: { pet: any }) {
           )}
         </section>
 
-        {/* ─── BÖLÜM 3: Evrak ve Veteriner ─── */}
-        <section id="veteriner-section" className="card-base p-6 sm:p-8 flex flex-col gap-6">
+        {/* ─── BÖLÜM 3: Resmi Kurum Kayıtları ─── */}
+        <section id="resmi-kurum-section" className="card-base p-6 sm:p-8 flex flex-col gap-6">
           <h2 className="text-base font-semibold text-text-primary border-b border-border-main pb-3 flex items-center justify-between flex-wrap gap-2">
-            <span>3. Evrak & Veteriner Bilgisi</span>
+            <span>3. Resmi Kurum Kayıtları</span>
             
             {!showDocScanner && (
               <button type="button"
@@ -716,10 +739,20 @@ export default function EditPetForm({ pet }: { pet: any }) {
                 const parsed = data?.parsed || data
                 if (parsed?.microchip_no) setMicrochipNo(parsed.microchip_no)
                 if (parsed?.passport_no)  setPassportNo(parsed.passport_no)
+                if (parsed?.registration_city) setRegistrationCity(parsed.registration_city)
+                if (parsed?.registration_district) setRegistrationDistrict(parsed.registration_district)
+                if (parsed?.agriculture_directorate) {
+                  setAgricultureDirectorate(parsed.agriculture_directorate)
+                } else if (parsed?.registration_district) {
+                  setAgricultureDirectorate(`${parsed.registration_district} İlçe Tarım ve Orman Müdürlüğü`)
+                }
+                if (parsed?.vet_company)  setVetCompany(parsed.vet_company)
                 if (parsed?.vet_name)     setVetName(parsed.vet_name)
                 if (parsed?.vet_phone)    setVetPhone(parsed.vet_phone)
+                if (parsed?.vet_email)    setVetEmail(parsed.vet_email)
                 setShowDocScanner(false)
               }}
+
             />
           )}
 
@@ -747,24 +780,52 @@ export default function EditPetForm({ pet }: { pet: any }) {
               <label className="text-[13px] font-bold text-text-primary">Pasaport No</label>
               <input value={passportNo} onChange={e => setPassportNo(e.target.value)} className="input-base"/>
             </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-[13px] font-bold text-text-primary">Klinik / Şirket Adı</label>
-              <input value={vetCompany} onChange={e => setVetCompany(e.target.value)} placeholder="Örn: Pati Veteriner Kliniği" className="input-base"/>
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-[13px] font-bold text-text-primary">Veteriner Adı</label>
-              <input value={vetName} onChange={e => setVetName(e.target.value)} placeholder="Örn: Dr. Ali Yılmaz" className="input-base"/>
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-[13px] font-bold text-text-primary">Veteriner Telefonu</label>
-              <input value={vetPhone} onChange={e => setVetPhone(e.target.value)} type="tel" placeholder="05xx xxx xx xx" className="input-base"/>
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-[13px] font-bold text-text-primary">Veteriner E-posta</label>
-              <input value={vetEmail} onChange={e => setVetEmail(e.target.value)} type="email" placeholder="klinik@email.com" className="input-base"/>
+
+            <div className="col-span-1 sm:col-span-2 pt-4 border-t border-border-main flex flex-col gap-4">
+              <div className="flex items-center gap-2">
+                <Building2 size={18} className="text-primary" />
+                <span className="text-[13px] font-bold text-text-primary">Kayıtlı Olduğu İlçe Tarım ve Orman Müdürlüğü</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="flex flex-col gap-2">
+                  <label className="text-[13px] font-bold text-text-primary">Kayıtlı İl</label>
+                  <select 
+                    value={registrationCity} 
+                    onChange={e => handleRegistrationCityChange(e.target.value)} 
+                    className="input-base"
+                  >
+                    <option value="">İl seçin (opsiyonel)</option>
+                    {provinces.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+                  </select>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[13px] font-bold text-text-primary">Kayıtlı İlçe</label>
+                  <select 
+                    value={registrationDistrict} 
+                    onChange={e => handleRegistrationDistrictChange(e.target.value)} 
+                    disabled={!registrationCity}
+                    className="input-base disabled:bg-gray-50 disabled:text-gray-400"
+                  >
+                    <option value="">İlçe seçin (opsiyonel)</option>
+                    {registrationCity && provinces.find(p => p.name === registrationCity)?.districts?.sort((a:any, b:any) => a.name.localeCompare(b.name, 'tr')).map((d: any) => (
+                      <option key={d.id} value={d.name}>{d.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[13px] font-bold text-text-primary">Müdürlük Adı</label>
+                  <input 
+                    value={agricultureDirectorate} 
+                    onChange={e => setAgricultureDirectorate(e.target.value)} 
+                    placeholder="Örn: Kadıköy İlçe Tarım ve Orman Müdürlüğü" 
+                    className="input-base"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </section>
+
 
         <section 
           id="sos-section" 
@@ -834,6 +895,30 @@ export default function EditPetForm({ pet }: { pet: any }) {
             {sosSaving ? 'Kaydediliyor...' : <><Siren size={16} className="w-4 h-4 text-white" aria-hidden="true" /> Acil Durum Ağını Kaydet</>}
           </button>
         </section>
+
+        {/* ─── BÖLÜM 5: Veteriner Kayıtları ─── */}
+        <section id="veteriner-section" className="card-base p-6 sm:p-8 flex flex-col gap-6">
+          <h2 className="text-base font-semibold text-text-primary border-b border-border-main pb-3">5. Veteriner Kayıtları</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-text-primary">Klinik / Şirket Adı</label>
+              <input value={vetCompany} onChange={e => setVetCompany(e.target.value)} placeholder="Örn: Pati Veteriner Kliniği" className="input-base"/>
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-text-primary">Veteriner Adı</label>
+              <input value={vetName} onChange={e => setVetName(e.target.value)} placeholder="Örn: Dr. Ali Yılmaz" className="input-base"/>
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-text-primary">Veteriner Telefonu</label>
+              <input value={vetPhone} onChange={e => setVetPhone(e.target.value)} type="tel" placeholder="05xx xxx xx xx" className="input-base"/>
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-text-primary">Veteriner E-posta</label>
+              <input value={vetEmail} onChange={e => setVetEmail(e.target.value)} type="email" placeholder="klinik@email.com" className="input-base"/>
+            </div>
+          </div>
+        </section>
+
 
         {(() => {
           const enrichTasks: { label: string; icon: React.ReactNode }[] = []

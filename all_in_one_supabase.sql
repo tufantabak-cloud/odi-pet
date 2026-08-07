@@ -323,7 +323,11 @@ ALTER TABLE public.pets
 
 ALTER TABLE public.pets 
   ADD COLUMN city text,
-  ADD COLUMN district text;
+  ADD COLUMN district text,
+  ADD COLUMN IF NOT EXISTS registration_city text,
+  ADD COLUMN IF NOT EXISTS registration_district text,
+  ADD COLUMN IF NOT EXISTS agriculture_directorate text;
+
 
 
 

@@ -5,6 +5,7 @@ import FormModal from '@/components/ui/FormModal'
 import Input from '@/components/ui/primitives/Input'
 import Button from '@/components/ui/primitives/Button'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+import { ShieldAlert, MapPin, CheckCircle2, Edit2 } from 'lucide-react'
 
 interface SmartAddressPromptProps {
   open: boolean
@@ -19,6 +20,7 @@ export default function SmartAddressPrompt({
   onClose,
   onSubmit,
   uiConfig,
+  displayType,
 }: SmartAddressPromptProps) {
   const [postalCode, setPostalCode] = useState('')
   const [city, setCity] = useState('')
@@ -232,15 +234,24 @@ export default function SmartAddressPrompt({
     <FormModal
       open={open}
       title={(uiConfig?.title as string) || 'Acil Durum Konum & İletişim'}
-      description={(uiConfig?.description as string) || 'Acil durumlarda en yakın veteriner ve ambulans yönlendirmesi için konum bilginizi doğrulayın.'}
+      description=""
       icon="🚨"
       iconBg="bg-red-100"
+      displayType={displayType}
       onClose={onClose}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Bilgilendirme Uyarısı (Açık Adres Alınmaz Açıklaması) */}
-        <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 leading-relaxed font-medium">
-          ℹ️ <strong>Acil Durum Konum Doğrulama:</strong> Bu alanda açık/tam adres kaydı alınmaz. Yalnızca GPS veya Posta Kodu ile eşleşen <strong>İl, İlçe ve Mahalle</strong> bilgileri kaydedilir.
+        {/* OPOS Uyumlu Bilgilendirme Uyarısı (Açık Adres Alınmaz Açıklaması) */}
+        <div className="p-4 bg-amber-50/90 border border-amber-200/80 rounded-2xl flex items-start gap-3 text-amber-950 shadow-sm">
+          <div className="p-2 bg-amber-100/90 rounded-xl text-amber-800 shrink-0 mt-0.5">
+            <ShieldAlert size={18} className="w-4.5 h-4.5" />
+          </div>
+          <div className="space-y-1">
+            <h4 className="text-xs font-bold text-amber-950 tracking-tight">Acil Durum Konum Doğrulama</h4>
+            <p className="text-[13px] leading-relaxed text-amber-900 font-normal">
+              Bu alanda açık/tam adres kaydı <strong>alınmaz</strong>. Yalnızca GPS veya Posta Kodu ile eşleşen <strong>İl, İlçe ve Mahalle</strong> bilgileri kaydedilir.
+            </p>
+          </div>
         </div>
 
         {/* 📍 1. ADIM: GPS Konumu İle Otomatik Bul */}

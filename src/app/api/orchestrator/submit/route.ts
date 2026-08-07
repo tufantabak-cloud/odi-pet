@@ -1,6 +1,8 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
+import { checkFeatureAccess } from '@/lib/features/entitlement/engine'
+import { hasPetCapability } from '@/lib/pets/access'
 
 // Request validation schema
 const submitRequestSchema = z.object({
@@ -8,6 +10,27 @@ const submitRequestSchema = z.object({
   payload: z.record(z.string(), z.any()), // The form data submitted by the client
   pet_id: z.string().uuid().optional(),
 })
+
+// Specific payload schema for monthly growth
+const monthlyGrowthPayloadSchema = z.object({
+  _event: z.string().optional(),
+  image_url: z.string().url().optional(), // optional if dismissed
+  caption: z.string().trim().max(200).optional(),
+  taken_at: z.string().datetime().optional(),
+})
+
+const GALLERY_BUCKET = 'pet_gallery_bucket'
+
+/**
+ * image_url yalnizca projenin kendi storage'ina, dogru bucket'a ve dogru pet
+ * klasorune ait olabilir. Baska bucket / baska pet klasoru / harici URL reddedilir.
+ */
+function isAllowedGalleryUrl(imageUrl: string, petId: string): boolean {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL
+  if (!base) return false
+  const expectedPrefix = `${base.replace(/\/$/, '')}/storage/v1/object/public/${GALLERY_BUCKET}/${petId}/`
+  return imageUrl.startsWith(expectedPrefix)
+}
 
 export async function POST(request: Request) {
   try {
@@ -23,6 +46,9 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { prompt_id, payload, pet_id } = submitRequestSchema.parse(body)
 
+    // Check if dismissed early return
+    const eventType = payload._event === 'dismissed' ? 'dismissed' : 'completed'
+
     // 3. Securely lookup the mutation_action from the database
     // The client NEVER sends the mutation_action directly to prevent injection.
     const { data: prompt, error: promptError } = await supabase
@@ -37,27 +63,113 @@ export async function POST(request: Request) {
 
     const { mutation_action, campaign_id } = prompt
 
-    // 4. Log the 'completed' event in orchestrator_analytics
-    const { error: analyticsError } = await supabase
-      .from('orchestrator_analytics')
-      .insert({
-        campaign_id: campaign_id,
-        prompt_id: prompt_id,
-        profile_id: user.id,
-        event_type: 'completed',
-        event_data: { payload_snapshot: payload }
-      })
+    // 4. Analytics helper.
+    // ONEMLI: 'completed' kaydi YALNIZCA mutasyon basariyla tamamlandiktan sonra
+    // yazilir. Aksi halde reddedilen (403/400/500) istekler de tamamlanmis sayilir
+    // ve kullanici gereksiz yere cooldown'a girer.
+    const logEvent = async (
+      event_type: 'completed' | 'dismissed' | 'failed_validation',
+      event_data: Record<string, unknown>
+    ) => {
+      const { error: analyticsError } = await supabase
+        .from('orchestrator_analytics')
+        .insert({
+          campaign_id: campaign_id,
+          prompt_id: prompt_id,
+          profile_id: user.id,
+          event_type,
+          event_data,
+        })
 
-    if (analyticsError) {
-      console.error('[Orchestrator Analytics Error]', analyticsError)
-      // Continue anyway — analytics failure should not block the actual mutation
+      if (analyticsError) {
+        console.error('[Orchestrator Analytics Error]', analyticsError)
+        // Analytics hatasi akisi bloklamaz
+      }
+    }
+
+    /** Dogrulama/yetki hatalarinda: failed_validation logla + hata yanitini dondur. */
+    const fail = async (
+      reason: string,
+      status: number,
+      extra: Record<string, unknown> = {}
+    ) => {
+      await logEvent('failed_validation', { reason, ...extra })
+      return NextResponse.json({ error: reason, ...extra }, { status })
+    }
+
+    // Early return if dismissed, no mutation needed
+    if (eventType === 'dismissed') {
+      await logEvent('dismissed', { payload_snapshot: payload })
+      return NextResponse.json({ success: true, action: mutation_action, result: 'dismissed' })
     }
 
     // 5. Route to the correct canonical mutation service
-    // Each case calls the project's existing SSOT-compliant canonical service.
     let result = null
 
     switch (mutation_action) {
+      case 'SAVE_MONTHLY_GROWTH': {
+        console.log(`[Mutation Router] Executing SAVE_MONTHLY_GROWTH for user ${user.id}`)
+        if (!pet_id) {
+          return await fail('pet_id_required', 400)
+        }
+
+        // Validate payload
+        const growthPayload = monthlyGrowthPayloadSchema.safeParse(payload)
+        if (!growthPayload.success) {
+          return await fail('invalid_payload', 400)
+        }
+
+        const { image_url, caption, taken_at } = growthPayload.data
+        if (!image_url) {
+          return await fail('image_url_required', 400)
+        }
+
+        // Storage whitelist: dogru proje + dogru bucket + dogru pet klasoru
+        if (!isAllowedGalleryUrl(image_url, pet_id)) {
+          return await fail('invalid_image_url_source', 400)
+        }
+
+        // taken_at gelecege tarihlenemez
+        const takenAtIso = taken_at || new Date().toISOString()
+        if (new Date(takenAtIso).getTime() > Date.now() + 60_000) {
+          return await fail('taken_at_in_future', 400)
+        }
+
+        // Capability check (IDOR Protection)
+        const isPrimaryOwner = await hasPetCapability(supabase, pet_id, 'is_primary_pet_owner')
+        if (!isPrimaryOwner) {
+          return await fail('forbidden', 403)
+        }
+
+        // Quota check via Premium Engine
+        const access = await checkFeatureAccess({ userId: user.id, featureKey: 'gallery_capacity' })
+        
+        if (!access.allowed) {
+          // Yetim dosya temizligi istemci tarafinda 403 yanitiyla tetiklenir.
+          return await fail('gallery_quota_exceeded', 403, { reason: access.reason, upgrade_required: true })
+        }
+
+        // Insert into canonical gallery table
+        const { error: insertError } = await supabase
+          .from('pet_gallery')
+          .insert({
+            pet_id: pet_id,
+            user_id: user.id,
+            image_url: image_url,
+            caption: caption || 'Aylık Gelişim Fotoğrafı',
+            category: 'growth_timeline',
+            taken_at: takenAtIso,
+          })
+
+        if (insertError) {
+          console.error('[Mutation Router] SAVE_MONTHLY_GROWTH insert error:', insertError)
+          return await fail('save_failed', 500)
+        }
+
+        result = { action: 'SAVE_MONTHLY_GROWTH', success: true }
+        break
+      }
+
       case 'SAVE_ADDRESS': {
         console.log(`[Mutation Router] Executing SAVE_ADDRESS for user ${user.id}`, payload)
 
@@ -70,7 +182,6 @@ export async function POST(request: Request) {
         const emergencyPhone = typeof payload.emergency_phone === 'string' ? payload.emergency_phone : null
         const latitude = typeof payload.latitude === 'number' ? payload.latitude : null
         const longitude = typeof payload.longitude === 'number' ? payload.longitude : null
-
         const postalCode = typeof payload.postal_code === 'string' ? payload.postal_code : null
 
         // 1. Update user profile with address and emergency phone (SSOT for /owner/profile/edit)
@@ -136,19 +247,16 @@ export async function POST(request: Request) {
       }
 
       case 'SAVE_WEIGHT':
-        // TODO: Wire to canonical createWeightLog({ pet_id, weight: payload.weight })
         console.log(`[Mutation Router] Executing SAVE_WEIGHT for user ${user.id}, pet ${pet_id}`)
         result = { action: 'SAVE_WEIGHT', success: true }
         break
 
       case 'SAVE_VACCINE':
-        // TODO: Wire to canonical createVaccineRecord()
         console.log(`[Mutation Router] Executing SAVE_VACCINE for user ${user.id}`)
         result = { action: 'SAVE_VACCINE', success: true }
         break
 
       case 'SAVE_FOOD':
-        // TODO: Wire to canonical createFoodRecord()
         console.log(`[Mutation Router] Executing SAVE_FOOD for user ${user.id}`)
         result = { action: 'SAVE_FOOD', success: true }
         break
@@ -165,8 +273,11 @@ export async function POST(request: Request) {
 
       default:
         console.warn(`[Mutation Router] Unknown mutation_action: ${mutation_action}`)
-        return NextResponse.json({ error: 'Unsupported mutation action' }, { status: 400 })
+        return await fail('unsupported_mutation_action', 400)
     }
+
+    // Mutasyon basarili — 'completed' YALNIZCA burada yazilir.
+    await logEvent('completed', { payload_snapshot: payload })
 
     return NextResponse.json({ success: true, result })
 

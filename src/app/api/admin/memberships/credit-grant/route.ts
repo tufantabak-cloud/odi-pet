@@ -29,26 +29,33 @@ export async function POST(req: NextRequest) {
     let query = adminSupabase.from('profiles').select('id')
 
     if (target_mode === 'all') {
-      // Tüm kullanıcılar
-    } else if (target_mode === 'free') {
-      query = query.or(`premium_until.is.null,premium_until.lte.${nowISO}`)
-    } else if (target_mode === 'active_premium') {
-      query = query.gt('premium_until', nowISO)
-    } else if (target_mode === 'churn_risk') {
-      query = query.gt('premium_until', nowISO).lte('premium_until', in30DaysISO)
-    } else if (target_mode === 'role_owner') {
-      query = query.eq('role', 'owner')
-    } else if (target_mode === 'role_vet') {
-      query = query.eq('role', 'vet')
-    } else if (target_mode === 'role_admin') {
-      query = query.in('role', ['admin', 'founder'])
+      const { data: matchedProfiles } = await adminSupabase.from('profiles').select('id')
+      targetUserIds = matchedProfiles?.map(p => p.id) ?? []
+    } else if (['free', 'active_premium', 'churn_risk'].includes(target_mode)) {
+      const { data: subs } = await adminSupabase.from('user_subscriptions').select('profile_id, plan, status');
+      const proIds = subs?.filter(s => ['pro', 'ai_plus'].includes(s.plan) && s.status === 'active').map(s => s.profile_id) || [];
+      
+      if (target_mode === 'active_premium' || target_mode === 'churn_risk') {
+        targetUserIds = proIds;
+      } else if (target_mode === 'free') {
+        const { data: allProfiles } = await adminSupabase.from('profiles').select('id');
+        targetUserIds = (allProfiles || []).map(p => p.id).filter(id => !proIds.includes(id));
+      }
+    } else {
+      let query = adminSupabase.from('profiles').select('id')
+      if (target_mode === 'role_owner') {
+        query = query.eq('role', 'owner')
+      } else if (target_mode === 'role_vet') {
+        query = query.eq('role', 'vet')
+      } else if (target_mode === 'role_admin') {
+        query = query.in('role', ['admin', 'founder'])
+      }
+      const { data: matchedProfiles, error: queryErr } = await query
+      if (queryErr) {
+        return NextResponse.json({ error: `Grup kullanıcıları getirilemedi: ${queryErr.message}` }, { status: 500 })
+      }
+      targetUserIds = matchedProfiles?.map(p => p.id) ?? []
     }
-
-    const { data: matchedProfiles, error: queryErr } = await query
-    if (queryErr) {
-      return NextResponse.json({ error: `Grup kullanıcıları getirilemedi: ${queryErr.message}` }, { status: 500 })
-    }
-    targetUserIds = matchedProfiles?.map(p => p.id) ?? []
   } else if (Array.isArray(user_ids) && user_ids.length > 0) {
     // Çözümleme: E-posta adresi veya UUID girilmiş olabilir
     const emails = user_ids.filter((item: string) => item.includes('@'))
@@ -100,77 +107,24 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // 2. Profile güncellemesi (hem premium_until hem de pro_trial_until kolonlarını güncelle)
-    const { data: currentProf } = await adminSupabase
-      .from('profiles')
-      .select('premium_until, pro_trial_until')
-      .eq('id', targetUserId)
-      .maybeSingle()
-
-    const now = new Date()
-    const rawUntil = currentProf?.premium_until || (currentProf as any)?.pro_trial_until
-    const currentUntil = rawUntil ? new Date(rawUntil) : now
-    const baseDate = currentUntil > now ? currentUntil : now
-
-    let newUntil: Date
-    if (creditDays >= 3650) {
-      // Sonsuz / Ömür boyu için 2099 yılı
-      newUntil = new Date('2099-12-31T23:59:59.000Z')
-    } else {
-      newUntil = new Date(baseDate.getTime() + creditDays * 86400000)
-    }
-
-    const isoDate = newUntil.toISOString()
-
-    // A) Bileşik güncelleme dene
-    let { error: updateErr } = await adminSupabase
-      .from('profiles')
-      .update({
-        premium_until: isoDate,
-        pro_trial_until: isoDate,
-        premium_tier: 'pro',
+    // Legacy premium_tier update removed.
+    // C) Kredi defterine (membership_credits) yazımı garanti et
+    try {
+      await adminSupabase.from('membership_credits').insert({
+        profile_id: targetUserId,
+        credit_days: creditDays,
+        reason: creditReason,
+        idempotency_key: idempotencyKey,
+        metadata: {
+          granted_by: user.id,
+          note: note || 'Admin tarafından hediye edildi.',
+          granted_at: new Date().toISOString(),
+        },
       })
-      .eq('id', targetUserId)
-
-    if (updateErr) {
-      // B) Kolonlardan biri yoksa tekli güncellemeleri dene
-      const { error: err1 } = await adminSupabase
-        .from('profiles')
-        .update({ premium_until: isoDate })
-        .eq('id', targetUserId)
-
-      const { error: err2 } = await adminSupabase
-        .from('profiles')
-        .update({ pro_trial_until: isoDate })
-        .eq('id', targetUserId)
-
-      if (!err1 || !err2) {
-        updateErr = null
-      }
+    } catch (insErr: any) {
+      console.warn(`[AdminCreditGrant] membership_credits insert skipped:`, insErr?.message)
     }
-
-    if (updateErr) {
-      console.error(`[AdminCreditGrant] Failed for ${targetUserId}:`, updateErr)
-      results.push({ userId: targetUserId, success: false, error: updateErr.message })
-    } else {
-      // C) Kredi defterine (membership_credits) yazımı garanti et
-      try {
-        await adminSupabase.from('membership_credits').insert({
-          profile_id: targetUserId,
-          credit_days: creditDays,
-          reason: creditReason,
-          idempotency_key: idempotencyKey,
-          metadata: {
-            granted_by: user.id,
-            note: note || 'Admin tarafından hediye edildi.',
-            granted_at: new Date().toISOString(),
-          },
-        })
-      } catch (insErr: any) {
-        console.warn(`[AdminCreditGrant] membership_credits insert skipped:`, insErr?.message)
-      }
-      results.push({ userId: targetUserId, success: true })
-    }
+    results.push({ userId: targetUserId, success: true })
   }
 
   const successCount = results.filter(r => r.success).length

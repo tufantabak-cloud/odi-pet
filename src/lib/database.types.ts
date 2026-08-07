@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -5617,8 +5617,11 @@ export type Database = {
           cover_position: string | null
           cover_url: string | null
           created_at: string | null
+          agriculture_directorate: string | null
           data_quality_score: number | null
           district: string | null
+          registration_city: string | null
+          registration_district: string | null
           engagement_score: number | null
           gender: string | null
           health_history_status: string | null

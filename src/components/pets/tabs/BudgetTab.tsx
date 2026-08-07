@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { Database } from '@/types'
+import { useFeature } from '@/lib/features/hooks'
+import { PremiumContent } from '@/components/premium/PremiumContent'
+import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 
 type PetRow = Database['public']['Tables']['pets']['Row']
 
@@ -22,6 +25,20 @@ interface Expense {
 }
 
 export default function BudgetTab({ pet }: { pet: PetRow }) {
+  const [currentUserId, setCurrentUserId] = useState<string>('')
+  
+  useEffect(() => {
+    const fetchUser = async () => {
+      const supabase = createBrowserSupabaseClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) setCurrentUserId(session.user.id)
+    }
+    fetchUser()
+  }, [])
+
+  const analyticsFeature = useFeature({ userId: currentUserId, featureKey: 'budget_analytics' })
+  const exportFeature = useFeature({ userId: currentUserId, featureKey: 'budget_export' })
+
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -202,28 +219,39 @@ export default function BudgetTab({ pet }: { pet: PetRow }) {
         </form>
       )}
 
-      {/* Kategoriler */}
+      {/* Kategoriler - Premium Feature Guard */}
       <div className="flex flex-col gap-2">
-        <h4 className="text-[13px] font-black text-text-secondary px-1 uppercase mt-2">Kategoriler</h4>
-        {categoryTotals.map(cat => {
-          const pct = total > 0 ? (cat.total / total) * 100 : 0
-          return (
-            <div key={cat.key} className={`flex items-center justify-between p-4 bg-white border ${cat.border} rounded-2xl`}>
-              <div className="flex items-center gap-3">
-                <span className="text-[18px]">{cat.icon}</span>
-                <span className="font-bold text-[13px] text-text-primary">{cat.key}</span>
+        <h4 className="text-[13px] font-black text-text-secondary px-1 uppercase mt-2">Kategoriler & Trendler</h4>
+        
+        {!analyticsFeature.loading && !analyticsFeature.enabled ? (
+          <div className="mt-2">
+            <PremiumContent 
+              featureState={analyticsFeature} 
+              featureName="Bütçe Analitik & Trendler" 
+              onUpgrade={() => { window.location.href = '/owner/profile/subscription'; }} 
+            />
+          </div>
+        ) : (
+          categoryTotals.map(cat => {
+            const pct = total > 0 ? (cat.total / total) * 100 : 0
+            return (
+              <div key={cat.key} className={`flex items-center justify-between p-4 bg-white border ${cat.border} rounded-2xl`}>
+                <div className="flex items-center gap-3">
+                  <span className="text-[18px]">{cat.icon}</span>
+                  <span className="font-bold text-[13px] text-text-primary">{cat.key}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  {total > 0 && (
+                    <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div className={`h-full rounded-full bg-gradient-to-r ${cat.color}`} style={{ width: `${pct}%` }} />
+                    </div>
+                  )}
+                  <span className={`text-[13px] font-black ${cat.total > 0 ? cat.text : 'text-text-secondary'}`}>₺{cat.total.toFixed(2)}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                {total > 0 && (
-                  <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full bg-gradient-to-r ${cat.color}`} style={{ width: `${pct}%` }} />
-                  </div>
-                )}
-                <span className={`text-[13px] font-black ${cat.total > 0 ? cat.text : 'text-text-secondary'}`}>₺{cat.total.toFixed(2)}</span>
-              </div>
-            </div>
-          )
-        })}
+            )
+          })
+        )}
       </div>
 
       {/* Son Harcamalar */}

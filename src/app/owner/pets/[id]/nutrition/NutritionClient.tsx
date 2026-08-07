@@ -88,7 +88,6 @@ export default function NutritionClient({
   const [loading, setLoading] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
   const [showBarcodeCamera, setShowBarcodeCamera] = useState(false)
-  const [dismissedBanner, setDismissedBanner] = useState(false)
   const [weightError, setWeightError] = useState<string | null>(null)
 
   // OPOS Cilt 3: native alert()/confirm() yerine inline hata + ConfirmModal.
@@ -1001,23 +1000,6 @@ export default function NutritionClient({
         </>
       )}
 
-      {!inventory && !dismissedBanner && (
-        <div className="animate-in fade-in slide-in-from-top-4 duration-500">
-          <SmartCardBanner
-            title="MAMA PORSİYONU HESAPLAMA"
-            message={`${pet.name}'in günlük beslenme porsiyonunu hesaplayabilmemiz için hangi marka ve tip mama kullanıyorsun?`}
-            ctaText="Akıllı Tarama ile Ekle"
-            icon={<UtensilsIcon className="w-5 h-5 text-amber-500" />}
-            gradient="from-amber-50 to-orange-50"
-            iconBg="bg-amber-100 text-amber-700"
-            onClick={() => {
-              setShowAddModal(true)
-              setAddMode('search')
-            }}
-            onDismiss={() => setDismissedBanner(true)}
-          />
-        </div>
-      )}
 
       {showBanner && (
         <div className="p-4 rounded-xl border-l-4 font-medium text-sm bg-red-50 border-red-500 text-red-800 flex items-center gap-1.5">
@@ -1231,23 +1213,23 @@ export default function NutritionClient({
               <h3 className="font-extrabold text-base text-text-primary">Alerji ve Hassasiyet Notları</h3>
             </div>
             <form onSubmit={handleSaveAllergies} className="flex flex-col gap-3">
-              <div>
+              <div className="flex flex-col gap-1.5 w-full">
                 <label className="text-xs font-bold text-text-secondary">Bilinen Alerjiler (Virgülle Ayırın)</label>
                 <input
                   name="allergy_info"
                   defaultValue={Array.isArray(profile?.allergy_info) ? profile.allergy_info.join(', ') : profile?.allergy_info || ''}
                   placeholder="Örn: Tavuk eti, Sığır eti, Tahıl"
-                  className="input-base min-h-[44px] text-[13px]"
+                  className="input-base w-full min-h-[44px] text-[13px]"
                 />
               </div>
-              <div>
+              <div className="flex flex-col gap-1.5 w-full">
                 <label className="text-xs font-bold text-text-secondary">Özel Hassasiyet / Sindirim Notları</label>
                 <textarea
                   name="sensitivity_notes"
                   defaultValue={profile?.sensitivity_notes || ''}
                   placeholder="Örn: Mide hassasiyeti var, soğuk su içince kusabilir."
                   rows={2}
-                  className="input-base text-[13px] py-2"
+                  className="input-base w-full text-[13px] py-2"
                 />
               </div>
               <button

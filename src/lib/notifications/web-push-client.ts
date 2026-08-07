@@ -33,8 +33,9 @@ export type NotificationState =
 export function getDeviceId(): string {
   if (typeof window === 'undefined') return 'server-side'
   let deviceId = localStorage.getItem('odi_device_id')
-  if (!deviceId) {
-    deviceId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `dev-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!deviceId || !uuidRegex.test(deviceId)) {
+    deviceId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : '00000000-0000-4000-8000-' + Math.random().toString(16).substring(2, 14).padEnd(12, '0');
     localStorage.setItem('odi_device_id', deviceId)
   }
   return deviceId

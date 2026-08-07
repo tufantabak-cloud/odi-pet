@@ -59,7 +59,11 @@ export async function POST(req: NextRequest, context: RouteContext) {
   }
 
   const body = await req.json()
-  const { action, story, requirements } = body // action: 'activate' | 'cancel'
+  const { action, story, requirements, city } = body // action: 'activate' | 'cancel'
+
+  if (city && typeof city === 'string') {
+    await supabase.from('pets').update({ city: city.trim() }).eq('id', id)
+  }
 
   if (action === 'cancel') {
     // Mevcut aktif ilanı iptal et
@@ -116,7 +120,8 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
 const putSchema = z.object({
   story: z.string().min(20, 'Hikaye en az 20 karakter olmalıdır').max(500, 'Hikaye en fazla 500 karakter olmalıdır').optional(),
-  requirements: z.array(z.string()).optional()
+  requirements: z.array(z.string()).optional(),
+  city: z.string().optional()
 })
 
 // PUT — aktif ilanı düzenle
@@ -145,7 +150,11 @@ export async function PUT(req: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: 'Validation error', details: result.error.format() }, { status: 400 })
   }
 
-  const { story, requirements } = result.data
+  const { story, requirements, city } = result.data
+
+  if (city) {
+    await supabase.from('pets').update({ city: city.trim() }).eq('id', id)
+  }
 
   const { data, error } = await supabase
     .from('pet_adoptions')

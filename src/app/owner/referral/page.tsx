@@ -1,7 +1,7 @@
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { redirect } from 'next/navigation'
 import ReferralClient from './ReferralClient'
-import { getEntitlement } from '@/lib/subscription/entitlement'
+import { defaultRepository } from '@/lib/features/entitlement/repository'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 export const metadata = {
@@ -14,7 +14,15 @@ export default async function ReferralPage() {
   if (!user) redirect('/login')
 
   const supabase = await createServerSupabaseClient()
-  const entitlement = await getEntitlement(user.id)
+  const { data: userSubscription } = await supabase.from('user_subscriptions').select('current_period_end, status').eq('profile_id', user.id).maybeSingle()
+  const hasActiveSub = userSubscription?.status === 'active' || userSubscription?.status === 'trialing'
+  let daysLeft = 90;
+  if (userSubscription?.current_period_end) {
+     const end = new Date(userSubscription.current_period_end).getTime()
+     daysLeft = Math.max(0, Math.ceil((end - Date.now()) / (1000 * 60 * 60 * 24)))
+  } else if (hasActiveSub) {
+     daysLeft = 36500;
+  }
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -44,7 +52,7 @@ export default async function ReferralPage() {
         referralCount={referralCount ?? 0}
         qualifiedCount={qualifiedCount}
         earnedDays={earnedDays}
-        daysLeft={entitlement.daysLeft || 90}
+        daysLeft={daysLeft}
         invitesList={invitesList ?? []}
       />
     </div>

@@ -29,8 +29,7 @@ interface User {
   role: string | null
   phone: string | null
   created_at: string
-  premium_until?: string | null
-  premium_tier?: string | null
+  plan?: string | null
 }
 
 interface UsersResponse {
@@ -42,33 +41,19 @@ interface UsersResponse {
   roleCounts: Record<string, number>
 }
 
-function SubscriptionBadge({ premiumUntil }: { premiumUntil?: string | null }) {
-  if (!premiumUntil) {
-    return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-2xs font-extrabold bg-slate-100 text-slate-600 border border-slate-200">
-        Standart (Free)
-      </span>
-    )
-  }
-
-  const untilDate = new Date(premiumUntil)
-  const now = new Date()
-  const diffMs = untilDate.getTime() - now.getTime()
-  const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
-
-  if (daysLeft > 0) {
-    const isInfinite = daysLeft >= 3650
+function SubscriptionBadge({ planName }: { planName?: string | null }) {
+  if (planName === 'pro' || planName === 'ai_plus') {
     return (
       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-2xs font-black bg-amber-50 text-amber-700 border border-amber-300 shadow-xs">
         <Crown className="w-3 h-3 text-amber-500 fill-amber-500" />
-        Odi Pro ({isInfinite ? 'Sonsuz ♾️' : `${daysLeft} Gün`})
+        Odi {planName === 'pro' ? 'Pro' : 'AI+'}
       </span>
     )
   }
 
   return (
-    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-2xs font-extrabold bg-rose-50 text-rose-700 border border-rose-200">
-      Süresi Doldu
+    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-2xs font-extrabold bg-slate-100 text-slate-600 border border-slate-200">
+      Standart (Free)
     </span>
   )
 }
@@ -177,8 +162,7 @@ export default function AdminUsersClient() {
         const now = Date.now()
         targetUserIds = targetUserIds.filter(id => {
           const u = data.users.find(x => x.id === id)
-          if (!u?.premium_until) return true
-          return new Date(u.premium_until).getTime() <= now
+          return u?.plan !== 'pro' && u?.plan !== 'ai_plus'
         })
       }
     }
@@ -460,7 +444,7 @@ export default function AdminUsersClient() {
                       </td>
                       <td className="p-4 hidden sm:table-cell" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <SubscriptionBadge premiumUntil={user.premium_until} />
+                          <SubscriptionBadge planName={user.plan} />
                           <button
                             type="button"
                             onClick={() => openSingleGrantModal(user)}

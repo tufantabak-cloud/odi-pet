@@ -17,8 +17,6 @@ const ROLE_LABELS: Record<string, { label: string; color: string; desc: string }
   viewer:        { label: 'Görüntüleyici', color: 'bg-gray-100 text-gray-600', desc: 'Salt okunur' },
 }
 
-const PLAN_LIMITS: Record<string, number> = { free: 2, pro: 5, ai_plus: 999 }
-
 export default function FamilyTab({ petId, petName, plan, initialSos }: { petId: string; petName: string; plan: string; initialSos?: any[] }) {
   const router = useRouter()
   const [members, setMembers] = useState<any[]>([])
@@ -193,22 +191,17 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
     }
   }
 
-  const limit = PLAN_LIMITS[plan] ?? 2
-
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between p-4 rounded-sm bg-bg-main border border-border-main">
         <div>
           <p className="text-[13px] font-bold text-text-primary">
-            {members.length} / {limit === 999 ? '∞' : limit} Üye Slotu
+            {members.length} / ∞ Üye Slotu
           </p>
           <p className="text-[11px] text-text-secondary mt-0.5">
-            {plan === 'free' ? 'Pro\'ya geçerek 5 üyeye kadar davet et' : plan === 'pro' ? 'AI+ ile sınırsız üye' : 'Sınırsız üye (AI+)'}
+            Sınırsız üye
           </p>
         </div>
-        {plan === 'free' && (
-          <a href="/owner/profile/subscription" className="btn-primary text-xs py-2 px-3 shrink-0">Yükselt</a>
-        )}
       </div>
 
       {/* Members List */}

@@ -1,7 +1,7 @@
 import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
 import { getCurrentProfile } from '@/lib/auth/get-current-profile'
 import { hasPetCapability } from '@/lib/pets/access'
-import { getEntitlement } from '@/lib/subscription/entitlement'
+import { defaultRepository } from '@/lib/features/entitlement/repository'
 import { redirect } from 'next/navigation'
 import ReportsTab from '../ReportsTab'
 import PageHeader from '@/components/ui/primitives/PageHeader'
@@ -29,8 +29,8 @@ export default async function ReportsPage(props: PageProps) {
 
   if (!pet) redirect('/owner/dashboard')
 
-  const [entitlement, { data: payments }] = await Promise.all([
-    getEntitlement(pet.owner_id),
+  const [tier, { data: payments }] = await Promise.all([
+    defaultRepository.getUserTier(pet.owner_id),
     supabase.from('payments').select('*').eq('pet_id', id).order('payment_date', { ascending: false }),
   ])
 
@@ -41,7 +41,7 @@ export default async function ReportsPage(props: PageProps) {
         <ReportsTab 
           petId={pet.id} 
           petName={pet.name} 
-          plan={entitlement.tier} 
+          plan={tier} 
           payments={payments ?? []} 
         />
       </div>

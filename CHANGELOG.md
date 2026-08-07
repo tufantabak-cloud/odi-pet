@@ -1,6 +1,32 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [Feature] Experience Orchestrator - Aylık Gelişim Modülü (2026-08-06)
+
+### Added
+- **Aylık Gelişim Kampanyası (SmartMonthlyGrowthPrompt):** Kullanıcıların her ay petlerinin gelişim fotoğraflarını zaman tüneline eklemelerini sağlayan yeni orkestratör modülü eklendi.
+- **Dinamik Cooldown Engine:** `/evaluate` endpoint'inde sabit 7 gün (`weekAgo`) mantığı terk edilip, her kampanyanın kendi `cooldown_hours` değerini dinamik alan `lookbackHours` mekanizması getirildi.
+- **Recurring Campaign Support:** `cooldown_rules.recurring === true` bayrağı desteklenerek kampanya tamamlanmış olsa bile süresi dolduğunda tekrar aktif olma özelliği eklendi.
+- **Declarative Requires Desteği:** `requires` kural kümesine `no_gallery_photo_in_days` (zaman tüneli kontrolü) ve `gallery_quota_available` (kota denetimi) mekanizmaları eklendi.
+- **Server-Side Quota Enforcement:** Galeri limiti ücretsiz kullanıcılar için 10'dan 5'e düşürüldü (SSOT: `galleryQuota.ts`). Backend tarafında IDOR ve Kota dolumu kontrolleri yapılarak 403 `gallery_quota_exceeded` güvenliği sağlandı.
+- **GalleryTab Entegrasyonu:** 'growth_timeline' (Gelişim) sekmesi eklendi, paywall dinamik kota ile uyarlandı.
+
+### Fixed (kod denetimi sonrası — 2026-08-06)
+- **Migration UUID hatası:** Seed, `orchestrator_campaigns.id` / `orchestrator_prompts.id` (UUID) kolonlarına metin yazdığı için `22P02` ile başarısız oluyordu. Deterministik sabit UUID'lere geçildi; `ON CONFLICT DO UPDATE` yerine `DO NOTHING` kullanılarak admin panelinden yapılan ayarların her deploy'da ezilmesi engellendi.
+- **`completed` analitiği erken yazılıyordu:** Kayıt artık YALNIZCA mutasyon başarıyla tamamlandıktan sonra yazılır. Reddedilen istekler (403/400/500) `failed_validation` olarak loglanır — böylece kota nedeniyle reddedilen kullanıcı 30 günlük cooldown'a girmez.
+- **Tek seferlik kampanyaların "tamamlandı" kontrolü:** `completed` sorgusu artık lookback penceresinden bağımsız çalışıyor; pencere dışında kalan eski tamamlamalar nedeniyle kampanyanın tekrar gösterilmesi hatası giderildi.
+- **Cooldown yalnızca gerçek etkileşimden başlar:** `shown` event'i cooldown başlatmaz; yalnızca `completed` / `dismissed` / `snoozed` dikkate alınır.
+- **Hata yanıtları istemciye ulaşmıyordu:** `DynamicExperienceEngine.handleSubmit` artık `res.ok` kontrol edip hata fırlatıyor. Böylece prompt bileşenleri kota mesajını gösterebiliyor ve storage'daki yetim dosyayı temizleyebiliyor.
+- **Storage whitelist sıkılaştırıldı:** `image_url` yalnızca `pet_gallery_bucket/${pet_id}/` önekiyle kabul ediliyor (önceden herhangi bir public bucket geçebiliyordu).
+- **Kota kontrolü fail-closed:** Sayım sorgusu hata verirse yazma yapılmaz (500).
+- **Dosya doğrulaması:** Prompt bileşeninde JPG/PNG/WEBP ve max 5 MB kontrolü eklendi.
+- **`no_gallery_photo_in_days` NULL hatası:** `taken_at` NULL kayıtlar sorgudan hariç tutuldu (Postgres `DESC` varsayılanı NULLS FIRST olduğu için "fotoğraf yok" yanılgısı oluşuyordu).
+- **`taken_at` gelecek tarih reddi** ve `caption` uzunluk sınırı (200) eklendi.
+- **SSOT sızıntısı:** Premium limiti (200) artık `GALLERY_PHOTO_LIMIT_PREMIUM` üzerinden okunuyor.
+- **Geriye dönük uyumluluk:** Ücretsiz limitin 10→5 düşmesi nedeniyle limit üstünde kalan kullanıcılara "planınız güncellendi, mevcut fotoğraflarınız korunuyor" mesajı gösteriliyor; fotoğraflar silinmiyor.
+- **Testler:** `src/app/api/orchestrator/orchestrator.test.ts` içindeki 12 `it.todo` yerine 24 çalışan entegrasyon testi yazıldı (bellek içi Supabase taklidi: `src/app/api/orchestrator/testUtils.ts`).
+
+---
 
 ## [Milestone] QA Priority 1 — Critical Bug & Security CLOSED (2026-05-29)
 

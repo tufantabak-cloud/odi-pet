@@ -1,18 +1,17 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { createPortal } from 'react-dom'
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 interface ConfirmModalProps {
-  open: boolean
-  title: string
-  message?: string
-  confirmLabel?: string
-  cancelLabel?: string
-  /** 'danger' renders the confirm button in red, 'warning' in amber, 'default' in primary */
-  variant?: 'danger' | 'warning' | 'default'
-  onConfirm: () => void
-  onCancel: () => void
+  open: boolean;
+  title: string;
+  message?: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  variant?: 'danger' | 'warning' | 'default';
+  onConfirm: () => void;
+  onCancel: () => void;
 }
 
 export default function ConfirmModal({
@@ -25,48 +24,58 @@ export default function ConfirmModal({
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
-  const [mounted, setMounted] = useState(false)
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-     
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
+
+  // Lock body scroll while open
+  useEffect(() => {
+    if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
 
   // Close on Escape key
   useEffect(() => {
-    if (!open) return
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onCancel() }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [open, onCancel])
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCancel();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [open, onCancel]);
 
-  if (!open || !mounted) return null
+  if (!open || !mounted) return null;
 
   const confirmClass =
     variant === 'danger'
       ? 'bg-error text-white hover:bg-error/90'
       : variant === 'warning'
       ? 'bg-amber-500 text-white hover:bg-amber-600'
-      : 'btn-primary'
+      : 'btn-primary';
 
   const iconBg =
     variant === 'danger'
       ? 'bg-error/10'
       : variant === 'warning'
       ? 'bg-amber-50'
-      : 'bg-primary/10'
+      : 'bg-primary/10';
 
-  const icon =
-    variant === 'danger' ? '🗑️' : variant === 'warning' ? '⚠️' : '❓'
+  const icon = variant === 'danger' ? '🗑️' : variant === 'warning' ? '⚠️' : '❓';
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain"
+      className="fixed inset-0 z-[9999] bg-[rgba(15,23,42,0.60)] backdrop-blur-md flex items-center justify-center p-4 overscroll-contain"
       onClick={onCancel}
     >
       <div
-        className="bg-surface w-full max-w-sm rounded-modal shadow-2xl overflow-y-auto max-h-[90dvh] animate-in fade-in zoom-in-95 duration-200"
-        onClick={e => e.stopPropagation()}
+        className="bg-surface w-[calc(100%-32px)] max-w-[480px] sm:max-w-[480px] rounded-modal shadow-2xl overflow-y-auto max-h-[90dvh] animate-in fade-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Icon + Header */}
         <div className="px-6 pt-7 pb-4 flex flex-col items-center text-center gap-3">
@@ -97,6 +106,5 @@ export default function ConfirmModal({
       </div>
     </div>,
     document.body
-  )
+  );
 }
-

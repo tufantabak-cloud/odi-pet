@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
-import { getEntitlement } from '@/lib/subscription/entitlement'
-import { revalidatePath, revalidateTag } from 'next/cache'
+import { withAPIFeatureGuard } from '@/lib/features/guards/APIFeatureGuard'
 
 type RouteContext = {
   params: Promise<{ id: string }>
 }
 
-export async function GET(req: NextRequest, context: RouteContext) {
+async function getMatchesHandler(req: NextRequest, context: RouteContext) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -22,15 +21,6 @@ export async function GET(req: NextRequest, context: RouteContext) {
 
   const supabase = await createServerSupabaseClient()
 
-  // Premium kontrolü
-  const entitlement = await getEntitlement(user.id)
-
-  if (!entitlement.isPremium) {
-    return NextResponse.json(
-      { error: 'Bu özellik premium üyelere özeldir.' },
-      { status: 403 }
-    )
-  }
 
   // Sahiplik doğrulaması
   const { data: ownerRecord } = await supabase
@@ -101,7 +91,9 @@ export async function GET(req: NextRequest, context: RouteContext) {
   return NextResponse.json({ candidates: formattedCandidates })
 }
 
-export async function POST(req: NextRequest, context: RouteContext) {
+export const GET = withAPIFeatureGuard('smart_matching', getMatchesHandler)
+
+async function postMatchHandler(req: NextRequest, context: RouteContext) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -157,3 +149,5 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
   return NextResponse.json({ success: true, is_mutual: isMutual })
 }
+
+export const POST = withAPIFeatureGuard('smart_matching', postMatchHandler)

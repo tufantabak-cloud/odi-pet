@@ -1,28 +1,15 @@
-import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
-import { Database } from '@/lib/database.types'
+import { getSessionUser } from '@/lib/auth/get-current-profile'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
+    const user = await getSessionUser()
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error('Supabase admin credentials missing')
-    }
-
-    const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey)
-
-    const token = authHeader.replace('Bearer ', '')
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const supabase = await createServerSupabaseClient()
 
     const { data: applications, error: applicationsError } = await supabase
       .from('breeding_applications')

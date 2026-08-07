@@ -3,6 +3,7 @@ export const integrationTestFiles = [
   'src/app/api/admin/parasite-protocols/route.test.ts',
   'src/app/api/parasite-suggestions/route.test.ts',
   'src/app/api/pets/[id]/parasite-records/route.test.ts',
+  'src/app/api/orchestrator/orchestrator.test.ts',
   'src/app/api/plans/route-duplicate.test.ts',
   'src/app/api/plans/route.test.ts',
   'src/app/api/plans/[id]/route.test.ts',

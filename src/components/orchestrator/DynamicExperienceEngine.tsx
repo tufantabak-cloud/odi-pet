@@ -24,6 +24,7 @@ interface OrchestratorPromptComponentProps {
   onSubmit: (payload: Record<string, unknown>) => Promise<void>
   uiConfig?: Record<string, unknown>
   displayType?: string
+  petId?: string
 }
 
 // ───────────────────────────────────────────────────────────
@@ -36,6 +37,7 @@ const ComponentRegistry: Record<string, React.ComponentType<OrchestratorPromptCo
   SmartVaccineReminder: dynamic(() => import('@/components/orchestrator/prompts/SmartVaccineReminder')),
   PremiumUpgradeBanner: dynamic(() => import('@/components/orchestrator/prompts/PremiumUpgradeBanner')),
   SmartAddressPrompt: dynamic(() => import('@/components/orchestrator/prompts/SmartAddressPrompt')),
+  SmartMonthlyGrowthPrompt: dynamic(() => import('@/components/orchestrator/prompts/SmartMonthlyGrowthPrompt')),
 }
 
 interface DynamicExperienceEngineProps {
@@ -62,7 +64,7 @@ export default function DynamicExperienceEngine({
         const res = await fetch('/api/orchestrator/evaluate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contextTags, triggerEvent })
+          body: JSON.stringify({ contextTags, triggerEvent, petId })
         })
         const data: EvaluationResponse = await res.json()
         if (data.success && data.prompt) {
@@ -98,23 +100,30 @@ export default function DynamicExperienceEngine({
 
   // Handle the submission securely — only prompt_id is sent, never the mutation_action
   const handleSubmit = async (payload: Record<string, unknown>) => {
-    try {
-      const res = await fetch('/api/orchestrator/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt_id: prompt.id,
-          payload
-        })
+    // ONEMLI: Hatalar YUTULMAZ, cagiran bilesene firlatilir.
+    // Prompt bilesenleri kota (403 gallery_quota_exceeded) gibi hatalarda kullaniciya
+    // mesaj gosterip yukledikleri yetim dosyayi temizleyebilmelidir.
+    const res = await fetch('/api/orchestrator/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt_id: prompt.id,
+        payload,
+        pet_id: petId
       })
-      const data = await res.json()
-      if (data.success) {
-        setOpen(false)
-        onDone?.()
-      }
-    } catch (error) {
-      console.error('[Experience Engine] Submit failed:', error)
+    })
+
+    const data = await res.json().catch(() => ({}))
+
+    if (!res.ok || !data?.success) {
+      const err = new Error(data?.error || 'submit_failed') as Error & { status?: number }
+      err.status = res.status
+      console.error('[Experience Engine] Submit failed:', res.status, data?.error)
+      throw err
     }
+
+    setOpen(false)
+    onDone?.()
   }
 
   const handleClose = async () => {
@@ -125,7 +134,8 @@ export default function DynamicExperienceEngine({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt_id: prompt.id,
-          payload: { _event: 'dismissed' }
+          payload: { _event: 'dismissed' },
+          pet_id: petId
         })
       })
     } catch { /* analytics failure should not block UX */ }
@@ -149,6 +159,7 @@ export default function DynamicExperienceEngine({
         onSubmit={handleSubmit}
         uiConfig={prompt.ui_config}
         displayType={prompt.display_type}
+        petId={petId}
       />
     </Suspense>
   )

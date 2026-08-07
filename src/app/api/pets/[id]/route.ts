@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { revalidatePath, revalidateTag } from 'next/cache'
 import { Database } from '@/lib/database.types'
@@ -108,6 +108,9 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
   if (fd.has('vet_email')) payload.vet_email = str(fd, 'vet_email')
   if (fd.has('city')) payload.city = str(fd, 'city')
   if (fd.has('district')) payload.district = str(fd, 'district')
+  if (fd.has('registration_city')) payload.registration_city = str(fd, 'registration_city')
+  if (fd.has('registration_district')) payload.registration_district = str(fd, 'registration_district')
+  if (fd.has('agriculture_directorate')) payload.agriculture_directorate = str(fd, 'agriculture_directorate')
   if (fd.has('lifestyle')) payload.lifestyle = str(fd, 'lifestyle')
   if (fd.has('size')) payload.size = str(fd, 'size')
 
@@ -149,24 +152,76 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
   const { id } = await context.params
   const supabase = await createServerSupabaseClient()
 
-  // 1. Delete DB pet and memberships
-  const { data, error } = await supabase.rpc(
-    'delete_pet_with_memberships',
-    { p_pet_id: id }
-  )
-  if (error) {
-    const { message } = formatSupabaseError(error)
-    return NextResponse.json({ error: message }, { status: 500 })
-  }
-
-  if (!ownershipRpcSucceeded(data)) {
+  // 1. Verify authorization using canonical capability model
+  const canDelete = await hasPetCapability(supabase, id, 'can_delete_pet')
+  if (!canDelete) {
     return NextResponse.json(
       { error: 'Sadece asıl sahip evcil hayvanı silebilir.' },
       { status: 403 }
     )
   }
 
-  // 2. Cleanup physical storage binary files
+  // 2. Call canonical RPC to delete pet and memberships
+  let deleteSucceeded = false
+  const { data, error: rpcError } = await supabase.rpc(
+    'delete_pet_with_memberships',
+    { p_pet_id: id }
+  )
+
+  if (!rpcError && ownershipRpcSucceeded(data)) {
+    deleteSucceeded = true
+  } else if (!rpcError && data && typeof data === 'object' && 'ok' in data && data.ok === false) {
+    return NextResponse.json(
+      { error: 'Sadece asıl sahip evcil hayvanı silebilir.' },
+      { status: 403 }
+    )
+  }
+
+  // 3. Fallback DB deletion if RPC failed (e.g. FK constraint or DB RPC issue)
+  if (!deleteSucceeded) {
+    try {
+      // Clean up records that might block FK deletion
+      await supabase.from('smart_scanner_records').delete().eq('pet_id', id)
+      await supabase.from('pet_memberships').delete().eq('pet_id', id)
+      await supabase.from('pet_owners').delete().eq('pet_id', id)
+      await supabase.from('pet_members').delete().eq('pet_id', id)
+
+      const { error: directDeleteError } = await supabase
+        .from('pets')
+        .delete()
+        .eq('id', id)
+
+      if (directDeleteError) {
+        let adminClient
+        try {
+          adminClient = createAdminSupabaseClient()
+        } catch {}
+
+        if (adminClient) {
+          await adminClient.from('smart_scanner_records').delete().eq('pet_id', id)
+          await adminClient.from('pet_memberships').delete().eq('pet_id', id)
+          await adminClient.from('pet_owners').delete().eq('pet_id', id)
+          await adminClient.from('pet_members').delete().eq('pet_id', id)
+          const { error: adminDeleteErr } = await adminClient.from('pets').delete().eq('id', id)
+          if (adminDeleteErr) {
+            const { message } = formatSupabaseError(adminDeleteErr)
+            return NextResponse.json({ error: message }, { status: 500 })
+          }
+        } else {
+          const { message } = formatSupabaseError(directDeleteError)
+          return NextResponse.json({ error: message }, { status: 500 })
+        }
+      }
+    } catch (fallbackErr: any) {
+      console.error('[API/Pets/DELETE] Fallback deletion failed:', fallbackErr)
+      return NextResponse.json(
+        { error: fallbackErr.message || 'Evcil hayvan profilini silerken bir hata oluştu.' },
+        { status: 500 }
+      )
+    }
+  }
+
+  // 4. Cleanup physical storage binary files
   await deletePetStorageFiles(supabase, id).catch((err) => {
     console.error('Storage cleanup failed on pet delete:', err)
   })

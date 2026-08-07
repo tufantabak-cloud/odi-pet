@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
-import { getEntitlement } from '@/lib/subscription/entitlement'
+import { checkFeatureAccess } from '@/lib/features/entitlement/engine'
+import { defaultRepository } from '@/lib/features/entitlement/repository'
 import { Database } from '@/lib/database.types'
 
 type VetRow = Database['public']['Tables']['vets']['Row']
@@ -111,9 +112,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ petI
   const force = searchParams.get('force') === 'true'
 
 
-  const entitlement = await getEntitlement(user.id)
-  const isPremium = entitlement.isPremium
-  const isAIPlus = entitlement.hasAiPlus
+  // Wrap in checkFeatureAccess for ai_vet
+  const access = await checkFeatureAccess({ userId: user.id, featureKey: 'ai_vet' })
+  if (!access.allowed) {
+    return NextResponse.json({ error: 'Feature Access Denied', reason: access.reason }, { status: 403 })
+  }
 
   // Helper to fetch vet status
   const fetchVetStatus = async (riskId: string) => {
@@ -144,7 +147,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ petI
 
     if (cachedInsight) {
       const vetData = await fetchVetStatus(cachedInsight.id)
-      return NextResponse.json({ ...cachedInsight, isPremium, isAIPlus, ...vetData })
+      return NextResponse.json({ ...cachedInsight, ...vetData })
     }
   }
 
@@ -259,16 +262,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ petI
   if (error) {
     console.error('[PredictiveEngine] Kayıt hatası:', error)
     return NextResponse.json({
-      ...insightData, isPremium, isAIPlus, vetReviewStatus: 'none', vetName: null,
+      ...insightData, vetReviewStatus: 'none', vetName: null,
       householdScore, householdLevel
     })
   }
 
   return NextResponse.json({
-    ...newInsight, isPremium, isAIPlus, vetReviewStatus: 'none', vetName: null,
+    ...newInsight, vetReviewStatus: 'none', vetName: null,
     householdScore, householdLevel,
-    // Smart reassignment suggestion (AI+ only)
-    smartReassignment: isAIPlus && unassignedCritical > 0 ? {
+    // Smart reassignment suggestion
+    smartReassignment: unassignedCritical > 0 ? {
       available: true,
       hint: 'Yük dağılımına göre en uygun üye Odi tarafından önerilecek.'
     } : null

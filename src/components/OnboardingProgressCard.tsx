@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
-import { ShieldCheck, Sparkles, ChevronDown, CheckCircle2, Circle } from 'lucide-react';
+import { ShieldCheck, Sparkles, ChevronDown, ChevronUp, CheckCircle2, Circle } from 'lucide-react';
 
 interface OnboardingProgressCardProps {
   petId?: string;
@@ -19,7 +19,7 @@ export default function OnboardingProgressCard({
   const router = useRouter();
   const { progress, snooze } = useOnboardingProgress(petId);
 
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
 
@@ -74,16 +74,22 @@ export default function OnboardingProgressCard({
   return (
     <>
       <div className="bg-white border border-slate-100 rounded-[24px] p-5 mb-4 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)]">
-        <div className="flex items-center justify-between mb-3">
+        <div 
+          className="flex items-center justify-between mb-3 cursor-pointer select-none"
+          onClick={() => setIsCollapsed(true)}
+        >
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-purple-600" />
             <h3 className="text-sm font-semibold text-text-primary">
               {petName} için Kurulum Rehberi
             </h3>
           </div>
-          <span className="text-xs font-bold text-primary">
-            %{progress.percentage}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-primary">
+              %{progress.percentage}
+            </span>
+            <ChevronUp className="w-4 h-4 text-text-secondary" />
+          </div>
         </div>
 
         <div className="w-full bg-slate-100 h-1.5 rounded-full mb-4 overflow-hidden">

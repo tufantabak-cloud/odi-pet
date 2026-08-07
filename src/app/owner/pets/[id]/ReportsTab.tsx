@@ -223,7 +223,6 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
       
       if (!res.ok) {
         setError(data?.error || 'Rapor oluşturulamadı.')
-        if (data?.requiresUpgrade) setError((data?.error || 'Yükseltme gerekli') + ' → ' + (plan === 'free' ? 'Pro' : 'AI+') + ' gerekli')
         return
       }
       setReport(data)
@@ -261,8 +260,6 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const planRank: Record<string, number> = { free: 0, pro: 1, ai_plus: 2 }
-  const userRank = planRank[plan] ?? 0
 
   return (
     <div className="flex flex-col gap-5">
@@ -322,7 +319,7 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
           <div className="flex flex-col gap-3">
             <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-widest">Rapor Türü</h3>
             {REPORT_TYPES.map(rt => {
-              const locked = planRank[rt.plan] > userRank
+              const locked = false
               return (
                 <button
                   key={rt.id}

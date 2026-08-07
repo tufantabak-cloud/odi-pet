@@ -54,5 +54,3 @@ export const Illustration: React.FC<IllustrationProps> = ({
     </div>
   );
 };
-
-export default Illustration;

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { getEntitlement } from '@/lib/subscription/entitlement'
 import { Database } from '@/lib/database.types'
 
 type PetRow = Database['public']['Tables']['pets']['Row']
@@ -86,12 +85,8 @@ export async function GET(
     .eq('token', token)
     .then(() => {})
 
-  // 2. Get plan for scope enforcement
-  const entitlement = await getEntitlement(profileId)
-  const plan = entitlement.tier
-
   // Plan limits
-  const effectiveDays = plan === 'free' ? 7 : daysAhead
+  const effectiveDays = daysAhead
   const from = new Date().toISOString().split('T')[0]
   const to = new Date(Date.now() + effectiveDays * 86400000).toISOString().split('T')[0]
 
@@ -110,7 +105,7 @@ export async function GET(
   ])]
 
   if (allPetIds.length === 0) {
-    return buildICS([], appUrl, plan)
+    return buildICS([], appUrl)
   }
 
   const petsMap: Record<string, string> = {}
@@ -131,7 +126,7 @@ export async function GET(
 
   // Scope filtering
   if (scope === 'assigned') schedQ = schedQ.eq('assigned_to', profileId)
-  if (scope === 'critical_only' || plan === 'ai_plus' && scope === 'critical_only') {
+  if (scope === 'critical_only') {
     schedQ = schedQ.eq('escalation_level', 'critical')
   }
 
@@ -154,7 +149,6 @@ export async function GET(
   // Health schedules → ICS events
   for (const s of schedules ?? []) {
     if (!filters[s.plan_type ?? 'task']) continue
-    if (plan === 'free' && s.priority === 'low') continue // free: skip low priority
 
     const petName = s.pet_id ? (petsMap[s.pet_id] ?? 'Pet') : 'Pet'
     const icon = TYPE_ICONS[s.plan_type ?? 'task'] ?? '📋'
@@ -192,7 +186,7 @@ export async function GET(
   }
 
   // AI+ predictive alerts as calendar blocks
-  if (plan === 'ai_plus' && scope !== 'assigned') {
+  if (scope !== 'assigned') {
     const { data: insights } = await supabase
       .from('predictive_insights')
       .select('pet_id, risk_level, message, created_at')
@@ -212,17 +206,17 @@ export async function GET(
     }
   }
 
-  return buildICS(events, appUrl, plan)
+  return buildICS(events, appUrl)
 }
 
-function buildICS(events: string[], appUrl: string, plan: string) {
+function buildICS(events: string[], appUrl: string) {
   const ics = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
     'PRODID:-//Odi Pet Care//Calendar Feed//TR',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
-    `X-WR-CALNAME:ODI Pet Care${plan !== 'free' ? ' (' + plan.toUpperCase() + ')' : ''}`,
+    `X-WR-CALNAME:ODI Pet Care`,
     'X-WR-TIMEZONE:Europe/Istanbul',
     'X-WR-CALDESC:Evcil hayvan bakım görevleri ve randevuları',
     ...events,

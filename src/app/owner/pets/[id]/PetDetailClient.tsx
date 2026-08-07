@@ -2,7 +2,10 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import dynamic from 'next/dynamic'
 import { Share2, Phone, Camera, ImageIcon, FileImage, Wallet, Home, FileText, AlertTriangle, Heart, ShieldCheck, Pencil, Inbox, Key, Scale, Move, Users, Bell, X, Lock, Check, Calendar } from 'lucide-react'
+
+const DynamicExperienceEngine = dynamic(() => import('@/components/orchestrator/DynamicExperienceEngine'), { ssr: false })
 import FamilyTab from './FamilyTab'
 import HealthTab from '@/components/pets/tabs/HealthTab'
 
@@ -19,7 +22,6 @@ import BreedHealthCard from '@/components/pets/BreedHealthCard'
 import LostPetWizard from '@/components/pets/LostPetWizard'
 import MinimalGrowthChart from '@/components/pets/MinimalGrowthChart'
 import { SmartScanner } from '@/components/ui/SmartScanner'
-import FloatingSOS from '@/components/FloatingSOS'
 import { HealthTracker } from '@/components/health-tracker/HealthTracker'
 import { EstrusTracker } from '@/components/estrus-tracker/EstrusTracker'
 import PetHeroCard from './PetHeroCard'
@@ -1508,8 +1510,14 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               onMarkFound={handleMarkFound}
               latestWeight={primaryWeight !== '-' ? primaryWeight : null}
               onMenuOpen={() => setShowPetMenuSheet(true)}
-              onChangeCoverClick={() => setShowCoverSourceSheet(true)}
               onChangeAvatarClick={() => avatarInputRef.current?.click()}
+            />
+
+            {/* Experience Orchestrator - Kilitli alanın dışına monte edildi */}
+            <DynamicExperienceEngine 
+              contextTags={['pet_detail']} 
+              triggerEvent="on_load" 
+              petId={pet.id} 
             />
 
             <div className="sticky top-16 z-20 bg-surface border-b border-border">
@@ -1541,8 +1549,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                   
                   {/* SOL SÜTUN (Masaüstü: lg:col-span-7) */}
                   <div className="lg:col-span-7 flex flex-col gap-4">
-                    {/* Paylaş + Acil Durum */}
-                    <div className="grid grid-cols-2 gap-3">
+                    {/* Paylaş & Ekip */}
+                    <div>
                       <button
                         type="button"
                         onClick={() => setIsShareModalOpen(true)}
@@ -1551,16 +1559,6 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                         <Share2 size={18} className="text-primary" />
                         <span className="text-sm font-bold text-text-primary">Paylaş & Ekip</span>
                       </button>
-                      <FloatingSOS
-                        fullWidth={true}
-                        petId={pet.id}
-                        petName={pet.name}
-                        vetPhone={(pet as any).vet_phone ?? undefined}
-                        vetName={pet.vet_name ?? undefined}
-                        sosContacts={pet.sos_contacts}
-                        onLostReport={() => setLostWizardOpen(true)}
-                        onMarkFound={handleMarkFound}
-                      />
                     </div>
 
                     {/* 3. Bugün */}
@@ -2603,7 +2601,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               <FamilyTab
                 petId={pet.id}
                 petName={pet.name}
-                plan={subscription?.plan ?? 'free'}
+                plan={subscription?.['status'] === 'active' || subscription?.['status'] === 'trialing' ? 'pro' : 'free'}
                 initialSos={pet.sos_contacts}
               />
             </div>

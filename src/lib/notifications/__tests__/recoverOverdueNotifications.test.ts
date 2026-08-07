@@ -2,6 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { recoverOverdueNotifications } from '../recoverOverdueNotifications'
 import * as createNotifModule from '../create-overdue-vaccine-notifications'
 
+const makeEq = (data: any) => {
+  const p = Promise.resolve({ data, error: null }) as any
+  p.eq = () => p
+  return p
+}
+
 describe('Sprint X.4 - recoverOverdueNotifications Orchestration Layer', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
@@ -13,9 +19,7 @@ describe('Sprint X.4 - recoverOverdueNotifications Orchestration Layer', () => {
         if (table === 'plans') {
           return {
             select: () => ({
-              eq: () => ({
-                eq: () => Promise.resolve({ data: [], error: null }),
-              }),
+              eq: () => makeEq([]),
             }),
           }
         }
@@ -42,9 +46,7 @@ describe('Sprint X.4 - recoverOverdueNotifications Orchestration Layer', () => {
         if (table === 'plans') {
           return {
             select: () => ({
-              eq: () => ({
-                eq: () => Promise.resolve({ data: mockOverduePlans, error: null }),
-              }),
+              eq: () => makeEq(mockOverduePlans),
             }),
           }
         }
@@ -87,9 +89,7 @@ describe('Sprint X.4 - recoverOverdueNotifications Orchestration Layer', () => {
         if (table === 'plans') {
           return {
             select: () => ({
-              eq: () => ({
-                eq: () => Promise.resolve({ data: mockOverduePlans, error: null }),
-              }),
+              eq: () => makeEq(mockOverduePlans),
             }),
           }
         }
@@ -124,9 +124,7 @@ describe('Sprint X.4 - recoverOverdueNotifications Orchestration Layer', () => {
         if (table === 'plans') {
           return {
             select: () => ({
-              eq: () => ({
-                eq: () => Promise.resolve({ data: mockOverduePlans, error: null }),
-              }),
+              eq: () => makeEq(mockOverduePlans),
             }),
           }
         }

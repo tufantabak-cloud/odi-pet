@@ -8,21 +8,14 @@ export default async function ClinicAdminPage() {
 
   const supabase = await createServerSupabaseClient()
 
-  const { data: memberships } = await supabase
-    .from('clinic_memberships')
-    .select('clinic_id, is_clinic_admin, clinics(*)')
-    .eq('profile_id', profile.id)
-    .limit(1)
-
-  const membership = memberships?.[0]
   const hasGlobalAdminRole =
     profile.role === 'admin' || profile.role === 'founder'
-  if (!membership || (!membership.is_clinic_admin && !hasGlobalAdminRole)) {
+  if (!hasGlobalAdminRole) {
     redirect('/clinic/dashboard')
   }
 
-  const clinic = (membership.clinics as any) ?? null
-  const clinicId = membership.clinic_id ?? null
+  const clinic: any = null
+  const clinicId: string | null = null
 
   // Tüm üyeler
   const { data: members } = clinicId

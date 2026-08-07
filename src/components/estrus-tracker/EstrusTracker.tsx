@@ -1,13 +1,29 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useEstrusTracker, EstrusCycle } from './useEstrusTracker';
 import { EstrusCycleDetails } from './EstrusCycleDetails';
 import { useReproductiveForecast } from './useReproductiveForecast';
 import { ReproductiveForecastCard } from './ReproductiveForecastCard';
 import { EstrusPreferencesToggle } from './EstrusPreferencesToggle';
+import { useFeature } from '@/lib/features/hooks';
+import { PremiumContent } from '@/components/premium/PremiumContent';
+import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 
 export function EstrusTracker({ petId, petSpecies }: { petId: string, petSpecies: string }) {
+  const [currentUserId, setCurrentUserId] = useState<string>('');
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const supabase = createBrowserSupabaseClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) setCurrentUserId(session.user.id);
+    };
+    fetchUser();
+  }, []);
+
+  const breedingFeature = useFeature({ userId: currentUserId, featureKey: 'breeding_forecast' });
+
   const { cycles, loading, addCycle, updateCycle, deleteCycle } = useEstrusTracker(petId);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [isHistoricalModalOpen, setIsHistoricalModalOpen] = useState(false);
@@ -16,6 +32,19 @@ export function EstrusTracker({ petId, petSpecies }: { petId: string, petSpecies
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   const { forecast, loading: forecastLoading, error: forecastError, refetch: refetchForecast } = useReproductiveForecast(petId);
+
+  // Feature guard - erişim yoksa PremiumContent göster
+  if (!breedingFeature.loading && !breedingFeature.enabled) {
+    return (
+      <div className="mt-4">
+        <PremiumContent 
+          featureState={breedingFeature}
+          featureName="Üreme & Kızgınlık Tahmini"
+          onUpgrade={() => { window.location.href = '/owner/profile/subscription'; }}
+        />
+      </div>
+    );
+  }
 
   // Form states
   const [startDate, setStartDate] = useState('');

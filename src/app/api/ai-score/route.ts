@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { getIP, aiScoreRateLimit } from '@/lib/auth-security'
+import { withAPIFeatureGuard } from '@/lib/features/guards/APIFeatureGuard'
+import { getUsageEngine } from '@/lib/features/usage'
 
 const SYSTEM_PROMPT = `Sen bir veteriner triaj asistanısın. Kullanıcının tarif ettiği evcil hayvan belirtilerini değerlendirip aşağıdaki JSON formatında yanıt ver. SADECE JSON döndür, başka hiçbir şey yazma.
 
@@ -34,7 +36,7 @@ function heuristicFallback(symptomStr: string) {
   return { score: 10, severity: 'low', recommended_action: 'Gözlem altında tutun, gerekirse veterinere başvurun', reasoning: null }
 }
 
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest) {
   // Auth guard — Gemini API maliyetini korumak için
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -53,6 +55,22 @@ export async function POST(req: NextRequest) {
 
   const apiKey = process.env.GEMINI_API_KEY
   if (apiKey) {
+    // Quota consumption — check BEFORE expensive Gemini call
+    const requestId = crypto.randomUUID()
+    const usageResult = await getUsageEngine().consumeUsage({
+      userId: user.id,
+      featureKey: 'ai_vet',
+      amount: 1,
+      idempotencyKey: requestId,
+    })
+    
+    if (!usageResult.success && !usageResult.idempotentAlreadyProcessed) {
+      return NextResponse.json(
+        { error: 'Kullanım kotanız doldu. Lütfen planınızı yükseltin.' },
+        { status: 403 }
+      )
+    }
+
     try {
       const genAI = new GoogleGenerativeAI(apiKey)
       const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
@@ -81,4 +99,6 @@ export async function POST(req: NextRequest) {
   const fallback = heuristicFallback(symptomStr)
   return NextResponse.json({ ...fallback, powered_by: 'heuristic' })
 }
+
+export const POST = withAPIFeatureGuard('ai_vet', handler)
 

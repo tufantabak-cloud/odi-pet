@@ -70,12 +70,13 @@ export default async function SubscriptionPage({
       .eq('is_active', true),
   ])
 
-  const rawPlan = subscription?.plan
   const currentPlan: PlanKey =
-    rawPlan === 'pro' || rawPlan === 'ai_plus' ? rawPlan : 'free'
+    (subscription?.['status'] === 'active' || subscription?.['status'] === 'trialing') 
+      ? ((subscription?.['plan'] as PlanKey) || 'pro') 
+      : 'free'
   const planInfo = PLAN_FEATURES[currentPlan]
   const isPaid = currentPlan !== 'free'
-  const subscriptionStatus = subscription?.status ?? 'active'
+  const subscriptionStatus = subscription?.['status'] ?? 'active'
   const hasBillingAccount = Boolean(subscription?.stripe_customer_id)
   const renewDate = subscription?.current_period_end
     ? new Date(subscription.current_period_end).toLocaleDateString('tr-TR', {

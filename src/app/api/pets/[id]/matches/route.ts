@@ -1,28 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
-import { getEntitlement } from '@/lib/subscription/entitlement'
+import { withAPIFeatureGuard } from '@/lib/features/guards/APIFeatureGuard'
 
 type RouteContext = {
   params: Promise<{ id: string }>
 }
 
-export async function GET(req: NextRequest, context: RouteContext) {
+export const GET = withAPIFeatureGuard('social_adoption', async (req: NextRequest, context: RouteContext) => {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await context.params
   const supabase = await createServerSupabaseClient()
 
-  // Premium kontrolü
-  const entitlement = await getEntitlement(user.id)
 
-  if (!entitlement.isPremium) {
-    return NextResponse.json(
-      { error: 'Bu özellik premium üyelere özeldir.' },
-      { status: 403 }
-    )
-  }
 
   // Sahiplik doğrulaması
   const { data: ownerRecord } = await supabase
@@ -74,4 +66,4 @@ export async function GET(req: NextRequest, context: RouteContext) {
   // Tarihleri eşleştirmek için myLikes ve mutualLikes verilerini birleştirerek döndürebiliriz
   // Şimdilik sadece pet listesi dönmek yeterli
   return NextResponse.json({ matches: matchedPets || [] })
-}
+})

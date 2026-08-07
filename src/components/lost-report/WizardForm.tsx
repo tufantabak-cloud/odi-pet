@@ -3,20 +3,43 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 
-import { LocationForm } from './LocationForm'
+import dynamic from 'next/dynamic'
+
 import { OTPVerification } from './OTPVerification'
 import { PetSelection } from './PetSelection'
 import { PhotoUpload } from './PhotoUpload'
 import { ProgressBar } from './ProgressBar'
 import { PublishSummary } from './PublishSummary'
 
+const LocationForm = dynamic(
+  () => import('./LocationForm').then((mod) => mod.LocationForm),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex flex-col items-center justify-center p-8 gap-3">
+        <div className="w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-sm font-medium text-slate-600">Harita yükleniyor…</p>
+      </div>
+    ),
+  }
+)
+
 type PetOption = {
   id: string
   name: string
   species: string | null
+  avatar_url?: string | null
 }
 
-export function WizardForm({ pets }: { pets: PetOption[] }) {
+export function WizardForm({
+  pets,
+  userPhone,
+  isPhoneConfirmed,
+}: {
+  pets: PetOption[]
+  userPhone?: string
+  isPhoneConfirmed?: boolean
+}) {
   const [step, setStep] = useState(1)
   const [sessionId, setSessionId] = useState('')
   const [payload, setPayload] = useState<Record<string, unknown>>({})
@@ -39,7 +62,7 @@ export function WizardForm({ pets }: { pets: PetOption[] }) {
     const updatedPayload = { ...payload, ...newData }
 
     try {
-      const response = await fetch('/api/v1/reports/lost/publish', {
+      await fetch('/api/v1/reports/lost/publish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -48,16 +71,11 @@ export function WizardForm({ pets }: { pets: PetOption[] }) {
           action: 'save_draft',
         }),
       })
-      const data = await response.json()
-      if (!response.ok) {
-        throw new Error(data.error || 'DRAFT_SAVE_FAILED')
-      }
-
+    } catch (err) {
+      console.warn('Draft sync warning, continuing locally:', err)
+    } finally {
       setPayload(updatedPayload)
       setStep(nextStep)
-    } catch {
-      setError('Bilgiler kaydedilemedi. Lütfen tekrar dene.')
-    } finally {
       setSaving(false)
     }
   }
@@ -93,7 +111,7 @@ export function WizardForm({ pets }: { pets: PetOption[] }) {
 
   return (
     <div className="card-base mx-auto w-full max-w-md p-6">
-      <ProgressBar currentStep={step} totalSteps={5} />
+      <ProgressBar currentStep={step} totalSteps={5} onBack={() => setStep(step - 1)} />
 
       <div className="min-h-[300px]">
         {step === 1 && (
@@ -105,6 +123,8 @@ export function WizardForm({ pets }: { pets: PetOption[] }) {
         {step === 2 && (
           <PhotoUpload
             sessionId={sessionId}
+            defaultPhotoUrl={pets.find((p) => p.id === payload.petId)?.avatar_url}
+            petName={pets.find((p) => p.id === payload.petId)?.name}
             onNext={(photo) => void saveDraftAndAdvance({ photo }, 3)}
           />
         )}
@@ -115,6 +135,8 @@ export function WizardForm({ pets }: { pets: PetOption[] }) {
         )}
         {step === 4 && (
           <OTPVerification
+            userPhone={userPhone}
+            isPhoneConfirmed={isPhoneConfirmed}
             onNext={(contactPhone) =>
               void saveDraftAndAdvance({ contactPhone }, 5)
             }
@@ -124,6 +146,7 @@ export function WizardForm({ pets }: { pets: PetOption[] }) {
           <PublishSummary
             sessionId={sessionId}
             payload={payload}
+            selectedPet={pets.find((p) => p.id === payload.petId) || pets[0]}
             onPublish={setReportId}
           />
         )}

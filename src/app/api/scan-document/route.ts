@@ -3,6 +3,8 @@ import { randomUUID } from 'crypto'
 import { getIP, scanDocRateLimit } from '@/lib/auth-security'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
+import { withAPIFeatureGuard } from '@/lib/features/guards/APIFeatureGuard'
+import { getUsageEngine } from '@/lib/features/usage'
 
 const SYSTEM_PROMPT = `
 Sen bir evcil hayvan bakım uygulaması için akıllı belge tarama asistanısın.
@@ -11,9 +13,19 @@ Markdown kullanma, sadece saf JSON döndür.
 
 Zorunlu JSON Şeması:
 {
-  "document_type": "food_packaging" | "vaccine_card" | "medicine_packaging" | "parasite_product" | "unknown",
+  "document_type": "pet_passport" | "official_document" | "food_packaging" | "vaccine_card" | "medicine_packaging" | "parasite_product" | "unknown",
   "confidence": 0.0, // 0.0 - 1.0 arası
   "extracted_fields": {
+    // Eğer document_type = "pet_passport" veya "official_document" ise (veya resmi evrak/karne/tarım müdürlüğü belgesi ise):
+    "microchip_no": "15 haneli mikroçip numarası (örn: 900123456789012)",
+    "passport_no": "Pasaport / karne numarası (örn: TR-34-123456)",
+    "registration_city": "Kayıtlı olunan il (örn: İstanbul)",
+    "registration_district": "Kayıtlı olunan ilçe (örn: Kadıköy)",
+    "agriculture_directorate": "Kayıtlı olduğu İlçe Tarım ve Orman Müdürlüğü adı (örn: Kadıköy İlçe Tarım ve Orman Müdürlüğü)",
+    "vet_name": "Veteriner Hekim Adı",
+    "vet_company": "Klinik / Kurum Adı",
+    "vet_phone": "Veteriner Telefonu",
+    "vet_email": "Veteriner E-posta",
     // Eğer document_type = "food_packaging" ise:
     "food_brand": "Marka adı (örn: Purina)",
     "food_product": "Ürün adı (örn: Pro Plan Adult)",
@@ -53,6 +65,7 @@ Zorunlu JSON Şeması:
 Lütfen verileri olabildiğince eksiksiz doldur. Tespit edemediğin alanları null yap.
 `;
 
+
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 const ALLOWED_MIME_TO_EXT: Record<string, string> = {
@@ -64,7 +77,7 @@ const ALLOWED_MIME_TO_EXT: Record<string, string> = {
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10MB
 
-export async function POST(req: Request) {
+async function handler(req: Request) {
   let uploadedPath: string | null = null
   let adminSupabase: ReturnType<typeof createAdminSupabaseClient> | null = null
 
@@ -149,6 +162,25 @@ export async function POST(req: Request) {
     const buffer = await image.arrayBuffer()
     const base64Image = Buffer.from(buffer).toString('base64')
 
+    // Quota consumption — check BEFORE expensive Gemini call
+    const requestId = crypto.randomUUID()
+    const usageResult = await getUsageEngine().consumeUsage({
+      userId: user.id,
+      featureKey: 'scan_document',
+      amount: 1,
+      idempotencyKey: requestId,
+    })
+    
+    if (!usageResult.success && !usageResult.idempotentAlreadyProcessed) {
+      if (adminSupabase && uploadedPath) {
+        await cleanupUpload(adminSupabase, uploadedPath)
+      }
+      return NextResponse.json(
+        { error: 'Kullanım kotanız doldu. Lütfen planınızı yükseltin.' },
+        { status: 403 }
+      )
+    }
+
     // Gemini API Request
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`
     const geminiRes = await fetch(geminiUrl, {
@@ -223,3 +255,5 @@ async function cleanupUpload(admin: ReturnType<typeof createAdminSupabaseClient>
     console.error('Belge temizleme (best-effort) başarısız:', err)
   }
 }
+
+export const POST = withAPIFeatureGuard('scan_document', handler)

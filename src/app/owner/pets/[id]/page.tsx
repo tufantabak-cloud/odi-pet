@@ -9,7 +9,7 @@ import { getNowTR } from '@/lib/utils'
 import PetDetailClient from './PetDetailClient'
 import { getPlanDisplayTitle } from '@/lib/plans/utils'
 import { hasPetCapability } from '@/lib/pets/access'
-import { getEntitlement } from '@/lib/subscription/entitlement'
+import { defaultRepository } from '@/lib/features/entitlement/repository'
 import OnboardingGate from '@/components/onboarding/OnboardingGate'
 
 type PageProps = {
@@ -198,11 +198,11 @@ export default async function PetDetailPage(props: PageProps) {
     score = Math.max(0, score - (overdue * 25))
   }
 
-  const [entitlement, { count: passkeyCount }] = await Promise.all([
-    getEntitlement(pet.owner_id),
+  const [tier, { count: passkeyCount }] = await Promise.all([
+    defaultRepository.getUserTier(pet.owner_id),
     supabase.from('passkeys').select('id', { count: 'exact', head: true }).eq('user_id', profile.id),
   ])
-  const sub = { plan: entitlement.tier }
+  const sub = { plan: tier }
 
   return (
     <OnboardingGate>

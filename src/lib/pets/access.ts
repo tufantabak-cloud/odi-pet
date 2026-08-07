@@ -42,22 +42,12 @@ const CAPABILITY_ROLES: Record<PetCapability, readonly PetRole[]> = {
   is_primary_pet_owner: ['primary_owner'],
 }
 
-/** pet_members.role → kanonik rol eşlemesi (SQL current_pet_role ile aynı). */
-const LEGACY_MEMBER_ROLE_MAP: Record<string, PetRole> = {
-  owner: 'co_owner',
-  admin: 'care_admin',
-  editor: 'care_editor',
-  viewer: 'viewer',
-}
-
 /**
  * public.current_pet_role() fonksiyonunun TypeScript aynası. Yalnızca kanonik
- * RPC kullanılamadığında (membership migration'ı henüz uygulanmamış ortamlar)
+ * RPC kullanılamadığında (petMembership migration'ı henüz uygulanmamış ortamlar)
  * devreye girer. Çözümleme sırası SQL ile birebir aynıdır:
  *   1) pet_memberships (status='active')
  *   2) pets.owner_id            → primary_owner
- *   3) pet_owners (role='owner') → co_owner
- *   4) pet_members              → rol eşlemesi
  * Öncelik sırası korunduğu için RPC'li ve RPC'siz davranış aynıdır.
  */
 async function resolvePetRoleFallback(
@@ -69,10 +59,8 @@ async function resolvePetRoleFallback(
   if (!uid) return null
 
   const [
-    { data: membership },
+    { data: petMembership },
     { data: pet },
-    { data: legacyOwner },
-    { data: legacyMember },
   ] = await Promise.all([
     supabase
       .from('pet_memberships')
@@ -82,25 +70,10 @@ async function resolvePetRoleFallback(
       .eq('status', 'active')
       .maybeSingle(),
     supabase.from('pets').select('id').eq('id', petId).eq('owner_id', uid).maybeSingle(),
-    supabase
-      .from('pet_owners')
-      .select('role')
-      .eq('pet_id', petId)
-      .eq('profile_id', uid)
-      .eq('role', 'owner')
-      .maybeSingle(),
-    supabase
-      .from('pet_members')
-      .select('role')
-      .eq('pet_id', petId)
-      .eq('profile_id', uid)
-      .maybeSingle(),
   ])
 
-  if (membership?.role) return membership.role as PetRole
+  if (petMembership?.role) return petMembership.role as PetRole
   if (pet) return 'primary_owner'
-  if (legacyOwner) return 'co_owner'
-  if (legacyMember?.role) return LEGACY_MEMBER_ROLE_MAP[legacyMember.role] ?? null
 
   return null
 }

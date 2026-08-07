@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
-import { getEntitlement } from '@/lib/subscription/entitlement'
+import { withAPIFeatureGuard } from '@/lib/features/guards/APIFeatureGuard'
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ petId: string }> }) {
+async function vetReviewHandler(req: NextRequest, { params }: { params: Promise<{ petId: string }> }) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -12,12 +12,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pet
 
   const supabase = await createServerSupabaseClient()
   const { petId } = await params
-
-  // Security: Ensure user is AI+
-  const entitlement = await getEntitlement(user.id)
-  if (!entitlement.hasAiPlus) {
-    return NextResponse.json({ error: 'AI+ plan required' }, { status: 403 })
-  }
 
   // Check if review already exists
   const { data: existing } = await supabase.from('vet_reviews').select('id').eq('risk_id', riskId).single()
@@ -65,3 +59,5 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pet
 
   return NextResponse.json({ success: true, data, isInstant })
 }
+
+export const POST = withAPIFeatureGuard('ai_vet', vetReviewHandler);

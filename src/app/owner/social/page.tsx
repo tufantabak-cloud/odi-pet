@@ -1,7 +1,6 @@
-import Link from 'next/link'
 import { createAdminSupabaseClient } from '@/lib/supabase/server'
 import { SocialTabs } from '@/components/social/SocialTabs'
-import { Compass, MessageSquare, Trophy, ArrowLeft } from 'lucide-react'
+import { Compass, MessageSquare, Trophy } from 'lucide-react'
 
 export default async function SocialPage() {
   const supabase = createAdminSupabaseClient()
@@ -41,18 +40,6 @@ export default async function SocialPage() {
   return (
     <div className="flex flex-col gap-6 pb-32 pb-safe w-full mx-auto font-sans animate-fadeInUp">
       
-      {/* 1. HERO BÖLÜMÜ */}
-      <section className="rounded-3xl overflow-hidden relative shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] bg-white/90 backdrop-blur-md p-6 md:p-8 border border-slate-100 text-center">
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-violet-500 via-primary to-rose-500" />
-        <div className="relative z-10 flex flex-col items-center max-w-2xl mx-auto">
-          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight leading-snug mb-3">
-            Odi.Pet Sosyal Dünyası
-          </h1>
-          <p className="text-slate-600 text-sm md:text-base font-normal leading-relaxed">
-            Yeni bir can dostuna yuva olun, evcil hayvanınız için en iyi yuvayı bulun, kayıp ilanlarına göz atın veya uygun eşleştirmeleri keşfedin. Odi.Pet topluluğu her zaman yanınızda!
-          </p>
-        </div>
-      </section>
 
       {/* 2. AKTİF ÖZELLİKLER (Client Component Tabs) */}
       <SocialTabs adoptions={adoptions} lostPets={lostPets} matches={matches} />
@@ -99,17 +86,6 @@ export default async function SocialPage() {
           </div>
         </div>
       </section>
-
-      {/* Action / Back to Dashboard */}
-      <div className="flex justify-center mt-2">
-        <Link 
-          href="/owner/dashboard" 
-          className="inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white min-h-[44px] px-6 rounded-2xl text-sm font-semibold transition-all active:scale-[0.98] shadow-sm"
-        >
-          <ArrowLeft className="w-4 h-4 stroke-[2.5]" />
-          Ana Sayfaya Dön
-        </Link>
-      </div>
 
     </div>
   )

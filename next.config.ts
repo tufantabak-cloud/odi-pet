@@ -24,7 +24,7 @@ const nextConfig: NextConfig = {
       style-src 'self' 'unsafe-inline' https://unpkg.com;
       img-src 'self' blob: data: https://*.supabase.co https://*.tile.openstreetmap.org;
       font-src 'self' data:;
-      connect-src 'self' https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://api.resend.com;
+      connect-src 'self' https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://api.resend.com https://*.tile.openstreetmap.org https://tile.openstreetmap.org;
       frame-src 'self' https://challenges.cloudflare.com;
       object-src 'none';
       base-uri 'self';

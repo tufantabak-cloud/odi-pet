@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
-import { getEntitlement } from '@/lib/subscription/entitlement'
+import { defaultRepository } from '@/lib/features/entitlement/repository'
 
 // GET: retrieve or create feed token for current user
 export async function GET() {
@@ -10,8 +10,7 @@ export async function GET() {
 
   const supabase = await createServerSupabaseClient()
 
-  const entitlement = await getEntitlement(user.id)
-  const plan = entitlement.tier
+  const plan = await defaultRepository.getUserTier(user.id)
 
   const { data: existing } = await supabase
     .from('calendar_feed_tokens').select('*').eq('profile_id', user.id).single()

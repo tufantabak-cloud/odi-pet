@@ -25,7 +25,7 @@ const lostReportPhotoSchema = z.union([
   }),
   z.object({
     photoUrl: z.string().url(),
-    path: z.string().min(1).max(500),
+    path: z.string().min(1).max(500).optional(),
   }),
 ])
 

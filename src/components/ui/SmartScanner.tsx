@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Camera, X, Check, Loader2, ImageIcon, AlertCircle } from "lucide-react";
+import { useFeature } from "@/lib/features/hooks";
+import { PremiumContent } from "@/components/premium/PremiumContent";
 
 export interface ParsedScannerData {
   title?: string;
@@ -27,8 +29,15 @@ export interface ParsedScannerData {
   meals_per_day?: string | number;
   date?: string;
   next_date?: string;
-  dose?: string;
-  duration?: string;
+  microchip_no?: string;
+  passport_no?: string;
+  registration_city?: string;
+  registration_district?: string;
+  agriculture_directorate?: string;
+  vet_company?: string;
+  vet_name?: string;
+  vet_phone?: string;
+  vet_email?: string;
   [key: string]: string | number | undefined;
 }
 
@@ -62,6 +71,20 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Feature guard for scan_document
+  const [currentUserId, setCurrentUserId] = useState<string>('');
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { createBrowserSupabaseClient } = await import('@/lib/supabase/client');
+      const supabase = createBrowserSupabaseClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) setCurrentUserId(session.user.id);
+    };
+    fetchUser();
+  }, []);
+
+  const scanFeature = useFeature({ userId: currentUserId, featureKey: 'scan_document' });
 
   // Clean up stream on unmount
   useEffect(() => {
@@ -524,12 +547,55 @@ export function SmartScanner({ petId, onSave, onResult, onClose }: SmartScannerP
       );
     }
 
+    if (recordType === "pet_passport" || recordType === "official_document" || parsedData.microchip_no || parsedData.passport_no || parsedData.agriculture_directorate || parsedData.registration_city) {
+      return (
+        <div className="flex flex-col gap-4 mb-4">
+          <div className="bg-blue-50 text-blue-800 p-3 rounded-xl border border-blue-200 flex items-start gap-2 mb-2">
+            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+            <p className="text-[13px] font-normal leading-tight">Bu bilgiler taradığınız resmi belgeden/pasaporttan otomatik okunmuştur. İnceleyip düzenleyebilirsiniz.</p>
+          </div>
+          
+          {renderField('microchip_no', 'Mikroçip Numarası', parsedData.microchip_no, 'text', true)}
+          {renderField('passport_no', 'Pasaport / Karne No', parsedData.passport_no, 'text', true)}
+          {renderField('registration_city', 'Kayıtlı İl', parsedData.registration_city)}
+          {renderField('registration_district', 'Kayıtlı İlçe', parsedData.registration_district)}
+          {renderField('agriculture_directorate', 'Kayıtlı Olduğu İlçe Tarım ve Orman Müdürlüğü', parsedData.agriculture_directorate, 'text', true)}
+          {renderField('vet_company', 'Veteriner Kliniği / Şirket', parsedData.vet_company)}
+          {renderField('vet_name', 'Veteriner Hekim Adı', parsedData.vet_name)}
+          {renderField('vet_phone', 'Veteriner Telefonu', parsedData.vet_phone)}
+          {renderField('vet_email', 'Veteriner E-posta', parsedData.vet_email)}
+        </div>
+      );
+    }
+
     return (
       <div className="bg-white p-6 rounded-2xl border border-border-main shadow-sm text-center mb-6">
         <p className="text-text-secondary font-normal">Bu belge tipi tam anlaşılamadı. Sadece metin içeriğini not olarak kaydedebiliriz veya tekrar deneyebilirsiniz.</p>
       </div>
     );
   };
+
+  if (!scanFeature.loading && !scanFeature.enabled) {
+    return (
+      <div 
+        onClick={(e) => e.stopPropagation()}
+        className="fixed inset-0 z-[10010] flex flex-col items-center justify-center bg-surface/95 backdrop-blur-sm p-4"
+      >
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden relative border border-border-main">
+          <button onClick={onClose} className="absolute right-4 top-4 p-2 rounded-full bg-surface text-text-secondary hover:bg-surface transition-colors z-10">
+            <X className="w-5 h-5" />
+          </button>
+          <div className="p-2">
+            <PremiumContent 
+              featureState={scanFeature} 
+              featureName="Akıllı Belge Tarayıcı" 
+              onUpgrade={() => { window.location.href = '/owner/profile/subscription'; }} 
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 

@@ -22,19 +22,7 @@ export default async function IndexPage({ searchParams }: { searchParams: Promis
   } else if (profile?.role === 'vet') {
     redirect('/clinic/dashboard')
   } else if (profile?.role === 'admin') {
-    const supabase = await createServerSupabaseClient()
-    const { data: membership } = await supabase
-      .from('clinic_memberships')
-      .select('clinic_id')
-      .eq('profile_id', profile.id)
-      .limit(1)
-      .maybeSingle()
-
-    if (membership) {
-      redirect('/clinic/dashboard')
-    } else {
-      redirect('/admin')
-    }
+    redirect('/admin')
   } else if (profile?.role === 'founder') {
     redirect('/admin')
   }

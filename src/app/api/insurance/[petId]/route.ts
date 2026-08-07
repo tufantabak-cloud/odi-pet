@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { computeInsuranceEligibility } from '@/lib/insurance/eligibility-engine'
-import { getEntitlement } from '@/lib/subscription/entitlement'
 import { Database } from '@/lib/database.types'
+import { withAPIFeatureGuard } from '@/lib/features/guards/APIFeatureGuard'
 
 
 type DiseaseRecordRow = Database['public']['Tables']['health_diseases']['Row']
@@ -11,27 +10,17 @@ type DiseaseRecordRow = Database['public']['Tables']['health_diseases']['Row']
 
 
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ petId: string }> }) {
-  const user = await getSessionUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
+async function insuranceHandler(req: NextRequest, { params }: { params: Promise<{ petId: string }> }) {
   const supabase = await createServerSupabaseClient()
   const { petId } = await params
   const force = req.nextUrl.searchParams.get('force') === 'true'
-
-  // Plan gate — free gets teaser only
-  const entitlement = await getEntitlement(user.id)
-  const plan = entitlement.tier
-  if (!entitlement.isPremium) {
-    return NextResponse.json({ locked: true, plan, message: 'Insurance Readiness Pro plan ile açılır' })
-  }
 
   // 30-day cache
   if (!force) {
     const { data: cached } = await supabase.from('insurance_profiles')
       .select('*').eq('pet_id', petId).single()
     if (cached && new Date(cached.next_review_at) > new Date()) {
-      return NextResponse.json({ ...cached, plan, cached: true })
+      return NextResponse.json({ ...cached, cached: true })
     }
   }
 
@@ -100,6 +89,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ petI
   })
 
   // ── Persist / upsert ────────────────────────────────────
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const { data: saved } = await supabase.from('insurance_profiles').upsert({
     pet_id: petId,
     profile_id: user.id,
@@ -118,12 +110,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ petI
 
   return NextResponse.json({
     ...result,
-    plan,
     cached: false,
     computedAt: saved?.computed_at ?? new Date().toISOString(),
     nextReviewAt: saved?.next_review_at,
     // Insurance-ready underwriting export
-    underwritingData: plan === 'ai_plus' ? {
+    underwritingData: {
       preventiveComplianceScore,
       incidentCount,
       chronicConditionCount,
@@ -131,6 +122,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ petI
       householdReliabilityScore,
       hasRabiesVaccine,
       profileComplete,
-    } : undefined,
+    },
   })
 }
+
+export const GET = withAPIFeatureGuard('insurance_readiness', insuranceHandler);

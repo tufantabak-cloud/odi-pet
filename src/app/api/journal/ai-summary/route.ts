@@ -3,6 +3,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getIP, aiSummaryRateLimit } from '@/lib/auth-security'
+import { withAPIFeatureGuard } from '@/lib/features/guards/APIFeatureGuard'
+import { getUsageEngine } from '@/lib/features/usage'
 
 const SYSTEM_INSTRUCTION = `Sen Odi.Pet uygulamasının veri özetleme asistanısın. Kullanıcıya evcil hayvanının son günlerdeki günlük kayıtlarının kısa bir trend özetini sunuyorsun. Türkçe konuşuyorsun.
 
@@ -14,7 +16,7 @@ KURALLAR:
 "Girdiğiniz kayıtlar, petinizin [trend özetine uygun 1-2 kelime] gösterdiğini düşündürüyor. Bu birçok farklı nedenden kaynaklanabilir. Kesin bilgi ve doğru tanı için en kısa sürede veteriner hekiminize danışmanızı öneririz."
 Not: Yukarıdaki paragraftaki [trend özetine uygun 1-2 kelime] kısmını cümlenin anlamlı olması için doldur, örneğin "iştah kaybı", "stres belirtileri", "değişken bir ruh hali" gibi.`
 
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -55,6 +57,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ summary: "AI servisi şu an kullanılamıyor, ancak kayıtlarınız güvende." })
   }
 
+  // Quota consumption — check BEFORE expensive Gemini call
+  const requestId = crypto.randomUUID()
+  const usageResult = await getUsageEngine().consumeUsage({
+    userId: user.id,
+    featureKey: 'ai_vet',
+    amount: 1,
+    idempotencyKey: requestId,
+  })
+  
+  if (!usageResult.success && !usageResult.idempotentAlreadyProcessed) {
+    return NextResponse.json(
+      { summary: 'Kullanım kotanız doldu. Lütfen planınızı yükseltin.' },
+      { status: 403 }
+    )
+  }
+
   try {
     const genAI = new GoogleGenerativeAI(apiKey)
     const model = genAI.getGenerativeModel({
@@ -75,3 +93,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ summary: "Özet çıkarılırken bir hata oluştu, lütfen daha sonra tekrar deneyin." }, { status: 500 })
   }
 }
+
+export const POST = withAPIFeatureGuard('ai_vet', handler)

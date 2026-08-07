@@ -7,7 +7,9 @@ import { Database } from '@/types';
 import { z } from 'zod';
 import PaywallCard from '@/components/subscription/PaywallCard';
 
-export const CategorySchema = z.enum(['general', 'health', 'document', 'memory', 'daily']);
+import { useFeature } from '@/lib/features/hooks';
+
+export const CategorySchema = z.enum(['general', 'health', 'document', 'memory', 'daily', 'growth_timeline']);
 export type CategoryType = z.infer<typeof CategorySchema>;
 
 const categoryLabels: Record<CategoryType, string> = {
@@ -15,7 +17,8 @@ const categoryLabels: Record<CategoryType, string> = {
   health: 'Sağlık',
   document: 'Belge',
   memory: 'Anı',
-  daily: 'Günlük'
+  daily: 'Günlük',
+  growth_timeline: 'Gelişim'
 };
 
 type PetRow = Database['public']['Tables']['pets']['Row'];
@@ -29,13 +32,20 @@ export default function GalleryTab({ pet }: { pet: PetWithCover }) {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<any | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
-  const [isPremium, setIsPremium] = useState(false);
+
   
   // New Form States
   const [caption, setCaption] = useState('');
   const [takenAt, setTakenAt] = useState('');
   const [category, setCategory] = useState<CategoryType>('general');
   const [activeTab, setActiveTab] = useState<CategoryType | 'all'>('all');
+
+  const [userId, setUserId] = useState<string>('');
+  
+  const galleryFeature = useFeature({
+    userId,
+    featureKey: 'gallery_capacity'
+  });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const supabase = createBrowserSupabaseClient();
@@ -44,14 +54,7 @@ export default function GalleryTab({ pet }: { pet: PetWithCover }) {
     setLoading(true);
     const { data: userData } = await supabase.auth.getUser();
     if (userData.user?.id) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('premium_until')
-        .eq('id', userData.user.id)
-        .maybeSingle();
-      if (profile?.premium_until && new Date(profile.premium_until) > new Date()) {
-        setIsPremium(true);
-      }
+      setUserId(userData.user.id);
     }
 
     const { data, error } = await supabase
@@ -70,7 +73,8 @@ export default function GalleryTab({ pet }: { pet: PetWithCover }) {
     fetchPhotos();
   }, [pet.id]);
 
-  const maxPhotosAllowed = isPremium ? 200 : 10;
+  const maxPhotosAllowed = galleryFeature.limit || 5;
+  const isOverLegacyLimit = !galleryFeature.enabled && photos.length > maxPhotosAllowed;
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -229,8 +233,12 @@ export default function GalleryTab({ pet }: { pet: PetWithCover }) {
         />
         {photos.length >= maxPhotosAllowed || showPaywall ? (
           <PaywallCard
-            title="Galeri Yükleme Limitine Ulaşıldı"
-            description={`Ücretsiz planda evcil hayvan başına en fazla ${maxPhotosAllowed} fotoğraflık alan sunulur. Odi Pro ile 200 fotoğrafa kadar yükleyebilirsiniz.`}
+            title={isOverLegacyLimit ? 'Plan Limitiniz Güncellendi' : 'Galeri Yükleme Limitine Ulaşıldı'}
+            description={
+              isOverLegacyLimit
+                ? `Limitiniz güncellendi. Mevcut ${photos.length} fotoğrafınız korunuyor; yeni fotoğraf eklemek için planınızı yükseltin.`
+                : `Planınızda en fazla ${maxPhotosAllowed} fotoğraflık alan sunulur. Daha fazla fotoğraf yüklemek için planınızı yükseltin.`
+            }
             featureName="Galeri Kapasitesi"
           />
         ) : (

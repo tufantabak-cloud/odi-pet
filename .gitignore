@@ -75,3 +75,10 @@ test-db.js
 test-estrus-db.js
 check_types.ts
 test_*.ts
+
+# Playwright
+node_modules/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

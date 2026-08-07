@@ -1,11 +1,13 @@
 import { createAdminSupabaseClient } from '@/lib/supabase/server'
 import { DEFAULT_SETTINGS } from '@/app/api/admin/memberships/settings/route'
+import { membershipService } from '@/lib/membership'
 
 export async function grantReferralCredit(referralId: string) {
   const adminSupabase = createAdminSupabaseClient()
 
   // 1. Dinamik ayarları veritabanından çek (veya varsayılan kuralları yükle)
   let settings = { ...DEFAULT_SETTINGS }
+  let referralRewardDays = 30
 
   try {
     const { data: settingsRow } = await adminSupabase
@@ -16,6 +18,16 @@ export async function grantReferralCredit(referralId: string) {
 
     if (settingsRow?.value) {
       settings = { ...DEFAULT_SETTINGS, ...settingsRow.value }
+    }
+
+    const { data: rewardRow } = await adminSupabase
+      .from('system_settings')
+      .select('value')
+      .eq('key', 'referral_rewards')
+      .maybeSingle()
+
+    if (rewardRow?.value?.referral_reward_days) {
+      referralRewardDays = Number(rewardRow.value.referral_reward_days) || 30
     }
   } catch {
     // Fallback default values
@@ -58,15 +70,9 @@ export async function grantReferralCredit(referralId: string) {
     .eq('referrer_id', referrerId)
     .eq('status', 'qualified')
 
-  const inviteIndex = (totalQualifiedCount ?? 0) + 1 // 1-indexed (1. Davet, 2. Davet, 3. Davet...)
+  const inviteIndex = (totalQualifiedCount ?? 0) + 1 // 1-indexed
 
-  // 5. Kademeli davet kredisi hesaplama:
-  // 1. Yeni Üye: 30 Gün
-  // 2. Yeni Üye: 30 + 30 = 60 Gün
-  // 3. Yeni Üye: 30 + 60 = 90 Gün
-  // 4. Yeni Üye: 30 + 120 = 150 Gün
-  // 5. Yeni Üye: 30 + 300 = 330 Gün
-  let referrerCreditDays = settings.referral_tier_1_days
+  let referrerCreditDays = Math.max(referralRewardDays, settings.referral_tier_1_days)
 
   if (inviteIndex === 2) {
     referrerCreditDays += settings.referral_tier_2_bonus
@@ -78,7 +84,7 @@ export async function grantReferralCredit(referralId: string) {
     referrerCreditDays += settings.referral_tier_5_bonus
   }
 
-  // 6. Davet Edene Kademeli Kredi Tanımla (grant_membership_credit RPC)
+  // 6. Davet Edene Kademeli Kredi Tanımla (grant_membership_credit RPC + MembershipService event/audit/notification)
   await adminSupabase.rpc('grant_membership_credit', {
     p_profile_id: referrerId,
     p_days: referrerCreditDays,
@@ -87,7 +93,17 @@ export async function grantReferralCredit(referralId: string) {
     p_metadata: { referral_id: referralId, role: 'referrer', invite_index: inviteIndex, days: referrerCreditDays },
   })
 
-  // 7. Davet Edilene (Yeni Üye) Kredi Tanımla (grant_membership_credit RPC)
+  await membershipService.extendMembership(
+    {
+      profileId: referrerId,
+      additionalDays: referrerCreditDays,
+      reason: 'REFERRAL_REWARD',
+      metadata: { referral_id: referralId, invite_index: inviteIndex }
+    },
+    'referral'
+  )
+
+  // 7. Davet Edilene (Yeni Üye) Kredi Tanımla
   await adminSupabase.rpc('grant_membership_credit', {
     p_profile_id: refereeId,
     p_days: settings.referee_welcome_days,
@@ -106,3 +122,4 @@ export async function grantReferralCredit(referralId: string) {
 
   return { success: true, referrerDays: referrerCreditDays, refereeDays: settings.referee_welcome_days }
 }
+

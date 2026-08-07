@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { getIP, aiVetRateLimit } from '@/lib/auth-security'
+import { withAPIFeatureGuard } from '@/lib/features/guards/APIFeatureGuard'
+import { getUsageEngine } from '@/lib/features/usage'
 
 const SYSTEM_INSTRUCTION = `Sen Odi AI Vet adlı bir veteriner triaj asistanısın. Türkçe konuşuyorsun.
 
@@ -46,7 +48,7 @@ function heuristicFallback(_symptomStr?: string) {
   }
 }
 
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest) {
   // Auth guard — Gemini API maliyetini korumak için
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -97,6 +99,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ text: fb.text, score: fb.score, severity: fb.severity, powered_by: 'heuristic' })
   }
 
+  // Quota consumption — check BEFORE expensive Gemini call
+  const requestId = crypto.randomUUID()
+  const usageResult = await getUsageEngine().consumeUsage({
+    userId: user.id,
+    featureKey: 'ai_vet',
+    amount: 1,
+    idempotencyKey: requestId,
+  })
+  if (!usageResult.success && !usageResult.idempotentAlreadyProcessed) {
+    return NextResponse.json(
+      { error: 'Kullanım kotanız doldu. Lütfen planınızı yükseltin.' },
+      { status: 403 }
+    )
+  }
+
   try {
     const genAI = new GoogleGenerativeAI(apiKey)
     const model = genAI.getGenerativeModel({
@@ -127,3 +144,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ text: fb.text, score: fb.score, severity: fb.severity, powered_by: 'heuristic' })
   }
 }
+
+export const POST = withAPIFeatureGuard('ai_vet', handler)
+

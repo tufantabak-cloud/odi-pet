@@ -46,7 +46,7 @@ function RoleBadge({ role }: { role: string | null }) {
 }
 
 function SubBadge({ plan, status }: { plan: string | null; status: string | null }) {
-  if (!plan || plan === 'free') {
+  if (!plan || String(plan) === 'free') {
     return <span className="text-[12px] text-text-secondary font-semibold">Ücretsiz</span>
   }
   const isActive = status === 'active'
@@ -70,7 +70,7 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
   // Load profile with fallback if optional premium columns fail
   let { data: profile } = await supabase
     .from('profiles')
-    .select('id, first_name, last_name, email, role, phone, created_at, premium_until, pro_trial_until, premium_tier')
+    .select('id, first_name, last_name, email, role, phone, created_at, pro_trial_until')
     .eq('id', id)
     .maybeSingle()
 
@@ -84,9 +84,6 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
     profile = fallbackProfile as any
   }
 
-  if (profile) {
-    profile.premium_until = profile.premium_until || (profile as any).pro_trial_until || null
-  }
 
   // Load other details in parallel
   const [
@@ -282,12 +279,12 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
             </h2>
 
             <div className="space-y-3">
-              <ProCountdownCard premiumUntil={profile.premium_until} />
+              <ProCountdownCard premiumUntil={subscription?.current_period_end || null} />
 
               {subscription && (
                 <div className="pt-2 border-t border-border-main space-y-1 text-[12px] text-text-secondary">
                   <div className="font-bold text-slate-800 mb-1">Stripe / Ödemeli Abonelik:</div>
-                  <SubBadge plan={subscription.plan} status={subscription.status} />
+                  <SubBadge plan={subscription['plan']} status={subscription['status']} />
                   {subscription.ends_at && (
                     <div className="mt-1 text-2xs">Bitiş: {new Date(subscription.ends_at).toLocaleDateString('tr-TR')}</div>
                   )}
@@ -334,7 +331,7 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
             </div>
             <div className="flex items-center justify-between text-[13px]">
               <span className="text-text-secondary">Plan</span>
-              <span className="font-bold text-text-primary">{subscription?.plan?.toUpperCase() ?? 'FREE'}</span>
+              <span className="font-bold text-text-primary">{subscription?.['plan']?.toUpperCase() ?? 'FREE'}</span>
             </div>
           </div>
 

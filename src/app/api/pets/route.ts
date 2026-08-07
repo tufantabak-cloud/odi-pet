@@ -131,10 +131,13 @@ export async function POST(req: NextRequest) {
     pedigree_dam:  str(fd, 'pedigree_dam')  || null,
     vet_name:      str(fd, 'vet_name')      || null,
     vet_phone:     str(fd, 'vet_phone')     || null,
-    city:          str(fd, 'city')          || null,
-    district:      str(fd, 'district')      || null,
-    is_neutered:   str(fd, 'is_neutered') === 'true',
-    lifestyle:     str(fd, 'lifestyle')     || null,
+    city:                   str(fd, 'city')                   || null,
+    district:               str(fd, 'district')               || null,
+    registration_city:      str(fd, 'registration_city')      || null,
+    registration_district:  str(fd, 'registration_district')  || null,
+    agriculture_directorate: str(fd, 'agriculture_directorate') || null,
+    is_neutered:            str(fd, 'is_neutered') === 'true',
+    lifestyle:              str(fd, 'lifestyle')              || null,
   }
 
 

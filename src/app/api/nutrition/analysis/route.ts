@@ -1,24 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSessionUser } from '@/lib/auth/get-current-profile'
-import { getEntitlement } from '@/lib/subscription/entitlement'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { withAPIFeatureGuard } from '@/lib/features/guards/APIFeatureGuard'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(req: NextRequest) {
-  const user = await getSessionUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  const entitlement = await getEntitlement(user.id)
-  
-  // GATING LOGIC
-  if (!entitlement.isPremium) {
-    return NextResponse.json({
-      locked: true,
-      message: "Beslenme analizi için Premium gerekli"
-    }, { status: 402 }) // Payment Required
-  }
-
+async function analysisHandler(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const petId = searchParams.get('petId')
 
@@ -49,4 +35,6 @@ export async function GET(req: NextRequest) {
     }
   })
 }
+
+export const GET = withAPIFeatureGuard('nutrition_analysis', analysisHandler);
 

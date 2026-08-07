@@ -1,8 +1,8 @@
 import { getCurrentProfile, getSessionUser } from '@/lib/auth/get-current-profile'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { getEntitlement } from '@/lib/subscription/entitlement'
-import Link from 'next/link'
+import { defaultRepository } from '@/lib/features/entitlement/repository'
 import { logout } from '@/features/auth/actions'
+import Link from 'next/link'
 import PetCardActions from './PetCardActions'
 import NotificationSettings from './NotificationSettings'
 import CoachMark from '@/components/ui/CoachMark'
@@ -77,15 +77,20 @@ export default async function ProfileMenuPage({
   const totalReferredUsers = userReferrals?.length ?? 0
   const qualifiedReferrals = userReferrals?.filter(r => r.status === 'qualified').length ?? 0
 
-  const entitlement = await getEntitlement(profile?.id ?? '')
+  const { data: userSubscription } = await supabase.from('user_subscriptions').select('current_period_end, status').eq('profile_id', profile?.id ?? '').maybeSingle()
 
-  const planName =
-    entitlement.tier === 'pro'
-      ? 'Odi Pro'
-      : entitlement.tier === 'ai_plus'
-      ? 'Odi AI+'
-      : 'Odi Free'
-  const isPremium = entitlement.isPremium
+  const hasActiveSub = userSubscription?.status === 'active' || userSubscription?.status === 'trialing'
+  const planName = hasActiveSub ? 'Odi Pro' : 'Odi Free'
+
+  let daysLeft = 0;
+  let validUntil: string | null = null;
+  if (userSubscription?.current_period_end) {
+     const end = new Date(userSubscription.current_period_end).getTime()
+     daysLeft = Math.max(0, Math.ceil((end - Date.now()) / (1000 * 60 * 60 * 24)))
+     validUntil = userSubscription.current_period_end
+  } else if (hasActiveSub) {
+     daysLeft = 36500; // infinite if they are premium without an end date
+  }
 
   let hasVaccineRecords = false
   if (pets && pets.length > 0) {
@@ -108,7 +113,7 @@ export default async function ProfileMenuPage({
     { done: !!((profile as any)?.emergency_contact_name), label: 'Acil İletişim Kişisi Ekle', action: '+ Acil Kişi', link: '/owner/profile/edit' },
     { done: !!((profile as any)?.city), label: 'Konum Bilgisi Ekle', action: '+ Konum Ekle', link: '/owner/profile/edit' },
     { done: (passkeyCount ?? 0) > 0, label: 'Biyometrik Giriş Tanımla', action: '+ Şifresiz Giriş', link: '/owner/profile?biometric=true' },
-    { done: isPremium, label: 'Ödeme Yöntemi Ekle', action: '+ Ödeme Yöntemi Ekle', link: '/owner/profile/subscription' },
+    { done: hasActiveSub, label: 'Ödeme Yöntemi Ekle', action: '+ Ödeme Yöntemi Ekle', link: '/owner/profile/subscription' },
     { done: !!(pets && pets.length > 0), label: 'İlk Can Dostunu Ekle', action: '+ Can Dost Ekle', link: '/owner/pets/add' },
     { done: hasVaccineRecords, label: 'Aşı Kaydı Gir', action: '+ Aşı Ekle', link: pets && pets.length > 0 ? `/owner/pets/${pets[0].id}` : '/owner/pets/add' },
   ]
@@ -140,10 +145,10 @@ export default async function ProfileMenuPage({
             {profile?.first_name?.charAt(0) ?? 'U'}
             <div
               className={`absolute bottom-0 right-0 px-2 h-7 rounded-full border-2 border-white flex items-center justify-center text-2xs font-bold ${
-                isPremium ? 'bg-amber-400 text-white' : 'bg-slate-200 text-slate-600'
+                hasActiveSub ? 'bg-amber-400 text-white' : 'bg-slate-200 text-slate-600'
               }`}
             >
-              {isPremium ? (entitlement.source === 'credit' ? `PRO · ${entitlement.daysLeft} gün` : 'PRO') : 'FREE'}
+              {hasActiveSub ? (daysLeft < 3650 ? `PRO · ${daysLeft} gün` : 'PRO') : 'FREE'}
             </div>
           </div>
 
@@ -155,7 +160,7 @@ export default async function ProfileMenuPage({
           <div className="flex items-center gap-2 mt-3 bg-bg-main px-4 py-1.5 rounded-full border border-border-main">
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-xs font-bold text-text-secondary uppercase tracking-wider">
-              {entitlement.source === 'credit' ? `Odi Pro · ${entitlement.daysLeft} gün kaldı` : `${planName} Üyesi`}
+              {daysLeft > 0 && daysLeft < 3650 ? `Odi Pro · ${daysLeft} gün kaldı` : `${planName} Üyesi`}
             </span>
           </div>
 
@@ -300,18 +305,18 @@ export default async function ProfileMenuPage({
             <div>
               <h3 className="text-xl font-extrabold text-text-primary flex items-center gap-2">
                 {planName}
-                {isPremium && <Star className="w-5 h-5 text-amber-400 fill-amber-400" />}
+                {hasActiveSub && <Star className="w-5 h-5 text-amber-400 fill-amber-400" />}
               </h3>
               <p className="text-sm font-semibold text-text-secondary mt-1">
-                {isPremium ? (
-                  entitlement.daysLeft >= 3650 ? (
+                {hasActiveSub ? (
+                  daysLeft >= 3650 ? (
                     <span className="text-amber-700 font-bold flex items-center gap-1">
                       👑 Ömür Boyu Sonsuz Pro Kullanım (Süresiz ♾️)
                     </span>
                   ) : (
                     <span className="text-amber-700 font-bold flex items-center gap-1">
-                      👑 Aktif Pro Kullanıcı ({entitlement.daysLeft} Gün Kaldı
-                      {entitlement.validUntil && ` · Bitiş: ${new Date(entitlement.validUntil).toLocaleDateString('tr-TR')}`})
+                      👑 Aktif Pro Kullanıcı ({daysLeft} Gün Kaldı
+                      {validUntil && ` · Bitiş: ${new Date(validUntil).toLocaleDateString('tr-TR')}`})
                     </span>
                   )
                 ) : (
@@ -319,10 +324,10 @@ export default async function ProfileMenuPage({
                 )}
               </p>
             </div>
-            {isPremium ? (
+            {hasActiveSub ? (
               <span className="px-3.5 py-1 bg-amber-50 text-amber-800 text-xs font-black rounded-full border border-amber-200/80 flex items-center gap-1">
                 <Crown className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
-                {entitlement.daysLeft >= 3650 ? 'Sonsuz ♾️ Pro' : `${entitlement.daysLeft} Gün Aktif`}
+                {daysLeft >= 3650 ? 'Sonsuz ♾️ Pro' : `${daysLeft} Gün Aktif`}
               </span>
             ) : (
               <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-full">
@@ -340,10 +345,10 @@ export default async function ProfileMenuPage({
                 Abonelik Durumu
               </div>
               <div className="text-base font-black text-amber-950">
-                {isPremium ? (entitlement.daysLeft >= 3650 ? 'Sonsuz ♾️' : `${entitlement.daysLeft} Gün Kaldı`) : 'Free (Ücretsiz)'}
+                {hasActiveSub ? (daysLeft >= 3650 ? 'Sonsuz ♾️' : `${daysLeft} Gün Kaldı`) : 'Free (Ücretsiz)'}
               </div>
               <div className="text-2xs font-semibold text-amber-700">
-                {isPremium ? (entitlement.daysLeft >= 3650 ? 'Sınırsız Ömür Boyu Erişim' : `Son Gün: ${new Date(entitlement.validUntil!).toLocaleDateString('tr-TR')}`) : 'Pro avantajlar pasif'}
+                {hasActiveSub ? (daysLeft >= 3650 ? 'Sınırsız Ömür Boyu Erişim' : `Son Gün: ${validUntil ? new Date(validUntil).toLocaleDateString('tr-TR') : ''}`) : 'Pro avantajlar pasif'}
               </div>
             </div>
 
@@ -408,10 +413,10 @@ export default async function ProfileMenuPage({
             <Link
               href="/owner/profile/subscription"
               className={`rounded-2xl text-sm font-semibold py-2.5 px-5 transition-all active:scale-[0.98] ${
-                isPremium ? 'btn-secondary' : 'btn-primary'
+                hasActiveSub ? 'btn-secondary' : 'btn-primary'
               }`}
             >
-              {isPremium ? 'Aboneliği Yönet →' : 'Pro\'ya Yükselt →'}
+              {hasActiveSub ? 'Aboneliği Yönet →' : 'Pro\'ya Yükselt →'}
             </Link>
             <Link
               href="/referral"

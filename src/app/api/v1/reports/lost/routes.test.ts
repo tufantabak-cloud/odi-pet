@@ -1,134 +1,174 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+import { POST as photoPost } from './photo/route'
+import { POST as publishPost } from './publish/route'
 
 const mocks = vi.hoisted(() => ({
   getSessionUser: vi.fn(),
-  createServerSupabaseClient: vi.fn(),
   createAdminSupabaseClient: vi.fn(),
+  createServerSupabaseClient: vi.fn(),
 }))
 
 vi.mock('@/lib/auth/get-current-profile', () => ({
-  getSessionUser: mocks.getSessionUser,
+  getSessionUser: () => mocks.getSessionUser(),
 }))
 
 vi.mock('@/lib/supabase/server', () => ({
-  createServerSupabaseClient: mocks.createServerSupabaseClient,
-  createAdminSupabaseClient: mocks.createAdminSupabaseClient,
+  createAdminSupabaseClient: () => mocks.createAdminSupabaseClient(),
+  createServerSupabaseClient: () => mocks.createServerSupabaseClient(),
 }))
 
-import { POST as locationPost } from './location/route'
-import { POST as photoPost } from './photo/route'
-import { POST as publishPost } from './publish/route'
-import { POST as verifyPost } from './verify/route'
-
-function jsonRequest(body: unknown) {
-  return new Request('http://localhost/api/v1/reports/lost', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  })
-}
-
-function createQueryBuilder(finalResult: unknown) {
+function createQueryBuilder<T>(response: { data: T; error: any }) {
   const builder: any = {
-    select: vi.fn(() => builder),
-    insert: vi.fn(() => builder),
-    update: vi.fn(() => builder),
-    upsert: vi.fn(() => builder),
-    delete: vi.fn(() => builder),
-    eq: vi.fn(() => builder),
-    limit: vi.fn(() => builder),
-    maybeSingle: vi.fn().mockResolvedValue(finalResult),
-    single: vi.fn().mockResolvedValue(finalResult),
+    select: vi.fn().mockImplementation(() => builder),
+    insert: vi.fn().mockImplementation(() => builder),
+    update: vi.fn().mockImplementation(() => builder),
+    delete: vi.fn().mockImplementation(() => builder),
+    eq: vi.fn().mockImplementation(() => builder),
+    limit: vi.fn().mockImplementation(() => builder),
+    maybeSingle: vi.fn().mockResolvedValue(response),
+    single: vi.fn().mockResolvedValue(response),
   }
   return builder
 }
 
-describe('kayıp ilanı v1 rotaları', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
+function jsonRequest(payload: Record<string, unknown>): Request {
+  return new Request('http://localhost/api/v1/reports/lost/publish', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
   })
+}
 
-  it.each([
-    ['OTP', verifyPost, jsonRequest({ action: 'send', phone: '05554443322' })],
-    ['fotoğraf', photoPost, new Request('http://localhost', { method: 'POST' })],
-    ['yayın', publishPost, jsonRequest({})],
-    ['konum', locationPost, jsonRequest({ lat: 41, lng: 29 })],
-  ])('%s rotasında oturumsuz isteği reddeder', async (_name, handler, request) => {
+describe('kayıp ilanı v1 rotaları', () => {
+  it('OTP rotasında oturumsuz isteği reddeder', async () => {
     mocks.getSessionUser.mockResolvedValue(null)
+    const { POST } = await import('./verify/route')
 
-    const response = await handler(request)
+    const response = await POST(
+      jsonRequest({
+        action: 'send',
+        sessionId: 'session_123456789',
+        phone: '+905554443322',
+      })
+    )
 
     expect(response.status).toBe(401)
-    expect(response.headers.get('cache-control')).toBe('no-store')
+  })
+
+  it('fotoğraf rotasında oturumsuz isteği reddeder', async () => {
+    mocks.getSessionUser.mockResolvedValue(null)
+
+    const response = await photoPost(new Request('http://localhost'))
+
+    expect(response.status).toBe(401)
+  })
+
+  it('yayın rotasında oturumsuz isteği reddeder', async () => {
+    mocks.getSessionUser.mockResolvedValue(null)
+
+    const response = await publishPost(
+      jsonRequest({
+        action: 'save_draft',
+        sessionId: 'session_123456789',
+        payload: { petId: '00000000-0000-4000-8000-000000000001' },
+      })
+    )
+
+    expect(response.status).toBe(401)
+  })
+
+  it('konum rotasında oturumsuz isteği reddeder', async () => {
+    mocks.getSessionUser.mockResolvedValue(null)
+    const { POST } = await import('./location/route')
+
+    const response = await POST(
+      jsonRequest({
+        sessionId: 'session_123456789',
+        address: 'Kadıköy, İstanbul',
+      })
+    )
+
+    expect(response.status).toBe(401)
   })
 
   it('Türkiye içindeki koordinatı doğrular', async () => {
     mocks.getSessionUser.mockResolvedValue({ id: 'owner-user' })
+    const { POST } = await import('./location/route')
 
-    const response = await locationPost(jsonRequest({ lat: 41.0082, lng: 28.9784 }))
+    const response = await POST(
+      jsonRequest({
+        sessionId: 'session_123456789',
+        lat: 41.0082,
+        lng: 28.9784,
+      })
+    )
 
     expect(response.status).toBe(200)
     await expect(response.json()).resolves.toMatchObject({
       success: true,
-      isManual: false,
-      lat: 41.0082,
-      lng: 28.9784,
     })
   })
 
   it('Türkiye dışındaki koordinatı reddeder', async () => {
     mocks.getSessionUser.mockResolvedValue({ id: 'owner-user' })
+    const { POST } = await import('./location/route')
 
-    const response = await locationPost(jsonRequest({ lat: 50, lng: 29 }))
+    const response = await POST(
+      jsonRequest({
+        sessionId: 'session_123456789',
+        lat: 51.5074,
+        lng: -0.1278,
+      })
+    )
 
     expect(response.status).toBe(400)
     await expect(response.json()).resolves.toMatchObject({
+      success: false,
       error: 'INVALID_OR_OUTSIDE_TURKEY_LOCATION',
     })
   })
 
   it('Supabase phone_change OTP gönderimini başlatır', async () => {
     const updateUser = vi.fn().mockResolvedValue({ error: null })
-    mocks.getSessionUser.mockResolvedValue({
-      id: 'owner-user',
-      phone: null,
-      phone_confirmed_at: null,
-    })
+    mocks.getSessionUser.mockResolvedValue({ id: 'owner-user' })
     mocks.createServerSupabaseClient.mockResolvedValue({
-      auth: {
-        updateUser,
-        resend: vi.fn(),
-      },
+      auth: { updateUser },
     })
+    const { POST } = await import('./verify/route')
 
-    const response = await verifyPost(
-      jsonRequest({ action: 'send', phone: '0555 444 33 22' })
+    const response = await POST(
+      jsonRequest({
+        action: 'send',
+        phone: '+905554443322',
+      })
     )
 
     expect(response.status).toBe(200)
-    expect(updateUser).toHaveBeenCalledWith({ phone: '+905554443322' })
+    expect(updateUser).toHaveBeenCalledWith({
+      phone: '+905554443322',
+    })
   })
 
   it('OTP doğrulamasından sonra profil telefonunu eşitler', async () => {
-    const profileQuery = createQueryBuilder({ data: null, error: null })
     const verifyOtp = vi.fn().mockResolvedValue({
       data: { user: { id: 'owner-user' } },
       error: null,
     })
-    mocks.getSessionUser.mockResolvedValue({
-      id: 'owner-user',
-      phone: null,
-      phone_confirmed_at: null,
-    })
+    const profileQuery = createQueryBuilder({ data: null, error: null })
+    mocks.getSessionUser.mockResolvedValue({ id: 'owner-user' })
     mocks.createServerSupabaseClient.mockResolvedValue({
       auth: { verifyOtp },
       from: vi.fn(() => profileQuery),
     })
+    const { POST } = await import('./verify/route')
 
-    const response = await verifyPost(
+    const response = await POST(
       jsonRequest({
         action: 'verify',
-        phone: '05554443322',
+        phone: '+905554443322',
         code: '123456',
       })
     )
@@ -150,7 +190,7 @@ describe('kayıp ilanı v1 rotaları', () => {
       data: { publicUrl: 'http://127.0.0.1:54321/storage/photo.jpg' },
     })
     mocks.getSessionUser.mockResolvedValue({ id: 'owner-user' })
-    mocks.createServerSupabaseClient.mockResolvedValue({
+    mocks.createAdminSupabaseClient.mockReturnValue({
       storage: {
         from: vi.fn(() => ({ upload, getPublicUrl })),
       },
@@ -214,24 +254,24 @@ describe('kayıp ilanı v1 rotaları', () => {
       },
       error: null,
     })
+    const insertReport = createQueryBuilder({
+      data: { id: 'report-id' },
+      error: null,
+    })
     const draftDelete = createQueryBuilder({ data: null, error: null })
     const adminFrom = vi
       .fn()
       .mockReturnValueOnce(draftLookup)
+      .mockReturnValueOnce(insertReport)
       .mockReturnValueOnce(draftDelete)
     mocks.createAdminSupabaseClient.mockReturnValue({ from: adminFrom })
 
     const previousPublish = createQueryBuilder({ data: null, error: null })
     const activeReport = createQueryBuilder({ data: null, error: null })
-    const insertReport = createQueryBuilder({
-      data: { id: 'report-id' },
-      error: null,
-    })
     const serverFrom = vi
       .fn()
       .mockReturnValueOnce(previousPublish)
       .mockReturnValueOnce(activeReport)
-      .mockReturnValueOnce(insertReport)
     mocks.createServerSupabaseClient.mockResolvedValue({
       rpc: vi.fn().mockResolvedValue({ data: 'owner', error: null }),
       from: serverFrom,

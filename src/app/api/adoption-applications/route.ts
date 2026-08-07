@@ -130,26 +130,33 @@ export async function GET(req: NextRequest) {
 
     if (!isOwner) return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 403 })
 
-    const { data, error } = await supabase
+    const { data: apps, error } = await supabase
       .from('adoption_applications')
-      .select(`
-        id,
-        listing_id,
-        status,
-        message,
-        created_at,
-        profiles (
-          id,
-          full_name,
-          phone,
-          avatar_url
-        )
-      `)
+      .select('id, listing_id, status, message, created_at, applicant_id')
       .eq('listing_id', listingId)
       .order('created_at', { ascending: false })
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    return NextResponse.json({ applications: data })
+
+    const applicantIds = Array.from(new Set((apps || []).map(a => a.applicant_id).filter(Boolean)))
+    let profilesMap: Record<string, any> = {}
+    if (applicantIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, phone, avatar_url')
+        .in('id', applicantIds)
+
+      if (profiles) {
+        profilesMap = Object.fromEntries(profiles.map(p => [p.id, p]))
+      }
+    }
+
+    const applications = (apps || []).map(a => ({
+      ...a,
+      profiles: profilesMap[a.applicant_id] || null
+    }))
+
+    return NextResponse.json({ applications })
 
   } else {
     // Mevcut davranış: applicant_id = user.id

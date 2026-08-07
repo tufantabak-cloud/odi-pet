@@ -18,16 +18,21 @@ export interface RecoverOverdueNotificationsResult {
  */
 export async function recoverOverdueNotifications(
   supabase: AdminSupabaseClient,
-  options?: { dryRun?: boolean }
+  options?: { category?: string; dryRun?: boolean }
 ): Promise<RecoverOverdueNotificationsResult> {
   const dryRun = options?.dryRun ?? false
 
-  // 1. Fetch overdue vaccine plans
-  const { data: overduePlansData, error: plansError } = await supabase
+  // 1. Fetch overdue plans
+  let query = supabase
     .from('plans')
     .select('id, pet_id, user_id, category, sub_type, scheduled_at')
     .eq('status', 'overdue')
-    .eq('category', 'asi')
+
+  if (options?.category) {
+    query = query.eq('category', options.category)
+  }
+
+  const { data: overduePlansData, error: plansError } = await query
 
   if (plansError) throw plansError
   const overduePlans: OverduePlan[] = (overduePlansData ?? []).filter(

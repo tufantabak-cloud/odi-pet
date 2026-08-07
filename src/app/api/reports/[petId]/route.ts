@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
-import { getEntitlement } from '@/lib/subscription/entitlement'
+import { withAPIFeatureGuard } from '@/lib/features/guards/APIFeatureGuard'
+import { getUsageEngine } from '@/lib/features/usage'
 
 type RouteContext = {
   params: Promise<{ petId: string }>
 }
 
-export async function POST(req: NextRequest, context: RouteContext) {
+async function handler(req: NextRequest, context: RouteContext) {
   try {
     const { petId } = await context.params
     if (!petId) {
@@ -54,25 +55,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     const reportType = body?.report_type || 'summary'
     const dateRange = body?.date_range || 'last_12_months'
 
-    // 3. Subscription plan verification
-    const entitlement = await getEntitlement(user.id)
 
-    const planRank: Record<string, number> = { free: 0, pro: 1, ai_plus: 2 }
-    const requiredRank: Record<string, number> = { summary: 0, medical_timeline: 1, travel_pack: 2 }
-
-    const userRank = planRank[entitlement.tier] ?? 0
-    const reportRank = requiredRank[reportType] ?? 0
-
-    if (reportRank > userRank) {
-      const requiredPlanLabel = reportType === 'medical_timeline' ? 'Pro' : 'AI+'
-      return NextResponse.json(
-        { 
-          error: `Bu rapor türü için ${requiredPlanLabel} plana yükseltmeniz gerekmektedir.`,
-          requiresUpgrade: true 
-        }, 
-        { status: 403 }
-      )
-    }
 
     // 4. Fetch actual pet health statistics
     // 4a. Vaccines Count (from vaccine_records_v2)
@@ -101,7 +84,23 @@ export async function POST(req: NextRequest, context: RouteContext) {
       .eq('pet_id', petId)
       .order('scheduled_at', { ascending: true })
 
-    // 5. Generate validation hash & persist report record in database
+    // 5. Quota consumption check
+    const requestId = crypto.randomUUID()
+    const usageResult = await getUsageEngine().consumeUsage({
+      userId: user.id,
+      featureKey: 'pdf_export',
+      amount: 1,
+      idempotencyKey: requestId,
+    })
+    
+    if (!usageResult.success && !usageResult.idempotentAlreadyProcessed) {
+      return NextResponse.json(
+        { error: 'Rapor oluşturma kotanız doldu. Lütfen planınızı yükseltin.' },
+        { status: 403 }
+      )
+    }
+
+    // 6. Generate validation hash & persist report record in database
     const verificationHash = Math.random().toString(36).substring(2, 10).toUpperCase()
 
     const { data: reportRow, error: insertError } = await supabase
@@ -138,3 +137,5 @@ export async function POST(req: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: 'Rapor oluşturulurken beklenmeyen bir hata oluştu.' }, { status: 500 })
   }
 }
+
+export const POST = withAPIFeatureGuard('pdf_export', handler)

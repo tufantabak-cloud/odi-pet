@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
-import { getEntitlement } from '@/lib/subscription/entitlement'
+import { defaultRepository } from '@/lib/features/entitlement/repository'
 
 export async function GET() {
   const user = await getSessionUser()
@@ -12,7 +12,7 @@ export async function GET() {
   // 1. Referral kodunu al
   const { data: profile } = await supabase
     .from('profiles')
-    .select('referral_code, first_name, premium_until')
+    .select('referral_code, first_name')
     .eq('id', user.id)
     .single()
 
@@ -27,7 +27,7 @@ export async function GET() {
   const milestoneBonusDays = qualifiedCount >= 5 ? 60 : 0
   const earnedDays = (qualifiedCount * 30) + milestoneBonusDays
 
-  const entitlement = await getEntitlement(user.id)
+  const tier = await defaultRepository.getUserTier(user.id)
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://odi-petcare.vercel.app'
 
   return NextResponse.json({
@@ -36,7 +36,7 @@ export async function GET() {
     referralCount: referralCount ?? 0,
     qualifiedCount,
     earnedDays,
-    entitlement,
+    tier,
     invitesList: invitesList ?? [],
     firstName: profile?.first_name ?? ''
   })

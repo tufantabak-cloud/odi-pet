@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 
   let query = supabase
     .from('profiles')
-    .select('id, first_name, last_name, email, role, phone, created_at, premium_until, pro_trial_until, premium_tier', { count: 'exact' })
+    .select('id, first_name, last_name, email, role, phone, created_at, pro_trial_until, premium_tier', { count: 'exact' })
     .order('created_at', { ascending: false })
     .range(from, to)
 
@@ -70,7 +70,6 @@ export async function GET(req: NextRequest) {
 
   const users = (rawUsers || []).map((u: any) => ({
     ...u,
-    premium_until: u.premium_until || u.pro_trial_until || null,
   }))
 
   // Role counts for tab badges

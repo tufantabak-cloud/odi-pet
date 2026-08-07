@@ -4,8 +4,11 @@ import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { AdoptionFeedCard } from './AdoptionFeedCard'
+import { AdoptionFeaturedCard } from './AdoptionFeaturedCard'
 import { BreedingFeedCard } from './BreedingFeedCard'
+import { BreedingFeaturedCard } from './BreedingFeaturedCard'
 import { LostFeedCard } from './LostFeedCard'
+import { LostFeaturedCard } from './LostFeaturedCard'
 import { BreedingApplicationsManager } from './BreedingApplicationsManager'
 import { AdoptionApplicationsManager } from './AdoptionApplicationsManager'
 import { CreateListingPetSelectorModal } from './CreateListingPetSelectorModal'
@@ -16,10 +19,11 @@ import { TURKIYE_ILLER } from '@/lib/utils/turkiyeIller'
 import dynamic from 'next/dynamic'
 import { 
   Home, AlertTriangle, Heart, Megaphone, PawPrint, ClipboardList, 
-  Plus, Inbox, Search, Sparkles, MapPin, Calendar, Filter, 
+  Plus, Inbox, Search, Sparkles, MapPin, Calendar, Filter, SlidersHorizontal,
   CheckCircle2, XCircle, Compass, List, Map, ChevronDown, ChevronUp, 
-  X, Check, Eye, Clock
+  X, Check, Eye, Clock, Lock, ChevronRight, ArrowLeft
 } from 'lucide-react'
+import { useFeature } from '@/lib/features/hooks'
 import { normalizeSpecies, getSpeciesLabel } from '@/lib/species'
 import { useSearchParams } from 'next/navigation'
 
@@ -83,8 +87,6 @@ export function SocialTabs({
   const initialTab = (urlTab && TAB_MAP[urlTab]) || 'adoption'
   
   const [activeTab, setActiveTab] = useState<Tab>(initialTab)
-  const [isPremium, setIsPremium] = useState<boolean>(false)
-  const [daysLeft, setDaysLeft] = useState<number>(0)
 
   useEffect(() => {
     if (urlTab && TAB_MAP[urlTab]) {
@@ -92,52 +94,35 @@ export function SocialTabs({
     }
   }, [urlTab])
 
+  const [currentUserId, setCurrentUserId] = useState<string>('')
+
   useEffect(() => {
-    const checkUserEntitlement = async () => {
+    const fetchUserId = async () => {
       const supabase = createBrowserSupabaseClient()
-      const { data: userData } = await supabase.auth.getUser()
-      if (userData.user?.id) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('premium_until')
-          .eq('id', userData.user.id)
-          .maybeSingle()
-
-        if (profile?.premium_until) {
-          const until = new Date(profile.premium_until)
-          const now = new Date()
-          if (until > now) {
-            setIsPremium(true)
-            setDaysLeft(Math.ceil((until.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
-            return
-          }
-        }
-
-        const { data: sub } = await supabase
-          .from('user_subscriptions')
-          .select('plan, status')
-          .eq('profile_id', userData.user.id)
-          .maybeSingle()
-
-        if (sub && (sub.status === 'active' || sub.status === 'trialing') && (sub.plan === 'pro' || sub.plan === 'ai_plus')) {
-          setIsPremium(true)
-        }
-      }
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) setCurrentUserId(session.user.id)
     }
-    checkUserEntitlement()
+    fetchUserId()
   }, [])
 
   const [matches, setMatches] = useState<any[]>(initialMatches || [])
   const [loadingMatches, setLoadingMatches] = useState(false)
   const [myListings, setMyListings] = useState<any[]>([])
+
+  const matchFeature = useFeature({
+    userId: currentUserId,
+    featureKey: 'smart_matching'
+  })
   const [myAdoptionListings, setMyAdoptionListings] = useState<any[]>([])
-  const [currentUserId, setCurrentUserId] = useState<string>('')
   const [userApplications, setUserApplications] = useState<any[]>([])
   const [estrusOnly, setEstrusOnly] = useState(false)
   
   const [adoptionSpeciesFilter, setAdoptionSpeciesFilter] = useState<'all' | 'cat' | 'dog'>('all')
   const [adoptionCityFilter, setAdoptionCityFilter] = useState<string>('')
   const [adoptionDateFilter, setAdoptionDateFilter] = useState<'all' | '7days' | '30days'>('all')
+  const [adoptionSearchQuery, setAdoptionSearchQuery] = useState<string>('')
+  const [adoptionAgeFilter, setAdoptionAgeFilter] = useState<'all' | 'puppy' | 'adult'>('all')
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState<boolean>(false)
   
   const [showCreateModal, setShowCreateModal] = useState(false)
 
@@ -161,12 +146,16 @@ export function SocialTabs({
   const [lostSpeciesFilter, setLostSpeciesFilter] = useState('Tümü')
   const [lostCityFilter, setLostCityFilter] = useState('')
   const [lostDateFilter, setLostDateFilter] = useState('Tümü')
+  const [lostSearchQuery, setLostSearchQuery] = useState('')
+  const [showLostAdvancedFilters, setShowLostAdvancedFilters] = useState(false)
   const [lostViewMode, setLostViewMode] = useState<'list' | 'map'>('list')
 
   const [speciesFilter, setSpeciesFilter] = useState('Tümü')
   const [genderFilter, setGenderFilter] = useState('Tümü')
   const [cityFilter, setCityFilter] = useState('')
   const [breedFilter, setBreedFilter] = useState('')
+  const [matchSearchQuery, setMatchSearchQuery] = useState('')
+  const [showMatchAdvancedFilters, setShowMatchAdvancedFilters] = useState(false)
 
   useEffect(() => {
     if (activeTab === 'match') {
@@ -357,8 +346,23 @@ export function SocialTabs({
 
   return (
     <section className="flex flex-col gap-5">
+      {/* Page Header with Back Button */}
+      <div className="flex items-center gap-3 pt-1">
+        <Link 
+          href="/owner/dashboard"
+          className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-700 hover:text-slate-900 hover:bg-slate-50 active:scale-[0.98] transition-all shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] shrink-0"
+          title="Ana Sayfaya Dön"
+        >
+          <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
+        </Link>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-lg font-extrabold text-slate-900 truncate">Sosyal & Topluluk</h1>
+          <p className="text-2xs text-slate-500 font-normal truncate">Sahiplendirme, kayıp ve eşleştirme merkezi</p>
+        </div>
+      </div>
+
       {/* Tab Switcher */}
-      <div className="flex bg-slate-100/80 rounded-2xl p-1.5 border border-slate-200/60 shadow-sm">
+      <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200/60 shadow-inner">
         <button
           onClick={() => setActiveTab('adoption')}
           className={`flex-1 flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl transition-all active:scale-[0.98] ${
@@ -375,7 +379,7 @@ export function SocialTabs({
           onClick={() => setActiveTab('lost')}
           className={`flex-1 flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl transition-all active:scale-[0.98] ${
             activeTab === 'lost' 
-              ? 'bg-white text-rose-700 shadow-sm border border-rose-100 font-semibold' 
+              ? 'bg-white text-violet-700 shadow-sm border border-violet-100 font-semibold' 
               : 'text-slate-500 hover:text-slate-900 font-medium'
           }`}
         >
@@ -387,7 +391,7 @@ export function SocialTabs({
           onClick={() => setActiveTab('match')}
           className={`flex-1 flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl transition-all active:scale-[0.98] ${
             activeTab === 'match' 
-              ? 'bg-white text-pink-700 shadow-sm border border-pink-100 font-semibold' 
+              ? 'bg-white text-violet-700 shadow-sm border border-violet-100 font-semibold' 
               : 'text-slate-500 hover:text-slate-900 font-medium'
           }`}
         >
@@ -396,29 +400,70 @@ export function SocialTabs({
         </button>
       </div>
 
+      {/* Tab Description */}
+      <div className="text-center px-4 pb-2 animate-fadeIn">
+        <p className="text-sm text-slate-500 font-medium leading-relaxed">
+          {activeTab === 'adoption' && "Yeni bir dost sahiplenin veya sahiplendirme ilanı oluşturun"}
+          {activeTab === 'lost' && "Kayıp ve bulunan evcil hayvan ilanlarını görüntüleyin."}
+          {activeTab === 'match' && "Tür, ırk ve konuma göre uygun eş adaylarını keşfedin."}
+        </p>
+      </div>
+
       {/* Adoption Tab Content */}
       {activeTab === 'adoption' && (() => {
         const filteredAdoptions = adoptions.filter(adoption => {
+          const pet = adoption.pet
+          if (!pet) return false
+
+          // Species filter
           if (adoptionSpeciesFilter !== 'all') {
-            const species = adoption.pet?.species?.toLowerCase()
+            const species = pet.species?.toLowerCase()
             if (adoptionSpeciesFilter === 'cat' && normalizeSpecies(species) !== 'cat') return false
             if (adoptionSpeciesFilter === 'dog' && normalizeSpecies(species) !== 'dog') return false
           }
+
+          // Age filter
+          if (adoptionAgeFilter !== 'all' && pet.birth_date) {
+            const ageInMs = Date.now() - new Date(pet.birth_date).getTime()
+            const ageInYears = ageInMs / (1000 * 60 * 60 * 24 * 365.25)
+            if (adoptionAgeFilter === 'puppy' && ageInYears >= 1) return false
+            if (adoptionAgeFilter === 'adult' && ageInYears < 1) return false
+          }
+
+          // City filter
           if (adoptionCityFilter) {
-            const city = (adoption.pet?.city || '').toLowerCase()
+            const city = (pet.city || '').toLowerCase()
             if (!city.includes(adoptionCityFilter.toLowerCase())) return false
           }
+
+          // Date filter
           if (adoptionDateFilter !== 'all') {
             if (!adoption.created_at) return false
             const days = Math.floor((Date.now() - new Date(adoption.created_at).getTime()) / (1000 * 60 * 60 * 24))
             if (adoptionDateFilter === '7days' && days > 7) return false
             if (adoptionDateFilter === '30days' && days > 30) return false
           }
+
+          // Search query filter
+          if (adoptionSearchQuery.trim()) {
+            const query = adoptionSearchQuery.toLowerCase().trim()
+            const nameMatch = (pet.name || '').toLowerCase().includes(query)
+            const breedMatch = (pet.breed || '').toLowerCase().includes(query)
+            const cityMatch = (pet.city || '').toLowerCase().includes(query)
+            const speciesMatch = (pet.species || '').toLowerCase().includes(query)
+            if (!nameMatch && !breedMatch && !cityMatch && !speciesMatch) return false
+          }
+
           return true
         })
 
+        // Partition into Featured and Recent
+        const featuredListings = filteredAdoptions.slice(0, 4)
+        const recentListings = filteredAdoptions
+
         return (
-          <div className="flex flex-col gap-4 animate-fadeIn">
+          <div className="flex flex-col gap-5 animate-fadeIn">
+            {/* My Active Listings & Applications */}
             {myAdoptionListings.length > 0 && (
               <div className="flex flex-col gap-4">
                 {myAdoptionListings.map(listing => {
@@ -474,63 +519,169 @@ export function SocialTabs({
               </div>
             )}
 
-            {/* Filter controls */}
-            <div className="flex flex-wrap gap-2.5 mb-1">
-              <select 
-                value={adoptionSpeciesFilter}
-                onChange={e => setAdoptionSpeciesFilter(e.target.value as any)}
-                className="px-3 py-2 bg-white border border-slate-200 rounded-2xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all"
+            {/* Action Banner: İlan Ver (Alt navigasyonu bozmayacak şekilde konumlandırıldı) */}
+            <div className="flex justify-between items-center bg-gradient-to-r from-violet-600 to-indigo-600 text-white p-4 rounded-3xl shadow-sm">
+              <div className="flex flex-col gap-0.5">
+                <span className="font-extrabold text-sm">Sahiplendirme İlanı Oluştur</span>
+                <span className="text-2xs text-violet-100 font-normal">Sıcak bir yuva arayan dostunuza ilan açın</span>
+              </div>
+              <button 
+                onClick={() => setShowCreateModal(true)}
+                className="bg-white text-violet-700 font-bold text-xs px-4 py-2.5 rounded-2xl shadow-sm hover:bg-violet-50 active:scale-[0.98] transition-all shrink-0 flex items-center gap-1.5"
               >
-                <option value="all">Tüm Türler</option>
-                <option value="cat">Kedi</option>
-                <option value="dog">Köpek</option>
-              </select>
+                <Plus className="w-4 h-4 stroke-[2.5]" /> İlan Ver
+              </button>
+            </div>
 
-              <select
-                value={adoptionCityFilter}
-                onChange={e => setAdoptionCityFilter(e.target.value)}
-                className="px-3 py-2 bg-white border border-slate-200 rounded-2xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all"
+            {/* Arama Barı & Filtre Butonu */}
+            <div className="relative flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 stroke-[2]" />
+                <input 
+                  type="text" 
+                  placeholder="Evcil hayvan, ırk veya şehir ara..." 
+                  value={adoptionSearchQuery}
+                  onChange={e => setAdoptionSearchQuery(e.target.value)}
+                  className="w-full bg-white border border-slate-200 pl-10 pr-4 py-2.5 rounded-2xl text-xs font-normal text-slate-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all placeholder:text-slate-400 shadow-sm"
+                />
+              </div>
+              <button 
+                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                className={`p-2.5 rounded-2xl border transition-all shadow-sm ${
+                  showAdvancedFilters ? 'bg-violet-50 border-violet-200 text-violet-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
               >
-                <option value="">Tüm Şehirler</option>
-                {Object.keys(TURKIYE_ILLER).sort().map(city => (
-                  <option key={city} value={city}>{city}</option>
-                ))}
-              </select>
+                <SlidersHorizontal className="w-4 h-4 stroke-[2]" />
+              </button>
+            </div>
 
-              <select
-                value={adoptionDateFilter}
-                onChange={e => setAdoptionDateFilter(e.target.value as any)}
-                className="px-3 py-2 bg-white border border-slate-200 rounded-2xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all"
+            {/* Gelişmiş Tarih Filtresi Dropdown */}
+            {showAdvancedFilters && (
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl flex items-center gap-3 animate-fadeIn">
+                <span className="text-xs font-semibold text-slate-600">Ek Filtreler:</span>
+                <select
+                  value={adoptionDateFilter}
+                  onChange={e => setAdoptionDateFilter(e.target.value as any)}
+                  className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none"
+                >
+                  <option value="all">Tüm Zamanlar</option>
+                  <option value="7days">Son 7 Gün</option>
+                  <option value="30days">Son 30 Gün</option>
+                </select>
+              </div>
+            )}
+
+            {/* Kategori Filtre Çipleri */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+              <button 
+                onClick={() => setAdoptionSpeciesFilter(adoptionSpeciesFilter === 'dog' ? 'all' : 'dog')}
+                className={`px-4 py-2 rounded-2xl text-xs font-semibold shrink-0 transition-all border ${
+                  adoptionSpeciesFilter === 'dog' ? 'bg-violet-600 text-white border-violet-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
               >
-                <option value="all">Tüm Zamanlar</option>
-                <option value="7days">Son 7 Gün</option>
-                <option value="30days">Son 30 Gün</option>
-              </select>
+                🐶 Köpek
+              </button>
+              <button 
+                onClick={() => setAdoptionSpeciesFilter(adoptionSpeciesFilter === 'cat' ? 'all' : 'cat')}
+                className={`px-4 py-2 rounded-2xl text-xs font-semibold shrink-0 transition-all border ${
+                  adoptionSpeciesFilter === 'cat' ? 'bg-violet-600 text-white border-violet-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                🐱 Kedi
+              </button>
+              <button 
+                onClick={() => {
+                  setAdoptionSpeciesFilter('all')
+                  setAdoptionAgeFilter('all')
+                }}
+                className={`px-4 py-2 rounded-2xl text-xs font-semibold shrink-0 transition-all border ${
+                  adoptionSpeciesFilter === 'all' && adoptionAgeFilter === 'all' ? 'bg-violet-600 text-white border-violet-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                Tümü
+              </button>
+              <button 
+                onClick={() => setAdoptionAgeFilter(adoptionAgeFilter === 'puppy' ? 'all' : 'puppy')}
+                className={`px-4 py-2 rounded-2xl text-xs font-semibold shrink-0 transition-all border ${
+                  adoptionAgeFilter === 'puppy' ? 'bg-violet-600 text-white border-violet-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                Yavru
+              </button>
+              <button 
+                onClick={() => setAdoptionAgeFilter(adoptionAgeFilter === 'adult' ? 'all' : 'adult')}
+                className={`px-4 py-2 rounded-2xl text-xs font-semibold shrink-0 transition-all border ${
+                  adoptionAgeFilter === 'adult' ? 'bg-violet-600 text-white border-violet-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                Yetişkin
+              </button>
+            </div>
+
+            {/* Konum Seçimi */}
+            <div className="flex items-center gap-2">
+              <div className="relative inline-block">
+                <select
+                  value={adoptionCityFilter}
+                  onChange={e => setAdoptionCityFilter(e.target.value)}
+                  className="appearance-none px-4 py-2 pr-9 bg-white border border-slate-200 rounded-2xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all shadow-sm"
+                >
+                  <option value="">📍 Konum (Tümü)</option>
+                  {Object.keys(TURKIYE_ILLER).sort().map(city => (
+                    <option key={city} value={city}>📍 {city}</option>
+                  ))}
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none stroke-[2]" />
+              </div>
             </div>
 
             {filteredAdoptions.length === 0 ? (
               <div className="rounded-3xl bg-white border border-slate-100 p-10 text-center flex flex-col items-center justify-center gap-3 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)]">
-                <div className="w-12 h-12 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center">
-                  <Home className="w-6 h-6 stroke-[1.75]" />
+                <div className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center">
+                  <Compass className="w-6 h-6 stroke-[1.75]" />
                 </div>
                 <p className="text-sm font-semibold text-slate-900 text-center">
-                  Aktif sahiplendirme ilanı yok
+                  Yakınında ilan bulunamadı.
                 </p>
                 <p className="text-xs text-slate-500 text-center font-normal">
-                  Pet detay sayfasından sahiplendirme ilanı verebilirsin
+                  İlk ilanı sen oluştur.
                 </p>
-                <Link
-                  href="/owner/dashboard"
-                  className="text-xs text-violet-600 font-semibold underline underline-offset-4 hover:text-violet-800 transition-colors mt-1"
-                >
-                  Petlerime git →
-                </Link>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredAdoptions.map(adoption => (
-                  <AdoptionFeedCard key={adoption.id} adoption={adoption} currentUserId={currentUserId} />
-                ))}
+              <div className="flex flex-col gap-6">
+                {/* Section 1: Öne Çıkan Dostlar */}
+                {featuredListings.length > 0 && (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex justify-between items-center px-1">
+                      <h3 className="font-extrabold text-slate-900 text-base">Öne Çıkan Dostlar</h3>
+                      <button className="text-xs font-bold text-violet-600 hover:text-violet-700 flex items-center gap-0.5">
+                        Tümünü Gör <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                      </button>
+                    </div>
+                    <div className="flex gap-3.5 overflow-x-auto pb-2 pt-1 no-scrollbar -mx-1 px-1">
+                      {featuredListings.map(adoption => (
+                        <AdoptionFeaturedCard key={adoption.id} adoption={adoption} currentUserId={currentUserId} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Section 2: Son Eklenen İlanlar */}
+                {recentListings.length > 0 && (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex justify-between items-center px-1">
+                      <h3 className="font-extrabold text-slate-900 text-base">Son Eklenen İlanlar</h3>
+                      <button className="text-xs font-bold text-violet-600 hover:text-violet-700 flex items-center gap-0.5">
+                        Tümünü Gör <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {recentListings.map(adoption => (
+                        <AdoptionFeedCard key={adoption.id} adoption={adoption} currentUserId={currentUserId} />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -544,16 +695,20 @@ export function SocialTabs({
           const pet = report.pet
           if (!pet) return false
 
+          // Species filter
           if (lostSpeciesFilter !== 'Tümü') {
             const matchSpecies = lostSpeciesFilter === 'Kedi' ? 'cat' : 'dog'
             if (normalizeSpecies(pet.species) !== matchSpecies) return false
           }
 
+          // City filter
           if (lostCityFilter.trim() !== '') {
             const cityMatch = (pet.city || '').toLowerCase().includes(lostCityFilter.trim().toLowerCase())
-            if (!cityMatch) return false
+            const locMatch = (report.last_seen_location || '').toLowerCase().includes(lostCityFilter.trim().toLowerCase())
+            if (!cityMatch && !locMatch) return false
           }
 
+          // Date filter
           if (lostDateFilter !== 'Tümü') {
             if (report.last_seen_at) {
               const diffMs = Date.now() - new Date(report.last_seen_at).getTime()
@@ -564,11 +719,26 @@ export function SocialTabs({
             }
           }
 
+          // Search query filter
+          if (lostSearchQuery.trim()) {
+            const query = lostSearchQuery.toLowerCase().trim()
+            const nameMatch = (pet.name || '').toLowerCase().includes(query)
+            const breedMatch = (pet.breed || '').toLowerCase().includes(query)
+            const cityMatch = (pet.city || '').toLowerCase().includes(query)
+            const locMatch = (report.last_seen_location || '').toLowerCase().includes(query)
+            const speciesMatch = (pet.species || '').toLowerCase().includes(query)
+            if (!nameMatch && !breedMatch && !cityMatch && !locMatch && !speciesMatch) return false
+          }
+
           return true
         })
 
+        // Partition into Emergency and Recent
+        const emergencyLostPets = filteredLostPets.slice(0, 4)
+        const recentLostPets = filteredLostPets
+
         return (
-          <div className="flex flex-col gap-4 animate-fadeIn">
+          <div className="flex flex-col gap-5 animate-fadeIn">
             {/* Kendi Aktif Kayıp İlanınız */}
             {myLostReports.length > 0 && (
               <div className="flex flex-col gap-4">
@@ -615,72 +785,151 @@ export function SocialTabs({
               </div>
             )}
 
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-slate-900">
-                Kayıp İlanları
-              </h2>
+            {/* Action Row: Kayıp İlanı Ver / Buldum Bildir */}
+            <div className="grid grid-cols-2 gap-3">
               <Link
-                href="/owner/lost-report"
-                className="inline-flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold px-4 py-2 rounded-2xl active:scale-[0.98] transition-all shadow-sm shadow-rose-600/20"
+                href="/owner/lost-report?mode=lost"
+                className="flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-700 text-white p-3.5 rounded-2xl font-bold text-xs active:scale-[0.98] transition-all shadow-sm shadow-rose-600/20"
               >
-                <AlertTriangle className="w-3.5 h-3.5 stroke-[2]" />
+                <AlertTriangle className="w-4 h-4 stroke-[2.5]" />
                 Kayıp İlanı Ver
+              </Link>
+              <Link
+                href="/owner/lost-report?mode=found"
+                className="flex items-center justify-center gap-2 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 p-3.5 rounded-2xl font-bold text-xs active:scale-[0.98] transition-all shadow-sm"
+              >
+                <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+                Buldum Bildir
               </Link>
             </div>
 
-            {/* Filtre Bar */}
-            <div className="bg-white border border-slate-100 p-4 rounded-3xl shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] flex flex-col gap-3">
-              <div className="flex justify-between items-center">
-                <h4 className="text-2xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <Filter className="w-3.5 h-3.5 stroke-[2]" /> Kayıp İlanı Filtrele
-                </h4>
-                <div className="flex bg-slate-100 p-1 rounded-xl">
-                  <button 
-                    onClick={() => setLostViewMode('list')} 
-                    className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1 ${
-                      lostViewMode === 'list' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-900'
-                    }`}
-                  >
-                    <List className="w-3.5 h-3.5 stroke-[2]" /> Liste
-                  </button>
-                  <button 
-                    onClick={() => setLostViewMode('map')} 
-                    className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1 ${
-                      lostViewMode === 'map' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-900'
-                    }`}
-                  >
-                    <Map className="w-3.5 h-3.5 stroke-[2]" /> Harita
-                  </button>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                <select 
-                  className="px-3 py-2 bg-white border border-slate-200 rounded-2xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all" 
-                  value={lostSpeciesFilter} 
-                  onChange={e => setLostSpeciesFilter(e.target.value)}
-                >
-                  <option value="Tümü">Tüm Türler</option>
-                  <option value="Kedi">Kedi</option>
-                  <option value="Köpek">Köpek</option>
-                </select>
+            {/* Arama Barı & Gelişmiş Filtre Butonu */}
+            <div className="relative flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 stroke-[2]" />
                 <input 
                   type="text" 
-                  placeholder="Şehir Ara..." 
-                  className="px-3 py-2 bg-white border border-slate-200 rounded-2xl text-xs font-normal text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all placeholder:text-slate-400" 
-                  value={lostCityFilter}
-                  onChange={e => setLostCityFilter(e.target.value)}
+                  placeholder="Kayıp pet, ırk veya ilçe/şehir ara..." 
+                  value={lostSearchQuery}
+                  onChange={e => setLostSearchQuery(e.target.value)}
+                  className="w-full bg-white border border-slate-200 pl-10 pr-4 py-2.5 rounded-2xl text-xs font-normal text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all placeholder:text-slate-400 shadow-sm"
                 />
-                <select 
-                  className="px-3 py-2 bg-white border border-slate-200 rounded-2xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all" 
-                  value={lostDateFilter} 
+              </div>
+              <button 
+                onClick={() => setShowLostAdvancedFilters(!showLostAdvancedFilters)}
+                className={`p-2.5 rounded-2xl border transition-all shadow-sm ${
+                  showLostAdvancedFilters ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <SlidersHorizontal className="w-4 h-4 stroke-[2]" />
+              </button>
+            </div>
+
+            {/* Gelişmiş Filtre Dropdown */}
+            {showLostAdvancedFilters && (
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl flex items-center gap-3 animate-fadeIn">
+                <span className="text-xs font-semibold text-slate-600">Zaman Filtresi:</span>
+                <select
+                  value={lostDateFilter}
                   onChange={e => setLostDateFilter(e.target.value)}
+                  className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none"
                 >
                   <option value="Tümü">Tüm Zamanlar</option>
                   <option value="Bugün">Bugün</option>
                   <option value="Son 3 Gün">Son 3 Gün</option>
                   <option value="Son 7 Gün">Son 7 Gün</option>
                 </select>
+              </div>
+            )}
+
+            {/* Kategori Filtre Çipleri */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+              <button 
+                onClick={() => setLostSpeciesFilter(lostSpeciesFilter === 'Köpek' ? 'Tümü' : 'Köpek')}
+                className={`px-4 py-2 rounded-2xl text-xs font-semibold shrink-0 transition-all border ${
+                  lostSpeciesFilter === 'Köpek' ? 'bg-rose-600 text-white border-rose-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                🐶 Köpek
+              </button>
+              <button 
+                onClick={() => setLostSpeciesFilter(lostSpeciesFilter === 'Kedi' ? 'Tümü' : 'Kedi')}
+                className={`px-4 py-2 rounded-2xl text-xs font-semibold shrink-0 transition-all border ${
+                  lostSpeciesFilter === 'Kedi' ? 'bg-rose-600 text-white border-rose-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                🐱 Kedi
+              </button>
+              <button 
+                onClick={() => {
+                  setLostSpeciesFilter('Tümü')
+                  setLostDateFilter('Tümü')
+                }}
+                className={`px-4 py-2 rounded-2xl text-xs font-semibold shrink-0 transition-all border ${
+                  lostSpeciesFilter === 'Tümü' && lostDateFilter === 'Tümü' ? 'bg-rose-600 text-white border-rose-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                Tümü
+              </button>
+              <button 
+                onClick={() => setLostDateFilter(lostDateFilter === 'Bugün' ? 'Tümü' : 'Bugün')}
+                className={`px-4 py-2 rounded-2xl text-xs font-semibold shrink-0 transition-all border ${
+                  lostDateFilter === 'Bugün' ? 'bg-rose-600 text-white border-rose-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                Bugün
+              </button>
+              <button 
+                onClick={() => setLostDateFilter(lostDateFilter === 'Son 3 Gün' ? 'Tümü' : 'Son 3 Gün')}
+                className={`px-4 py-2 rounded-2xl text-xs font-semibold shrink-0 transition-all border ${
+                  lostDateFilter === 'Son 3 Gün' ? 'bg-rose-600 text-white border-rose-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                Son 3 Gün
+              </button>
+              <button 
+                onClick={() => setLostDateFilter(lostDateFilter === 'Son 7 Gün' ? 'Tümü' : 'Son 7 Gün')}
+                className={`px-4 py-2 rounded-2xl text-xs font-semibold shrink-0 transition-all border ${
+                  lostDateFilter === 'Son 7 Gün' ? 'bg-rose-600 text-white border-rose-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                Son 7 Gün
+              </button>
+            </div>
+
+            {/* Konum & Görünüm Modu (Liste / Harita) */}
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="relative inline-block">
+                <select
+                  value={lostCityFilter}
+                  onChange={e => setLostCityFilter(e.target.value)}
+                  className="appearance-none px-4 py-2 pr-9 bg-white border border-slate-200 rounded-2xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
+                >
+                  <option value="">📍 Konum (Tüm Türkiye)</option>
+                  {Object.keys(TURKIYE_ILLER).sort().map(city => (
+                    <option key={city} value={city}>📍 {city}</option>
+                  ))}
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none stroke-[2]" />
+              </div>
+
+              <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200/60 shrink-0">
+                <button 
+                  onClick={() => setLostViewMode('list')} 
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all flex items-center gap-1 ${
+                    lostViewMode === 'list' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  <List className="w-3.5 h-3.5 stroke-[2]" /> Liste
+                </button>
+                <button 
+                  onClick={() => setLostViewMode('map')} 
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all flex items-center gap-1 ${
+                    lostViewMode === 'map' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  <Map className="w-3.5 h-3.5 stroke-[2]" /> Harita
+                </button>
               </div>
             </div>
 
@@ -692,19 +941,57 @@ export function SocialTabs({
                 ))}
               </div>
             ) : filteredLostPets.length === 0 ? (
-              <div className="rounded-3xl bg-white border border-slate-100 p-10 text-center flex flex-col items-center gap-3 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)]">
-                <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
-                  <AlertTriangle className="w-6 h-6 stroke-[1.75]" />
+              <div className="rounded-3xl bg-white border border-slate-100 p-10 text-center flex flex-col items-center justify-center gap-3 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)]">
+                <div className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center">
+                  <Compass className="w-6 h-6 stroke-[1.75]" />
                 </div>
-                <p className="text-xs text-slate-500 font-normal">Aranan kriterlere uygun aktif kayıp ilanı bulunmuyor.</p>
+                <p className="text-sm font-semibold text-slate-900 text-center">
+                  Yakınında kayıp ilanı bulunamadı.
+                </p>
+                <p className="text-xs text-slate-500 text-center font-normal">
+                  İlk ilanı sen oluştur.
+                </p>
               </div>
             ) : lostViewMode === 'map' ? (
               <LostMapView reports={filteredLostPets} />
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredLostPets.map(report => (
-                  <LostFeedCard key={report.id} report={report} />
-                ))}
+              <div className="flex flex-col gap-6">
+                {/* Section 1: Acil Kayıp İlanları */}
+                {emergencyLostPets.length > 0 && (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex justify-between items-center px-1">
+                      <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-1.5">
+                        <AlertTriangle className="w-4 h-4 text-rose-600 stroke-[2.5]" />
+                        Acil Kayıp İlanları
+                      </h3>
+                      <button className="text-xs font-bold text-rose-600 hover:text-rose-700 flex items-center gap-0.5">
+                        Tümünü Gör <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                      </button>
+                    </div>
+                    <div className="flex gap-3.5 overflow-x-auto pb-2 pt-1 no-scrollbar -mx-1 px-1">
+                      {emergencyLostPets.map(report => (
+                        <LostFeaturedCard key={report.id} report={report} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Section 2: Son Eklenen İlanlar */}
+                {recentLostPets.length > 0 && (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex justify-between items-center px-1">
+                      <h3 className="font-extrabold text-slate-900 text-base">Son Eklenen İlanlar</h3>
+                      <button className="text-xs font-bold text-rose-600 hover:text-rose-700 flex items-center gap-0.5">
+                        Tümünü Gör <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {recentLostPets.map(report => (
+                        <LostFeedCard key={report.id} report={report} />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -713,15 +1000,38 @@ export function SocialTabs({
 
       {/* Match Tab Content */}
       {activeTab === 'match' && (
-        !isPremium ? (
-          <PaywallCard
-            title="Eşleştirme Modülü Pro Özelliğidir"
-            description="Evcil hayvanınız için uygun ırk ve sağlık şartlarındaki eş adaylarını keşfetmek ve iletişime geçmek Odi Pro aboneliği ile mümkündür."
-            featureName="Eşleştirme & Çiftleştirme"
-            daysLeft={daysLeft}
-          />
-        ) : (
         <div className="flex flex-col gap-4 animate-fadeIn">
+          {!matchFeature.enabled && (
+            <div className="h-16 flex items-center justify-between px-4 rounded-2xl bg-gradient-to-r from-amber-50 to-violet-50 border border-violet-100 mb-2 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center">
+                  <Lock className="w-4 h-4 stroke-[2]" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900">Eşleştirme Premium Özelliği</h4>
+                  <p className="text-xs text-slate-500">Adayları görmek için yükseltin</p>
+                </div>
+              </div>
+              <Link href="/pricing" className="bg-white text-violet-700 text-xs font-bold px-4 py-2 rounded-xl shadow-sm border border-violet-100 hover:bg-violet-50 transition-colors">
+                İncele
+              </Link>
+            </div>
+          )}
+
+          {!matchFeature.enabled ? (
+             <div className="rounded-3xl bg-white border border-slate-100 p-10 text-center flex flex-col items-center justify-center gap-3 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)]">
+                <div className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center">
+                  <Compass className="w-6 h-6 stroke-[1.75]" />
+                </div>
+                <p className="text-sm font-semibold text-slate-900 text-center">
+                  İçerik Gizli
+                </p>
+                <p className="text-xs text-slate-500 text-center font-normal">
+                  Eşleşmeleri görmek için Premium abonesi olmalısınız.
+                </p>
+              </div>
+          ) : (
+            <div className="flex flex-col gap-4">
           
           {myListings.length > 0 ? (
             <div className="flex flex-col gap-4">
@@ -813,11 +1123,7 @@ export function SocialTabs({
             </div>
           )}
 
-          {/* Modal state */}
-          <CreateListingPetSelectorModal
-            isOpen={showCreateModal}
-            onClose={() => setShowCreateModal(false)}
-          />
+
 
           {/* BAŞVURULARIM (Applicant Side) */}
           {userApplications.length > 0 && (
@@ -1006,17 +1312,8 @@ export function SocialTabs({
                                     </span>
                                   </div>
                                   <p className="text-xs text-slate-500 font-normal">{candidate.breed}</p>
-                                  <p className="text-2xs text-slate-500 mt-1 flex items-center gap-1 font-normal">
-                                    <MapPin className="w-3 h-3 text-rose-500 stroke-[2]" /> {candidate.city}
-                                  </p>
-                                  {candidate.breeding_listing?.notes && (
-                                    <p className="text-xs text-slate-600 italic mt-2 line-clamp-2 bg-slate-50 p-2.5 rounded-2xl border border-slate-100 font-normal">
-                                      "{candidate.breeding_listing.notes}"
-                                    </p>
-                                  )}
                                 </div>
-
-                                <div className="flex gap-2 justify-end mt-4">
+                                <div className="flex justify-end gap-2 mt-3 pt-2 border-t border-slate-100">
                                   <button 
                                     onClick={() => handleDiscoverAction('skip')}
                                     className="px-4 py-2 bg-white border border-slate-200 text-slate-600 font-semibold text-xs rounded-2xl hover:bg-slate-50 active:scale-[0.98] transition-all"
@@ -1046,15 +1343,50 @@ export function SocialTabs({
             )}
           </div>
 
-          <div className="bg-white border border-slate-100 p-4 rounded-3xl shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] flex flex-col gap-3">
-            <div className="flex justify-between items-center flex-wrap gap-2">
-              <h4 className="text-2xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Filter className="w-3.5 h-3.5 stroke-[2]" /> İlan Filtrele
-              </h4>
-              <div className="flex items-center gap-2">
+          {/* İLAN FİLTRELEME & ARAMA BARLARI */}
+          <div className="flex flex-col gap-3">
+            {/* Action Banner */}
+            <div className="bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 rounded-3xl p-5 text-white shadow-sm flex justify-between items-center gap-4 relative overflow-hidden">
+              <div className="flex flex-col gap-1 z-10">
+                <h3 className="font-extrabold text-lg">Eşleşme İlanı Oluştur</h3>
+                <p className="text-xs text-white/90 font-medium">Dostunuz için ideal bir eşleşme ilanı yayınlayın.</p>
+              </div>
+              <button 
+                onClick={() => setShowCreateModal(true)}
+                className="bg-white text-pink-600 hover:bg-pink-50 font-extrabold text-xs px-4 py-2.5 rounded-2xl active:scale-[0.98] transition-all shadow-sm shrink-0 flex items-center gap-1.5 z-10"
+              >
+                <Plus className="w-4 h-4 stroke-[2.5]" /> İlan Ver
+              </button>
+            </div>
+
+            {/* Arama Barı & Gelişmiş Filtre */}
+            <div className="relative flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 stroke-[2]" />
+                <input 
+                  type="text" 
+                  placeholder="Evcil hayvan, ırk veya şehir ara..." 
+                  value={matchSearchQuery}
+                  onChange={e => setMatchSearchQuery(e.target.value)}
+                  className="w-full bg-white border border-slate-200 pl-10 pr-4 py-2.5 rounded-2xl text-xs font-normal text-slate-900 focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-all placeholder:text-slate-400 shadow-sm"
+                />
+              </div>
+              <button 
+                onClick={() => setShowMatchAdvancedFilters(!showMatchAdvancedFilters)}
+                className={`p-2.5 rounded-2xl border transition-all shadow-sm ${
+                  showMatchAdvancedFilters ? 'bg-pink-50 border-pink-200 text-pink-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <SlidersHorizontal className="w-4 h-4 stroke-[2]" />
+              </button>
+            </div>
+
+            {/* Gelişmiş Filtre Dropdown */}
+            {showMatchAdvancedFilters && (
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl flex flex-wrap items-center gap-3 animate-fadeIn">
                 <button
                   onClick={() => setEstrusOnly(!estrusOnly)}
-                  className={`px-3 py-1.5 rounded-full text-2xs font-semibold border transition-all ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
                     estrusOnly 
                       ? 'bg-pink-500 text-white border-pink-500 shadow-sm' 
                       : 'bg-white text-pink-600 border-pink-200 hover:bg-pink-50'
@@ -1063,70 +1395,181 @@ export function SocialTabs({
                   🌸 Aktif Kızgınlık
                 </button>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-2xs font-semibold text-slate-500 whitespace-nowrap">Mesafe:</span>
+                  <span className="text-xs font-semibold text-slate-600">Mesafe:</span>
                   <select
                     value={maxDistance ?? ''}
                     onChange={e => setMaxDistance(e.target.value ? Number(e.target.value) : null)}
-                    className="text-2xs border border-slate-200 rounded-xl px-2 py-1.5 bg-white font-semibold text-slate-800 focus:outline-none"
+                    className="text-xs border border-slate-200 rounded-xl px-2.5 py-1.5 bg-white font-semibold text-slate-800 focus:outline-none"
                   >
                     <option value="">Tüm Türkiye</option>
                     <option value="50">50 km</option>
                     <option value="100">100 km</option>
                     <option value="200">200 km</option>
-                    <option value="300">300 km</option>
                     <option value="500">500 km</option>
                   </select>
                 </div>
               </div>
+            )}
+
+            {/* Kategori Filtre Çipleri */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+              <button 
+                onClick={() => setSpeciesFilter(speciesFilter === 'Köpek' ? 'Tümü' : 'Köpek')}
+                className={`px-4 py-2 rounded-2xl text-xs font-semibold shrink-0 transition-all border ${
+                  speciesFilter === 'Köpek' ? 'bg-pink-600 text-white border-pink-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                🐶 Köpek
+              </button>
+              <button 
+                onClick={() => setSpeciesFilter(speciesFilter === 'Kedi' ? 'Tümü' : 'Kedi')}
+                className={`px-4 py-2 rounded-2xl text-xs font-semibold shrink-0 transition-all border ${
+                  speciesFilter === 'Kedi' ? 'bg-pink-600 text-white border-pink-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                🐱 Kedi
+              </button>
+              <button 
+                onClick={() => {
+                  setSpeciesFilter('Tümü')
+                  setGenderFilter('Tümü')
+                }}
+                className={`px-4 py-2 rounded-2xl text-xs font-semibold shrink-0 transition-all border ${
+                  speciesFilter === 'Tümü' && genderFilter === 'Tümü' ? 'bg-pink-600 text-white border-pink-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                Tümü
+              </button>
+              <button 
+                onClick={() => setGenderFilter(genderFilter === 'Erkek' ? 'Tümü' : 'Erkek')}
+                className={`px-4 py-2 rounded-2xl text-xs font-semibold shrink-0 transition-all border ${
+                  genderFilter === 'Erkek' ? 'bg-pink-600 text-white border-pink-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                ♂ Erkek
+              </button>
+              <button 
+                onClick={() => setGenderFilter(genderFilter === 'Dişi' ? 'Tümü' : 'Dişi')}
+                className={`px-4 py-2 rounded-2xl text-xs font-semibold shrink-0 transition-all border ${
+                  genderFilter === 'Dişi' ? 'bg-pink-600 text-white border-pink-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                ♀ Dişi
+              </button>
             </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
-              <select className="px-3 py-2 bg-white border border-slate-200 rounded-2xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-all" value={speciesFilter} onChange={e => setSpeciesFilter(e.target.value)}>
-                <option value="Tümü">Tüm Türler</option>
-                <option value="Kedi">Kedi</option>
-                <option value="Köpek">Köpek</option>
-              </select>
-              <select className="px-3 py-2 bg-white border border-slate-200 rounded-2xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-all" value={genderFilter} onChange={e => setGenderFilter(e.target.value)}>
-                <option value="Tümü">Tüm Cinsiyetler</option>
-                <option value="Erkek">♂ Erkek</option>
-                <option value="Dişi">♀ Dişi</option>
-              </select>
-              <input 
-                type="text" 
-                placeholder="Şehir Ara..." 
-                className="px-3 py-2 bg-white border border-slate-200 rounded-2xl text-xs font-normal text-slate-900 focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-all placeholder:text-slate-400" 
-                value={cityFilter}
-                onChange={e => setCityFilter(e.target.value)}
-              />
-              <input 
-                type="text" 
-                placeholder="Irk Ara..." 
-                className="px-3 py-2 bg-white border border-slate-200 rounded-2xl text-xs font-normal text-slate-900 focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-all placeholder:text-slate-400" 
-                value={breedFilter}
-                onChange={e => setBreedFilter(e.target.value)}
-              />
+
+            {/* Konum Seçimi */}
+            <div className="flex items-center gap-2">
+              <div className="relative inline-block">
+                <select
+                  value={cityFilter}
+                  onChange={e => setCityFilter(e.target.value)}
+                  className="appearance-none px-4 py-2 pr-9 bg-white border border-slate-200 rounded-2xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-all shadow-sm"
+                >
+                  <option value="">📍 Konum (Tüm Türkiye)</option>
+                  {Object.keys(TURKIYE_ILLER).sort().map(city => (
+                    <option key={city} value={city}>📍 {city}</option>
+                  ))}
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none stroke-[2]" />
+              </div>
             </div>
           </div>
 
-          {loadingMatches ? (
-            <div className="p-10 text-center text-slate-400 text-xs animate-pulse font-normal">İlanlar aranıyor...</div>
-          ) : matches.length === 0 ? (
-            <div className="rounded-3xl bg-white border border-slate-100 p-10 text-center flex flex-col items-center gap-3 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)]">
-              <div className="w-12 h-12 rounded-2xl bg-pink-50 text-pink-500 flex items-center justify-center">
-                <Heart className="w-6 h-6 stroke-[1.75]" />
+          {/* İLAN FEED / SECTIONS */}
+          {(() => {
+            const filteredMatches = matches.filter(listing => {
+              if (!matchSearchQuery.trim()) return true
+              const query = matchSearchQuery.toLowerCase().trim()
+              const pet = listing.pets
+              if (!pet) return false
+              const nameMatch = (pet.name || '').toLowerCase().includes(query)
+              const titleMatch = (listing.title || '').toLowerCase().includes(query)
+              const breedMatch = (pet.breed || '').toLowerCase().includes(query)
+              const cityMatch = (pet.city || '').toLowerCase().includes(query)
+              return nameMatch || titleMatch || breedMatch || cityMatch
+            })
+
+            const featuredMatches = filteredMatches.slice(0, 4)
+            const recentMatches = filteredMatches
+
+            if (loadingMatches) {
+              return (
+                <div className="flex flex-col gap-3">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="h-32 rounded-3xl bg-slate-100 animate-pulse" />
+                  ))}
+                </div>
+              )
+            }
+
+            if (filteredMatches.length === 0) {
+              return (
+                <div className="rounded-3xl bg-white border border-slate-100 p-10 text-center flex flex-col items-center justify-center gap-3 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)]">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center">
+                    <Compass className="w-6 h-6 stroke-[1.75]" />
+                  </div>
+                  <p className="text-sm font-semibold text-slate-900 text-center">
+                    Aramanıza uygun eşleşme ilanı bulunamadı.
+                  </p>
+                  <p className="text-xs text-slate-500 text-center font-normal">
+                    Filtreleri değiştirebilir veya ilk ilanı siz oluşturabilirsiniz.
+                  </p>
+                </div>
+              )
+            }
+
+            return (
+              <div className="flex flex-col gap-6">
+                {/* Section 1: Öne Çıkan Adaylar */}
+                {featuredMatches.length > 0 && (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex justify-between items-center px-1">
+                      <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4 text-pink-600 stroke-[2.5]" />
+                        Öne Çıkan Adaylar
+                      </h3>
+                      <button className="text-xs font-bold text-pink-600 hover:text-pink-700 flex items-center gap-0.5">
+                        Tümünü Gör <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                      </button>
+                    </div>
+                    <div className="flex gap-3.5 overflow-x-auto pb-2 pt-1 no-scrollbar -mx-1 px-1">
+                      {featuredMatches.map(listing => (
+                        <BreedingFeaturedCard key={listing.id} listing={listing} userApplications={userApplications} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Section 2: Son Eklenen İlanlar */}
+                {recentMatches.length > 0 && (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex justify-between items-center px-1">
+                      <h3 className="font-extrabold text-slate-900 text-base">Son Eklenen İlanlar</h3>
+                      <button className="text-xs font-bold text-pink-600 hover:text-pink-700 flex items-center gap-0.5">
+                        Tümünü Gör <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {recentMatches.map(listing => (
+                        <BreedingFeedCard key={listing.id} listing={listing} userApplications={userApplications} />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-              <p className="text-xs text-slate-500 font-normal">Bu kriterlere uygun aktif üreme ilanı bulunmuyor.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {matches.map(listing => (
-                <BreedingFeedCard key={listing.id} listing={listing} userApplications={userApplications} />
-              ))}
-            </div>
-          )}
+            )
+          })()}
         </div>
-        )
       )}
+    </div>
+  )}
+      {/* Universal Listing Create Modal */}
+      <CreateListingPetSelectorModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        mode={activeTab === 'adoption' ? 'adoption' : 'match'}
+      />
     </section>
   )
 }

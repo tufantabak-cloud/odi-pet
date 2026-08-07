@@ -1,28 +1,29 @@
-import { getCurrentProfile } from '@/lib/auth/get-current-profile'
-import { createAdminSupabaseClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
-import Link from 'next/link'
+import { getCurrentProfile } from '@/lib/auth/get-current-profile';
+import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import {
   ShieldCheck,
   AlertTriangle,
   Gift,
-} from 'lucide-react'
-import MembershipsManagementClient from './MembershipsManagementClient'
+  Users
+} from 'lucide-react';
+import MembershipsManagementClient from './MembershipsManagementClient';
 
 export default async function AdminMembershipsPage() {
-  const profile = await getCurrentProfile()
+  const profile = await getCurrentProfile();
   if (!profile || (profile.role !== 'admin' && profile.role !== 'founder')) {
-    redirect('/owner/dashboard')
+    redirect('/owner/dashboard');
   }
 
-  const adminSupabase = createAdminSupabaseClient()
-  const now = new Date()
-  const nowISO = now.toISOString()
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-  const in7Days = new Date(Date.now() + 7 * 86400000).toISOString()
-  const in30Days = new Date(Date.now() + 30 * 86400000).toISOString()
+  const adminSupabase = createAdminSupabaseClient();
+  const now = new Date();
+  const nowISO = now.toISOString();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const in7Days = new Date(Date.now() + 7 * 86400000).toISOString();
+  const in30Days = new Date(Date.now() + 30 * 86400000).toISOString();
 
-  // 1. Özet Metrikler (Read-Only Aggregation - OPOS Cilt 5/6)
+  // 1. Özet Metrikler & Phase 18 Üyelik Verileri (Read-Only Aggregation - OPOS Cilt 5/6)
   const [
     { count: totalActivePremium },
     { count: totalPaidSubs },
@@ -30,6 +31,7 @@ export default async function AdminMembershipsPage() {
     { data: riskUsers },
     { data: reasonGroups },
     { data: referralsStats },
+    { data: userSubscriptions }
   ] = await Promise.all([
     adminSupabase.from('profiles').select('id', { count: 'exact', head: true }).gt('premium_until', nowISO),
     adminSupabase.from('user_subscriptions').select('id', { count: 'exact', head: true }).in('status', ['active', 'trialing']).in('plan', ['pro', 'ai_plus']),
@@ -37,28 +39,50 @@ export default async function AdminMembershipsPage() {
     adminSupabase.from('profiles').select('id, first_name, last_name, premium_until, premium_tier').gt('premium_until', nowISO).lte('premium_until', in30Days).order('premium_until', { ascending: true }).limit(50),
     adminSupabase.from('membership_credits').select('reason, credit_days'),
     adminSupabase.from('referrals').select('status'),
-  ])
+    adminSupabase.from('user_subscriptions').select('*, profiles!user_subscriptions_profile_id_fkey(first_name, last_name, email, referral_code)').order('created_at', { ascending: false }).limit(100)
+  ]);
 
-  const totalMonthDaysGranted = monthCredits?.reduce((acc, curr) => acc + (curr.credit_days || 0), 0) ?? 0
+  const totalMonthDaysGranted = monthCredits?.reduce((acc, curr) => acc + (curr.credit_days || 0), 0) ?? 0;
 
   // Churn risk kırılımları
-  const risk7Days = riskUsers?.filter(u => u.premium_until && u.premium_until <= in7Days) ?? []
-  const creditOnlyCount = Math.max(0, (totalActivePremium ?? 0) - (totalPaidSubs ?? 0))
+  const risk7Days = riskUsers?.filter((u) => u.premium_until && u.premium_until <= in7Days) ?? [];
+  const creditOnlyCount = Math.max(0, (totalActivePremium ?? 0) - (totalPaidSubs ?? 0));
 
   // Reason dağılımı
-  const reasonSummary: Record<string, { count: number; totalDays: number }> = {}
-  reasonGroups?.forEach(row => {
+  const reasonSummary: Record<string, { count: number; totalDays: number }> = {};
+  reasonGroups?.forEach((row) => {
     if (!reasonSummary[row.reason]) {
-      reasonSummary[row.reason] = { count: 0, totalDays: 0 }
+      reasonSummary[row.reason] = { count: 0, totalDays: 0 };
     }
-    reasonSummary[row.reason].count += 1
-    reasonSummary[row.reason].totalDays += row.credit_days || 0
-  })
+    reasonSummary[row.reason].count += 1;
+    reasonSummary[row.reason].totalDays += row.credit_days || 0;
+  });
 
   // Davet hunisi
-  const totalInvites = referralsStats?.length ?? 0
-  const qualifiedInvites = referralsStats?.filter(r => r.status === 'qualified').length ?? 0
-  const conversionRate = totalInvites > 0 ? Math.round((qualifiedInvites / totalInvites) * 100) : 0
+  const totalInvites = referralsStats?.length ?? 0;
+  const qualifiedInvites = referralsStats?.filter((r) => r.status === 'qualified').length ?? 0;
+  const conversionRate = totalInvites > 0 ? Math.round((qualifiedInvites / totalInvites) * 100) : 0;
+
+  // Formatted Subscriptions for Phase 18 Layer
+  const formattedSubscriptions = (userSubscriptions || []).map((sub: any) => {
+    const aiPlusEnd = sub.ai_plus_until ? new Date(sub.ai_plus_until) : null;
+    const proEnd = sub.pro_until ? new Date(sub.pro_until) : null;
+
+    const daysLeftAiPlus = aiPlusEnd && aiPlusEnd > now ? Math.ceil((aiPlusEnd.getTime() - now.getTime()) / 86400000) : 0;
+    const proBaseDate = aiPlusEnd && aiPlusEnd > now ? aiPlusEnd : now;
+    const daysLeftPro = proEnd && proEnd > proBaseDate ? Math.ceil((proEnd.getTime() - proBaseDate.getTime()) / 86400000) : 0;
+    const totalPremiumDays = proEnd && proEnd > now ? Math.ceil((proEnd.getTime() - now.getTime()) / 86400000) : 0;
+    const computedPlan = daysLeftAiPlus > 0 ? 'ai_plus' : (daysLeftPro > 0 ? 'pro' : (sub.plan || 'free'));
+
+    return {
+      ...sub,
+      plan: computedPlan,
+      daysLeftAiPlus,
+      daysLeftPro,
+      totalPremiumDays,
+      premiumEndDate: sub.pro_until || sub.current_period_end
+    };
+  });
 
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-8 font-sans pb-24">
@@ -75,7 +99,7 @@ export default async function AdminMembershipsPage() {
             Üyelik İzleme & Promosyon Yönetimi
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            OPOS Cilt 14 RBAC & Dinamik Kredi Gün Ayarları ve Promosyon Gönderimi
+            OPOS Cilt 14 RBAC & Dinamik Kredi Gün Ayarları, Promosyon Gönderimi & Phase 18 Üyelik Provider Katmanı
           </p>
         </div>
       </div>
@@ -109,8 +133,8 @@ export default async function AdminMembershipsPage() {
         </div>
       </div>
 
-      {/* 2. Dinamik Yönetim & Promosyon Gönderme Aracı */}
-      <MembershipsManagementClient riskUsers={riskUsers ?? []} />
+      {/* 2. Dinamik Yönetim, Promosyon Gönderme Aracı & Phase 18 Üyelik Provider Paneli */}
+      <MembershipsManagementClient riskUsers={riskUsers ?? []} initialSubscriptions={formattedSubscriptions} />
 
       {/* 3. Churn Riski Listesi (Expiring Soon) */}
       <div className="card-base p-6 rounded-3xl bg-white border border-slate-100 shadow-sm space-y-4">
@@ -137,9 +161,9 @@ export default async function AdminMembershipsPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {riskUsers?.map((user) => {
-                const until = new Date(user.premium_until!)
-                const daysLeft = Math.ceil((until.getTime() - now.getTime()) / 86400000)
-                const isUrgent = daysLeft <= 7
+                const until = new Date(user.premium_until!);
+                const daysLeft = Math.ceil((until.getTime() - now.getTime()) / 86400000);
+                const isUrgent = daysLeft <= 7;
 
                 return (
                   <tr key={user.id} className="hover:bg-slate-50/50 transition-colors">
@@ -206,5 +230,5 @@ export default async function AdminMembershipsPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
