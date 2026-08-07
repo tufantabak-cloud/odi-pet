@@ -19,7 +19,8 @@ export async function POST(req: NextRequest, context: RouteContext) {
   }
 
   const normalizedContacts = []
-  for (const contact of sos_contacts) {
+  for (let i = 0; i < sos_contacts.length; i++) {
+    const contact = sos_contacts[i]
     if (!contact || typeof contact !== 'object') {
       return NextResponse.json({ error: 'Acil durum kişisi geçersiz.' }, { status: 400 })
     }
@@ -37,8 +38,22 @@ export async function POST(req: NextRequest, context: RouteContext) {
     normalizedContacts.push({
       name: typeof contact.name === 'string' ? contact.name.trim() : '',
       phone,
-      relation: typeof contact.relation === 'string' ? contact.relation.trim() : '',
+      relation: i === 0 ? 'Sahibi' : (typeof contact.relation === 'string' ? contact.relation.trim() : ''),
     })
+  }
+
+  if (normalizedContacts.length >= 2) {
+    const c1 = normalizedContacts[0]
+    const c2 = normalizedContacts[1]
+    if (
+      (c1.phone && c2.phone && c1.phone.replace(/\D/g, '') === c2.phone.replace(/\D/g, '')) ||
+      (c1.name && c2.name && c1.name.toLowerCase() === c2.name.toLowerCase())
+    ) {
+      return NextResponse.json(
+        { error: 'Birincil kişi ile Yedek bağlantı kişisi aynı kişi olamaz.' },
+        { status: 400 },
+      )
+    }
   }
 
   const supabase = await createServerSupabaseClient()

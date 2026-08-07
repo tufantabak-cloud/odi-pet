@@ -1,6 +1,5 @@
 import { createAdminSupabaseClient } from '../../supabase/server';
 import { PlanKey } from './types';
-import { cookies } from 'next/headers';
 
 // Encapsulate DB operations to allow easier mocking and swapping
 export class EntitlementRepository {
@@ -11,18 +10,18 @@ export class EntitlementRepository {
   }
 
   async getUserTier(userId: string): Promise<PlanKey> {
-    const { data, error } = await this.supabase
+    const { data: profile, error: profileError } = await this.supabase
       .from('profiles')
       .select('role')
       .eq('id', userId)
       .single();
 
-    if (error || !data) {
+    if (profileError || !profile) {
       return 'free'; // Default fallback
     }
 
     // 1. Check for Admin Preview Override via Cookie or Header (X-Odi-Preview)
-    if (data.role === 'admin' || data.role === 'founder') {
+    if (profile.role === 'admin' || profile.role === 'founder') {
       try {
         const { cookies, headers } = await import('next/headers');
         const headerStore = await headers();
@@ -43,7 +42,36 @@ export class EntitlementRepository {
       }
     }
 
-    // 2. Return actual tier
+    // 2. Read actual subscription from user_subscriptions
+    const nowISO = new Date().toISOString();
+    const { data: sub, error: subError } = await this.supabase
+      .from('user_subscriptions')
+      .select('plan, status, ai_plus_until, pro_until')
+      .eq('profile_id', userId)
+      .in('status', ['active', 'trialing'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (subError || !sub) {
+      return 'free';
+    }
+
+    // ai_plus_until alanı hâlâ geçerliyse ai_plus döndür
+    if (sub.ai_plus_until && sub.ai_plus_until > nowISO) {
+      return 'ai_plus';
+    }
+
+    // pro_until alanı hâlâ geçerliyse pro döndür
+    if (sub.pro_until && sub.pro_until > nowISO) {
+      return 'pro';
+    }
+
+    // plan alanı direkt olarak geçerliyse (Stripe bazlı aktif abonelik)
+    if (sub.plan && sub.plan !== 'free') {
+      return sub.plan;
+    }
+
     return 'free';
   }
 

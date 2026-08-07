@@ -58,14 +58,26 @@ export async function POST(request: Request) {
       user_agent: userAgent,
     }
 
-    if (device_id) subscriptionData.device_id = device_id
-    if (platform) subscriptionData.platform = platform
-    if (browser) subscriptionData.browser = browser
-    if (app_version) subscriptionData.app_version = app_version
-
-    const { error } = await supabase
+    // First attempt full upsert with core required fields
+    let { error } = await supabase
       .from('push_subscriptions')
       .upsert(subscriptionData, { onConflict: 'profile_id,endpoint' })
+
+    // If schema mismatch error occurred due to optional extended fields, attempt safe insert
+    if (error && (error.code === 'PGRST204' || error.message?.includes('schema cache') || error.message?.includes('column'))) {
+      console.warn('[push/subscribe] Retrying with strictly minimal fields due to schema variance:', error.message)
+      const minimalData = {
+        profile_id: user.id,
+        endpoint,
+        p256dh: keys.p256dh,
+        auth_key: keys.auth,
+        user_agent: userAgent,
+      }
+      const retryResult = await supabase
+        .from('push_subscriptions')
+        .upsert(minimalData, { onConflict: 'profile_id,endpoint' })
+      error = retryResult.error
+    }
 
     if (error) {
       console.error('[push/subscribe] Database save failed:', {

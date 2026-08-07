@@ -70,7 +70,7 @@ export async function createPetWithCompatibility(
     '[pet-create] Atomic RPC is missing; using legacy fallback insert.'
   )
 
-  const legacyResult = await supabase
+  let legacyResult = await supabase
     .from('pets')
     .insert({
       ...payload,
@@ -78,6 +78,20 @@ export async function createPetWithCompatibility(
     })
     .select('id, name, species')
     .single()
+
+  if (legacyResult.error && (legacyResult.error.code === 'PGRST204' || legacyResult.error.message?.includes('schema cache'))) {
+    console.warn('[pet-create] PGRST204 detected (missing DB column). Retrying insert without unmigrated registration fields.')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { registration_city, registration_district, agriculture_directorate, ...safePayload } = payload as any
+    legacyResult = await supabase
+      .from('pets')
+      .insert({
+        ...safePayload,
+        owner_id: userId,
+      } as any)
+      .select('id, name, species')
+      .single()
+  }
 
   if (legacyResult.error || !legacyResult.data) {
     return {

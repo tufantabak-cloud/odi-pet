@@ -21,7 +21,7 @@ const OUT_ASSETS = path.join(ROOT, 'public/assets');
 // in docs/brand/LOGO_USAGE.md) — not invented values.
 const ICON_GRADIENT_LIGHT = '#6824AD'; // sampled from odi-icon-512.png background fill
 const ICON_GRADIENT_DARK = '#4C1596';  // sampled from odi-icon-512.png background fill
-const SPLASH_SOLID = '#3E1EA3';        // matches SplashScreen.tsx wrapper + manifest.json theme_color
+const SPLASH_SOLID = '#480376';        // matches SplashScreen.tsx wrapper + manifest.json theme_color
 
 function gradientSquareSvg(size, c1, c2) {
   return Buffer.from(

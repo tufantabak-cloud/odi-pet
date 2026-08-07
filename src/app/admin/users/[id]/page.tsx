@@ -99,7 +99,7 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
       .order('created_at', { ascending: false }),
     supabase
       .from('user_subscriptions')
-      .select('id, plan, status, created_at, current_period_end')
+      .select('id, plan, status, provider, reason, ai_plus_until, pro_until, created_at, current_period_end')
       .eq('profile_id', id)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -279,14 +279,24 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
             </h2>
 
             <div className="space-y-3">
-              <ProCountdownCard premiumUntil={subscription?.current_period_end || null} />
+              <ProCountdownCard
+                premiumUntil={subscription?.pro_until || subscription?.current_period_end || null}
+                aiPlusUntil={subscription?.ai_plus_until || null}
+                proUntil={subscription?.pro_until || null}
+                plan={subscription?.plan || null}
+              />
 
               {subscription && (
                 <div className="pt-2 border-t border-border-main space-y-1 text-[12px] text-text-secondary">
-                  <div className="font-bold text-slate-800 mb-1">Stripe / Ödemeli Abonelik:</div>
+                  <div className="font-bold text-slate-800 mb-1 flex justify-between items-center">
+                    <span>Abonelik Sağlayıcı / Durum:</span>
+                    <span className="text-2xs font-extrabold uppercase px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                      {subscription.provider || 'referral'}
+                    </span>
+                  </div>
                   <SubBadge plan={subscription['plan']} status={subscription['status']} />
-                  {subscription.ends_at && (
-                    <div className="mt-1 text-2xs">Bitiş: {new Date(subscription.ends_at).toLocaleDateString('tr-TR')}</div>
+                  {subscription.reason && (
+                    <div className="mt-1 text-2xs text-slate-500 font-mono">Neden: {subscription.reason}</div>
                   )}
                 </div>
               )}

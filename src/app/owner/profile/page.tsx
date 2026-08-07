@@ -77,20 +77,33 @@ export default async function ProfileMenuPage({
   const totalReferredUsers = userReferrals?.length ?? 0
   const qualifiedReferrals = userReferrals?.filter(r => r.status === 'qualified').length ?? 0
 
-  const { data: userSubscription } = await supabase.from('user_subscriptions').select('current_period_end, status').eq('profile_id', profile?.id ?? '').maybeSingle()
+  const { data: userSubscription } = await supabase
+    .from('user_subscriptions')
+    .select('plan, status, ai_plus_until, pro_until, current_period_end, notification_prefs')
+    .eq('profile_id', profile?.id ?? '')
+    .maybeSingle()
 
-  const hasActiveSub = userSubscription?.status === 'active' || userSubscription?.status === 'trialing'
-  const planName = hasActiveSub ? 'Odi Pro' : 'Odi Free'
+  const now = new Date()
+  const aiPlusEnd = userSubscription?.ai_plus_until ? new Date(userSubscription.ai_plus_until) : null
+  const proEnd = userSubscription?.pro_until ? new Date(userSubscription.pro_until) : null
 
-  let daysLeft = 0;
-  let validUntil: string | null = null;
-  if (userSubscription?.current_period_end) {
-     const end = new Date(userSubscription.current_period_end).getTime()
-     daysLeft = Math.max(0, Math.ceil((end - Date.now()) / (1000 * 60 * 60 * 24)))
-     validUntil = userSubscription.current_period_end
-  } else if (hasActiveSub) {
-     daysLeft = 36500; // infinite if they are premium without an end date
-  }
+  const daysLeftAiPlus = aiPlusEnd && aiPlusEnd > now ? Math.ceil((aiPlusEnd.getTime() - now.getTime()) / 86400000) : 0
+  const proBaseDate = aiPlusEnd && aiPlusEnd > now ? aiPlusEnd : now
+  const daysLeftPro = proEnd && proEnd > proBaseDate ? Math.ceil((proEnd.getTime() - proBaseDate.getTime()) / 86400000) : 0
+  const totalPremiumDays = proEnd && proEnd > now ? Math.ceil((proEnd.getTime() - now.getTime()) / 86400000) : 0
+
+  let computedPlan = userSubscription?.plan || (profile as any)?.premium_tier || 'free'
+  if (daysLeftAiPlus > 0) computedPlan = 'ai_plus'
+  else if (daysLeftPro > 0) computedPlan = 'pro'
+
+  const hasActiveSub = daysLeftAiPlus > 0 || daysLeftPro > 0 || userSubscription?.status === 'active' || userSubscription?.status === 'trialing'
+  
+  let planDisplayName = 'Odi Free'
+  if (computedPlan === 'ai_plus') planDisplayName = 'Odi AI+ (En Üst Paket)'
+  else if (computedPlan === 'pro') planDisplayName = 'Odi Pro'
+
+  let daysLeft = totalPremiumDays
+  let validUntil: string | null = userSubscription?.pro_until || userSubscription?.current_period_end || null
 
   let hasVaccineRecords = false
   if (pets && pets.length > 0) {
@@ -160,7 +173,7 @@ export default async function ProfileMenuPage({
           <div className="flex items-center gap-2 mt-3 bg-bg-main px-4 py-1.5 rounded-full border border-border-main">
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-xs font-bold text-text-secondary uppercase tracking-wider">
-              {daysLeft > 0 && daysLeft < 3650 ? `Odi Pro · ${daysLeft} gün kaldı` : `${planName} Üyesi`}
+              {daysLeft > 0 && daysLeft < 3650 ? `${planDisplayName} · ${daysLeft} gün kaldı` : `${planDisplayName} Üyesi`}
             </span>
           </div>
 
@@ -300,34 +313,37 @@ export default async function ProfileMenuPage({
       {/* 2. Subscription Command Center */}
       <section className="flex flex-col gap-2">
         <h2 className="text-xs font-bold text-text-secondary uppercase tracking-wider px-2">Abonelik & Kredi Durum Merkezi</h2>
-        <div className="bg-white rounded-3xl p-6 border-l-4 border-l-amber-400 border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] space-y-5">
+        <div className="bg-white rounded-3xl p-6 border-l-4 border-l-purple-500 border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] space-y-5">
           <div className="flex justify-between items-start flex-wrap gap-3">
             <div>
               <h3 className="text-xl font-extrabold text-text-primary flex items-center gap-2">
-                {planName}
-                {hasActiveSub && <Star className="w-5 h-5 text-amber-400 fill-amber-400" />}
+                {planDisplayName}
+                {hasActiveSub && <Star className="w-5 h-5 text-purple-500 fill-purple-400" />}
               </h3>
               <p className="text-sm font-semibold text-text-secondary mt-1">
-                {hasActiveSub ? (
-                  daysLeft >= 3650 ? (
-                    <span className="text-amber-700 font-bold flex items-center gap-1">
-                      👑 Ömür Boyu Sonsuz Pro Kullanım (Süresiz ♾️)
-                    </span>
-                  ) : (
-                    <span className="text-amber-700 font-bold flex items-center gap-1">
-                      👑 Aktif Pro Kullanıcı ({daysLeft} Gün Kaldı
-                      {validUntil && ` · Bitiş: ${new Date(validUntil).toLocaleDateString('tr-TR')}`})
-                    </span>
-                  )
+                {daysLeftAiPlus > 0 ? (
+                  <span className="text-purple-700 font-bold flex items-center gap-1">
+                    ✨ Aktif AI+ Hoş Geldin Üyeliği ({daysLeftAiPlus} Gün AI+ Kaldı · Sonrasında {daysLeftPro} Gün PRO Başlayacak)
+                  </span>
+                ) : daysLeftPro > 0 ? (
+                  <span className="text-amber-700 font-bold flex items-center gap-1">
+                    👑 Aktif PRO Üyeliği ({daysLeftPro} Gün PRO Kaldı
+                    {validUntil && ` · Bitiş: ${new Date(validUntil).toLocaleDateString('tr-TR')}`})
+                  </span>
                 ) : (
-                  'Ücretsiz (Free) plana devam ediyorsunuz'
+                  'Ücretsiz (Free) plana devam ediyorsunuz. Davet kodu paylaşarak PRO gün kazanabilirsiniz.'
                 )}
               </p>
             </div>
-            {hasActiveSub ? (
+            {daysLeftAiPlus > 0 ? (
+              <span className="px-3.5 py-1 bg-purple-50 text-purple-800 text-xs font-black rounded-full border border-purple-200 flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5 text-purple-600 fill-purple-400" />
+                {daysLeftAiPlus} Gün AI+ Aktif
+              </span>
+            ) : daysLeftPro > 0 ? (
               <span className="px-3.5 py-1 bg-amber-50 text-amber-800 text-xs font-black rounded-full border border-amber-200/80 flex items-center gap-1">
                 <Crown className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
-                {daysLeft >= 3650 ? 'Sonsuz ♾️ Pro' : `${daysLeft} Gün Aktif`}
+                {daysLeftPro} Gün PRO Aktif
               </span>
             ) : (
               <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-full">
@@ -337,36 +353,50 @@ export default async function ProfileMenuPage({
           </div>
 
           {/* 3 Metric Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {/* Stat 1: Status / Days Left */}
-            <div className="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200/70 space-y-1">
-              <div className="text-2xs font-extrabold text-amber-800 uppercase tracking-wider flex items-center gap-1">
-                <Crown className="w-3.5 h-3.5 text-amber-600" />
-                Abonelik Durumu
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            {/* Stat 1: Kalan AI+ */}
+            <div className="p-3.5 rounded-2xl bg-purple-50/60 border border-purple-200/70 space-y-1">
+              <div className="text-2xs font-extrabold text-purple-800 uppercase tracking-wider flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                Kalan AI+
               </div>
-              <div className="text-base font-black text-amber-950">
-                {hasActiveSub ? (daysLeft >= 3650 ? 'Sonsuz ♾️' : `${daysLeft} Gün Kaldı`) : 'Free (Ücretsiz)'}
+              <div className="text-base font-black text-purple-950">
+                {daysLeftAiPlus > 0 ? `${daysLeftAiPlus} Gün` : 'Tamamlandı / Yok'}
               </div>
-              <div className="text-2xs font-semibold text-amber-700">
-                {hasActiveSub ? (daysLeft >= 3650 ? 'Sınırsız Ömür Boyu Erişim' : `Son Gün: ${validUntil ? new Date(validUntil).toLocaleDateString('tr-TR') : ''}`) : 'Pro avantajlar pasif'}
+              <div className="text-2xs font-semibold text-purple-700">
+                {daysLeftAiPlus > 0 ? '60 Günlük Hoş Geldin AI+' : 'PRO Kademesine Geçildi'}
               </div>
             </div>
 
-            {/* Stat 2: Total Credits Earned */}
-            <div className="p-3.5 rounded-2xl bg-purple-50/60 border border-purple-200/70 space-y-1">
-              <div className="text-2xs font-extrabold text-purple-800 uppercase tracking-wider flex items-center gap-1">
-                <Gift className="w-3.5 h-3.5 text-purple-600" />
+            {/* Stat 2: Kalan PRO */}
+            <div className="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200/70 space-y-1">
+              <div className="text-2xs font-extrabold text-amber-800 uppercase tracking-wider flex items-center gap-1">
+                <Crown className="w-3.5 h-3.5 text-amber-600" />
+                Kalan PRO
+              </div>
+              <div className="text-base font-black text-amber-950">
+                {daysLeftPro > 0 ? `${daysLeftPro} Gün` : 'Yok'}
+              </div>
+              <div className="text-2xs font-semibold text-amber-700">
+                {daysLeftAiPlus > 0 ? 'AI+ Bitiminde Sıraya Girecek' : daysLeftPro > 0 ? `Son Gün: ${validUntil ? new Date(validUntil).toLocaleDateString('tr-TR') : ''}` : 'Süre Doldu'}
+              </div>
+            </div>
+
+            {/* Stat 3: Total Credits Earned */}
+            <div className="p-3.5 rounded-2xl bg-blue-50/60 border border-blue-200/70 space-y-1">
+              <div className="text-2xs font-extrabold text-blue-800 uppercase tracking-wider flex items-center gap-1">
+                <Gift className="w-3.5 h-3.5 text-blue-600" />
                 Kazanılan Krediler
               </div>
-              <div className="text-base font-black text-purple-950">
+              <div className="text-base font-black text-blue-950">
                 +{totalCreditDays >= 36500 ? 'Sonsuz ♾️' : `${totalCreditDays} Gün`}
               </div>
-              <div className="text-2xs font-semibold text-purple-700">
+              <div className="text-2xs font-semibold text-blue-700">
                 {userCredits?.length ?? 0} İşlem / Promosyon Hediye
               </div>
             </div>
 
-            {/* Stat 3: Referred Users */}
+            {/* Stat 4: Referred Users */}
             <div className="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-200/70 space-y-1">
               <div className="text-2xs font-extrabold text-emerald-800 uppercase tracking-wider flex items-center gap-1">
                 <Users className="w-3.5 h-3.5 text-emerald-600" />

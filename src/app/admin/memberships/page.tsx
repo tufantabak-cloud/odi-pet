@@ -31,21 +31,41 @@ export default async function AdminMembershipsPage() {
     { data: riskUsers },
     { data: reasonGroups },
     { data: referralsStats },
-    { data: userSubscriptions }
+    { data: allPlans },
+    { data: allBundles },
+    { data: allPlanBundles },
+    { data: allBundleFeatures }
   ] = await Promise.all([
-    adminSupabase.from('profiles').select('id', { count: 'exact', head: true }).gt('premium_until', nowISO),
+    adminSupabase.from('user_subscriptions').select('id', { count: 'exact', head: true }).in('status', ['active', 'trialing']).in('plan', ['pro', 'ai_plus']),
     adminSupabase.from('user_subscriptions').select('id', { count: 'exact', head: true }).in('status', ['active', 'trialing']).in('plan', ['pro', 'ai_plus']),
     adminSupabase.from('membership_credits').select('credit_days').gte('created_at', startOfMonth),
-    adminSupabase.from('profiles').select('id, first_name, last_name, premium_until, premium_tier').gt('premium_until', nowISO).lte('premium_until', in30Days).order('premium_until', { ascending: true }).limit(50),
+    adminSupabase.from('user_subscriptions').select('id, profile_id, plan, pro_until').gt('pro_until', nowISO).lte('pro_until', in30Days).order('pro_until', { ascending: true }).limit(50),
     adminSupabase.from('membership_credits').select('reason, credit_days'),
     adminSupabase.from('referrals').select('status'),
-    adminSupabase.from('user_subscriptions').select('*, profiles!user_subscriptions_profile_id_fkey(first_name, last_name, email, referral_code)').order('created_at', { ascending: false }).limit(100)
+    adminSupabase.from('subscription_plans').select('*').order('sort_order', { ascending: true }),
+    adminSupabase.from('app_bundles').select('*'),
+    adminSupabase.from('plan_bundles').select('*'),
+    adminSupabase.from('bundle_features').select('*')
   ]);
+
+  // Fetch all profiles (only real columns) and user_subscriptions separately
+  const { data: allProfiles } = await adminSupabase
+    .from('profiles')
+    .select('id, first_name, last_name, email, role, created_at')
+    .order('created_at', { ascending: false })
+    .limit(100);
+
+  const { data: allUserSubs } = await adminSupabase
+    .from('user_subscriptions')
+    .select('*')
+    .limit(200);
+
+  console.log('[memberships] profiles:', allProfiles?.length ?? 0, 'subs:', allUserSubs?.length ?? 0);
 
   const totalMonthDaysGranted = monthCredits?.reduce((acc, curr) => acc + (curr.credit_days || 0), 0) ?? 0;
 
-  // Churn risk kırılımları
-  const risk7Days = riskUsers?.filter((u) => u.premium_until && u.premium_until <= in7Days) ?? [];
+  // Churn risk kırılımları (pro_until from user_subscriptions)
+  const risk7Days = riskUsers?.filter((u: any) => u.pro_until && u.pro_until <= in7Days) ?? [];
   const creditOnlyCount = Math.max(0, (totalActivePremium ?? 0) - (totalPaidSubs ?? 0));
 
   // Reason dağılımı
@@ -63,24 +83,44 @@ export default async function AdminMembershipsPage() {
   const qualifiedInvites = referralsStats?.filter((r) => r.status === 'qualified').length ?? 0;
   const conversionRate = totalInvites > 0 ? Math.round((qualifiedInvites / totalInvites) * 100) : 0;
 
-  // Formatted Subscriptions for Phase 18 Layer
-  const formattedSubscriptions = (userSubscriptions || []).map((sub: any) => {
-    const aiPlusEnd = sub.ai_plus_until ? new Date(sub.ai_plus_until) : null;
-    const proEnd = sub.pro_until ? new Date(sub.pro_until) : null;
+  // In-memory mapping of user_subscriptions to profiles
+  const subMap = new Map((allUserSubs || []).map((s: any) => [s.profile_id, s]));
+
+  // Formatted Subscriptions for Phase 18 Layer (All Registered Profiles)
+  const formattedSubscriptions = (allProfiles || []).map((prof: any) => {
+    const sub = subMap.get(prof.id) || {};
+
+    const aiPlusUntil = sub.ai_plus_until;
+    const proUntil = sub.pro_until;
+
+    const aiPlusEnd = aiPlusUntil ? new Date(aiPlusUntil) : null;
+    const proEnd = proUntil ? new Date(proUntil) : null;
 
     const daysLeftAiPlus = aiPlusEnd && aiPlusEnd > now ? Math.ceil((aiPlusEnd.getTime() - now.getTime()) / 86400000) : 0;
     const proBaseDate = aiPlusEnd && aiPlusEnd > now ? aiPlusEnd : now;
     const daysLeftPro = proEnd && proEnd > proBaseDate ? Math.ceil((proEnd.getTime() - proBaseDate.getTime()) / 86400000) : 0;
     const totalPremiumDays = proEnd && proEnd > now ? Math.ceil((proEnd.getTime() - now.getTime()) / 86400000) : 0;
-    const computedPlan = daysLeftAiPlus > 0 ? 'ai_plus' : (daysLeftPro > 0 ? 'pro' : (sub.plan || 'free'));
+
+    let computedPlan = sub.plan || prof.premium_tier || 'free';
+    if (daysLeftAiPlus > 0) computedPlan = 'ai_plus';
+    else if (daysLeftPro > 0) computedPlan = 'pro';
 
     return {
-      ...sub,
+      id: sub.id || prof.id,
+      profile_id: prof.id,
+      profiles: {
+        first_name: prof.first_name,
+        last_name: prof.last_name,
+        email: prof.email,
+        role: prof.role,
+      },
       plan: computedPlan,
+      status: sub.status || (totalPremiumDays > 0 ? 'active' : 'free'),
+      provider: sub.provider || 'referral',
       daysLeftAiPlus,
       daysLeftPro,
       totalPremiumDays,
-      premiumEndDate: sub.pro_until || sub.current_period_end
+      premiumEndDate: proUntil || sub.current_period_end
     };
   });
 
@@ -134,7 +174,14 @@ export default async function AdminMembershipsPage() {
       </div>
 
       {/* 2. Dinamik Yönetim, Promosyon Gönderme Aracı & Phase 18 Üyelik Provider Paneli */}
-      <MembershipsManagementClient riskUsers={riskUsers ?? []} initialSubscriptions={formattedSubscriptions} />
+      <MembershipsManagementClient
+        riskUsers={[]}
+        initialSubscriptions={formattedSubscriptions}
+        initialPlans={allPlans ?? []}
+        initialBundles={allBundles ?? []}
+        initialPlanBundles={allPlanBundles ?? []}
+        initialBundleFeatures={allBundleFeatures ?? []}
+      />
 
       {/* 3. Churn Riski Listesi (Expiring Soon) */}
       <div className="card-base p-6 rounded-3xl bg-white border border-slate-100 shadow-sm space-y-4">
@@ -160,19 +207,19 @@ export default async function AdminMembershipsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {riskUsers?.map((user) => {
-                const until = new Date(user.premium_until!);
+              {riskUsers?.map((user: any) => {
+                const until = new Date(user.pro_until ?? now);
                 const daysLeft = Math.ceil((until.getTime() - now.getTime()) / 86400000);
                 const isUrgent = daysLeft <= 7;
 
                 return (
                   <tr key={user.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="p-3 font-semibold text-slate-900">
-                      {user.first_name || 'Kullanıcı'} {user.last_name || ''}
+                      Kullanıcı ({user.profile_id?.slice(0, 8)}...)
                     </td>
                     <td className="p-3">
                       <span className="px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-2xs font-bold uppercase">
-                        {user.premium_tier || 'pro'}
+                        {user.plan || 'pro'}
                       </span>
                     </td>
                     <td className="p-3 text-slate-600">
@@ -187,7 +234,7 @@ export default async function AdminMembershipsPage() {
                     </td>
                     <td className="p-3 text-right">
                       <Link
-                        href={`/admin/users/${user.id}`}
+                        href={`/admin/users/${user.profile_id}`}
                         className="text-xs font-bold text-primary hover:underline"
                       >
                         Detay →

@@ -21,9 +21,9 @@ export default defineConfig({
       NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
     },
     exclude: [
-      'node_modules',
-      '.next',
-      '.git',
+      '**/node_modules/**',
+      '**/.next/**',
+      '**/.git/**',
       'e2e',
       '.claude',
       'brain',

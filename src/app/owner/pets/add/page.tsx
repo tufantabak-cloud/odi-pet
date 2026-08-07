@@ -152,7 +152,7 @@ function PetForm({
   submitError
 }: PetFormProps) {
   const [activeMeasureTab, setActiveMeasureTab] = useState<'weight' | 'height'>('weight')
-  const handleApproxChange = (yStr: string, mStr: string) => {
+  const handleApproxChange = (yStr: string, mStr: string = '') => {
     setApproxYears(yStr)
     setApproxMonths(mStr)
     
@@ -334,16 +334,7 @@ function PetForm({
                   min={0} max={30} step={1} unit="Yaş"
                   placeholder="Yaş (Örn: 1)"
                   value={approxYears}
-                  onChange={e => handleApproxChange(e.target.value, approxMonths)}
-                  className="w-full h-14 !rounded-card border-primary/20 bg-surface"
-                />
-
-                {/* Ay Girişi */}
-                <StepperInput
-                  min={0} max={11} step={1} unit="Ay"
-                  placeholder="Ay (Örn: 4)"
-                  value={approxMonths}
-                  onChange={e => handleApproxChange(approxYears, e.target.value)}
+                  onChange={e => handleApproxChange(e.target.value)}
                   className="w-full h-14 !rounded-card border-primary/20 bg-surface"
                 />
               </div>
@@ -950,6 +941,11 @@ function PetSOSStep({
   const secondaryPhoneInvalid = secondaryHasData
     && !isTurkishMobilePhone(sosContacts[1]?.phone || '')
 
+  const isSameContact = secondaryHasData && (
+    (sosContacts[0]?.phone && sosContacts[1]?.phone && sosContacts[0].phone.replace(/\D/g, '') === sosContacts[1].phone.replace(/\D/g, '')) ||
+    (sosContacts[0]?.name && sosContacts[1]?.name && sosContacts[0].name.trim().toLowerCase() === sosContacts[1].name.trim().toLowerCase())
+  )
+
   const handleSave = () => {
     setShowValidation(true)
 
@@ -960,6 +956,7 @@ function PetSOSStep({
       || secondaryNameMissing
       || secondaryPhoneInvalid
       || secondaryRelationMissing
+      || isSameContact
     ) {
       return
     }
@@ -1065,7 +1062,7 @@ function PetSOSStep({
                 onBlur={() => setTouchedPhones(current => [true, current[1]])}
                 onChange={e => {
                   const nc = [...sosContacts]
-                  nc[0] = { ...nc[0], phone: formatTurkishMobileInput(e.target.value) }
+                  nc[0] = { ...nc[0], phone: formatTurkishMobileInput(e.target.value), relation: 'Sahibi' }
                   setSosContacts(nc)
                 }}
                 required
@@ -1081,31 +1078,23 @@ function PetSOSStep({
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-bold text-text-secondary">Yakınlık *</label>
-              <select 
-                className={`input-base text-sm py-3 px-4 bg-white ${
-                  showValidation && primaryRelationMissing ? 'border-error focus:border-error focus:ring-error/20' : ''
-                }`}
-                value={sosContacts[0]?.relation || ''} 
-                data-testid="emergency-contact-relation-select"
-                aria-invalid={showValidation && primaryRelationMissing}
-                onChange={e => { const nc = [...sosContacts]; nc[0] = { ...nc[0], relation: e.target.value }; setSosContacts(nc); }}
-                required
-              >
-                <option value="" disabled>Seçiniz</option>
-                <option value="Sahibi">Sahibi</option>
-                <option value="Aile Üyesi">Aile Üyesi</option>
-                <option value="Eşi / Partneri">Eşi / Partneri</option>
-                <option value="Komşu">Komşu</option>
-                <option value="Arkadaş / Yakın">Arkadaş / Yakın</option>
-                <option value="Evcil Hayvan Bakıcısı">Evcil Hayvan Bakıcısı</option>
-                <option value="Veteriner Hekim">Veteriner Hekim</option>
-                <option value="Diğer">Diğer</option>
-              </select>
-              {showValidation && primaryRelationMissing && (
-                <p role="alert" className="text-[11px] font-bold text-error">Yakınlık seçimi zorunludur.</p>
-              )}
+              <input 
+                type="text" 
+                readOnly 
+                disabled
+                className="input-base text-sm py-3 px-4 bg-gray-100/80 text-text-secondary font-semibold cursor-not-allowed border-border-main" 
+                value="Sahibi" 
+                data-testid="emergency-contact-relation-input"
+              />
             </div>
           </div>
+
+          {showValidation && isSameContact && (
+            <div role="alert" className="p-3 bg-error/10 text-error text-xs font-bold rounded-xl border border-error/20 flex items-center gap-1.5">
+              <AlertTriangle size={16} className="w-4 h-4 text-error shrink-0" aria-hidden="true" />
+              Birincil kişi ile Yedek bağlantı kişisi aynı kişi olamaz. Lütfen farklı bir yedek kişi girin.
+            </div>
+          )}
 
           <div className="flex flex-col gap-3 p-5 bg-bg-main rounded-2xl border border-border-main hover:border-text-secondary/30 transition-colors">
             <div className="flex justify-between items-center flex-wrap gap-2 mb-1">
@@ -1302,7 +1291,7 @@ export default function AddPetPage() {
 
   const [createdPetId, setCreatedPetId] = useState<string | null>(null)
   const [sosContacts, setSosContacts] = useState([
-    { name: '', phone: '', relation: '' },
+    { name: '', phone: '', relation: 'Sahibi' },
     { name: '', phone: '', relation: '' },
   ])
   const [sosLoading, setSosLoading] = useState(false)

@@ -33,6 +33,14 @@ export const RulerPicker: React.FC<RulerPickerProps> = ({
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const isSelfScrolling = useRef(false)
+  const isUserInteracting = useRef(false)
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Mouse drag durumları (Masaüstü için)
+  const isMouseDownRef = useRef(false)
+  const startXRef = useRef(0)
+  const scrollLeftStartRef = useRef(0)
+
   const [isEditing, setIsEditing] = useState(false)
   const [inputValue, setInputValue] = useState(String(value || ''))
 
@@ -45,6 +53,8 @@ export const RulerPicker: React.FC<RulerPickerProps> = ({
   const handleScroll = useCallback(() => {
     if (!scrollContainerRef.current || isSelfScrolling.current) return
 
+    isUserInteracting.current = true
+
     const scrollLeft = scrollContainerRef.current.scrollLeft
     const tickIndex = Math.round(scrollLeft / tickWidth)
     const rawVal = min + tickIndex * step
@@ -54,6 +64,14 @@ export const RulerPicker: React.FC<RulerPickerProps> = ({
     if (formattedVal !== numericValue) {
       onChange(formattedVal)
     }
+
+    // Scroll hareketi bittiğinde etkileşimi sıfırla
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current)
+    }
+    scrollTimeoutRef.current = setTimeout(() => {
+      isUserInteracting.current = false
+    }, 150)
   }, [min, max, step, tickWidth, numericValue, onChange])
 
   // Değer dışarıdan değiştiğinde cetveli kaydır
@@ -78,20 +96,49 @@ export const RulerPicker: React.FC<RulerPickerProps> = ({
     [min, max, step, tickWidth]
   )
 
+  // Değer dışarıdan (veya butonlar/input ile) değiştiğinde cetveli konumlandır
   useEffect(() => {
     setInputValue(String(numericValue || ''))
-    if (!isSelfScrolling.current) {
+    if (!isSelfScrolling.current && !isUserInteracting.current && !isMouseDownRef.current) {
       scrollToValue(numericValue, false)
     }
   }, [numericValue, scrollToValue])
 
-  // İlk yüklemede cetveli ortala
+  // İlk yüklemede cetveli konumlandır
   useEffect(() => {
     const timer = setTimeout(() => {
       scrollToValue(numericValue, false)
     }, 100)
-    return () => clearTimeout(timer)
+    return () => {
+      clearTimeout(timer)
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current)
+    }
   }, [])
+
+  // Mouse Drag Etkileşimi (Masaüstü Kullanıcıları İçin)
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!scrollContainerRef.current) return
+    isMouseDownRef.current = true
+    isUserInteracting.current = true
+    startXRef.current = e.clientX
+    scrollLeftStartRef.current = scrollContainerRef.current.scrollLeft
+  }
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isMouseDownRef.current || !scrollContainerRef.current) return
+    e.preventDefault()
+    const dx = e.clientX - startXRef.current
+    scrollContainerRef.current.scrollLeft = scrollLeftStartRef.current - dx
+  }
+
+  const handleMouseUpOrLeave = () => {
+    if (isMouseDownRef.current) {
+      isMouseDownRef.current = false
+      setTimeout(() => {
+        isUserInteracting.current = false
+      }, 150)
+    }
+  }
 
   const handleInc = () => {
     const next = parseFloat(Math.min(max, numericValue + step).toFixed(step < 1 ? 1 : 0))
@@ -145,7 +192,7 @@ export const RulerPicker: React.FC<RulerPickerProps> = ({
             type="button"
             onClick={handleDec}
             disabled={numericValue <= min}
-            className="w-10 h-10 rounded-full bg-slate-100/80 hover:bg-primary-soft hover:text-primary active:scale-95 disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center justify-center font-extrabold text-slate-600 text-lg shadow-xs"
+            className="w-10 h-10 rounded-full bg-slate-100/80 hover:bg-primary-soft hover:text-primary active:scale-95 disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center justify-center font-extrabold text-slate-600 text-lg shadow-xs cursor-pointer"
             aria-label="Azalt"
           >
             -
@@ -188,7 +235,7 @@ export const RulerPicker: React.FC<RulerPickerProps> = ({
             type="button"
             onClick={handleInc}
             disabled={numericValue >= max}
-            className="w-10 h-10 rounded-full bg-slate-100/80 hover:bg-primary-soft hover:text-primary active:scale-95 disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center justify-center font-extrabold text-slate-600 text-lg shadow-xs"
+            className="w-10 h-10 rounded-full bg-slate-100/80 hover:bg-primary-soft hover:text-primary active:scale-95 disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center justify-center font-extrabold text-slate-600 text-lg shadow-xs cursor-pointer"
             aria-label="Artır"
           >
             +
@@ -211,7 +258,11 @@ export const RulerPicker: React.FC<RulerPickerProps> = ({
           <div
             ref={scrollContainerRef}
             onScroll={handleScroll}
-            className="w-full h-full overflow-x-auto no-scrollbar scroll-smooth flex items-end cursor-grab active:cursor-grabbing touch-pan-x"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUpOrLeave}
+            onMouseLeave={handleMouseUpOrLeave}
+            className="w-full h-full overflow-x-auto no-scrollbar flex items-end cursor-grab active:cursor-grabbing touch-pan-x"
             style={{
               paddingLeft: 'calc(50% - 7px)',
               paddingRight: 'calc(50% - 7px)',
@@ -276,7 +327,7 @@ export const RulerPicker: React.FC<RulerPickerProps> = ({
                   key={p}
                   type="button"
                   onClick={() => handlePresetClick(p)}
-                  className={`px-3 py-1 rounded-full text-[12px] font-bold transition-all shrink-0 active:scale-95 ${
+                  className={`px-3 py-1 rounded-full text-[12px] font-bold transition-all shrink-0 active:scale-95 cursor-pointer ${
                     isActive
                       ? 'bg-primary text-white shadow-sm shadow-primary/30 scale-105'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'

@@ -114,10 +114,22 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
   if (fd.has('lifestyle')) payload.lifestyle = str(fd, 'lifestyle')
   if (fd.has('size')) payload.size = str(fd, 'size')
 
-  const { error: updateError } = await supabase
+  let { error: updateError } = await supabase
     .from('pets')
     .update(payload)
     .eq('id', id)
+
+  if (updateError && (updateError.code === 'PGRST204' || updateError.message?.includes('schema cache'))) {
+    console.warn('[pet-update] PGRST204 detected. Retrying update without unmigrated registration fields.')
+    delete payload.registration_city
+    delete payload.registration_district
+    delete payload.agriculture_directorate
+    const { error: retryError } = await supabase
+      .from('pets')
+      .update(payload)
+      .eq('id', id)
+    updateError = retryError
+  }
 
   if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 })
 

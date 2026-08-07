@@ -15,13 +15,10 @@ export default function SplashScreen() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const alreadySeen = sessionStorage.getItem("odi_splash_seen") === "true";
-      const isDevOrLocal =
-        window.location.hostname === "localhost" ||
-        window.location.hostname === "127.0.0.1";
       const isTestEnv =
         window.navigator.userAgent.includes("Playwright") ||
         window.location.search.includes("test=true") ||
-        isDevOrLocal;
+        window.location.search.includes("nosplash=true");
 
       if (alreadySeen || isTestEnv) {
         setIsVisible(false);
@@ -76,11 +73,9 @@ export default function SplashScreen() {
     try {
       sessionStorage.setItem("odi_splash_seen", "true");
     } catch {}
-    if (phase === 2 && !isFadingOut) {
+    if (!isFadingOut) {
       setIsFadingOut(true);
       setTimeout(() => setIsVisible(false), FADE_OUT_DURATION_MS);
-    } else {
-      setIsVisible(false);
     }
   };
 
@@ -88,15 +83,15 @@ export default function SplashScreen() {
 
   return (
     <div
-      className={`fixed inset-0 z-[99999] bg-[#3B0764] transition-opacity duration-500 ease-out ${
+      className={`fixed inset-0 z-[99999] bg-[#480376] transition-opacity duration-500 ease-out ${
         isFadingOut ? "opacity-0 pointer-events-none" : "opacity-100"
-      } ${phase === 2 ? "cursor-pointer" : ""}`}
-      role={phase === 2 ? "button" : undefined}
-      tabIndex={phase === 2 ? 0 : -1}
-      aria-label={phase === 2 ? "Açılış ekranını geç" : undefined}
+      } cursor-pointer`}
+      role="button"
+      tabIndex={0}
+      aria-label="Açılış ekranını geç"
       onClick={dismissSplash}
       onKeyDown={(event) => {
-        if (phase === 2 && (event.key === "Enter" || event.key === " ")) {
+        if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
           dismissSplash();
         }

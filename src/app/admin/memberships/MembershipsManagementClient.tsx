@@ -27,6 +27,8 @@ import {
   Clock
 } from 'lucide-react';
 
+import PlanManagementTab from './PlanManagementTab';
+
 import {
   assignPlanAction,
   changePlanAction,
@@ -62,6 +64,10 @@ interface RiskUser {
 interface Props {
   riskUsers: RiskUser[];
   initialSubscriptions?: any[];
+  initialPlans?: any[];
+  initialBundles?: any[];
+  initialPlanBundles?: any[];
+  initialBundleFeatures?: any[];
 }
 
 type GrantMode =
@@ -83,8 +89,15 @@ interface UserSearchResult {
   premium_until: string | null;
 }
 
-export default function MembershipsManagementClient({ riskUsers, initialSubscriptions = [] }: Props) {
-  const [activeTab, setActiveTab] = useState<'promotions' | 'provider_actions'>('promotions');
+export default function MembershipsManagementClient({
+  riskUsers,
+  initialSubscriptions = [],
+  initialPlans = [],
+  initialBundles = [],
+  initialPlanBundles = [],
+  initialBundleFeatures = []
+}: Props) {
+  const [activeTab, setActiveTab] = useState<'promotions' | 'provider_actions' | 'plans'>('promotions');
   const [isPending, startTransition] = useTransition();
 
   // Settings State
@@ -387,7 +400,27 @@ export default function MembershipsManagementClient({ riskUsers, initialSubscrip
           <Layers className="w-4 h-4" />
           Manual Membership Provider (Phase 18 Katmanı)
         </button>
+        <button
+          onClick={() => setActiveTab('plans')}
+          className={`pb-3 flex items-center gap-2 transition-colors ${
+            activeTab === 'plans'
+              ? 'border-b-2 border-primary text-primary font-black'
+              : 'hover:text-slate-900'
+          }`}
+        >
+          <Award className="w-4 h-4" />
+          Plan Yönetimi (Phase 18D)
+        </button>
       </div>
+
+      {activeTab === 'plans' && (
+        <PlanManagementTab
+          initialPlans={initialPlans}
+          initialBundles={initialBundles}
+          initialPlanBundles={initialPlanBundles}
+          initialBundleFeatures={initialBundleFeatures}
+        />
+      )}
 
       {activeTab === 'promotions' && (
         <>
@@ -1031,8 +1064,8 @@ export default function MembershipsManagementClient({ riskUsers, initialSubscrip
               </span>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
+            <div className="overflow-x-auto relative">
+              <table className="w-full text-left text-sm border-collapse">
                 <thead className="bg-slate-50 text-slate-500 font-bold text-xs uppercase tracking-wider">
                   <tr>
                     <th className="p-3">Kullanıcı</th>
@@ -1041,7 +1074,7 @@ export default function MembershipsManagementClient({ riskUsers, initialSubscrip
                     <th className="p-3">Sağlayıcı</th>
                     <th className="p-3">Kalan AI+</th>
                     <th className="p-3">Kalan PRO</th>
-                    <th className="p-3 text-right">Eylemler</th>
+                    <th className="p-3 text-right sticky right-0 bg-slate-50 shadow-xs z-10">Eylemler</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -1072,34 +1105,28 @@ export default function MembershipsManagementClient({ riskUsers, initialSubscrip
                         <td className="p-3 text-xs font-bold text-purple-700">
                           {sub.daysLeftPro > 0 ? `${sub.daysLeftPro} gün` : '-'}
                         </td>
-                        <td className="p-3 text-right space-x-1">
-                          <button
-                            onClick={() => {
+                        <td className="p-3 text-right sticky right-0 bg-white shadow-xs z-10 space-x-1">
+                          <select
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (!val) return;
                               setActiveModalUser(sub);
-                              setModalActionType('grant_membership');
+                              setModalActionType(val as any);
+                              e.target.value = '';
                             }}
-                            className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-2xs font-bold rounded-lg hover:bg-emerald-100"
+                            defaultValue=""
+                            className="px-2.5 py-1.5 bg-purple-50 text-purple-900 border border-purple-200 text-2xs font-bold rounded-xl cursor-pointer hover:bg-purple-100 transition-all"
                           >
-                            Grant (+30)
-                          </button>
-                          <button
-                            onClick={() => {
-                              setActiveModalUser(sub);
-                              setModalActionType('assign_plan');
-                            }}
-                            className="px-2.5 py-1 bg-purple-50 text-purple-700 text-2xs font-bold rounded-lg hover:bg-purple-100"
-                          >
-                            Assign AI+
-                          </button>
-                          <button
-                            onClick={() => {
-                              setActiveModalUser(sub);
-                              setModalActionType('expire_membership');
-                            }}
-                            className="px-2.5 py-1 bg-rose-50 text-rose-700 text-2xs font-bold rounded-lg hover:bg-rose-100"
-                          >
-                            Expire
-                          </button>
+                            <option value="" disabled>⚡ İşlem Seçin</option>
+                            <option value="grant_membership">➕ Hediye Kredi Yükle (+30 Gün)</option>
+                            <option value="assign_plan">⭐ Plan Değiştir / AI+ At</option>
+                            <option value="extend_plan">⏳ Süre Uzat (Gün Ekle)</option>
+                            <option value="start_trial">🧪 Deneme Süresi Başlat</option>
+                            <option value="cancel_membership">🛑 Üyeliği İptal Et</option>
+                            <option value="resume_membership">🔄 İptali Kaldır / Devam Et</option>
+                            <option value="expire_membership">❌ Süreyi Sonlandır (Expire)</option>
+                            <option value="reset_quota">🧹 Harcanan Kotayı Sıfırla</option>
+                          </select>
                         </td>
                       </tr>
                     );

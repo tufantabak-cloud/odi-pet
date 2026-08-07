@@ -298,13 +298,32 @@ export default function EditPetForm({ pet }: { pet: any }) {
   const handleSaveSos = async () => {
     setSosSaving(true)
     setSosMsg(null)
+
+    const c1 = sosContacts[0]
+    const c2 = sosContacts[1]
+    const isSame = c2 && (c2.name || c2.phone) && (
+      (c1?.phone && c2?.phone && c1.phone.replace(/\D/g, '') === c2.phone.replace(/\D/g, '')) ||
+      (c1?.name && c2?.name && c1.name.trim().toLowerCase() === c2.name.trim().toLowerCase())
+    )
+
+    if (isSame) {
+      setSosMsg({ type: 'err', text: 'Birincil kişi ile Yedek bağlantı kişisi aynı kişi olamaz.' })
+      setSosSaving(false)
+      return
+    }
+
     try {
       const res = await fetch(`/api/pets/${pet.id}/sos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sos_contacts: sosContacts.filter(c => c.name || c.phone) }),
+        body: JSON.stringify({
+          sos_contacts: sosContacts
+            .filter(c => c.name || c.phone)
+            .map((c, idx) => idx === 0 ? { ...c, relation: 'Sahibi' } : c),
+        }),
       })
-      setSosMsg(res.ok ? { type: 'ok', text: 'Acil durum ağı güncellendi.' } : { type: 'err', text: 'Kaydedilemedi.' })
+      const data = await res.json().catch(() => ({}))
+      setSosMsg(res.ok ? { type: 'ok', text: 'Acil durum ağı güncellendi.' } : { type: 'err', text: data.error || 'Kaydedilemedi.' })
     } catch {
       setSosMsg({ type: 'err', text: 'Bağlantı hatası.' })
     } finally {
@@ -868,23 +887,33 @@ export default function EditPetForm({ pet }: { pet: any }) {
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-bold text-text-secondary">Yakınlık</label>
-                  <select 
-                    className="input-base bg-white"
-                    value={sosContacts[i]?.relation || ''}
-                    onChange={e => { const c = [...sosContacts]; c[i] = {...c[i], relation: e.target.value}; setSosContacts(c) }}
-                  >
-                    <option value="" disabled>Seçiniz</option>
-                    <option value="Aile Üyesi">Aile Üyesi</option>
-                    <option value="Eşi / Partneri">Eşi / Partneri</option>
-                    <option value="Komşu">Komşu</option>
-                    <option value="Arkadaş / Yakın">Arkadaş / Yakın</option>
-                    <option value="Evcil Hayvan Bakıcısı">Evcil Hayvan Bakıcısı</option>
-                    <option value="Veteriner Hekim">Veteriner Hekim</option>
-                    <option value="Diğer">Diğer</option>
-                    {sosContacts[i]?.relation && !['Aile Üyesi', 'Eşi / Partneri', 'Komşu', 'Arkadaş / Yakın', 'Evcil Hayvan Bakıcısı', 'Veteriner Hekim', 'Diğer'].includes(sosContacts[i].relation) && (
-                      <option value={sosContacts[i].relation}>{sosContacts[i].relation}</option>
-                    )}
-                  </select>
+                  {i === 0 ? (
+                    <input 
+                      type="text" 
+                      readOnly 
+                      disabled
+                      className="input-base bg-gray-100/80 text-text-secondary font-semibold cursor-not-allowed border-border-main" 
+                      value="Sahibi" 
+                    />
+                  ) : (
+                    <select 
+                      className="input-base bg-white"
+                      value={sosContacts[i]?.relation || ''}
+                      onChange={e => { const c = [...sosContacts]; c[i] = {...c[i], relation: e.target.value}; setSosContacts(c) }}
+                    >
+                      <option value="" disabled>Seçiniz</option>
+                      <option value="Aile Üyesi">Aile Üyesi</option>
+                      <option value="Eşi / Partneri">Eşi / Partneri</option>
+                      <option value="Komşu">Komşu</option>
+                      <option value="Arkadaş / Yakın">Arkadaş / Yakın</option>
+                      <option value="Evcil Hayvan Bakıcısı">Evcil Hayvan Bakıcısı</option>
+                      <option value="Veteriner Hekim">Veteriner Hekim</option>
+                      <option value="Diğer">Diğer</option>
+                      {sosContacts[i]?.relation && !['Aile Üyesi', 'Eşi / Partneri', 'Komşu', 'Arkadaş / Yakın', 'Evcil Hayvan Bakıcısı', 'Veteriner Hekim', 'Diğer'].includes(sosContacts[i].relation) && (
+                        <option value={sosContacts[i].relation}>{sosContacts[i].relation}</option>
+                      )}
+                    </select>
+                  )}
                 </div>
               </div>
             </div>
