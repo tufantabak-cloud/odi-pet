@@ -156,40 +156,54 @@ Görsel kabul: hedef genişliklerde (320/390/430 px), kullanım zemininde, önce
 | `primary/odi-logo-primary.svg` | Ana marka kilidi | `0 0 2000 2000` | ✅ **GEÇTİ** | 2031 KB → 11 KB |
 | `primary/odi-logo-horizontal.svg` | Geniş alan / e-posta / PDF üstbilgi | `0 0 2000 600` | ✅ **GEÇTİ** | 700 KB (PSD!) → 12 KB |
 | `primary/odi-logo-vertical.svg` | Dar/dikey alan | `0 0 1200 1600` | ✅ **GEÇTİ** | 1354 KB → 11 KB |
-| `monochrome/odi-logo-one-color.svg` | Baskı / gravür | `0 0 2000 2000` | ✅ **GEÇTİ**\* | 946 KB (PSD!) → 11 KB |
-| `monochrome/odi-logo-white.svg` | Koyu zemin | `0 0 2000 2000` | ✅ **GEÇTİ**\* | 2553 KB → 11 KB |
-| `watermark/odi-logo-white-dark-bg.svg` | Filigran / rapor üzeri | `0 0 2000 2000` | ✅ **GEÇTİ**\* | 3755 KB (0 path) → 11 KB |
+| `monochrome/odi-logo-one-color.svg` | Baskı / gravür — tek renk, temalanabilir | `0 0 2000 2000` | ✅ **GEÇTİ** | 946 KB (PSD!) → 15 KB, `currentColor` uygulandı |
+| `monochrome/odi-logo-white.svg` | Koyu zemin | `0 0 2000 2000` | ✅ **GEÇTİ** | 2553 KB → 11 KB |
+| `watermark/odi-logo-white-dark-bg.svg` | Filigran / rapor üzeri | `0 0 2000 2000` | ✅ **GEÇTİ** | 3755 KB (0 path) → 11 KB |
 | `app-icons/odi-icon.svg` | Uygulama ikonu kaynağı | `0 0 1024 1024` | ✅ **GEÇTİ** | 1359 KB (1254×1254 hatalı) → 9 KB (1024×1024 doğru) |
 | `splash/odi-splash-logo.svg` | Açılış ekranı (§2) | `0 0 1080 1920` | ✅ **GEÇTİ** | **3739 KB → 28 KB** (P0 — kapandı) |
 | `social/odi-social-avatar.svg` | Sosyal profil görseli | `0 0 1024 1024` | ✅ **GEÇTİ** | 1120 KB → 8 KB |
-| `social/odi-social-cover.svg` | Sosyal kapak görseli | `0 0 1500 500` | ❌ **EKSİK** | silinmiş, yeniden export edilmedi |
-| **TOPLAM (9/10 kanonik)** | | | | **23.2 MB → 0.12 MB (−%99.5)** |
+| `social/odi-social-cover.svg` | Sosyal kapak görseli | `0 0 1500 500` | ✅ **GEÇTİ** | yeniden export edildi, 19 KB |
+| **TOPLAM (10/10 kanonik)** | | | | **23.2 MB → 0.14 MB (−%99.4)** |
 
-\* Bkz. §7.3 — bu üç dosya birbirinin byte-birebir kopyası; tasarım açısından açık madde.
+Kanonik setin tamamı şartnameyi karşılıyor. §7.3'teki renk düzeltmesi ve §7.6'daki iki eksik varlık kapandı (bkz. aşağı).
 
 ### 7.2 Raster Türevler
 
 | Türev | Durum |
 | :--- | :--- |
 | `app-icons/odi-icon-{16…512}.png` (12 boyut) | ✅ Tamam, doğru piksel boyutlarında |
-| `app-icons/odi-icon-1024.png` | ❌ **EKSİK** |
+| `app-icons/odi-icon-1024.png` | ✅ Tamam — 448 KB |
 | `splash/odi-splash-logo.png` | ✅ Tamam — 1041 KB → **127 KB** (8 kat küçüldü) |
 | `favicon/*` | ✅ Etkilenmedi, değişmedi |
 
-### 7.3 Açık Madde — Renk Varyantları Birbirinin Kopyası
+### 7.3 Uygulanan Düzeltme — Renk Varyantları
 
-`odi-logo-one-color.svg`, `odi-logo-white.svg` ve `watermark/odi-logo-white-dark-bg.svg` **üçü de byte-birebir aynı dosya** (aynı MD5 hash, 10.841 bayt). Üçünde de dolgu sabit `fill:#fff` (beyaz) olarak gömülü.
+**Tespit:** `odi-logo-one-color.svg`, `odi-logo-white.svg` ve `watermark/odi-logo-white-dark-bg.svg` **üçü de byte-birebir aynı dosyaydı** (aynı MD5, 10.841 bayt, aynı `<style>` bloğu, `.a{fill:#fff}` `.b{fill:#f9f8fb}`) — §3.4.2'nin izin verdiği tek istisnayı (`one-color` varyantında `currentColor`) hiçbiri karşılamıyordu.
 
-Bu, §3.4.2'nin izin verdiği tek istisnayı (tek-renk varyantında `currentColor`) karşılamıyor: `one-color` varyantı şu an `currentColor` değil, sabit beyaz kullanıyor — yani tüketici tarafında renklendirilemez, yalnızca koyu zeminde işe yarar. Üç ayrı kullanım amacı (tek-renk baskı / beyaz logo / filigran) için üç farklı dosya üretilmiş görünmüyor, aynı dosya üç yere kopyalanmış.
+**Uygulanan düzeltme — yalnızca `monochrome/odi-logo-one-color.svg`:**
 
-**Bu bir tasarım kararı gerektirir, otomatik düzeltilemez.** Öneri: `one-color.svg` dosyasında dolgu `currentColor` olarak değiştirilsin (tüketici CSS ile renklendirebilsin); `white.svg` ve `watermark` dosyaları mevcut haliyle (sabit `#fff`) kalabilir çünkü zaten o renk için üretiliyorlar.
+```diff
+- <style>.a{fill:#fff}.b{fill:#f9f8fb}</style>
++ <style>.a{fill:currentColor;opacity:.6}.b{fill:currentColor}</style>
+```
+
+(Nihai teslimatta sınıf sırası tersti — `.a` ikincil katman/opaklık, `.b` ana gövde; işlevsel olarak tarif edilenle birebir aynı.)
+
+`white.svg` ve `watermark/odi-logo-white-dark-bg.svg`'ye dokunulmadı — onlar zaten kendi amaçları (beyaz logo / filigran) için sabit `#fff` kalmalı, bu doğru.
+
+**Doğrulama — tarayıcı `getBBox()`/render testiyle yapıldı:**
+- `#3B0764`, `#9C26AF` (mor), `#0F766E` (teal) zeminlerde ayrı ayrı render edildi — üçünde de `currentColor` doğru devralınıyor, logo CSS `color` değerine göre renkleniyor.
+- Geometri değişmedi — dosya boyutu farkı (+24 bayt) yalnızca `<style>` string uzunluğuna karşılık geliyor, path verisi birebir aynı.
+- Boyut: 15.5 KB ham / 6.3 KB gzip — bütçe içinde.
+
+**Tüketim şekli:** `currentColor` yalnızca inline SVG'de (React component olarak) çalışır — `next/image`/`<img src>` ile kullanılırsa renk aktarımı olmaz. Proje zaten bu deseni `src/components/icons/PetIcons.tsx`'te kullanıyor (8 `currentColor` kullanımı), yani konvansiyonla uyumlu.
 
 ### 7.4 Açık Madde — Teknik Hijyen Detayları
 
-Kabul edilen 9 dosyanın tamamında:
-- `width`/`height` öznitelikleri hâlâ mevcut (§3.3.2 ihlali — düşük risk, `next/image fill` şu an sorunsuz çalışıyor ama temizlenmesi önerilir)
-- `<title>` yok (§3.6.2 — erişilebilirlik, `next/image alt` bunu şimdilik telafi ediyor)
-- `<style>` blokları `.a`/`.b` gibi anlamsız sınıf adları kullanıyor (§3.5.6)
+Kabul edilen 10 dosyanın çoğunda:
+- `width`/`height` öznitelikleri hâlâ mevcut (§3.3.2 ihlali — düşük risk, `next/image fill` şu an sorunsuz çalışıyor ama temizlenmesi önerilir). **İstisna:** `social/odi-social-cover.svg` bunu zaten doğru yapıyor — `width`/`height` yok, yalnızca `viewBox`.
+- Çoğunda `<title>` yok (§3.6.2 — erişilebilirlik, `next/image alt` bunu şimdilik telafi ediyor). **İstisna:** `social/odi-social-cover.svg`'de `role="img"` + `<title id="odi-social-cover-title">` var — diğer 9 dosyadan daha iyi.
+- `<style>` blokları `.a`/`.b` gibi anlamsız sınıf adları kullanıyor (§3.5.6).
 
 Bunlar işlevi bozmuyor, üretim engelleyici değil — bir sonraki revizyon turunda düzeltilmesi önerilir.
 
@@ -200,20 +214,17 @@ Bunlar işlevi bozmuyor, üretim engelleyici değil — bir sonraki revizyon tur
 | `logos/icon/` klasörü `app-icons/` ile birebir kopyaydı (14 dosya, ~2.1 MB) | Klasör kaldırıldı (`app-icons/` kanonik; kodun referans verdiği yol) | ✅ Tamamlandı |
 | `logos/primary/Horizontal Logo.svg` — boşluklu artık dosya | Kaynağı yenileme sürecinde kaldırıldı | ✅ Tamamlandı |
 | `public/brand.zip` — 29 MB, herkese açık indirilebilir, her deploy'a dahil | `brand-archive/brand.zip` (repo kökü, `public/` dışı) konumuna taşındı | ✅ Tamamlandı |
-| `social/odi-social-cover.svg` kare geometriydi (1024×1024, kapak için yanlış) | Dosya kaldırıldı, 1500×500 ile yeniden export bekleniyor | 🟡 Yeniden export bekliyor |
+| `social/odi-social-cover.svg` kare geometriydi (1024×1024, kapak için yanlış) | 1500×500 ile yeniden export edildi | ✅ Tamamlandı |
+| `app-icons/odi-icon-1024.png` exportu sırasında kaynak SVG `odi-icon.svg` → `odi-icon-1024.svg` olarak yanlışlıkla yeniden adlandırılmıştı | Kanonik isme (`odi-icon.svg`) geri döndürüldü — içerik değişmedi (aynı MD5) | ✅ Tamamlandı |
 
-### 7.6 Kalan İş — Yeni Varlık Üretimi Gerektirir
+### 7.6 Kalan Bilgilendirme Maddesi — Üretim Engelleyici Değil
 
-Bunlar dosya taşıma/temizlik ile kapatılamaz; tasarım ekibinden yeni export gerektirir:
+**`odi-social-cover.svg` dikey güvenli alan taşması:** Tarayıcı `getBBox()` ile ölçüldü — içerik (logo + slogan) yatayda mükemmel ortalanmış (338–1162 px, güvenli alan 150–1350 px'in tam ortasında), ancak dikeyde önerilen 110–390 px güvenli alanı taşıyor (gerçek: 78–427 px — üstte 32px, altta 37px fazla).
 
-| # | Varlık | Not |
-| :-- | :--- | :--- |
-| 1 | `social/odi-social-cover.svg` | Hedef 1500×500 (X/Twitter kapak oranı) |
-| 2 | `app-icons/odi-icon-1024.png` | `odi-icon.svg`'den türetilir, store submission için |
-| 3 | `monochrome/odi-logo-one-color.svg` renk düzeltmesi | §7.3 — `fill:#fff` yerine `fill:currentColor` |
+Native oranında (1500×500, X/Twitter header) hiçbir kesilme yok — sorun yalnızca dosya başka, daha kısa bir orana (LinkedIn ~5.9:1, Facebook ~2.6:1) kırpılırsa ortaya çıkar. Bu platformlar için ayrı kırpma yapılacaksa gözden geçirilmeli; yalnızca X/Twitter için kullanılacaksa aksiyon gerekmez.
 
 ### 7.7 Genel Sonuç
 
-**P0 (splash) dahil kanonik setin 9/10'u şartnameyi karşılıyor.** Logo SVG toplam ağırlığı 23.2 MB → 0.12 MB (**−%99.5**). Kodda referans verilen hiçbir varlık artık eksik değil. Yapısal temizlik (kopya klasör, artık dosya, herkese açık arşiv) tamamlandı.
+**Kanonik logo setinin 10/10'u şartnameyi karşılıyor, dahil P0 (splash).** Logo SVG toplam ağırlığı 23.2 MB → 0.14 MB (**−%99.4**). Kodda referans verilen hiçbir varlık eksik değil. Yapısal temizlik (kopya klasör, artık dosya, herkese açık arşiv, yanlış adlandırma) tamamlandı.
 
-Kalan 3 madde (§7.3, §7.6) üretim engelleyici değil; bir sonraki marka revizyon turuna bırakılabilir.
+Kalan tek madde (§7.4 teknik hijyen detayları, §7.6 sosyal kapak güvenli alan notu) kozmetik/bilgilendirme niteliğinde; üretim engelleyici değil, bir sonraki marka revizyon turuna bırakılabilir.
