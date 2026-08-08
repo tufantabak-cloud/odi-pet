@@ -325,6 +325,9 @@ serve(async (req: Request) => {
               )
               pushesSent++
 
+              // Touch last_seen_at to keep active devices fresh
+              await supabase.from("push_subscriptions").update({ last_seen_at: new Date().toISOString() }).eq("id", sub.id)
+
               // Observability: Log success
               await supabase.from("notification_delivery_logs").insert({
                 profile_id: profileId,

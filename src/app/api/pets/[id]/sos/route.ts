@@ -46,7 +46,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     const c1 = normalizedContacts[0]
     const c2 = normalizedContacts[1]
     if (
-      (c1.phone && c2.phone && c1.phone.replace(/\D/g, '') === c2.phone.replace(/\D/g, '')) ||
+      (c1.phone && c2.phone && c1.phone.replace(/\D/g, '') === c2.phone.replace(/\D/g, '')) &&
       (c1.name && c2.name && c1.name.toLowerCase() === c2.name.toLowerCase())
     ) {
       return NextResponse.json(

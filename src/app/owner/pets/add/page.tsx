@@ -942,7 +942,7 @@ function PetSOSStep({
     && !isTurkishMobilePhone(sosContacts[1]?.phone || '')
 
   const isSameContact = secondaryHasData && (
-    (sosContacts[0]?.phone && sosContacts[1]?.phone && sosContacts[0].phone.replace(/\D/g, '') === sosContacts[1].phone.replace(/\D/g, '')) ||
+    (sosContacts[0]?.phone && sosContacts[1]?.phone && sosContacts[0].phone.replace(/\D/g, '') === sosContacts[1].phone.replace(/\D/g, '')) &&
     (sosContacts[0]?.name && sosContacts[1]?.name && sosContacts[0].name.trim().toLowerCase() === sosContacts[1].name.trim().toLowerCase())
   )
 

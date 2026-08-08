@@ -302,7 +302,7 @@ export default function EditPetForm({ pet }: { pet: any }) {
     const c1 = sosContacts[0]
     const c2 = sosContacts[1]
     const isSame = c2 && (c2.name || c2.phone) && (
-      (c1?.phone && c2?.phone && c1.phone.replace(/\D/g, '') === c2.phone.replace(/\D/g, '')) ||
+      (c1?.phone && c2?.phone && c1.phone.replace(/\D/g, '') === c2.phone.replace(/\D/g, '')) &&
       (c1?.name && c2?.name && c1.name.trim().toLowerCase() === c2.name.trim().toLowerCase())
     )
 

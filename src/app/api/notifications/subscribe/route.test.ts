@@ -84,13 +84,17 @@ describe('POST /api/notifications/subscribe', () => {
     expect(response.status).toBe(200)
     expect(await response.json()).toEqual({ success: true })
     expect(upsert).toHaveBeenCalledWith(
-      {
+      expect.objectContaining({
         profile_id: 'profile-1',
         endpoint: validSubscription.endpoint,
         p256dh: validSubscription.keys.p256dh,
         auth_key: validSubscription.keys.auth,
         user_agent: 'Vitest Browser',
-      },
+        platform: 'unknown',
+        browser: 'unknown',
+        app_version: '1.0.0',
+        is_active: true,
+      }),
       { onConflict: 'profile_id,endpoint' }
     )
   })
@@ -107,5 +111,35 @@ describe('POST /api/notifications/subscribe', () => {
     expect(response.status).toBe(500)
     expect(body).toEqual({ error: 'PUSH_SUBSCRIPTION_SAVE_FAILED' })
     expect(JSON.stringify(body)).not.toContain('sensitive database policy detail')
+  })
+
+  it('cihaz kimliği, platform ve tarayıcı verilerini veritabanı payloadına aktarır', async () => {
+    const { upsert } = mockSupabase()
+    const customDeviceUuid = '11111111-2222-4333-8444-555555555555'
+
+    const fullSubscription = {
+      ...validSubscription,
+      device_id: customDeviceUuid,
+      platform: 'android',
+      browser: 'chrome',
+      app_version: '1.2.0',
+    }
+
+    const response = await POST(createRequest(fullSubscription))
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ success: true })
+    expect(upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        profile_id: 'profile-1',
+        endpoint: validSubscription.endpoint,
+        device_id: customDeviceUuid,
+        platform: 'android',
+        browser: 'chrome',
+        app_version: '1.2.0',
+        is_active: true,
+      }),
+      { onConflict: 'profile_id,endpoint' }
+    )
   })
 })

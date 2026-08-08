@@ -50,20 +50,40 @@ export async function POST(request: Request) {
     const userAgent = request.headers.get('user-agent') ?? ''
     const { endpoint, keys, device_id, platform, browser, app_version } = parsed.data
 
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    const validDeviceId = device_id && uuidRegex.test(device_id) ? device_id : undefined
+
     const subscriptionData: Record<string, unknown> = {
       profile_id: user.id,
       endpoint,
       p256dh: keys.p256dh,
       auth_key: keys.auth,
       user_agent: userAgent,
+      platform: platform ?? 'unknown',
+      browser: browser ?? 'unknown',
+      app_version: app_version ?? '1.0.0',
+      last_seen_at: new Date().toISOString(),
+      is_active: true,
     }
 
-    // First attempt full upsert with core required fields
+    if (validDeviceId) {
+      subscriptionData.device_id = validDeviceId
+    }
+
+    // First attempt full upsert with core required fields and device metadata
     let { error } = await supabase
       .from('push_subscriptions')
       .upsert(subscriptionData, { onConflict: 'profile_id,endpoint' })
 
-    // If schema mismatch error occurred due to optional extended fields, attempt safe insert
+    // If conflict occurs on profile_id,device_id index due to endpoint renewal
+    if (error && validDeviceId && (error.code === '23505' || error.message?.includes('idx_push_subs_profile_device'))) {
+      const retryResult = await supabase
+        .from('push_subscriptions')
+        .upsert(subscriptionData, { onConflict: 'profile_id,device_id' })
+      error = retryResult.error
+    }
+
+    // If schema mismatch error occurred due to optional extended fields, attempt safe fallback
     if (error && (error.code === 'PGRST204' || error.message?.includes('schema cache') || error.message?.includes('column'))) {
       console.warn('[push/subscribe] Retrying with strictly minimal fields due to schema variance:', error.message)
       const minimalData = {
@@ -95,7 +115,7 @@ export async function POST(request: Request) {
       await supabase.from('notification_delivery_logs').insert({
         profile_id: user.id,
         event_type: 'subscription_created',
-        metadata: { platform: platform ?? 'unknown', browser: browser ?? 'unknown', device_id: device_id ?? null }
+        metadata: { platform: platform ?? 'unknown', browser: browser ?? 'unknown', device_id: validDeviceId ?? null }
       })
     } catch {
       // Non-blocking log insertion failure
@@ -141,6 +161,15 @@ export async function DELETE(request: Request) {
     }
 
     const { error } = await query
+
+    if (!error && device_id && endpoint) {
+      // Clean up any lingering subscription matching same device_id
+      await supabase
+        .from('push_subscriptions')
+        .delete()
+        .eq('profile_id', user.id)
+        .eq('device_id', device_id)
+    }
 
     if (error) {
       console.error('[push/unsubscribe] Database delete failed:', {
