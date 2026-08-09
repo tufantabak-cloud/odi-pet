@@ -84,20 +84,16 @@ export async function POST(req: NextRequest, context: RouteContext) {
         .maybeSingle()
 
       const updates: Record<string, any> = {}
-      if (primaryContact?.phone) {
-        if (!prof?.phone) updates.phone = primaryContact.phone
-        if (!prof?.emergency_contact_phone) {
-          updates.emergency_contact_name = primaryContact.name
-          updates.emergency_contact_phone = primaryContact.phone
-          updates.emergency_contact_relation = primaryContact.relation
-        }
+      if (primaryContact) {
+        if (!prof?.phone && primaryContact.phone) updates.phone = primaryContact.phone
+        updates.emergency_contact_name = primaryContact.name || null
+        updates.emergency_contact_phone = primaryContact.phone || null
+        updates.emergency_contact_relation = 'Sahibi'
       }
-      if (secondaryContact?.phone) {
-        if (!prof?.emergency_contact2_phone) {
-          updates.emergency_contact2_name = secondaryContact.name
-          updates.emergency_contact2_phone = secondaryContact.phone
-          updates.emergency_contact2_relation = secondaryContact.relation
-        }
+      if (secondaryContact) {
+        updates.emergency_contact2_name = secondaryContact.name || null
+        updates.emergency_contact2_phone = secondaryContact.phone || null
+        updates.emergency_contact2_relation = secondaryContact.relation || null
       }
       if (Object.keys(updates).length > 0) {
         await supabase.from('profiles').update(updates).eq('id', user.id)

@@ -34,7 +34,8 @@ export async function POST(req: NextRequest) {
   )
 
   if (error) {
-    const { message } = formatSupabaseError(error)
+    console.error('[pets/family] create_pet_caregiver_invite RPC error:', error)
+    const { message } = formatSupabaseError(error, 'QR kod / Davet üretilemedi.')
     return NextResponse.json({ error: message }, { status: 500 })
   }
 
@@ -58,8 +59,15 @@ export async function POST(req: NextRequest) {
     const status = code === 'FORBIDDEN' || code === 'ROLE_ESCALATION'
       ? 403
       : 400
+    const errorMsgMap: Record<string, string> = {
+      SELF_INVITE: 'Kendi e-posta adresinize davet gönderemezsiniz.',
+      ALREADY_MEMBER: 'Bu e-posta adresi zaten ekibin bir üyesi.',
+      INVALID_ROLE: 'Geçersiz üye rolü seçildi.',
+      EMAIL_REQUIRED: 'Geçerli bir e-posta adresi zorunludur.',
+      FORBIDDEN: 'Bu pet için üye davet etme yetkiniz bulunmuyor.',
+    }
     return NextResponse.json(
-      { error: 'Davet oluşturulamadı.', code },
+      { error: errorMsgMap[code || ''] || 'Davet oluşturulamadı.', code },
       { status }
     )
   }
@@ -79,6 +87,10 @@ export async function POST(req: NextRequest) {
   // Inviter profile name
   const inviterName = user.user_metadata?.first_name || user.email || 'Bir kullanıcı'
 
+  const host = req.headers.get('x-forwarded-host') || req.headers.get('host')
+  const protocol = req.headers.get('x-forwarded-proto') || (host?.includes('localhost') ? 'http' : 'https')
+  const requestOrigin = host ? `${protocol}://${host}` : req.nextUrl.origin
+
   // E-posta gönderimi (Kayıtlı/kayıtsız kullanıcı kontrolü dahil)
   const emailRes = await sendCaregiverInviteEmail({
     toEmail: email,
@@ -86,6 +98,7 @@ export async function POST(req: NextRequest) {
     petName: pet?.name ?? 'Can Dostu',
     role,
     inviteToken: invite.token,
+    origin: requestOrigin,
   })
 
   const inviteLink = emailRes.inviteLink

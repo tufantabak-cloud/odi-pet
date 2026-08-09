@@ -19,7 +19,7 @@ test('Diagnostic Login', async ({ page }) => {
   await page.fill('input[name="password"]', PASSWORD || '');
   
   // Take screenshot before submit
-  await page.screenshot({ path: 'C:/Users/Tufan TABAK/.gemini/antigravity/brain/b5c138b2-f8cd-4061-a245-58874928482e/before_submit.png' });
+  await page.screenshot({ path: 'test-results/before_submit.png' });
 
   console.log('Clicking submit...');
   await page.click('button[type="submit"]');
@@ -29,7 +29,7 @@ test('Diagnostic Login', async ({ page }) => {
   console.log('Current URL after submit:', page.url());
   
   // Take screenshot after submit
-  await page.screenshot({ path: 'C:/Users/Tufan TABAK/.gemini/antigravity/brain/b5c138b2-f8cd-4061-a245-58874928482e/after_submit.png' });
+  await page.screenshot({ path: 'test-results/after_submit.png' });
 
   const bodyHTML = await page.content();
   console.log('PAGE HTML BODY SNIPPET:', bodyHTML.slice(0, 1000));

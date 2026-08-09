@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Odi.Pet - Production Manuel UAT Testing Suite</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #7c3aed;
+      --primary-light: #f3e8ff;
+      --success: #10b981;
+      --success-light: #d1fae5;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
+      --warning: #f59e0b;
+      --warning-light: #fef3c7;
+      --info: #3b82f6;
+      --info-light: #dbeafe;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --radius: 16px;
+      --radius-lg: 24px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      color: white;
+      padding: 32px;
+      border-radius: var(--radius-lg);
+      margin-bottom: 24px;
+      box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.3);
+    }
+
+    header h1 {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      opacity: 0.9;
+      font-size: 15px;
+    }
+
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 16px 20px;
+      border-radius: var(--radius);
+    }
+
+    .stat-card .val {
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    .stat-card .lbl {
+      font-size: 13px;
+      opacity: 0.9;
+      font-weight: 500;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      background: white;
+      padding: 16px 24px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .btn:hover { background: #f1f5f9; }
+    .btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .btn-action {
+      background: var(--primary);
+      color: white;
+      border: none;
+    }
+
+    .btn-action:hover {
+      background: #6d28d9;
+    }
+
+    .table-container {
+      background: white;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      overflow-x: auto;
+      box-shadow: 0 4px 20px -2px rgba(15,23,42,0.04);
+      margin-bottom: 32px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    th {
+      background: #f8fafc;
+      padding: 16px 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      border-bottom: 2px solid var(--border);
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    td {
+      padding: 14px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    tr:hover td { background: #faf5ff; }
+
+    .badge-p0 { background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 11px; }
+    .badge-p1 { background: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 11px; }
+    .badge-p2 { background: #e0f2fe; color: #075985; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 11px; }
+    .badge-p3 { background: #f1f5f9; color: #475569; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 11px; }
+
+    .result-options {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 140px;
+    }
+
+    .result-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s;
+    }
+
+    .result-btn input { display: none; }
+
+    .result-btn.pass-btn:has(input:checked) { background: var(--success-light); border-color: var(--success); color: #065f46; }
+    .result-btn.fail-btn:has(input:checked) { background: var(--danger-light); border-color: var(--danger); color: #991b1b; }
+    .result-btn.blocked-btn:has(input:checked) { background: var(--warning-light); border-color: var(--warning); color: #92400e; }
+    .result-btn.na-btn:has(input:checked) { background: #e2e8f0; border-color: #94a3b8; color: #334155; }
+
+    textarea, input[type="text"] {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-family: inherit;
+      font-size: 12px;
+      background: #fafafa;
+      transition: all 0.2s;
+      resize: vertical;
+    }
+
+    textarea:focus, input[type="text"]:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: white;
+      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+    }
+
+    .obs-input { min-height: 54px; }
+
+    .section-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      border: 1px solid var(--border);
+      margin-bottom: 24px;
+      box-shadow: 0 4px 20px -2px rgba(15,23,42,0.04);
+    }
+
+    .section-card h2 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    .obs-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .signoff-list {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .decision-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 16px 0;
+    }
+
+    .radio-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .radio-label:has(input:checked) {
+      border-color: var(--primary);
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .signoff-inputs {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .input-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🐶 Odi.Pet - Production Manuel UAT Suite</h1>
+      <p>Test Eden: <strong>Tufan TABAK</strong> | Tamamen Etkileşimli & Otomatik Kaydedilen Canlı Değerlendirme Paneli</p>
+      
+      <div class="stats-bar">
+        <div class="stat-card">
+          <div class="val" id="stat-total">46</div>
+          <div class="lbl">Toplam Test Maddesi</div>
+        </div>
+        <div class="stat-card">
+          <div class="val" id="stat-pass" style="color: #4ade80;">0</div>
+          <div class="lbl">Tamamlanan (PASS)</div>
+        </div>
+        <div class="stat-card">
+          <div class="val" id="stat-fail" style="color: #f87171;">0</div>
+          <div class="lbl">Hatalı (FAIL)</div>
+        </div>
+        <div class="stat-card">
+          <div class="val" id="stat-pending" style="color: #fbbf24;">46</div>
+          <div class="lbl">Değerlendirme Bekliyor</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="controls">
+      <div class="filter-group">
+        <button class="btn active" onclick="filterCategory('ALL')">Hepsi (46)</button>
+        <button class="btn" onclick="filterCategory('P0')">P0 Kritikler (16)</button>
+        <button class="btn" onclick="filterCategory('P1')">P1 (15)</button>
+        <button class="btn" onclick="filterCategory('P2')">P2 (10)</button>
+        <button class="btn" onclick="filterCategory('P3')">P3 (5)</button>
+        <button class="btn" onclick="filterStatus('PENDING')">Bekleyenler</button>
+      </div>
+
+      <div style="display: flex; gap: 8px;">
+        <button class="btn btn-action" onclick="exportData()">💾 Verileri Kaydet / Dışa Aktar</button>
+        <button class="btn" onclick="clearData()" style="color: var(--danger);">🗑 SIFIRLA</button>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table id="uat-table">
+        <thead>
+          <tr>
+            <th style="width: 80px;">ID</th>
+            <th style="width: 60px;">Öncelik</th>
+            <th style="width: 110px;">Kullanıcı / Rol</th>
+            <th style="width: 180px;">Ön Koşul</th>
+            <th style="width: 220px;">Kullanıcı Aksiyonu</th>
+            <th style="width: 260px;">Beklenen Sonuç</th>
+            <th style="width: 250px;">Benim Gözlemim / Görüşüm (CANLI EDİT)</th>
+            <th style="width: 150px;">Sonuç</th>
+            <th style="width: 160px;">Kanıt / Not</th>
+          </tr>
+        </thead>
+        <tbody id="uat-tbody">
+          <!-- Rows inserted via JS -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SUMMARY SECTION -->
+    <div class="section-card">
+      <h2>📊 UAT Sonuç Özeti</h2>
+      <table style="width: 100%; border: 1px solid var(--border); border-radius: 12px; overflow: hidden;">
+        <thead>
+          <tr>
+            <th>Öncelik</th>
+            <th>Toplam</th>
+            <th>PASS</th>
+            <th>FAIL</th>
+            <th>BLOCKED</th>
+            <th>N/A</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>P0</strong></td><td id="p0-tot">16</td><td id="p0-pass">0</td><td id="p0-fail">0</td><td id="p0-blk">0</td><td id="p0-na">0</td></tr>
+          <tr><td><strong>P1</strong></td><td id="p1-tot">15</td><td id="p1-pass">0</td><td id="p1-fail">0</td><td id="p1-blk">0</td><td id="p1-na">0</td></tr>
+          <tr><td><strong>P2</strong></td><td id="p2-tot">10</td><td id="p2-pass">0</td><td id="p2-fail">0</td><td id="p2-blk">0</td><td id="p2-na">0</td></tr>
+          <tr><td><strong>P3</strong></td><td id="p3-tot">5</td><td id="p3-pass">0</td><td id="p3-fail">0</td><td id="p3-blk">0</td><td id="p3-na">0</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- MANUEL GÖZLEMLER -->
+    <div class="section-card">
+      <h2>📝 Manuel Kullanıcı Gözlemleri</h2>
+      <div class="obs-grid">
+        <div>
+          <label style="font-weight: 700; font-size: 13px; display: block; margin-bottom: 6px;">Genel Kullanıcı Deneyimi</label>
+          <textarea id="genel-ux" rows="3" oninput="saveUserData()" placeholder="Uygulama hakkındaki genel izleniminiz..."></textarea>
+        </div>
+        <div>
+          <label style="font-weight: 700; font-size: 13px; display: block; margin-bottom: 6px;">En Önemli Sorunlar</label>
+          <textarea id="en-sorunlar" rows="3" oninput="saveUserData()" placeholder="Test sırasında bulduğunuz en kritik aksaklıklar..."></textarea>
+        </div>
+        <div>
+          <label style="font-weight: 700; font-size: 13px; display: block; margin-bottom: 6px;">Kullanıcıyı En Çok Zorlayan Noktalar</label>
+          <textarea id="en-zorlayan" rows="3" oninput="saveUserData()" placeholder="Karmaşık veya kafa karıştıran akışlar..."></textarea>
+        </div>
+        <div>
+          <label style="font-weight: 700; font-size: 13px; display: block; margin-bottom: 6px;">Çok İyi Çalışan Noktalar</label>
+          <textarea id="iyi-noktalar" rows="3" oninput="saveUserData()" placeholder="En beğendiğiniz ve hızlı çalışan kısımlar..."></textarea>
+        </div>
+        <div>
+          <label style="font-weight: 700; font-size: 13px; display: block; margin-bottom: 6px;">Canlıya Çıkmadan Önce Düzeltilmesini İstediğim Noktalar</label>
+          <textarea id="duzeltme-istekleri" rows="3" oninput="saveUserData()" placeholder="Yayınlanmadan önce mutlaka revize edilmesi gerekenler..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIGN OFF -->
+    <div class="section-card">
+      <h2>✍️ FINAL MANUAL UAT SIGN-OFF</h2>
+      
+      <div class="signoff-list">
+        <label class="checkbox-label"><input type="checkbox" id="chk-p0" onchange="saveUserData()"> P0 kontrolleri: Tamamlandı</label>
+        <label class="checkbox-label"><input type="checkbox" id="chk-p1" onchange="saveUserData()"> P1 kontrolleri: Tamamlandı</label>
+        <label class="checkbox-label"><input type="checkbox" id="chk-p2" onchange="saveUserData()"> P2 kontrolleri: Tamamlandı</label>
+        <label class="checkbox-label"><input type="checkbox" id="chk-sec" onchange="saveUserData()"> Güvenlik kontrolleri: Tamamlandı</label>
+        <label class="checkbox-label"><input type="checkbox" id="chk-data" onchange="saveUserData()"> Veri bütünlüğü: Tamamlandı</label>
+        <label class="checkbox-label"><input type="checkbox" id="chk-mob" onchange="saveUserData()"> Mobile UX: Tamamlandı</label>
+        <label class="checkbox-label"><input type="checkbox" id="chk-smoke" onchange="saveUserData()"> Production Smoke Test: Tamamlandı</label>
+      </div>
+
+      <h3 style="font-size: 15px; margin-bottom: 10px;">Genel Karar:</h3>
+      <div class="decision-group">
+        <label class="radio-label"><input type="radio" name="final-decision" value="READY" onchange="saveUserData()"> ✅ PRODUCTION'A HAZIR</label>
+        <label class="radio-label"><input type="radio" name="final-decision" value="RETEST" onchange="saveUserData()"> ⚠️ DÜZELTMELERDEN SONRA TEKRAR TEST EDİLECEK</label>
+        <label class="radio-label"><input type="radio" name="final-decision" value="NOT_READY" onchange="saveUserData()"> ❌ PRODUCTION'A HAZIR DEĞİL</label>
+      </div>
+
+      <div class="signoff-inputs">
+        <div class="input-field">
+          <label>Test Eden</label>
+          <input type="text" id="signer-name" value="Tufan TABAK" oninput="saveUserData()">
+        </div>
+        <div class="input-field">
+          <label>Tarih</label>
+          <input type="text" id="signer-date" placeholder="GG / AA / 2026" oninput="saveUserData()">
+        </div>
+        <div class="input-field">
+          <label>İmza / Onay Notu</label>
+          <input type="text" id="signer-note" placeholder="Onay veriyorum / şartlı onay..." oninput="saveUserData()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const testCases = [
+      { id: "AUTH-001", priority: "P0", role: "Ziyaretçi", pre: "Giriş yapılmamış, e-posta erişimi var", action: "/register sayfasına git → E-posta/şifre doldur → Kayıt Ol'a bas", result: "Doğrulama bildirimi gösterilir ve onboarding başlar." },
+      { id: "AUTH-002", priority: "P0", role: "Owner", pre: "Doğrulanmış hesap var", action: "/login sayfasına git → Bilgileri gir → Giriş Yap'a bas", result: "Başarıyla doğrulanır, cookie atanır, /owner/dashboard'a yönlendirir." },
+      { id: "AUTH-003", priority: "P1", role: "Ziyaretçi", pre: "E-posta kayıtlı", action: "/reset-password'e git → E-posta yaz → Şifre Bağlantısı Gönder'e bas", result: "Şifre yenileme e-postası gelir, link ile yeni şifre atanır." },
+      { id: "AUTH-004", priority: "P2", role: "Owner", pre: "Passkey destekli tarayıcı", action: "Passkey seçeneğini aktifleştir → Biyometrik giriş dene", result: "FaceID/Parmak izi ile şifresiz giriş tamamlanır." },
+      { id: "AUTH-005", priority: "P0", role: "Owner", pre: "Oturum açık", action: "Çıkış Yap butonuna bas", result: "Oturum sonlanır, token temizlenir, /login'e döner." },
+      { id: "PET-001", priority: "P0", role: "Owner", pre: "Giriş yapılmış", action: "/owner/pets/add aç → 7 alanı gir (Tür, İsim, Yaş, Kilo vb) → Kaydet", result: "Pet eklenir, yaş skalası (Yavru/Yetişkin/Yaşlı) doğru hesaplanır." },
+      { id: "PET-002", priority: "P0", role: "Owner", pre: "En az 1 pet eklenmiş", action: "Pet kartına tıkla → Detay ekranını aç", result: "OPOS 24px hero kart, tipografi, rozetler sorunsuz yüklenir." },
+      { id: "PET-003", priority: "P1", role: "Owner", pre: "Pet profili var", action: "/owner/pets/[id]/edit aç → Fotoğraf/İsim güncelle → Kaydet", result: "Private storage signed URL ile fotoğraf yenilenir, profil güncellenir." },
+      { id: "PET-004", priority: "P1", role: "Owner", pre: "Pet profili var", action: "Pet detayında QR / Künye butonuna bas", result: "Özel QR kod ve çip numarası görüntülenir, kamuya açık profile yönlendirir." },
+      { id: "PET-005", priority: "P2", role: "Owner", pre: "Pet mevcut", action: "Peti Arşivle / Pasife Al seç → Onayla", result: "Pet ana listeden kalkar, tıbbi geçmiş arşivlenir (is_archived = true)." },
+      { id: "PET-006", priority: "P0", role: "Owner", pre: "Birden fazla pet var", action: "Header pet switcher'dan farklı pet seç", result: "Tüm dashboard verileri seçilen petin verilerine göre güncellenir." },
+      { id: "VAC-001", priority: "P0", role: "Owner", pre: "Pet mevcut", action: "/owner/pets/[id]/vaccines aç → Yeni Aşı Ekle → Karma Aşı seçip kaydet", result: "Aşı kanonik tabloya kaydolur, gelecek doz takvime yansır." },
+      { id: "VAC-002", priority: "P0", role: "Owner", pre: "Aşı kaydı var", action: "Aşı geçmişinde kaydı seç → Sil / Kaldır onayla", result: "Hard delete yapılmaz; is_archived = true set edilir." },
+      { id: "VAC-003", priority: "P1", role: "Owner", pre: "Gelecek aşı var", action: "Dashboard ve Takvimi kontrol et", result: "Yaklaşan aşı için sarı/turuncu rozet ve bildirim oluşur." },
+      { id: "VAC-004", priority: "P1", role: "Owner", pre: "Aşı karne resmi var", action: "Aşı formunda karne belgesi seç → Kaydet", result: "Dosya private storage'a kaydolur, geçici signed URL üretilir." },
+      { id: "VAC-005", priority: "P2", role: "Owner", pre: "Aşı geçmişi var", action: "Aşı listesinde arama / tür filtresi yap", result: "Liste anında filtrelenir, eşleşmeyenler gizlenir." },
+      { id: "MED-001", priority: "P0", role: "Owner", pre: "Pet mevcut", action: "/owner/pets/[id]/parasite aç → Parazit uygulaması ekle", result: "Kanonik kayıt eklenir, gelecek periyot takvime işlenir." },
+      { id: "MED-002", priority: "P1", role: "Owner", pre: "Pet mevcut", action: "/owner/pets/[id]/treatments aç → İlaç / Tedavi ekle", result: "İlaç takibi başlar, dikey timeline akışına düşer." },
+      { id: "MED-003", priority: "P1", role: "Owner", pre: "Gecikmiş parazit var", action: "Dashboard'u kontrol et", result: "Kırmızı Gecikti rozeti ve hızlı aksiyon uyarısı gösterilir." },
+      { id: "MED-004", priority: "P2", role: "Owner", pre: "Aktif tedavi var", action: "Tedaviyi Tamamlandı olarak işaretle", result: "Geçmiş tedavilere kaydırılır, kalan hatırlatmalar kapatılır." },
+      { id: "NUT-001", priority: "P0", role: "Owner", pre: "Pet mevcut", action: "/owner/pets/[id]/nutrition aç → Kuru mama & porsiyon ekle", result: "Beslenme planı ve öğün saatleri kaydedilir." },
+      { id: "NUT-002", priority: "P1", role: "Owner", pre: "Beslenme tanımı var", action: "Alerjen / Hassasiyet bilgisi gir", result: "Alerji rozeti profilde dondurulur, tavsiyelerde göz önüne alınır." },
+      { id: "WGT-001", priority: "P0", role: "Owner", pre: "Pet mevcut", action: "+ Kilo Ekle seç → Güncel kiloyu gir", result: "Kilo eklenir, büyüme grafiği ve ideal kilo bandı güncellenir." },
+      { id: "WGT-002", priority: "P2", role: "Owner", pre: "En az 2 kilo kaydı var", action: "Kilo grafiği zaman filtresini değiştir (1Ay/6Ay)", result: "Grafik zaman aralığına göre dinamik ölçeklenir." },
+      { id: "CAL-001", priority: "P0", role: "Owner", pre: "Etkinlik/Aşı var", action: "/owner/takvim sayfasına git → Ay/Hafta bak", result: "Tüm kanonik modüllerden gelen işlemler doğru günde gösterilir." },
+      { id: "CAL-002", priority: "P1", role: "Owner", pre: "Oturum açık", action: "+ Özel Etkinlik Ekle seç → Başlık/Saat gir", result: "Etkinlik takvime ve push bildirim sistemine işlenir." },
+      { id: "CAL-003", priority: "P2", role: "Owner", pre: "Farklı türde etkinlik var", action: "Kategori filtre çiplerini değiştir (Aşı/Parazit)", result: "Yalnızca seçili kategori takvimde kalır." },
+      { id: "CAL-004", priority: "P1", role: "Owner", pre: "Hatırlatıcı var", action: "Hatırlatıcıya bas → Tamamlandı işaretle", result: "Durum yeşil onay ikonuyla güncellenir." },
+      { id: "AIV-001", priority: "P0", role: "Owner", pre: "Oturum açık", action: "/owner/ai-vet aç → Semptom sor", result: "Mor Sparkles ikonu ve Tıbbi Sorumluluk Reddi (Disclaimer) gösterilir." },
+      { id: "AIV-002", priority: "P0", role: "Owner", pre: "AI aktif", action: "AI'ya aşı kaydı yaptırmasını söyle", result: "AI habersiz mutasyon YAPAMAZ. Taslak İnceleme (Review UI) sunulur." },
+      { id: "AIV-003", priority: "P1", role: "Owner", pre: "Aşı belgesi var", action: "/owner/scanner aç → Belge yükleyip OCR çalıştır", result: "Bulunan veriler Confidence Score (%85) ile onayınıza sunulur." },
+      { id: "AIV-004", priority: "P2", role: "Owner", pre: "Bulanık fotoğraf var", action: "Okunaksız belge yükle", result: "Düşük güven uyarısı verir, manuel düzenleme alanı açar." },
+      { id: "SOS-001", priority: "P0", role: "Herkes", pre: "Siteye erişim var", action: "Kırmızı SOS butonuna bas → /sos aç", result: "Acil veteriner hattı ve nöbetçi klinikler gecikmesiz açılır." },
+      { id: "SOS-002", priority: "P0", role: "Owner", pre: "Pet var", action: "/owner/lost-report aç → Kayıp ilanı ver", result: "Kayıp haritasına düşer, yakındaki kullanıcılara acil uyarı gider." },
+      { id: "SOS-003", priority: "P1", role: "Ziyaretçi", pre: "QR kod okutuldu", action: "Kayıp petin tasmasındaki QR kodu tara", result: "Kamuya açık acil iletişim profili ve Bulundu Bildirimi açılır." },
+      { id: "SRV-001", priority: "P1", role: "Owner", pre: "Konum aktif", action: "/owner/vets git → Nöbetçi filtresini aç", result: "En yakın klinikler mesafeye ve çalışma saatine göre sıralanır." },
+      { id: "SRV-002", priority: "P1", role: "Owner", pre: "Klinik seçili", action: "Randevu Al'a bas → Tarih/Saat seçip gönder", result: "Randevu Onay Bekliyor olarak kaydedilir, kliniğe düşer." },
+      { id: "SRV-003", priority: "P2", role: "Owner", pre: "Hizmet ekranı", action: "/owner/services aç → Otel/Sitter/Groomer filtrele", result: "Sağlayıcı kartları ve fiyat paketleri listelenir." },
+      { id: "SRV-004", priority: "P3", role: "Owner", pre: "Mağaza var", action: "Marketplace'te mama / oyuncak ara", result: "Ürünler ve satın alma yönlendirmeleri sorunsuz çalışır." },
+      { id: "SOC-001", priority: "P2", role: "Owner", pre: "Oturum açık", action: "/owner/social aç → Fotoğraflı gönderi paylaş", result: "Topluluk akışında anında yer alır." },
+      { id: "SOC-002", priority: "P2", role: "Owner", pre: "Gönderi var", action: "Gönderiye pati ver (beğen) ve yorum yaz", result: "Beğeni anında güncellenir (active:scale micro animasyon), yorum eklenir." },
+      { id: "SOC-003", priority: "P3", role: "Owner", pre: "Diğer petler var", action: "Diğer pet profilinde Takip Et'e bas", result: "Takip başlar, gönderileri akışınıza yansır." },
+      { id: "FAM-001", priority: "P1", role: "Owner", pre: "Pet sahibi", action: "FamilyTab → Eş-Sahip Davet Et (Co-Owner)", result: "Kabul eden üye pet üzerinde tam yetki kazanır." },
+      { id: "FAM-002", priority: "P1", role: "Owner", pre: "Pet sahibi", action: "FamilyTab → Bakıcı Davet Et (Caregiver)", result: "Sadece okuma/beslenme işaretleme yetkisi verilir." },
+      { id: "FAM-003", priority: "P2", role: "Owner", pre: "Eş-sahip var", action: "Eş-sahibin yetkisini kaldır", result: "Yetki anında düşer, pet listeden silinir." },
+      { id: "PRO-001", priority: "P1", role: "Vet", pre: "Vet girişi var", action: "/clinic paneline git → Randevuyu onayla", result: "Randevu durumu güncellenir, sahibine bildirim gider." },
+      { id: "PRO-002", priority: "P2", role: "Hizmet Veren", pre: "Otel/Sitter girişi", action: "/hotel veya /sitter paneline git → Müsaitlik yenile", result: "Profil ve arama sonuçlarında fiyat/müsaitlik güncellenir." },
+      { id: "PRO-003", priority: "P1", role: "Vet", pre: "Muayene bitti", action: "Hasta pete resmi muayene kartı ekle", result: "Muayene kaydı kanonik tıbbi geçmişe ve timeline'a eklenir." },
+      { id: "ADM-001", priority: "P1", role: "Admin", pre: "Admin girişi var", action: "/admin paneline git → Metrikleri incele", result: "Kullanıcı/pet/RLS durum özetleri gecikmesiz yüklenir." },
+      { id: "ADM-002", priority: "P2", role: "Admin", pre: "Bekleyen AI makale var", action: "Admin Human Source Verification → Yayınla", result: "Gerçek insan admin onayı loglanır (actor_role: admin) ve yayınlanır." },
+      { id: "ADM-003", priority: "P3", role: "Admin", pre: "Erişim denemesi var", action: "Audit Trail sekmesini aç", result: "RLS yetki ihlali veya yetkisiz erişim logları listelenir." },
+      { id: "MOB-001", priority: "P0", role: "Owner", pre: "Mobil 375px", action: "Mobil cihazda/DevTools 375px sekmeleri gez", result: "Bottom Nav sabit kalır, minimum 44px dokunma alanı ve 24px radius korunur." },
+      { id: "MOB-002", priority: "P1", role: "Owner", pre: "İnternet kesildi", action: "Ağ bağlantısını kapat → Sayfayı yenile", result: "PWA offline uyarısı verir, önbellekteki veriyi gösterir, çökmez." },
+      { id: "SEC-001", priority: "P0", role: "Owner", pre: "Farklı kullanıcı pet id", action: "URL'ye başkasının pet ID'sini yazıp gitmeyi dene", result: "Supabase RLS engeller, 404/403 yetkisiz erişim verir." },
+      { id: "SEC-002", priority: "P0", role: "Ziyaretçi", pre: "Giriş yok", action: "Doğrudan /owner/dashboard veya /admin aç", result: "Middleware durdurur, /login'e yönlendirir." },
+      { id: "SEC-003", priority: "P1", role: "Owner", pre: "DevTools Network açık", action: "Medya indirme isteklerini izle", result: "Raw CDN gizlenir, yalnızca süreli createSignedUrl üretilir." }
+    ];
+
+    function renderTable() {
+      const tbody = document.getElementById('uat-tbody');
+      tbody.innerHTML = '';
+      
+      const savedData = JSON.parse(localStorage.getItem('odi_uat_data') || '{}');
+
+      testCases.forEach((tc) => {
+        const itemVal = savedData[tc.id] || { status: '', obs: '', note: '' };
+        const badgeClass = `badge-${tc.priority.toLowerCase()}`;
+
+        const tr = document.createElement('tr');
+        tr.id = `row-${tc.id}`;
+        tr.setAttribute('data-priority', tc.priority);
+        tr.setAttribute('data-status', itemVal.status || 'PENDING');
+
+        tr.innerHTML = `
+          <td><strong>${tc.id}</strong></td>
+          <td><span class="${badgeClass}">${tc.priority}</span></td>
+          <td>${tc.role}</td>
+          <td style="color: var(--text-muted);">${tc.pre}</td>
+          <td>${tc.action}</td>
+          <td style="font-weight: 500;">${tc.result}</td>
+          <td>
+            <textarea class="obs-input" id="obs-${tc.id}" oninput="updateItem('${tc.id}')" placeholder="Gerçekte ne oldu? Deneyim nasıldı?">${itemVal.obs || ''}</textarea>
+          </td>
+          <td>
+            <div class="result-options">
+              <label class="result-btn pass-btn"><input type="radio" name="res-${tc.id}" value="PASS" ${itemVal.status === 'PASS' ? 'checked' : ''} onchange="updateItem('${tc.id}')"> 🟢 PASS</label>
+              <label class="result-btn fail-btn"><input type="radio" name="res-${tc.id}" value="FAIL" ${itemVal.status === 'FAIL' ? 'checked' : ''} onchange="updateItem('${tc.id}')"> 🔴 FAIL</label>
+              <label class="result-btn blocked-btn"><input type="radio" name="res-${tc.id}" value="BLOCKED" ${itemVal.status === 'BLOCKED' ? 'checked' : ''} onchange="updateItem('${tc.id}')"> 🟠 BLOCKED</label>
+              <label class="result-btn na-btn"><input type="radio" name="res-${tc.id}" value="N/A" ${itemVal.status === 'N/A' ? 'checked' : ''} onchange="updateItem('${tc.id}')"> ⚪️ N/A</label>
+            </div>
+          </td>
+          <td>
+            <input type="text" id="note-${tc.id}" value="${itemVal.note || ''}" oninput="updateItem('${tc.id}')" placeholder="Ekran görüntüsü / Not">
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      updateStats();
+      loadUserGlobalObs();
+    }
+
+    function updateItem(id) {
+      const savedData = JSON.parse(localStorage.getItem('odi_uat_data') || '{}');
+      const selectedRadio = document.querySelector(`input[name="res-${id}"]:checked`);
+      const statusVal = selectedRadio ? selectedRadio.value : '';
+      const obsVal = document.getElementById(`obs-${id}`).value;
+      const noteVal = document.getElementById(`note-${id}`).value;
+
+      savedData[id] = { status: statusVal, obs: obsVal, note: noteVal };
+      localStorage.setItem('odi_uat_data', JSON.stringify(savedData));
+
+      const row = document.getElementById(`row-${id}`);
+      if (row) row.setAttribute('data-status', statusVal || 'PENDING');
+
+      updateStats();
+    }
+
+    function updateStats() {
+      const savedData = JSON.parse(localStorage.getItem('odi_uat_data') || '{}');
+      let pass = 0, fail = 0, blk = 0, na = 0;
+      
+      const priorityStats = {
+        P0: { pass: 0, fail: 0, blk: 0, na: 0 },
+        P1: { pass: 0, fail: 0, blk: 0, na: 0 },
+        P2: { pass: 0, fail: 0, blk: 0, na: 0 },
+        P3: { pass: 0, fail: 0, blk: 0, na: 0 }
+      };
+
+      testCases.forEach(tc => {
+        const item = savedData[tc.id];
+        if (item && item.status) {
+          const st = item.status;
+          if (st === 'PASS') pass++;
+          if (st === 'FAIL') fail++;
+          if (st === 'BLOCKED') blk++;
+          if (st === 'N/A') na++;
+
+          if (priorityStats[tc.priority]) {
+            if (st === 'PASS') priorityStats[tc.priority].pass++;
+            if (st === 'FAIL') priorityStats[tc.priority].fail++;
+            if (st === 'BLOCKED') priorityStats[tc.priority].blk++;
+            if (st === 'N/A') priorityStats[tc.priority].na++;
+          }
+        }
+      });
+
+      document.getElementById('stat-pass').innerText = pass;
+      document.getElementById('stat-fail').innerText = fail;
+      document.getElementById('stat-pending').innerText = 46 - (pass + fail + blk + na);
+
+      // Summary Table Update
+      ['P0', 'P1', 'P2', 'P3'].forEach(p => {
+        const pKey = p.toLowerCase();
+        document.getElementById(`${pKey}-pass`).innerText = priorityStats[p].pass;
+        document.getElementById(`${pKey}-fail`).innerText = priorityStats[p].fail;
+        document.getElementById(`${pKey}-blk`).innerText = priorityStats[p].blk;
+        document.getElementById(`${pKey}-na`).innerText = priorityStats[p].na;
+      });
+    }
+
+    function saveUserData() {
+      const userObs = {
+        genelUX: document.getElementById('genel-ux').value,
+        enSorunlar: document.getElementById('en-sorunlar').value,
+        enZorlayan: document.getElementById('en-zorlayan').value,
+        iyiNoktalar: document.getElementById('iyi-noktalar').value,
+        duzeltmeIstekleri: document.getElementById('duzeltme-istekleri').value,
+        chkP0: document.getElementById('chk-p0').checked,
+        chkP1: document.getElementById('chk-p1').checked,
+        chkP2: document.getElementById('chk-p2').checked,
+        chkSec: document.getElementById('chk-sec').checked,
+        chkData: document.getElementById('chk-data').checked,
+        chkMob: document.getElementById('chk-mob').checked,
+        chkSmoke: document.getElementById('chk-smoke').checked,
+        decision: document.querySelector('input[name="final-decision"]:checked')?.value || '',
+        signerName: document.getElementById('signer-name').value,
+        signerDate: document.getElementById('signer-date').value,
+        signerNote: document.getElementById('signer-note').value,
+      };
+      localStorage.setItem('odi_uat_global_obs', JSON.stringify(userObs));
+    }
+
+    function loadUserGlobalObs() {
+      const userObs = JSON.parse(localStorage.getItem('odi_uat_global_obs') || '{}');
+      if (userObs.genelUX) document.getElementById('genel-ux').value = userObs.genelUX;
+      if (userObs.enSorunlar) document.getElementById('en-sorunlar').value = userObs.enSorunlar;
+      if (userObs.enZorlayan) document.getElementById('en-zorlayan').value = userObs.enZorlayan;
+      if (userObs.iyiNoktalar) document.getElementById('iyi-noktalar').value = userObs.iyiNoktalar;
+      if (userObs.duzeltmeIstekleri) document.getElementById('duzeltme-istekleri').value = userObs.duzeltmeIstekleri;
+
+      document.getElementById('chk-p0').checked = !!userObs.chkP0;
+      document.getElementById('chk-p1').checked = !!userObs.chkP1;
+      document.getElementById('chk-p2').checked = !!userObs.chkP2;
+      document.getElementById('chk-sec').checked = !!userObs.chkSec;
+      document.getElementById('chk-data').checked = !!userObs.chkData;
+      document.getElementById('chk-mob').checked = !!userObs.chkMob;
+      document.getElementById('chk-smoke').checked = !!userObs.chkSmoke;
+
+      if (userObs.decision) {
+        const rad = document.querySelector(`input[name="final-decision"][value="${userObs.decision}"]`);
+        if (rad) rad.checked = true;
+      }
+
+      if (userObs.signerName) document.getElementById('signer-name').value = userObs.signerName;
+      if (userObs.signerDate) document.getElementById('signer-date').value = userObs.signerDate;
+      if (userObs.signerNote) document.getElementById('signer-note').value = userObs.signerNote;
+    }
+
+    function filterCategory(cat) {
+      document.querySelectorAll('.filter-group .btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+
+      const rows = document.querySelectorAll('#uat-tbody tr');
+      rows.forEach(r => {
+        if (cat === 'ALL' || r.getAttribute('data-priority') === cat) {
+          r.style.display = '';
+        } else {
+          r.style.display = 'none';
+        }
+      });
+    }
+
+    function filterStatus(st) {
+      document.querySelectorAll('.filter-group .btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+
+      const rows = document.querySelectorAll('#uat-tbody tr');
+      rows.forEach(r => {
+        const rowStatus = r.getAttribute('data-status');
+        if (st === 'PENDING' && (rowStatus === 'PENDING' || !rowStatus)) {
+          r.style.display = '';
+        } else {
+          r.style.display = 'none';
+        }
+      });
+    }
+
+    function exportData() {
+      const itemData = localStorage.getItem('odi_uat_data');
+      const obsData = localStorage.getItem('odi_uat_global_obs');
+      const fullExport = { items: JSON.parse(itemData || '{}'), global: JSON.parse(obsData || '{}') };
+      
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fullExport, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `odi_pet_uat_report_${new Date().toISOString().slice(0,10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function clearData() {
+      if (confirm('Tüm UAT test verileriniz sıfırlanacak. Emin misiniz?')) {
+        localStorage.removeItem('odi_uat_data');
+        localStorage.removeItem('odi_uat_global_obs');
+        location.reload();
+      }
+    }
+
+    window.onload = renderTable;
+  </script>
+</body>
+</html>

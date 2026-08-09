@@ -51,7 +51,7 @@ export default async function EditPetPage({ params }: { params: Promise<{ id: st
   return (
     <div className="flex flex-col gap-8 pb-10 w-full">
       <React.Suspense fallback={<div className="animate-pulse h-96 bg-bg-main rounded-2xl"></div>}>
-        <EditPetForm pet={petWithOwners} />
+        <EditPetForm pet={petWithOwners} ownerProfile={profile} />
       </React.Suspense>
     </div>
   )

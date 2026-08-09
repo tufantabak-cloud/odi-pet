@@ -35,13 +35,13 @@ export default async function EditProfilePage() {
           const c1 = pet.sos_contacts[0]
           const c2 = pet.sos_contacts[1]
 
-          if (c1?.phone && !petEmergencyPhone) {
-            petEmergencyPhone = c1.phone
+          if (c1 && !petEmergencyPhone && !petEmergencyName) {
+            petEmergencyPhone = c1.phone || ''
             petEmergencyName = c1.name || ''
             petEmergencyRelation = c1.relation || ''
           }
-          if (c2?.phone && !petEmergency2Phone) {
-            petEmergency2Phone = c2.phone
+          if (c2 && !petEmergency2Relation && !petEmergency2Name && !petEmergency2Phone) {
+            petEmergency2Phone = c2.phone || ''
             petEmergency2Name = c2.name || ''
             petEmergency2Relation = c2.relation || ''
           }

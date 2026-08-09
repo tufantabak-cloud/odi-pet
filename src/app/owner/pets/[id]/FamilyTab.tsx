@@ -33,8 +33,14 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
 
   const [inviteToCancel, setInviteToCancel] = useState<string | null>(null)
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false)
-  const [showInviteForm, setShowInviteForm] = useState(false)
+  const [showInviteForm, setShowInviteForm] = useState(true)
   const [inviteMode, setInviteMode] = useState<'email' | 'qr'>('qr')
+
+  const switchInviteMode = (mode: 'qr' | 'email') => {
+    setInviteMode(mode)
+    setInviteLink(null)
+    setInviteMsg(null)
+  }
   const [showQrCode, setShowQrCode] = useState(true)
   const [email, setEmail] = useState('')
   const [role, setRole] = useState('editor')
@@ -101,7 +107,9 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
     setInviteLink(null)
     setCopied(false)
 
-    const targetEmail = email.trim() || (inviteMode === 'qr' ? `qr-davet-${Math.random().toString(36).substring(2, 9)}@odipet.local` : '')
+    const targetEmail = inviteMode === 'qr'
+      ? `qr-davet-${Math.random().toString(36).substring(2, 9)}-${Date.now()}@odipet.local`
+      : email.trim()
 
     if (!targetEmail) {
       setInviteMsg({ type: 'err', text: 'Lütfen geçerli bir e-posta adresi girin.' })
@@ -385,7 +393,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
           <div className="flex bg-bg-main p-1 rounded-2xl mb-4 border border-border-main">
             <button
               type="button"
-              onClick={() => setInviteMode('qr')}
+              onClick={() => switchInviteMode('qr')}
               className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                 inviteMode === 'qr'
                   ? 'bg-white text-purple-700 shadow-xs font-semibold'
@@ -396,7 +404,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
             </button>
             <button
               type="button"
-              onClick={() => setInviteMode('email')}
+              onClick={() => switchInviteMode('email')}
               className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                 inviteMode === 'email'
                   ? 'bg-white text-primary shadow-xs font-semibold'
@@ -495,22 +503,22 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
               </select>
             </div>
 
-            {/* E-posta Alanı */}
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between">
+            {/* E-posta Alanı — Sadece E-posta İle sekmesinde gösterilir */}
+            {inviteMode === 'email' && (
+              <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold text-text-secondary">
-                  E-posta Adresi {inviteMode === 'qr' && <span className="text-text-secondary font-normal">(İsteğe Bağlı)</span>}
+                  E-posta Adresi *
                 </label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="ornek@email.com"
+                  className="input-base"
+                />
               </div>
-              <input
-                type="email"
-                required={inviteMode === 'email'}
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder={inviteMode === 'qr' ? 'ornek@email.com (Boş bırakabilirsiniz)' : 'ornek@email.com'}
-                className="input-base"
-              />
-            </div>
+            )}
 
             <button
               type="submit"

@@ -311,7 +311,7 @@ export function buildPetMicroTasks({
       title: 'Acil Durum Kişisi',
       description: 'Beklenmeyen durumlar için acil durumda ulaşılacak kişiyi ekleyin.',
       actionText: 'Kişi Ekle',
-      route: `/owner/pets/${pet.id}/edit?highlight=emergencyContact`,
+      route: `/owner/pets/${pet.id}/edit?highlight=emergencyContact#sos-section`,
       icon: 'ti ti-phone-call'
     });
   }

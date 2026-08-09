@@ -6,6 +6,7 @@ interface SendInviteEmailParams {
   petName: string
   role: string
   inviteToken: string
+  origin?: string
 }
 
 const ROLE_DISPLAY_NAMES: Record<string, string> = {
@@ -21,6 +22,7 @@ export async function sendCaregiverInviteEmail({
   petName,
   role,
   inviteToken,
+  origin,
 }: SendInviteEmailParams) {
   const supabase = await createServerSupabaseClient()
 
@@ -33,7 +35,7 @@ export async function sendCaregiverInviteEmail({
 
   const isExistingUser = !!profile
   const roleLabel = ROLE_DISPLAY_NAMES[role] ?? role
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const baseUrl = origin || process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
   const inviteLink = `${baseUrl}/invite/${inviteToken}`
 
   // 2. Şablon Başlık ve Gövdesi

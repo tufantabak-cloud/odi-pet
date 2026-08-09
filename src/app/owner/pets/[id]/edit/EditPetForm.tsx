@@ -29,7 +29,7 @@ const DOG_BREEDS = [
 const CAT_COLORS = ['Siyah', 'Beyaz', 'Gri', 'Turuncu', 'Karamel', 'Tekir', 'Calico', 'Beyaz-Siyah', 'Diğer']
 const DOG_COLORS = ['Siyah', 'Beyaz', 'Kahverengi', 'Altın Sarısı', 'Krem', 'Gri', 'Siyah-Beyaz', 'Üç Renkli', 'Diğer']
 
-export default function EditPetForm({ pet }: { pet: any }) {
+export default function EditPetForm({ pet, ownerProfile }: { pet: any; ownerProfile?: any }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const highlight = searchParams ? searchParams.get('highlight') : null
@@ -88,13 +88,9 @@ export default function EditPetForm({ pet }: { pet: any }) {
     const now = new Date()
     const todayDay = now.getDate()
     
-    let targetYear = now.getFullYear() - years
-    let targetMonth = now.getMonth() - months
-    
-    while (targetMonth < 0) {
-      targetMonth += 12
-      targetYear -= 1
-    }
+    const targetMonth = (now.getMonth() - (months % 12) + 12) % 12
+    const yearOffset = Math.floor((months) / 12) + years + (targetMonth > now.getMonth() ? 1 : 0)
+    const targetYear = now.getFullYear() - yearOffset
     
     // Target ayın maksimum gün sayısını bulup bugünün gün değeriyle sınırla
     const maxDaysInTarget = new Date(targetYear, targetMonth + 1, 0).getDate()
@@ -115,8 +111,6 @@ export default function EditPetForm({ pet }: { pet: any }) {
       setHeightCm(next > 0 ? String(parseFloat(next.toFixed(1))) : '0')
     }
   }
-
-
 
   const [selectedBreed, setSelectedBreed] = useState(pet.breed || '')
   
@@ -173,11 +167,16 @@ export default function EditPetForm({ pet }: { pet: any }) {
     }
   }
 
-  const [sosContacts, setSosContacts] = useState<{name:string; phone:string; relation:string}[]>(
-    pet.sos_contacts && pet.sos_contacts.length > 0
-      ? pet.sos_contacts
-      : [{ name: '', phone: '', relation: '' }, { name: '', phone: '', relation: '' }]
-  )
+  const initialC1Name = pet.sos_contacts?.[0]?.name || ownerProfile?.emergency_contact_name || `${ownerProfile?.first_name || ''} ${ownerProfile?.last_name || ''}`.trim()
+  const initialC1Phone = pet.sos_contacts?.[0]?.phone || ownerProfile?.emergency_contact_phone || ownerProfile?.phone || ''
+  const initialC2Name = pet.sos_contacts?.[1]?.name || ownerProfile?.emergency_contact2_name || ''
+  const initialC2Phone = pet.sos_contacts?.[1]?.phone || ownerProfile?.emergency_contact2_phone || ''
+  const initialC2Relation = pet.sos_contacts?.[1]?.relation || ownerProfile?.emergency_contact2_relation || ''
+
+  const [sosContacts, setSosContacts] = useState<{name:string; phone:string; relation:string}[]>([
+    { name: initialC1Name, phone: initialC1Phone, relation: 'Sahibi' },
+    { name: initialC2Name, phone: initialC2Phone, relation: initialC2Relation }
+  ])
   const [sosSaving, setSosSaving] = useState(false)
   const [sosMsg, setSosMsg] = useState<{type:'ok'|'err'; text:string} | null>(null)
   const [successToast, setSuccessToast] = useState(false)
@@ -904,12 +903,17 @@ export default function EditPetForm({ pet }: { pet: any }) {
                       <option value="" disabled>Seçiniz</option>
                       <option value="Aile Üyesi">Aile Üyesi</option>
                       <option value="Eşi / Partneri">Eşi / Partneri</option>
+                      <option value="Eş">Eş</option>
+                      <option value="Anne / Baba">Anne / Baba</option>
+                      <option value="Kardeş">Kardeş</option>
+                      <option value="Komşu / Bakıcı">Komşu / Bakıcı</option>
                       <option value="Komşu">Komşu</option>
                       <option value="Arkadaş / Yakın">Arkadaş / Yakın</option>
+                      <option value="Arkadaş">Arkadaş</option>
                       <option value="Evcil Hayvan Bakıcısı">Evcil Hayvan Bakıcısı</option>
                       <option value="Veteriner Hekim">Veteriner Hekim</option>
                       <option value="Diğer">Diğer</option>
-                      {sosContacts[i]?.relation && !['Aile Üyesi', 'Eşi / Partneri', 'Komşu', 'Arkadaş / Yakın', 'Evcil Hayvan Bakıcısı', 'Veteriner Hekim', 'Diğer'].includes(sosContacts[i].relation) && (
+                      {sosContacts[i]?.relation && !['Aile Üyesi', 'Eşi / Partneri', 'Eş', 'Anne / Baba', 'Kardeş', 'Komşu / Bakıcı', 'Komşu', 'Arkadaş / Yakın', 'Arkadaş', 'Evcil Hayvan Bakıcısı', 'Veteriner Hekim', 'Diğer'].includes(sosContacts[i].relation) && (
                         <option value={sosContacts[i].relation}>{sosContacts[i].relation}</option>
                       )}
                     </select>

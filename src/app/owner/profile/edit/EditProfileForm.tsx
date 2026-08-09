@@ -74,20 +74,21 @@ export default function EditProfileForm({
     petEmergencyPhone ||
     ''
 
+  const ownerFullName = `${parsedFirstName} ${parsedLastName}`.trim()
+
   const initialEmergencyName =
     profile?.emergency_contact_name ||
     petEmergencyName ||
+    ownerFullName ||
     ''
 
   const initialEmergencyPhone =
     profile?.emergency_contact_phone ||
     petEmergencyPhone ||
+    initialPhone ||
     ''
 
-  const initialEmergencyRelation =
-    profile?.emergency_contact_relation ||
-    (petEmergencyRelation === 'Sahibi' ? 'Eş' : petEmergencyRelation) ||
-    ''
+  const initialEmergencyRelation = 'Sahibi'
 
   // 2. Acil İletişim Kişisi değerleri
   const initialEmergency2Name =
@@ -139,9 +140,14 @@ export default function EditProfileForm({
   const [successToast, setSuccessToast] = useState(false)
 
   const handleCopyOwnerPhone = () => {
+    const ownerName = `${firstName} ${lastName}`.trim()
     if (phone) {
       setEmergencyPhone(phone)
     }
+    if (ownerName) {
+      setEmergencyName(ownerName)
+    }
+    setEmergencyRelation('Sahibi')
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -152,35 +158,73 @@ export default function EditProfileForm({
     // Acil durum numarası girildiğinde, temel kimlik telefon bilgisi boşsa ikisini de eşle
     const resolvedPhone = phone || (emergencyPhone ? emergencyPhone : (emergency2Phone ? emergency2Phone : null))
 
+    const payload: Record<string, any> = {
+      first_name: firstName,
+      last_name: lastName,
+      email: email || null,
+      phone: resolvedPhone,
+      avatar_color: avatarColor,
+      city: city || null,
+      district: district || null,
+      neighborhood: neighborhood || null,
+      bio: bio || null,
+      emergency_contact_name: emergencyName || null,
+      emergency_contact_phone: emergencyPhone || null,
+      emergency_contact_relation: emergencyRelation || null,
+      emergency_contact2_name: emergency2Name || null,
+      emergency_contact2_phone: emergency2Phone || null,
+      emergency_contact2_relation: emergency2Relation || null,
+      preferred_vet_name: vetName || null,
+      preferred_vet_phone: vetPhone || null,
+      notify_email: notifyEmail,
+      notify_sms: notifySms,
+      notify_push: notifyPush,
+      updated_at: new Date().toISOString(),
+    }
+
     try {
-      const { error: updateError } = await supabase
+      let { error: updateError } = await supabase
         .from('profiles')
-        .update({
-          first_name: firstName,
-          last_name: lastName,
-          email: email || null,
-          phone: resolvedPhone,
-          avatar_color: avatarColor,
-          city: city || null,
-          district: district || null,
-          neighborhood: neighborhood || null,
-          bio: bio || null,
-          emergency_contact_name: emergencyName || null,
-          emergency_contact_phone: emergencyPhone || null,
-          emergency_contact_relation: emergencyRelation || null,
-          emergency_contact2_name: emergency2Name || null,
-          emergency_contact2_phone: emergency2Phone || null,
-          emergency_contact2_relation: emergency2Relation || null,
-          preferred_vet_name: vetName || null,
-          preferred_vet_phone: vetPhone || null,
-          notify_email: notifyEmail,
-          notify_sms: notifySms,
-          notify_push: notifyPush,
-          updated_at: new Date().toISOString(),
-        })
+        .update(payload)
         .eq('id', profile.id)
 
-      if (updateError) throw updateError
+      if (updateError && (updateError.code === 'PGRST204' || updateError.message?.includes('schema cache') || updateError.message?.includes('Could not find'))) {
+        console.warn('[EditProfileForm] Schema cache error detected for 2nd emergency contact columns. Retrying without emergency_contact2_* fields.')
+        delete payload.emergency_contact2_name
+        delete payload.emergency_contact2_phone
+        delete payload.emergency_contact2_relation
+
+        const { error: retryError } = await supabase
+          .from('profiles')
+          .update(payload)
+          .eq('id', profile.id)
+        updateError = retryError
+      }
+
+      if (updateError) {
+        throw new Error(updateError.message || updateError.details || 'Profil güncellenirken veritabanı hatası oluştu.')
+      }
+
+      // Sync emergency contacts to all pets owned by this profile for bi-directional flow
+      const petSosContacts = [
+        {
+          name: emergencyName || `${firstName} ${lastName}`.trim(),
+          phone: emergencyPhone || resolvedPhone || '',
+          relation: 'Sahibi',
+        },
+        {
+          name: emergency2Name || '',
+          phone: emergency2Phone || '',
+          relation: emergency2Relation || '',
+        },
+      ].filter(c => c.name || c.phone)
+
+      if (petSosContacts.length > 0) {
+        await supabase
+          .from('pets')
+          .update({ sos_contacts: petSosContacts })
+          .eq('owner_id', profile.id)
+      }
 
       setSuccessToast(true)
       router.refresh()
@@ -189,8 +233,8 @@ export default function EditProfileForm({
         router.push('/owner/profile')
       }, 1500)
     } catch (err: any) {
-      console.error(err)
-      setError(err.message || 'Profil güncellenirken bir hata oluştu.')
+      console.error('[EditProfileForm] Update failed:', err?.message || err)
+      setError(err?.message || 'Profil güncellenirken bir hata oluştu.')
     } finally {
       setIsSubmitting(false)
     }
@@ -448,20 +492,13 @@ export default function EditProfileForm({
 
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-bold text-text-secondary ml-1">Yakınlık Derecesi / Rolü</label>
-            <select
-              value={emergencyRelation}
-              onChange={e => setEmergencyRelation(e.target.value)}
-              className="input-base rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 outline-none transition-all bg-white"
-            >
-              <option value="">Seçiniz</option>
-              <option value="Sahibi">Sahibi</option>
-              <option value="Eş">Eş</option>
-              <option value="Anne / Baba">Anne / Baba</option>
-              <option value="Kardeş">Kardeş</option>
-              <option value="Komşu / Bakıcı">Komşu / Bakıcı</option>
-              <option value="Arkadaş">Arkadaş</option>
-              <option value="Diğer">Diğer</option>
-            </select>
+            <input
+              type="text"
+              readOnly
+              disabled
+              value="Sahibi"
+              className="input-base rounded-2xl border border-slate-200 px-4 py-3 text-sm bg-slate-100/80 text-text-secondary font-semibold cursor-not-allowed outline-none"
+            />
           </div>
         </div>
 
@@ -503,13 +540,21 @@ export default function EditProfileForm({
               className="input-base rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none transition-all bg-white"
             >
               <option value="">Seçiniz</option>
+              <option value="Aile Üyesi">Aile Üyesi</option>
+              <option value="Eşi / Partneri">Eşi / Partneri</option>
               <option value="Eş">Eş</option>
               <option value="Anne / Baba">Anne / Baba</option>
               <option value="Kardeş">Kardeş</option>
               <option value="Komşu / Bakıcı">Komşu / Bakıcı</option>
+              <option value="Komşu">Komşu</option>
+              <option value="Arkadaş / Yakın">Arkadaş / Yakın</option>
               <option value="Arkadaş">Arkadaş</option>
+              <option value="Evcil Hayvan Bakıcısı">Evcil Hayvan Bakıcısı</option>
               <option value="Veteriner Hekim">Veteriner Hekim</option>
               <option value="Diğer">Diğer</option>
+              {emergency2Relation && !['Aile Üyesi', 'Eşi / Partneri', 'Eş', 'Anne / Baba', 'Kardeş', 'Komşu / Bakıcı', 'Komşu', 'Arkadaş / Yakın', 'Arkadaş', 'Evcil Hayvan Bakıcısı', 'Veteriner Hekim', 'Diğer'].includes(emergency2Relation) && (
+                <option value={emergency2Relation}>{emergency2Relation}</option>
+              )}
             </select>
           </div>
         </div>

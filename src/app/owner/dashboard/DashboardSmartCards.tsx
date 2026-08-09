@@ -418,8 +418,18 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
       const isCompleted = s.status === 'completed' || s.status === 'done'
       const updatedDate = s.updated_at ? new Date(s.updated_at) : new Date(s.completed_at || s.due_date)
       const isRecent = updatedDate.getTime() > Date.now() - 24 * 60 * 60 * 1000
-      return isCompleted && isRecent
+      const isVaccineTask =
+        s._plan_category === 'asi' ||
+        (s.category || '').toLowerCase().includes('asi') ||
+        (s.category || '').toLowerCase().includes('aşı') ||
+        (s.sub_category || '').toLowerCase().includes('asi') ||
+        (s.sub_category || '').toLowerCase().includes('aşı') ||
+        (s.title || '').toLowerCase().includes('aşı') ||
+        (s.title || '').toLowerCase().includes('asi') ||
+        !!s.vaccines
+      return isCompleted && isRecent && isVaccineTask
     })
+
 
     if (recentVaccine) {
       const appetiteCardId = `appetite-${recentVaccine.id}`
@@ -483,7 +493,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
         dateInfo: 'Eksik Bilgi',
         ctaLabel: 'Şimdi Ekle',
         action: () => {
-          router.push(`/owner/pets/${targetPet.id}/edit`)
+          router.push(`/owner/pets/${targetPet.id}/edit?highlight=emergencyContact#sos-section`)
         }
       })
     }

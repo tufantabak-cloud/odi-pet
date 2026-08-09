@@ -11,6 +11,7 @@ const dogSpeciesImage = '/brand/illustrations/species/dog.png'
 import { StepperInput } from '@/components/ui/StepperInput'
 import { RulerPicker } from '@/components/ui/RulerPicker'
 import { BreedCombobox } from '@/components/ui/BreedCombobox'
+import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import {
   formatTurkishMobileInput,
   isTurkishMobilePhone,
@@ -888,45 +889,37 @@ function PetSOSStep({
   const [availableContacts, setAvailableContacts] = useState<{ name: string; phone: string; relation: string }[]>([])
   const [touchedPhones, setTouchedPhones] = useState([false, false])
   const [showValidation, setShowValidation] = useState(false)
+  const [isCustomizing, setIsCustomizing] = useState(false)
 
   useEffect(() => {
     async function loadContacts() {
       try {
-        const res = await fetch('/api/pets')
+        const res = await fetch('/api/owner/emergency-contacts')
         if (res.ok) {
           const data = await res.json()
-          if (data.pets) {
-            const list: { name: string; phone: string; relation: string }[] = []
-            const seen = new Set<string>()
-            for (const pet of data.pets) {
-              const contacts = pet.sos_contacts
-              if (Array.isArray(contacts)) {
-                for (const c of contacts) {
-                  if (c && c.name && c.phone) {
-                    const cleanPhone = c.phone.replace(/\D/g, '').slice(-10)
-                    const cleanName = c.name.trim().toLowerCase()
-                    const key = cleanPhone ? `${cleanName}-${cleanPhone}` : `${cleanName}-${c.phone.trim()}`
-                    if (!seen.has(key)) {
-                      seen.add(key)
-                      list.push({
-                        name: c.name.trim(),
-                        phone: formatTurkishMobileInput(c.phone),
-                        relation: c.relation || 'Diğer'
-                      })
-                    }
-                  }
-                }
-              }
-            }
-            setAvailableContacts(list)
+          if (data.c1?.name || data.c1?.phone || data.c2?.name) {
+            setSosContacts([
+              { name: data.c1?.name || '', phone: data.c1?.phone || '', relation: 'Sahibi' },
+              { name: data.c2?.name || '', phone: data.c2?.phone || '', relation: data.c2?.relation || '' },
+            ])
           }
         }
       } catch (err) {
         console.error('Kişileri yükleme hatası:', err)
       }
     }
-    loadContacts()
+    if (!sosContacts[0]?.name || !sosContacts[0]?.phone) {
+      loadContacts()
+    }
   }, [])
+
+  const c1HasPhone = isTurkishMobilePhone(sosContacts[0]?.phone || '')
+  const c1HasName = !!sosContacts[0]?.name?.trim()
+  const c2HasPhone = isTurkishMobilePhone(sosContacts[1]?.phone || '')
+  const c2HasName = !!sosContacts[1]?.name?.trim()
+  const c2HasRelation = !!sosContacts[1]?.relation?.trim()
+
+  const hasBothContacts = c1HasName && c1HasPhone && c2HasName && c2HasPhone && c2HasRelation
 
   const primaryNameMissing = !sosContacts[0]?.name?.trim()
   const primaryRelationMissing = !sosContacts[0]?.relation?.trim()
@@ -962,6 +955,81 @@ function PetSOSStep({
     }
 
     onSubmit()
+  }
+
+  if (hasBothContacts && !isCustomizing) {
+    return (
+      <div className="flex flex-col w-full mx-auto pb-10 animate-fadeIn">
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-6 border-b border-border-main pb-4">
+          <div className="flex flex-col flex-1">
+            <h1 className="text-xl font-extrabold text-text-primary tracking-tight flex items-center gap-1.5">Acil Durum Ağı <Siren size={20} className="w-5 h-5 text-error shrink-0" aria-hidden="true" /></h1>
+            <p className="text-xs text-text-secondary font-medium">Profilinizdeki kayıtlı acil iletişim ağı otomatik algılandı.</p>
+          </div>
+        </div>
+
+        <div className="card-base p-6 sm:p-8 flex flex-col gap-6 border border-primary/20 bg-gradient-to-br from-violet-50/40 via-white to-amber-50/30 shadow-md">
+          {submitError && (
+            <div role="alert" aria-live="assertive" className="p-3 bg-error/10 text-error text-[13px] font-bold rounded-xl border border-error/20 flex items-center gap-1.5">
+              <AlertTriangle size={16} className="w-4 h-4 text-error shrink-0" aria-hidden="true" /> {submitError}
+            </div>
+          )}
+
+          <div className="flex items-center gap-3.5 p-4.5 bg-white/90 rounded-2xl border border-slate-200/80 shadow-2xs">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 font-bold">
+              <Check size={20} className="w-5 h-5 text-emerald-700" aria-hidden="true" />
+            </div>
+            <div>
+              <h2 className="text-sm font-extrabold text-text-primary">Kayıtlı Acil Durum İletişim Ağınız Yüklendi</h2>
+              <p className="text-xs text-text-secondary font-medium">Profilinizdeki rehber {petName} dostunuz için hazır.</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="p-4.5 rounded-2xl bg-white border border-slate-200/80 flex flex-col gap-1 shadow-2xs">
+              <span className="text-[11px] font-extrabold text-error uppercase tracking-wider">1. Birincil Bağlantı</span>
+              <p className="text-sm font-bold text-text-primary">{sosContacts[0].name}</p>
+              <p className="text-xs font-medium text-text-secondary">{sosContacts[0].phone} • <span className="font-semibold text-error">Sahibi</span></p>
+            </div>
+
+            <div className="p-4.5 rounded-2xl bg-white border border-slate-200/80 flex flex-col gap-1 shadow-2xs">
+              <span className="text-[11px] font-extrabold text-primary uppercase tracking-wider">2. Yedek Bağlantı</span>
+              <p className="text-sm font-bold text-text-primary">{sosContacts[1].name}</p>
+              <p className="text-xs font-medium text-text-secondary">{sosContacts[1].phone} • <span className="font-semibold text-primary">{sosContacts[1].relation || 'Yedek'}</span></p>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center w-full gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onSubmit}
+              disabled={loading}
+              data-testid="emergency-contact-one-click-confirm-button"
+              className="btn-primary w-full py-4 text-base shadow-lg shadow-primary/20 flex items-center justify-center gap-2 font-extrabold"
+            >
+              {loading ? (
+                <span className="flex items-center gap-2 justify-center">
+                  <svg className="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                  Kaydediliyor...
+                </span>
+              ) : (
+                <span className="flex items-center justify-center gap-2">
+                  Bu Bilgilerle Devam Et <Check size={18} className="w-5 h-5 text-white" aria-hidden="true" />
+                </span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsCustomizing(true)}
+              className="text-xs font-bold text-text-secondary hover:text-primary transition-colors underline underline-offset-4 py-1"
+            >
+              Kişileri Bu Pet İçin Düzenle / Değiştir
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -1295,6 +1363,26 @@ export default function AddPetPage() {
     { name: '', phone: '', relation: '' },
   ])
   const [sosLoading, setSosLoading] = useState(false)
+
+  useEffect(() => {
+    async function loadOwnerProfile() {
+      try {
+        const res = await fetch('/api/owner/emergency-contacts')
+        if (res.ok) {
+          const data = await res.json()
+          if (data.c1 || data.c2) {
+            setSosContacts([
+              { name: data.c1?.name || '', phone: data.c1?.phone || '', relation: 'Sahibi' },
+              { name: data.c2?.name || '', phone: data.c2?.phone || '', relation: data.c2?.relation || '' },
+            ])
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching owner emergency contacts in AddPetPage:', err)
+      }
+    }
+    loadOwnerProfile()
+  }, [])
 
   const handleSpeciesSelect = (species: Species) => {
     setSelectedSpecies(species)
