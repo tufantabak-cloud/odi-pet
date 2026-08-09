@@ -72,8 +72,8 @@ export async function POST(req: NextRequest, context: RouteContext) {
   if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
 
   revalidatePath('/owner/dashboard')
-  // @ts-expect-error
-    revalidateTag('dashboard')
+  revalidateTag(`dashboard-${user.id}`, 'default')
+  revalidateTag('dashboard', 'default')
   revalidatePath(`/owner/pets/${id}`)
 
   return NextResponse.json({ success: true })

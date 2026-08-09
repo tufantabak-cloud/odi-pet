@@ -11,8 +11,8 @@ export async function POST(req: Request) {
     const supabase = await createServerSupabaseClient()
 
     // Auth kontrolü
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     // (başka bir kullanıcıya veya başka bir pet'e ait klasör kabul edilmez).
     let documentStoragePath: string | null = null
     if (document_storage_path) {
-      const expectedPrefix = `${session.user.id}/${pet_id}/`
+      const expectedPrefix = `${user.id}/${pet_id}/`
       if (typeof document_storage_path !== 'string' || !document_storage_path.startsWith(expectedPrefix)) {
         return NextResponse.json({ error: 'Geçersiz belge yolu' }, { status: 400 })
       }

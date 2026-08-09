@@ -51,8 +51,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   revalidatePath('/owner/dashboard')
-  // @ts-expect-error
-  revalidateTag('dashboard')
+  revalidateTag(`dashboard-${user.id}`, 'default')
+  revalidateTag('dashboard', 'default')
   revalidatePath('/owner/pets')
   revalidatePath(`/owner/pets/${id}`)
   revalidatePath('/owner/profile')

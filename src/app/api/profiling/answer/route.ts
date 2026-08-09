@@ -4,15 +4,15 @@ import { NextResponse } from 'next/server';
 export async function POST(request: Request) {
   try {
     const supabase = await createServerSupabaseClient();
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-    if (!session) {
+    if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
     const { question_id, action } = body;
-    const userId = session.user.id;
+    const userId = user.id;
 
     if (!question_id || !action) {
       return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });

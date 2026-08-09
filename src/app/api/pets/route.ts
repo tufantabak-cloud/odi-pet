@@ -289,8 +289,8 @@ export async function POST(req: NextRequest) {
   }
 
   revalidatePath('/owner/dashboard')
-  // @ts-expect-error
-    revalidateTag('dashboard')
+  revalidateTag(`dashboard-${user.id}`, 'default')
+  revalidateTag('dashboard', 'default')
   revalidatePath('/owner/pets')
   return NextResponse.json({ success: true, pet: data })
 }

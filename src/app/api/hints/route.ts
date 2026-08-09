@@ -3,16 +3,16 @@ import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
   const supabase = await createServerSupabaseClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (userError || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const { data, error } = await supabase
     .from('onboarding_hints')
     .select('hint_key')
-    .eq('profile_id', session.user.id);
+    .eq('profile_id', user.id);
 
   if (error) {
     return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 });
@@ -24,9 +24,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const supabase = await createServerSupabaseClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (userError || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
 
     const { error } = await supabase
       .from('onboarding_hints')
-      .upsert({ profile_id: session.user.id, hint_key }, { onConflict: 'profile_id,hint_key' });
+      .upsert({ profile_id: user.id, hint_key }, { onConflict: 'profile_id,hint_key' });
 
     if (error) {
       return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 });

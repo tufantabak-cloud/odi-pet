@@ -77,8 +77,8 @@ export async function POST(req: NextRequest, context: RouteContext) {
     if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
 
     revalidatePath(`/owner/pets/${id}`)
-    // @ts-expect-error
-    revalidateTag('dashboard')
+    revalidateTag(`dashboard-${user.id}`, 'default')
+    revalidateTag('dashboard', 'default')
     return NextResponse.json({ success: true, status: 'cancelled' })
   }
 
@@ -113,8 +113,8 @@ export async function POST(req: NextRequest, context: RouteContext) {
   if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
 
   revalidatePath(`/owner/pets/${id}`)
-  // @ts-expect-error
-    revalidateTag('dashboard')
+  revalidateTag(`dashboard-${user.id}`, 'default')
+  revalidateTag('dashboard', 'default')
   return NextResponse.json({ success: true, adoption: data })
 }
 
@@ -171,8 +171,8 @@ export async function PUT(req: NextRequest, context: RouteContext) {
   if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
 
   revalidatePath(`/owner/pets/${id}`)
-  // @ts-expect-error
-  revalidateTag('dashboard')
+  revalidateTag(`dashboard-${user.id}`, 'default')
+  revalidateTag('dashboard', 'default')
   
   return NextResponse.json({ success: true, adoption: data })
 }

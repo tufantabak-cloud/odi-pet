@@ -123,14 +123,14 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
         let petMembershipPetIds: string[] = []
 
         const { data: petMemberships, error: petMembershipsError } = await supabase
-          .from('pet_petMemberships')
+          .from('pet_memberships')
           .select('pet_id')
           .eq('profile_id', uid)
           .eq('status', 'active')
 
         if (petMembershipsError) {
           console.warn(
-            '[dashboard] pet_petMemberships fetch failed, falling back to legacy pet_members / owner_id:',
+            '[dashboard] pet_memberships fetch failed, falling back to legacy pet_members / owner_id:',
             petMembershipsError.message
           )
 
