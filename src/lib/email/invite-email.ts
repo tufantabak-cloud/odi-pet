@@ -35,7 +35,11 @@ export async function sendCaregiverInviteEmail({
 
   const isExistingUser = !!profile
   const roleLabel = ROLE_DISPLAY_NAMES[role] ?? role
-  const baseUrl = origin || process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const isProduction = process.env.NODE_ENV === 'production'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL
+  // Production'da daima kanonikal site URL'sini kullan (QR kodunun mobil cihazdan açılabilmesi için)
+  // Dev ortamında origin header'ını kullan (local IP ile çalışabilmesi için)
+  const baseUrl = (isProduction && siteUrl) ? siteUrl : (origin || siteUrl || 'http://localhost:3000')
   const inviteLink = `${baseUrl}/invite/${inviteToken}`
 
   // 2. Şablon Başlık ve Gövdesi

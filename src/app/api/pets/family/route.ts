@@ -87,9 +87,17 @@ export async function POST(req: NextRequest) {
   // Inviter profile name
   const inviterName = user.user_metadata?.first_name || user.email || 'Bir kullanıcı'
 
-  const host = req.headers.get('x-forwarded-host') || req.headers.get('host')
-  const protocol = req.headers.get('x-forwarded-proto') || (host?.includes('localhost') ? 'http' : 'https')
-  const requestOrigin = host ? `${protocol}://${host}` : req.nextUrl.origin
+  // Production'da kanonikal URL kullan; dev'de request host'u kullan
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL
+  const isProduction = process.env.NODE_ENV === 'production'
+  let requestOrigin: string
+  if (isProduction && siteUrl) {
+    requestOrigin = siteUrl
+  } else {
+    const host = req.headers.get('x-forwarded-host') || req.headers.get('host')
+    const protocol = req.headers.get('x-forwarded-proto') || (host?.includes('localhost') ? 'http' : 'https')
+    requestOrigin = host ? `${protocol}://${host}` : (req.nextUrl.origin || siteUrl || 'http://localhost:3000')
+  }
 
   // E-posta gönderimi (Kayıtlı/kayıtsız kullanıcı kontrolü dahil)
   const emailRes = await sendCaregiverInviteEmail({

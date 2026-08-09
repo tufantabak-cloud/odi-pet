@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   distDir: process.env.NEXT_DIST_DIR || '.next',
-  allowedDevOrigins: ['127.0.0.1'],
+  allowedDevOrigins: ['127.0.0.1', '192.168.1.21', '192.168.0.*', '10.0.*', '172.16.*', '172.17.*', '172.28.*'],
   images: {
     remotePatterns: [
       {

@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "predev": "node scripts/generate-features-index.mjs",
-    "dev": "concurrently -p none \"serwist build serwist.config.mjs --watch --no-update-notifier\" \"next dev\"",
+    "dev": "concurrently -p none \"serwist build serwist.config.mjs --watch --no-update-notifier\" \"next dev --hostname 0.0.0.0\"",
+    "dev:mobile": "concurrently -p none \"serwist build serwist.config.mjs --watch --no-update-notifier\" \"next dev --hostname 0.0.0.0\" & echo 'Mobil test icin: http://192.168.1.21:3000'",
     "prebuild": "node scripts/generate-features-index.mjs",
     "build": "next build && serwist build serwist.config.mjs --no-update-notifier",
     "start": "next start",
