@@ -15,9 +15,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     .eq('slug', slug)
     .maybeSingle();
 
-  if (!article) return { title: 'İçerik Bulunamadı | Odi.Pet' };
+  if (!article) return { title: 'İçerik Bulunamadı | Odi' };
   return {
-    title: `${article.title} | Odi.Pet`,
+    title: `${article.title} | Odi`,
     description: article.excerpt
   };
 }

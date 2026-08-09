@@ -18,7 +18,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://odi.pet'),
-  title: 'Odi.Pet — Can Dostunun Yaşam Platformu',
+  title: 'Odi — Can Dostunun Yaşam Platformu',
   description: 'Can Dostunun Yaşam Platformu',
   manifest: '/manifest.json',
   appleWebApp: {
@@ -36,9 +36,9 @@ export const metadata: Metadata = {
     apple: '/brand/app-icons/odi-icon-180.png',
   },
   openGraph: {
-    title: 'Odi.Pet — Can Dostunun Yaşam Platformu',
+    title: 'Odi — Can Dostunun Yaşam Platformu',
     description: 'Can Dostunun Yaşam Platformu',
-    siteName: 'Odi.Pet',
+    siteName: 'Odi',
     locale: 'tr_TR',
     type: 'website',
     images: [
@@ -46,13 +46,13 @@ export const metadata: Metadata = {
         url: '/generated/odi-og-image-1200x630.jpg',
         width: 1200,
         height: 630,
-        alt: 'Odi.Pet — Can Dostunun Yaşam Platformu',
+        alt: 'Odi — Can Dostunun Yaşam Platformu',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Odi.Pet — Can Dostunun Yaşam Platformu',
+    title: 'Odi — Can Dostunun Yaşam Platformu',
     description: 'Can Dostunun Yaşam Platformu',
     images: ['/generated/odi-og-image-1200x630.jpg'],
   },

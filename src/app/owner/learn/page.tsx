@@ -6,7 +6,7 @@ import LearnClient from './LearnClient';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'Bilgi ve Rehber | Odi.Pet',
+  title: 'Bilgi ve Rehber | Odi',
   description: 'Petinizin sağlığı, bakımı ve mutlu yaşamı için güvenilir bilgiler.'
 };
 

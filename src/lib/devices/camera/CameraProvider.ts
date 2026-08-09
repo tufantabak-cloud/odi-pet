@@ -30,7 +30,7 @@ export interface CameraBrandConfig {
 }
 
 export const SUPPORTED_CAMERA_BRANDS: CameraBrandConfig[] = [
-  { id: 'odipet', name: 'Odi.Pet Akıllı Kamera', requiresOAuth: false, requiresRtspUrl: false },
+  { id: 'odipet', name: 'Odi Akıllı Kamera', requiresOAuth: false, requiresRtspUrl: false },
   { id: 'xiaomi', name: 'Xiaomi (Mi Home)', requiresOAuth: true, requiresRtspUrl: false },
   { id: 'tplink', name: 'TP-Link Tapo', requiresOAuth: true, requiresRtspUrl: false },
   { id: 'rtsp', name: 'Diğer (RTSP / ONVIF)', requiresOAuth: false, requiresRtspUrl: true }

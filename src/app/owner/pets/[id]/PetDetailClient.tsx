@@ -33,6 +33,8 @@ import { useDismissedMicroTasks } from '@/hooks/useDismissedMicroTasks'
 import { PetTaskModals, TaskModalType } from '@/components/pets/PetTaskModals'
 import ParasitePlanCompletionModal from '@/components/pets/ParasitePlanCompletionModal'
 import ConfirmModal from '@/components/ui/ConfirmModal'
+import FloatingSOS from '@/components/FloatingSOS'
+
 
 import { getPlanDisplayCategory } from '@/lib/plans/utils'
 import { getTurkishGenitiveSuffix } from '@/lib/pets/utils'
@@ -1549,8 +1551,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                   
                   {/* SOL SÜTUN (Masaüstü: lg:col-span-7) */}
                   <div className="lg:col-span-7 flex flex-col gap-4">
-                    {/* Paylaş & Ekip */}
-                    <div>
+                    {/* Paylaş & Ekip / Acil Durum */}
+                    <div className="grid grid-cols-2 gap-3">
                       <button
                         type="button"
                         onClick={() => setIsShareModalOpen(true)}
@@ -1559,6 +1561,16 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                         <Share2 size={18} className="text-primary" />
                         <span className="text-sm font-bold text-text-primary">Paylaş & Ekip</span>
                       </button>
+                      <FloatingSOS
+                        fullWidth={true}
+                        petId={pet.id}
+                        petName={pet.name}
+                        vetPhone={(pet as any).vet_phone ?? undefined}
+                        vetName={pet.vet_name ?? undefined}
+                        sosContacts={pet.sos_contacts}
+                        onLostReport={() => setLostWizardOpen(true)}
+                        onMarkFound={handleMarkFound}
+                      />
                     </div>
 
                     {/* 3. Bugün */}

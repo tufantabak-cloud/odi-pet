@@ -621,7 +621,7 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
 
         {!taskToEdit && (
           <p className="text-[13px] text-text-secondary mb-2 leading-relaxed">
-            Odi.Pet Akıllı Asistan sizin için en uygun tekrarları ve hatırlatıcıları otomatik ayarlar.
+            Odi Akıllı Asistan sizin için en uygun tekrarları ve hatırlatıcıları otomatik ayarlar.
           </p>
         )}
 

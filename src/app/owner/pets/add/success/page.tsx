@@ -163,7 +163,7 @@ function SuccessContent() {
             </div>
             
             <p className="text-[13px] text-text-primary font-medium leading-relaxed mb-3">
-              Odi.Pet&apos;in temel amacı <strong className="text-primary">{petName}</strong>&apos;in aşı tarihlerini, parazit damlalarını ve veteriner kontrollerini zamanı geldiğinde size anlık hatırlatmaktır.
+              Odi&apos;nin temel amacı <strong className="text-primary">{petName}</strong>&apos;in aşı tarihlerini, parazit damlalarını ve veteriner kontrollerini zamanı geldiğinde size anlık hatırlatmaktır.
             </p>
 
             <div className="p-3 bg-white/80 rounded-xl border border-amber-500/20 text-xs text-amber-900 font-semibold space-y-1.5">

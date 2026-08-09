@@ -430,7 +430,7 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
               </div>
 
               <p className="text-xs text-purple-900 leading-relaxed max-w-sm font-medium">
-                İkinci kullanıcı telefon kamerasını veya <strong>Odi.Pet Akıllı Tarayıcıyı</strong> bu QR koda tuttuğunda anında <strong>{petName}</strong> dostunuzun ekibine yetkili olarak katılır.
+                İkinci kullanıcı telefon kamerasını veya <strong>Odi Akıllı Tarayıcıyı</strong> bu QR koda tuttuğunda anında <strong>{petName}</strong> dostunuzun ekibine yetkili olarak katılır.
               </p>
 
               <div className="flex gap-2 w-full max-w-xs mt-1">

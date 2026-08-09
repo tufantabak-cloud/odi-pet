@@ -679,7 +679,7 @@ export default function PlanManagementTab({
                       type="text"
                       value={formData.display_name}
                       onChange={(e) => setFormData({ ...formData, display_name: e.target.value, plan_name: e.target.value })}
-                      placeholder="Örn: Odi Pet Pro Plus"
+                      placeholder="Örn: Odi Pro Plus"
                       required
                       className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
                     />

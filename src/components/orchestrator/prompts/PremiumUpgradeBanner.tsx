@@ -26,7 +26,7 @@ export default function PremiumUpgradeBanner({
   return (
     <div className="fixed inset-x-0 bottom-24 z-40 px-4 animate-in slide-in-from-bottom-8 duration-500">
       <SmartCardBanner
-        title={(uiConfig?.title as string) || 'Odi.Pet Premium'}
+        title={(uiConfig?.title as string) || 'Odi Premium'}
         message={(uiConfig?.message as string) || 'AI destekli sağlık önerileri, öncelikli destek ve daha fazlası.'}
         ctaText={(uiConfig?.ctaText as string) || 'Premium\'a Geç'}
         icon="✨"

@@ -83,7 +83,7 @@ export default function PwaEnforcer() {
     const isIosDevice = /iphone|ipad|ipod/i.test(lowerUa);
     const isSafariBrowser = /^((?!chrome|android|crios|fxios|opera|biambrowser).)*safari/i.test(lowerUa);
     const inAppDetected = /fban|fbav|instagram|micromessenger|line\/|twitter|telegram|linkedin|crios|fxios|wv/i.test(lowerUa) || (isIosDevice && !isSafariBrowser);
-    
+
     setIsInApp(inAppDetected);
 
     if (isIosDevice) {
@@ -96,8 +96,8 @@ export default function PwaEnforcer() {
     }
 
     // 3. Standalone (PWA installed) check
-    const isStandalone = 
-      window.matchMedia("(display-mode: standalone)").matches || 
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
       (window.navigator as any).standalone === true;
 
     if (!isStandalone) {
@@ -175,7 +175,7 @@ export default function PwaEnforcer() {
         <div className="absolute bottom-[-10%] right-[-10%] w-[300px] h-[300px] rounded-full bg-pink-600/20 blur-[80px] pointer-events-none" />
 
         <div className="relative w-full max-w-md bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-modal p-6 md:p-8 shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-300">
-          
+
           <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-violet-500 to-primary p-4 flex items-center justify-center mb-6 shadow-[0_8px_24px_rgba(108,92,231,0.3)] animate-bounce">
             <svg className="w-full h-full text-white" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
@@ -185,7 +185,7 @@ export default function PwaEnforcer() {
           <h1 className="text-2xl font-bold bg-gradient-to-r from-white via-violet-200 to-white bg-clip-text text-transparent mb-2">
             Bildirimler Gerekli!
           </h1>
-          
+
           <p className="text-[14px] text-zinc-400 mb-8 leading-relaxed max-w-[290px]">
             Odi.Pet'in aşı, tedavi ve önemli sağlık hatırlatmalarını anında alabilmeniz için bildirim izinlerini açmanız <strong>zorunludur</strong>.
           </p>
@@ -268,9 +268,9 @@ export default function PwaEnforcer() {
       <div className="absolute bottom-[-10%] right-[-10%] w-[300px] h-[300px] rounded-full bg-pink-600/20 blur-[80px] pointer-events-none" />
 
       <div className="relative w-full max-w-md bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-modal p-6 md:p-8 shadow-2xl flex flex-col items-center text-center">
-        
+
         <div className="w-24 h-24 rounded-modal mb-6 shadow-[0_8px_32px_rgba(0,0,0,0.5)] animate-in fade-in zoom-in duration-500 flex items-center justify-center bg-white overflow-hidden p-1">
-          <Image src="/brand/app-icons/odi-icon-512.png" alt="Odi.Pet Logo" width={96} height={96} className="w-full h-full object-contain rounded-[20px]" />
+          <Image src="/brand/app-icons/odi-icon-512.png" alt="Odi Logo" width={96} height={96} className="w-full h-full object-contain rounded-[20px]" />
         </div>
 
         {showPostInstallGuide ? (
@@ -288,7 +288,7 @@ export default function PwaEnforcer() {
             <h1 className="text-2xl font-bold bg-gradient-to-r from-white via-violet-200 to-white bg-clip-text text-transparent mb-2">
               Odi.Pet'e Hoş Geldiniz!
             </h1>
-            
+
             <p className="text-[14px] text-zinc-400 mb-6 leading-relaxed max-w-[280px]">
               Uygulamamızı kullanmaya devam edebilmek için cihazınıza yüklemeniz gerekmektedir.
             </p>
@@ -340,7 +340,7 @@ export default function PwaEnforcer() {
                     </p>
                   </div>
                 </div>
-                
+
                 <p className="text-[12px] text-center text-zinc-500 italic mt-2 mb-4">
                   En iyi deneyim için Safari önerilir. Ekleme bittikten sonra aşağıdaki butona basabilirsiniz.
                 </p>

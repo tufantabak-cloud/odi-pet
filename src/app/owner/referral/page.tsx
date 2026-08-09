@@ -5,8 +5,8 @@ import { defaultRepository } from '@/lib/features/entitlement/repository'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 export const metadata = {
-  title: 'Arkadaşını Davet Et — Odi.Pet',
-  description: 'Referral kodunla arkadaşlarını Odi.Pet\'e davet et, Pro süreni uzat!',
+  title: 'Arkadaşını Davet Et — Odi',
+  description: 'Referral kodunla arkadaşlarını Odi\'ye davet et, Pro süreni uzat!',
 }
 
 export default async function ReferralPage() {

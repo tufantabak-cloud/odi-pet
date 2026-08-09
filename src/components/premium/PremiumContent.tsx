@@ -27,7 +27,7 @@ export function PremiumContent({ featureState, onUpgrade, featureName }: Premium
 
   if (featureState.state === 'COMING_SOON') {
     title = 'Çok Yakında!';
-    description = `Bu ${featureName ? `(${featureName}) ` : ''}özellik şu an geliştirme aşamasındadır. Çok yakında Odi.Pet'te sizlerle olacak.`;
+    description = `Bu ${featureName ? `(${featureName}) ` : ''}özellik şu an geliştirme aşamasındadır. Çok yakında Odi'de sizlerle olacak.`;
     showButton = false;
     icon = (
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -56,9 +56,9 @@ export function PremiumContent({ featureState, onUpgrade, featureName }: Premium
       <p className="text-text-secondary text-sm leading-relaxed max-w-sm">
         {description}
       </p>
-      
+
       {showButton && (
-        <button 
+        <button
           onClick={onUpgrade}
           className="mt-4 w-full h-11 bg-primary text-white font-bold rounded-2xl active:scale-[0.98] transition-all hover:scale-[1.02] shadow-sm flex justify-center items-center"
         >

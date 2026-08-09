@@ -225,7 +225,7 @@ export async function POST(req: NextRequest) {
         .single();
 
       return NextResponse.json({
-        message: `İçerik Odi.Pet yayın ilkelerine uygun bulunmadı: ${classification.rejectionReason}`,
+        message: `İçerik Odi yayın ilkelerine uygun bulunmadı: ${classification.rejectionReason}`,
         discovered: rejDisc
       }, { status: 200 });
     }

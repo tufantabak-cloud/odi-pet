@@ -91,7 +91,7 @@ export function ReproductiveForecastCard({ forecast, loading, error, onRetry }: 
           <div className="flex gap-3">
             <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
             <p className="text-sm text-blue-800 leading-relaxed">
-              Kedilerde kızgınlık dönemleri mevsim, yaşam ortamı ve bireysel özelliklere göre değişebilir. Odi.Pet aktif belirtileri takip eder ancak kesin bir sonraki tarih üretmez.
+              Kedilerde kızgınlık dönemleri mevsim, yaşam ortamı ve bireysel özelliklere göre değişebilir. Odi aktif belirtileri takip eder ancak kesin bir sonraki tarih üretmez.
             </p>
           </div>
         </div>
@@ -125,7 +125,7 @@ export function ReproductiveForecastCard({ forecast, loading, error, onRetry }: 
             ) : (
               <>
                 <p className="text-sm text-gray-700 mb-2 font-medium">Henüz kişisel tahmin oluşturmak için yeterli döngü kaydı yok.</p>
-                <p className="text-xs text-gray-500">Her yeni dönemi kaydettikçe tahmin Odi.Pet tarafından otomatik olarak geliştirilecektir.</p>
+                <p className="text-xs text-gray-500">Her yeni dönemi kaydettikçe tahmin Odi tarafından otomatik olarak geliştirilecektir.</p>
               </>
             )}
           </div>

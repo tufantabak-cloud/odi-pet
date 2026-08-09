@@ -45,14 +45,14 @@ export async function sendCaregiverInviteEmail({
 
   const actionText = isExistingUser
     ? `<strong>${inviterName}</strong> seni <strong>${petName}</strong> isimli dostumuzun bakım ekibine (<strong>${roleLabel}</strong>) davet etti!<br/><br/>Uygulamayı açtığında davet kabul penceresini doğrudan görebilir veya aşağıdaki bağlantıdan hemen kabul edebilirsin.`
-    : `<strong>${inviterName}</strong> seni Odi.Pet üzerinde <strong>${petName}</strong> isimli dostumuzun bakım ekibine (<strong>${roleLabel}</strong>) davet etti!<br/><br/>Aşağıdaki bağlantıdan hemen kaydolup daveti kabul ederek <strong>${petName}</strong>'nin bakım yolculuğuna katılabilirsin.`
+    : `<strong>${inviterName}</strong> seni Odi üzerinde <strong>${petName}</strong> isimli dostumuzun bakım ekibine (<strong>${roleLabel}</strong>) davet etti!<br/><br/>Aşağıdaki bağlantıdan hemen kaydolup daveti kabul ederek <strong>${petName}</strong>'nin bakım yolculuğuna katılabilirsin.`
 
   const buttonLabel = isExistingUser ? 'Daveti Kabul Et →' : 'Üye Ol ve Daveti Kabul Et →'
 
   const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 20px; background-color: #f5f3ff; border-radius: 20px;">
       <div style="text-align: center; padding: 20px 0 10px 0;">
-        <h1 style="color: #7c3aed; margin: 0; font-size: 24px; font-weight: 800;">🐾 Odi.Pet</h1>
+        <h1 style="color: #7c3aed; margin: 0; font-size: 24px; font-weight: 800;">🐾 Odi</h1>
         <p style="color: #6b7280; font-size: 13px; margin-top: 4px;">Evcil Hayvan Yaşam Platformu</p>
       </div>
 

@@ -91,8 +91,8 @@ export default function ReferralClient({
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
-          title: 'Odi.Pet — Can Dostunun Yaşam Platformu',
-          text: 'Tüylü dostun için her şey bir arada! 🐾 Benimle Odi.Pet\'i dene ve +30 gün Odi Pro kazan:',
+          title: 'Odi — Can Dostunun Yaşam Platformu',
+          text: 'Tüylü dostun için her şey bir arada! 🐾 Benimle Odi\'yi dene ve +30 gün Odi Pro kazan:',
           url: referralUrl,
         })
       } catch {
@@ -103,9 +103,9 @@ export default function ReferralClient({
     }
   }
 
-  const shareText = encodeURIComponent(`Tüylü dostun için her şey bir arada! 🐾 Benimle Odi.Pet'i dene ve +30 gün Odi Pro kazan: ${referralUrl}`)
+  const shareText = encodeURIComponent(`Tüylü dostun için her şey bir arada! 🐾 Benimle Odi'yi dene ve +30 gün Odi Pro kazan: ${referralUrl}`)
   const waUrl = `https://wa.me/?text=${shareText}`
-  const tgUrl = `https://t.me/share/url?url=${encodeURIComponent(referralUrl)}&text=${encodeURIComponent('Odi.Pet ile evcil hayvan bakımını keşfet +30 Gün Odi Pro kazan 🐾')}`
+  const tgUrl = `https://t.me/share/url?url=${encodeURIComponent(referralUrl)}&text=${encodeURIComponent('Odi ile evcil hayvan bakımını keşfet +30 Gün Odi Pro kazan 🐾')}`
   const smsUrl = `sms:?body=${shareText}`
 
   const progressPercent = Math.min(100, Math.round((daysLeft / 365) * 100))

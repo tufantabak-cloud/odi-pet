@@ -8,7 +8,7 @@ import TakvimClient from './TakvimClient'
 export const dynamic = 'force-dynamic'
 
 export const metadata = {
-  title: 'Takvim | Odi.Pet',
+  title: 'Takvim | Odi',
   description: 'Tüm can dostlarının aşı, bakım ve randevu takvimi tek yerde.',
 }
 

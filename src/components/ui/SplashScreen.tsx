@@ -106,7 +106,7 @@ export default function SplashScreen() {
         <div className="relative w-full h-full max-w-[85vw] max-h-[75vh] sm:max-w-[70vw] sm:max-h-[80vh]">
           <Image
             src="/brand/logos/splash/odi-splash-logo.png"
-            alt="Odi.Pet — Can Dostunun Yaşam Platformu"
+            alt="Odi — Can Dostunun Yaşam Platformu"
             fill
             sizes="(max-width: 768px) 85vw, 70vw"
             className="object-contain object-center"
@@ -124,7 +124,7 @@ export default function SplashScreen() {
         <div className="relative w-full h-full max-w-[85vw] max-h-[75vh] sm:max-w-[70vw] sm:max-h-[80vh]">
           <Image
             src="/brand/logos/splash/odi-splash-logo.svg"
-            alt="Odi.Pet — Logo"
+            alt="Odi — Logo"
             fill
             sizes="(max-width: 768px) 85vw, 70vw"
             className="object-contain object-center"

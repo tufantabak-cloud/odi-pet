@@ -86,7 +86,7 @@ export default function ClinicRegisterPage() {
             />
           </Link>
           <h1 className="text-3xl font-black text-text-primary tracking-tighter">Klinik Kaydı</h1>
-          <p className="text-sm font-bold text-text-secondary/80 mt-1 uppercase tracking-widest text-2xs">Odi.Pet Veteriner Ağına Katılın</p>
+          <p className="text-sm font-bold text-text-secondary/80 mt-1 uppercase tracking-widest text-2xs">Odi Veteriner Ağına Katılın</p>
         </div>
 
         <form className="flex flex-col gap-5" onSubmit={handleSubmit}>

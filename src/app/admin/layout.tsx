@@ -8,7 +8,7 @@ import AdminSidebarNav from './AdminSidebarNav'
 import { ShieldCheck, UserCheck, ArrowLeft, LogOut } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Admin Console — ODI Pet',
+  title: 'Admin Console — Odi',
   robots: 'noindex, nofollow', // Never index admin pages
 }
 

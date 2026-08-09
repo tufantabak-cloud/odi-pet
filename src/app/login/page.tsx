@@ -159,7 +159,7 @@ function LoginForm() {
 
             {/* ── Logo & Başlık ── */}
             <div className="flex flex-col items-center mb-6">
-              <Image src="/brand/app-icons/odi-icon-512.png" alt="Odi.Pet Logo" width={72} height={72} className="mb-2 h-10 w-10" priority />
+              <Image src="/brand/app-icons/odi-icon-512.png" alt="Odi Logo" width={72} height={72} className="mb-2 h-10 w-10" priority />
               <p className="text-caption text-text-secondary font-medium">Can Dost Yaşam Platformu</p>
             </div>
 

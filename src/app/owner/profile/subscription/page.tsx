@@ -256,7 +256,7 @@ export default async function SubscriptionPage({
             Ödeme yöntemi
           </h2>
           <p className="mt-2 text-xs leading-relaxed text-text-secondary font-medium">
-            Kart bilgilerin Odi.Pet tarafından tutulmaz. Ekleme ve güncelleme
+            Kart bilgilerin Odi tarafından tutulmaz. Ekleme ve güncelleme
             işlemleri güvenli Stripe alanında yapılır.
           </p>
           {hasBillingAccount && (

@@ -6,7 +6,7 @@ import Link from 'next/link';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'İçerik Yönetimi | Odi.Pet Admin',
+  title: 'İçerik Yönetimi | Odi Admin',
   description: 'Kişiselleştirilmiş içerik ve rehber yönetimi'
 };
 

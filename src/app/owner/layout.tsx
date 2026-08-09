@@ -84,7 +84,7 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
               priority
             />
           </div>
-          <span className="text-[18px] font-black text-text-primary tracking-tighter hidden sm:block">Odi.Pet</span>
+          <span className="text-[18px] font-black text-text-primary tracking-tighter">Odi</span>
           <span className="text-[12px] font-bold text-[var(--color-primary)] tracking-tight">
             Can Dost Yaşam Platformu
           </span>

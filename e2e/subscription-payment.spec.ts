@@ -30,7 +30,7 @@ test.describe('Abonelik ve ödeme güvenli akışı', () => {
     ).toBeVisible()
     await expect(page.getByText('Odi Free').first()).toBeVisible()
     await expect(
-      page.getByText('Kart bilgilerin Odi.Pet tarafından tutulmaz.')
+      page.getByText('Kart bilgilerin Odi tarafından tutulmaz.')
     ).toBeVisible()
     await expect(page.getByText('4242')).toHaveCount(0)
     await expect(page.getByText(/INV-2026/)).toHaveCount(0)

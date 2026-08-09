@@ -107,7 +107,7 @@ export function getBoosterRules(vaccineCode: string): BoosterInfo {
         'Dünya standartlarında bu aşının biyolojik koruyuculuğu 3 yıla kadar ' +
         'sürebilir. Ancak Türkiye\'deki yasal prosedürler, seyahat kuralları ' +
         've pansiyon/otel kabullerinde yıllık aşı tekrarı aranmaktadır. ' +
-        'Odi.Pet takviminizi yasal mevzuata uygun olarak yıllık planlar.',
+        'Odi takviminizi yasal mevzuata uygun olarak yıllık planlar.',
     };
   }
 
@@ -433,7 +433,7 @@ export async function generateVaccinationPlan(
 
     if (records) {
       existingRecords = records.map(r => ({ vaccine_code: r.vaccine_code, status: r.status }));
-      
+
       for (const r of records) {
         if (r.status === 'completed' && r.administered_at) {
           const existing = lastRecordMap[r.vaccine_code];

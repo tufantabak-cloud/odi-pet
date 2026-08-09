@@ -155,7 +155,7 @@ export default async function OwnerDashboard() {
                 Hoş Geldiniz!
               </h2>
               <p className="text-[13px] text-[var(--color-text-secondary)] mb-6 max-w-[250px] mx-auto leading-relaxed">
-                Başlamak için ilk dostunuzu ekleyin ve Odi.Pet dünyasını keşfedin.
+                Başlamak için ilk dostunuzu ekleyin ve Odi dünyasını keşfedin.
               </p>
               <Link href="/owner/pets/add" data-testid="add-first-pet-button" className="h-12 w-full max-w-[200px] flex items-center justify-center bg-[var(--color-primary)] text-white rounded-[18px] font-800 text-[14px] hover:scale-[1.02] active:scale-[0.98] transition-transform shadow-md shadow-primary/20">
                 İlk Dostumu Ekle 🐾
