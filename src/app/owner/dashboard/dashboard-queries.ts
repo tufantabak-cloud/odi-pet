@@ -119,34 +119,28 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
           console.error('[dashboard] profile fetch failed:', profileError.message)
         }
 
-        /* ── Pets (KRİTİK) ──────────────────────────────── */
-        let petMembershipPetIds: string[] = []
+        /* ── Pets (KRİTİK - Kanonik + Owner + Legacy fallback) ───────── */
+        const [{ data: petMemberships }, { data: legacyMembers }, { data: ownedPets }] = await Promise.all([
+          supabase
+            .from('pet_memberships')
+            .select('pet_id')
+            .eq('profile_id', uid)
+            .eq('status', 'active'),
+          supabase
+            .from('pet_members')
+            .select('pet_id')
+            .eq('profile_id', uid),
+          supabase
+            .from('pets')
+            .select('id')
+            .eq('owner_id', uid),
+        ])
 
-        const { data: petMemberships, error: petMembershipsError } = await supabase
-          .from('pet_memberships')
-          .select('pet_id')
-          .eq('profile_id', uid)
-          .eq('status', 'active')
+        const activeMembershipIds = (petMemberships ?? []).map((m: any) => m.pet_id).filter(Boolean)
+        const legacyIds = (legacyMembers ?? []).map((m: any) => m.pet_id).filter(Boolean)
+        const ownedIds = (ownedPets ?? []).map((p: any) => p.id).filter(Boolean)
 
-        if (petMembershipsError) {
-          console.warn(
-            '[dashboard] pet_memberships fetch failed, falling back to legacy pet_members / owner_id:',
-            petMembershipsError.message
-          )
-
-          const [{ data: legacyMembers }, { data: ownedPets }] = await Promise.all([
-            supabase.from('pet_members').select('pet_id').eq('profile_id', uid),
-            supabase.from('pets').select('id').eq('owner_id', uid),
-          ])
-
-          const legacyIds = (legacyMembers ?? []).map((m: any) => m.pet_id)
-          const ownedIds = (ownedPets ?? []).map((p: any) => p.id)
-          petMembershipPetIds = Array.from(new Set([...legacyIds, ...ownedIds]))
-        } else {
-          petMembershipPetIds = Array.from(
-            new Set((petMemberships ?? []).map((petMembership) => petMembership.pet_id))
-          )
-        }
+        const petMembershipPetIds = Array.from(new Set([...activeMembershipIds, ...legacyIds, ...ownedIds]))
 
         const petResult = petMembershipPetIds.length === 0
           ? { data: [] as DashboardPet[], error: null }
