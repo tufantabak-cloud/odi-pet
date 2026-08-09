@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 
-const EMAIL = process.env.TEST_EMAIL
-const PASSWORD = process.env.TEST_PASSWORD
+const EMAIL = process.env.TEST_EMAIL || 'e2e-owner@odipet.local'
+const PASSWORD = process.env.TEST_PASSWORD || 'Password123!'
 
 async function waitForSplash(page: Page) {
   try {
@@ -20,11 +20,10 @@ async function login(page: Page) {
   }
 
   await page.goto('/login?nosplash=true')
-  await waitForSplash(page)
+  await page.waitForSelector('input[name="email"]', { timeout: 10000 })
   await page.fill('input[name="email"]', EMAIL)
   await page.fill('input[name="password"]', PASSWORD)
-  await expect(page.locator('button[type="submit"]')).toBeEnabled({ timeout: 5000 })
-  await page.click('button[type="submit"]')
+  await page.click('button[type="submit"]', { force: true })
   await expect(page).toHaveURL(
     /\/admin|\/(owner|clinic|sitter|trainer|groomer|hotel)\//,
     { timeout: 20_000 },

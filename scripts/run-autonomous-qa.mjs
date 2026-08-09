@@ -143,6 +143,7 @@ const playwrightArgs = [
   'test',
   ...targetFiles,
   `--reporter=json,html`,
+  ...(process.env.PLAYWRIGHT_PROJECT ? [`--project=${process.env.PLAYWRIGHT_PROJECT}`] : []),
 ]
 
 const envForPlaywright = {
