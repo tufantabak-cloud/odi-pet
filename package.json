@@ -34,6 +34,9 @@
     "test:ux": "playwright test tests/ux-persona-flow.spec.ts --headed",
     "test:ux:report": "playwright show-report",
     "test:all": "npm run test:unit && npm run test:integration && npm run test:db && npm run test:e2e",
+    "qa": "node scripts/run-autonomous-qa.mjs",
+    "qa:smoke": "node scripts/run-autonomous-qa.mjs --smoke",
+    "qa:regression": "node scripts/run-autonomous-qa.mjs --regression",
     "illustration:new": "node scripts/create-illustration-cli.mjs"
   },
   "dependencies": {

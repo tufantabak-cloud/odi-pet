@@ -64,11 +64,15 @@ function LoginForm() {
   useEffect(() => {
     setHydrated(true)
     const checkSession = async () => {
-      const supabase = createBrowserSupabaseClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        router.refresh()
-        router.push('/')
+      try {
+        const supabase = createBrowserSupabaseClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          router.refresh()
+          router.push('/')
+        }
+      } catch {
+        // Ignored: login form will render normally if session check fails
       }
     }
     checkSession()

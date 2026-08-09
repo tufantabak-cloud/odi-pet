@@ -8,7 +8,7 @@ const TOTAL_SPLASH_DURATION_MS = 3000;
 const FADE_OUT_DURATION_MS = 500;
 
 export default function SplashScreen() {
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [phase, setPhase] = useState<1 | 2>(1);
 
@@ -21,9 +21,9 @@ export default function SplashScreen() {
         window.location.search.includes("nosplash=true");
 
       if (alreadySeen || isTestEnv) {
-        setIsVisible(false);
         return;
       }
+      setIsVisible(true);
     }
 
     // Faz 1 -> Faz 2 geçişi (1000ms)

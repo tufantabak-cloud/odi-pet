@@ -124,6 +124,7 @@ export function PetSlider({ pets, onActiveChange }: { pets: Pet[], onActiveChang
             return (
               <div
                 key={pet.id}
+                data-testid="pet-card"
                 ref={(el) => { cardRefs.current[index] = el }}
                 className="relative flex-shrink-0 flex flex-col cursor-pointer transition-all duration-300 ease-out active:scale-[0.98]"
                 style={{

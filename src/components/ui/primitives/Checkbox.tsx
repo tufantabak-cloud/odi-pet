@@ -15,7 +15,6 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(function Chec
   const checkboxId = id || props.name
   return (
     <label
-      htmlFor={checkboxId}
       className="inline-flex items-center gap-2 cursor-pointer select-none py-3 -my-3" // 44x44 dokunma alanı için dikey padding
     >
       <input

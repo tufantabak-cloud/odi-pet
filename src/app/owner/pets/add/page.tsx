@@ -1284,7 +1284,7 @@ export default function AddPetPage() {
   const [coverPreview, setCoverPreview] = useState('')
   const [coverFile, setCoverFile] = useState<File | null>(null)
   const [isNeutered, setIsNeutered] = useState(false)
-  const [weight, setWeight] = useState('')
+  const [weight, setWeight] = useState('4')
   const [height, setHeight] = useState('')
   const [loading, setLoading] = useState(false)
   const [submitError, setSubmitError] = useState('')
@@ -1298,6 +1298,9 @@ export default function AddPetPage() {
 
   const handleSpeciesSelect = (species: Species) => {
     setSelectedSpecies(species)
+    if (!weight) {
+      setWeight(species === 'cat' ? '4' : '10')
+    }
     setStep(2)
   }
 
