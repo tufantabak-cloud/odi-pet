@@ -83,7 +83,7 @@ export default function SplashScreen() {
 
   return (
     <div
-      className={`fixed inset-0 z-[99999] bg-[#480376] transition-opacity duration-500 ease-out ${
+      className={`fixed inset-0 z-[99999] bg-[#3b0764] transition-opacity duration-500 ease-out ${
         isFadingOut ? "opacity-0 pointer-events-none" : "opacity-100"
       } cursor-pointer`}
       role="button"
