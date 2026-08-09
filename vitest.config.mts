@@ -24,6 +24,7 @@ export default defineConfig({
       '**/node_modules/**',
       '**/.next/**',
       '**/.git/**',
+      '**/Odi.Pet/**',
       'e2e',
       '.claude',
       'brain',

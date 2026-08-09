@@ -25,9 +25,24 @@ vi.mock('@/lib/supabase/server', () => ({
   createAdminSupabaseClient: () => createFakeSupabase(state.db, state.user),
 }))
 
-const hasPetCapabilityMock = vi.fn()
+const hasPetCapabilityMock = vi.fn().mockResolvedValue(true)
 vi.mock('@/lib/pets/access', () => ({
   hasPetCapability: (...args: unknown[]) => hasPetCapabilityMock(...args),
+}))
+
+vi.mock('@/lib/features/entitlement/engine', () => ({
+  checkFeatureAccess: async ({ featureKey }: { featureKey: string }) => {
+    if (state.failCountForTable === 'pet_gallery') {
+      throw new Error('quota_check_failed')
+    }
+    if (featureKey === 'gallery_capacity') {
+      const count = Array.isArray(state.db.pet_gallery) ? state.db.pet_gallery.length : 0
+      if (count >= 5) {
+        return { allowed: false, reason: 'quota_exceeded', currentTier: 'free' }
+      }
+    }
+    return { allowed: true, currentTier: 'free' }
+  },
 }))
 
 const { POST: evaluatePOST } = await import('./evaluate/route')

@@ -142,7 +142,13 @@ export async function POST(request: Request) {
         }
 
         // Quota check via Premium Engine
-        const access = await checkFeatureAccess({ userId: user.id, featureKey: 'gallery_capacity' })
+        let access
+        try {
+          access = await checkFeatureAccess({ userId: user.id, featureKey: 'gallery_capacity' })
+        } catch (quotaErr) {
+          console.error('[Mutation Router] Quota check error:', quotaErr)
+          return await fail('quota_check_failed', 500)
+        }
         
         if (!access.allowed) {
           // Yetim dosya temizligi istemci tarafinda 403 yanitiyla tetiklenir.
