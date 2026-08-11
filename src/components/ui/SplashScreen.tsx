@@ -97,40 +97,36 @@ export default function SplashScreen() {
         }
       }}
     >
-      {/* Faz 2 — Kusursuz Ortalı & Taşmasız OPOS Splash Görseli (SVG — PNG yerine renk uyumu için) */}
+      {/* Faz 2 — Tam ekran SVG (object-cover → CSS bg asla görünmez, renk farkı sıfır) */}
       <div
-        className={`absolute inset-0 flex items-center justify-center p-6 sm:p-12 transition-opacity duration-500 ease-in-out ${
+        className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${
           phase === 2 ? "opacity-100" : "opacity-0"
         }`}
       >
-        <div className="relative w-full h-full max-w-[85vw] max-h-[75vh] sm:max-w-[70vw] sm:max-h-[80vh]">
-          <Image
-            src="/brand/logos/splash/odi-splash-logo.svg"
-            alt="Odi — Can Dostunun Yaşam Platformu"
-            fill
-            sizes="(max-width: 768px) 85vw, 70vw"
-            className="object-contain object-center"
-            priority
-          />
-        </div>
+        <Image
+          src="/brand/logos/splash/odi-splash-logo.svg"
+          alt="Odi — Can Dostunun Yaşam Platformu"
+          fill
+          sizes="100vw"
+          className="object-cover object-center"
+          priority
+        />
       </div>
 
-      {/* Faz 1 — Kusursuz Ortalı & Taşmasız OPOS Vektörel Splash Görseli (SVG) */}
+      {/* Faz 1 — Tam ekran SVG (aynı kaynak, geçiş sırasında renk tutarlılığı) */}
       <div
-        className={`absolute inset-0 flex items-center justify-center p-6 sm:p-12 transition-opacity duration-500 ease-in-out ${
+        className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${
           phase === 1 ? "opacity-100" : "opacity-0"
         }`}
       >
-        <div className="relative w-full h-full max-w-[85vw] max-h-[75vh] sm:max-w-[70vw] sm:max-h-[80vh]">
-          <Image
-            src="/brand/logos/splash/odi-splash-logo.svg"
-            alt="Odi — Logo"
-            fill
-            sizes="(max-width: 768px) 85vw, 70vw"
-            className="object-contain object-center"
-            priority
-          />
-        </div>
+        <Image
+          src="/brand/logos/splash/odi-splash-logo.svg"
+          alt="Odi — Logo"
+          fill
+          sizes="100vw"
+          className="object-cover object-center"
+          priority
+        />
       </div>
     </div>
   );
