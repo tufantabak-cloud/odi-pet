@@ -97,9 +97,9 @@ export default function SplashScreen() {
         }
       }}
     >
-      {/* Faz 2 — Tam ekran SVG (object-cover → CSS bg asla görünmez, renk farkı sıfır) */}
+      {/* Logo içeriği — SVG artık transparan, tek renk yüzeyi CSS bg-[#3b0764] */}
       <div
-        className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${
+        className={`absolute inset-0 flex items-center justify-center transition-opacity duration-500 ease-in-out ${
           phase === 2 ? "opacity-100" : "opacity-0"
         }`}
       >
@@ -108,14 +108,13 @@ export default function SplashScreen() {
           alt="Odi — Can Dostunun Yaşam Platformu"
           fill
           sizes="100vw"
-          className="object-cover object-center"
+          className="object-contain object-center"
           priority
         />
       </div>
 
-      {/* Faz 1 — Tam ekran SVG (aynı kaynak, geçiş sırasında renk tutarlılığı) */}
       <div
-        className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${
+        className={`absolute inset-0 flex items-center justify-center transition-opacity duration-500 ease-in-out ${
           phase === 1 ? "opacity-100" : "opacity-0"
         }`}
       >
@@ -124,7 +123,7 @@ export default function SplashScreen() {
           alt="Odi — Logo"
           fill
           sizes="100vw"
-          className="object-cover object-center"
+          className="object-contain object-center"
           priority
         />
       </div>
