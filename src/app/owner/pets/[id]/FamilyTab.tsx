@@ -125,15 +125,18 @@ export default function FamilyTab({ petId, petName, plan, initialSos }: { petId:
       })
       const data = await res.json()
       if (!res.ok) { setInviteMsg({ type: 'err', text: data.error }); return }
+
+      const isEmailWarning = inviteMode === 'email' && data.emailSent === false
+
       setInviteMsg({
-        type: 'ok',
+        type: isEmailWarning ? 'err' : 'ok',
         text: inviteMode === 'qr'
           ? 'Barkod / QR Kod başarıyla üretildi! İkinci kullanıcı okuttuğunda doğrudan yetkilendirilir.'
           : data.message
       })
       if (data.inviteLink) {
         setInviteLink(data.inviteLink)
-        setShowQrCode(true)
+        setShowQrCode(inviteMode === 'qr')
       }
       setEmail('')
       setLoaded(false)

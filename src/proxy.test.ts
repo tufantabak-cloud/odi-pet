@@ -118,7 +118,7 @@ describe('proxy erişim sınırı', () => {
     )
 
     expect(response.status).toBe(401)
-    expect(await response.json()).toEqual({ error: 'Unauthorized' })
+    expect(await response.json()).toEqual({ error: 'Unauthorized', requiresAuth: true })
   })
 
   it('API kök yolunu da session sınırında tutar', async () => {

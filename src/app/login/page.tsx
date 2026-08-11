@@ -141,7 +141,8 @@ function LoginForm() {
       }
       setSuccess(true)
       router.refresh()
-      router.replace('/')
+      const redirectTarget = searchParams.get('redirect')
+      router.replace(redirectTarget && redirectTarget.startsWith('/') ? redirectTarget : '/')
     } catch {
       setError('Sunucu bağlantı hatası. Lütfen tekrar deneyin.')
     } finally {

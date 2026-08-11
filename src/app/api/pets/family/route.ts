@@ -110,13 +110,30 @@ export async function POST(req: NextRequest) {
   })
 
   const inviteLink = emailRes.inviteLink
+  const isQrMode = email.startsWith('qr-davet-') || email.endsWith('@odipet.local')
+
+  if (!isQrMode && emailRes.emailSent === false) {
+    console.warn('[pets/family] Davet e-postası ulaştırılamadı:', { email, error: emailRes.error })
+    return NextResponse.json({
+      success: true,
+      emailSent: false,
+      invite,
+      inviteLink,
+      isExistingUser: emailRes.isExistingUser,
+      emailError: emailRes.error,
+      message: `Davet oluşturuldu ancak e-posta ulaştırılamadı (${emailRes.error || 'gönderim hatası'}). Lütfen aşağıdaki bağlantıyı kopyalayarak davet etmek istediğiniz kişiye iletin.`,
+    })
+  }
 
   return NextResponse.json({
     success: true,
+    emailSent: isQrMode ? false : true,
     invite,
     inviteLink,
     isExistingUser: emailRes.isExistingUser,
-    message: emailRes.isExistingUser
+    message: isQrMode
+      ? 'Barkod / QR Kod başarıyla üretildi!'
+      : emailRes.isExistingUser
       ? `${pet?.name ?? 'Can Dostu'}'nun bakım ekibine davet gönderildi. Kullanıcı uygulamaya girdiğinde davet penceresini görecek ve e-posta alacak.`
       : `${email} adresine üye olma ve davet kabul etme e-postası gönderildi.`,
   })

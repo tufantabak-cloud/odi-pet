@@ -40,7 +40,14 @@ export async function sendCaregiverInviteEmail({
   // Production'da daima kanonikal site URL'sini kullan (QR kodunun mobil cihazdan açılabilmesi için)
   // Dev ortamında origin header'ını kullan (local IP ile çalışabilmesi için)
   const baseUrl = (isProduction && siteUrl) ? siteUrl : (origin || siteUrl || 'http://localhost:3000')
-  const inviteLink = `${baseUrl}/invite/${inviteToken}`
+  const cleanBaseUrl = baseUrl.replace(/\/+$/, '')
+  const inviteLink = `${cleanBaseUrl}/invite/${inviteToken}`
+
+  // QR kodu davetleri sentetik e-posta (qr-davet-...@odipet.local) kullandığından e-posta gönderimi gerekmez
+  const isQrInvite = toEmail.startsWith('qr-davet-') || toEmail.endsWith('@odipet.local')
+  if (isQrInvite) {
+    return { success: true, simulated: true, isExistingUser: false, inviteLink, isQr: true, emailSent: false }
+  }
 
   // 2. Şablon Başlık ve Gövdesi
   const subject = isExistingUser
@@ -89,8 +96,10 @@ export async function sendCaregiverInviteEmail({
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) {
     console.log('[Email Simulation] No RESEND_API_KEY found. Link:', inviteLink)
-    return { success: true, simulated: true, isExistingUser, inviteLink }
+    return { success: true, simulated: true, isExistingUser, inviteLink, emailSent: false }
   }
+
+  const fromAddress = process.env.RESEND_FROM_EMAIL || 'Odi.Pet <onboarding@resend.dev>'
 
   try {
     const res = await fetch('https://api.resend.com/emails', {
@@ -100,7 +109,7 @@ export async function sendCaregiverInviteEmail({
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Odi.Pet <onboarding@resend.dev>',
+        from: fromAddress,
         to: [toEmail],
         subject,
         html,
@@ -109,13 +118,14 @@ export async function sendCaregiverInviteEmail({
 
     const resJson = await res.json()
     if (!res.ok) {
-      console.warn('[Resend Email Notice]', resJson.message || resJson)
-      return { success: true, emailSent: false, isExistingUser, inviteLink }
+      const errorMsg = resJson.message || resJson.error || resJson.name || 'Resend email failed'
+      console.error('[Resend Email Error]', { status: res.status, error: errorMsg, to: toEmail })
+      return { success: false, emailSent: false, isExistingUser, inviteLink, error: errorMsg }
     }
 
-    return { success: true, emailSent: true, isExistingUser, inviteLink }
+    return { success: true, emailSent: true, isExistingUser, inviteLink, messageId: resJson.id }
   } catch (err) {
     console.error('[Resend Email Exception]', err)
-    return { success: true, emailSent: false, isExistingUser, inviteLink }
+    return { success: false, emailSent: false, isExistingUser, inviteLink, error: 'E-posta servisine ulaşılamadı.' }
   }
 }

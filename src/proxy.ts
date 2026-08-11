@@ -108,7 +108,10 @@ export async function proxy(request: NextRequest) {
     }
 
     if (isApiRequest) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json(
+        { error: 'Unauthorized', requiresAuth: true },
+        { status: 401 }
+      )
     }
 
     const loginUrl = request.nextUrl.clone()
