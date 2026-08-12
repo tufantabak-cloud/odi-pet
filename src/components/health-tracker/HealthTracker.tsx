@@ -6,6 +6,7 @@ import { CategoryCard, toCategoryKey } from './CategoryCard';
 import { CategoryGroup, FlowEvent, TaskRow } from './types';
 import { buildPlanYapHref } from './lib/plan-link';
 import { buildCoverageIntervals, computeExpiryDateLabel, addDaysToDateKey, CoverageInterval } from './lib/coverage';
+import { DeletePlanConfirmationModal } from '@/components/ui/DeletePlanConfirmationModal';
 
 interface HealthTrackerProps {
   petId: string;
@@ -93,6 +94,8 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
   const [onlyShowMissed, setOnlyShowMissed] = useState(false);
   // Artırıldığında tüm satırlar bağımsız olarak "bugün"e geri kayar
   const [resetToken, setResetToken] = useState(0);
+  const [deletingPlan, setDeletingPlan] = useState<{ id: string; title?: string; category?: string } | null>(null);
+  const [isDeletingPlanProcessing, setIsDeletingPlanProcessing] = useState(false);
 
   const todayKey = toDateKey(new Date());
   const visibleKeys = visibleDates.map(toDateKey);
@@ -126,7 +129,21 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
     onMarkDone: (id: string) => markEventStatus(id, 'done'),
     onPostpone: (id: string) => postponeEvent(id, 1),
     onEdit: onEditTask || (() => {}),
-    onDelete: deleteEvent,
+    onDelete: (id: string, event?: FlowEvent) => {
+      // KURAL 3: Plan ayrımı için öncelikli olarak event._source === 'plans' veya 'health_schedules' kullanılır.
+      // Belirsiz kaynak veya gerçekleşmiş tıbbi kayıtlar (vaccine_records_v2, parasite_records, growth_records, weight_logs vb.)
+      // KESİNLİKLE Plan Silme onay modalına BAĞLANMAZ.
+      const isPlan = event && (event._source === 'plans' || event._source === 'health_schedules');
+      if (isPlan) {
+        setDeletingPlan({
+          id,
+          title: event.taskTitle || event.title,
+          category: event.category,
+        });
+      } else {
+        deleteEvent(id);
+      }
+    },
   };
 
   /** Bir grup/alt grubun (filtre sonrası) event'leri */
@@ -276,6 +293,29 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
         <LegendDot color="bg-[#fef2f2] border border-[#fca5a5]" label="Kaçırıldı" />
         <LegendDot color="bg-[#f0fdf4] border border-[#86efac]" label="Korumada" />
       </div>
+
+      {/* Plan Silme Onay Modali (Takvim Sekmesi Entegrasyonu) */}
+      {deletingPlan && (
+        <DeletePlanConfirmationModal
+          open={!!deletingPlan}
+          title={deletingPlan.title ? `${deletingPlan.title} planını silmek istiyor musunuz?` : undefined}
+          categoryName={deletingPlan.category}
+          isDeleting={isDeletingPlanProcessing}
+          onCancel={() => {
+            if (!isDeletingPlanProcessing) setDeletingPlan(null);
+          }}
+          onConfirm={async () => {
+            if (!deletingPlan) return;
+            setIsDeletingPlanProcessing(true);
+            try {
+              await deleteEvent(deletingPlan.id);
+            } finally {
+              setIsDeletingPlanProcessing(false);
+              setDeletingPlan(null);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -385,7 +425,7 @@ function TimelineRow({
   onMarkDone: (id: string) => void;
   onPostpone: (id: string) => void;
   onEdit: (event: FlowEvent) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string, event?: FlowEvent) => void;
 }) {
   const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);

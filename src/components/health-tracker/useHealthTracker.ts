@@ -211,7 +211,11 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
       );
 
       const mergedEvents = [
-        ...(schedulesRes.data || []),
+        ...(schedulesRes.data || []).map((s: any) => ({
+          ...s,
+          _source: 'health_schedules',
+          _plan_id: s.plan_id,
+        })),
         ...(plansRes.data || [])
           .filter((p: any) => p.status !== 'cancelled')
           .filter((p: any) => !(p.category === 'parazit' && p.status === 'completed' && completedPlanIdsInParasiteRecords.has(p.id)))

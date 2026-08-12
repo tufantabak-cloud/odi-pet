@@ -33,6 +33,7 @@ import { useDismissedMicroTasks } from '@/hooks/useDismissedMicroTasks'
 import { PetTaskModals, TaskModalType } from '@/components/pets/PetTaskModals'
 import ParasitePlanCompletionModal from '@/components/pets/ParasitePlanCompletionModal'
 import ConfirmModal from '@/components/ui/ConfirmModal'
+import { DeletePlanConfirmationModal } from '@/components/ui/DeletePlanConfirmationModal'
 import FloatingSOS from '@/components/FloatingSOS'
 
 
@@ -302,6 +303,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   const [pendingCoverUrl, setPendingCoverUrl] = useState<string|null>(null)
   const [selectedPosition, setSelectedPosition] = useState<'top'|'center'|'bottom'>('center')
   const [selectedScale, setSelectedScale] = useState(1)
+  const [deletingPlan, setDeletingPlan] = useState<{ id: string; title?: string; category?: string } | null>(null)
+  const [isDeletingPlanProcessing, setIsDeletingPlanProcessing] = useState(false)
 
   async function handleSavePosition() {
     const formData = new FormData()
@@ -627,11 +630,14 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     const realPlanId = resolveRealPlanId(item);
     if (realPlanId) {
       router.push(`/owner/plan-yap/edit/${realPlanId}`);
-    } else {
-      // health_schedules kaynaklı kayıtlar için edit sayfası desteği yok; modal fallback
-      setTaskToEdit(item);
-      setTaskWizardOpen(true);
+      return;
     }
+    // Gerçekleşmiş tıbbi geçmiş kayıtları (aşı, parazit, kilo vb.) SmartTaskWizard modalı ile düzenlenemez
+    if (item?._source && item._source !== 'plans' && item._source !== 'health_schedules') {
+      return;
+    }
+    setTaskToEdit(item);
+    setTaskWizardOpen(true);
   }
 
   const handleTaskClick = (item: any) => {
@@ -928,8 +934,14 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
    * her zaman kaynak plana yönlendirilmelidir.
    */
   const resolveRealPlanId = (item: any): string | null => {
-    if (isPlanSource(item.id)) return getRealPlanId(item.id)
-    if (item._is_virtual && item._source === 'plans' && item._plan_id) return item._plan_id
+    if (!item) return null
+    if (typeof item === 'string') {
+      if (isPlanSource(item)) return getRealPlanId(item)
+      return null
+    }
+    if (item.id && isPlanSource(item.id)) return getRealPlanId(item.id)
+    if ((item._source === 'plans' || item._source === 'health_schedules') && item._plan_id) return item._plan_id
+    if (item._is_virtual && (item._source === 'plans' || item._source === 'health_schedules') && item._plan_id) return item._plan_id
     return null
   }
 
@@ -1208,7 +1220,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                     <button onClick={(e) => { e.stopPropagation(); handlePostpone(item.id) }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary-soft flex items-center gap-2 cursor-pointer"><Calendar size={16} className="w-4 h-4 text-primary" aria-hidden="true" /> 1 Gün Ertele</button>
                     <div className="border-t border-border-main/30 mx-2 my-1"/>
                     <button onClick={(e) => { e.stopPropagation(); handleEditTask(item); setActiveMenuId(null); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer"><Pencil size={16} className="w-4 h-4 text-primary" aria-hidden="true" /> Düzenle</button>
-                    <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(item.id) }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer"><X size={16} className="w-4 h-4 text-error" aria-hidden="true" /> Sil</button>
+                    <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); setDeletingPlan({ id: item.id, title: item.title || (item as any).vaccines?.name, category: getPlanDisplayCategory(item.category, item.sub_category) }); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer"><X size={16} className="w-4 h-4 text-error" aria-hidden="true" /> Sil</button>
                   </div>
                 )}
               </div>
@@ -1657,7 +1669,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                                       className="min-h-[44px] px-2 py-2 text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 rounded-xl transition-colors flex items-center justify-center gap-1 cursor-pointer">
                                       <Pencil size={14} className="w-3.5 h-3.5 text-primary" aria-hidden="true" /> Düzenle
                                     </button>
-                                    <button onClick={() => handleDeleteTask(plan.id)}
+                                    <button onClick={() => { setActiveMenuId(null); setDeletingPlan({ id: plan.id, title: plan.title || (plan as any).vaccines?.name, category: getPlanDisplayCategory(plan.category, plan.sub_category) }); }}
                                       className="min-h-[44px] px-2 py-2 text-xs font-bold text-error bg-error/10 hover:bg-error/20 rounded-xl transition-colors flex items-center justify-center gap-1 cursor-pointer">
                                       <X size={14} className="w-3.5 h-3.5 text-error" aria-hidden="true" /> Sil
                                     </button>
@@ -1807,6 +1819,29 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             router.refresh();
             setTaskWizardOpen(false);
             setTaskToEdit(null);
+          }}
+        />
+      )}
+
+      {/* Plan Silme Onay Modali (P0/P1 UX - Tıbbi Kayıt Koruma Güvenceli) */}
+      {deletingPlan && (
+        <DeletePlanConfirmationModal
+          open={!!deletingPlan}
+          title={deletingPlan.title ? `${deletingPlan.title} planını silmek istiyor musunuz?` : undefined}
+          categoryName={deletingPlan.category}
+          isDeleting={isDeletingPlanProcessing}
+          onCancel={() => {
+            if (!isDeletingPlanProcessing) setDeletingPlan(null);
+          }}
+          onConfirm={async () => {
+            if (!deletingPlan) return;
+            setIsDeletingPlanProcessing(true);
+            try {
+              await handleDeleteTask(deletingPlan.id);
+            } finally {
+              setIsDeletingPlanProcessing(false);
+              setDeletingPlan(null);
+            }
           }}
         />
       )}

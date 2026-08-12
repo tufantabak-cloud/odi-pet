@@ -6,6 +6,7 @@ import {
   getPetAgeStageFromBirthDate,
   type PetAgeStageKey,
 } from '@/lib/pets/age-stage';
+import { findBreedByIdOrName } from '@/lib/pets/breedsMaster';
 
 export type LifeStage = PetAgeStageKey;
 
@@ -30,6 +31,14 @@ export type MatchingReasonType =
  */
 export function normalizeBreedKey(breedName: string | null | undefined): string {
   if (!breedName) return 'mixed';
+  const found = findBreedByIdOrName(breedName);
+  if (found) {
+    if (found.id.includes('poodle')) return 'poodle';
+    if (found.id.includes('bulldog')) return found.id.includes('french') ? 'french_bulldog' : 'bulldog';
+    if (found.id === 'other_cat' || found.id === 'other_dog') return 'mixed';
+    return found.id;
+  }
+
   const clean = breedName.toLowerCase().trim();
 
   if (clean.includes('poodle') || clean.includes('pudel') || clean.includes('kaniş')) {
@@ -96,10 +105,14 @@ export function getBreedTraits(
 
   const breedTraitsMap: Record<string, BreedTrait[]> = {
     poodle: ['curly_hair', 'small_breed'],
+    toy_poodle: ['curly_hair', 'small_breed'],
+    miniature_poodle: ['curly_hair', 'small_breed'],
+    standard_poodle: ['curly_hair', 'large_breed'],
     golden_retriever: ['long_hair', 'large_breed'],
     labrador_retriever: ['large_breed'],
     german_shepherd: ['long_hair', 'large_breed'],
     french_bulldog: ['brachycephalic', 'small_breed'],
+    english_bulldog: ['brachycephalic', 'medium_breed' as any],
     pug: ['brachycephalic', 'small_breed'],
     rottweiler: ['large_breed'],
     shih_tzu: ['long_hair', 'brachycephalic', 'small_breed'],
