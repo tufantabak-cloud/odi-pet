@@ -64,18 +64,18 @@ export type ReproductiveForecast = {
 
 export async function generateReproductiveForecastWithDate(
   petId: string, 
-  supabase: any,
+  supabase: import('@supabase/supabase-js').SupabaseClient,
   today: Date = new Date()
 ): Promise<ReproductiveForecast> {
   const { data: pet } = await supabase.from('pets').select('species, gender, is_neutered').eq('id', petId).single();
   if (!pet) {
-    return calculateReproductiveForecast({ pet: null as any, cycles: [], observations: [], tests: [] }, today);
+    return calculateReproductiveForecast({ pet: null as unknown as { species: 'dog' | 'cat'; gender: 'female' | 'male'; is_neutered: boolean }, cycles: [], observations: [], tests: [] }, today);
   }
 
   const { data: cycles } = await supabase.from('pet_estrus_cycles').select('id, start_date, end_date').eq('pet_id', petId).order('start_date', { ascending: true });
   
-  let observations: any[] = [];
-  let tests: any[] = [];
+  let observations: unknown[] = [];
+  let tests: unknown[] = [];
   
   const allCycles = cycles || [];
   let activeCycleId = null;
@@ -91,12 +91,12 @@ export async function generateReproductiveForecastWithDate(
       .select('observation_date, symptom_code, cycle_id')
       .eq('cycle_id', activeCycleId)
       .order('observation_date', { ascending: true });
-    observations = (obs || []).map((o: any) => ({ ...o, cycle_id: o.cycle_id || activeCycleId }));
+    observations = (obs || []).map((o: Record<string, unknown>) => ({ ...o, cycle_id: o.cycle_id || activeCycleId }));
 
     const { data: tsts } = await supabase.from('pet_reproductive_tests')
       .select('id, sampled_at, cycle_id')
       .eq('cycle_id', activeCycleId);
-    tests = (tsts || []).map((t: any) => ({ ...t, cycle_id: t.cycle_id || activeCycleId }));
+    tests = (tsts || []).map((t: Record<string, unknown>) => ({ ...t, cycle_id: t.cycle_id || activeCycleId }));
   }
 
   const input: ForecastInput = {
