@@ -489,7 +489,7 @@ export async function generateVaccinationPlan(
         vaccine_name: t.vaccine_name,
         species: t.species,
         is_active: t.is_active,
-        is_core: t.mandatory_level === 'core',
+        is_core: t.is_core,
         dose_count: t.dose_count,
         recurrence_days: t.recurrence_days,
         has_annual_booster: t.has_annual_booster,

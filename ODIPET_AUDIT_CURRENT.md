@@ -1,16 +1,16 @@
-# Odi.Pet Audit - Mevcut Durum
+ï»¿# Odi.Pet Audit - Mevcut Durum
 
-## Açık Sorunlar
+## AÃ§Ä±k Sorunlar
 
-Şu an için kritik bir açık sorun bulunmamaktadır.
+Åu an iÃ§in kritik bir aÃ§Ä±k sorun bulunmamaktadÄ±r.
 
 ## Tamamlanan Temizlikler
 
-1. **Yasal Zorunlu Aşı (Kuduz) Boşluğu**: ÇÖZÜLDÜ. vaccine_protocols tablosunda DOG_RABIES ve CAT_RABIES satırları is_core = true olarak tanımlı olduğu için algoritma tarafından otomatik olarak plana alınıyor. Sigorta uygunluk hesabındaki boşluk kapandı.
+1. **Yasal Zorunlu AÅŸÄ± (Kuduz) BoÅŸluÄŸu**: Ã‡Ã–ZÃœLDÃœ. vaccine_protocols tablosunda DOG_RABIES ve CAT_RABIES satÄ±rlarÄ± is_core = true olarak tanÄ±mlÄ± olduÄŸu iÃ§in algoritma tarafÄ±ndan otomatik olarak plana alÄ±nÄ±yor. Sigorta uygunluk hesabÄ±ndaki boÅŸluk kapandÄ±.
 
-2. **Mimari Boşluk - Karma Aşı Modellemesi**: ÇÖZÜLDÜ. DOG_CDV artık tek bir 'Gençlik Hastalığı (DHPPi) Protokolü' satırı olarak birleştirildi. Kullanıcıya aynı enjeksiyon için 3 ayrı görev gösterme sorunu giderildi.
+2. **Mimari BoÅŸluk - Karma AÅŸÄ± Modellemesi**: Ã‡Ã–ZÃœLDÃœ. DOG_CDV artÄ±k tek bir 'GenÃ§lik HastalÄ±ÄŸÄ± (DHPPi) ProtokolÃ¼' satÄ±rÄ± olarak birleÅŸtirildi. KullanÄ±cÄ±ya aynÄ± enjeksiyon iÃ§in 3 ayrÄ± gÃ¶rev gÃ¶sterme sorunu giderildi.
 
-3. **Legacy Aşı Tablolarının Silinmesi (DROP)**:
+3. **Legacy AÅŸÄ± TablolarÄ±nÄ±n Silinmesi (DROP)**:
    * **Tarih**: 2026-07-02
    * **Uygulanan Migration**: [20260702145549_drop_legacy_vaccine_tables.sql](file:///c:/Odi.Pet/supabase/migrations/20260702145549_drop_legacy_vaccine_tables.sql)
-   * **Detay**: Eski public.vaccines ve public.vaccine_records tabloları (tüm ilişkileriyle/cascade) production veritabanından tamamen silindi ve temizlendi.
+   * **Detay**: Eski public.vaccines ve public.vaccine_records tablolarÄ± (tÃ¼m iliÅŸkileriyle/cascade) production veritabanÄ±ndan tamamen silindi ve temizlendi.
