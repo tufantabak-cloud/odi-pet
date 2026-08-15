@@ -2,9 +2,9 @@ name: Architecture Guard & CI Quality Gate
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, phase18-wip ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, phase18-wip ]
 
 jobs:
   architecture-guard:
