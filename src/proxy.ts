@@ -30,8 +30,8 @@ function validateSameOrigin(request: NextRequest): NextResponse | null {
 function buildCsp(nonce: string): string {
   // In production: strict nonce-based CSP (no unsafe-eval, no unsafe-inline for scripts)
   // In development: same policy but delivered as Report-Only so React eval() works
-  // 'unsafe-inline' is kept as a fallback for older browsers that ignore nonce
-  return `default-src 'self'; script-src 'self' 'nonce-${nonce}' 'unsafe-inline' https://challenges.cloudflare.com https://unpkg.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' blob: data: https://*.supabase.co https://*.tile.openstreetmap.org; font-src 'self' data:; connect-src 'self' blob: http://127.0.0.1:* http://localhost:* https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://api.resend.com https://*.tile.openstreetmap.org https://tile.openstreetmap.org; frame-src 'self' https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;`
+  // Savunma Katmanı (Defense-in-Depth): https://odi.pet ve sub-domain'leri harici/edge push payload'ları ve CDN görselleri için img-src ve connect-src'ye eklenmiştir.
+  return `default-src 'self'; script-src 'self' 'nonce-${nonce}' 'unsafe-inline' https://challenges.cloudflare.com https://unpkg.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' blob: data: https://*.supabase.co https://*.tile.openstreetmap.org https://odi.pet https://*.odi.pet; font-src 'self' data:; connect-src 'self' blob: http://127.0.0.1:* http://localhost:* https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://api.resend.com https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://odi.pet https://*.odi.pet; frame-src 'self' https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;`
 }
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production'

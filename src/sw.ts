@@ -117,8 +117,8 @@ self.addEventListener('push', (event: PushEvent) => {
 
   const options: NotificationOptions & { data: NotificationData } = {
     body,
-    icon: payload.icon ?? 'https://odi.pet/brand/app-icons/odi-icon-256.png',
-    badge: payload.badge ?? 'https://odi.pet/brand/app-icons/odi-icon-256.png',
+    icon: payload.icon ?? '/brand/app-icons/odi-icon-256.png',
+    badge: payload.badge ?? '/brand/app-icons/odi-icon-256.png',
     tag: notificationTag,
     renotify: false, // Prevents lock screen cluttering for same task
     data: {
