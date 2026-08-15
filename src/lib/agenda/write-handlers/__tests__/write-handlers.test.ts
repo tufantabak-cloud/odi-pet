@@ -169,7 +169,7 @@ describe('Agenda Write Handlers & Auto-Matching (ADIM 4B)', () => {
 
     const context = {
       ...mockContext,
-      supabase: mockSupabase
+      supabase: mockSupabase as any
     };
 
     const input = {
@@ -179,7 +179,7 @@ describe('Agenda Write Handlers & Auto-Matching (ADIM 4B)', () => {
       administered_at: '2026-07-23T10:00:00Z'
     };
 
-    const { result, matchResult } = await processRecordCreation('asi', input, context);
+    const { result, matchResult } = await processRecordCreation('asi', input as any, context);
 
     expect(matchResult.status).toBe('exact');
     expect(result.recordId).toBe('vac_rec_123');

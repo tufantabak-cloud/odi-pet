@@ -45,7 +45,7 @@ describe('Request Idempotency, Calendar Year & TOCTOU Protection (ADIM 4B.3)', (
       { pet_id: 'pet_123', vaccine_code: 'DOG_RABIES', vaccine_name: 'Kuduz Aşısı', administered_at: '2026-07-23T10:00:00Z' },
       matchCandidate,
       { status: 'resolved', nextDueAt: '2027-07-23T10:00:00Z', source: 'protocol' },
-      { ...mockContext, supabase: mockSupabase }
+      { ...mockContext, supabase: mockSupabase as any }
     );
 
     expect(mockSupabase.rpc).toHaveBeenCalledWith('complete_vaccine_plan_and_record', expect.objectContaining({
@@ -85,7 +85,7 @@ describe('Request Idempotency, Calendar Year & TOCTOU Protection (ADIM 4B.3)', (
       { pet_id: 'pet_123', parasite_type: 'internal', administered_at: '2026-07-23T10:00:00Z', protection_duration_days: 30 },
       matchCandidate,
       { status: 'resolved', nextDueAt: '2026-08-22T10:00:00Z', source: 'duration' },
-      { ...mockContext, supabase: mockSupabase }
+      { ...mockContext, supabase: mockSupabase as any }
     );
 
     expect(mockSupabase.rpc).toHaveBeenCalledWith('complete_parasite_plan_and_record', expect.objectContaining({

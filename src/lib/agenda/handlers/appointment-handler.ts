@@ -7,6 +7,9 @@ import {
   AgendaDateRange,
   AgendaActionDescriptor,
   AgendaDisplayMetadata,
+  AgendaActionType,
+  AgendaPlanInput,
+  AgendaRecordInput,
   deriveDateKey
 } from '../types';
 
@@ -43,7 +46,7 @@ export class AppointmentReadHandler implements AgendaReadHandler {
       displayMetadata: {
         title: plan.sub_type || 'Veteriner Randevusu',
         note: plan.note,
-        extraData: plan.extra_data
+        extraData: (plan.extra_data as Record<string, unknown>) || undefined
       },
       actionDescriptors: [
         { type: 'complete', targetSource: 'plan', targetId: plan.id, enabled: plan.status === 'active' },
@@ -54,7 +57,7 @@ export class AppointmentReadHandler implements AgendaReadHandler {
   }
 
   normalizeActualRecord(record: AgendaRecordInput, context: AgendaNormalizationContext): PetAgendaEvent {
-    const appAt = record.scheduled_at || record.appointment_date || record.created_at;
+    const appAt = record.scheduled_at || record.appointment_date || record.created_at || null;
     const dateKey = deriveDateKey(appAt, context.timeZone);
 
     return {

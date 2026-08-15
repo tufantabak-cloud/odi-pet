@@ -18,7 +18,8 @@ export class VaccineReadHandler implements AgendaReadHandler {
   readonly category = 'asi';
 
   normalizePlan(plan: AgendaPlanInput, context: AgendaNormalizationContext): PetAgendaEvent {
-    const vCode = plan.extra_data?.vaccine_code || plan.extra_data?.vaccine?.code || 'CUSTOM';
+    const extra = (plan.extra_data as Record<string, any>) || {};
+    const vCode = extra.vaccine_code || extra.vaccine?.code || 'CUSTOM';
     const isCompletedChild = !!plan.parent_plan_id;
     const isMainSeries = !plan.parent_plan_id && !!plan.repeat_rule;
     const scheduledAt = plan.scheduled_at || null;
@@ -85,10 +86,10 @@ export class VaccineReadHandler implements AgendaReadHandler {
       fallbackIdentity: `${baseIdentity}_${dateKey}`,
       mainPlanId: record.plan_id || null,
       parentPlanId: null,
-      scheduledAt: administeredAt,
-      occurrenceScheduledAt: administeredAt,
-      actualAt: administeredAt,
-      nextDueAt: record.next_due_date || record.due_at || null,
+      scheduledAt: administeredAt || null,
+      occurrenceScheduledAt: administeredAt || null,
+      actualAt: administeredAt || null,
+      nextDueAt: (record.next_due_date || record.due_at || null) as string | null,
       dateKey,
       sourceStatus: record.status || 'completed',
       lifecycleType: 'medical_record',
@@ -167,11 +168,12 @@ export class VaccineReadHandler implements AgendaReadHandler {
   }
 
   private getDisplayMetadataFromPlan(plan: AgendaPlanInput): AgendaDisplayMetadata {
+    const extra = (plan.extra_data as Record<string, any>) || {};
     return {
-      title: getPlanDisplayTitle(plan),
+      title: getPlanDisplayTitle(plan as any),
       note: plan.note,
-      vaccineCode: plan.extra_data?.vaccine_code || plan.extra_data?.vaccine?.code,
-      extraData: plan.extra_data
+      vaccineCode: extra.vaccine_code || extra.vaccine?.code,
+      extraData: (plan.extra_data as Record<string, unknown>) || undefined
     };
   }
 }

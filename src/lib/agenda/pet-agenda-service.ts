@@ -1,10 +1,11 @@
-import { AgendaPlanInput, AgendaRecordInput,  PetAgendaEvent, AgendaNormalizationContext, deriveDateKey } from './types';
+import { AgendaPlanInput, AgendaRecordInput, PetAgendaEvent, AgendaNormalizationContext, AgendaDateRange, deriveDateKey } from './types';
 import { agendaReadRegistry } from './registry';
 
 export function buildStableIdentity(category: string, subType: string, extraData?: Record<string, unknown>): string {
   const cat = (category || '').toLowerCase().trim();
   const sub = (subType || '').toLowerCase().trim();
-  const vCode = extraData?.vaccine_code || extraData?.vaccine?.code;
+  const extra = (extraData as Record<string, any>) || {};
+  const vCode = extra.vaccine_code || extra.vaccine?.code;
 
   if (cat === 'asi' && vCode) {
     return `asi:${vCode.toUpperCase()}`;
@@ -26,8 +27,8 @@ export function buildPetAgendaEvents(
   const todayStr = deriveDateKey(new Date().toISOString(), timeZone);
   const linkedPlanIds = new Set<string>();
 
-  rawVaccines.forEach(v => { if (v.plan_id) linkedPlanIds.add(v.plan_id); });
-  rawParasites.forEach(p => { if (p.plan_id) linkedPlanIds.add(p.plan_id); });
+  rawVaccines.forEach(v => { if ((v as any).plan_id) linkedPlanIds.add((v as any).plan_id); });
+  rawParasites.forEach(p => { if ((p as any).plan_id) linkedPlanIds.add((p as any).plan_id); });
 
   const context: AgendaNormalizationContext = {
     todayStr,
@@ -37,67 +38,72 @@ export function buildPetAgendaEvents(
 
   const events: PetAgendaEvent[] = [];
 
-  // 1. Vaccine Records v2
+  // 1. Vaccine Records V2
+  const vaccineHandler = agendaReadRegistry.getHandler('asi');
   rawVaccines.forEach(v => {
-    const handler = agendaReadRegistry.getHandlerForRecord('vaccine_records_v2');
-    events.push(handler.normalizeActualRecord(v, context));
+    events.push(vaccineHandler.normalizeActualRecord(v, context));
   });
 
   // 2. Parasite Records
+  const parasiteHandler = agendaReadRegistry.getHandler('parazit');
   rawParasites.forEach(p => {
-    const handler = agendaReadRegistry.getHandlerForRecord('parasite_records');
-    events.push(handler.normalizeActualRecord(p, context));
+    events.push(parasiteHandler.normalizeActualRecord(p, context));
   });
 
   // 3. Growth Records
+  const growthHandler = agendaReadRegistry.getHandler('kilo');
   rawGrowth.forEach(g => {
-    const handler = agendaReadRegistry.getHandlerForRecord('growth_records');
-    events.push(handler.normalizeActualRecord(g, context));
+    events.push(growthHandler.normalizeActualRecord(g, context));
   });
 
   // 4. Appointments
+  const apptHandler = agendaReadRegistry.getHandler('saglik');
   rawAppointments.forEach(a => {
-    const handler = agendaReadRegistry.getHandlerForRecord('appointments');
-    events.push(handler.normalizeActualRecord(a, context));
+    events.push(apptHandler.normalizeActualRecord(a, context));
   });
 
-  // 5. Nutrition Logs
-  rawNutrition.forEach(n => {
-    const handler = agendaReadRegistry.getHandlerForRecord('nutrition_logs');
-    events.push(handler.normalizeActualRecord(n, context));
-  });
-
-  // 6. Legacy Medications
+  // 5. Health Medications (Legacy)
+  const medHandler = agendaReadRegistry.getHandler('ilac');
   rawMedications.forEach(m => {
-    const handler = agendaReadRegistry.getHandlerForRecord('health_medications');
-    events.push(handler.normalizeActualRecord(m, context));
+    events.push(medHandler.normalizeActualRecord(m, context));
   });
 
-  // 7. Plans Table
+  // 6. Nutrition Logs
+  const nutHandler = agendaReadRegistry.getHandler('beslenme');
+  rawNutrition.forEach(n => {
+    events.push(nutHandler.normalizeActualRecord(n, context));
+  });
+
+  // 7. Canonical Plans & Occurrences
+  const range: AgendaDateRange = {
+    rangeStartStr: deriveDateKey(new Date(Date.now() - 30 * 86400000).toISOString(), timeZone),
+    rangeEndStr: deriveDateKey(new Date(Date.now() + 60 * 86400000).toISOString(), timeZone)
+  };
+
   rawPlans.forEach(p => {
-    // Filter cancelled plans
-    if (p.status === 'cancelled') return;
+    if (p.parent_plan_id) return; // Completed occurrences handled via status/link
 
     // Filter plans linked to medical records
     if (linkedPlanIds.has(p.id) && p.status === 'completed') return;
 
-    const handler = agendaReadRegistry.getHandlerForRecord('plans', p.category, p.sub_type, p.extra_data);
+    const handler = agendaReadRegistry.getHandlerForRecord('plans', p.category || undefined, p.sub_type || undefined, (p.extra_data as Record<string, unknown>) || undefined);
     events.push(handler.normalizePlan(p, context));
   });
 
   // 8. Legacy Health Schedules (if un-covered)
   const knownStableIds = new Set(events.map(e => `${e.stableIdentity}_${e.dateKey}`));
   rawSchedules.forEach(s => {
-    const sDate = deriveDateKey(s.due_date, timeZone);
-    const handler = agendaReadRegistry.getHandlerForRecord('health_schedules', s.schedule_type || 'saglik', s.title, s.metadata);
+    const sAny = s as any;
+    const sDate = deriveDateKey(sAny.due_date || s.scheduled_at, timeZone);
+    const handler = agendaReadRegistry.getHandlerForRecord('health_schedules', sAny.schedule_type || 'saglik', s.title || undefined, sAny.metadata || undefined);
     const baseEvt = handler.normalizePlan({
       id: s.id,
-      category: s.schedule_type || 'saglik',
+      category: sAny.schedule_type || 'saglik',
       sub_type: s.title || 'Görev',
-      scheduled_at: s.due_date,
-      status: s.completed ? 'completed' : 'active',
-      extra_data: s.metadata,
-      note: s.notes
+      scheduled_at: sAny.due_date || s.scheduled_at,
+      status: sAny.completed ? 'completed' : 'active',
+      extra_data: sAny.metadata || s.extra_data,
+      note: s.note
     }, context);
 
     if (!knownStableIds.has(`${baseEvt.stableIdentity}_${sDate}`)) {

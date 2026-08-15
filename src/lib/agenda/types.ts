@@ -169,7 +169,7 @@ export interface AgendaPlanInput {
   product?: string | null;
   item?: string | null;
   amount?: string | null;
-  code?: string | null; category?: string | null; dosage_string?: string | null; dose?: string | null; name?: string | null; medication?: string | null; unit?: string | null; [key: string]: unknown;
+  code?: string | null; category?: string | null; dosage_string?: string | null; dose?: string | null; name?: string | null; medication?: string | null; unit?: string | null; [key: string]: any;
 }
 
 export interface AgendaRecordInput {
@@ -184,5 +184,5 @@ export interface AgendaRecordInput {
   measured_at?: string | null;
   administered_at?: string | null;
   weight?: number | null;
-  code?: string | null; category?: string | null; dosage_string?: string | null; dose?: string | null; name?: string | null; medication?: string | null; unit?: string | null; [key: string]: unknown;
+  code?: string | null; category?: string | null; dosage_string?: string | null; dose?: string | null; name?: string | null; medication?: string | null; unit?: string | null; [key: string]: any;
 }

@@ -7,6 +7,9 @@ import {
   AgendaDateRange,
   AgendaActionDescriptor,
   AgendaDisplayMetadata,
+  AgendaActionType,
+  AgendaPlanInput,
+  AgendaRecordInput,
   deriveDateKey
 } from '../types';
 import { getPlanDisplayTitle } from '@/lib/plans/utils';
@@ -27,7 +30,8 @@ export class MedicationReadHandler implements AgendaReadHandler {
     else if (dateKey < context.todayStr) displayStatus = 'overdue';
     else if (dateKey === context.todayStr) displayStatus = 'today';
 
-    const medName = plan.extra_data?.medication?.name || plan.sub_type || 'İlaç';
+    const extra = (plan.extra_data as Record<string, any>) || {};
+    const medName = extra.medication?.name || plan.sub_type || 'İlaç';
     const baseIdentity = `ilac:${medName.toLowerCase().replace(/\s+/g, '_')}`;
     const mainPlanId = isCompletedChild ? plan.parent_plan_id : plan.id;
     const occurrenceIdentity = occurrenceScheduledAt ? `${mainPlanId}_${occurrenceScheduledAt}` : null;
@@ -57,10 +61,10 @@ export class MedicationReadHandler implements AgendaReadHandler {
       isVirtual: false,
       isActionable: plan.status === 'active',
       displayMetadata: {
-        title: getPlanDisplayTitle(plan),
+        title: getPlanDisplayTitle(plan as any),
         note: plan.note,
-        dosageString: plan.extra_data?.medication?.dosage_string || plan.extra_data?.medication?.dose || '1 Doz',
-        extraData: plan.extra_data
+        dosageString: extra.medication?.dosage_string || extra.medication?.dose || '1 Doz',
+        extraData: (plan.extra_data as Record<string, unknown>) || undefined
       },
       actionDescriptors: [
         { type: 'complete', targetSource: 'plan', targetId: plan.id, enabled: plan.status === 'active' },

@@ -74,13 +74,14 @@ export async function generateReproductiveForecastWithDate(
 
   const { data: cycles } = await supabase.from('pet_estrus_cycles').select('id, start_date, end_date').eq('pet_id', petId).order('start_date', { ascending: true });
   
-  let observations: unknown[] = [];
-  let tests: unknown[] = [];
+  let observations: ForecastInput['observations'] = [];
+  let tests: ForecastInput['tests'] = [];
   
   const allCycles = cycles || [];
   let activeCycleId = null;
+
   for (const c of allCycles) {
-    if (!c.end_date && new Date(c.start_date) <= today) {
+    if (!c.end_date) {
       activeCycleId = c.id;
       break;
     }
@@ -91,12 +92,12 @@ export async function generateReproductiveForecastWithDate(
       .select('observation_date, symptom_code, cycle_id')
       .eq('cycle_id', activeCycleId)
       .order('observation_date', { ascending: true });
-    observations = (obs || []).map((o: Record<string, unknown>) => ({ ...o, cycle_id: o.cycle_id || activeCycleId }));
+    observations = (obs || []).map((o) => ({ ...o, cycle_id: o.cycle_id || activeCycleId })) as ForecastInput['observations'];
 
     const { data: tsts } = await supabase.from('pet_reproductive_tests')
       .select('id, sampled_at, cycle_id')
       .eq('cycle_id', activeCycleId);
-    tests = (tsts || []).map((t: Record<string, unknown>) => ({ ...t, cycle_id: t.cycle_id || activeCycleId }));
+    tests = (tsts || []).map((t) => ({ ...t, cycle_id: t.cycle_id || activeCycleId })) as ForecastInput['tests'];
   }
 
   const input: ForecastInput = {

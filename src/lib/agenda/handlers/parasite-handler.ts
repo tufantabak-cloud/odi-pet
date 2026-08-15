@@ -7,6 +7,9 @@ import {
   AgendaDateRange,
   AgendaActionDescriptor,
   AgendaDisplayMetadata,
+  AgendaActionType,
+  AgendaPlanInput,
+  AgendaRecordInput,
   deriveDateKey
 } from '../types';
 import { getPlanDisplayTitle } from '@/lib/plans/utils';
@@ -15,7 +18,8 @@ export class ParasiteReadHandler implements AgendaReadHandler {
   readonly category = 'parazit';
 
   normalizePlan(plan: AgendaPlanInput, context: AgendaNormalizationContext): PetAgendaEvent {
-    const pType = plan.extra_data?.product?.category || plan.sub_type || 'custom';
+    const extra = (plan.extra_data as Record<string, any>) || {};
+    const pType = extra.product?.category || plan.sub_type || 'custom';
     const isCompletedChild = !!plan.parent_plan_id;
     const isMainSeries = !plan.parent_plan_id && !!plan.repeat_rule;
     const scheduledAt = plan.scheduled_at || null;
@@ -57,10 +61,10 @@ export class ParasiteReadHandler implements AgendaReadHandler {
       isVirtual: false,
       isActionable: plan.status === 'active',
       displayMetadata: {
-        title: getPlanDisplayTitle(plan),
+        title: getPlanDisplayTitle(plan as any),
         note: plan.note,
         parasiteType: pType,
-        extraData: plan.extra_data
+        extraData: (plan.extra_data as Record<string, unknown>) || undefined
       },
       actionDescriptors: [
         { type: 'complete', targetSource: 'plan', targetId: plan.id, enabled: plan.status === 'active' },
@@ -97,10 +101,10 @@ export class ParasiteReadHandler implements AgendaReadHandler {
       fallbackIdentity: `${baseIdentity}_${dateKey}`,
       mainPlanId: record.plan_id || null,
       parentPlanId: null,
-      scheduledAt: administeredAt,
-      occurrenceScheduledAt: administeredAt,
-      actualAt: administeredAt,
-      nextDueAt,
+      scheduledAt: administeredAt || null,
+      occurrenceScheduledAt: administeredAt || null,
+      actualAt: administeredAt || null,
+      nextDueAt: nextDueAt || null,
       dateKey,
       sourceStatus: 'completed',
       lifecycleType: 'medical_record',

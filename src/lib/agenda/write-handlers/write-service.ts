@@ -39,7 +39,7 @@ export async function processRecordCreation(
           distanceMinutes: 0,
           repeatRule: selectedPlan.repeat_rule,
           displayDate: selectedPlan.scheduled_at.split('T')[0],
-          rawPlan: selectedPlan
+          rawPlan: selectedPlan as unknown as Record<string, unknown>
         },
         reason: 'user_selected_plan'
       };
@@ -53,7 +53,7 @@ export async function processRecordCreation(
   let result: WriteResult;
 
   if (matchResult.status === 'exact') {
-    const nextDue = await handler.calculateNextDue(input, matchResult.candidate.rawPlan);
+    const nextDue = await handler.calculateNextDue(input, matchResult.candidate.rawPlan as unknown as PlanRecord);
     result = await handler.persistLinkedRecord(input, matchResult.candidate, nextDue, context);
   } else {
     result = await handler.persistIndependentRecord(input, context);

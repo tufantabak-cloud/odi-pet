@@ -59,8 +59,8 @@ describe('ADIM 5 — UI & API Entegrasyon Testleri', () => {
 
     const res = await processRecordCreation(
       'asi',
-      { pet_id: 'pet_123', vaccine_code: 'DOG_RABIES', vaccine_name: 'Kuduz', administered_at: '2026-07-23T10:00:00Z' },
-      { supabase: mockSupabase, petId: 'pet_123', userId: 'user_123', timeZone: 'Europe/Istanbul', idempotencyKey: '77777777-7777-7777-7777-777777777777' }
+      { pet_id: 'pet_123', vaccine_code: 'DOG_RABIES', vaccine_name: 'Kuduz', administered_at: '2026-07-23T10:00:00Z' } as any,
+      { supabase: mockSupabase as any, petId: 'pet_123', userId: 'user_123', timeZone: 'Europe/Istanbul', idempotencyKey: '77777777-7777-7777-7777-777777777777' }
     );
 
     expect(res.result.recordId).toBe('rec_indep_123');
@@ -92,8 +92,8 @@ describe('ADIM 5 — UI & API Entegrasyon Testleri', () => {
 
     const res = await processRecordCreation(
       'asi',
-      { pet_id: 'pet_123', vaccine_code: 'DOG_RABIES', vaccine_name: 'Kuduz', administered_at: '2026-07-23T10:00:00Z' },
-      { supabase: mockSupabase, petId: 'pet_123', userId: 'user_123', timeZone: 'Europe/Istanbul', idempotencyKey: '77777777-7777-7777-7777-777777777777' }
+      { pet_id: 'pet_123', vaccine_code: 'DOG_RABIES', vaccine_name: 'Kuduz', administered_at: '2026-07-23T10:00:00Z' } as any,
+      { supabase: mockSupabase as any, petId: 'pet_123', userId: 'user_123', timeZone: 'Europe/Istanbul', idempotencyKey: '77777777-7777-7777-7777-777777777777' }
     );
 
     expect(res.result.recordId).toBe('rec_existing_456');

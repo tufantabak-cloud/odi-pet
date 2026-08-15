@@ -7,6 +7,9 @@ import {
   AgendaDateRange,
   AgendaActionDescriptor,
   AgendaDisplayMetadata,
+  AgendaActionType,
+  AgendaPlanInput,
+  AgendaRecordInput,
   deriveDateKey
 } from '../types';
 
@@ -52,7 +55,7 @@ export class NutritionLogReadHandler implements AgendaReadHandler {
       displayMetadata: {
         title: plan.sub_type || 'Mama Saati',
         note: plan.note,
-        extraData: plan.extra_data
+        extraData: (plan.extra_data as Record<string, unknown>) || undefined
       },
       actionDescriptors: [
         { type: 'complete', targetSource: 'plan', targetId: plan.id, enabled: plan.status === 'active' },

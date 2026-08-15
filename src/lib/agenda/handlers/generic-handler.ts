@@ -7,6 +7,9 @@ import {
   AgendaDateRange,
   AgendaActionDescriptor,
   AgendaDisplayMetadata,
+  AgendaActionType,
+  AgendaPlanInput,
+  AgendaRecordInput,
   deriveDateKey
 } from '../types';
 import { getPlanDisplayTitle } from '@/lib/plans/utils';
@@ -42,7 +45,7 @@ export class GenericReadHandler implements AgendaReadHandler {
       stableIdentity: baseIdentity,
       occurrenceIdentity: occurrenceScheduledAt ? `${plan.id}_${occurrenceScheduledAt}` : null,
       fallbackIdentity: `${baseIdentity}_${dateKey}`,
-      mainPlanId: isCompletedChild ? plan.parent_plan_id : plan.id,
+      mainPlanId: (isCompletedChild ? plan.parent_plan_id : plan.id) || null,
       parentPlanId: plan.parent_plan_id || null,
       scheduledAt,
       occurrenceScheduledAt,
@@ -57,9 +60,9 @@ export class GenericReadHandler implements AgendaReadHandler {
       isVirtual: false,
       isActionable: plan.status === 'active',
       displayMetadata: {
-        title: getPlanDisplayTitle(plan),
+        title: getPlanDisplayTitle(plan as any),
         note: plan.note,
-        extraData: plan.extra_data
+        extraData: (plan.extra_data as Record<string, unknown>) || undefined
       },
       actionDescriptors: [
         { type: 'complete', targetSource: 'plan', targetId: plan.id, enabled: plan.status === 'active' },

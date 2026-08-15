@@ -7,6 +7,9 @@ import {
   AgendaDateRange,
   AgendaActionDescriptor,
   AgendaDisplayMetadata,
+  AgendaActionType,
+  AgendaPlanInput,
+  AgendaRecordInput,
   deriveDateKey
 } from '../types';
 
@@ -43,7 +46,7 @@ export class GrowthMeasurementReadHandler implements AgendaReadHandler {
       displayMetadata: {
         title: plan.sub_type || 'Kilo & Boy Ölçümü',
         note: plan.note,
-        extraData: plan.extra_data
+        extraData: (plan.extra_data as Record<string, unknown>) || undefined
       },
       actionDescriptors: [
         { type: 'complete', targetSource: 'plan', targetId: plan.id, enabled: plan.status === 'active' },
@@ -55,9 +58,9 @@ export class GrowthMeasurementReadHandler implements AgendaReadHandler {
   normalizeActualRecord(record: AgendaRecordInput, context: AgendaNormalizationContext): PetAgendaEvent {
     const recAt = record.measured_at
       ? record.measured_at
-      : record.recorded_at
-        ? `${record.recorded_at}T12:00:00.000Z`
-        : record.created_at;
+      : (record as any).recorded_at
+        ? `${(record as any).recorded_at}T12:00:00.000Z`
+        : record.created_at || null;
     const dateKey = deriveDateKey(recAt, context.timeZone);
 
     return {

@@ -5,10 +5,9 @@ import {
   NextDueResult,
   PlanRecord,
   WriteContext,
-  WriteResult,
-  AgendaPlanInput,
-  AgendaRecordInput
+  WriteResult
 } from '../types';
+import { AgendaPlanInput, AgendaRecordInput } from '../../types';
 
 export class MedicationWriteHandler implements AgendaWriteHandler {
   readonly category = 'ilac';

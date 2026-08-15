@@ -65,9 +65,9 @@ export class RoutineReadHandler implements AgendaReadHandler {
       isVirtual: false,
       isActionable: plan.status === 'active',
       displayMetadata: {
-        title: getPlanDisplayTitle(plan),
+        title: getPlanDisplayTitle(plan as any),
         note: plan.note,
-        extraData: plan.extra_data
+        extraData: (plan.extra_data as Record<string, unknown>) || undefined
       },
       actionDescriptors: [
         { type: 'complete', targetSource: 'plan', targetId: plan.id, enabled: plan.status === 'active' },
@@ -89,7 +89,7 @@ export class RoutineReadHandler implements AgendaReadHandler {
 
     const rawLegacy = {
       id: mainPlan.id,
-      category: mainPlan.category,
+      category: mainPlan.category || 'rutin',
       title: baseEvt.displayMetadata.title,
       due_date: baseEvt.dateKey,
       due_time: baseEvt.scheduledAt?.split('T')[1]?.substring(0, 8) || '09:00:00',
@@ -100,16 +100,17 @@ export class RoutineReadHandler implements AgendaReadHandler {
 
     const expanded = expandRecurringForTimeline([rawLegacy], -7, 60);
 
-    return expanded.map((exp: Record<string, unknown>) => {
-      const isAnchor = exp.due_date === baseEvt.dateKey;
+    return expanded.map((exp: any) => {
+      const dueStr = String(exp.due_date);
+      const isAnchor = dueStr === baseEvt.dateKey;
       return {
         ...baseEvt,
-        eventId: isAnchor ? baseEvt.eventId : `virtual_${mainPlan.id}_${exp.due_date}_${exp.due_time}`,
-        scheduledAt: `${exp.due_date}T${exp.due_time || '09:00:00'}.000Z`,
-        dateKey: exp.due_date,
+        eventId: isAnchor ? baseEvt.eventId : `virtual_${mainPlan.id}_${dueStr}_${exp.due_time}`,
+        scheduledAt: `${dueStr}T${exp.due_time || '09:00:00'}.000Z`,
+        dateKey: dueStr,
         isVirtual: !isAnchor,
-        displayStatus: exp.due_date < context.todayStr ? 'overdue' : exp.due_date === context.todayStr ? 'today' : 'upcoming',
-        status: exp.due_date < context.todayStr ? 'overdue' : exp.due_date === context.todayStr ? 'today' : 'upcoming'
+        displayStatus: dueStr < context.todayStr ? 'overdue' : dueStr === context.todayStr ? 'today' : 'upcoming',
+        status: dueStr < context.todayStr ? 'overdue' : dueStr === context.todayStr ? 'today' : 'upcoming'
       };
     });
   }

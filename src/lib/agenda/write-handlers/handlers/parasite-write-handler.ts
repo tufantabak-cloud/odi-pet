@@ -50,7 +50,8 @@ export class ParasiteWriteHandler implements AgendaWriteHandler<ParasiteWriteInp
     for (const plan of activePlans) {
       if (plan.category !== 'parazit') continue;
 
-      const planType = normalizeTurkish(plan.extra_data?.product?.category || plan.sub_type || '');
+      const extra = (plan.extra_data as Record<string, any>) || {};
+      const planType = normalizeTurkish(extra.product?.category || plan.sub_type || '');
       const isInternalMatch = targetType === 'internal' && (planType.includes('internal') || planType.includes('iç') || planType.includes('ic'));
       const isExternalMatch = targetType === 'external' && (planType.includes('external') || planType.includes('dış') || planType.includes('dis'));
       const isCombinedMatch = targetType === 'combined' && (planType.includes('combined') || planType.includes('karma'));
@@ -74,7 +75,7 @@ export class ParasiteWriteHandler implements AgendaWriteHandler<ParasiteWriteInp
           distanceMinutes,
           repeatRule: plan.repeat_rule,
           displayDate: deriveDateKey(plan.scheduled_at),
-          rawPlan: plan
+          rawPlan: plan as unknown as Record<string, unknown>
         });
       }
     }
