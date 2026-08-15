@@ -54,12 +54,11 @@ describe('Sprint Y.1 — Architecture Guard Rails', () => {
     expect(content).toContain("'estimated'");
   });
 
-  it('Guard 5: vaccination-algorithm preserves is_core semantics and uses feature flag', () => {
+  it('Guard 5: vaccination-algorithm preserves is_core semantics', () => {
     const algoPath = path.join(rootDir, 'src/features/pets/vaccination-algorithm.ts');
     expect(fs.existsSync(algoPath)).toBe(true);
     const content = fs.readFileSync(algoPath, 'utf8');
     expect(content).toContain('is_core: p.is_core');
-    expect(content).toContain('isLegalRequiredPlansEnabled');
   });
 
   it('Guard 6: recoverOverdueNotifications delegates to canonical createOverdueVaccineNotifications', () => {

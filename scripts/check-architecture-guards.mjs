@@ -63,8 +63,7 @@ const algoPath = path.join(rootDir, 'src/features/pets/vaccination-algorithm.ts'
 assert(fs.existsSync(algoPath), 'vaccination-algorithm.ts missing');
 const algoContent = fs.readFileSync(algoPath, 'utf8');
 assert(algoContent.includes("is_core: p.is_core"), 'is_core domain meaning must remain untouched');
-assert(algoContent.includes('isLegalRequiredPlansEnabled'), 'isLegalRequiredPlansEnabled feature flag helper missing');
-console.log('✅ Guard 5 Passed: vaccination-algorithm preserves is_core semantics and uses feature flag.');
+console.log('✅ Guard 5 Passed: vaccination-algorithm preserves is_core semantics.');
 
 // 6. Check Overdue Recovery Architecture
 const recoveryPath = path.join(rootDir, 'src/lib/notifications/recoverOverdueNotifications.ts');

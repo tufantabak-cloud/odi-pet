@@ -372,6 +372,7 @@ export const MODULES: ModuleEntry[] = [
     href: '/clinic',
     extraRoutes: [
       '/clinic/register',
+      '/api/auth/clinic-register',
       '/clinic/dashboard',
       '/clinic/appointments',
       '/clinic/care-plans',
