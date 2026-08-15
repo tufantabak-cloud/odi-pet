@@ -1,23 +1,11 @@
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+// NOT: Bu route `src/proxy.ts` içindeki admin/founder rol kontrolüyle
+// korunuyor, ama önceki içerik `supabase.from('admin_audit_logs').select('*')`
+// sonucunu ek bir filtre olmadan JSON.stringify ile dökerek defense-in-depth
+// ilkesini ihlal ediyordu. Gerçek Audit Log ekranı (filtreleme, sayfalama)
+// yazılana kadar sorgu kaldırıldı.
 import { ShieldCheck, FileText } from 'lucide-react';
 
-export default async function Page() {
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-      },
-    }
-  );
-
-  const { data: records, error } = await supabase.from('admin_audit_logs').select('*').limit(5);
-
+export default function Page() {
   return (
     <div className="space-y-6">
       <div>
@@ -30,25 +18,9 @@ export default async function Page() {
         </p>
       </div>
 
-      {error && (
-        <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold">
-          Hata: {error.message}
-        </div>
-      )}
-
-      <div className="space-y-3">
-        {records && records.length > 0 ? (
-          records.map((record: any) => (
-            <div key={record.id} className="card-base rounded-3xl p-5 font-mono text-xs overflow-x-auto shadow-xs border border-border-main">
-              <pre className="text-text-primary">{JSON.stringify(record, null, 2)}</pre>
-            </div>
-          ))
-        ) : (
-          <div className="card-base rounded-3xl p-12 text-center text-text-secondary">
-            <FileText className="w-8 h-8 mx-auto mb-2 text-text-secondary opacity-50" />
-            <p className="text-sm font-semibold">Henüz denetim kaydı bulunamadı.</p>
-          </div>
-        )}
+      <div className="card-base rounded-3xl p-12 text-center text-text-secondary">
+        <FileText className="w-8 h-8 mx-auto mb-2 text-text-secondary opacity-50" />
+        <p className="text-sm font-semibold">Bu bölüm henüz yapım aşamasında.</p>
       </div>
     </div>
   );

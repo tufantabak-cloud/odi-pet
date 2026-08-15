@@ -82,6 +82,8 @@ export const DOG_STANDARDS: BreedStandard[] = [
   { breedKey: 'mixed', displayName: 'Melez / Sokak', species: 'dog', profiles: generateProfiles(10.0, 30.0, 35.0, 8.0) }
 ]
 
+import { findBreedByIdOrName, normalizeText } from '@/lib/pets/breedsMaster';
+
 export function findBreedStandard(
   species: string,
   breedRaw: string | null | undefined
@@ -92,6 +94,27 @@ export function findBreedStandard(
   
   if (!breedRaw) {
     return allStandards.find(b => b.breedKey === fallbackKey)!;
+  }
+
+  const masterItem = findBreedByIdOrName(breedRaw, normSpecies);
+  const searchCandidates = [
+    breedRaw,
+    masterItem?.id,
+    masterItem?.name,
+    masterItem?.name_tr,
+    masterItem?.name_en,
+    ...(masterItem?.aliases || [])
+  ].filter(Boolean) as string[];
+
+  for (const cand of searchCandidates) {
+    const normCand = normalizeText(cand);
+    const found = allStandards.find(b => 
+      b.breedKey === normCand || 
+      normalizeText(b.displayName) === normCand ||
+      normCand.includes(normalizeText(b.displayName)) ||
+      normalizeText(b.displayName).includes(normCand)
+    );
+    if (found) return found;
   }
   
   const normalized = breedRaw.toLowerCase().replace(/[^a-z0-9]/g, '_');
@@ -143,6 +166,7 @@ export function assessWeight(params: {
   weightKg: number
   isNeutered: boolean
   gender: Gender
+  targetWeightKg?: number | null
 }): WeightAssessment {
   if (!params.birthDate) {
     return {
@@ -171,11 +195,18 @@ export function assessWeight(params: {
   const ageMonths = getAgeInMonths(params.birthDate);
   const profile = standard.profiles.find(p => ageMonths >= p.ageMonthMin && ageMonths <= p.ageMonthMax) || standard.profiles[standard.profiles.length - 1];
 
-  const idealMin = profile.ideal.minKg;
+  let idealMin = profile.ideal.minKg;
   let idealMax = profile.ideal.maxKg;
   
   if (params.isNeutered) {
     idealMax = idealMax * 0.90;
+  }
+
+  if (params.targetWeightKg && params.targetWeightKg > 0) {
+    const target = params.targetWeightKg;
+    const margin = target * 0.05;
+    idealMin = parseFloat((target - margin).toFixed(1));
+    idealMax = parseFloat((target + margin).toFixed(1));
   }
 
   const overweightThreshold = profile.overweight;

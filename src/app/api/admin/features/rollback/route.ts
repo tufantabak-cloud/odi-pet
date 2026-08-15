@@ -46,7 +46,6 @@ export async function POST(req: NextRequest) {
       metadata: { reason }
     });
 
-    console.log(`[Rollback] Version ${version_id} restored successfully.`);
 
     return NextResponse.json({ success: true });
 

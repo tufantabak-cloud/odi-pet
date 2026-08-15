@@ -72,7 +72,9 @@ export default async function OwnerDashboard() {
     .slice(0, 3)
 
   // Aktif Planlar
-  const activePlans = (plans || []).filter((p: any) => p.next_run && new Date(p.next_run) > today)
+  const activePlans = (plans || [])
+    .filter((p: any) => (p.status === 'active' || !p.status) && (p.scheduled_at || p.next_run) && new Date(p.scheduled_at || p.next_run) >= today)
+    .sort((a: any, b: any) => new Date(a.scheduled_at || a.next_run).getTime() - new Date(b.scheduled_at || b.next_run).getTime())
 
   const petsWithStats = (pets || []).map((pet: any) => {
     let lastFeedingDate = ''

@@ -69,9 +69,17 @@ export default function PwaUpdater() {
           });
         }
  
-        await reg.update();
+        await reg.update().catch((err) => {
+          if (process.env.NODE_ENV === "development") {
+            console.debug("[PWA] SW update check skipped in dev mode:", err);
+          } else {
+            console.warn("[PWA] SW update check failed:", err);
+          }
+        });
       } catch (error) {
-        console.error("SW güncelleme kontrolü başarısız:", error);
+        if (process.env.NODE_ENV !== "development") {
+          console.error("SW güncelleme kontrolü başarısız:", error);
+        }
       }
     };
  

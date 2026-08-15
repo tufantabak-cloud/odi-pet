@@ -14,7 +14,10 @@ import {
   Dog,
 } from 'lucide-react'
 
+import { ArchiveConfirmModal } from '@/components/pets/common/ArchiveConfirmModal'
+
 export default function ProductSettingsPage() {
+  const [deleteId, setDeleteId] = useState<string | null>(null)
   const [templates, setTemplates] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [speciesFilter, setSpeciesFilter] = useState<'Kedi' | 'Köpek' | 'Tümü'>('Tümü')
@@ -84,9 +87,13 @@ export default function ProductSettingsPage() {
   }, [wizardOpen])
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Bu ürünü silmek istediğinize emin misiniz?')) return
+    setDeleteId(id)
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteId) return
     try {
-      await fetch(`/api/products/templates/${id}`, { method: 'DELETE' })
+      await fetch(`/api/products/templates/${deleteId}`, { method: 'DELETE' })
       fetchTemplates()
     } catch (err) {
       console.error(err)
@@ -518,6 +525,16 @@ export default function ProductSettingsPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {deleteId && (
+        <ArchiveConfirmModal
+          isOpen={!!deleteId}
+          itemTitle="Ürün Şablonu"
+          isHealthRecord={false}
+          onClose={() => setDeleteId(null)}
+          onConfirm={confirmDelete}
+        />
       )}
     </div>
   )

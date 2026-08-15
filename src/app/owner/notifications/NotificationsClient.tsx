@@ -201,7 +201,6 @@ export default function NotificationsClient({
 
     const handleServiceWorkerMessage = (event: MessageEvent) => {
       if (event.data && event.data.type === 'REFRESH_NOTIFICATIONS') {
-        console.log('[SW Message] Refreshing notifications in foreground...')
         router.refresh()
       }
     }

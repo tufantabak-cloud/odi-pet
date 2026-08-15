@@ -36,15 +36,29 @@ const SUB_CATEGORIES_WITH_PICKER: Record<string, 'vaccine' | 'parasite'> = {
  * DB'de 'Medikal', 'Saglik', 'Bakım' vb. saklanır.
  */
 function resolveCategoryFromTask(task: any): TaskCategory | null {
-  if (!task?.category) return null;
-  let category = task.category === 'Temizlik' ? 'Hijyen' : task.category;
-  // Tuvalet eğitimi görevleri artık Aktiviteler altında
+  if (!task) return null;
+  const rawCat = task.category || task.pet_care_tasks?.category || task._plan_category;
+  if (!rawCat) return null;
+
+  let cat = String(rawCat).trim();
+  if (cat === 'Temizlik') cat = 'Hijyen';
+  if (['Asi', 'asi', 'Parazit', 'parazit', 'Medikal', 'medikal', 'Aşı', 'aşı'].includes(cat)) cat = 'Medikal';
+  if (['Aktivite', 'aktivite', 'Aktiviteler'].includes(cat)) cat = 'Aktiviteler';
+  if (['saglik', 'Saglik', 'Sağlık'].includes(cat)) cat = 'Saglik';
+  if (['bakim', 'Bakım'].includes(cat)) cat = 'Bakım';
+  if (['beslenme', 'Beslenme'].includes(cat)) cat = 'Beslenme';
+  if (['hijyen', 'Hijyen'].includes(cat)) cat = 'Hijyen';
+  if (['veteriner', 'Veteriner'].includes(cat)) cat = 'Veteriner';
+  if (['diger', 'Diger', 'Diğer'].includes(cat)) cat = 'Diger';
+
+  const sub = task.sub_category || task.sub_type;
   const toiletTrainingSubs = ['Kedi Tuvalet', 'Köpek Tuvalet'];
-  if (category === 'Hijyen' && toiletTrainingSubs.includes(task.sub_category)) {
-    category = 'Aktiviteler';
+  if (cat === 'Hijyen' && sub && toiletTrainingSubs.includes(sub)) {
+    cat = 'Aktiviteler';
   }
+
   const validIds = TASK_CATEGORIES.map(c => c.id);
-  return validIds.includes(category) ? category as TaskCategory : null;
+  return validIds.includes(cat as any) ? (cat as TaskCategory) : null;
 }
 
 export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initialCategory = null, allowPastDate = true, onClose, onDone }: SmartTaskWizardProps) {
@@ -59,10 +73,9 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
 
   // ── State 2: Sub Category ─────────────────────────────────────────
   const [subCategory, setSubCategory] = useState<string | null>(() =>
-    taskToEdit?.sub_category ?? null
+    taskToEdit?.sub_category || taskToEdit?.sub_type || taskToEdit?.pet_care_tasks?.title || null
   );
   const [customText, setCustomText] = useState<string>(() =>
-    // "Diğer" kategorisinde görev başlığı customText olarak başlar
     (taskToEdit?.category === 'Diger' || taskToEdit?.sub_category === 'Diğer')
       ? (taskToEdit?.title || '')
       : ''
@@ -70,7 +83,7 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
 
   // ── State 2b: Düzenlenebilir başlık (edit modunda) ────────────────
   const [editTitle, setEditTitle] = useState<string>(() =>
-    taskToEdit?.title || taskToEdit?.vaccines?.name || ''
+    taskToEdit?.title || taskToEdit?.vaccines?.name || taskToEdit?.taskTitle || taskToEdit?.pet_care_tasks?.title || ''
   );
 
   // ── State 3: 3rd-level picker (only when sub-category needs it) ───
@@ -81,19 +94,23 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
   const [formData, setFormData] = useState<TaskFormData>(() => ({
     date: taskToEdit?.due_date
       ? taskToEdit.due_date.split('T')[0]
-      : new Date().toISOString().split('T')[0],
-    time: taskToEdit?.due_time || '12:00',
-    // frequency: notification_rule'dan değil plan_id ilişkisinden gelir.
-    // Şimdilik notification_rule'daki frequency'yi de kontrol ederiz.
-    frequency: taskToEdit?.plan?.frequency || taskToEdit?.notification_rule?.frequency || 'once',
-    interval: taskToEdit?.plan?.interval || 1,
-    endCondition: taskToEdit?.plan?.end_condition || 'never',
-    endDate: taskToEdit?.plan?.end_date || undefined,
-    endOccurrences: taskToEdit?.plan?.end_occurrences || undefined,
+      : taskToEdit?.scheduled_at
+        ? taskToEdit.scheduled_at.split('T')[0]
+        : new Date().toISOString().split('T')[0],
+    time: taskToEdit?.due_time
+      ? taskToEdit.due_time.slice(0, 5)
+      : taskToEdit?.scheduled_at && taskToEdit.scheduled_at.includes('T')
+        ? taskToEdit.scheduled_at.split('T')[1].slice(0, 5)
+        : '12:00',
+    frequency: taskToEdit?.repeat_rule || taskToEdit?.plan?.frequency || taskToEdit?.notification_rule?.frequency || (taskToEdit?.frequency_days >= 365 ? 'yearly' : taskToEdit?.frequency_days >= 30 ? 'monthly' : taskToEdit?.frequency_days >= 7 ? 'weekly' : taskToEdit?.frequency_days >= 1 ? 'daily' : 'once'),
+    interval: taskToEdit?.plan?.interval || taskToEdit?.extra_data?.interval || 1,
+    endCondition: taskToEdit?.plan?.end_condition || taskToEdit?.extra_data?.endCondition || 'never',
+    endDate: taskToEdit?.plan?.end_date || taskToEdit?.ends_at || undefined,
+    endOccurrences: taskToEdit?.plan?.end_occurrences || taskToEdit?.extra_data?.endOccurrences || undefined,
     notificationEnabled: taskToEdit?.notification_rule?.enabled ?? true,
     notificationMinutes: taskToEdit?.notification_rule?.minutes_before ?? 0,
-    notes: taskToEdit?.notes || '',
-    metadata: taskToEdit?.metadata || {}
+    notes: taskToEdit?.notes || taskToEdit?.note || '',
+    metadata: taskToEdit?.metadata || taskToEdit?.extra_data || {}
   }));
 
   const [advancedOpen, setAdvancedOpen] = useState<boolean>(() => !!taskToEdit);
@@ -112,6 +129,7 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
   // ── Smart Defaults on sub-category change ─────────────────────────
   // Edit modunda da çalışır — kullanıcı alt kategoriyi değiştirince yeni defaults yüklenir
   useEffect(() => {
+    if (taskToEdit) return;
     if (!subCategory) return;
     if (subCategory !== 'Diğer') {
       const defaults = getSmartDefault(subCategory);
@@ -200,17 +218,19 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
   // ── Save handler ──────────────────────────────────────────────────
   const handleSave = async () => {
     // Validation
-    if (!category) {
-      setError('Lütfen bir kategori seçin.');
-      return;
-    }
-    if (!subCategory && category !== 'Diger') {
-      setError('Lütfen bir alt kategori seçin.');
-      return;
-    }
-    if (needsVaccinePicker && !selectedVaccine) {
-      setError('Lütfen bir aşı seçin.');
-      return;
+    if (!taskToEdit) {
+      if (!category) {
+        setError('Lütfen bir kategori seçin.');
+        return;
+      }
+      if (!subCategory && category !== 'Diger') {
+        setError('Lütfen bir alt kategori seçin.');
+        return;
+      }
+      if (needsVaccinePicker && !selectedVaccine) {
+        setError('Lütfen bir aşı seçin.');
+        return;
+      }
     }
 
     const finalTitle = computeTitle();
@@ -225,7 +245,7 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
     try {
       const supabase = createBrowserSupabaseClient();
       const todayStr = new Date().toISOString().split('T')[0];
-      const isPastDate = (formData.date <= todayStr) && markAsDone;
+      const isPastDate = formData.date <= todayStr;
 
       const metadata = {
         ...formData.metadata,
@@ -287,7 +307,8 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
             'Veteriner': 'kontrol',
             'Kontrol & Randevu': 'kontrol',
           };
-          let planCategory = PLAN_CAT_MAP_REV[category] || category.toLowerCase();
+          const safeCategory = category || 'Diger';
+          let planCategory = PLAN_CAT_MAP_REV[safeCategory] || safeCategory.toLowerCase();
           if ((planCategory === 'asi' || planCategory === 'medikal') && subCategory && (subCategory.includes('Parazit') || subCategory.includes('Tasma') || subCategory.includes('Birleşik'))) {
             planCategory = 'parazit';
           }
@@ -527,11 +548,7 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
         // Geçmiş tarihli onay durumu
         let status = 'upcoming';
         if (isPastDate) {
-           if (dStr <= todayStr && markAsDone) {
-             status = 'done';
-           } else {
-             status = 'upcoming';
-           }
+          status = 'done';
         }
 
         inserts.push({
@@ -596,10 +613,15 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
   // ── Save button disabled logic ────────────────────────────────────
   const isSaveDisabled =
     loading ||
-    !category ||
-    (!subCategory && category !== 'Diger') ||
-    (needsVaccinePicker && !selectedVaccine && !showVaccinePicker) ||
-    (!computeTitle() && category !== 'Diger');
+    (taskToEdit
+      ? !editTitle.trim()
+      : (
+          !category ||
+          (!subCategory && category !== 'Diger') ||
+          (needsVaccinePicker && !selectedVaccine && !showVaccinePicker) ||
+          (!computeTitle() && category !== 'Diger')
+        )
+    );
 
 
   const todayStrUI = new Date().toISOString().split('T')[0];
@@ -666,19 +688,29 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
           </div>
         )}
 
-        {/* ── 2b. Başlık düzenleme (edit modunda, alt kategori seçilince) ── */}
-        {taskToEdit && subCategory && subCategory !== 'Diğer' && !showVaccinePicker && (
-          <div className="flex flex-col gap-1.5 mt-3 animate-fadeInUp">
-            <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider">
-              Görev Başlığı
-            </label>
-            <input
-              type="text"
-              value={editTitle}
-              onChange={e => setEditTitle(e.target.value)}
-              placeholder={subCategory || 'Görev adı...'}
-              className="input-base py-3 text-[14px]"
-            />
+        {/* ── 2b. Başlık düzenleme (edit modunda) ── */}
+        {taskToEdit && !showVaccinePicker && (
+          <div className="flex flex-col gap-2 my-2 animate-fadeInUp">
+            {category && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-bg-main rounded-xl border border-border-main/50 w-fit">
+                <span className="text-[12px] font-bold text-text-secondary">Kategori:</span>
+                <span className="text-[12px] font-black text-primary">
+                  {TASK_CATEGORIES.find(c => c.id === category)?.label || category}
+                </span>
+              </div>
+            )}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[12px] font-black text-text-secondary uppercase tracking-wider">
+                Görev / Plan Başlığı
+              </label>
+              <input
+                type="text"
+                value={editTitle}
+                onChange={e => setEditTitle(e.target.value)}
+                placeholder="Görev adı..."
+                className="input-base py-3 text-[14px]"
+              />
+            </div>
           </div>
         )}
 
@@ -757,9 +789,9 @@ export default function SmartTaskWizard({ petId, petSpecies, taskToEdit, initial
         )}
 
         {/* ── 4. Advanced Settings ──────────────────────────────── */}
-        {(pickerSatisfied && (subCategory || (category === 'Diger' && customText.length > 0))) && !showVaccinePicker && (
+        {(taskToEdit || (pickerSatisfied && (subCategory || (category === 'Diger' && customText.length > 0)))) && !showVaccinePicker && (
           <TaskFormAdvanced
-            category={category!}
+            category={category || 'Diger'}
             formData={formData}
             onChange={(d) => setFormData(prev => ({ ...prev, ...d }))}
             isOpen={advancedOpen}

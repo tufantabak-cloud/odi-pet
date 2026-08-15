@@ -24,14 +24,17 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: 1. TypeScript Check
+      - name: 1. Lint Check
+        run: npm run lint
+
+      - name: 2. TypeScript Check
         run: npx tsc --noEmit --skipLibCheck
 
-      - name: 2. Architecture Guards Check
+      - name: 3. Architecture Guards Check
         run: node scripts/check-architecture-guards.mjs
 
-      - name: 3. Unit & Architecture Tests
+      - name: 4. Unit & Architecture Tests
         run: npx vitest run
 
-      - name: 4. Next.js Production Build Test
+      - name: 5. Next.js Production Build Test
         run: npm run build

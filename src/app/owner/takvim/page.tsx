@@ -131,8 +131,8 @@ export default async function TakvimPage() {
 
     return {
       id: evt.eventId,
-      type: evt.category === 'saglik' && evt.subCategory.includes('Randevu') ? ('appointment' as const) : ('task' as const),
-      plan_type: evt.category,
+      type: evt.category === 'saglik' && (evt.subCategory || "").includes('Randevu') ? ('appointment' as const) : ('task' as const),
+      plan_type: evt.category || null,
       title: evt.displayMetadata?.title || evt.subCategory || 'Görev',
       date: evt.scheduledAt || evt.dateKey,
       pet_id: targetPetId,

@@ -18,7 +18,6 @@ export default function OnboardingGate({ children }: { children: React.ReactNode
 
     fetch('/api/onboarding')
       .then(async r => {
-        console.log('OnboardingGate API status:', r.status);
         if (!r.ok) {
           const text = await r.text();
           console.error('OnboardingGate API error text:', text);
@@ -27,7 +26,6 @@ export default function OnboardingGate({ children }: { children: React.ReactNode
         return r.json();
       })
       .then(data => {
-        console.log('OnboardingGate API data:', data);
         setProgress(data)
         if (!data.wizard_completed) setShowWizard(true)
         setLoading(false)

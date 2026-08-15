@@ -9,8 +9,10 @@ import { EstrusPreferencesToggle } from './EstrusPreferencesToggle';
 import { useFeature } from '@/lib/features/hooks';
 import { PremiumContent } from '@/components/premium/PremiumContent';
 import { createBrowserSupabaseClient } from '@/lib/supabase/client';
+import { ArchiveConfirmModal } from '@/components/pets/common/ArchiveConfirmModal';
 
 export function EstrusTracker({ petId, petSpecies }: { petId: string, petSpecies: string }) {
+  const [cycleToDeleteId, setCycleToDeleteId] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string>('');
 
   useEffect(() => {
@@ -33,6 +35,13 @@ export function EstrusTracker({ petId, petSpecies }: { petId: string, petSpecies
 
   const { forecast, loading: forecastLoading, error: forecastError, refetch: refetchForecast } = useReproductiveForecast(petId);
 
+  // Form states
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [notes, setNotes] = useState('');
+  const [symptoms, setSymptoms] = useState<string[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+
   // Feature guard - erişim yoksa PremiumContent göster
   if (!breedingFeature.loading && !breedingFeature.enabled) {
     return (
@@ -45,13 +54,6 @@ export function EstrusTracker({ petId, petSpecies }: { petId: string, petSpecies
       </div>
     );
   }
-
-  // Form states
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [notes, setNotes] = useState('');
-  const [symptoms, setSymptoms] = useState<string[]>([]);
-  const [submitting, setSubmitting] = useState(false);
 
   const availableSymptoms = petSpecies === 'Köpek' 
     ? ['Kanama', 'Şişlik', 'Huzursuzluk', 'Sık İdrara Çıkma', 'İştahsızlık']
@@ -125,17 +127,21 @@ export function EstrusTracker({ petId, petSpecies }: { petId: string, petSpecies
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
-    setIsDeleting(id);
+  const handleDelete = (id: string) => {
+    setCycleToDeleteId(id);
+  };
+
+  const confirmDeleteCycle = async () => {
+    if (!cycleToDeleteId) return;
+    setIsDeleting(cycleToDeleteId);
     try {
-      await deleteCycle(id);
+      await deleteCycle(cycleToDeleteId);
       refetchForecast();
     } catch (err: any) {
       console.error(err);
-      alert(err.message || 'Silinemedi.');
     } finally {
       setIsDeleting(null);
+      setCycleToDeleteId(null);
     }
   };
 
@@ -515,6 +521,15 @@ export function EstrusTracker({ petId, petSpecies }: { petId: string, petSpecies
         </div>
       )}
 
+      {cycleToDeleteId && (
+        <ArchiveConfirmModal
+          isOpen={!!cycleToDeleteId}
+          itemTitle="Kızgınlık Döngü Kaydı"
+          isHealthRecord={true}
+          onClose={() => setCycleToDeleteId(null)}
+          onConfirm={confirmDeleteCycle}
+        />
+      )}
     </div>
   );
 }

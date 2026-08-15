@@ -1,37 +1,16 @@
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+// NOT: Bu route `registry.ts` içinde `status: 'hidden'` olarak işaretli ve
+// middleware (`src/proxy.ts` -> `isBlockedPath`) tarafından 404'e düşürülüyor.
+// Önceki içerik `supabase.from('marketplace_products').select('*').limit(5)`
+// sonucunu sahiplik/erişim filtresi olmadan JSON.stringify ile döküyordu.
+// Modül `registry.ts`'de canlıya alınmadan önce bu route her koşulda güvenli
+// olsun diye sorgu tamamen kaldırıldı; gerçek Mağaza ekranı yazılana kadar
+// yalnızca statik bir "yakında" yer tutucu gösterir.
 
-export default async function Page() {
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-      },
-    }
-  );
-
-  const { data: records, error } = await supabase.from('marketplace_products').select('*').limit(5);
-
+export default function Page() {
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-4">Mağaza</h1>
-      {error && <p className="text-red-500">Error: {error.message}</p>}
-      <ul className="space-y-2">
-        {records && records.length > 0 ? (
-          records.map((record: any) => (
-            <li key={record.id} className="p-4 bg-white rounded shadow text-sm">
-              <pre>{JSON.stringify(record, null, 2)}</pre>
-            </li>
-          ))
-        ) : (
-          <p>Kayıt bulunamadı.</p>
-        )}
-      </ul>
+      <p className="text-text-secondary text-sm">Bu bölüm henüz yapım aşamasında.</p>
     </div>
   );
 }

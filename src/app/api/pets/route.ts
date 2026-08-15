@@ -43,8 +43,6 @@ export async function POST(req: NextRequest) {
   const uploadedPaths: string[] = []
 
   // Diagnostic Log
-  console.log('[API/Pets/POST] FormData keys:', Array.from(fd.keys()))
-  console.log('[API/Pets/POST] species field:', fd.get('species'), 'type:', typeof fd.get('species'))
 
   // ─── Profiles kaydının var olduğundan emin ol ─────────────────
   await supabase
@@ -138,6 +136,7 @@ export async function POST(req: NextRequest) {
     agriculture_directorate: str(fd, 'agriculture_directorate') || null,
     is_neutered:            str(fd, 'is_neutered') === 'true',
     lifestyle:              str(fd, 'lifestyle')              || null,
+    target_weight_kg:       str(fd, 'target_weight_kg') || str(fd, 'target_weight') ? parseFloat((str(fd, 'target_weight_kg') || str(fd, 'target_weight'))!.replace(',', '.')) : null,
   }
 
 
@@ -236,7 +235,6 @@ export async function POST(req: NextRequest) {
             supabase
           )
           if (notifError) console.error('[API/Pets] Notifications insert error:', notifError)
-          else console.log('[API/Pets] Notifications inserted successfully. count:', notifCount)
         }
       }
     }

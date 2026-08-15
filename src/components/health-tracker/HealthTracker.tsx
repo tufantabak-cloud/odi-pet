@@ -11,6 +11,8 @@ import { DeletePlanConfirmationModal } from '@/components/ui/DeletePlanConfirmat
 interface HealthTrackerProps {
   petId: string;
   onEditTask?: (task: any) => void;
+  onMarkDone?: (task: any) => void;
+  onPostpone?: (task: any) => void;
   refreshTrigger?: number;
 }
 
@@ -86,7 +88,7 @@ function useDragScroll(ref: React.RefObject<HTMLDivElement | null>) {
   }, [ref]);
 }
 
-export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrackerProps) {
+export function HealthTracker({ petId, onEditTask, onMarkDone, onPostpone, refreshTrigger }: HealthTrackerProps) {
   const {
     categoryGroups, loading, markEventStatus, postponeEvent, deleteEvent,
     visibleDates,
@@ -126,8 +128,8 @@ export function HealthTracker({ petId, onEditTask, refreshTrigger }: HealthTrack
   }
 
   const cardProps = {
-    onMarkDone: (id: string) => markEventStatus(id, 'done'),
-    onPostpone: (id: string) => postponeEvent(id, 1),
+    onMarkDone: onMarkDone || ((id: string) => markEventStatus(id, 'done')),
+    onPostpone: onPostpone || ((id: string) => postponeEvent(id, 1)),
     onEdit: onEditTask || (() => {}),
     onDelete: (id: string, event?: FlowEvent) => {
       // KURAL 3: Plan ayrımı için öncelikli olarak event._source === 'plans' veya 'health_schedules' kullanılır.

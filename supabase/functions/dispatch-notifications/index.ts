@@ -159,10 +159,150 @@ serve(async (req: Request) => {
     let emailsSent = 0
     let pushesSent = 0
     let pushJobsDeferred = 0
-    const sentIds: string[] = []
+    let planJobsProcessed = 0
+    let planPushesSent = 0
 
-    // 3. Fetch unsent notifications
-    const { data: unsent, error: fetchErr } = await supabase
+    // -----------------------------------------------------------------
+    // 3. Plan Push Reminders (Canonical source: notification_jobs)
+    // -----------------------------------------------------------------
+    const { data: claimedJobs, error: claimErr } = await supabase.rpc("claim_notification_jobs", { p_limit: 50 })
+
+    let jobsToProcess: Array<{
+      job_id: string;
+      plan_id: string;
+      fire_at: string;
+      user_id: string;
+      pet_id: string | null;
+      category: string;
+      sub_type: string;
+      scheduled_at: string;
+      status: string;
+    }> = []
+
+    if (!claimErr && Array.isArray(claimedJobs)) {
+      jobsToProcess = claimedJobs
+    } else {
+      // Fallback query if RPC unavailable in test environment
+      const { data: fallbackJobs } = await supabase
+        .from("notification_jobs")
+        .select("id, plan_id, fire_at, plans!inner(user_id, pet_id, category, sub_type, scheduled_at, status)")
+        .eq("sent", false)
+        .lte("fire_at", new Date().toISOString())
+        .eq("plans.status", "active")
+        .limit(50)
+
+      if (fallbackJobs) {
+        jobsToProcess = fallbackJobs.map((j: any) => ({
+          job_id: j.id,
+          plan_id: j.plan_id,
+          fire_at: j.fire_at,
+          user_id: j.plans?.user_id,
+          pet_id: j.plans?.pet_id,
+          category: j.plans?.category,
+          sub_type: j.plans?.sub_type,
+          scheduled_at: j.plans?.scheduled_at,
+          status: j.plans?.status
+        }))
+      }
+    }
+
+    if (jobsToProcess.length > 0) {
+      const planUserIds = Array.from(new Set(jobsToProcess.map(j => j.user_id).filter(Boolean)))
+
+      const { data: jobPushSubs } = await supabase
+        .from("push_subscriptions")
+        .select("*")
+        .in("profile_id", planUserIds)
+        .eq("is_active", true)
+
+      const jobSubsMap = new Map<string, any[]>()
+      for (const sub of jobPushSubs ?? []) {
+        if (!jobSubsMap.has(sub.profile_id)) jobSubsMap.set(sub.profile_id, [])
+        jobSubsMap.get(sub.profile_id)!.push(sub)
+      }
+
+      for (const job of jobsToProcess) {
+        planJobsProcessed++
+
+        // Skip completed/cancelled/invalid plans
+        if (!job.status || job.status !== 'active') {
+          await supabase.from("notification_jobs").update({ sent: true, locked_until: null }).eq("id", job.job_id)
+          continue
+        }
+
+        // Quiet Hours Check: If quiet hours & normal priority -> DEFER (keep sent=false, unlock job)
+        if (isQuietHours) {
+          pushJobsDeferred++
+          await supabase.from("notification_jobs").update({ locked_until: null }).eq("id", job.job_id)
+          continue
+        }
+
+        const userSubs = jobSubsMap.get(job.user_id) ?? []
+        let deliveredCount = 0
+        let invalidCount = 0
+        let retryableCount = 0
+
+        if (userSubs.length > 0 && VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+          const categoryTr = job.category === 'asi' ? 'Aşı' : job.category === 'parazit' ? 'Parazit' : job.category === 'saglik' ? 'Sağlık' : 'Görev'
+          const deepLink = job.pet_id ? `/owner/pets/${job.pet_id}#pet-tasks` : "/owner/notifications"
+          const payload = JSON.stringify({
+            version: 1,
+            title: `${job.sub_type ?? categoryTr} Hatırlatması ⏰`,
+            body: "Can dostunuz için 1 yeni sağlık güncellemeniz var 🐾",
+            icon: 'https://odi.pet/brand/app-icons/odi-icon-256.png',
+            badge: 'https://odi.pet/brand/app-icons/odi-icon-256.png',
+            url: deepLink,
+            tag: `plan_job:${job.job_id}`,
+            entity_type: 'plan',
+            entity_id: job.plan_id,
+            channel_id: 'Reminders',
+            priority: 'normal'
+          })
+
+          for (const sub of userSubs) {
+            try {
+              await webpush.sendNotification(
+                { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth_key } },
+                payload,
+                { urgency: 'normal', TTL: 86400 }
+              )
+              deliveredCount++
+              pushesSent++
+              planPushesSent++
+              await supabase.from("push_subscriptions").update({ last_seen_at: new Date().toISOString() }).eq("id", sub.id)
+            } catch (err: any) {
+              if (err?.statusCode === 410 || err?.statusCode === 404) {
+                invalidCount++
+                await supabase.from("push_subscriptions").delete().eq("id", sub.id)
+              } else {
+                retryableCount++
+                console.error(`[dispatch-notifications] Plan push error job=${job.job_id}:`, err)
+              }
+            }
+          }
+        }
+
+        const outcome = {
+          subscriptionCount: userSubs.length,
+          deliveredCount,
+          invalidSubscriptionCount: invalidCount,
+          retryableFailureCount: retryableCount
+        }
+
+        const finalize = shouldFinalizePushJob(outcome)
+        if (finalize) {
+          await supabase.from("notification_jobs").update({ sent: true, locked_until: null }).eq("id", job.job_id)
+        } else {
+          // Unlock for retry on transient failure
+          await supabase.from("notification_jobs").update({ locked_until: null }).eq("id", job.job_id)
+        }
+      }
+    }
+
+    // -----------------------------------------------------------------
+    // 4. General In-App Notifications (Birthdays, System Alerts, etc.)
+    // -----------------------------------------------------------------
+    const { data: unsentGeneral } = await supabase
       .from("notifications")
       .select(`
         id,
@@ -172,13 +312,13 @@ serve(async (req: Request) => {
         type,
         pet_id,
         priority,
+        sent_email,
+        sent_push,
         profiles!notifications_profile_id_fkey ( email )
       `)
-      .eq("sent_email", false)
+      .or("sent_email.eq.false,sent_push.eq.false")
       .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
       .order("created_at", { ascending: false })
-
-    if (fetchErr) throw new Error(`Fetch error: ${fetchErr.message}`)
 
     interface NotificationPayload {
       id: string;
@@ -188,11 +328,13 @@ serve(async (req: Request) => {
       type: string;
       pet_id: string | null;
       priority?: 'high' | 'normal' | 'low';
+      sent_email?: boolean;
+      sent_push?: boolean;
       profiles: { email: string } | { email: string }[] | null;
     }
 
     const byProfile = new Map<string, { email: string; notifs: NotificationPayload[] }>()
-    for (const n of (unsent as unknown as NotificationPayload[]) ?? []) {
+    for (const n of (unsentGeneral as unknown as NotificationPayload[]) ?? []) {
       const email = Array.isArray(n.profiles) ? n.profiles[0]?.email : n.profiles?.email
       if (!email) continue
       if (!byProfile.has(n.profile_id)) {
@@ -203,7 +345,6 @@ serve(async (req: Request) => {
 
     const profileIds = Array.from(byProfile.keys())
 
-    // Fetch Preferences & Push Subscriptions
     const { data: prefs } = await supabase
       .from("notification_preferences")
       .select("*")
@@ -226,13 +367,13 @@ serve(async (req: Request) => {
       subsByProfile.get(sub.profile_id)!.push(sub)
     }
 
-    // Process Notifications
+    const emailSentIds: string[] = []
+    const pushSentIds: string[] = []
+
     for (const [profileId, { email, notifs }] of byProfile) {
       if (!notifs || notifs.length === 0) continue
-
       const userPref = prefMap.get(profileId)
 
-      // Filter out notifications disabled by user preferences
       const filteredNotifs = notifs.filter(n => {
         if (!userPref) return true
         if (n.type.includes('vaccine') && userPref.vaccines === false) return false
@@ -245,78 +386,51 @@ serve(async (req: Request) => {
 
       if (filteredNotifs.length === 0) continue
 
-      // Rate Limiting Check (Configurable: max 5 push per 10 mins, except high priority)
-      const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_MINUTES * 60 * 1000).toISOString()
-      const { count: recentSentCount } = await supabase
-        .from("notification_delivery_logs")
-        .select("id", { count: 'exact', head: true })
-        .eq("profile_id", profileId)
-        .eq("event_type", "send_success")
-        .gte("created_at", windowStart)
-
-      const isRateLimited = (recentSentCount ?? 0) >= RATE_LIMIT_MAX_COUNT
-
-      // Email Dispatch
-      if (!isQuietHours) {
-        const subject = filteredNotifs.length === 1
-          ? `🐾 ${filteredNotifs[0].title}`
-          : `🐾 ${filteredNotifs.length} yeni hatırlatma – Odi.Pet`
-        const sent = await sendEmail(email, subject, buildEmailHtml(filteredNotifs))
+      // General Email Dispatch
+      const pendingEmails = filteredNotifs.filter(n => n.sent_email === false)
+      if (pendingEmails.length > 0 && !isQuietHours) {
+        const subject = pendingEmails.length === 1
+          ? `🐾 ${pendingEmails[0].title}`
+          : `🐾 ${pendingEmails.length} yeni bildirim – Odi.Pet`
+        const sent = await sendEmail(email, subject, buildEmailHtml(pendingEmails))
         if (sent) {
           emailsSent++
-          sentIds.push(...filteredNotifs.map(n => n.id))
+          emailSentIds.push(...pendingEmails.map(n => n.id))
         }
       }
 
-      // Web Push Dispatch
-      if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+      // General Web Push Dispatch
+      const pendingPushes = filteredNotifs.filter(n => n.sent_push === false)
+      if (pendingPushes.length > 0 && VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
         const userSubs = subsByProfile.get(profileId) ?? []
 
-        for (const notif of filteredNotifs) {
+        for (const notif of pendingPushes) {
           const isHighPriority = notif.priority === 'high' || notif.type.includes('emergency')
-          
-          // Quiet Hours Check (High priority bypasses quiet hours)
-          if (isQuietHours && !isHighPriority) {
-            continue
-          }
+          if (isQuietHours && !isHighPriority) continue
 
-          // Rate Limiting Check (High priority bypasses rate limiting)
-          if (isRateLimited && !isHighPriority) {
-            console.log(`[dispatch-notifications] Rate limit reached for profile ${profileId}. Skipping normal push.`)
-            continue
-          }
-
-          // KVKK/GDPR Payload Privacy (Generic text on lock screen)
-          const privacyBody = "Can dostunuz için 1 yeni sağlık güncellemeniz var 🐾"
+          const privacyBody = "Can dostunuz için 1 yeni güncellemeniz var 🐾"
           const deepLinkUrl = notif.pet_id ? `/owner/pets/${notif.pet_id}#pet-tasks` : '/owner/notifications'
           const entityType = notif.type.includes('vaccine') ? 'vaccine' : notif.type.includes('parasite') ? 'parasite' : 'general'
           const entityId = notif.pet_id ?? notif.id
-          const notificationTag = `${entityType}:${entityId}:due`
+          const notificationTag = `general:${entityType}:${entityId}`
           const channelId = getAndroidChannelId(notif.type, notif.priority ?? 'normal')
 
           const payload = JSON.stringify({
             version: 1,
             title: notif.title,
-            body: privacyBody, // Privacy-protected lock screen text
+            body: privacyBody,
             icon: 'https://odi.pet/brand/app-icons/odi-icon-256.png',
             badge: 'https://odi.pet/brand/app-icons/odi-icon-256.png',
             url: deepLinkUrl,
-            tag: notificationTag, // Lock Screen Deduplication
+            tag: notificationTag,
             entity_type: entityType,
             entity_id: entityId,
             channel_id: channelId,
             priority: notif.priority ?? 'normal'
           })
 
+          let anyPushed = false
           for (const sub of userSubs) {
-            // Observability: Log attempt
-            await supabase.from("notification_delivery_logs").insert({
-              profile_id: profileId,
-              notification_id: notif.id,
-              device_id: sub.device_id,
-              event_type: "send_attempted"
-            })
-
             try {
               await webpush.sendNotification(
                 { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth_key } },
@@ -324,55 +438,38 @@ serve(async (req: Request) => {
                 { urgency: isHighPriority ? 'high' : 'normal', TTL: 86400 }
               )
               pushesSent++
-
-              // Touch last_seen_at to keep active devices fresh
+              anyPushed = true
               await supabase.from("push_subscriptions").update({ last_seen_at: new Date().toISOString() }).eq("id", sub.id)
-
-              // Observability: Log success
-              await supabase.from("notification_delivery_logs").insert({
-                profile_id: profileId,
-                notification_id: notif.id,
-                device_id: sub.device_id,
-                event_type: "send_success"
-              })
-            } catch (err: unknown) {
-              const pushErr = err as { statusCode?: number }
-              if (pushErr.statusCode === 410 || pushErr.statusCode === 404) {
-                // Delete stale 410 subscription
+            } catch (err: any) {
+              if (err?.statusCode === 410 || err?.statusCode === 404) {
                 await supabase.from("push_subscriptions").delete().eq("id", sub.id)
-                await supabase.from("notification_delivery_logs").insert({
-                  profile_id: profileId,
-                  device_id: sub.device_id,
-                  event_type: "subscription_removed",
-                  error_code: "STALE_410_GONE"
-                })
-              } else {
-                console.error(`[dispatch-notifications] Push error for ${profileId}:`, pushErr)
-                await supabase.from("notification_delivery_logs").insert({
-                  profile_id: profileId,
-                  notification_id: notif.id,
-                  device_id: sub.device_id,
-                  event_type: "send_failed",
-                  error_code: String(pushErr.statusCode ?? 'UNKNOWN')
-                })
               }
             }
+          }
+
+          if (anyPushed || userSubs.length === 0) {
+            pushSentIds.push(notif.id)
           }
         }
       }
     }
 
-    if (sentIds.length > 0) {
-      await supabase.from("notifications").update({ sent_email: true }).in("id", sentIds)
+    if (emailSentIds.length > 0) {
+      await supabase.from("notifications").update({ sent_email: true }).in("id", emailSentIds)
+    }
+    if (pushSentIds.length > 0) {
+      await supabase.from("notifications").update({ sent_push: true }).in("id", pushSentIds)
     }
 
-    console.log(`[dispatch-notifications] Emails sent: ${emailsSent}, Web Pushes sent: ${pushesSent}`)
+    console.log(`[dispatch-notifications] Plan jobs processed: ${planJobsProcessed}, Plan pushes: ${planPushesSent}, General emails: ${emailsSent}, General pushes: ${pushesSent}`)
 
     return new Response(
       JSON.stringify({
         status: "success",
         request_id: requestId,
         in_app_notifications_created: bdayCount + scheduleCount,
+        plan_jobs_processed: planJobsProcessed,
+        plan_pushes_sent: planPushesSent,
         emails_sent: emailsSent,
         pushes_sent: pushesSent,
       }),

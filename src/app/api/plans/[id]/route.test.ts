@@ -111,7 +111,6 @@ describe('Parasite Plan Completion API Tests', () => {
       console.error('dogProtoErr:', dogProtoErr)
     }
     dogProtoId = dogProto?.id || ''
-    console.log('dogProto inserted:', dogProto)
 
     const { data: catProto, error: catProtoErr } = await adminClient.from('parasite_protocols').insert({
       parasite_code: 'P_VT_CAT',
@@ -128,7 +127,6 @@ describe('Parasite Plan Completion API Tests', () => {
       console.error('catProtoErr:', catProtoErr)
     }
     catProtoId = catProto?.id || ''
-    console.log('catProto inserted:', catProto)
 
     const { data: petOwned, error: petOwnedError } = await adminClient.from('pets').insert({
       owner_id: testUserId,
@@ -205,8 +203,6 @@ describe('Parasite Plan Completion API Tests', () => {
       status: 'active',
       extra_data: { parasite_protocol_id: dogProtoId }
     }).select().single()
-    console.log('Inserted plan not owned:', plan)
-    console.log('dogProtoId was:', dogProtoId)
 
     const req = new NextRequest(`http://localhost:3000/api/plans/${plan.id}`, {
       method: 'PATCH',
@@ -399,8 +395,6 @@ describe('Parasite Plan Completion API Tests', () => {
       status: 'active',
       extra_data: { parasite_protocol_id: dogProtoId }
     }).select().single()
-    console.log('Success test - Inserted plan:', plan)
-    console.log('Success test - dogProtoId:', dogProtoId)
 
     // 1. First completion call
     const req1 = new NextRequest(`http://localhost:3000/api/plans/${plan.id}`, {
@@ -510,7 +504,6 @@ describe('Parasite Plan Completion API Tests', () => {
     const databaseUrl = process.env.LOCAL_DATABASE_URL
 
     if (!isLocal || !isDdlAllowed || !databaseUrl) {
-      console.log('SKIPPED — local database required')
       ctx.skip()
       return
     }

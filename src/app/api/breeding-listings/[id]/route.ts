@@ -115,7 +115,39 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
   if (!ownerRecord) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
-  
+
+  // ── FORENSIC DÜZELTME: mass-assignment engeli ──────────────────────────
+  // `.update(body)` önceden ham body'yi doğrudan Supabase'e geçiriyordu.
+  // Bu, `pet_id`/`user_id` gibi authorization alanlarının client tarafından
+  // değiştirilip ilanın başka bir pet'e/kullanıcıya bağlanmasına izin
+  // veriyordu (RLS yalnızca `user_id = auth.uid()` şartını kontrol ediyor,
+  // `pet_id` sütununu kısıtlamıyor). Şimdi yalnızca gerçek, ilan-alanı
+  // sütunları whitelist edilerek güncelleniyor; `id`, `pet_id`, `user_id`
+  // asla body'den alınmaz.
+  const ALLOWED_PATCH_FIELDS = [
+    'title',
+    'purpose',
+    'preferred_date_start',
+    'preferred_date_end',
+    'notes',
+    'requirements',
+    'status',
+    'photo_url',
+    'estrus_notification_enabled',
+    'experience_level',
+  ] as const
+
+  const updatePayload: Record<string, unknown> = {}
+  for (const field of ALLOWED_PATCH_FIELDS) {
+    if (Object.prototype.hasOwnProperty.call(body, field)) {
+      updatePayload[field] = body[field]
+    }
+  }
+
+  if (Object.keys(updatePayload).length === 0) {
+    return NextResponse.json({ error: 'Güncellenecek geçerli bir alan bulunamadı.' }, { status: 400 })
+  }
+
   if (body.status === 'closed') {
     const { data: listing } = await supabase
       .from('breeding_listings')
@@ -140,7 +172,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
           payload: {
             title: 'İlan Kapatıldı',
             body: `Başvurduğunuz "${listing.title}" ilanı ilan sahibi tarafından kapatıldı.`,
-            action_url: '/owner/social'
+            action_url: '/owner/social?tab=eslestirme'
           },
           scheduled_for: new Date().toISOString()
         }))
@@ -158,7 +190,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 
   const { error } = await supabase
     .from('breeding_listings')
-    .update(body)
+    .update(updatePayload)
     .eq('pet_id', id)
     .eq('user_id', user.id)
 
@@ -208,7 +240,7 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
         payload: {
           title: 'İlan Kapatıldı',
           body: `Başvurduğunuz "${listing.title}" ilanı ilan sahibi tarafından kapatıldı.`,
-          action_url: '/owner/social'
+          action_url: '/owner/social?tab=eslestirme'
         },
         scheduled_for: new Date().toISOString()
       }))

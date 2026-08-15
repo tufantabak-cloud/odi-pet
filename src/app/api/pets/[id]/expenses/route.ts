@@ -78,3 +78,37 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
   return NextResponse.json({ success: true })
 }
+
+export async function DELETE(req: NextRequest, context: RouteContext) {
+  const user = await getSessionUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { id } = await context.params
+  const supabase = await createServerSupabaseClient()
+
+  const { data: ownerRecord } = await supabase
+    .from('pet_owners')
+    .select('role')
+    .eq('pet_id', id)
+    .eq('profile_id', user.id)
+    .single()
+
+  if (!ownerRecord) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const body = await req.json()
+  const { expense_id } = body
+  if (!expense_id) return NextResponse.json({ error: 'Harcama ID zorunludur.' }, { status: 400 })
+
+  const { error } = await supabase
+    .from('pet_expenses')
+    .delete()
+    .eq('id', expense_id)
+    .eq('pet_id', id)
+
+  if (error) return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 })
+
+  revalidatePath('/owner/dashboard')
+  revalidatePath(`/owner/pets/${id}`)
+
+  return NextResponse.json({ success: true })
+}

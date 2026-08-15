@@ -21,8 +21,8 @@ export class AppointmentReadHandler implements AgendaReadHandler {
       eventId: `plan_${plan.id}`,
       source: 'plans',
       sourceRecordId: plan.id,
-      category: 'saglik',
-      subCategory: plan.sub_type || 'Veteriner Randevusu',
+      category: 'saglik' as string,
+      subCategory: (plan.sub_type || "") as any || 'Veteriner Randevusu',
       stableIdentity: `saglik:vet_${plan.id}`,
       occurrenceIdentity: null,
       fallbackIdentity: `saglik:vet_${dateKey}`,
@@ -33,7 +33,7 @@ export class AppointmentReadHandler implements AgendaReadHandler {
       actualAt: plan.completed_at || null,
       nextDueAt: null,
       dateKey,
-      sourceStatus: plan.status,
+      sourceStatus: plan.status || 'unknown',
       lifecycleType: 'appointment',
       displayStatus: plan.status === 'completed' ? 'completed' : dateKey < context.todayStr ? 'overdue' : 'upcoming',
       status: plan.status === 'completed' ? 'completed' : dateKey < context.todayStr ? 'overdue' : 'upcoming',
@@ -61,8 +61,8 @@ export class AppointmentReadHandler implements AgendaReadHandler {
       eventId: `appointment_${record.id}`,
       source: 'appointments',
       sourceRecordId: record.id,
-      category: 'saglik',
-      subCategory: 'Veteriner Randevusu',
+      category: 'saglik' as string,
+      subCategory: 'Veteriner Randevusu' as string,
       stableIdentity: `saglik:vet_${record.id}`,
       occurrenceIdentity: null,
       fallbackIdentity: `saglik:vet_${dateKey}`,
@@ -101,7 +101,7 @@ export class AppointmentReadHandler implements AgendaReadHandler {
     const dateKey = deriveDateKey(appAt, context.timeZone);
 
     return {
-      category: 'saglik',
+      category: 'saglik' as string,
       baseIdentity: `saglik:vet_${input.id}`,
       occurrenceIdentity: null,
       fallbackIdentity: `saglik:vet_${dateKey}`

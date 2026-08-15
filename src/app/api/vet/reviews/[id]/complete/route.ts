@@ -1,10 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { requireRole } from '@/lib/auth/get-current-profile'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  // GÜVENLİK DÜZELTMESİ: bkz. claim/route.ts ile aynı kök neden — bu
+  // endpoint de `vetId`'yi doğrulamadan istek gövdesinden alıyor ve
+  // `vet_earnings`e ödeme kaydı (₺50) ekliyordu. `vet_earnings` RLS'i daha
+  // önceki bir migration'da (20260521000009_fix_vet_earnings_rls.sql)
+  // servis-role dışı tüm erişimi kapattığı için INSERT zaten sessizce
+  // başarısız oluyordu, ancak `status: 'approved'/'rejected'` güncellemesi
+  // ve `vet_verifications` kaydı hâlâ herhangi bir giriş yapmış pet owner
+  // tarafından kendi incelemesi için tetiklenebiliyordu. Aynı minimal
+  // düzeltme uygulandı: gerçek 'vet' rolü zorunlu kılındı.
+  const vetProfile = await requireRole(['vet', 'admin', 'founder'])
+  if (!vetProfile) {
+    return NextResponse.json({ error: 'Forbidden: vet role required' }, { status: 403 })
+  }
+
   const supabase = await createServerSupabaseClient()
   const { id } = await params
-  
+
   const body = await req.json()
   const { approved = true, note = '', vetId } = body
 

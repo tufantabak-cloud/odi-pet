@@ -51,8 +51,8 @@ export interface PetAgendaEvent {
   eventId: string;
   source: 'plans' | 'vaccine_records_v2' | 'parasite_records' | 'health_medications' | 'growth_records' | 'nutrition_logs' | 'appointments' | 'health_schedules';
   sourceRecordId: string;
-  category: string;
-  subCategory: string;
+  category?: string | null;
+  subCategory?: string | null;
   stableIdentity: string;
   occurrenceIdentity: string | null;
   fallbackIdentity: string | null;
@@ -80,7 +80,7 @@ export type AgendaMatchResult =
   | { status: 'multiple'; eventIds: string[]; reason: string };
 
 export interface AgendaIdentity {
-  category: string;
+  category?: string | null;
   baseIdentity: string;
   occurrenceIdentity: string | null;
   fallbackIdentity: string | null;
@@ -97,8 +97,8 @@ export interface AgendaDateRange {
   rangeEndStr: string;   // YYYY-MM-DD
 }
 
-export interface AgendaReadHandler<TPlan = any, TRecord = any> {
-  category: string;
+export interface AgendaReadHandler<TPlan = AgendaPlanInput, TRecord = AgendaRecordInput> {
+  category?: string | null;
 
   normalizePlan(
     plan: TPlan,
@@ -147,4 +147,42 @@ export function deriveDateKey(dateInput: string | null | undefined, timeZone = '
   } catch {
     return trimmed.split('T')[0] || '';
   }
+}
+
+export interface AgendaPlanInput {
+  id: string;
+  scheduled_at?: string | null;
+  occurrence_scheduled_at?: string | null;
+  status?: string;
+  sub_type?: string | null;
+  note?: string | null;
+  parent_plan_id?: string | null;
+  completed_at?: string | null;
+  extra_data?: any | null;
+  title?: string | null;
+  vaccine_code?: string | null;
+  parasite_type?: string | null;
+  dosage?: string | null;
+  brand?: string | null;
+  frequency_label?: string | null;
+  frequency_days?: number | null;
+  product?: string | null;
+  item?: string | null;
+  amount?: string | null;
+  code?: string | null; category?: string | null; dosage_string?: string | null; dose?: string | null; name?: string | null; medication?: string | null; unit?: string | null; [key: string]: any;
+}
+
+export interface AgendaRecordInput {
+  id: string;
+  scheduled_at?: string | null;
+  appointment_date?: string | null;
+  created_at?: string | null;
+  status?: string;
+  title?: string | null;
+  notes?: string | null;
+  date?: string | null;
+  measured_at?: string | null;
+  administered_at?: string | null;
+  weight?: number | null;
+  code?: string | null; category?: string | null; dosage_string?: string | null; dose?: string | null; name?: string | null; medication?: string | null; unit?: string | null; [key: string]: any;
 }

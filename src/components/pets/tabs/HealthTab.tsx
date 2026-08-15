@@ -5,13 +5,19 @@ import Link from 'next/link';
 import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 import { ShieldCheckIcon, BugIcon, StethoscopeIcon, CarrierIcon, VaccineIcon, ParasiteIcon } from '@/components/icons/PetIcons';
 import { SmartScanner } from '@/components/ui/SmartScanner';
+import { PlanItemActionMenu } from '@/components/pets/common/PlanItemActionMenu';
+import { PostponeModal } from '@/components/pets/common/PostponeModal';
+import { ArchiveConfirmModal } from '@/components/pets/common/ArchiveConfirmModal';
 
 interface HealthTabProps {
   petId: string;
   petName: string;
+  onMarkDone?: (item: any) => void;
+  onPostpone?: (item: any) => void;
+  onEdit?: (item: any) => void;
 }
 
-export default function HealthTab({ petId, petName }: HealthTabProps) {
+export default function HealthTab({ petId, petName, onMarkDone, onPostpone, onEdit }: HealthTabProps) {
   const supabase = createBrowserSupabaseClient();
   const [hideVaultBanner, setHideVaultBanner] = useState(true);
   const [healthRecords, setHealthRecords] = useState<any[]>([]);
@@ -23,6 +29,10 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
   const [loadingParasites, setLoadingParasites] = useState(true);
   const [loadingVet, setLoadingVet] = useState(true);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+
+  // Action Modals State
+  const [rescheduleItem, setRescheduleItem] = useState<{ id: string; title: string; type: 'vaccine' | 'parasite' | 'vet' | 'health'; currentDate?: string } | null>(null);
+  const [archiveItem, setArchiveItem] = useState<{ id: string; title: string; type: 'vaccine' | 'parasite' | 'vet' | 'health' } | null>(null);
 
   // Check localStorage for banner state on mount
   useEffect(() => {
@@ -96,6 +106,49 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
     loadVetRecords();
   }, [loadHealthRecords, loadVaccines, loadParasites, loadVetRecords]);
 
+  // Action Save Handlers
+  const handleRescheduleSave = async (newDate: string, reason?: string) => {
+    if (!rescheduleItem) return;
+    const { id, type } = rescheduleItem;
+
+    if (type === 'vaccine') {
+      await supabase.from('vaccine_records_v2').update({ administered_at: newDate, notes: reason }).eq('id', id);
+      await loadVaccines();
+    } else if (type === 'parasite') {
+      await supabase.from('parasite_records').update({ administered_at: newDate, notes: reason }).eq('id', id);
+      await loadParasites();
+    } else if (type === 'vet') {
+      await supabase.from('appointments').update({ scheduled_at: newDate, notes: reason }).eq('id', id);
+      await loadVetRecords();
+    } else if (type === 'health') {
+      await fetch(`/api/pets/${petId}/records/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: newDate, notes: reason }),
+      });
+      await loadHealthRecords();
+    }
+  };
+
+  const handleArchiveConfirm = async () => {
+    if (!archiveItem) return;
+    const { id, type } = archiveItem;
+
+    if (type === 'vaccine') {
+      await supabase.from('vaccine_records_v2').update({ status: 'archived' }).eq('id', id);
+      setVaccineRecords((prev) => prev.filter((r) => r.id !== id));
+    } else if (type === 'parasite') {
+      await supabase.from('parasite_records').update({ status: 'archived' }).eq('id', id);
+      setParasiteRecords((prev) => prev.filter((r) => r.id !== id));
+    } else if (type === 'vet') {
+      await supabase.from('appointments').update({ status: 'archived' }).eq('id', id);
+      setVetRecords((prev) => prev.filter((r) => r.id !== id));
+    } else if (type === 'health') {
+      await fetch(`/api/pets/${petId}/records/${id}`, { method: 'DELETE' });
+      setHealthRecords((prev) => prev.filter((r) => r.id !== id));
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6 py-2">
       {/* ── Dijital Belge Kasası Yönlendirme Bannerı ── */}
@@ -140,20 +193,6 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
               <p className="text-[12px] text-text-secondary">{petName} için geçmiş sağlık, muayene ve tedavi kayıtları</p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              href={`/owner/plan-yap/saglik?pet_id=${petId}`}
-              className="min-h-[44px] px-4 py-2.5 rounded-xl bg-primary text-white font-bold text-[12px] hover:bg-primary-hover hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xs inline-flex items-center gap-1.5"
-            >
-              <StethoscopeIcon size={16} badgeSize="none" /> Sağlık Planla
-            </Link>
-            <Link
-              href={`/owner/plan-yap/saglik?pet_id=${petId}&mode=log`}
-              className="min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-[12px] hover:bg-emerald-700 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xs inline-flex items-center gap-1.5"
-            >
-              📋 Sağlık Kaydı Ekle
-            </Link>
-          </div>
         </div>
 
         {/* Sağlık Geçmişi Listesi */}
@@ -187,16 +226,33 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
                     </p>
                   </div>
                 </div>
-                {rec.document_path && (
-                  <a
-                    href={rec.document_path}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1"
-                  >
-                    📄 Belge
-                  </a>
-                )}
+                <div className="flex items-center gap-2">
+                  {rec.document_path && (
+                    <a
+                      href={rec.document_path}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1"
+                    >
+                      📄 Belge
+                    </a>
+                  )}
+                  <PlanItemActionMenu
+                    itemId={rec.id}
+                    itemTitle={rec.title || rec.type || 'Sağlık Kaydı'}
+                    itemType="health"
+                    onMarkDone={undefined}
+                    onPostpone={undefined}
+                    onEdit={onEdit ? () => onEdit(rec) : undefined}
+                    onArchiveOrDelete={() =>
+                      setArchiveItem({
+                        id: rec.id,
+                        title: rec.title || rec.type || 'Sağlık Kaydı',
+                        type: 'health',
+                      })
+                    }
+                  />
+                </div>
               </div>
             ))}
           </div>
@@ -220,18 +276,6 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
             >
               📷 Belge / OCR Tara
             </button>
-            <Link
-              href={`/owner/plan-yap/asi?pet_id=${petId}`}
-              className="min-h-[44px] px-4 py-2 rounded-xl bg-primary text-white font-bold text-[12px] hover:bg-primary-hover hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xs flex items-center gap-1.5"
-            >
-              💉 Aşı Planla
-            </Link>
-            <Link
-              href={`/owner/plan-yap/asi?pet_id=${petId}&mode=log`}
-              className="min-h-[44px] px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-[12px] hover:bg-emerald-700 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xs flex items-center gap-1.5"
-            >
-              📋 Aşı Kaydı Ekle
-            </Link>
           </div>
         </div>
 
@@ -247,7 +291,7 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
               <VaccineIcon size={24} />
             </div>
             <p className="text-[14px] text-text-primary font-bold">Henüz Aşı Kaydı Yok</p>
-            <p className="text-[12px] text-text-secondary/80 max-w-sm leading-relaxed mb-1">Aşı takvimi oluşturmak için "Aşı Planla" veya geçmiş aşıları kaydetmek için "Aşı Kaydı Ekle" butonunu kullanabilirsiniz.</p>
+            <p className="text-[12px] text-text-secondary/80 max-w-sm leading-relaxed mb-1">Geçmiş veya gelecek aşı planlarınızı alt navigasyondaki Hızlı Erişim (+) butonundan ekleyebilirsiniz.</p>
           </div>
         ) : (
           <div className="flex flex-col gap-2.5">
@@ -267,16 +311,33 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
                     </p>
                   </div>
                 </div>
-                {rec.document_storage_path && (
-                  <a
-                    href={rec.document_storage_path}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1"
-                  >
-                    📄 Belge
-                  </a>
-                )}
+                <div className="flex items-center gap-2">
+                  {rec.document_storage_path && (
+                    <a
+                      href={rec.document_storage_path}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1"
+                    >
+                      📄 Belge
+                    </a>
+                  )}
+                  <PlanItemActionMenu
+                    itemId={rec.id}
+                    itemTitle={rec.vaccine_name || 'Aşı Kaydı'}
+                    itemType="vaccine"
+                    onMarkDone={undefined}
+                    onPostpone={undefined}
+                    onEdit={onEdit ? () => onEdit(rec) : undefined}
+                    onArchiveOrDelete={() =>
+                      setArchiveItem({
+                        id: rec.id,
+                        title: rec.vaccine_name || 'Aşı Kaydı',
+                        type: 'vaccine',
+                      })
+                    }
+                  />
+                </div>
               </div>
             ))}
           </div>
@@ -293,20 +354,6 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
               <p className="text-[12px] text-text-secondary">{petName} için geçmiş parazit uygulamaları</p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              href={`/owner/plan-yap/parazit?pet_id=${petId}`}
-              className="min-h-[44px] px-4 py-2 rounded-xl bg-teal-600 text-white font-bold text-[12px] hover:bg-teal-700 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xs flex items-center gap-1.5"
-            >
-              🐛 Parazit Planla
-            </Link>
-            <Link
-              href={`/owner/plan-yap/parazit?pet_id=${petId}&mode=log`}
-              className="min-h-[44px] px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-[12px] hover:bg-emerald-700 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xs flex items-center gap-1.5"
-            >
-              📋 Parazit Kaydı Ekle
-            </Link>
-          </div>
         </div>
 
         {/* Parazit Geçmişi Listesi */}
@@ -321,7 +368,7 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
               <ParasiteIcon size={24} />
             </div>
             <p className="text-[14px] text-text-primary font-bold">Henüz Parazit Kaydı Yok</p>
-            <p className="text-[12px] text-text-secondary/80 max-w-sm leading-relaxed mb-1">İç ve dış parazit korumasını başlatmak için "Parazit Planla" veya tamamlanan bir uygulamayı girmek için "Parazit Kaydı Ekle" butonunu kullanabilirsiniz.</p>
+            <p className="text-[12px] text-text-secondary/80 max-w-sm leading-relaxed mb-1">İç ve dış parazit koruma planlarınızı alt navigasyondaki Hızlı Erişim (+) butonundan ekleyebilirsiniz.</p>
           </div>
         ) : (
           <div className="flex flex-col gap-2.5">
@@ -342,16 +389,33 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
                     </p>
                   </div>
                 </div>
-                {rec.document_storage_path && (
-                  <a
-                    href={rec.document_storage_path}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1"
-                  >
-                    📄 Fotoğraf
-                  </a>
-                )}
+                <div className="flex items-center gap-2">
+                  {rec.document_storage_path && (
+                    <a
+                      href={rec.document_storage_path}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1"
+                    >
+                      📄 Fotoğraf
+                    </a>
+                  )}
+                  <PlanItemActionMenu
+                    itemId={rec.id}
+                    itemTitle={rec.brand_free_text || rec.product_free_text || rec.parasite_code || 'Parazit Koruması'}
+                    itemType="parasite"
+                    onMarkDone={undefined}
+                    onPostpone={undefined}
+                    onEdit={onEdit ? () => onEdit(rec) : undefined}
+                    onArchiveOrDelete={() =>
+                      setArchiveItem({
+                        id: rec.id,
+                        title: rec.brand_free_text || rec.product_free_text || rec.parasite_code || 'Parazit Koruması',
+                        type: 'parasite',
+                      })
+                    }
+                  />
+                </div>
               </div>
             ))}
           </div>
@@ -369,20 +433,6 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
               <h3 className="font-extrabold text-text-primary text-[16px]">Veteriner & Randevu Geçmişi</h3>
               <p className="text-[12px] text-text-secondary">{petName} için geçmiş veteriner kontrolleri ve randevular</p>
             </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              href={`/owner/plan-yap/kontrol?pet_id=${petId}`}
-              className="min-h-[44px] px-4 py-2 rounded-xl bg-purple-600 text-white font-bold text-[12px] hover:bg-purple-700 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xs flex items-center gap-1.5"
-            >
-              🏥 Randevu Planla
-            </Link>
-            <Link
-              href={`/owner/plan-yap/kontrol?pet_id=${petId}&mode=log`}
-              className="min-h-[44px] px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-[12px] hover:bg-emerald-700 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xs flex items-center gap-1.5"
-            >
-              📋 Veteriner Kaydı Ekle
-            </Link>
           </div>
         </div>
 
@@ -419,11 +469,28 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
                     </p>
                   </div>
                 </div>
-                {rec.status && (
-                  <span className="text-[11px] font-bold text-purple-700 bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-200/50">
-                    {rec.status === 'completed' || rec.status === 'done' ? '✓ Tamamlandı' : rec.status}
-                  </span>
-                )}
+                <div className="flex items-center gap-2">
+                  {rec.status && (
+                    <span className="text-[11px] font-bold text-purple-700 bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-200/50">
+                      {rec.status === 'completed' || rec.status === 'done' ? '✓ Tamamlandı' : rec.status}
+                    </span>
+                  )}
+                  <PlanItemActionMenu
+                    itemId={rec.id}
+                    itemTitle={rec.clinics?.name || rec.title || rec.reason || 'Veteriner Ziyareti'}
+                    itemType="appointment"
+                    onMarkDone={undefined}
+                    onPostpone={undefined}
+                    onEdit={onEdit ? () => onEdit(rec) : undefined}
+                    onArchiveOrDelete={() =>
+                      setArchiveItem({
+                        id: rec.id,
+                        title: rec.clinics?.name || rec.title || rec.reason || 'Veteriner Ziyareti',
+                        type: 'vet',
+                      })
+                    }
+                  />
+                </div>
               </div>
             ))}
           </div>
@@ -439,6 +506,28 @@ export default function HealthTab({ petId, petName }: HealthTabProps) {
             setIsScannerOpen(false);
             loadVaccines();
           }}
+        />
+      )}
+
+      {/* Tarih Erteleme / Güncelleme Modalı */}
+      {rescheduleItem && (
+        <PostponeModal
+          isOpen={!!rescheduleItem}
+          taskTitle={rescheduleItem.title}
+          currentDate={rescheduleItem.currentDate || new Date().toISOString()}
+          onClose={() => setRescheduleItem(null)}
+          onPostpone={(newDate, note) => handleRescheduleSave(newDate, note)}
+        />
+      )}
+
+      {/* Soft Delete / Arşivleme Onay Modalı */}
+      {archiveItem && (
+        <ArchiveConfirmModal
+          isOpen={!!archiveItem}
+          itemTitle={archiveItem.title}
+          isHealthRecord={true}
+          onClose={() => setArchiveItem(null)}
+          onConfirm={handleArchiveConfirm}
         />
       )}
     </div>

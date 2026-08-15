@@ -60,7 +60,6 @@ export default async function AdminMembershipsPage() {
     .select('*')
     .limit(200);
 
-  console.log('[memberships] profiles:', allProfiles?.length ?? 0, 'subs:', allUserSubs?.length ?? 0);
 
   const totalMonthDaysGranted = monthCredits?.reduce((acc, curr) => acc + (curr.credit_days || 0), 0) ?? 0;
 

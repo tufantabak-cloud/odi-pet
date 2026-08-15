@@ -102,9 +102,6 @@ export async function createOverdueVaccineNotifications(
     created++
   }
 
-  console.log(
-    `Overdue vaccine notifications: candidates=${rows.length} created=${created} duplicates=${skipped} skipped_invalid=${invalidCount} failed=0`
-  )
 
   return { notified: created, skipped: skipped + invalidCount }
 }

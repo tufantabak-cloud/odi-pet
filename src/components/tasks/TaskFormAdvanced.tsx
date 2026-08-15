@@ -289,6 +289,7 @@ export default function TaskFormAdvanced({
                     {formData.frequency === 'daily' ? (
                       <>
                         <option value={0}>Zamanında</option>
+                        <option value={30}>30 dakika önce</option>
                         <option value={60}>1 saat önce</option>
                         <option value={180}>3 saat önce</option>
                         <option value={300}>5 saat önce</option>
@@ -297,6 +298,7 @@ export default function TaskFormAdvanced({
                     ) : formData.frequency === 'once' ? (
                       <>
                         <option value={0}>Zamanında</option>
+                        <option value={30}>30 dakika önce</option>
                         <option value={60}>1 saat önce</option>
                         <option value={180}>3 saat önce</option>
                         <option value={1440}>1 gün önce</option>
@@ -307,6 +309,7 @@ export default function TaskFormAdvanced({
                     ) : (
                       <>
                         <option value={0}>Zamanında</option>
+                        <option value={30}>30 dakika önce</option>
                         <option value={1440}>1 gün önce</option>
                         <option value={4320}>3 gün önce</option>
                         <option value={7200}>5 gün önce</option>

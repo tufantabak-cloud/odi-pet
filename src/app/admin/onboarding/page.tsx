@@ -1,37 +1,13 @@
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+// NOT: Bu route admin/founder rol kontrolüyle korunuyor (src/proxy.ts), ama
+// önceki içerik `supabase.from('user_activation_scores').select('*').limit(5)`
+// sonucunu filtresiz JSON.stringify ile dökerek defense-in-depth ilkesini
+// ihlal ediyordu. Sorgu kaldırıldı.
 
-export default async function Page() {
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-      },
-    }
-  );
-
-  const { data: records, error } = await supabase.from('user_activation_scores').select('*').limit(5);
-
+export default function Page() {
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-4">Onboarding Durumları</h1>
-      {error && <p className="text-red-500">Error: {error.message}</p>}
-      <ul className="space-y-2">
-        {records && records.length > 0 ? (
-          records.map((record: any) => (
-            <li key={record.id} className="p-4 bg-white rounded shadow text-sm">
-              <pre>{JSON.stringify(record, null, 2)}</pre>
-            </li>
-          ))
-        ) : (
-          <p>Kayıt bulunamadı.</p>
-        )}
-      </ul>
+      <p className="text-text-secondary text-sm">Bu bölüm henüz yapım aşamasında.</p>
     </div>
   );
 }

@@ -84,8 +84,9 @@ export default function PetHeroCard({
       </div>
 
       {/* Üst Butonlar — Sol: Geri | Orta: Kayıp Rozeti | Sağ: 3 Nokta Menü */}
-      <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-20">
+      <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-20 pointer-events-auto">
         <button
+          type="button"
           onClick={() => router.back()}
           aria-label="Geri Dön"
           className="w-[42px] h-[42px] min-w-[42px] min-h-[42px] rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center cursor-pointer hover:bg-black/60 transition-all active:scale-95 shadow-md">
@@ -94,10 +95,10 @@ export default function PetHeroCard({
 
         {activeLostReport && (
           <button
+            type="button"
             onClick={onMarkFound}
             aria-label="Kayıp İlanı Aktif"
-            className="px-3 py-1.5 rounded-full bg-red-600/90 text-white text-xs font-bold backdrop-blur-md border border-red-400/30 flex items-center gap-1.5 shadow-lg animate-pulse hover:bg-red-700 transition-colors"
-          >
+            className="px-3 py-1.5 rounded-full bg-red-600/90 text-white text-xs font-bold backdrop-blur-md border border-red-400/30 flex items-center gap-1.5 shadow-lg animate-pulse hover:bg-red-700 transition-colors cursor-pointer">
             <AlertTriangle size={14} className="text-white" />
             <span>Kayıp İlanı Aktif</span>
           </button>
@@ -105,7 +106,13 @@ export default function PetHeroCard({
 
         {/* Sağ Üst — TEK ÜÇ NOKTA (...) MENÜSÜ */}
         <button
-          onClick={onMenuOpen}
+          type="button"
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            if (onMenuOpen) onMenuOpen()
+            else if (onChangeCoverClick) onChangeCoverClick()
+          }}
           aria-label="Profil Menüsü"
           title="Seçenekler"
           className="w-[42px] h-[42px] min-w-[42px] min-h-[42px] rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center cursor-pointer hover:bg-black/60 transition-all active:scale-95 shadow-md">

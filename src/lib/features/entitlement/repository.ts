@@ -27,14 +27,12 @@ export class EntitlementRepository {
         const headerStore = await headers();
         const previewHeader = headerStore.get('x-odi-preview');
         if (previewHeader) {
-          console.log(`[PremiumPreview] Admin ${userId} previewing via Header as ${previewHeader}`);
           return previewHeader;
         }
 
         const cookieStore = await cookies();
         const previewCookie = cookieStore.get('odi_premium_preview');
         if (previewCookie && previewCookie.value) {
-          console.log(`[PremiumPreview] Admin ${userId} previewing via Cookie as ${previewCookie.value}`);
           return previewCookie.value;
         }
       } catch (e) {

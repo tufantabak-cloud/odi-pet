@@ -14,7 +14,10 @@ import {
   Dog,
 } from 'lucide-react'
 
+import { ArchiveConfirmModal } from '@/components/pets/common/ArchiveConfirmModal'
+
 export default function SymptomSettingsPage() {
+  const [deleteId, setDeleteId] = useState<string | null>(null)
   const [templates, setTemplates] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [speciesFilter, setSpeciesFilter] = useState<'Kedi' | 'Köpek' | 'Tümü'>('Tümü')
@@ -52,9 +55,13 @@ export default function SymptomSettingsPage() {
   }, [wizardOpen])
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Bu semptomu silmek istediğinize emin misiniz?')) return
+    setDeleteId(id)
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteId) return
     try {
-      await fetch(`/api/symptoms/templates/${id}`, { method: 'DELETE' })
+      await fetch(`/api/symptoms/templates/${deleteId}`, { method: 'DELETE' })
       fetchTemplates()
     } catch (err) {
       console.error(err)
@@ -399,6 +406,16 @@ export default function SymptomSettingsPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {deleteId && (
+        <ArchiveConfirmModal
+          isOpen={!!deleteId}
+          itemTitle="Semptom Şablonu"
+          isHealthRecord={false}
+          onClose={() => setDeleteId(null)}
+          onConfirm={confirmDelete}
+        />
       )}
     </div>
   )

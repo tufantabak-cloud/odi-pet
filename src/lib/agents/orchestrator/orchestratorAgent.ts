@@ -109,17 +109,14 @@ export async function runOrchestratedPipeline(
 
     // 1. Yeni overdue planları bul ve güncelle
     const overdueResult = await markOverduePlans(adminSupabase, { dryRun })
-    console.log('Overdue plans marked:', overdueResult.updated, dryRun ? `(dry-run, wouldUpdate=${overdueResult.wouldUpdate})` : '')
 
     // 2. Yeni overdue olan planlar için bildirim oluştur
     if (!dryRun && overdueResult.plans.length > 0) {
       const notifResult = await createOverdueVaccineNotifications(adminSupabase, overdueResult.plans)
-      console.log('Overdue notifications for new plans:', notifResult.notified, 'skipped:', notifResult.skipped)
     }
 
     // 3. X.4 / C.5.3 Recovery: Eksik kalan overdue planları telafi et
     const recoveryResult = await recoverOverdueNotifications(adminSupabase, { dryRun })
-    console.log('Overdue recovery:', recoveryResult.recoveredCount, 'skipped:', recoveryResult.skippedCount, 'candidates:', recoveryResult.candidateCount)
 
     agents_succeeded.push('overdue_plans')
   } catch (err) {
@@ -137,7 +134,6 @@ export async function runOrchestratedPipeline(
   try {
     const adminSupabase = createAdminSupabaseClient()
     const result = await createEstrusNotifications(adminSupabase, { dryRun })
-    console.log('Estrus notifications:', result.created, 'skipped:', result.skipped, 'errors:', result.errors, dryRun ? `(dry-run)` : '')
     agents_succeeded.push('estrus_notifications')
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err)
@@ -154,7 +150,6 @@ export async function runOrchestratedPipeline(
   try {
     const adminSupabase = createAdminSupabaseClient()
     const result = await expireSharedPetCards(adminSupabase, { dryRun })
-    console.log('Shared pet cards expired:', result.updated, dryRun ? `(dry-run, wouldUpdate=${result.wouldUpdate})` : '')
     agents_succeeded.push('expire_cards')
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err)
@@ -171,7 +166,6 @@ export async function runOrchestratedPipeline(
   try {
     const adminSupabase = createAdminSupabaseClient()
     const watchResult = await runContentReviewWatch(adminSupabase)
-    console.log('Content Review Watch completed:', watchResult.counts, 'Alerts:', watchResult.summaryAlerts)
     agents_succeeded.push('content_review_watch')
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err)

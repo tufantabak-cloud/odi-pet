@@ -202,14 +202,40 @@ export async function DELETE(req: NextRequest) {
 
   // 1. Bekleyen Daveti İptal Etme (Cancel Invite)
   if (invite_id) {
-    const { error: inviteErr } = await supabase.rpc('revoke_pet_invite', {
+    const { data: inviteData, error: inviteErr } = await supabase.rpc('revoke_pet_invite', {
       p_invite_id: invite_id,
       p_pet_id: pet_id,
     })
 
     if (inviteErr) {
-      const { message } = formatSupabaseError(inviteErr, 'Davet iptal edilirken hata oluştu.')
-      return NextResponse.json({ error: message }, { status: 500 })
+      console.warn('[pets/family] revoke_pet_invite RPC failed, attempting direct table update:', inviteErr)
+      const { error: directErr } = await supabase
+        .from('pet_invites')
+        .update({ status: 'revoked' })
+        .eq('id', invite_id)
+        .eq('pet_id', pet_id)
+
+      if (directErr) {
+        console.error('[pets/family] Direct pet_invites update failed:', directErr)
+        const { message } = formatSupabaseError(directErr, 'Davet iptal edilirken hata oluştu.')
+        return NextResponse.json({ error: message }, { status: 500 })
+      }
+
+      return NextResponse.json({ success: true, message: 'Davet başarıyla iptal edildi.' })
+    }
+
+    if (!ownershipRpcSucceeded(inviteData)) {
+      const code = ownershipRpcCode(inviteData)
+      const status = code === 'FORBIDDEN' ? 403 : code === 'NOT_FOUND' ? 404 : 400
+      const errorMsgMap: Record<string, string> = {
+        FORBIDDEN: 'Davet iptal etme yetkiniz bulunmuyor.',
+        NOT_FOUND: 'İptal edilecek davet bulunamadı.',
+        AUTH_REQUIRED: 'Oturum açmanız gerekiyor.',
+      }
+      return NextResponse.json(
+        { error: errorMsgMap[code || ''] || 'Davet iptal edilemedi.', code },
+        { status }
+      )
     }
 
     return NextResponse.json({ success: true, message: 'Davet başarıyla iptal edildi.' })
@@ -222,8 +248,27 @@ export async function DELETE(req: NextRequest) {
     })
 
     if (leaveErr) {
-      const { message } = formatSupabaseError(leaveErr, 'Ekipten ayrılma işlemi başarısız oldu.')
-      return NextResponse.json({ error: message }, { status: 500 })
+      console.warn('[pets/family] leave_pet_team RPC failed, attempting direct table update:', leaveErr)
+      const { error: memErr } = await supabase
+        .from('pet_memberships')
+        .update({ status: 'revoked', revoked_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+        .eq('pet_id', pet_id)
+        .eq('profile_id', user.id)
+        .neq('role', 'primary_owner')
+
+      await supabase
+        .from('pet_members')
+        .delete()
+        .eq('pet_id', pet_id)
+        .eq('profile_id', user.id)
+
+      if (memErr) {
+        console.error('[pets/family] Fallback leave team failed:', memErr)
+        const { message } = formatSupabaseError(leaveErr, 'Ekipten ayrılma işlemi başarısız oldu.')
+        return NextResponse.json({ error: message }, { status: 500 })
+      }
+
+      return NextResponse.json({ success: true, left: true, message: 'Ekipten ayrıldınız.' })
     }
 
     if (typeof leaveData === 'object' && leaveData !== null && !(leaveData as any).ok) {
@@ -253,8 +298,20 @@ export async function DELETE(req: NextRequest) {
     }
   )
   if (error) {
-    const { message } = formatSupabaseError(error)
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.warn('[pets/family] remove_pet_caregiver RPC failed, attempting direct table delete:', error)
+    const { error: delErr } = await supabase
+      .from('pet_members')
+      .delete()
+      .eq('id', member_id)
+      .eq('pet_id', pet_id)
+
+    if (delErr) {
+      console.error('[pets/family] Direct pet_members delete failed:', delErr)
+      const { message } = formatSupabaseError(error)
+      return NextResponse.json({ error: message }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
   }
 
   if (!ownershipRpcSucceeded(data)) {

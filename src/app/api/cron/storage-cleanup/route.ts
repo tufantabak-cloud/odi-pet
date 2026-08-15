@@ -1,14 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { authorizeCronRequest } from '@/lib/security/cron-auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
-  // Authorization check (Cron secret or internal header)
-  const authHeader = req.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // GÜVENLİK DÜZELTMESİ: Bu route daha önce kendi auth kontrolünü yapıyordu
+  // (`if (cronSecret && authHeader !== ...)`), ve CRON_SECRET ortam
+  // değişkeni tanımsız olduğunda kontrol tamamen atlanıyordu (fail-open) —
+  // bu da bu route'u (storage bucket'larından dosya SİLME işlemi yapan bir
+  // endpoint'i) yetkisiz herkese açık hale getirebilirdi. Ayrıca karşılaştırma
+  // timing-safe değildi. Diğer 12 cron route'unun tamamının kullandığı
+  // ortak, fail-closed `authorizeCronRequest()` yardımcı fonksiyonuna
+  // geçirildi (bkz. src/lib/security/cron-auth.ts) — davranış artık
+  // repodaki yerleşik güvenli desenle birebir tutarlı.
+  const authorizationError = authorizeCronRequest(req);
+  if (authorizationError) {
+    return authorizationError;
   }
 
   const supabase = createAdminSupabaseClient();

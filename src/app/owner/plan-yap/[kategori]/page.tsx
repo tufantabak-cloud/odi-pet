@@ -17,6 +17,7 @@ import { StepperInput } from '@/components/ui/StepperInput';
 import { OptionalApplicationDetails } from '@/components/health-records/OptionalApplicationDetails';
 import type { ApplicationDetails } from '@/lib/health-records/application-details';
 import { normalizeSpecies } from '@/lib/species';
+import { ArchiveConfirmModal } from '@/components/pets/common/ArchiveConfirmModal';
 import {
   isProductSpeciesCompatible,
   isProductTypeCompatibleWithProtocol,
@@ -104,6 +105,7 @@ export default function WizardOrchestrator() {
   // Düzenlemede planın orijinal extra_data'sı; kayıtta üzerine yazılmayan alanlar (dose_number, migrated_from vb.) korunur
   const [initialExtraData, setInitialExtraData] = useState<Record<string, any> | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -290,11 +292,6 @@ export default function WizardOrchestrator() {
         }
       }
 
-      if (categoryKey === 'beslenme' && queryPetId) {
-        router.replace(`/owner/pets/${queryPetId}/nutrition`);
-        return;
-      }
-
       const { data, error } = await supabase.from('pets').select('id, name, species, avatar_url');
       let petCount = 0;
       if (!error && data) {
@@ -388,9 +385,19 @@ export default function WizardOrchestrator() {
         .eq('status', 'active')
         .eq('sub_type', sub);
       if (cancelled) return;
-      setMatchingPlans(data || []);
+      
+      const plans = data || [];
+      setMatchingPlans(plans);
       setMatchSub(sub);
       setMatchLoading(false);
+
+      if (logMode) {
+        if (plans.length > 0) {
+          setStepData({ linkedPlanId: plans[0].id });
+        } else {
+          setStepData({ linkedPlanId: 'none' });
+        }
+      }
     };
     fetchMatches();
 
@@ -680,13 +687,7 @@ export default function WizardOrchestrator() {
       return false;
     };
 
-    // Log modu ilişkilendirme adımı: eşleşen planlı görev varsa (veya kontrol
-    // ediliyorsa) "Bunu zaten planlamış mıydınız?" adımı araya girer.
-    if (linkStepMode === 'loading') {
-      steps.push({ key: 'link_plan', type: 'link_plan_loading', title: 'Planlı görev mi?', desc: 'Kontrol ediliyor…' });
-    } else if (linkStepMode === 'select') {
-      steps.push({ key: 'link_plan', type: 'link_plan_selection', title: 'Planlı görev mi?', desc: 'Bu işlem zaten planladığınız bir görev olabilir.' });
-    }
+    // Log modu otomatik ilişkilendirme: plan_loading ve plan_selection adımları kaldırıldı.
 
     if (isLinked) {
       // Bir planlı göreve bağlandı: yalnızca onay adımı gösterilir. Kayıt,
@@ -740,8 +741,11 @@ export default function WizardOrchestrator() {
     (stepKeys.includes('recurrence') && wizardData.frequency !== 'once' && wizardData.endCondition === 'date' && !wizardData.endDate) ||
     (subCat === 'İlaç' && (!wizardData.medication_name || !wizardData.medication_unit || !wizardData.date || !wizardData.time || !wizardData.medication_dose || !wizardData.medication_freq_type));
 
-  const handleDelete = async () => {
-    if (!window.confirm('Bu planı silmek istediğinize emin misiniz?')) return;
+  const handleDelete = () => {
+    setShowDeleteConfirmModal(true);
+  };
+
+  const confirmDeletePlan = async () => {
     setIsDeleting(true);
     try {
       const res = await fetch(`/api/plans/${editId}`, { method: 'DELETE' });
@@ -749,13 +753,15 @@ export default function WizardOrchestrator() {
       router.push('/owner/dashboard');
       router.refresh();
     } catch (err: any) {
-      alert(err.message);
+      console.error(err);
+    } finally {
       setIsDeleting(false);
+      setShowDeleteConfirmModal(false);
     }
   };
 
   // ── API Payload Hazırlama ─────────────────────────────────────────
-  const healthCategory = categoryKey === 'asi' || categoryKey === 'parazit'
+  const healthCategory = ['asi', 'parazit', 'beslenme', 'bakim', 'aktivite', 'kilo'].includes(categoryKey)
     ? categoryKey
     : null;
   const applicationDetails: ApplicationDetails = {
@@ -793,43 +799,70 @@ export default function WizardOrchestrator() {
       };
     }
 
-    const parasiteTypeBySubCategory: Record<string, 'internal' | 'external' | 'combined' | 'collar'> = {
-      'İç Parazit': 'internal',
-      'Dış Parazit': 'external',
-      'Birleşik Parazit': 'combined',
-      'Parazit Tasması': 'collar',
-    };
-    const plannedProduct = wizardData.plannedProduct;
+    if (categoryKey === 'parazit') {
+      const parasiteTypeBySubCategory: Record<string, 'internal' | 'external' | 'combined' | 'collar'> = {
+        'İç Parazit': 'internal',
+        'Dış Parazit': 'external',
+        'Birleşik Parazit': 'combined',
+        'Parazit Tasması': 'collar',
+      };
+      const plannedProduct = wizardData.plannedProduct;
 
+      return {
+        pet_id: petId,
+        parasite_type:
+          wizardData.selectedProduct?.category ||
+          parasiteTypeBySubCategory[wizardData.subCategory] ||
+          'combined',
+        parasite_code:
+          wizardData.selectedProduct?.parasite_code ||
+          initialExtraData?.parasite_code ||
+          undefined,
+        administered_at: administeredAt,
+        protection_duration_days:
+          applicationDetails.protection_duration_days ||
+          plannedProduct?.protection_duration_days ||
+          wizardData.selectedProduct?.duration_days ||
+          30,
+        application_method:
+          applicationDetails.application_method ||
+          plannedProduct?.application_method ||
+          'spot_on',
+        brand_free_text:
+          applicationDetails.brand ||
+          plannedProduct?.brand ||
+          null,
+        product_free_text:
+          applicationDetails.product_name ||
+          plannedProduct?.name ||
+          null,
+        notes: applicationDetails.product_notes || wizardData.notes || null,
+      };
+    }
+
+    if (categoryKey === 'ilac') {
+      return {
+        pet_id: petId,
+        medication_name: wizardData.medication_name || wizardData.subCategory || 'İlaç',
+        dose: wizardData.medication_dose ? `${wizardData.medication_dose} ${wizardData.medication_unit || ''}`.trim() : null,
+        usage_duration: wizardData.medication_duration === 'days' && wizardData.medication_days 
+          ? `${wizardData.medication_days} gün` 
+          : null,
+      };
+    }
+
+    // Fallback for routines (beslenme, bakim, aktivite)
     return {
       pet_id: petId,
-      parasite_type:
-        wizardData.selectedProduct?.category ||
-        parasiteTypeBySubCategory[wizardData.subCategory] ||
-        'combined',
-      parasite_code:
-        wizardData.selectedProduct?.parasite_code ||
-        initialExtraData?.parasite_code ||
-        undefined,
-      administered_at: administeredAt,
-      protection_duration_days:
-        applicationDetails.protection_duration_days ||
-        plannedProduct?.protection_duration_days ||
-        wizardData.selectedProduct?.duration_days ||
-        30,
-      application_method:
-        applicationDetails.application_method ||
-        plannedProduct?.application_method ||
-        'spot_on',
-      brand_free_text:
-        applicationDetails.brand ||
-        plannedProduct?.brand ||
-        null,
-      product_free_text:
-        applicationDetails.product_name ||
-        plannedProduct?.name ||
-        null,
-      notes: applicationDetails.product_notes || wizardData.notes || null,
+      category: categoryKey,
+      sub_type: wizardData.subCategory || 'Genel',
+      completed_at: administeredAt,
+      notes: wizardData.notes || null,
+      extra_data: {
+        grams: wizardData.food_amount_grams || null,
+        duration_minutes: wizardData.activity_duration_minutes || null,
+        ...initialExtraData
+      }
     };
   };
 
@@ -921,81 +954,7 @@ export default function WizardOrchestrator() {
       return;
     }
 
-    if (subCat === 'İlaç' || subCat === 'İlaç Kullanımı') {
-       let repeat_rule = null;
-       let scheduledAt = `${wizardData.date || new Date().toISOString().split('T')[0]}T${wizardData.time || '09:00'}:00`;
-       
-       if (wizardData.medication_freq_type === 'once_daily') {
-          repeat_rule = 'daily';
-          wizardData.interval = 1;
-       } else if (wizardData.medication_freq_type === 'once_weekly') {
-          repeat_rule = 'weekly';
-          wizardData.interval = 1;
-       } else if (wizardData.medication_freq_type === 'as_needed') {
-          repeat_rule = null;
-          scheduledAt = new Date().toISOString(); 
-       }
-       
-       let endsAt = null;
-       if (wizardData.medication_duration === 'days' && wizardData.medication_days) {
-          const d = new Date(scheduledAt);
-          d.setDate(d.getDate() + wizardData.medication_days);
-          endsAt = d.toISOString();
-       }
-       
-       const extra_data = {
-         // Düzenlemede orijinal extra_data'daki ek alanlar korunur
-         ...(initialExtraData || {}),
-         record_type: 'medication',
-         source: initialExtraData?.source ?? 'plan_yap',
-         medication: {
-           name: wizardData.medication_name,
-           unit: wizardData.medication_unit,
-           dose: wizardData.medication_dose,
-           dosage_string: `${wizardData.medication_dose} ${wizardData.medication_unit}`,
-           photo_url: wizardData.medication_photo_url || null,
-           purpose: wizardData.medication_purpose || null,
-           freq_type: wizardData.medication_freq_type,
-           stock_enabled: wizardData.medication_stock_enabled,
-           stock: wizardData.medication_stock_enabled ? (wizardData.medication_stock_count || 30) : null,
-           alert_threshold: wizardData.medication_stock_enabled ? (wizardData.medication_alert_count || 10) : null
-         }
-       };
-       
-       const medPayload = {
-         pet_id: petId,
-         category: categoryKey,
-         sub_type: 'İlaç Kullanımı',
-         scheduled_at: new Date(scheduledAt).toISOString(),
-         repeat_rule: repeat_rule,
-         ends_at: endsAt,
-         notif_before: wizardData.medication_freq_type === 'as_needed' ? null : 0, 
-         notif_unit: 'minute',
-         note: wizardData.notes || null,
-         extra_data: extra_data
-       };
-       
-       try {
-         const res = await fetch('/api/plans' + (isEditMode ? `/${editId}` : ''), {
-           method: isEditMode ? 'PATCH' : 'POST',
-           headers: { 'Content-Type': 'application/json' },
-           body: JSON.stringify(medPayload),
-         });
 
-         if (res.ok) {
-           setIsSuccess(true);
-         } else {
-           const errData = await res.json();
-           alert(`Hata: ${errData.error || 'İlaç kaydedilemedi'}`);
-         }
-       } catch (err) {
-         console.error(err);
-         alert('Beklenmeyen bir hata oluştu.');
-       } finally {
-         setIsSubmitting(false);
-       }
-       return;
-    }
     
     // Combine Date and Time
     let scheduledAt = wizardData.date;
@@ -1018,8 +977,12 @@ export default function WizardOrchestrator() {
         ? (wizardData.selectedVaccine?.name || wizardData.subCategory || 'Aşı')
         : subCat === 'Diğer' ? (wizardData.customText || 'Diğer') : (subCat || 'Genel'),
       scheduled_at: new Date(scheduledAt).toISOString(),
-      repeat_rule: wizardData.frequency === 'once' ? null : wizardData.frequency,
-      ends_at: endsAt ? new Date(endsAt).toISOString() : null,
+      repeat_rule: categoryKey === 'ilac'
+        ? (wizardData.medication_freq_type === 'once_daily' ? 'daily' : wizardData.medication_freq_type === 'once_weekly' ? 'weekly' : null)
+        : (wizardData.frequency === 'once' ? null : wizardData.frequency),
+      ends_at: categoryKey === 'ilac' && wizardData.medication_duration === 'days' && wizardData.medication_days
+        ? new Date(new Date(scheduledAt).getTime() + wizardData.medication_days * 86400000).toISOString()
+        : (endsAt ? new Date(endsAt).toISOString() : null),
       notif_before: wizardData.notificationEnabled ? (wizardData.notificationMinutes || 0) : 0,
       notif_unit: 'minute',
       note: wizardData.notes || null,
@@ -1035,8 +998,20 @@ export default function WizardOrchestrator() {
           ? { code: wizardData.selectedVaccine.code ?? null, name: wizardData.selectedVaccine.name ?? null }
           : (initialExtraData?.vaccine ?? null),
         vaccine_code: wizardData.selectedVaccine?.code ?? initialExtraData?.vaccine_code ?? null,
-        record_type: categoryKey === 'asi' ? 'vaccine_schedule' : (initialExtraData?.record_type ?? null),
         source: initialExtraData?.source ?? 'plan_yap',
+        record_type: categoryKey === 'asi' ? 'vaccine_schedule' : (categoryKey === 'ilac' ? 'medication' : (initialExtraData?.record_type ?? null)),
+        medication: categoryKey === 'ilac' ? {
+           name: wizardData.medication_name,
+           unit: wizardData.medication_unit,
+           dose: wizardData.medication_dose,
+           dosage_string: wizardData.medication_dose ? `${wizardData.medication_dose} ${wizardData.medication_unit || ''}`.trim() : null,
+           photo_url: wizardData.medication_photo_url || null,
+           purpose: wizardData.medication_purpose || null,
+           freq_type: wizardData.medication_freq_type,
+           stock_enabled: wizardData.medication_stock_enabled,
+           stock: wizardData.medication_stock_enabled ? (wizardData.medication_stock_count || 30) : null,
+           alert_threshold: wizardData.medication_stock_enabled ? (wizardData.medication_alert_count || 10) : null
+        } : (initialExtraData?.medication ?? null),
         product: wizardData.selectedProduct ? {
           id: wizardData.selectedProduct.id,
           brand_name: wizardData.selectedProduct.brand_name ?? null,
@@ -2301,6 +2276,9 @@ export default function WizardOrchestrator() {
         const recurring = !!linkedPlan.repeat_rule;
         return (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+            <div className="p-3 bg-indigo-50 border border-indigo-100 text-indigo-700 text-[13px] font-semibold rounded-xl flex items-center gap-2">
+              💡 Bu eylemi eşleşen planınızla otomatik olarak işledik.
+            </div>
             <div className="p-4 bg-surface border border-border-main rounded-2xl">
               <p className="text-[11px] font-bold text-text-secondary uppercase tracking-wider mb-1">Planlı Görev</p>
               <p className="text-base font-extrabold text-text-primary">{linkedPlan.sub_type}</p>
@@ -2345,6 +2323,7 @@ export default function WizardOrchestrator() {
               {wizardData.notificationEnabled && (
                 <select value={wizardData.notificationMinutes} onChange={(e) => setStepData({ notificationMinutes: parseInt(e.target.value) })} className="bg-slate-50 border border-slate-200 text-xs rounded-lg py-1.5 px-2 outline-none font-medium">
                   <option value={0}>Zamanında</option>
+                  <option value={30}>30 dakika önce</option>
                   <option value={60}>1 saat önce</option>
                   <option value={180}>3 saat önce</option>
                   <option value={1440}>1 gün önce</option>
@@ -2583,6 +2562,13 @@ export default function WizardOrchestrator() {
       )}
       <WizardShell
         category={categoryKey}
+        subCategoryTitle={
+          querySubCat ||
+          (wizardData.subCategory === 'Diğer' ? wizardData.customText : wizardData.subCategory) ||
+          wizardData.selectedVaccine?.name ||
+          wizardData.selectedProduct?.product_name ||
+          ''
+        }
         onNext={currentStepIndex === totalSteps - 1 ? handleSubmit : nextStep}
         submitText={
           isLinked
@@ -2671,6 +2657,16 @@ export default function WizardOrchestrator() {
             }
             setShowScanner(false);
           }}
+        />
+      )}
+
+      {showDeleteConfirmModal && (
+        <ArchiveConfirmModal
+          isOpen={showDeleteConfirmModal}
+          itemTitle="Plan Kaydı"
+          isHealthRecord={true}
+          onClose={() => setShowDeleteConfirmModal(false)}
+          onConfirm={confirmDeletePlan}
         />
       )}
     </>

@@ -121,8 +121,8 @@ export async function POST(req: NextRequest) {
           granted_at: new Date().toISOString(),
         },
       })
-    } catch (insErr: any) {
-      console.warn(`[AdminCreditGrant] membership_credits insert skipped:`, insErr?.message)
+    } catch (insErr: unknown) {
+      console.warn(`[AdminCreditGrant] membership_credits insert skipped:`, insErr instanceof Error ? insErr.message : String(insErr))
     }
     results.push({ userId: targetUserId, success: true })
   }

@@ -15,7 +15,7 @@ export class GenericReadHandler implements AgendaReadHandler {
   readonly category: string;
 
   constructor(category = 'diger') {
-    this.category = category;
+    this.category = category as string;
   }
 
   normalizePlan(plan: any, context: AgendaNormalizationContext): PetAgendaEvent {
@@ -37,8 +37,8 @@ export class GenericReadHandler implements AgendaReadHandler {
       eventId: `plan_${plan.id}`,
       source: 'plans',
       sourceRecordId: plan.id,
-      category: plan.category || this.category,
-      subCategory: plan.sub_type || 'Görev',
+      category: (plan.category as string) || this.category as string,
+      subCategory: (plan.sub_type || "") as any || 'Görev',
       stableIdentity: baseIdentity,
       occurrenceIdentity: occurrenceScheduledAt ? `${plan.id}_${occurrenceScheduledAt}` : null,
       fallbackIdentity: `${baseIdentity}_${dateKey}`,
@@ -49,7 +49,7 @@ export class GenericReadHandler implements AgendaReadHandler {
       actualAt: plan.completed_at || (plan.status === 'completed' ? scheduledAt : null),
       nextDueAt: plan.repeat_rule ? scheduledAt : null,
       dateKey,
-      sourceStatus: plan.status,
+      sourceStatus: plan.status || 'unknown',
       lifecycleType: isCompletedChild ? 'completed_occurrence' : 'plan',
       displayStatus,
       status: displayStatus,
@@ -85,7 +85,7 @@ export class GenericReadHandler implements AgendaReadHandler {
     const dateKey = deriveDateKey(scheduledAt, context.timeZone);
 
     return {
-      category: input.category || this.category,
+      category: (input.category || "") as string || this.category as string,
       baseIdentity,
       occurrenceIdentity: input.occurrence_scheduled_at ? `${input.id}_${input.occurrence_scheduled_at}` : null,
       fallbackIdentity: `${baseIdentity}_${dateKey}`

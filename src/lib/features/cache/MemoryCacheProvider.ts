@@ -28,7 +28,6 @@ export class MemoryCacheProvider implements CacheProvider {
   }
 
   async invalidateTag(tag: string): Promise<void> {
-    console.log(`[MemoryCacheProvider] Invalidating Tag: ${tag}`);
     try {
       (revalidateTag as any)(tag);
     } catch (e) {

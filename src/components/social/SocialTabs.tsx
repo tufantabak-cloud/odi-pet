@@ -13,6 +13,7 @@ import { BreedingApplicationsManager } from './BreedingApplicationsManager'
 import { AdoptionApplicationsManager } from './AdoptionApplicationsManager'
 import { CreateListingPetSelectorModal } from './CreateListingPetSelectorModal'
 import PaywallCard from '@/components/subscription/PaywallCard'
+import { ArchiveConfirmModal } from '@/components/pets/common/ArchiveConfirmModal'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import citiesData from '@/lib/cities.json'
 import { TURKIYE_ILLER } from '@/lib/utils/turkiyeIller'
@@ -40,8 +41,13 @@ type Tab = 'adoption' | 'lost' | 'match'
 
 const TAB_MAP: Record<string, Tab> = {
   'sahiplendir': 'adoption',
+  'sahiplendirme': 'adoption',
+  'adoption': 'adoption',
   'lost': 'lost',
-  'eslestirme': 'match'
+  'kayip': 'lost',
+  'eslestirme': 'match',
+  'eslesme': 'match',
+  'match': 'match'
 }
 
 const getAge = (birthDate: string) => {
@@ -87,6 +93,18 @@ export function SocialTabs({
   const initialTab = (urlTab && TAB_MAP[urlTab]) || 'adoption'
   
   const [activeTab, setActiveTab] = useState<Tab>(initialTab)
+
+  const handleTabChange = (tab: Tab) => {
+    setActiveTab(tab)
+    const paramMap: Record<Tab, string> = {
+      adoption: 'sahiplendir',
+      lost: 'lost',
+      match: 'eslestirme'
+    }
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(null, '', `/owner/social?tab=${paramMap[tab]}`)
+    }
+  }
 
   useEffect(() => {
     if (urlTab && TAB_MAP[urlTab]) {
@@ -141,6 +159,7 @@ export function SocialTabs({
   const [userCity, setUserCity] = useState<string>('')
 
   // Lost reports states
+  const [closeReportPetId, setCloseReportPetId] = useState<string | null>(null)
   const [myLostReports, setMyLostReports] = useState<any[]>([])
   const [myLostReportsLoaded, setMyLostReportsLoaded] = useState(false)
   const [lostSpeciesFilter, setLostSpeciesFilter] = useState('Tümü')
@@ -240,10 +259,14 @@ export function SocialTabs({
     setMyLostReportsLoaded(true)
   }
 
-  const handleMarkLostReportFound = async (petId: string) => {
-    if (!confirm('Dostunuz bulundu mu? İlan kapatılacaktır.')) return
+  const handleMarkLostReportFound = (petId: string) => {
+    setCloseReportPetId(petId)
+  }
+
+  const confirmMarkLostReportFound = async () => {
+    if (!closeReportPetId) return
     try {
-      const res = await fetch(`/api/pets/${petId}/lost`, {
+      const res = await fetch(`/api/pets/${closeReportPetId}/lost`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'found' })
@@ -252,7 +275,9 @@ export function SocialTabs({
       checkMyLostReports()
       window.location.reload()
     } catch (err) {
-      alert('İşlem başarısız oldu.')
+      console.error(err)
+    } finally {
+      setCloseReportPetId(null)
     }
   }
 
@@ -364,7 +389,7 @@ export function SocialTabs({
       {/* Tab Switcher */}
       <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200/60 shadow-inner">
         <button
-          onClick={() => setActiveTab('adoption')}
+          onClick={() => handleTabChange('adoption')}
           className={`flex-1 flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl transition-all active:scale-[0.98] ${
             activeTab === 'adoption' 
               ? 'bg-white text-violet-700 shadow-sm border border-violet-100 font-semibold' 
@@ -376,7 +401,7 @@ export function SocialTabs({
         </button>
 
         <button
-          onClick={() => setActiveTab('lost')}
+          onClick={() => handleTabChange('lost')}
           className={`flex-1 flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl transition-all active:scale-[0.98] ${
             activeTab === 'lost' 
               ? 'bg-white text-violet-700 shadow-sm border border-violet-100 font-semibold' 
@@ -388,7 +413,7 @@ export function SocialTabs({
         </button>
 
         <button
-          onClick={() => setActiveTab('match')}
+          onClick={() => handleTabChange('match')}
           className={`flex-1 flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl transition-all active:scale-[0.98] ${
             activeTab === 'match' 
               ? 'bg-white text-violet-700 shadow-sm border border-violet-100 font-semibold' 
@@ -1570,6 +1595,16 @@ export function SocialTabs({
         onClose={() => setShowCreateModal(false)}
         mode={activeTab === 'adoption' ? 'adoption' : 'match'}
       />
+
+      {closeReportPetId && (
+        <ArchiveConfirmModal
+          isOpen={!!closeReportPetId}
+          itemTitle="Kayıp İlanı"
+          isHealthRecord={false}
+          onClose={() => setCloseReportPetId(null)}
+          onConfirm={confirmMarkLostReportFound}
+        />
+      )}
     </section>
   )
 }

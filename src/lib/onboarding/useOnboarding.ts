@@ -3,6 +3,48 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ONBOARDING_STEPS, GuideStep } from './GuideConfig';
 
+type FetchResponseListener = (url: string, method: string, ok: boolean) => void;
+
+const fetchListeners = new Set<FetchResponseListener>();
+let isFetchIntercepted = false;
+
+function ensureFetchInterceptor() {
+  if (typeof window === 'undefined' || isFetchIntercepted) return;
+  isFetchIntercepted = true;
+
+  const nativeFetch = window.fetch;
+
+  window.fetch = async function (...args) {
+    const response = await nativeFetch.apply(this, args);
+
+    // After fetch successfully resolves, asynchronously/safely notify listeners
+    try {
+      if (response && fetchListeners.size > 0) {
+        const [resource, config] = args;
+        const method = config?.method?.toUpperCase() || 'GET';
+        let url = '';
+        if (typeof resource === 'string') url = resource;
+        else if (resource instanceof Request) url = resource.url;
+        else if (resource instanceof URL) url = resource.toString();
+
+        if (url) {
+          fetchListeners.forEach(listener => {
+            try {
+              listener(url, method, response.ok);
+            } catch {
+              // Ignore listener errors
+            }
+          });
+        }
+      }
+    } catch {
+      // Ignore background interception errors
+    }
+
+    return response;
+  };
+}
+
 export function useOnboarding() {
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
   const [isEnabled, setIsEnabled] = useState(true);
@@ -56,7 +98,10 @@ export function useOnboarding() {
 
     // Fetch progress
     fetch('/api/onboarding')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then(data => {
         if (data && data.completedSteps) {
           setCompletedSteps(data.completedSteps);
@@ -70,47 +115,27 @@ export function useOnboarding() {
   }, []);
 
   useEffect(() => {
-    const originalFetch = window.fetch;
-    window.fetch = async (...args) => {
-      let response;
-      try {
-        response = await originalFetch(...args);
-      } catch (err) {
-        // Ağ hatası veya bağlantı kesintilerinde hatayı aynen dışarı fırlat
-        throw err;
-      }
-      
-      try {
-        const [resource, config] = args;
-        const method = config?.method?.toUpperCase() || 'GET';
-        let url = '';
-        if (typeof resource === 'string') url = resource;
-        else if (resource instanceof Request) url = resource.url;
-        else if (resource instanceof URL) url = resource.toString();
+    ensureFetchInterceptor();
 
-        if (url && response.ok) {
-          // Check triggers like api:POST:/api/journal
-          const pathname = new URL(url, window.location.origin).pathname;
-          const trigger = `api:${method}:${pathname}`;
-          const step = ONBOARDING_STEPS.find(s => s.completionTrigger === trigger);
-          if (step && !completedStepsRef.current.includes(step.key)) {
-            // Trigger completion
-            completeStepRef.current(step.key);
-          }
+    const listener: FetchResponseListener = (url, method, ok) => {
+      if (!ok) return;
+      try {
+        const pathname = new URL(url, window.location.origin).pathname;
+        const trigger = `api:${method}:${pathname}`;
+        const step = ONBOARDING_STEPS.find(s => s.completionTrigger === trigger);
+        if (step && !completedStepsRef.current.includes(step.key)) {
+          completeStepRef.current(step.key);
         }
-      } catch (e) {
-        // ignore interceptor errors
+      } catch {
+        // ignore URL parse errors
       }
-      
-      return response;
     };
 
+    fetchListeners.add(listener);
     return () => {
-      window.fetch = originalFetch;
+      fetchListeners.delete(listener);
     };
   }, []);
-
-
 
   // Find the first uncompleted step in ONBOARDING_STEPS sequence
   const currentStepIndex = ONBOARDING_STEPS.findIndex(s => !completedSteps.includes(s.key));
@@ -126,3 +151,4 @@ export function useOnboarding() {
     completeStepByTrigger
   };
 }
+

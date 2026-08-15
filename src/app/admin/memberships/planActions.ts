@@ -2,6 +2,52 @@
 
 import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 
+// FORENSIC DÜZELTME (schema-drift sweep): bkz. MembershipService.ts'deki
+// eşdeğer not — `premium_audit_logs`'un gerçek şeması `user_id NOT NULL,
+// action_type NOT NULL, old_value, new_value, ip_address, created_at`
+// (20260807013400_enterprise_premium_v3.sql, koşulsuz ilk CREATE TABLE).
+// Bu dosyadaki 4 çağrı noktası `admin_id`/`action`/`target_profile_id`/
+// `reason` (hiçbiri gerçek tabloda yok) kullanıyordu.
+//
+// ÖNEMLİ SINIRLAMA (kapsam dışı bırakıldı, düzeltilmedi): bu dosya
+// 'use client' işaretli ve tarayıcıda, yalnızca oturum-bazlı (anon-key)
+// Supabase client'ıyla çalışıyor. `premium_audit_logs` tablosu ise
+// yalnızca `service_role`'e GRANT edilmiş (`GRANT SELECT, INSERT,
+// UPDATE, DELETE ON public.premium_audit_logs TO service_role;`) ve
+// `authenticated` rolü için hiçbir INSERT RLS politikası tanımlı değil.
+// Bu, muhtemelen kasıtlı bir güvenlik sınırı (denetim kayıtlarının
+// yalnızca sunucu tarafından yazılabilmesi). Sonuç: kolon adları
+// düzeltilse bile bu insert GRANT seviyesinde reddedilmeye devam
+// edecek. Bunu çözmek bu işlemi sunucu tarafına taşımayı (yeni bir API
+// route/mimari kararı) gerektirir — bu, "minimal forensic düzeltme"
+// kapsamının dışında bırakıldı ve ayrıca raporlandı. Burada yapılan
+// tek şey: (a) gerçek şemaya doğru alan eşlemesi, (b) hatanın sessizce
+// yutulması yerine loglanması — böylece ileride biri bu akışı sunucu
+// tarafına taşırsa doğru veri şekli zaten hazır olur. Birincil işlemler
+// (plan create/update/archive/duplicate) bu insert'in başarısından
+// bağımsızdır ve etkilenmez.
+export async function writeAuditLog(
+  supabase: ReturnType<typeof createBrowserSupabaseClient>,
+  actorId: string,
+  action: string,
+  reason: string,
+  oldValue: unknown,
+  newValue: unknown
+) {
+  const { error } = await supabase.from('premium_audit_logs').insert({
+    user_id: actorId,
+    action_type: action,
+    old_value: oldValue ?? null,
+    new_value: {
+      ...(newValue && typeof newValue === 'object' ? newValue : {}),
+      reason,
+    },
+  });
+  if (error) {
+    console.error(`[planActions] Audit log yazılamadı (${action}):`, error.message);
+  }
+}
+
 export interface PlanFormData {
   id?: string;
   plan_key: string;
@@ -105,14 +151,14 @@ export async function createPlanAction(data: PlanFormData) {
   }
 
   // 3. Write Audit Log
-  await supabase.from('premium_audit_logs').insert({
-    admin_id: user.id,
-    action: 'plan_created',
-    target_profile_id: user.id,
-    reason: `Yeni abonelik planı oluşturuldu: ${data.plan_key}`,
-    old_value: null,
-    new_value: { plan_key: data.plan_key, display_name: data.display_name, price_monthly: data.price_monthly }
-  });
+  await writeAuditLog(
+    supabase,
+    user.id,
+    'plan_created',
+    `Yeni abonelik planı oluşturuldu: ${data.plan_key}`,
+    null,
+    { plan_key: data.plan_key, display_name: data.display_name, price_monthly: data.price_monthly }
+  );
 
   return createdPlan;
 }
@@ -199,14 +245,14 @@ export async function updatePlanAction(id: string, data: Partial<PlanFormData>) 
     data.apple_product_id !== undefined ||
     data.google_play_product_id !== undefined;
 
-  await supabase.from('premium_audit_logs').insert({
-    admin_id: user.id,
-    action: isProviderChange ? 'provider_mapping_updated' : 'plan_updated',
-    target_profile_id: user.id,
-    reason: `Plan güncellendi: ${currentPlan?.plan_key || id}`,
-    old_value: currentPlan,
-    new_value: updatedPlan
-  });
+  await writeAuditLog(
+    supabase,
+    user.id,
+    isProviderChange ? 'provider_mapping_updated' : 'plan_updated',
+    `Plan güncellendi: ${currentPlan?.plan_key || id}`,
+    currentPlan,
+    updatedPlan
+  );
 
   return updatedPlan;
 }
@@ -235,14 +281,14 @@ export async function archivePlanAction(id: string) {
     throw new Error(`Plan arşivleme hatası: ${error.message}`);
   }
 
-  await supabase.from('premium_audit_logs').insert({
-    admin_id: user.id,
-    action: 'plan_archived',
-    target_profile_id: user.id,
-    reason: `Plan arşivlendi: ${updatedPlan.plan_key}`,
-    old_value: { id, status: 'active' },
-    new_value: { id, status: 'archived' }
-  });
+  await writeAuditLog(
+    supabase,
+    user.id,
+    'plan_archived',
+    `Plan arşivlendi: ${updatedPlan.plan_key}`,
+    { id, status: 'active' },
+    { id, status: 'archived' }
+  );
 
   return updatedPlan;
 }
@@ -303,14 +349,14 @@ export async function duplicatePlanAction(id: string) {
     await supabase.from('plan_bundles').insert(newBundleRows);
   }
 
-  await supabase.from('premium_audit_logs').insert({
-    admin_id: user.id,
-    action: 'plan_duplicated',
-    target_profile_id: user.id,
-    reason: `Plan kopyalandı: ${original.plan_key} -> ${newKey}`,
-    old_value: { original_key: original.plan_key },
-    new_value: { new_key: newKey }
-  });
+  await writeAuditLog(
+    supabase,
+    user.id,
+    'plan_duplicated',
+    `Plan kopyalandı: ${original.plan_key} -> ${newKey}`,
+    { original_key: original.plan_key },
+    { new_key: newKey }
+  );
 
   return duplicated;
 }

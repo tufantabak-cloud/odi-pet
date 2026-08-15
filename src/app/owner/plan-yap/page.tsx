@@ -219,14 +219,7 @@ function PlanYapContent() {
               role="listitem"
               aria-label={`${category.title} plan sihirbazını başlat`}
               onClick={() => {
-                // Beslenme "plan" modunda özel besleme planlayıcısına gider; "log"
-                // modunda ise diğer kategoriler gibi sihirbazda geçmişe dönük
-                // öğün/işlem kaydı olarak işlenir.
-                if (category.key === 'beslenme' && !isLog) {
-                  router.push(`/owner/pets/${selectedPet}/nutrition`);
-                } else {
-                  router.push(`/owner/plan-yap/${category.key}?pet_id=${selectedPet}${modeSuffix}`);
-                }
+                router.push(`/owner/plan-yap/${category.key}?pet_id=${selectedPet}${modeSuffix}`);
               }}
               className="w-full flex items-start p-4 bg-white border border-gray-100 rounded-3xl shadow-sm hover:shadow-md hover:border-gray-200 transition-all group focus:outline-none focus:ring-4 focus:ring-slate-300/30 text-left"
             >

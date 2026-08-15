@@ -1068,4 +1068,42 @@ export const PetIcons: Record<CategoryKey, {
     ),
     subIcons: {}
   },
+
+  ilac: {
+    icon: ({ size = 48 }) => (
+      <svg width={size} height={size} viewBox="0 0 48 48">
+        <defs>
+          <linearGradient id="ilacGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#2DD4BF"/>
+            <stop offset="100%" stopColor="#0D9488"/>
+          </linearGradient>
+          <filter id="ilacShadow">
+            <feDropShadow dx="0" dy="2" stdDeviation="2" floodOpacity="0.2"/>
+          </filter>
+        </defs>
+        <rect x="12" y="16" width="24" height="16" rx="8" fill="url(#ilacGrad)" filter="url(#ilacShadow)"/>
+        <line x1="24" y1="16" x2="24" y2="32" stroke="white" strokeWidth="2" strokeOpacity="0.5"/>
+      </svg>
+    ),
+    subIcons: {}
+  },
+
+  kilo: {
+    icon: ({ size = 48 }) => (
+      <svg width={size} height={size} viewBox="0 0 48 48">
+        <defs>
+          <linearGradient id="kiloGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#A78BFA"/>
+            <stop offset="100%" stopColor="#7C3AED"/>
+          </linearGradient>
+          <filter id="kiloShadow">
+            <feDropShadow dx="0" dy="2" stdDeviation="2" floodOpacity="0.2"/>
+          </filter>
+        </defs>
+        <rect x="10" y="24" width="28" height="10" rx="3" fill="url(#kiloGrad)" filter="url(#kiloShadow)"/>
+        <path d="M14 24 L24 10 L34 24 Z" fill="#8B5CF6"/>
+      </svg>
+    ),
+    subIcons: {}
+  },
 }

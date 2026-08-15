@@ -3,25 +3,14 @@
 import { useState, useEffect } from 'react';
 import { AlertTriangle, BarChart2, AlertCircle, BookOpen } from 'lucide-react';
 
-// Irk seçenekleri kaynağı
-const ALL_BREEDS = [
-  { key: 'poodle', name: 'Poodle / Kaniş', species: 'dog' },
-  { key: 'golden_retriever', name: 'Golden Retriever', species: 'dog' },
-  { key: 'labrador_retriever', name: 'Labrador Retriever', species: 'dog' },
-  { key: 'german_shepherd', name: 'Alman Kurdu', species: 'dog' },
-  { key: 'french_bulldog', name: 'Fransız Buldoğu', species: 'dog' },
-  { key: 'pug', name: 'Pug', species: 'dog' },
-  { key: 'rottweiler', name: 'Rottweiler', species: 'dog' },
-  { key: 'shih_tzu', name: 'Shih Tzu', species: 'dog' },
-  { key: 'chihuahua', name: 'Chihuahua', species: 'dog' },
-  { key: 'yorkshire_terrier', name: 'Yorkshire Terrier', species: 'dog' },
-  { key: 'british_shorthair', name: 'British Shorthair', species: 'cat' },
-  { key: 'scottish_fold', name: 'Scottish Fold', species: 'cat' },
-  { key: 'siamese', name: 'Siyam', species: 'cat' },
-  { key: 'persian', name: 'İran Kedisi (Persian)', species: 'cat' },
-  { key: 'maine_coon', name: 'Maine Coon', species: 'cat' },
-  { key: 'mixed', name: 'Melez / Tekir / Bilinmeyen', species: 'both' }
-];
+import { MASTER_BREEDS } from '@/lib/pets/breedsMaster';
+
+// Irk seçenekleri kaynağı (Master Katalogdan Dinamik Türetilen)
+const ALL_BREEDS = MASTER_BREEDS.map((b) => ({
+  key: b.id,
+  name: b.name,
+  species: b.species,
+}));
 
 export function resolveSourceUrl(src: any): string | null {
   if (!src) return null;

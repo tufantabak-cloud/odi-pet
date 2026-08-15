@@ -10,7 +10,7 @@ interface CategoryCardProps {
   onMarkDone: (id: string) => void;
   onPostpone: (id: string) => void;
   onEdit: (event: FlowEvent) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string, event?: FlowEvent) => void;
 }
 
 /** UI kategori etiketini (DB_CATEGORY_TO_UI çıktısı) CategoryKey'e çevirir */

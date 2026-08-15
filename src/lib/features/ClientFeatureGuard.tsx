@@ -64,7 +64,6 @@ export function ClientFeatureGuard({
         featureName={featureKey}
         onUpgrade={() => {
           // Future: Redirect to billing or trigger bottom sheet
-          console.log('Redirecting to upgrade page for plan:', featureState.upgradePlan);
           window.location.href = '/settings/subscription';
         }} 
       />

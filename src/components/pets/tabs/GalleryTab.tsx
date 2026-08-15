@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Database } from '@/types';
 import { z } from 'zod';
 import PaywallCard from '@/components/subscription/PaywallCard';
+import { ArchiveConfirmModal } from '@/components/pets/common/ArchiveConfirmModal';
 
 import { useFeature } from '@/lib/features/hooks';
 
@@ -32,6 +33,7 @@ export default function GalleryTab({ pet }: { pet: PetWithCover }) {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<any | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [photoToDeleteId, setPhotoToDeleteId] = useState<string | null>(null);
 
   
   // New Form States
@@ -354,17 +356,26 @@ export default function GalleryTab({ pet }: { pet: PetWithCover }) {
 
           <div className="absolute bottom-10 left-0 right-0 flex justify-center pb-safe" onClick={e => e.stopPropagation()}>
             <button 
-              onClick={() => {
-                if(confirm("Bu fotoğrafı silmek istediğinize emin misiniz?")) {
-                  handleDelete(selectedPhoto.id);
-                }
-              }}
+              onClick={() => setPhotoToDeleteId(selectedPhoto.id)}
               className="flex items-center gap-2 px-5 py-3 bg-red-500/90 hover:bg-red-500 text-white font-bold rounded-2xl shadow-lg backdrop-blur-sm transition-all"
             >
               🗑️ Fotoğrafı Sil
             </button>
           </div>
         </div>
+      )}
+
+      {photoToDeleteId && (
+        <ArchiveConfirmModal
+          isOpen={!!photoToDeleteId}
+          itemTitle="Seçili Fotoğraf"
+          isHealthRecord={false}
+          onClose={() => setPhotoToDeleteId(null)}
+          onConfirm={async () => {
+            await handleDelete(photoToDeleteId);
+            setPhotoToDeleteId(null);
+          }}
+        />
       )}
     </div>
   );

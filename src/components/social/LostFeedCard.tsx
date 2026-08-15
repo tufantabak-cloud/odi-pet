@@ -41,7 +41,7 @@ export function LostFeedCard({ report }: { report: any }) {
           text: `🚨 Kayıp Pet İlanı\n\n${pet.name} kayboldu!\nTür: ${speciesLabel}\nSon Görüldüğü Yer: ${report.last_seen_location}\nİletişim: ${report.contact_phone || 'Belirtilmemiş'}\n\nOdi.Pet üzerinden görüntüle →\nhttps://app.odi.pet/owner/social?tab=lost`,
         });
       } catch (error) {
-        console.log('Error sharing', error);
+        console.error('Error sharing', error);
       }
     } else {
       alert('Tarayıcınız paylaşım özelliğini desteklemiyor.');

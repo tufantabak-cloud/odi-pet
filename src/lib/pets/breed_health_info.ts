@@ -155,24 +155,39 @@ export const breedHealthData: Record<string, BreedHealthInfo> = {
   }
 };
 
+import { findBreedByIdOrName, normalizeText } from '@/lib/pets/breedsMaster';
+
 /**
- * Kullanıcının girdiği ırk adına göre en uygun sağlık verisini döndürür.
+ * Kullanıcının girdiği ırk adına veya id'sine göre en uygun sağlık verisini döndürür.
  */
 export function getBreedHealthInfo(breedName: string | undefined | null): BreedHealthInfo | null {
   if (!breedName) return null;
-  const normalized = breedName.toLowerCase().trim();
 
-  // Tam eşleşme
-  if (breedHealthData[normalized]) {
-    return breedHealthData[normalized];
-  }
+  const foundItem = findBreedByIdOrName(breedName);
+  const searchTerms = [
+    breedName,
+    foundItem?.name,
+    foundItem?.name_tr,
+    foundItem?.name_en,
+    foundItem?.id,
+    ...(foundItem?.aliases || []),
+  ].filter(Boolean) as string[];
 
-  // Kısmi eşleşme araması
-  for (const [key, value] of Object.entries(breedHealthData)) {
-    if (normalized.includes(key) || key.includes(normalized)) {
-      return value;
+  for (const term of searchTerms) {
+    const norm = normalizeText(term);
+    if (!norm) continue;
+
+    if (breedHealthData[norm]) {
+      return breedHealthData[norm];
+    }
+
+    for (const [key, value] of Object.entries(breedHealthData)) {
+      const normKey = normalizeText(key);
+      if (norm.includes(normKey) || normKey.includes(norm)) {
+        return value;
+      }
     }
   }
-  
+
   return null;
 }

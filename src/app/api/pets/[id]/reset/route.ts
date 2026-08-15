@@ -18,7 +18,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     .eq('profile_id', user.id)
     .single()
 
-  console.log('[API/Pets/Reset] ownerRecord:', ownerRecord, 'ownerError:', ownerError, 'petId:', id, 'userId:', user.id)
 
   if (!ownerRecord || ownerRecord.role !== 'owner') {
     console.error('[API/Pets/Reset] Access denied. ownerRecord:', ownerRecord)

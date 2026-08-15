@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Camera, ChevronDown, FilePenLine, ScanLine, Syringe } from 'lucide-react'
 import type { ApplicationDetails } from '@/lib/health-records/application-details'
 
-type HealthCategory = 'asi' | 'parazit'
+type HealthCategory = 'asi' | 'parazit' | 'beslenme' | 'bakim' | 'aktivite' | 'kilo' | 'ilac' | 'saglik' | 'kontrol' | 'hijyen'
 
 interface OptionalApplicationDetailsProps {
   category: HealthCategory
