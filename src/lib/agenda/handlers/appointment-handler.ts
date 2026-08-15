@@ -13,7 +13,7 @@ import {
 export class AppointmentReadHandler implements AgendaReadHandler {
   readonly category = 'saglik';
 
-  normalizePlan(plan: any, context: AgendaNormalizationContext): PetAgendaEvent {
+  normalizePlan(plan: AgendaPlanInput, context: AgendaNormalizationContext): PetAgendaEvent {
     const scheduledAt = plan.scheduled_at || null;
     const dateKey = deriveDateKey(scheduledAt, context.timeZone);
 
@@ -22,7 +22,7 @@ export class AppointmentReadHandler implements AgendaReadHandler {
       source: 'plans',
       sourceRecordId: plan.id,
       category: 'saglik' as string,
-      subCategory: (plan.sub_type || "") as any || 'Veteriner Randevusu',
+      subCategory: (plan.sub_type || "") || 'Veteriner Randevusu',
       stableIdentity: `saglik:vet_${plan.id}`,
       occurrenceIdentity: null,
       fallbackIdentity: `saglik:vet_${dateKey}`,
@@ -53,7 +53,7 @@ export class AppointmentReadHandler implements AgendaReadHandler {
     };
   }
 
-  normalizeActualRecord(record: any, context: AgendaNormalizationContext): PetAgendaEvent {
+  normalizeActualRecord(record: AgendaRecordInput, context: AgendaNormalizationContext): PetAgendaEvent {
     const appAt = record.scheduled_at || record.appointment_date || record.created_at;
     const dateKey = deriveDateKey(appAt, context.timeZone);
 
@@ -92,11 +92,11 @@ export class AppointmentReadHandler implements AgendaReadHandler {
     };
   }
 
-  projectOccurrences(mainPlan: any, _range: AgendaDateRange, context: AgendaNormalizationContext): PetAgendaEvent[] {
+  projectOccurrences(mainPlan: AgendaPlanInput, _range: AgendaDateRange, context: AgendaNormalizationContext): PetAgendaEvent[] {
     return [this.normalizePlan(mainPlan, context)];
   }
 
-  getIdentity(input: any, context: AgendaNormalizationContext): AgendaIdentity {
+  getIdentity(input: AgendaPlanInput | AgendaRecordInput, context: AgendaNormalizationContext): AgendaIdentity {
     const appAt = input.scheduled_at || input.appointment_date || input.created_at;
     const dateKey = deriveDateKey(appAt, context.timeZone);
 
@@ -108,11 +108,11 @@ export class AppointmentReadHandler implements AgendaReadHandler {
     };
   }
 
-  getFallbackMatchCandidates(_record: any, _events: PetAgendaEvent[], _context: AgendaNormalizationContext): AgendaMatchResult {
+  getFallbackMatchCandidates(_record: AgendaRecordInput, _events: PetAgendaEvent[], _context: AgendaNormalizationContext): AgendaMatchResult {
     return { status: 'none' };
   }
 
-  getAllowedActions(event: PetAgendaEvent): any[] {
+  getAllowedActions(event: PetAgendaEvent): AgendaActionType[] {
     return (event.actionDescriptors || []).map(a => a.type);
   }
 

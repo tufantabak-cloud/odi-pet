@@ -137,8 +137,8 @@ describe('Agenda Integration & UI Target Verification (ADIM 4A.2)', () => {
     const handler = agendaReadRegistry.getHandlerForRecord('vaccine_records_v2');
     const vRec = { id: 'vr1', vaccine_code: 'DOG_RABIES', administered_at: '2026-07-23T10:00:00Z' };
 
-    const evt1 = { eventId: 'e1', category: 'asi', dateKey: '2026-07-23', displayMetadata: { vaccineCode: 'DOG_RABIES' } } as any;
-    const evt2 = { eventId: 'e2', category: 'asi', dateKey: '2026-07-24', displayMetadata: { vaccineCode: 'DOG_RABIES' } } as any;
+    const evt1 = { eventId: 'e1', category: 'asi', dateKey: '2026-07-23', displayMetadata: { vaccineCode: 'DOG_RABIES' } } as unknown;
+    const evt2 = { eventId: 'e2', category: 'asi', dateKey: '2026-07-24', displayMetadata: { vaccineCode: 'DOG_RABIES' } } as unknown;
 
     const match = handler.getFallbackMatchCandidates(vRec, [evt1, evt2], mockContext);
     expect(match.status).toBe('multiple');

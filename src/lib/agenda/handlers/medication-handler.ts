@@ -14,7 +14,7 @@ import { getPlanDisplayTitle } from '@/lib/plans/utils';
 export class MedicationReadHandler implements AgendaReadHandler {
   readonly category = 'ilac';
 
-  normalizePlan(plan: any, context: AgendaNormalizationContext): PetAgendaEvent {
+  normalizePlan(plan: AgendaPlanInput, context: AgendaNormalizationContext): PetAgendaEvent {
     const isCompletedChild = !!plan.parent_plan_id;
     const isMainSeries = !plan.parent_plan_id && !!plan.repeat_rule;
     const scheduledAt = plan.scheduled_at || null;
@@ -38,7 +38,7 @@ export class MedicationReadHandler implements AgendaReadHandler {
       source: 'plans',
       sourceRecordId: plan.id,
       category: 'ilac' as string,
-      subCategory: (plan.sub_type || "") as any || 'İlaç Takibi',
+      subCategory: (plan.sub_type || "") || 'İlaç Takibi',
       stableIdentity: baseIdentity,
       occurrenceIdentity,
       fallbackIdentity,
@@ -70,7 +70,7 @@ export class MedicationReadHandler implements AgendaReadHandler {
     };
   }
 
-  normalizeActualRecord(record: any, context: AgendaNormalizationContext): PetAgendaEvent {
+  normalizeActualRecord(record: AgendaRecordInput, context: AgendaNormalizationContext): PetAgendaEvent {
     const administeredAt = record.start_date || record.created_at;
     const dateKey = deriveDateKey(administeredAt, context.timeZone);
     const medName = record.medication_name || 'İlaç';
@@ -112,12 +112,12 @@ export class MedicationReadHandler implements AgendaReadHandler {
     };
   }
 
-  projectOccurrences(mainPlan: any, _range: AgendaDateRange, context: AgendaNormalizationContext): PetAgendaEvent[] {
+  projectOccurrences(mainPlan: AgendaPlanInput, _range: AgendaDateRange, context: AgendaNormalizationContext): PetAgendaEvent[] {
     if (mainPlan.status !== 'active') return [];
     return [this.normalizePlan(mainPlan, context)];
   }
 
-  getIdentity(input: any, context: AgendaNormalizationContext): AgendaIdentity {
+  getIdentity(input: AgendaPlanInput | AgendaRecordInput, context: AgendaNormalizationContext): AgendaIdentity {
     const medName = input.extra_data?.medication?.name || input.medication_name || input.sub_type || 'ilac';
     const baseIdentity = `ilac:${medName.toLowerCase().replace(/\s+/g, '_')}`;
     const scheduledAt = input.scheduled_at || input.start_date;
@@ -131,11 +131,11 @@ export class MedicationReadHandler implements AgendaReadHandler {
     };
   }
 
-  getFallbackMatchCandidates(_record: any, _events: PetAgendaEvent[], _context: AgendaNormalizationContext): AgendaMatchResult {
+  getFallbackMatchCandidates(_record: AgendaRecordInput, _events: PetAgendaEvent[], _context: AgendaNormalizationContext): AgendaMatchResult {
     return { status: 'none' };
   }
 
-  getAllowedActions(event: PetAgendaEvent): any[] {
+  getAllowedActions(event: PetAgendaEvent): AgendaActionType[] {
     return (event.actionDescriptors || []).map(a => a.type);
   }
 

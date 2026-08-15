@@ -14,7 +14,7 @@ import { getPlanDisplayTitle } from '@/lib/plans/utils';
 export class ParasiteReadHandler implements AgendaReadHandler {
   readonly category = 'parazit';
 
-  normalizePlan(plan: any, context: AgendaNormalizationContext): PetAgendaEvent {
+  normalizePlan(plan: AgendaPlanInput, context: AgendaNormalizationContext): PetAgendaEvent {
     const pType = plan.extra_data?.product?.category || plan.sub_type || 'custom';
     const isCompletedChild = !!plan.parent_plan_id;
     const isMainSeries = !plan.parent_plan_id && !!plan.repeat_rule;
@@ -38,7 +38,7 @@ export class ParasiteReadHandler implements AgendaReadHandler {
       source: 'plans',
       sourceRecordId: plan.id,
       category: 'parazit' as string,
-      subCategory: (plan.sub_type || "") as any || 'Parazit',
+      subCategory: (plan.sub_type || "") || 'Parazit',
       stableIdentity: baseIdentity,
       occurrenceIdentity,
       fallbackIdentity,
@@ -70,7 +70,7 @@ export class ParasiteReadHandler implements AgendaReadHandler {
     };
   }
 
-  normalizeActualRecord(record: any, context: AgendaNormalizationContext): PetAgendaEvent {
+  normalizeActualRecord(record: AgendaRecordInput, context: AgendaNormalizationContext): PetAgendaEvent {
     const pType = record.parasite_type || 'custom';
     const administeredAt = record.administered_at || record.created_at;
     const dateKey = deriveDateKey(administeredAt, context.timeZone);
@@ -127,12 +127,12 @@ export class ParasiteReadHandler implements AgendaReadHandler {
     };
   }
 
-  projectOccurrences(mainPlan: any, _range: AgendaDateRange, context: AgendaNormalizationContext): PetAgendaEvent[] {
+  projectOccurrences(mainPlan: AgendaPlanInput, _range: AgendaDateRange, context: AgendaNormalizationContext): PetAgendaEvent[] {
     if (mainPlan.status !== 'active') return [];
     return [this.normalizePlan(mainPlan, context)];
   }
 
-  getIdentity(input: any, context: AgendaNormalizationContext): AgendaIdentity {
+  getIdentity(input: AgendaPlanInput | AgendaRecordInput, context: AgendaNormalizationContext): AgendaIdentity {
     const pType = input.parasite_type || input.extra_data?.product?.category || 'custom';
     const baseIdentity = `parazit:${pType.toLowerCase()}`;
     const scheduledAt = input.scheduled_at || input.administered_at;
@@ -146,7 +146,7 @@ export class ParasiteReadHandler implements AgendaReadHandler {
     };
   }
 
-  getFallbackMatchCandidates(record: any, events: PetAgendaEvent[], context: AgendaNormalizationContext): AgendaMatchResult {
+  getFallbackMatchCandidates(record: AgendaRecordInput, events: PetAgendaEvent[], context: AgendaNormalizationContext): AgendaMatchResult {
     if (record.plan_id) {
       const match = events.find(e => e.sourceRecordId === record.plan_id || e.mainPlanId === record.plan_id);
       if (match) return { status: 'exact', eventId: match.eventId, reason: 'linked_plan_id' };
@@ -167,7 +167,7 @@ export class ParasiteReadHandler implements AgendaReadHandler {
     return { status: 'none' };
   }
 
-  getAllowedActions(event: PetAgendaEvent): any[] {
+  getAllowedActions(event: PetAgendaEvent): AgendaActionType[] {
     return (event.actionDescriptors || []).map(a => a.type);
   }
 

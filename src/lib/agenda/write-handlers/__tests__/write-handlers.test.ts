@@ -8,7 +8,7 @@ import { processRecordCreation } from '../write-service';
 
 describe('Agenda Write Handlers & Auto-Matching (ADIM 4B)', () => {
   const mockContext = {
-    supabase: null as any,
+    supabase: null as unknown as import('@supabase/supabase-js').SupabaseClient,
     petId: 'pet_123',
     userId: 'user_456',
     timeZone: 'Europe/Istanbul'

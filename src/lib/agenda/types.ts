@@ -44,7 +44,7 @@ export interface AgendaDisplayMetadata {
   dosageString?: string | null;
   frequencyLabel?: string;
   frequencyDays?: number;
-  extraData?: Record<string, any>;
+  extraData?: Record<string, unknown>;
 }
 
 export interface PetAgendaEvent {
@@ -158,7 +158,7 @@ export interface AgendaPlanInput {
   note?: string | null;
   parent_plan_id?: string | null;
   completed_at?: string | null;
-  extra_data?: any | null;
+  extra_data?: unknown | null;
   title?: string | null;
   vaccine_code?: string | null;
   parasite_type?: string | null;
@@ -169,7 +169,7 @@ export interface AgendaPlanInput {
   product?: string | null;
   item?: string | null;
   amount?: string | null;
-  code?: string | null; category?: string | null; dosage_string?: string | null; dose?: string | null; name?: string | null; medication?: string | null; unit?: string | null; [key: string]: any;
+  code?: string | null; category?: string | null; dosage_string?: string | null; dose?: string | null; name?: string | null; medication?: string | null; unit?: string | null; [key: string]: unknown;
 }
 
 export interface AgendaRecordInput {
@@ -184,5 +184,5 @@ export interface AgendaRecordInput {
   measured_at?: string | null;
   administered_at?: string | null;
   weight?: number | null;
-  code?: string | null; category?: string | null; dosage_string?: string | null; dose?: string | null; name?: string | null; medication?: string | null; unit?: string | null; [key: string]: any;
+  code?: string | null; category?: string | null; dosage_string?: string | null; dose?: string | null; name?: string | null; medication?: string | null; unit?: string | null; [key: string]: unknown;
 }

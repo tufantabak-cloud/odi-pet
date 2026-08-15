@@ -7,6 +7,9 @@ import {
   AgendaDateRange,
   AgendaActionDescriptor,
   AgendaDisplayMetadata,
+  AgendaPlanInput,
+  AgendaRecordInput,
+  AgendaActionType,
   deriveDateKey
 } from '../types';
 import { getPlanDisplayTitle } from '@/lib/plans/utils';
@@ -14,7 +17,7 @@ import { getPlanDisplayTitle } from '@/lib/plans/utils';
 export class VaccineReadHandler implements AgendaReadHandler {
   readonly category = 'asi';
 
-  normalizePlan(plan: any, context: AgendaNormalizationContext): PetAgendaEvent {
+  normalizePlan(plan: AgendaPlanInput, context: AgendaNormalizationContext): PetAgendaEvent {
     const vCode = plan.extra_data?.vaccine_code || plan.extra_data?.vaccine?.code || 'CUSTOM';
     const isCompletedChild = !!plan.parent_plan_id;
     const isMainSeries = !plan.parent_plan_id && !!plan.repeat_rule;
@@ -38,7 +41,7 @@ export class VaccineReadHandler implements AgendaReadHandler {
       source: 'plans',
       sourceRecordId: plan.id,
       category: 'asi' as string,
-      subCategory: (plan.sub_type || "") as any || 'Aşı',
+      subCategory: (plan.sub_type || "") || 'Aşı',
       stableIdentity: baseIdentity,
       occurrenceIdentity,
       fallbackIdentity,
@@ -65,7 +68,7 @@ export class VaccineReadHandler implements AgendaReadHandler {
     };
   }
 
-  normalizeActualRecord(record: any, context: AgendaNormalizationContext): PetAgendaEvent {
+  normalizeActualRecord(record: AgendaRecordInput, context: AgendaNormalizationContext): PetAgendaEvent {
     const vCode = record.vaccine_code || 'CUSTOM';
     const administeredAt = record.administered_at || record.created_at;
     const dateKey = deriveDateKey(administeredAt, context.timeZone);
@@ -111,12 +114,12 @@ export class VaccineReadHandler implements AgendaReadHandler {
     };
   }
 
-  projectOccurrences(mainPlan: any, _range: AgendaDateRange, context: AgendaNormalizationContext): PetAgendaEvent[] {
+  projectOccurrences(mainPlan: AgendaPlanInput, _range: AgendaDateRange, context: AgendaNormalizationContext): PetAgendaEvent[] {
     if (mainPlan.status !== 'active') return [];
     return [this.normalizePlan(mainPlan, context)];
   }
 
-  getIdentity(input: any, context: AgendaNormalizationContext): AgendaIdentity {
+  getIdentity(input: AgendaPlanInput | AgendaRecordInput, context: AgendaNormalizationContext): AgendaIdentity {
     const vCode = input.vaccine_code || input.extra_data?.vaccine_code || 'CUSTOM';
     const baseIdentity = `asi:${vCode.toUpperCase()}`;
     const scheduledAt = input.scheduled_at || input.administered_at;
@@ -130,7 +133,7 @@ export class VaccineReadHandler implements AgendaReadHandler {
     };
   }
 
-  getFallbackMatchCandidates(record: any, events: PetAgendaEvent[], context: AgendaNormalizationContext): AgendaMatchResult {
+  getFallbackMatchCandidates(record: AgendaRecordInput, events: PetAgendaEvent[], context: AgendaNormalizationContext): AgendaMatchResult {
     if (record.plan_id) {
       const match = events.find(e => e.sourceRecordId === record.plan_id || e.mainPlanId === record.plan_id);
       if (match) return { status: 'exact', eventId: match.eventId, reason: 'linked_plan_id' };
@@ -151,7 +154,7 @@ export class VaccineReadHandler implements AgendaReadHandler {
     return { status: 'none' };
   }
 
-  getAllowedActions(event: PetAgendaEvent): any[] {
+  getAllowedActions(event: PetAgendaEvent): AgendaActionType[] {
     return (event.actionDescriptors || []).map(a => a.type);
   }
 
@@ -163,7 +166,7 @@ export class VaccineReadHandler implements AgendaReadHandler {
     return event.displayMetadata;
   }
 
-  private getDisplayMetadataFromPlan(plan: any): AgendaDisplayMetadata {
+  private getDisplayMetadataFromPlan(plan: AgendaPlanInput): AgendaDisplayMetadata {
     return {
       title: getPlanDisplayTitle(plan),
       note: plan.note,

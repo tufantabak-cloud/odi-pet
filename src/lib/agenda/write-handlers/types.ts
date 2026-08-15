@@ -21,7 +21,7 @@ export type PlanMatchCandidate = {
   distanceMinutes: number;
   repeatRule: string | null;
   displayDate: string;
-  rawPlan: any;
+  rawPlan: Record<string, unknown>;
 };
 
 export type NextDueResult =
@@ -37,8 +37,8 @@ export type NextDueResult =
     };
 
 export interface WriteContext {
-  supabase: any;
-  rpcSupabase?: any;
+  supabase: import('@supabase/supabase-js').SupabaseClient;
+  rpcSupabase?: import('@supabase/supabase-js').SupabaseClient;
   petId: string;
   userId: string;
   timeZone: string;
@@ -64,10 +64,10 @@ export interface PlanRecord {
   status: string;
   parent_plan_id: string | null;
   occurrence_scheduled_at: string | null;
-  extra_data?: any;
+  extra_data?: Record<string, unknown>;
 }
 
-export interface AgendaWriteHandler<TInput = any> {
+export interface AgendaWriteHandler<TInput = Record<string, unknown>> {
   category: string;
 
   validateInput(input: TInput): Promise<void> | void;

@@ -7,6 +7,9 @@ import {
   AgendaDateRange,
   AgendaActionDescriptor,
   AgendaDisplayMetadata,
+  AgendaPlanInput,
+  AgendaRecordInput,
+  AgendaActionType,
   deriveDateKey
 } from '../types';
 import { getPlanDisplayTitle } from '@/lib/plans/utils';
@@ -19,7 +22,7 @@ export class RoutineReadHandler implements AgendaReadHandler {
     this.category = category as string;
   }
 
-  normalizePlan(plan: any, context: AgendaNormalizationContext): PetAgendaEvent {
+  normalizePlan(plan: AgendaPlanInput, context: AgendaNormalizationContext): PetAgendaEvent {
     const isCompletedChild = !!plan.parent_plan_id;
     const isMainSeries = !plan.parent_plan_id && !!plan.repeat_rule;
     const scheduledAt = plan.scheduled_at || null;
@@ -43,7 +46,7 @@ export class RoutineReadHandler implements AgendaReadHandler {
       source: 'plans',
       sourceRecordId: plan.id,
       category: this.category as string,
-      subCategory: (plan.sub_type || "") as any || 'Görevi',
+      subCategory: (plan.sub_type || "") || 'Görevi',
       stableIdentity: baseIdentity,
       occurrenceIdentity,
       fallbackIdentity,
@@ -74,11 +77,11 @@ export class RoutineReadHandler implements AgendaReadHandler {
     };
   }
 
-  normalizeActualRecord(record: any, context: AgendaNormalizationContext): PetAgendaEvent {
+  normalizeActualRecord(record: AgendaRecordInput, context: AgendaNormalizationContext): PetAgendaEvent {
     return this.normalizePlan(record, context);
   }
 
-  projectOccurrences(mainPlan: any, _range: AgendaDateRange, context: AgendaNormalizationContext): PetAgendaEvent[] {
+  projectOccurrences(mainPlan: AgendaPlanInput, _range: AgendaDateRange, context: AgendaNormalizationContext): PetAgendaEvent[] {
     if (mainPlan.status !== 'active') return [];
 
     const baseEvt = this.normalizePlan(mainPlan, context);
@@ -97,7 +100,7 @@ export class RoutineReadHandler implements AgendaReadHandler {
 
     const expanded = expandRecurringForTimeline([rawLegacy], -7, 60);
 
-    return expanded.map((exp: any) => {
+    return expanded.map((exp: Record<string, unknown>) => {
       const isAnchor = exp.due_date === baseEvt.dateKey;
       return {
         ...baseEvt,
@@ -111,7 +114,7 @@ export class RoutineReadHandler implements AgendaReadHandler {
     });
   }
 
-  getIdentity(input: any, context: AgendaNormalizationContext): AgendaIdentity {
+  getIdentity(input: AgendaPlanInput | AgendaRecordInput, context: AgendaNormalizationContext): AgendaIdentity {
     const subSlug = (input.sub_type || '').toLowerCase().replace(/\s+/g, '_');
     const baseIdentity = `${this.category}:${subSlug}`;
     const scheduledAt = input.scheduled_at;
@@ -125,11 +128,11 @@ export class RoutineReadHandler implements AgendaReadHandler {
     };
   }
 
-  getFallbackMatchCandidates(_record: any, _events: PetAgendaEvent[], _context: AgendaNormalizationContext): AgendaMatchResult {
+  getFallbackMatchCandidates(_record: AgendaRecordInput, _events: PetAgendaEvent[], _context: AgendaNormalizationContext): AgendaMatchResult {
     return { status: 'none' };
   }
 
-  getAllowedActions(event: PetAgendaEvent): any[] {
+  getAllowedActions(event: PetAgendaEvent): AgendaActionType[] {
     return (event.actionDescriptors || []).map(a => a.type);
   }
 

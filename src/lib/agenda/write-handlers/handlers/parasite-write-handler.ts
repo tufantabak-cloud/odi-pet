@@ -91,7 +91,7 @@ export class ParasiteWriteHandler implements AgendaWriteHandler<ParasiteWriteInp
   }
 
   async calculateNextDue(input: ParasiteWriteInput, matchedPlan: PlanRecord | null): Promise<NextDueResult> {
-    const durationDays = input.protection_duration_days || matchedPlan?.extra_data?.protection_duration_days || 30;
+    const durationDays = (input.protection_duration_days || matchedPlan?.extra_data?.protection_duration_days || 30) as number;
     const adminDate = new Date(input.administered_at);
     adminDate.setDate(adminDate.getDate() + durationDays);
 
@@ -192,12 +192,13 @@ export class ParasiteWriteHandler implements AgendaWriteHandler<ParasiteWriteInp
     // Ensure UUID idempotency key exists
     const idempotencyKey = context.idempotencyKey || crypto.randomUUID();
 
-    const parasiteCode = mainPlan.extra_data?.parasite_code || `${input.parasite_type.toUpperCase()}_GENERIC`;
+    const extra = mainPlan.extra_data as Record<string, any> || {};
+    const parasiteCode = extra.parasite_code || `${input.parasite_type.toUpperCase()}_GENERIC`;
     const parasiteProtocolId =
-      mainPlan.extra_data?.parasite_protocol_id ||
-      mainPlan.extra_data?.product?.id ||
+      extra.parasite_protocol_id ||
+      extra.product?.id ||
       null;
-    const rawMethod = (input.application_method || mainPlan.extra_data?.application_method || 'spot_on').toLowerCase();
+    const rawMethod = (input.application_method || extra.application_method || 'spot_on').toLowerCase();
     let applicationMethod = 'spot_on';
     if (rawMethod === 'oral' || rawMethod === 'tablet' || rawMethod === 'chewable') {
       applicationMethod = 'oral';

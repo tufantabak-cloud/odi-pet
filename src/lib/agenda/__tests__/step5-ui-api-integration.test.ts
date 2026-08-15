@@ -41,7 +41,7 @@ describe('ADIM 5 — UI & API Entegrasyon Testleri', () => {
           return {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
-            then: (cb: any) => cb({ data: [], error: null })
+            then: (cb: (arg: unknown) => void) => cb({ data: [], error: null })
           };
         }
         if (table === 'vaccine_records_v2') {
@@ -74,7 +74,7 @@ describe('ADIM 5 — UI & API Entegrasyon Testleri', () => {
           return {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
-            then: (cb: any) => cb({ data: [], error: null })
+            then: (cb: (arg: unknown) => void) => cb({ data: [], error: null })
           };
         }
         if (table === 'vaccine_records_v2') {

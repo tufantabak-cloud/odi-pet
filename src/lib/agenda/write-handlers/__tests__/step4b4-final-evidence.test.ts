@@ -248,12 +248,12 @@ describe('ADIM 4B.4 — Canonical Protocol Engine, Idempotency Key, Strict Match
   it('14. Medication category fail-closed in registry', () => {
     const handler = agendaWriteRegistry.getHandler('ilac');
     expect(handler.category).toBe('ilac');
-    expect(() => handler.validateInput({} as any)).toThrowError('MEDICATION_WRITE_UNSUPPORTED');
+    expect(() => handler.validateInput({} as unknown)).toThrowError('MEDICATION_WRITE_UNSUPPORTED');
   });
 
   it('15. Medication handler findMatchingPlans returns none', async () => {
     const handler = agendaWriteRegistry.getHandler('ilac');
-    const result = await handler.findMatchingPlans({} as any, []);
+    const result = await handler.findMatchingPlans({} as unknown, []);
     expect(result.status).toBe('none');
   });
 });

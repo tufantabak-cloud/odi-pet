@@ -6,7 +6,7 @@ import { agendaWriteRegistry } from '../registry';
 
 describe('Request Idempotency, Calendar Year & TOCTOU Protection (ADIM 4B.3)', () => {
   const mockContext = {
-    supabase: null as any,
+    supabase: null as unknown as import('@supabase/supabase-js').SupabaseClient,
     petId: 'pet_123',
     userId: 'user_456',
     timeZone: 'Europe/Istanbul',
@@ -116,6 +116,6 @@ describe('Request Idempotency, Calendar Year & TOCTOU Protection (ADIM 4B.3)', (
   it('4. Medication category fail-closed in AgendaWriteRegistry', () => {
     const handler = agendaWriteRegistry.getHandler('ilac');
     expect(handler.category).toBe('ilac');
-    expect(() => handler.validateInput({} as any)).toThrowError('MEDICATION_WRITE_UNSUPPORTED');
+    expect(() => handler.validateInput({} as unknown)).toThrowError('MEDICATION_WRITE_UNSUPPORTED');
   });
 });

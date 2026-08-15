@@ -5,17 +5,19 @@ import {
   NextDueResult,
   PlanRecord,
   WriteContext,
-  WriteResult
+  WriteResult,
+  AgendaPlanInput,
+  AgendaRecordInput
 } from '../types';
 
 export class MedicationWriteHandler implements AgendaWriteHandler {
   readonly category = 'ilac';
 
-  validateInput(input: any): void {
+  validateInput(input: AgendaPlanInput | AgendaRecordInput): void {
     if (!input || !input.pet_id) throw new Error('MEDICATION_WRITE_UNSUPPORTED: pet_id is required');
   }
 
-  getStableIdentity(input: any): string {
+  getStableIdentity(input: AgendaPlanInput | AgendaRecordInput): string {
     return `ilac:${input.medication_name || 'custom'}`;
   }
 
@@ -27,7 +29,7 @@ export class MedicationWriteHandler implements AgendaWriteHandler {
     return { status: 'unresolved', reason: 'medication_write_unsupported' };
   }
 
-  async persistIndependentRecord(input: any, context: WriteContext): Promise<WriteResult> {
+  async persistIndependentRecord(input: AgendaPlanInput | AgendaRecordInput, context: WriteContext): Promise<WriteResult> {
     const { supabase, petId } = context;
 
     const { data: record, error } = await supabase
@@ -55,7 +57,7 @@ export class MedicationWriteHandler implements AgendaWriteHandler {
   }
 
   async persistLinkedRecord(
-    input: any,
+    input: AgendaPlanInput | AgendaRecordInput,
     match: PlanMatchCandidate,
     nextDue: NextDueResult,
     context: WriteContext

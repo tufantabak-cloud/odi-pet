@@ -68,7 +68,7 @@ export class GrowthWriteHandler implements AgendaWriteHandler<GrowthWriteInput> 
 
   async persistLinkedRecord(
     input: GrowthWriteInput,
-    _match: any,
+    _match: unknown,
     _nextDue: NextDueResult,
     context: WriteContext
   ): Promise<WriteResult> {

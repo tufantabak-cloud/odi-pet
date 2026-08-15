@@ -15,7 +15,7 @@ export interface RoutineWriteInput {
   sub_type: string;
   completed_at: string;
   notes?: string;
-  extra_data?: any;
+  extra_data?: Record<string, unknown>;
 }
 
 export class RoutineWriteHandler implements AgendaWriteHandler<RoutineWriteInput> {
@@ -62,7 +62,7 @@ export class RoutineWriteHandler implements AgendaWriteHandler<RoutineWriteInput
           distanceMinutes,
           repeatRule: plan.repeat_rule,
           displayDate: deriveDateKey(plan.scheduled_at),
-          rawPlan: plan
+          rawPlan: plan as unknown as Record<string, unknown>
         });
       }
     }
@@ -112,7 +112,7 @@ export class RoutineWriteHandler implements AgendaWriteHandler<RoutineWriteInput
     if (error) throw error;
 
     let canonicalTable: string | null = null;
-    let canonicalPayload: any = null;
+    let canonicalPayload: Record<string, unknown> | null = null;
 
     if (this.category === 'beslenme') {
       canonicalTable = 'meal_consumption';
@@ -169,7 +169,7 @@ export class RoutineWriteHandler implements AgendaWriteHandler<RoutineWriteInput
         });
         
         if (!insertErr) {
-          const rpcSupabase = (context as any).rpcSupabase ?? context.supabase;
+          const rpcSupabase = (context as { rpcSupabase?: import('@supabase/supabase-js').SupabaseClient }).rpcSupabase ?? context.supabase;
           await rpcSupabase.rpc('consume_medication_dose', {
             p_course_id: course.id,
             p_dose: course.dose_per_administration || 1
@@ -218,7 +218,7 @@ export class RoutineWriteHandler implements AgendaWriteHandler<RoutineWriteInput
     const completedChildId = rpcRes?.completed_plan_id || rpcRes?.completed_id || rpcRes?.id || null;
 
     let canonicalTable: string | null = null;
-    let canonicalPayload: any = null;
+    let canonicalPayload: Record<string, unknown> | null = null;
 
     if (this.category === 'beslenme') {
       canonicalTable = 'meal_consumption';
@@ -292,7 +292,7 @@ export class RoutineWriteHandler implements AgendaWriteHandler<RoutineWriteInput
       source: 'plans',
       linkedPlanId: completedChildId,
       completedOccurrencePlanId: completedChildId,
-      advancedMainPlanId: mainPlan.id,
+      advancedMainPlanId: mainPlan.id as string,
       nextDueAt: nextDue.status === 'resolved' ? nextDue.nextDueAt : null
     };
   }

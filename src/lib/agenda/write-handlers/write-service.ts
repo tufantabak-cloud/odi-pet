@@ -1,9 +1,10 @@
 import { WriteContext, WriteResult, PlanMatchResult, PlanRecord } from './types';
 import { agendaWriteRegistry } from './registry';
+import { AgendaPlanInput, AgendaRecordInput } from '../types';
 
 export async function processRecordCreation(
   category: string,
-  input: any,
+  input: AgendaPlanInput | AgendaRecordInput,
   context: WriteContext,
   selectedPlanId?: string
 ): Promise<{ result: WriteResult; matchResult: PlanMatchResult }> {
@@ -19,7 +20,7 @@ export async function processRecordCreation(
 
   if (error) throw error;
 
-  const activePlans: PlanRecord[] = plans || [];
+  const activePlans = (plans || []) as unknown as PlanRecord[];
 
   let matchResult: PlanMatchResult;
 

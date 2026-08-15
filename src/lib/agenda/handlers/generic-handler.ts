@@ -18,7 +18,7 @@ export class GenericReadHandler implements AgendaReadHandler {
     this.category = category as string;
   }
 
-  normalizePlan(plan: any, context: AgendaNormalizationContext): PetAgendaEvent {
+  normalizePlan(plan: AgendaPlanInput, context: AgendaNormalizationContext): PetAgendaEvent {
     const isCompletedChild = !!plan.parent_plan_id;
     const scheduledAt = plan.scheduled_at || null;
     const occurrenceScheduledAt = plan.occurrence_scheduled_at || (isCompletedChild ? scheduledAt : null);
@@ -38,7 +38,7 @@ export class GenericReadHandler implements AgendaReadHandler {
       source: 'plans',
       sourceRecordId: plan.id,
       category: (plan.category as string) || this.category as string,
-      subCategory: (plan.sub_type || "") as any || 'Görev',
+      subCategory: (plan.sub_type || "") || 'Görev',
       stableIdentity: baseIdentity,
       occurrenceIdentity: occurrenceScheduledAt ? `${plan.id}_${occurrenceScheduledAt}` : null,
       fallbackIdentity: `${baseIdentity}_${dateKey}`,
@@ -69,16 +69,16 @@ export class GenericReadHandler implements AgendaReadHandler {
     };
   }
 
-  normalizeActualRecord(record: any, context: AgendaNormalizationContext): PetAgendaEvent {
+  normalizeActualRecord(record: AgendaRecordInput, context: AgendaNormalizationContext): PetAgendaEvent {
     return this.normalizePlan(record, context);
   }
 
-  projectOccurrences(mainPlan: any, _range: AgendaDateRange, context: AgendaNormalizationContext): PetAgendaEvent[] {
+  projectOccurrences(mainPlan: AgendaPlanInput, _range: AgendaDateRange, context: AgendaNormalizationContext): PetAgendaEvent[] {
     if (mainPlan.status !== 'active') return [];
     return [this.normalizePlan(mainPlan, context)];
   }
 
-  getIdentity(input: any, context: AgendaNormalizationContext): AgendaIdentity {
+  getIdentity(input: AgendaPlanInput | AgendaRecordInput, context: AgendaNormalizationContext): AgendaIdentity {
     const subSlug = (input.sub_type || 'task').toLowerCase().replace(/\s+/g, '_');
     const baseIdentity = `${input.category || this.category}:${subSlug}`;
     const scheduledAt = input.scheduled_at;
@@ -92,11 +92,11 @@ export class GenericReadHandler implements AgendaReadHandler {
     };
   }
 
-  getFallbackMatchCandidates(_record: any, _events: PetAgendaEvent[], _context: AgendaNormalizationContext): AgendaMatchResult {
+  getFallbackMatchCandidates(_record: AgendaRecordInput, _events: PetAgendaEvent[], _context: AgendaNormalizationContext): AgendaMatchResult {
     return { status: 'none' };
   }
 
-  getAllowedActions(event: PetAgendaEvent): any[] {
+  getAllowedActions(event: PetAgendaEvent): AgendaActionType[] {
     return (event.actionDescriptors || []).map(a => a.type);
   }
 

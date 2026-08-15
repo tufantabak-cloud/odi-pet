@@ -13,7 +13,7 @@ import {
 export class NutritionLogReadHandler implements AgendaReadHandler {
   readonly category = 'beslenme';
 
-  normalizePlan(plan: any, context: AgendaNormalizationContext): PetAgendaEvent {
+  normalizePlan(plan: AgendaPlanInput, context: AgendaNormalizationContext): PetAgendaEvent {
     const scheduledAt = plan.scheduled_at || null;
     const dateKey = deriveDateKey(scheduledAt, context.timeZone);
 
@@ -31,7 +31,7 @@ export class NutritionLogReadHandler implements AgendaReadHandler {
       source: 'plans',
       sourceRecordId: plan.id,
       category: 'beslenme' as string,
-      subCategory: (plan.sub_type || "") as any || 'Mama Saati',
+      subCategory: (plan.sub_type || "") || 'Mama Saati',
       stableIdentity: `beslenme:${(plan.sub_type || 'mama').toLowerCase().replace(/\s+/g, '_')}`,
       occurrenceIdentity: plan.parent_plan_id ? `beslenme:${plan.parent_plan_id}_${dateKey}` : null,
       fallbackIdentity: `beslenme:${plan.id}_${dateKey}`,
@@ -62,7 +62,7 @@ export class NutritionLogReadHandler implements AgendaReadHandler {
     };
   }
 
-  normalizeActualRecord(record: any, context: AgendaNormalizationContext): PetAgendaEvent {
+  normalizeActualRecord(record: AgendaRecordInput, context: AgendaNormalizationContext): PetAgendaEvent {
     const loggedAt = record.logged_at || record.created_at;
     const dateKey = deriveDateKey(loggedAt, context.timeZone);
 
@@ -101,11 +101,11 @@ export class NutritionLogReadHandler implements AgendaReadHandler {
     };
   }
 
-  projectOccurrences(mainPlan: any, _range: AgendaDateRange, context: AgendaNormalizationContext): PetAgendaEvent[] {
+  projectOccurrences(mainPlan: AgendaPlanInput, _range: AgendaDateRange, context: AgendaNormalizationContext): PetAgendaEvent[] {
     return [this.normalizePlan(mainPlan, context)];
   }
 
-  getIdentity(input: any, context: AgendaNormalizationContext): AgendaIdentity {
+  getIdentity(input: AgendaPlanInput | AgendaRecordInput, context: AgendaNormalizationContext): AgendaIdentity {
     const dateKey = deriveDateKey(input.logged_at || input.scheduled_at, context.timeZone);
     return {
       category: 'beslenme' as string,
@@ -115,11 +115,11 @@ export class NutritionLogReadHandler implements AgendaReadHandler {
     };
   }
 
-  getFallbackMatchCandidates(_record: any, _events: PetAgendaEvent[], _context: AgendaNormalizationContext): AgendaMatchResult {
+  getFallbackMatchCandidates(_record: AgendaRecordInput, _events: PetAgendaEvent[], _context: AgendaNormalizationContext): AgendaMatchResult {
     return { status: 'none' };
   }
 
-  getAllowedActions(event: PetAgendaEvent): any[] {
+  getAllowedActions(event: PetAgendaEvent): AgendaActionType[] {
     return (event.actionDescriptors || []).map(a => a.type);
   }
 

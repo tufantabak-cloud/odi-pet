@@ -13,7 +13,7 @@ export class AgendaWriteRegistry {
   private medicationHandler = new MedicationWriteHandler();
   private genericHandler = new GenericWriteHandler();
 
-  getHandler(category: string): AgendaWriteHandler {
+  getHandler(category: string): AgendaWriteHandler<any> {
     const cat = (category || '').toLowerCase().trim();
 
     if (cat === 'asi') return this.vaccineHandler;

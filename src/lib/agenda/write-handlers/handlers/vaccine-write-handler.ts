@@ -49,7 +49,8 @@ export class VaccineWriteHandler implements AgendaWriteHandler<VaccineWriteInput
     for (const plan of activePlans) {
       if (plan.category !== 'asi') continue;
 
-      const planCode = (plan.extra_data?.vaccine_code || plan.extra_data?.vaccine?.code || '').toUpperCase();
+      const extra = plan.extra_data as Record<string, any> || {};
+      const planCode = ((extra.vaccine_code as string) || (extra.vaccine?.code as string) || '').toUpperCase();
       
       // Strict exact matching: vaccine_code must match if present
       if (targetCode && planCode && targetCode !== planCode) continue;
@@ -74,7 +75,7 @@ export class VaccineWriteHandler implements AgendaWriteHandler<VaccineWriteInput
           distanceMinutes,
           repeatRule: plan.repeat_rule,
           displayDate: deriveDateKey(plan.scheduled_at),
-          rawPlan: plan
+          rawPlan: plan as unknown as Record<string, unknown>
         });
       }
     }
@@ -97,7 +98,7 @@ export class VaccineWriteHandler implements AgendaWriteHandler<VaccineWriteInput
     }
 
     // 2. Canonical protocol engine — single source of truth
-    const vCode = (input.vaccine_code || matchedPlan?.extra_data?.vaccine_code || '').toUpperCase();
+    const vCode = ((input.vaccine_code as string) || ((matchedPlan?.extra_data as Record<string, any>)?.vaccine_code as string) || '').toUpperCase();
 
     if (!vCode || vCode === 'CUSTOM') {
       return { status: 'unresolved', reason: 'unknown_vaccine_code_cannot_resolve_protocol' };

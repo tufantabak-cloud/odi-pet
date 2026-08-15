@@ -5,7 +5,7 @@ import { processRecordCreation } from '../write-service';
 
 describe('Atomic Write, Idempotency & Failure Injection Proof (ADIM 4B.1)', () => {
   const mockContext = {
-    supabase: null as any,
+    supabase: null as unknown as import('@supabase/supabase-js').SupabaseClient,
     petId: 'pet_123',
     userId: 'user_456',
     timeZone: 'Europe/Istanbul'
@@ -24,7 +24,7 @@ describe('Atomic Write, Idempotency & Failure Injection Proof (ADIM 4B.1)', () =
 
       // Step 2 fails
       throw new Error('DB_CONNECTION_LOST_ON_STEP_2');
-    } catch (err: any) {
+    } catch (err: unknown) {
       step2ErrorEncountered = true;
       expect(err.message).toBe('DB_CONNECTION_LOST_ON_STEP_2');
     }

@@ -1,7 +1,7 @@
-import { PetAgendaEvent, AgendaNormalizationContext, deriveDateKey } from './types';
+import { AgendaPlanInput, AgendaRecordInput,  PetAgendaEvent, AgendaNormalizationContext, deriveDateKey } from './types';
 import { agendaReadRegistry } from './registry';
 
-export function buildStableIdentity(category: string, subType: string, extraData?: any): string {
+export function buildStableIdentity(category: string, subType: string, extraData?: Record<string, unknown>): string {
   const cat = (category || '').toLowerCase().trim();
   const sub = (subType || '').toLowerCase().trim();
   const vCode = extraData?.vaccine_code || extraData?.vaccine?.code;
@@ -13,14 +13,14 @@ export function buildStableIdentity(category: string, subType: string, extraData
 }
 
 export function buildPetAgendaEvents(
-  rawPlans: any[] = [],
-  rawVaccines: any[] = [],
-  rawParasites: any[] = [],
-  rawSchedules: any[] = [],
-  rawGrowth: any[] = [],
-  rawAppointments: any[] = [],
-  rawMedications: any[] = [],
-  rawNutrition: any[] = [],
+  rawPlans: AgendaPlanInput[] = [],
+  rawVaccines: AgendaRecordInput[] = [],
+  rawParasites: AgendaRecordInput[] = [],
+  rawSchedules: AgendaPlanInput[] = [],
+  rawGrowth: AgendaRecordInput[] = [],
+  rawAppointments: AgendaRecordInput[] = [],
+  rawMedications: AgendaRecordInput[] = [],
+  rawNutrition: AgendaRecordInput[] = [],
   timeZone = 'Europe/Istanbul'
 ): PetAgendaEvent[] {
   const todayStr = deriveDateKey(new Date().toISOString(), timeZone);

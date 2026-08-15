@@ -13,7 +13,7 @@ import {
 export class GrowthMeasurementReadHandler implements AgendaReadHandler {
   readonly category = 'saglik';
 
-  normalizePlan(plan: any, context: AgendaNormalizationContext): PetAgendaEvent {
+  normalizePlan(plan: AgendaPlanInput, context: AgendaNormalizationContext): PetAgendaEvent {
     const scheduledAt = plan.scheduled_at || null;
     const dateKey = deriveDateKey(scheduledAt, context.timeZone);
 
@@ -22,7 +22,7 @@ export class GrowthMeasurementReadHandler implements AgendaReadHandler {
       source: 'plans',
       sourceRecordId: plan.id,
       category: 'saglik' as string,
-      subCategory: (plan.sub_type || "") as any || 'Kilo & Boy Ölçümü',
+      subCategory: (plan.sub_type || "") || 'Kilo & Boy Ölçümü',
       stableIdentity: 'saglik:kilo_boy',
       occurrenceIdentity: null,
       fallbackIdentity: `saglik:kilo_boy_${plan.id}`,
@@ -52,7 +52,7 @@ export class GrowthMeasurementReadHandler implements AgendaReadHandler {
     };
   }
 
-  normalizeActualRecord(record: any, context: AgendaNormalizationContext): PetAgendaEvent {
+  normalizeActualRecord(record: AgendaRecordInput, context: AgendaNormalizationContext): PetAgendaEvent {
     const recAt = record.measured_at
       ? record.measured_at
       : record.recorded_at
@@ -94,11 +94,11 @@ export class GrowthMeasurementReadHandler implements AgendaReadHandler {
     };
   }
 
-  projectOccurrences(mainPlan: any, _range: AgendaDateRange, context: AgendaNormalizationContext): PetAgendaEvent[] {
+  projectOccurrences(mainPlan: AgendaPlanInput, _range: AgendaDateRange, context: AgendaNormalizationContext): PetAgendaEvent[] {
     return [this.normalizePlan(mainPlan, context)];
   }
 
-  getIdentity(input: any, _context: AgendaNormalizationContext): AgendaIdentity {
+  getIdentity(input: AgendaPlanInput | AgendaRecordInput, _context: AgendaNormalizationContext): AgendaIdentity {
     return {
       category: 'saglik' as string,
       baseIdentity: `saglik:kilo_${input.id}`,
@@ -107,11 +107,11 @@ export class GrowthMeasurementReadHandler implements AgendaReadHandler {
     };
   }
 
-  getFallbackMatchCandidates(_record: any, _events: PetAgendaEvent[], _context: AgendaNormalizationContext): AgendaMatchResult {
+  getFallbackMatchCandidates(_record: AgendaRecordInput, _events: PetAgendaEvent[], _context: AgendaNormalizationContext): AgendaMatchResult {
     return { status: 'none' };
   }
 
-  getAllowedActions(event: PetAgendaEvent): any[] {
+  getAllowedActions(event: PetAgendaEvent): AgendaActionType[] {
     return (event.actionDescriptors || []).map(a => a.type);
   }
 
