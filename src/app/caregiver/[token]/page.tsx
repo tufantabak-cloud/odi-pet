@@ -1,5 +1,7 @@
 import React from 'react'
 import { notFound } from 'next/navigation'
+import { headers } from 'next/headers'
+import { caregiverTokenRateLimit } from '@/lib/auth-security'
 import { createAdminSupabaseClient } from '@/lib/supabase/server'
 import { PhoneCall, Stethoscope, AlertCircle, Info, ChevronDown } from 'lucide-react'
 import { LogbookForm } from '@/components/caregiver/LogbookForm'
@@ -29,6 +31,15 @@ async function getSharedCard(token: string) {
 }
 
 export default async function CaregiverPage({ params }: CaregiverPageProps) {
+  const headersList = await headers()
+  const ip = headersList.get('x-forwarded-for')?.split(',')[0].trim() 
+           || headersList.get('x-real-ip') 
+           || '127.0.0.1'
+  const rl = await caregiverTokenRateLimit.limit(ip)
+  if (!rl.success) {
+    notFound()
+  }
+
   const card = await getSharedCard(params.token)
 
   if (!card) {

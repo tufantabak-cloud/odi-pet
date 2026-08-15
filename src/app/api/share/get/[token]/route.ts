@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminSupabaseClient } from '@/lib/supabase/server'
+import { caregiverTokenRateLimit, getIP } from '@/lib/auth-security'
 
 export async function GET(
   req: NextRequest,
   context: { params: Promise<{ token: string }> }
 ) {
   const { token } = await context.params
+
+  const ip = getIP(req)
+  const rl = await caregiverTokenRateLimit.limit(ip)
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: 'Çok fazla istek gönderildi. Lütfen bir süre bekleyin.' },
+      { status: 429 }
+    )
+  }
 
   if (!token) {
     return NextResponse.json({ error: 'Token bulunamadı.' }, { status: 400 })

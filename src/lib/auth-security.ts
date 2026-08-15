@@ -91,6 +91,7 @@ export const aiVetRateLimit      = createRateLimit(20, "1 m", "@upstash/ratelimi
 export const aiScoreRateLimit    = createRateLimit(30, "1 m", "@upstash/ratelimit/ai-score");
 export const scanDocRateLimit    = createRateLimit(10, "1 m", "@upstash/ratelimit/scan-doc");
 export const aiSummaryRateLimit  = createRateLimit(10, "1 m", "@upstash/ratelimit/ai-summary");
+export const caregiverTokenRateLimit = createRateLimit(30, "1 m", "@upstash/ratelimit/caregiver-token");
 
 
 export async function verifyTurnstile(token: string | null | undefined, ip: string): Promise<boolean> {
