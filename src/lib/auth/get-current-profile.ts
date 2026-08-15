@@ -10,15 +10,7 @@ export async function getSessionUser() {
 
 export async function getCurrentProfile() {
   const user = await getSessionUser()
-  if (!user) {
-    if (process.env.NODE_ENV !== 'production') {
-      const { createAdminSupabaseClient } = await import('../supabase/server')
-      const admin = createAdminSupabaseClient()
-      const { data: devProfile } = await admin.from('profiles').select('*').eq('email', 'tufan.tabak@gmail.com').maybeSingle()
-      if (devProfile) return devProfile
-    }
-    return null
-  }
+  if (!user) return null
 
   const supabase = await createServerSupabaseClient()
   const { data: profile, error } = await supabase
