@@ -189,7 +189,7 @@ describe('ADIM 4B.4 — Canonical Protocol Engine, Idempotency Key, Strict Match
       { pet_id: 'p1', vaccine_code: 'DOG_RABIES', vaccine_name: 'Kuduz', administered_at: '2026-07-23T10:00:00Z' },
       match,
       { status: 'resolved', nextDueAt: '2027-07-23T10:00:00Z', source: 'protocol_engine_365d' },
-      { supabase: mockSupabase as any, petId: 'p1', userId: 'u1', timeZone: 'Europe/Istanbul', idempotencyKey: testUuid }
+      { supabase: mockSupabase, petId: 'p1', userId: 'u1', timeZone: 'Europe/Istanbul', idempotencyKey: testUuid }
     );
     expect(mockSupabase.rpc).toHaveBeenCalledWith('complete_vaccine_plan_and_record', expect.objectContaining({
       p_idempotency_key: testUuid,
@@ -229,7 +229,7 @@ describe('ADIM 4B.4 — Canonical Protocol Engine, Idempotency Key, Strict Match
       { pet_id: 'p1', parasite_type: 'internal', administered_at: '2026-07-23T10:00:00Z', protection_duration_days: 30 },
       match,
       { status: 'resolved', nextDueAt: '2026-08-22T10:00:00Z', source: 'duration' },
-      { supabase: mockSupabase as any, petId: 'p1', userId: 'u1', timeZone: 'Europe/Istanbul', idempotencyKey: testUuid }
+      { supabase: mockSupabase, petId: 'p1', userId: 'u1', timeZone: 'Europe/Istanbul', idempotencyKey: testUuid }
     );
     expect(mockSupabase.rpc).toHaveBeenCalledWith('complete_parasite_plan_and_record', expect.objectContaining({
       p_idempotency_key: testUuid,
@@ -248,12 +248,12 @@ describe('ADIM 4B.4 — Canonical Protocol Engine, Idempotency Key, Strict Match
   it('14. Medication category fail-closed in registry', () => {
     const handler = agendaWriteRegistry.getHandler('ilac');
     expect(handler.category).toBe('ilac');
-    expect(() => handler.validateInput({} as unknown)).toThrowError('MEDICATION_WRITE_UNSUPPORTED');
+    expect(() => handler.validateInput({} as any)).toThrowError('MEDICATION_WRITE_UNSUPPORTED');
   });
 
   it('15. Medication handler findMatchingPlans returns none', async () => {
     const handler = agendaWriteRegistry.getHandler('ilac');
-    const result = await handler.findMatchingPlans({} as unknown, []);
+    const result = await handler.findMatchingPlans({} as any, []);
     expect(result.status).toBe('none');
   });
 });

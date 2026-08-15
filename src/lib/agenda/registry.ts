@@ -28,7 +28,7 @@ export class AgendaReadRegistry {
     this.handlers.set('aktivite', new RoutineReadHandler('aktivite'));
   }
 
-  getHandlerForRecord(source: string, category?: string, subType?: string, extraData?: Record<string, unknown>): AgendaReadHandler {
+  getHandlerForRecord(source: string, category?: string, subType?: string, extraData?: any): AgendaReadHandler {
     // 1. Source-specific routing precedence
     if (source === 'vaccine_records_v2') return this.vaccineHandler;
     if (source === 'parasite_records') return this.parasiteHandler;
@@ -62,7 +62,7 @@ export class AgendaReadRegistry {
     return this.genericHandler;
   }
 
-  getHandler(category: string, subType?: string, extraData?: Record<string, unknown>): AgendaReadHandler {
+  getHandler(category: string, subType?: string, extraData?: any): AgendaReadHandler {
     return this.getHandlerForRecord('plans', category, subType, extraData);
   }
 }

@@ -8,7 +8,7 @@ import { processRecordCreation } from '../write-service';
 
 describe('Agenda Write Handlers & Auto-Matching (ADIM 4B)', () => {
   const mockContext = {
-    supabase: null as unknown as import('@supabase/supabase-js').SupabaseClient,
+    supabase: null as any,
     petId: 'pet_123',
     userId: 'user_456',
     timeZone: 'Europe/Istanbul'
@@ -169,7 +169,7 @@ describe('Agenda Write Handlers & Auto-Matching (ADIM 4B)', () => {
 
     const context = {
       ...mockContext,
-      supabase: mockSupabase as any
+      supabase: mockSupabase
     };
 
     const input = {
@@ -179,7 +179,7 @@ describe('Agenda Write Handlers & Auto-Matching (ADIM 4B)', () => {
       administered_at: '2026-07-23T10:00:00Z'
     };
 
-    const { result, matchResult } = await processRecordCreation('asi', input as any, context);
+    const { result, matchResult } = await processRecordCreation('asi', input, context);
 
     expect(matchResult.status).toBe('exact');
     expect(result.recordId).toBe('vac_rec_123');

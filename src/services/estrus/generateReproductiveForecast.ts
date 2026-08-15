@@ -64,24 +64,23 @@ export type ReproductiveForecast = {
 
 export async function generateReproductiveForecastWithDate(
   petId: string, 
-  supabase: import('@supabase/supabase-js').SupabaseClient,
+  supabase: any,
   today: Date = new Date()
 ): Promise<ReproductiveForecast> {
   const { data: pet } = await supabase.from('pets').select('species, gender, is_neutered').eq('id', petId).single();
   if (!pet) {
-    return calculateReproductiveForecast({ pet: null as unknown as { species: 'dog' | 'cat'; gender: 'female' | 'male'; is_neutered: boolean }, cycles: [], observations: [], tests: [] }, today);
+    return calculateReproductiveForecast({ pet: null as any, cycles: [], observations: [], tests: [] }, today);
   }
 
   const { data: cycles } = await supabase.from('pet_estrus_cycles').select('id, start_date, end_date').eq('pet_id', petId).order('start_date', { ascending: true });
   
-  let observations: ForecastInput['observations'] = [];
-  let tests: ForecastInput['tests'] = [];
+  let observations: any[] = [];
+  let tests: any[] = [];
   
   const allCycles = cycles || [];
   let activeCycleId = null;
-
   for (const c of allCycles) {
-    if (!c.end_date) {
+    if (!c.end_date && new Date(c.start_date) <= today) {
       activeCycleId = c.id;
       break;
     }
@@ -92,12 +91,12 @@ export async function generateReproductiveForecastWithDate(
       .select('observation_date, symptom_code, cycle_id')
       .eq('cycle_id', activeCycleId)
       .order('observation_date', { ascending: true });
-    observations = (obs || []).map((o) => ({ ...o, cycle_id: o.cycle_id || activeCycleId })) as ForecastInput['observations'];
+    observations = (obs || []).map((o: any) => ({ ...o, cycle_id: o.cycle_id || activeCycleId }));
 
     const { data: tsts } = await supabase.from('pet_reproductive_tests')
       .select('id, sampled_at, cycle_id')
       .eq('cycle_id', activeCycleId);
-    tests = (tsts || []).map((t) => ({ ...t, cycle_id: t.cycle_id || activeCycleId })) as ForecastInput['tests'];
+    tests = (tsts || []).map((t: any) => ({ ...t, cycle_id: t.cycle_id || activeCycleId }));
   }
 
   const input: ForecastInput = {

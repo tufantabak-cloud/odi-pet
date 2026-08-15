@@ -7,9 +7,6 @@ import {
   AgendaDateRange,
   AgendaActionDescriptor,
   AgendaDisplayMetadata,
-  AgendaPlanInput,
-  AgendaRecordInput,
-  AgendaActionType,
   deriveDateKey
 } from '../types';
 import { getPlanDisplayTitle } from '@/lib/plans/utils';
@@ -22,7 +19,7 @@ export class RoutineReadHandler implements AgendaReadHandler {
     this.category = category as string;
   }
 
-  normalizePlan(plan: AgendaPlanInput, context: AgendaNormalizationContext): PetAgendaEvent {
+  normalizePlan(plan: any, context: AgendaNormalizationContext): PetAgendaEvent {
     const isCompletedChild = !!plan.parent_plan_id;
     const isMainSeries = !plan.parent_plan_id && !!plan.repeat_rule;
     const scheduledAt = plan.scheduled_at || null;
@@ -46,7 +43,7 @@ export class RoutineReadHandler implements AgendaReadHandler {
       source: 'plans',
       sourceRecordId: plan.id,
       category: this.category as string,
-      subCategory: (plan.sub_type || "") || 'Görevi',
+      subCategory: (plan.sub_type || "") as any || 'Görevi',
       stableIdentity: baseIdentity,
       occurrenceIdentity,
       fallbackIdentity,
@@ -65,9 +62,9 @@ export class RoutineReadHandler implements AgendaReadHandler {
       isVirtual: false,
       isActionable: plan.status === 'active',
       displayMetadata: {
-        title: getPlanDisplayTitle(plan as any),
+        title: getPlanDisplayTitle(plan),
         note: plan.note,
-        extraData: (plan.extra_data as Record<string, unknown>) || undefined
+        extraData: plan.extra_data
       },
       actionDescriptors: [
         { type: 'complete', targetSource: 'plan', targetId: plan.id, enabled: plan.status === 'active' },
@@ -77,11 +74,11 @@ export class RoutineReadHandler implements AgendaReadHandler {
     };
   }
 
-  normalizeActualRecord(record: AgendaRecordInput, context: AgendaNormalizationContext): PetAgendaEvent {
+  normalizeActualRecord(record: any, context: AgendaNormalizationContext): PetAgendaEvent {
     return this.normalizePlan(record, context);
   }
 
-  projectOccurrences(mainPlan: AgendaPlanInput, _range: AgendaDateRange, context: AgendaNormalizationContext): PetAgendaEvent[] {
+  projectOccurrences(mainPlan: any, _range: AgendaDateRange, context: AgendaNormalizationContext): PetAgendaEvent[] {
     if (mainPlan.status !== 'active') return [];
 
     const baseEvt = this.normalizePlan(mainPlan, context);
@@ -89,7 +86,7 @@ export class RoutineReadHandler implements AgendaReadHandler {
 
     const rawLegacy = {
       id: mainPlan.id,
-      category: mainPlan.category || 'rutin',
+      category: mainPlan.category,
       title: baseEvt.displayMetadata.title,
       due_date: baseEvt.dateKey,
       due_time: baseEvt.scheduledAt?.split('T')[1]?.substring(0, 8) || '09:00:00',
@@ -101,21 +98,20 @@ export class RoutineReadHandler implements AgendaReadHandler {
     const expanded = expandRecurringForTimeline([rawLegacy], -7, 60);
 
     return expanded.map((exp: any) => {
-      const dueStr = String(exp.due_date);
-      const isAnchor = dueStr === baseEvt.dateKey;
+      const isAnchor = exp.due_date === baseEvt.dateKey;
       return {
         ...baseEvt,
-        eventId: isAnchor ? baseEvt.eventId : `virtual_${mainPlan.id}_${dueStr}_${exp.due_time}`,
-        scheduledAt: `${dueStr}T${exp.due_time || '09:00:00'}.000Z`,
-        dateKey: dueStr,
+        eventId: isAnchor ? baseEvt.eventId : `virtual_${mainPlan.id}_${exp.due_date}_${exp.due_time}`,
+        scheduledAt: `${exp.due_date}T${exp.due_time || '09:00:00'}.000Z`,
+        dateKey: exp.due_date,
         isVirtual: !isAnchor,
-        displayStatus: dueStr < context.todayStr ? 'overdue' : dueStr === context.todayStr ? 'today' : 'upcoming',
-        status: dueStr < context.todayStr ? 'overdue' : dueStr === context.todayStr ? 'today' : 'upcoming'
+        displayStatus: exp.due_date < context.todayStr ? 'overdue' : exp.due_date === context.todayStr ? 'today' : 'upcoming',
+        status: exp.due_date < context.todayStr ? 'overdue' : exp.due_date === context.todayStr ? 'today' : 'upcoming'
       };
     });
   }
 
-  getIdentity(input: AgendaPlanInput | AgendaRecordInput, context: AgendaNormalizationContext): AgendaIdentity {
+  getIdentity(input: any, context: AgendaNormalizationContext): AgendaIdentity {
     const subSlug = (input.sub_type || '').toLowerCase().replace(/\s+/g, '_');
     const baseIdentity = `${this.category}:${subSlug}`;
     const scheduledAt = input.scheduled_at;
@@ -129,11 +125,11 @@ export class RoutineReadHandler implements AgendaReadHandler {
     };
   }
 
-  getFallbackMatchCandidates(_record: AgendaRecordInput, _events: PetAgendaEvent[], _context: AgendaNormalizationContext): AgendaMatchResult {
+  getFallbackMatchCandidates(_record: any, _events: PetAgendaEvent[], _context: AgendaNormalizationContext): AgendaMatchResult {
     return { status: 'none' };
   }
 
-  getAllowedActions(event: PetAgendaEvent): AgendaActionType[] {
+  getAllowedActions(event: PetAgendaEvent): any[] {
     return (event.actionDescriptors || []).map(a => a.type);
   }
 

@@ -5,7 +5,7 @@ import { processRecordCreation } from '../write-service';
 
 describe('Atomic Write, Idempotency & Failure Injection Proof (ADIM 4B.1)', () => {
   const mockContext = {
-    supabase: null as unknown as import('@supabase/supabase-js').SupabaseClient,
+    supabase: null as any,
     petId: 'pet_123',
     userId: 'user_456',
     timeZone: 'Europe/Istanbul'
@@ -24,9 +24,9 @@ describe('Atomic Write, Idempotency & Failure Injection Proof (ADIM 4B.1)', () =
 
       // Step 2 fails
       throw new Error('DB_CONNECTION_LOST_ON_STEP_2');
-    } catch (err: unknown) {
+    } catch (err: any) {
       step2ErrorEncountered = true;
-      expect((err as Error).message).toBe('DB_CONNECTION_LOST_ON_STEP_2');
+      expect(err.message).toBe('DB_CONNECTION_LOST_ON_STEP_2');
     }
 
     // Proof: step2 failed BUT step1 plan remained in DB (non-atomic failure)
@@ -61,13 +61,13 @@ describe('Atomic Write, Idempotency & Failure Injection Proof (ADIM 4B.1)', () =
       rawPlan: { id: 'main_plan_111', scheduled_at: '2026-07-23T10:00:00Z', repeat_rule: 'yearly' }
     };
 
-    const nextDue = { status: 'resolved' as const, nextDueAt: '2027-07-23T10:00:00Z', source: 'duration' };
+    const nextDue = { status: 'resolved' as const, nextDueAt: '2027-07-23T10:00:00Z', source: 'yearly' };
 
     const result = await handler.persistLinkedRecord(
       { pet_id: 'pet_123', vaccine_code: 'DOG_RABIES', vaccine_name: 'Kuduz Aşısı', administered_at: '2026-07-23T10:00:00Z' },
       matchCandidate,
       nextDue,
-      { ...mockContext, supabase: mockSupabase as any }
+      { ...mockContext, supabase: mockSupabase }
     );
 
     expect(mockSupabase.rpc).toHaveBeenCalledWith('complete_vaccine_plan_and_record', expect.anything());
@@ -109,7 +109,7 @@ describe('Atomic Write, Idempotency & Failure Injection Proof (ADIM 4B.1)', () =
       { pet_id: 'pet_123', parasite_type: 'internal', administered_at: '2026-07-23T10:00:00Z', protection_duration_days: 30 },
       matchCandidate,
       nextDue,
-      { ...mockContext, supabase: mockSupabase as any }
+      { ...mockContext, supabase: mockSupabase }
     );
 
     expect(mockSupabase.rpc).toHaveBeenCalledWith('complete_parasite_plan_and_record', expect.anything());

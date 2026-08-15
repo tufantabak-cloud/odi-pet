@@ -7,16 +7,13 @@ import {
   AgendaDateRange,
   AgendaActionDescriptor,
   AgendaDisplayMetadata,
-  AgendaActionType,
-  AgendaPlanInput,
-  AgendaRecordInput,
   deriveDateKey
 } from '../types';
 
 export class AppointmentReadHandler implements AgendaReadHandler {
   readonly category = 'saglik';
 
-  normalizePlan(plan: AgendaPlanInput, context: AgendaNormalizationContext): PetAgendaEvent {
+  normalizePlan(plan: any, context: AgendaNormalizationContext): PetAgendaEvent {
     const scheduledAt = plan.scheduled_at || null;
     const dateKey = deriveDateKey(scheduledAt, context.timeZone);
 
@@ -25,7 +22,7 @@ export class AppointmentReadHandler implements AgendaReadHandler {
       source: 'plans',
       sourceRecordId: plan.id,
       category: 'saglik' as string,
-      subCategory: (plan.sub_type || "") || 'Veteriner Randevusu',
+      subCategory: (plan.sub_type || "") as any || 'Veteriner Randevusu',
       stableIdentity: `saglik:vet_${plan.id}`,
       occurrenceIdentity: null,
       fallbackIdentity: `saglik:vet_${dateKey}`,
@@ -46,7 +43,7 @@ export class AppointmentReadHandler implements AgendaReadHandler {
       displayMetadata: {
         title: plan.sub_type || 'Veteriner Randevusu',
         note: plan.note,
-        extraData: (plan.extra_data as Record<string, unknown>) || undefined
+        extraData: plan.extra_data
       },
       actionDescriptors: [
         { type: 'complete', targetSource: 'plan', targetId: plan.id, enabled: plan.status === 'active' },
@@ -56,8 +53,8 @@ export class AppointmentReadHandler implements AgendaReadHandler {
     };
   }
 
-  normalizeActualRecord(record: AgendaRecordInput, context: AgendaNormalizationContext): PetAgendaEvent {
-    const appAt = record.scheduled_at || record.appointment_date || record.created_at || null;
+  normalizeActualRecord(record: any, context: AgendaNormalizationContext): PetAgendaEvent {
+    const appAt = record.scheduled_at || record.appointment_date || record.created_at;
     const dateKey = deriveDateKey(appAt, context.timeZone);
 
     return {
@@ -95,11 +92,11 @@ export class AppointmentReadHandler implements AgendaReadHandler {
     };
   }
 
-  projectOccurrences(mainPlan: AgendaPlanInput, _range: AgendaDateRange, context: AgendaNormalizationContext): PetAgendaEvent[] {
+  projectOccurrences(mainPlan: any, _range: AgendaDateRange, context: AgendaNormalizationContext): PetAgendaEvent[] {
     return [this.normalizePlan(mainPlan, context)];
   }
 
-  getIdentity(input: AgendaPlanInput | AgendaRecordInput, context: AgendaNormalizationContext): AgendaIdentity {
+  getIdentity(input: any, context: AgendaNormalizationContext): AgendaIdentity {
     const appAt = input.scheduled_at || input.appointment_date || input.created_at;
     const dateKey = deriveDateKey(appAt, context.timeZone);
 
@@ -111,11 +108,11 @@ export class AppointmentReadHandler implements AgendaReadHandler {
     };
   }
 
-  getFallbackMatchCandidates(_record: AgendaRecordInput, _events: PetAgendaEvent[], _context: AgendaNormalizationContext): AgendaMatchResult {
+  getFallbackMatchCandidates(_record: any, _events: PetAgendaEvent[], _context: AgendaNormalizationContext): AgendaMatchResult {
     return { status: 'none' };
   }
 
-  getAllowedActions(event: PetAgendaEvent): AgendaActionType[] {
+  getAllowedActions(event: PetAgendaEvent): any[] {
     return (event.actionDescriptors || []).map(a => a.type);
   }
 

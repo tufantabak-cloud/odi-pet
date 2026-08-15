@@ -78,13 +78,13 @@ export async function createEstrusNotifications(
         continue; 
       }
 
-      const inputCycles = cycles.map(c => ({ id: c.id as string, start_date: c.start_date as string, end_date: c.end_date as string | null }));
-      let inputObs: { observation_date: string; symptom_code: string; cycle_id: string }[] = [];
-      let inputTests: { id: string; sampled_at: string; cycle_id: string }[] = [];
+      const inputCycles = cycles.map(c => ({ id: c.id, start_date: c.start_date, end_date: c.end_date }));
+      let inputObs: any = [];
+      let inputTests: any = [];
       
       for (const c of inputCycles) {
-        inputObs = inputObs.concat((obsByCycle.get(c.id as string) || []) as unknown as { observation_date: string; symptom_code: string; cycle_id: string }[]);
-        inputTests = inputTests.concat((testsByCycle.get(c.id as string) || []) as unknown as { id: string; sampled_at: string; cycle_id: string }[]);
+        inputObs = inputObs.concat(obsByCycle.get(c.id) || []);
+        inputTests = inputTests.concat(testsByCycle.get(c.id) || []);
       }
 
       const input: ForecastInput = {
@@ -96,7 +96,7 @@ export async function createEstrusNotifications(
 
       const forecast = calculateReproductiveForecast(input, today);
 
-      const notificationsToCreate: Record<string, unknown>[] = [];
+      const notificationsToCreate: any = [];
 
       const { activeCycle } = forecast;
       if (activeCycle.cycleId && activeCycle.cycleDay !== null && activeCycle.cycleDay >= ESTRUS_ACTIVE_REVIEW_DAY) {
@@ -117,7 +117,7 @@ export async function createEstrusNotifications(
         const diffStartDays = (startHeat.getTime() - today.getTime()) / 86400000;
         
         if (diffStartDays <= ESTRUS_UPCOMING_LEAD_DAYS && today <= endHeat) {
-          const closedCycles = cycles.filter(c => c.end_date).sort((a,b) => new Date(b.end_date as string).getTime() - new Date(a.end_date as string).getTime());
+          const closedCycles = cycles.filter(c => c.end_date).sort((a,b) => new Date(b.end_date!).getTime() - new Date(a.end_date!).getTime());
           const latestClosed = closedCycles[0];
           
           if (latestClosed) {
@@ -136,6 +136,7 @@ export async function createEstrusNotifications(
 
       for (const notif of notificationsToCreate) {
         if (dryRun) {
+          console.log('[DRY RUN] Would create notif:', notif.idempotency_key);
           result.created++;
           continue;
         }
@@ -158,11 +159,11 @@ export async function createEstrusNotifications(
   return result;
 }
 
-function groupByPet(data: Record<string, unknown>[] | null, key: string) {
-  const map = new Map<string, Record<string, unknown>[]>();
+function groupByPet(data: any, key: string) {
+  const map = new Map<string, any[]>();
   if (!data) return map;
   for (const item of data) {
-    const pId = (item[key] as string) || (item.pet_estrus_cycles as Record<string, unknown>)?.pet_id as string;
+    const pId = item[key] || item.pet_estrus_cycles?.pet_id;
     if (!pId) continue;
     if (!map.has(pId)) map.set(pId, []);
     map.get(pId)!.push(item);
@@ -170,11 +171,11 @@ function groupByPet(data: Record<string, unknown>[] | null, key: string) {
   return map;
 }
 
-function groupByCycle(data: Record<string, unknown>[] | null) {
-  const map = new Map<string, Record<string, unknown>[]>();
+function groupByCycle(data: any) {
+  const map = new Map<string, any[]>();
   if (!data) return map;
   for (const item of data) {
-    const cId = item.cycle_id as string;
+    const cId = item.cycle_id;
     if (!cId) continue;
     if (!map.has(cId)) map.set(cId, []);
     map.get(cId)!.push(item);

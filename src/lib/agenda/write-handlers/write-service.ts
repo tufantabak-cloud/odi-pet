@@ -1,10 +1,9 @@
 import { WriteContext, WriteResult, PlanMatchResult, PlanRecord } from './types';
 import { agendaWriteRegistry } from './registry';
-import { AgendaPlanInput, AgendaRecordInput } from '../types';
 
 export async function processRecordCreation(
   category: string,
-  input: AgendaPlanInput | AgendaRecordInput,
+  input: any,
   context: WriteContext,
   selectedPlanId?: string
 ): Promise<{ result: WriteResult; matchResult: PlanMatchResult }> {
@@ -20,7 +19,7 @@ export async function processRecordCreation(
 
   if (error) throw error;
 
-  const activePlans = (plans || []) as unknown as PlanRecord[];
+  const activePlans: PlanRecord[] = plans || [];
 
   let matchResult: PlanMatchResult;
 
@@ -39,7 +38,7 @@ export async function processRecordCreation(
           distanceMinutes: 0,
           repeatRule: selectedPlan.repeat_rule,
           displayDate: selectedPlan.scheduled_at.split('T')[0],
-          rawPlan: selectedPlan as unknown as Record<string, unknown>
+          rawPlan: selectedPlan
         },
         reason: 'user_selected_plan'
       };
@@ -53,7 +52,7 @@ export async function processRecordCreation(
   let result: WriteResult;
 
   if (matchResult.status === 'exact') {
-    const nextDue = await handler.calculateNextDue(input, matchResult.candidate.rawPlan as unknown as PlanRecord);
+    const nextDue = await handler.calculateNextDue(input, matchResult.candidate.rawPlan);
     result = await handler.persistLinkedRecord(input, matchResult.candidate, nextDue, context);
   } else {
     result = await handler.persistIndependentRecord(input, context);

@@ -91,6 +91,6 @@ describe('Vaccine Protocol Engine, Strict Matching & Medication Fail-Closed (ADI
   it('5. MedicationWriteHandler fails closed for medication category', () => {
     const handler = agendaWriteRegistry.getHandler('ilac');
     expect(handler.category).toBe('ilac');
-    expect(() => handler.validateInput({} as unknown)).toThrowError('MEDICATION_WRITE_UNSUPPORTED');
+    expect(() => handler.validateInput({} as any)).toThrowError('MEDICATION_WRITE_UNSUPPORTED');
   });
 });

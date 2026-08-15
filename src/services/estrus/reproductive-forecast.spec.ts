@@ -5,11 +5,11 @@ describe('Reproductive Forecast Engine (ADIM 15.1)', () => {
   const TODAY = new Date('2026-07-15T12:00:00Z');
 
   // Mock Supabase Client Factory
-  const createMockSupabase = (pet: Record<string, unknown>, cycles: Record<string, unknown>[] = [], observations: Record<string, unknown>[] = [], tests: Record<string, unknown>[] = []) => {
+  const createMockSupabase = (pet: any, cycles: any[] = [], observations: any[] = [], tests: any[] = []) => {
     return {
       from: (table: string) => ({
         select: () => ({
-          eq: (field: string, val: unknown) => {
+          eq: (field: string, val: any) => {
             if (table === 'pets' && field === 'id') {
               return { single: async () => ({ data: pet }) };
             }
@@ -26,14 +26,14 @@ describe('Reproductive Forecast Engine (ADIM 15.1)', () => {
           }
         })
       })
-    } as unknown as import('@supabase/supabase-js').SupabaseClient;
+    };
   };
 
-  const expectReproductiveWindowEmpty = (result: Record<string, unknown>) => {
-    expect((result.reproductiveWindow as Record<string, unknown>).start).toBeNull();
-    expect((result.reproductiveWindow as Record<string, unknown>).end).toBeNull();
-    expect((result.reproductiveWindow as Record<string, unknown>).label).toBe('not_available');
-    expect((result.confidence as Record<string, unknown>).reproductiveWindow).toBe('none');
+  const expectReproductiveWindowEmpty = (result: any) => {
+    expect(result.reproductiveWindow.start).toBeNull();
+    expect(result.reproductiveWindow.end).toBeNull();
+    expect(result.reproductiveWindow.label).toBe('not_available');
+    expect(result.confidence.reproductiveWindow).toBe('none');
   };
 
   it('1. Senaryo: Erkek pet', async () => {
@@ -233,7 +233,7 @@ describe('Reproductive Forecast Engine (ADIM 15.1)', () => {
   describe('Veri Sızıntısı ve Güvenlik Testleri', () => {
     it('Servis response sözleşmesinde hiçbir şekilde hassas veya gizli veri alanı barındırmaz', async () => {
       const supabase = createMockSupabase({ species: 'dog', gender: 'female', is_neutered: false });
-      const result = await generateReproductiveForecastWithDate('1', supabase, TODAY) as unknown as Record<string, unknown>;
+      const result = await generateReproductiveForecastWithDate('1', supabase, TODAY) as any;
       
       const keys = JSON.stringify(result);
       expect(keys).not.toContain('document_storage_path');

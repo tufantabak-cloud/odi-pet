@@ -44,7 +44,7 @@ export interface AgendaDisplayMetadata {
   dosageString?: string | null;
   frequencyLabel?: string;
   frequencyDays?: number;
-  extraData?: Record<string, unknown>;
+  extraData?: Record<string, any>;
 }
 
 export interface PetAgendaEvent {
@@ -158,7 +158,7 @@ export interface AgendaPlanInput {
   note?: string | null;
   parent_plan_id?: string | null;
   completed_at?: string | null;
-  extra_data?: unknown | null;
+  extra_data?: any | null;
   title?: string | null;
   vaccine_code?: string | null;
   parasite_type?: string | null;

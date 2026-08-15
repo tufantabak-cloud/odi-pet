@@ -7,16 +7,13 @@ import {
   AgendaDateRange,
   AgendaActionDescriptor,
   AgendaDisplayMetadata,
-  AgendaActionType,
-  AgendaPlanInput,
-  AgendaRecordInput,
   deriveDateKey
 } from '../types';
 
 export class GrowthMeasurementReadHandler implements AgendaReadHandler {
   readonly category = 'saglik';
 
-  normalizePlan(plan: AgendaPlanInput, context: AgendaNormalizationContext): PetAgendaEvent {
+  normalizePlan(plan: any, context: AgendaNormalizationContext): PetAgendaEvent {
     const scheduledAt = plan.scheduled_at || null;
     const dateKey = deriveDateKey(scheduledAt, context.timeZone);
 
@@ -25,7 +22,7 @@ export class GrowthMeasurementReadHandler implements AgendaReadHandler {
       source: 'plans',
       sourceRecordId: plan.id,
       category: 'saglik' as string,
-      subCategory: (plan.sub_type || "") || 'Kilo & Boy Ölçümü',
+      subCategory: (plan.sub_type || "") as any || 'Kilo & Boy Ölçümü',
       stableIdentity: 'saglik:kilo_boy',
       occurrenceIdentity: null,
       fallbackIdentity: `saglik:kilo_boy_${plan.id}`,
@@ -46,7 +43,7 @@ export class GrowthMeasurementReadHandler implements AgendaReadHandler {
       displayMetadata: {
         title: plan.sub_type || 'Kilo & Boy Ölçümü',
         note: plan.note,
-        extraData: (plan.extra_data as Record<string, unknown>) || undefined
+        extraData: plan.extra_data
       },
       actionDescriptors: [
         { type: 'complete', targetSource: 'plan', targetId: plan.id, enabled: plan.status === 'active' },
@@ -55,12 +52,12 @@ export class GrowthMeasurementReadHandler implements AgendaReadHandler {
     };
   }
 
-  normalizeActualRecord(record: AgendaRecordInput, context: AgendaNormalizationContext): PetAgendaEvent {
+  normalizeActualRecord(record: any, context: AgendaNormalizationContext): PetAgendaEvent {
     const recAt = record.measured_at
       ? record.measured_at
-      : (record as any).recorded_at
-        ? `${(record as any).recorded_at}T12:00:00.000Z`
-        : record.created_at || null;
+      : record.recorded_at
+        ? `${record.recorded_at}T12:00:00.000Z`
+        : record.created_at;
     const dateKey = deriveDateKey(recAt, context.timeZone);
 
     return {
@@ -97,11 +94,11 @@ export class GrowthMeasurementReadHandler implements AgendaReadHandler {
     };
   }
 
-  projectOccurrences(mainPlan: AgendaPlanInput, _range: AgendaDateRange, context: AgendaNormalizationContext): PetAgendaEvent[] {
+  projectOccurrences(mainPlan: any, _range: AgendaDateRange, context: AgendaNormalizationContext): PetAgendaEvent[] {
     return [this.normalizePlan(mainPlan, context)];
   }
 
-  getIdentity(input: AgendaPlanInput | AgendaRecordInput, _context: AgendaNormalizationContext): AgendaIdentity {
+  getIdentity(input: any, _context: AgendaNormalizationContext): AgendaIdentity {
     return {
       category: 'saglik' as string,
       baseIdentity: `saglik:kilo_${input.id}`,
@@ -110,11 +107,11 @@ export class GrowthMeasurementReadHandler implements AgendaReadHandler {
     };
   }
 
-  getFallbackMatchCandidates(_record: AgendaRecordInput, _events: PetAgendaEvent[], _context: AgendaNormalizationContext): AgendaMatchResult {
+  getFallbackMatchCandidates(_record: any, _events: PetAgendaEvent[], _context: AgendaNormalizationContext): AgendaMatchResult {
     return { status: 'none' };
   }
 
-  getAllowedActions(event: PetAgendaEvent): AgendaActionType[] {
+  getAllowedActions(event: PetAgendaEvent): any[] {
     return (event.actionDescriptors || []).map(a => a.type);
   }
 

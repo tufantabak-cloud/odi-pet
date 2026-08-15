@@ -7,9 +7,6 @@ import {
   AgendaDateRange,
   AgendaActionDescriptor,
   AgendaDisplayMetadata,
-  AgendaActionType,
-  AgendaPlanInput,
-  AgendaRecordInput,
   deriveDateKey
 } from '../types';
 import { getPlanDisplayTitle } from '@/lib/plans/utils';
@@ -21,7 +18,7 @@ export class GenericReadHandler implements AgendaReadHandler {
     this.category = category as string;
   }
 
-  normalizePlan(plan: AgendaPlanInput, context: AgendaNormalizationContext): PetAgendaEvent {
+  normalizePlan(plan: any, context: AgendaNormalizationContext): PetAgendaEvent {
     const isCompletedChild = !!plan.parent_plan_id;
     const scheduledAt = plan.scheduled_at || null;
     const occurrenceScheduledAt = plan.occurrence_scheduled_at || (isCompletedChild ? scheduledAt : null);
@@ -41,11 +38,11 @@ export class GenericReadHandler implements AgendaReadHandler {
       source: 'plans',
       sourceRecordId: plan.id,
       category: (plan.category as string) || this.category as string,
-      subCategory: (plan.sub_type || "") || 'Görev',
+      subCategory: (plan.sub_type || "") as any || 'Görev',
       stableIdentity: baseIdentity,
       occurrenceIdentity: occurrenceScheduledAt ? `${plan.id}_${occurrenceScheduledAt}` : null,
       fallbackIdentity: `${baseIdentity}_${dateKey}`,
-      mainPlanId: (isCompletedChild ? plan.parent_plan_id : plan.id) || null,
+      mainPlanId: isCompletedChild ? plan.parent_plan_id : plan.id,
       parentPlanId: plan.parent_plan_id || null,
       scheduledAt,
       occurrenceScheduledAt,
@@ -60,9 +57,9 @@ export class GenericReadHandler implements AgendaReadHandler {
       isVirtual: false,
       isActionable: plan.status === 'active',
       displayMetadata: {
-        title: getPlanDisplayTitle(plan as any),
+        title: getPlanDisplayTitle(plan),
         note: plan.note,
-        extraData: (plan.extra_data as Record<string, unknown>) || undefined
+        extraData: plan.extra_data
       },
       actionDescriptors: [
         { type: 'complete', targetSource: 'plan', targetId: plan.id, enabled: plan.status === 'active' },
@@ -72,16 +69,16 @@ export class GenericReadHandler implements AgendaReadHandler {
     };
   }
 
-  normalizeActualRecord(record: AgendaRecordInput, context: AgendaNormalizationContext): PetAgendaEvent {
+  normalizeActualRecord(record: any, context: AgendaNormalizationContext): PetAgendaEvent {
     return this.normalizePlan(record, context);
   }
 
-  projectOccurrences(mainPlan: AgendaPlanInput, _range: AgendaDateRange, context: AgendaNormalizationContext): PetAgendaEvent[] {
+  projectOccurrences(mainPlan: any, _range: AgendaDateRange, context: AgendaNormalizationContext): PetAgendaEvent[] {
     if (mainPlan.status !== 'active') return [];
     return [this.normalizePlan(mainPlan, context)];
   }
 
-  getIdentity(input: AgendaPlanInput | AgendaRecordInput, context: AgendaNormalizationContext): AgendaIdentity {
+  getIdentity(input: any, context: AgendaNormalizationContext): AgendaIdentity {
     const subSlug = (input.sub_type || 'task').toLowerCase().replace(/\s+/g, '_');
     const baseIdentity = `${input.category || this.category}:${subSlug}`;
     const scheduledAt = input.scheduled_at;
@@ -95,11 +92,11 @@ export class GenericReadHandler implements AgendaReadHandler {
     };
   }
 
-  getFallbackMatchCandidates(_record: AgendaRecordInput, _events: PetAgendaEvent[], _context: AgendaNormalizationContext): AgendaMatchResult {
+  getFallbackMatchCandidates(_record: any, _events: PetAgendaEvent[], _context: AgendaNormalizationContext): AgendaMatchResult {
     return { status: 'none' };
   }
 
-  getAllowedActions(event: PetAgendaEvent): AgendaActionType[] {
+  getAllowedActions(event: PetAgendaEvent): any[] {
     return (event.actionDescriptors || []).map(a => a.type);
   }
 

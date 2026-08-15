@@ -1,11 +1,10 @@
-import { AgendaPlanInput, AgendaRecordInput, PetAgendaEvent, AgendaNormalizationContext, AgendaDateRange, deriveDateKey } from './types';
+import { PetAgendaEvent, AgendaNormalizationContext, deriveDateKey } from './types';
 import { agendaReadRegistry } from './registry';
 
-export function buildStableIdentity(category: string, subType: string, extraData?: Record<string, unknown>): string {
+export function buildStableIdentity(category: string, subType: string, extraData?: any): string {
   const cat = (category || '').toLowerCase().trim();
   const sub = (subType || '').toLowerCase().trim();
-  const extra = (extraData as Record<string, any>) || {};
-  const vCode = extra.vaccine_code || extra.vaccine?.code;
+  const vCode = extraData?.vaccine_code || extraData?.vaccine?.code;
 
   if (cat === 'asi' && vCode) {
     return `asi:${vCode.toUpperCase()}`;
@@ -14,21 +13,21 @@ export function buildStableIdentity(category: string, subType: string, extraData
 }
 
 export function buildPetAgendaEvents(
-  rawPlans: AgendaPlanInput[] = [],
-  rawVaccines: AgendaRecordInput[] = [],
-  rawParasites: AgendaRecordInput[] = [],
-  rawSchedules: AgendaPlanInput[] = [],
-  rawGrowth: AgendaRecordInput[] = [],
-  rawAppointments: AgendaRecordInput[] = [],
-  rawMedications: AgendaRecordInput[] = [],
-  rawNutrition: AgendaRecordInput[] = [],
+  rawPlans: any[] = [],
+  rawVaccines: any[] = [],
+  rawParasites: any[] = [],
+  rawSchedules: any[] = [],
+  rawGrowth: any[] = [],
+  rawAppointments: any[] = [],
+  rawMedications: any[] = [],
+  rawNutrition: any[] = [],
   timeZone = 'Europe/Istanbul'
 ): PetAgendaEvent[] {
   const todayStr = deriveDateKey(new Date().toISOString(), timeZone);
   const linkedPlanIds = new Set<string>();
 
-  rawVaccines.forEach(v => { if ((v as any).plan_id) linkedPlanIds.add((v as any).plan_id); });
-  rawParasites.forEach(p => { if ((p as any).plan_id) linkedPlanIds.add((p as any).plan_id); });
+  rawVaccines.forEach(v => { if (v.plan_id) linkedPlanIds.add(v.plan_id); });
+  rawParasites.forEach(p => { if (p.plan_id) linkedPlanIds.add(p.plan_id); });
 
   const context: AgendaNormalizationContext = {
     todayStr,
@@ -38,72 +37,67 @@ export function buildPetAgendaEvents(
 
   const events: PetAgendaEvent[] = [];
 
-  // 1. Vaccine Records V2
-  const vaccineHandler = agendaReadRegistry.getHandler('asi');
+  // 1. Vaccine Records v2
   rawVaccines.forEach(v => {
-    events.push(vaccineHandler.normalizeActualRecord(v, context));
+    const handler = agendaReadRegistry.getHandlerForRecord('vaccine_records_v2');
+    events.push(handler.normalizeActualRecord(v, context));
   });
 
   // 2. Parasite Records
-  const parasiteHandler = agendaReadRegistry.getHandler('parazit');
   rawParasites.forEach(p => {
-    events.push(parasiteHandler.normalizeActualRecord(p, context));
+    const handler = agendaReadRegistry.getHandlerForRecord('parasite_records');
+    events.push(handler.normalizeActualRecord(p, context));
   });
 
   // 3. Growth Records
-  const growthHandler = agendaReadRegistry.getHandler('kilo');
   rawGrowth.forEach(g => {
-    events.push(growthHandler.normalizeActualRecord(g, context));
+    const handler = agendaReadRegistry.getHandlerForRecord('growth_records');
+    events.push(handler.normalizeActualRecord(g, context));
   });
 
   // 4. Appointments
-  const apptHandler = agendaReadRegistry.getHandler('saglik');
   rawAppointments.forEach(a => {
-    events.push(apptHandler.normalizeActualRecord(a, context));
+    const handler = agendaReadRegistry.getHandlerForRecord('appointments');
+    events.push(handler.normalizeActualRecord(a, context));
   });
 
-  // 5. Health Medications (Legacy)
-  const medHandler = agendaReadRegistry.getHandler('ilac');
-  rawMedications.forEach(m => {
-    events.push(medHandler.normalizeActualRecord(m, context));
-  });
-
-  // 6. Nutrition Logs
-  const nutHandler = agendaReadRegistry.getHandler('beslenme');
+  // 5. Nutrition Logs
   rawNutrition.forEach(n => {
-    events.push(nutHandler.normalizeActualRecord(n, context));
+    const handler = agendaReadRegistry.getHandlerForRecord('nutrition_logs');
+    events.push(handler.normalizeActualRecord(n, context));
   });
 
-  // 7. Canonical Plans & Occurrences
-  const range: AgendaDateRange = {
-    rangeStartStr: deriveDateKey(new Date(Date.now() - 30 * 86400000).toISOString(), timeZone),
-    rangeEndStr: deriveDateKey(new Date(Date.now() + 60 * 86400000).toISOString(), timeZone)
-  };
+  // 6. Legacy Medications
+  rawMedications.forEach(m => {
+    const handler = agendaReadRegistry.getHandlerForRecord('health_medications');
+    events.push(handler.normalizeActualRecord(m, context));
+  });
 
+  // 7. Plans Table
   rawPlans.forEach(p => {
-    if (p.parent_plan_id) return; // Completed occurrences handled via status/link
+    // Filter cancelled plans
+    if (p.status === 'cancelled') return;
 
     // Filter plans linked to medical records
     if (linkedPlanIds.has(p.id) && p.status === 'completed') return;
 
-    const handler = agendaReadRegistry.getHandlerForRecord('plans', p.category || undefined, p.sub_type || undefined, (p.extra_data as Record<string, unknown>) || undefined);
+    const handler = agendaReadRegistry.getHandlerForRecord('plans', p.category, p.sub_type, p.extra_data);
     events.push(handler.normalizePlan(p, context));
   });
 
   // 8. Legacy Health Schedules (if un-covered)
   const knownStableIds = new Set(events.map(e => `${e.stableIdentity}_${e.dateKey}`));
   rawSchedules.forEach(s => {
-    const sAny = s as any;
-    const sDate = deriveDateKey(sAny.due_date || s.scheduled_at, timeZone);
-    const handler = agendaReadRegistry.getHandlerForRecord('health_schedules', sAny.schedule_type || 'saglik', s.title || undefined, sAny.metadata || undefined);
+    const sDate = deriveDateKey(s.due_date, timeZone);
+    const handler = agendaReadRegistry.getHandlerForRecord('health_schedules', s.schedule_type || 'saglik', s.title, s.metadata);
     const baseEvt = handler.normalizePlan({
       id: s.id,
-      category: sAny.schedule_type || 'saglik',
+      category: s.schedule_type || 'saglik',
       sub_type: s.title || 'Görev',
-      scheduled_at: sAny.due_date || s.scheduled_at,
-      status: sAny.completed ? 'completed' : 'active',
-      extra_data: sAny.metadata || s.extra_data,
-      note: s.note
+      scheduled_at: s.due_date,
+      status: s.completed ? 'completed' : 'active',
+      extra_data: s.metadata,
+      note: s.notes
     }, context);
 
     if (!knownStableIds.has(`${baseEvt.stableIdentity}_${sDate}`)) {
