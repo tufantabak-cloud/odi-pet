@@ -116,7 +116,6 @@ DECLARE
   
   v_sync_id UUID := gen_random_uuid();
   v_now TIMESTAMPTZ := now();
-  v_inserted_id UUID;
   
   v_hash_exists BOOLEAN;
 BEGIN
@@ -170,14 +169,14 @@ BEGIN
         sync_version,
         v_sync_id,
         v_now
-      ) RETURNING id INTO v_inserted_id;
+      );
       
       -- Insert History
       INSERT INTO public.feature_version_history (
-        feature_id, feature_key, old_version, new_version, 
+        feature_key, old_version, new_version, 
         sync_id, sync_source, change_reason, actor_type, actor_id
       ) VALUES (
-        v_inserted_id, v_key, NULL, v_feature_version,
+        v_key, NULL, v_feature_version,
         v_sync_id, p_sync_source::public.sync_source_enum, p_change_reason, p_actor_type::public.actor_type_enum, p_actor_id
       );
       
@@ -203,13 +202,12 @@ BEGIN
           last_synced_at = v_now
         WHERE key = v_key;
         
-        -- Record history if version changed
         IF v_existing.feature_version IS DISTINCT FROM v_feature_version THEN
           INSERT INTO public.feature_version_history (
-            feature_id, feature_key, old_version, new_version, 
+            feature_key, old_version, new_version, 
             sync_id, sync_source, change_reason, actor_type, actor_id
           ) VALUES (
-            v_existing.id, v_key, v_existing.feature_version, v_feature_version,
+            v_key, v_existing.feature_version, v_feature_version,
             v_sync_id, p_sync_source::public.sync_source_enum, p_change_reason, p_actor_type::public.actor_type_enum, p_actor_id
           );
         END IF;

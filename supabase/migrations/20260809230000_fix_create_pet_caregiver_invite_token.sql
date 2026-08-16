@@ -79,6 +79,11 @@ CREATE TABLE IF NOT EXISTS public.pet_membership_events (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- Schema drift fix for pet_membership_events
+ALTER TABLE public.pet_membership_events 
+  ADD COLUMN IF NOT EXISTS request_id uuid,
+  ADD COLUMN IF NOT EXISTS old_role public.pet_membership_role;
+
 CREATE UNIQUE INDEX IF NOT EXISTS pet_membership_events_request_idx
   ON public.pet_membership_events (
     request_id,

@@ -35,8 +35,7 @@ ALTER TABLE public.app_features
 -- 3. Create `feature_version_history` table
 CREATE TABLE IF NOT EXISTS public.feature_version_history (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  feature_id UUID NOT NULL REFERENCES public.app_features(id) ON DELETE RESTRICT,
-  feature_key TEXT NOT NULL,
+  feature_key TEXT NOT NULL REFERENCES public.app_features(key) ON DELETE RESTRICT,
   old_version TEXT,
   new_version TEXT NOT NULL,
   sync_id UUID NOT NULL,
@@ -48,7 +47,6 @@ CREATE TABLE IF NOT EXISTS public.feature_version_history (
 );
 
 -- Index for fast history lookups
-CREATE INDEX IF NOT EXISTS idx_feature_version_history_feature_id ON public.feature_version_history(feature_id);
 CREATE INDEX IF NOT EXISTS idx_feature_version_history_feature_key ON public.feature_version_history(feature_key);
 CREATE INDEX IF NOT EXISTS idx_feature_version_history_sync_id ON public.feature_version_history(sync_id);
 
@@ -87,7 +85,6 @@ DECLARE
   
   v_sync_id UUID := gen_random_uuid();
   v_now TIMESTAMPTZ := now();
-  v_inserted_id UUID;
 BEGIN
   
   FOR v_feature IN SELECT * FROM jsonb_array_elements(payload_json)
@@ -126,14 +123,14 @@ BEGIN
         sync_version,
         v_sync_id,
         v_now
-      ) RETURNING id INTO v_inserted_id;
+      );
       
       -- Insert History
       INSERT INTO public.feature_version_history (
-        feature_id, feature_key, old_version, new_version, 
+        feature_key, old_version, new_version, 
         sync_id, sync_source, change_reason, actor_type, actor_id
       ) VALUES (
-        v_inserted_id, v_key, NULL, v_feature_version,
+        v_key, NULL, v_feature_version,
         v_sync_id, p_sync_source::public.sync_source_enum, p_change_reason, p_actor_type::public.actor_type_enum, p_actor_id
       );
       
@@ -176,13 +173,12 @@ BEGIN
           last_synced_at = v_now
         WHERE key = v_key;
         
-        -- If version specifically changed, record history
         IF v_existing.feature_version IS DISTINCT FROM v_feature_version THEN
           INSERT INTO public.feature_version_history (
-            feature_id, feature_key, old_version, new_version, 
+            feature_key, old_version, new_version, 
             sync_id, sync_source, change_reason, actor_type, actor_id
           ) VALUES (
-            v_existing.id, v_key, v_existing.feature_version, v_feature_version,
+            v_key, v_existing.feature_version, v_feature_version,
             v_sync_id, p_sync_source::public.sync_source_enum, p_change_reason, p_actor_type::public.actor_type_enum, p_actor_id
           );
         END IF;
