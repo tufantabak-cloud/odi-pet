@@ -139,7 +139,7 @@ export default function MembershipsManagementClient({
   // User Detail & Action Center State
   const [detailSearchQuery, setDetailSearchQuery] = useState('');
   const [selectedDetailUser, setSelectedDetailUser] = useState<any | null>(null);
-  const [userDetails, setUserDetails] = useState<{credits: any[], events: any[]} | null>(null);
+  const [userDetails, setUserDetails] = useState<{credits: any[], events: any[], referrals?: any[]} | null>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -1413,6 +1413,53 @@ export default function MembershipsManagementClient({
                               </div>
                             </div>
                           ))
+                        )}
+                      </div>
+                    </div>
+
+                    {/* DAVETLER / KAZANDIRDIĞI ÜYELER */}
+                    <div className="card-base p-6 rounded-3xl bg-white border border-slate-100 shadow-sm space-y-4">
+                      <h4 className="font-bold text-slate-900 flex items-center gap-2">
+                        <Users className="w-5 h-5 text-primary" />
+                        Davetler / Kazandırdığı Üyeler
+                      </h4>
+                      <div className="grid grid-cols-3 gap-4 mb-4">
+                        <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-center">
+                          <span className="text-2xs font-bold text-slate-500 block">Toplam</span>
+                          <span className="text-lg font-black text-slate-800">{userDetails.referrals?.length || 0}</span>
+                        </div>
+                        <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-center">
+                          <span className="text-2xs font-bold text-slate-500 block">Kabul Edilen</span>
+                          <span className="text-lg font-black text-emerald-600">{userDetails.referrals?.filter((r: any) => r.status === 'qualified').length || 0}</span>
+                        </div>
+                        <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-center">
+                          <span className="text-2xs font-bold text-slate-500 block">Bekleyen</span>
+                          <span className="text-lg font-black text-amber-500">{userDetails.referrals?.filter((r: any) => r.status === 'pending').length || 0}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="max-h-[300px] overflow-y-auto pr-2 space-y-2">
+                        {(!userDetails.referrals || userDetails.referrals.length === 0) ? (
+                           <div className="text-center p-4 text-xs text-slate-400">Henüz kimseyi davet etmemiş.</div>
+                        ) : (
+                          userDetails.referrals.map((ref: any, idx: number) => {
+                             const refUser = ref.referred || {};
+                             const fullName = [refUser.first_name, refUser.last_name].filter(Boolean).join(' ') || 'İsimsiz';
+                             return (
+                               <div key={idx} className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-white">
+                                  <div>
+                                    <div className="text-sm font-bold text-slate-900">{fullName}</div>
+                                    <div className="text-2xs text-slate-400">{refUser.email || 'E-posta gizli'}</div>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className={`text-xs font-bold uppercase ${ref.status === 'qualified' ? 'text-emerald-600' : 'text-amber-500'}`}>
+                                      {ref.status === 'qualified' ? 'Kabul Edildi' : 'Bekliyor'}
+                                    </div>
+                                    <div className="text-2xs text-slate-400">{new Date(ref.created_at).toLocaleDateString('tr-TR')}</div>
+                                  </div>
+                               </div>
+                             );
+                          })
                         )}
                       </div>
                     </div>

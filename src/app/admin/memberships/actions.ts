@@ -197,13 +197,18 @@ export async function getUserMembershipDetailsAction(profileId: string) {
   const { createAdminSupabaseClient } = await import('@/lib/supabase/server');
   const adminSupabase = createAdminSupabaseClient();
   
-  const [credits, events] = await Promise.all([
+  const [credits, events, referrals] = await Promise.all([
     adminSupabase.from('membership_credits').select('*').eq('profile_id', profileId).order('created_at', { ascending: false }),
-    adminSupabase.from('membership_events').select('*').eq('profile_id', profileId).order('created_at', { ascending: false })
+    adminSupabase.from('membership_events').select('*').eq('profile_id', profileId).order('created_at', { ascending: false }),
+    adminSupabase.from('referrals')
+      .select('*, referred:profiles!referrals_referred_id_fkey(first_name, last_name, email)')
+      .eq('referrer_id', profileId)
+      .order('created_at', { ascending: false })
   ]);
   
   return { 
     credits: credits.data || [], 
-    events: events.data || [] 
+    events: events.data || [],
+    referrals: referrals.data || []
   };
 }
