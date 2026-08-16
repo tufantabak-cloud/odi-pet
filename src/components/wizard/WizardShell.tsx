@@ -14,6 +14,9 @@ export interface WizardStepData {
 
 interface WizardShellProps {
   category: CategoryKey;
+  subCategoryTitle?: string;
+  planTitle?: string;
+  petName?: string;
   steps: WizardStepData[];
   onNext?: () => void;
   onSkip?: () => void;
@@ -32,6 +35,9 @@ interface WizardShellProps {
 
 export function WizardShell({
   category,
+  subCategoryTitle,
+  planTitle,
+  petName,
   steps,
   onNext,
   onSkip,
@@ -46,13 +52,27 @@ export function WizardShell({
   editAll = false,
 }: WizardShellProps) {
   const router = useRouter();
-  const { stepIndex, prevStep, setStepIndex } = useWizardStore();
+  const { stepIndex, prevStep, setStepIndex, wizardData } = useWizardStore();
   const theme = categoryThemes[category];
 
   const totalSteps = steps.length;
   const currentStep = Math.min(stepIndex, totalSteps - 1);
   const progressPercentage = ((currentStep + 1) / totalSteps) * 100;
   const isLastStep = currentStep === totalSteps - 1;
+
+  const categoryLabel = theme?.label || 'Planlama';
+  const effectiveSubCat =
+    subCategoryTitle ||
+    (wizardData?.subCategory !== 'Diğer' ? wizardData?.subCategory : wizardData?.customText) ||
+    wizardData?.selectedVaccine?.name ||
+    wizardData?.selectedProduct?.product_name ||
+    '';
+
+  const headerDisplayTitle = planTitle
+    ? planTitle
+    : effectiveSubCat
+      ? `${effectiveSubCat} Planı`
+      : `${categoryLabel} Planı`;
 
   const handleBack = () => {
     if (onBack) {
@@ -87,8 +107,13 @@ export function WizardShell({
             >
               <ChevronLeft className="w-6 h-6 text-slate-700" />
             </button>
-            <div className="text-base font-semibold text-slate-700 absolute left-1/2 -translate-x-1/2">
-              Planı Düzenle
+            <div className="flex flex-col items-center justify-center text-center absolute left-1/2 -translate-x-1/2 min-w-0 max-w-[65%] px-2">
+              <span className="text-xs font-bold truncate w-full" style={{ color: theme?.textColor || '#1E293B' }}>
+                {headerDisplayTitle}
+              </span>
+              <span className="text-[10px] font-semibold text-slate-400">
+                Planı Düzenle
+              </span>
             </div>
             <div className="w-10"></div>
           </div>
@@ -151,8 +176,13 @@ export function WizardShell({
             <ChevronLeft className="w-6 h-6 text-slate-700" />
           </button>
 
-          <div className="text-base font-semibold text-slate-500 absolute left-1/2 -translate-x-1/2">
-            Adım {currentStep + 1} / {totalSteps}
+          <div className="flex flex-col items-center justify-center text-center absolute left-1/2 -translate-x-1/2 min-w-0 max-w-[65%] px-2">
+            <span className="text-xs font-bold truncate w-full" style={{ color: theme?.textColor || '#1E293B' }}>
+              {headerDisplayTitle}
+            </span>
+            <span className="text-[10px] font-semibold text-slate-400">
+              Adım {currentStep + 1} / {totalSteps}
+            </span>
           </div>
 
           <div className="w-10"></div>
@@ -162,6 +192,31 @@ export function WizardShell({
       {/* Content Area - Scrollable */}
       <main className="flex-1 overflow-y-auto overflow-x-hidden w-full pb-[100px]">
         <div className="max-w-3xl mx-auto w-full flex flex-col px-4 pt-4">
+          {/* Active Planning Context Banner */}
+          <div
+            className="mb-3 px-4 py-3 rounded-2xl border flex items-center justify-between shadow-2xs"
+            style={{
+              backgroundColor: theme?.bgLight || '#F8FAFC',
+              borderColor: theme?.progressColor ? `${theme.progressColor}35` : '#E2E8F0',
+            }}
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-white text-xs shadow-xs shrink-0"
+                style={{ backgroundColor: theme?.progressColor || '#6366F1' }}
+              >
+                <span className="uppercase text-[11px] tracking-wider">{categoryLabel.substring(0, 2)}</span>
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+                  {categoryLabel} {effectiveSubCat ? `• ${effectiveSubCat}` : 'Planlaması'}
+                </p>
+                <h2 className="text-sm font-bold truncate" style={{ color: theme?.textColor || '#0F172A' }}>
+                  {headerDisplayTitle}
+                </h2>
+              </div>
+            </div>
+          </div>
           {steps.map((step, index) => {
             // 1. TAMAMLANAN ADIMLAR
             if (currentStep > index) {

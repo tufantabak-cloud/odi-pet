@@ -63,8 +63,8 @@ function PushPermissionCard({
       const reg = await navigator.serviceWorker.ready;
       reg.showNotification('🐾 Odi.Pet Test Bildirimi', {
         body: 'Harika! Telefon bildirimlerin ve Service Worker bağlantın başarıyla çalışıyor. 🌟',
-        icon: 'https://odi.pet/brand/app-icons/odi-icon-256.png',
-        badge: 'https://odi.pet/brand/app-icons/odi-icon-256.png',
+        icon: '/brand/app-icons/odi-icon-256.png',
+        badge: '/brand/app-icons/odi-icon-256.png',
         tag: 'test-notification',
         data: { url: '/owner/notifications' }
       });
@@ -201,7 +201,6 @@ export default function NotificationsClient({
 
     const handleServiceWorkerMessage = (event: MessageEvent) => {
       if (event.data && event.data.type === 'REFRESH_NOTIFICATIONS') {
-        console.log('[SW Message] Refreshing notifications in foreground...')
         router.refresh()
       }
     }

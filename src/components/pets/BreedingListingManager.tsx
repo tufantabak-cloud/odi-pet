@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Database } from '@/types'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+import { ArchiveConfirmModal } from '@/components/pets/common/ArchiveConfirmModal'
 
 type PetRow = Database['public']['Tables']['pets']['Row']
 
@@ -14,6 +15,7 @@ export default function BreedingListingManager({ pet, initialListing }: { pet: P
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [isEditing, setIsEditing] = useState(false)
+  const [confirmAction, setConfirmAction] = useState<{ type: 'close' | 'delete'; title: string } | null>(null)
   
   // form state
   const [title, setTitle] = useState('')
@@ -174,20 +176,10 @@ export default function BreedingListingManager({ pet, initialListing }: { pet: P
           }} className="btn-secondary flex-1 py-2 text-[12px]">
             Düzenle
           </button>
-          <button onClick={async () => {
-            if(!confirm('İlanı kapatmak istediğinize emin misiniz?')) return
-            await fetch(`/api/breeding-listings/${pet.id}`, {
-              method: 'PATCH', body: JSON.stringify({ status: 'closed' })
-            })
-            window.location.reload()
-          }} className="btn-secondary flex-1 py-2 text-[12px]">
+          <button onClick={() => setConfirmAction({ type: 'close', title: 'Eşleşme İlanı' })} className="btn-secondary flex-1 py-2 text-[12px]">
             İlanı Kapat
           </button>
-          <button onClick={async () => {
-            if(!confirm('Bu işlem geri alınamaz. İlanı kalıcı olarak silmek istiyor musunuz?')) return
-            await fetch(`/api/breeding-listings/${pet.id}`, { method: 'DELETE' })
-            window.location.reload()
-          }} className="px-4 bg-red-50 border border-red-200 text-red-600 font-bold text-[12px] py-2 rounded-xl hover:bg-red-100 transition-colors flex items-center justify-center cursor-pointer">
+          <button onClick={() => setConfirmAction({ type: 'delete', title: 'Eşleşme İlanı' })} className="px-4 bg-red-50 border border-red-200 text-red-600 font-bold text-[12px] py-2 rounded-xl hover:bg-red-100 transition-colors flex items-center justify-center cursor-pointer">
             🗑 Sil
           </button>
         </div>
@@ -476,6 +468,28 @@ export default function BreedingListingManager({ pet, initialListing }: { pet: P
           {submitting ? 'Kaydediliyor...' : (listing ? 'Değişiklikleri Kaydet' : 'İlanı Yayınla')}
         </button>
       </form>
+
+      {confirmAction && (
+        <ArchiveConfirmModal
+          isOpen={!!confirmAction}
+          itemTitle={confirmAction.title}
+          isHealthRecord={false}
+          onClose={() => setConfirmAction(null)}
+          onConfirm={async () => {
+            if (confirmAction.type === 'close') {
+              await fetch(`/api/breeding-listings/${pet.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'closed' }),
+              })
+            } else {
+              await fetch(`/api/breeding-listings/${pet.id}`, { method: 'DELETE' })
+            }
+            setConfirmAction(null)
+            window.location.reload()
+          }}
+        />
+      )}
     </div>
   )
 }

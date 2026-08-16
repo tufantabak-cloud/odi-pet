@@ -65,7 +65,6 @@ export async function recoverOverdueNotifications(
   }
 
   if (dryRun) {
-    console.log(`[OverdueRecovery] dry-run: Would recover ${unnotifiedPlans.length} missing vaccine notifications.`)
     return { recoveredCount: unnotifiedPlans.length, skippedCount: 0, candidateCount: unnotifiedPlans.length }
   }
 

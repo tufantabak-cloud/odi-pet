@@ -130,7 +130,6 @@ export async function GET(req: NextRequest) {
 
   if (tokenHash && type && isValidEmailOtpType(type)) {
     // ── Path A: OTP / Token Hash Doğrulama (Cross-device uyumlu) ──
-    console.log('[auth/callback] token_hash ile verifyOtp çalıştırılıyor, type:', type)
     const { error: otpError, data: otpData } = await supabase.auth.verifyOtp({
       token_hash: tokenHash,
       type,
@@ -192,11 +191,11 @@ export async function GET(req: NextRequest) {
           pro_until:           proEnd.toISOString(),
           current_period_end:  proEnd.toISOString(),
           earned_days:         0,
-        } as any)
+        })
 
         await adminClient
           .from('profiles')
-          .update({ premium_tier: 'ai_plus', premium_until: proEnd.toISOString() } as any)
+          .update({ premium_tier: 'ai_plus', premium_until: proEnd.toISOString() })
           .eq('id', userId)
 
         await adminClient.from('membership_events').insert({
@@ -208,7 +207,6 @@ export async function GET(req: NextRequest) {
           metadata:      { ai_plus_days: 60, pro_days: 60, reason: 'WELCOME_PROMOTION', source: 'callback_fallback' },
         })
 
-        console.log('[auth/callback] Welcome AI+ lifecycle granted for new user:', userId)
       }
     }
   } catch (lifecycleErr) {

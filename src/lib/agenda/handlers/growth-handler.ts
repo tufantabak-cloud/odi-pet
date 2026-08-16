@@ -21,8 +21,8 @@ export class GrowthMeasurementReadHandler implements AgendaReadHandler {
       eventId: `plan_${plan.id}`,
       source: 'plans',
       sourceRecordId: plan.id,
-      category: 'saglik',
-      subCategory: plan.sub_type || 'Kilo & Boy Ölçümü',
+      category: 'saglik' as string,
+      subCategory: (plan.sub_type || "") as any || 'Kilo & Boy Ölçümü',
       stableIdentity: 'saglik:kilo_boy',
       occurrenceIdentity: null,
       fallbackIdentity: `saglik:kilo_boy_${plan.id}`,
@@ -33,7 +33,7 @@ export class GrowthMeasurementReadHandler implements AgendaReadHandler {
       actualAt: plan.completed_at || null,
       nextDueAt: null,
       dateKey,
-      sourceStatus: plan.status,
+      sourceStatus: plan.status || 'unknown',
       lifecycleType: 'measurement',
       displayStatus: plan.status === 'completed' ? 'completed' : 'upcoming',
       status: plan.status === 'completed' ? 'completed' : 'upcoming',
@@ -64,8 +64,8 @@ export class GrowthMeasurementReadHandler implements AgendaReadHandler {
       eventId: `growth_${record.id}`,
       source: 'growth_records',
       sourceRecordId: record.id,
-      category: 'saglik',
-      subCategory: 'Kilo Ölçümü',
+      category: 'saglik' as string,
+      subCategory: 'Kilo Ölçümü' as string,
       stableIdentity: `saglik:kilo_${record.id}`,
       occurrenceIdentity: null,
       fallbackIdentity: `saglik:kilo_${record.id}`,
@@ -100,7 +100,7 @@ export class GrowthMeasurementReadHandler implements AgendaReadHandler {
 
   getIdentity(input: any, _context: AgendaNormalizationContext): AgendaIdentity {
     return {
-      category: 'saglik',
+      category: 'saglik' as string,
       baseIdentity: `saglik:kilo_${input.id}`,
       occurrenceIdentity: null,
       fallbackIdentity: `saglik:kilo_${input.id}`

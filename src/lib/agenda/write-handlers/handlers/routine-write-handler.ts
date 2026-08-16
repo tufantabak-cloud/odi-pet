@@ -93,7 +93,7 @@ export class RoutineWriteHandler implements AgendaWriteHandler<RoutineWriteInput
   async persistIndependentRecord(input: RoutineWriteInput, context: WriteContext): Promise<WriteResult> {
     const { supabase, petId, userId } = context;
 
-    const { data: plan, error } = await supabase
+    const { data: record, error } = await supabase
       .from('plans')
       .insert({
         pet_id: petId,
@@ -111,11 +111,85 @@ export class RoutineWriteHandler implements AgendaWriteHandler<RoutineWriteInput
 
     if (error) throw error;
 
+    let canonicalTable: string | null = null;
+    let canonicalPayload: any = null;
+
+    if (this.category === 'beslenme') {
+      canonicalTable = 'meal_consumption';
+      canonicalPayload = {
+        pet_id: petId,
+        occurred_at: input.completed_at,
+        occurrence_id: record.id,
+        source: 'manual',
+        verification: 'self_reported',
+        grams: input.extra_data?.grams || 100, // default fallback
+        notes: input.notes || null
+      };
+    } else if (this.category === 'bakim' || this.category === 'hijyen') {
+      canonicalTable = 'care_logs';
+      canonicalPayload = {
+        pet_id: petId,
+        occurred_at: input.completed_at,
+        occurrence_id: record.id,
+        source: 'manual',
+        verification: 'self_reported',
+        care_type: input.sub_type || 'Genel Bakım',
+        notes: input.notes || null
+      };
+    } else if (this.category === 'aktivite') {
+      canonicalTable = 'activity_logs';
+      canonicalPayload = {
+        pet_id: petId,
+        occurred_at: input.completed_at,
+        occurrence_id: record.id,
+        source: 'manual',
+        verification: 'self_reported',
+        activity_type: input.sub_type || 'Egzersiz',
+        duration_minutes: input.extra_data?.duration_minutes || 30,
+        notes: input.notes || null
+      };
+    } else if (this.category === 'saglik' && input.sub_type === 'İlaç') {
+      const { data: courses } = await supabase
+        .from('health_medication_courses')
+        .select('id, dose_per_administration')
+        .eq('pet_id', petId)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1);
+        
+      if (courses && courses.length > 0) {
+        const course = courses[0];
+        const { error: insertErr } = await supabase.from('health_medication_records').insert({
+          course_id: course.id,
+          pet_id: petId,
+          occurred_at: input.completed_at,
+          occurrence_id: record.id,
+          dose_administered: course.dose_per_administration || 1,
+          notes: input.notes || null
+        });
+        
+        if (!insertErr) {
+          const rpcSupabase = (context as any).rpcSupabase ?? context.supabase;
+          await rpcSupabase.rpc('consume_medication_dose', {
+            p_course_id: course.id,
+            p_dose: course.dose_per_administration || 1
+          });
+        } else {
+          console.error(`Failed to insert independent record into health_medication_records:`, insertErr);
+        }
+      }
+    }
+
+    if (canonicalTable && canonicalPayload) {
+      const { error: insertErr } = await supabase.from(canonicalTable).insert(canonicalPayload);
+      if (insertErr) console.error(`Failed to insert independent record into ${canonicalTable}:`, insertErr);
+    }
+
     return {
-      recordId: plan.id,
+      recordId: record.id,
       source: 'plans',
-      linkedPlanId: plan.id,
-      completedOccurrencePlanId: plan.id,
+      linkedPlanId: record.id,
+      completedOccurrencePlanId: record.id,
       advancedMainPlanId: null,
       nextDueAt: null
     };
@@ -127,7 +201,7 @@ export class RoutineWriteHandler implements AgendaWriteHandler<RoutineWriteInput
     nextDue: NextDueResult,
     context: WriteContext
   ): Promise<WriteResult> {
-    const { supabase } = context;
+    const { supabase, petId } = context;
     const mainPlan = match.rawPlan;
 
     const rpcSupabase = context.rpcSupabase ?? context.supabase;
@@ -141,7 +215,77 @@ export class RoutineWriteHandler implements AgendaWriteHandler<RoutineWriteInput
 
     if (rpcErr) throw rpcErr;
 
-    const completedChildId = rpcRes?.completed_plan_id || rpcRes?.id || null;
+    const completedChildId = rpcRes?.completed_plan_id || rpcRes?.completed_id || rpcRes?.id || null;
+
+    let canonicalTable: string | null = null;
+    let canonicalPayload: any = null;
+
+    if (this.category === 'beslenme') {
+      canonicalTable = 'meal_consumption';
+      canonicalPayload = {
+        pet_id: petId,
+        occurred_at: input.completed_at,
+        occurrence_id: completedChildId,
+        source: 'manual',
+        verification: 'self_reported',
+        grams: input.extra_data?.grams || 100, // default fallback
+        notes: input.notes || null
+      };
+    } else if (this.category === 'bakim' || this.category === 'hijyen') {
+      canonicalTable = 'care_logs';
+      canonicalPayload = {
+        pet_id: petId,
+        occurred_at: input.completed_at,
+        occurrence_id: completedChildId,
+        source: 'manual',
+        verification: 'self_reported',
+        care_type: input.sub_type || 'Genel Bakım',
+        notes: input.notes || null
+      };
+    } else if (this.category === 'aktivite') {
+      canonicalTable = 'activity_logs';
+      canonicalPayload = {
+        pet_id: petId,
+        occurred_at: input.completed_at,
+        occurrence_id: completedChildId,
+        source: 'manual',
+        verification: 'self_reported',
+        activity_type: input.sub_type || 'Egzersiz',
+        duration_minutes: input.extra_data?.duration_minutes || 30,
+        notes: input.notes || null
+      };
+    } else if (this.category === 'saglik' && input.sub_type === 'İlaç') {
+      const { data: course } = await supabase
+        .from('health_medication_courses')
+        .select('id, dose_per_administration')
+        .eq('main_plan_id', match.mainPlanId)
+        .single();
+        
+      if (course) {
+        const { error: insertErr } = await supabase.from('health_medication_records').insert({
+          course_id: course.id,
+          pet_id: petId,
+          occurred_at: input.completed_at,
+          occurrence_id: completedChildId,
+          dose_administered: course.dose_per_administration || 1,
+          notes: input.notes || null
+        });
+        
+        if (!insertErr) {
+          await rpcSupabase.rpc('consume_medication_dose', {
+            p_course_id: course.id,
+            p_dose: course.dose_per_administration || 1
+          });
+        } else {
+          console.error(`Failed to insert linked record into health_medication_records:`, insertErr);
+        }
+      }
+    }
+
+    if (canonicalTable && canonicalPayload) {
+      const { error: insertErr } = await supabase.from(canonicalTable).insert(canonicalPayload);
+      if (insertErr) console.error(`Failed to insert linked record into ${canonicalTable}:`, insertErr);
+    }
 
     return {
       recordId: completedChildId || mainPlan.id,

@@ -282,7 +282,7 @@ describe('Owner Parasite Preferences API Tests', () => {
     const res = await PATCH(req, { params: Promise.resolve({ id: ownedPetId }) })
     const json = await res.json()
     if (res.status !== 200) {
-      console.log('PATCH 6 FAILED:', json)
+      console.error('PATCH 6 FAILED:', json)
     }
     expect(res.status).toBe(200)
     expect(json.success).toBe(true)

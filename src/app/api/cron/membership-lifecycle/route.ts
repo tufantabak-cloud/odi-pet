@@ -136,7 +136,6 @@ export async function GET(req: Request) {
     errors: errors.length > 0 ? errors : undefined
   };
 
-  console.log('[cron/membership-lifecycle]', JSON.stringify(result));
 
   return NextResponse.json(result, { status: errors.length > 0 && aiToPro + proToFree === 0 ? 500 : 200 });
 }

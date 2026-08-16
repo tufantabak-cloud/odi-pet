@@ -38,7 +38,9 @@ import {
   resumeMembershipAction,
   grantMembershipAction,
   expireMembershipAction,
-  resetQuotaAction
+  resetQuotaAction,
+  getUserMembershipDetailsAction,
+  extendAiPlusAction
 } from './actions';
 
 interface SettingsState {
@@ -97,7 +99,7 @@ export default function MembershipsManagementClient({
   initialPlanBundles = [],
   initialBundleFeatures = []
 }: Props) {
-  const [activeTab, setActiveTab] = useState<'promotions' | 'provider_actions' | 'plans'>('promotions');
+  const [activeTab, setActiveTab] = useState<'promotions' | 'user_detail' | 'plans'>('user_detail');
   const [isPending, startTransition] = useTransition();
 
   // Settings State
@@ -133,6 +135,17 @@ export default function MembershipsManagementClient({
   const [selectedPickerUsers, setSelectedPickerUsers] = useState<
     Map<string, { name: string; email: string; role: string }>
   >(new Map());
+
+  // User Detail & Action Center State
+  const [detailSearchQuery, setDetailSearchQuery] = useState('');
+  const [selectedDetailUser, setSelectedDetailUser] = useState<any | null>(null);
+  const [userDetails, setUserDetails] = useState<{credits: any[], events: any[], referrals?: any[]} | null>(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const [addDaysPlan, setAddDaysPlan] = useState<'ai_plus'|'pro'>('pro');
+  const [addDaysAmount, setAddDaysAmount] = useState<number>(30);
+  const [addDaysReason, setAddDaysReason] = useState<string>('campaign');
 
   // Phase 18 Provider Action Modal State
   const [activeModalUser, setActiveModalUser] = useState<any | null>(null);
@@ -177,6 +190,84 @@ export default function MembershipsManagementClient({
       clearTimeout(timer);
     };
   }, [userSearchQuery, grantMode]);
+
+  // Live User Search for User Detail Tab
+  useEffect(() => {
+    if (activeTab !== 'user_detail') return;
+
+    let isMounted = true;
+    setLoadingUserSearch(true);
+
+    const timer = setTimeout(() => {
+      fetch(`/api/admin/users?search=${encodeURIComponent(detailSearchQuery)}&page=1`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (isMounted && data?.users) {
+            setUserSearchResults(data.users);
+          }
+        })
+        .catch(console.error)
+        .finally(() => {
+          if (isMounted) setLoadingUserSearch(false);
+        });
+    }, 300);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [detailSearchQuery, activeTab]);
+
+  const fetchUserDetails = async (user: any) => {
+    setLoadingDetails(true);
+    setSelectedDetailUser(user);
+    try {
+      const data = await getUserMembershipDetailsAction(user.id);
+      setUserDetails(data);
+    } catch (err) {
+      console.error(err);
+      alert('Kullanıcı detayları yüklenemedi.');
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
+  const handleAddDaysAction = async () => {
+    if (!selectedDetailUser) return;
+    if (addDaysAmount <= 0) return alert('Geçerli bir gün sayısı girin.');
+    if (!confirm(`${selectedDetailUser.first_name} adlı kullanıcıya +${addDaysAmount} Gün ${addDaysPlan.toUpperCase()} eklemek istiyor musunuz?`)) return;
+
+    setActionLoading(true);
+    try {
+      if (addDaysPlan === 'pro') {
+        const res = await fetch('/api/admin/memberships/credit-grant', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            target_mode: 'manual',
+            user_ids: [selectedDetailUser.id],
+            days: addDaysAmount,
+            reason: addDaysReason,
+            note: 'Admin Detail Panel'
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'İşlem başarısız');
+        setToastMessage(`✓ Başarıyla +${addDaysAmount} Gün eklendi!`);
+      } else {
+        await extendAiPlusAction(selectedDetailUser.id, addDaysAmount, addDaysReason);
+        setToastMessage(`✓ Başarıyla +${addDaysAmount} Gün AI+ eklendi!`);
+      }
+
+      // Refresh details
+      await fetchUserDetails(selectedDetailUser);
+      setTimeout(() => setToastMessage(null), 3000);
+    } catch (err: any) {
+      alert(err.message || 'Aksiyon uygulanamadı.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   const handleSaveSettings = async () => {
     setSavingSettings(true);
@@ -390,15 +481,15 @@ export default function MembershipsManagementClient({
           Promosyon & Davet Kampanyaları
         </button>
         <button
-          onClick={() => setActiveTab('provider_actions')}
+          onClick={() => setActiveTab('user_detail')}
           className={`pb-3 flex items-center gap-2 transition-colors ${
-            activeTab === 'provider_actions'
+            activeTab === 'user_detail'
               ? 'border-b-2 border-primary text-primary font-black'
               : 'hover:text-slate-900'
           }`}
         >
-          <Layers className="w-4 h-4" />
-          Manual Membership Provider (Phase 18 Katmanı)
+          <User className="w-4 h-4" />
+          Kullanıcı Detay & Aksiyon Merkezi
         </button>
         <button
           onClick={() => setActiveTab('plans')}
@@ -1045,103 +1136,338 @@ export default function MembershipsManagementClient({
         </>
       )}
 
-      {/* Tab 2: Phase 18 Manual Membership Provider Additive Layer */}
-      {activeTab === 'provider_actions' && (
+      {/* Tab 2: User Detail & Action Center */}
+      {activeTab === 'user_detail' && (
         <div className="space-y-6">
           <div className="card-base p-6 rounded-3xl bg-white border border-slate-100 shadow-sm space-y-4">
-            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3 flex-wrap gap-4">
               <div>
                 <h3 className="text-md font-bold text-slate-900 flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5 text-primary" />
-                  Manual Membership Provider Kontrolleri (Phase 18)
+                  <User className="w-5 h-5 text-primary" />
+                  Kullanıcı Seçimi
                 </h3>
                 <p className="text-xs text-slate-500 mt-1">
-                  Yalnızca doğrudan üyelik durumlarını (AssignPlan, ChangePlan, ExtendPlan, StartTrial, Cancel, Resume, GrantMembership, ExpireMembership, ResetQuota) değiştirir.
+                  Detaylarını görmek ve işlem yapmak istediğiniz kullanıcıyı arayın.
                 </p>
               </div>
-              <span className="text-xs font-extrabold px-3 py-1 bg-purple-50 text-purple-700 rounded-full border border-purple-200">
-                {initialSubscriptions.length} Kayıt Yüklendi
-              </span>
+              <div className="relative w-full md:w-auto md:min-w-[300px]">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="İsim, soyisim veya e-posta ile filtrele/ara..."
+                  value={detailSearchQuery}
+                  onChange={(e) => setDetailSearchQuery(e.target.value)}
+                  className="input-base w-full py-2 pl-9 pr-3 text-xs rounded-xl border border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                />
+              </div>
             </div>
 
+            {/* Kullanıcı Listesi (Ana Liste) */}
             <div className="overflow-x-auto relative">
-              <table className="w-full text-left text-sm border-collapse">
-                <thead className="bg-slate-50 text-slate-500 font-bold text-xs uppercase tracking-wider">
+              <table className="w-full text-left text-sm border-collapse whitespace-nowrap">
+                <thead className="bg-slate-50 text-slate-500 font-bold text-2xs uppercase tracking-wider">
                   <tr>
                     <th className="p-3">Kullanıcı</th>
-                    <th className="p-3">Plan</th>
-                    <th className="p-3">Durum</th>
-                    <th className="p-3">Sağlayıcı</th>
-                    <th className="p-3">Kalan AI+</th>
-                    <th className="p-3">Kalan PRO</th>
-                    <th className="p-3 text-right sticky right-0 bg-slate-50 shadow-xs z-10">Eylemler</th>
+                    <th className="p-3">Plan / Durum</th>
+                    <th className="p-3">AI+ / PRO Kalan</th>
+                    <th className="p-3">Toplam / Bitiş</th>
+                    <th className="p-3">Kredi Özeti</th>
+                    <th className="p-3">Davet (Kabul/T)</th>
+                    <th className="p-3 text-right sticky right-0 bg-slate-50 shadow-xs z-10">Aksiyon</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {initialSubscriptions.map((sub) => {
-                    const profile = sub.profiles || {};
+                  {/* Eğer arama varsa backend'den gelen sonuçları gösterelim veya initialSubscriptions içinde arayalım */}
+                  {(detailSearchQuery && !loadingUserSearch && userSearchResults.length > 0 
+                    ? userSearchResults.map(u => initialSubscriptions.find(s => s.profile_id === u.id) || { profile_id: u.id, profiles: u, plan: 'free', status: 'expired', daysLeftAiPlus: 0, daysLeftPro: 0, totalPremiumDays: 0, totalGrantedDays: 0, totalCreditsCount: 0, totalInvites: 0, qualifiedInvites: 0 })
+                    : (detailSearchQuery ? [] : initialSubscriptions)
+                  ).map((sub: any) => {
+                    const prof = sub.profiles || {};
+                    const fullName = [prof.first_name, prof.last_name].filter(Boolean).join(' ') || 'İsimsiz';
+                    const isSelected = selectedDetailUser?.profile_id === sub.profile_id;
+                    
                     return (
-                      <tr key={sub.id} className="hover:bg-slate-50/50 transition-colors">
+                      <tr 
+                        key={sub.profile_id} 
+                        onClick={() => fetchUserDetails(sub)}
+                        className={`transition-colors cursor-pointer ${isSelected ? 'bg-primary/5' : 'hover:bg-slate-50/50'}`}
+                      >
                         <td className="p-3 font-semibold text-slate-900">
-                          <div>
-                            {profile.first_name || 'Kullanıcı'} {profile.last_name || ''}
-                            <p className="text-2xs text-slate-400 font-normal">{profile.email}</p>
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-slate-100 text-slate-600 text-2xs flex items-center justify-center shrink-0">
+                              {(fullName[0] || '?').toUpperCase()}
+                            </div>
+                            <div>
+                              <div className="text-xs">{fullName}</div>
+                              <div className="text-2xs text-slate-400 font-normal">{prof.email}</div>
+                            </div>
                           </div>
                         </td>
                         <td className="p-3">
-                          <span className="px-2.5 py-0.5 rounded-full text-2xs font-extrabold uppercase bg-slate-100 text-slate-800">
+                          <span className="px-2 py-0.5 rounded-full text-2xs font-extrabold uppercase bg-slate-100 text-slate-800 mr-2">
                             {sub.plan || 'FREE'}
                           </span>
+                          <span className={`px-2 py-0.5 rounded-full text-2xs font-bold uppercase ${sub.status === 'active' ? 'text-emerald-600' : 'text-slate-400'}`}>
+                            {sub.status || 'EXPIRED'}
+                          </span>
                         </td>
-                        <td className="p-3 text-xs font-bold text-emerald-600 uppercase">
-                          {sub.status || 'ACTIVE'}
+                        <td className="p-3 text-xs font-bold">
+                          <span className="text-emerald-600 mr-2">AI+: {sub.daysLeftAiPlus > 0 ? sub.daysLeftAiPlus : '-'}</span>
+                          <span className="text-purple-600">PRO: {sub.daysLeftPro > 0 ? sub.daysLeftPro : '-'}</span>
                         </td>
-                        <td className="p-3 text-xs text-slate-500 font-mono">
-                          {sub.provider || 'manual'}
+                        <td className="p-3 text-xs">
+                          <div className="font-bold text-slate-800">{sub.totalPremiumDays > 0 ? `${sub.totalPremiumDays} Gün` : '-'}</div>
+                          <div className="text-2xs text-slate-400">{sub.premiumEndDate ? new Date(sub.premiumEndDate).toLocaleDateString('tr-TR') : '-'}</div>
                         </td>
-                        <td className="p-3 text-xs font-bold text-emerald-700">
-                          {sub.daysLeftAiPlus > 0 ? `${sub.daysLeftAiPlus} gün` : '-'}
+                        <td className="p-3 text-xs">
+                          <div className="font-bold text-amber-600">+{sub.totalGrantedDays || 0} Gün</div>
+                          <div className="text-2xs text-slate-400">{sub.totalCreditsCount || 0} İşlem</div>
                         </td>
-                        <td className="p-3 text-xs font-bold text-purple-700">
-                          {sub.daysLeftPro > 0 ? `${sub.daysLeftPro} gün` : '-'}
+                        <td className="p-3 text-xs">
+                          <div className="font-bold text-blue-600">{sub.qualifiedInvites || 0} / {sub.totalInvites || 0}</div>
                         </td>
-                        <td className="p-3 text-right sticky right-0 bg-white shadow-xs z-10 space-x-1">
-                          <select
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              if (!val) return;
-                              setActiveModalUser(sub);
-                              setModalActionType(val as any);
-                              e.target.value = '';
-                            }}
-                            defaultValue=""
-                            className="px-2.5 py-1.5 bg-purple-50 text-purple-900 border border-purple-200 text-2xs font-bold rounded-xl cursor-pointer hover:bg-purple-100 transition-all"
+                        <td className="p-3 text-right sticky right-0 bg-white shadow-xs z-10">
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); fetchUserDetails(sub); }}
+                            className="px-3 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 text-2xs font-bold rounded-lg transition-all"
                           >
-                            <option value="" disabled>⚡ İşlem Seçin</option>
-                            <option value="grant_membership">➕ Hediye Kredi Yükle (+30 Gün)</option>
-                            <option value="assign_plan">⭐ Plan Değiştir / AI+ At</option>
-                            <option value="extend_plan">⏳ Süre Uzat (Gün Ekle)</option>
-                            <option value="start_trial">🧪 Deneme Süresi Başlat</option>
-                            <option value="cancel_membership">🛑 Üyeliği İptal Et</option>
-                            <option value="resume_membership">🔄 İptali Kaldır / Devam Et</option>
-                            <option value="expire_membership">❌ Süreyi Sonlandır (Expire)</option>
-                            <option value="reset_quota">🧹 Harcanan Kotayı Sıfırla</option>
-                          </select>
+                            Seç & Yönet
+                          </button>
                         </td>
                       </tr>
                     );
                   })}
-                  {initialSubscriptions.length === 0 && (
-                    <tr>
-                      <td colSpan={7} className="p-6 text-center text-slate-400 text-xs">
-                        Kayıtlı üyelik verisi yok.
-                      </td>
-                    </tr>
+                  
+                  {/* Yükleniyor veya Bulunamadı */}
+                  {detailSearchQuery && loadingUserSearch && (
+                    <tr><td colSpan={7} className="p-6 text-center text-xs text-slate-500"><RotateCw className="w-4 h-4 animate-spin inline mr-2"/>Aranıyor...</td></tr>
+                  )}
+                  {detailSearchQuery && !loadingUserSearch && userSearchResults.length === 0 && (
+                    <tr><td colSpan={7} className="p-6 text-center text-xs text-slate-400">Sonuç bulunamadı.</td></tr>
+                  )}
+                  {!detailSearchQuery && initialSubscriptions.length === 0 && (
+                    <tr><td colSpan={7} className="p-6 text-center text-xs text-slate-400">Kayıtlı kullanıcı verisi yok.</td></tr>
                   )}
                 </tbody>
               </table>
             </div>
           </div>
+
+          {/* Kullanıcı Seçildiğinde Panel Gösterimi */}
+          {selectedDetailUser && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
+              {/* Sol Kolon: Mevcut Durum & Aksiyon */}
+              <div className="lg:col-span-1 space-y-6">
+                
+                <div className="card-base p-5 rounded-3xl bg-white border border-slate-100 shadow-sm space-y-4">
+                  <div className="flex items-center gap-3">
+                     <div className="w-12 h-12 rounded-full bg-primary/10 text-primary font-bold text-lg flex items-center justify-center shrink-0">
+                       {(selectedDetailUser.profiles?.first_name?.[0] || selectedDetailUser.first_name?.[0] || '?').toUpperCase()}
+                     </div>
+                     <div>
+                       <h3 className="font-bold text-slate-900">{selectedDetailUser.profiles?.first_name || selectedDetailUser.first_name} {selectedDetailUser.profiles?.last_name || selectedDetailUser.last_name}</h3>
+                       <p className="text-xs text-slate-500">{selectedDetailUser.profiles?.email || selectedDetailUser.email}</p>
+                     </div>
+                  </div>
+                  
+                  <div className="pt-4 border-t border-slate-100 space-y-3">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-500">Mevcut Plan</span>
+                      <span className="font-extrabold uppercase px-2 py-0.5 rounded-md bg-slate-100 text-slate-800">{selectedDetailUser.plan || 'free'}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-500">Durum</span>
+                      <span className={`font-extrabold uppercase px-2 py-0.5 rounded-md ${selectedDetailUser.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>{selectedDetailUser.status || 'expired'}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-500">AI+ Kalan</span>
+                      <span className="font-bold text-emerald-700">{selectedDetailUser.daysLeftAiPlus > 0 ? `${selectedDetailUser.daysLeftAiPlus} Gün` : '-'}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-500">PRO Kalan</span>
+                      <span className="font-bold text-purple-700">{selectedDetailUser.daysLeftPro > 0 ? `${selectedDetailUser.daysLeftPro} Gün` : '-'}</span>
+                    </div>
+                    {(selectedDetailUser.ai_plus_until || selectedDetailUser.pro_until) && (
+                      <div className="pt-2 border-t border-slate-50 space-y-1">
+                        {selectedDetailUser.ai_plus_until && (
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="text-slate-400">AI+ Bitiş</span>
+                            <span className="text-slate-700">{new Date(selectedDetailUser.ai_plus_until).toLocaleDateString('tr-TR')}</span>
+                          </div>
+                        )}
+                        {selectedDetailUser.pro_until && (
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="text-slate-400">PRO Bitiş</span>
+                            <span className="text-slate-700">{new Date(selectedDetailUser.pro_until).toLocaleDateString('tr-TR')}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Hızlı Aksiyon: Gün Ekle */}
+                <div className="card-base p-5 rounded-3xl bg-slate-50 border border-slate-200 shadow-sm space-y-4">
+                  <h4 className="font-bold text-slate-900 flex items-center gap-2 text-sm">
+                    <Gift className="w-4 h-4 text-primary" />
+                    Hızlı Gün Ekle
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => setAddDaysPlan('pro')}
+                      className={`py-2 px-2 text-xs font-bold rounded-xl border transition-all ${addDaysPlan === 'pro' ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-slate-600 hover:bg-slate-100'}`}
+                    >
+                      PRO
+                    </button>
+                    <button
+                      onClick={() => setAddDaysPlan('ai_plus')}
+                      className={`py-2 px-2 text-xs font-bold rounded-xl border transition-all ${addDaysPlan === 'ai_plus' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-600 hover:bg-slate-100'}`}
+                    >
+                      AI+
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input type="number" min="1" value={addDaysAmount} onChange={(e) => setAddDaysAmount(Number(e.target.value))} className="w-20 p-2 text-sm font-bold border border-slate-200 rounded-xl" />
+                    <span className="text-xs font-bold text-slate-500">Gün</span>
+                  </div>
+                  <select value={addDaysReason} onChange={(e) => setAddDaysReason(e.target.value)} className="w-full p-2 text-xs font-bold border border-slate-200 rounded-xl">
+                    <option value="admin_grant">👑 Özel Admin Hediyesi</option>
+                    <option value="support_apology">🛠️ Sistem Özrü / Telafi</option>
+                    <option value="campaign">🎁 Promosyon Kampanyası</option>
+                  </select>
+                  <button onClick={handleAddDaysAction} disabled={actionLoading} className="w-full py-2.5 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-800 disabled:opacity-50 flex justify-center items-center gap-2">
+                    {actionLoading ? <RotateCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                    Uygula
+                  </button>
+                </div>
+              </div>
+
+              {/* Sağ Kolon: Özellikler ve Geçmiş */}
+              <div className="lg:col-span-2 space-y-6">
+                
+                {loadingDetails ? (
+                  <div className="p-10 flex flex-col items-center justify-center gap-3 text-slate-500">
+                    <RotateCw className="w-6 h-6 animate-spin text-primary" />
+                    <span className="text-sm">Geçmiş veriler yükleniyor...</span>
+                  </div>
+                ) : userDetails && (
+                  <>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      <div className="p-4 rounded-2xl bg-white border border-slate-100 shadow-sm">
+                        <span className="text-2xs font-bold text-slate-400 block mb-1">Toplam İşlem</span>
+                        <span className="text-xl font-black text-slate-800">{userDetails.credits.length} Kredi</span>
+                      </div>
+                      <div className="p-4 rounded-2xl bg-white border border-slate-100 shadow-sm">
+                        <span className="text-2xs font-bold text-slate-400 block mb-1">Verilen Gün</span>
+                        <span className="text-xl font-black text-amber-600">+{userDetails.credits.reduce((acc, c) => acc + (c.credit_days||0), 0)}</span>
+                      </div>
+                      <div className="p-4 rounded-2xl bg-white border border-slate-100 shadow-sm">
+                        <span className="text-2xs font-bold text-slate-400 block mb-1">Son Kredi</span>
+                        <span className="text-sm font-bold text-slate-800">{userDetails.credits[0] ? new Date(userDetails.credits[0].created_at).toLocaleDateString('tr-TR') : '-'}</span>
+                      </div>
+                      <div className="p-4 rounded-2xl bg-white border border-slate-100 shadow-sm">
+                        <span className="text-2xs font-bold text-slate-400 block mb-1">Son Hareket</span>
+                        <span className="text-sm font-bold text-slate-800">{userDetails.events[0] ? new Date(userDetails.events[0].created_at).toLocaleDateString('tr-TR') : '-'}</span>
+                      </div>
+                    </div>
+
+                    <div className="card-base p-6 rounded-3xl bg-white border border-slate-100 shadow-sm space-y-4">
+                      <h4 className="font-bold text-slate-900 flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-primary" />
+                        Üyelik Hareket Geçmişi
+                      </h4>
+                      <div className="max-h-[400px] overflow-y-auto pr-2 space-y-3">
+                        {userDetails.events.length === 0 && userDetails.credits.length === 0 ? (
+                          <div className="text-center p-4 text-xs text-slate-400">Kayıtlı hareket bulunmuyor.</div>
+                        ) : (
+                          // Birleştirip sıralayalım
+                          [...userDetails.events.map(e => ({ ...e, _type: 'event' })), ...userDetails.credits.map(c => ({ ...c, _type: 'credit' }))]
+                          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                          .map((item, idx) => (
+                            <div key={idx} className="flex items-start gap-4 p-3 rounded-2xl border border-slate-50 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                              <div className="pt-0.5">
+                                {item._type === 'credit' ? <Gift className="w-4 h-4 text-amber-500" /> : <Layers className="w-4 h-4 text-primary" />}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-xs font-bold text-slate-900">
+                                    {item._type === 'credit' ? 'Kredi Tanımlandı' : (item.action_type || 'Bilinmeyen Aksiyon')}
+                                  </span>
+                                  <span className="text-2xs font-bold text-slate-400">{new Date(item.created_at).toLocaleString('tr-TR')}</span>
+                                </div>
+                                {item._type === 'credit' && (
+                                  <div className="mt-1 text-xs text-slate-600">
+                                    <span className="font-extrabold text-emerald-600">+{item.credit_days} Gün</span> • {item.reason} 
+                                    {item.note && ` (${item.note})`}
+                                  </div>
+                                )}
+                                {item._type === 'event' && (
+                                  <div className="mt-1 text-xs text-slate-600">
+                                    <span className="font-bold text-slate-500">{item.previous_plan || 'free'}</span> 
+                                    <span className="mx-1">→</span> 
+                                    <span className="font-bold text-slate-800">{item.new_plan}</span>
+                                    {item.reason && <span className="ml-2 text-slate-400">• {item.reason}</span>}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+
+                    {/* DAVETLER / KAZANDIRDIĞI ÜYELER */}
+                    <div className="card-base p-6 rounded-3xl bg-white border border-slate-100 shadow-sm space-y-4">
+                      <h4 className="font-bold text-slate-900 flex items-center gap-2">
+                        <Users className="w-5 h-5 text-primary" />
+                        Davetler / Kazandırdığı Üyeler
+                      </h4>
+                      <div className="grid grid-cols-3 gap-4 mb-4">
+                        <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-center">
+                          <span className="text-2xs font-bold text-slate-500 block">Toplam</span>
+                          <span className="text-lg font-black text-slate-800">{userDetails.referrals?.length || 0}</span>
+                        </div>
+                        <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-center">
+                          <span className="text-2xs font-bold text-slate-500 block">Kabul Edilen</span>
+                          <span className="text-lg font-black text-emerald-600">{userDetails.referrals?.filter((r: any) => r.status === 'qualified').length || 0}</span>
+                        </div>
+                        <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-center">
+                          <span className="text-2xs font-bold text-slate-500 block">Bekleyen</span>
+                          <span className="text-lg font-black text-amber-500">{userDetails.referrals?.filter((r: any) => r.status === 'pending').length || 0}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="max-h-[300px] overflow-y-auto pr-2 space-y-2">
+                        {(!userDetails.referrals || userDetails.referrals.length === 0) ? (
+                           <div className="text-center p-4 text-xs text-slate-400">Henüz kimseyi davet etmemiş.</div>
+                        ) : (
+                          userDetails.referrals.map((ref: any, idx: number) => {
+                             const refUser = ref.referred || {};
+                             const fullName = [refUser.first_name, refUser.last_name].filter(Boolean).join(' ') || 'İsimsiz';
+                             return (
+                               <div key={idx} className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-white">
+                                  <div>
+                                    <div className="text-sm font-bold text-slate-900">{fullName}</div>
+                                    <div className="text-2xs text-slate-400">{refUser.email || 'E-posta gizli'}</div>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className={`text-xs font-bold uppercase ${ref.status === 'qualified' ? 'text-emerald-600' : 'text-amber-500'}`}>
+                                      {ref.status === 'qualified' ? 'Kabul Edildi' : 'Bekliyor'}
+                                    </div>
+                                    <div className="text-2xs text-slate-400">{new Date(ref.created_at).toLocaleDateString('tr-TR')}</div>
+                                  </div>
+                               </div>
+                             );
+                          })
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

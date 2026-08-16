@@ -14,7 +14,6 @@ export interface VaccinationTask {
   extra_data: Record<string, any>;
 }
 
-const isLegalRequiredPlansEnabled = () => process.env.ENABLE_LEGAL_REQUIRED_PLANS !== 'false';
 
 // ============================================================
 // SABİTLER
@@ -400,7 +399,6 @@ export async function generateVaccinationPlan(
       species: p.species,
       is_active: p.is_active,
       is_core: p.is_core,
-      mandatory_level: p.mandatory_level,
       first_dose_week: firstDoseWeek,
       dose_count: doses.length || 1,
       recurrence_days: p.repeat_interval_days || 21,
@@ -411,9 +409,7 @@ export async function generateVaccinationPlan(
       }
     };
   }).filter((t: any) => {
-    const isIncluded =
-      t.is_core ||
-      (isLegalRequiredPlansEnabled() && t.mandatory_level === 'legal_required');
+    const isIncluded = t.is_core;
 
     if (species === 'cat' && options?.isOutdoor) {
       return isIncluded || t.vaccine_code === 'CAT_FELV';
@@ -493,7 +489,7 @@ export async function generateVaccinationPlan(
         vaccine_name: t.vaccine_name,
         species: t.species,
         is_active: t.is_active,
-        is_core: t.mandatory_level === 'core',
+        is_core: t.is_core,
         dose_count: t.dose_count,
         recurrence_days: t.recurrence_days,
         has_annual_booster: t.has_annual_booster,

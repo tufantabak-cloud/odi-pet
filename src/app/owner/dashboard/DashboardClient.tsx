@@ -12,8 +12,38 @@ import OnboardingProgressCard from '@/components/OnboardingProgressCard'
 
 import PetRecommendationsCard from '@/components/dashboard/PetRecommendationsCard'
 import PendingInviteModal from '@/components/pets/family/PendingInviteModal'
-import { Stethoscope, Shield, Calendar, Sparkles, ChevronRight, Gift, Scan } from 'lucide-react'
+import WeatherPawAlert from '@/components/dashboard/WeatherPawAlert'
+import { Stethoscope, Shield, Calendar, Sparkles, ChevronRight, Gift, Scan, Syringe, Bug, Scale, Utensils, Scissors, Activity, Plus } from 'lucide-react'
 import { Badge } from '@/components/ui/primitives'
+
+function getAgendaCategoryStyle(item: any) {
+  const title = (item.title || item.vaccines?.name || getPlanDisplayTitle(item) || '').toLowerCase()
+  const category = (item.category || item.sub_category || item.sub_type || '').toLowerCase()
+
+  if (title.includes('aşı') || title.includes('asi') || title.includes('kuduz') || title.includes('karma') || title.includes('lösemi') || title.includes('bordetella') || category.includes('asi')) {
+    return { icon: Syringe, bg: 'bg-blue-100', text: 'text-blue-600', tag: 'Aşı' }
+  }
+  if (title.includes('parazit') || category.includes('parazit')) {
+    return { icon: Bug, bg: 'bg-teal-100', text: 'text-teal-600', tag: 'Parazit' }
+  }
+  if (title.includes('kilo') || title.includes('boy') || title.includes('tartı') || title.includes('ölçüm')) {
+    return { icon: Scale, bg: 'bg-indigo-100', text: 'text-indigo-600', tag: 'Kilo & Ölçüm' }
+  }
+  if (title.includes('mama') || title.includes('beslenme') || title.includes('öğün') || category.includes('beslenme')) {
+    return { icon: Utensils, bg: 'bg-amber-100', text: 'text-amber-600', tag: 'Beslenme' }
+  }
+  if (title.includes('taram') || title.includes('bakım') || title.includes('banyo') || title.includes('tırnak') || category.includes('bakim')) {
+    return { icon: Scissors, bg: 'bg-pink-100', text: 'text-pink-600', tag: 'Bakım' }
+  }
+  if (title.includes('veteriner') || title.includes('randevu') || title.includes('muayene') || title.includes('klinik')) {
+    return { icon: Stethoscope, bg: 'bg-purple-100', text: 'text-purple-600', tag: 'Veteriner' }
+  }
+  if (title.includes('yürüyüş') || title.includes('egzersiz') || title.includes('oyun') || category.includes('aktivite')) {
+    return { icon: Activity, bg: 'bg-orange-100', text: 'text-orange-600', tag: 'Aktivite' }
+  }
+
+  return { icon: Sparkles, bg: 'bg-violet-100', text: 'text-violet-600', tag: 'Rutin' }
+}
 
 export default function DashboardClient({
   greeting,
@@ -92,12 +122,16 @@ export default function DashboardClient({
         </div>
       </div>
 
-      {/* 2. Petlerim (Overlap Tasarım) */}
+      {/* 2. Petlerim Slider */}
       {petsWithStats && petsWithStats.length > 0 && (
         <div className="flex flex-col gap-3 pt-2">
           <div className="flex items-center justify-between px-[var(--space-4)]">
             <h2 className="text-xs font-bold text-text-primary uppercase tracking-wider">Petlerim</h2>
-            <Link href="/owner/pets/add" data-testid="add-first-pet-button" className="text-xs font-semibold text-primary">
+            <Link
+              href="/owner/pets/add"
+              data-testid="add-first-pet-button"
+              className="text-xs font-semibold text-primary min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-3 py-1.5 rounded-xl hover:bg-primary/5 active:scale-[0.98] transition-all"
+            >
               + Ekle
             </Link>
           </div>
@@ -107,7 +141,8 @@ export default function DashboardClient({
 
       {/* 3. Bugünkü Odak / Smart Cards */}
       {pets && pets.length > 0 && (
-        <div className="px-[var(--space-4)] pt-2">
+        <div className="px-[var(--space-4)] pt-2 flex flex-col gap-2">
+          {activePet && <WeatherPawAlert activePet={activePet} />}
           <DashboardSmartCards
             pets={pets}
             activePetId={activePetId}
@@ -123,7 +158,21 @@ export default function DashboardClient({
       {/* 4. Ajanda (Yaklaşan Etkinlikler & Aktif Planlar Birleşimi) */}
       <div className="flex flex-col gap-2.5 px-[var(--space-4)] pt-2" id="section-ajanda">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-bold text-text-primary uppercase tracking-wider">Ajanda</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xs font-bold text-text-primary uppercase tracking-wider">Ajanda</h2>
+            {activePet && (
+              <span className="text-2xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-text-secondary">
+                {activePet.name}
+              </span>
+            )}
+          </div>
+          <Link
+            href="/owner/calendar"
+            className="text-xs font-semibold text-primary inline-flex items-center gap-0.5 hover:underline py-1 px-2 rounded-lg hover:bg-primary/5 transition-all"
+          >
+            <span>Takvime Git</span>
+            <ChevronRight className="w-3.5 h-3.5 stroke-[2]" />
+          </Link>
         </div>
 
         {(upcomingEvents.length > 0 || activePlans.length > 0) ? (
@@ -131,51 +180,97 @@ export default function DashboardClient({
             {/* Etkinlikler */}
             {upcomingEvents.map((event: any) => {
               const eventDate = new Date(event.due_date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })
+              const title = event.title || event.vaccines?.name || 'Sağlık Takibi'
+              const petName = event.pets?.name || 'Pet'
+              const petId = event.pet_id || event.pets?.id
+              const { icon: ItemIcon, bg, text, tag } = getAgendaCategoryStyle(event)
+              const isSelectedPet = activePetId && petId === activePetId
+
               return (
-                <div key={event.id} className="flex items-center justify-between p-4 rounded-[24px] border border-slate-100 bg-white shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] transition-all duration-200">
+                <Link
+                  key={`event-${event.id}`}
+                  href={petId ? `/owner/pets/${petId}?tab=health` : '/owner/calendar'}
+                  className={`flex items-center justify-between p-4 rounded-[24px] border bg-white shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.08)] hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 ${
+                    isSelectedPet ? 'border-primary/30 ring-1 ring-primary/10' : 'border-slate-100'
+                  }`}
+                >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-primary/10 text-primary">
-                      <Shield className="w-4 h-4 stroke-[2]" />
+                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${bg} ${text}`}>
+                      <ItemIcon className="w-5 h-5 stroke-[2]" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-text-primary truncate">{event.title || event.vaccines?.name || 'Sağlık Takibi'}</p>
-                      <p className="text-2xs text-text-secondary font-medium truncate">{event.pets?.name || 'Pet'}</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-sm font-semibold text-text-primary truncate">{title}</p>
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 text-text-secondary shrink-0">
+                          {tag}
+                        </span>
+                      </div>
+                      <p className="text-2xs text-text-secondary font-medium truncate mt-0.5">{petName}</p>
                     </div>
                   </div>
                   <div className="text-right shrink-0">
                     <span className="text-xs font-semibold text-text-primary">{eventDate}</span>
-                    {event.due_time && <p className="text-2xs text-text-tertiary mt-0.5">{event.due_time.substring(0, 5)}</p>}
+                    {event.due_time ? (
+                      <p className="text-2xs text-text-tertiary mt-0.5">{event.due_time.substring(0, 5)}</p>
+                    ) : (
+                      <p className="text-2xs text-emerald-600 font-semibold mt-0.5">Yaklaşıyor</p>
+                    )}
                   </div>
-                </div>
+                </Link>
               )
             })}
 
             {/* Rutin Planlar */}
             {activePlans.slice(0, 3).map((plan: any) => {
-              const planDate = plan.next_run ? new Date(plan.next_run).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }) : 'Belirtilmemiş'
+              const dateVal = plan.scheduled_at || plan.next_run
+              const planDate = dateVal ? new Date(dateVal).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }) : 'Belirtilmemiş'
+              const title = getPlanDisplayTitle(plan)
+              const petName = plan.pets?.name || 'Pet'
+              const petId = plan.pet_id || plan.pets?.id
+              const { icon: ItemIcon, bg, text, tag } = getAgendaCategoryStyle(plan)
+              const isSelectedPet = activePetId && petId === activePetId
+
               return (
-                <div key={plan.id} className="flex items-center justify-between p-4 rounded-[24px] border border-slate-100 bg-white shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] transition-all duration-200">
+                <Link
+                  key={`plan-${plan.id}`}
+                  href={petId ? `/owner/pets/${petId}?tab=health` : '/owner/calendar'}
+                  className={`flex items-center justify-between p-4 rounded-[24px] border bg-white shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.08)] hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 ${
+                    isSelectedPet ? 'border-primary/30 ring-1 ring-primary/10' : 'border-slate-100'
+                  }`}
+                >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-violet-100 text-violet-600">
-                      <Sparkles className="w-4 h-4 stroke-[2]" />
+                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${bg} ${text}`}>
+                      <ItemIcon className="w-5 h-5 stroke-[2]" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-text-primary truncate">{getPlanDisplayTitle(plan)}</p>
-                      <p className="text-2xs text-text-secondary font-medium truncate">{plan.pets?.name || 'Pet'}</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-sm font-semibold text-text-primary truncate">{title}</p>
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 text-text-secondary shrink-0">
+                          {tag}
+                        </span>
+                      </div>
+                      <p className="text-2xs text-text-secondary font-medium truncate mt-0.5">{petName}</p>
                     </div>
                   </div>
                   <div className="text-right shrink-0">
                     <span className="text-xs font-semibold text-text-primary">{planDate}</span>
-                    <p className="text-2xs text-text-tertiary mt-0.5">Sıradaki</p>
+                    <p className="text-2xs text-primary font-semibold mt-0.5">Sıradaki Rutin</p>
                   </div>
-                </div>
+                </Link>
               )
             })}
           </div>
         ) : (
-          <div className="p-4 rounded-[24px] border border-dashed border-slate-200 bg-white text-center">
-            <i className="ti ti-calendar-event block mb-1 text-xl text-text-tertiary" />
+          <div className="p-6 rounded-[24px] border border-dashed border-slate-200 bg-white text-center flex flex-col items-center justify-center">
+            <Calendar className="w-8 h-8 text-text-tertiary stroke-[1.5] mb-2" />
             <p className="text-xs text-text-tertiary font-medium">Yakın zamanda planlanmış bir ajanda öğesi yok</p>
+            <Link
+              href="/owner/plan-yap"
+              className="mt-3 text-xs font-bold text-primary inline-flex items-center gap-1 hover:underline"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Yeni Rutin veya Plan Oluştur</span>
+            </Link>
           </div>
         )}
       </div>

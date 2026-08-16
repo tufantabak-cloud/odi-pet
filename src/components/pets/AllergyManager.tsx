@@ -1,6 +1,8 @@
 "use client"
 
 import React, { useState } from 'react'
+import { PlanItemActionMenu } from '@/components/pets/common/PlanItemActionMenu'
+import { ArchiveConfirmModal } from '@/components/pets/common/ArchiveConfirmModal'
 
 interface AllergyManagerProps {
   petId: string
@@ -11,6 +13,7 @@ export default function AllergyManager({ petId, initialAllergies }: AllergyManag
   const [allergies, setAllergies] = useState(initialAllergies || [])
   const [isAdding, setIsAdding] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<any | null>(null)
   
   // Form State
   const [triggerName, setTriggerName] = useState('')
@@ -54,8 +57,9 @@ export default function AllergyManager({ petId, initialAllergies }: AllergyManag
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Bu alerjiyi silmek istediğinize emin misiniz?")) return
+  const executeDelete = async () => {
+    if (!deleteTarget) return
+    const id = deleteTarget.id
     
     try {
       const res = await fetch(`/api/pets/${petId}/allergies`, {
@@ -154,16 +158,27 @@ export default function AllergyManager({ petId, initialAllergies }: AllergyManag
               {a.symptoms && <p className="text-[12px] text-red-600/80 font-medium mt-1"><span className="font-bold opacity-70">Belirti:</span> {a.symptoms}</p>}
               {a.treatment && <p className="text-[12px] text-red-600/80 font-medium mt-0.5"><span className="font-bold opacity-70">Tedavi/Not:</span> {a.treatment}</p>}
             </div>
-            <button 
-              onClick={() => handleDelete(a.id)}
-              className="w-8 h-8 rounded-full bg-white text-red-500 shadow-sm flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors"
-              title="Sil"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-            </button>
+            <PlanItemActionMenu
+              itemId={a.id}
+              itemTitle={a.trigger_name}
+              itemType="allergy"
+              isHealthRecord={true}
+              onArchiveOrDelete={() => setDeleteTarget(a)}
+            />
           </div>
         ))}
       </div>
+
+      {deleteTarget && (
+        <ArchiveConfirmModal
+          isOpen={!!deleteTarget}
+          itemTitle={deleteTarget.trigger_name}
+          isHealthRecord={true}
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={executeDelete}
+        />
+      )}
     </div>
   )
 }
+

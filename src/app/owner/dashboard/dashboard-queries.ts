@@ -68,8 +68,10 @@ export interface DashboardPlan {
   pet_id: string
   category: string
   sub_type: string
+  scheduled_at?: string | null
+  next_run?: string | null
+  status?: string | null
   extra_data: any
-  next_run: string | null
   pets: { name: string } | null
 }
 

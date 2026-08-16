@@ -48,7 +48,7 @@ export default function MatchTab({ pet }: { pet: PetRow }) {
         </div>
         
         <Link 
-          href="/owner/social" 
+          href="/owner/social?tab=eslestirme" 
           className="btn-primary w-full py-3 text-center text-sm bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-xl transition-all shadow-sm"
         >
           Sosyal &gt; Eşleştirme →

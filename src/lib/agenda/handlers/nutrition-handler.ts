@@ -30,8 +30,8 @@ export class NutritionLogReadHandler implements AgendaReadHandler {
       eventId,
       source: 'plans',
       sourceRecordId: plan.id,
-      category: 'beslenme',
-      subCategory: plan.sub_type || 'Mama Saati',
+      category: 'beslenme' as string,
+      subCategory: (plan.sub_type || "") as any || 'Mama Saati',
       stableIdentity: `beslenme:${(plan.sub_type || 'mama').toLowerCase().replace(/\s+/g, '_')}`,
       occurrenceIdentity: plan.parent_plan_id ? `beslenme:${plan.parent_plan_id}_${dateKey}` : null,
       fallbackIdentity: `beslenme:${plan.id}_${dateKey}`,
@@ -42,7 +42,7 @@ export class NutritionLogReadHandler implements AgendaReadHandler {
       actualAt: plan.completed_at || null,
       nextDueAt: plan.repeat_rule ? scheduledAt : null,
       dateKey,
-      sourceStatus: plan.status,
+      sourceStatus: plan.status || 'unknown',
       lifecycleType: 'plan',
       displayStatus: plan.status === 'completed' ? 'completed' : dateKey < context.todayStr ? 'overdue' : 'upcoming',
       status: plan.status === 'completed' ? 'completed' : dateKey < context.todayStr ? 'overdue' : 'upcoming',
@@ -70,8 +70,8 @@ export class NutritionLogReadHandler implements AgendaReadHandler {
       eventId: `nutrition_${record.id}`,
       source: 'nutrition_logs',
       sourceRecordId: record.id,
-      category: 'beslenme',
-      subCategory: 'Beslenme Kaydı',
+      category: 'beslenme' as string,
+      subCategory: 'Beslenme Kaydı' as string,
       stableIdentity: `beslenme:log_${record.id}`,
       occurrenceIdentity: null,
       fallbackIdentity: `beslenme:log_${dateKey}`,
@@ -108,7 +108,7 @@ export class NutritionLogReadHandler implements AgendaReadHandler {
   getIdentity(input: any, context: AgendaNormalizationContext): AgendaIdentity {
     const dateKey = deriveDateKey(input.logged_at || input.scheduled_at, context.timeZone);
     return {
-      category: 'beslenme',
+      category: 'beslenme' as string,
       baseIdentity: `beslenme:${input.id}`,
       occurrenceIdentity: null,
       fallbackIdentity: `beslenme:${input.id}_${dateKey}`

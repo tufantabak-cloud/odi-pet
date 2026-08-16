@@ -95,7 +95,7 @@ export async function sendCaregiverInviteEmail({
 
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) {
-    console.log('[Email Simulation] No RESEND_API_KEY found. Link:', inviteLink)
+    console.warn('[Email Simulation] No RESEND_API_KEY found. Link:', inviteLink)
     return { success: true, simulated: true, isExistingUser, inviteLink, emailSent: false }
   }
 

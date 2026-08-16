@@ -108,7 +108,6 @@ export async function POST(request: Request) {
 
     switch (mutation_action) {
       case 'SAVE_MONTHLY_GROWTH': {
-        console.log(`[Mutation Router] Executing SAVE_MONTHLY_GROWTH for user ${user.id}`)
         if (!pet_id) {
           return await fail('pet_id_required', 400)
         }
@@ -177,7 +176,6 @@ export async function POST(request: Request) {
       }
 
       case 'SAVE_ADDRESS': {
-        console.log(`[Mutation Router] Executing SAVE_ADDRESS for user ${user.id}`, payload)
 
         const city = typeof payload.city === 'string' ? payload.city : null
         const district = typeof payload.district === 'string' ? payload.district : null
@@ -253,27 +251,22 @@ export async function POST(request: Request) {
       }
 
       case 'SAVE_WEIGHT':
-        console.log(`[Mutation Router] Executing SAVE_WEIGHT for user ${user.id}, pet ${pet_id}`)
         result = { action: 'SAVE_WEIGHT', success: true }
         break
 
       case 'SAVE_VACCINE':
-        console.log(`[Mutation Router] Executing SAVE_VACCINE for user ${user.id}`)
         result = { action: 'SAVE_VACCINE', success: true }
         break
 
       case 'SAVE_FOOD':
-        console.log(`[Mutation Router] Executing SAVE_FOOD for user ${user.id}`)
         result = { action: 'SAVE_FOOD', success: true }
         break
 
       case 'UPGRADE_PREMIUM':
-        console.log(`[Mutation Router] Executing UPGRADE_PREMIUM for user ${user.id}`)
         result = { action: 'UPGRADE_PREMIUM', success: true }
         break
 
       case 'REQUEST_PERMISSION_LOCATION':
-        console.log(`[Mutation Router] Executing REQUEST_PERMISSION_LOCATION for user ${user.id}`)
         result = { action: 'REQUEST_PERMISSION_LOCATION', success: true }
         break
 

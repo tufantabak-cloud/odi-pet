@@ -302,6 +302,26 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
         });
       }
 
+      if (input.category === 'saglik' && input.sub_type === 'İlaç') {
+        const startDate = input.scheduled_at.split('T')[0];
+        await supabase.from('health_medication_courses').insert({
+          pet_id: input.pet_id,
+          user_id: userId,
+          medication_name: input.extra_data?.medication_name || 'Bilinmeyen İlaç',
+          medication_unit: input.extra_data?.medication_unit || 'doz',
+          purpose: input.extra_data?.purpose || null,
+          frequency_type: input.extra_data?.medication_freq_type || 'once_daily',
+          start_date: startDate,
+          duration_type: input.extra_data?.medication_duration || 'continuous',
+          duration_days: input.extra_data?.medication_days || null,
+          stock_enabled: input.extra_data?.medication_stock_enabled || false,
+          stock_count: input.extra_data?.medication_stock_count || 0,
+          stock_alert_threshold: input.extra_data?.medication_alert_count || 0,
+          dose_per_administration: input.extra_data?.medication_dose || 1,
+          main_plan_id: mainPlan.id
+        });
+      }
+
       return mainPlan;
     } else {
       // One-time plan: save with completed status directly
@@ -342,6 +362,26 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
       });
       
     if (notifError) throw new Error(notifError.message);
+  }
+
+  if (input.category === 'saglik' && input.sub_type === 'İlaç') {
+    const startDate = input.scheduled_at.split('T')[0];
+    await supabase.from('health_medication_courses').insert({
+      pet_id: input.pet_id,
+      user_id: userId,
+      medication_name: input.extra_data?.medication_name || 'Bilinmeyen İlaç',
+      medication_unit: input.extra_data?.medication_unit || 'doz',
+      purpose: input.extra_data?.purpose || null,
+      frequency_type: input.extra_data?.medication_freq_type || 'once_daily',
+      start_date: startDate,
+      duration_type: input.extra_data?.medication_duration || 'continuous',
+      duration_days: input.extra_data?.medication_days || null,
+      stock_enabled: input.extra_data?.medication_stock_enabled || false,
+      stock_count: input.extra_data?.medication_stock_count || 0,
+      stock_alert_threshold: input.extra_data?.medication_alert_count || 0,
+      dose_per_administration: input.extra_data?.medication_dose || 1,
+      main_plan_id: plan.id
+    });
   }
 
   return plan;

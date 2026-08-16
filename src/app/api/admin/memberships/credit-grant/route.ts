@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
-
+import { Client } from 'pg'
 export async function POST(req: NextRequest) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -94,37 +94,40 @@ export async function POST(req: NextRequest) {
   for (const targetUserId of targetUserIds) {
     const idempotencyKey = `admin_grant:${timestamp}:${targetUserId}`
 
-    // 1. RPC çağrısı dene
-    await adminSupabase.rpc('grant_membership_credit', {
-      p_profile_id: targetUserId,
-      p_days: creditDays,
-      p_reason: creditReason,
-      p_idempotency_key: idempotencyKey,
-      p_metadata: {
-        granted_by: user.id,
-        note: note || 'Admin tarafından toplu/tekil hediye edildi.',
-        granted_at: new Date().toISOString(),
-      },
-    })
-
-    // Legacy premium_tier update removed.
-    // C) Kredi defterine (membership_credits) yazımı garanti et
+    // 1. Direct PostgreSQL RPC çağrısı (PGRST202 Bypass)
+    const dbUrl = process.env.DATABASE_URL || 'postgresql://postgres:postgres@127.0.0.1:54322/postgres'
+    const pgClient = new Client({ connectionString: dbUrl })
+    
     try {
-      await adminSupabase.from('membership_credits').insert({
-        profile_id: targetUserId,
-        credit_days: creditDays,
-        reason: creditReason,
-        idempotency_key: idempotencyKey,
-        metadata: {
-          granted_by: user.id,
-          note: note || 'Admin tarafından hediye edildi.',
-          granted_at: new Date().toISOString(),
-        },
-      })
-    } catch (insErr: any) {
-      console.warn(`[AdminCreditGrant] membership_credits insert skipped:`, insErr?.message)
+      await pgClient.connect()
+    } catch (dbErr: any) {
+      console.error(`[AdminCreditGrant] PostgreSQL connection failed:`, dbErr.message)
+      results.push({ userId: targetUserId, success: false, error: 'Veritabanı bağlantısı kurulamadı.' })
+      continue
     }
-    results.push({ userId: targetUserId, success: true })
+
+    try {
+      await pgClient.query(
+        `SELECT public.grant_membership_credit($1::uuid, $2::integer, $3::text, $4::text, $5::jsonb);`,
+        [
+          targetUserId,
+          creditDays,
+          creditReason,
+          idempotencyKey,
+          JSON.stringify({
+            granted_by: user.id,
+            note: note || 'Admin tarafından toplu/tekil hediye edildi.',
+            granted_at: new Date().toISOString(),
+          })
+        ]
+      )
+      results.push({ userId: targetUserId, success: true })
+    } catch (rpcError: any) {
+      console.error(`[AdminCreditGrant] PostgreSQL RPC failed for user ${targetUserId}:`, rpcError.message)
+      results.push({ userId: targetUserId, success: false, error: rpcError.message })
+    } finally {
+      await pgClient.end()
+    }
   }
 
   const successCount = results.filter(r => r.success).length

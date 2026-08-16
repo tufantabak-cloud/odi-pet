@@ -68,7 +68,7 @@ CREATE INDEX IF NOT EXISTS idx_business_profiles_profile_id ON public.business_p
 CREATE INDEX IF NOT EXISTS idx_clinic_memberships_clinic_id ON public.clinic_memberships(clinic_id);
 CREATE INDEX IF NOT EXISTS idx_clinic_memberships_profile_id ON public.clinic_memberships(profile_id);
 CREATE INDEX IF NOT EXISTS idx_insurance_profiles_profile_id ON public.insurance_profiles(profile_id);
-CREATE INDEX IF NOT EXISTS idx_lost_reports_profile_id ON public.lost_reports(profile_id);
+-- CREATE INDEX IF NOT EXISTS idx_lost_reports_profile_id ON public.lost_reports(profile_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_profile_id ON public.notifications(profile_id);
 CREATE INDEX IF NOT EXISTS idx_onboarding_progress_profile_id ON public.onboarding_progress(profile_id);
 CREATE INDEX IF NOT EXISTS idx_pet_journal_entries_user_id ON public.pet_journal_entries(user_id);

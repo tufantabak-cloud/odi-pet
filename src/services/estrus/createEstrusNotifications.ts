@@ -79,8 +79,8 @@ export async function createEstrusNotifications(
       }
 
       const inputCycles = cycles.map(c => ({ id: c.id, start_date: c.start_date, end_date: c.end_date }));
-      let inputObs: any[] = [];
-      let inputTests: any[] = [];
+      let inputObs: any = [];
+      let inputTests: any = [];
       
       for (const c of inputCycles) {
         inputObs = inputObs.concat(obsByCycle.get(c.id) || []);
@@ -96,7 +96,7 @@ export async function createEstrusNotifications(
 
       const forecast = calculateReproductiveForecast(input, today);
 
-      const notificationsToCreate: any[] = [];
+      const notificationsToCreate: any = [];
 
       const { activeCycle } = forecast;
       if (activeCycle.cycleId && activeCycle.cycleDay !== null && activeCycle.cycleDay >= ESTRUS_ACTIVE_REVIEW_DAY) {
@@ -159,7 +159,7 @@ export async function createEstrusNotifications(
   return result;
 }
 
-function groupByPet(data: any[] | null, key: string) {
+function groupByPet(data: any, key: string) {
   const map = new Map<string, any[]>();
   if (!data) return map;
   for (const item of data) {
@@ -171,7 +171,7 @@ function groupByPet(data: any[] | null, key: string) {
   return map;
 }
 
-function groupByCycle(data: any[] | null) {
+function groupByCycle(data: any) {
   const map = new Map<string, any[]>();
   if (!data) return map;
   for (const item of data) {

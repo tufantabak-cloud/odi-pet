@@ -34,7 +34,6 @@ class PremiumEventBus {
       type,
       timestamp: new Date().toISOString()
     };
-    console.log(`[PremiumEventBus] Event Published: ${type}`, fullPayload);
     this.emitter.emit(type, fullPayload);
     this.emitter.emit('*', fullPayload);
   }

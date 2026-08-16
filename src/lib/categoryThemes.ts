@@ -1,6 +1,6 @@
 export type CategoryKey =
   | 'asi' | 'parazit' | 'bakim'
-  | 'beslenme' | 'hijyen' | 'aktivite' | 'saglik' | 'kontrol'
+  | 'beslenme' | 'hijyen' | 'aktivite' | 'saglik' | 'kontrol' | 'ilac' | 'kilo'
 
 export const categoryThemes: Record<CategoryKey, {
   label: string
@@ -65,4 +65,18 @@ export const categoryThemes: Record<CategoryKey, {
     bgLight: '#F3EBFF',
     textColor: '#4A1D7A',
   },
+  ilac: {
+    label: 'İlaçlar & Takviyeler',
+    gradient: 'from-teal-400 to-emerald-500',
+    progressColor: '#14B8A6',
+    bgLight: '#F0FDFA',
+    textColor: '#0F766E',
+  },
+  kilo: {
+    label: 'Kilo Takibi',
+    gradient: 'from-indigo-400 to-purple-500',
+    progressColor: '#8B5CF6',
+    bgLight: '#F5F3FF',
+    textColor: '#5B21B6',
+  }
 }

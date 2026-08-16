@@ -1,5 +1,6 @@
 import { getCurrentProfile } from '@/lib/auth/get-current-profile';
 import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { MembershipCalculator } from '@/lib/membership/MembershipCalculator';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -55,12 +56,17 @@ export default async function AdminMembershipsPage() {
     .order('created_at', { ascending: false })
     .limit(100);
 
-  const { data: allUserSubs } = await adminSupabase
-    .from('user_subscriptions')
-    .select('*')
-    .limit(200);
+  const profileIds = allProfiles?.map(p => p.id) || [];
 
-  console.log('[memberships] profiles:', allProfiles?.length ?? 0, 'subs:', allUserSubs?.length ?? 0);
+  const [
+    { data: allUserSubs },
+    { data: userCredits },
+    { data: userReferrals }
+  ] = await Promise.all([
+    adminSupabase.from('user_subscriptions').select('*').in('profile_id', profileIds),
+    adminSupabase.from('membership_credits').select('profile_id, credit_days').in('profile_id', profileIds),
+    adminSupabase.from('referrals').select('referrer_id, status').in('referrer_id', profileIds)
+  ]);
 
   const totalMonthDaysGranted = monthCredits?.reduce((acc, curr) => acc + (curr.credit_days || 0), 0) ?? 0;
 
@@ -88,25 +94,25 @@ export default async function AdminMembershipsPage() {
 
   // Formatted Subscriptions for Phase 18 Layer (All Registered Profiles)
   const formattedSubscriptions = (allProfiles || []).map((prof: any) => {
-    const sub = subMap.get(prof.id) || {};
+    const sub = subMap.get(prof.id) || null;
+    const state = MembershipCalculator.calculateMembershipState(sub);
+    const { daysLeftAiPlus, daysLeftPro, totalPremiumDays } = state;
 
-    const aiPlusUntil = sub.ai_plus_until;
-    const proUntil = sub.pro_until;
+    let computedPlan = state.computedPlan;
+    if (!sub && prof.premium_tier && prof.premium_tier !== 'free') {
+      computedPlan = prof.premium_tier;
+    }
 
-    const aiPlusEnd = aiPlusUntil ? new Date(aiPlusUntil) : null;
-    const proEnd = proUntil ? new Date(proUntil) : null;
+    const uCredits = (userCredits || []).filter((c: any) => c.profile_id === prof.id);
+    const totalGrantedDays = uCredits.reduce((acc: number, c: any) => acc + (c.credit_days || 0), 0);
+    const totalCreditsCount = uCredits.length;
 
-    const daysLeftAiPlus = aiPlusEnd && aiPlusEnd > now ? Math.ceil((aiPlusEnd.getTime() - now.getTime()) / 86400000) : 0;
-    const proBaseDate = aiPlusEnd && aiPlusEnd > now ? aiPlusEnd : now;
-    const daysLeftPro = proEnd && proEnd > proBaseDate ? Math.ceil((proEnd.getTime() - proBaseDate.getTime()) / 86400000) : 0;
-    const totalPremiumDays = proEnd && proEnd > now ? Math.ceil((proEnd.getTime() - now.getTime()) / 86400000) : 0;
-
-    let computedPlan = sub.plan || prof.premium_tier || 'free';
-    if (daysLeftAiPlus > 0) computedPlan = 'ai_plus';
-    else if (daysLeftPro > 0) computedPlan = 'pro';
+    const uReferrals = (userReferrals || []).filter((r: any) => r.referrer_id === prof.id);
+    const totalInvites = uReferrals.length;
+    const qualifiedInvites = uReferrals.filter((r: any) => r.status === 'qualified').length;
 
     return {
-      id: sub.id || prof.id,
+      id: sub?.id || prof.id,
       profile_id: prof.id,
       profiles: {
         first_name: prof.first_name,
@@ -115,12 +121,18 @@ export default async function AdminMembershipsPage() {
         role: prof.role,
       },
       plan: computedPlan,
-      status: sub.status || (totalPremiumDays > 0 ? 'active' : 'free'),
-      provider: sub.provider || 'referral',
+      status: state.status.toLowerCase(),
+      provider: sub?.provider || 'referral',
       daysLeftAiPlus,
       daysLeftPro,
       totalPremiumDays,
-      premiumEndDate: proUntil || sub.current_period_end
+      ai_plus_until: sub?.ai_plus_until || null,
+      pro_until: sub?.pro_until || null,
+      premiumEndDate: state.validUntil ? state.validUntil.toISOString() : null,
+      totalGrantedDays,
+      totalCreditsCount,
+      totalInvites,
+      qualifiedInvites
     };
   });
 

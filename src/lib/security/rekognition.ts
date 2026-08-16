@@ -9,7 +9,6 @@ export interface RekognitionResult {
  * Performs visual analysis of the lost pet images.
  */
 export async function analyzeImage(imageUrl: string): Promise<RekognitionResult> {
-  console.log(`[Rekognition Mock] Analyzing image: ${imageUrl}`);
   // In a real implementation, this would call AWS Rekognition API.
   return new Promise((resolve) => {
     setTimeout(() => {

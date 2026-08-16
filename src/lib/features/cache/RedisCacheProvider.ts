@@ -18,7 +18,6 @@ export class RedisCacheProvider implements CacheProvider {
   }
 
   async invalidateTag(tag: string): Promise<void> {
-    console.log(`[RedisCacheProvider] Broadcast Tag Invalidation: ${tag}`);
     try {
       (revalidateTag as any)(tag);
     } catch (e) {}

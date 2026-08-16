@@ -1,12 +1,14 @@
 'use client'
 
 import React, { useState, useRef, useEffect, useMemo } from 'react'
+import { searchBreeds, normalizeText } from '@/lib/pets/breedsMaster'
 
 export interface BreedComboboxProps {
   id?: string
   value: string
   onChange: (breed: string) => void
-  breeds: string[]
+  breeds?: string[]
+  species?: 'cat' | 'dog' | string
   popularBreeds?: string[]
   placeholder?: string
   required?: boolean
@@ -18,7 +20,8 @@ export const BreedCombobox: React.FC<BreedComboboxProps> = ({
   id = 'pet-breed-combobox',
   value,
   onChange,
-  breeds,
+  breeds = [],
+  species,
   popularBreeds = [],
   placeholder = 'Irk ara veya listeden seçin...',
   required = false,
@@ -29,7 +32,7 @@ export const BreedCombobox: React.FC<BreedComboboxProps> = ({
   const [searchTerm, setSearchTerm] = useState('')
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // Disari tiklandiginda kapat
+  // Dışarı tıklandığında kapat
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -40,12 +43,19 @@ export const BreedCombobox: React.FC<BreedComboboxProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Arama sonuclarini filtrele
+  // Arama sonuçlarını akıllıca ve alfabetik olarak filtrele
   const filteredBreeds = useMemo(() => {
-    if (!searchTerm.trim()) return breeds
-    const query = searchTerm.toLowerCase().trim()
-    return breeds.filter((b) => b.toLowerCase().includes(query))
-  }, [breeds, searchTerm])
+    if (species) {
+      const items = searchBreeds(searchTerm, species)
+      return items.map((i) => i.name)
+    }
+
+    if (!searchTerm.trim()) return [...breeds].sort((a, b) => a.localeCompare(b, 'tr'))
+    const queryNorm = normalizeText(searchTerm)
+    return breeds
+      .filter((b) => normalizeText(b).includes(queryNorm))
+      .sort((a, b) => a.localeCompare(b, 'tr'))
+  }, [breeds, species, searchTerm])
 
   const handleSelect = (breed: string) => {
     onChange(breed)
@@ -55,30 +65,6 @@ export const BreedCombobox: React.FC<BreedComboboxProps> = ({
 
   return (
     <div className={`flex flex-col gap-2.5 w-full relative ${className}`} ref={containerRef}>
-      {/* Popüler Irklar (Hızlı Seçim Çipleri) */}
-      {popularBreeds.length > 0 && (
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[11px] font-bold text-text-secondary">Popüler:</span>
-          {popularBreeds.map((pop) => {
-            const isSelected = value === pop
-            return (
-              <button
-                key={pop}
-                type="button"
-                onClick={() => handleSelect(pop)}
-                className={`px-2.5 py-1 rounded-full text-[12px] font-bold transition-all duration-200 cursor-pointer active:scale-95 ${
-                  isSelected
-                    ? 'bg-primary text-white shadow-xs scale-105'
-                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                }`}
-              >
-                {pop}
-              </button>
-            )
-          })}
-        </div>
-      )}
-
       {/* Input / Dropdown Tetikleyici */}
       <div className="relative w-full">
         <input
@@ -126,7 +112,7 @@ export const BreedCombobox: React.FC<BreedComboboxProps> = ({
         <div className="absolute z-50 left-0 right-0 top-full mt-1 bg-white border border-border-main/80 rounded-2xl shadow-xl max-h-60 overflow-y-auto p-1.5 animate-fadeIn">
           {filteredBreeds.length === 0 ? (
             <div className="p-3 text-center text-[13px] text-text-secondary font-medium">
-              Aramanızla eşleşen ırk bulunamadı. &ldquo;Diğer&rdquo; seçeneğini kullanabilirsiniz.
+              Aramanızla eşleşen ırk bulunamadı. Aramanıza uygun özel ırk adı girebilirsiniz.
             </div>
           ) : (
             <div className="flex flex-col gap-0.5">
@@ -155,3 +141,4 @@ export const BreedCombobox: React.FC<BreedComboboxProps> = ({
     </div>
   )
 }
+

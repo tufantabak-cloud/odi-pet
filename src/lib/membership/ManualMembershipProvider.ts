@@ -16,6 +16,7 @@ import {
   ListMembershipsOptions,
   SubscriptionState
 } from './types';
+import { MembershipCalculator } from './MembershipCalculator';
 
 export class ManualMembershipProvider implements IMembershipProvider {
   readonly providerType: MembershipProviderType = 'manual';
@@ -34,17 +35,19 @@ export class ManualMembershipProvider implements IMembershipProvider {
 
     if (error || !data) return null;
 
-    const rawStatus = (data.status || 'active').toUpperCase() as SubscriptionState;
     const profileObj = data.profiles as any;
+    const state = MembershipCalculator.calculateMembershipState(data);
 
     return {
       id: data.id,
       profileId: data.profile_id || profileId,
-      plan: data.plan,
-      status: rawStatus,
+      plan: state.computedPlan,
+      status: state.status as SubscriptionState,
       provider: data.provider || this.providerType,
       reason: data.reason || undefined,
-      currentPeriodEnd: data.current_period_end,
+      aiPlusUntil: data.ai_plus_until,
+      proUntil: data.pro_until,
+      currentPeriodEnd: state.currentPeriodEnd ? state.currentPeriodEnd.toISOString() : null,
       createdAt: data.created_at,
       profile: profileObj
     };
@@ -55,19 +58,21 @@ export class ManualMembershipProvider implements IMembershipProvider {
     const durationDays = params.durationDays ?? 60;
     const periodEnd = new Date(Date.now() + durationDays * 86400000).toISOString();
 
+    const updatePayload: any = {
+      profile_id: params.profileId,
+      plan: params.plan,
+      status: 'active',
+      provider: this.providerType,
+      reason: params.reason || 'MANUAL_ASSIGNMENT',
+      current_period_end: periodEnd
+    };
+
+    if (params.plan === 'ai_plus') updatePayload.ai_plus_until = periodEnd;
+    if (params.plan === 'pro') updatePayload.pro_until = periodEnd;
+
     const { data, error } = await supabase
       .from('user_subscriptions')
-      .upsert(
-        {
-          profile_id: params.profileId,
-          plan: params.plan,
-          status: 'active',
-          provider: this.providerType,
-          reason: params.reason || 'MANUAL_ASSIGNMENT',
-          current_period_end: periodEnd
-        },
-        { onConflict: 'profile_id' }
-      )
+      .upsert(updatePayload, { onConflict: 'profile_id' })
       .select('*, profiles!user_subscriptions_profile_id_fkey(first_name, last_name, email, referral_code)')
       .single();
 
@@ -116,19 +121,21 @@ export class ManualMembershipProvider implements IMembershipProvider {
     const plan = params.plan || 'ai_plus';
     const periodEnd = new Date(Date.now() + params.trialDays * 86400000).toISOString();
 
+    const updatePayload: any = {
+      profile_id: params.profileId,
+      plan: plan,
+      status: 'trialing',
+      provider: this.providerType,
+      reason: params.reason || 'MANUAL_TRIAL',
+      current_period_end: periodEnd
+    };
+
+    if (plan === 'ai_plus') updatePayload.ai_plus_until = periodEnd;
+    if (plan === 'pro') updatePayload.pro_until = periodEnd;
+
     const { data, error } = await supabase
       .from('user_subscriptions')
-      .upsert(
-        {
-          profile_id: params.profileId,
-          plan: plan,
-          status: 'trialing',
-          provider: this.providerType,
-          reason: params.reason || 'MANUAL_TRIAL',
-          current_period_end: periodEnd
-        },
-        { onConflict: 'profile_id' }
-      )
+      .upsert(updatePayload, { onConflict: 'profile_id' })
       .select('*, profiles!user_subscriptions_profile_id_fkey(first_name, last_name, email, referral_code)')
       .single();
 
@@ -147,34 +154,18 @@ export class ManualMembershipProvider implements IMembershipProvider {
 
   async extendMembership(params: ExtendMembershipParams): Promise<{ success: boolean; membership: MembershipDetails }> {
     const supabase = this.getClient();
-    const existing = await this.getMembership(params.profileId);
-    const now = new Date();
 
-    let currentEnd = existing?.currentPeriodEnd ? new Date(existing.currentPeriodEnd) : now;
-    if (currentEnd < now) currentEnd = now;
+    const { error } = await supabase.rpc('grant_membership_credit', {
+      p_profile_id: params.profileId,
+      p_days: params.additionalDays,
+      p_reason: params.reason || 'EXTENSION',
+      p_idempotency_key: params.idempotencyKey || `extension_${Date.now()}_${Math.random()}`,
+      p_metadata: params.metadata || {}
+    });
 
-    const newEnd = new Date(currentEnd.getTime() + params.additionalDays * 86400000).toISOString();
-
-    const { data, error } = await supabase
-      .from('user_subscriptions')
-      .update({
-        current_period_end: newEnd,
-        status: 'active',
-        provider: this.providerType,
-        reason: params.reason || 'EXTENSION'
-      })
-      .eq('profile_id', params.profileId)
-      .select('*, profiles!user_subscriptions_profile_id_fkey(first_name, last_name, email, referral_code)')
-      .single();
-
-    if (error || !data) {
-      throw new Error(`Failed to extend membership: ${error?.message || 'Unknown error'}`);
+    if (error) {
+      throw new Error(`Failed to extend membership: ${error.message}`);
     }
-
-    await supabase
-      .from('profiles')
-      .update({ premium_until: newEnd })
-      .eq('id', params.profileId);
 
     const membership = await this.getMembership(params.profileId);
     return { success: true, membership: membership! };
@@ -190,7 +181,9 @@ export class ManualMembershipProvider implements IMembershipProvider {
         status: 'canceled',
         provider: this.providerType,
         reason: params.reason || 'MANUAL_CANCELLATION',
-        current_period_end: params.immediate ? nowISO : undefined
+        current_period_end: params.immediate ? nowISO : undefined,
+        ai_plus_until: params.immediate ? nowISO : undefined,
+        pro_until: params.immediate ? nowISO : undefined
       })
       .eq('profile_id', params.profileId)
       .select('*, profiles!user_subscriptions_profile_id_fkey(first_name, last_name, email, referral_code)')
@@ -222,7 +215,8 @@ export class ManualMembershipProvider implements IMembershipProvider {
         status: 'active',
         provider: this.providerType,
         reason: params.reason || 'MANUAL_RESUME',
-        current_period_end: periodEnd
+        current_period_end: periodEnd,
+        pro_until: periodEnd
       })
       .eq('profile_id', params.profileId)
       .select('*, profiles!user_subscriptions_profile_id_fkey(first_name, last_name, email, referral_code)')
@@ -327,15 +321,18 @@ export class ManualMembershipProvider implements IMembershipProvider {
 
     const memberships: MembershipDetails[] = data.map((item: any) => {
       const profileObj = item.profiles;
+      const state = MembershipCalculator.calculateMembershipState(item);
 
       return {
         id: item.id,
         profileId: item.profile_id,
-        plan: item.plan,
-        status: (item.status || 'active').toUpperCase() as SubscriptionState,
+        plan: state.computedPlan,
+        status: state.status as SubscriptionState,
         provider: item.provider || 'manual',
         reason: item.reason || undefined,
-        currentPeriodEnd: item.current_period_end,
+        aiPlusUntil: item.ai_plus_until,
+        proUntil: item.pro_until,
+        currentPeriodEnd: state.currentPeriodEnd ? state.currentPeriodEnd.toISOString() : null,
         createdAt: item.created_at,
         profile: profileObj
       };

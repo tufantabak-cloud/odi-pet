@@ -72,6 +72,32 @@ export class MembershipService {
     });
   }
 
+  // FORENSIC DÜZELTME (schema-drift sweep): `premium_audit_logs`'un gerçek
+  // (canlı) şeması `20260807013400_enterprise_premium_v3.sql`'de
+  // KOŞULSUZ olarak ilk kez oluşturuldu: `id, user_id UUID NOT NULL,
+  // action_type TEXT NOT NULL, old_value, new_value, ip_address,
+  // created_at`. Daha sonraki `20260807100000_membership_events_and_referral_provider.sql`
+  // aynı tabloyu `admin_id, target_profile_id, action, reason, metadata,
+  // timestamp` kolonlarıyla yeniden `CREATE TABLE IF NOT EXISTS` ile
+  // tanımlamaya çalıştı — tablo zaten var olduğu için no-op oldu; hiçbir
+  // ALTER TABLE ile bu kolonlar gerçek tabloya eklenmedi. Bu fonksiyon
+  // yanlışlıkla no-op olan ikinci tanıma göre yazılmıştı; her çağrıda
+  // sessizce (hata hiç kontrol edilmeden) başarısız oluyordu.
+  //
+  // Alan eşlemesi (gerçek şemada karşılığı olmayanlar `new_value`
+  // JSONB'sine kayıpsız şekilde katlanıyor, veri atılmıyor):
+  //   admin_id -> user_id (gerçek kolon NOT NULL; admin_id tanımsızsa
+  //     targetProfileId'ye düşülüyor — çağıran taraflarda adminId her
+  //     zaman opsiyonel (bkz. types.ts `adminId?: string`), bu yüzden
+  //     satırın en az etkilenen kullanıcıya atfedilmesi, NOT NULL
+  //     ihlaliyle audit kaydının tamamen kaybolmasından daha güvenli).
+  //   action -> action_type
+  //   target_profile_id, reason, metadata -> new_value içine katlanır
+  //   (gerçek şemada bu üçü için ayrı kolon yok)
+  // Bu tablo yalnızca service_role'e GRANT edildiği için (`GRANT SELECT,
+  // INSERT, UPDATE, DELETE ... TO service_role`) ve bu servis zaten
+  // `createAdminSupabaseClient()` (service-role) kullandığı için GRANT
+  // sorunu burada yok — yalnızca kolon adları yanlıştı.
   private async logAudit(
     adminId: string | undefined,
     targetProfileId: string,
@@ -82,15 +108,20 @@ export class MembershipService {
     metadata: Record<string, any> = {}
   ) {
     const supabase = createAdminSupabaseClient();
-    await supabase.from('premium_audit_logs').insert({
-      admin_id: adminId || null,
-      target_profile_id: targetProfileId,
-      action: action,
-      old_value: oldValue || {},
-      new_value: newValue || {},
-      reason: reason || null,
-      metadata: metadata
+    const { error } = await supabase.from('premium_audit_logs').insert({
+      user_id: adminId || targetProfileId,
+      action_type: action,
+      old_value: oldValue ?? {},
+      new_value: {
+        ...(newValue && typeof newValue === 'object' ? newValue : {}),
+        target_profile_id: targetProfileId,
+        reason: reason ?? null,
+        metadata,
+      },
     });
+    if (error) {
+      console.error('[MembershipService.logAudit] Insert failed:', error.message);
+    }
   }
 
   async getMembership(profileId: string): Promise<MembershipDetails | null> {

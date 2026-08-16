@@ -32,12 +32,17 @@ interface BuildMicroTasksArgs {
     sos_contacts?: any[] | null;
     birth_date?: string | null;
     birth_date_precision?: string | null;
+    weight?: number | string | null;
+    weight_kg?: number | string | null;
   };
-  vaccinePlans: any[] | null;
-  parasitePlans: any[] | null;
+  vaccinePlans?: any[] | null;
+  parasitePlans?: any[] | null;
   carePlans?: any[] | null;
-  latestWeight?: { weight_kg?: number | null } | null;
+  latestWeight?: { weight_kg?: number | null; value?: number | null; weight?: number | null } | null;
   nutritionProfile?: any | null;
+  assignments?: any[] | null;
+  lastVaccineRecord?: any | null;
+  inventory?: any | null;
 }
 
 export function buildPetMicroTasks({
@@ -46,22 +51,36 @@ export function buildPetMicroTasks({
   parasitePlans,
   carePlans = [],
   latestWeight,
-  nutritionProfile
+  nutritionProfile,
+  assignments = [],
+  lastVaccineRecord,
+  inventory,
 }: BuildMicroTasksArgs): PetMicroTask[] {
   const allTasks: PetMicroTask[] = [];
 
-  // Helper checks
-  const hasActiveVaccinePlan = Array.isArray(vaccinePlans) && vaccinePlans.some(p => p.status === 'active' || p.status === 'scheduled');
-  const hasActiveParasitePlan = Array.isArray(parasitePlans) && parasitePlans.some(p => p.status === 'active' || p.status === 'scheduled');
-  const hasValidWeight = latestWeight?.weight_kg != null;
+  // Helper checks across all tab data sources
+  const hasActiveVaccinePlan =
+    (Array.isArray(vaccinePlans) && vaccinePlans.some(p => p && p.status !== 'cancelled' && p.status !== 'deleted')) ||
+    lastVaccineRecord != null;
+
+  const hasActiveParasitePlan =
+    Array.isArray(parasitePlans) && parasitePlans.some(p => p && p.status !== 'cancelled' && p.status !== 'deleted');
+
+  const rawPetWeight = pet.weight ?? pet.weight_kg;
+  const numPetWeight = typeof rawPetWeight === 'string' ? parseFloat(rawPetWeight) : rawPetWeight;
+
+  const hasValidWeight =
+    (latestWeight?.weight_kg != null && Number(latestWeight.weight_kg) > 0) ||
+    (latestWeight?.value != null && Number(latestWeight.value) > 0) ||
+    (latestWeight?.weight != null && Number(latestWeight.weight) > 0) ||
+    (numPetWeight != null && !isNaN(numPetWeight) && numPetWeight > 0);
 
   const hasBirthDate = !!pet.birth_date && pet.birth_date_precision !== 'unknown';
   const hasGender = !!pet.gender;
   const hasNeuteredStatus = pet.is_neutered !== null && pet.is_neutered !== undefined;
 
-  // Basic profile completeness for unlocking Nutrition tasks
-  const isBasicProfileComplete = hasBirthDate && hasGender && hasNeuteredStatus;
-  const isPhase1HealthComplete = hasActiveVaccinePlan && hasActiveParasitePlan && hasValidWeight;
+  // Progressive profiling unlock
+  const isNutritionUnlocked = true;
 
   // ─────────────────────────────────────────────────────────────
   // AŞAMA 1 — Temel Sağlık Güvenliği (Priority 1)
@@ -104,6 +123,7 @@ export function buildPetMicroTasks({
       type: 'missing_weight',
       priority: 1,
       actionType: 'DIRECT_DATA',
+      directAction: 'WEIGHT_MODAL',
       title: 'Kilo Bilgisi Gir',
       description: 'Gelişimini takip edebilmek için güncel kilosunu girin.',
       actionText: 'Bilgi Gir',
@@ -148,13 +168,32 @@ export function buildPetMicroTasks({
 
   // ─────────────────────────────────────────────────────────────
   // AŞAMA 3 — Beslenme Temel Bilgileri (Priority 3)
-  // Kilit açılma koşulu: Temel profil bilgileri + Aşama 1 sağlık tamamlanmış olmalı
   // ─────────────────────────────────────────────────────────────
-  const isNutritionUnlocked = isBasicProfileComplete && isPhase1HealthComplete;
 
-  const hasMealsPerDay = nutritionProfile?.meals_per_day != null;
-  const hasDailyGrams = nutritionProfile?.daily_grams != null;
-  const hasFoodType = nutritionProfile?.food_type != null;
+  const hasFoodAssignment = Array.isArray(assignments) && assignments.length > 0;
+  const activeAssignment = hasFoodAssignment
+    ? (assignments.find((a: any) => a && a.is_active !== false) || assignments[0])
+    : null;
+
+  const hasMealsPerDay =
+    nutritionProfile?.meals_per_day != null ||
+    (activeAssignment != null && (activeAssignment.meals_per_day != null || activeAssignment.daily_meals != null || activeAssignment.portion_grams != null));
+
+  const hasDailyGrams =
+    nutritionProfile?.daily_grams != null ||
+    (activeAssignment != null && (activeAssignment.daily_target_grams != null || activeAssignment.daily_grams != null || activeAssignment.portion_grams != null)) ||
+    inventory?.daily_target_grams != null;
+
+  const hasFoodType =
+    nutritionProfile?.food_type != null ||
+    (activeAssignment != null && (
+      activeAssignment.food_type != null ||
+      activeAssignment.food_product_family?.food_form != null ||
+      activeAssignment.food_form != null ||
+      activeAssignment.food_product_family?.official_name != null ||
+      activeAssignment.custom_name != null ||
+      activeAssignment.custom_brand != null
+    ));
 
   if (isNutritionUnlocked) {
     // 6. Günlük Öğün Sayısını Belirle
@@ -208,16 +247,23 @@ export function buildPetMicroTasks({
 
   // ─────────────────────────────────────────────────────────────
   // AŞAMA 4 — Bakım Rutinleri (Priority 4)
-  // Kilit açılma koşulu: 3 beslenme alanı da (öğün, gram, tip) tamamlanmış olmalı
   // ─────────────────────────────────────────────────────────────
-  const isAllNutritionComplete = hasMealsPerDay && hasDailyGrams && hasFoodType;
-  const activeCarePlans = Array.isArray(carePlans) ? carePlans.filter(p => p.status === 'active') : [];
+  const activeCarePlans = Array.isArray(carePlans) ? carePlans.filter(p => p && p.status !== 'cancelled' && p.status !== 'deleted') : [];
 
-  const hasBrushingPlan = activeCarePlans.some(p => p.sub_type === 'Tüy Bakımı' || p.sub_type === 'Tüy Tarama');
-  const hasDentalPlan = activeCarePlans.some(p => p.sub_type === 'Diş Fırçalama' || p.sub_type === 'Diş Bakımı');
-  const hasNailPlan = activeCarePlans.some(p => p.sub_type === 'Tırnak Kesimi');
+  const hasBrushingPlan = activeCarePlans.some(p => {
+    const text = `${p.sub_type || ''} ${p.sub_category || ''} ${p.title || ''}`.toLowerCase();
+    return text.includes('tüy') || text.includes('tarama') || text.includes('grooming');
+  });
+  const hasDentalPlan = activeCarePlans.some(p => {
+    const text = `${p.sub_type || ''} ${p.sub_category || ''} ${p.title || ''}`.toLowerCase();
+    return text.includes('diş') || text.includes('dental');
+  });
+  const hasNailPlan = activeCarePlans.some(p => {
+    const text = `${p.sub_type || ''} ${p.sub_category || ''} ${p.title || ''}`.toLowerCase();
+    return text.includes('tırnak') || text.includes('nail');
+  });
 
-  if (isNutritionUnlocked && isAllNutritionComplete) {
+  if (isNutritionUnlocked) {
     // 9. Tüy Tarama Rutini Eksik
     if (!hasBrushingPlan) {
       allTasks.push({

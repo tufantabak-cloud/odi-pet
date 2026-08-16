@@ -113,14 +113,24 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
   if (fd.has('agriculture_directorate')) payload.agriculture_directorate = str(fd, 'agriculture_directorate')
   if (fd.has('lifestyle')) payload.lifestyle = str(fd, 'lifestyle')
   if (fd.has('size')) payload.size = str(fd, 'size')
+  if (fd.has('target_weight_kg')) {
+    const twStr = str(fd, 'target_weight_kg')
+    if (twStr) {
+      const twVal = parseFloat(twStr.replace(',', '.'))
+      payload.target_weight_kg = !isNaN(twVal) && twVal > 0 ? twVal : null
+    } else {
+      payload.target_weight_kg = null
+    }
+  }
 
   let { error: updateError } = await supabase
     .from('pets')
     .update(payload)
     .eq('id', id)
 
-  if (updateError && (updateError.code === 'PGRST204' || updateError.message?.includes('schema cache'))) {
-    console.warn('[pet-update] PGRST204 detected. Retrying update without unmigrated registration fields.')
+  if (updateError && (updateError.code === 'PGRST204' || updateError.message?.includes('schema cache') || updateError.code === '42703')) {
+    console.warn('[pet-update] PGRST204/Schema error detected. Retrying update without unmigrated fields.')
+    delete payload.target_weight_kg
     delete payload.registration_city
     delete payload.registration_district
     delete payload.agriculture_directorate

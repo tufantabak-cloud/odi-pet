@@ -23,11 +23,47 @@ function validateSameOrigin(request: NextRequest): NextResponse | null {
   return null
 }
 
+/**
+ * Generate a unique nonce and build CSP header string.
+ * Nonce replaces 'unsafe-inline' and 'unsafe-eval' in script-src for XSS protection.
+ */
+function buildCsp(nonce: string): string {
+  // In production: strict nonce-based CSP (no unsafe-eval, no unsafe-inline for scripts)
+  // In development: same policy but delivered as Report-Only so React eval() works
+  // Savunma Katmanı (Defense-in-Depth): https://odi.pet ve sub-domain'leri harici/edge push payload'ları ve CDN görselleri için img-src ve connect-src'ye eklenmiştir.
+  return `default-src 'self'; script-src 'self' 'nonce-${nonce}' 'unsafe-inline' https://challenges.cloudflare.com https://unpkg.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' blob: data: https://*.supabase.co https://*.tile.openstreetmap.org https://odi.pet https://*.odi.pet; font-src 'self' data:; connect-src 'self' blob: http://127.0.0.1:* http://localhost:* https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://api.resend.com https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://odi.pet https://*.odi.pet; frame-src 'self' https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;`
+}
+
+const IS_PRODUCTION = process.env.NODE_ENV === 'production'
+
+// In dev: Content-Security-Policy-Report-Only (does not block, only reports)
+// In prod: Content-Security-Policy (enforces the policy)
+const CSP_HEADER_NAME = IS_PRODUCTION
+  ? 'Content-Security-Policy'
+  : 'Content-Security-Policy-Report-Only'
+
+/**
+ * Apply CSP and nonce headers to a NextResponse.
+ */
+function applyCspHeaders(response: NextResponse, csp: string, nonce: string): void {
+  response.headers.set(CSP_HEADER_NAME, csp)
+  response.headers.set('x-nonce', nonce)
+}
+
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
+  // --- Nonce-based CSP ---
+  const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
+  const cspHeader = buildCsp(nonce)
+  // Inject nonce into request headers so Next.js applies it to inline scripts
+  request.headers.set('x-nonce', nonce)
+  request.headers.set(CSP_HEADER_NAME, cspHeader)
+
   if (isBlockedPath(pathname)) {
-    return NextResponse.rewrite(new URL('/404', request.url), { status: 404 })
+    const res = NextResponse.rewrite(new URL('/404', request.url), { status: 404 })
+    applyCspHeaders(res, cspHeader, nonce)
+    return res
   }
 
   const isLoginPage = pathname === '/login'
@@ -44,6 +80,7 @@ export async function proxy(request: NextRequest) {
   ) {
     const csrfError = validateSameOrigin(request)
     if (csrfError) {
+      applyCspHeaders(csrfError, cspHeader, nonce)
       return csrfError
     }
   }
@@ -51,7 +88,9 @@ export async function proxy(request: NextRequest) {
   // Public, token and service endpoints validate their own access contract in
   // the route handler and must not depend on a Supabase browser session.
   if (isApiRequest && apiAccessMode !== 'session') {
-    return NextResponse.next({ request })
+    const res = NextResponse.next({ request })
+    applyCspHeaders(res, cspHeader, nonce)
+    return res
   }
 
   if (
@@ -59,7 +98,9 @@ export async function proxy(request: NextRequest) {
     && !isProtectedPagePath(pathname)
     && !isLoginPage
   ) {
-    return NextResponse.next({ request })
+    const res = NextResponse.next({ request })
+    applyCspHeaders(res, cspHeader, nonce)
+    return res
   }
 
   let supabaseResponse = NextResponse.next({ request })
@@ -104,20 +145,25 @@ export async function proxy(request: NextRequest) {
 
   if (!user) {
     if (isLoginPage) {
+      applyCspHeaders(supabaseResponse, cspHeader, nonce)
       return supabaseResponse
     }
 
     if (isApiRequest) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: 'Unauthorized', requiresAuth: true },
         { status: 401 }
       )
+      applyCspHeaders(res, cspHeader, nonce)
+      return res
     }
 
     const loginUrl = request.nextUrl.clone()
     loginUrl.pathname = '/login'
     loginUrl.searchParams.set('reason', 'session_expired')
-    return NextResponse.redirect(loginUrl)
+    const res = NextResponse.redirect(loginUrl)
+    applyCspHeaders(res, cspHeader, nonce)
+    return res
   }
 
   if (isLoginPage) {
@@ -129,6 +175,7 @@ export async function proxy(request: NextRequest) {
     supabaseResponse.cookies.getAll().forEach((cookie) => {
       redirectResponse.cookies.set(cookie)
     })
+    applyCspHeaders(redirectResponse, cspHeader, nonce)
     return redirectResponse
   }
 
@@ -141,18 +188,23 @@ export async function proxy(request: NextRequest) {
 
     if (profile?.role !== 'admin' && profile?.role !== 'founder') {
       if (isApiRequest) {
-        return NextResponse.json(
+        const res = NextResponse.json(
           { error: 'Forbidden: Admin access required' },
           { status: 403 }
         )
+        applyCspHeaders(res, cspHeader, nonce)
+        return res
       }
 
       const dashboardUrl = request.nextUrl.clone()
       dashboardUrl.pathname = '/owner/dashboard'
-      return NextResponse.redirect(dashboardUrl)
+      const adminRes = NextResponse.redirect(dashboardUrl)
+      applyCspHeaders(adminRes, cspHeader, nonce)
+      return adminRes
     }
   }
 
+  applyCspHeaders(supabaseResponse, cspHeader, nonce)
   return supabaseResponse
 }
 

@@ -5,6 +5,8 @@ import { Database } from '@/types'
 import { useFeature } from '@/lib/features/hooks'
 import { PremiumContent } from '@/components/premium/PremiumContent'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+import { PlanItemActionMenu } from '@/components/pets/common/PlanItemActionMenu'
+import { ArchiveConfirmModal } from '@/components/pets/common/ArchiveConfirmModal'
 
 type PetRow = Database['public']['Tables']['pets']['Row']
 
@@ -44,6 +46,21 @@ export default function BudgetTab({ pet }: { pet: PetRow }) {
   const [showForm, setShowForm] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [archiveItem, setArchiveItem] = useState<{ id: string; title: string } | null>(null)
+
+  const handleArchiveConfirm = async () => {
+    if (!archiveItem) return
+    try {
+      await fetch(`/api/pets/${pet.id}/expenses`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ expense_id: archiveItem.id }),
+      })
+      setExpenses((prev) => prev.filter((e) => e.id !== archiveItem.id))
+    } catch (err) {
+      console.error('Harcama silinirken hata oluştu:', err)
+    }
+  }
 
   // Form state
   const [amount, setAmount] = useState('')
@@ -267,9 +284,22 @@ export default function BudgetTab({ pet }: { pet: PetRow }) {
                   <p className="font-bold text-[13px] text-text-primary truncate">{exp.category}</p>
                   {exp.description && <p className="text-[11px] text-text-secondary truncate">{exp.description}</p>}
                 </div>
-                <div className="text-right shrink-0">
-                  <p className="font-black text-[13px] text-text-primary">₺{Number(exp.amount).toFixed(2)}</p>
-                  <p className="text-[10px] text-text-secondary">{new Date(exp.date).toLocaleDateString('tr-TR')}</p>
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="text-right">
+                    <p className="font-black text-[13px] text-text-primary">₺{Number(exp.amount).toFixed(2)}</p>
+                    <p className="text-[10px] text-text-secondary">{new Date(exp.date).toLocaleDateString('tr-TR')}</p>
+                  </div>
+                  <PlanItemActionMenu
+                    itemId={exp.id}
+                    itemTitle={`${exp.category} - ₺${Number(exp.amount).toFixed(2)}`}
+                    itemType="expense"
+                    onArchiveOrDelete={() =>
+                      setArchiveItem({
+                        id: exp.id,
+                        title: `${exp.category} - ₺${Number(exp.amount).toFixed(2)}`,
+                      })
+                    }
+                  />
                 </div>
               </div>
             )
@@ -286,6 +316,18 @@ export default function BudgetTab({ pet }: { pet: PetRow }) {
         </div>
       )}
         </>
+      )}
+
+      {archiveItem && (
+        <ArchiveConfirmModal
+          isOpen={!!archiveItem}
+          itemTitle={archiveItem.title}
+          isHealthRecord={false}
+          onClose={() => setArchiveItem(null)}
+          onConfirm={async () => {
+            await handleArchiveConfirm()
+          }}
+        />
       )}
     </div>
   )

@@ -10,6 +10,7 @@ import { buildPetMicroTasks } from '@/lib/microTasks/petMicroTasks'
 import { PetMicroTaskCard } from '@/components/micro-tasks/PetMicroTaskCard'
 import { useDismissedMicroTasks } from '@/hooks/useDismissedMicroTasks'
 import ParasitePlanCompletionModal from '@/components/pets/ParasitePlanCompletionModal'
+import { PetTaskModals, TaskModalType } from '@/components/pets/PetTaskModals'
 
 
 
@@ -85,6 +86,42 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
   const [dismissedCards, setDismissedCards] = useState<string[]>([])
   const [expanded, setExpanded] = useState(false)
   const { filterVisibleTasks, dismissTask } = useDismissedMicroTasks()
+  const [nutritionProfile, setNutritionProfile] = useState<any>(null)
+  const [foodAssignments, setFoodAssignments] = useState<any[]>([])
+  const [activeTaskModal, setActiveTaskModal] = useState<TaskModalType>(null)
+
+  useEffect(() => {
+    if (!activePetId) return
+    let isMounted = true
+    supabase
+      .from('pet_nutrition_profiles')
+      .select('*')
+      .eq('pet_id', activePetId)
+      .maybeSingle()
+      .then(({ data }: any) => {
+        if (isMounted) {
+          setNutritionProfile(data ?? null)
+        }
+      })
+    supabase
+      .from('pet_food_assignments')
+      .select(`
+        *,
+        food_product_family:food_product_families (
+          id,
+          official_name,
+          food_form,
+          brand:food_brands ( display_name )
+        )
+      `)
+      .eq('pet_id', activePetId)
+      .then(({ data }: any) => {
+        if (isMounted) {
+          setFoodAssignments(data ?? [])
+        }
+      })
+    return () => { isMounted = false }
+  }, [activePetId, supabase])
 
 
   useEffect(() => {
@@ -569,7 +606,8 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
               (s: any) => s.pet_id === activePetId && (s._plan_category === 'bakim' || s.category === 'Bakım' || s.category === 'bakim')
             ) ?? [],
             latestWeight: allWeightLogs?.find(w => w.pet_id === activePetId) ?? null,
-            nutritionProfile: null,
+            nutritionProfile: nutritionProfile,
+            assignments: foodAssignments,
           }).filter(t => t.type !== 'missing_emergency_contact')
         )
       : []
@@ -906,6 +944,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
             task={dashboardMicroTasks[0]}
             petId={activePetId}
             onDismiss={(id) => dismissTask(activePetId, id)}
+            onDirectAction={(action) => setActiveTaskModal(action as TaskModalType)}
           />
         )}
 
@@ -918,6 +957,22 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
           />
         ))}
       </div>
+
+      <PetTaskModals
+        petId={activePetId}
+        petName={pets.find(p => p.id === activePetId)?.name || ''}
+        activeModal={activeTaskModal}
+        onClose={() => setActiveTaskModal(null)}
+        onSuccess={() => {
+          router.refresh()
+          supabase
+            .from('pet_nutrition_profiles')
+            .select('*')
+            .eq('pet_id', activePetId)
+            .maybeSingle()
+            .then(({ data }: any) => setNutritionProfile(data ?? null))
+        }}
+      />
 
       {quickUpdateConfig && quickUpdateConfig.type === 'journal' ? (
         <div className="fixed inset-0 z-[10000] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-fade-in" onClick={() => setQuickUpdateConfig(null)}>

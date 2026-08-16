@@ -5647,6 +5647,7 @@ export type Database = {
           vet_name: string | null
           vet_phone: string | null
           weekly_log_count: number | null
+          target_weight_kg: number | null
         }
         Insert: {
           avatar_url?: string | null
@@ -5685,6 +5686,7 @@ export type Database = {
           vet_name?: string | null
           vet_phone?: string | null
           weekly_log_count?: number | null
+          target_weight_kg?: number | null
         }
         Update: {
           avatar_url?: string | null
@@ -5723,6 +5725,7 @@ export type Database = {
           vet_name?: string | null
           vet_phone?: string | null
           weekly_log_count?: number | null
+          target_weight_kg?: number | null
         }
         Relationships: [
           {

@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { PlanItemActionMenu } from '@/components/pets/common/PlanItemActionMenu';
+import { ArchiveConfirmModal } from '@/components/pets/common/ArchiveConfirmModal';
 
 interface Medication {
   id: string; // plan_123 formatı veya db id
@@ -29,6 +31,7 @@ export default function MedicationManager({ petId, initialMedications }: Medicat
   const router = useRouter();
   const [meds, setMeds] = useState<Medication[]>(initialMedications || []);
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Medication | null>(null);
 
   const handleDoseGive = async (med: Medication) => {
     if (!med._plan_id) return;
@@ -68,9 +71,10 @@ export default function MedicationManager({ petId, initialMedications }: Medicat
     }
   };
 
-  const handleDelete = async (med: Medication) => {
-    if (!confirm(`${med.medication_name} ilacını silmek istediğinize emin misiniz?`)) return;
-    
+  const executeDelete = async () => {
+    if (!deleteTarget) return;
+    const med = deleteTarget;
+
     try {
       if (med._source === 'plans' && med._plan_id) {
         const res = await fetch(`/api/plans/${med._plan_id}`, { method: 'DELETE' });
@@ -153,18 +157,29 @@ export default function MedicationManager({ petId, initialMedications }: Medicat
                     {loadingId === med.id ? '...' : '+ Doz Ver'}
                   </button>
                 )}
-                <button
-                  onClick={() => handleDelete(med)}
-                  className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
-                  title="Sil"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                </button>
+                <PlanItemActionMenu
+                  itemId={med.id}
+                  itemTitle={med.medication_name}
+                  itemType="medication"
+                  isHealthRecord={true}
+                  onArchiveOrDelete={() => setDeleteTarget(med)}
+                />
               </div>
             </div>
           );
         })}
       </div>
+
+      {deleteTarget && (
+        <ArchiveConfirmModal
+          isOpen={!!deleteTarget}
+          itemTitle={deleteTarget.medication_name}
+          isHealthRecord={true}
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={executeDelete}
+        />
+      )}
     </div>
   );
 }
+

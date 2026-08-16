@@ -3,8 +3,10 @@
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { User, Clock, CheckCircle2, XCircle, Trash2 } from 'lucide-react'
+import { ArchiveConfirmModal } from '@/components/pets/common/ArchiveConfirmModal'
 
 export function AdoptionApplicationsManager({ petId, listingId }: { petId?: string; listingId?: string }) {
+  const [withdrawAppId, setWithdrawAppId] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'incoming' | 'outgoing'>('incoming')
   
   const [incomingApps, setIncomingApps] = useState<any[]>([])
@@ -66,17 +68,23 @@ export function AdoptionApplicationsManager({ petId, listingId }: { petId?: stri
     }
   }
 
-  const handleWithdraw = async (appId: string) => {
-    if (!confirm('Başvurunuzu geri çekmek istediğinize emin misiniz?')) return
+  const handleWithdraw = (appId: string) => {
+    setWithdrawAppId(appId)
+  }
+
+  const confirmWithdraw = async () => {
+    if (!withdrawAppId) return
     try {
-      const res = await fetch(`/api/adoption-applications/${appId}`, {
+      const res = await fetch(`/api/adoption-applications/${withdrawAppId}`, {
         method: 'DELETE'
       })
       if (res.ok) {
-        setOutgoingApps(apps => apps.filter(app => app.id !== appId))
+        setOutgoingApps(apps => apps.filter(app => app.id !== withdrawAppId))
       }
     } catch (err) {
       console.error(err)
+    } finally {
+      setWithdrawAppId(null)
     }
   }
 
@@ -225,6 +233,16 @@ export function AdoptionApplicationsManager({ petId, listingId }: { petId?: stri
             })
           )}
         </div>
+      )}
+
+      {withdrawAppId && (
+        <ArchiveConfirmModal
+          isOpen={!!withdrawAppId}
+          itemTitle="Sahiplenme Başvurusu"
+          isHealthRecord={false}
+          onClose={() => setWithdrawAppId(null)}
+          onConfirm={confirmWithdraw}
+        />
       )}
     </div>
   )

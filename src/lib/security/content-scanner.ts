@@ -8,7 +8,6 @@ export interface ScanResult {
 }
 
 export async function scanContentText(text: string): Promise<ScanResult> {
-  console.log(`[Content Scanner] Scanning text: ${text.substring(0, 20)}...`);
   // Mock logic
   const forbiddenWords = ['scam', 'reward scam', 'fake'];
   const lowerText = text.toLowerCase();

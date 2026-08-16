@@ -1,11 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { requireRole } from '@/lib/auth/get-current-profile'
 
-// MOCK: Assuming the Vet logs in and we know their ID
-// In a real app, this would use getSessionUser() and lookup the vet profile
-const getMockVetId = () => '00000000-0000-0000-0000-000000000001' // Placeholder
-
+// GÜVENLİK DÜZELTMESİ: Bu endpoint önceden hiçbir kimlik/rol kontrolü
+// yapmıyordu ("MOCK"). `vet_reviews` RLS'i (`profile_id = auth.uid()`)
+// SELECT'i teknik olarak yalnızca çağıranın KENDİ inceleme kayıtlarıyla
+// sınırlıyordu (bu yüzden veri sızıntısı yoktu), ama bu da "veteriner görev
+// havuzu" özelliğinin işlevsel olarak hiç çalışmadığı, sadece pet owner'ın
+// kendi (genelde boş) kayıtlarını gördüğü anlamına geliyordu. claim/complete
+// ile tutarlılık için aynı 'vet' rol zorunluluğu eklendi.
 export async function GET(req: NextRequest) {
+  const vetProfile = await requireRole(['vet', 'admin', 'founder'])
+  if (!vetProfile) {
+    return NextResponse.json({ error: 'Forbidden: vet role required' }, { status: 403 })
+  }
+
   const supabase = await createServerSupabaseClient()
   
   // 3. GÖREV HAVUZU (CORE ENGINE) - Fetch pending

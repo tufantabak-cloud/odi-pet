@@ -43,6 +43,7 @@ export async function GET() {
       .from('notifications')
       .select('*')
       .eq('profile_id', user.id)
+      .eq('is_read', false)
       .order('created_at', { ascending: false })
       .limit(5)
   ])

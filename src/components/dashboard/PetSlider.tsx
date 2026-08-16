@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { Heart, AlertCircle, ChevronRight, Scale } from 'lucide-react'
 
 type Pet = {
   id: string
@@ -75,215 +76,141 @@ export function PetSlider({ pets, onActiveChange }: { pets: Pet[], onActiveChang
     }
   }, [checkScrollState, pets])
 
-  const bgColors = [
-    'linear-gradient(160deg,#c7bef7,#5D3FD3)',
-    'linear-gradient(160deg,#ffc5c5,#FF6B6B)',
-    'linear-gradient(160deg,#a8ede9,#4ECDC4)'
+  const bgGradients = [
+    'from-violet-500/80 to-purple-700/80',
+    'from-amber-400/80 to-rose-500/80',
+    'from-teal-400/80 to-emerald-600/80',
+    'from-blue-400/80 to-indigo-600/80'
   ]
-  const iconColors = ['#5D3FD3', '#FF6B6B', '#4ECDC4']
+
   const petCount = pets.length
 
-  const cardWidth = petCount === 1 ? 200 : petCount === 2 ? 155 : 120
-  const containerH = petCount === 1 ? 240 : petCount === 2 ? 240 : 255
-
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3 w-full">
       {/* Kart slider container */}
       <div className="relative w-full">
         {/* Sol tarafta gölge/geçiş göstergesi */}
         {petCount >= 3 && canScrollLeft && (
-          <div className="pointer-events-none absolute top-0 left-0 h-full w-8 z-30 bg-gradient-to-r from-bg-main to-transparent transition-opacity duration-300" />
+          <div className="pointer-events-none absolute top-0 left-0 h-full w-10 z-20 bg-gradient-to-r from-bg-main to-transparent transition-opacity duration-300" />
         )}
 
         {/* Sağ tarafta gölge/geçiş göstergesi */}
         {petCount >= 3 && canScrollRight && (
-          <div className="pointer-events-none absolute top-0 right-0 h-full w-8 z-30 bg-gradient-to-l from-bg-main to-transparent transition-opacity duration-300" />
+          <div className="pointer-events-none absolute top-0 right-0 h-full w-10 z-20 bg-gradient-to-l from-bg-main to-transparent transition-opacity duration-300" />
         )}
 
         <div
           ref={containerRef}
-          className={`relative flex items-end pb-2 ${
-            petCount >= 3
-              ? 'overflow-x-auto scrollbar-none scroll-smooth'
-              : 'justify-center overflow-hidden px-4'
+          className={`flex items-stretch gap-4 pb-2 pt-1 px-4 overflow-x-auto scrollbar-none scroll-smooth snap-x snap-mandatory ${
+            petCount <= 2 ? 'justify-center' : ''
           }`}
-          style={{ height: `${containerH}px` }}
         >
-          {/* Sol dolgu / spacer */}
-          {petCount >= 3 && <div className="w-4 flex-shrink-0 h-1 pointer-events-none" />}
-
           {pets.map((pet, index) => {
             const isActive = index === activeIndex
-            const bg = bgColors[index % 3]
-            const iconColor = iconColors[index % 3]
-            const activeH = petCount === 1 ? 220 : petCount === 2 ? 220 : 205
-            const sideH = petCount === 2 ? 185 : 172
-            const photoActiveH = petCount === 1 ? 170 : petCount === 2 ? 172 : 160
-            const photoSideH = petCount === 2 ? 142 : 130
+            const gradient = bgGradients[index % bgGradients.length]
 
             return (
               <div
                 key={pet.id}
                 data-testid="pet-card"
                 ref={(el) => { cardRefs.current[index] = el }}
-                className="relative flex-shrink-0 flex flex-col cursor-pointer transition-all duration-300 ease-out active:scale-[0.98]"
-                style={{
-                  width: `${cardWidth}px`,
-                  marginRight: index < pets.length - 1 ? '-28px' : '0',
-                  zIndex: isActive ? 20 : 5 - Math.min(index, 4)
-                }}
+                className={`snap-center flex-shrink-0 w-[200px] sm:w-[230px] rounded-[24px] transition-all duration-300 ease-out cursor-pointer select-none flex flex-col justify-between overflow-hidden bg-white border-2 ${
+                  isActive
+                    ? 'border-primary shadow-[0_12px_28px_-4px_rgba(93,63,211,0.22)] ring-4 ring-primary/10 scale-[1.02] z-10'
+                    : 'border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.05)] hover:border-slate-200 hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.08)] opacity-90 hover:opacity-100'
+                } active:scale-[0.98]`}
                 onClick={() => {
-                  setActiveIndex(index)
-                  centerActiveCard(index, true)
+                  if (!isActive) {
+                    setActiveIndex(index)
+                    centerActiveCard(index, true)
+                  }
                 }}
               >
-                {/* FOTOĞRAF — overlap olabilir */}
-                <div
-                  className="relative overflow-hidden rounded-t-[20px] border-[3px] border-b-0 flex items-center justify-center flex-shrink-0 transition-all duration-300"
-                  style={{
-                    height: isActive ? `${photoActiveH}px` : `${photoSideH}px`,
-                    background: bg,
-                    borderColor: isActive ? 'var(--color-primary)' : 'transparent'
-                  }}
-                >
+                {/* Visual Header / Avatar Section */}
+                <div className="relative h-[145px] w-full overflow-hidden bg-slate-100 flex items-center justify-center">
                   {pet.avatar_url ? (
                     <Image
                       src={pet.avatar_url}
                       alt={pet.name}
                       fill
-                      sizes={`${cardWidth}px`}
-                      className="object-cover object-center"
+                      sizes="(max-width: 768px) 50vw, 230px"
+                      className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
-                    <span className="block w-full text-center text-[68px] 
-                                     font-black text-white/35 mt-3 leading-none">
-                      {(pet.name || '?').charAt(0)}
-                    </span>
-                  )}
-
-                  {/* İsim overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 px-3 pb-2 z-10"
-                       style={{
-                         background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 100%)',
-                         paddingTop: '40%'
-                       }}>
-                    <span className={`font-black text-white truncate block ${isActive ? 'text-[14px]' : 'text-[12px]'}`}>{pet.name}</span>
-                  </div>
-
-                  {/* Overdue badge */}
-                  {pet.overdueCount > 0 && (
-                    <div className="absolute top-[10px] left-[10px] w-[22px] h-[22px] 
-                                    rounded-full bg-[var(--color-danger)] border-2 border-white
-                                    flex items-center justify-center 
-                                    text-white text-[10px] font-black z-20 shadow-sm">
-                      {pet.overdueCount}
+                    <div className={`w-full h-full bg-gradient-to-br ${gradient} flex items-center justify-center`}>
+                      <span className="text-4xl font-extrabold text-white/90 drop-shadow-sm">
+                        {(pet.name || '?').charAt(0).toUpperCase()}
+                      </span>
                     </div>
                   )}
+
+                  {/* Top-Right Overdue Badge */}
+                  {pet.overdueCount > 0 ? (
+                    <div className="absolute top-2.5 right-2.5 z-10 px-2 py-1 rounded-full bg-danger text-white text-2xs font-bold flex items-center gap-1 shadow-sm">
+                      <AlertCircle className="w-3.5 h-3.5 stroke-[2.5]" />
+                      <span>{pet.overdueCount} Aşı</span>
+                    </div>
+                  ) : (
+                    <div className="absolute top-2.5 right-2.5 z-10 w-7 h-7 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center text-emerald-600 shadow-sm">
+                      <Heart className="w-4 h-4 stroke-[2] fill-emerald-500/20" />
+                    </div>
+                  )}
+
+                  {/* Gradient Overlay & Pet Name */}
+                  <div className="absolute inset-x-0 bottom-0 pt-8 pb-2 px-3 bg-gradient-to-t from-black/75 via-black/30 to-transparent flex items-end">
+                    <h3 className="text-base font-bold text-white tracking-tight truncate drop-shadow-md">
+                      {pet.name}
+                    </h3>
+                  </div>
                 </div>
 
-                {/* BİLGİ ALANI */}
-                {isActive ? (
+                {/* Footer Info & Action Section */}
+                <div className="p-3 flex flex-col justify-between gap-2 flex-1 bg-white">
+                  {/* Status / Metric Row */}
+                  <div className="flex items-center justify-between gap-2 text-xs">
+                    <span className="font-medium text-text-secondary truncate">
+                      {pet.overdueCount > 0
+                        ? 'Aşı zamanı'
+                        : pet.weightVal
+                        ? `${pet.weightVal.toString().replace(/kg/gi, '').trim()} kg`
+                        : 'Sağlıklı & Mutlu'}
+                    </span>
+                    {pet.weightVal && pet.overdueCount === 0 && (
+                      <Scale className="w-3.5 h-3.5 text-text-tertiary stroke-[2] shrink-0" />
+                    )}
+                  </div>
+
+                  {/* Navigation Link */}
                   <Link
                     href={`/owner/pets/${pet.id}`}
-                    className="relative bg-white rounded-b-[20px] border-[3px] border-t-0 flex flex-col gap-[5px] px-2.5 py-2 flex-1 shadow-md transition-all duration-300"
-                    style={{
-                      borderColor: 'var(--color-primary)',
-                      borderTop: '2px solid var(--color-primary)',
-                      zIndex: 25
-                    }}
-                    onClick={e => e.stopPropagation()}
+                    className={`mt-1 pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-bold transition-colors ${
+                      isActive ? 'text-primary' : 'text-text-secondary hover:text-primary'
+                    }`}
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    {/* Satır 1: durum + ikon */}
-                    <div className="flex items-center gap-1.5 w-full">
-                      <span className="text-[9px] font-semibold text-[var(--color-text-muted)] 
-                                       flex-1 leading-tight truncate">
-                        {pet.overdueCount > 0
-                          ? 'Aşı zamanı'
-                          : pet.weightVal
-                          ? `${pet.weightVal.toString().replace(/kg/gi, '').trim()} kg`
-                          : 'Sağlıklı ve Mutlu'}
-                      </span>
-                      <div
-                        className="w-[18px] h-[18px] rounded-full flex items-center 
-                                   justify-center flex-shrink-0"
-                        style={{
-                          background: pet.overdueCount > 0 ? 'var(--color-danger)' : iconColor
-                        }}
-                      >
-                        <i className={`text-white text-[9px] 
-                          ${pet.overdueCount > 0 
-                            ? 'ti ti-alert-circle' 
-                            : 'ti ti-heart'}`} />
-                      </div>
-                    </div>
-
-                    {/* Satır 2: Profili Gör — SADECE aktif kartta */}
-                    <div className="flex items-center justify-center gap-[3px] 
-                                    pt-1 border-t border-[#f4f3fa] w-full">
-                      <span className="text-[9px] font-bold" 
-                            style={{color: 'var(--color-primary)'}}>
-                        Profili Gör
-                      </span>
-                      <i className="ti ti-chevron-right text-[10px]" 
-                         style={{color: 'var(--color-primary)'}} />
-                    </div>
+                    <span>Profili Gör</span>
+                    <ChevronRight className="w-4 h-4 stroke-[2.5]" />
                   </Link>
-                ) : (
-                  <div
-                    className="relative bg-white rounded-b-[20px] border-[3px] border-t-0 flex flex-col gap-[5px] px-2.5 py-2 flex-1"
-                    style={{
-                      borderColor: 'transparent',
-                      zIndex: 25
-                    }}
-                  >
-                    {/* Satır 1: durum + ikon */}
-                    <div className="flex items-center gap-1.5 w-full">
-                      <span className="text-[9px] font-semibold text-[var(--color-text-muted)] 
-                                       flex-1 leading-tight truncate">
-                        {pet.overdueCount > 0
-                          ? 'Aşı zamanı'
-                          : pet.weightVal
-                          ? `${pet.weightVal.toString().replace(/kg/gi, '').trim()} kg`
-                          : 'Sağlıklı ve Mutlu'}
-                      </span>
-                      <div
-                        className="w-[18px] h-[18px] rounded-full flex items-center 
-                                   justify-center flex-shrink-0"
-                        style={{
-                          background: pet.overdueCount > 0 ? 'var(--color-danger)' : iconColor
-                        }}
-                      >
-                        <i className={`text-white text-[9px] 
-                          ${pet.overdueCount > 0 
-                            ? 'ti ti-alert-circle' 
-                            : 'ti ti-heart'}`} />
-                      </div>
-                    </div>
-                  </div>
-                )}
+                </div>
               </div>
             )
           })}
-
-          {/* Sağ dolgu / spacer (en sağdaki kartın tam ortalanıp kesilmemesi için) */}
-          {petCount >= 3 && <div className="w-16 flex-shrink-0 h-1 pointer-events-none" />}
         </div>
       </div>
 
       {/* Dot göstergesi */}
       {pets.length > 1 && (
-        <div className="flex gap-[5px] justify-center pt-1">
+        <div className="flex items-center justify-center gap-1.5 pt-1">
           {pets.map((_, i) => (
             <button
               key={i}
               type="button"
               aria-label={`Pet ${i + 1}`}
-              className="h-[6px] rounded-full transition-all duration-300 
-                         cursor-pointer border-0 p-0 focus:outline-none"
-              style={{
-                width: i === activeIndex ? '20px' : '6px',
-                background: i === activeIndex ? 'var(--color-primary)' : '#e2e2e9'
-              }}
+              className={`h-2 rounded-full transition-all duration-300 cursor-pointer border-0 p-0 focus:outline-none ${
+                i === activeIndex
+                  ? 'w-6 bg-primary shadow-sm'
+                  : 'w-2 bg-slate-200 hover:bg-slate-300'
+              }`}
               onClick={() => {
                 setActiveIndex(i)
                 centerActiveCard(i, true)
@@ -295,3 +222,4 @@ export function PetSlider({ pets, onActiveChange }: { pets: Pet[], onActiveChang
     </div>
   )
 }
+

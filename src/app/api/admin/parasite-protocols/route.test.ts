@@ -50,7 +50,6 @@ describe('Admin Parasite Protocols API Security and Constraint Tests', () => {
   afterAll(async () => {
     // Test verisini temizleme (Fiziksel silme - service role kullanarak)
     if (createdTestId) {
-      console.log(`[TEST DATA CLEANUP] Deleting test protocol ID: ${createdTestId}`);
       const { error } = await adminClient
         .from('parasite_protocols')
         .delete()
@@ -58,7 +57,6 @@ describe('Admin Parasite Protocols API Security and Constraint Tests', () => {
       if (error) {
         console.error('[TEST DATA CLEANUP] Failed to delete test protocol:', error.message)
       } else {
-        console.log('[TEST DATA CLEANUP] Success')
       }
     }
   })

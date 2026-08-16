@@ -6,10 +6,10 @@ interface ActionSheetProps {
   event: ComputedEvent;
   anchorRef: React.RefObject<HTMLDivElement | null>;
   onClose: () => void;
-  onMarkDone: (id: string) => void;
-  onPostpone: (id: string) => void;
+  onMarkDone: (event: any) => void;
+  onPostpone: (event: any) => void;
   onEdit: (event: ComputedEvent) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string, event?: any) => void;
 }
 
 export function ActionSheet({ event, anchorRef, onClose, onMarkDone, onPostpone, onEdit, onDelete }: ActionSheetProps) {
@@ -88,13 +88,13 @@ export function ActionSheet({ event, anchorRef, onClose, onMarkDone, onPostpone,
       {event.computedStatus !== 'done' && (
         <>
           <button
-            onClick={(e) => { e.stopPropagation(); onMarkDone(event.id); onClose(); }}
+            onClick={(e) => { e.stopPropagation(); onMarkDone(event); onClose(); }}
             className="w-full text-left px-4 py-3 hover:bg-bg-main text-text-primary transition-colors font-medium border-b border-border-main/30"
           >
             ✓ Tamamlandı
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); onPostpone(event.id); onClose(); }}
+            onClick={(e) => { e.stopPropagation(); onPostpone(event); onClose(); }}
             className="w-full text-left px-4 py-3 hover:bg-bg-main text-text-primary transition-colors font-medium border-b border-border-main/30"
           >
             📅 1 Gün Ertele
@@ -108,7 +108,7 @@ export function ActionSheet({ event, anchorRef, onClose, onMarkDone, onPostpone,
         ✏️ Düzenle
       </button>
       <button 
-        onClick={(e) => { e.stopPropagation(); onDelete(event.id); onClose(); }}
+        onClick={(e) => { e.stopPropagation(); onDelete(event.id, event); onClose(); }}
         className="w-full text-left px-4 py-3 hover:bg-error/5 text-error transition-colors font-medium"
       >
         ❌ Sil

@@ -43,6 +43,6 @@
     "node_modules",
     "supabase/functions",
     "scratch",
-    "Odi.Pet"
+    "./Odi.Pet"
   ]
 }

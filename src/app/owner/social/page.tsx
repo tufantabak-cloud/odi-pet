@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { createAdminSupabaseClient } from '@/lib/supabase/server'
 import { SocialTabs } from '@/components/social/SocialTabs'
 import { Compass, MessageSquare, Trophy } from 'lucide-react'
@@ -40,6 +41,21 @@ export default async function SocialPage() {
   return (
     <div className="flex flex-col gap-6 pb-32 pb-safe w-full mx-auto font-sans animate-fadeInUp">
       
+      {/* Top Back Navigation */}
+      <div className="flex items-center px-2 -mb-2">
+        <Link href="/owner/dashboard" className="flex items-center gap-2 text-text-secondary hover:text-primary transition-colors text-[14px] font-bold group">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:-translate-x-0.5 transition-transform">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Ana Sayfa'ya Dön
+        </Link>
+      </div>
+
+      {/* Page Title Header */}
+      <div className="px-2 flex flex-col gap-1">
+        <h1 className="text-2xl font-bold text-text-primary tracking-tight">Sosyal & Topluluk</h1>
+        <p className="text-xs font-medium text-text-secondary">Sahiplendirme, kayıp ilanları ve dost eşleştirme ilanlarını keşfedin.</p>
+      </div>
 
       {/* 2. AKTİF ÖZELLİKLER (Client Component Tabs) */}
       <SocialTabs adoptions={adoptions} lostPets={lostPets} matches={matches} />
