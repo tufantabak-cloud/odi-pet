@@ -39,7 +39,8 @@ import {
   grantMembershipAction,
   expireMembershipAction,
   resetQuotaAction,
-  getUserMembershipDetailsAction
+  getUserMembershipDetailsAction,
+  extendAiPlusAction
 } from './actions';
 
 interface SettingsState {
@@ -254,7 +255,7 @@ export default function MembershipsManagementClient({
         if (!res.ok) throw new Error(data.error || 'İşlem başarısız');
         setToastMessage(`✓ Başarıyla +${addDaysAmount} Gün eklendi!`);
       } else {
-        await extendPlanAction(selectedDetailUser.id, addDaysAmount, addDaysReason);
+        await extendAiPlusAction(selectedDetailUser.id, addDaysAmount, addDaysReason);
         setToastMessage(`✓ Başarıyla +${addDaysAmount} Gün AI+ eklendi!`);
       }
 
