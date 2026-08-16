@@ -44,6 +44,11 @@ export async function grantReferralCredit(referralId: string) {
     throw new Error(`Referral record not found: ${referralId}`)
   }
 
+  if (referral.status !== 'qualified') {
+    console.warn(`Referral ${referralId} is not qualified. Credit skipped.`)
+    return { success: false, reason: 'NOT_QUALIFIED' }
+  }
+
   const referrerId = referral.referrer_id
   const refereeId = referral.referred_id
 
@@ -84,33 +89,29 @@ export async function grantReferralCredit(referralId: string) {
     referrerCreditDays += settings.referral_tier_5_bonus
   }
 
-  // 6. Davet Edene Kademeli Kredi Tanımla (grant_membership_credit RPC + MembershipService event/audit/notification)
-  await adminSupabase.rpc('grant_membership_credit', {
-    p_profile_id: referrerId,
-    p_days: referrerCreditDays,
-    p_reason: 'referral_referrer',
-    p_idempotency_key: `referral:${referralId}:referrer`,
-    p_metadata: { referral_id: referralId, role: 'referrer', invite_index: inviteIndex, days: referrerCreditDays },
-  })
-
+  // 6. Davet Edene Kademeli Kredi Tanımla (MembershipService event/audit/notification)
   await membershipService.extendMembership(
     {
       profileId: referrerId,
       additionalDays: referrerCreditDays,
       reason: 'REFERRAL_REWARD',
+      idempotencyKey: `referral:${referralId}:referrer`,
       metadata: { referral_id: referralId, invite_index: inviteIndex }
     },
     'referral'
   )
 
   // 7. Davet Edilene (Yeni Üye) Kredi Tanımla
-  await adminSupabase.rpc('grant_membership_credit', {
-    p_profile_id: refereeId,
-    p_days: settings.referee_welcome_days,
-    p_reason: 'referral_referee',
-    p_idempotency_key: `referral:${referralId}:referee`,
-    p_metadata: { referral_id: referralId, role: 'referee', days: settings.referee_welcome_days },
-  })
+  await membershipService.extendMembership(
+    {
+      profileId: refereeId,
+      additionalDays: settings.referee_welcome_days,
+      reason: 'REFERRAL_REWARD',
+      idempotencyKey: `referral:${referralId}:referee`,
+      metadata: { referral_id: referralId, role: 'referee' }
+    },
+    'referral'
+  )
 
   // 8. 5. Davette Kurucu Üye Rozeti ekle
   if (inviteIndex >= 5) {

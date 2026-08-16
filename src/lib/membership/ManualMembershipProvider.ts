@@ -159,7 +159,7 @@ export class ManualMembershipProvider implements IMembershipProvider {
       p_profile_id: params.profileId,
       p_days: params.additionalDays,
       p_reason: params.reason || 'EXTENSION',
-      p_idempotency_key: `extension_${Date.now()}_${Math.random()}`,
+      p_idempotency_key: params.idempotencyKey || `extension_${Date.now()}_${Math.random()}`,
       p_metadata: params.metadata || {}
     });
 
