@@ -1154,7 +1154,7 @@ export default function MembershipsManagementClient({
                 <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="İsim, soyisim veya e-posta ile arayın..."
+                  placeholder="İsim, soyisim veya e-posta ile filtrele/ara..."
                   value={detailSearchQuery}
                   onChange={(e) => setDetailSearchQuery(e.target.value)}
                   className="input-base w-full py-2 pl-9 pr-3 text-xs rounded-xl border border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
@@ -1162,52 +1162,96 @@ export default function MembershipsManagementClient({
               </div>
             </div>
 
-            {/* Arama Sonuçları */}
-            {detailSearchQuery && (
-              <div className="max-h-60 overflow-y-auto space-y-2 pr-1 border border-slate-100 rounded-xl p-2 bg-slate-50">
-                {loadingUserSearch ? (
-                  <div className="p-3 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
-                    <RotateCw className="w-4 h-4 animate-spin text-primary" />
-                    <span>Aranıyor...</span>
-                  </div>
-                ) : userSearchResults.length === 0 ? (
-                  <div className="p-3 text-center text-xs text-slate-400">Kullanıcı bulunamadı.</div>
-                ) : (
-                  userSearchResults.map((u) => {
-                    const fullName = [u.first_name, u.last_name].filter(Boolean).join(' ') || 'İsimsiz';
-                    // Bulduğumuz user'ı initialSubscriptions'dan zenginleştirelim
-                    const richUser = initialSubscriptions.find((s) => s.profile_id === u.id) || { ...u, profile_id: u.id, plan: 'free', status: 'expired' };
-                    const isSelected = selectedDetailUser?.id === u.id;
+            {/* Kullanıcı Listesi (Ana Liste) */}
+            <div className="overflow-x-auto relative">
+              <table className="w-full text-left text-sm border-collapse whitespace-nowrap">
+                <thead className="bg-slate-50 text-slate-500 font-bold text-2xs uppercase tracking-wider">
+                  <tr>
+                    <th className="p-3">Kullanıcı</th>
+                    <th className="p-3">Plan / Durum</th>
+                    <th className="p-3">AI+ / PRO Kalan</th>
+                    <th className="p-3">Toplam / Bitiş</th>
+                    <th className="p-3">Kredi Özeti</th>
+                    <th className="p-3">Davet (Kabul/T)</th>
+                    <th className="p-3 text-right sticky right-0 bg-slate-50 shadow-xs z-10">Aksiyon</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {/* Eğer arama varsa backend'den gelen sonuçları gösterelim veya initialSubscriptions içinde arayalım */}
+                  {(detailSearchQuery && !loadingUserSearch && userSearchResults.length > 0 
+                    ? userSearchResults.map(u => initialSubscriptions.find(s => s.profile_id === u.id) || { profile_id: u.id, profiles: u, plan: 'free', status: 'expired', daysLeftAiPlus: 0, daysLeftPro: 0, totalPremiumDays: 0, totalGrantedDays: 0, totalCreditsCount: 0, totalInvites: 0, qualifiedInvites: 0 })
+                    : (detailSearchQuery ? [] : initialSubscriptions)
+                  ).map((sub: any) => {
+                    const prof = sub.profiles || {};
+                    const fullName = [prof.first_name, prof.last_name].filter(Boolean).join(' ') || 'İsimsiz';
+                    const isSelected = selectedDetailUser?.profile_id === sub.profile_id;
+                    
                     return (
-                      <button
-                        key={u.id}
-                        type="button"
-                        onClick={() => {
-                          setDetailSearchQuery('');
-                          fetchUserDetails(richUser);
-                        }}
-                        className={`w-full text-left p-3 rounded-xl border flex items-center justify-between gap-3 transition-all ${
-                          isSelected ? 'bg-primary/5 border-primary/30' : 'bg-white border-slate-200 hover:border-slate-300'
-                        }`}
+                      <tr 
+                        key={sub.profile_id} 
+                        onClick={() => fetchUserDetails(sub)}
+                        className={`transition-colors cursor-pointer ${isSelected ? 'bg-primary/5' : 'hover:bg-slate-50/50'}`}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-700 text-xs font-extrabold flex items-center justify-center shrink-0">
-                            {(fullName[0] || '?').toUpperCase()}
+                        <td className="p-3 font-semibold text-slate-900">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-slate-100 text-slate-600 text-2xs flex items-center justify-center shrink-0">
+                              {(fullName[0] || '?').toUpperCase()}
+                            </div>
+                            <div>
+                              <div className="text-xs">{fullName}</div>
+                              <div className="text-2xs text-slate-400 font-normal">{prof.email}</div>
+                            </div>
                           </div>
-                          <div>
-                            <span className="text-sm font-bold text-slate-900 block">{fullName}</span>
-                            <span className="text-xs text-slate-500 block">{u.email}</span>
-                          </div>
-                        </div>
-                        <span className="text-2xs font-bold uppercase px-2 py-1 bg-slate-100 text-slate-600 rounded-md">
-                          Seç
-                        </span>
-                      </button>
+                        </td>
+                        <td className="p-3">
+                          <span className="px-2 py-0.5 rounded-full text-2xs font-extrabold uppercase bg-slate-100 text-slate-800 mr-2">
+                            {sub.plan || 'FREE'}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded-full text-2xs font-bold uppercase ${sub.status === 'active' ? 'text-emerald-600' : 'text-slate-400'}`}>
+                            {sub.status || 'EXPIRED'}
+                          </span>
+                        </td>
+                        <td className="p-3 text-xs font-bold">
+                          <span className="text-emerald-600 mr-2">AI+: {sub.daysLeftAiPlus > 0 ? sub.daysLeftAiPlus : '-'}</span>
+                          <span className="text-purple-600">PRO: {sub.daysLeftPro > 0 ? sub.daysLeftPro : '-'}</span>
+                        </td>
+                        <td className="p-3 text-xs">
+                          <div className="font-bold text-slate-800">{sub.totalPremiumDays > 0 ? `${sub.totalPremiumDays} Gün` : '-'}</div>
+                          <div className="text-2xs text-slate-400">{sub.premiumEndDate ? new Date(sub.premiumEndDate).toLocaleDateString('tr-TR') : '-'}</div>
+                        </td>
+                        <td className="p-3 text-xs">
+                          <div className="font-bold text-amber-600">+{sub.totalGrantedDays || 0} Gün</div>
+                          <div className="text-2xs text-slate-400">{sub.totalCreditsCount || 0} İşlem</div>
+                        </td>
+                        <td className="p-3 text-xs">
+                          <div className="font-bold text-blue-600">{sub.qualifiedInvites || 0} / {sub.totalInvites || 0}</div>
+                        </td>
+                        <td className="p-3 text-right sticky right-0 bg-white shadow-xs z-10">
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); fetchUserDetails(sub); }}
+                            className="px-3 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 text-2xs font-bold rounded-lg transition-all"
+                          >
+                            Seç & Yönet
+                          </button>
+                        </td>
+                      </tr>
                     );
-                  })
-                )}
-              </div>
-            )}
+                  })}
+                  
+                  {/* Yükleniyor veya Bulunamadı */}
+                  {detailSearchQuery && loadingUserSearch && (
+                    <tr><td colSpan={7} className="p-6 text-center text-xs text-slate-500"><RotateCw className="w-4 h-4 animate-spin inline mr-2"/>Aranıyor...</td></tr>
+                  )}
+                  {detailSearchQuery && !loadingUserSearch && userSearchResults.length === 0 && (
+                    <tr><td colSpan={7} className="p-6 text-center text-xs text-slate-400">Sonuç bulunamadı.</td></tr>
+                  )}
+                  {!detailSearchQuery && initialSubscriptions.length === 0 && (
+                    <tr><td colSpan={7} className="p-6 text-center text-xs text-slate-400">Kayıtlı kullanıcı verisi yok.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* Kullanıcı Seçildiğinde Panel Gösterimi */}

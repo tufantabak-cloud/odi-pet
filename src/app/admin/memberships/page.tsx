@@ -56,11 +56,17 @@ export default async function AdminMembershipsPage() {
     .order('created_at', { ascending: false })
     .limit(100);
 
-  const { data: allUserSubs } = await adminSupabase
-    .from('user_subscriptions')
-    .select('*')
-    .limit(200);
+  const profileIds = allProfiles?.map(p => p.id) || [];
 
+  const [
+    { data: allUserSubs },
+    { data: userCredits },
+    { data: userReferrals }
+  ] = await Promise.all([
+    adminSupabase.from('user_subscriptions').select('*').in('profile_id', profileIds),
+    adminSupabase.from('membership_credits').select('profile_id, credit_days').in('profile_id', profileIds),
+    adminSupabase.from('referrals').select('referrer_id, status').in('referrer_id', profileIds)
+  ]);
 
   const totalMonthDaysGranted = monthCredits?.reduce((acc, curr) => acc + (curr.credit_days || 0), 0) ?? 0;
 
@@ -97,6 +103,14 @@ export default async function AdminMembershipsPage() {
       computedPlan = prof.premium_tier;
     }
 
+    const uCredits = (userCredits || []).filter((c: any) => c.profile_id === prof.id);
+    const totalGrantedDays = uCredits.reduce((acc: number, c: any) => acc + (c.credit_days || 0), 0);
+    const totalCreditsCount = uCredits.length;
+
+    const uReferrals = (userReferrals || []).filter((r: any) => r.referrer_id === prof.id);
+    const totalInvites = uReferrals.length;
+    const qualifiedInvites = uReferrals.filter((r: any) => r.status === 'qualified').length;
+
     return {
       id: sub?.id || prof.id,
       profile_id: prof.id,
@@ -114,7 +128,11 @@ export default async function AdminMembershipsPage() {
       totalPremiumDays,
       ai_plus_until: sub?.ai_plus_until || null,
       pro_until: sub?.pro_until || null,
-      premiumEndDate: state.validUntil ? state.validUntil.toISOString() : null
+      premiumEndDate: state.validUntil ? state.validUntil.toISOString() : null,
+      totalGrantedDays,
+      totalCreditsCount,
+      totalInvites,
+      qualifiedInvites
     };
   });
 
