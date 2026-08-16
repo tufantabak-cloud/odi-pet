@@ -133,6 +133,8 @@ export interface MembershipDetails {
   status: SubscriptionState;
   provider: MembershipProviderType | string;
   reason?: string;
+  aiPlusUntil?: string | null;
+  proUntil?: string | null;
   currentPeriodEnd?: string | null;
   createdAt?: string | null;
   profile?: {

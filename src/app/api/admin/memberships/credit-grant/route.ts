@@ -94,8 +94,8 @@ export async function POST(req: NextRequest) {
   for (const targetUserId of targetUserIds) {
     const idempotencyKey = `admin_grant:${timestamp}:${targetUserId}`
 
-    // 1. RPC çağrısı dene
-    await adminSupabase.rpc('grant_membership_credit', {
+    // 1. RPC çağrısı
+    const { error: rpcError } = await adminSupabase.rpc('grant_membership_credit', {
       p_profile_id: targetUserId,
       p_days: creditDays,
       p_reason: creditReason,
@@ -107,23 +107,12 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // Legacy premium_tier update removed.
-    // C) Kredi defterine (membership_credits) yazımı garanti et
-    try {
-      await adminSupabase.from('membership_credits').insert({
-        profile_id: targetUserId,
-        credit_days: creditDays,
-        reason: creditReason,
-        idempotency_key: idempotencyKey,
-        metadata: {
-          granted_by: user.id,
-          note: note || 'Admin tarafından hediye edildi.',
-          granted_at: new Date().toISOString(),
-        },
-      })
-    } catch (insErr: unknown) {
-      console.warn(`[AdminCreditGrant] membership_credits insert skipped:`, insErr instanceof Error ? insErr.message : String(insErr))
+    if (rpcError) {
+      console.error(`[AdminCreditGrant] RPC failed for user ${targetUserId}:`, rpcError.message);
+      results.push({ userId: targetUserId, success: false, error: rpcError.message });
+      continue;
     }
+
     results.push({ userId: targetUserId, success: true })
   }
 

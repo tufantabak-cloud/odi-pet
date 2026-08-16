@@ -1,5 +1,6 @@
 import { getCurrentProfile } from '@/lib/auth/get-current-profile';
 import { createAdminSupabaseClient } from '@/lib/supabase/server';
+import { MembershipCalculator } from '@/lib/membership/MembershipCalculator';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -87,25 +88,17 @@ export default async function AdminMembershipsPage() {
 
   // Formatted Subscriptions for Phase 18 Layer (All Registered Profiles)
   const formattedSubscriptions = (allProfiles || []).map((prof: any) => {
-    const sub = subMap.get(prof.id) || {};
+    const sub = subMap.get(prof.id) || null;
+    const state = MembershipCalculator.calculateMembershipState(sub);
+    const { daysLeftAiPlus, daysLeftPro, totalPremiumDays } = state;
 
-    const aiPlusUntil = sub.ai_plus_until;
-    const proUntil = sub.pro_until;
-
-    const aiPlusEnd = aiPlusUntil ? new Date(aiPlusUntil) : null;
-    const proEnd = proUntil ? new Date(proUntil) : null;
-
-    const daysLeftAiPlus = aiPlusEnd && aiPlusEnd > now ? Math.ceil((aiPlusEnd.getTime() - now.getTime()) / 86400000) : 0;
-    const proBaseDate = aiPlusEnd && aiPlusEnd > now ? aiPlusEnd : now;
-    const daysLeftPro = proEnd && proEnd > proBaseDate ? Math.ceil((proEnd.getTime() - proBaseDate.getTime()) / 86400000) : 0;
-    const totalPremiumDays = proEnd && proEnd > now ? Math.ceil((proEnd.getTime() - now.getTime()) / 86400000) : 0;
-
-    let computedPlan = sub.plan || prof.premium_tier || 'free';
-    if (daysLeftAiPlus > 0) computedPlan = 'ai_plus';
-    else if (daysLeftPro > 0) computedPlan = 'pro';
+    let computedPlan = state.computedPlan;
+    if (!sub && prof.premium_tier && prof.premium_tier !== 'free') {
+      computedPlan = prof.premium_tier;
+    }
 
     return {
-      id: sub.id || prof.id,
+      id: sub?.id || prof.id,
       profile_id: prof.id,
       profiles: {
         first_name: prof.first_name,
@@ -114,12 +107,12 @@ export default async function AdminMembershipsPage() {
         role: prof.role,
       },
       plan: computedPlan,
-      status: sub.status || (totalPremiumDays > 0 ? 'active' : 'free'),
-      provider: sub.provider || 'referral',
+      status: state.status.toLowerCase(),
+      provider: sub?.provider || 'referral',
       daysLeftAiPlus,
       daysLeftPro,
       totalPremiumDays,
-      premiumEndDate: proUntil || sub.current_period_end
+      premiumEndDate: state.validUntil ? state.validUntil.toISOString() : null
     };
   });
 

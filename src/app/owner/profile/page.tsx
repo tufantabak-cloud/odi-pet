@@ -1,5 +1,6 @@
 import { getCurrentProfile, getSessionUser } from '@/lib/auth/get-current-profile'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { MembershipCalculator } from '@/lib/membership/MembershipCalculator'
 import { defaultRepository } from '@/lib/features/entitlement/repository'
 import { logout } from '@/features/auth/actions'
 import Link from 'next/link'
@@ -83,27 +84,21 @@ export default async function ProfileMenuPage({
     .eq('profile_id', profile?.id ?? '')
     .maybeSingle()
 
-  const now = new Date()
-  const aiPlusEnd = userSubscription?.ai_plus_until ? new Date(userSubscription.ai_plus_until) : null
-  const proEnd = userSubscription?.pro_until ? new Date(userSubscription.pro_until) : null
+  const state = MembershipCalculator.calculateMembershipState(userSubscription)
+  const { daysLeftAiPlus, daysLeftPro, totalPremiumDays } = state
+  let computedPlan = state.computedPlan
+  if (!userSubscription && (profile as any)?.premium_tier && (profile as any)?.premium_tier !== 'free') {
+    computedPlan = (profile as any).premium_tier
+  }
 
-  const daysLeftAiPlus = aiPlusEnd && aiPlusEnd > now ? Math.ceil((aiPlusEnd.getTime() - now.getTime()) / 86400000) : 0
-  const proBaseDate = aiPlusEnd && aiPlusEnd > now ? aiPlusEnd : now
-  const daysLeftPro = proEnd && proEnd > proBaseDate ? Math.ceil((proEnd.getTime() - proBaseDate.getTime()) / 86400000) : 0
-  const totalPremiumDays = proEnd && proEnd > now ? Math.ceil((proEnd.getTime() - now.getTime()) / 86400000) : 0
-
-  let computedPlan = userSubscription?.plan || (profile as any)?.premium_tier || 'free'
-  if (daysLeftAiPlus > 0) computedPlan = 'ai_plus'
-  else if (daysLeftPro > 0) computedPlan = 'pro'
-
-  const hasActiveSub = daysLeftAiPlus > 0 || daysLeftPro > 0 || userSubscription?.status === 'active' || userSubscription?.status === 'trialing'
+  const hasActiveSub = daysLeftAiPlus > 0 || daysLeftPro > 0 || state.status === 'ACTIVE' || state.status === 'TRIAL'
   
   let planDisplayName = 'Odi Free'
   if (computedPlan === 'ai_plus') planDisplayName = 'Odi AI+ (En Üst Paket)'
   else if (computedPlan === 'pro') planDisplayName = 'Odi Pro'
 
   let daysLeft = totalPremiumDays
-  let validUntil: string | null = userSubscription?.pro_until || userSubscription?.current_period_end || null
+  let validUntil: string | null = state.validUntil ? state.validUntil.toISOString() : null
 
   let hasVaccineRecords = false
   if (pets && pets.length > 0) {
