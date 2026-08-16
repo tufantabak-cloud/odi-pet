@@ -160,7 +160,7 @@ BEGIN
 
   -- PRO süresi de bitti → FREE'ye düşür
   FOR rec IN
-    SELECT id, profile_id
+    SELECT id, profile_id, plan
     FROM public.user_subscriptions
     WHERE plan IN ('pro', 'ai_plus')
       AND status IN ('active', 'trialing')
