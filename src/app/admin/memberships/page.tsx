@@ -112,6 +112,8 @@ export default async function AdminMembershipsPage() {
       daysLeftAiPlus,
       daysLeftPro,
       totalPremiumDays,
+      ai_plus_until: sub?.ai_plus_until || null,
+      pro_until: sub?.pro_until || null,
       premiumEndDate: state.validUntil ? state.validUntil.toISOString() : null
     };
   });

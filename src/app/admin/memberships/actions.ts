@@ -131,3 +131,19 @@ export async function resetQuotaAction(profileId: string, featureKey: string, re
   revalidatePath('/admin/memberships');
   return result;
 }
+
+export async function getUserMembershipDetailsAction(profileId: string) {
+  const admin = await ensureAdmin();
+  const { createAdminSupabaseClient } = await import('@/lib/supabase/server');
+  const adminSupabase = createAdminSupabaseClient();
+  
+  const [credits, events] = await Promise.all([
+    adminSupabase.from('membership_credits').select('*').eq('profile_id', profileId).order('created_at', { ascending: false }),
+    adminSupabase.from('membership_events').select('*').eq('profile_id', profileId).order('created_at', { ascending: false })
+  ]);
+  
+  return { 
+    credits: credits.data || [], 
+    events: events.data || [] 
+  };
+}
