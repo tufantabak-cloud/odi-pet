@@ -74,15 +74,13 @@ describe('AI Vet Functional QA', () => {
     }
     testUserId = userData.user.id;
 
-    // 2. Grant credits
-    await supabase.from('feature_usage').insert([
-      {
-        user_id: testUserId,
-        feature_key: 'ai_vet_assessments',
-        used_count: 0,
-        limit_count: 100
-      }
-    ]);
+    // 2. Grant ai_plus tier & generous quota
+    await supabase.from('user_subscriptions').upsert({
+      profile_id: testUserId,
+      plan: 'ai_plus',
+      status: 'active',
+      ai_plus_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    }, { onConflict: 'profile_id' });
 
     // 3. Create a test pet (Odi Dog)
     const { data: petData, error: petError } = await supabase.from('pets').insert([
@@ -112,6 +110,8 @@ describe('AI Vet Functional QA', () => {
     if (testUserId) {
       await new Promise(resolve => setTimeout(resolve, 2000));
       await supabase.from('pets').delete().eq('owner_id', testUserId);
+      await supabase.from('user_subscriptions').delete().eq('profile_id', testUserId);
+      await supabase.from('feature_usage').delete().eq('profile_id', testUserId);
       await supabase.from('feature_usage').delete().eq('user_id', testUserId);
       await supabase.auth.admin.deleteUser(testUserId);
     }

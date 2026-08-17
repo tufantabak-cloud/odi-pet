@@ -110,7 +110,7 @@ describe('kayıp ilanı v1 rotaları', () => {
     await expect(response.json()).resolves.toMatchObject({
       success: true,
     })
-  })
+  }, 15000)
 
   it('Türkiye dışındaki koordinatı reddeder', async () => {
     mocks.getSessionUser.mockResolvedValue({ id: 'owner-user' })

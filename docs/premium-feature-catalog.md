@@ -4,7 +4,7 @@
 
 **Toplam Özellik Sayısı:** 14
 
-**Son Güncelleme:** 2026-08-17T17:07:16.499Z
+**Son Güncelleme:** 2026-08-17T17:28:29.666Z
 
 ## Tüm Özellikler (Feature Registry)
 
