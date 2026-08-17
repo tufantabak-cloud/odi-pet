@@ -192,11 +192,11 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
           body: JSON.stringify({ status: 'completed' })
         })
       } else {
-        const supabase = createBrowserSupabaseClient()
-        await supabase
-          .from('health_schedules')
-          .update({ status: 'completed' })
-          .eq('id', taskId)
+        await fetch(`/api/pets/${activePetId}/schedules/${taskId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'completed' })
+        })
       }
       router.refresh()
     } catch (err) {
