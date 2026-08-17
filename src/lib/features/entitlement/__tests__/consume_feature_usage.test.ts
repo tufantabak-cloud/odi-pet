@@ -7,31 +7,34 @@ describe('consume_feature_usage RPC Integration', () => {
   const testFeatureKey = 'test_feature_rpc';
 
   beforeAll(async () => {
-    // Ensure test profile exists (if constraints require it, otherwise skip)
-    // We try to insert a profile, ignore if exists
-    await supabase.from('profiles').upsert({
+    // Ensure test profile exists
+    const { error: profileError } = await supabase.from('profiles').upsert({
       id: testProfileId,
       email: 'rpc-test@odi.pet',
       first_name: 'RPC',
       last_name: 'Test',
       role: 'owner'
     }, { onConflict: 'id' });
+    if (profileError) throw profileError;
 
     // Ensure feature definition
-    await supabase.from('app_features').upsert({
+    const { error: featError } = await supabase.from('app_features').upsert({
       key: testFeatureKey,
       status: 'active',
-      name: 'Test Feature',
+      label: 'Test Feature',
       description: 'Integration test feature'
     }, { onConflict: 'key' });
+    if (featError) throw featError;
 
-    // Ensure limits (Free = Quota 1, AI+ = Quota 5)
-    await supabase.from('feature_limits').upsert([
+    // Ensure limits (Free = Quota 1, AI+ = Quota 5) matching live RPC contract
+    const { error: limitsError } = await supabase.from('feature_limits').upsert([
       {
         feature_key: testFeatureKey,
         plan_tier: 'free',
         limit_type: 'quota',
         limit_value: 1,
+        window_value: 30,
+        window_unit: 'day',
         window_days: 30,
         is_enabled: true
       },
@@ -40,10 +43,13 @@ describe('consume_feature_usage RPC Integration', () => {
         plan_tier: 'ai_plus',
         limit_type: 'quota',
         limit_value: 5,
+        window_value: 30,
+        window_unit: 'day',
         window_days: 30,
         is_enabled: true
       }
     ], { onConflict: 'feature_key,plan_tier' });
+    if (limitsError) throw limitsError;
     
     // Clear usage
     await supabase.from('feature_usage').delete().eq('profile_id', testProfileId).eq('feature_key', testFeatureKey);
@@ -84,12 +90,13 @@ describe('consume_feature_usage RPC Integration', () => {
     // 1. Upgrade user to ai_plus
     const futureDate = new Date();
     futureDate.setFullYear(futureDate.getFullYear() + 1);
-    await supabase.from('user_subscriptions').upsert({
+    const { error: subError } = await supabase.from('user_subscriptions').upsert({
       profile_id: testProfileId,
       plan: 'ai_plus',
       status: 'active',
       ai_plus_until: futureDate.toISOString()
     }, { onConflict: 'profile_id' });
+    if (subError) throw subError;
 
     // 2. Consume 2 (should succeed now, since AI+ limit is 5 and current usage is 1)
     const res3 = await supabase.rpc('consume_feature_usage', {

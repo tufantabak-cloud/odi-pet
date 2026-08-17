@@ -3,6 +3,7 @@ import { createAdminSupabaseClient } from '@/lib/supabase/server';
 import { featureRegistry } from '@/lib/features/registry';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 
 export async function GET(req: NextRequest) {
   try {
@@ -20,7 +21,7 @@ export async function GET(req: NextRequest) {
     
     if (fs.existsSync(indexFilePath)) {
       const idx = JSON.parse(fs.readFileSync(indexFilePath, 'utf8'));
-      localHash = require('crypto').createHash('sha256').update(JSON.stringify(idx)).digest('hex');
+      localHash = crypto.createHash('sha256').update(JSON.stringify(idx)).digest('hex');
       registryVersion = idx.version || '1.0.0';
     }
 

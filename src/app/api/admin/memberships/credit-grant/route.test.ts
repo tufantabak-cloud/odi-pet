@@ -193,7 +193,7 @@ describe('Admin API: POST /api/admin/memberships/credit-grant', () => {
     const { error: anonErr } = await anonClient.rpc('grant_membership_credit', {
       p_profile_id: testUserId, p_days: 10, p_reason: 'test', p_idempotency_key: 'test3', p_metadata: {}
     })
-    expect(anonErr?.message).toContain('Could not find the function') // PGRST202
+    expect(anonErr?.message).toMatch(/permission denied|Could not find the function/i)
 
     // API Authorization check (unauthorized user)
     vi.mocked(authModule.getSessionUser).mockResolvedValue({ id: testUserId } as any)

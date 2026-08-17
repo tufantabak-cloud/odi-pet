@@ -9,6 +9,7 @@ const mockSubscriptionData = {
   plan: 'ai_plus',
   status: 'active',
   provider: 'manual',
+  ai_plus_until: new Date(Date.now() + 60 * 86400000).toISOString(),
   current_period_end: new Date(Date.now() + 60 * 86400000).toISOString(),
   profiles: {
     first_name: 'Test',
@@ -20,6 +21,7 @@ const mockSubscriptionData = {
 
 vi.mock('@/lib/supabase/server', () => ({
   createAdminSupabaseClient: vi.fn(() => ({
+    rpc: vi.fn().mockResolvedValue({ error: null }),
     from: vi.fn(() => ({
       select: vi.fn(() => ({
         eq: vi.fn(() => ({
