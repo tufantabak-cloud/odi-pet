@@ -40,7 +40,6 @@ import { PostponeModal } from '@/components/pets/common/PostponeModal'
 import { CompletionDetailsModal } from '@/components/pets/common/CompletionDetailsModal'
 import ConfirmModal from '@/components/ui/ConfirmModal'
 import FloatingSOS from '@/components/FloatingSOS'
-import RoutineStatsGrid from '@/components/pets/stats/RoutineStatsGrid'
 import AiDocumentScanner from '@/components/ai/AiDocumentScanner'
 import { assessWeight } from '@/lib/vetStandards/weightStandards'
 
@@ -1548,8 +1547,6 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
             {activeTab === 'ozet' && (
               <div className="p-4 flex flex-col gap-6">
-                {/* Routine Stats Visualization - Özet Sekmesinde */}
-                <RoutineStatsGrid petId={pet.id} />
                 <div className="lg:grid lg:grid-cols-12 lg:gap-6 lg:items-start flex flex-col gap-4">
                   
                   {/* SOL SÜTUN (Masaüstü: lg:col-span-7) */}

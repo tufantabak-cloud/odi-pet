@@ -13,6 +13,7 @@ import OnboardingProgressCard from '@/components/OnboardingProgressCard'
 import PetRecommendationsCard from '@/components/dashboard/PetRecommendationsCard'
 import PendingInviteModal from '@/components/pets/family/PendingInviteModal'
 import WeatherPawAlert from '@/components/dashboard/WeatherPawAlert'
+import OdiNoticedWeightCard from '@/components/dashboard/OdiNoticedWeightCard'
 import { Stethoscope, Shield, Calendar, Sparkles, ChevronRight, Gift, Scan, Syringe, Bug, Scale, Utensils, Scissors, Activity, Plus } from 'lucide-react'
 import { Badge } from '@/components/ui/primitives'
 
@@ -143,6 +144,12 @@ export default function DashboardClient({
       {pets && pets.length > 0 && (
         <div className="px-[var(--space-4)] pt-2 flex flex-col gap-2">
           {activePet && <WeatherPawAlert activePet={activePet} />}
+          {activePet && (
+            <OdiNoticedWeightCard
+              activePet={activePet}
+              allWeightLogs={allWeightLogs}
+            />
+          )}
           <DashboardSmartCards
             pets={pets}
             activePetId={activePetId}
