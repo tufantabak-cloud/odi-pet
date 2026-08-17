@@ -1,5 +1,6 @@
 import {
-  Home, Store, Users, Bot,
+  Sparkles,
+  Home, Store, Users,
   MessageCircle, Wallet, Calendar,
   ShoppingBag, FileText, MapPin,
   User, Gift, Scan, Plus,
@@ -13,7 +14,7 @@ export const ICON_MAP: Record<string, LucideIcon> = {
   'ti-home': Home,
   'ti-building-store': Store,
   'ti-users': Users,
-  'ti-robot': Bot,
+  'ti-robot': Sparkles,
   'ti-message': MessageCircle,
   'ti-wallet': Wallet,
   'ti-calendar': Calendar,

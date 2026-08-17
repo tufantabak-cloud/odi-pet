@@ -8,7 +8,7 @@ import { resolveActionHref } from '@/components/BottomNav'
 import { getNavModules, type ModuleEntry } from '@/lib/modules/registry'
 import {
   LayoutGrid,
-  Bot,
+  Sparkles,
   Stethoscope,
   Users,
   BookOpen,
@@ -51,7 +51,7 @@ const fallbackActionMenuItems = [
 // Kenar menüsü ikonları — anahtarlar modül kaydındaki `key` ile eşleşir.
 const MODULE_ICONS: Record<string, React.ReactNode> = {
   dashboard:     <LayoutGrid className="w-[18px] h-[18px]" />,
-  'ai-vet':      <Bot className="w-[18px] h-[18px]" />,
+  'ai-vet':      <Sparkles className="w-[18px] h-[18px] text-purple-600" />,
   services:      <Stethoscope className="w-[18px] h-[18px]" />,
   social:        <Users className="w-[18px] h-[18px]" />,
   learn:         <BookOpen className="w-[18px] h-[18px]" />,

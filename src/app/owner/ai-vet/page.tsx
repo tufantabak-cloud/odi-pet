@@ -299,7 +299,7 @@ export default function AIVetPage() {
           hintKey="ai_vet_intro"
           title="Pet seç, semptomları anlat"
           message="Üst kısımdan evcil hayvanını seç ve şikayetini yaz. AI, cinsine ve yaşına göre kişisel değerlendirme yapacak."
-          icon="🤖"
+          icon="✨"
           position="bottom"
         />
         <div className="flex gap-4 items-start">
@@ -309,10 +309,8 @@ export default function AIVetPage() {
           </button>
           <div>
             <h1 className="text-[24px] font-extrabold text-text-primary tracking-tight flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary-soft text-primary flex items-center justify-center shrink-0">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/>
-                </svg>
+              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center shrink-0">
+                <Sparkles className="w-5 h-5" />
               </div>
               AI Vet
             </h1>

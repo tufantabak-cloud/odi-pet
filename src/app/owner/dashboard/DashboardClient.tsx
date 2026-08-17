@@ -300,8 +300,8 @@ export default function DashboardClient({
             {/* AI Vet — Primary */}
             <Link href="/owner/ai-vet" prefetch={false}
               className="flex flex-col items-center justify-center gap-2.5 p-4 rounded-[24px] min-h-[96px] cursor-pointer bg-white border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.08)] hover:border-slate-200 hover:scale-[1.02] transition-all duration-200 active:scale-[0.98]">
-              <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-                <Stethoscope className="w-5 h-5 stroke-[2]" />
+              <div className="w-11 h-11 rounded-2xl bg-purple-100 flex items-center justify-center text-purple-600">
+                <Sparkles className="w-5 h-5 stroke-[2]" />
               </div>
               <div className="text-center">
                 <div className="text-xs font-semibold text-text-primary leading-tight">Odi AI Vet</div>

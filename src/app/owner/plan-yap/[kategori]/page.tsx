@@ -8,7 +8,7 @@ import { useWizardStore } from '@/store/wizardStore';
 import { WizardShell } from '@/components/wizard/WizardShell';
 import { WizardStep } from '@/components/wizard/WizardStep';
 import { PetAvatar } from '@/components/ui/PetAvatar';
-import { CheckCircle2, Search, ScanLine, Check } from 'lucide-react';
+import { CheckCircle2, Search, ScanLine, Check, Sparkles } from 'lucide-react';
 import { TaskCategory, getFilteredSubCategories, getSmartDefault } from '@/lib/tasks/taskDefaults';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -1350,8 +1350,8 @@ export default function WizardOrchestrator() {
 
               {/* AI Vet yönlendirme */}
               {selectedSymptoms.length > 0 && (
-                <div className="p-3 bg-primary/5 rounded-xl border border-primary/20 flex items-center gap-3">
-                  <span className="text-xl">🤖</span>
+                <div className="p-3 bg-purple-50 rounded-xl border border-purple-200 flex items-center gap-3">
+                  <Sparkles className="w-5 h-5 text-purple-600 shrink-0" />
                   <div className="flex-1">
                     <p className="text-[12px] font-bold text-primary">
                       AI Vet'e danışmak ister misin?
