@@ -23,7 +23,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Eksik parametreler' }, { status: 400 })
     }
 
-    if (record_type !== 'vaccine_card') {
+    if (!['vaccine_card', 'food_packaging'].includes(record_type)) {
       return NextResponse.json({ error: 'Desteklenmeyen belge tipi' }, { status: 400 })
     }
 
@@ -51,9 +51,79 @@ export async function POST(req: Request) {
 
     const petSpecies = normalizeSpecies(pet.species)
 
-    // ── vaccine_code çözümleme ─────────────────────────────────
-    // Kullanıcı SmartScanner ekranında zaten seçim yaptıysa (candidates arasından
-    // veya CUSTOM), doğrudan onu kullan — tekrar arama yapma.
+    // ── GIDA / MAMA PAKETİ İŞLEME (food_packaging) ────────────────
+    if (record_type === 'food_packaging') {
+      const addedGrams = Number(parsed_data.package_size_grams || 0)
+      const mealsPerDay = Number(parsed_data.meals_per_day || 0)
+      const dailyGrams = Number(parsed_data.daily_grams || 0)
+      
+      const { data: currentInv } = await supabase
+        .from('food_inventory')
+        .select('*')
+        .eq('pet_id', pet_id)
+        .maybeSingle()
+
+      // Eğer mevcut stok varsa tahmini olarak güncelle
+      const prevStock = currentInv?.current_stock_grams || 0
+      const lastRefill = currentInv?.last_refill_date
+      let estimatedStock = prevStock
+      
+      if (lastRefill && currentInv?.estimated_daily_usage) {
+        const passedMs = Date.now() - new Date(lastRefill).getTime()
+        const passedDays = Math.max(0, Math.floor(passedMs / (1000 * 60 * 60 * 24)))
+        estimatedStock = Math.max(0, prevStock - (passedDays * currentInv.estimated_daily_usage))
+      }
+      
+      const newStockGrams = estimatedStock + addedGrams
+      const estimatedDailyUsage = dailyGrams > 0 ? dailyGrams : currentInv?.estimated_daily_usage
+      
+      let nextRefillEstimate = null
+      if (estimatedDailyUsage && estimatedDailyUsage > 0) {
+        const daysLeft = Math.floor(newStockGrams / estimatedDailyUsage)
+        const nextDate = new Date()
+        nextDate.setDate(nextDate.getDate() + daysLeft)
+        nextRefillEstimate = nextDate.toISOString()
+      }
+
+      const { data: inventoryData, error: inventoryError } = await supabase
+        .from('food_inventory')
+        .upsert({
+          pet_id,
+          current_stock_grams: newStockGrams,
+          estimated_daily_usage: estimatedDailyUsage || null,
+          last_refill_date: new Date().toISOString(),
+          next_refill_estimate: nextRefillEstimate,
+          low_stock_threshold_days: currentInv?.low_stock_threshold_days || 5
+        }, { onConflict: 'pet_id' })
+        .select()
+        .single()
+
+      if (inventoryError) {
+        console.error('Food inventory update error:', inventoryError)
+        return NextResponse.json({ error: 'Stok güncellenirken bir hata oluştu.' }, { status: 500 })
+      }
+
+      // Ayrıca nutrition_logs'a bir kayıt ekleyelim ki Timeline'da görünsün
+      await supabase.from('nutrition_logs').insert({
+        pet_id,
+        food_form: parsed_data.food_type || 'dry',
+        amount_grams: addedGrams,
+        meal_type: 'other',
+        log_date: new Date().toISOString().split('T')[0],
+        notes: `SmartScanner ile ${parsed_data.food_brand || ''} ${parsed_data.food_product || ''} paket eklendi.`
+      })
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          record: inventoryData,
+          planCompleted: false
+        }
+      })
+    }
+
+    // ── AŞI KARTI İŞLEME (vaccine_card) ─────────────────────────────────
+    // vaccine_code çözümleme
     let vaccineCode: string | null = parsed_data.vaccine_code || null
     let brandId: string | null = parsed_data.brand_id || null
 
@@ -111,7 +181,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // ── vaccine_records_v2'ye insert (X.1 — createVaccineRecord servisi) ────────────
+    // vaccine_records_v2'ye insert (X.1 — createVaccineRecord servisi)
     const isBrandSelected = !!brandId
     const vaccineResult = await createVaccineRecord(supabase, {
       pet_id,
