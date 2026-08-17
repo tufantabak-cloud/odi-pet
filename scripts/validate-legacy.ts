@@ -65,7 +65,10 @@ function findLegacyTermsInCode(): string[] {
         fullPath.includes('src\\lib\\membership') ||
         fullPath.includes(path.join('src', 'app', 'admin', 'memberships')) ||
         fullPath.includes('src/app/admin/memberships') ||
-        fullPath.includes('src\\app\\admin\\memberships')
+        fullPath.includes('src\\app\\admin\\memberships') ||
+        fullPath.includes(path.join('src', 'app', 'api', 'admin', 'memberships')) ||
+        fullPath.includes('src/app/api/admin/memberships') ||
+        fullPath.includes('src\\app\\api\\admin\\memberships')
       ) {
         continue;
       }

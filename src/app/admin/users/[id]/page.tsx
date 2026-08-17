@@ -283,7 +283,7 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
                 premiumUntil={subscription?.pro_until || subscription?.current_period_end || null}
                 aiPlusUntil={subscription?.ai_plus_until || null}
                 proUntil={subscription?.pro_until || null}
-                plan={subscription?.plan || null}
+                plan={subscription?.['plan'] || null}
               />
 
               {subscription && (

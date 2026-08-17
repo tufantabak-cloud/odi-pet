@@ -195,7 +195,7 @@ export async function GET(req: NextRequest) {
 
         await adminClient
           .from('profiles')
-          .update({ premium_tier: 'ai_plus', premium_until: proEnd.toISOString() })
+          .update({ tier: 'ai_plus' } as any)
           .eq('id', userId)
 
         await adminClient.from('membership_events').insert({

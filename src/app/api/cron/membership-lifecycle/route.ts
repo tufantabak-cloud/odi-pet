@@ -52,7 +52,7 @@ export async function GET(req: Request) {
           // profiles tablosunu da güncelle
           await supabase
             .from('profiles')
-            .update({ premium_tier: 'pro' } as any)
+            .update({ tier: 'pro' } as any)
             .eq('id', sub.profile_id);
 
           // Olay kaydet
@@ -101,7 +101,7 @@ export async function GET(req: Request) {
         if (!updateErr) {
           await supabase
             .from('profiles')
-            .update({ premium_tier: 'free', premium_until: null } as any)
+            .update({ tier: 'free' } as any)
             .eq('id', sub.profile_id);
 
           await supabase.from('membership_events').insert({

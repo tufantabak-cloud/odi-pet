@@ -87,8 +87,8 @@ export default async function ProfileMenuPage({
   const state = MembershipCalculator.calculateMembershipState(userSubscription)
   const { daysLeftAiPlus, daysLeftPro, totalPremiumDays } = state
   let computedPlan = state.computedPlan
-  if (!userSubscription && (profile as any)?.premium_tier && (profile as any)?.premium_tier !== 'free') {
-    computedPlan = (profile as any).premium_tier
+  if (!userSubscription && (profile as any)?.tier && (profile as any)?.tier !== 'free') {
+    computedPlan = (profile as any).tier
   }
 
   const hasActiveSub = daysLeftAiPlus > 0 || daysLeftPro > 0 || state.status === 'ACTIVE' || state.status === 'TRIAL'
