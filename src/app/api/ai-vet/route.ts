@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI, Schema, SchemaType } from '@google/generative-ai'
+import { Schema, SchemaType } from '@google/generative-ai'
+import { generateStructuredContent } from '@/lib/ai/gemini-gateway'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { getIP, aiVetRateLimit } from '@/lib/auth-security'
 import { withAPIFeatureGuard } from '@/lib/features/guards/APIFeatureGuard'
@@ -55,6 +56,13 @@ interface ChatMessage {
   role: 'user' | 'model'
   parts: { text: string }[]
 }
+
+/**
+ * Model zinciri: birincil model kapasite hatasi (503) verirse yedege dusulur.
+ * gemini-2.0-flash bu repoda ai-score ve journal/ai-summary uclarinda halihazirda
+ * kullanildigi icin bilinen-calisir bir yedek; structured output'u destekler.
+ */
+const AI_VET_MODEL_CHAIN = ['gemini-3.6-flash', 'gemini-2.0-flash']
 
 function safeFallbackResponse(): AIVetResponse {
   return {
@@ -265,25 +273,24 @@ Sana verilen JSON formatındaki \`PetAIContext\` objesi, bu pet hakkındaki TEK 
 
   // 4. Gemini Structured Output Call
   try {
-    const genAI = new GoogleGenerativeAI(apiKey)
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-3.6-flash',
-      systemInstruction: systemInstruction,
-      generationConfig: {
-        maxOutputTokens: 2048,
-        responseMimeType: "application/json",
-        responseSchema: aiVetResponseSchema,
-      }
-    })
-
     const chatHistory: ChatMessage[] = history.slice(0, -1).map(m => ({
       role: m.role,
       parts: [{ text: m.text }],
     }))
 
-    const chat = model.startChat({ history: chatHistory })
-    const result = await chat.sendMessage(lastMessage)
-    const raw = result.response.text()
+    // Saglayici cagrisi merkezi gateway uzerinden: gecici 429/5xx hatalarinda
+    // ustel geri cekilme ile tekrar dener, ardindan yedek modele duser.
+    const generation = await generateStructuredContent({
+      apiKey,
+      models: AI_VET_MODEL_CHAIN,
+      systemInstruction,
+      responseSchema: aiVetResponseSchema,
+      maxOutputTokens: 2048,
+      history: chatHistory,
+      message: lastMessage,
+    })
+    const raw = generation.text
+    const modelUsed = generation.modelUsed
 
     let structuredResponse: AIVetResponse
     try {
@@ -313,7 +320,7 @@ Sana verilen JSON formatındaki \`PetAIContext\` objesi, bu pet hakkındaki TEK 
         user_prompt: lastMessage,
         ai_response: structuredResponse,
         severity: structuredResponse.severity,
-        powered_by: 'gemini-3.6-flash'
+        powered_by: modelUsed
       }).then(({ error }) => {
         if (error) console.error('[ai-vet] Failed to write ai_vet_logs:', error)
       })
@@ -321,9 +328,9 @@ Sana verilen JSON formatındaki \`PetAIContext\` objesi, bu pet hakkındaki TEK 
       console.error('[ai-vet] Error setting up ai_vet_logs insert:', logErr)
     }
 
-    return NextResponse.json({ 
-      response: structuredResponse, 
-      powered_by: 'gemini-3.6-flash',
+    return NextResponse.json({
+      response: structuredResponse,
+      powered_by: modelUsed,
       contextUsed: backendContextUsed
     })
   } catch (err) {

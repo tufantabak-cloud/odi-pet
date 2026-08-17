@@ -148,7 +148,9 @@ describe('AI Vet Functional QA', () => {
 
     expect(response.status).toBe(200);
     if (!checkFallback(data.response)) {
-      expect(data.powered_by).toBe('gemini-3.6-flash');
+      // Gateway kapasite hatasinda yedek modele dusebilir; iddia "bir AI modeli
+      // cevapladi" olmali, "su model cevapladi" degil.
+      expect(['gemini-3.6-flash', 'gemini-2.0-flash']).toContain(data.powered_by);
       expect(data.response.assessment_available).toBe(true);
       expect(data.response.is_emergency).toBe(false);
       expect(data.response.summary).toBeDefined();
