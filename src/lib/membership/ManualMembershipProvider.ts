@@ -153,13 +153,14 @@ export class ManualMembershipProvider implements IMembershipProvider {
   }
 
   async extendMembership(params: ExtendMembershipParams): Promise<{ success: boolean; membership: MembershipDetails }> {
+    if (!params.idempotencyKey) throw new Error("idempotencyKey is required");
     const supabase = this.getClient();
 
     const { error } = await supabase.rpc('grant_membership_credit', {
       p_profile_id: params.profileId,
       p_days: params.additionalDays,
       p_reason: params.reason || 'EXTENSION',
-      p_idempotency_key: params.idempotencyKey || `extension_${Date.now()}_${Math.random()}`,
+      p_idempotency_key: params.idempotencyKey,
       p_metadata: params.metadata || {}
     });
 
@@ -236,21 +237,7 @@ export class ManualMembershipProvider implements IMembershipProvider {
   }
 
   async grantQuota(params: GrantQuotaParams): Promise<{ success: boolean }> {
-    const supabase = this.getClient();
-    const { error } = await supabase.from('feature_limits').upsert(
-      {
-        feature_key: params.featureKey,
-        plan_tier: 'manual_override',
-        limit_type: 'quota',
-        limit_value: params.quotaAmount,
-        window_value: 30,
-        window_unit: 'day',
-        is_enabled: true
-      },
-      { onConflict: 'feature_key,plan_tier' }
-    );
-
-    return { success: !error };
+    throw new Error('grantQuota is not supported. Use feature_overrides instead.');
   }
 
   async resetQuota(params: ResetQuotaParams): Promise<{ success: boolean }> {

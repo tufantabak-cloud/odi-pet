@@ -24,8 +24,13 @@ export async function GET() {
     .order('created_at', { ascending: false })
 
   const qualifiedCount = invitesList?.filter(i => i.status === 'qualified').length ?? 0
-  const milestoneBonusDays = qualifiedCount >= 5 ? 60 : 0
-  const earnedDays = (qualifiedCount * 30) + milestoneBonusDays
+  
+  const { data: credits } = await supabase
+    .from('membership_credits')
+    .select('credit_days')
+    .eq('profile_id', user.id)
+    .eq('reason', 'REFERRAL_REWARD');
+  const earnedDays = credits?.reduce((sum, c) => sum + (c.credit_days || 0), 0) || 0;
 
   const tier = await defaultRepository.getUserTier(user.id)
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://odi-petcare.vercel.app'

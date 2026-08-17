@@ -9,8 +9,7 @@ export class EntitlementPolicy {
     dbStatus: any,
     planKey: PlanKey,
     limitData: any, // The specific limit record from feature_limits
-    usage: number,
-    bundleContext?: { hasBundle: boolean, isBundleFeatureEnabled: boolean }
+    usage: number
   ): FeatureAccessResult {
 
     const baseResult: FeatureAccessResult = {
@@ -45,11 +44,6 @@ export class EntitlementPolicy {
     }
     if (dbStatus.status === 'deprecated' || featureDef.state === 'DEPRECATED') {
       return { ...baseResult, reason: FeatureAccessReason.DEPRECATED };
-    }
-
-    // 3. LAYER 2: BUNDLE ACCESS CHECK
-    if (bundleContext && !bundleContext.isBundleFeatureEnabled) {
-      return { ...baseResult, reason: FeatureAccessReason.BUNDLE_DISABLED };
     }
 
     // 4. LAYER 3: LIMIT RECORD & EXPLICIT DISABLE CHECK

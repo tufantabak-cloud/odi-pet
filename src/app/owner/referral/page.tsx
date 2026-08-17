@@ -14,14 +14,18 @@ export default async function ReferralPage() {
   if (!user) redirect('/login')
 
   const supabase = await createServerSupabaseClient()
-  const { data: userSubscription } = await supabase.from('user_subscriptions').select('current_period_end, status').eq('profile_id', user.id).maybeSingle()
+  const { data: userSubscription } = await supabase.from('user_subscriptions').select('current_period_end, status, ai_plus_until, pro_until').eq('profile_id', user.id).maybeSingle()
   const hasActiveSub = userSubscription?.status === 'active' || userSubscription?.status === 'trialing'
-  let daysLeft = 90;
-  if (userSubscription?.current_period_end) {
-     const end = new Date(userSubscription.current_period_end).getTime()
-     daysLeft = Math.max(0, Math.ceil((end - Date.now()) / (1000 * 60 * 60 * 24)))
-  } else if (hasActiveSub) {
-     daysLeft = 36500;
+  let daysLeft = 0;
+  if (hasActiveSub) {
+    const endDates = [
+      userSubscription?.ai_plus_until ? new Date(userSubscription.ai_plus_until).getTime() : 0,
+      userSubscription?.pro_until ? new Date(userSubscription.pro_until).getTime() : 0,
+      userSubscription?.current_period_end ? new Date(userSubscription.current_period_end).getTime() : 0
+    ].filter(t => t > Date.now());
+    if (endDates.length > 0) {
+      daysLeft = Math.max(0, Math.ceil((Math.max(...endDates) - Date.now()) / (1000 * 60 * 60 * 24)));
+    }
   }
 
   const { data: profile } = await supabase
@@ -37,8 +41,13 @@ export default async function ReferralPage() {
     .order('created_at', { ascending: false })
 
   const qualifiedCount = invitesList?.filter(i => i.status === 'qualified').length ?? 0
-  const milestoneBonusDays = qualifiedCount >= 5 ? 60 : 0
-  const earnedDays = (qualifiedCount * 30) + milestoneBonusDays
+  
+  const { data: credits } = await supabase
+    .from('membership_credits')
+    .select('credit_days')
+    .eq('profile_id', user.id)
+    .eq('reason', 'REFERRAL_REWARD');
+  const earnedDays = credits?.reduce((sum, c) => sum + (c.credit_days || 0), 0) || 0;
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://odi-petcare.vercel.app'
   const referralCode = profile?.referral_code ?? '—'

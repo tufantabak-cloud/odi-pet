@@ -43,6 +43,19 @@ import {
   extendAiPlusAction
 } from './actions';
 
+/**
+ * crypto.randomUUID() yalnizca guvenli baglamda (HTTPS / localhost) tanimlidir.
+ * Proje LAN uzerinden http ile dev erisimini destekliyor (bkz. next.config.ts
+ * allowedDevOrigins, package.json dev:mobile). O baglamda randomUUID undefined
+ * olur; guvenli bir yedege dusuyoruz. Uretimde (HTTPS) her zaman ilk dal calisir.
+ */
+function newIdempotencyKey(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `k-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 interface SettingsState {
   welcome_credit_days: number;
   per_pet_credit_days: number;
@@ -146,12 +159,14 @@ export default function MembershipsManagementClient({
   const [addDaysPlan, setAddDaysPlan] = useState<'ai_plus'|'pro'>('pro');
   const [addDaysAmount, setAddDaysAmount] = useState<number>(30);
   const [addDaysReason, setAddDaysReason] = useState<string>('campaign');
+  const [detailActionKey, setDetailActionKey] = useState<string>('');
 
   // Phase 18 Provider Action Modal State
   const [activeModalUser, setActiveModalUser] = useState<any | null>(null);
   const [modalActionType, setModalActionType] = useState<string | null>(null);
   const [modalDays, setModalDays] = useState(30);
   const [modalReason, setModalReason] = useState('');
+  const [modalActionKey, setModalActionKey] = useState<string>('');
 
   useEffect(() => {
     fetch('/api/admin/memberships/settings')
@@ -163,6 +178,17 @@ export default function MembershipsManagementClient({
       })
       .catch(console.error);
   }, []);
+
+  // Idempotency anahtarları panel/modal AÇILDIĞINDA bir kez üretilir.
+  // Tıklama anında üretilmesi durumunda çift tıklama iki farklı anahtar
+  // doğurur ve mükerrer gün ekleme koruması devre dışı kalır.
+  useEffect(() => {
+    if (selectedDetailUser) setDetailActionKey(newIdempotencyKey());
+  }, [selectedDetailUser]);
+
+  useEffect(() => {
+    if (activeModalUser && modalActionType) setModalActionKey(newIdempotencyKey());
+  }, [activeModalUser, modalActionType]);
 
   // Live User Search for Picker Mode
   useEffect(() => {
@@ -255,9 +281,12 @@ export default function MembershipsManagementClient({
         if (!res.ok) throw new Error(data.error || 'İşlem başarısız');
         setToastMessage(`✓ Başarıyla +${addDaysAmount} Gün eklendi!`);
       } else {
-        await extendAiPlusAction(selectedDetailUser.id, addDaysAmount, addDaysReason);
+        await extendAiPlusAction(selectedDetailUser.id, addDaysAmount, addDaysReason, detailActionKey);
         setToastMessage(`✓ Başarıyla +${addDaysAmount} Gün AI+ eklendi!`);
       }
+      
+      // Regenerate key for subsequent actions
+      setDetailActionKey(newIdempotencyKey());
 
       // Refresh details
       await fetchUserDetails(selectedDetailUser);
@@ -411,11 +440,11 @@ export default function MembershipsManagementClient({
         const pid = activeModalUser.profile_id || activeModalUser.id;
 
         if (modalActionType === 'grant_membership') {
-          await grantMembershipAction(pid, modalDays, modalReason);
+          await grantMembershipAction(pid, modalDays, modalReason, modalActionKey);
         } else if (modalActionType === 'assign_plan') {
           await assignPlanAction(pid, 'ai_plus', modalDays, modalReason);
         } else if (modalActionType === 'extend_plan') {
-          await extendPlanAction(pid, modalDays, modalReason);
+          await extendPlanAction(pid, modalDays, modalReason, modalActionKey);
         } else if (modalActionType === 'expire_membership') {
           await expireMembershipAction(pid);
         } else if (modalActionType === 'start_trial') {
@@ -429,6 +458,7 @@ export default function MembershipsManagementClient({
         setToastMessage(`✓ Üyelik aksiyonu (${modalActionType}) başarıyla uygulandı.`);
         setActiveModalUser(null);
         setModalActionType(null);
+        setModalActionKey('');
         setTimeout(() => setToastMessage(null), 4000);
       } catch (err: any) {
         alert(err.message || 'Aksiyon uygulanamadı.');

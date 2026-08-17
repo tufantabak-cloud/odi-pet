@@ -229,8 +229,11 @@ export class MembershipService {
   }
 
   // 7. GrantMembership
-  async grantMembership(profileId: string, days: number, reason: string = 'MANUAL_GRANT', adminId?: string) {
-    return this.extendPlan({ profileId, additionalDays: days, reason, adminId }, 'manual');
+  async grantMembership(profileId: string, days: number, reason: string = 'MANUAL_GRANT', adminId?: string, idempotencyKey?: string) {
+    // Idempotency anahtarı çağıran tarafından üretilmelidir. Burada üretilirse
+    // her çağrı yeni anahtar alır ve mükerrer gün ekleme koruması çalışmaz.
+    if (!idempotencyKey) throw new Error('grantMembership requires an idempotencyKey');
+    return this.extendPlan({ profileId, additionalDays: days, reason, adminId, idempotencyKey }, 'manual');
   }
 
   // 8. ExpireMembership
@@ -297,9 +300,10 @@ export class MembershipService {
         additionalDays: rewardDays,
         reason: `REFERRAL_REWARD:${referredId}`,
         adminId: adminId,
-        metadata: { referral_id: refData.id, referred_id: referredId }
+        metadata: { referral_id: refData.id, referred_id: referredId },
+        idempotencyKey: `legacy_referral_${referrerId}_${referredId}`
       },
-      'referral'
+      'manual'
     );
   }
 

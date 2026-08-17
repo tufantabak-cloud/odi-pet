@@ -89,7 +89,7 @@ export class EntitlementRepository {
       .from('feature_limits')
       .select('*')
       .eq('feature_key', featureKey)
-      .eq('plan', tier)
+      .eq('plan_tier', tier)
       .single();
 
     if (error || !data) return null;
@@ -104,7 +104,7 @@ export class EntitlementRepository {
     
     let query = this.supabase
       .from('feature_usage')
-      .select('usage_count')
+      .select('count')
       .eq('feature_key', featureKey)
       .eq('profile_id', userId);
 
@@ -119,7 +119,7 @@ export class EntitlementRepository {
     if (error || !data) return 0;
     
     // Sum all usage rows if there are multiple (e.g. daily rows)
-    return data.reduce((acc, row) => acc + (row.usage_count || 0), 0);
+    return data.reduce((acc, row) => acc + (row.count || 0), 0);
   }
 }
 

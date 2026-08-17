@@ -29,41 +29,11 @@ export default function UpgradeButton({
   const [error, setError] = useState<string | null>(null)
 
   const handleUpgrade = async () => {
-    if (disabled || isLoading) return
-
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      const response = await fetch('/api/payments/create-checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ plan, interval }),
-      })
-      const result = (await response.json()) as {
-        url?: string
-        error?: string
-      }
-
-      if (!response.ok || !result.url) {
-        setError(
-          ERROR_MESSAGES[result.error ?? ''] ??
-            'Ödeme sayfası açılamadı. Lütfen tekrar dene.'
-        )
-        return
-      }
-
-      window.location.assign(result.url)
-    } catch {
-      setError('Bağlantı kurulamadı. Lütfen internetini kontrol edip tekrar dene.')
-    } finally {
-      setIsLoading(false)
-    }
+    // Payment is disabled for launch
+    return
   }
 
-  const buttonLabel = label || 'Güvenli Ödemeye Geç →'
+  const buttonLabel = 'Yakında';
 
   return (
     <div className="flex flex-col gap-2">
@@ -71,10 +41,11 @@ export default function UpgradeButton({
         type="button"
         onClick={handleUpgrade}
         className={className}
-        disabled={disabled || isLoading}
-        aria-busy={isLoading}
+        disabled={true}
+        aria-busy={false}
+        title="Ödeme altyapısı lansman sonrası aktif edilecektir."
       >
-        {isLoading ? 'Ödeme sayfası hazırlanıyor…' : buttonLabel}
+        {buttonLabel}
       </button>
 
       {error && (

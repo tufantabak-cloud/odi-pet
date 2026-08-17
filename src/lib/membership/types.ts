@@ -73,7 +73,7 @@ export interface ExtendMembershipParams {
   reason?: string;
   adminId?: string;
   metadata?: Record<string, any>;
-  idempotencyKey?: string;
+  idempotencyKey: string;
 }
 
 export interface CancelMembershipParams {

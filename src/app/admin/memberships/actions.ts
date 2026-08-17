@@ -43,14 +43,16 @@ export async function changePlanAction(profileId: string, newPlan: string, reaso
   return result;
 }
 
-export async function extendPlanAction(profileId: string, additionalDays: number = 30, reason?: string) {
+export async function extendPlanAction(profileId: string, additionalDays: number = 30, reason?: string, idempotencyKey?: string) {
+  if (!idempotencyKey) throw new Error("idempotencyKey is required");
   const admin = await ensureAdmin();
   const result = await membershipService.extendPlan(
     {
       profileId,
       additionalDays,
       reason: reason || 'ADMIN_EXTENSION',
-      adminId: admin.id
+      adminId: admin.id,
+      idempotencyKey
     },
     'manual'
   );
@@ -58,12 +60,14 @@ export async function extendPlanAction(profileId: string, additionalDays: number
   return result;
 }
 
-export async function extendAiPlusAction(profileId: string, additionalDays: number = 30, reason?: string) {
+export async function extendAiPlusAction(profileId: string, additionalDays: number = 30, reason?: string, idempotencyKey?: string) {
+  if (!idempotencyKey) throw new Error("idempotencyKey is required");
   const admin = await ensureAdmin();
   
   // Direct PG logic to bypass PostgREST limits and strictly grant AI+
   const { Client } = await import('pg');
-  const dbUrl = process.env.DATABASE_URL || 'postgresql://postgres:postgres@127.0.0.1:54322/postgres';
+  if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required");
+  const dbUrl = process.env.DATABASE_URL;
   const pgClient = new Client({ connectionString: dbUrl });
   
   try {
@@ -94,7 +98,7 @@ export async function extendAiPlusAction(profileId: string, additionalDays: numb
       profileId, 
       additionalDays, 
       reason || 'ADMIN_AI_PLUS_EXTENSION',
-      `admin_ai_plus_${Date.now()}_${Math.random()}`,
+      idempotencyKey,
       JSON.stringify({ granted_by: admin.id, target: 'ai_plus', note: 'Direct AI+ Grant' })
     ]);
     
@@ -163,9 +167,10 @@ export async function resumeMembershipAction(profileId: string, reason?: string)
   return result;
 }
 
-export async function grantMembershipAction(profileId: string, days: number = 30, reason?: string) {
+export async function grantMembershipAction(profileId: string, days: number = 30, reason?: string, idempotencyKey?: string) {
+  if (!idempotencyKey) throw new Error("idempotencyKey is required");
   const admin = await ensureAdmin();
-  const result = await membershipService.grantMembership(profileId, days, reason || 'ADMIN_GRANT', admin.id);
+  const result = await membershipService.grantMembership(profileId, days, reason || 'ADMIN_GRANT', admin.id, idempotencyKey);
   revalidatePath('/admin/memberships');
   return result;
 }

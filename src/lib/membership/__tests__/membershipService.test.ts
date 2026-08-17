@@ -97,7 +97,8 @@ describe('MembershipService Additive State Provider', () => {
       {
         profileId: 'user-1',
         additionalDays: 30,
-        reason: 'PROMOTION'
+        reason: 'PROMOTION',
+        idempotencyKey: 'test-idempotency-key'
       },
       'manual'
     );

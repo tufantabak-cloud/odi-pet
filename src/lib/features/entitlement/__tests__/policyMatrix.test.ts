@@ -52,12 +52,6 @@ describe('EntitlementPolicy Exhaustive Decision Matrix', () => {
     expect(res.reason).toBe(FeatureAccessReason.DEPRECATED);
   });
 
-  it('5. Returns BUNDLE_DISABLED when bundle feature is disabled', () => {
-    const res = EntitlementPolicy.evaluate('test', dummyFeatureDef, dummyDbStatus, 'pro', { is_enabled: true, limit_type: 'unlimited' }, 0, { hasBundle: true, isBundleFeatureEnabled: false });
-    expect(res.allowed).toBe(false);
-    expect(res.reason).toBe(FeatureAccessReason.BUNDLE_DISABLED);
-  });
-
   it('6. Returns MISSING_LIMIT_RECORD when limit record is null', () => {
     const res = EntitlementPolicy.evaluate('test', dummyFeatureDef, dummyDbStatus, 'pro', null, 0);
     expect(res.allowed).toBe(false);
