@@ -1,13 +1,25 @@
 import {
   Sparkles,
-  Home, Store, Users,
-  MessageCircle, Wallet, Calendar,
-  ShoppingBag, FileText, MapPin,
-  User, Gift, Scan, Plus,
-  HeartPulse, PenLine, MoreHorizontal,
-  CalendarPlus, ClipboardPlus
+  Home,
+  Store,
+  Users,
+  MessageCircle,
+  Wallet,
+  Calendar,
+  ShoppingBag,
+  FileText,
+  MapPin,
+  User,
+  Gift,
+  Scan,
+  Plus,
+  HeartPulse,
+  PenLine,
+  MoreHorizontal,
+  CalendarPlus,
+  ClipboardPlus,
+  type LucideIcon,
 } from 'lucide-react'
-import { LucideIcon } from 'lucide-react'
 import React from 'react'
 
 export const ICON_MAP: Record<string, LucideIcon> = {
