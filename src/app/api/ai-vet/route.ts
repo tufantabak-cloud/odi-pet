@@ -1,55 +1,117 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GoogleGenerativeAI, Schema, SchemaType } from '@google/generative-ai'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { getIP, aiVetRateLimit } from '@/lib/auth-security'
 import { withAPIFeatureGuard } from '@/lib/features/guards/APIFeatureGuard'
 import { getUsageEngine } from '@/lib/features/usage'
+import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
+import { AIVetResponse } from '@/app/owner/ai-vet/ai-vet-types'
 
 const SYSTEM_INSTRUCTION = `Sen Odi AI Vet adlı bir veteriner triaj asistanısın. Türkçe konuşuyorsun.
+Odi Pet sistemindeki evcil hayvan kayıtlarını inceleyerek bağlamsal ve empatik bir ön değerlendirme yapıyorsun.
 
 Görevin:
-1. Kullanıcının tarif ettiği evcil hayvan belirtilerini dinle.
-2. Bağlamsal, açıklayıcı ve empatik bir yanıt ver — iki ila dört paragraf.
-3. Risk seviyesini (düşük / orta / kritik) ve gerekçesini her zaman açıkla.
-4. Mümkünse olası nedenleri listele (örn. besin zehirlenmesi, enfeksiyon vb.).
-5. Somut, uygulanabilir bir sonraki adım öner.
-6. Yanıtının en sonuna, sadece şu formatta tek satır ekle (başka bir şey yazma):
-   [SCORE:XX][SEV:low|medium|critical]
-   XX = 0-100 arası tam sayı risk skoru
+1. Kullanıcının tarif ettiği belirtileri ve pet bağlamını (yaş, ırk vs.) dikkate al.
+2. Klinik bir risk skoru ve ciddiyet durumu (low / medium / critical / emergency) belirle.
+3. Eksik bilgileri veya kırmızı bayrakları (red flags) tespit et.
+4. Veteriner ziyareti gerekiyorsa zamanlamasını öner.
+5. Kullanıcıya empatik bir özet ve alınması gereken aksiyonları sun.
+6. KLİNİK SINIRLAR: Bu kesinlikle klinik bir teşhis değildir, her zaman "olası durumlar" dili kullan. ASLA reçete yazma, ASLA ilaç dozu önerme, ASLA hastanın mevcut ilacının dozunu değiştirme. Sadece ilaç dozu sorulduğu için klinik severity'i yükseltme (örn. critical yapma) ve risk_score'u null bırak. Gerçek bir klinik acil durum semptomu varsa o zaman severity'i yükselt.
+7. ÖNEMLİ ÜRÜN KURALI (PRODUCT INVARIANT): Odi Pet YALNIZCA kedi (cat) ve köpek (dog) türlerini destekler. Kuş, tavşan, vb. desteklenmez. Desteklenmeyen bir türden bahsediliyorsa "assessment_available: false" dön ve reddet.
+8. ZAMANLAMA / TRİYAJ (TIME_SENSITIVE): Eğer kullanıcı "sabaha kadar bekleyebilir miyim?" gibi zaman hassasiyeti belirten bir soru sorarsa, beklemenin güvenli olup olmadığını, hangi belirtiler ("red flags") çıkarsa derhal eyleme geçmesi gerektiğini açıkça belirt.
+9. VERİ AYRIMI (CONVERSATION vs CANONICAL): Kullanıcının bu sohbette verdiği anlık bilgiler (örn: "Bugün 5 kg tarttım") sadece bu konuşma için geçerlidir, kalıcı bir tıbbi kayıt olarak değerlendirilemez.
+10. VERİ EKSİKLİĞİ (NOT_RECORDED): "Kayıt yok" kesinlikle "yok/sağlıklı" anlamına gelmez. "Kayıtlarımızda bu bilgi bulunmuyor" de.
+11. AKSİYON (ALLOWLIST): Yalnızca sana verilen allowlist eylemlerinden ('add_weight', 'go_to_vaccines', 'go_to_parasites', 'go_to_nutrition', 'go_to_health', 'find_vet') uygun olanları öner. Önerdiğin aksiyon SADECE SORGUNUN BAĞLAMIYLA SEMANTİK OLARAK İLİŞKİLİYSE döndürülmelidir (Örn: Aşı konusu -> go_to_vaccines). İlgisiz durumlarda otomatik aksiyon ekleme.
+12. Verdiğin JSON formatındaki yanıt tamamen yapılandırılmış ve kurallara uygun olmalıdır.`
 
-Kurallar:
-- Skor 0-30 → sev: low
-- Skor 31-69 → sev: medium
-- Skor 70-100 → sev: critical
-- Yalnızca evcil hayvan sağlığı ile ilgili konulara cevap ver.
-- Kullanıcı alakasız bir şey sorarsa nazikçe yönlendir.
-- Tıbbi kesinlik iddiasında bulunma; "olabilir", "muhtemelen" gibi ifadeler kullan.
-- Veteriner ziyaretinin yerini tutmadığını vurgula.`
+const aiVetResponseSchema: Schema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    assessment_available: { type: SchemaType.BOOLEAN },
+    is_emergency: { type: SchemaType.BOOLEAN },
+    emergency_reason: { type: SchemaType.STRING },
+    emergency_action: { type: SchemaType.STRING },
+    severity: { type: SchemaType.STRING },
+    risk_score: { type: SchemaType.INTEGER },
+    confidence_score: { type: SchemaType.INTEGER },
+    summary: { type: SchemaType.STRING },
+    missing_critical_info: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+    possible_explanations: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+    recommended_actions: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+    red_flags: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+    when_to_see_vet: { type: SchemaType.STRING },
+    follow_up_questions: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+    suggested_app_actions: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+    reasoning: { type: SchemaType.STRING },
+    known_context: { type: SchemaType.STRING },
+    missing_information: { type: SchemaType.STRING },
+  },
+  required: [
+    'assessment_available', 'is_emergency', 'severity'
+  ],
+}
 
 interface ChatMessage {
   role: 'user' | 'model'
   parts: { text: string }[]
 }
 
-function parseScoreLine(text: string): { score: number; severity: string; cleanText: string } {
-  const match = text.match(/\[SCORE:(\d+)\]\[SEV:(low|medium|critical)\]/)
-  if (!match) return { score: 10, severity: 'low', cleanText: text.trim() }
-
-  const score = Math.min(100, Math.max(0, Number(match[1])))
-  const severity = match[2]
-  const cleanText = text.replace(match[0], '').replace(/\n\s*$/, '').trim()
-  return { score, severity, cleanText }
+function safeFallbackResponse(): AIVetResponse {
+  return {
+    assessment_available: false,
+    is_emergency: false,
+    severity: 'unknown',
+    risk_score: null,
+    confidence_score: 0,
+    summary: 'Odi şu anda güvenilir bir değerlendirme oluşturamadı. Sistemlerimizde geçici bir yoğunluk veya hata olabilir. Belirtiler ciddi veya hızla kötüleşiyorsa, lütfen vakit kaybetmeden doğrudan veteriner hekiminizle iletişime geçin.',
+  }
 }
 
-function heuristicFallback(_symptomStr?: string) {
-  return {
-    score: 50, severity: 'medium',
-    text: 'Sistemlerimizde şu an geçici bir yoğunluk yaşanıyor, lütfen birazdan tekrar deneyin. Eğer evcil dostunuzun durumu acilse, vakit kaybetmeden en yakın veteriner kliniğine başvurmanızı önemle tavsiye ederiz.',
+// Emergency Guard: Runs before LLM call
+function checkEmergencyGuard(text: string): AIVetResponse | null {
+  const lowerText = text.toLowerCase()
+  const emergencyKeywords = [
+    'nefes alamıyor', 'nefes darlığı', 'bilinci kapalı', 
+    'bayıldı', 'nöbet geçiriyor', 'kriz geçiriyor', 'durmayan kanama',
+    'kan kusuyor', 'gözü dışarı çıktı', 'nabzı yok',
+    'zehir', 'toksik', 'araba çarptı', 'yüksekten düştü',
+    'idrar yapamıyor'
+  ]
+  
+  for (const kw of emergencyKeywords) {
+    if (lowerText.includes(kw)) {
+      return {
+        assessment_available: false,
+        is_emergency: true,
+        emergency_reason: `Yüksek riskli durum tespit edildi: ${kw}`,
+        emergency_action: 'LÜTFEN DERHAL EN YAKIN VETERİNER KLİNİĞİNE GİDİN. Durum hayati tehlike taşıyor olabilir.',
+        severity: 'emergency',
+        risk_score: null,
+        confidence_score: 100,
+        summary: 'Sistemimiz acil müdahale gerektirebilecek bir durum tespit etti. Bu tür durumlarda saniyeler önemlidir.',
+      }
+    }
+  }
+  return null
+}
+
+function getExactAgeStr(birthDateStr: string): string {
+  const bd = new Date(birthDateStr)
+  const now = new Date()
+  const diffTime = Math.abs(now.getTime() - bd.getTime())
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+  
+  if (diffDays < 30) {
+    return `${Math.floor(diffDays / 7)} haftalık`
+  } else if (diffDays < 365) {
+    return `${Math.floor(diffDays / 30)} aylık`
+  } else {
+    return `${Math.floor(diffDays / 365)} yaşında`
   }
 }
 
 async function handler(req: NextRequest) {
-  // Auth guard — Gemini API maliyetini korumak için
+  // Auth guard
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -58,48 +120,135 @@ async function handler(req: NextRequest) {
   if (!success) return NextResponse.json({ error: 'Çok fazla istek. Lütfen bekleyin.' }, { status: 429 })
 
   const body = await req.json()
-  // history: array of { role: 'user'|'model', text: string }
   const history: { role: 'user' | 'model'; text: string }[] = body.history ?? []
+  const petId = body.petId
 
-  // İçerik uzunluk limiti (flood / cost koruma)
   if (history.length > 50) {
-    return NextResponse.json({ error: 'Konuşma geçmişi çok uzun. Yeni bir sohbet başlatın.' }, { status: 400 })
+    return NextResponse.json({ error: 'Konuşma geçmişi çok uzun.' }, { status: 400 })
   }
   const lastMessage = history[history.length - 1]?.text ?? ''
   if (lastMessage.length > 2000) {
-    return NextResponse.json({ error: 'Mesaj çok uzun (max 2000 karakter).' }, { status: 400 })
+    return NextResponse.json({ error: 'Mesaj çok uzun.' }, { status: 400 })
   }
 
-  const petContext = body.petContext ?? null
-
+  // 1. Server-Side Pet Authorization & Canonical Fetch
   let systemInstruction = SYSTEM_INSTRUCTION
-  if (petContext) {
-    systemInstruction += `\n\nBAĞLAM (Şu An İlgilenilen Evcil Hayvan):\n`
-    systemInstruction += `- İsim: ${petContext.name}\n`
-    systemInstruction += `- Tür/Irk: ${petContext.species} / ${petContext.breed || 'Bilinmiyor'}\n`
-    if (petContext.gender) systemInstruction += `- Cinsiyet: ${petContext.gender}\n`
-    if (petContext.birth_date) {
-      const ageYears = Math.floor((new Date().getTime() - new Date(petContext.birth_date).getTime()) / (1000 * 60 * 60 * 24 * 365.25))
-      systemInstruction += `- Doğum Tarihi: ${petContext.birth_date} (Yaklaşık ${ageYears} yaşında)\n`
+  let backendContextUsed: string[] = []
+  
+  if (petId) {
+    const supabase = await createServerSupabaseClient()
+    
+    // Auth Check manually for defense in depth
+    const { data: petCheck } = await supabase
+      .from('pets')
+      .select('id')
+      .eq('id', petId)
+      .eq('owner_id', user.id)
+      .single()
+      
+    if (!petCheck) {
+      return NextResponse.json({ error: 'Pet bulunamadı veya yetkiniz yok.' }, { status: 403 })
     }
-    if (petContext.vaccines && petContext.vaccines.length > 0) {
-      systemInstruction += `- Son Aşılar: ${petContext.vaccines.join(', ')}\n`
+
+    try {
+      const { buildPetAIContext } = await import('@/lib/ai/context-engine')
+      const petContext = await buildPetAIContext(supabase, petId, lastMessage)
+      
+      // Calculate contextUsed purely on the backend
+      if (petContext.core.weight.status !== 'not_recorded') backendContextUsed.push('weight')
+      if (petContext.core.medicalStatus.conditionsStatus !== 'not_recorded') backendContextUsed.push('conditions')
+      if (petContext.core.medicalStatus.medicationsStatus !== 'not_recorded') backendContextUsed.push('medications')
+      if (petContext.core.medicalStatus.allergiesStatus !== 'not_recorded') backendContextUsed.push('allergies')
+      if (petContext.intentSpecific?.vaccines) backendContextUsed.push('vaccines')
+      if (petContext.intentSpecific?.parasites) backendContextUsed.push('parasites')
+      if (petContext.intentSpecific?.nutrition) backendContextUsed.push('nutrition')
+      if (petContext.intentSpecific?.reproductive) backendContextUsed.push('reproductive')
+
+      systemInstruction += `\n\nBAĞLAM (PetAIContext JSON):\n`
+      systemInstruction += JSON.stringify(petContext, null, 2)
+      
+      systemInstruction += `\n\nÖNEMLİ KURAL (HALLUCINATION PREVENTION):
+Sana verilen JSON formatındaki \`PetAIContext\` objesi, bu pet hakkındaki TEK VE KESİN gerçektir. 
+- Eğer bir alanın status'u 'not_recorded' ise, o veri sistemde KAYITLI DEĞİL demektir. Asla "yoktur" veya "sağlıklıdır" gibi negatif bir sonuca varma. "Kayıtlarımızda bu bilgi bulunmuyor" de.
+- Context'te bulunmayan hiçbir aşı adını, ilaç markasını veya tıbbi geçmişi pete atfetme.
+- Eğer kullanıcı DOĞRUDAN bir parametreyi soruyorsa (örneğin kilonun kendisi veya mama türü) ve bu veri 'not_recorded' / 'stale' ise, değerlendirme yapmayı reddet (assessment_available: false) ve missing_information alanında veriyi talep et.
+- ANCAK tıbbi bir semptom veya genel sağlık durumu sorulduğunda (örn. kusma, ishal, halsizlik), kilo veya beslenme verisinin eksik olması bir değerlendirme engeli (blocker) DEĞİLDİR. Assessment yapmaya devam et, sadece ikincil bir soru olarak kilo/beslenme bilgisini isteyebilirsin.`
+
+    } catch (ctxErr: any) {
+      if (ctxErr.message === 'INVALID_SPECIES') {
+        const fb = {
+          assessment_available: false,
+          is_emergency: false,
+          severity: 'unknown',
+          risk_score: null,
+          confidence_score: 100,
+          summary: 'Odi Pet yalnızca kedi ve köpekler için hizmet vermektedir.',
+        }
+        try {
+          const adminClient = createAdminSupabaseClient()
+          adminClient.from('ai_vet_logs').insert({
+            pet_id: petId,
+            owner_id: user.id,
+            user_prompt: lastMessage,
+            ai_response: fb,
+            severity: 'unknown',
+            powered_by: 'invariant-guard'
+          }).then(({ error }) => { if (error) console.error(error) })
+        } catch (e) {}
+        
+        return NextResponse.json({
+          response: fb,
+          powered_by: 'invariant-guard'
+        })
+      }
+      console.error('[ai-vet] Context Engine Error:', ctxErr)
+      return NextResponse.json({ error: 'Bağlam oluşturulurken hata oluştu.' }, { status: 500 })
     }
-    if (petContext.diseases && petContext.diseases.length > 0) {
-      systemInstruction += `- Bilinen Hastalıklar: ${petContext.diseases.join(', ')}\n`
-    }
-    systemInstruction += `\nÖNEMLİ: Lütfen tavsiyelerini bu bilgilere göre uyarla. Kullanıcıya güven vermek için yanıtının hemen başında ${petContext.name}'in profiline (ırkı, yaşı, aşıları vb.) hakim olduğunu açıkça hissettiren sıcak bir giriş yap.`
+  }
+
+  // 2. Emergency Guard (Pre-LLM)
+  const emergencyCheck = checkEmergencyGuard(lastMessage)
+  if (emergencyCheck) {
+    try {
+      const adminClient = createAdminSupabaseClient()
+      adminClient.from('ai_vet_logs').insert({
+        pet_id: petId,
+        owner_id: user.id,
+        user_prompt: lastMessage,
+        ai_response: emergencyCheck,
+        severity: emergencyCheck.severity || 'emergency',
+        powered_by: 'emergency-guard'
+      }).then(({ error }) => { if (error) console.error(error) })
+    } catch (e) {}
+
+    return NextResponse.json({ 
+      response: emergencyCheck,
+      powered_by: 'emergency-guard' 
+    })
   }
 
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
-    // Heuristic fallback — use last user message
-    const lastUser = [...history].reverse().find(m => m.role === 'user')?.text ?? ''
-    const fb = heuristicFallback(lastUser.toLowerCase())
-    return NextResponse.json({ text: fb.text, score: fb.score, severity: fb.severity, powered_by: 'heuristic' })
+    const fb = safeFallbackResponse()
+    try {
+      const adminClient = createAdminSupabaseClient()
+      adminClient.from('ai_vet_logs').insert({
+        pet_id: petId,
+        owner_id: user.id,
+        user_prompt: lastMessage,
+        ai_response: fb,
+        severity: 'unknown',
+        powered_by: 'heuristic'
+      }).then(({ error }) => { if (error) console.error(error) })
+    } catch (e) {}
+    
+    return NextResponse.json({ 
+      response: fb, 
+      powered_by: 'heuristic' 
+    })
   }
 
-  // Quota consumption — check BEFORE expensive Gemini call
+  // 3. Quota consumption
   const requestId = crypto.randomUUID()
   const usageResult = await getUsageEngine().consumeUsage({
     userId: user.id,
@@ -114,11 +263,18 @@ async function handler(req: NextRequest) {
     )
   }
 
+  // 4. Gemini Structured Output Call
   try {
     const genAI = new GoogleGenerativeAI(apiKey)
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-3.6-flash',
       systemInstruction: systemInstruction,
+      generationConfig: {
+        maxOutputTokens: 2048,
+        temperature: 0.4,
+        responseMimeType: "application/json",
+        responseSchema: aiVetResponseSchema,
+      }
     })
 
     const chatHistory: ChatMessage[] = history.slice(0, -1).map(m => ({
@@ -126,24 +282,75 @@ async function handler(req: NextRequest) {
       parts: [{ text: m.text }],
     }))
 
-    const chat = model.startChat({
-      history: chatHistory,
-      generationConfig: { maxOutputTokens: 1024, temperature: 0.7 },
-    })
-
+    const chat = model.startChat({ history: chatHistory })
     const result = await chat.sendMessage(lastMessage)
     const raw = result.response.text()
 
-    const { score, severity, cleanText } = parseScoreLine(raw)
+    let structuredResponse: AIVetResponse
+    try {
+      structuredResponse = JSON.parse(raw)
+    } catch (parseError) {
+      console.error('[ai-vet] JSON Parse error:', parseError)
+      return NextResponse.json({ 
+        response: safeFallbackResponse(), 
+        powered_by: 'fallback-parse-error' 
+      })
+    }
 
-    return NextResponse.json({ text: cleanText, score, severity, powered_by: 'gemini' })
+    // Clean up potentially missing optional fields from structured response
+    // Fallback severity to unknown if it's missing somehow
+    if (!structuredResponse.severity || !['low', 'medium', 'critical'].includes(structuredResponse.severity)) {
+      structuredResponse.severity = 'unknown'
+      structuredResponse.assessment_available = false
+    }
+
+    // --- AUDIT LOGGING ---
+    try {
+      const adminClient = createAdminSupabaseClient()
+      // Asynchronously log the transaction
+      adminClient.from('ai_vet_logs').insert({
+        pet_id: petId,
+        owner_id: user.id,
+        user_prompt: lastMessage,
+        ai_response: structuredResponse,
+        severity: structuredResponse.severity,
+        powered_by: 'gemini'
+      }).then(({ error }) => {
+        if (error) console.error('[ai-vet] Failed to write ai_vet_logs:', error)
+      })
+    } catch (logErr) {
+      console.error('[ai-vet] Error setting up ai_vet_logs insert:', logErr)
+    }
+
+    return NextResponse.json({ 
+      response: structuredResponse, 
+      powered_by: 'gemini',
+      contextUsed: backendContextUsed
+    })
   } catch (err) {
     console.error('[ai-vet] Gemini error:', err)
-    const lastUser = [...history].reverse().find(m => m.role === 'user')?.text ?? ''
-    const fb = heuristicFallback(lastUser.toLowerCase())
-    return NextResponse.json({ text: fb.text, score: fb.score, severity: fb.severity, powered_by: 'heuristic' })
+    
+    // --- AUDIT LOGGING (ERROR FALLBACK) ---
+    try {
+      const fb = safeFallbackResponse()
+      const adminClient = createAdminSupabaseClient()
+      adminClient.from('ai_vet_logs').insert({
+        pet_id: petId, // from scope above
+        owner_id: user.id, // from scope above
+        user_prompt: lastMessage, // from scope above
+        ai_response: fb,
+        severity: 'unknown',
+        powered_by: 'fallback-api-error'
+      }).then(({ error }) => {
+        if (error) console.error('[ai-vet] Failed to write ai_vet_logs (fallback):', error)
+      })
+    } catch (e) {}
+
+    return NextResponse.json({ 
+      response: safeFallbackResponse(), 
+      powered_by: 'fallback-api-error' 
+    })
   }
 }
 
 export const POST = withAPIFeatureGuard('ai_vet', handler)
-
