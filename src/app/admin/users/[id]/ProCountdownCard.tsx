@@ -12,6 +12,7 @@ interface Props {
 
 export default function ProCountdownCard({ premiumUntil, aiPlusUntil, proUntil, plan }: Props) {
   const targetUntil = aiPlusUntil || proUntil || premiumUntil
+  const [mounted, setMounted] = useState(false)
 
   const [timeLeft, setTimeLeft] = useState<{
     days: number
@@ -28,6 +29,10 @@ export default function ProCountdownCard({ premiumUntil, aiPlusUntil, proUntil, 
     isInfinite: false,
     isExpired: true,
   })
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     if (!targetUntil) {
@@ -69,7 +74,7 @@ export default function ProCountdownCard({ premiumUntil, aiPlusUntil, proUntil, 
 
   const isAiPlus = (plan === 'ai_plus' || !!aiPlusUntil) && !timeLeft.isExpired
 
-  if (!targetUntil || timeLeft.isExpired) {
+  if (!mounted || !targetUntil || timeLeft.isExpired) {
     return (
       <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
         <div className="flex items-center justify-between">

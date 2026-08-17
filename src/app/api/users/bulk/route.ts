@@ -26,12 +26,41 @@ export async function DELETE(req: NextRequest) {
           throw new Error('Kendi hesabınızı silemezsiniz.');
         }
 
-        // Önce profiles kaydını ve bağlı verilerini temizlemeyi dene
+        // 1) Kullanıcıya ait pet'lerin ID'lerini bulup pet bağımlı tablolarını temizle
+        const { data: userPets } = await adminSupabase.from('pets').select('id').eq('owner_id', id);
+        const petIds = (userPets || []).map(p => p.id);
+
+        if (petIds.length > 0) {
+          await Promise.allSettled([
+            adminSupabase.from('vaccines').delete().in('pet_id', petIds),
+            adminSupabase.from('parasite_records').delete().in('pet_id', petIds),
+            adminSupabase.from('pet_weight_logs').delete().in('pet_id', petIds),
+            adminSupabase.from('pet_medical_notes').delete().in('pet_id', petIds),
+            adminSupabase.from('pet_food_logs').delete().in('pet_id', petIds),
+          ]);
+          await adminSupabase.from('pets').delete().eq('owner_id', id);
+        }
+
+        // 2) Kullanıcı profil bağımlı tablolarını temizle (FK kısıtlamalarını aşmak için)
+        await Promise.allSettled([
+          adminSupabase.from('user_subscriptions').delete().eq('profile_id', id),
+          adminSupabase.from('membership_credits').delete().eq('profile_id', id),
+          adminSupabase.from('membership_events').delete().eq('profile_id', id),
+          adminSupabase.from('event_stream').delete().eq('profile_id', id),
+          adminSupabase.from('referrals').delete().eq('referrer_id', id),
+          adminSupabase.from('referrals').delete().eq('referred_id', id),
+          adminSupabase.from('user_survey_stats').delete().eq('user_id', id),
+          adminSupabase.from('user_consents').delete().eq('user_id', id),
+          adminSupabase.from('ai_conversations').delete().eq('profile_id', id),
+          adminSupabase.from('reminders').delete().eq('user_id', id),
+        ]);
+
+        // 3) Profiles kaydını temizle
         await adminSupabase.from('profiles').delete().eq('id', id);
 
-        // Supabase Auth kullanıcısını sil
+        // 4) Supabase Auth kullanıcısını sil
         const { data, error } = await adminSupabase.auth.admin.deleteUser(id);
-        if (error) throw error;
+        if (error && !error.message.includes('User not found')) throw error;
         return data;
       })
     );

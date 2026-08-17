@@ -32,8 +32,8 @@ const aiVetResponseSchema: Schema = {
     emergency_reason: { type: SchemaType.STRING },
     emergency_action: { type: SchemaType.STRING },
     severity: { type: SchemaType.STRING },
-    risk_score: { type: SchemaType.INTEGER },
-    confidence_score: { type: SchemaType.INTEGER },
+    risk_score: { type: SchemaType.INTEGER, nullable: true },
+    confidence_score: { type: SchemaType.INTEGER, nullable: true },
     summary: { type: SchemaType.STRING },
     missing_critical_info: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
     possible_explanations: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
@@ -271,7 +271,6 @@ Sana verilen JSON formatındaki \`PetAIContext\` objesi, bu pet hakkındaki TEK 
       systemInstruction: systemInstruction,
       generationConfig: {
         maxOutputTokens: 2048,
-        temperature: 0.4,
         responseMimeType: "application/json",
         responseSchema: aiVetResponseSchema,
       }
@@ -314,7 +313,7 @@ Sana verilen JSON formatındaki \`PetAIContext\` objesi, bu pet hakkındaki TEK 
         user_prompt: lastMessage,
         ai_response: structuredResponse,
         severity: structuredResponse.severity,
-        powered_by: 'gemini'
+        powered_by: 'gemini-3.6-flash'
       }).then(({ error }) => {
         if (error) console.error('[ai-vet] Failed to write ai_vet_logs:', error)
       })
@@ -324,7 +323,7 @@ Sana verilen JSON formatındaki \`PetAIContext\` objesi, bu pet hakkındaki TEK 
 
     return NextResponse.json({ 
       response: structuredResponse, 
-      powered_by: 'gemini',
+      powered_by: 'gemini-3.6-flash',
       contextUsed: backendContextUsed
     })
   } catch (err) {

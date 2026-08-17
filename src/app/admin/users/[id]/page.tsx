@@ -85,41 +85,49 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
   }
 
 
-  // Load other details in parallel
+  // Load other details in parallel safely
   const [
-    { data: pets },
-    { data: subscriptionRaw },
-    { data: events },
-    { data: creditHistory },
+    pets,
+    subscriptionRaw,
+    events,
+    creditHistory,
   ] = await Promise.all([
-    supabase
-      .from('pets')
-      .select('id, name, species, breed, birth_date, created_at')
-      .eq('owner_id', id)
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('user_subscriptions')
-      .select('id, plan, status, provider, reason, ai_plus_until, pro_until, created_at, current_period_end')
-      .eq('profile_id', id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from('event_stream')
-      .select('id, event, event_type, ts, created_at, payload, metadata')
-      .eq('profile_id', id)
-      .order('created_at', { ascending: false })
-      .limit(20),
-    supabase
-      .from('membership_credits')
-      .select('id, credit_days, reason, metadata, created_at')
-      .eq('profile_id', id)
-      .order('created_at', { ascending: false }),
+    Promise.resolve(
+      supabase
+        .from('pets')
+        .select('id, name, species, breed, birth_date, created_at')
+        .eq('owner_id', id)
+        .order('created_at', { ascending: false })
+    ).then(res => res.data || []).catch(() => []),
+    Promise.resolve(
+      supabase
+        .from('user_subscriptions')
+        .select('id, plan, status, provider, reason, ai_plus_until, pro_until, created_at, current_period_end')
+        .eq('profile_id', id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    ).then(res => res.data || null).catch(() => null),
+    Promise.resolve(
+      supabase
+        .from('event_stream')
+        .select('id, event, event_type, ts, created_at, payload, metadata')
+        .eq('profile_id', id)
+        .order('created_at', { ascending: false })
+        .limit(20)
+    ).then(res => res.data || []).catch(() => []),
+    Promise.resolve(
+      supabase
+        .from('membership_credits')
+        .select('id, credit_days, reason, metadata, created_at')
+        .eq('profile_id', id)
+        .order('created_at', { ascending: false })
+    ).then(res => res.data || []).catch(() => []),
   ])
 
   const subscription = subscriptionRaw ? {
     ...subscriptionRaw,
-    ends_at: subscriptionRaw.current_period_end
+    ends_at: (subscriptionRaw as any).current_period_end
   } : null
 
   if (!profile) return notFound()
@@ -191,7 +199,7 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
               </div>
             ) : (
               <div className="divide-y divide-border-main">
-                {(pets ?? []).map((pet) => (
+                {(pets ?? []).map((pet: any) => (
                   <div key={pet.id} className="px-6 py-4 flex items-center gap-4">
                     <div className="w-10 h-10 rounded-xl bg-bg-main border border-border-main flex items-center justify-center text-lg flex-shrink-0">
                       {pet.species === 'cat' ? '🐱' : '🐶'}
