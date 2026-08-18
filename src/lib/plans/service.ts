@@ -461,6 +461,13 @@ export async function updatePlan(userId: string, planId: string, input: UpdatePl
       .single();
 
     if (updatedMainPlan) {
+      // Dismiss active in-app notifications tied to this plan
+      await supabase
+        .from('notifications')
+        .update({ is_read: true, opened_at: new Date().toISOString() })
+        .eq('plan_id', planId)
+        .eq('is_read', false);
+
       // Update notification job for the next occurrence
       const newNotifBefore = updatedMainPlan.notif_before;
       const newNotifUnit = updatedMainPlan.notif_unit;
@@ -507,6 +514,15 @@ export async function updatePlan(userId: string, planId: string, input: UpdatePl
     .single();
 
   if (planError) throw new Error(planError.message);
+
+  // If plan was marked completed, dismiss active in-app notifications tied to this plan
+  if (statusToApply === 'completed' || input.status === 'completed') {
+    await supabase
+      .from('notifications')
+      .update({ is_read: true, opened_at: new Date().toISOString() })
+      .eq('plan_id', planId)
+      .eq('is_read', false);
+  }
 
   // If schedule or notification settings changed, update notification_jobs
   if (input.scheduled_at || input.notif_before !== undefined || input.notif_unit) {
