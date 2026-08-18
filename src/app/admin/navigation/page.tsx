@@ -308,15 +308,14 @@ export default function AdminNavigationPage() {
                   {item.is_active ? 'Gizle' : 'Göster'}
                 </button>
 
-                {slot === 'bottom_nav' ? (
+                {slot === 'bottom_nav' && (
                   <button onClick={() => setShowPagePickerForSlot({ slot, editingItemId: item.id })} className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-[12px] font-bold">
                     Değiştir
                   </button>
-                ) : (
-                  <button onClick={() => deleteItem(item.id)} className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-[12px] font-bold">
-                    Sil
-                  </button>
                 )}
+                <button onClick={() => deleteItem(item.id)} className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-[12px] font-bold">
+                  Sil
+                </button>
               </div>
             </div>
           ))}
@@ -325,7 +324,7 @@ export default function AdminNavigationPage() {
           )}
         </div>
 
-        {slotItems.length < maxItems && slot !== 'bottom_nav' && (
+        {slotItems.length < maxItems && (
           <button 
             onClick={() => setShowPagePickerForSlot({ slot })}
             className="w-full mt-4 py-3 border-2 border-dashed border-border-main rounded-xl text-[13px] font-bold text-text-secondary hover:border-primary hover:text-primary transition-all"
