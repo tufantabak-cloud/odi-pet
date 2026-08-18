@@ -990,7 +990,7 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
                 {filteredCities.length > 0 ? (
                   filteredCities.map((city) => (
                     <button
-                      key={city.value}
+                      key={city.label}
                       onClick={() => saveCityToPet(city.label)}
                       disabled={isSavingLocation}
                       className="text-left px-3 py-2.5 rounded-lg hover:bg-slate-50 active:bg-slate-100 text-sm font-semibold text-slate-700 transition-colors"
