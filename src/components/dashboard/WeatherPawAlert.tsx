@@ -46,6 +46,7 @@ export interface WeatherData {
     humidity: number
   }>
   isFallback?: boolean
+  hasLocation?: boolean
 }
 
 interface WeatherPawAlertProps {
@@ -447,6 +448,25 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
     }
   }, [petCity, dismissed])
 
+  const handleRequestLocation = (e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation()
+    }
+    if (typeof window !== 'undefined' && navigator.geolocation) {
+      setIsRefreshing(true)
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          fetchWeather(pos.coords)
+        },
+        (err) => {
+          console.warn('Geolocation permission denied or error:', err)
+          setIsRefreshing(false)
+        },
+        { timeout: 8000 }
+      )
+    }
+  }
+
   const handleManualRefresh = () => {
     setIsRefreshing(true)
     if (typeof window !== 'undefined' && navigator.geolocation) {
@@ -472,12 +492,12 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
       uvIndex: weather.uvIndex,
       weatherCode: weather.weatherCode,
       isDay: weather.isDay,
-      cityName: weather.cityName,
+      cityName: weather.cityName || petCity || '',
       sunset: weather.sunset,
       sunrise: weather.sunrise,
       asphaltTemp: weather.asphaltTemp,
     })
-  }, [weather, petSpecies, petName])
+  }, [weather, petSpecies, petName, petCity])
 
   if (dismissed) return null
 
@@ -510,7 +530,8 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
   if (!weather || !activeScenario) return null
 
   const temp = Math.round(weather.temp)
-  const cityName = weather.cityName || petCity || 'İstanbul'
+  const hasLocation = Boolean(petCity || (weather.hasLocation && weather.cityName) || weather.cityName)
+  const cityName = hasLocation ? (weather.cityName || petCity) : ''
   const description = weather.weatherDescription || 'Az bulutlu'
   const iconType = weather.weatherIconType || 'cloud-sun'
 
@@ -557,12 +578,31 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
                 {renderWeatherIcon(iconType, 'w-8 h-8 text-slate-800 stroke-[1.75]')}
               </div>
               <div>
-                <div className="text-[17px] sm:text-[18px] font-bold text-slate-900 tracking-tight leading-tight">
-                  {cityName}, {temp}°C
-                </div>
-                <div className="text-[13px] sm:text-[14px] text-slate-500 font-medium leading-tight mt-0.5">
-                  {description}
-                </div>
+                {hasLocation && cityName ? (
+                  <>
+                    <div className="text-[17px] sm:text-[18px] font-bold text-slate-900 tracking-tight leading-tight">
+                      {cityName}, {temp}°C
+                    </div>
+                    <div className="text-[13px] sm:text-[14px] text-slate-500 font-medium leading-tight mt-0.5">
+                      {description}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-[17px] sm:text-[18px] font-bold text-slate-900 tracking-tight leading-tight">
+                      Hava Durumu
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRequestLocation}
+                      disabled={isRefreshing}
+                      className="inline-flex items-center gap-1 text-[13px] sm:text-[14px] text-blue-600 hover:text-blue-700 font-bold leading-tight mt-0.5 group cursor-pointer active:scale-[0.98] transition-all"
+                    >
+                      <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0 group-hover:scale-110 transition-transform" />
+                      <span>{isRefreshing ? 'Konum alınıyor...' : 'Konumunuzu ekleyin'}</span>
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
@@ -648,10 +688,27 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
                     {activeScenario.modalTitle}
                   </h3>
                   <p className="text-[12px] text-slate-500 font-medium flex items-center gap-1 mt-0.5">
-                    <MapPin className="w-3.5 h-3.5 text-blue-500" />
-                    <span>{cityName}</span>
-                    <span>•</span>
-                    <span>Canlı Ortam ve Hava Verisi</span>
+                    <MapPin className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                    {hasLocation && cityName ? (
+                      <>
+                        <span>{cityName}</span>
+                        <span>•</span>
+                        <span>Canlı Ortam ve Hava Verisi</span>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={handleRequestLocation}
+                          disabled={isRefreshing}
+                          className="text-blue-600 hover:underline font-bold inline-flex items-center gap-1 cursor-pointer"
+                        >
+                          {isRefreshing ? 'Konum alınıyor...' : 'Konumunuzu ekleyin'}
+                        </button>
+                        <span>•</span>
+                        <span>Genel Çevre Verisi</span>
+                      </>
+                    )}
                   </p>
                 </div>
               </div>

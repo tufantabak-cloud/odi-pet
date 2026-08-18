@@ -96,9 +96,13 @@ const BUCKET_META: Record<BucketKey, { label: string; overdue?: boolean; isCompl
   sonYapilanlar: { label: 'SON YAPILANLAR', isCompleted: true },
 }
 
+const UPCOMING_BUCKET_KEYS: BucketKey[] = ['geciken', 'bugun', 'buHafta', 'sonraki']
+const COMPLETED_BUCKET_KEYS: BucketKey[] = ['sonYapilanlar']
+
 export default function TakvimClient({ pets, initialEvents = [] }: { pets: Pet[]; initialEvents?: CalendarEvent[] }) {
   const [activePetId, setActivePetId] = useState<string | null>(null)
   const [activeFilter, setActiveFilter] = useState<'tumu' | CategoryKey>('tumu')
+  const [activeView, setActiveView] = useState<'yaklasan' | 'sonYapilanlar'>('yaklasan')
 
   const multiPet = pets.length > 1
 
@@ -136,7 +140,19 @@ export default function TakvimClient({ pets, initialEvents = [] }: { pets: Pet[]
   }, [visibleEvents])
 
   const activePet = activePetId ? pets.find(p => p.id === activePetId) ?? null : null
-  const totalVisible = Object.values(buckets).reduce((n, list) => n + list.length, 0)
+
+  const upcomingCount = useMemo(() => {
+    return (
+      buckets.geciken.length +
+      buckets.bugun.length +
+      buckets.buHafta.length +
+      buckets.sonraki.length
+    )
+  }, [buckets])
+
+  const completedCount = buckets.sonYapilanlar.length
+  const currentBucketKeys = activeView === 'yaklasan' ? UPCOMING_BUCKET_KEYS : COMPLETED_BUCKET_KEYS
+  const currentCount = activeView === 'yaklasan' ? upcomingCount : completedCount
 
   return (
     <div className="flex flex-col gap-3 pb-32 w-full mx-auto font-sans">
@@ -147,8 +163,12 @@ export default function TakvimClient({ pets, initialEvents = [] }: { pets: Pet[]
           <h1 className="text-2xl font-bold text-text-primary leading-tight tracking-tight">Takvim</h1>
           <p className="text-xs text-text-secondary font-medium">
             {activePet ? `${activePet.name} · ` : ''}
-            {`${totalVisible} kayıt`}
-            <span className="text-text-tertiary"> · son 30 gün ve sonraki 30 gün</span>
+            {activeView === 'yaklasan'
+              ? `${upcomingCount} yaklaşan görev`
+              : `${completedCount} tamamlanan görev`}
+            <span className="text-text-tertiary">
+              {activeView === 'yaklasan' ? ' · sonraki 30 gün' : ' · son 30 gün'}
+            </span>
           </p>
         </div>
         <Link
@@ -159,6 +179,58 @@ export default function TakvimClient({ pets, initialEvents = [] }: { pets: Pet[]
         >
           <CalendarPlus className="w-5 h-5" />
         </Link>
+      </div>
+
+      {/* Görünüm Sekmeleri: Yaklaşan Görevler (Varsayılan) / Son Yapılanlar */}
+      <div className="px-4">
+        <div className="grid grid-cols-2 p-1 rounded-2xl bg-surface-secondary/70 border border-border-main/60">
+          <button
+            type="button"
+            onClick={() => setActiveView('yaklasan')}
+            aria-pressed={activeView === 'yaklasan'}
+            className={`min-h-11 flex items-center justify-center gap-2 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all duration-200 cursor-pointer active:scale-[0.98] ${
+              activeView === 'yaklasan'
+                ? 'bg-surface text-text-primary shadow-sm font-bold'
+                : 'text-text-secondary hover:text-text-primary'
+            }`}
+          >
+            <span>Yaklaşan Görevler</span>
+            {upcomingCount > 0 && (
+              <span
+                className={`rounded-full px-2 py-0.5 text-2xs font-bold ${
+                  activeView === 'yaklasan'
+                    ? 'bg-primary/10 text-primary'
+                    : 'bg-surface text-text-secondary'
+                }`}
+              >
+                {upcomingCount}
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveView('sonYapilanlar')}
+            aria-pressed={activeView === 'sonYapilanlar'}
+            className={`min-h-11 flex items-center justify-center gap-2 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all duration-200 cursor-pointer active:scale-[0.98] ${
+              activeView === 'sonYapilanlar'
+                ? 'bg-surface text-text-primary shadow-sm font-bold'
+                : 'text-text-secondary hover:text-text-primary'
+            }`}
+          >
+            <span>Son Yapılanlar</span>
+            {completedCount > 0 && (
+              <span
+                className={`rounded-full px-2 py-0.5 text-2xs font-bold ${
+                  activeView === 'sonYapilanlar'
+                    ? 'bg-[#F0FDF4] text-[#166534]'
+                    : 'bg-surface text-text-secondary'
+                }`}
+              >
+                {completedCount}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Pet filtre çipleri — yalnızca birden fazla pet varsa */}
@@ -226,29 +298,43 @@ export default function TakvimClient({ pets, initialEvents = [] }: { pets: Pet[]
       </div>
 
       {/* İçerik */}
-      {totalVisible === 0 ? (
+      {currentCount === 0 ? (
         <div className="px-4 pt-2">
           <div className="rounded-card border border-dashed border-border-main bg-surface p-8 text-center flex flex-col items-center justify-center">
-            <CalendarCheck className="w-8 h-8 text-success mb-2" />
-            <p className="text-sm font-semibold text-text-primary">Planlı görev yok</p>
-            <p className="text-xs text-text-secondary mt-1">
-              {activeFilter === 'tumu'
-                ? 'Bu dönem için planlanmış bir şey görünmüyor.'
-                : 'Bu kategoride planlanmış bir şey görünmüyor.'}
-            </p>
-            <Link
-              href="/owner/plan-yap"
-              prefetch={false}
-              className="inline-flex min-h-11 items-center justify-center gap-2 mt-4 px-4 py-2.5 rounded-full border border-primary text-primary text-xs font-bold hover:bg-primary-soft transition-all active:scale-95"
-            >
-              <Plus className="w-4 h-4 shrink-0" />
-              Rutin planla
-            </Link>
+            {activeView === 'yaklasan' ? (
+              <>
+                <CalendarCheck className="w-8 h-8 text-success mb-2" />
+                <p className="text-sm font-semibold text-text-primary">Planlanmış görev yok</p>
+                <p className="text-xs text-text-secondary mt-1">
+                  {activeFilter === 'tumu'
+                    ? 'Bu dönem için planlanmış bir görev görünmüyor.'
+                    : 'Bu kategoride planlanmış bir görev görünmüyor.'}
+                </p>
+                <Link
+                  href="/owner/plan-yap"
+                  prefetch={false}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 mt-4 px-4 py-2.5 rounded-full border border-primary text-primary text-xs font-bold hover:bg-primary-soft transition-all active:scale-95"
+                >
+                  <Plus className="w-4 h-4 shrink-0" />
+                  Rutin planla
+                </Link>
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="w-8 h-8 text-text-tertiary mb-2" />
+                <p className="text-sm font-semibold text-text-primary">Tamamlanan görev yok</p>
+                <p className="text-xs text-text-secondary mt-1">
+                  {activeFilter === 'tumu'
+                    ? 'Son 30 gün içinde tamamlanmış bir görev kaydı bulunmuyor.'
+                    : 'Bu kategoride tamamlanmış bir görev kaydı bulunmuyor.'}
+                </p>
+              </>
+            )}
           </div>
         </div>
       ) : (
         <div className="px-4 flex flex-col">
-          {(Object.keys(BUCKET_META) as BucketKey[]).map(key => {
+          {currentBucketKeys.map(key => {
             const list = buckets[key]
             if (list.length === 0) return null
             const meta = BUCKET_META[key]

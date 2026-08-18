@@ -199,4 +199,21 @@ describe('evaluateWeatherScenario - 5 Cat Smart Scenarios', () => {
     expect(res.headline).toContain('5 dakikalık tarama tüy yumağını önler')
     expect(res.metric1.label).toBe('Tarama Rutini')
   })
+
+  it('handles empty/unknown cityName gracefully without errors', () => {
+    const res = evaluateWeatherScenario({
+      species: 'kopek',
+      petName: 'Rex',
+      temp: 22,
+      humidity: 50,
+      uvIndex: 2,
+      weatherCode: 0,
+      isDay: true,
+      cityName: '',
+    })
+
+    expect(res.species).toBe('dog')
+    expect(res.headline).toBeDefined()
+    expect(res.categoryTitle).toBe('HAVA VE AKTİVİTE')
+  })
 })

@@ -103,8 +103,8 @@ export const MODULES: ModuleEntry[] = [
     icon: 'ti-users',
     status: 'live',
     version: 'V1.0',
-    slots: ['bottom_nav', 'side_primary'],
-    order: 3,
+    slots: ['side_primary', 'side_shortcut'],
+    order: 4,
     note: 'Sahiplendirme / kayıp / eşleştirme. Kayıp akışının 4 ayrı e2e testi var.',
   },
   {
@@ -142,15 +142,15 @@ export const MODULES: ModuleEntry[] = [
   },
   {
     key: 'vets',
-    label: 'Veteriner Bul',
+    label: 'Veteriner',
     href: '/owner/vets',
     icon: 'ti-map-pin',
     status: 'live',
     version: 'V1.0',
-    slots: ['side_shortcut'],
-    order: 1,
+    slots: ['bottom_nav', 'side_shortcut', 'side_primary'],
+    order: 3,
     note:
-      '~4.500 klinik. DİKKAT: /clinic ile karıştırma — o ayrı bir B2B portal ve kapalı.',
+      '~4.500 klinik. Mobilde alt navigasyonda 3. sekme. DİKKAT: /clinic ile karıştırma — o ayrı bir B2B portal ve kapalı.',
   },
   {
     key: 'notifications',

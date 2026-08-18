@@ -133,10 +133,12 @@ export async function GET(request: Request) {
   let lon = searchParams.get('lon');
   const cityParam = searchParams.get('city');
 
-  let resolvedCityName = 'İstanbul';
+  let hasLocation = false;
+  let resolvedCityName = '';
 
   // 1. Şehir parametresi verilmişse eşleştir
   if (cityParam) {
+    hasLocation = true;
     const normalized = normalizeTurkish(cityParam);
     if (TURKISH_CITIES[normalized]) {
       lat = String(TURKISH_CITIES[normalized].lat);
@@ -146,16 +148,16 @@ export async function GET(request: Request) {
       // Şehir ismini direkt kullan
       resolvedCityName = cityParam;
     }
-  }
-
-  // 2. Varsayılan koordinat (İstanbul)
-  if (!lat || !lon) {
-    lat = '41.0082';
-    lon = '28.9784';
-    resolvedCityName = 'İstanbul';
-  } else if (!cityParam) {
+  } else if (lat && lon) {
+    hasLocation = true;
     // Koordinatlardan en yakın ili bul
     resolvedCityName = findNearestCity(parseFloat(lat), parseFloat(lon));
+  } else {
+    // 2. Varsayılan koordinat (Genel hava durumu için İstanbul koordinatları kullanılır ama şehir adı atanmaz)
+    lat = '41.0082';
+    lon = '28.9784';
+    resolvedCityName = '';
+    hasLocation = false;
   }
 
   const currentMonth = new Date().getMonth();
@@ -179,6 +181,7 @@ export async function GET(request: Request) {
     weatherDescription: 'Az bulutlu',
     weatherIconType: 'cloud-sun',
     cityName: resolvedCityName,
+    hasLocation,
     isDay: true,
     sunset: new Date().toISOString().split('T')[0] + 'T20:00:00',
     sunrise: new Date().toISOString().split('T')[0] + 'T06:15:00',
@@ -193,10 +196,12 @@ export async function GET(request: Request) {
   };
 
   try {
+    const validLat = lat || '41.0082';
+    const validLon = lon || '28.9784';
     const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(
-      lat
+      validLat
     )}&longitude=${encodeURIComponent(
-      lon
+      validLon
     )}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,uv_index&hourly=temperature_2m,uv_index,weather_code,relative_humidity_2m&daily=sunrise,sunset,uv_index_max,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1`;
 
     const controller = new AbortController();
@@ -291,6 +296,7 @@ export async function GET(request: Request) {
         weatherDescription: weatherInfo.description,
         weatherIconType: weatherInfo.icon,
         cityName: resolvedCityName,
+        hasLocation,
         isDay,
         sunset: sunsetTime,
         sunrise: sunriseTime,
