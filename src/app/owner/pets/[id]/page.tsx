@@ -56,7 +56,9 @@ export default async function PetDetailPage(props: PageProps) {
     { data: inventory },
     { data: feedingLogs },
     { data: assignments },
-    { data: lastVaccineRecord }
+    { data: lastVaccineRecord },
+    { data: initialVaccinesRaw },
+    { data: initialParasites }
   ] = await Promise.all([
     supabase.from('health_schedules').select('*').eq('pet_id', id).order('due_date').limit(100),
     supabase.from('plans').select('*').eq('pet_id', id).order('scheduled_at').limit(100),
@@ -90,8 +92,16 @@ export default async function PetDetailPage(props: PageProps) {
         package_type
       )
     `).eq('pet_id', id).order('started_at', { ascending: false }).order('created_at', { ascending: false }),
-    supabase.from('vaccine_records_v2').select('vaccine_name, administered_at, status').eq('pet_id', id).not('administered_at', 'is', null).in('status', ['completed', 'done']).order('administered_at', { ascending: false }).limit(1).maybeSingle()
+    supabase.from('vaccine_records_v2').select('vaccine_name, administered_at, status').eq('pet_id', id).not('administered_at', 'is', null).in('status', ['completed', 'done']).order('administered_at', { ascending: false }).limit(1).maybeSingle(),
+    // HealthTab initial data — eliminates duplicate client-side fetches on Sağlık tab mount
+    supabase.from('vaccine_records_v2').select('*').eq('pet_id', id).not('administered_at', 'is', null).order('administered_at', { ascending: false }).limit(50),
+    supabase.from('parasite_records').select('*').eq('pet_id', id).order('administered_at', { ascending: false }).limit(50)
   ])
+
+  const VACCINE_EXCLUDED = new Set(['cancelled', 'migrated_to_plan', 'overdue', 'pending', 'upcoming', 'scheduled', 'planned'])
+  const initialVaccines = (initialVaccinesRaw || []).filter(
+    (v: any) => v.administered_at && (!v.status || v.status === 'completed' || v.status === 'done') && !VACCINE_EXCLUDED.has(v.status)
+  )
 
   const PLAN_CATEGORY_MAP: Record<string, string> = {
     saglik: 'Saglik',
@@ -228,6 +238,8 @@ export default async function PetDetailPage(props: PageProps) {
         hasPasskey={(passkeyCount ?? 0) > 0}
         isAdminView={isAdmin}
         lastVaccineRecord={lastVaccineRecord ?? null}
+        initialVaccines={initialVaccines}
+        initialParasites={initialParasites ?? []}
       />
     </OnboardingGate>
   )

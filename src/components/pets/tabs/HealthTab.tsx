@@ -15,19 +15,24 @@ interface HealthTabProps {
   onMarkDone?: (item: any) => void;
   onPostpone?: (item: any) => void;
   onEdit?: (item: any) => void;
+  /** Pre-fetched server data — skips initial client-side fetches when provided */
+  initialVaccines?: any[];
+  initialParasites?: any[];
+  initialVetRecords?: any[];
 }
 
-export default function HealthTab({ petId, petName, onMarkDone, onPostpone, onEdit }: HealthTabProps) {
+export default function HealthTab({ petId, petName, onMarkDone, onPostpone, onEdit, initialVaccines, initialParasites, initialVetRecords }: HealthTabProps) {
   const supabase = createBrowserSupabaseClient();
   const [hideVaultBanner, setHideVaultBanner] = useState(true);
   const [healthRecords, setHealthRecords] = useState<any[]>([]);
-  const [vaccineRecords, setVaccineRecords] = useState<any[]>([]);
-  const [parasiteRecords, setParasiteRecords] = useState<any[]>([]);
-  const [vetRecords, setVetRecords] = useState<any[]>([]);
+  const [vaccineRecords, setVaccineRecords] = useState<any[]>(initialVaccines ?? []);
+  const [parasiteRecords, setParasiteRecords] = useState<any[]>(initialParasites ?? []);
+  const [vetRecords, setVetRecords] = useState<any[]>(initialVetRecords ?? []);
   const [loadingHealth, setLoadingHealth] = useState(true);
-  const [loadingVaccines, setLoadingVaccines] = useState(true);
-  const [loadingParasites, setLoadingParasites] = useState(true);
-  const [loadingVet, setLoadingVet] = useState(true);
+  // Skip spinner for vaccines/parasites/vet if initial server data was provided
+  const [loadingVaccines, setLoadingVaccines] = useState(!initialVaccines);
+  const [loadingParasites, setLoadingParasites] = useState(!initialParasites);
+  const [loadingVet, setLoadingVet] = useState(!initialVetRecords);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   // Action Modals State
@@ -100,11 +105,14 @@ export default function HealthTab({ petId, petName, onMarkDone, onPostpone, onEd
   }, [supabase, petId]);
 
   useEffect(() => {
+    // Always fetch health records (no server-side prefetch for this endpoint)
     loadHealthRecords();
-    loadVaccines();
-    loadParasites();
-    loadVetRecords();
-  }, [loadHealthRecords, loadVaccines, loadParasites, loadVetRecords]);
+    // Only fetch vaccine/parasite/vet records if initial server data was NOT provided
+    if (!initialVaccines) loadVaccines();
+    if (!initialParasites) loadParasites();
+    if (!initialVetRecords) loadVetRecords();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadHealthRecords]);
 
   // Action Save Handlers
   const handleRescheduleSave = async (newDate: string, reason?: string) => {

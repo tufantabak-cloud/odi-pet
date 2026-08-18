@@ -202,6 +202,9 @@ export interface PetDetailProps {
   hasPasskey?: boolean;
   isAdminView?: boolean;
   lastVaccineRecord?: { vaccine_name?: string; administered_at?: string; status?: string | null } | null;
+  /** Pre-fetched server data for HealthTab — eliminates duplicate client-side fetches on Sağlık tab mount */
+  initialVaccines?: any[];
+  initialParasites?: any[];
 }
 
 export function getTaskCardStyle(isOverdue: boolean, isCompleted: boolean) {
@@ -277,7 +280,7 @@ function getEventType(event: any): 'stock_status' | 'completed_record' | 'active
   return 'active_plan';
 }
 
-export default function PetDetailClient({ pet, age, score, overdue, schedules, diseases, allergies, medications, growthRecords, appointments, nutritionLogs, inventory, feedingLogs, weightLogs, assignments, payments, subscription, activeLostReport, hasPasskey = false, isAdminView = false, lastVaccineRecord }: PetDetailProps) {
+export default function PetDetailClient({ pet, age, score, overdue, schedules, diseases, allergies, medications, growthRecords, appointments, nutritionLogs, inventory, feedingLogs, weightLogs, assignments, payments, subscription, activeLostReport, hasPasskey = false, isAdminView = false, lastVaccineRecord, initialVaccines, initialParasites }: PetDetailProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -2301,6 +2304,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
               onMarkDone={handleMarkDone}
               onPostpone={handlePostpone}
               onEdit={handleEditTask}
+              initialVaccines={initialVaccines}
+              initialParasites={initialParasites}
+              initialVetRecords={appointments}
             />
             <BreedHealthCard breed={pet.breed} />
           </>
