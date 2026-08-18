@@ -1,37 +1,9 @@
 import { NextResponse } from 'next/server';
+import { TURKIYE_ILLER } from '@/lib/utils/turkiyeIller';
 
 export const dynamic = 'force-dynamic';
 
-const TURKISH_CITIES: Record<string, { lat: number; lon: number; name: string }> = {
-  istanbul: { lat: 41.0082, lon: 28.9784, name: 'İstanbul' },
-  ankara: { lat: 39.9334, lon: 32.8597, name: 'Ankara' },
-  izmir: { lat: 38.4237, lon: 27.1428, name: 'İzmir' },
-  bursa: { lat: 40.1885, lon: 29.0610, name: 'Bursa' },
-  antalya: { lat: 36.8969, lon: 30.7133, name: 'Antalya' },
-  adana: { lat: 37.0000, lon: 35.3213, name: 'Adana' },
-  konya: { lat: 37.8746, lon: 32.4932, name: 'Konya' },
-  gaziantep: { lat: 37.0662, lon: 37.3833, name: 'Gaziantep' },
-  kocaeli: { lat: 40.8533, lon: 29.8815, name: 'Kocaeli' },
-  mersin: { lat: 36.8121, lon: 34.6415, name: 'Mersin' },
-  mugla: { lat: 37.2153, lon: 28.3636, name: 'Muğla' },
-  eskisehir: { lat: 39.7767, lon: 30.5206, name: 'Eskişehir' },
-  trabzon: { lat: 41.0027, lon: 39.7168, name: 'Trabzon' },
-  samsun: { lat: 41.2867, lon: 36.3300, name: 'Samsun' },
-  canakkale: { lat: 40.1553, lon: 26.4142, name: 'Çanakkale' },
-  kayseri: { lat: 38.7205, lon: 35.4826, name: 'Kayseri' },
-  aydin: { lat: 37.8380, lon: 27.8456, name: 'Aydın' },
-  balikesir: { lat: 39.6484, lon: 27.8826, name: 'Balıkesir' },
-  tekirdag: { lat: 40.9833, lon: 27.5167, name: 'Tekirdağ' },
-  denizli: { lat: 37.7765, lon: 29.0864, name: 'Denizli' },
-  sakarya: { lat: 40.7569, lon: 30.3783, name: 'Sakarya' },
-  edirne: { lat: 41.6772, lon: 26.5557, name: 'Edirne' },
-  yalova: { lat: 40.6500, lon: 29.2667, name: 'Yalova' },
-  diyarbakir: { lat: 37.9144, lon: 40.2306, name: 'Diyarbakır' },
-  hatay: { lat: 36.2023, lon: 36.1613, name: 'Hatay' },
-  manisa: { lat: 38.6191, lon: 27.4289, name: 'Manisa' },
-  sanliurfa: { lat: 37.1674, lon: 38.7955, name: 'Şanlıurfa' },
-  sivas: { lat: 39.7477, lon: 37.0179, name: 'Sivas' },
-  rize: { lat: 41.0201, lon: 40.5234, name: 'Rize' },
+const TOURIST_DISTRICTS: Record<string, { lat: number; lon: number; name: string }> = {
   bodrum: { lat: 37.0344, lon: 27.4305, name: 'Bodrum' },
   cesme: { lat: 38.3236, lon: 26.3042, name: 'Çeşme' },
   fethiye: { lat: 36.6217, lon: 29.1164, name: 'Fethiye' },
@@ -54,18 +26,44 @@ function normalizeTurkish(text: string): string {
     .trim();
 }
 
+function findLocationByName(cityName: string) {
+  const normalized = normalizeTurkish(cityName);
+  if (TOURIST_DISTRICTS[normalized]) return TOURIST_DISTRICTS[normalized];
+
+  const cityKey = Object.keys(TURKIYE_ILLER).find(k => normalizeTurkish(k) === normalized);
+  if (cityKey) {
+    return {
+      lat: TURKIYE_ILLER[cityKey].lat,
+      lon: TURKIYE_ILLER[cityKey].lon,
+      name: TURKIYE_ILLER[cityKey].label
+    };
+  }
+  return null;
+}
+
 function findNearestCity(lat: number, lon: number): string {
   let closestCity = 'İstanbul';
   let minDistance = Infinity;
 
-  for (const key of Object.keys(TURKISH_CITIES)) {
-    const city = TURKISH_CITIES[key];
+  for (const key of Object.keys(TOURIST_DISTRICTS)) {
+    const city = TOURIST_DISTRICTS[key];
     const dLat = city.lat - lat;
     const dLon = city.lon - lon;
     const dist = dLat * dLat + dLon * dLon;
     if (dist < minDistance) {
       minDistance = dist;
       closestCity = city.name;
+    }
+  }
+
+  for (const key of Object.keys(TURKIYE_ILLER)) {
+    const city = TURKIYE_ILLER[key];
+    const dLat = city.lat - lat;
+    const dLon = city.lon - lon;
+    const dist = dLat * dLat + dLon * dLon;
+    if (dist < minDistance) {
+      minDistance = dist;
+      closestCity = city.label;
     }
   }
 
@@ -139,13 +137,13 @@ export async function GET(request: Request) {
   // 1. Şehir parametresi verilmişse eşleştir
   if (cityParam) {
     hasLocation = true;
-    const normalized = normalizeTurkish(cityParam);
-    if (TURKISH_CITIES[normalized]) {
-      lat = String(TURKISH_CITIES[normalized].lat);
-      lon = String(TURKISH_CITIES[normalized].lon);
-      resolvedCityName = TURKISH_CITIES[normalized].name;
+    const foundLocation = findLocationByName(cityParam);
+    if (foundLocation) {
+      lat = String(foundLocation.lat);
+      lon = String(foundLocation.lon);
+      resolvedCityName = foundLocation.name;
     } else {
-      // Şehir ismini direkt kullan
+      // Şehir ismini direkt kullan (Fallback)
       resolvedCityName = cityParam;
     }
   } else if (lat && lon) {

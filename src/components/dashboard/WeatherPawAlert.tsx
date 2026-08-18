@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useId, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   Sun,
   CloudSun,
@@ -20,8 +21,11 @@ import {
   Droplets,
   HeartHandshake,
   Lightbulb,
+  Search,
+  Loader2,
 } from 'lucide-react'
 import { evaluateWeatherScenario, WeatherScenarioResult } from '@/lib/weatherScenarios'
+import { TURKIYE_ILLER } from '@/lib/utils/turkiyeIller'
 
 export interface WeatherData {
   temp: number
@@ -374,15 +378,61 @@ function renderWeatherIcon(iconType: string, className: string = 'w-8 h-8 text-s
 }
 
 export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
+  const router = useRouter()
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(true)
   const [dismissed, setDismissed] = useState(false)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
 
+  // Location Modal States
+  const [showLocationModal, setShowLocationModal] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [isSavingLocation, setIsSavingLocation] = useState(false)
+  const [locationError, setLocationError] = useState('')
+
   const petCity = activePet?.city || ''
   const petName = activePet?.name || 'Dostunuz'
   const petSpecies = activePet?.species || ''
+
+  const citiesList = useMemo(() => {
+    return Object.values(TURKIYE_ILLER).sort((a, b) => a.label.localeCompare(b.label))
+  }, [])
+
+  const filteredCities = useMemo(() => {
+    if (!searchQuery) return citiesList
+    const lowerQ = searchQuery.toLowerCase()
+    // Türkçe karaktere duyarlı basit arama
+    return citiesList.filter((city) => 
+      city.label.toLowerCase().includes(lowerQ) || 
+      city.label.toLocaleLowerCase('tr-TR').includes(lowerQ)
+    )
+  }, [searchQuery, citiesList])
+
+  const saveCityToPet = async (cityName: string) => {
+    if (!activePet?.id) return
+    setIsSavingLocation(true)
+    setLocationError('')
+    try {
+      const res = await fetch(`/api/pets/${activePet.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ city: cityName }),
+      })
+
+      if (res.ok) {
+        sessionStorage.removeItem('odi_weather_data_v3')
+        setShowLocationModal(false)
+        router.refresh()
+      } else {
+        setLocationError('Konum kaydedilirken bir hata oluştu.')
+      }
+    } catch (err) {
+      setLocationError('Bağlantı hatası oluştu.')
+    } finally {
+      setIsSavingLocation(false)
+    }
+  }
 
   const fetchWeather = async (coords?: { latitude: number; longitude: number }) => {
     try {
@@ -453,18 +503,42 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
     if (e) {
       e.stopPropagation()
     }
+    setShowLocationModal(true)
+  }
+
+  const handleGpsLocation = () => {
     if (typeof window !== 'undefined' && navigator.geolocation) {
-      setIsRefreshing(true)
+      setIsSavingLocation(true)
+      setLocationError('')
       navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          fetchWeather(pos.coords)
+        async (pos) => {
+          try {
+            const res = await fetch(`/api/weather?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`)
+            if (res.ok) {
+              const json = await res.json()
+              if (json.success && json.data?.cityName) {
+                await saveCityToPet(json.data.cityName)
+              } else {
+                setLocationError('Konumunuz belirlenemedi, lütfen listeden seçin.')
+              }
+            } else {
+              setLocationError('Konum servisine erişilemedi.')
+            }
+          } catch (err) {
+             setLocationError('Hava durumu servisine erişilemedi.')
+          } finally {
+            setIsSavingLocation(false)
+          }
         },
         (err) => {
           console.warn('Geolocation permission denied or error:', err)
-          setIsRefreshing(false)
+          setIsSavingLocation(false)
+          setLocationError('Konum izni alınamadı, lütfen listeden seçin.')
         },
-        { timeout: 8000 }
+        { timeout: 6000 }
       )
+    } else {
+      setLocationError('Tarayıcınız konum servisini desteklemiyor.')
     }
   }
 
@@ -846,6 +920,90 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
               >
                 Tamam
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. Location Search & GPS Modal */}
+      {showLocationModal && (
+        <div
+          className="fixed inset-0 z-[10001] bg-slate-900/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200"
+          onClick={() => setShowLocationModal(false)}
+        >
+          <div
+            className="bg-white w-full max-w-md rounded-t-[28px] sm:rounded-3xl p-5 shadow-2xl flex flex-col animate-in slide-in-from-bottom-4 duration-300 max-h-[85vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-blue-600" />
+                Konum Belirle
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowLocationModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors text-slate-500"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleGpsLocation}
+              disabled={isSavingLocation}
+              className="w-full flex items-center justify-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 py-3 rounded-xl font-bold mb-4 transition-colors active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
+            >
+              {isSavingLocation ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Konum Bulunuyor...
+                </>
+              ) : (
+                <>
+                  <MapPin className="w-5 h-5" />
+                  Mevcut Konumumu Kullan
+                </>
+              )}
+            </button>
+
+            {locationError && (
+              <div className="mb-4 text-xs font-semibold text-red-600 bg-red-50 p-3 rounded-lg border border-red-100">
+                {locationError}
+              </div>
+            )}
+
+            <div className="relative mb-4 shrink-0">
+              <Search className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Şehir ara..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all text-sm font-medium"
+              />
+            </div>
+
+            <div className="flex-1 overflow-y-auto min-h-[200px]">
+              <div className="grid grid-cols-2 gap-2 pb-6">
+                {filteredCities.length > 0 ? (
+                  filteredCities.map((city) => (
+                    <button
+                      key={city.value}
+                      onClick={() => saveCityToPet(city.label)}
+                      disabled={isSavingLocation}
+                      className="text-left px-3 py-2.5 rounded-lg hover:bg-slate-50 active:bg-slate-100 text-sm font-semibold text-slate-700 transition-colors"
+                    >
+                      {city.label}
+                    </button>
+                  ))
+                ) : (
+                  <div className="col-span-2 text-center py-6 text-sm text-slate-500 font-medium">
+                    Şehir bulunamadı
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
