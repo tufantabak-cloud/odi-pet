@@ -52,7 +52,9 @@ export default async function ClinicDashboard() {
       {/* Greeting */}
       <div className="flex flex-col gap-2">
         <h1 className="text-[32px] font-extrabold text-text-primary tracking-tight">
-          Günaydın, Dr. {profile?.first_name || 'Kullanıcı'} 👋
+          {profile?.first_name && profile.first_name.toLowerCase() !== 'kullanıcı' && profile.first_name.toLowerCase() !== 'kullanici'
+            ? `Günaydın, Dr. ${profile.first_name} 👋`
+            : 'Günaydın, Doktor 👋'}
         </h1>
         <p className="text-[16px] font-normal text-text-secondary">
           Günlük operasyon görünümü. Randevu ve geciken bakımları buradan yönetin.

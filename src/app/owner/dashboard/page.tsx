@@ -100,13 +100,21 @@ export default async function OwnerDashboard() {
     return { ...pet, lastFeedingDate, weightVal, overdueCount, upcomingCount }
   })
 
-  const firstName = profile?.first_name || 'Hos Geldin'
+  const rawFirstName = profile?.first_name?.trim()
+  const isGenericPlaceholder =
+    !rawFirstName ||
+    rawFirstName.toLowerCase() === 'kullanıcı' ||
+    rawFirstName.toLowerCase() === 'kullanici' ||
+    rawFirstName.toLowerCase() === 'hos geldin' ||
+    rawFirstName.toLowerCase() === 'hoş geldin'
+  const firstName = isGenericPlaceholder ? '' : rawFirstName
   const greeting = (() => {
     const h = now.getHours()
     if (h < 12) return 'Günaydın'
     if (h < 18) return 'İyi günler'
     return 'İyi akşamlar'
   })()
+  const displayGreeting = firstName ? `${greeting}, ${firstName}` : greeting
 
   const dateStr = now.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })
 
@@ -149,7 +157,7 @@ export default async function OwnerDashboard() {
         {(!pets || pets.length === 0) ? (
           <div className="px-[var(--space-4)] pt-6 flex flex-col gap-4">
             <h1 className="text-[22px] font-black text-[var(--color-text-primary)] leading-tight tracking-tight">
-              {greeting}, {firstName}
+              {displayGreeting}
             </h1>
             <GlassCard padding="lg" className="text-center flex flex-col items-center mt-4">
               <div className="text-5xl mb-4">🐾</div>

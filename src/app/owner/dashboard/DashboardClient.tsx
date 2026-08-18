@@ -110,7 +110,7 @@ export default function DashboardClient({
       <div className="px-[var(--space-4)] pt-6 pb-1 flex items-center justify-between gap-4">
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-bold text-text-primary leading-tight tracking-tight">
-            {greeting}, {firstName}
+            {firstName ? `${greeting}, ${firstName}` : greeting}
           </h1>
           <div className="text-xs text-text-secondary font-medium flex items-center gap-1.5">
             <i className="ti ti-calendar text-primary text-xs" />
