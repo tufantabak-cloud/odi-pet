@@ -9,11 +9,32 @@ export default serwist(
   {
     swSrc: "src/sw.ts",
     swDest: "public/sw.js",
-    globIgnores: ["public/**/*.html"],
+    globIgnores: [
+      "public/**/*.html",
+      "public/**/*.md",
+      "public/**/*.json",
+      "public/**/source.svg",
+      "public/**/README*",
+      "**/*.map",
+    ],
     manifestTransforms: [
       (entries) => ({
         manifest: entries.filter((entry) => {
           const normalizedUrl = entry.url.replaceAll("\\", "/");
+
+          // Next.js App Router does not serve Pages router SSG manifests and developer docs
+          if (
+            normalizedUrl.includes("_ssgManifest") ||
+            normalizedUrl.includes("_buildManifest") ||
+            normalizedUrl.includes("_clientMiddlewareManifest") ||
+            normalizedUrl.endsWith(".md") ||
+            normalizedUrl.endsWith(".json") ||
+            normalizedUrl.endsWith(".map") ||
+            normalizedUrl.endsWith("source.svg")
+          ) {
+            return false;
+          }
+
           const isPrerenderedPage =
             /\/server\/(?:app|pages)\/.*\.html$/.test(normalizedUrl);
 
@@ -27,7 +48,7 @@ export default serwist(
       }),
     ],
     esbuildOptions: {
-      sourcemap: true,
+      sourcemap: false,
     },
   },
   undefined,

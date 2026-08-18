@@ -24,14 +24,13 @@ function validateSameOrigin(request: NextRequest): NextResponse | null {
 }
 
 /**
- * Generate a unique nonce and build CSP header string.
- * Nonce replaces 'unsafe-inline' and 'unsafe-eval' in script-src for XSS protection.
+ * Build CSP header string.
+ * Allows Next.js runtime hydration scripts, Turnstile, Leaflet, and PWA scripts.
  */
-function buildCsp(nonce: string): string {
-  // In production: strict nonce-based CSP (no unsafe-eval, no unsafe-inline for scripts)
-  // In development: same policy but delivered as Report-Only so React eval() works
+function buildCsp(): string {
+  // In production & dev: strict CSP allowing Next.js inline scripts, Turnstile, Leaflet and PWA
   // Savunma Katmanı (Defense-in-Depth): https://odi.pet ve sub-domain'leri harici/edge push payload'ları ve CDN görselleri için img-src ve connect-src'ye eklenmiştir.
-  return `default-src 'self'; script-src 'self' 'nonce-${nonce}' 'unsafe-inline' https://challenges.cloudflare.com https://unpkg.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' blob: data: https://*.supabase.co https://*.tile.openstreetmap.org https://odi.pet https://*.odi.pet; font-src 'self' data:; connect-src 'self' blob: http://127.0.0.1:* http://localhost:* https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://api.resend.com https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://odi.pet https://*.odi.pet; frame-src 'self' https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;`
+  return `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://unpkg.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' blob: data: https://*.supabase.co https://*.tile.openstreetmap.org https://odi.pet https://*.odi.pet; font-src 'self' data:; connect-src 'self' blob: http://127.0.0.1:* http://localhost:* https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://api.resend.com https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://odi.pet https://*.odi.pet; frame-src 'self' https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;`
 }
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production'
@@ -53,9 +52,9 @@ function applyCspHeaders(response: NextResponse, csp: string, nonce: string): vo
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
-  // --- Nonce-based CSP ---
+  // --- CSP Header ---
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
-  const cspHeader = buildCsp(nonce)
+  const cspHeader = buildCsp()
   // Inject nonce into request headers so Next.js applies it to inline scripts
   request.headers.set('x-nonce', nonce)
   request.headers.set(CSP_HEADER_NAME, cspHeader)
