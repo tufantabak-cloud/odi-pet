@@ -497,16 +497,23 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
       : null
 
     const hasNoLogs = !lastWeightLog
-    const hasWeight = lastWeightLog?.weight_kg != null
-    const hasHeight = lastWeightLog?.height_cm != null
+    const hasWeight = lastWeightLog && lastWeightLog.weight_kg != null
+    const hasHeight = lastWeightLog && lastWeightLog.height_cm != null
     
-    const isMissingData = hasNoLogs || (!hasWeight || !hasHeight)
+    const isMissingData = hasNoLogs || !hasWeight || !hasHeight
     const isRoutineDue = lastWeightLog && daysSinceLastLog !== null && daysSinceLastLog >= 30
 
     let missingTitle = 'Kilo & Boy Bilgisi Eksik'
+    let missingSubtitle = `${targetPet.name}'in profilini tamamla`
+    
     if (!hasNoLogs) {
-      if (!hasWeight && hasHeight) missingTitle = 'Kilo Bilgisi Eksik'
-      else if (hasWeight && !hasHeight) missingTitle = 'Boy Bilgisi Eksik'
+      if (!hasWeight && hasHeight) {
+        missingTitle = 'Kilo Bilgisi Eksik'
+        missingSubtitle = `${targetPet.name}'in kilosunu ekleyerek profilini tamamla`
+      } else if (hasWeight && !hasHeight) {
+        missingTitle = 'Boy Bilgisi Eksik'
+        missingSubtitle = `${targetPet.name}'in boyunu ekleyerek ideal kilo hesabını netleştirin`
+      }
     }
 
     const weightFirstCardId = `weight-first-${targetPet.id}`
@@ -517,7 +524,7 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
         priority: 6,
         isCritical: true,
         title: missingTitle,
-        subtitle: `${targetPet.name}'in profilini tamamla`,
+        subtitle: missingSubtitle,
         dateInfo: 'Eksik Bilgi',
         ctaLabel: 'Gir',
         action: () => {
