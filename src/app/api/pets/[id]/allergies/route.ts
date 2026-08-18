@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient, createAdminSupabaseClient } from '@/lib/supabase/server'
 import { getCurrentProfile } from '@/lib/auth/get-current-profile'
+import { hasPetCapability } from '@/lib/pets/access'
 
 export async function GET(request: Request, props: { params: Promise<{ id: string }> }) {
   try {
@@ -12,14 +13,8 @@ export async function GET(request: Request, props: { params: Promise<{ id: strin
     const supabase = isAdmin ? createAdminSupabaseClient() : await createServerSupabaseClient()
 
     if (!isAdmin) {
-      const { data: ownership } = await supabase
-        .from('pet_owners')
-        .select('pet_id')
-        .eq('pet_id', id)
-        .eq('profile_id', profile.id)
-        .single()
-
-      if (!ownership) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      const canView = await hasPetCapability(supabase, id, 'can_view_pet')
+      if (!canView) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const { data: allergies, error } = await supabase
@@ -44,15 +39,12 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
 
     const supabase = await createServerSupabaseClient()
 
-    const { data: ownership } = await supabase
-      .from('pet_owners')
-      .select('pet_id')
-      .eq('pet_id', id)
-      .eq('profile_id', profile.id)
-      .single()
-
-    if (!ownership && profile.role !== 'admin' && profile.role !== 'founder') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    const isAdmin = profile.role === 'admin' || profile.role === 'founder'
+    if (!isAdmin) {
+      const canManage = await hasPetCapability(supabase, id, 'can_manage_pet_care')
+      if (!canManage) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
     }
 
     const body = await request.json()
@@ -89,15 +81,12 @@ export async function DELETE(request: Request, props: { params: Promise<{ id: st
 
     const supabase = await createServerSupabaseClient()
 
-    const { data: ownership } = await supabase
-      .from('pet_owners')
-      .select('pet_id')
-      .eq('pet_id', id)
-      .eq('profile_id', profile.id)
-      .single()
-
-    if (!ownership && profile.role !== 'admin' && profile.role !== 'founder') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    const isAdmin = profile.role === 'admin' || profile.role === 'founder'
+    if (!isAdmin) {
+      const canManage = await hasPetCapability(supabase, id, 'can_manage_pet_care')
+      if (!canManage) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
     }
 
     const body = await request.json()

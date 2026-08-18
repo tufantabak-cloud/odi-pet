@@ -5,6 +5,7 @@ import {
 } from '@/lib/supabase/server';
 import { processRecordCreation } from '@/lib/agenda/write-handlers/write-service';
 import { persistApplicationDetails } from '@/lib/agenda/write-handlers/persist-application-details';
+import { hasPetCapability } from '@/lib/pets/access';
 
 export async function POST(request: Request) {
   try {
@@ -41,26 +42,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'INVALID_IDEMPOTENCY_KEY' }, { status: 400 });
     }
 
-    // Ana sahip ve pet_owners tablosundaki ortak sahipler desteklenir.
-    const [
-      { data: primaryOwner },
-      { data: sharedOwner }
-    ] = await Promise.all([
-      supabase
-        .from('pets')
-        .select('id')
-        .eq('id', pet_id)
-        .eq('owner_id', user.id)
-        .maybeSingle(),
-      supabase
-        .from('pet_owners')
-        .select('id')
-        .eq('pet_id', pet_id)
-        .eq('profile_id', user.id)
-        .maybeSingle()
-    ]);
+    // Kanonik yetki modeli: primary_owner, co_owner, care_admin, care_editor desteklenir
+    const canManageCare = await hasPetCapability(supabase, pet_id, 'can_manage_pet_care');
 
-    if (!primaryOwner && !sharedOwner) {
+    if (!canManageCare) {
       return NextResponse.json(
         { error: 'PET_NOT_FOUND_OR_FORBIDDEN' },
         { status: 403 }

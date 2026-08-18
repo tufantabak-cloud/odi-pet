@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 
+import { hasPetCapability } from '@/lib/pets/access'
+
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; recordId: string }> }
@@ -12,15 +14,9 @@ export async function DELETE(
 
   const supabase = await createServerSupabaseClient()
 
-  // Pet sahipliği doğrulama
-  const { data: ownership } = await supabase
-    .from('pet_owners')
-    .select('profile_id')
-    .eq('pet_id', id)
-    .eq('profile_id', user.id)
-    .single()
-
-  if (!ownership) {
+  // Pet bakım yetkisi doğrulama
+  const canManage = await hasPetCapability(supabase, id, 'can_manage_pet_care')
+  if (!canManage) {
     return NextResponse.json(
       { error: 'Bu işlem için yetkiniz yok.' },
       { status: 403 }

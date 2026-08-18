@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { hasPetCapability } from '@/lib/pets/access';
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -12,16 +13,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     const { id: petId } = await params;
 
-    // Check pet ownership
-    const { data: pet, error: petError } = await supabase
-      .from('pets')
-      .select('id')
-      .eq('id', petId)
-      .eq('user_id', user.id)
-      .single();
-
-    if (petError || !pet) {
-      return NextResponse.json({ error: 'Pet not found or unauthorized' }, { status: 404 });
+    // Check pet care management capability
+    const canManageCare = await hasPetCapability(supabase, petId, 'can_manage_pet_care');
+    if (!canManageCare) {
+      return NextResponse.json({ error: 'Pet not found or unauthorized' }, { status: 403 });
     }
 
     const formData = await req.formData();

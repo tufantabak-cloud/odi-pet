@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getCurrentProfile } from '@/lib/auth/get-current-profile'
 import { normalizeSpecies } from '@/lib/species'
+import { hasPetCapability } from '@/lib/pets/access'
 
 export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
   try {
@@ -22,16 +23,10 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
       return NextResponse.json({ error: 'Pet not found' }, { status: 404 })
     }
 
-    // Sahiplik kontrolü
+    // Yetkilendirme kontrolü
     if (profile.role !== 'admin' && profile.role !== 'founder') {
-      const { data: ownership } = await supabase
-        .from('pet_owners')
-        .select('pet_id')
-        .eq('pet_id', id)
-        .eq('profile_id', profile.id)
-        .single()
-
-      if (!ownership) {
+      const canManage = await hasPetCapability(supabase, id, 'can_manage_pet_care')
+      if (!canManage) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
       }
     }
