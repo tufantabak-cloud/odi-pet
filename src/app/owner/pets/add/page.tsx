@@ -191,6 +191,7 @@ function PetForm({
   submitError,
 }: PetFormProps) {
   const [activeMeasureTab, setActiveMeasureTab] = useState<'weight' | 'height'>('weight')
+  const [showValidation, setShowValidation] = useState(false)
 
   const handleApproxChange = (yStr: string) => {
     setApproxYears(yStr)
@@ -230,7 +231,48 @@ function PetForm({
       <DefaultDogAvatar width={36} height={36} />
     )
 
-  const isFormValid = !!petName.trim() && !!selectedBreed && !!gender && !!birthDate && !!weight
+  const isNameInvalid = showValidation && !petName.trim()
+  const isBreedInvalid = showValidation && !selectedBreed
+  const isGenderInvalid = showValidation && !gender
+  const isBirthDateInvalid = showValidation && !birthDate
+  const isWeightInvalid = showValidation && !weight
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    setShowValidation(true)
+
+    if (!petName.trim()) {
+      document.getElementById('name')?.focus()
+      onSubmit(e)
+      return
+    }
+    if (!selectedBreed) {
+      document.getElementById('pet-breed-combobox')?.focus()
+      onSubmit(e)
+      return
+    }
+    if (!gender) {
+      const genderEl = document.getElementById('gender-group')
+      genderEl?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      genderEl?.focus()
+      onSubmit(e)
+      return
+    }
+    if (!birthDate) {
+      if (birthDateMode === 'exact') {
+        document.getElementById('pet-birthdate-input')?.focus()
+      }
+      onSubmit(e)
+      return
+    }
+    if (!weight) {
+      document.getElementById('pet-weight-ruler')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      onSubmit(e)
+      return
+    }
+
+    onSubmit(e)
+  }
 
   return (
     <div className="flex flex-col w-full mx-auto pb-8 animate-fadeIn">
@@ -257,12 +299,12 @@ function PetForm({
         </div>
       </div>
 
-      <form onSubmit={onSubmit} className="card-base p-6 sm:p-8 flex flex-col gap-6 rounded-3xl">
+      <form onSubmit={handleFormSubmit} noValidate className="card-base p-6 sm:p-8 flex flex-col gap-6 rounded-3xl">
         {submitError && (
           <div
             role="alert"
             aria-live="assertive"
-            className="p-3.5 bg-error/10 text-error text-xs font-bold rounded-2xl border border-error/20 flex items-center gap-2"
+            className="p-3.5 bg-error/10 text-error text-xs font-bold rounded-2xl border border-error/20 flex items-center gap-2 animate-fadeIn"
           >
             <AlertTriangle size={16} className="w-4 h-4 text-error shrink-0" aria-hidden="true" />
             <span>{submitError}</span>
@@ -283,9 +325,18 @@ function PetForm({
               onChange={(e) => setPetName(e.target.value.toLocaleUpperCase('tr-TR'))}
               placeholder={species === 'cat' ? 'ÖRN: MİA, BONCUK' : 'ÖRN: MAX, KARAMEL'}
               data-testid="pet-name-input"
-              className="input-base uppercase text-sm font-semibold rounded-2xl"
+              aria-invalid={isNameInvalid}
+              aria-describedby={isNameInvalid ? 'pet-name-error' : undefined}
+              className={`input-base uppercase text-sm font-semibold rounded-2xl transition-all ${
+                isNameInvalid ? 'border-error focus:border-error focus:ring-error/20 bg-rose-50/20' : ''
+              }`}
               required
             />
+            {isNameInvalid && (
+              <p id="pet-name-error" role="alert" className="text-2xs font-bold text-error animate-fadeIn">
+                Lütfen can dostunuzun ismini girin.
+              </p>
+            )}
           </div>
 
           {/* Irk Combobox */}
@@ -293,25 +344,38 @@ function PetForm({
             <label htmlFor="pet-breed-combobox" className="text-xs font-extrabold text-text-primary">
               Irk *
             </label>
-            <BreedCombobox
-              id="pet-breed-combobox"
-              value={selectedBreed}
-              onChange={(b) => setSelectedBreed(b)}
-              species={species}
-              breeds={breeds}
-              popularBreeds={popularBreeds}
-              placeholder="Irk yazın veya listeden seçin..."
-              required
-              data-testid="pet-breed-select"
-            />
+            <div className={isBreedInvalid ? 'ring-2 ring-error/40 rounded-2xl' : ''}>
+              <BreedCombobox
+                id="pet-breed-combobox"
+                value={selectedBreed}
+                onChange={(b) => setSelectedBreed(b)}
+                species={species}
+                breeds={breeds}
+                popularBreeds={popularBreeds}
+                placeholder="Irk yazın veya listeden seçin..."
+                required
+                data-testid="pet-breed-select"
+              />
+            </div>
+            {isBreedInvalid && (
+              <p id="pet-breed-error" role="alert" className="text-2xs font-bold text-error animate-fadeIn">
+                Lütfen can dostunuzun ırkını seçin.
+              </p>
+            )}
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           {/* Cinsiyet */}
-          <div className="flex flex-col gap-2">
+          <div id="gender-group" tabIndex={-1} className="flex flex-col gap-2 outline-none">
             <label className="text-xs font-extrabold text-text-primary">Cinsiyet *</label>
-            <div className="flex gap-3">
+            <div
+              className={`flex gap-3 p-1 rounded-2xl transition-all ${
+                isGenderInvalid ? 'border-2 border-error bg-rose-50/30' : ''
+              }`}
+              role="radiogroup"
+              aria-label="Cinsiyet seçimi"
+            >
               {(
                 [
                   ['male', 'Erkek', 'sky'],
@@ -323,10 +387,14 @@ function PetForm({
                   theme === 'sky'
                     ? isSelected
                       ? 'border-sky-500 bg-sky-50/80 text-sky-700 shadow-xs scale-[1.01]'
-                      : 'hover:border-sky-300 text-text-secondary'
+                      : isGenderInvalid
+                        ? 'border-error/40 hover:border-sky-300 text-text-secondary'
+                        : 'hover:border-sky-300 text-text-secondary'
                     : isSelected
                       ? 'border-pink-500 bg-pink-50/80 text-pink-700 shadow-xs scale-[1.01]'
-                      : 'hover:border-pink-300 text-text-secondary'
+                      : isGenderInvalid
+                        ? 'border-error/40 hover:border-pink-300 text-text-secondary'
+                        : 'hover:border-pink-300 text-text-secondary'
 
                 return (
                   <label
@@ -338,6 +406,8 @@ function PetForm({
                       name="gender"
                       value={v}
                       checked={gender === v}
+                      aria-invalid={isGenderInvalid}
+                      aria-describedby={isGenderInvalid ? 'pet-gender-error' : undefined}
                       onChange={() => setGender(v)}
                       className="sr-only"
                     />
@@ -346,6 +416,11 @@ function PetForm({
                 )
               })}
             </div>
+            {isGenderInvalid && (
+              <p id="pet-gender-error" role="alert" className="text-2xs font-bold text-error animate-fadeIn">
+                Lütfen can dostunuzun cinsiyetini seçin.
+              </p>
+            )}
           </div>
 
           {/* Doğum Tarihi / Yaş */}
@@ -400,11 +475,16 @@ function PetForm({
             {birthDateMode === 'exact' ? (
               <div className="animate-scaleIn">
                 <input
+                  id="pet-birthdate-input"
                   type="date"
                   value={birthDate}
                   max={new Date().toISOString().split('T')[0]}
                   data-testid="pet-birthdate-input"
-                  className="input-base w-full animate-scaleIn text-sm font-semibold rounded-2xl"
+                  aria-invalid={isBirthDateInvalid}
+                  aria-describedby={isBirthDateInvalid ? 'pet-birthdate-error' : undefined}
+                  className={`input-base w-full animate-scaleIn text-sm font-semibold rounded-2xl transition-all ${
+                    isBirthDateInvalid ? 'border-error focus:border-error focus:ring-error/20 bg-rose-50/20' : ''
+                  }`}
                   onChange={(e) => setBirthDate(e.target.value)}
                 />
               </div>
@@ -418,7 +498,9 @@ function PetForm({
                   placeholder="Yaş (Örn: 1)"
                   value={approxYears}
                   onChange={(e) => handleApproxChange(e.target.value)}
-                  className="w-full h-12 !rounded-2xl border-primary/20 bg-surface"
+                  className={`w-full h-12 !rounded-2xl bg-surface ${
+                    isBirthDateInvalid ? 'border-2 border-error' : 'border-primary/20'
+                  }`}
                 />
                 {approxYears === '0' && (
                   <p className="text-2xs text-text-secondary font-medium">
@@ -426,6 +508,12 @@ function PetForm({
                   </p>
                 )}
               </div>
+            )}
+
+            {isBirthDateInvalid && (
+              <p id="pet-birthdate-error" role="alert" className="text-2xs font-bold text-error animate-fadeIn">
+                Lütfen can dostunuzun doğum tarihini veya yaklaşık yaşını belirtin.
+              </p>
             )}
 
             {birthDate && (
@@ -530,14 +618,19 @@ function PetForm({
               presets={species === 'cat' ? [20, 25, 30, 35] : [30, 45, 60, 80]}
             />
           )}
+
+          {isWeightInvalid && (
+            <p id="pet-weight-error" role="alert" className="text-2xs font-bold text-error animate-fadeIn">
+              Lütfen can dostunuzun kilosunu girin.
+            </p>
+          )}
         </div>
 
         <div className="flex justify-end mt-2 pt-5 border-t border-border-main">
           <button
             type="submit"
-            disabled={!isFormValid}
             data-testid="pet-save-button"
-            className="btn-primary min-w-[180px] w-full sm:w-auto py-3.5 text-sm sm:text-base shadow-md shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none hover:-translate-y-0.5 active:scale-[0.98] transition-all flex items-center justify-center gap-2 font-bold cursor-pointer rounded-2xl"
+            className="btn-primary min-w-[180px] w-full sm:w-auto py-3.5 text-sm sm:text-base shadow-md shadow-primary/20 hover:-translate-y-0.5 active:scale-[0.98] transition-all flex items-center justify-center gap-2 font-bold cursor-pointer rounded-2xl"
           >
             <span>Devam Et</span>
             <ChevronRight size={18} className="w-4.5 h-4.5" aria-hidden="true" />
