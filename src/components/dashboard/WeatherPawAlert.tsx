@@ -405,6 +405,7 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
               JSON.stringify({
                 data: json.data,
                 timestamp: Date.now(),
+                city: petCity,
               })
             )
           }
@@ -425,8 +426,8 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
       const cached = sessionStorage.getItem('odi_weather_data_v3')
       if (cached) {
         try {
-          const { data, timestamp } = JSON.parse(cached)
-          if (Date.now() - timestamp < 15 * 60 * 1000) {
+          const { data, timestamp, city } = JSON.parse(cached)
+          if (Date.now() - timestamp < 15 * 60 * 1000 && city === petCity) {
             setWeather(data)
             setLoading(false)
             return
