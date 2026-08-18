@@ -80,7 +80,7 @@ export default function OdiNoticedWeightCard({ activePet, allWeightLogs = [] }: 
     return defaultPoints
   }, [petLogs])
 
-  if (!activePet) return null
+  if (!activePet || petLogs.length < 2) return null
 
   const formattedWeight = latestWeight % 1 === 0 ? latestWeight.toFixed(0) : latestWeight.toFixed(1)
 

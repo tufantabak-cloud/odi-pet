@@ -607,54 +607,63 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
               </div>
             </div>
 
-            {/* Advice / Headline */}
-            <div className="text-[15px] sm:text-[16px] font-bold text-slate-800 leading-snug tracking-tight max-w-[320px] mt-4 mb-4">
-              {headline}
-            </div>
+            {/* Data or Empty State */}
+            {hasLocation ? (
+              <>
+                {/* Advice / Headline */}
+                <div className="text-[15px] sm:text-[16px] font-bold text-slate-800 leading-snug tracking-tight max-w-[320px] mt-4 mb-4">
+                  {headline}
+                </div>
 
-            {/* Dynamic Metrics */}
-            <div className="flex items-center">
-              {/* Metric 1 */}
-              <div className="flex flex-col">
-                <span className="text-[14px] sm:text-[15px] font-extrabold text-slate-900 leading-tight">
-                  {metric1.label}
-                </span>
-                <span
-                  className={`text-[12px] sm:text-[13px] font-bold mt-0.5 ${getMetricColorClass(
-                    metric1.color
-                  )}`}
+                {/* Dynamic Metrics */}
+                <div className="flex items-center">
+                  {/* Metric 1 */}
+                  <div className="flex flex-col">
+                    <span className="text-[14px] sm:text-[15px] font-extrabold text-slate-900 leading-tight">
+                      {metric1.label}
+                    </span>
+                    <span
+                      className={`text-[12px] sm:text-[13px] font-bold mt-0.5 ${getMetricColorClass(
+                        metric1.color
+                      )}`}
+                    >
+                      {metric1.statusText}
+                    </span>
+                  </div>
+
+                  {/* Divider Line */}
+                  <div className="w-[1px] h-8 bg-blue-200/80 mx-4 sm:mx-6 shrink-0" />
+
+                  {/* Metric 2 */}
+                  <div className="flex flex-col">
+                    <span className="text-[14px] sm:text-[15px] font-extrabold text-slate-900 leading-tight">
+                      {metric2.label}
+                    </span>
+                    <span
+                      className={`text-[12px] sm:text-[13px] font-bold mt-0.5 ${getMetricColorClass(
+                        metric2.color
+                      )}`}
+                    >
+                      {metric2.statusText}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Action Link */}
+                <button
+                  type="button"
+                  onClick={() => setShowDetailModal(true)}
+                  className="inline-flex items-center gap-1.5 text-[13px] sm:text-[14px] font-bold text-[#2563EB] hover:text-blue-700 active:scale-[0.98] transition-all mt-4 group cursor-pointer"
                 >
-                  {metric1.statusText}
-                </span>
+                  <span>{ctaText}</span>
+                  <ArrowRight className="w-3.5 h-3.5 stroke-[2.5] group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              </>
+            ) : (
+              <div className="text-[14px] sm:text-[15px] text-slate-600 font-medium leading-relaxed max-w-[280px] mt-4">
+                Konumunuzu ekleyin — size özel yürüyüş tavsiyeleri için.
               </div>
-
-              {/* Divider Line */}
-              <div className="w-[1px] h-8 bg-blue-200/80 mx-4 sm:mx-6 shrink-0" />
-
-              {/* Metric 2 */}
-              <div className="flex flex-col">
-                <span className="text-[14px] sm:text-[15px] font-extrabold text-slate-900 leading-tight">
-                  {metric2.label}
-                </span>
-                <span
-                  className={`text-[12px] sm:text-[13px] font-bold mt-0.5 ${getMetricColorClass(
-                    metric2.color
-                  )}`}
-                >
-                  {metric2.statusText}
-                </span>
-              </div>
-            </div>
-
-            {/* Action Link */}
-            <button
-              type="button"
-              onClick={() => setShowDetailModal(true)}
-              className="inline-flex items-center gap-1.5 text-[13px] sm:text-[14px] font-bold text-[#2563EB] hover:text-blue-700 active:scale-[0.98] transition-all mt-4 group cursor-pointer"
-            >
-              <span>{ctaText}</span>
-              <ArrowRight className="w-3.5 h-3.5 stroke-[2.5] group-hover:translate-x-0.5 transition-transform" />
-            </button>
+            )}
           </div>
 
           {/* Right Column: Illustration */}

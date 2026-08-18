@@ -496,17 +496,27 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
       ? Math.floor((Date.now() - new Date(lastWeightLog.measured_at).getTime()) / 86400000)
       : null
 
-    const isFirstEntry = !lastWeightLog
+    const hasNoLogs = !lastWeightLog
+    const hasWeight = lastWeightLog?.weight_kg != null
+    const hasHeight = lastWeightLog?.height_cm != null
+    
+    const isMissingData = hasNoLogs || (!hasWeight || !hasHeight)
     const isRoutineDue = lastWeightLog && daysSinceLastLog !== null && daysSinceLastLog >= 30
 
+    let missingTitle = 'Kilo & Boy Bilgisi Eksik'
+    if (!hasNoLogs) {
+      if (!hasWeight && hasHeight) missingTitle = 'Kilo Bilgisi Eksik'
+      else if (hasWeight && !hasHeight) missingTitle = 'Boy Bilgisi Eksik'
+    }
+
     const weightFirstCardId = `weight-first-${targetPet.id}`
-    if (isFirstEntry && !dismissedCards.includes(weightFirstCardId) && highlight !== weightFirstCardId) {
+    if (isMissingData && !dismissedCards.includes(weightFirstCardId) && highlight !== weightFirstCardId) {
       activeCards.push({
         id: weightFirstCardId,
         type: 'weight-first',
         priority: 6,
         isCritical: true,
-        title: 'Kilo & Boy Bilgisi Eksik',
+        title: missingTitle,
         subtitle: `${targetPet.name}'in profilini tamamla`,
         dateInfo: 'Eksik Bilgi',
         ctaLabel: 'Gir',
