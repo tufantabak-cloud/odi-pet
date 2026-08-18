@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { getSpeciesEmoji } from '@/lib/species'
+import { getPlanTargetUrl, getPlanActionLabel, type TakvimCategoryKey } from '@/lib/agenda/takvim-navigation'
 import { VaccineIcon, ParasiteIcon, ShampooIcon, BowlIcon, VetIcon, BoneIcon } from '@/components/icons/PetIcons'
 import { CalendarPlus, LayoutGrid, Plus, AlertTriangle, CheckCircle2, CalendarCheck } from 'lucide-react'
 
@@ -105,6 +106,9 @@ export default function TakvimClient({ pets, initialEvents = [] }: { pets: Pet[]
   const [activeView, setActiveView] = useState<'yaklasan' | 'sonYapilanlar'>('yaklasan')
 
   const multiPet = pets.length > 1
+  const effectivePetId = activePetId || (pets.length === 1 ? pets[0].id : null)
+  const targetPlanUrl = getPlanTargetUrl(activeFilter, effectivePetId)
+  const targetPlanLabel = getPlanActionLabel(activeFilter)
 
   const events = useMemo(() => {
     if (!activePetId) return initialEvents
@@ -172,9 +176,10 @@ export default function TakvimClient({ pets, initialEvents = [] }: { pets: Pet[]
           </p>
         </div>
         <Link
-          href="/owner/plan-yap"
+          href={targetPlanUrl}
           prefetch={false}
-          aria-label="Yeni rutin planla"
+          aria-label={targetPlanLabel}
+          title={targetPlanLabel}
           className="w-11 h-11 min-h-11 shrink-0 rounded-full flex items-center justify-center border border-border-main bg-surface text-text-secondary hover:text-primary hover:border-primary/30 transition-all active:scale-95 shadow-sm"
         >
           <CalendarPlus className="w-5 h-5" />
@@ -275,8 +280,8 @@ export default function TakvimClient({ pets, initialEvents = [] }: { pets: Pet[]
         </div>
       )}
 
-      {/* Kategori filtresi */}
-      <div className="px-4">
+      {/* Kategori filtresi & Bağlamsal Hızlı Planlama */}
+      <div className="px-4 flex flex-col gap-2">
         <div className="flex gap-1 p-1 rounded-xl bg-surface-secondary/70 border border-border-main/60">
           {FILTERS.map(f => {
             const on = activeFilter === f.key
@@ -295,6 +300,22 @@ export default function TakvimClient({ pets, initialEvents = [] }: { pets: Pet[]
             )
           })}
         </div>
+
+        {activeFilter !== 'tumu' && (
+          <div className="flex items-center justify-between px-1">
+            <span className="text-xs text-text-tertiary font-medium">
+              {CATEGORY_STYLE[activeFilter]?.label} takvimi
+            </span>
+            <Link
+              href={targetPlanUrl}
+              prefetch={false}
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold hover:bg-primary/20 transition-all active:scale-95"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              {targetPlanLabel}
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* İçerik */}
@@ -308,15 +329,15 @@ export default function TakvimClient({ pets, initialEvents = [] }: { pets: Pet[]
                 <p className="text-xs text-text-secondary mt-1">
                   {activeFilter === 'tumu'
                     ? 'Bu dönem için planlanmış bir görev görünmüyor.'
-                    : 'Bu kategoride planlanmış bir görev görünmüyor.'}
+                    : `Bu dönem için planlanmış ${CATEGORY_STYLE[activeFilter]?.label.toLowerCase()} görevi görünmüyor.`}
                 </p>
                 <Link
-                  href="/owner/plan-yap"
+                  href={targetPlanUrl}
                   prefetch={false}
                   className="inline-flex min-h-11 items-center justify-center gap-2 mt-4 px-4 py-2.5 rounded-full border border-primary text-primary text-xs font-bold hover:bg-primary-soft transition-all active:scale-95"
                 >
                   <Plus className="w-4 h-4 shrink-0" />
-                  Rutin planla
+                  {targetPlanLabel}
                 </Link>
               </>
             ) : (
@@ -326,7 +347,7 @@ export default function TakvimClient({ pets, initialEvents = [] }: { pets: Pet[]
                 <p className="text-xs text-text-secondary mt-1">
                   {activeFilter === 'tumu'
                     ? 'Son 30 gün içinde tamamlanmış bir görev kaydı bulunmuyor.'
-                    : 'Bu kategoride tamamlanmış bir görev kaydı bulunmuyor.'}
+                    : `Son 30 gün içinde tamamlanmış ${CATEGORY_STYLE[activeFilter]?.label.toLowerCase()} kaydı bulunmuyor.`}
                 </p>
               </>
             )}
