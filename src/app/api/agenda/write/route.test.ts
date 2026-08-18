@@ -4,11 +4,16 @@ const mocks = vi.hoisted(() => ({
   createAdminSupabaseClient: vi.fn(),
   createServerSupabaseClient: vi.fn(),
   processRecordCreation: vi.fn(),
+  hasPetCapability: vi.fn(),
 }))
 
 vi.mock('@/lib/supabase/server', () => ({
   createAdminSupabaseClient: mocks.createAdminSupabaseClient,
   createServerSupabaseClient: mocks.createServerSupabaseClient,
+}))
+
+vi.mock('@/lib/pets/access', () => ({
+  hasPetCapability: mocks.hasPetCapability,
 }))
 
 vi.mock('@/lib/agenda/write-handlers/write-service', () => ({
@@ -70,6 +75,7 @@ function configureSession({
   }
 
   mocks.createServerSupabaseClient.mockResolvedValue(sessionClient)
+  mocks.hasPetCapability.mockResolvedValue(Boolean(primaryOwner || sharedOwner))
   return { queries, sessionClient }
 }
 
