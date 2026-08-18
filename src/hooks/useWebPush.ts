@@ -14,6 +14,7 @@ import {
 
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ''
 const PUSH_OPERATION_TIMEOUT_MS = 15_000
+const INIT_CHECK_TIMEOUT_MS = 3_000
 const SOFT_PROMPT_REMIND_DAYS = 14
 
 function urlBase64ToUint8Array(base64String: string) {
@@ -111,14 +112,14 @@ export function useWebPush() {
 
         const readyRegistration = await withTimeout(
           navigator.serviceWorker.ready,
-          PUSH_OPERATION_TIMEOUT_MS,
+          INIT_CHECK_TIMEOUT_MS,
           'SW_READY_TIMEOUT'
         )
         swRegRef.current = readyRegistration
 
         const existingSubscription = await withTimeout(
           readyRegistration.pushManager.getSubscription(),
-          PUSH_OPERATION_TIMEOUT_MS,
+          INIT_CHECK_TIMEOUT_MS,
           'PUSH_SUBSCRIPTION_TIMEOUT'
         )
 

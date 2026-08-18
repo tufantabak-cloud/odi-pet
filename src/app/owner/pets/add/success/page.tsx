@@ -59,16 +59,11 @@ function SuccessContent() {
   }, [petId, router, supabase])
 
   useEffect(() => {
-    if (isInitializing) return
-
     if (isSubscribed) {
       setErrorMsg('')
       setActiveStep(6)
-      return
     }
-
-    if (pushError) setErrorMsg(pushError)
-  }, [isInitializing, isSubscribed, pushError])
+  }, [isSubscribed])
 
   const handleSubscribe = async () => {
     setErrorMsg('')
@@ -220,13 +215,13 @@ function SuccessContent() {
               <button
                 type="button"
                 onClick={handleSubscribe}
-                disabled={isLoading || isInitializing}
-                className="w-full btn-primary py-3.5 text-sm sm:text-base font-bold shadow-md flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all rounded-2xl cursor-pointer"
+                disabled={isLoading}
+                className="w-full btn-primary py-3.5 text-sm sm:text-base font-bold shadow-md flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] transition-all rounded-2xl cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {isLoading || isInitializing ? (
+                {isLoading ? (
                   <span className="flex items-center gap-2 justify-center">
                     <Loader2 size={18} className="w-4.5 h-4.5 animate-spin" aria-hidden="true" />
-                    <span>{isInitializing ? 'Kontrol ediliyor...' : 'Etkinleştiriliyor...'}</span>
+                    <span>Etkinleştiriliyor...</span>
                   </span>
                 ) : (
                   <span className="flex items-center justify-center gap-1.5">
@@ -245,7 +240,6 @@ function SuccessContent() {
                 <button
                   type="button"
                   onClick={() => setShowSkipWarning(true)}
-                  disabled={isLoading || isInitializing}
                   className="text-xs font-bold text-text-secondary hover:text-text-primary py-2 hover:underline transition-colors text-center cursor-pointer"
                 >
                   Bildirim Açmadan 6. Adıma Geç
@@ -260,7 +254,8 @@ function SuccessContent() {
                     <button
                       type="button"
                       onClick={handleSubscribe}
-                      className="px-3.5 py-2 bg-primary text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer active:scale-[0.97]"
+                      disabled={isLoading}
+                      className="px-3.5 py-2 bg-primary text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer active:scale-[0.97] disabled:opacity-70"
                     >
                       Vazgeç, Bildirim Aç
                     </button>
