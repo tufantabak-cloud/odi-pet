@@ -40,8 +40,8 @@ import {
   POPULAR_DOG_BREED_NAMES,
 } from '@/lib/pets/breedsMaster'
 
-const catSpeciesImage = '/brand/illustrations/species/cat.png'
-const dogSpeciesImage = '/brand/illustrations/species/dog.png'
+const catSpeciesImage = '/brand/illustrations/species/cat.webp'
+const dogSpeciesImage = '/brand/illustrations/species/dog.webp'
 
 const CAT_BREEDS = CAT_BREED_NAMES
 const POPULAR_CAT_BREEDS = POPULAR_CAT_BREED_NAMES
@@ -49,6 +49,24 @@ const DOG_BREEDS = DOG_BREEDS_NAMES
 const POPULAR_DOG_BREEDS = POPULAR_DOG_BREED_NAMES
 
 type Species = 'cat' | 'dog'
+
+// ── Fallback ikonlar (görsel yüklenemediğinde) ──────────────────
+function SpeciesFallbackIcon({ species }: { species: Species }) {
+  if (species === 'cat') {
+    return (
+      <svg viewBox="0 0 64 64" fill="none" className="w-16 h-16 opacity-30" aria-hidden="true">
+        <path d="M32 10C20.95 10 12 18.95 12 30c0 8.28 4.8 15.44 11.8 18.96L22 54h20l-1.8-5.04C47.2 45.44 52 38.28 52 30c0-11.05-8.95-20-20-20z" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M14 16L8 8M50 16L56 8M26 40c0 1.1.9 2 2 2h8a2 2 0 000-4h-8a2 2 0 00-2 2z" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    )
+  }
+  return (
+    <svg viewBox="0 0 64 64" fill="none" className="w-16 h-16 opacity-30" aria-hidden="true">
+      <path d="M44 14c0-4-4-6-8-4-2-4-8-4-10 0-4-2-8 0-8 4 0 6 4 10 10 10h6c6 0 10-4 10-10z" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M20 24c-8 2-12 10-10 18 1 4 4 8 8 10l2 4h24l2-4c4-2 7-6 8-10 2-8-2-16-10-18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
 
 // ── Adım 1: Tür Seçimi ──────────────────────────────────────────
 function SpeciesSelector({
@@ -58,6 +76,8 @@ function SpeciesSelector({
   onSelect: (s: Species) => void
   onBack: () => void
 }) {
+  const [imgError, setImgError] = useState<Record<Species, boolean>>({ cat: false, dog: false })
+
   return (
     <div className="flex flex-col items-center w-full mx-auto pt-2 pb-8 gap-8 animate-fadeIn">
       <div className="w-full flex justify-start">
@@ -90,6 +110,7 @@ function SpeciesSelector({
             ariaLabel: 'Kedi seç',
             border: 'hover:border-violet-400 focus:border-violet-500',
             badgeBg: 'bg-violet-100 text-violet-700',
+            fallbackBg: 'bg-violet-50',
           },
           {
             species: 'dog' as Species,
@@ -99,8 +120,9 @@ function SpeciesSelector({
             ariaLabel: 'Köpek seç',
             border: 'hover:border-amber-400 focus:border-amber-500',
             badgeBg: 'bg-amber-100 text-amber-800',
+            fallbackBg: 'bg-amber-50',
           },
-        ]).map(({ species, title, subtitle, image, ariaLabel, border, badgeBg }) => (
+        ]).map(({ species, title, subtitle, image, ariaLabel, border, badgeBg, fallbackBg }) => (
           <button
             key={species}
             type="button"
@@ -109,14 +131,20 @@ function SpeciesSelector({
             data-testid={species === 'cat' ? 'pet-species-cat-button' : 'pet-species-dog-button'}
             className={`group relative flex flex-col items-center p-4 rounded-3xl border-2 border-border-main bg-white shadow-2xs ${border} hover:shadow-medium transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer text-left`}
           >
-            <div className="relative w-full aspect-square overflow-hidden rounded-2xl bg-surface-2 mb-3">
-              <Image
-                src={image}
-                alt={title}
-                fill
-                sizes="(max-width: 640px) 45vw, 240px"
-                className="object-cover group-hover:scale-105 transition-transform duration-300"
-              />
+            <div className={`relative w-full aspect-square overflow-hidden rounded-2xl mb-3 ${imgError[species] ? `${fallbackBg} flex items-center justify-center text-text-secondary` : 'bg-surface-2'}`}>
+              {imgError[species] ? (
+                <SpeciesFallbackIcon species={species} />
+              ) : (
+                <Image
+                  src={image}
+                  alt={title}
+                  fill
+                  priority
+                  sizes="(max-width: 640px) 45vw, 240px"
+                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  onError={() => setImgError(prev => ({ ...prev, [species]: true }))}
+                />
+              )}
             </div>
             <div className="w-full flex items-center justify-between pt-1">
               <div>
