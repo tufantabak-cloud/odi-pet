@@ -89,4 +89,30 @@ describe('Turnstile Server-Side Verification (BUG-007 Audit)', () => {
     const result = await verifyTurnstile(null, '127.0.0.1');
     expect(result).toBe(true);
   });
+
+  it('Test G: validates expectedAction matching', async () => {
+    (process.env as Record<string, string | undefined>).NODE_ENV = 'production';
+    process.env.TURNSTILE_SECRET_KEY = '0x4AAAAAAA_test_secret_key';
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ success: true, action: 'login' }),
+    } as Response);
+
+    const result = await verifyTurnstile('valid_token_xyz', '127.0.0.1', 'login');
+    expect(result).toBe(true);
+  });
+
+  it('Test H: rejects when action does not match expectedAction', async () => {
+    (process.env as Record<string, string | undefined>).NODE_ENV = 'production';
+    process.env.TURNSTILE_SECRET_KEY = '0x4AAAAAAA_test_secret_key';
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ success: true, action: 'signup' }),
+    } as Response);
+
+    const result = await verifyTurnstile('valid_token_xyz', '127.0.0.1', 'login');
+    expect(result).toBe(false);
+  });
 });

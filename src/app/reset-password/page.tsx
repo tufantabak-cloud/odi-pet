@@ -88,7 +88,7 @@ export default function ResetPasswordPage() {
                   setTurnstileToken(token)
                   setValue('turnstileToken', token)
                 }}
-                options={{ size: 'invisible' }}
+                options={{ action: 'reset_password' }}
               />
             )}
             {error && (

@@ -189,12 +189,12 @@ function LoginForm() {
               </div>
             )}
 
-            {/* Turnstile (görünmez) */}
+            {/* Turnstile */}
             {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
               <Turnstile
                 siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
                 onSuccess={(token) => { setTurnstileToken(token); setValue('turnstileToken', token) }}
-                options={{ size: 'invisible' }}
+                options={{ action: 'login' }}
               />
             )}
 

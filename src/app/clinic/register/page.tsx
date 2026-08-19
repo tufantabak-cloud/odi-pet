@@ -94,7 +94,7 @@ export default function ClinicRegisterPage() {
             <Turnstile
               siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
               onSuccess={setTurnstileToken}
-              options={{ size: 'invisible' }}
+              options={{ action: 'clinic_register' }}
             />
           )}
           {error && (

@@ -94,19 +94,21 @@ export const aiSummaryRateLimit  = createRateLimit(10, "1 m", "@upstash/ratelimi
 export const caregiverTokenRateLimit = createRateLimit(30, "1 m", "@upstash/ratelimit/caregiver-token");
 
 
-export async function verifyTurnstile(token: string | null | undefined, ip: string): Promise<boolean> {
-  // GEÇİCİ: Uzman panel dönemi (18-22 Ağustos) için Turnstile bypass
-  // TODO: Panel bitince kaldır ve Cloudflare production key'lerini yapılandır
+export async function verifyTurnstile(
+  token: string | null | undefined,
+  ip: string,
+  expectedAction?: string
+): Promise<boolean> {
+  // Allow bypass during temporary maintenance or test environments
   if (process.env.TURNSTILE_BYPASS === 'true') {
     return true;
   }
 
-  // Allow bypass in test environment
   if (isTrustedPlaywrightTestEnvironment() || process.env.NODE_ENV === 'test') {
     return true;
   }
 
-  const secretKey = process.env.TURNSTILE_SECRET_KEY;
+  const secretKey = process.env.TURNSTILE_SECRET_KEY || process.env.TURNSTILE_SECRET;
   if (!secretKey) {
     if (process.env.NODE_ENV === 'production') {
       console.error("TURNSTILE_SECRET_KEY is not set in production.");
@@ -117,23 +119,54 @@ export async function verifyTurnstile(token: string | null | undefined, ip: stri
     return true;
   }
 
-  if (!token) {
+  if (typeof token !== 'string' || token.length === 0 || token.length > 2048) {
     return false;
   }
 
-  const formData = new FormData();
-  formData.append('secret', secretKey);
-  formData.append('response', token);
-  formData.append('remoteip', ip);
-
   try {
-    const result = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-      body: formData,
-      method: 'POST',
+    const params = new URLSearchParams({
+      secret: secretKey,
+      response: token,
+      remoteip: ip,
     });
 
-    const outcome = await result.json();
-    return outcome.success;
+    const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params,
+      signal: AbortSignal.timeout(10_000),
+    });
+
+    if (!response.ok) {
+      console.error(`Turnstile siteverify HTTP error: ${response.status}`);
+      return false;
+    }
+
+    const outcome = await response.json();
+    if (!outcome.success) {
+      return false;
+    }
+
+    // Optional action validation if configured
+    if (expectedAction && outcome.action && outcome.action !== expectedAction) {
+      console.warn(`Turnstile action mismatch: expected ${expectedAction}, got ${outcome.action}`);
+      return false;
+    }
+
+    // Optional hostname validation if TURNSTILE_HOSTNAMES is configured in env
+    if (process.env.TURNSTILE_HOSTNAMES) {
+      const allowedHostnames = new Set(
+        process.env.TURNSTILE_HOSTNAMES.split(',')
+          .map(h => h.trim().toLowerCase())
+          .filter(Boolean)
+      );
+      if (allowedHostnames.size > 0 && outcome.hostname && !allowedHostnames.has(outcome.hostname.toLowerCase())) {
+        console.warn(`Turnstile hostname mismatch: ${outcome.hostname} not in allowlist`);
+        return false;
+      }
+    }
+
+    return true;
   } catch (error) {
     console.error("Turnstile verification error:", error);
     return false;
