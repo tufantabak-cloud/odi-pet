@@ -18,6 +18,25 @@ const nextConfig: NextConfig = {
     workerThreads: true,
   },
   turbopack: {},
+  async redirects() {
+    return [
+      {
+        source: '/owner/budget',
+        destination: '/owner/pets',
+        permanent: false,
+      },
+      {
+        source: '/help',
+        destination: '/owner/learn',
+        permanent: false,
+      },
+      {
+        source: '/legal/privacy',
+        destination: '/legal/kvkk',
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     return [
       {
