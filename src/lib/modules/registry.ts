@@ -103,8 +103,8 @@ export const MODULES: ModuleEntry[] = [
     icon: 'ti-users',
     status: 'live',
     version: 'V1.0',
-    slots: ['side_primary', 'side_shortcut'],
-    order: 4,
+    slots: ['bottom_nav', 'side_primary', 'side_shortcut'],
+    order: 3,
     note: 'Sahiplendirme / kayıp / eşleştirme. Kayıp akışının 4 ayrı e2e testi var.',
   },
   {
@@ -114,7 +114,7 @@ export const MODULES: ModuleEntry[] = [
     icon: 'ti-user',
     status: 'live',
     version: 'V1.0',
-    slots: ['bottom_nav', 'side_shortcut'],
+    slots: ['side_shortcut'],
     order: 5,
     note: '10 alt ayar sayfası, Stripe aboneliği dahil.',
   },
@@ -147,8 +147,8 @@ export const MODULES: ModuleEntry[] = [
     icon: 'ti-map-pin',
     status: 'live',
     version: 'V1.0',
-    slots: ['bottom_nav', 'side_shortcut', 'side_primary'],
-    order: 3,
+    slots: ['side_shortcut', 'side_primary'],
+    order: 4,
     note:
       '~4.500 klinik. Mobilde alt navigasyonda 3. sekme. DİKKAT: /clinic ile karıştırma — o ayrı bir B2B portal ve kapalı.',
   },
@@ -514,6 +514,9 @@ export function normalizeHref(href: string): string {
  * Modül kaydında (MODULES) tanımlı ise m.order kullanılır; aksi halde order_index veya 99.
  */
 function getNavItemOrder<T extends { href: string; id?: string }>(item: T): number {
+  if ('order_index' in item && typeof (item as any).order_index === 'number') {
+    return (item as any).order_index
+  }
   const normHref = normalizeHref(item.href)
   const moduleEntry = MODULES.find(
     m => normalizeHref(m.href) === normHref || (item.id && m.key === item.id)
@@ -521,9 +524,7 @@ function getNavItemOrder<T extends { href: string; id?: string }>(item: T): numb
   if (moduleEntry && moduleEntry.order !== undefined) {
     return moduleEntry.order
   }
-  return ('order_index' in item && typeof (item as any).order_index === 'number')
-    ? (item as any).order_index
-    : 99
+  return 99
 }
 
 export function filterNavItems<T extends { href: string }>(items: T[] | undefined): T[] {
