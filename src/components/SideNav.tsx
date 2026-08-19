@@ -38,6 +38,7 @@ type SideNavProps = {
   actionMenuItems?: NavItem[]
   bottomNavItems?: NavItem[]
   menuDrawerItems?: NavItem[]
+  sidePrimaryItems?: NavItem[]
 }
 
 const fallbackActionMenuItems = [
@@ -51,19 +52,19 @@ const fallbackActionMenuItems = [
 // Kenar menüsü ikonları — anahtarlar modül kaydındaki `key` ile eşleşir.
 const MODULE_ICONS: Record<string, React.ReactNode> = {
   dashboard:     <LayoutGrid className="w-[18px] h-[18px]" />,
-  'ai-vet':      <Sparkles className="w-[18px] h-[18px] text-purple-600" />,
-  services:      <Stethoscope className="w-[18px] h-[18px]" />,
+  takvim:        <Calendar className="w-[18px] h-[18px]" />,
   social:        <Users className="w-[18px] h-[18px]" />,
+  'ai-vet':      <Sparkles className="w-[18px] h-[18px] text-purple-600" />,
   learn:         <BookOpen className="w-[18px] h-[18px]" />,
+  notifications: <Bell className="w-[18px] h-[18px]" />,
+  vets:          <MapPin className="w-[18px] h-[18px]" />,
+  profile:       <User className="w-[18px] h-[18px]" />,
+  help:          <HelpCircle className="w-[18px] h-[18px]" />,
+  services:      <Stethoscope className="w-[18px] h-[18px]" />,
   messages:      <MessageCircle className="w-[18px] h-[18px]" />,
   budget:        <Wallet className="w-[18px] h-[18px]" />,
   events:        <Calendar className="w-[18px] h-[18px]" />,
-  takvim:        <Calendar className="w-[18px] h-[18px]" />,
   marketplace:   <ShoppingBag className="w-[18px] h-[18px]" />,
-  vets:          <MapPin className="w-[18px] h-[18px]" />,
-  notifications: <Bell className="w-[18px] h-[18px]" />,
-  profile:       <User className="w-[18px] h-[18px]" />,
-  help:          <HelpCircle className="w-[18px] h-[18px]" />,
 }
 
 // Yedek menüler modül kaydından üretilir (src/lib/modules/registry.ts).
@@ -102,30 +103,78 @@ function NavLink({ href, label, icon }: { href: string; label: string; icon: Rea
   )
 }
 
-export default function SideNav({ actionMenuItems, bottomNavItems, menuDrawerItems }: SideNavProps) {
+export default function SideNav({ actionMenuItems, bottomNavItems, menuDrawerItems, sidePrimaryItems }: SideNavProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const activeActionMenuItems = actionMenuItems && actionMenuItems.length > 0
     ? actionMenuItems
     : fallbackActionMenuItems
 
-  const activePrimaryItems = bottomNavItems && bottomNavItems.length > 0
-    ? bottomNavItems
-        .filter(item => item.href !== '#' && item.label !== 'Menü')
-        .map(item => ({
+  // Primary Navigation (ANA MENÜ): Unique list of primary items
+  const activePrimaryItems = (() => {
+    const rawList = sidePrimaryItems && sidePrimaryItems.length > 0
+      ? sidePrimaryItems.map(item => ({
           href: item.href,
           label: item.label,
           icon: getIcon(item.icon, 18)
         }))
-    : primaryItems
+      : (bottomNavItems && bottomNavItems.length > 0
+          ? [
+              ...bottomNavItems
+                .filter(item => item.href !== '#' && item.label !== 'Menü')
+                .map(item => ({
+                  href: item.href,
+                  label: item.label,
+                  icon: getIcon(item.icon, 18)
+                })),
+              ...primaryItems
+            ]
+          : primaryItems)
 
-  const activeShortcutItems = menuDrawerItems && menuDrawerItems.length > 0
-    ? menuDrawerItems.map(item => ({
-        href: item.href,
-        label: item.label,
-        icon: getIcon(item.icon, 18)
-      }))
-    : shortcutItems
+    const seen = new Set<string>()
+    const deduplicated: Array<{ href: string; label: string; icon: React.ReactNode }> = []
+    for (const item of rawList) {
+      const normHref = (item.href || '').split(/[?#]/)[0].toLowerCase()
+      if (normHref && !seen.has(normHref)) {
+        seen.add(normHref)
+        deduplicated.push(item)
+      }
+    }
+    return deduplicated
+  })()
+
+  // Shortcuts Navigation (KISA YOLLAR): Strictly filter out any item already in primary
+  const activeShortcutItems = (() => {
+    const primaryHrefs = new Set(activePrimaryItems.map(i => (i.href || '').split(/[?#]/)[0].toLowerCase()))
+    const primaryLabels = new Set(activePrimaryItems.map(i => i.label.toLowerCase().trim()))
+
+    const rawShortcuts = menuDrawerItems && menuDrawerItems.length > 0
+      ? menuDrawerItems.map(item => ({
+          href: item.href,
+          label: item.label,
+          icon: getIcon(item.icon, 18)
+        }))
+      : shortcutItems
+
+    const seen = new Set<string>()
+    const deduplicated: Array<{ href: string; label: string; icon: React.ReactNode }> = []
+    for (const item of rawShortcuts) {
+      const normHref = (item.href || '').split(/[?#]/)[0].toLowerCase()
+      const normLabel = item.label.toLowerCase().trim()
+      if (
+        normHref &&
+        normHref !== '#' &&
+        item.label !== 'Menü' &&
+        !primaryHrefs.has(normHref) &&
+        !primaryLabels.has(normLabel) &&
+        !seen.has(normHref)
+      ) {
+        seen.add(normHref)
+        deduplicated.push(item)
+      }
+    }
+    return deduplicated
+  })()
 
   return (
     <aside className="hidden md:flex w-[220px] shrink-0 flex-col gap-1 p-6 border-r border-border-main sticky top-16 h-[calc(100vh-4rem)] self-start overflow-y-auto">

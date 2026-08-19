@@ -83,6 +83,13 @@ const TAB_ICONS: Record<string, (active: boolean) => React.ReactNode> = {
       <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
     </svg>
   ),
+  menu: (active) => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round">
+      <line x1="4" y1="12" x2="20" y2="12"/>
+      <line x1="4" y1="6" x2="20" y2="6"/>
+      <line x1="4" y1="18" x2="20" y2="18"/>
+    </svg>
+  ),
   profile: (active) => (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -98,6 +105,7 @@ const fallbackIcon = (active: boolean) => (
 )
 
 const actionTab = {
+  id: 'action-btn',
   isAction: true,
   href: '#',
   label: '',
@@ -113,11 +121,11 @@ const actionTab = {
 
 /**
  * Yedek sekmeler modül kaydından üretilir (src/lib/modules/registry.ts).
- * Kapalı modüller getNavModules tarafından elenir — burada elle liste tutulmaz,
- * aksi halde kapatılmış bir modül yedek listede kalıp 404'e düşürür.
- * (+) butonu ortaya yerleştirilir.
+ * Kapalı modüller getNavModules tarafından elenir — burada elle liste tutulmaz.
+ * Sıralama: Anasayfa | Takvim | (+) Hızlı Erişim | Sosyal | Menü
  */
 const registryTabs = getNavModules('bottom_nav').map(m => ({
+  id: m.key,
   href: m.href,
   label: m.label,
   icon: TAB_ICONS[m.key] ?? fallbackIcon,
@@ -129,6 +137,7 @@ const tabs = [
   actionTab,
   ...registryTabs.slice(midIndex),
 ] as Array<{
+  id?: string
   href: string
   label: string
   isAction?: boolean
@@ -147,29 +156,42 @@ export default function BottomNav({
 
   useEffect(() => { setMounted(true) }, [])
 
+  // Deduplicate and sanitize dynamic tabs from bottomNavItems
   const dynamicTabs: any[] | null = bottomNavItems && bottomNavItems.length > 0
-    ? bottomNavItems.map(item => ({
-        id: item.id,
-        label: item.label,
-        href: item.href,
-        iconString: item.icon,
-        matchType: item.match_type,
-        isAction: false
-      }))
+    ? (() => {
+        const seen = new Set<string>()
+        const list: any[] = []
+        for (const item of bottomNavItems) {
+          const key = (item.href || '').split(/[?#]/)[0].toLowerCase() || item.id || item.label
+          if (!seen.has(key)) {
+            seen.add(key)
+            list.push({
+              id: item.id,
+              label: item.label,
+              href: item.href,
+              iconString: item.icon,
+              matchType: item.match_type,
+              isAction: false
+            })
+          }
+        }
+        return list
+      })()
     : null
 
-  // Ensure action button is always inserted in dynamicTabs if it exists
+  // Ensure action button is always inserted in dynamicTabs if it exists (at index 2)
   const finalDynamicTabs = dynamicTabs ? [...dynamicTabs] : null
   if (finalDynamicTabs && finalDynamicTabs.length > 0) {
-    // (+) butonunu ortaya yerleştir. Sabit indeks yerine isimle bulunur:
-    // sekme sayısı modül kaydına göre değişebildiği için tabs[2] güvenli değil.
-    const midIndex = Math.floor(finalDynamicTabs.length / 2)
-    finalDynamicTabs.splice(midIndex, 0, {
-      ...actionTab,
-      id: 'action-btn',
-      iconString: '',
-      matchType: 'exact' as const
-    })
+    const hasAction = finalDynamicTabs.some(t => t.isAction || t.id === 'action-btn')
+    if (!hasAction) {
+      const midIndex = Math.floor(finalDynamicTabs.length / 2)
+      finalDynamicTabs.splice(midIndex, 0, {
+        ...actionTab,
+        id: 'action-btn',
+        iconString: '',
+        matchType: 'exact' as const
+      })
+    }
   }
 
   const activeTabs = finalDynamicTabs ?? tabs
@@ -185,7 +207,7 @@ export default function BottomNav({
       return
     }
     
-    if (tab.href === '#' || tab.label === 'Menü') {
+    if (tab.href === '#' || tab.label === 'Menü' || tab.id === 'menu') {
       e.preventDefault()
       setIsDrawerOpen(true)
       return
@@ -241,7 +263,18 @@ export default function BottomNav({
             <div className="p-6">
               {menuDrawerItems && menuDrawerItems.length > 0 ? (
                 <div className="grid grid-cols-3 gap-y-6 gap-x-4">
-                  {menuDrawerItems.map((item) => (
+                  {menuDrawerItems
+                    .filter((item) => {
+                      const norm = (item.href || '').split(/[?#]/)[0].toLowerCase()
+                      return (
+                        norm !== '/owner/dashboard' &&
+                        norm !== '/owner/takvim' &&
+                        norm !== '/owner/social' &&
+                        item.href !== '#' &&
+                        item.label !== 'Menü'
+                      )
+                    })
+                    .map((item) => (
                     <Link
                       key={item.id}
                       href={item.href}

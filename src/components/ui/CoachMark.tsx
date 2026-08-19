@@ -43,7 +43,7 @@ export default function CoachMark({
         const res = await fetch('/api/hints');
         if (res.ok) {
           const data = await res.json();
-          if (data.dismissed?.includes(hintKey)) {
+          if (Array.isArray(data?.dismissed) && data.dismissed.includes(hintKey)) {
             setIsDismissed(true);
             if (!localDismissed.includes(hintKey)) {
               localStorage.setItem('odi_hints_dismissed', JSON.stringify([...localDismissed, hintKey]));

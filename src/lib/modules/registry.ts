@@ -103,20 +103,20 @@ export const MODULES: ModuleEntry[] = [
     icon: 'ti-users',
     status: 'live',
     version: 'V1.0',
-    slots: ['bottom_nav', 'side_primary', 'side_shortcut'],
+    slots: ['bottom_nav', 'side_primary'],
     order: 3,
     note: 'Sahiplendirme / kayıp / eşleştirme. Kayıp akışının 4 ayrı e2e testi var.',
   },
   {
-    key: 'profile',
-    label: 'Profil',
-    href: '/owner/profile',
-    icon: 'ti-user',
+    key: 'menu',
+    label: 'Menü',
+    href: '#',
+    icon: 'ti-dots',
     status: 'live',
     version: 'V1.0',
-    slots: ['side_shortcut'],
-    order: 5,
-    note: '10 alt ayar sayfası, Stripe aboneliği dahil.',
+    slots: ['bottom_nav'],
+    order: 4,
+    note: 'Mobil alt navigasyon çekmece menü tetikleyicisi.',
   },
   {
     key: 'ai-vet',
@@ -126,7 +126,7 @@ export const MODULES: ModuleEntry[] = [
     status: 'live',
     version: 'V1.0',
     slots: ['side_primary'],
-    order: 2,
+    order: 4,
     note: 'Gemini triage + tıbbi uyarı guardrail. Ana pazarlama kancası.',
   },
   {
@@ -141,18 +141,6 @@ export const MODULES: ModuleEntry[] = [
     note: 'Makale sistemi, vet-review guard\'lı. İçerik doluluğu operasyonel konu.',
   },
   {
-    key: 'vets',
-    label: 'Veteriner',
-    href: '/owner/vets',
-    icon: 'ti-map-pin',
-    status: 'live',
-    version: 'V1.0',
-    slots: ['side_shortcut', 'side_primary'],
-    order: 4,
-    note:
-      '~4.500 klinik. Mobilde alt navigasyonda 3. sekme. DİKKAT: /clinic ile karıştırma — o ayrı bir B2B portal ve kapalı.',
-  },
-  {
     key: 'notifications',
     label: 'Bildirimler',
     href: '/owner/notifications',
@@ -160,21 +148,42 @@ export const MODULES: ModuleEntry[] = [
     status: 'live',
     version: 'V1.0',
     slots: ['side_shortcut'],
-    order: 2,
+    order: 1,
     note: 'Web push + overdue aşı bildirimleri.',
+  },
+  {
+    key: 'vets',
+    label: 'Veteriner',
+    href: '/owner/vets',
+    icon: 'ti-map-pin',
+    status: 'live',
+    version: 'V1.0',
+    slots: ['side_shortcut'],
+    order: 2,
+    note:
+      '~4.500 klinik. Mobilde alt navigasyonda 3. sekme. DİKKAT: /clinic ile karıştırma — o ayrı bir B2B portal ve kapalı.',
+  },
+  {
+    key: 'profile',
+    label: 'Profil',
+    href: '/owner/profile',
+    icon: 'ti-user',
+    status: 'live',
+    version: 'V1.0',
+    slots: ['side_shortcut'],
+    order: 3,
+    note: '10 alt ayar sayfası, Stripe aboneliği dahil.',
   },
   {
     key: 'help',
     label: 'Yardım',
-    href: '/help.html',
+    href: '/owner/learn',
     icon: 'ti-file-text',
     status: 'live',
     version: 'V1.0',
     slots: ['side_shortcut'],
     order: 4,
-    note:
-      'public/help.html — statik "Nasıl Yapılır" sayfası. ' +
-      'TODO: eski mor tonu (#534AB7) kullanıyor, marka rengi #9C26AF ile güncellenmeli.',
+    note: 'Yardım ve içerik kanonik rotası (/owner/learn).',
   },
 
   // ══════════════════════════════════════════════════════════
@@ -513,16 +522,20 @@ export function normalizeHref(href: string): string {
  * Bir menü öğesinin modül kaydındaki öncelik sırasını çözer.
  * Modül kaydında (MODULES) tanımlı ise m.order kullanılır; aksi halde order_index veya 99.
  */
-function getNavItemOrder<T extends { href: string; id?: string }>(item: T): number {
-  if ('order_index' in item && typeof (item as any).order_index === 'number') {
-    return (item as any).order_index
-  }
+function getNavItemOrder<T extends { href: string; id?: string; label?: string }>(item: T): number {
   const normHref = normalizeHref(item.href)
+  const normLabel = item.label?.toLowerCase().trim()
   const moduleEntry = MODULES.find(
-    m => normalizeHref(m.href) === normHref || (item.id && m.key === item.id)
+    m =>
+      (normHref && normalizeHref(m.href) === normHref) ||
+      (item.id && m.key === item.id) ||
+      (normLabel && m.label.toLowerCase() === normLabel)
   )
   if (moduleEntry && moduleEntry.order !== undefined) {
     return moduleEntry.order
+  }
+  if ('order_index' in item && typeof (item as any).order_index === 'number') {
+    return (item as any).order_index
   }
   return 99
 }
@@ -544,18 +557,23 @@ export function filterNavItems<T extends { href: string }>(items: T[] | undefine
  *  1. Kapalı modüle işaret eden DB satırlarını DÜŞÜRÜR (ölü link olmasın).
  *  2. DB'de karşılığı olmayan canlı modülleri EKLER (yeni modül, tabloya satır
  *     eklenmeden de menüde görünsün).
+ *  3. Mükerrer (duplicate) tanımları tekilleştirir (SSOT deduplication).
  *
  * Böylece bir modülü açmak/kapatmak için tek yer modül kaydıdır; DB tablosu
  * yalnızca sıralama/etiket özelleştirmesi için kullanılır.
  */
-export function resolveNavItems<T extends { href: string; label?: string; id?: string }>(
+export function resolveNavItems<T extends { href: string; label?: string; id?: string; icon?: string }>(
   dbItems: T[] | undefined,
   slot: NavSlot
 ): Array<T | ModuleNavItem> {
-  const kept = filterNavItems(dbItems).filter(item => {
+  const rawFiltered = filterNavItems(dbItems).filter(item => {
     const normHref = normalizeHref(item.href)
+    const normLabel = item.label?.toLowerCase().trim()
     const moduleEntry = MODULES.find(
-      m => normalizeHref(m.href) === normHref || (item.id && m.key === item.id)
+      m =>
+        (normHref && normalizeHref(m.href) === normHref) ||
+        (item.id && m.key === item.id) ||
+        (normLabel && m.label.toLowerCase() === normLabel)
     )
     if (moduleEntry) {
       return moduleEntry.slots.includes(slot)
@@ -563,20 +581,50 @@ export function resolveNavItems<T extends { href: string; label?: string; id?: s
     return true
   })
 
-  const presentPaths = new Set(kept.map(i => normalizeHref(i.href)))
+  // Deduplicate rawFiltered by canonical key, normalized href, and label
+  const seenKeys = new Set<string>()
+  const kept: T[] = []
 
-  const missing = getNavModules(slot)
-    .filter(m => !presentPaths.has(normalizeHref(m.href)))
-    .map<ModuleNavItem>(m => ({
-      id: m.key,
-      label: m.label,
-      icon: m.icon,
-      href: m.href,
-      slot,
-      order_index: m.order ?? 99,
-      is_active: true,
-      match_type: 'startsWith',
-    }))
+  for (const item of rawFiltered) {
+    const normHref = normalizeHref(item.href)
+    const normLabel = item.label?.toLowerCase().trim() || ''
+    const moduleEntry = MODULES.find(
+      m =>
+        (normHref && normalizeHref(m.href) === normHref) ||
+        (item.id && m.key === item.id) ||
+        (normLabel && m.label.toLowerCase() === normLabel)
+    )
+    const dedupKey = moduleEntry?.key || (normHref ? `href:${normHref}` : `label:${normLabel}`)
+    if (!seenKeys.has(dedupKey)) {
+      seenKeys.add(dedupKey)
+      kept.push(item)
+    }
+  }
+
+  // Find missing modules for this slot
+  const missing: ModuleNavItem[] = []
+  for (const m of getNavModules(slot)) {
+    const mNormHref = normalizeHref(m.href)
+    const mLabel = m.label.toLowerCase().trim()
+    const dedupKey = m.key
+    if (!seenKeys.has(dedupKey)) {
+      const hrefClaimed = mNormHref && Array.from(seenKeys).some(k => k === `href:${mNormHref}`)
+      const labelClaimed = Array.from(seenKeys).some(k => k === `label:${mLabel}`)
+      if (!hrefClaimed && !labelClaimed) {
+        seenKeys.add(dedupKey)
+        missing.push({
+          id: m.key,
+          label: m.label,
+          icon: m.icon,
+          href: m.href,
+          slot,
+          order_index: m.order ?? 99,
+          is_active: true,
+          match_type: 'startsWith',
+        })
+      }
+    }
+  }
 
   const combined = [...kept, ...missing]
 

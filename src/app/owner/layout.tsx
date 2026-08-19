@@ -63,6 +63,11 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
     'side_shortcut'
   )
 
+  const sidePrimaryItems = resolveNavItems(
+    navItems?.filter(i => i.slot === 'side_primary'),
+    'side_primary'
+  )
+
   // Hızlı ekle menüsü modül kaydında tanımlı değil; yalnızca süzülür.
   const actionMenuItems = filterNavItems(
     navItems?.filter(i => i.slot === 'action_menu')
@@ -116,7 +121,8 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
           <SideNav 
             actionMenuItems={actionMenuItems} 
             bottomNavItems={bottomNavItems} 
-            menuDrawerItems={menuDrawerItems} 
+            menuDrawerItems={menuDrawerItems}
+            sidePrimaryItems={sidePrimaryItems}
           />
         )}
 

@@ -16,6 +16,7 @@ import {
   HeartPulse,
   PenLine,
   MoreHorizontal,
+  Menu,
   CalendarPlus,
   ClipboardPlus,
   type LucideIcon,
@@ -40,6 +41,7 @@ export const ICON_MAP: Record<string, LucideIcon> = {
   'ti-heart-rate-monitor': HeartPulse,
   'ti-pencil': PenLine,
   'ti-dots': MoreHorizontal,
+  'ti-menu': Menu,
   'ti-calendar-plus': CalendarPlus || Calendar,
   'ti-clipboard-plus': ClipboardPlus || Plus,
 }
