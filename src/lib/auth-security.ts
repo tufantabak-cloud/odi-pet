@@ -95,6 +95,12 @@ export const caregiverTokenRateLimit = createRateLimit(30, "1 m", "@upstash/rate
 
 
 export async function verifyTurnstile(token: string | null | undefined, ip: string): Promise<boolean> {
+  // GEÇİCİ: Uzman panel dönemi (18-22 Ağustos) için Turnstile bypass
+  // TODO: Panel bitince kaldır ve Cloudflare production key'lerini yapılandır
+  if (process.env.TURNSTILE_BYPASS === 'true') {
+    return true;
+  }
+
   // Allow bypass in test environment
   if (isTrustedPlaywrightTestEnvironment() || process.env.NODE_ENV === 'test') {
     return true;
