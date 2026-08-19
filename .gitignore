@@ -19,6 +19,7 @@
 # testing
 /coverage
 /Odi.Pet/
+/audit-results/
 
 # next.js
 /.next/
