@@ -2142,7 +2142,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         {activeTab === 'saglik' && showNeuterBanner && (
           <SmartCardBanner
             title="Sağlık Profili Eksik"
-            description="Odi kısırlaştırıldı mı? Metabolizma hızı değişeceği için aşı ve kilo takibi daha kesin sonuçlar verecektir."
+            description={`${pet.name} kısırlaştırıldı mı? Metabolizma hızı değişeceği için aşı ve kilo takibi daha kesin sonuçlar verecektir.`}
             actionLabel="Güncelle"
             icon={<HeartPulseIcon size={24} />}
             colorTheme="purple"

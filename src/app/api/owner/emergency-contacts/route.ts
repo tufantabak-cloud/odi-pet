@@ -24,10 +24,8 @@ export async function GET(req: NextRequest) {
     .select('sos_contacts')
     .eq('owner_id', user.id)
 
-  const ownerFullName = `${prof?.first_name || ''} ${prof?.last_name || ''}`.trim()
-
-  let c1Name = prof?.emergency_contact_name || ownerFullName || ''
-  let c1Phone = prof?.emergency_contact_phone || prof?.phone || ''
+  let c1Name = prof?.emergency_contact_name || ''
+  let c1Phone = prof?.emergency_contact_phone || ''
   let c1Relation = 'Sahibi'
 
   let c2Name = prof?.emergency_contact2_name || ''

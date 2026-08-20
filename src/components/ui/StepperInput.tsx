@@ -92,7 +92,7 @@ export const StepperInput = forwardRef<HTMLInputElement, StepperInputProps>(({
           value={value}
           onChange={onChange}
           ref={handleRef}
-          className="w-full text-center outline-none text-base font-bold text-text-primary placeholder:font-medium placeholder:text-text-secondary bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          className="flex-1 min-w-0 text-center outline-none text-base font-bold text-text-primary placeholder:font-medium placeholder:text-text-secondary bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         />
         {unit && <span className="text-[13px] font-bold text-text-secondary ml-1 whitespace-nowrap">{unit}</span>}
       </div>
