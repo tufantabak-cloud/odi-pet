@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
 import { trackEvent } from '@/lib/analytics/track'
 import SpotlightTour, { TourStep } from './SpotlightTour'
 
@@ -80,7 +79,6 @@ const TOUR_STEPS: TourStep[] = [
 
 export default function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
   const [saving, setSaving] = useState(false)
-  const router = useRouter()
 
   const handleTourComplete = useCallback(async () => {
     setSaving(true)
@@ -94,9 +92,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
     })
     
     onComplete()
-    // Redirect user to add pet form as Katman 1 (Onboarding) primary action
-    router.replace('/owner/pets/add')
-  }, [onComplete, router])
+  }, [onComplete])
 
   return (
     <SpotlightTour 
