@@ -10,13 +10,35 @@
   "orientation": "portrait",
   "lang": "tr",
   "icons": [
-    { "src": "/brand/app-icons/odi-icon-128.png", "sizes": "128x128", "type": "image/png", "purpose": "any" },
-    { "src": "/brand/app-icons/odi-icon-256.png", "sizes": "256x256", "type": "image/png", "purpose": "any" },
-    { "src": "/brand/app-icons/odi-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/generated/odi-icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
-    { "src": "/brand/app-icons/odi-icon-180.png", "sizes": "180x180", "type": "image/png" }
+    {
+      "src": "/brand/app-icons/odi-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/app-icons/odi-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/app-icons/odi-icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/brand/app-icons/odi-icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ],
   "screenshots": [],
-  "categories": ["health", "lifestyle"],
+  "categories": [
+    "health",
+    "lifestyle"
+  ],
   "related_applications": []
 }

@@ -68,30 +68,7 @@ async function whiteOnTransparent(inputPath) {
 // excluding its own white drop-shadow margin (detected via chroma scan).
 const ICON_CROP = { left: 34, top: 34, width: 444, height: 444 };
 
-async function buildMaskableIcon() {
-  const size = 512;
-  // Android adaptive-icon safe zone: foreground content at 66% of canvas
-  // (matches Android's own 72dp/108dp foreground guideline).
-  const safeContent = Math.round(size * 0.66); // 338px
-
-  const bg = await sharp(gradientSquareSvg(size, ICON_GRADIENT_LIGHT, ICON_GRADIENT_DARK))
-    .png()
-    .toBuffer();
-
-  const glyph = await sharp(path.join(BRAND, 'app-icons/odi-icon-512.png'))
-    .extract(ICON_CROP)
-    .resize(safeContent, safeContent, { fit: 'contain' })
-    .toBuffer();
-
-  const offset = Math.round((size - safeContent) / 2);
-
-  await sharp(bg)
-    .composite([{ input: glyph, left: offset, top: offset }])
-    .png()
-    .toFile(path.join(OUT_GENERATED, 'odi-icon-512-maskable.png'));
-
-  console.log('✓ odi-icon-512-maskable.png (512x512, 66% safe-zone content)');
-}
+// Maskable icon generation is now handled natively via the normalized SVG pipeline.
 
 async function buildOgImage() {
   const width = 1200;
@@ -122,7 +99,6 @@ async function buildSplashFrames() {
   const bg1 = await sharp(solidRectSvg(w1, h1, SPLASH_SOLID)).png().toBuffer();
   const iconContentSize = Math.round(w1 * 0.52);
   const glyph1 = await sharp(path.join(BRAND, 'app-icons/odi-icon-512.png'))
-    .extract(ICON_CROP)
     .resize(iconContentSize, iconContentSize, { fit: 'contain' })
     .toBuffer();
   await sharp(bg1)
@@ -147,7 +123,6 @@ async function buildSplashFrames() {
 }
 
 async function main() {
-  await buildMaskableIcon();
   await buildOgImage();
   await buildSplashFrames();
   console.log('\nAll derived brand assets generated.');
