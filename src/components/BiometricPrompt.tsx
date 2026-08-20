@@ -11,16 +11,38 @@ export function BiometricPrompt({ forceOpen = false }: { forceOpen?: boolean }) 
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (forceOpen) {
-      setVisible(true);
-      return;
+    let isMounted = true;
+    async function checkSupportAndShow() {
+      try {
+        if (
+          typeof window === 'undefined' ||
+          !window.PublicKeyCredential ||
+          typeof window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable !== 'function'
+        ) {
+          return;
+        }
+        const available = await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+        if (!available || !isMounted) return;
+
+        if (forceOpen) {
+          setVisible(true);
+          return;
+        }
+        const dismissed = localStorage.getItem('biometric_prompt_dismissed');
+        if (!dismissed) {
+          const timer = setTimeout(() => {
+            if (isMounted) setVisible(true);
+          }, 1500);
+          return () => clearTimeout(timer);
+        }
+      } catch {
+        // Platform authenticator not available
+      }
     }
-    const dismissed = localStorage.getItem('biometric_prompt_dismissed');
-    if (!dismissed) {
-      // Sadece 1.5 saniye sonra göster (Gözü yormasın)
-      const timer = setTimeout(() => setVisible(true), 1500);
-      return () => clearTimeout(timer);
-    }
+    checkSupportAndShow();
+    return () => {
+      isMounted = false;
+    };
   }, [forceOpen]);
 
   const dismiss = () => {

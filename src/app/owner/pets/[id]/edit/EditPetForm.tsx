@@ -700,7 +700,8 @@ export default function EditPetForm({ pet, ownerProfile }: { pet: any; ownerProf
                       </span>
                     </div>
                     <span className="text-[10px] font-bold tracking-widest text-text-tertiary uppercase mt-0.5">
-                      DOKUN VE KAYDIR
+                      <span className="inline md:hidden">DOKUN VE KAYDIR</span>
+                      <span className="hidden md:inline">TIKLA VE SÜRÜKLE</span>
                     </span>
                   </div>
 

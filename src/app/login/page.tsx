@@ -303,9 +303,7 @@ function LoginForm() {
                 )}
               </Button>
 
-              <div className="min-h-[50px]">
-                <BiometricLogin />
-              </div>
+              <BiometricLogin />
 
             </form>
 

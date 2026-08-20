@@ -226,7 +226,14 @@ export const RulerPicker: React.FC<RulerPickerProps> = ({
               </div>
             )}
             <span className="text-[10px] font-bold text-text-secondary/70 tracking-wider uppercase mt-0.5">
-              {isEditing ? 'Tamamlamak için tıklayın' : 'Dokun ve Kaydır'}
+              {isEditing ? (
+                'Tamamlamak için tıklayın'
+              ) : (
+                <>
+                  <span className="inline md:hidden">DOKUN VE KAYDIR</span>
+                  <span className="hidden md:inline">TIKLA VE SÜRÜKLE</span>
+                </>
+              )}
             </span>
           </div>
 

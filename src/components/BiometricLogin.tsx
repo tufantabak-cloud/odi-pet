@@ -1,16 +1,54 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Fingerprint, Loader2 } from 'lucide-react';
 import { createBrowserSupabaseClient } from '@/lib/supabase/client';
 
 export function BiometricLogin() {
   const router = useRouter();
+  const [isSupported, setIsSupported] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handlePasskeyLogin = async () => {
+  useEffect(() => {
+    let isMounted = true;
+    async function checkSupport() {
+      try {
+        if (
+          typeof window !== 'undefined' &&
+          window.PublicKeyCredential &&
+          typeof window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function'
+        ) {
+          const available = await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+          if (isMounted) {
+            setIsSupported(!!available);
+          }
+        } else {
+          if (isMounted) {
+            setIsSupported(false);
+          }
+        }
+      } catch {
+        if (isMounted) {
+          setIsSupported(false);
+        }
+      }
+    }
+
+    checkSupport();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  if (!isSupported) {
+    return null;
+  }
+
+  const handlePasskeyLogin = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
     setLoading(true);
     setError(null);
     try {
@@ -36,16 +74,17 @@ export function BiometricLogin() {
   };
 
   return (
-    <div className="w-full mt-4">
+    <div className="w-full mt-3">
       <button
+        type="button"
         onClick={handlePasskeyLogin}
         disabled={loading}
-        className="w-full flex items-center justify-center gap-2 py-3 border border-border rounded-xl bg-white text-[13px] font-medium text-text-primary active:scale-[0.98] transition-all disabled:opacity-60"
+        className="w-full flex items-center justify-center gap-2 py-3 border border-border rounded-xl bg-white text-[13px] font-medium text-text-primary hover:bg-slate-50 active:scale-[0.98] transition-all disabled:opacity-60 cursor-pointer shadow-xs"
       >
         {loading ? (
-          <Loader2 className="w-5 h-5 animate-spin" />
+          <Loader2 className="w-5 h-5 animate-spin text-primary" />
         ) : (
-          <i className="ti ti-fingerprint text-[18px] text-primary" />
+          <Fingerprint className="w-5 h-5 text-primary" />
         )}
         FaceID / TouchID ile Giriş Yap
       </button>
@@ -53,3 +92,4 @@ export function BiometricLogin() {
     </div>
   );
 }
+
