@@ -81,7 +81,7 @@ export const StepperInput = forwardRef<HTMLInputElement, StepperInputProps>(({
       >
         -
       </button>
-      <div className="flex flex-1 items-center justify-center px-3 min-w-[150px]">
+      <div className="flex flex-1 items-center justify-center px-3 min-w-40">
         <input
           {...props}
           type="number"
