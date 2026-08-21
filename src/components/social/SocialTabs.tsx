@@ -135,6 +135,9 @@ export function SocialTabs({
 
   const [matches, setMatches] = useState<any[]>(initialMatches || [])
   const [loadingMatches, setLoadingMatches] = useState(false)
+  const [matchesError, setMatchesError] = useState<string | null>(null)
+  const [lostActionError, setLostActionError] = useState<string | null>(null)
+  const [myAdoptionApplications, setMyAdoptionApplications] = useState<any[]>([])
   const [myListings, setMyListings] = useState<any[]>([])
 
   const matchFeature = useFeature({
@@ -202,6 +205,7 @@ export function SocialTabs({
       checkMyLostReports()
     } else if (activeTab === 'adoption') {
       checkMyAdoptionListing()
+      fetchMyAdoptionApplications()
     }
   }, [activeTab])
 
@@ -284,9 +288,21 @@ export function SocialTabs({
       checkMyLostReports()
       window.location.reload()
     } catch (err) {
-      console.error(err)
+      console.error('[SocialTabs] mark-found failed:', err)
+      setLostActionError('İlan kapatılamadı. Lütfen tekrar deneyin.')
     } finally {
       setCloseReportPetId(null)
+    }
+  }
+
+  const fetchMyAdoptionApplications = async () => {
+    try {
+      const res = await fetch('/api/adoption-applications')
+      const json = await res.json()
+      if (res.ok) setMyAdoptionApplications(json.applications || [])
+      else console.error('[SocialTabs] adoption-applications error:', json?.error)
+    } catch (err) {
+      console.error('[SocialTabs] adoption-applications fetch failed:', err)
     }
   }
 
@@ -354,6 +370,7 @@ export function SocialTabs({
 
   const fetchMatches = async () => {
     setLoadingMatches(true)
+    setMatchesError(null)
     try {
       const params = new URLSearchParams()
       if (speciesFilter !== 'Tümü') params.append('species', speciesFilter)
@@ -369,9 +386,16 @@ export function SocialTabs({
       const json = await res.json()
       if (res.ok) {
         setMatches(json.data || [])
+      } else {
+        // Eskiden sessizce "sonuç yok" gibi görünüyordu; artık hata olarak bildiriliyor.
+        console.error('[SocialTabs] breeding-listings error:', json?.error)
+        setMatches([])
+        setMatchesError(json?.error || 'Eşleşme ilanları yüklenemedi.')
       }
     } catch (err) {
-      console.error(err)
+      console.error('[SocialTabs] breeding-listings fetch failed:', err)
+      setMatches([])
+      setMatchesError('Bağlantı hatası. Lütfen tekrar deneyin.')
     } finally {
       setLoadingMatches(false)
     }
@@ -539,6 +563,53 @@ export function SocialTabs({
               </div>
             )}
 
+
+            {/* Blok 4 devamı — kendi başvurularının durumu (Eşleştirme ile simetrik) */}
+            {myAdoptionApplications.length > 0 && (
+              <div className="flex flex-col gap-3">
+                <SubSectionHeading icon={<Inbox className="w-4 h-4 text-violet-600 stroke-[2]" />}>
+                  Başvurularım
+                </SubSectionHeading>
+                <ResultsGrid>
+                  {myAdoptionApplications.map(app => {
+                    const listing = Array.isArray(app.pet_adoptions) ? app.pet_adoptions[0] : app.pet_adoptions
+                    const pet = Array.isArray(listing?.pets) ? listing?.pets[0] : listing?.pets
+                    return (
+                      <div key={app.id} className="bg-white border border-slate-100 p-4 rounded-2xl shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden relative shrink-0">
+                          {pet?.avatar_url ? (
+                            <Image src={pet.avatar_url} alt={pet?.name || 'Pet'} fill sizes="40px" className="object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate-400 text-2xs">🐾</div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2 mb-0.5">
+                            <h4 className="font-semibold text-slate-900 text-xs truncate">{pet?.name || 'İlan'}</h4>
+                        {(() => {
+                          switch (app.status) {
+                            case 'pending':
+                              return <span className="text-2xs font-semibold px-2 py-0.5 rounded-lg bg-amber-50 text-amber-700 border border-amber-200/60 flex items-center gap-1"><Clock className="w-3 h-3 stroke-[2]" /> Bekliyor</span>
+                            case 'approved':
+                              return <span className="text-2xs font-semibold px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200/60 flex items-center gap-1"><CheckCircle2 className="w-3 h-3 stroke-[2]" /> Onaylandı</span>
+                            case 'rejected':
+                              return <span className="text-2xs font-semibold px-2 py-0.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-200/60 flex items-center gap-1"><XCircle className="w-3 h-3 stroke-[2]" /> Reddedildi</span>
+                            default:
+                              return <span className="text-2xs font-semibold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 border border-slate-200">{app.status}</span>
+                          }
+                        })()}
+                          </div>
+                          <p className="text-2xs text-slate-500 truncate font-normal">
+                            Sahiplendirme başvurunuz
+                          </p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </ResultsGrid>
+              </div>
+            )}
+
             {/* ── BLOK 5: CTA ── */}
             <CtaBar>
               <CtaSolid accent="violet" onClick={() => setShowCreateModal(true)}>
@@ -577,6 +648,9 @@ export function SocialTabs({
                   <option value="30days">Son 30 Gün</option>
                 </select>
               </div>
+              {activeFilterCount === 0 && (
+                <span className="text-xs text-slate-400 font-normal">Aktif filtre yok.</span>
+              )}
               {activeFilterCount > 0 && (
                 <button
                   type="button"
@@ -710,15 +784,15 @@ export function SocialTabs({
                   return (
                     <ActiveListingCard
                       key={report.id}
-                      accent="rose"
+                      accent="orange"
                       avatarUrl={pet?.avatar_url}
                       title={pet?.name}
-                      meta={<><MapPin className="w-3.5 h-3.5 text-rose-500 stroke-[2] shrink-0" /> Son Görülme: {report.last_seen_location}</>}
+                      meta={<><MapPin className="w-3.5 h-3.5 text-orange-700 stroke-[2] shrink-0" /> Son Görülme: {report.last_seen_location}</>}
                       action={
                         <button
                           type="button"
                           onClick={() => handleMarkLostReportFound(pet.id)}
-                          className={`${CTA_BUTTON_BASE} ${accentOf('rose').solid}`}
+                          className={`${CTA_BUTTON_BASE} ${accentOf('orange').solid}`}
                         >
                           Bulundu Olarak İşaretle ✓
                         </button>
@@ -729,18 +803,32 @@ export function SocialTabs({
               </div>
             )}
 
+            {lostActionError && (
+              <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-rose-50 border border-rose-200" role="alert">
+                <p className="text-xs font-semibold text-rose-800">{lostActionError}</p>
+                <button
+                  type="button"
+                  onClick={() => setLostActionError(null)}
+                  aria-label="Uyarıyı kapat"
+                  className="text-rose-700 hover:text-rose-900 shrink-0"
+                >
+                  <X className="w-4 h-4 stroke-[2.5]" />
+                </button>
+              </div>
+            )}
+
             {/* ── BLOK 5: CTA (bu sekmede iki eşit ağırlıklı aksiyon) ── */}
             <CtaBar twoUp>
               <Link
                 href="/owner/lost-report?mode=lost"
-                className={`${CTA_BUTTON_BASE} ${accentOf('rose').solid}`}
+                className={`${CTA_BUTTON_BASE} ${accentOf('orange').solid}`}
               >
                 <AlertTriangle className="w-4 h-4 stroke-[2.5]" />
                 Kayıp İlanı Ver
               </Link>
               <Link
                 href="/owner/lost-report?mode=found"
-                className={`${CTA_BUTTON_BASE} ${accentOf('rose').outline}`}
+                className={`${CTA_BUTTON_BASE} ${accentOf('orange').outline}`}
               >
                 <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
                 Buldum Bildir
@@ -749,7 +837,7 @@ export function SocialTabs({
 
             {/* ── BLOK 6: Arama + filtre butonu ── */}
             <SearchBar
-              accent="rose"
+              accent="orange"
               activeCount={activeFilterCount}
               value={lostSearchQuery}
               onChange={setLostSearchQuery}
@@ -760,25 +848,14 @@ export function SocialTabs({
 
             {/* ── BLOK 7: Filtre paneli ── */}
             <FilterPanel
-              accent="rose"
+              accent="orange"
               open={showLostAdvancedFilters}
               onToggle={() => setShowLostAdvancedFilters(!showLostAdvancedFilters)}
               activeCount={activeFilterCount}
             >
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-semibold text-slate-600">Zaman:</span>
-                <select
-                  value={lostDateFilter}
-                  onChange={e => setLostDateFilter(e.target.value)}
-                  aria-label="Zaman filtresi"
-                  className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none"
-                >
-                  <option value="Tümü">Tüm Zamanlar</option>
-                  <option value="Bugün">Bugün</option>
-                  <option value="Son 3 Gün">Son 3 Gün</option>
-                  <option value="Son 7 Gün">Son 7 Gün</option>
-                </select>
-              </div>
+              {activeFilterCount === 0 && (
+                <span className="text-xs text-slate-400 font-normal">Aktif filtre yok.</span>
+              )}
               {activeFilterCount > 0 && (
                 <button
                   type="button"
@@ -792,17 +869,17 @@ export function SocialTabs({
 
             {/* ── BLOK 8: Hızlı filtre chip'leri (kriter: tür + zaman) ── */}
             <ChipRow>
-              <FilterChip accent="rose" active={lostSpeciesFilter === 'Köpek'} onClick={() => setLostSpeciesFilter(lostSpeciesFilter === 'Köpek' ? 'Tümü' : 'Köpek')}>🐶 Köpek</FilterChip>
-              <FilterChip accent="rose" active={lostSpeciesFilter === 'Kedi'} onClick={() => setLostSpeciesFilter(lostSpeciesFilter === 'Kedi' ? 'Tümü' : 'Kedi')}>🐱 Kedi</FilterChip>
-              <FilterChip accent="rose" active={lostSpeciesFilter === 'Tümü' && lostDateFilter === 'Tümü'} onClick={() => { setLostSpeciesFilter('Tümü'); setLostDateFilter('Tümü') }}>Tümü</FilterChip>
-              <FilterChip accent="rose" active={lostDateFilter === 'Bugün'} onClick={() => setLostDateFilter(lostDateFilter === 'Bugün' ? 'Tümü' : 'Bugün')}>Bugün</FilterChip>
-              <FilterChip accent="rose" active={lostDateFilter === 'Son 3 Gün'} onClick={() => setLostDateFilter(lostDateFilter === 'Son 3 Gün' ? 'Tümü' : 'Son 3 Gün')}>Son 3 Gün</FilterChip>
-              <FilterChip accent="rose" active={lostDateFilter === 'Son 7 Gün'} onClick={() => setLostDateFilter(lostDateFilter === 'Son 7 Gün' ? 'Tümü' : 'Son 7 Gün')}>Son 7 Gün</FilterChip>
+              <FilterChip accent="orange" active={lostSpeciesFilter === 'Köpek'} onClick={() => setLostSpeciesFilter(lostSpeciesFilter === 'Köpek' ? 'Tümü' : 'Köpek')}>🐶 Köpek</FilterChip>
+              <FilterChip accent="orange" active={lostSpeciesFilter === 'Kedi'} onClick={() => setLostSpeciesFilter(lostSpeciesFilter === 'Kedi' ? 'Tümü' : 'Kedi')}>🐱 Kedi</FilterChip>
+              <FilterChip accent="orange" active={lostSpeciesFilter === 'Tümü' && lostDateFilter === 'Tümü'} onClick={() => { setLostSpeciesFilter('Tümü'); setLostDateFilter('Tümü') }}>Tümü</FilterChip>
+              <FilterChip accent="orange" active={lostDateFilter === 'Bugün'} onClick={() => setLostDateFilter(lostDateFilter === 'Bugün' ? 'Tümü' : 'Bugün')}>Bugün</FilterChip>
+              <FilterChip accent="orange" active={lostDateFilter === 'Son 3 Gün'} onClick={() => setLostDateFilter(lostDateFilter === 'Son 3 Gün' ? 'Tümü' : 'Son 3 Gün')}>Son 3 Gün</FilterChip>
+              <FilterChip accent="orange" active={lostDateFilter === 'Son 7 Gün'} onClick={() => setLostDateFilter(lostDateFilter === 'Son 7 Gün' ? 'Tümü' : 'Son 7 Gün')}>Son 7 Gün</FilterChip>
             </ChipRow>
 
             {/* ── BLOK 9: Konum (+ bu sekmeye özel Liste/Harita istisnası) ── */}
             <LocationRow
-              accent="rose"
+              accent="orange"
               value={lostCityFilter}
               onChange={setLostCityFilter}
               allLabel="Konum (Tüm Türkiye)"
@@ -843,7 +920,7 @@ export function SocialTabs({
               <div className="flex flex-col gap-6">
                 {emergencyLostPets.length > 0 && (
                   <div className="flex flex-col gap-3">
-                    <SectionHeading accent="rose" icon={<AlertTriangle className="w-4 h-4 text-rose-600 stroke-[2.5]" />} onSeeAll={() => scrollToSection('lost-recent')}>
+                    <SectionHeading accent="orange" icon={<AlertTriangle className="w-4 h-4 text-orange-700 stroke-[2.5]" />} onSeeAll={() => scrollToSection('lost-recent')}>
                       Acil Kayıp İlanları
                     </SectionHeading>
                     <FeaturedRail>
@@ -856,7 +933,7 @@ export function SocialTabs({
 
                 {recentLostPets.length > 0 && (
                   <div className="flex flex-col gap-3" id="lost-recent">
-                    <SectionHeading accent="rose">Tüm Kayıp İlanları</SectionHeading>
+                    <SectionHeading accent="orange">Tüm Kayıp İlanları</SectionHeading>
                     <ResultsGrid>
                       {recentLostPets.map(report => (
                         <LostFeedCard key={report.id} report={report} />
@@ -1098,6 +1175,9 @@ export function SocialTabs({
                       <option value="500">500 km</option>
                     </select>
                   </div>
+                  {activeFilterCount === 0 && (
+                    <span className="text-xs text-slate-400 font-normal">Aktif filtre yok.</span>
+                  )}
                   {activeFilterCount > 0 && (
                     <button
                       type="button"
@@ -1129,6 +1209,21 @@ export function SocialTabs({
                 {/* ── BLOK 10 / 11: Sonuçlar veya boş durum ── */}
                 {loadingMatches ? (
                   <ResultsSkeleton />
+                ) : matchesError ? (
+                  <EmptyState
+                    icon={<AlertTriangle className="w-6 h-6 stroke-[1.75]" />}
+                    title="Eşleşme İlanları Yüklenemedi"
+                    hint={matchesError}
+                    action={
+                      <button
+                        type="button"
+                        onClick={fetchMatches}
+                        className="mt-2 inline-flex items-center justify-center bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-5 py-2.5 rounded-2xl transition-all active:scale-[0.98]"
+                      >
+                        Tekrar Dene
+                      </button>
+                    }
+                  />
                 ) : filteredMatches.length === 0 ? (
                   <EmptyState title="Aramanıza uygun eşleşme ilanı bulunamadı." />
                 ) : (

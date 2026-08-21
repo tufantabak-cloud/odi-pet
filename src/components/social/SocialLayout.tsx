@@ -20,7 +20,7 @@ import {
 } from 'lucide-react'
 import { TURKIYE_ILLER } from '@/lib/utils/turkiyeIller'
 
-export type SocialAccent = 'violet' | 'rose' | 'pink'
+export type SocialAccent = 'violet' | 'orange' | 'pink'
 
 /* Tailwind sınıfları statik olmalı — dinamik string birleştirme yok. */
 const ACCENT: Record<SocialAccent, {
@@ -49,18 +49,20 @@ const ACCENT: Record<SocialAccent, {
     link: 'text-violet-600 hover:text-violet-700',
     icon: 'text-violet-600',
   },
-  rose: {
-    cardBorder: 'border-rose-200',
-    cardFade: 'bg-gradient-to-bl from-rose-50 to-transparent',
-    labelPill: 'bg-rose-50 text-rose-700 border-rose-100',
-    divider: 'border-rose-100',
-    focus: 'focus:ring-rose-500/20 focus:border-rose-500',
-    toggleOn: 'bg-rose-50 border-rose-200 text-rose-700',
-    chipOn: 'bg-rose-600 text-white border-rose-600 shadow-sm',
-    solid: 'bg-rose-600 hover:bg-rose-700 text-white shadow-sm shadow-rose-600/20',
-    outline: 'bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 shadow-sm',
-    link: 'text-rose-600 hover:text-rose-700',
-    icon: 'text-rose-600',
+  /* Kayıp İlanları. orange-500/600 beyaz metinle WCAG AA'yı geçmiyor
+     (2.80:1 / 3.56:1); solid yüzeylerde orange-700 kullanılıyor (5.18:1). */
+  orange: {
+    cardBorder: 'border-orange-200',
+    cardFade: 'bg-gradient-to-bl from-orange-50 to-transparent',
+    labelPill: 'bg-orange-50 text-orange-800 border-orange-200',
+    divider: 'border-orange-100',
+    focus: 'focus:ring-orange-500/20 focus:border-orange-500',
+    toggleOn: 'bg-orange-50 border-orange-200 text-orange-800',
+    chipOn: 'bg-orange-700 text-white border-orange-700 shadow-sm',
+    solid: 'bg-orange-700 hover:bg-orange-800 text-white shadow-sm shadow-orange-700/20',
+    outline: 'bg-white hover:bg-orange-50 text-orange-800 border border-orange-300 shadow-sm',
+    link: 'text-orange-700 hover:text-orange-800',
+    icon: 'text-orange-700',
   },
   pink: {
     cardBorder: 'border-pink-100',
