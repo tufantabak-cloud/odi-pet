@@ -29,6 +29,8 @@ export type NotificationState =
   | 'vapid_changed'
   | 'blocked'
   | 'sync_required'
+  | 'syncing'
+  | 'sync_failed'
 
 export function getDeviceId(): string {
   if (typeof window === 'undefined') return 'server-side'
@@ -148,7 +150,8 @@ export async function getOrCreatePushSubscription(
 export async function persistPushSubscription(
   subscription: PushSubscription,
   fetchImpl: typeof fetch,
-  timeoutMs: number
+  timeoutMs: number,
+  token?: string
 ): Promise<void> {
   const json = subscription.toJSON()
   if (!json.endpoint || !json.keys?.p256dh || !json.keys.auth) {
@@ -160,10 +163,16 @@ export async function persistPushSubscription(
   const controller = new AbortController()
 
   try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
     const response = await withTimeout(
       fetchImpl('/api/notifications/subscribe', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
+        credentials: 'same-origin', // Ensure cookies are sent
         body: JSON.stringify({
           endpoint: json.endpoint,
           keys: json.keys,

@@ -11,6 +11,7 @@ import {
   WebPushSetupError,
   withTimeout,
 } from '@/lib/notifications/web-push-client'
+import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ''
 const PUSH_OPERATION_TIMEOUT_MS = 15_000
@@ -138,6 +139,28 @@ export function useWebPush() {
         }
 
         const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+        
+        // Helper to sync gracefully
+        const trySync = async (sub: PushSubscription) => {
+          const supabase = createBrowserSupabaseClient()
+          const { data: { session } } = await supabase.auth.getSession()
+          if (!session) return false // Silent skip if logged out
+
+          try {
+            await persistPushSubscription(
+              sub,
+              fetch,
+              PUSH_OPERATION_TIMEOUT_MS,
+              session.access_token
+            )
+            return true
+          } catch (err: any) {
+            // Ignore 401s during auto-sync (e.g. race conditions)
+            if (err?.message?.includes('401')) return false
+            throw err
+          }
+        }
+
         if (
           !pushSubscriptionMatchesApplicationServerKey(
             existingSubscription,
@@ -145,22 +168,14 @@ export function useWebPush() {
           )
         ) {
           if (!cancelled) setState('vapid_changed')
-          await getOrCreatePushSubscription(
+          const newSub = await getOrCreatePushSubscription(
             readyRegistration,
             applicationServerKey,
             PUSH_OPERATION_TIMEOUT_MS
           )
-          await persistPushSubscription(
-            existingSubscription,
-            fetch,
-            PUSH_OPERATION_TIMEOUT_MS
-          )
+          await trySync(newSub)
         } else {
-          await persistPushSubscription(
-            existingSubscription,
-            fetch,
-            PUSH_OPERATION_TIMEOUT_MS
-          )
+          await trySync(existingSubscription)
         }
 
         if (!cancelled) {
@@ -237,6 +252,10 @@ export function useWebPush() {
 
     try {
       setIsLoading(true)
+      // If we are retrying a sync, visually update state
+      if (Notification.permission === 'granted') {
+        setState('syncing')
+      }
 
       const permissionResult = Notification.permission === 'default'
         ? await Notification.requestPermission()
@@ -269,10 +288,14 @@ export function useWebPush() {
         PUSH_OPERATION_TIMEOUT_MS
       )
 
+      const supabase = createBrowserSupabaseClient()
+      const { data: { session } } = await supabase.auth.getSession()
+
       await persistPushSubscription(
         subscription,
         fetch,
-        PUSH_OPERATION_TIMEOUT_MS
+        PUSH_OPERATION_TIMEOUT_MS,
+        session?.access_token
       )
 
       setIsSubscribed(true)
@@ -290,6 +313,11 @@ export function useWebPush() {
       const message = getUserMessage(subscribeError)
       setIsSubscribed(false)
       setError(message)
+      if (Notification.permission === 'granted') {
+        setState('sync_failed')
+      } else {
+        setState('default') // or leave it if there's another appropriate state
+      }
       console.error('[useWebPush] Subscribe failed:', subscribeError)
       return { success: false, error: message }
     } finally {
@@ -316,9 +344,18 @@ export function useWebPush() {
 
       const deviceId = getDeviceId()
 
+      const supabase = createBrowserSupabaseClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`
+      }
+
       await fetch('/api/notifications/subscribe', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
+        credentials: 'same-origin',
         body: JSON.stringify({
           endpoint: subscription?.endpoint,
           device_id: deviceId

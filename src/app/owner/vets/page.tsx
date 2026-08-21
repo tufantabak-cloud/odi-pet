@@ -5,6 +5,7 @@ import Link from 'next/link';
 import citiesData from '@/lib/cities.json';
 import CoachMark from '@/components/ui/CoachMark';
 import { Illustration } from '@/components/ui/Illustration';
+import { useGeolocation } from '@/contexts/GeolocationContext';
 
 interface Clinic {
   id: string;
@@ -42,6 +43,7 @@ function deg2rad(deg: number) {
 }
 
 export default function VetsPage() {
+  const { requestLocation: requestGeoLocation } = useGeolocation();
   const [clinics, setClinics] = useState<Clinic[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -191,38 +193,24 @@ export default function VetsPage() {
     searchClinics();
   };
 
-  const requestLocation = () => {
+  const requestLocation = async () => {
     if (isOffline) return;
-    if (typeof window === 'undefined' || !navigator.geolocation) {
-      setError('Tarayıcınız konum özelliğini desteklemiyor.');
-      return;
-    }
-
     setLoading(true);
     setError(null);
     setGpsDenied(false);
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        setUserLocation({ lat: latitude, lng: longitude });
-        searchClinics(latitude, longitude);
-      },
-      (err) => {
-        console.error('Geolocation error:', err);
-        if (err.code === 1) {
-          // GPS Permission Denied
-          setGpsDenied(true);
-        } else if (err.code === 3) {
-          // GPS Timeout
-          setError('Konum sinyali zaman aşımına uğradı. Lütfen cihaz konumunu kontrol edin veya şehri manuel seçin.');
-        } else {
-          setError('Konum alınırken bir sorun oluştu. Lütfen cihazınızın konum servislerini kontrol edin.');
-        }
-        setLoading(false);
-      },
-      { timeout: 10000, enableHighAccuracy: false, maximumAge: 60000 }
-    );
+    const coords = await requestGeoLocation();
+    if (!coords) {
+      // It handles denied, timeout, unavailable internally, we just act on null
+      setGpsDenied(true);
+      setError('Konum alınırken bir sorun oluştu veya izin reddedildi. Lütfen cihaz konumunu kontrol edin veya şehri manuel seçin.');
+      setLoading(false);
+      return;
+    }
+
+    const { latitude, longitude } = coords;
+    setUserLocation({ lat: latitude, lng: longitude });
+    searchClinics(latitude, longitude);
   };
 
   // Detail functions

@@ -6,6 +6,7 @@ import Input from '@/components/ui/primitives/Input'
 import Button from '@/components/ui/primitives/Button'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { ShieldAlert, MapPin, CheckCircle2, Edit2 } from 'lucide-react'
+import { useGeolocation } from '@/contexts/GeolocationContext'
 
 interface SmartAddressPromptProps {
   open: boolean
@@ -88,63 +89,55 @@ export default function SmartAddressPrompt({
     loadExistingData()
   }, [open])
 
-  // 📍 1. Adım: GPS Konumundan Posta Kodu ve Adres Bulma
-  const handleGetLocation = () => {
-    if (!navigator.geolocation) {
-      setError('Cihazınızda GPS/Konum desteği bulunmuyor.')
-      return
-    }
+  const { requestLocation } = useGeolocation()
 
+  // 📍 1. Adım: GPS Konumundan Posta Kodu ve Adres Bulma
+  const handleGetLocation = async () => {
     setGeolocating(true)
     setError(null)
     setLocationMessage(null)
 
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const lat = position.coords.latitude
-        const lng = position.coords.longitude
-        setLatitude(lat)
-        setLongitude(lng)
+    const coords = await requestLocation()
+    if (!coords) {
+      setGeolocating(false)
+      // The context mapped the error already. We can just fallback to a generic message.
+      setError('GPS konumu alınamadı veya izin reddedildi. Lütfen Posta Kodunuzu girin.')
+      return
+    }
 
-        try {
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&accept-language=tr`
-          )
-          const data = await response.json()
+    const lat = coords.latitude
+    const lng = coords.longitude
+    setLatitude(lat)
+    setLongitude(lng)
 
-          if (data && data.address) {
-            const addr = data.address
-            const detectedCity = addr.city || addr.province || addr.state || addr.region || ''
-            const detectedDistrict = addr.district || addr.town || addr.county || addr.borough || addr.suburb || ''
-            const detectedNeighborhood = addr.suburb || addr.neighbourhood || addr.quarter || addr.village || addr.residential || ''
-            const detectedPostcode = addr.postcode || ''
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&accept-language=tr`
+      )
+      const data = await response.json()
 
-            if (detectedCity) setCity(detectedCity)
-            if (detectedDistrict) setDistrict(detectedDistrict)
-            if (detectedNeighborhood) setNeighborhood(detectedNeighborhood)
-            if (detectedPostcode) setPostalCode(detectedPostcode)
+      if (data && data.address) {
+        const addr = data.address
+        const detectedCity = addr.city || addr.province || addr.state || addr.region || ''
+        const detectedDistrict = addr.district || addr.town || addr.county || addr.borough || addr.suburb || ''
+        const detectedNeighborhood = addr.suburb || addr.neighbourhood || addr.quarter || addr.village || addr.residential || ''
+        const detectedPostcode = addr.postcode || ''
 
-            const summaryParts = [detectedCity, detectedDistrict, detectedNeighborhood].filter(Boolean)
-            setLocationMessage(`📍 Konumunuz GPS ile otomatik bulundu: ${summaryParts.join(', ')}`)
-          } else {
-            setLocationMessage('📍 GPS koordinatları alındı.')
-          }
-        } catch {
-          setLocationMessage('📍 GPS koordinatları alındı.')
-        } finally {
-          setGeolocating(false)
-        }
-      },
-      (geoError) => {
-        setGeolocating(false)
-        if (geoError.code === geoError.PERMISSION_DENIED) {
-          setError('Konum izni reddedildi. Lütfen Posta Kodunuzu girin.')
-        } else {
-          setError('GPS konumu alınamadı. Lütfen Posta Kodunuzu girin.')
-        }
-      },
-      { timeout: 10000, enableHighAccuracy: true }
-    )
+        if (detectedCity) setCity(detectedCity)
+        if (detectedDistrict) setDistrict(detectedDistrict)
+        if (detectedNeighborhood) setNeighborhood(detectedNeighborhood)
+        if (detectedPostcode) setPostalCode(detectedPostcode)
+
+        const summaryParts = [detectedCity, detectedDistrict, detectedNeighborhood].filter(Boolean)
+        setLocationMessage(`📍 Konumunuz GPS ile otomatik bulundu: ${summaryParts.join(', ')}`)
+      } else {
+        setLocationMessage('📍 GPS koordinatları alındı.')
+      }
+    } catch {
+      setLocationMessage('📍 GPS koordinatları alındı.')
+    } finally {
+      setGeolocating(false)
+    }
   }
 
   // 📮 2. Adım: Posta Kodundan İl / İlçe / Mahalle Otomatik Çözümleme

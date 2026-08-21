@@ -31,7 +31,18 @@ async function readJson(request: Request): Promise<unknown | null> {
 // POST /api/notifications/subscribe
 export async function POST(request: Request) {
   try {
-    const user = await getSessionUser()
+    const supabase = await createServerSupabaseClient()
+    let user = await getSessionUser()
+    
+    if (!user) {
+      const authHeader = request.headers.get('authorization')
+      if (authHeader?.startsWith('Bearer ')) {
+        const token = authHeader.replace('Bearer ', '')
+        const { data } = await supabase.auth.getUser(token)
+        user = data?.user || null
+      }
+    }
+
     if (!user) {
       return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 })
     }
@@ -46,7 +57,6 @@ export async function POST(request: Request) {
 
     console.info('[push/subscribe] Saving device subscription for user:', user.id)
 
-    const supabase = await createServerSupabaseClient()
     const userAgent = request.headers.get('user-agent') ?? ''
     const { endpoint, keys, device_id, platform, browser, app_version } = parsed.data
 
@@ -135,7 +145,18 @@ export async function POST(request: Request) {
 // DELETE /api/notifications/subscribe
 export async function DELETE(request: Request) {
   try {
-    const user = await getSessionUser()
+    const supabase = await createServerSupabaseClient()
+    let user = await getSessionUser()
+    
+    if (!user) {
+      const authHeader = request.headers.get('authorization')
+      if (authHeader?.startsWith('Bearer ')) {
+        const token = authHeader.replace('Bearer ', '')
+        const { data } = await supabase.auth.getUser(token)
+        user = data?.user || null
+      }
+    }
+
     if (!user) {
       return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 })
     }
@@ -148,7 +169,6 @@ export async function DELETE(request: Request) {
       )
     }
 
-    const supabase = await createServerSupabaseClient()
     const { endpoint, device_id } = parsed.data
 
     let query = supabase.from('push_subscriptions').delete().eq('profile_id', user.id)

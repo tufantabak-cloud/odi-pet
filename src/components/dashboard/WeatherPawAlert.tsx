@@ -26,6 +26,7 @@ import {
 } from 'lucide-react'
 import { evaluateWeatherScenario, WeatherScenarioResult } from '@/lib/weatherScenarios'
 import { TURKIYE_ILLER } from '@/lib/utils/turkiyeIller'
+import { useGeolocation } from '@/contexts/GeolocationContext'
 
 export interface WeatherData {
   temp: number
@@ -434,6 +435,8 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
     }
   }
 
+  const { requestLocation } = useGeolocation()
+
   const fetchWeather = async (coords?: { latitude: number; longitude: number }) => {
     try {
       let url = `/api/weather`
@@ -489,14 +492,7 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
     }
 
     fetchWeather()
-
-    if (typeof window !== 'undefined' && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => fetchWeather(pos.coords),
-        () => {},
-        { timeout: 4000 }
-      )
-    }
+    // MOUNT-TIME LOCATION REQUEST REMOVED AS PER P0-1 RULE
   }, [petCity, dismissed])
 
   const handleRequestLocation = (e?: React.MouseEvent) => {
@@ -506,53 +502,44 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
     setShowLocationModal(true)
   }
 
-  const handleGpsLocation = () => {
-    if (typeof window !== 'undefined' && navigator.geolocation) {
-      setIsSavingLocation(true)
-      setLocationError('')
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          try {
-            const res = await fetch(`/api/weather?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`)
-            if (res.ok) {
-              const json = await res.json()
-              if (json.success && json.data?.cityName) {
-                await saveCityToPet(json.data.cityName)
-              } else {
-                setLocationError('Konumunuz belirlenemedi, lütfen listeden seçin.')
-              }
-            } else {
-              setLocationError('Konum servisine erişilemedi.')
-            }
-          } catch (err) {
-             setLocationError('Hava durumu servisine erişilemedi.')
-          } finally {
-            setIsSavingLocation(false)
-          }
-        },
-        (err) => {
-          console.warn('Geolocation permission denied or error:', err)
-          setIsSavingLocation(false)
-          setLocationError('Konum izni alınamadı, lütfen listeden seçin.')
-        },
-        { timeout: 6000 }
-      )
-    } else {
-      setLocationError('Tarayıcınız konum servisini desteklemiyor.')
+  const handleGpsLocation = async () => {
+    setIsSavingLocation(true)
+    setLocationError('')
+    
+    const coords = await requestLocation()
+    if (!coords) {
+      // The context handles mapping the error, we just show a generic fallback message here since the error could be denied/timeout etc.
+      setLocationError('Konum alınamadı, lütfen manuel seçin veya izinleri kontrol edin.')
+      setIsSavingLocation(false)
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/weather?lat=${coords.latitude}&lon=${coords.longitude}`)
+      if (res.ok) {
+        const json = await res.json()
+        if (json.success && json.data?.cityName) {
+          await saveCityToPet(json.data.cityName)
+        } else {
+          setLocationError('Konumunuz belirlenemedi, lütfen listeden seçin.')
+        }
+      } else {
+        setLocationError('Konum servisine erişilemedi.')
+      }
+    } catch (err) {
+       setLocationError('Hava durumu servisine erişilemedi.')
+    } finally {
+      setIsSavingLocation(false)
     }
   }
 
-  const handleManualRefresh = () => {
+  const handleManualRefresh = async () => {
     setIsRefreshing(true)
-    if (typeof window !== 'undefined' && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => fetchWeather(pos.coords),
-        () => fetchWeather(),
-        { timeout: 4000 }
-      )
-    } else {
-      fetchWeather()
-    }
+    
+    // Instead of forcing a native location request on refresh, we just re-fetch with petCity
+    // If we wanted exact GPS, we could call requestLocation(), but typically weather refresh 
+    // just refreshes the current known location.
+    await fetchWeather()
   }
 
   // Evaluate the intelligent scenario for Dog or Cat

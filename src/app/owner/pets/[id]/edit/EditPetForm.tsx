@@ -32,6 +32,7 @@ import {
   POPULAR_CAT_BREED_NAMES,
   POPULAR_DOG_BREED_NAMES,
 } from '@/lib/pets/breedsMaster'
+import { useGeolocation } from '@/contexts/GeolocationContext'
 
 const CAT_BREEDS = CAT_BREED_NAMES
 const DOG_BREEDS = DOG_BREEDS_NAMES
@@ -50,6 +51,7 @@ const AGE_PRESETS = [
 ]
 
 export default function EditPetForm({ pet, ownerProfile }: { pet: any; ownerProfile?: any }) {
+  const { requestLocation: requestGeoLocation } = useGeolocation()
   const router = useRouter()
   const searchParams = useSearchParams()
   const highlight = searchParams ? searchParams.get('highlight') : null
@@ -264,60 +266,52 @@ export default function EditPetForm({ pet, ownerProfile }: { pet: any; ownerProf
   }, [weightKg, species, sizeLocked])
 
   // Geolocation handler
-  const handleUseLocation = () => {
-    if (typeof window === 'undefined' || !navigator.geolocation) {
-      setGeoMsg({ type: 'err', text: 'Cihazınız konum servislerini desteklemiyor.' })
-      return
-    }
-
+  const handleUseLocation = async () => {
     setGeoLoading(true)
     setGeoMsg(null)
 
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          const lat = pos.coords.latitude
-          const lng = pos.coords.longitude
-          const res = await fetch(`/api/v1/reports/lost/reverse-geocode?lat=${lat}&lng=${lng}`)
-          if (res.ok) {
-            const data = await res.json()
-            if (data.name) {
-              const parts = data.name.split(',').map((s: string) => s.trim())
-              const matchedCity = provinces.find(p => 
-                parts.some((part: string) => p.name.toLocaleLowerCase('tr').includes(part.toLocaleLowerCase('tr')) || part.toLocaleLowerCase('tr').includes(p.name.toLocaleLowerCase('tr')))
-              )
+    const coords = await requestGeoLocation()
+    if (!coords) {
+      setGeoMsg({ type: 'err', text: 'Konum izni verilmedi veya konum alınamadı.' })
+      setGeoLoading(false)
+      return
+    }
 
-              if (matchedCity) {
-                setSelectedCity(matchedCity.name)
-                const matchedDistrict = matchedCity.districts?.find((d: any) =>
-                  parts.some((part: string) => d.name.toLocaleLowerCase('tr').includes(part.toLocaleLowerCase('tr')) || part.toLocaleLowerCase('tr').includes(d.name.toLocaleLowerCase('tr')))
-                )
-                if (matchedDistrict) {
-                  setSelectedDistrict(matchedDistrict.name)
-                }
-                setGeoMsg({ type: 'ok', text: `Konum belirlendi: ${matchedDistrict ? matchedDistrict.name + ', ' : ''}${matchedCity.name}` })
-              } else {
-                setGeoMsg({ type: 'err', text: `Bulunan konum: ${data.name}. Lütfen listeden ili seçiniz.` })
-              }
-            } else {
-              setGeoMsg({ type: 'err', text: 'Konum adresi çözümlenemedi.' })
+    try {
+      const lat = coords.latitude
+      const lng = coords.longitude
+      const res = await fetch(`/api/v1/reports/lost/reverse-geocode?lat=${lat}&lng=${lng}`)
+      if (res.ok) {
+        const data = await res.json()
+        if (data.name) {
+          const parts = data.name.split(',').map((s: string) => s.trim())
+          const matchedCity = provinces.find(p => 
+            parts.some((part: string) => p.name.toLocaleLowerCase('tr').includes(part.toLocaleLowerCase('tr')) || part.toLocaleLowerCase('tr').includes(p.name.toLocaleLowerCase('tr')))
+          )
+
+          if (matchedCity) {
+            setSelectedCity(matchedCity.name)
+            const matchedDistrict = matchedCity.districts?.find((d: any) =>
+              parts.some((part: string) => d.name.toLocaleLowerCase('tr').includes(part.toLocaleLowerCase('tr')) || part.toLocaleLowerCase('tr').includes(d.name.toLocaleLowerCase('tr')))
+            )
+            if (matchedDistrict) {
+              setSelectedDistrict(matchedDistrict.name)
             }
+            setGeoMsg({ type: 'ok', text: `Konum belirlendi: ${matchedDistrict ? matchedDistrict.name + ', ' : ''}${matchedCity.name}` })
           } else {
-            setGeoMsg({ type: 'err', text: 'Konum servisine ulaşılamadı.' })
+            setGeoMsg({ type: 'err', text: `Bulunan konum: ${data.name}. Lütfen listeden ili seçiniz.` })
           }
-        } catch {
-          setGeoMsg({ type: 'err', text: 'Konum alınırken bir hata oluştu.' })
-        } finally {
-          setGeoLoading(false)
+        } else {
+          setGeoMsg({ type: 'err', text: 'Konum adresi çözümlenemedi.' })
         }
-      },
-      (err) => {
-        console.warn('Geo error:', err)
-        setGeoMsg({ type: 'err', text: 'Konum izni verilmedi veya konum alınamadı.' })
-        setGeoLoading(false)
-      },
-      { timeout: 10000, enableHighAccuracy: true }
-    )
+      } else {
+        setGeoMsg({ type: 'err', text: 'Konum servisine ulaşılamadı.' })
+      }
+    } catch {
+      setGeoMsg({ type: 'err', text: 'Konum alınırken bir hata oluştu.' })
+    } finally {
+      setGeoLoading(false)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {

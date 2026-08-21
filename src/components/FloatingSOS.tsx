@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
+import { useGeolocation } from '@/contexts/GeolocationContext'
 
 const DynamicExperienceEngine = dynamic(
   () => import('@/components/orchestrator/DynamicExperienceEngine'),
@@ -33,6 +34,7 @@ export default function FloatingSOS({
   const [mounted, setMounted] = useState(false)
   const [lostReport, setLostReport] = useState<any>(null)
   const [locating, setLocating] = useState(false)
+  const { requestLocation } = useGeolocation()
 
   // Orchestrator state
   const [orchestratorActive, setOrchestratorActive] = useState(false)
@@ -83,29 +85,21 @@ export default function FloatingSOS({
     )
 
   // Konum bazlı veteriner arama
-  const handleFindVet = () => {
+  const handleFindVet = async () => {
     setLocating(true)
-    if (!navigator.geolocation) {
+    const coords = await requestLocation()
+    if (!coords) {
       window.open('https://maps.google.com/?q=veteriner', '_blank')
       setLocating(false)
       return
     }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords
-        window.open(
-          `https://www.google.com/maps/search/veteriner/@${latitude},${longitude},15z`,
-          '_blank'
-        )
-        setLocating(false)
-      },
-      () => {
-        // Konum izni reddedilirse genel arama
-        window.open('https://maps.google.com/?q=veteriner', '_blank')
-        setLocating(false)
-      },
-      { timeout: 8000 }
+
+    const { latitude, longitude } = coords
+    window.open(
+      `https://www.google.com/maps/search/veteriner/@${latitude},${longitude},15z`,
+      '_blank'
     )
+    setLocating(false)
   }
 
   const validContacts = (sosContacts ?? []).filter(c => c?.phone?.trim())

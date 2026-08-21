@@ -9,6 +9,7 @@ import SmartQuestionCard from '@/components/profiling/SmartQuestionCard'
 import SmartInsightCard from '@/components/profiling/SmartInsightCard'
 import { getPlanDisplayTitle } from '@/lib/plans/utils'
 import OnboardingProgressCard from '@/components/OnboardingProgressCard'
+import PermissionOnboarding from '@/components/permissions/PermissionOnboarding'
 
 import PetRecommendationsCard from '@/components/dashboard/PetRecommendationsCard'
 import PendingInviteModal from '@/components/pets/family/PendingInviteModal'
@@ -106,6 +107,7 @@ export default function DashboardClient({
   return (
     <>
       <PendingInviteModal pendingInvites={pendingUserInvites} />
+      <PermissionOnboarding />
       {/* 1. Üst Header / Karşılama */}
       <div className="px-[var(--space-4)] pt-6 pb-1 flex items-center justify-between gap-4">
         <div className="flex flex-col gap-1">

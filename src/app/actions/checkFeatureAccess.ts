@@ -8,9 +8,18 @@ import { CheckFeatureAccessParams, FeatureAccessResult } from '../../lib/feature
  * Used primarily by Client Components via the `useFeatureAccess` hook.
  */
 export async function checkFeatureAccessAction(params: CheckFeatureAccessParams): Promise<FeatureAccessResult> {
-  // In a real implementation, you might want to extract `userId` from the authenticated session 
-  // rather than trusting the client payload entirely, but for the universal adapter pattern, 
-  // this simply proxies to the core engine.
+  let userId = params.userId;
+  if (!userId) {
+    try {
+      const { getSessionUser } = await import('@/lib/auth/get-current-profile');
+      const user = await getSessionUser();
+      if (user) {
+        userId = user.id;
+      }
+    } catch {
+      // Session unavailable
+    }
+  }
   
-  return await engineCheck(params);
+  return await engineCheck({ ...params, userId: userId || '' });
 }

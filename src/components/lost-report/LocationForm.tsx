@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapPin, Navigation, Edit3 } from 'lucide-react';
+import { useGeolocation } from '@/contexts/GeolocationContext';
 
 if (typeof window !== 'undefined') {
   delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -114,26 +115,24 @@ export const LocationForm = ({ onNext }: { onNext: (data: any) => void }) => {
     }
   };
 
-  const handleGetCurrentLocation = () => {
-    if (typeof window === 'undefined' || !navigator.geolocation) {
-      setError('Cihazınız konum servislerini desteklemiyor.');
-      return;
-    }
+  const { requestLocation } = useGeolocation();
+
+  const handleGetCurrentLocation = async () => {
     setGeoLocating(true);
     setError('');
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setGeoLocating(false);
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        updateMarker(lat, lng);
-      },
-      () => {
-        setGeoLocating(false);
-        setError('Mevcut konum alınamadı. Lütfen harita üzerinden tıklayarak seçin.');
-      },
-      { timeout: 10000, enableHighAccuracy: true }
-    );
+    
+    const coords = await requestLocation();
+    
+    if (!coords) {
+      setGeoLocating(false);
+      setError('Mevcut konum alınamadı. Lütfen harita üzerinden tıklayarak seçin.');
+      return;
+    }
+
+    const lat = coords.latitude;
+    const lng = coords.longitude;
+    updateMarker(lat, lng);
+    setGeoLocating(false);
   };
 
   const handleVerify = async () => {

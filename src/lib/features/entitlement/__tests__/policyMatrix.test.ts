@@ -52,10 +52,18 @@ describe('EntitlementPolicy Exhaustive Decision Matrix', () => {
     expect(res.reason).toBe(FeatureAccessReason.DEPRECATED);
   });
 
-  it('6. Returns MISSING_LIMIT_RECORD when limit record is null', () => {
+  it('6. Returns ALLOWED for pro user when limit record is null', () => {
     const res = EntitlementPolicy.evaluate('test', dummyFeatureDef, dummyDbStatus, 'pro', null, 0);
+    expect(res.allowed).toBe(true);
+    expect(res.isUnlimited).toBe(true);
+    expect(res.reason).toBe(FeatureAccessReason.ALLOWED);
+  });
+
+  it('6b. Returns TIER_REQUIRED for free user when limit record is null on premium feature', () => {
+    const premiumDef = { ...dummyFeatureDef, tags: ['premium'] };
+    const res = EntitlementPolicy.evaluate('test', premiumDef, dummyDbStatus, 'free', null, 0);
     expect(res.allowed).toBe(false);
-    expect(res.reason).toBe(FeatureAccessReason.MISSING_LIMIT_RECORD);
+    expect(res.reason).toBe(FeatureAccessReason.TIER_REQUIRED);
   });
 
   it('7. Returns ALLOWED for unlimited feature', () => {

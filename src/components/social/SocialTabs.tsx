@@ -1033,27 +1033,33 @@ export function SocialTabs({
                   <Lock className="w-4 h-4 stroke-[2]" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-slate-900">Eşleştirme Premium Özelliği</h4>
-                  <p className="text-xs text-slate-500">Adayları görmek için yükseltin</p>
+                  <h4 className="text-sm font-bold text-slate-900">Eşleştirme PRO Özelliği</h4>
+                  <p className="text-xs text-slate-500">Arkadaşını davet ederek ücretsiz PRO kazanabilirsin</p>
                 </div>
               </div>
-              <Link href="/pricing" className="bg-white text-violet-700 text-xs font-bold px-4 py-2 rounded-xl shadow-sm border border-violet-100 hover:bg-violet-50 transition-colors">
-                İncele
+              <Link href="/owner/referral" className="bg-white text-violet-700 text-xs font-bold px-4 py-2 rounded-xl shadow-sm border border-violet-100 hover:bg-violet-50 transition-colors">
+                PRO Kazan →
               </Link>
             </div>
           )}
 
           {!matchFeature.enabled ? (
              <div className="rounded-3xl bg-white border border-slate-100 p-10 text-center flex flex-col items-center justify-center gap-3 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)]">
-                <div className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center">
-                  <Compass className="w-6 h-6 stroke-[1.75]" />
+                <div className="w-12 h-12 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center">
+                  <Sparkles className="w-6 h-6 stroke-[1.75]" />
                 </div>
-                <p className="text-sm font-semibold text-slate-900 text-center">
-                  İçerik Gizli
+                <p className="text-sm font-bold text-slate-900 text-center">
+                  Eşleştirme Adayları PRO Üyelerimize Özeldir
                 </p>
-                <p className="text-xs text-slate-500 text-center font-normal">
-                  Eşleşmeleri görmek için Premium abonesi olmalısınız.
+                <p className="text-xs text-slate-500 text-center font-normal max-w-sm">
+                  Arkadaşlarını Odi'ye davet ederek anında ücretsiz PRO kazanabilir ve tüm eşleşme adaylarını hemen incelemeye başlayabilirsin.
                 </p>
+                <Link
+                  href="/owner/referral"
+                  className="mt-2 inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold px-5 py-2.5 rounded-2xl shadow-sm transition-all active:scale-[0.98]"
+                >
+                  Arkadaşını Davet Et (+30 Gün PRO) →
+                </Link>
               </div>
           ) : (
             <div className="flex flex-col gap-4">

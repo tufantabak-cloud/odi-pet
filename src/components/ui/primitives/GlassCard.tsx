@@ -9,7 +9,7 @@ import React from 'react'
 // tutarsızlık burada not düşülüyor (bkz. Faz 2 raporu).
 
 type CardVariant = 'default' | 'hero' | 'insight' | 'interactive'
-type CardPadding = 'sm' | 'md' | 'lg'
+type CardPadding = 'sm' | 'md' | 'lg' | 'none'
 type CardCategory = 'health' | 'vaccine' | 'parasite' | 'nutrition' | 'care'
 
 interface GlassCardProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -20,6 +20,7 @@ interface GlassCardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const paddingStyles: Record<CardPadding, string> = {
+  none: 'p-0',
   sm: 'p-4',  // 16px
   md: 'p-5',  // 20px
   lg: 'p-6',  // 24px

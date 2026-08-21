@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { DefaultCatAvatar, DefaultDogAvatar } from '@/components/icons/PetIcons'
+import { useGeolocation } from '@/contexts/GeolocationContext'
 
 interface LostPetWizardProps {
   pet: any;
@@ -12,6 +13,7 @@ interface LostPetWizardProps {
 }
 
 export default function LostPetWizard({ pet, ownerPhone, onComplete, onCancel }: LostPetWizardProps) {
+  const { requestLocation } = useGeolocation()
   const [step, setStep] = useState(1)
   const [contactPhone, setContactPhone] = useState(ownerPhone || pet.sos_contacts?.[0]?.phone || '')
   const [location, setLocation] = useState('')
@@ -94,62 +96,59 @@ export default function LostPetWizard({ pet, ownerPhone, onComplete, onCancel }:
     }
   }
 
-  const handleGetLocation = () => {
-    if (navigator.geolocation) {
-      setLoading(true)
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          const lat = pos.coords.latitude
-          const lon = pos.coords.longitude
-          try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&accept-language=tr`)
-            const data = await res.json()
-            setLatLon({ lat, lon })
-            if (data && data.address) {
-              const addr = data.address
-              const provinceName = addr.province || addr.city || addr.state
-              let districtName = addr.town || addr.county || addr.city_district || addr.district || addr.suburb
+  const handleGetLocation = async () => {
+    setLoading(true)
+    const coords = await requestLocation()
+    if (!coords) {
+      setError('Konum alınamadı, lütfen izin verin veya adresi manuel yazın.')
+      setLoading(false)
+      return
+    }
 
-              if (provinceName) {
-                const matchedProv = provinces.find(p => p.name.localeCompare(provinceName, 'tr', { sensitivity: 'base' }) === 0 || provinceName.includes(p.name))
-                if (matchedProv) {
-                  setSelectedCity(matchedProv.name)
-                  
-                  if (districtName) {
-                    let cleanDist = districtName.replace(' İlçesi', '').replace(' Belediyesi', '').trim()
-                    let matchedDist = matchedProv.districts?.find((d: any) => d.name.localeCompare(cleanDist, 'tr', { sensitivity: 'base' }) === 0 || cleanDist.includes(d.name))
-                    
-                    if (matchedDist) {
-                      setSelectedDistrict(matchedDist.name)
-                    } else {
-                      setSelectedDistrict('')
-                    }
-                  }
-                }
-              }
+    const lat = coords.latitude
+    const lon = coords.longitude
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&accept-language=tr`)
+      const data = await res.json()
+      setLatLon({ lat, lon })
+      if (data && data.address) {
+        const addr = data.address
+        const provinceName = addr.province || addr.city || addr.state
+        let districtName = addr.town || addr.county || addr.city_district || addr.district || addr.suburb
 
-              const road = addr.road || ''
-              const suburb = addr.suburb || addr.neighbourhood || ''
-              const parts = [suburb, road].filter(Boolean)
-              if (parts.length > 0) {
-                setLocation(parts.join(', '))
+        if (provinceName) {
+          const matchedProv = provinces.find(p => p.name.localeCompare(provinceName, 'tr', { sensitivity: 'base' }) === 0 || provinceName.includes(p.name))
+          if (matchedProv) {
+            setSelectedCity(matchedProv.name)
+            
+            if (districtName) {
+              let cleanDist = districtName.replace(' İlçesi', '').replace(' Belediyesi', '').trim()
+              let matchedDist = matchedProv.districts?.find((d: any) => d.name.localeCompare(cleanDist, 'tr', { sensitivity: 'base' }) === 0 || cleanDist.includes(d.name))
+              
+              if (matchedDist) {
+                setSelectedDistrict(matchedDist.name)
               } else {
-                setLocation(`${lat.toFixed(6)}, ${lon.toFixed(6)}`)
+                setSelectedDistrict('')
               }
-            } else {
-              setLocation(`${lat.toFixed(6)}, ${lon.toFixed(6)}`)
             }
-          } catch (err) {
-            setLocation(`${lat.toFixed(6)}, ${lon.toFixed(6)}`)
-          } finally {
-            setLoading(false)
           }
-        },
-        () => {
-          setError('Konum alınamadı, lütfen izin verin veya adresi manuel yazın.')
-          setLoading(false)
         }
-      )
+
+        const road = addr.road || ''
+        const suburb = addr.suburb || addr.neighbourhood || ''
+        const parts = [suburb, road].filter(Boolean)
+        if (parts.length > 0) {
+          setLocation(parts.join(', '))
+        } else {
+          setLocation(`${lat.toFixed(6)}, ${lon.toFixed(6)}`)
+        }
+      } else {
+        setLocation(`${lat.toFixed(6)}, ${lon.toFixed(6)}`)
+      }
+    } catch (err) {
+      setLocation(`${lat.toFixed(6)}, ${lon.toFixed(6)}`)
+    } finally {
+      setLoading(false)
     }
   }
 

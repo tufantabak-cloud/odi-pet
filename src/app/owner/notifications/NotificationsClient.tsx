@@ -136,7 +136,7 @@ function PushPermissionCard({
     )
   }
 
-  if (!showSoftPrompt && state !== 'sync_required') return null
+  if (!showSoftPrompt && !['sync_required', 'sync_failed', 'syncing'].includes(state)) return null
 
   return (
     <div
@@ -147,9 +147,15 @@ function PushPermissionCard({
         🐶
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-extrabold text-base text-text-primary">Aşı ve Sağlık Uyarılarını Kaçırmayın</p>
+        <p className="font-extrabold text-base text-text-primary">
+          {['sync_required', 'sync_failed', 'syncing'].includes(state) 
+            ? 'Bildirim Senkronizasyonu Gerekli' 
+            : 'Aşı ve Sağlık Uyarılarını Kaçırmayın'}
+        </p>
         <p className="text-[13px] text-text-secondary mt-1 leading-relaxed">
-          {firstPet ? `"${displayName} Kuduz aşısına 3 gün kaldı" gibi kritik hatırlatmaları telefonunuza ulaştıralım.` : '"Can dostunuzun Kuduz aşısına 3 gün kaldı" gibi kritik hatırlatmaları telefonunuza ulaştıralım.'}
+          {['sync_required', 'sync_failed', 'syncing'].includes(state)
+            ? 'Bildirim izni verdiniz ancak cihazınız sunucuya kaydedilemedi. Bildirim alabilmek için tekrar deneyin.'
+            : (firstPet ? `"${displayName} Kuduz aşısına 3 gün kaldı" gibi kritik hatırlatmaları telefonunuza ulaştıralım.` : '"Can dostunuzun Kuduz aşısına 3 gün kaldı" gibi kritik hatırlatmaları telefonunuza ulaştıralım.')}
         </p>
         <div className="flex gap-2 mt-3 flex-wrap">
           <button
@@ -165,7 +171,7 @@ function PushPermissionCard({
             {isLoading ? (
               <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : '✓'}
-            Bildirimleri Aç
+            {['sync_required', 'sync_failed', 'syncing'].includes(state) ? 'Tekrar Dene' : 'Bildirimleri Aç'}
           </button>
           <button
             onClick={dismissSoftPrompt}
