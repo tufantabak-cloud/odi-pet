@@ -935,7 +935,10 @@ export default function NutritionClient({
       const res = await fetch(`/api/pets/${pet.id}/nutrition/weight/${logId}`, {
         method: 'DELETE'
       })
-      if (!res.ok) throw new Error('Kilo kaydı silinemedi')
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.error || 'Kilo kaydı silinemedi')
+      }
       router.refresh()
     } catch (err: any) {
       showApiError(err.message || 'Silme işlemi sırasında hata oluştu')

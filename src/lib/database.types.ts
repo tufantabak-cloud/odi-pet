@@ -7346,25 +7346,31 @@ export type Database = {
       }
       weight_logs: {
         Row: {
+          archived_at: string | null
           body_condition_score: number | null
           height_cm: number | null
           id: string
+          is_archived: boolean | null
           measured_at: string | null
           pet_id: string | null
           weight_kg: number | null
         }
         Insert: {
+          archived_at?: string | null
           body_condition_score?: number | null
           height_cm?: number | null
           id?: string
+          is_archived?: boolean | null
           measured_at?: string | null
           pet_id?: string | null
           weight_kg?: number | null
         }
         Update: {
+          archived_at?: string | null
           body_condition_score?: number | null
           height_cm?: number | null
           id?: string
+          is_archived?: boolean | null
           measured_at?: string | null
           pet_id?: string | null
           weight_kg?: number | null

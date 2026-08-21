@@ -307,6 +307,7 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
               .from('weight_logs')
               .select('pet_id, measured_at, weight_kg, height_cm')
               .in('pet_id', petIds)
+              .or('is_archived.is.null,is_archived.eq.false')
               .order('measured_at', { ascending: false }),
           ])
 

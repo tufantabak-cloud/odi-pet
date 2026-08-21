@@ -37,6 +37,7 @@ export default async function EditPetPage({ params }: { params: Promise<{ id: st
     .from('weight_logs')
     .select('weight_kg, height_cm')
     .eq('pet_id', id)
+    .or('is_archived.is.null,is_archived.eq.false')
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()

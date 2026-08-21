@@ -69,6 +69,7 @@ export async function buildPetAIContext(
     .from('weight_logs')
     .select('weight_kg, measured_at')
     .eq('pet_id', petId)
+    .or('is_archived.is.null,is_archived.eq.false')
     .order('measured_at', { ascending: false })
     .limit(1);
 

@@ -49,7 +49,7 @@ export default async function PetJournalPage(props: PageProps) {
     supabase.from('pet_adoptions').select('id, status, story, created_at').eq('pet_id', id).order('created_at', { ascending: false }),
     supabase.from('lost_reports').select('id, status, created_at').eq('pet_id', id).order('created_at', { ascending: false }),
     supabase.from('pet_food_assignments').select(`*, food_product_family:food_product_families (official_name, brand:food_brands(display_name))`).eq('pet_id', id),
-    supabase.from('weight_logs').select('*').eq('pet_id', id).order('measured_at', { ascending: false }).limit(20)
+    supabase.from('weight_logs').select('*').eq('pet_id', id).or('is_archived.is.null,is_archived.eq.false').order('measured_at', { ascending: false }).limit(20)
   ])
 
   // Build normalized nutrition timeline events (assignments start/end and plans)

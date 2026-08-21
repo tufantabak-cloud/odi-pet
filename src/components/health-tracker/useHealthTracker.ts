@@ -159,7 +159,8 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
         supabase
           .from('weight_logs')
           .select('*')
-          .eq('pet_id', petId),
+          .eq('pet_id', petId)
+          .or('is_archived.is.null,is_archived.eq.false'),
         supabase
           .from('appointments')
           .select('*')

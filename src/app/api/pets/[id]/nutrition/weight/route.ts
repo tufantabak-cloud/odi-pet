@@ -31,6 +31,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
     .from('weight_logs')
     .select('*')
     .eq('pet_id', id)
+    .or('is_archived.is.null,is_archived.eq.false')
     .order('measured_at', { ascending: true })
     .limit(20)
 
@@ -65,6 +66,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     .from('weight_logs')
     .select('id')
     .eq('pet_id', id)
+    .or('is_archived.is.null,is_archived.eq.false')
     .gte('measured_at', dayStart.toISOString())
     .lte('measured_at', dayEnd.toISOString())
     .limit(1)

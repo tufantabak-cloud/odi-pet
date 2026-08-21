@@ -45,6 +45,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     .from('weight_logs')
     .select('id')
     .eq('pet_id', id)
+    .or('is_archived.is.null,is_archived.eq.false')
     .gte('measured_at', dayStart.toISOString())
     .lte('measured_at', dayEnd.toISOString())
     .limit(1)

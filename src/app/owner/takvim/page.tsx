@@ -73,7 +73,7 @@ export default async function TakvimPage() {
     supabase.from('parasite_records').select('*').in('pet_id', allPetIds),
     supabase.from('health_schedules').select('*').in('pet_id', allPetIds),
     supabase.from('growth_records').select('*').in('pet_id', allPetIds),
-    supabase.from('weight_logs').select('*').in('pet_id', allPetIds),
+    supabase.from('weight_logs').select('*').in('pet_id', allPetIds).or('is_archived.is.null,is_archived.eq.false'),
     supabase.from('appointments').select('*').in('pet_id', allPetIds),
     supabase.from('health_medications').select('*').in('pet_id', allPetIds),
     supabase.from('nutrition_logs').select('*').in('pet_id', allPetIds),

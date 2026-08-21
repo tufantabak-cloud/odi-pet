@@ -23,6 +23,7 @@ export async function GET(
     .from('weight_logs')
     .select('*')
     .eq('pet_id', id)
+    .or('is_archived.is.null,is_archived.eq.false')
     .order('measured_at', { ascending: false })
 
   if (error) {
@@ -71,6 +72,7 @@ export async function POST(
       .select('id, measured_at')
       .eq('pet_id', id)
       .eq('weight_kg', weightValue)
+      .or('is_archived.is.null,is_archived.eq.false')
       .gte('measured_at', dayStart.toISOString())
       .lte('measured_at', dayEnd.toISOString())
       .limit(1)
