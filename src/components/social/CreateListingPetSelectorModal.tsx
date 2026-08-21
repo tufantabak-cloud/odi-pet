@@ -57,7 +57,10 @@ export function CreateListingPetSelectorModal({ isOpen, onClose, mode = 'match' 
           .from('pet_owners')
           .select('pet_id')
           .eq('profile_id', uid)
-          .eq('role', 'owner'),
+          // pet_owners yalnızca sahipler için yazılır (owner / co_owner), bakıcılar için yazılmaz.
+          // Rol literali yola göre değişiyor: DB trigger'ları 'owner', legacy fallback
+          // (create-pet-with-compatibility.ts) 'primary_owner' yazıyor — üçünü de kabul et.
+          .in('role', ['owner', 'primary_owner', 'co_owner']),
         supabase
           .from('pets')
           .select('id, name, species, gender, breed, avatar_url, is_neutered, owner_id')
