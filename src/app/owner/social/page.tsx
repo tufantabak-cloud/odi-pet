@@ -40,16 +40,17 @@ export default async function SocialPage() {
   return (
     <div className="flex flex-col gap-6 pb-32 pb-safe w-full mx-auto font-sans animate-fadeInUp">
       
-      {/* 2. AKTİF ÖZELLİKLER (Client Component Tabs) */}
+      {/* BLOK 1-11 — Aktif sekmenin canonical içeriği (Client Component Tabs) */}
       <SocialTabs adoptions={adoptions} lostPets={lostPets} matches={matches} />
 
-      {/* 3. YAKINDA GELİYOR */}
-      <div className="w-full flex items-center justify-center my-2">
+      {/* ORTAK ALAN — Sekmelerin DIŞINDA, sayfa başına TEK SEFER.
+          Sosyal & Topluluk alanının genel roadmap bölümüdür; sekmeye özel değildir. */}
+      <div className="w-full flex items-center justify-center my-2" aria-hidden="true">
         <div className="h-px bg-slate-200/80 w-full max-w-[200px]" />
       </div>
-      
-      <section className="flex flex-col gap-4 opacity-90">
-        <h2 className="text-xl font-bold text-slate-900 px-2 text-center">Neler Planlıyoruz?</h2>
+
+      <section className="flex flex-col gap-4 opacity-90" aria-labelledby="social-roadmap-heading">
+        <h2 id="social-roadmap-heading" className="text-xl font-bold text-slate-900 px-2 text-center">Neler Planlıyoruz?</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="rounded-3xl p-6 text-center bg-white border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] relative overflow-hidden flex flex-col items-center">
             <div className="absolute top-3 right-3 bg-slate-100 text-slate-500 text-2xs font-semibold px-2 py-0.5 rounded-lg">Çok Yakında</div>

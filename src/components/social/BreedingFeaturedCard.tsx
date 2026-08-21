@@ -31,7 +31,7 @@ export function BreedingFeaturedCard({ listing, userApplications = [] }: { listi
     <>
       <div 
         onClick={() => !hasApplied && setIsModalOpen(true)}
-        className="relative w-[220px] xs:w-[240px] sm:w-[260px] aspect-[3/4] rounded-3xl overflow-hidden shrink-0 group border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.08)] transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+        className="relative w-[220px] sm:w-[260px] aspect-[3/4] rounded-3xl overflow-hidden shrink-0 group border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.08)] transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
       >
         {/* Background Image */}
         {displayPhoto ? (
