@@ -1878,12 +1878,12 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                           <div className="grid grid-cols-2 gap-3">
                             <div className="bg-surface rounded-card p-3 flex flex-col items-center text-center border border-border-main/60 shadow-soft min-w-0">
                               <span className="text-xs font-semibold text-text-secondary">Son aşı</span>
-                              <span className="text-base xs:text-lg font-extrabold text-text-primary leading-tight mt-0.5 truncate max-w-full tabular-nums">{lastVaccineStr}</span>
+                              <span className="text-base font-extrabold text-text-primary leading-tight mt-0.5 truncate max-w-full tabular-nums">{lastVaccineStr}</span>
                               <span className="text-xs font-bold text-success mt-0.5 truncate max-w-full">{lastVaccineSub}</span>
                             </div>
                             <div className="bg-surface rounded-card p-3 flex flex-col items-center text-center border border-border-main/60 shadow-soft min-w-0">
                               <span className="text-xs font-semibold text-text-secondary">Sıradaki</span>
-                              <span className="text-base xs:text-lg font-extrabold text-text-primary leading-tight mt-0.5 truncate max-w-full tabular-nums">{nextDateStr}</span>
+                              <span className="text-base font-extrabold text-text-primary leading-tight mt-0.5 truncate max-w-full tabular-nums">{nextDateStr}</span>
                               <span className={`text-xs font-bold mt-0.5 truncate max-w-full ${overdueCount > 0 ? 'text-warning' : 'text-text-secondary'}`}>
                                 {nextSchedule ? (nextSchedule as any).title?.slice(0, 15) || 'Bakım' : 'Yok'}
                               </span>

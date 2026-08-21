@@ -196,7 +196,7 @@ export default function BreedingListingManager({ pet, initialListing }: { pet: P
         <div>
           <h3 className="font-bold text-text-primary text-base">Kısırlaştırılmış Profil</h3>
           <p className="text-[13px] text-text-secondary mt-1 max-w-[280px]">
-            Petinizin profilinde &apos;Kısırlaştırılmış&apos; seçili olduğundan üreme ilanı oluşturamazsınız. Bu bilgide hata varsa profilinizi güncelleyebilirsiniz.
+            Petinizin profilinde &apos;Kısırlaştırılmış&apos; seçili olduğundan eşleşme ilanı oluşturamazsınız. Bu bilgide hata varsa profilinizi güncelleyebilirsiniz.
           </p>
         </div>
         <button onClick={() => router.push(`/owner/pets/${pet.id}/edit`)} className="mt-2 btn-primary py-2px-6 h-10 text-[13px] px-6 rounded-xl shadow-md transition-all">
@@ -256,7 +256,7 @@ export default function BreedingListingManager({ pet, initialListing }: { pet: P
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-pink-50 flex items-center justify-center text-xl shadow-sm border border-pink-100 text-pink-500">❤️</div>
           <div>
-            <h3 className="font-extrabold text-[16px] text-text-primary">{listing ? 'İlanı Düzenle' : 'Üreme İlanı Oluştur'}</h3>
+            <h3 className="font-extrabold text-[16px] text-text-primary">{listing ? 'İlanı Düzenle' : 'Eşleşme İlanı Oluştur'}</h3>
             <p className="text-[12px] text-text-secondary font-normal mt-0.5">{listing ? 'İlan bilgilerinizi güncelleyin' : 'Uygun bir eş adayı bulmak için ilan verin'}</p>
           </div>
         </div>
@@ -273,7 +273,7 @@ export default function BreedingListingManager({ pet, initialListing }: { pet: P
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-blue-400"></span>
             <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
           </span>
-          <span className="text-[13px] font-bold text-blue-800">Üreme uygunluğu kontrol ediliyor…</span>
+          <span className="text-[13px] font-bold text-blue-800">Eşleşme uygunluğu kontrol ediliyor…</span>
         </div>
       )}
 
@@ -301,8 +301,8 @@ export default function BreedingListingManager({ pet, initialListing }: { pet: P
               <ul className="flex flex-col gap-2">
                 {eligibilityData.blocking_reasons.map((r: any, i: number) => {
                   let msg = r.message;
-                  if (r.code === 'PET_NEUTERED') msg = 'Kısırlaştırılmış petler için üreme ilanı oluşturulamaz.';
-                  if (r.code === 'UNSUPPORTED_SPECIES') msg = 'Üreme ilanı yalnızca kedi ve köpekler için kullanılabilir.';
+                  if (r.code === 'PET_NEUTERED') msg = 'Kısırlaştırılmış petler için eşleşme ilanı oluşturulamaz.';
+                  if (r.code === 'UNSUPPORTED_SPECIES') msg = 'Eşleşme ilanı yalnızca kedi ve köpekler için kullanılabilir.';
                   if (r.code === 'SEX_REQUIRED') msg = 'Petinizin cinsiyet bilgisini tamamlayın.';
                   if (r.code === 'BIRTH_DATE_REQUIRED') msg = 'Petinizin doğum tarihini tamamlayın.';
                   

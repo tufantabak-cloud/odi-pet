@@ -55,35 +55,51 @@ export function GeolocationProvider({ children }: { children: React.ReactNode })
     setErrorType(null)
 
     const promise = new Promise<GeolocationCoordinates | null>((resolve) => {
+      const handleSuccess = (position: GeolocationPosition) => {
+        setStatus('granted')
+        setCoords(position.coords)
+        setErrorType(null)
+        ongoingRequestRef.current = null
+        resolve(position.coords)
+      }
+
+      const handleError = (error: GeolocationPositionError) => {
+        let appError: LocationErrorType = 'LOCATION_UNKNOWN'
+        let appStatus: LocationStatus = 'error'
+
+        if (error.code === error.PERMISSION_DENIED) {
+          appError = 'LOCATION_PERMISSION_DENIED'
+          appStatus = 'denied'
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          appError = 'LOCATION_UNAVAILABLE'
+          appStatus = 'unavailable'
+        } else if (error.code === error.TIMEOUT) {
+          appError = 'LOCATION_TIMEOUT'
+          appStatus = 'timeout'
+        }
+
+        setStatus(appStatus)
+        setErrorType(appError)
+        ongoingRequestRef.current = null
+        resolve(null)
+      }
+
+      // 1. First attempt with high accuracy
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setStatus('granted')
-          setCoords(position.coords)
-          setErrorType(null)
-          ongoingRequestRef.current = null
-          resolve(position.coords)
-        },
+        handleSuccess,
         (error) => {
-          let appError: LocationErrorType = 'LOCATION_UNKNOWN'
-          let appStatus: LocationStatus = 'error'
-
-          if (error.code === error.PERMISSION_DENIED) {
-            appError = 'LOCATION_PERMISSION_DENIED'
-            appStatus = 'denied'
-          } else if (error.code === error.POSITION_UNAVAILABLE) {
-            appError = 'LOCATION_UNAVAILABLE'
-            appStatus = 'unavailable'
-          } else if (error.code === error.TIMEOUT) {
-            appError = 'LOCATION_TIMEOUT'
-            appStatus = 'timeout'
+          // If high accuracy fails due to timeout or position unavailable, fallback to low accuracy
+          if (error.code === error.TIMEOUT || error.code === error.POSITION_UNAVAILABLE) {
+            navigator.geolocation.getCurrentPosition(
+              handleSuccess,
+              handleError,
+              { timeout: timeoutMs, enableHighAccuracy: false, maximumAge: 60000 }
+            )
+          } else {
+            handleError(error)
           }
-
-          setStatus(appStatus)
-          setErrorType(appError)
-          ongoingRequestRef.current = null
-          resolve(null)
         },
-        { timeout: timeoutMs, enableHighAccuracy: true }
+        { timeout: Math.min(timeoutMs, 5000), enableHighAccuracy: true, maximumAge: 30000 }
       )
     })
 

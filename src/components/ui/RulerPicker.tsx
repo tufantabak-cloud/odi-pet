@@ -269,7 +269,7 @@ export const RulerPicker: React.FC<RulerPickerProps> = ({
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUpOrLeave}
             onMouseLeave={handleMouseUpOrLeave}
-            className="w-full h-full overflow-x-auto no-scrollbar flex items-end cursor-grab active:cursor-grabbing touch-pan-x"
+            className="w-full h-full overflow-x-auto scrollbar-none flex items-end cursor-grab active:cursor-grabbing touch-pan-x"
             style={{
               paddingLeft: 'calc(50% - 7px)',
               paddingRight: 'calc(50% - 7px)',
@@ -325,7 +325,7 @@ export const RulerPicker: React.FC<RulerPickerProps> = ({
 
         {/* Hızlı Seçim Rozetleri (Presets) */}
         {presets && presets.length > 0 && (
-          <div className="flex items-center justify-center gap-1.5 pt-1 border-t border-border-main/50 overflow-x-auto no-scrollbar">
+          <div className="flex items-center justify-center gap-1.5 pt-1 border-t border-border-main/50 overflow-x-auto scrollbar-none">
             <span className="text-[11px] font-bold text-text-secondary mr-1 shrink-0">Hızlı Seç:</span>
             {presets.map((p) => {
               const isActive = numericValue === p

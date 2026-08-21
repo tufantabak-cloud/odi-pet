@@ -14,7 +14,7 @@ export function FeatureFilters() {
   ];
 
   return (
-    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar p-1">
+    <div className="flex items-center gap-2 overflow-x-auto scrollbar-none p-1">
       {filters.map(f => (
         <button
           key={f.label}

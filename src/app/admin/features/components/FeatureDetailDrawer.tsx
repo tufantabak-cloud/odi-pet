@@ -25,7 +25,7 @@ export function FeatureDetailDrawer({ isOpen, onClose, feature }: { isOpen: bool
         </div>
 
         {/* Tabs */}
-        <div className="px-6 flex gap-6 border-b border-slate-100 overflow-x-auto no-scrollbar">
+        <div className="px-6 flex gap-6 border-b border-slate-100 overflow-x-auto scrollbar-none">
           <Tab id="overview" label="Overview" active={activeTab} onClick={setActiveTab} />
           <Tab id="limits" label="Limits" active={activeTab} onClick={setActiveTab} />
           <Tab id="history" label="Version History" active={activeTab} onClick={setActiveTab} />
