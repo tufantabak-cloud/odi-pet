@@ -4,6 +4,7 @@ import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { estimateNextRefillDate } from '@/lib/nutrition/refill-engine'
 import { revalidatePath } from 'next/cache'
 import { Database } from '@/lib/database.types'
+import { hasPetCapability } from '@/lib/pets/access'
 
 type FoodInventoryInsert = Database['public']['Tables']['food_inventory']['Insert']
 
@@ -11,12 +12,16 @@ type Params = { params: Promise<{ id: string }> }
 
 async function assertOwner(petId: string, userId: string) {
   const supabase = await createServerSupabaseClient()
+  const canManage = await hasPetCapability(supabase, petId, 'can_manage_pet_care')
+  if (canManage) return true
+
   const { data } = await supabase
     .from('pet_owners')
     .select('role')
     .eq('pet_id', petId)
     .eq('profile_id', userId)
-    .single()
+    .maybeSingle()
+
   return !!data
 }
 

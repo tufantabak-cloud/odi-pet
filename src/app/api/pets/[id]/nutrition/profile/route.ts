@@ -2,17 +2,22 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
 import { revalidatePath } from 'next/cache'
+import { hasPetCapability } from '@/lib/pets/access'
 
 type Params = { params: Promise<{ id: string }> }
 
 async function assertOwner(petId: string, userId: string) {
   const supabase = await createServerSupabaseClient()
+  const canManage = await hasPetCapability(supabase, petId, 'can_manage_pet_care')
+  if (canManage) return true
+
   const { data } = await supabase
     .from('pet_owners')
     .select('role')
     .eq('pet_id', petId)
     .eq('profile_id', userId)
     .maybeSingle()
+
   return !!data
 }
 

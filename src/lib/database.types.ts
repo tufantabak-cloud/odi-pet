@@ -7352,6 +7352,7 @@ export type Database = {
           id: string
           is_archived: boolean | null
           measured_at: string | null
+          notes: string | null
           pet_id: string | null
           weight_kg: number | null
         }
@@ -7362,6 +7363,7 @@ export type Database = {
           id?: string
           is_archived?: boolean | null
           measured_at?: string | null
+          notes?: string | null
           pet_id?: string | null
           weight_kg?: number | null
         }
@@ -7372,6 +7374,7 @@ export type Database = {
           id?: string
           is_archived?: boolean | null
           measured_at?: string | null
+          notes?: string | null
           pet_id?: string | null
           weight_kg?: number | null
         }

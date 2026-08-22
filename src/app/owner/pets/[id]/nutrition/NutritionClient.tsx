@@ -872,31 +872,39 @@ export default function NutritionClient({
     const rawHeight = fd.get('height_cm')?.toString() || ''
     const rawDate = fd.get('measured_at')?.toString() || ''
 
-    const sanitizedWeight = rawWeight.replace(',', '.')
-    const sanitizedHeight = rawHeight.replace(',', '.')
+    const sanitizedWeight = rawWeight.replace(',', '.') || String(newWeightKg)
+    const sanitizedHeight = rawHeight.replace(',', '.') || String(newHeightCm)
+
+    const weightVal = parseFloat(sanitizedWeight)
+    if (isNaN(weightVal) || weightVal <= 0) {
+      setWeightError('Lütfen geçerli bir kilo değeri seçiniz veya giriniz.')
+      return
+    }
 
     const selectedDateStr = rawDate.trim() || new Date().toISOString().split('T')[0]
 
-    // Aynı gün kayıt kontrolü (seçilen tarih için kayıt var mı?)
+    // Aynı gün aktif (arşivlenmemiş) kayıt var mı?
     const hasLogForSelectedDate = (weightLogs || []).some((log: any) => {
+      if (log.is_archived) return false
       const logDate = log.measured_at ? log.measured_at.split('T')[0] : log.created_at?.split('T')[0]
       return logDate === selectedDateStr
     })
 
     if (hasLogForSelectedDate) {
       const formattedDate = new Date(selectedDateStr + 'T00:00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
-      setWeightError(`${formattedDate} tarihi için zaten bir kilo/boy ölçüm kaydı bulunmaktadır. Bir günde en fazla 1 kayıt eklenebilir. Mevcut kaydı değiştirmek isterseniz aşağıdaki "Geçmiş Ölçümler" listesindeki Düzenle butonunu kullanabilirsiniz.`)
+      setWeightError(`${formattedDate} tarihi için zaten aktif bir kilo/boy ölçüm kaydı bulunmaktadır. Bir günde en fazla 1 kayıt eklenebilir. Mevcut kaydı değiştirmek isterseniz aşağıdaki "Geçmiş Ölçümler" listesindeki Düzenle butonunu kullanabilirsiniz.`)
       return
     }
 
     setLoading(true)
 
     const payload: Record<string, any> = {
-      weight_kg: parseFloat(sanitizedWeight),
+      weight_kg: weightVal,
       measured_at: new Date(selectedDateStr + 'T12:00:00.000Z').toISOString()
     }
-    if (sanitizedHeight.trim()) {
-      payload.height_cm = parseFloat(sanitizedHeight)
+    const heightVal = parseFloat(sanitizedHeight)
+    if (!isNaN(heightVal) && heightVal > 0) {
+      payload.height_cm = heightVal
     }
 
     try {
