@@ -148,3 +148,16 @@ Yani bu hesap muhtemelen hiç var olmadı ya da elle bir kere oluşturulup unutu
 P0-1 kapsamındaki code-splitting değişiklikleri kod, yapı ve gerçek performans verisi düzeyinde doğrulanmıştır. Antigravity'nin raporundaki fabrike/uydurma unsurlar (uydurma sebep açıklaması, eksik düzeltmeler, ölçülmemiş metrikler) tespit edilip düzeltilmiş; bu belgede yer alan sayılar gerçek, tekrarlanan ölçümlere dayanmaktadır. Bölüm 7'deki tüm açık maddeler artık kapalı veya P0-1 kapsamı dışında olduğu netleştirilmiş durumda.
 
 **P0-1 tamamen doğrulanmıştır ve PR/merge için hazırdır.**
+
+---
+
+## 9. Ek: PR #1'de Bulunan İlgisiz Commit'lerin İncelemesi
+
+PR açıldığında (`#1`, `perf/pet-detail-code-splitting` → `main`, 8 commit) P0-1 dışında 2 konu daha fark edildi ve incelendi:
+
+- **`fix(nutrition): ...` (`c27f80e`):** `weight_logs` için notes kolonu migration'ı + `assertOwner` yetkilendirme güncellemesi. Sadece nutrition dosyalarını etkiliyor (API route'ları, `NutritionClient.tsx`, yeni migration), kendi 140 satırlık test dosyasıyla geliyor. PetDetailClient'ın denetlenen yapısına dokunmuyor.
+- **`fix(security): upgrade weight_logs RLS policies ...` (`88def4a`, `1c89b86`):** Yeni RLS migration'ı okundu — `weight_logs` için SELECT/INSERT/UPDATE/DELETE politikaları `can_view_pet` / `can_manage_pet_care` (canonical helper) + doğrudan sahiplik kontrolleriyle yeniden tanımlanmış, `TO authenticated` ile sınırlı, aşırı izin veren bir `USING (true)` yok. `measurements/route.ts` da aynı isimlerle (`hasPetCapability(..., 'can_view_pet'/'can_manage_pet_care')`) uygulama katmanında eşleşen kontroller eklemiş — migration ile kod tutarlı. Güvenlik açısından makul görünüyor.
+
+**Önemli ama kod-doğruluğunu etkilemeyen bulgu:** Bu commit'lerin mesajları içerikleriyle örtüşmüyor — `88def4a` ("RLS güvenlik" mesajıyla) aslında PetDetailClient.tsx'in TÜM statik import'larını `dynamic()`'e çeviren asıl P0-1 diff'ini de sessizce içeriyor; buna karşılık `c3b8ab3` ("split heavy client components" mesajıyla) yalnızca 1 satırlık ilgisiz bir düzeltme (`ConfirmModal` için koşullu render guard'ı) içeriyor. Bu, git geçmişini yanıltıcı yapıyor (ör. `git blame` yanlış commit'i işaret eder) ama **HEAD'deki dosya içeriği doğrudan doğrulandığı için** (Bölüm 4) P0-1'in doğruluğunu etkilemiyor. Ayrıca `split3.js` adlı bir script `88def4a`'da yanlışlıkla commit'lenip 17 saniye sonra `1c89b86`'da geri silinmiş — kalıcı bir etkisi yok.
+
+**Sonuç: PR'daki 2 ek konu da (nutrition, RLS) incelendi, ciddi bir sorun görülmedi — merge'e engel değil.**
