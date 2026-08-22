@@ -6,41 +6,42 @@ import dynamic from 'next/dynamic'
 import { Share2, Phone, Camera, ImageIcon, FileImage, Wallet, Home, FileText, AlertTriangle, Heart, ShieldCheck, Pencil, Inbox, Key, Scale, Move, Users, Bell, X, Lock, Check, Calendar, Plus, Eye } from 'lucide-react'
 
 const DynamicExperienceEngine = dynamic(() => import('@/components/orchestrator/DynamicExperienceEngine'), { ssr: false })
-import FamilyTab from './FamilyTab'
-import HealthTab from '@/components/pets/tabs/HealthTab'
-import VeterinerTab from '@/components/pets/tabs/VeterinerTab'
+const FamilyTab = dynamic(() => import('./FamilyTab'), { loading: () => <div className='animate-pulse bg-gray-100 rounded-2xl w-full h-12' /> });
+const HealthTab = dynamic(() => import('@/components/pets/tabs/HealthTab'), { loading: () => <div className='animate-pulse bg-gray-100 rounded-2xl w-full h-12' /> });
+const VeterinerTab = dynamic(() => import('@/components/pets/tabs/VeterinerTab'), { loading: () => <div className='animate-pulse bg-gray-100 rounded-2xl w-full h-12' /> });
 
 
 import { TaskCategory } from '@/lib/tasks/taskDefaults'
 import { AlertCircleIcon, CalendarClockIcon, CheckCircle2Icon, CheckCircleIcon, ChevronRightIcon, HeartPulseIcon, ShieldAlertIcon, SmileIcon, StarIcon, TrophyIcon, ActivityIcon, PlusIcon, FileTextIcon, HistoryIcon, MapPinIcon, BabyIcon, FileLineChartIcon, HelpCircleIcon, DownloadIcon, PillIcon, DogIcon, CatIcon, IdCardIcon, TargetIcon, DropletsIcon } from 'lucide-react'
 import { VaccineIcon, ParasiteIcon, ShampooIcon, BowlIcon, CarrierIcon, BoneIcon, ScoopIcon, FirstAidIcon, StethoscopeIcon } from '@/components/icons/PetIcons'
-import NutritionClient from './nutrition/NutritionClient'
+const NutritionClient = dynamic(() => import('./nutrition/NutritionClient'), { loading: () => <div className='animate-pulse bg-gray-100 rounded-2xl w-full h-12' /> });
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import HumanAgeCalculator from '@/components/pets/HumanAgeCalculator'
-import BreedHealthCard from '@/components/pets/BreedHealthCard'
-import LostPetWizard from '@/components/pets/LostPetWizard'
-import MinimalGrowthChart from '@/components/pets/MinimalGrowthChart'
-import { SmartScanner } from '@/components/ui/SmartScanner'
-import { HealthTracker } from '@/components/health-tracker/HealthTracker'
-import { EstrusTracker } from '@/components/estrus-tracker/EstrusTracker'
-import SmartCardBanner from '@/components/ui/SmartCardBanner'
+const BreedHealthCard = dynamic(() => import('@/components/pets/BreedHealthCard'));
+const LostPetWizard = dynamic(() => import('@/components/pets/LostPetWizard'));
+const MinimalGrowthChart = dynamic(() => import('@/components/pets/MinimalGrowthChart'));
+const SmartScanner = dynamic(() => import('@/components/ui/SmartScanner').then(mod => mod.SmartScanner), { ssr: false })
+const HealthTracker = dynamic(() => import('@/components/health-tracker/HealthTracker').then(mod => mod.HealthTracker), { loading: () => <div className='animate-pulse bg-gray-100 rounded-2xl w-full h-12' /> })
+const EstrusTracker = dynamic(() => import('@/components/estrus-tracker/EstrusTracker').then(mod => mod.EstrusTracker))
+const SmartCardBanner = dynamic(() => import('@/components/ui/SmartCardBanner'));
 import PetHeroCard from './PetHeroCard'
-import AllergyManager from '@/components/pets/AllergyManager'
-import MedicationManager from '@/components/pets/MedicationManager'
-import HealthTimeline from '@/components/pets/health/HealthTimeline'
+const AllergyManager = dynamic(() => import('@/components/pets/AllergyManager'));
+const MedicationManager = dynamic(() => import('@/components/pets/MedicationManager'));
+const HealthTimeline = dynamic(() => import('@/components/pets/health/HealthTimeline'), { loading: () => <div className='animate-pulse bg-gray-100 rounded-2xl w-full h-12' /> });
 import { buildPetMicroTasks } from '@/lib/microTasks/petMicroTasks'
 import { PetMicroTaskCard } from '@/components/micro-tasks/PetMicroTaskCard'
 import { useDismissedMicroTasks } from '@/hooks/useDismissedMicroTasks'
-import { PetTaskModals, TaskModalType } from '@/components/pets/PetTaskModals'
-import ParasitePlanCompletionModal from '@/components/pets/ParasitePlanCompletionModal'
-import { DeletePlanConfirmationModal } from '@/components/ui/DeletePlanConfirmationModal'
-import { PostponeModal } from '@/components/pets/common/PostponeModal'
-import { CompletionDetailsModal } from '@/components/pets/common/CompletionDetailsModal'
-import ConfirmModal from '@/components/ui/ConfirmModal'
-import FloatingSOS from '@/components/FloatingSOS'
-import AiDocumentScanner from '@/components/ai/AiDocumentScanner'
+import type { TaskModalType } from '@/components/pets/PetTaskModals';
+const PetTaskModals = dynamic(() => import('@/components/pets/PetTaskModals').then(mod => mod.PetTaskModals))
+const ParasitePlanCompletionModal = dynamic(() => import('@/components/pets/ParasitePlanCompletionModal'));
+const DeletePlanConfirmationModal = dynamic(() => import('@/components/ui/DeletePlanConfirmationModal').then(mod => mod.DeletePlanConfirmationModal))
+const PostponeModal = dynamic(() => import('@/components/pets/common/PostponeModal').then(mod => mod.PostponeModal))
+const CompletionDetailsModal = dynamic(() => import('@/components/pets/common/CompletionDetailsModal').then(mod => mod.CompletionDetailsModal))
+const ConfirmModal = dynamic(() => import('@/components/ui/ConfirmModal'));
+const FloatingSOS = dynamic(() => import('@/components/FloatingSOS'));
+const AiDocumentScanner = dynamic(() => import('@/components/ai/AiDocumentScanner'), { ssr: false });
 import { assessWeight } from '@/lib/vetStandards/weightStandards'
 
 

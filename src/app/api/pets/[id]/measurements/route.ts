@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
+import { hasPetCapability } from '@/lib/pets/access'
 import { z } from 'zod'
 
 const measurementSchema = z.object({
@@ -19,6 +20,12 @@ export async function GET(
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const supabase = await createServerSupabaseClient()
+
+  const canView = await hasPetCapability(supabase, id, 'can_view_pet')
+  if (!canView) {
+    return NextResponse.json({ error: 'Bu pet için görüntüleme yetkiniz yok.' }, { status: 403 })
+  }
+
   const { data, error } = await supabase
     .from('weight_logs')
     .select('*')
@@ -31,7 +38,7 @@ export async function GET(
   }
 
   // Map to measurement format for HealthTab
-  const mappedData = data.map(log => ({
+  const mappedData = (data || []).map(log => ({
     id: log.id,
     measurement_type: 'weight',
     value: log.weight_kg,
@@ -50,14 +57,18 @@ export async function POST(
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const supabase = await createServerSupabaseClient()
+  const canManage = await hasPetCapability(supabase, id, 'can_manage_pet_care')
+  if (!canManage) {
+    return NextResponse.json({ error: 'Bu pet için bakım yönetme yetkiniz yok.' }, { status: 403 })
+  }
+
   const body = await req.json()
   const result = measurementSchema.safeParse(body)
   
   if (!result.success) {
     return NextResponse.json({ error: 'Validation error', details: result.error.format() }, { status: 400 })
   }
-
-  const supabase = await createServerSupabaseClient()
 
   const measuredAt = result.data.measured_at || new Date().toISOString()
   const weightValue = result.data.measurement_type === 'weight' ? result.data.value : null
