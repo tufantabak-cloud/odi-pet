@@ -5606,6 +5606,65 @@ export type Database = {
           },
         ]
       }
+      pet_vets: {
+        Row: {
+          id: string
+          pet_id: string
+          clinic_name: string
+          doctor_name: string | null
+          address: string | null
+          phone: string | null
+          email: string | null
+          specialty_tag: string | null
+          is_primary: boolean
+          is_past: boolean
+          start_date: string | null
+          notes: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          pet_id: string
+          clinic_name: string
+          doctor_name?: string | null
+          address?: string | null
+          phone?: string | null
+          email?: string | null
+          specialty_tag?: string | null
+          is_primary?: boolean
+          is_past?: boolean
+          start_date?: string | null
+          notes?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          pet_id?: string
+          clinic_name?: string
+          doctor_name?: string | null
+          address?: string | null
+          phone?: string | null
+          email?: string | null
+          specialty_tag?: string | null
+          is_primary?: boolean
+          is_past?: boolean
+          start_date?: string | null
+          notes?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pet_vets_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       pets: {
         Row: {
           avatar_url: string | null

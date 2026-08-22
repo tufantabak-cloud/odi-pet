@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import useSWR from 'swr';
+import toast from 'react-hot-toast';
 import { 
   Stethoscope, 
   MapPin, 
@@ -34,7 +36,8 @@ import {
   Home,
   Building2,
   Filter,
-  Download
+  Download,
+  Edit2
 } from 'lucide-react';
 
 // ── Tip Tanımlamaları ──
@@ -58,8 +61,10 @@ interface ClinicalProcess {
   title: string;
   badge: 'Randevu' | 'Kontrol' | 'Sevk' | 'Tedavi' | 'Operasyon' | 'Lab & Tetkik';
   status: 'overdue' | 'upcoming' | 'completed';
-  timeText: string; // "9 gün önce", "12 gün sonra"
-  clinicName: string;
+  timeText: string; // Legacy formatting string
+  targetDate?: string; // Standard date string
+  clinicName: string; // Fallback display name
+  clinicId?: string; // ID mapping to VetClinic
   doctorOrDept?: string;
   notes?: string;
   linkText?: string;
@@ -143,191 +148,83 @@ export default function VeterinerTab({
   const [showQrModal, setShowQrModal] = useState(false);
   const [selectedClinicFilter, setSelectedClinicFilter] = useState<string | null>(null);
 
-  // ── Mock State Verileri ──
-  const [vets, setVets] = useState<VetClinic[]>([
-    {
-      id: 'vet-1',
-      name: 'Kadıköy Pet Klinik',
-      doctorName: 'Dr. Elif Kaya',
-      address: 'Caferağa Mh., Kadıköy',
-      isPrimary: true,
-      startDate: '13 Ekim 2025',
-      statusText: '13 Ekim 2025 — devam ediyor',
-      phone: '+90 216 345 67 89',
-      email: 'info@kadikoypet.com',
-      isPast: false
-    },
-    {
-      id: 'vet-2',
-      name: 'Anadolu Hayvan Hastanesi',
-      doctorName: 'Dr. Sinem Ak',
-      specialtyTag: 'Dermatoloji',
-      isPrimary: false,
-      startDate: '13 Mayıs 2026',
-      statusText: '13 Mayıs 2026 — devam ediyor',
-      phone: '+90 216 999 00 11',
-      notes: 'Cilt takibi için ikinci görüş',
-      isPast: false
-    },
-    {
-      id: 'vet-3',
-      name: 'Moda Veteriner Polikliniği',
-      doctorName: 'Dr. Ahmet Yılmaz',
-      address: 'Moda Cd., Kadıköy',
-      isPrimary: false,
-      startDate: '2023 - 2025',
-      statusText: 'Eski klinik kaydı',
-      isPast: true
-    }
-  ]);
+  // ── Vet İşlemleri State'leri ──
+  const [editingVet, setEditingVet] = useState<VetClinic | null>(null);
+  const [showVetActionsId, setShowVetActionsId] = useState<string | null>(null);
+  const [showDeactivateConfirmId, setShowDeactivateConfirmId] = useState<string | null>(null);
+  const [pendingNewVet, setPendingNewVet] = useState<VetClinic | null>(null);
+  const [showOldVetConflictModal, setShowOldVetConflictModal] = useState(false);
 
-  const [processes, setProcesses] = useState<ClinicalProcess[]>([
-    {
-      id: 'proc-rabies',
-      title: 'Yasal Kuduz Aşısı (Zorunlu Tescil)',
-      badge: 'Randevu',
-      status: 'upcoming',
-      timeText: '18 gün sonra',
-      clinicName: 'Kadıköy İlçe Tarım ve Orman Müdürlüğü',
-      doctorOrDept: 'Resmi Veteriner Hekim Tescili',
-      notes: 'Yasal zorunlu yıllık kuduz aşısı ve PETVET pasaport güncellemesi',
-      syncedCategory: 'Aşı',
-      administrationPlace: 'agriculture_directorate',
-      appliedBy: 'Tarım ve Orman Bakanlığı (PETVET)'
-    },
-    {
-      id: 'proc-1',
-      title: 'Diş taşı temizliği',
-      badge: 'Randevu',
-      status: 'overdue',
-      timeText: '9 gün önce',
-      clinicName: 'Kadıköy Pet Klinik',
-      doctorOrDept: 'Dr. Elif Kaya',
-      notes: 'Randevuya gidilmedi',
-      syncedCategory: 'Aşı',
-      administrationPlace: 'veterinary_clinic',
-      appliedBy: 'Dr. Elif Kaya (Klinikte)'
-    },
-    {
-      id: 'proc-2',
-      title: 'Cilt kontrolü',
-      badge: 'Kontrol',
-      status: 'upcoming',
-      timeText: '12 gün sonra',
-      clinicName: 'Anadolu Hayvan Hastanesi',
-      doctorOrDept: 'Dermatoloji — Dr. Sinem Ak',
-      syncedCategory: 'Belge Kasası',
-      administrationPlace: 'veterinary_clinic',
-      appliedBy: 'Dr. Sinem Ak (Klinikte)'
-    },
-    {
-      id: 'proc-3',
-      title: 'Rutin İç-Dış Parazit Damlası',
-      badge: 'Tedavi',
-      status: 'upcoming',
-      timeText: '5 gün sonra',
-      clinicName: 'Evde (Hasta Sahibi)',
-      notes: 'Ense damlası hasta sahibi tarafından evde uygulanacak',
-      syncedCategory: 'Parazit',
-      administrationPlace: 'home',
-      appliedBy: 'Hasta Sahibi (Evde)'
-    },
-    {
-      id: 'proc-4',
-      title: 'Yıllık genel muayene',
-      badge: 'Randevu',
-      status: 'upcoming',
-      timeText: '26 gün sonra',
-      clinicName: 'Kadıköy Pet Klinik',
-      syncedCategory: 'Bütçe',
-      administrationPlace: 'veterinary_clinic',
-      appliedBy: 'Dr. Elif Kaya (Klinikte)'
-    },
-    {
-      id: 'proc-5',
-      title: 'Dermatoloji sevki',
-      badge: 'Sevk',
-      status: 'completed',
-      timeText: '92 gün önce',
-      clinicName: 'Kadıköy Pet Klinik',
-      notes: "Anadolu Hayvan Hastanesi'ne yönlendirildi",
-      linkText: 'Anadolu Hayvan Hastanesi (Dermatoloji)',
-      syncedCategory: 'Belge Kasası',
-      administrationPlace: 'veterinary_clinic',
-      appliedBy: 'Dr. Elif Kaya (Klinikte)'
-    }
-  ]);
+  // ── Süreç İşlemleri State'leri ──
+  const [showSnoozeModalId, setShowSnoozeModalId] = useState<string | null>(null);
+  const [snoozeDays, setSnoozeDays] = useState<string>('7');
+  const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-  const [labResults] = useState<LabResult[]>([
-    {
-      id: 'lab-1',
-      testName: 'Tam Kan Sayımı (Hemogram) & Biyokimya',
-      testType: 'Kan Tahlili',
-      date: '14 Mayıs 2026',
-      clinicName: 'Anadolu Hayvan Hastanesi',
-      status: 'normal',
-      statusText: '✓ Tüm parametreler normal değerlerde',
-      summaryText: 'ALT: 32 U/L, Kreatinin: 0.9 mg/dL, WBC: 8.5 x10^3/uL',
-      hasDocument: true,
-      documentName: 'Hemogram_Raporu_14052026.pdf'
-    },
-    {
-      id: 'lab-2',
-      testName: 'Deri Kazıntı & Alerji Panel İncelemesi',
-      testType: 'Patoloji',
-      date: '13 Mayıs 2026',
-      clinicName: 'Anadolu Hayvan Hastanesi',
-      status: 'abnormal',
-      statusText: '⚠️ Hafif çevresel alerji bulgusu',
-      summaryText: 'Mantar ve parazit negatif, atopik dermatit ile uyumlu hücresel reaksiyon.',
-      hasDocument: true,
-      documentName: 'Alerji_Panel_Sonuc.pdf'
-    }
-  ]);
+  // ✅ 1. SWR Vets Fetch
+  const { data: fetchedVets, mutate: mutateVets, isLoading: isVetsLoading } = useSWR(
+    `/api/pets/${petId}/vets`,
+    fetcher
+  );
 
-  const [prescriptions] = useState<Prescription[]>([
-    {
-      id: 'rx-1',
-      medicationName: 'Dermacure Kortizonlu Krem & Şampuan',
-      dosage: 'Günde 2 kez haricen uygulama',
-      duration: '14 gün',
-      doctorName: 'Dr. Sinem Ak',
-      clinicName: 'Anadolu Hayvan Hastanesi',
-      linkedDiagnosis: 'Atopik Dermatit / Deri Alerjisi',
-      startDate: '14 Mayıs 2026',
-      status: 'active'
-    },
-    {
-      id: 'rx-2',
-      medicationName: 'Amoksisilin Antibiyotik Damla',
-      dosage: 'Günde 1 kez 5 damla',
-      duration: '7 gün',
-      doctorName: 'Dr. Elif Kaya',
-      clinicName: 'Kadıköy Pet Klinik',
-      linkedDiagnosis: 'Hafif Kulak Enfeksiyonu',
-      startDate: '10 Ekim 2025',
-      status: 'completed'
-    }
-  ]);
+  const vets: VetClinic[] = React.useMemo(() => {
+    if (!fetchedVets || !Array.isArray(fetchedVets)) return [];
+    return fetchedVets.map((v: any) => ({
+      id: v.id,
+      name: v.clinic_name,
+      doctorName: v.doctor_name || undefined,
+      address: v.address || undefined,
+      phone: v.phone || undefined,
+      email: v.email || undefined,
+      specialtyTag: v.specialty_tag || undefined,
+      isPrimary: v.is_primary,
+      isPast: v.is_past,
+      startDate: v.start_date || v.created_at?.split('T')[0] || 'Bilinmiyor',
+      statusText: v.is_past ? 'Geçmiş klinik kaydı' : (v.start_date || v.created_at?.split('T')[0]) + ' – devam ediyor',
+      notes: v.notes || undefined
+    }));
+  }, [fetchedVets]);
 
-  const [surgeries] = useState<SurgeryRecord[]>([
-    {
-      id: 'surg-1',
-      procedureName: 'Kısırlaştırma Operasyonu (Orşiektomi)',
-      date: '15 Kasım 2024',
-      clinicName: 'Kadıköy Pet Klinik',
-      surgeonName: 'Dr. Elif Kaya',
-      anesthesiaType: 'İnhalasyon Anestezisi (İsoflurane)',
-      postOpNotes: 'Operasyon sorunsuz tamamlandı. Dikişler 10 gün sonra alındı. Yakalık kullanımı tamamlandı.',
-      followUpDate: '25 Kasım 2024 (Dikiş Alma)'
-    }
-  ]);
+  // ✅ 2. SWR Schedules Fetch
+  const { data: fetchedSchedules, mutate: mutateSchedules, isLoading: isSchedulesLoading } = useSWR(
+    `/api/pets/${petId}/schedules`,
+    fetcher
+  );
 
-  const visits: VisitRecord[] = [
-    { id: 'v-1', date: '14 Mayıs 2026', clinicName: 'Anadolu Hayvan Hastanesi', service: 'Dermatoloji Muayenesi & Krem', cost: 650 },
-    { id: 'v-2', date: '13 Ekim 2025', clinicName: 'Kadıköy Pet Klinik', service: 'Genel Kontrol & Karma Aşı', cost: 450 },
-    { id: 'v-3', date: '04 Haziran 2025', clinicName: 'Moda Veteriner', service: 'Rutin İç-Dış Parazit Bakımı', cost: 300 },
-  ];
+  const processes: ClinicalProcess[] = React.useMemo(() => {
+    if (!fetchedSchedules || !Array.isArray(fetchedSchedules)) return [];
+    return fetchedSchedules.map((s: any) => {
+      const today = new Date();
+      const target = new Date(s.due_date);
+      const diffTime = target.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      let timeText = diffDays > 0 ? `${diffDays} gün sonra` : diffDays < 0 ? `${Math.abs(diffDays)} gün önce` : 'Bugün';
+
+      return {
+        id: s.id,
+        title: s.title,
+        badge: s.metadata?.badge || 'Randevu',
+        status: s.status === 'completed' || s.status === 'done' ? 'completed' : diffDays < 0 ? 'overdue' : 'upcoming',
+        timeText,
+        targetDate: s.due_date,
+        clinicName: s.metadata?.clinicName || '',
+        clinicId: s.metadata?.clinicId,
+        doctorOrDept: s.metadata?.doctorOrDept,
+        notes: s.notes || s.metadata?.notes,
+        syncedCategory: 'Belge Kasası', // fallback
+        administrationPlace: s.metadata?.administrationPlace || 'veterinary_clinic',
+        appliedBy: s.metadata?.appliedBy,
+      };
+    });
+  }, [fetchedSchedules]);
+
+  // Derive Active/Past Vets
+  const activeVets = vets.filter(v => !v.isPast);
+  const pastVets = vets.filter(v => v.isPast);
+
+  const [labResults] = useState<LabResult[]>([]);
+  const [prescriptions] = useState<Prescription[]>([]);
+  const [surgeries] = useState<SurgeryRecord[]>([]);
+  const visits: VisitRecord[] = [];
 
   // Modallar
   const [showAddVetModal, setShowAddVetModal] = useState(false);
@@ -341,23 +238,66 @@ export default function VeterinerTab({
   const [newVetSpecialty, setNewVetSpecialty] = useState('');
 
   // Form State - Yeni Süreç
+  const [editingProcess, setEditingProcess] = useState<ClinicalProcess | null>(null);
   const [newProcTitle, setNewProcTitle] = useState('');
   const [newProcBadge, setNewProcBadge] = useState<'Randevu' | 'Kontrol' | 'Sevk' | 'Tedavi' | 'Operasyon' | 'Lab & Tetkik'>('Randevu');
-  const [newProcPlace, setNewProcPlace] = useState<'home' | 'veterinary_clinic' | 'agriculture_directorate'>('veterinary_clinic');
-  const [newProcClinic, setNewProcClinic] = useState('Kadıköy Pet Klinik');
-  const [newProcDays, setNewProcDays] = useState('7');
+  const [newProcPlace, setNewProcPlace] = useState<'home' | 'veterinary_clinic' | 'agriculture_directorate' | 'mobile_vet'>('veterinary_clinic');
+  const [newProcClinic, setNewProcClinic] = useState('vet-1');
+  const [newProcDate, setNewProcDate] = useState(new Date().toISOString().split('T')[0]);
 
   // Handlers
-  const handleMarkProcessDone = (id: string) => {
-    setProcesses(prev => prev.map(p => p.id === id ? { ...p, status: 'completed', timeText: 'Tamamlandı' } : p));
+  const handleMarkProcessDone = async (id: string) => {
+    try {
+      await fetch(`/api/pets/${petId}/schedules/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'completed' })
+      });
+      mutateSchedules();
+      toast.success('Süreç tamamlandı!');
+    } catch (error) {
+      toast.error('Güncelleme başarısız oldu.');
+    }
   };
 
   const handleSnoozeProcess = (id: string) => {
-    setProcesses(prev => prev.map(p => p.id === id ? { ...p, status: 'upcoming', timeText: '7 gün ertelendi' } : p));
+    setShowSnoozeModalId(id);
+    setSnoozeDays('7'); // Default 7 days
   };
 
-  const handleDeleteProcess = (id: string) => {
-    setProcesses(prev => prev.filter(p => p.id !== id));
+  const confirmSnooze = async () => {
+    if (showSnoozeModalId) {
+      const proc = processes.find(p => p.id === showSnoozeModalId);
+      if (proc) {
+        try {
+          const targetDate = proc.targetDate ? new Date(proc.targetDate) : new Date();
+          targetDate.setDate(targetDate.getDate() + parseInt(snoozeDays || '0'));
+          
+          await fetch(`/api/pets/${petId}/schedules/${showSnoozeModalId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ due_date: targetDate.toISOString().split('T')[0] })
+          });
+          mutateSchedules();
+          toast.success('Süreç ertelendi');
+        } catch (error) {
+          toast.error('Erteleme başarısız oldu.');
+        }
+      }
+      setShowSnoozeModalId(null);
+    }
+  };
+
+  const handleDeleteProcess = async (id: string) => {
+    try {
+      await fetch(`/api/pets/${petId}/schedules/${id}`, {
+        method: 'DELETE'
+      });
+      mutateSchedules();
+      toast.success('Süreç iptal edildi');
+    } catch (error) {
+      toast.error('Silme başarısız oldu.');
+    }
   };
 
   const handleCopyChip = () => {
@@ -366,72 +306,185 @@ export default function VeterinerTab({
     setTimeout(() => setCopiedChip(false), 2000);
   };
 
-  const handleAddVetSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newVetName.trim()) return;
-    const newEntry: VetClinic = {
-      id: `vet-${Date.now()}`,
-      name: newVetName.trim(),
-      doctorName: newVetDoctor.trim() || undefined,
-      address: newVetAddress.trim() || undefined,
-      phone: newVetPhone.trim() || undefined,
-      specialtyTag: newVetSpecialty.trim() || undefined,
-      startDate: 'Bugün',
-      statusText: 'Bugün başladı',
-      isPrimary: vets.length === 0,
-      isPast: false
-    };
-    setVets(prev => [newEntry, ...prev]);
-    setShowAddVetModal(false);
+  const resetVetForm = () => {
     setNewVetName('');
     setNewVetDoctor('');
     setNewVetAddress('');
     setNewVetPhone('');
     setNewVetSpecialty('');
+    setEditingVet(null);
   };
 
-  const handleAddProcessSubmit = (e: React.FormEvent) => {
+  const handleEditVet = (vet: VetClinic) => {
+    setEditingVet(vet);
+    setNewVetName(vet.name);
+    setNewVetDoctor(vet.doctorName || '');
+    setNewVetAddress(vet.address || '');
+    setNewVetPhone(vet.phone || '');
+    setNewVetSpecialty(vet.specialtyTag || '');
+    setShowVetActionsId(null);
+    setShowAddVetModal(true);
+  };
+
+  const handleDeactivateVet = async (id: string) => {
+    try {
+      await fetch(`/api/pets/${petId}/vets/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_past: true, is_primary: false })
+      });
+      toast.success('Veteriner pasife alındı');
+      mutateVets();
+      setShowVetActionsId(null);
+    } catch (error) {
+      toast.error('Hata oluştu');
+    }
+  };
+
+  const handleAddVetSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newVetName.trim()) return;
+
+    const payload = {
+      clinic_name: newVetName.trim(),
+      doctor_name: newVetDoctor.trim() || undefined,
+      address: newVetAddress.trim() || undefined,
+      phone: newVetPhone.trim() || undefined,
+      specialty_tag: newVetSpecialty.trim() || undefined,
+    };
+
+    try {
+      if (editingVet) {
+        await fetch(`/api/pets/${petId}/vets/${editingVet.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        toast.success('Veteriner bilgileri güncellendi');
+        mutateVets();
+        setShowAddVetModal(false);
+        resetVetForm();
+        return;
+      }
+
+      const hasActiveVets = vets.some(v => !v.isPast);
+      
+      if (hasActiveVets) {
+        // Just store in state temporarily to ask user what to do with the old one
+        setPendingNewVet({
+          id: 'temp',
+          name: payload.clinic_name,
+          doctorName: payload.doctor_name,
+          address: payload.address,
+          phone: payload.phone,
+          specialtyTag: payload.specialty_tag,
+          isPrimary: false,
+          isPast: false,
+          startDate: 'Bugün',
+          statusText: 'Bugün başladı'
+        });
+        setShowOldVetConflictModal(true);
+        setShowAddVetModal(false);
+      } else {
+        await fetch(`/api/pets/${petId}/vets`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...payload, is_primary: true })
+        });
+        toast.success('Yeni klinik eklendi');
+        mutateVets();
+        setShowAddVetModal(false);
+        resetVetForm();
+      }
+    } catch (error) {
+      toast.error('Bir hata oluştu');
+    }
+  };
+
+  const resetProcessForm = () => {
+    setEditingProcess(null);
+    setNewProcTitle('');
+    setNewProcBadge('Randevu');
+    setNewProcPlace('veterinary_clinic');
+    setNewProcClinic(activeVets[0]?.id || 'vet-1');
+    setNewProcDate(new Date().toISOString().split('T')[0]);
+  };
+
+  const handleEditProcess = (proc: ClinicalProcess) => {
+    setEditingProcess(proc);
+    setNewProcTitle(proc.title);
+    setNewProcBadge(proc.badge);
+    setNewProcPlace(proc.administrationPlace);
+    if (proc.clinicId) setNewProcClinic(proc.clinicId);
+    if (proc.targetDate) setNewProcDate(proc.targetDate);
+    setShowAddProcessModal(true);
+  };
+
+  const handleAddProcessSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newProcTitle.trim()) return;
     const isHome = newProcPlace === 'home';
     const isOfficial = newProcPlace === 'agriculture_directorate';
 
-    let clinicNameDisplay = newProcClinic;
-    let appliedByDisplay = `${newProcClinic} (Klinikte)`;
-    let syncCat: 'Aşı' | 'Parazit' | 'İlaç' | 'Belge Kasası' | 'Ameliyat' | 'Bütçe' = 'Belge Kasası';
+    let clinicNameDisplay = '';
+    let clinicIdValue: string | undefined = undefined;
+    let appliedByDisplay = '';
 
     if (isHome) {
       clinicNameDisplay = 'Evde (Hasta Sahibi)';
       appliedByDisplay = 'Hasta Sahibi (Evde)';
-      syncCat = 'Parazit';
     } else if (isOfficial) {
       clinicNameDisplay = 'Kadıköy İlçe Tarım ve Orman Müdürlüğü (PETVET)';
       appliedByDisplay = 'Tarım ve Orman Bakanlığı (Resmi Vet)';
-      syncCat = 'Aşı';
+    } else {
+      const selectedVet = vets.find(v => v.id === newProcClinic);
+      clinicNameDisplay = selectedVet?.name || 'Bilinmeyen Klinik';
+      clinicIdValue = selectedVet?.id;
+      appliedByDisplay = `${clinicNameDisplay} (Klinikte)`;
     }
 
-    const newProc: ClinicalProcess = {
-      id: `proc-${Date.now()}`,
+    const payload = {
       title: newProcTitle.trim(),
-      badge: newProcBadge,
+      due_date: newProcDate,
       status: 'upcoming',
-      timeText: `${newProcDays} gün sonra`,
-      clinicName: clinicNameDisplay,
-      administrationPlace: newProcPlace,
-      appliedBy: appliedByDisplay,
-      syncedCategory: syncCat
+      metadata: {
+        badge: newProcBadge,
+        clinicName: clinicNameDisplay,
+        clinicId: clinicIdValue,
+        administrationPlace: newProcPlace,
+        appliedBy: appliedByDisplay
+      }
     };
-    setProcesses(prev => [newProc, ...prev]);
-    setShowAddProcessModal(false);
-    setNewProcTitle('');
+
+    try {
+      if (editingProcess) {
+        await fetch(`/api/pets/${petId}/schedules/${editingProcess.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        toast.success('Süreç güncellendi');
+      } else {
+        await fetch(`/api/pets/${petId}/schedules`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        toast.success('Süreç eklendi');
+      }
+      
+      mutateSchedules();
+      setShowAddProcessModal(false);
+      resetProcessForm();
+    } catch (error) {
+      toast.error('İşlem başarısız oldu.');
+    }
   };
 
-  const activeVets = vets.filter(v => !v.isPast);
-  const pastVets = vets.filter(v => v.isPast);
 
   // Klinik filtresine göre süreçleri süzme
   const filteredProcesses = selectedClinicFilter
-    ? processes.filter(p => p.clinicName === selectedClinicFilter || p.administrationPlace === 'home' || p.administrationPlace === 'agriculture_directorate')
+    ? processes.filter(p => p.clinicId === selectedClinicFilter || p.administrationPlace === 'home' || p.administrationPlace === 'agriculture_directorate')
     : processes;
 
   const overdueProcesses = filteredProcesses.filter(p => p.status === 'overdue');
@@ -516,7 +569,7 @@ export default function VeterinerTab({
             {selectedClinicFilter && (
               <div className="bg-indigo-50 border border-indigo-200/80 rounded-2xl p-3 flex items-center justify-between text-xs font-bold text-indigo-900">
                 <span className="flex items-center gap-1.5">
-                  <Filter size={14} className="text-indigo-600" /> Şuna göre filtrelendi: <strong>{selectedClinicFilter}</strong>
+                  <Filter size={14} className="text-indigo-600" /> Şuna göre filtrelendi: <strong>{vets.find(v => v.id === selectedClinicFilter)?.name || 'Bilinmeyen Klinik'}</strong>
                 </span>
                 <button
                   onClick={() => setSelectedClinicFilter(null)}
@@ -528,7 +581,7 @@ export default function VeterinerTab({
             )}
 
             {activeVets.map(vet => {
-              const isSelected = selectedClinicFilter === vet.name;
+              const isSelected = selectedClinicFilter === vet.id;
               return (
                 <div 
                   key={vet.id} 
@@ -551,18 +604,51 @@ export default function VeterinerTab({
                       )}
                     </div>
 
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 relative">
                       <button 
-                        onClick={() => setSelectedClinicFilter(isSelected ? null : vet.name)}
+                        onClick={() => setSelectedClinicFilter(isSelected ? null : vet.id)}
                         className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
                           isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600'
                         }`}
                       >
                         {isSelected ? 'Filtre Aktif' : 'Süreçlerini Süz'}
                       </button>
-                      <button className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer">
+                      <button 
+                        onClick={() => setShowVetActionsId(showVetActionsId === vet.id ? null : vet.id)}
+                        className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                      >
                         <MoreVertical size={16} />
                       </button>
+
+                      {/* Dropdown Menu */}
+                      {showVetActionsId === vet.id && (
+                        <>
+                          <div 
+                            className="fixed inset-0 z-0" 
+                            onClick={() => setShowVetActionsId(null)}
+                          />
+                          <div className="absolute right-0 top-8 w-32 bg-white rounded-xl shadow-lg border border-slate-200 py-1 z-10">
+                            <button
+                              onClick={() => {
+                                handleEditVet(vet);
+                                setShowVetActionsId(null);
+                              }}
+                              className="w-full text-left px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer"
+                            >
+                              Düzenle
+                            </button>
+                            <button
+                              onClick={() => {
+                                setShowDeactivateConfirmId(vet.id);
+                                setShowVetActionsId(null);
+                              }}
+                              className="w-full text-left px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 cursor-pointer"
+                            >
+                              Pasif Et
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -618,10 +704,32 @@ export default function VeterinerTab({
                 {showPastVets && (
                   <div className="flex flex-col gap-2 mt-2 pl-2 border-l-2 border-slate-200">
                     {pastVets.map(pv => (
-                      <div key={pv.id} className="bg-white p-3 rounded-xl border border-slate-200 text-xs flex flex-col gap-1 opacity-80">
-                        <span className="font-bold text-slate-700">{pv.name}</span>
-                        {pv.doctorName && <span className="text-slate-500">{pv.doctorName}</span>}
-                        <span className="text-[11px] text-slate-400">{pv.statusText}</span>
+                      <div key={pv.id} className="bg-white p-3 rounded-xl border border-slate-200 text-xs flex flex-col gap-1 opacity-80 group">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <span className="font-bold text-slate-700">{pv.name}</span>
+                            {pv.doctorName && <span className="text-slate-500 block">{pv.doctorName}</span>}
+                            <span className="text-[11px] text-slate-400 block">{pv.statusText}</span>
+                          </div>
+                          <button
+                            onClick={async () => {
+                              try {
+                                await fetch(`/api/pets/${petId}/vets/${pv.id}`, {
+                                  method: 'PATCH',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ is_past: false })
+                                });
+                                toast.success('Klinik yeniden aktif edildi');
+                                mutateVets();
+                              } catch (error) {
+                                toast.error('Hata oluştu');
+                              }
+                            }}
+                            className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                          >
+                            Yeniden Aktif Et
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -630,7 +738,10 @@ export default function VeterinerTab({
             )}
 
             <button
-              onClick={() => setShowAddVetModal(true)}
+              onClick={() => {
+                resetVetForm();
+                setShowAddVetModal(true);
+              }}
               className="w-full py-3 rounded-2xl border-2 border-dashed border-slate-300 hover:border-emerald-500 text-slate-600 hover:text-emerald-600 font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] mt-1 bg-white cursor-pointer"
             >
               <Plus size={16} /> Veteriner ekle
@@ -727,6 +838,12 @@ export default function VeterinerTab({
                         <Clock size={14} /> Ertele
                       </button>
                       <button
+                        onClick={() => handleEditProcess(proc)}
+                        className="py-2 px-3 rounded-xl bg-white hover:bg-slate-100 text-slate-500 border border-slate-200 text-xs font-bold transition-all active:scale-[0.98] cursor-pointer"
+                      >
+                        <Edit2 size={14} />
+                      </button>
+                      <button
                         onClick={() => handleDeleteProcess(proc.id)}
                         className="py-2 px-3 rounded-xl bg-white hover:bg-rose-100 text-slate-500 hover:text-rose-600 border border-slate-200 text-xs font-bold transition-all active:scale-[0.98] cursor-pointer"
                       >
@@ -788,6 +905,12 @@ export default function VeterinerTab({
                         <Clock size={14} /> Ertele
                       </button>
                       <button
+                        onClick={() => handleEditProcess(proc)}
+                        className="py-2 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-500 border border-slate-200 text-xs font-bold transition-all active:scale-[0.98] cursor-pointer"
+                      >
+                        <Edit2 size={14} />
+                      </button>
+                      <button
                         onClick={() => handleDeleteProcess(proc.id)}
                         className="py-2 px-3 rounded-xl bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200 text-xs font-bold transition-all active:scale-[0.98] cursor-pointer"
                       >
@@ -842,6 +965,18 @@ export default function VeterinerTab({
               </div>
             )}
 
+            {filteredProcesses.length === 0 && (
+              <div className="flex flex-col items-center justify-center p-6 text-center gap-2 bg-slate-50/50 rounded-2xl border border-slate-100">
+                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center border border-slate-200 mb-1 shadow-xs">
+                  <Calendar size={20} className="text-slate-400" />
+                </div>
+                <p className="text-xs font-bold text-slate-700">Henüz süreç kaydı yok</p>
+                <p className="text-[11px] font-medium text-slate-500 max-w-[250px]">
+                  Klinik ziyaretlerinizi, randevularınızı veya aşı/parazit takiplerinizi buradan ekleyebilirsiniz.
+                </p>
+              </div>
+            )}
+
             <button
               onClick={() => setShowAddProcessModal(true)}
               className="w-full py-3 rounded-2xl border-2 border-dashed border-slate-300 hover:border-indigo-500 text-slate-600 hover:text-indigo-600 font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] mt-1 bg-white cursor-pointer"
@@ -879,6 +1014,25 @@ export default function VeterinerTab({
 
         {openLabSection && (
           <div className="p-4 flex flex-col gap-3 bg-slate-50/40">
+            <div className="bg-slate-100 border border-slate-200 rounded-xl p-3 text-[11px] text-slate-600 font-medium flex items-center gap-2">
+              <Activity size={16} className="text-slate-400 shrink-0" />
+              Yeni laboratuvar ve tetkik sonuçları Sağlık sekmesinden eklenmektedir. Bu alan geçmiş sonuçlarınızı özetler.
+            </div>
+            {labResults.length === 0 && (
+              <div className="flex flex-col items-center justify-center p-6 text-center gap-2 bg-white rounded-2xl border border-slate-100 shadow-xs">
+                <div className="w-12 h-12 bg-cyan-50 rounded-full flex items-center justify-center border border-cyan-100 mb-1">
+                  <Activity size={20} className="text-cyan-500" />
+                </div>
+                <p className="text-xs font-bold text-slate-700">Tahlil veya Tetkik Yok</p>
+                <p className="text-[11px] font-medium text-slate-500 max-w-[250px] mb-2">
+                  Petinizin kan tahlilleri, ultrason veya röntgen sonuçları eklendiğinde burada özetlenir.
+                </p>
+                <button className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold transition-colors cursor-pointer">
+                  Sağlık Sekmesine Git
+                </button>
+              </div>
+            )}
+            
             {labResults.map(lab => (
               <div key={lab.id} className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex flex-col gap-2">
                 <div className="flex items-start justify-between gap-2">
@@ -943,6 +1097,25 @@ export default function VeterinerTab({
 
         {openPrescriptionsSection && (
           <div className="p-4 flex flex-col gap-3 bg-slate-50/40">
+            <div className="bg-slate-100 border border-slate-200 rounded-xl p-3 text-[11px] text-slate-600 font-medium flex items-center gap-2">
+              <Pill size={16} className="text-slate-400 shrink-0" />
+              Yeni reçete ve ilaç protokolleri Sağlık sekmesinden eklenmektedir. Bu alan mevcut durumları özetler.
+            </div>
+            {prescriptions.length === 0 && (
+              <div className="flex flex-col items-center justify-center p-6 text-center gap-2 bg-white rounded-2xl border border-slate-100 shadow-xs">
+                <div className="w-12 h-12 bg-teal-50 rounded-full flex items-center justify-center border border-teal-100 mb-1">
+                  <Pill size={20} className="text-teal-500" />
+                </div>
+                <p className="text-xs font-bold text-slate-700">Aktif Reçete Yok</p>
+                <p className="text-[11px] font-medium text-slate-500 max-w-[250px] mb-2">
+                  Petinize yazılmış aktif bir ilaç protokolü veya reçete bulunmuyor.
+                </p>
+                <button className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold transition-colors cursor-pointer">
+                  Sağlık Sekmesine Git
+                </button>
+              </div>
+            )}
+            
             {prescriptions.map(rx => (
               <div key={rx.id} className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex flex-col gap-2">
                 <div className="flex items-center justify-between gap-2">
@@ -994,6 +1167,25 @@ export default function VeterinerTab({
 
         {openSurgerySection && (
           <div className="p-4 flex flex-col gap-3 bg-slate-50/40">
+            <div className="bg-slate-100 border border-slate-200 rounded-xl p-3 text-[11px] text-slate-600 font-medium flex items-center gap-2">
+              <Scissors size={16} className="text-slate-400 shrink-0" />
+              Operasyon ve cerrahi kayıtları Sağlık sekmesinden eklenmektedir. Bu alan geçmiş operasyonları listeler.
+            </div>
+            {surgeries.length === 0 && (
+              <div className="flex flex-col items-center justify-center p-6 text-center gap-2 bg-white rounded-2xl border border-slate-100 shadow-xs">
+                <div className="w-12 h-12 bg-rose-50 rounded-full flex items-center justify-center border border-rose-100 mb-1">
+                  <Scissors size={20} className="text-rose-500" />
+                </div>
+                <p className="text-xs font-bold text-slate-700">Operasyon Kaydı Yok</p>
+                <p className="text-[11px] font-medium text-slate-500 max-w-[250px] mb-2">
+                  Petinize ait herhangi bir cerrahi operasyon geçmişi bulunmuyor.
+                </p>
+                <button className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold transition-colors cursor-pointer">
+                  Sağlık Sekmesine Git
+                </button>
+              </div>
+            )}
+            
             {surgeries.map(surg => (
               <div key={surg.id} className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex flex-col gap-2">
                 <div className="flex items-center justify-between gap-2">
@@ -1035,6 +1227,18 @@ export default function VeterinerTab({
 
         {openVisitsSection && (
           <div className="p-4 flex flex-col gap-2.5 bg-slate-50/40 divide-y divide-slate-200/60">
+            {visits.length === 0 && (
+              <div className="flex flex-col items-center justify-center p-6 text-center gap-2 bg-white rounded-2xl border border-slate-100 shadow-xs">
+                <div className="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center border border-amber-100 mb-1">
+                  <Receipt size={20} className="text-amber-500" />
+                </div>
+                <p className="text-xs font-bold text-slate-700">Klinik Harcaması Yok</p>
+                <p className="text-[11px] font-medium text-slate-500 max-w-[250px]">
+                  Petinizin veteriner ziyaretleri tamamlandıkça harcamalarınız burada listelenir.
+                </p>
+              </div>
+            )}
+            
             {visits.map(v => (
               <div key={v.id} className="pt-2.5 first:pt-0 flex items-center justify-between gap-2">
                 <div>
@@ -1145,14 +1349,189 @@ export default function VeterinerTab({
         </div>
       )}
 
+      {showSnoozeModalId && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-[24px] p-6 w-full max-w-sm border border-slate-200 shadow-2xl flex flex-col gap-4 text-center">
+            <div className="w-16 h-16 rounded-full bg-slate-100 text-slate-500 mx-auto flex items-center justify-center mb-2">
+              <Clock size={32} />
+            </div>
+            <h3 className="text-lg font-extrabold text-slate-800">Süreci Ertele</h3>
+            <p className="text-sm text-slate-600 mb-2">
+              Bu süreci kaç gün ertelemek istiyorsunuz?
+            </p>
+            <div className="flex gap-2">
+              {[1, 3, 7, 15].map(days => (
+                <button
+                  key={days}
+                  onClick={() => setSnoozeDays(days.toString())}
+                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${snoozeDays === days.toString() ? 'bg-indigo-100 text-indigo-700 border-indigo-300' : 'bg-slate-50 text-slate-600 border-slate-200'} border`}
+                >
+                  {days} Gün
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center mt-2 border border-slate-200 rounded-xl overflow-hidden focus-within:border-indigo-500">
+               <input 
+                 type="number"
+                 min="1"
+                 value={snoozeDays}
+                 onChange={e => setSnoozeDays(e.target.value)}
+                 className="flex-1 px-3 py-2.5 text-sm font-bold text-center outline-hidden"
+                 placeholder="Özel"
+               />
+               <span className="px-3 text-xs font-bold text-slate-500 bg-slate-50 h-full flex items-center border-l border-slate-200">Gün</span>
+            </div>
+            <div className="flex gap-3 mt-2">
+              <button
+                onClick={() => setShowSnoozeModalId(null)}
+                className="flex-1 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-all active:scale-[0.98] cursor-pointer"
+              >
+                İptal
+              </button>
+              <button
+                onClick={confirmSnooze}
+                className="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-all active:scale-[0.98] cursor-pointer"
+              >
+                Ertele
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeactivateConfirmId && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-[24px] p-6 w-full max-w-sm border border-slate-200 shadow-2xl flex flex-col gap-4 text-center">
+            <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-500 mx-auto flex items-center justify-center mb-2">
+              <AlertTriangle size={32} />
+            </div>
+            <h3 className="text-lg font-extrabold text-slate-800">Veterineri Pasif Et</h3>
+            <p className="text-sm text-slate-600">
+              Bu veterineri pasife almak istediğinize emin misiniz? Geçmiş kayıtlarda listelenmeye devam edecektir.
+            </p>
+            <div className="flex gap-3 mt-2">
+              <button
+                onClick={() => setShowDeactivateConfirmId(null)}
+                className="flex-1 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-all active:scale-[0.98] cursor-pointer"
+              >
+                İptal
+              </button>
+              <button
+                onClick={() => {
+                   handleDeactivateVet(showDeactivateConfirmId);
+                   setShowDeactivateConfirmId(null);
+                }}
+                className="flex-1 py-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold transition-all active:scale-[0.98] cursor-pointer"
+              >
+                Pasif Et
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showOldVetConflictModal && pendingNewVet && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-[24px] p-6 w-full max-w-sm border border-slate-200 shadow-2xl flex flex-col gap-4 text-center">
+            <div className="w-16 h-16 rounded-full bg-amber-50 text-amber-500 mx-auto flex items-center justify-center mb-2">
+              <AlertTriangle size={32} />
+            </div>
+            <h3 className="text-lg font-extrabold text-slate-800">Eski Veteriner Ne Olacak?</h3>
+            <p className="text-sm text-slate-600">
+              Sistemde zaten aktif bir veteriner kaydınız bulunuyor. Yeni klinik eklediğinizde eskisini pasife almak ister misiniz?
+            </p>
+              <div className="flex flex-col gap-3 mt-2">
+                <button
+                  onClick={async () => {
+                    if (!pendingNewVet) return;
+                    try {
+                      // Eskileri pasife çek
+                      const activeVetIds = activeVets.map(v => v.id);
+                      await Promise.all(activeVetIds.map(id => 
+                        fetch(`/api/pets/${petId}/vets/${id}`, {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ is_past: true, is_primary: false })
+                        })
+                      ));
+
+                      // Yeni kliniği ekle
+                      await fetch(`/api/pets/${petId}/vets`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                          clinic_name: pendingNewVet.name,
+                          doctor_name: pendingNewVet.doctorName,
+                          address: pendingNewVet.address,
+                          phone: pendingNewVet.phone,
+                          specialty_tag: pendingNewVet.specialtyTag,
+                          is_primary: true 
+                        })
+                      });
+                      
+                      toast.success('Eski kayıt pasife alındı, yeni klinik eklendi');
+                      mutateVets();
+                      setShowOldVetConflictModal(false);
+                      setPendingNewVet(null);
+                      resetVetForm();
+                    } catch (error) {
+                      toast.error('İşlem sırasında hata oluştu');
+                    }
+                  }}
+                  className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold transition-all active:scale-[0.98] cursor-pointer"
+                >
+                  Eskisini Pasif Et
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!pendingNewVet) return;
+                    try {
+                      await fetch(`/api/pets/${petId}/vets`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                          clinic_name: pendingNewVet.name,
+                          doctor_name: pendingNewVet.doctorName,
+                          address: pendingNewVet.address,
+                          phone: pendingNewVet.phone,
+                          specialty_tag: pendingNewVet.specialtyTag,
+                          is_primary: false 
+                        })
+                      });
+                      
+                      toast.success('Yeni klinik eklendi');
+                      mutateVets();
+                      setShowOldVetConflictModal(false);
+                      setPendingNewVet(null);
+                      resetVetForm();
+                    } catch (error) {
+                      toast.error('Hata oluştu');
+                    }
+                  }}
+                  className="w-full py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-all active:scale-[0.98] cursor-pointer"
+                >
+                  İkisini de Aktif Tut
+                </button>
+              </div>
+          </div>
+        </div>
+      )}
+
       {showAddVetModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-5 w-full max-w-md border border-slate-200 shadow-2xl flex flex-col gap-4">
+          <div className="bg-white rounded-[24px] p-5 w-full max-w-md border border-slate-200 shadow-2xl flex flex-col gap-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-base font-extrabold text-slate-800 flex items-center gap-2">
-                <Stethoscope size={18} className="text-emerald-600" /> Yeni Veteriner Ekle
+                <Stethoscope size={18} className="text-emerald-600" /> 
+                {editingVet ? 'Veterineri Düzenle' : 'Yeni Veteriner Ekle'}
               </h3>
-              <button onClick={() => setShowAddVetModal(false)} className="p-1 rounded-full text-slate-400 hover:bg-slate-100 cursor-pointer">
+              <button 
+                onClick={() => {
+                  setShowAddVetModal(false);
+                  resetVetForm();
+                }} 
+                className="p-1 rounded-full text-slate-400 hover:bg-slate-100 cursor-pointer"
+              >
                 <X size={18} />
               </button>
             </div>
@@ -1218,7 +1597,10 @@ export default function VeterinerTab({
               <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setShowAddVetModal(false)}
+                  onClick={() => {
+                    setShowAddVetModal(false);
+                    resetVetForm();
+                  }}
                   className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 cursor-pointer"
                 >
                   İptal
@@ -1241,9 +1623,12 @@ export default function VeterinerTab({
           <div className="bg-white rounded-3xl p-5 w-full max-w-md border border-slate-200 shadow-2xl flex flex-col gap-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-base font-extrabold text-slate-800 flex items-center gap-2">
-                <Share2 size={18} className="text-indigo-600" /> Yeni Klinik Süreç Ekle
+                <Share2 size={18} className="text-indigo-600" /> {editingProcess ? 'Süreci Düzenle' : 'Yeni Klinik Süreç Ekle'}
               </h3>
-              <button onClick={() => setShowAddProcessModal(false)} className="p-1 rounded-full text-slate-400 hover:bg-slate-100 cursor-pointer">
+              <button onClick={() => {
+                setShowAddProcessModal(false);
+                resetProcessForm();
+              }} className="p-1 rounded-full text-slate-400 hover:bg-slate-100 cursor-pointer">
                 <X size={18} />
               </button>
             </div>
@@ -1320,12 +1705,12 @@ export default function VeterinerTab({
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">Zaman (Gün sonra)</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Tarih</label>
                   <input
-                    type="number"
-                    min="1"
-                    value={newProcDays}
-                    onChange={e => setNewProcDays(e.target.value)}
+                    type="date"
+                    required
+                    value={newProcDate}
+                    onChange={e => setNewProcDate(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-hidden focus:border-indigo-500"
                   />
                 </div>
@@ -1334,15 +1719,21 @@ export default function VeterinerTab({
               {newProcPlace === 'veterinary_clinic' && (
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1">Uygulanacak Veteriner Kliniği</label>
-                  <select
-                    value={newProcClinic}
-                    onChange={e => setNewProcClinic(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-hidden focus:border-indigo-500 bg-white"
-                  >
-                    {activeVets.map(v => (
-                      <option key={v.id} value={v.name}>{v.name} ({v.doctorName || 'Klinik'})</option>
-                    ))}
-                  </select>
+                  {activeVets.length > 0 ? (
+                    <select
+                      value={newProcClinic}
+                      onChange={e => setNewProcClinic(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-hidden focus:border-indigo-500 bg-white"
+                    >
+                      {activeVets.map(v => (
+                        <option key={v.id} value={v.id}>{v.name} ({v.doctorName || 'Klinik'})</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="bg-rose-50 border border-rose-200 text-rose-700 p-3 rounded-xl text-xs font-bold">
+                      Henüz aktif bir veteriner kliniği eklemediniz. Lütfen önce veteriner sekmesinden klinik ekleyin.
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1358,14 +1749,18 @@ export default function VeterinerTab({
               <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setShowAddProcessModal(false)}
+                  onClick={() => {
+                    setShowAddProcessModal(false);
+                    resetProcessForm();
+                  }}
                   className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 cursor-pointer"
                 >
                   İptal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                  disabled={newProcPlace === 'veterinary_clinic' && activeVets.length === 0}
+                  className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
                 >
                   Kaydet
                 </button>

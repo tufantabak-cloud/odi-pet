@@ -66,9 +66,11 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hook-form": "^7.76.0",
+    "react-hot-toast": "^2.6.0",
     "semver": "^7.8.5",
     "serwist": "^9.5.11",
     "stripe": "22.3.2",
+    "swr": "^2.5.1",
     "web-push": "^3.6.7",
     "zod": "^4.4.3",
     "zustand": "^5.0.14"
