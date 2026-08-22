@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS pet_vets (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   pet_id uuid NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
-  name text NOT NULL,
+  clinic_name text NOT NULL,
   doctor_name text,
   address text,
   phone text,
@@ -24,6 +24,10 @@ CREATE POLICY "Users can view their pet's vets"
     EXISTS (
       SELECT 1 FROM pet_owners WHERE pet_owners.pet_id = pet_vets.pet_id AND pet_owners.profile_id = auth.uid()
     )
+    OR
+    EXISTS (
+      SELECT 1 FROM pets WHERE pets.id = pet_vets.pet_id AND pets.owner_id = auth.uid()
+    )
   );
 
 CREATE POLICY "Users can insert their pet's vets"
@@ -31,6 +35,10 @@ CREATE POLICY "Users can insert their pet's vets"
   WITH CHECK (
     EXISTS (
       SELECT 1 FROM pet_owners WHERE pet_owners.pet_id = pet_vets.pet_id AND pet_owners.profile_id = auth.uid()
+    )
+    OR
+    EXISTS (
+      SELECT 1 FROM pets WHERE pets.id = pet_vets.pet_id AND pets.owner_id = auth.uid()
     )
   );
 
@@ -40,6 +48,10 @@ CREATE POLICY "Users can update their pet's vets"
     EXISTS (
       SELECT 1 FROM pet_owners WHERE pet_owners.pet_id = pet_vets.pet_id AND pet_owners.profile_id = auth.uid()
     )
+    OR
+    EXISTS (
+      SELECT 1 FROM pets WHERE pets.id = pet_vets.pet_id AND pets.owner_id = auth.uid()
+    )
   );
 
 CREATE POLICY "Users can delete their pet's vets"
@@ -47,6 +59,10 @@ CREATE POLICY "Users can delete their pet's vets"
   USING (
     EXISTS (
       SELECT 1 FROM pet_owners WHERE pet_owners.pet_id = pet_vets.pet_id AND pet_owners.profile_id = auth.uid()
+    )
+    OR
+    EXISTS (
+      SELECT 1 FROM pets WHERE pets.id = pet_vets.pet_id AND pets.owner_id = auth.uid()
     )
   );
 

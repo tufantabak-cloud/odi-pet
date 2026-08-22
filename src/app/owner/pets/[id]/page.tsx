@@ -58,7 +58,8 @@ export default async function PetDetailPage(props: PageProps) {
     { data: assignments },
     { data: lastVaccineRecord },
     { data: initialVaccinesRaw },
-    { data: initialParasites }
+    { data: initialParasites },
+    { data: initialVets }
   ] = await Promise.all([
     supabase.from('health_schedules').select('*').eq('pet_id', id).order('due_date').limit(100),
     supabase.from('plans').select('*').eq('pet_id', id).order('scheduled_at').limit(100),
@@ -95,7 +96,8 @@ export default async function PetDetailPage(props: PageProps) {
     supabase.from('vaccine_records_v2').select('vaccine_name, administered_at, status').eq('pet_id', id).not('administered_at', 'is', null).in('status', ['completed', 'done']).order('administered_at', { ascending: false }).limit(1).maybeSingle(),
     // HealthTab initial data — eliminates duplicate client-side fetches on Sağlık tab mount
     supabase.from('vaccine_records_v2').select('*').eq('pet_id', id).not('administered_at', 'is', null).order('administered_at', { ascending: false }).limit(50),
-    supabase.from('parasite_records').select('*').eq('pet_id', id).order('administered_at', { ascending: false }).limit(50)
+    supabase.from('parasite_records').select('*').eq('pet_id', id).order('administered_at', { ascending: false }).limit(50),
+    supabase.from('pet_vets').select('*').eq('pet_id', id).order('is_past', { ascending: true }).order('is_primary', { ascending: false }).order('created_at', { ascending: false })
   ])
 
   const VACCINE_EXCLUDED = new Set(['cancelled', 'migrated_to_plan', 'overdue', 'pending', 'upcoming', 'scheduled', 'planned'])
@@ -240,6 +242,7 @@ export default async function PetDetailPage(props: PageProps) {
         lastVaccineRecord={lastVaccineRecord ?? null}
         initialVaccines={initialVaccines}
         initialParasites={initialParasites ?? []}
+        initialVets={initialVets ?? []}
       />
     </OnboardingGate>
   )

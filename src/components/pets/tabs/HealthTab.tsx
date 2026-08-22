@@ -171,9 +171,7 @@ export default function HealthTab({ petId, petName, onMarkDone, onPostpone, onEd
               </p>
               <button 
                 onClick={() => {
-                  window.dispatchEvent(new CustomEvent('open-pet-section', { 
-                    detail: { section: 'Raporlar & Belgeler', tab: 'vault' } 
-                  }));
+                  window.location.href = `/owner/pets/${petId}/reports?tab=vault`;
                 }}
                 className="text-[12px] font-bold text-primary hover:underline flex items-center gap-1 hover:scale-[1.02] transition-transform"
               >

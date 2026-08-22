@@ -177,6 +177,8 @@ export default function EditPetForm({ pet, ownerProfile }: { pet: any; ownerProf
   const [editMeasureTab, setEditMeasureTab] = useState<'weight' | 'height'>('weight')
   const [microchipNo, setMicrochipNo] = useState(pet.microchip_no || '')
   const [passportNo, setPassportNo] = useState(pet.passport_no || '')
+  const [vetCompany, setVetCompany] = useState(pet.vet_company || '')
+  const [vetName, setVetName] = useState(pet.vet_name || '')
 
   const [registrationCity, setRegistrationCity] = useState(pet.registration_city || '')
   const [registrationDistrict, setRegistrationDistrict] = useState(pet.registration_district || '')
@@ -337,6 +339,8 @@ export default function EditPetForm({ pet, ownerProfile }: { pet: any; ownerProf
     if (size) fd.set('size', size)
     if (microchipNo) fd.set('microchip_no', microchipNo)
     if (passportNo) fd.set('passport_no', passportNo)
+    fd.set('vet_company', vetCompany)
+    fd.set('vet_name', vetName)
     if (photoFile) fd.set('avatar', photoFile)
     
     if (registrationCity) fd.set('registration_city', registrationCity)
@@ -931,6 +935,8 @@ export default function EditPetForm({ pet, ownerProfile }: { pet: any; ownerProf
                 const parsed = data?.parsed || data
                 if (parsed?.microchip_no) setMicrochipNo(parsed.microchip_no)
                 if (parsed?.passport_no)  setPassportNo(parsed.passport_no)
+                if (parsed?.vet_company)  setVetCompany(parsed.vet_company)
+                if (parsed?.vet_name)     setVetName(parsed.vet_name)
                 if (parsed?.registration_city) setRegistrationCity(parsed.registration_city)
                 if (parsed?.registration_district) setRegistrationDistrict(parsed.registration_district)
                 if (parsed?.agriculture_directorate) {
@@ -971,6 +977,28 @@ export default function EditPetForm({ pet, ownerProfile }: { pet: any; ownerProf
                 value={passportNo} 
                 onChange={e => setPassportNo(e.target.value)} 
                 placeholder="Örn: TR-PASS-88213" 
+                className="input-base"
+              />
+            </div>
+
+            {/* Veteriner Kliniği */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-text-primary">Veteriner Kliniği / Kurum</label>
+              <input 
+                value={vetCompany} 
+                onChange={e => setVetCompany(e.target.value)} 
+                placeholder="Örn: Kadıköy Veteriner Polikliniği" 
+                className="input-base"
+              />
+            </div>
+
+            {/* Veteriner Hekim */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-text-primary">Veteriner Hekim Adı</label>
+              <input 
+                value={vetName} 
+                onChange={e => setVetName(e.target.value)} 
+                placeholder="Örn: Dr. Ahmet Yılmaz" 
                 className="input-base"
               />
             </div>

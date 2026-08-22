@@ -111,6 +111,15 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
       }
     };
     window.addEventListener('open-pet-section', handleOpenTab);
+    
+    // Check URL parameters for direct vault access
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('tab') === 'vault') {
+        setActiveTab('vault');
+      }
+    }
+    
     return () => window.removeEventListener('open-pet-section', handleOpenTab);
   }, [])
 
@@ -500,7 +509,13 @@ export default function ReportsTab({ petId, petName, plan, payments }: { petId: 
             ) : (
               <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-border-main">
                 {records.length === 0 ? (
-                  <div className="text-sm text-text-secondary text-center py-6">Kayıtlı belge bulunmuyor.</div>
+                  <div className="text-sm text-text-secondary text-center py-10 flex flex-col items-center gap-3 bg-slate-50/50 rounded-sm border border-dashed border-border-main/50">
+                    <Folder size={32} className="text-primary/40" aria-hidden="true" />
+                    <div>
+                      <p className="font-semibold text-text-primary mb-1">Henüz belge eklemedin.</p>
+                      <p className="text-xs">Aşı kartı, pasaport, tahlil sonucu veya diğer önemli belgelerini burada güvenle saklayabilirsin.</p>
+                    </div>
+                  </div>
                 ) : (
                   <div className="grid gap-2">
                     {records.map(record => {

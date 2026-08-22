@@ -43,6 +43,7 @@ const ConfirmModal = dynamic(() => import('@/components/ui/ConfirmModal'));
 import FloatingSOS from '@/components/FloatingSOS'
 const AiDocumentScanner = dynamic(() => import('@/components/ai/AiDocumentScanner'), { ssr: false });
 import { assessWeight } from '@/lib/vetStandards/weightStandards'
+import { getPetVeterinaryLabel, getPetNutritionLabel } from '@/lib/pets/petSummaryUtils'
 
 
 import { getPlanDisplayCategory } from '@/lib/plans/utils'
@@ -244,6 +245,7 @@ export interface PetDetailProps {
   /** Pre-fetched server data for HealthTab — eliminates duplicate client-side fetches on Sağlık tab mount */
   initialVaccines?: any[];
   initialParasites?: any[];
+  initialVets?: any[];
 }
 
 export function getTaskCardStyle(isOverdue: boolean, isCompleted: boolean) {
@@ -319,7 +321,7 @@ function getEventType(event: any): 'stock_status' | 'completed_record' | 'active
   return 'active_plan';
 }
 
-export default function PetDetailClient({ pet, age, score, overdue, schedules, diseases, allergies, medications, growthRecords, appointments, nutritionLogs, inventory, feedingLogs, weightLogs, assignments, payments, subscription, activeLostReport, hasPasskey = false, isAdminView = false, lastVaccineRecord, initialVaccines, initialParasites }: PetDetailProps) {
+export default function PetDetailClient({ pet, age, score, overdue, schedules, diseases, allergies, medications, growthRecords, appointments, nutritionLogs, inventory, feedingLogs, weightLogs, assignments, payments, subscription, activeLostReport, hasPasskey = false, isAdminView = false, lastVaccineRecord, initialVaccines, initialParasites, initialVets }: PetDetailProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -1954,33 +1956,14 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                         </div>
                         <div className="flex items-center justify-between pt-2.5">
                           <span className="text-xs font-semibold text-text-secondary">Veteriner</span>
-                          <span className="text-xs font-bold text-text-primary truncate max-w-[180px]">{pet.vet_company || pet.vet_name || 'Kayıtlı veteriner yok'}</span>
+                          <span className="text-xs font-bold text-text-primary truncate max-w-[180px]">
+                            {getPetVeterinaryLabel(pet, appointments, initialVaccines, initialParasites, initialVets)}
+                          </span>
                         </div>
                         <div className="flex items-center justify-between pt-2.5">
                           <span className="text-xs font-semibold text-text-secondary">Beslenme</span>
                           <span className="text-xs font-bold text-text-primary truncate max-w-[180px]">
-                            {(() => {
-                              if (nutritionLogs?.[0]?.food_brand) {
-                                const type = nutritionLogs[0].food_type ? ` (${nutritionLogs[0].food_type})` : ''
-                                return `${nutritionLogs[0].food_brand}${type}`
-                              }
-                              const activeAssign = assignments?.find((a: any) => a && a.is_active !== false) || assignments?.[0]
-                              if (activeAssign) {
-                                const brandName = activeAssign.food_product_family?.brand?.display_name || activeAssign.custom_brand || activeAssign.food_product_family?.official_name || activeAssign.custom_name
-                                const productName = activeAssign.food_product_family?.official_name || activeAssign.custom_name
-                                const foodForm = activeAssign.food_product_family?.food_form || activeAssign.food_type
-                                
-                                let label = brandName || productName || 'Tanımlı Mama'
-                                if (brandName && productName && brandName !== productName && !productName.includes(brandName)) {
-                                  label = `${brandName} ${productName}`
-                                }
-                                if (foodForm) {
-                                  label += ` (${foodForm})`
-                                }
-                                return label
-                              }
-                              return 'Mama tanımlanmadı'
-                            })()}
+                            {getPetNutritionLabel(nutritionLogs, assignments)}
                           </span>
                         </div>
                       </div>

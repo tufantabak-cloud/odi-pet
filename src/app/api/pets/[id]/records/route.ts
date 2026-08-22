@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getSessionUser } from '@/lib/auth/get-current-profile'
+import { hasPetCapability } from '@/lib/pets/access'
 import { z } from 'zod'
 
 const recordSchema = z.object({
@@ -21,15 +22,10 @@ export async function GET(
 
   const supabase = await createServerSupabaseClient()
 
-  // Pet sahipliği doğrulama
-  const { data: ownership } = await supabase
-    .from('pet_owners')
-    .select('profile_id')
-    .eq('pet_id', id)
-    .eq('profile_id', user.id)
-    .single()
+  // Pet görüntüleme yetkisi doğrulama
+  const canView = await hasPetCapability(supabase, id, 'can_view_pet')
 
-  if (!ownership) {
+  if (!canView) {
     return NextResponse.json(
       { error: 'Bu işlem için yetkiniz yok.' },
       { status: 403 }
@@ -90,15 +86,10 @@ export async function POST(
 
   const supabase = await createServerSupabaseClient()
 
-  // Pet sahipliği doğrulama
-  const { data: ownership } = await supabase
-    .from('pet_owners')
-    .select('profile_id')
-    .eq('pet_id', id)
-    .eq('profile_id', user.id)
-    .single()
+  // Pet yönetim yetkisi doğrulama
+  const canManage = await hasPetCapability(supabase, id, 'can_manage_pet_care')
 
-  if (!ownership) {
+  if (!canManage) {
     return NextResponse.json(
       { error: 'Bu işlem için yetkiniz yok.' },
       { status: 403 }

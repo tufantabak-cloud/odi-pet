@@ -1,19 +1,22 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { getSessionUser } from '@/lib/auth/get-current-profile';
 
-export async function PATCH(request: Request, context: any) {
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string; vetId: string }> }
+) {
   try {
-    const { id, vetId } = context.params;
+    const { id, vetId } = await params;
     if (!id || !vetId) return NextResponse.json({ error: 'Pet ID and Vet ID are required' }, { status: 400 });
 
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
+    const user = await getSessionUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const payload = await request.json();
+    const supabase = await createServerSupabaseClient();
+    const payload = await req.json();
 
     const { data: vet, error } = await supabase
       .from('pet_vets')
@@ -24,13 +27,13 @@ export async function PATCH(request: Request, context: any) {
       .single();
 
     if (error) {
-      console.error('Error updating vet:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error('[API vets PATCH] Supabase error:', error);
+      return NextResponse.json({ error: error.message, details: error }, { status: 500 });
     }
 
     return NextResponse.json(vet);
   } catch (error: any) {
-    console.error('Exception updating vet:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error('[API vets PATCH] Exception:', error);
+    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
   }
 }
