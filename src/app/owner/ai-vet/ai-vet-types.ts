@@ -4,6 +4,8 @@ export interface QuickUpdateField {
   label: string
   placeholder?: string
   required?: boolean
+  defaultValue?: string
+  options?: { value: string | boolean; label: string }[]
 }
 
 export interface QuickUpdateConfig {

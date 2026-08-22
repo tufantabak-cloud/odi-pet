@@ -26,7 +26,16 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await context.params
-  const fd = await req.formData()
+  const contentType = req.headers.get('content-type') || ''
+  let jsonBody: any = null
+  let fd: FormData | null = null
+
+  if (contentType.includes('application/json')) {
+    jsonBody = await req.json().catch(() => ({}))
+  } else {
+    fd = await req.formData().catch(() => null)
+  }
+
   const supabase = await createServerSupabaseClient()
 
   // Verify ownership
@@ -49,77 +58,113 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 
   // Avatar Upload
   let avatarUrl = pet.avatar_url
-  const avatarFile = fd.get('avatar') as File | null
-  if (avatarFile && avatarFile.size > 0) {
-    const ext = avatarFile.name.split('.').pop() || 'jpg'
-    const path = `${user.id}/${Date.now()}.${ext}`
-    const { error: uploadError } = await supabase.storage
-      .from('pet-avatars')
-      .upload(path, avatarFile, { contentType: avatarFile.type, upsert: false })
-
-    if (!uploadError) {
-      const { data: urlData } = supabase.storage.from('pet-avatars').getPublicUrl(path)
-      avatarUrl = urlData.publicUrl
-    }
-  }
-
-  // Cover Upload
   let coverUrl = (pet as any).cover_url
-  const coverFile = fd.get('cover') as File | null
-  if (coverFile && coverFile.size > 0) {
-    const ext = coverFile.name.split('.').pop() || 'jpg'
-    const path = `covers/${user.id}/${Date.now()}.${ext}`
-    const { error: uploadError } = await supabase.storage
-      .from('pet-avatars')
-      .upload(path, coverFile, { contentType: coverFile.type, upsert: false })
 
-    if (!uploadError) {
-      const { data: urlData } = supabase.storage.from('pet-avatars').getPublicUrl(path)
-      coverUrl = urlData.publicUrl
+  if (fd) {
+    const avatarFile = fd.get('avatar') as File | null
+    if (avatarFile && avatarFile.size > 0) {
+      const ext = avatarFile.name.split('.').pop() || 'jpg'
+      const path = `${user.id}/${Date.now()}.${ext}`
+      const { error: uploadError } = await supabase.storage
+        .from('pet-avatars')
+        .upload(path, avatarFile, { contentType: avatarFile.type, upsert: false })
+
+      if (!uploadError) {
+        const { data: urlData } = supabase.storage.from('pet-avatars').getPublicUrl(path)
+        avatarUrl = urlData.publicUrl
+      }
     }
-  } else if (fd.has('cover_url')) {
-    coverUrl = str(fd, 'cover_url')
+
+    const coverFile = fd.get('cover') as File | null
+    if (coverFile && coverFile.size > 0) {
+      const ext = coverFile.name.split('.').pop() || 'jpg'
+      const path = `covers/${user.id}/${Date.now()}.${ext}`
+      const { error: uploadError } = await supabase.storage
+        .from('pet-avatars')
+        .upload(path, coverFile, { contentType: coverFile.type, upsert: false })
+
+      if (!uploadError) {
+        const { data: urlData } = supabase.storage.from('pet-avatars').getPublicUrl(path)
+        coverUrl = urlData.publicUrl
+      }
+    } else if (fd.has('cover_url')) {
+      coverUrl = str(fd, 'cover_url')
+    }
   }
 
   const payload: any = {}
-  
-  const cover_position = fd.get('cover_position') as string | null
-  if (cover_position) payload.cover_position = cover_position
 
-  const coverScale = fd.get('cover_scale') as string | null
-  if (coverScale) payload.cover_scale = parseFloat(coverScale)
+  if (jsonBody) {
+    if (jsonBody.is_neutered !== undefined) payload.is_neutered = Boolean(jsonBody.is_neutered)
+    if (jsonBody.name !== undefined) payload.name = jsonBody.name
+    if (jsonBody.breed !== undefined) payload.breed = jsonBody.breed
+    if (jsonBody.gender !== undefined) payload.gender = jsonBody.gender
+    if (jsonBody.color !== undefined) payload.color = jsonBody.color
+    if (jsonBody.birth_date !== undefined) payload.birth_date = jsonBody.birth_date
+    if (jsonBody.birth_date_precision !== undefined) payload.birth_date_precision = jsonBody.birth_date_precision
+    if (jsonBody.microchip_no !== undefined) payload.microchip_no = jsonBody.microchip_no
+    if (jsonBody.passport_no !== undefined) payload.passport_no = jsonBody.passport_no
+    if (jsonBody.tattoo_no !== undefined) payload.tattoo_no = jsonBody.tattoo_no
+    if (jsonBody.pedigree_sire !== undefined) payload.pedigree_sire = jsonBody.pedigree_sire
+    if (jsonBody.pedigree_dam !== undefined) payload.pedigree_dam = jsonBody.pedigree_dam
+    if (jsonBody.vet_name !== undefined) payload.vet_name = jsonBody.vet_name
+    if (jsonBody.vet_company !== undefined) payload.vet_company = jsonBody.vet_company
+    if (jsonBody.vet_phone !== undefined) payload.vet_phone = jsonBody.vet_phone
+    if (jsonBody.vet_email !== undefined) payload.vet_email = jsonBody.vet_email
+    if (jsonBody.city !== undefined) payload.city = jsonBody.city
+    if (jsonBody.district !== undefined) payload.district = jsonBody.district
+    if (jsonBody.registration_city !== undefined) payload.registration_city = jsonBody.registration_city
+    if (jsonBody.registration_district !== undefined) payload.registration_district = jsonBody.registration_district
+    if (jsonBody.agriculture_directorate !== undefined) payload.agriculture_directorate = jsonBody.agriculture_directorate
+    if (jsonBody.lifestyle !== undefined) payload.lifestyle = jsonBody.lifestyle
+    if (jsonBody.size !== undefined) payload.size = jsonBody.size
+    if (jsonBody.target_weight_kg !== undefined) {
+      const tw = typeof jsonBody.target_weight_kg === 'number' ? jsonBody.target_weight_kg : parseFloat(String(jsonBody.target_weight_kg).replace(',', '.'))
+      payload.target_weight_kg = !isNaN(tw) && tw > 0 ? tw : null
+    }
+  } else if (fd) {
+    const cover_position = fd.get('cover_position') as string | null
+    if (cover_position) payload.cover_position = cover_position
 
-  if (fd.has('name')) payload.name = str(fd, 'name')
-  if (fd.has('breed')) payload.breed = str(fd, 'breed')
-  if (avatarUrl !== pet.avatar_url) payload.avatar_url = avatarUrl ?? undefined
-  if (coverUrl !== (pet as any).cover_url) payload.cover_url = coverUrl ?? undefined
-  if (fd.has('birth_date')) payload.birth_date = str(fd, 'birth_date')
-  if (fd.has('birth_date_precision')) payload.birth_date_precision = str(fd, 'birth_date_precision')
-  if (fd.has('gender')) payload.gender = str(fd, 'gender')
-  if (fd.has('color')) payload.color = str(fd, 'color')
-  if (fd.has('microchip_no')) payload.microchip_no = str(fd, 'microchip_no')
-  if (fd.has('passport_no')) payload.passport_no = str(fd, 'passport_no')
-  if (fd.has('tattoo_no')) payload.tattoo_no = str(fd, 'tattoo_no')
-  if (fd.has('pedigree_sire')) payload.pedigree_sire = str(fd, 'pedigree_sire')
-  if (fd.has('pedigree_dam')) payload.pedigree_dam = str(fd, 'pedigree_dam')
-  if (fd.has('vet_name')) payload.vet_name = str(fd, 'vet_name')
-  if (fd.has('vet_company')) payload.vet_company = str(fd, 'vet_company')
-  if (fd.has('vet_phone')) payload.vet_phone = str(fd, 'vet_phone')
-  if (fd.has('vet_email')) payload.vet_email = str(fd, 'vet_email')
-  if (fd.has('city')) payload.city = str(fd, 'city')
-  if (fd.has('district')) payload.district = str(fd, 'district')
-  if (fd.has('registration_city')) payload.registration_city = str(fd, 'registration_city')
-  if (fd.has('registration_district')) payload.registration_district = str(fd, 'registration_district')
-  if (fd.has('agriculture_directorate')) payload.agriculture_directorate = str(fd, 'agriculture_directorate')
-  if (fd.has('lifestyle')) payload.lifestyle = str(fd, 'lifestyle')
-  if (fd.has('size')) payload.size = str(fd, 'size')
-  if (fd.has('target_weight_kg')) {
-    const twStr = str(fd, 'target_weight_kg')
-    if (twStr) {
-      const twVal = parseFloat(twStr.replace(',', '.'))
-      payload.target_weight_kg = !isNaN(twVal) && twVal > 0 ? twVal : null
-    } else {
-      payload.target_weight_kg = null
+    const coverScale = fd.get('cover_scale') as string | null
+    if (coverScale) payload.cover_scale = parseFloat(coverScale)
+
+    if (fd.has('is_neutered')) {
+      const v = fd.get('is_neutered')
+      payload.is_neutered = v === 'true' || v === 'on' || v === '1' || v === 'yes'
+    }
+    if (fd.has('name')) payload.name = str(fd, 'name')
+    if (fd.has('breed')) payload.breed = str(fd, 'breed')
+    if (avatarUrl !== pet.avatar_url) payload.avatar_url = avatarUrl ?? undefined
+    if (coverUrl !== (pet as any).cover_url) payload.cover_url = coverUrl ?? undefined
+    if (fd.has('birth_date')) payload.birth_date = str(fd, 'birth_date')
+    if (fd.has('birth_date_precision')) payload.birth_date_precision = str(fd, 'birth_date_precision')
+    if (fd.has('gender')) payload.gender = str(fd, 'gender')
+    if (fd.has('color')) payload.color = str(fd, 'color')
+    if (fd.has('microchip_no')) payload.microchip_no = str(fd, 'microchip_no')
+    if (fd.has('passport_no')) payload.passport_no = str(fd, 'passport_no')
+    if (fd.has('tattoo_no')) payload.tattoo_no = str(fd, 'tattoo_no')
+    if (fd.has('pedigree_sire')) payload.pedigree_sire = str(fd, 'pedigree_sire')
+    if (fd.has('pedigree_dam')) payload.pedigree_dam = str(fd, 'pedigree_dam')
+    if (fd.has('vet_name')) payload.vet_name = str(fd, 'vet_name')
+    if (fd.has('vet_company')) payload.vet_company = str(fd, 'vet_company')
+    if (fd.has('vet_phone')) payload.vet_phone = str(fd, 'vet_phone')
+    if (fd.has('vet_email')) payload.vet_email = str(fd, 'vet_email')
+    if (fd.has('city')) payload.city = str(fd, 'city')
+    if (fd.has('district')) payload.district = str(fd, 'district')
+    if (fd.has('registration_city')) payload.registration_city = str(fd, 'registration_city')
+    if (fd.has('registration_district')) payload.registration_district = str(fd, 'registration_district')
+    if (fd.has('agriculture_directorate')) payload.agriculture_directorate = str(fd, 'agriculture_directorate')
+    if (fd.has('lifestyle')) payload.lifestyle = str(fd, 'lifestyle')
+    if (fd.has('size')) payload.size = str(fd, 'size')
+    if (fd.has('target_weight_kg')) {
+      const twStr = str(fd, 'target_weight_kg')
+      if (twStr) {
+        const twVal = parseFloat(twStr.replace(',', '.'))
+        payload.target_weight_kg = !isNaN(twVal) && twVal > 0 ? twVal : null
+      } else {
+        payload.target_weight_kg = null
+      }
     }
   }
 
@@ -144,8 +189,8 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
   if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 })
 
   // Save weight and height if provided
-  const weight_kg = fd.get('weight_kg') as string | null
-  const height_cm = fd.get('height_cm') as string | null
+  const weight_kg = fd ? (fd.get('weight_kg') as string | null) : (jsonBody?.weight_kg != null ? String(jsonBody.weight_kg) : null)
+  const height_cm = fd ? (fd.get('height_cm') as string | null) : (jsonBody?.height_cm != null ? String(jsonBody.height_cm) : null)
   if (weight_kg) {
     const { error: growthError } = await supabase
       .from('weight_logs')

@@ -12,7 +12,16 @@ function QuickUpdateModal({ petId, config, onClose, onDone }: QuickUpdateModalPr
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
-  
+  const [radioValues, setRadioValues] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {}
+    config?.fields?.forEach((f: any) => {
+      if (f.type === 'radio' && f.defaultValue !== undefined) {
+        initial[f.name] = String(f.defaultValue)
+      }
+    })
+    return initial
+  })
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
@@ -44,6 +53,34 @@ function QuickUpdateModal({ petId, config, onClose, onDone }: QuickUpdateModalPr
                <label className="text-xs font-black text-text-secondary uppercase tracking-wider">{f.label}</label>
                {f.type === 'file' ? (
                  <input name={f.name} type="file" accept="image/*" className="input-base py-2.5 text-xs" required={f.required} />
+               ) : f.type === 'radio' ? (
+                 <div className="flex gap-2.5 mt-1">
+                   {f.options?.map((opt: any) => {
+                     const valStr = String(opt.value)
+                     const currentVal = radioValues[f.name] ?? String(f.defaultValue ?? '')
+                     const isSelected = currentVal === valStr
+                     return (
+                       <label
+                         key={valStr}
+                         className={`flex-1 py-3 px-3.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center cursor-pointer border active:scale-[0.98] ${
+                           isSelected
+                             ? 'bg-primary text-white border-primary shadow-sm shadow-primary/30'
+                             : 'bg-surface border-border-main text-text-secondary hover:border-primary/40'
+                         }`}
+                       >
+                         <input
+                           type="radio"
+                           name={f.name}
+                           value={valStr}
+                           checked={isSelected}
+                           onChange={() => setRadioValues(prev => ({ ...prev, [f.name]: valStr }))}
+                           className="sr-only"
+                         />
+                         {opt.label}
+                       </label>
+                     )
+                   })}
+                 </div>
                ) : (
                  <input name={f.name} type={f.type} step={f.type === 'number' ? 'any' : undefined} placeholder={f.placeholder} className="input-base py-3 text-sm" required={f.required} />
                )}

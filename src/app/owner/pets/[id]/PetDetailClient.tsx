@@ -55,6 +55,16 @@ function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
   // butona disabled yansımadan geçebilir; ref ile senkron kilit sağlanır.
   const submittingRef = useRef(false)
 
+  const [radioValues, setRadioValues] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {}
+    config?.fields?.forEach((f: any) => {
+      if (f.type === 'radio' && f.defaultValue !== undefined) {
+        initial[f.name] = String(f.defaultValue)
+      }
+    })
+    return initial
+  })
+
   async function handleSubmit(e: any) {
     e.preventDefault()
     if (submittingRef.current) return // çift gönderimi engelle
@@ -104,6 +114,34 @@ function QuickUpdateModal({ petId, config, onClose, onDone }: any) {
                <label className="text-xs font-medium text-text-secondary uppercase tracking-wider">{f.label}</label>
                {f.type === 'file' ? (
                  <input name={f.name} type="file" accept="image/*" className="input-base py-2.5 text-sm" required={f.required} />
+               ) : f.type === 'radio' ? (
+                 <div className="flex gap-2.5 mt-1">
+                   {f.options?.map((opt: any) => {
+                     const valStr = String(opt.value)
+                     const currentVal = radioValues[f.name] ?? String(f.defaultValue ?? '')
+                     const isSelected = currentVal === valStr
+                     return (
+                       <label
+                         key={valStr}
+                         className={`flex-1 py-3 px-3.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center cursor-pointer border active:scale-[0.98] ${
+                           isSelected
+                             ? 'bg-primary text-white border-primary shadow-sm shadow-primary/30'
+                             : 'bg-surface border-border-main text-text-secondary hover:border-primary/40'
+                         }`}
+                       >
+                         <input
+                           type="radio"
+                           name={f.name}
+                           value={valStr}
+                           checked={isSelected}
+                           onChange={() => setRadioValues(prev => ({ ...prev, [f.name]: valStr }))}
+                           className="sr-only"
+                         />
+                         {opt.label}
+                       </label>
+                     )
+                   })}
+                 </div>
                ) : (
                  <input name={f.name} type={f.type} step={f.type === 'number' ? 'any' : undefined} placeholder={f.placeholder} defaultValue={f.defaultValue} className="input-base py-3 text-sm" required={f.required} />
                )}
@@ -357,7 +395,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     inventory?.name
   );
 
-  const [showNeuterBanner, setShowNeuterBanner] = useState(!pet.is_neutered);
+  const [showNeuterBanner, setShowNeuterBanner] = useState(pet.is_neutered === null || pet.is_neutered === undefined);
   const [showFoodBanner, setShowFoodBanner] = useState(!hasFoodBrand);
 
   useEffect(() => {
@@ -1782,6 +1820,13 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                                   </div>
                                 )}
 
+                                <Link
+                                  href={`/owner/pets/${pet.id}/nutrition?tab=kilo`}
+                                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-[#F4F2FD] text-[#534AB7] border border-[#E2DFFA] text-xs font-bold transition-all active:scale-[0.97] shadow-xs flex items-center gap-1 cursor-pointer"
+                                >
+                                  <Eye size={14} /> Detay Gör
+                                </Link>
+
                                 <button
                                   onClick={() => setActiveTaskModal('WEIGHT_MODAL')}
                                   className="px-3 py-1.5 rounded-xl bg-[#534AB7] hover:bg-[#443C9E] text-white text-xs font-bold transition-all active:scale-[0.97] shadow-xs flex items-center gap-1 cursor-pointer"
@@ -2152,12 +2197,22 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             onAction={() => {
               setQuickUpdateConfig({
                 title: 'Kısırlaştırma Durumu',
-                desc: 'Kısırlaştırıldı mı?',
+                desc: `${pet.name} kısırlaştırıldı mı? Metabolizma hızı değişeceği için aşı ve kilo takibi daha kesin sonuçlar verecektir.`,
                 fields: [
-                  { name: 'is_neutered', type: 'checkbox', label: 'Evet, kısırlaştırıldı', required: false }
+                  {
+                    name: 'is_neutered',
+                    type: 'radio',
+                    label: 'Kısırlaştırma Seçeneği',
+                    defaultValue: pet.is_neutered === true ? 'true' : 'false',
+                    options: [
+                      { value: 'true', label: 'Evet, Kısırlaştırıldı' },
+                      { value: 'false', label: 'Hayır, Kısırlaştırılmadı' }
+                    ]
+                  }
                 ],
                 customHandler: async (fd: FormData) => {
-                  const isNeutered = fd.get('is_neutered') === 'on';
+                  const val = fd.get('is_neutered');
+                  const isNeutered = val === 'true';
                   await fetch(`/api/pets/${pet.id}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
