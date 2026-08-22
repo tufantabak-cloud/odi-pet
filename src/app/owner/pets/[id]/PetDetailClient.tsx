@@ -18,9 +18,9 @@ const NutritionClient = dynamic(() => import('./nutrition/NutritionClient'), { l
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
-import HumanAgeCalculator from '@/components/pets/HumanAgeCalculator'
+const HumanAgeCalculator = dynamic(() => import('@/components/pets/HumanAgeCalculator'), { loading: () => <div className='animate-pulse bg-gray-100 rounded-2xl w-full h-12' /> });
 const BreedHealthCard = dynamic(() => import('@/components/pets/BreedHealthCard'));
-const LostPetWizard = dynamic(() => import('@/components/pets/LostPetWizard'));
+const LostPetWizard = dynamic(() => import('@/components/pets/LostPetWizard'), { ssr: false });
 const MinimalGrowthChart = dynamic(() => import('@/components/pets/MinimalGrowthChart'));
 const SmartScanner = dynamic(() => import('@/components/ui/SmartScanner').then(mod => mod.SmartScanner), { ssr: false })
 const HealthTracker = dynamic(() => import('@/components/health-tracker/HealthTracker').then(mod => mod.HealthTracker), { loading: () => <div className='animate-pulse bg-gray-100 rounded-2xl w-full h-12' /> })
@@ -40,7 +40,7 @@ const DeletePlanConfirmationModal = dynamic(() => import('@/components/ui/Delete
 const PostponeModal = dynamic(() => import('@/components/pets/common/PostponeModal').then(mod => mod.PostponeModal))
 const CompletionDetailsModal = dynamic(() => import('@/components/pets/common/CompletionDetailsModal').then(mod => mod.CompletionDetailsModal))
 const ConfirmModal = dynamic(() => import('@/components/ui/ConfirmModal'));
-const FloatingSOS = dynamic(() => import('@/components/FloatingSOS'));
+import FloatingSOS from '@/components/FloatingSOS'
 const AiDocumentScanner = dynamic(() => import('@/components/ai/AiDocumentScanner'), { ssr: false });
 import { assessWeight } from '@/lib/vetStandards/weightStandards'
 
@@ -1694,13 +1694,15 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
                     {/* Modal, microTasks listesinden bağımsız render edilir:
                         aksi halde modal açıkken liste boşalırsa modal da kaybolur. */}
-                    <PetTaskModals
-                      petId={pet.id}
-                      petName={pet.name}
-                      activeModal={activeTaskModal}
-                      onClose={() => setActiveTaskModal(null)}
-                      onSuccess={() => router.refresh()}
-                    />
+                    {activeTaskModal && (
+                      <PetTaskModals
+                        petId={pet.id}
+                        petName={pet.name}
+                        activeModal={activeTaskModal}
+                        onClose={() => setActiveTaskModal(null)}
+                        onSuccess={() => router.refresh()}
+                      />
+                    )}
                   </div>
 
                   {/* SAĞ SÜTUN (Masaüstü: lg:col-span-5) */}

@@ -55,14 +55,19 @@ describe('POST /api/notifications/subscribe', () => {
 
   it('oturumu olmayan isteği reddeder', async () => {
     mocks.getSessionUser.mockResolvedValue(null)
+    const { from } = mockSupabase()
 
     const response = await POST(createRequest(validSubscription))
 
     expect(response.status).toBe(401)
     expect(await response.json()).toEqual({ error: 'UNAUTHORIZED' })
+    // Yetkisiz istekte hicbir veritabani tablosuna dokunulmamali
+    expect(from).not.toHaveBeenCalled()
   })
 
   it('bozuk veya eksik abonelik payloadını reddeder', async () => {
+    const { from } = mockSupabase()
+
     const response = await POST(createRequest({
       endpoint: 'not-a-url',
       keys: { auth: 'auth-value' },
@@ -72,6 +77,8 @@ describe('POST /api/notifications/subscribe', () => {
     expect(await response.json()).toEqual({
       error: 'INVALID_PUSH_SUBSCRIPTION',
     })
+    // Gecersiz payload'da da veritabanina yazma/okuma yapilmamali
+    expect(from).not.toHaveBeenCalled()
   })
 
   it('cihaz aboneliğini kullanıcı profiline kaydeder', async () => {
