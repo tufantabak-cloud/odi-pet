@@ -13,7 +13,7 @@ const VeterinerTab = dynamic(() => import('@/components/pets/tabs/VeterinerTab')
 
 import { TaskCategory } from '@/lib/tasks/taskDefaults'
 import { AlertCircleIcon, CalendarClockIcon, CheckCircle2Icon, CheckCircleIcon, ChevronRightIcon, HeartPulseIcon, ShieldAlertIcon, SmileIcon, StarIcon, TrophyIcon, ActivityIcon, PlusIcon, FileTextIcon, HistoryIcon, MapPinIcon, BabyIcon, FileLineChartIcon, HelpCircleIcon, DownloadIcon, PillIcon, DogIcon, CatIcon, IdCardIcon, TargetIcon, DropletsIcon } from 'lucide-react'
-import { VaccineIcon, ParasiteIcon, ShampooIcon, BowlIcon, CarrierIcon, BoneIcon, ScoopIcon, FirstAidIcon, StethoscopeIcon } from '@/components/icons/PetIcons'
+import { VaccineIcon, ParasiteIcon, ShampooIcon, BowlIcon, CarrierIcon, BoneIcon, ScoopIcon, FirstAidIcon, StethoscopeIcon, ShieldCheckIcon } from '@/components/icons/PetIcons'
 const NutritionClient = dynamic(() => import('./nutrition/NutritionClient'), { loading: () => <div className='animate-pulse bg-gray-100 rounded-2xl w-full h-12' /> });
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -365,6 +365,17 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   const [activeTab, setActiveTab] = useState<'ozet'|'saglik'|'bakim'|'takvim'|'beslenme'|'veteriner'|'ekstra'>(initialTab)
   const [isSmartScannerOpen, setIsSmartScannerOpen] = useState(false)
   const { filterVisibleTasks, dismissTask } = useDismissedMicroTasks()
+
+  const [hideVaultBanner, setHideVaultBanner] = useState(true);
+  useEffect(() => {
+    const isHidden = localStorage.getItem('hide_vault_banner') === 'true';
+    setHideVaultBanner(isHidden);
+  }, []);
+
+  const handleCloseVaultBanner = () => {
+    localStorage.setItem('hide_vault_banner', 'true');
+    setHideVaultBanner(true);
+  };
 
   // Canlı saat — her dakika yenilenerek gecikme etiketlerini ve overdue sayısını günceller
   const [now, setNow] = useState(() => Date.now())
@@ -1591,6 +1602,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
             {activeTab === 'ozet' && (
               <div className="p-4 flex flex-col gap-6">
+
                 <div className="lg:grid lg:grid-cols-12 lg:gap-6 lg:items-start flex flex-col gap-4">
                   
                   {/* SOL SÜTUN (Masaüstü: lg:col-span-7) */}
@@ -1980,6 +1992,37 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                   </div>
 
                 </div>
+
+                {/* ── Dijital Belge Kasası Yönlendirme Bannerı ── */}
+                {!hideVaultBanner && (
+                  <div className="card-base p-5 bg-gradient-to-br from-blue-50/50 to-indigo-50/30 border border-blue-100 relative overflow-hidden">
+                    <div className="flex items-start gap-4">
+                      <ShieldCheckIcon badgeSize="md" size={22} />
+                      <div className="flex-1 pr-6">
+                        <h3 className="font-extrabold text-text-primary text-[14px] mb-1">Dijital Belge Kasası</h3>
+                        <p className="text-[12px] text-text-secondary leading-relaxed mb-3">
+                          Evcil hayvanınızın tüm raporları, pasaportu ve belgeleri Dijital Belge Kasası'nda güvende.
+                        </p>
+                        <button 
+                          onClick={() => {
+                            window.location.href = `/owner/pets/${pet.id}/reports?tab=vault`;
+                          }}
+                          className="text-[12px] font-bold text-primary hover:underline flex items-center gap-1 hover:scale-[1.02] transition-transform"
+                        >
+                          Belge Kasasına Git →
+                        </button>
+                      </div>
+                      <button 
+                        onClick={handleCloseVaultBanner}
+                        className="absolute top-3 right-3 text-text-secondary hover:text-text-primary p-1 rounded-full hover:bg-slate-100 transition-colors"
+                        aria-label="Kapat"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
               </div>
             )}
           </div>
