@@ -3009,7 +3009,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
       )}
 
       {/* Kayıp ilanını kapatma onayı — OPOS Cilt 3 (native confirm yerine) */}
-      <ConfirmModal
+      {markFoundConfirmOpen && <ConfirmModal
         open={markFoundConfirmOpen}
         title="Dostunuz Bulundu mu?"
         message={`${pet.name} bulundu olarak işaretlenecek ve kayıp ilanı kapatılacaktır.`}
