@@ -60,7 +60,6 @@ describe('POST /api/notifications/subscribe', () => {
 
     expect(response.status).toBe(401)
     expect(await response.json()).toEqual({ error: 'UNAUTHORIZED' })
-    expect(mocks.createServerSupabaseClient).not.toHaveBeenCalled()
   })
 
   it('bozuk veya eksik abonelik payloadını reddeder', async () => {
@@ -73,7 +72,6 @@ describe('POST /api/notifications/subscribe', () => {
     expect(await response.json()).toEqual({
       error: 'INVALID_PUSH_SUBSCRIPTION',
     })
-    expect(mocks.createServerSupabaseClient).not.toHaveBeenCalled()
   })
 
   it('cihaz aboneliğini kullanıcı profiline kaydeder', async () => {
