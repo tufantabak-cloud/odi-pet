@@ -392,9 +392,12 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
   const [isSavingLocation, setIsSavingLocation] = useState(false)
   const [locationError, setLocationError] = useState('')
 
+  const petId = activePet?.id || ''
   const petCity = activePet?.city || ''
   const petName = activePet?.name || 'Dostunuz'
   const petSpecies = activePet?.species || ''
+  // Her pet'e özel cache key — global cache petler arası çakışmayı engeller
+  const WEATHER_CACHE_KEY = `odi_weather_${petId}_v3`
 
   const citiesList = useMemo(() => {
     return Object.values(TURKIYE_ILLER).sort((a, b) => a.label.localeCompare(b.label))
@@ -422,7 +425,7 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
       })
 
       if (res.ok) {
-        sessionStorage.removeItem('odi_weather_data_v3')
+        sessionStorage.removeItem(WEATHER_CACHE_KEY)
         setShowLocationModal(false)
         router.refresh()
       } else {
@@ -454,7 +457,7 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
           setWeather(json.data)
           if (typeof window !== 'undefined') {
             sessionStorage.setItem(
-              'odi_weather_data_v3',
+              WEATHER_CACHE_KEY,
               JSON.stringify({
                 data: json.data,
                 timestamp: Date.now(),
@@ -476,7 +479,7 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
     if (dismissed) return
 
     if (typeof window !== 'undefined') {
-      const cached = sessionStorage.getItem('odi_weather_data_v3')
+      const cached = sessionStorage.getItem(WEATHER_CACHE_KEY)
       if (cached) {
         try {
           const { data, timestamp, city } = JSON.parse(cached)
@@ -493,7 +496,7 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
 
     fetchWeather()
     // MOUNT-TIME LOCATION REQUEST REMOVED AS PER P0-1 RULE
-  }, [petCity, dismissed])
+  }, [petId, petCity, dismissed])
 
   const handleRequestLocation = (e?: React.MouseEvent) => {
     if (e) {
@@ -592,7 +595,9 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
   if (!weather || !activeScenario) return null
 
   const temp = Math.round(weather.temp)
-  const hasLocation = Boolean(petCity || (weather.hasLocation && weather.cityName) || weather.cityName)
+  // hasLocation yalnızca DB'deki pet city kaydına dayanır.
+  // API'den gelen weather.cityName IP bazlı fallback olabilir — buna güvenilmez.
+  const hasLocation = Boolean(petCity)
   const cityName = hasLocation ? (weather.cityName || petCity) : ''
   const description = weather.weatherDescription || 'Az bulutlu'
   const iconType = weather.weatherIconType || 'cloud-sun'
