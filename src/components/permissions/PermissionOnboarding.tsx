@@ -76,7 +76,7 @@ export default function PermissionOnboarding() {
           const isStandalone = window.matchMedia('(display-mode: standalone)').matches || ('standalone' in navigator && (navigator as any).standalone === true)
           showToast(
             isStandalone
-              ? 'Konum izni cihaz ayarlarınızdan engellenmiş. Lütfen cihazınızın Ayarlar > Uygulamalar bölümünden Odi Pet için Konum iznini etkinleştirin.'
+              ? 'Konum izniniz engellenmiş. Lütfen Chrome tarayıcınızı açarak Site Ayarları (Site Settings) bölümünden Odi Pet için Konum iznini etkinleştirin.'
               : 'Konum izni tarayıcı ayarlarınızdan engellenmiş. Lütfen adres çubuğundaki kilit (🔒) ikonuna basıp konuma izin verin.',
             'warning'
           )
