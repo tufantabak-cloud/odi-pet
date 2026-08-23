@@ -74,8 +74,11 @@ function SuccessContent() {
       setErrorMsg(result.error)
     } else {
       if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || ('standalone' in navigator && (navigator as any).standalone === true)
         setErrorMsg(
-          'Tarayıcınızda bildirim izinleri engellenmiş. Lütfen adres çubuğundaki kilit simgesinden bildirim iznini açın.'
+          isStandalone
+            ? 'Bildirim izinleri cihaz ayarlarınızdan engellenmiş. Lütfen cihazınızın Ayarlar > Uygulamalar bölümünden izin verin.'
+            : 'Tarayıcınızda bildirim izinleri engellenmiş. Lütfen adres çubuğundaki kilit simgesinden bildirim iznini açın.'
         )
       } else {
         setErrorMsg('Bildirimler etkinleştirilemedi. Lütfen tekrar deneyin.')

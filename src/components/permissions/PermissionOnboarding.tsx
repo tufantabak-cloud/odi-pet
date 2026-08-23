@@ -73,8 +73,11 @@ export default function PermissionOnboarding() {
         showToast('Konum izni başarıyla alındı! 📍', 'success')
       } else {
         if (geoStatus === 'denied') {
+          const isStandalone = window.matchMedia('(display-mode: standalone)').matches || ('standalone' in navigator && (navigator as any).standalone === true)
           showToast(
-            'Konum izni tarayıcı ayarlarınızdan engellenmiş. Lütfen adres çubuğundaki kilit (🔒) ikonuna basıp konuma izin verin.',
+            isStandalone
+              ? 'Konum izni cihaz ayarlarınızdan engellenmiş. Lütfen cihazınızın Ayarlar > Uygulamalar bölümünden Odi Pet için Konum iznini etkinleştirin.'
+              : 'Konum izni tarayıcı ayarlarınızdan engellenmiş. Lütfen adres çubuğundaki kilit (🔒) ikonuna basıp konuma izin verin.',
             'warning'
           )
         } else if (geoStatus === 'unsupported') {
@@ -109,8 +112,11 @@ export default function PermissionOnboarding() {
         showToast('Bildirimler başarıyla etkinleştirildi! 🔔', 'success')
       } else if (res.error) {
         if (pushPermission === 'denied') {
+          const isStandalone = window.matchMedia('(display-mode: standalone)').matches || ('standalone' in navigator && (navigator as any).standalone === true)
           showToast(
-            'Bildirim izni tarayıcı ayarlarınızda engellenmiş. Lütfen kilit (🔒) ikonuna basıp bildirimlere izin verin.',
+            isStandalone
+              ? 'Bildirim izni cihaz ayarlarınızdan engellenmiş. Lütfen cihazınızın Ayarlar > Uygulamalar bölümünden Odi Pet için bildirimlere izin verin.'
+              : 'Bildirim izni tarayıcı ayarlarınızda engellenmiş. Lütfen kilit (🔒) ikonuna basıp bildirimlere izin verin.',
             'warning'
           )
         } else {
