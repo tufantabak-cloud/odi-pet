@@ -50,9 +50,35 @@ function applyCspHeaders(response: NextResponse, csp: string, nonce: string): vo
 }
 
 export async function proxy(request: NextRequest) {
-  const pathname = request.nextUrl.pathname
+  // Capture ref parameter
+  const ref = request.nextUrl.searchParams.get('ref')
+  const odipetRef = request.cookies.get('odipet_ref')?.value
+  
+  let response = await innerProxy(request)
 
-  // --- CSP Header ---
+  // Redirect / to /login if there's a ref (as in the old middleware logic)
+  if (ref && ref !== odipetRef && request.nextUrl.pathname === '/') {
+    const loginUrl = new URL('/login', request.url)
+    response = NextResponse.redirect(loginUrl)
+  }
+
+  // Set cookie if needed
+  if (ref && ref !== odipetRef) {
+    const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    response.cookies.set('odipet_ref', ref, {
+      expires,
+      httpOnly: false,
+      path: '/',
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production'
+    })
+  }
+  
+  return response
+}
+
+async function innerProxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
   const cspHeader = buildCsp()
   // Inject nonce into request headers so Next.js applies it to inline scripts
@@ -209,6 +235,8 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
+    '/',
+    '/register',
     '/owner/:path*',
     '/admin/:path*',
     '/clinic/:path*',

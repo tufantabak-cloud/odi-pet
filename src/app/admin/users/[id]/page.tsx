@@ -294,7 +294,10 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
         <div className="space-y-6">
 
           {/* Referral Network */}
-          <ReferralNetworkCard referrals={referralsOut ?? []} />
+          <ReferralNetworkCard referrals={(referralsOut ?? []).map((r: any) => ({
+            ...r,
+            referred: Array.isArray(r.referred) ? r.referred[0] : r.referred
+          }))} />
 
           {/* Subscription & Pro Credit */}
           <div className="card-base p-5 space-y-4">
