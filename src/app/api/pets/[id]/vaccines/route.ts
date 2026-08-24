@@ -82,6 +82,15 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
 
     if (error) throw error
 
+    // 🚀 Referral Qualification Check 🚀
+    // Aşı eklendiğinde bekleyen bir referans varsa (hasHealthRecord) yeterli hale gelebilir.
+    try {
+      const { checkPendingReferrals } = await import('@/lib/referral/checkPendingReferrals')
+      await checkPendingReferrals(profile.id)
+    } catch (refErr) {
+      console.error('[API/Vaccines] checkPendingReferrals error:', refErr)
+    }
+
     return NextResponse.json({ data: newRecord })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })

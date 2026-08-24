@@ -95,10 +95,12 @@ export async function qualifyReferral(referralId: string): Promise<QualifyCheckR
   const isQualified = accountCreated && emailVerified && hasPet && hasHealthRecordWithin14Days
 
   if (isQualified) {
-    // 5. Kanonik referral kredi servisini tetikle
+    // 5. Kanonik referral kredi servisini tetikle.
+    // Eger bu servis basarisiz olursa, exception firlatir ve DB 'pending' kalir.
+    // Bir dahaki evaluate edisinde idempotencyKey sayesinde if already_granted, sadece durumu qualified yapar.
     await grantReferralCredit(referral.id)
 
-    // Referans durumunu qualified olarak güncelle
+    // Referans durumunu qualified olarak guncelle
     await adminSupabase
       .from('referrals')
       .update({

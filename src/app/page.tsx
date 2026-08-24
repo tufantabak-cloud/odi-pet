@@ -12,6 +12,9 @@ export default async function IndexPage({ searchParams }: { searchParams: Promis
   const user = await getSessionUser()
 
   if (!user) {
+    if (params.ref) {
+      redirect(`/login?ref=${params.ref}`)
+    }
     redirect('/login')
   }
 

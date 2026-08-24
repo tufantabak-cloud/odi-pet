@@ -30,17 +30,20 @@ export function useSubmitPendingReferral(userId: string | null | undefined) {
     if (!userId) return
 
     const pendingCode = localStorage.getItem('pending_referral')
-    if (!pendingCode) return
+    const hasCookie = typeof document !== 'undefined' && document.cookie.includes('odipet_ref=')
+    
+    if (!pendingCode && !hasCookie) return
 
-    // Hemen temizle — çift gönderimi engelle
-    localStorage.removeItem('pending_referral')
+    if (pendingCode) {
+      localStorage.removeItem('pending_referral')
+    }
 
     fetch('/api/referral/use', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ referralCode: pendingCode }),
+      body: JSON.stringify(pendingCode ? { referralCode: pendingCode } : {}),
     }).catch(() => {
-      // Sessiz hata — kritik değil
+      // Sessiz hata - kritik değil
     })
   }, [userId])
 }

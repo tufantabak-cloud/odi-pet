@@ -8,6 +8,7 @@ import DeletePetButton from './DeletePetButton'
 import QuickGrantUserButton from './QuickGrantUserButton'
 import ProCountdownCard from './ProCountdownCard'
 import SubscriptionCreditsLedger from './SubscriptionCreditsLedger'
+import ReferralNetworkCard from './ReferralNetworkCard'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -91,6 +92,7 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
     subscriptionRaw,
     events,
     creditHistory,
+    referralsOut,
   ] = await Promise.all([
     Promise.resolve(
       supabase
@@ -98,7 +100,7 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
         .select('id, name, species, breed, birth_date, created_at')
         .eq('owner_id', id)
         .order('created_at', { ascending: false })
-    ).then(res => res.data || []).catch(() => []),
+    ).then((res) => res.data || []),
     Promise.resolve(
       supabase
         .from('user_subscriptions')
@@ -107,7 +109,7 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle()
-    ).then(res => res.data || null).catch(() => null),
+    ).then((res) => res.data || null),
     Promise.resolve(
       supabase
         .from('event_stream')
@@ -115,14 +117,28 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
         .eq('profile_id', id)
         .order('created_at', { ascending: false })
         .limit(20)
-    ).then(res => res.data || []).catch(() => []),
+    ).then((res) => res.data || []),
     Promise.resolve(
       supabase
         .from('membership_credits')
         .select('id, credit_days, reason, metadata, created_at')
         .eq('profile_id', id)
         .order('created_at', { ascending: false })
-    ).then(res => res.data || []).catch(() => []),
+    ).then((res) => res.data || []),
+    Promise.resolve(
+      supabase
+        .from('referrals')
+        .select(`
+          id,
+          status,
+          created_at,
+          qualified_at,
+          referred_id,
+          referred:profiles!referrals_referred_id_fkey(id, first_name, last_name, email)
+        `)
+        .eq('referrer_id', id)
+        .order('created_at', { ascending: false })
+    ).then((res) => res.data || [])
   ])
 
   const subscription = subscriptionRaw ? {
@@ -276,6 +292,9 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
 
         {/* RIGHT COLUMN */}
         <div className="space-y-6">
+
+          {/* Referral Network */}
+          <ReferralNetworkCard referrals={referralsOut ?? []} />
 
           {/* Subscription & Pro Credit */}
           <div className="card-base p-5 space-y-4">

@@ -286,6 +286,15 @@ export async function POST(req: NextRequest) {
     console.error('[API/Pets] Per pet credit grant error:', creditErr)
   }
 
+  // 🚀 Referral Qualification Check 🚀
+  // Kullanıcının beklemede (pending) referansı varsa, pet eklediği için artık yeterli olabilir.
+  try {
+    const { checkPendingReferrals } = await import('@/lib/referral/checkPendingReferrals')
+    await checkPendingReferrals(user.id)
+  } catch (refErr) {
+    console.error('[API/Pets] checkPendingReferrals error:', refErr)
+  }
+
   revalidatePath('/owner/dashboard')
   revalidateTag(`dashboard-${user.id}`, 'default')
   revalidateTag('dashboard', 'default')

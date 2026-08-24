@@ -44,11 +44,6 @@ export async function grantReferralCredit(referralId: string) {
     throw new Error(`Referral record not found: ${referralId}`)
   }
 
-  if (referral.status !== 'qualified') {
-    console.warn(`Referral ${referralId} is not qualified. Credit skipped.`)
-    return { success: false, reason: 'NOT_QUALIFIED' }
-  }
-
   const referrerId = referral.referrer_id
   const refereeId = referral.referred_id
 

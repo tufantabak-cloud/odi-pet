@@ -133,6 +133,14 @@ export async function POST(
       extra_data: { source: 'system', auto_generated: true }
     });
 
+  // 🚀 Referral Qualification Check 🚀
+  try {
+    const { checkPendingReferrals } = await import('@/lib/referral/checkPendingReferrals')
+    await checkPendingReferrals(user.id)
+  } catch (refErr) {
+    console.error('[API/Measurements] checkPendingReferrals error:', refErr)
+  }
+
   return NextResponse.json({ success: true, measurement: {
     id: measurement.id,
     measurement_type: 'weight',

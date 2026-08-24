@@ -7,7 +7,12 @@ export async function POST(req: NextRequest) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { referralCode } = await req.json()
+  let { referralCode } = await req.json().catch(() => ({}))
+  
+  if (!referralCode) {
+    referralCode = req.cookies.get('odipet_ref')?.value
+  }
+
   if (!referralCode) return NextResponse.json({ error: 'referralCode gerekli' }, { status: 400 })
 
   const supabase = await createServerSupabaseClient()
@@ -61,5 +66,7 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  return NextResponse.json({ success: true })
+  const response = NextResponse.json({ success: true })
+  response.cookies.delete('odipet_ref')
+  return response
 }
