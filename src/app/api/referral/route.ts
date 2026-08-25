@@ -33,7 +33,7 @@ export async function GET() {
   const earnedDays = credits?.reduce((sum, c) => sum + (c.credit_days || 0), 0) || 0;
 
   const tier = await defaultRepository.getUserTier(user.id)
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://odi-petcare.vercel.app'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://odi.pet'
 
   return NextResponse.json({
     referralCode: profile?.referral_code ?? null,

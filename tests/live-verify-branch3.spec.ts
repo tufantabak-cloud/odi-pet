@@ -23,7 +23,7 @@ test('Verify Live Vercel touch-target class and page loads', async ({ page, cont
   }
 
   const sessionData = await res.json();
-  await page.goto('https://odi-petcare.vercel.app/login');
+  await page.goto('https://odi.pet/login');
   
   const sessionStr = JSON.stringify(sessionData);
   const base64Session = Buffer.from(sessionStr).toString('base64');
@@ -38,7 +38,7 @@ test('Verify Live Vercel touch-target class and page loads', async ({ page, cont
   const cookiesToSet = chunks.map((chunk, index) => ({
     name: `sb-soautcxgiqhxiaxrubxv-auth-token.${index}`,
     value: chunk,
-    domain: 'odi-petcare.vercel.app',
+    domain: 'odi.pet',
     path: '/',
     expires: expiry,
     secure: true,
@@ -55,7 +55,7 @@ test('Verify Live Vercel touch-target class and page loads', async ({ page, cont
   await page.setViewportSize({ width: 375, height: 812 });
 
   console.log("Navigating to live dashboard...");
-  await page.goto('https://odi-petcare.vercel.app/owner/dashboard');
+  await page.goto('https://odi.pet/owner/dashboard');
   await page.waitForLoadState('networkidle');
 
   // Verify Dashboard loads
@@ -69,7 +69,7 @@ test('Verify Live Vercel touch-target class and page loads', async ({ page, cont
   expect(classList).toContain('min-w-[44px]');
 
   console.log("Navigating to live vaccines page...");
-  await page.goto('https://odi-petcare.vercel.app/owner/pets/1899a1ab-02d9-4074-977f-9bcdf90b4981/vaccines');
+  await page.goto('https://odi.pet/owner/pets/1899a1ab-02d9-4074-977f-9bcdf90b4981/vaccines');
   await page.waitForLoadState('networkidle');
 
   // Verify Vaccines page loads

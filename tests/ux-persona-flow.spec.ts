@@ -12,7 +12,7 @@ test.describe('Odi.Pet E2E UX Persona Flow', () => {
 
   test.beforeAll(async ({ request }) => {
     baseUrl = process.env.TEST_BASE_URL || 'http://127.0.0.1:3100';
-    if (baseUrl.includes('vercel.app') || baseUrl.includes('odi-petcare')) {
+    if (baseUrl.includes('odi.pet') || baseUrl.includes('vercel.app') || baseUrl.includes('odi-petcare')) {
       isProduction = true;
     }
   });

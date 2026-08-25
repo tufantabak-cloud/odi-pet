@@ -23,7 +23,7 @@ test('Verify Live Vercel Onboarding Friction Buttons', async ({ page, context })
   }
 
   const sessionData = await res.json();
-  await page.goto('https://odi-petcare.vercel.app/login');
+  await page.goto('https://odi.pet/login');
   
   const sessionStr = JSON.stringify(sessionData);
   const base64Session = Buffer.from(sessionStr).toString('base64');
@@ -38,7 +38,7 @@ test('Verify Live Vercel Onboarding Friction Buttons', async ({ page, context })
   const cookiesToSet = chunks.map((chunk, index) => ({
     name: `sb-soautcxgiqhxiaxrubxv-auth-token.${index}`,
     value: chunk,
-    domain: 'odi-petcare.vercel.app',
+    domain: 'odi.pet',
     path: '/',
     expires: expiry,
     secure: true,
@@ -52,7 +52,7 @@ test('Verify Live Vercel Onboarding Friction Buttons', async ({ page, context })
   }, sessionData);
 
   console.log("Navigating to live pet wizard...");
-  await page.goto('https://odi-petcare.vercel.app/owner/pets/add');
+  await page.goto('https://odi.pet/owner/pets/add');
   await page.waitForLoadState('networkidle');
   
   // Step 1: Species

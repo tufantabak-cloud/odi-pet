@@ -6,7 +6,7 @@ test('Verify profile cards for MIKROTEST_PET after successful login with updated
   const projectRef = 'soautcxgiqhxiaxrubxv';
   
   console.log('Navigating to login page to initialize storage...');
-  await page.goto('https://odi-petcare.vercel.app/login');
+  await page.goto('https://odi.pet/login');
   
   const sessionData = await page.evaluate(async () => {
     const supabaseUrl = 'https://soautcxgiqhxiaxrubxv.supabase.co';
@@ -60,7 +60,7 @@ test('Verify profile cards for MIKROTEST_PET after successful login with updated
       {
         name: `${baseCookieName}`,
         value: encodeURIComponent(sessionString),
-        domain: 'odi-petcare.vercel.app',
+        domain: 'odi.pet',
         path: '/',
         secure: true,
         sameSite: 'Lax'
@@ -68,7 +68,7 @@ test('Verify profile cards for MIKROTEST_PET after successful login with updated
       {
         name: `${baseCookieName}.0`,
         value: encodeURIComponent(sessionString.substring(0, 1000)),
-        domain: 'odi-petcare.vercel.app',
+        domain: 'odi.pet',
         path: '/',
         secure: true,
         sameSite: 'Lax'
@@ -76,7 +76,7 @@ test('Verify profile cards for MIKROTEST_PET after successful login with updated
       {
         name: `sb-access-token`,
         value: session.access_token,
-        domain: 'odi-petcare.vercel.app',
+        domain: 'odi.pet',
         path: '/',
         secure: true,
         sameSite: 'Lax'
@@ -84,7 +84,7 @@ test('Verify profile cards for MIKROTEST_PET after successful login with updated
       {
         name: `sb-refresh-token`,
         value: session.refresh_token,
-        domain: 'odi-petcare.vercel.app',
+        domain: 'odi.pet',
         path: '/',
         secure: true,
         sameSite: 'Lax'
@@ -95,7 +95,7 @@ test('Verify profile cards for MIKROTEST_PET after successful login with updated
   }
 
   // Go to pet page directly
-  const petUrl = 'https://odi-petcare.vercel.app/owner/pets/b16d322b-7f18-4366-aef0-25eae8392ce7';
+  const petUrl = 'https://odi.pet/owner/pets/b16d322b-7f18-4366-aef0-25eae8392ce7';
   console.log(`Navigating to pet page: ${petUrl}`);
   await page.goto(petUrl);
   
