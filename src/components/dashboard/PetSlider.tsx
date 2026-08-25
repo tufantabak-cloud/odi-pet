@@ -102,7 +102,7 @@ export function PetSlider({ pets, onActiveChange }: { pets: Pet[], onActiveChang
         <div
           ref={containerRef}
           className={`flex items-stretch gap-4 pb-2 pt-1 px-4 overflow-x-auto scrollbar-none scroll-smooth snap-x snap-mandatory ${
-            petCount <= 2 ? 'justify-center' : ''
+            petCount === 1 ? 'justify-center' : petCount === 2 ? 'justify-start sm:justify-center' : ''
           }`}
         >
           {pets.map((pet, index) => {

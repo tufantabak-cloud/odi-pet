@@ -8,9 +8,9 @@ import { LogbookForm } from '@/components/caregiver/LogbookForm'
 import Image from 'next/image'
 
 interface CaregiverPageProps {
-  params: {
+  params: Promise<{
     token: string
-  }
+  }>
 }
 
 async function getSharedCard(token: string) {
@@ -31,6 +31,7 @@ async function getSharedCard(token: string) {
 }
 
 export default async function CaregiverPage({ params }: CaregiverPageProps) {
+  const { token } = await params
   const headersList = await headers()
   const ip = headersList.get('x-forwarded-for')?.split(',')[0].trim() 
            || headersList.get('x-real-ip') 
@@ -40,7 +41,7 @@ export default async function CaregiverPage({ params }: CaregiverPageProps) {
     notFound()
   }
 
-  const card = await getSharedCard(params.token)
+  const card = await getSharedCard(token)
 
   if (!card) {
     notFound() // Yönlendir veya hata göster
@@ -170,7 +171,7 @@ export default async function CaregiverPage({ params }: CaregiverPageProps) {
         {/* Seyir Defteri */}
         {card.can_log_entries && (
           <section className="pt-6 border-t border-slate-200 dark:border-slate-800">
-            <LogbookForm shareToken={params.token} />
+            <LogbookForm shareToken={token} />
           </section>
         )}
 
