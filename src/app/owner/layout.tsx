@@ -13,6 +13,14 @@ import DashboardPendingReferral from '@/components/DashboardPendingReferral'
 import { Gift } from 'lucide-react'
 import { filterNavItems, resolveNavItems } from '@/lib/modules/registry'
 import { GeolocationProvider } from '@/contexts/GeolocationContext'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
 
 export default async function OwnerLayout({ children }: { children: ReactNode }) {
   const profile = await requireRole(['owner', 'admin', 'founder'])

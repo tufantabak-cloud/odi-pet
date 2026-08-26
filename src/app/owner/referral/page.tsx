@@ -49,7 +49,7 @@ export default async function ReferralPage() {
     .eq('reason', 'REFERRAL_REWARD');
   const earnedDays = credits?.reduce((sum, c) => sum + (c.credit_days || 0), 0) || 0;
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://odi-petcare.vercel.app'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://odi.pet'
   const referralCode = profile?.referral_code ?? '—'
   const referralUrl = `${appUrl}/?ref=${referralCode}`
 
