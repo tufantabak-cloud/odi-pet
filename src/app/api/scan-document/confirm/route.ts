@@ -5,6 +5,7 @@ import { createVaccineRecord } from '@/lib/vaccines/createVaccineRecord'
 
 import { detectRouteConflict } from '@/features/pets/vaccination-algorithm'
 import type { AdministrationRoute } from '@/lib/vaccines/vaccination-rules'
+import { processRecordCreation } from '@/lib/agenda/write-handlers/write-service'
 
 export async function POST(req: Request) {
   try {
@@ -23,7 +24,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Eksik parametreler' }, { status: 400 })
     }
 
-    if (!['vaccine_card', 'food_packaging'].includes(record_type)) {
+    if (!['vaccine_card', 'food_packaging', 'parasite_product', 'medicine_packaging'].includes(record_type)) {
       return NextResponse.json({ error: 'Desteklenmeyen belge tipi' }, { status: 400 })
     }
 
@@ -119,6 +120,55 @@ export async function POST(req: Request) {
           record: inventoryData,
           planCompleted: false
         }
+      })
+    }
+
+    // 🐾 PARAZİT İŞLEME (parasite_product) 🐾
+    if (record_type === 'parasite_product') {
+      const context = { supabase, petId: pet_id, userId: user.id, timeZone: 'Europe/Istanbul' }
+      
+      let pType = 'internal'
+      if (parsed_data.parasite_type) {
+        const rawP = parsed_data.parasite_type.toLowerCase()
+        if (rawP.includes('dış') || rawP.includes('external')) pType = 'external'
+        else if (rawP.includes('birleşik') || rawP.includes('karma') || rawP.includes('combined')) pType = 'combined'
+        else if (rawP.includes('tasma') || rawP.includes('collar')) pType = 'collar'
+      }
+
+      const parasiteInput = {
+        parasite_type: pType,
+        administered_at: parsed_data.date || new Date().toISOString().split('T')[0],
+        protection_duration_days: parsed_data.duration_days || 30,
+        application_method: parsed_data.application_method || 'spot_on',
+        brand_free_text: parsed_data.brand || null,
+        product_free_text: parsed_data.product_name || parsed_data.title || null,
+        notes: parsed_data.active_ingredient ? `Etken Madde: ${parsed_data.active_ingredient}` : null
+      }
+
+      const { result } = await processRecordCreation('parazit', parasiteInput, context)
+      
+      return NextResponse.json({
+        success: true,
+        data: { record: { id: result.recordId }, planCompleted: !!result.linkedPlanId }
+      })
+    }
+
+    // 🐾 İLAÇ İŞLEME (medicine_packaging) 🐾
+    if (record_type === 'medicine_packaging') {
+      const context = { supabase, petId: pet_id, userId: user.id, timeZone: 'Europe/Istanbul' }
+
+      const medicineInput = {
+        pet_id,
+        medication_name: parsed_data.title || parsed_data.product_name || 'İsimsiz İlaç',
+        dose: parsed_data.dose || null,
+        usage_duration: parsed_data.duration || null
+      }
+
+      const { result } = await processRecordCreation('ilac', medicineInput, context)
+
+      return NextResponse.json({
+        success: true,
+        data: { record: { id: result.recordId }, planCompleted: false }
       })
     }
 

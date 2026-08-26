@@ -17,10 +17,9 @@ export default function ScannerClient({ pets }: { pets: any[] }) {
     const { record_type, parsed } = data
 
     try {
-      if (record_type === 'vaccine_card') {
-        // vaccine_records_v2 yazımı SmartScanner.handleConfirm içinde
-        // /api/scan-document/confirm çağrısıyla zaten tamamlandı — burada
-        // tekrar yazma yapılmaz.
+      if (record_type === 'vaccine_card' || record_type === 'parasite_product' || record_type === 'medicine_packaging') {
+        // SSOT yazımı SmartScanner.handleConfirm içinde
+        // /api/scan-document/confirm çağrısıyla zaten tamamlandı — burada tekrar yazma yapılmaz.
       } else if (record_type === 'food_packaging') {
         await fetch(`/api/pets/${selectedPetId}/nutrition/profile`, {
           method: 'POST',
@@ -29,18 +28,6 @@ export default function ScannerClient({ pets }: { pets: any[] }) {
             food_brand: parsed.food_brand,
             food_product: parsed.food_product,
             food_type: parsed.food_type,
-          }),
-        })
-      } else if (record_type === 'medicine_packaging' || record_type === 'parasite_product') {
-        await fetch(`/api/pets/${selectedPetId}/treatments`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            disease_name: parsed.title || parsed.product_name || 'Tedavi Kaydı',
-            category: record_type === 'parasite_product' ? 'İç/Dış Parazit Uygulaması' : 'İlaç Tedavisi',
-            status: 'Tamamlandı',
-            start_date: new Date().toISOString().split('T')[0],
-            notes: parsed.active_ingredient || '',
           }),
         })
       }
