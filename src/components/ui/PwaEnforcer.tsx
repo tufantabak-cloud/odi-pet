@@ -15,6 +15,7 @@ export default function PwaEnforcer() {
   const [enforceType, setEnforceType] = useState<"pwa" | "notification">("pwa");
   const [os, setOs] = useState<"ios" | "android" | "other">("other");
   const [isInApp, setIsInApp] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showIosGuide, setShowIosGuide] = useState(false);
   const [showPostInstallGuide, setShowPostInstallGuide] = useState(false);
@@ -99,6 +100,8 @@ export default function PwaEnforcer() {
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
       (window.navigator as any).standalone === true;
+    
+    setIsStandalone(isStandalone);
 
     if (!isStandalone) {
       // PWA is enforced if not dismissed
@@ -204,6 +207,12 @@ export default function PwaEnforcer() {
                   <p><strong>1.</strong> iPhone/iPad'inizde <strong className="text-white">Ayarlar</strong> uygulamasını açın.</p>
                   <p><strong>2.</strong> <strong className="text-white">Bildirimler</strong> &gt; <strong className="text-white">Odi.Pet</strong> yolunu izleyin.</p>
                   <p><strong>3.</strong> <strong className="text-white">Bildirimlere İzin Ver</strong> seçeneğini aktif yapın ve uygulamayı yeniden başlatın.</p>
+                </div>
+              ) : isStandalone ? (
+                <div className="text-[13px] text-zinc-300 space-y-2.5 bg-white/[0.02] border border-white/[0.04] p-4 rounded-2xl">
+                  <p><strong>1.</strong> Cihazınızda <strong className="text-white">Ayarlar &gt; Uygulamalar</strong> bölümünü açın.</p>
+                  <p><strong>2.</strong> Listeden <strong className="text-white">Odi Pet</strong> uygulamasını bulun.</p>
+                  <p><strong>3.</strong> <strong className="text-white">İzinler / Bildirimler</strong> bölümünden bildirimlere izin verin.</p>
                 </div>
               ) : (
                 <div className="text-[13px] text-zinc-300 space-y-2.5 bg-white/[0.02] border border-white/[0.04] p-4 rounded-2xl">

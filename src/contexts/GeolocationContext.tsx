@@ -29,7 +29,7 @@ export interface GeolocationState {
 
 const GeolocationContext = createContext<GeolocationState | undefined>(undefined)
 
-const DEFAULT_TIMEOUT = 8000
+const DEFAULT_TIMEOUT = 15000
 
 export function GeolocationProvider({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<LocationStatus>('idle')
@@ -41,6 +41,12 @@ export function GeolocationProvider({ children }: { children: React.ReactNode })
 
   const requestLocation = useCallback((timeoutMs: number = DEFAULT_TIMEOUT): Promise<GeolocationCoordinates | null> => {
     if (typeof window === 'undefined' || !navigator.geolocation) {
+      setStatus('unsupported')
+      setErrorType('LOCATION_UNSUPPORTED')
+      return Promise.resolve(null)
+    }
+
+    if (window.isSecureContext === false) {
       setStatus('unsupported')
       setErrorType('LOCATION_UNSUPPORTED')
       return Promise.resolve(null)
@@ -96,10 +102,12 @@ export function GeolocationProvider({ children }: { children: React.ReactNode })
               { timeout: timeoutMs, enableHighAccuracy: false, maximumAge: 60000 }
             )
           } else {
+            // PERMISSION_DENIED (or unknown error) goes directly to handleError, NO FALLBACK
             handleError(error)
           }
         },
-        { timeout: Math.min(timeoutMs, 5000), enableHighAccuracy: true, maximumAge: 30000 }
+        // We use full timeoutMs rather than aggressively capping at 5000ms
+        { timeout: timeoutMs, enableHighAccuracy: true, maximumAge: 30000 }
       )
     })
 
