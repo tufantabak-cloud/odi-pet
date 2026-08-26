@@ -127,12 +127,17 @@ export async function POST(req: Request) {
     if (record_type === 'parasite_product') {
       const context = { supabase, petId: pet_id, userId: user.id, timeZone: 'Europe/Istanbul' }
       
-      let pType = 'internal'
+      let pType: string | null = null
       if (parsed_data.parasite_type) {
         const rawP = parsed_data.parasite_type.toLowerCase()
-        if (rawP.includes('dış') || rawP.includes('external')) pType = 'external'
+        if (rawP.includes('iç') || rawP.includes('internal')) pType = 'internal'
+        else if (rawP.includes('dış') || rawP.includes('external')) pType = 'external'
         else if (rawP.includes('birleşik') || rawP.includes('karma') || rawP.includes('combined')) pType = 'combined'
         else if (rawP.includes('tasma') || rawP.includes('collar')) pType = 'collar'
+      }
+
+      if (!pType) {
+        return NextResponse.json({ error: 'Parazit türü anlaşılamadı. Lütfen bilgileri kontrol edip tekrar deneyin.' }, { status: 400 })
       }
 
       const parasiteInput = {
