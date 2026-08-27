@@ -95,14 +95,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  const { data: { publicUrl } } = supabase.storage
-    .from('pet-documents')
-    .getPublicUrl(filename)
-
   return NextResponse.json({ 
     success: true, 
-    path: filename, 
-    url: publicUrl 
+    path: filename
   })
 }
 

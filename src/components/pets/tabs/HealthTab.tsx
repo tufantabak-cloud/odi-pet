@@ -8,6 +8,7 @@ import { SmartScanner } from '@/components/ui/SmartScanner';
 import { PlanItemActionMenu } from '@/components/pets/common/PlanItemActionMenu';
 import { PostponeModal } from '@/components/pets/common/PostponeModal';
 import { ArchiveConfirmModal } from '@/components/pets/common/ArchiveConfirmModal';
+import { injectSignedUrls } from '@/lib/storage/signed-url';
 
 interface HealthTabProps {
   petId: string;
@@ -68,7 +69,8 @@ export default function HealthTab({ petId, petName, onMarkDone, onPostpone, onEd
 
     const EXCLUDED = new Set(['cancelled', 'migrated_to_plan', 'overdue', 'pending', 'upcoming', 'scheduled', 'planned']);
     const filtered = (data || []).filter((v: any) => v.administered_at && (!v.status || v.status === 'completed' || v.status === 'done') && !EXCLUDED.has(v.status));
-    setVaccineRecords(filtered);
+    const signedData = await injectSignedUrls(filtered, supabase);
+    setVaccineRecords(signedData);
     setLoadingVaccines(false);
   }, [supabase, petId]);
 
@@ -79,7 +81,8 @@ export default function HealthTab({ petId, petName, onMarkDone, onPostpone, onEd
       .select('*')
       .eq('pet_id', petId)
       .order('administered_at', { ascending: false });
-    setParasiteRecords(data || []);
+    const signedData = await injectSignedUrls(data || [], supabase);
+    setParasiteRecords(signedData);
     setLoadingParasites(false);
   }, [supabase, petId]);
 
@@ -281,7 +284,7 @@ export default function HealthTab({ petId, petName, onMarkDone, onPostpone, onEd
                 <div className="flex items-center gap-2">
                   {rec.document_storage_path && (
                     <a
-                      href={rec.document_storage_path}
+                      href={rec.signed_url || rec.document_storage_path}
                       target="_blank"
                       rel="noreferrer"
                       className="text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1"
@@ -359,7 +362,7 @@ export default function HealthTab({ petId, petName, onMarkDone, onPostpone, onEd
                 <div className="flex items-center gap-2">
                   {rec.document_storage_path && (
                     <a
-                      href={rec.document_storage_path}
+                      href={rec.signed_url || rec.document_storage_path}
                       target="_blank"
                       rel="noreferrer"
                       className="text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1"

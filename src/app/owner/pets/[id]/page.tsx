@@ -11,6 +11,7 @@ import { getPlanDisplayTitle } from '@/lib/plans/utils'
 import { hasPetCapability } from '@/lib/pets/access'
 import { defaultRepository } from '@/lib/features/entitlement/repository'
 import OnboardingGate from '@/components/onboarding/OnboardingGate'
+import { injectSignedUrls } from '@/lib/storage/signed-url'
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -210,9 +211,16 @@ export default async function PetDetailPage(props: PageProps) {
     score = Math.max(0, score - (overdue * 25))
   }
 
-  const [tier, { count: passkeyCount }] = await Promise.all([
+  const [
+    tier,
+    { count: passkeyCount },
+    signedVaccines,
+    signedParasites
+  ] = await Promise.all([
     defaultRepository.getUserTier(pet.owner_id),
     supabase.from('passkeys').select('id', { count: 'exact', head: true }).eq('user_id', profile.id),
+    injectSignedUrls(initialVaccines, supabase),
+    injectSignedUrls(initialParasites ?? [], supabase)
   ])
   const sub = { plan: tier }
 
@@ -240,8 +248,8 @@ export default async function PetDetailPage(props: PageProps) {
         hasPasskey={(passkeyCount ?? 0) > 0}
         isAdminView={isAdmin}
         lastVaccineRecord={lastVaccineRecord ?? null}
-        initialVaccines={initialVaccines}
-        initialParasites={initialParasites ?? []}
+        initialVaccines={signedVaccines}
+        initialParasites={signedParasites}
         initialVets={initialVets ?? []}
       />
     </OnboardingGate>
