@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "predev": "node scripts/generate-features-index.mjs",
-    "dev": "concurrently -p none \"serwist build serwist.config.mjs --watch --no-update-notifier\" \"next dev --hostname 0.0.0.0\"",
-    "dev:mobile": "concurrently -p none \"serwist build serwist.config.mjs --watch --no-update-notifier\" \"next dev --hostname 0.0.0.0\" & echo 'Mobil test icin: http://192.168.1.21:3000'",
+    "dev": "next dev --hostname 0.0.0.0",
+    "dev:mobile": "next dev --hostname 0.0.0.0 & echo 'Mobil test icin: http://192.168.1.21:3000'",
     "prebuild": "node scripts/generate-features-index.mjs",
-    "build": "next build && serwist build serwist.config.mjs --no-update-notifier",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint src --max-warnings 210",
     "lint:pets": "eslint src/app/owner/pets --max-warnings 207",
@@ -77,7 +77,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
-    "@serwist/cli": "9.5.11",
+    "@serwist/cli": "^9.5.11",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/pg": "^8.20.0",

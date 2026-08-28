@@ -1,5 +1,5 @@
 import { createAdminSupabaseClient } from '@/lib/supabase/server'
-import { DEFAULT_SETTINGS } from '@/app/api/admin/memberships/settings/route'
+import { DEFAULT_SETTINGS } from '@/lib/referral/settings'
 import { membershipService } from '@/lib/membership'
 
 export async function grantReferralCredit(referralId: string) {

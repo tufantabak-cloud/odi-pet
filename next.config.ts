@@ -1,4 +1,5 @@
 import { withSentryConfig } from '@sentry/nextjs';
+import withSerwistInit from '@serwist/next';
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -17,7 +18,6 @@ const nextConfig: NextConfig = {
   experimental: {
     workerThreads: true,
   },
-  turbopack: {},
   async redirects() {
     return [
       {
@@ -85,7 +85,12 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSentryConfig(nextConfig, {
+const withSerwist = withSerwistInit({
+  swSrc: "src/sw.ts",
+  swDest: "public/sw.js",
+});
+
+export default withSentryConfig(withSerwist(nextConfig), {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
