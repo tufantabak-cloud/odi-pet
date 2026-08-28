@@ -181,6 +181,7 @@ export default async function OwnerDashboard() {
             headerTaskTone={headerTaskTone}
             petsWithStats={petsWithStats}
             pets={pets}
+            profile={profile}
             activeQuestion={activeQuestion}
             activeInsight={activeInsight}
             upcomingSchedules={upcomingSchedules}

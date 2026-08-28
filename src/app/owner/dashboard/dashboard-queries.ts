@@ -9,7 +9,9 @@ import { fetchEstrusVirtualEvents } from '@/lib/estrus/virtual-events'
 
 /** Profil verisi — sadece selamlama için kullanılıyor */
 interface DashboardProfile {
+  id: string
   first_name: string
+  city?: string
 }
 
 /**
@@ -113,7 +115,7 @@ export async function getCachedDashboardData(userId: string): Promise<DashboardD
         /* ── Profile (sessiz) ────────────────────────────── */
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('first_name')
+          .select('id, first_name, city')
           .eq('id', uid)
           .single()
 

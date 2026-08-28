@@ -65,6 +65,7 @@ export default function DashboardClient({
   allWeightLogs,
   journalEntries,
   pendingUserInvites,
+  profile,
 }: any) {
   const [activePetId, setActivePetId] = useState(pets[0]?.id)
   const activePet = petsWithStats?.find((p: any) => p.id === activePetId) || pets?.find((p: any) => p.id === activePetId) || pets?.[0]
@@ -145,7 +146,7 @@ export default function DashboardClient({
       {/* 3. Bugünkü Odak / Smart Cards */}
       {pets && pets.length > 0 && (
         <div className="px-[var(--space-4)] pt-2 flex flex-col gap-2">
-          {activePet && <WeatherPawAlert activePet={activePet} />}
+          {activePet && <WeatherPawAlert key={activePet.id} activePet={activePet} ownerProfile={profile} />}
           {activePet && (
             <OdiNoticedWeightCard
               activePet={activePet}

@@ -24,6 +24,7 @@ import {
   Search,
   Loader2,
 } from 'lucide-react'
+import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { evaluateWeatherScenario, WeatherScenarioResult } from '@/lib/weatherScenarios'
 import { TURKIYE_ILLER } from '@/lib/utils/turkiyeIller'
 import { useGeolocation } from '@/contexts/GeolocationContext'
@@ -59,6 +60,11 @@ interface WeatherPawAlertProps {
     id: string
     name: string
     species?: string
+    city?: string
+    [key: string]: any
+  }
+  ownerProfile?: {
+    id: string
     city?: string
     [key: string]: any
   }
@@ -378,7 +384,7 @@ function renderWeatherIcon(iconType: string, className: string = 'w-8 h-8 text-s
   }
 }
 
-export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
+export default function WeatherPawAlert({ activePet, ownerProfile }: WeatherPawAlertProps) {
   const router = useRouter()
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -392,9 +398,11 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
   const [isSavingLocation, setIsSavingLocation] = useState(false)
   const [locationError, setLocationError] = useState('')
 
-  const petCity = activePet?.city || ''
+  const effectiveCity = activePet?.city || ownerProfile?.city || ''
   const petName = activePet?.name || 'Dostunuz'
   const petSpecies = activePet?.species || ''
+  const profileId = ownerProfile?.id
+
 
   const citiesList = useMemo(() => {
     return Object.values(TURKIYE_ILLER).sort((a, b) => a.label.localeCompare(b.label))
@@ -410,18 +418,15 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
     )
   }, [searchQuery, citiesList])
 
-  const saveCityToPet = async (cityName: string) => {
-    if (!activePet?.id) return
+  const saveCityToProfile = async (cityName: string) => {
+    if (!profileId) return
     setIsSavingLocation(true)
     setLocationError('')
     try {
-      const res = await fetch(`/api/pets/${activePet.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ city: cityName }),
-      })
+      const supabase = createBrowserSupabaseClient()
+      const { error } = await supabase.from('profiles').update({ city: cityName }).eq('id', profileId)
 
-      if (res.ok) {
+      if (!error) {
         sessionStorage.removeItem('odi_weather_data_v3')
         setShowLocationModal(false)
         router.refresh()
@@ -437,20 +442,20 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
 
   const { requestLocation } = useGeolocation()
 
-  const fetchWeather = async (coords?: { latitude: number; longitude: number }) => {
+  const fetchWeather = async (signal: AbortSignal, coords?: { latitude: number; longitude: number }) => {
     try {
       let url = `/api/weather`
       if (coords) {
         url += `?lat=${coords.latitude}&lon=${coords.longitude}`
-        if (petCity) url += `&city=${encodeURIComponent(petCity)}`
-      } else if (petCity) {
-        url += `?city=${encodeURIComponent(petCity)}`
+        if (effectiveCity) url += `&city=${encodeURIComponent(effectiveCity)}`
+      } else if (effectiveCity) {
+        url += `?city=${encodeURIComponent(effectiveCity)}`
       }
 
-      const res = await fetch(url)
+      const res = await fetch(url, { signal })
       if (res.ok) {
         const json = await res.json()
-        if (json.success && json.data) {
+        if (json.success && json.data && !signal.aborted) {
           setWeather(json.data)
           if (typeof window !== 'undefined') {
             sessionStorage.setItem(
@@ -458,29 +463,35 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
               JSON.stringify({
                 data: json.data,
                 timestamp: Date.now(),
-                city: petCity,
+                city: effectiveCity,
               })
             )
           }
         }
       }
-    } catch (err) {
-      console.warn('Weather fetch warning:', err)
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        console.warn('Weather fetch warning:', err)
+      }
     } finally {
-      setLoading(false)
-      setIsRefreshing(false)
+      if (!signal.aborted) {
+        setLoading(false)
+        setIsRefreshing(false)
+      }
     }
   }
 
   useEffect(() => {
     if (dismissed) return
 
+    const controller = new AbortController()
+
     if (typeof window !== 'undefined') {
       const cached = sessionStorage.getItem('odi_weather_data_v3')
       if (cached) {
         try {
           const { data, timestamp, city } = JSON.parse(cached)
-          if (Date.now() - timestamp < 15 * 60 * 1000 && city === petCity) {
+          if (Date.now() - timestamp < 15 * 60 * 1000 && city === effectiveCity) {
             setWeather(data)
             setLoading(false)
             return
@@ -491,9 +502,12 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
       }
     }
 
-    fetchWeather()
-    // MOUNT-TIME LOCATION REQUEST REMOVED AS PER P0-1 RULE
-  }, [petCity, dismissed])
+    fetchWeather(controller.signal)
+    
+    return () => {
+      controller.abort()
+    }
+  }, [effectiveCity, dismissed, activePet?.id])
 
   const handleRequestLocation = (e?: React.MouseEvent) => {
     if (e) {
@@ -519,7 +533,7 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
       if (res.ok) {
         const json = await res.json()
         if (json.success && json.data?.cityName) {
-          await saveCityToPet(json.data.cityName)
+          await saveCityToProfile(json.data.cityName)
         } else {
           setLocationError('Konumunuz belirlenemedi, lütfen listeden seçin.')
         }
@@ -535,11 +549,8 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
 
   const handleManualRefresh = async () => {
     setIsRefreshing(true)
-    
-    // Instead of forcing a native location request on refresh, we just re-fetch with petCity
-    // If we wanted exact GPS, we could call requestLocation(), but typically weather refresh 
-    // just refreshes the current known location.
-    await fetchWeather()
+    const controller = new AbortController()
+    await fetchWeather(controller.signal)
   }
 
   // Evaluate the intelligent scenario for Dog or Cat
@@ -554,12 +565,12 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
       uvIndex: weather.uvIndex,
       weatherCode: weather.weatherCode,
       isDay: weather.isDay,
-      cityName: weather.cityName || petCity || '',
+      cityName: weather.cityName || effectiveCity || '',
       sunset: weather.sunset,
       sunrise: weather.sunrise,
       asphaltTemp: weather.asphaltTemp,
     })
-  }, [weather, petSpecies, petName, petCity])
+  }, [weather, petSpecies, petName, effectiveCity])
 
   if (dismissed) return null
 
@@ -592,8 +603,9 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
   if (!weather || !activeScenario) return null
 
   const temp = Math.round(weather.temp)
-  const hasLocation = Boolean(petCity || (weather.hasLocation && weather.cityName) || weather.cityName)
-  const cityName = hasLocation ? (weather.cityName || petCity) : ''
+  // Re-evaluating hasLocation logic. If weather is fallback, and effectiveCity is null, we shouldn't show weather as real.
+  const hasLocation = Boolean(effectiveCity || (weather.hasLocation && weather.cityName) || (weather.cityName && !weather.isFallback))
+  const cityName = hasLocation ? (weather.cityName || effectiveCity) : ''
   const description = weather.weatherDescription || 'Az bulutlu'
   const iconType = weather.weatherIconType || 'cloud-sun'
 
@@ -614,6 +626,10 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
         return 'text-[#059669]'
     }
   }
+
+  const emptyStateText = petSpecies === 'cat'
+    ? 'Konumunuzu ekleyin — size özel ev ortamı ve bakım tavsiyeleri için.'
+    : 'Konumunuzu ekleyin — size özel yürüyüş ve pati güvenliği tavsiyeleri için.'
 
   return (
     <>
@@ -722,7 +738,7 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
               </>
             ) : (
               <div className="text-[14px] sm:text-[15px] text-slate-600 font-medium leading-relaxed max-w-[280px] mt-4">
-                Konumunuzu ekleyin — size özel yürüyüş tavsiyeleri için.
+                {emptyStateText}
               </div>
             )}
           </div>
@@ -978,7 +994,7 @@ export default function WeatherPawAlert({ activePet }: WeatherPawAlertProps) {
                   filteredCities.map((city) => (
                     <button
                       key={city.label}
-                      onClick={() => saveCityToPet(city.label)}
+                      onClick={() => saveCityToProfile(city.label)}
                       disabled={isSavingLocation}
                       className="text-left px-3 py-2.5 rounded-lg hover:bg-slate-50 active:bg-slate-100 text-sm font-semibold text-slate-700 transition-colors"
                     >
