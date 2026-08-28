@@ -33,6 +33,7 @@ import {
   POPULAR_DOG_BREED_NAMES,
 } from '@/lib/pets/breedsMaster'
 import { useGeolocation } from '@/contexts/GeolocationContext'
+import { findNearestProvince } from '@/lib/utils/turkiyeIller'
 
 const CAT_BREEDS = CAT_BREED_NAMES
 const DOG_BREEDS = DOG_BREEDS_NAMES
@@ -267,7 +268,7 @@ export default function EditPetForm({ pet, ownerProfile }: { pet: any; ownerProf
     setSize(calculated)
   }, [weightKg, species, sizeLocked])
 
-  // Geolocation handler
+  // Geolocation handler — deterministic nearest-province via TURKIYE_ILLER SSOT
   const handleUseLocation = async () => {
     setGeoLoading(true)
     setGeoMsg(null)
@@ -282,32 +283,46 @@ export default function EditPetForm({ pet, ownerProfile }: { pet: any; ownerProf
     try {
       const lat = coords.latitude
       const lng = coords.longitude
-      const res = await fetch(`/api/v1/reports/lost/reverse-geocode?lat=${lat}&lng=${lng}`)
-      if (res.ok) {
-        const data = await res.json()
-        if (data.name) {
-          const parts = data.name.split(',').map((s: string) => s.trim())
-          const matchedCity = provinces.find(p => 
-            parts.some((part: string) => p.name.toLocaleLowerCase('tr').includes(part.toLocaleLowerCase('tr')) || part.toLocaleLowerCase('tr').includes(p.name.toLocaleLowerCase('tr')))
-          )
 
-          if (matchedCity) {
-            setSelectedCity(matchedCity.name)
-            const matchedDistrict = matchedCity.districts?.find((d: any) =>
-              parts.some((part: string) => d.name.toLocaleLowerCase('tr').includes(part.toLocaleLowerCase('tr')) || part.toLocaleLowerCase('tr').includes(d.name.toLocaleLowerCase('tr')))
-            )
-            if (matchedDistrict) {
-              setSelectedDistrict(matchedDistrict.name)
+      // Deterministic: find nearest province from static TURKIYE_ILLER coordinates
+      const nearestProvinceName = findNearestProvince(lat, lng)
+
+      // Match against the provinces list loaded from TurkiyeAPI (for dropdown sync)
+      const matchedCity = provinces.find((p: any) => p.name === nearestProvinceName)
+
+      if (matchedCity) {
+        setSelectedCity(matchedCity.name)
+
+        // Best-effort district resolution via reverse-geocode (non-blocking bonus)
+        try {
+          const res = await fetch(`/api/v1/reports/lost/reverse-geocode?lat=${lat}&lng=${lng}`)
+          if (res.ok) {
+            const data = await res.json()
+            if (data.name) {
+              const parts = data.name.split(',').map((s: string) => s.trim())
+              const matchedDistrict = matchedCity.districts?.find((d: any) =>
+                parts.some((part: string) =>
+                  d.name.toLocaleLowerCase('tr').includes(part.toLocaleLowerCase('tr')) ||
+                  part.toLocaleLowerCase('tr').includes(d.name.toLocaleLowerCase('tr'))
+                )
+              )
+              if (matchedDistrict) {
+                setSelectedDistrict(matchedDistrict.name)
+                setGeoMsg({ type: 'ok', text: `Konum belirlendi: ${matchedDistrict.name}, ${matchedCity.name}` })
+                setGeoLoading(false)
+                return
+              }
             }
-            setGeoMsg({ type: 'ok', text: `Konum belirlendi: ${matchedDistrict ? matchedDistrict.name + ', ' : ''}${matchedCity.name}` })
-          } else {
-            setGeoMsg({ type: 'err', text: `Bulunan konum: ${data.name}. Lütfen listeden ili seçiniz.` })
           }
-        } else {
-          setGeoMsg({ type: 'err', text: 'Konum adresi çözümlenemedi.' })
+        } catch {
+          // District resolution failed — not critical, province is already set
         }
+
+        setGeoMsg({ type: 'ok', text: `Konum belirlendi: ${matchedCity.name}` })
       } else {
-        setGeoMsg({ type: 'err', text: 'Konum servisine ulaşılamadı.' })
+        // Province found deterministically but not yet in provinces dropdown (TurkiyeAPI still loading)
+        setSelectedCity(nearestProvinceName)
+        setGeoMsg({ type: 'ok', text: `Konum belirlendi: ${nearestProvinceName}` })
       }
     } catch {
       setGeoMsg({ type: 'err', text: 'Konum alınırken bir hata oluştu.' })

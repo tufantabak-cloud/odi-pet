@@ -106,3 +106,24 @@ export function cityDistanceKm(
   if (!c1 || !c2) return null
   return haversineKm(c1.lat, c1.lon, c2.lat, c2.lon)
 }
+
+/**
+ * Deterministic nearest-province finder.
+ * Uses haversineKm distance against TURKIYE_ILLER (81 il).
+ * Returns the province label (e.g. "İstanbul") — guaranteed match.
+ */
+export function findNearestProvince(lat: number, lon: number): string {
+  let closestLabel = 'İstanbul'
+  let minDist = Infinity
+
+  for (const key of Object.keys(TURKIYE_ILLER)) {
+    const city = TURKIYE_ILLER[key]
+    const dist = haversineKm(lat, lon, city.lat, city.lon)
+    if (dist < minDist) {
+      minDist = dist
+      closestLabel = city.label
+    }
+  }
+
+  return closestLabel
+}
