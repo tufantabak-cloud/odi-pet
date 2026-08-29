@@ -68,7 +68,7 @@ CREATE POLICY "Users can delete their pet's vets"
 
 -- Function to handle only one primary vet per pet
 CREATE OR REPLACE FUNCTION ensure_single_primary_pet_vet()
-RETURNS TRIGGER AS 
+RETURNS TRIGGER AS $$
 BEGIN
   IF NEW.is_primary = true THEN
     UPDATE pet_vets
@@ -77,7 +77,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
- LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 CREATE TRIGGER tr_ensure_single_primary_pet_vet
 BEFORE INSERT OR UPDATE OF is_primary ON pet_vets
