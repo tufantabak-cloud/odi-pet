@@ -2,28 +2,30 @@
 -- Ensures all code-defined features have matching records in the database
 
 -- 1. Insert/Update all registered features in app_features
-INSERT INTO public.app_features (key, name, description, category, status, is_public)
+INSERT INTO public.app_features (key, label, description, scope, status, visibility, tags, metadata)
 VALUES
-  ('smart_matching', 'Akıllı Eşleştirme', 'Akıllı eşleştirme ve sosyal özellikler.', 'social', 'active', true),
-  ('breeding_listings', 'Çiftleştirme İlan Yönetimi', 'Çiftleştirme ilanı oluşturma, yönetme ve başvuru takibi.', 'social', 'active', true),
-  ('breeding_forecast', 'Çiftleşme ve Östrus Tahmini', 'Östrus döngüsü analizi ve çiftleşme zamanı tahmini.', 'social', 'active', true),
-  ('social_adoption', 'Sahiplendirme', 'Evcil hayvan sahiplendirme ve yuva bulma.', 'social', 'active', true),
-  ('ai_vet', 'AI Veteriner Asistanı', 'Yapay zeka destekli semptom analizi ve veteriner danışmanlığı.', 'ai', 'active', true),
-  ('nutrition_analysis', 'Beslenme Analizi', 'Yapay zeka ile mama içeriği ve besin değerleri analizi.', 'ai', 'active', true),
-  ('scan_document', 'Belge ve Karne Tarama (OCR)', 'Aşı karnesi ve tahlil sonuçlarını yapay zeka ile otomatik okuma.', 'ai', 'active', true),
-  ('pdf_export', 'PDF Sağlık Karnesi ve Raporlar', 'Evcil hayvan sağlık geçmişi ve aşı karnesini PDF olarak dışa aktarma.', 'reports', 'active', true),
-  ('budget_tracking', 'Bütçe ve Gider Takibi', 'Temel evcil hayvan harcama ve bütçe kaydı.', 'monetization', 'active', true),
-  ('budget_analytics', 'Gelişmiş Bütçe Analitiği', 'Kategori bazlı harcama dağılımı ve tahminler.', 'monetization', 'active', true),
-  ('budget_export', 'Bütçe Raporu Dışa Aktarma', 'Harcama raporlarını Excel/CSV olarak indirme.', 'monetization', 'active', true),
-  ('calendar_sync', 'Takvim Senkronizasyonu', 'Aşı ve bakım hatırlatıcılarını Google/Apple takvime aktarma.', 'core', 'active', true),
-  ('gallery_capacity', 'Gelişmiş Medya Galerisi', 'Yüksek çözünürlüklü ve geniş kapasiteli fotoğraf/video saklama.', 'core', 'active', true),
-  ('insurance_readiness', 'Sigorta Hazırlık Analizi', 'Evcil hayvan sigortası için uygunluk ve risk analizi.', 'health', 'active', true)
+  ('smart_matching', 'Akıllı Eşleştirme', 'Akıllı eşleştirme ve sosyal özellikler.', 'global', 'active', 'public', ARRAY['social'], '{"category": "social"}'::jsonb),
+  ('breeding_listings', 'Çiftleştirme İlan Yönetimi', 'Çiftleştirme ilanı oluşturma, yönetme ve başvuru takibi.', 'global', 'active', 'public', ARRAY['social'], '{"category": "social"}'::jsonb),
+  ('breeding_forecast', 'Çiftleşme ve Östrus Tahmini', 'Östrus döngüsü analizi ve çiftleşme zamanı tahmini.', 'global', 'active', 'public', ARRAY['social'], '{"category": "social"}'::jsonb),
+  ('social_adoption', 'Sahiplendirme', 'Evcil hayvan sahiplendirme ve yuva bulma.', 'global', 'active', 'public', ARRAY['social'], '{"category": "social"}'::jsonb),
+  ('ai_vet', 'AI Veteriner Asistanı', 'Yapay zeka destekli semptom analizi ve veteriner danışmanlığı.', 'global', 'active', 'public', ARRAY['ai'], '{"category": "ai"}'::jsonb),
+  ('nutrition_analysis', 'Beslenme Analizi', 'Yapay zeka ile mama içeriği ve besin değerleri analizi.', 'global', 'active', 'public', ARRAY['ai'], '{"category": "ai"}'::jsonb),
+  ('scan_document', 'Belge ve Karne Tarama (OCR)', 'Aşı karnesi ve tahlil sonuçlarını yapay zeka ile otomatik okuma.', 'global', 'active', 'public', ARRAY['ai'], '{"category": "ai"}'::jsonb),
+  ('pdf_export', 'PDF Sağlık Karnesi ve Raporlar', 'Evcil hayvan sağlık geçmişi ve aşı karnesini PDF olarak dışa aktarma.', 'global', 'active', 'public', ARRAY['reports'], '{"category": "reports"}'::jsonb),
+  ('budget_tracking', 'Bütçe ve Gider Takibi', 'Temel evcil hayvan harcama ve bütçe kaydı.', 'global', 'active', 'public', ARRAY['monetization'], '{"category": "monetization"}'::jsonb),
+  ('budget_analytics', 'Gelişmiş Bütçe Analitiği', 'Kategori bazlı harcama dağılımı ve tahminler.', 'global', 'active', 'public', ARRAY['monetization'], '{"category": "monetization"}'::jsonb),
+  ('budget_export', 'Bütçe Raporu Dışa Aktarma', 'Harcama raporlarını Excel/CSV olarak indirme.', 'global', 'active', 'public', ARRAY['monetization'], '{"category": "monetization"}'::jsonb),
+  ('calendar_sync', 'Takvim Senkronizasyonu', 'Aşı ve bakım hatırlatıcılarını Google/Apple takvime aktarma.', 'global', 'active', 'public', ARRAY['core'], '{"category": "core"}'::jsonb),
+  ('gallery_capacity', 'Gelişmiş Medya Galerisi', 'Yüksek çözünürlüklü ve geniş kapasiteli fotoğraf/video saklama.', 'global', 'active', 'public', ARRAY['core'], '{"category": "core"}'::jsonb),
+  ('insurance_readiness', 'Sigorta Hazırlık Analizi', 'Evcil hayvan sigortası için uygunluk ve risk analizi.', 'global', 'active', 'public', ARRAY['health'], '{"category": "health"}'::jsonb)
 ON CONFLICT (key) DO UPDATE SET
-  name = EXCLUDED.name,
+  label = EXCLUDED.label,
   description = EXCLUDED.description,
-  category = EXCLUDED.category,
+  scope = EXCLUDED.scope,
   status = EXCLUDED.status,
-  is_public = EXCLUDED.is_public;
+  visibility = EXCLUDED.visibility,
+  tags = EXCLUDED.tags,
+  metadata = public.app_features.metadata || EXCLUDED.metadata;
 
 -- 2. Insert feature_limits for AI+ (All features enabled & unlimited / high quota)
 INSERT INTO public.feature_limits (feature_key, plan_tier, limit_type, limit_value, window_days, is_enabled)
