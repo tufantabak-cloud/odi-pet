@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { sendEmail } from '@/lib/email/emailService'
 
 interface SendInviteEmailParams {
   toEmail: string
@@ -62,70 +63,43 @@ export async function sendCaregiverInviteEmail({
 
   const buttonLabel = isExistingUser ? 'Daveti Kabul Et →' : 'Üye Ol ve Daveti Kabul Et →'
 
-  const html = `
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 20px; background-color: #f5f3ff; border-radius: 20px;">
-      <div style="text-align: center; padding: 20px 0 10px 0;">
-        <h1 style="color: #7c3aed; margin: 0; font-size: 24px; font-weight: 800;">🐾 Odi</h1>
-        <p style="color: #6b7280; font-size: 13px; margin-top: 4px;">Evcil Hayvan Yaşam Platformu</p>
-      </div>
-
-      <div style="background-color: #ffffff; padding: 28px; border-radius: 16px; border: 1px solid #e5e7eb; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.05);">
-        <p style="font-size: 16px; font-weight: 700; color: #1f2937; margin-top: 0;">${recipientGreeting}</p>
-        <p style="font-size: 14px; color: #4b5563; line-height: 1.6; margin-bottom: 24px;">
-          ${actionText}
-        </p>
-
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${inviteLink}" style="background-color: #7c3aed; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 12px; font-weight: 700; font-size: 15px; display: inline-block; box-shadow: 0 4px 10px rgba(124, 58, 237, 0.3);">
-            ${buttonLabel}
-          </a>
-        </div>
-
-        <p style="font-size: 12px; color: #9ca3af; text-align: center; margin-bottom: 0;">
-          Bağlantı çalışmazsa şu adresi tarayıcınıza kopyalayabilirsiniz:<br/>
-          <span style="color: #7c3aed; word-break: break-all;">${inviteLink}</span>
-        </p>
-      </div>
-
-      <div style="text-align: center; margin-top: 16px; font-size: 11px; color: #9ca3af;">
-        © 2026 Odi.Pet. Tüm hakları saklıdır.
-      </div>
-    </div>
+  const htmlContent = `
+    <p style="font-size: 16px; font-weight: 700; color: #1f2937; margin-top: 0;">${recipientGreeting}</p>
+    <p style="font-size: 14px; color: #4b5563; line-height: 1.6; margin-bottom: 24px;">
+      ${actionText}
+    </p>
   `
 
-  const apiKey = process.env.RESEND_API_KEY
-  if (!apiKey) {
-    console.warn('[Email Simulation] No RESEND_API_KEY found. Link:', inviteLink)
-    return { success: true, simulated: true, isExistingUser, inviteLink, emailSent: false }
+  // 3. Central EmailService vasıtasıyla e-posta gönderimi (Natro XMail SMTP / SUPPORT category)
+  const emailRes = await sendEmail({
+    category: 'SUPPORT',
+    to: toEmail,
+    subject,
+    html: htmlContent,
+    recipientName: profile?.first_name,
+    actionButton: {
+      label: buttonLabel,
+      url: inviteLink,
+    },
+  })
+
+  if (!emailRes.success) {
+    console.error('[Invite Email Failure]', { to: toEmail, error: emailRes.error })
+    return {
+      success: false,
+      emailSent: false,
+      isExistingUser,
+      inviteLink,
+      error: emailRes.error || 'E-posta servisine ulaşılamadı.',
+    }
   }
 
-  const fromAddress = process.env.RESEND_FROM_EMAIL || 'Odi.Pet <onboarding@resend.dev>'
-
-  try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: fromAddress,
-        to: [toEmail],
-        subject,
-        html,
-      }),
-    })
-
-    const resJson = await res.json()
-    if (!res.ok) {
-      const errorMsg = resJson.message || resJson.error || resJson.name || 'Resend email failed'
-      console.error('[Resend Email Error]', { status: res.status, error: errorMsg, to: toEmail })
-      return { success: false, emailSent: false, isExistingUser, inviteLink, error: errorMsg }
-    }
-
-    return { success: true, emailSent: true, isExistingUser, inviteLink, messageId: resJson.id }
-  } catch (err) {
-    console.error('[Resend Email Exception]', err)
-    return { success: false, emailSent: false, isExistingUser, inviteLink, error: 'E-posta servisine ulaşılamadı.' }
+  return {
+    success: true,
+    emailSent: !emailRes.simulated,
+    simulated: emailRes.simulated,
+    isExistingUser,
+    inviteLink,
+    messageId: emailRes.messageId,
   }
 }

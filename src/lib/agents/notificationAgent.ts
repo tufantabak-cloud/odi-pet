@@ -13,7 +13,7 @@ function ensureVapidInitialized() {
   if (!publicKey || !privateKey) {
     throw new Error('VAPID anahtarları tanımlı değil. NEXT_PUBLIC_VAPID_PUBLIC_KEY ve VAPID_PRIVATE_KEY env değişkenlerini kontrol edin.');
   }
-  webpush.setVapidDetails('mailto:destek@odi.pet', publicKey, privateKey);
+  webpush.setVapidDetails('mailto:support@odi.pet', publicKey, privateKey);
   vapidInitialized = true;
 }
 

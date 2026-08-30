@@ -35,7 +35,7 @@ export default function KVKKPage() {
 
           <section>
             <h2 className="text-[18px] font-extrabold text-primary mb-3">4. Haklarınız</h2>
-            <p>KVKK Madde 11 uyarınca; verilerinizin işlenip işlenmediğini öğrenme, silinmesini veya düzeltilmesini talep etme hakkına sahipsiniz. Taleplerinizi <a href="mailto:destek@odi.pet" className="text-primary hover:underline font-bold">destek@odi.pet</a> adresi üzerinden iletebilirsiniz.</p>
+            <p>KVKK Madde 11 uyarınca; verilerinizin işlenip işlenmediğini öğrenme, silinmesini veya düzeltilmesini talep etme hakkına sahipsiniz. Taleplerinizi <a href="mailto:privacy@odi.pet" className="text-primary hover:underline font-bold">privacy@odi.pet</a> adresi üzerinden iletebilirsiniz.</p>
           </section>
         </div>
       </div>

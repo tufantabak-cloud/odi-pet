@@ -13,7 +13,7 @@ export async function GET(request: Request) {
       `https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(code)}&country=Turkey&format=jsonv2&addressdetails=1&accept-language=tr`,
       {
         headers: {
-          'User-Agent': 'OdiPetApp/1.0 (contact@odi.pet)'
+          'User-Agent': 'OdiPetApp/1.0 (support@odi.pet)'
         }
       }
     )
