@@ -13,68 +13,156 @@ type Pet = {
   weightVal?: string | null
 }
 
+export function calculateSidePadding(containerWidth: number, cardWidth: number, minPadding = 16): number {
+  if (containerWidth <= 0 || cardWidth <= 0) return minPadding
+  return Math.max(minPadding, Math.floor((containerWidth - cardWidth) / 2))
+}
+
+export function calculateTargetScrollLeft(
+  cardOffsetLeft: number,
+  containerWidth: number,
+  cardWidth: number
+): number {
+  const target = cardOffsetLeft - (containerWidth / 2) + (cardWidth / 2)
+  return Math.max(0, Math.round(target))
+}
+
+export function findClosestCardIndex(
+  scrollLeft: number,
+  clientWidth: number,
+  cards: Array<{ offsetLeft: number; clientWidth: number }>
+): number {
+  if (!cards || cards.length === 0) return 0
+  const containerCenter = scrollLeft + clientWidth / 2
+  let closestIndex = 0
+  let minDistance = Infinity
+
+  cards.forEach((card, i) => {
+    if (!card) return
+    const cardCenter = card.offsetLeft + card.clientWidth / 2
+    const distance = Math.abs(containerCenter - cardCenter)
+    if (distance < minDistance) {
+      minDistance = distance
+      closestIndex = i
+    }
+  })
+
+  return closestIndex
+}
+
 export function PetSlider({ pets, onActiveChange }: { pets: Pet[], onActiveChange?: (petId: string) => void }) {
   const [activeIndex, setActiveIndex] = useState(0)
+  const [sidePadding, setSidePadding] = useState<number>(0)
   const containerRef = useRef<HTMLDivElement>(null)
   const cardRefs = useRef<(HTMLDivElement | null)[]>([])
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(false)
+  const isProgrammaticScrollRef = useRef(false)
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Ensure cardRefs array size matches pets length
   useEffect(() => {
     cardRefs.current = cardRefs.current.slice(0, pets.length)
   }, [pets])
 
+  // Dinamik olarak container ve kart genişliğine göre merkezleme padding'i hesapla
+  const updateDimensions = useCallback(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    const containerWidth = container.clientWidth
+    const firstCard = cardRefs.current[0]
+    const cardWidth = firstCard ? Math.round(firstCard.getBoundingClientRect().width) : 204
+
+    const padding = calculateSidePadding(containerWidth, cardWidth)
+    setSidePadding(padding)
+  }, [])
+
   // Center active card smoothly inside container
   const centerActiveCard = useCallback((index: number, smooth = true) => {
     const container = containerRef.current
     const card = cardRefs.current[index]
     if (container && card) {
-      const containerWidth = container.clientWidth
-      const cardOffsetLeft = card.offsetLeft
-      const cardWidth = card.clientWidth
+      const targetScrollLeft = calculateTargetScrollLeft(
+        card.offsetLeft,
+        container.clientWidth,
+        card.clientWidth
+      )
 
-      // Target scroll position to place card in exact horizontal center
-      const targetScrollLeft = cardOffsetLeft - (containerWidth / 2) + (cardWidth / 2)
-
+      isProgrammaticScrollRef.current = true
       container.scrollTo({
-        left: Math.max(0, targetScrollLeft),
+        left: targetScrollLeft,
         behavior: smooth ? 'smooth' : 'auto'
       })
+
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current)
+      scrollTimeoutRef.current = setTimeout(() => {
+        isProgrammaticScrollRef.current = false
+      }, smooth ? 450 : 50)
     }
   }, [])
 
-  // Selected pet callback & auto-centering
+  // ResizeObserver ve window resize dinleyici
+  useEffect(() => {
+    updateDimensions()
+    const container = containerRef.current
+    if (!container) return
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateDimensions()
+    })
+    resizeObserver.observe(container)
+    window.addEventListener('resize', updateDimensions)
+
+    return () => {
+      resizeObserver.disconnect()
+      window.removeEventListener('resize', updateDimensions)
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current)
+    }
+  }, [updateDimensions, pets.length])
+
+  // Selected pet callback & auto-centering on mount / activeIndex change
   useEffect(() => {
     if (pets[activeIndex]) {
       onActiveChange?.(pets[activeIndex].id)
     }
     const timer = setTimeout(() => {
       centerActiveCard(activeIndex, true)
-    }, 50)
+    }, 60)
     return () => clearTimeout(timer)
   }, [activeIndex, pets, onActiveChange, centerActiveCard])
 
-  // Dynamic scroll state check for side gradients
-  const checkScrollState = useCallback(() => {
+  // Dynamic scroll state check and closest-card detection on swipe/scroll
+  const handleScroll = useCallback(() => {
     const container = containerRef.current
     if (!container) return
+
     const { scrollLeft, scrollWidth, clientWidth } = container
-    setCanScrollLeft(scrollLeft > 8)
-    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 8)
-  }, [])
+    setCanScrollLeft(scrollLeft > 10)
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10)
+
+    // Kullanıcı elle swipe ederken en yakın kartı aktif yap
+    if (isProgrammaticScrollRef.current) return
+
+    const validCards = cardRefs.current
+      .map(card => card ? { offsetLeft: card.offsetLeft, clientWidth: card.clientWidth } : null)
+      .filter((c): c is { offsetLeft: number; clientWidth: number } => c !== null)
+
+    const closestIndex = findClosestCardIndex(scrollLeft, clientWidth, validCards)
+
+    if (closestIndex !== activeIndex) {
+      setActiveIndex(closestIndex)
+      if (pets[closestIndex]) {
+        onActiveChange?.(pets[closestIndex].id)
+      }
+    }
+  }, [activeIndex, pets, onActiveChange])
 
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
-    checkScrollState()
-    container.addEventListener('scroll', checkScrollState, { passive: true })
-    window.addEventListener('resize', checkScrollState, { passive: true })
-    return () => {
-      container.removeEventListener('scroll', checkScrollState)
-      window.removeEventListener('resize', checkScrollState)
-    }
-  }, [checkScrollState, pets])
+    handleScroll()
+  }, [handleScroll, sidePadding])
 
   const bgGradients = [
     'from-violet-500/80 to-purple-700/80',
@@ -85,25 +173,34 @@ export function PetSlider({ pets, onActiveChange }: { pets: Pet[], onActiveChang
 
   const petCount = pets.length
 
+  const dynamicPaddingStyle = sidePadding > 0
+    ? `${sidePadding}px`
+    : 'calc(50% - 100px)'
+
   return (
     <div className="flex flex-col gap-3 w-full">
       {/* Kart slider container */}
-      <div className="relative w-full">
+      <div className="relative w-[calc(100%+2rem)] -mx-4 sm:w-full sm:mx-0 overflow-hidden">
         {/* Sol tarafta gölge/geçiş göstergesi */}
-        {petCount >= 3 && canScrollLeft && (
-          <div className="pointer-events-none absolute top-0 left-0 h-full w-10 z-20 bg-gradient-to-r from-bg-main to-transparent transition-opacity duration-300" />
+        {petCount >= 2 && canScrollLeft && (
+          <div className="pointer-events-none absolute top-0 left-0 h-full w-10 z-20 bg-gradient-to-r from-[var(--color-bg-main)] to-transparent transition-opacity duration-300" />
         )}
 
         {/* Sağ tarafta gölge/geçiş göstergesi */}
-        {petCount >= 3 && canScrollRight && (
-          <div className="pointer-events-none absolute top-0 right-0 h-full w-10 z-20 bg-gradient-to-l from-bg-main to-transparent transition-opacity duration-300" />
+        {petCount >= 2 && canScrollRight && (
+          <div className="pointer-events-none absolute top-0 right-0 h-full w-10 z-20 bg-gradient-to-l from-[var(--color-bg-main)] to-transparent transition-opacity duration-300" />
         )}
 
         <div
           ref={containerRef}
-          className={`flex items-stretch gap-4 pb-2 pt-1 px-4 overflow-x-auto scrollbar-none scroll-smooth snap-x snap-mandatory ${
-            petCount <= 2 ? 'justify-center' : ''
-          }`}
+          onScroll={handleScroll}
+          style={{
+            paddingLeft: dynamicPaddingStyle,
+            paddingRight: dynamicPaddingStyle,
+            scrollPaddingLeft: dynamicPaddingStyle,
+            scrollPaddingRight: dynamicPaddingStyle,
+          }}
+          className="flex items-stretch gap-4 pt-2 pb-4 overflow-x-auto scrollbar-none scroll-smooth snap-x snap-mandatory"
         >
           {pets.map((pet, index) => {
             const isActive = index === activeIndex
