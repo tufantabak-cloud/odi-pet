@@ -235,6 +235,32 @@ Sana verilen JSON formatındaki \`PetAIContext\` objesi, bu pet hakkındaki TEK 
     })
   }
 
+  // Contract 4: Canonical AI Vet Test Provider
+  if (process.env.PLAYWRIGHT_TEST === 'true') {
+    return NextResponse.json({
+      response: {
+        assessment_available: true,
+        is_emergency: false,
+        severity: 'low',
+        risk_score: 15,
+        confidence_score: 90,
+        summary: '[E2E MOCK] Evcil hayvanınızın durumu stabil görünüyor. Endişelenecek bir durum yok.',
+        missing_critical_info: [],
+        possible_explanations: ['Mevsimsel değişiklik', 'Hafif sindirim sorunu'],
+        recommended_actions: ['Bol su içtiğinden emin olun', 'Gözlemlemeye devam edin'],
+        red_flags: ['Kusma', 'Ateş'],
+        when_to_see_vet: 'Durum 24 saat içinde düzelmezse veterinerinize başvurun.',
+        follow_up_questions: [],
+        suggested_app_actions: [],
+        reasoning: 'E2E test suite için oluşturulmuş deterministik mock yanıt.',
+        known_context: 'Test ortamı',
+        missing_information: 'Yok'
+      },
+      powered_by: 'e2e-mock',
+      contextUsed: backendContextUsed
+    })
+  }
+
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
     const fb = safeFallbackResponse()

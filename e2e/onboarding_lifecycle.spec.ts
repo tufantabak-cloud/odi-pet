@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+﻿import { test, expect, type Page } from '@playwright/test';
 
 test.use({
   viewport: { width: 375, height: 812 },
@@ -36,8 +36,8 @@ test.describe.serial('Onboarding Lifecycle', () => {
     await page.fill('#confirmPassword', password);
     await page.check('#terms');
     
-    await page.click('button[type="submit"]:has-text("Kayıt Ol ve Başla")');
-    await expect(page.locator('text=Aramıza Hoş Geldiniz!')).toBeVisible({ timeout: 10000 });
+    await page.click('button[type="submit"]:has-text("KayÄ±t Ol ve BaÅŸla")');
+    await expect(page.locator('text=AramÄ±za HoÅŸ Geldiniz!')).toBeVisible({ timeout: 10000 });
     await page.close();
   });
 
@@ -51,7 +51,7 @@ test.describe.serial('Onboarding Lifecycle', () => {
     await expect(page).toHaveURL(/\/owner\/dashboard/, { timeout: 15000 });
   });
 
-  test('NEXT_PUBLIC_ONBOARDING_ENABLED=false yapıldığında hiçbir spotlight çıkmaz', async ({ page }) => {
+  test('NEXT_PUBLIC_ONBOARDING_ENABLED=false yapÄ±ldÄ±ÄŸÄ±nda hiÃ§bir spotlight Ã§Ä±kmaz', async ({ page }) => {
     // We simulate NEXT_PUBLIC_ONBOARDING_ENABLED=false by setting localStorage
     await page.goto('/owner/dashboard');
     await page.evaluate(() => {
@@ -69,7 +69,7 @@ test.describe.serial('Onboarding Lifecycle', () => {
     await page.evaluate(() => window.localStorage.removeItem('onboarding_disabled'));
   });
 
-  test('Adım 1 tamamlanınca DB\'ye yazılır ve Adım 2 ancak Adım 1 sonrası tetiklenir', async ({ page }) => {
+  test('AdÄ±m 1 tamamlanÄ±nca DB\'ye yazÄ±lÄ±r ve AdÄ±m 2 ancak AdÄ±m 1 sonrasÄ± tetiklenir', async ({ page }) => {
     page.on('console', msg => console.log(`BROWSER: ${msg.text()}`));
     // Wait for the wizard popover to load
     try {
@@ -86,7 +86,7 @@ test.describe.serial('Onboarding Lifecycle', () => {
       await page.waitForTimeout(600);
       await page.click('button:has-text("Devam Et")');
       await page.waitForTimeout(600);
-      await page.click('button:has-text("Başla 🐾")');
+      await page.click('button:has-text("BaÅŸla ğŸ¾")');
       await page.waitForTimeout(1000);
       
       // Wait for the action-driven tour to start
@@ -94,25 +94,27 @@ test.describe.serial('Onboarding Lifecycle', () => {
       title = await page.locator('.driver-popover-title').innerText();
     }
     
-    expect(title).toContain('İlk Adım: Pet Ekle'); // Step 1 Title in GuideConfig
+    expect(title).toContain('Ä°lk AdÄ±m: Pet Ekle'); // Step 1 Title in GuideConfig
     
     // Click the actual add pet button that has id #onb-pet-add
     await page.click('#onb-pet-add');
     
-    // --- Pet Ekleme Akışı ---
-    // Adım 1: Tür Seçimi (Köpek)
-    await page.click('button:has-text("Köpek")');
+    // --- Pet Ekleme AkÄ±ÅŸÄ± ---
+    // AdÄ±m 1: TÃ¼r SeÃ§imi (KÃ¶pek)
+    await page.click('button:has-text("KÃ¶pek")');
     
-    // Adım 2: Form Doldurma
-    await page.fill('#name', 'Karabaş');
-    await page.selectOption('#breed', 'Kangal'); // Köpek ırklarından biri
+    // AdÄ±m 2: Form Doldurma
+    await page.fill('#name', 'KarabaÅŸ');
+    await page.getByTestId('pet-breed-select').fill('Kangal');
+    await page.getByRole('button', { name: 'Kangal', exact: true }).click();
     await page.fill('input[type="date"]', '2023-01-01');
-    await page.fill('#weight', '15');
+    await page.locator('label:has-text("â™‚ Erkek")').click();
+    await page.getByRole('button', { name: '15 kg' }).click();
     
     await page.click('button:has-text("Devam Et")');
     
-    // Adım 3: Fotoğraf Ekleme (Zorunlu)
-    await page.waitForSelector('text=Fotoğraf Ekle', { timeout: 10000 });
+    // AdÄ±m 3: FotoÄŸraf Ekleme (Zorunlu)
+    await page.waitForSelector('text=FotoÄŸraf Ekle', { timeout: 10000 });
     const fileInput = page.getByTestId('pet-photo-input');
     await fileInput.setInputFiles({
       name: 'test-pet.jpg',
@@ -121,14 +123,14 @@ test.describe.serial('Onboarding Lifecycle', () => {
     });
     await page.getByTestId('pet-profile-create-button').click();
 
-    // Adım 4: Acil Durum Ağı (Atla)
-    await page.waitForSelector('text=Acil Durum Ağı', { timeout: 10000 });
+    // AdÄ±m 4: Acil Durum AÄŸÄ± (Atla)
+    await page.waitForSelector('text=Acil Durum AÄŸÄ±', { timeout: 10000 });
     await page.getByTestId('emergency-contact-skip-button').click();
 
-    // Bu noktada /api/pets POST edilmiş olmalı ve success sayfasına yönlenmiş olmalı.
+    // Bu noktada /api/pets POST edilmiÅŸ olmalÄ± ve success sayfasÄ±na yÃ¶nlenmiÅŸ olmalÄ±.
     await expect(page).toHaveURL(/\/owner\/pets\/add\/success/, { timeout: 15000 });
     
-    // Dashboard'a manuel olarak dönerek Step 2'nin orada belirdiğini kontrol edelim
+    // Dashboard'a manuel olarak dÃ¶nerek Step 2'nin orada belirdiÄŸini kontrol edelim
     await page.goto('/owner/dashboard');
     
     // Check if step 2 appears
@@ -137,7 +139,7 @@ test.describe.serial('Onboarding Lifecycle', () => {
     expect(step2Title).toContain('Plan Yap'); // Step 2 Title
   });
 
-  test('Dismiss sonrası adımın tamamlandı sayıldığı (Adım 3 - Bildirimler)', async ({ page }) => {
+  test('Dismiss sonrasÄ± adÄ±mÄ±n tamamlandÄ± sayÄ±ldÄ±ÄŸÄ± (AdÄ±m 3 - Bildirimler)', async ({ page }) => {
     // Mock Notification and PushManager so useWebPush returns 'default'
     await page.addInitScript(() => {
       Object.defineProperty(window, 'PushManager', { value: function() {} });
@@ -168,8 +170,8 @@ test.describe.serial('Onboarding Lifecycle', () => {
     await expect(prompt).not.toBeVisible();
   });
 
-  test('Uygulama kapatılıp açılınca kaldığı adımdan devam ettiği', async ({ page, context }) => {
-    // Adım 1 completed in a previous test context, but since this runs with the same user, 
+  test('Uygulama kapatÄ±lÄ±p aÃ§Ä±lÄ±nca kaldÄ±ÄŸÄ± adÄ±mdan devam ettiÄŸi', async ({ page, context }) => {
+    // AdÄ±m 1 completed in a previous test context, but since this runs with the same user, 
     // it will fetch state from DB.
     await page.goto('/owner/dashboard');
     await waitForSplash(page);
@@ -180,7 +182,7 @@ test.describe.serial('Onboarding Lifecycle', () => {
     const title = await page.locator('.driver-popover-title').innerText();
     
     // We expect the title not to be Step 1 because Step 1 was completed in earlier test scenario for this user DB record.
-    expect(title).not.toContain('İlk Can Dostunu Ekle');
+    expect(title).not.toContain('Ä°lk Can Dostunu Ekle');
     
     // Restarting app by reloading the page (simulates closing and reopening the web app)
     // This wipes out all React state, forcing it to fetch from DB
@@ -194,3 +196,5 @@ test.describe.serial('Onboarding Lifecycle', () => {
     
   });
 });
+
+

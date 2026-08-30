@@ -1,9 +1,10 @@
-import { expect, test } from '@playwright/test'
+﻿import { expect } from '@playwright/test';
+import { test } from './fixtures';
 
 const CRON_SECRET = 'odi-pet-local-e2e-cron-secret'
 
-test.describe('Cron güvenlik ve Edge Function zinciri', () => {
-  test('dispatch rotası yetkisiz çağrıları reddeder ve doğru secret ile Edge Functiona ulaşır', async ({
+test.describe('Cron gÃ¼venlik ve Edge Function zinciri', () => {
+  test('dispatch rotasÄ± yetkisiz Ã§aÄŸrÄ±larÄ± reddeder ve doÄŸru secret ile Edge Functiona ulaÅŸÄ±r', async ({
     request,
   }) => {
     const missingAuthorization = await request.get(
@@ -40,7 +41,7 @@ test.describe('Cron güvenlik ve Edge Function zinciri', () => {
     expect(body.result.request_id).toBe(body.request_id)
   })
 
-  test('orchestrator doğru secret ile güvenli dry-run tamamlar', async ({
+  test('orchestrator doÄŸru secret ile gÃ¼venli dry-run tamamlar', async ({
     request,
   }) => {
     const response = await request.get(
@@ -59,3 +60,4 @@ test.describe('Cron güvenlik ve Edge Function zinciri', () => {
     })
   })
 })
+

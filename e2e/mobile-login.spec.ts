@@ -1,4 +1,5 @@
-import { test, expect, devices } from '@playwright/test';
+﻿import { expect, devices } from '@playwright/test';
+import { test } from './fixtures';;
 
 test.use({
   viewport: { width: 375, height: 812 },
@@ -7,19 +8,19 @@ test.use({
 });
 
 test('Mobile Google Login Redirect Flow', async ({ page }) => {
-  console.log('Test başlatılıyor: Mobil ortamda (iPhone 13) odi.pet login sayfası açılıyor...');
+  console.log('Test baÅŸlatÄ±lÄ±yor: Mobil ortamda (iPhone 13) odi.pet login sayfasÄ± aÃ§Ä±lÄ±yor...');
   
   // Yerel login adresine gidiyoruz
   await page.goto('/login');
   
-  console.log('Sayfa yüklendi, Google ile Giriş Yap butonu aranıyor...');
-  // Butonu bul (Google metnini içeren buton)
+  console.log('Sayfa yÃ¼klendi, Google ile GiriÅŸ Yap butonu aranÄ±yor...');
+  // Butonu bul (Google metnini iÃ§eren buton)
   const googleBtn = page.locator('button', { hasText: 'Google' });
   await expect(googleBtn).toBeVisible();
   
-  console.log('Google butonuna tıklanıyor...');
+  console.log('Google butonuna tÄ±klanÄ±yor...');
   
-  // Yeni sayfa/yönlendirme yakalamak için Promise hazırlıyoruz
+  // Yeni sayfa/yÃ¶nlendirme yakalamak iÃ§in Promise hazÄ±rlÄ±yoruz
   const [request] = await Promise.all([
     page.waitForRequest(req => {
       const url = new URL(req.url());
@@ -28,12 +29,13 @@ test('Mobile Google Login Redirect Flow', async ({ page }) => {
     googleBtn.click()
   ]);
 
-  console.log('Yönlendirme isteği yakalandı!');
-  console.log('Yönlendirilen URL:', request.url());
+  console.log('YÃ¶nlendirme isteÄŸi yakalandÄ±!');
+  console.log('YÃ¶nlendirilen URL:', request.url());
   
-  // URL'nin geçerli olup olmadığını ve doğru parametreleri içerip içermediğini kontrol edelim
+  // URL'nin geÃ§erli olup olmadÄ±ÄŸÄ±nÄ± ve doÄŸru parametreleri iÃ§erip iÃ§ermediÄŸini kontrol edelim
   expect(request.url()).toContain('provider=google');
   expect(request.url()).toContain('redirect_to');
   
-  console.log('Test Başarılı: Yönlendirme URL\'si geçerli ve herhangi bir kodlama hatası barındırmıyor.');
+  console.log('Test BaÅŸarÄ±lÄ±: YÃ¶nlendirme URL\'si geÃ§erli ve herhangi bir kodlama hatasÄ± barÄ±ndÄ±rmÄ±yor.');
 });
+

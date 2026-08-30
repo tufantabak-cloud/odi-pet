@@ -9,6 +9,37 @@ import { defineConfig, devices } from '@playwright/test';
 // dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 /**
+ * SSOT E2E Environment Contract
+ */
+import { 
+  LOCAL_E2E_EMAIL, 
+  LOCAL_E2E_PASSWORD, 
+  LOCAL_E2E_ADMIN_EMAIL, 
+  LOCAL_E2E_ADMIN_PASSWORD 
+} from './scripts/seed-local-e2e-fixtures.mjs';
+
+process.env.TEST_BASE_URL = 'http://127.0.0.1:3100';
+process.env.PLAYWRIGHT_TEST = 'true';
+process.env.NEXT_PUBLIC_APP_URL = process.env.TEST_BASE_URL;
+process.env.NEXT_PUBLIC_SITE_URL = process.env.TEST_BASE_URL;
+
+// Ensure local supabase matches CI
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://127.0.0.1:54321';
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRlZmF1bHQiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTY5ODE4NTQ3NSwiZXhwIjoyMDEzNzYxNDc1fQ.v_Y7R-n9B-...';
+}
+
+// Ensure default tests use canonical owner
+if (!process.env.TEST_EMAIL) {
+  process.env.TEST_EMAIL = LOCAL_E2E_EMAIL;
+  process.env.TEST_PASSWORD = LOCAL_E2E_PASSWORD;
+}
+
+// Expose admin variables 
+process.env.TEST_ADMIN_EMAIL = LOCAL_E2E_ADMIN_EMAIL;
+process.env.TEST_ADMIN_PASSWORD = LOCAL_E2E_ADMIN_PASSWORD;
+
+/**
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({

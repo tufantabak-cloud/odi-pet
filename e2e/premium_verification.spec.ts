@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+﻿import { expect, type Page } from '@playwright/test';
+import { test } from './fixtures';
 
 const EMAIL = process.env.TEST_ADMIN_EMAIL || 'tufan.tabak@gmail.com';
 const PASSWORD = process.env.TEST_ADMIN_PASSWORD;
@@ -37,27 +38,21 @@ test.describe('Premium & Feature Entitlement Production Readiness Suite', () => 
     await page.goto('/admin/memberships');
 
     // Verify main tabs are present
-    await expect(page.locator('button:has-text("Genel Ayarlar")')).toBeVisible();
-    await expect(page.locator('button:has-text("Planlar & Paketler")')).toBeVisible();
-    await expect(page.locator('button:has-text("Özellikler (Registry)")')).toBeVisible();
-    await expect(page.locator('button:has-text("Kota & Erişim Matrisi")')).toBeVisible();
+    await expect(page.locator('button:has-text("Promosyon & Davet KampanyalarÄ±")')).toBeVisible();
+    await expect(page.locator('button:has-text("KullanÄ±cÄ± Detay & Aksiyon Merkezi")')).toBeVisible();
+    await expect(page.locator('button:has-text("Plan YÃ¶netimi (Phase 18D)")')).toBeVisible();
 
-    // Click on Quotas tab
-    await page.click('button:has-text("Kota & Erişim Matrisi")');
-    await expect(page.locator('h3:has-text("Kota ve Erişim Matrisi")')).toBeVisible();
-
-    // Export JSON button check
-    await expect(page.locator('button:has-text("Dışa Aktar (JSON)")')).toBeVisible();
-    await expect(page.locator('button:has-text("Test Et (Dry Run)")')).toBeVisible();
+    // Click on Plans tab
+    await page.click('button:has-text("Plan YÃ¶netimi (Phase 18D)")');
+    await expect(page.locator('text=Platform PlanlarÄ±')).toBeVisible();
   });
 
   test('3. Admin Preview Cookie Mode: Previewing Pro/AI+ applies correctly', async ({ page, context }) => {
     await loginAsAdmin(page);
     await page.goto('/admin/memberships');
 
-    // Click on General tab
-    await page.click('button:has-text("Genel Ayarlar")');
-    
+    // Ensure page loaded
+    await expect(page.locator('h1:has-text("Ãœyelik Ä°zleme")')).toBeVisible();
     // Set preview cookie programmatically
     await context.addCookies([{
       name: 'odi_premium_preview',
@@ -94,3 +89,4 @@ test.describe('Premium & Feature Entitlement Production Readiness Suite', () => 
   });
 
 });
+

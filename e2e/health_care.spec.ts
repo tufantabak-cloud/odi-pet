@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+﻿import { expect, type Page } from '@playwright/test';
+import { test } from './fixtures';
 
 const EMAIL = process.env.TEST_EMAIL;
 const PASSWORD = process.env.TEST_PASSWORD;
@@ -27,14 +28,14 @@ test.describe('Odi.Pet Health and Care Module Verification', () => {
     test.setTimeout(120000);
     await login(page);
 
-    // Bu senaryo kayıt sihirbazını değil sağlık yaşam döngüsünü sınar.
-    // Test petini kararlı API sözleşmesi üzerinden oluştur.
+    // Bu senaryo kayÄ±t sihirbazÄ±nÄ± deÄŸil saÄŸlÄ±k yaÅŸam dÃ¶ngÃ¼sÃ¼nÃ¼ sÄ±nar.
+    // Test petini kararlÄ± API sÃ¶zleÅŸmesi Ã¼zerinden oluÅŸtur.
     console.log('Creating a temporary dog...');
     const petResponse = await page.evaluate(async (name) => {
       const form = new FormData();
       form.append('name', name);
       form.append('species', 'dog');
-      form.append('breed', 'Poodle (Kaniş)');
+      form.append('breed', 'Poodle (KaniÅŸ)');
       form.append('birth_date', '2026-01-01');
       form.append('gender', 'male');
       form.append('is_neutered', 'false');
@@ -62,7 +63,7 @@ test.describe('Odi.Pet Health and Care Module Verification', () => {
 
     // Step: Vaccine Selection
     console.log('Selecting a vaccine template...');
-    await expect(page.locator('text=Aşı Seçimi').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=AÅŸÄ± SeÃ§imi').first()).toBeVisible({ timeout: 10000 });
     // Click first core vaccine in the list
     await page.locator('button h4').first().click();
     await page.getByRole('button', { name: 'Devam et', exact: true }).click();
@@ -83,22 +84,22 @@ test.describe('Odi.Pet Health and Care Module Verification', () => {
 
     // Step: Notification & Save
     console.log('Saving the plan...');
-    await expect(page.locator('text=Hatırlatıcı').first()).toBeVisible({ timeout: 10000 });
-    await page.getByRole('button', { name: 'Planı Kaydet', exact: true }).click();
+    await expect(page.locator('text=HatÄ±rlatÄ±cÄ±').first()).toBeVisible({ timeout: 10000 });
+    await page.getByRole('button', { name: 'PlanÄ± Kaydet', exact: true }).click();
 
     // Verify Success Screen
     console.log('Verifying success screen...');
-    await expect(page.locator('text=Rutin Oluşturuldu!')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('text=Rutin OluÅŸturuldu!')).toBeVisible({ timeout: 15000 });
     
     // Go to Pet Profile
-    await page.click('button:has-text("Pet Profiline Dön")');
+    await page.click('button:has-text("Pet Profiline DÃ¶n")');
     await page.waitForURL(new RegExp(`/owner/pets/${petId}`), { timeout: 15000 });
     await page.waitForLoadState('networkidle');
 
     // 3. Timeline (Health Tracker) Verification
     console.log('Verifying tasks on the timeline...');
-    // Verify that the core vaccine is listed in the timeline under MEDİKAL / AŞI category
-    await expect(page.locator('text=Aşı').first()).toBeVisible({ timeout: 10000 });
+    // Verify that the core vaccine is listed in the timeline under MEDÄ°KAL / AÅI category
+    await expect(page.locator('text=AÅŸÄ±').first()).toBeVisible({ timeout: 10000 });
 
     // Verify correct color class and icon on the timeline chip
     const timelineChip = page.locator('button[data-status]').first();
@@ -110,8 +111,8 @@ test.describe('Odi.Pet Health and Care Module Verification', () => {
     await timelineChip.click();
     await page.waitForTimeout(500);
 
-    // Click "✓ Tamamlandı" in the ActionSheet
-    const markDoneBtn = page.locator('button:has-text("✓ Tamamlandı")');
+    // Click "âœ“ TamamlandÄ±" in the ActionSheet
+    const markDoneBtn = page.locator('button:has-text("âœ“ TamamlandÄ±")');
     await expect(markDoneBtn).toBeVisible({ timeout: 5000 });
     await markDoneBtn.click();
     await page.waitForTimeout(1000);
@@ -120,12 +121,12 @@ test.describe('Odi.Pet Health and Care Module Verification', () => {
     // The chip element class should contain done background color (e.g. #2ca67a)
     await expect(page.locator('button[data-status="done"]').first()).toBeVisible({ timeout: 10000 });
 
-    // 5. Vaccines Page (Aşı Karnesi) Verification
+    // 5. Vaccines Page (AÅŸÄ± Karnesi) Verification
     console.log('Checking Vaccine Card page...');
     await page.goto(`/owner/pets/${petId}/vaccines`);
     await page.waitForLoadState('networkidle');
     await expect(page.locator('text=Takvim').first()).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('text=Kayıtlar').first()).toBeVisible();
+    await expect(page.locator('text=AÅŸÄ±').first()).toBeVisible();
 
     // 6. Delete Pet Profile
     console.log('Cleaning up: deleting pet profile...');
@@ -136,9 +137,10 @@ test.describe('Odi.Pet Health and Care Module Verification', () => {
     await petRow.locator('button:has(svg)').first().click(); // opens three dots menu
     await page.waitForTimeout(500);
 
-    await page.click('button:has-text("Profili Kalıcı Olarak Sil")');
+    await page.click('button:has-text("Profili KalÄ±cÄ± Olarak Sil")');
     await page.click('button:has-text("Evet, Sil")'); // confirm modal
     await expect(page).toHaveURL(/\/owner\/dashboard/, { timeout: 15000 });
     console.log('Pet profile successfully deleted and verified!');
   });
 });
+

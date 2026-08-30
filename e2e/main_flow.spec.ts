@@ -1,11 +1,12 @@
-import { expect, test, type Page } from '@playwright/test'
+﻿import { expect, type Page } from '@playwright/test';
+import { test } from './fixtures';
 
 const EMAIL = process.env.TEST_EMAIL || 'e2e-owner@odipet.local'
 const PASSWORD = process.env.TEST_PASSWORD || 'Password123!'
 
 async function waitForSplash(page: Page) {
   try {
-    const splash = page.locator('[aria-label="Açılış ekranını geç"]');
+    const splash = page.locator('[aria-label="AÃ§Ä±lÄ±ÅŸ ekranÄ±nÄ± geÃ§"]');
     if (await splash.count() > 0) {
       await splash.click({ force: true }).catch(() => {});
       await splash.waitFor({ state: 'detached', timeout: 2000 }).catch(() => {});
@@ -91,3 +92,4 @@ test.describe('Pets Module', () => {
     await expect(page.getByText('Moka E2E', { exact: true })).toBeVisible()
   })
 })
+

@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '@playwright/test'
+﻿import { expect, type Page } from '@playwright/test';
+import { test } from './fixtures';
 
 import { LOCAL_E2E_EMAIL, LOCAL_E2E_PASSWORD } from '../scripts/seed-local-e2e-fixtures.mjs'
 
@@ -13,45 +14,45 @@ async function login(page: Page) {
   await page.goto('/login')
   await page.getByTestId('login-email-input').fill(email)
   await page.getByTestId('login-password-input').fill(password)
-  await page.getByRole('button', { name: 'Giriş Yap', exact: true }).click()
+  await page.getByRole('button', { name: 'GiriÅŸ Yap', exact: true }).click()
   await expect(page).toHaveURL(/\/owner\//, { timeout: 15_000 })
 }
 
-test.describe('Abonelik ve ödeme güvenli akışı', () => {
+test.describe('Abonelik ve Ã¶deme gÃ¼venli akÄ±ÅŸÄ±', () => {
   test.beforeEach(async ({ page }) => {
     await login(page)
     await page.goto('/owner/profile/subscription')
     await page.waitForLoadState('networkidle')
   })
 
-  test('gerçek olmayan kart veya fatura göstermeden güvenli durumu açıklar', async ({
+  test('gerÃ§ek olmayan kart veya fatura gÃ¶stermeden gÃ¼venli durumu aÃ§Ä±klar', async ({
     page,
   }) => {
     await expect(
-      page.getByRole('heading', { name: 'Abonelik ve Ödeme' })
+      page.getByRole('heading', { name: 'Abonelik ve Ã–deme' })
     ).toBeVisible()
     await expect(page.getByText('Odi Free').first()).toBeVisible()
     await expect(
-      page.getByText('Kart bilgilerin Odi tarafından tutulmaz.')
+      page.getByText('Kart bilgilerin Odi tarafÄ±ndan tutulmaz.')
     ).toBeVisible()
     await expect(page.getByText('4242')).toHaveCount(0)
     await expect(page.getByText(/INV-2026/)).toHaveCount(0)
     await expect(page.locator('[data-nextjs-dialog]')).toHaveCount(0)
   })
 
-  test('ödeme ayarı yoksa butonları yanıltıcı başarı yerine kapalı tutar', async ({
+  test('Ã¶deme ayarÄ± yoksa butonlarÄ± yanÄ±ltÄ±cÄ± baÅŸarÄ± yerine kapalÄ± tutar', async ({
     page,
   }) => {
     const disabledButtons = page.getByRole('button', {
-      name: 'Ödeme ayarı bekleniyor',
+      name: 'Ã–deme ayarÄ± bekleniyor',
     })
 
     await expect(disabledButtons).toHaveCount(2)
     await expect(disabledButtons.first()).toBeDisabled()
-    await expect(page.getByText(/Çok yakında/i)).toHaveCount(0)
+    await expect(page.getByText(/Ã‡ok yakÄ±nda/i)).toHaveCount(0)
   })
 
-  test('mobil görünümde yatay taşma veya hata katmanı oluşturmaz', async ({
+  test('mobil gÃ¶rÃ¼nÃ¼mde yatay taÅŸma veya hata katmanÄ± oluÅŸturmaz', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 })
@@ -70,3 +71,4 @@ test.describe('Abonelik ve ödeme güvenli akışı', () => {
     expect(layout.contentWidth).toBeLessThanOrEqual(layout.viewportWidth)
   })
 })
+

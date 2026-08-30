@@ -1,4 +1,5 @@
-import { test, expect } from '@playwright/test';
+﻿import { expect } from '@playwright/test';
+import { test } from './fixtures';
 
 test('Diagnostic Login', async ({ page }) => {
   const EMAIL = process.env.TEST_EMAIL;
@@ -38,8 +39,9 @@ test('Diagnostic Login', async ({ page }) => {
   const errorTexts = await page.evaluate(() => {
     return Array.from(document.querySelectorAll('.text-error, .bg-error\\/10, [role="alert"], p, span'))
       .map(el => (el.textContent || '').trim())
-      .filter(text => text.toLowerCase().includes('hata') || text.toLowerCase().includes('geçersiz') || text.toLowerCase().includes('error') || text.toLowerCase().includes('şifre') || text.length > 20)
+      .filter(text => text.toLowerCase().includes('hata') || text.toLowerCase().includes('geÃ§ersiz') || text.toLowerCase().includes('error') || text.toLowerCase().includes('ÅŸifre') || text.length > 20)
       .slice(0, 10);
   });
   console.log('Detected error or status texts:', errorTexts);
 });
+

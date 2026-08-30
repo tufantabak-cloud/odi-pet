@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+﻿import { expect, type Page } from '@playwright/test';
+import { test } from './fixtures';
 
 const EMAIL = process.env.TEST_EMAIL;
 const PASSWORD = process.env.TEST_PASSWORD;
@@ -36,8 +37,8 @@ test.describe('Vaccine OS Module', () => {
       fd.append('gender', 'male');
       fd.append('is_neutered', 'false');
       fd.append('weight', '15');
-      fd.append('city', 'İzmir');
-      fd.append('district', 'Karşıyaka');
+      fd.append('city', 'Ä°zmir');
+      fd.append('district', 'KarÅŸÄ±yaka');
 
       const res = await fetch('/api/pets', {
         method: 'POST',
@@ -53,15 +54,15 @@ test.describe('Vaccine OS Module', () => {
     await page.waitForLoadState('networkidle');
 
     await expect(page.locator('text=Takvim').first()).toBeVisible({ timeout: 10_000 });
-    await expect(page.locator('text=Kayıtlar').first()).toBeVisible();
+    await expect(page.locator('text=AÅŸÄ±').first()).toBeVisible();
   });
 
-  test('Manuel İşlem modal opens and closes', async ({ page }) => {
+  test('Manuel Ä°ÅŸlem modal opens and closes', async ({ page }) => {
     await login(page);
     await page.goto(`/owner/pets/${petId}/vaccines`);
     await page.waitForLoadState('networkidle');
 
-    const manualBtn = page.locator('button:has-text("Manuel İşlem"), button:has-text("Manuel")').first();
+    const manualBtn = page.locator('button:has-text("Manuel Ä°ÅŸlem"), button:has-text("Manuel")').first();
     if (await manualBtn.isVisible()) {
       await manualBtn.click();
       // Modal should open
@@ -70,7 +71,7 @@ test.describe('Vaccine OS Module', () => {
       ).toBeVisible({ timeout: 6_000 });
 
       // Close with Iptal button
-      await page.click('button:has-text("İptal")');
+      await page.click('button:has-text("Ä°ptal")');
       // Modal should close (element count goes back to 0)
       await expect(
         page.getByRole('dialog').first()
@@ -78,7 +79,7 @@ test.describe('Vaccine OS Module', () => {
     }
   });
 
-  test('Takvim görünümü görev takibini gösterir ve test petini temizler', async ({ page }) => {
+  test('Takvim gÃ¶rÃ¼nÃ¼mÃ¼ gÃ¶rev takibini gÃ¶sterir ve test petini temizler', async ({ page }) => {
     await login(page);
     await page.goto(`/owner/pets/${petId}/vaccines`);
     await page.waitForLoadState('networkidle');
@@ -87,10 +88,10 @@ test.describe('Vaccine OS Module', () => {
     const takvimTab = page.locator('button:has-text("Takvim"), a:has-text("Takvim")').first();
     if (await takvimTab.isVisible()) await takvimTab.click();
 
-    // Güncel birleşik pet profilinde Takvim sekmesi, aşıları da içeren
-    // merkezi görev takip görünümünü açar.
+    // GÃ¼ncel birleÅŸik pet profilinde Takvim sekmesi, aÅŸÄ±larÄ± da iÃ§eren
+    // merkezi gÃ¶rev takip gÃ¶rÃ¼nÃ¼mÃ¼nÃ¼ aÃ§ar.
     await expect(
-      page.getByRole('heading', { name: 'Görev Takibi' })
+      page.getByRole('heading', { name: 'GÃ¶rev Takibi' })
     ).toBeVisible({ timeout: 10_000 });
 
     // Clean up pet
@@ -100,16 +101,17 @@ test.describe('Vaccine OS Module', () => {
     if (await petRow.isVisible()) {
       await petRow.locator('button:has(svg)').first().click();
       await page.waitForTimeout(500);
-      await page.click('button:has-text("Profili Kalıcı Olarak Sil")');
+      await page.click('button:has-text("Profili KalÄ±cÄ± Olarak Sil")');
       await page.click('button:has-text("Evet, Sil")');
       await expect(page).toHaveURL(/\/owner\/dashboard/, { timeout: 15000 });
     }
   });
 });
 
-test.describe('Vaccine OS – Route Guard', () => {
+test.describe('Vaccine OS â€“ Route Guard', () => {
   test('Unauthenticated user is redirected to /login', async ({ page }) => {
     await page.goto(`/owner/pets/nonexistent-id/vaccines`);
     await expect(page).toHaveURL(/\/login/, { timeout: 10_000 });
   });
 });
+
