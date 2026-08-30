@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import { dismissBlockingOverlays } from './helpers/dismiss-modals';
 
 // Supabase URL'den canonical storage key türet — local Supabase için sb-127-auth-token
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -337,6 +338,7 @@ test.describe('P0 Final Runtime Retest Gate Suite', () => {
       console.log('[P0-003] Loading pet detail page...');
       await page.goto(`/owner/pets/${testPetId}`);
       await page.waitForLoadState('networkidle');
+      await dismissBlockingOverlays(page);
 
       // 2. Tab Navigation: Özet -> Takvim -> Sağlık -> Bakım -> Beslenme -> Veteriner -> Ekstra
       const tabs = [

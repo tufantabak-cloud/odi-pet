@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { dismissBlockingOverlays } from './helpers/dismiss-modals';
 
 const EMAIL = process.env.TEST_EMAIL;
 const PASSWORD = process.env.TEST_PASSWORD;
@@ -13,6 +14,7 @@ async function login(page: Page) {
   await page.fill('input[name="password"]', PASSWORD);
   await page.click('button[type="submit"]');
   await expect(page).toHaveURL(/\/admin|\/owner\//, { timeout: 15_000 });
+  await dismissBlockingOverlays(page);
 }
 
 test.describe('Vaccine OS Module', () => {
@@ -82,6 +84,7 @@ test.describe('Vaccine OS Module', () => {
     await login(page);
     await page.goto(`/owner/pets/${petId}/vaccines`);
     await page.waitForLoadState('networkidle');
+    await dismissBlockingOverlays(page);
 
     // Navigate to calendar tab if not default
     const takvimTab = page.locator('button:has-text("Takvim"), a:has-text("Takvim")').first();

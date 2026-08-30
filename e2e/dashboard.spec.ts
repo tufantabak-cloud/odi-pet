@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { dismissBlockingOverlays } from './helpers/dismiss-modals';
 
 const EMAIL = process.env.TEST_EMAIL || 'e2e-owner@odipet.local';
 const PASSWORD = process.env.TEST_PASSWORD || 'OdiPetLocalE2E-2026!';
@@ -22,6 +23,8 @@ async function loginAndGetDashboard(page: Page) {
   if (page.url().includes('/admin')) {
     await page.goto('/owner/dashboard?nosplash=true');
   }
+  // Gerçek kullanıcı gibi ekranda beliren onboarding/izin modalını kapat
+  await dismissBlockingOverlays(page);
 }
 
 test.describe('Odi.Pet Dashboard Verification', () => {

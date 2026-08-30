@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { dismissBlockingOverlays } from './helpers/dismiss-modals';
 
 const EMAIL = process.env.TEST_EMAIL;
 const PASSWORD = process.env.TEST_PASSWORD;
@@ -20,6 +21,7 @@ async function login(page: Page) {
   if (page.url().includes('/admin')) {
     await page.goto('/owner/dashboard');
   }
+  await dismissBlockingOverlays(page);
 }
 
 test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification', () => {
@@ -52,6 +54,7 @@ test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification'
     console.log('Logging weight...');
     await page.goto(`/owner/pets/${petId}`);
     await page.waitForLoadState('networkidle');
+    await dismissBlockingOverlays(page);
 
     // Gelişim grafiği güncel birleşik profilde Sağlık sekmesindedir.
     await page.getByRole('tab', { name: 'Sağlık' }).click();
