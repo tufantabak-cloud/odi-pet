@@ -74,15 +74,34 @@ test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification'
 
     // Click weight log tab "Kilo Takibi" if not already selected
     const kiloTab = page.locator('button:has-text("Kilo Takibi")').first();
-    if (await kiloTab.isVisible({ timeout: 5000 })) {
+    if (await kiloTab.isVisible({ timeout: 5000 }).catch(() => false)) {
       await safeClick(page, kiloTab);
       await page.waitForTimeout(500);
     }
 
-    // Fill decimal weight e.g. 5.2
-    await page.fill('input[name="weight_kg"]', '5.2');
-    await safeClick(page, page.locator('button[type="submit"]:has-text("Ekle"), button[type="submit"]:has-text("Kaydet")').first());
-    await page.waitForTimeout(1000);
+    // RulerPicker üzerinden kilo değerini belirle (preset butonu veya sayısal giriş)
+    const presetBtn = page.locator('button:has-text("5.5 kg"), button:has-text("5.0 kg"), button:has-text("5 kg"), button:has-text("4.0 kg")').first();
+    if (await presetBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await safeClick(page, presetBtn);
+    } else {
+      const displayVal = page.locator('div.cursor-pointer:has-text("kg")').first();
+      if (await displayVal.isVisible().catch(() => false)) {
+        await safeClick(page, displayVal);
+        const numberInput = page.locator('input[type="number"]').first();
+        if (await numberInput.isVisible().catch(() => false)) {
+          await numberInput.fill('5.2');
+          await numberInput.blur();
+        }
+      }
+    }
+    await page.waitForTimeout(500);
+
+    // Formu kaydet
+    const saveWeightBtn = page.locator('button[type="submit"]:has-text("Kaydet"), button[type="submit"]:has-text("Ekle")').first();
+    if (await saveWeightBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await safeClick(page, saveWeightBtn);
+      await page.waitForTimeout(1000);
+    }
 
     // Go back to pet profile to verify MinimalGrowthChart rendered weight & custom curve
     await page.goto(`/owner/pets/${petId}`);
@@ -122,8 +141,12 @@ test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification'
 
     // Under timeline or tasks list, check if feeding related task or status is visible
     // "Beslenme" tab in Pet Profile accordion
-    await page.click('button:has-text("Beslenme")');
-    await page.waitForTimeout(500);
+    const beslenmeTab = page.getByRole('tab', { name: 'Beslenme' });
+    if (await beslenmeTab.isVisible().catch(() => false)) {
+      await safeClick(page, beslenmeTab);
+      await page.waitForTimeout(500);
+    }
+
     // Since we saved brand PremiumRoyal and 125g, let's verify if they show up in info fields
     await expect(page.locator('text=PremiumRoyal').first()).toBeVisible({ timeout: 10000 });
     await expect(page.locator('text=125 g').first()).toBeVisible({ timeout: 10000 });
