@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { dismissBlockingOverlays } from './helpers/dismiss-modals';
+import { dismissBlockingOverlays, safeClick } from './helpers/dismiss-modals';
 
 const EMAIL = process.env.TEST_EMAIL;
 const PASSWORD = process.env.TEST_PASSWORD;
@@ -18,10 +18,10 @@ async function login(page: Page) {
 }
 
 test.describe('Vaccine OS Module', () => {
-  let petId: string;
-  const tempPetName = `VacOS_${Math.floor(Math.random() * 9000) + 1000}`;
+  let petId = '';
+  const tempPetName = `VaccineTestPet_${Date.now()}`;
 
-  test.beforeAll(async ({}) => {
+  test.beforeAll(async () => {
     // We will dynamically create the pet in the first test and clean it up after
   });
 
@@ -53,30 +53,34 @@ test.describe('Vaccine OS Module', () => {
 
     await page.goto(`/owner/pets/${petId}/vaccines`);
     await page.waitForLoadState('networkidle');
+    await dismissBlockingOverlays(page);
 
+    // Birleşik pet profilinde Takvim ve Sağlık sekmelerinin varlığını doğrula
     await expect(page.locator('text=Takvim').first()).toBeVisible({ timeout: 10_000 });
-    await expect(page.locator('text=Kayıtlar').first()).toBeVisible();
+    await expect(page.locator('text=Sağlık, text=Kayıtlar').first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('Manuel İşlem modal opens and closes', async ({ page }) => {
     await login(page);
     await page.goto(`/owner/pets/${petId}/vaccines`);
     await page.waitForLoadState('networkidle');
+    await dismissBlockingOverlays(page);
 
-    const manualBtn = page.locator('button:has-text("Manuel İşlem"), button:has-text("Manuel")').first();
-    if (await manualBtn.isVisible()) {
-      await manualBtn.click();
-      // Modal should open
-      await expect(
-        page.getByRole('dialog').first()
-      ).toBeVisible({ timeout: 6_000 });
+    // Click "Manuel İşlem Ekle" button
+    const addBtn = page.locator('button:has-text("Manuel İşlem Ekle")').first();
+    if (await addBtn.isVisible()) {
+      await safeClick(page, addBtn);
 
-      // Close with Iptal button
-      await page.click('button:has-text("İptal")');
-      // Modal should close (element count goes back to 0)
-      await expect(
-        page.getByRole('dialog').first()
-      ).not.toBeVisible({ timeout: 5_000 });
+      // Verify modal opened
+      const modal = page.locator('div[role="dialog"]');
+      await expect(modal).toBeVisible({ timeout: 5000 });
+
+      // Close modal using cancel or X button
+      const closeBtn = modal.locator('button:has-text("İptal"), button[aria-label="Kapat"]').first();
+      await safeClick(page, closeBtn);
+
+      // Verify modal closed
+      await expect(modal).not.toBeVisible();
     }
   });
 
@@ -86,9 +90,11 @@ test.describe('Vaccine OS Module', () => {
     await page.waitForLoadState('networkidle');
     await dismissBlockingOverlays(page);
 
-    // Navigate to calendar tab if not default
-    const takvimTab = page.locator('button:has-text("Takvim"), a:has-text("Takvim")').first();
-    if (await takvimTab.isVisible()) await takvimTab.click();
+    // Birleşik pet profilindeki Takvim sekmesine kanonik safeClick ile geç
+    const takvimTab = page.getByRole('tab', { name: 'Takvim' });
+    if (await takvimTab.isVisible()) {
+      await safeClick(page, takvimTab);
+    }
 
     // Güncel birleşik pet profilinde Takvim sekmesi, aşıları da içeren
     // merkezi görev takip görünümünü açar.
@@ -99,12 +105,15 @@ test.describe('Vaccine OS Module', () => {
     // Clean up pet
     await page.goto('/owner/profile');
     await page.waitForLoadState('networkidle');
+    await dismissBlockingOverlays(page);
     const petRow = page.locator(`.card-base:has-text("${tempPetName}")`);
     if (await petRow.isVisible()) {
-      await petRow.locator('button:has(svg)').first().click();
+      await safeClick(page, petRow.locator('button:has(svg)').first());
       await page.waitForTimeout(500);
-      await page.click('button:has-text("Profili Kalıcı Olarak Sil")');
-      await page.click('button:has-text("Evet, Sil")');
+      const deleteConfirmBtn = page.locator('button:has-text("Sil"), button:has-text("Evet")').first();
+      if (await deleteConfirmBtn.isVisible()) {
+        await safeClick(page, deleteConfirmBtn);
+      }
       await expect(page).toHaveURL(/\/owner\/dashboard/, { timeout: 15000 });
     }
   });

@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { dismissBlockingOverlays } from './helpers/dismiss-modals';
+import { dismissBlockingOverlays, safeClick } from './helpers/dismiss-modals';
 
 const EMAIL = process.env.TEST_EMAIL;
 const PASSWORD = process.env.TEST_PASSWORD;
@@ -57,21 +57,22 @@ test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification'
     await dismissBlockingOverlays(page);
 
     // Gelişim grafiği güncel birleşik profilde Sağlık sekmesindedir.
-    await page.getByRole('tab', { name: 'Sağlık' }).click();
+    await safeClick(page, page.getByRole('tab', { name: 'Sağlık' }));
     // Add first weight record from Pet Profile page using MinimalGrowthChart (add record button)
-    await page.click('button[title="Kilo veya Boy Ekle"]');
+    await safeClick(page, page.locator('button[title="Kilo veya Boy Ekle"]').first());
     await page.waitForTimeout(500);
 
     // Fill decimal weight e.g. 4.8
     await page.fill('input[name="weight_kg"]', '4.8');
     await page.fill('input[name="height_cm"]', '25.3');
-    await page.click('button[type="submit"]:has-text("Kaydet")');
+    await safeClick(page, page.locator('button[type="submit"]:has-text("Kaydet")').first());
     await page.waitForTimeout(1000);
 
     // 3. Navigate to Nutrition and Weight Tracking tab to verify decimals & add another weight for curve scaling
     console.log('Going to nutrition page to log another weight...');
     await page.goto(`/owner/pets/${petId}/nutrition`);
     await page.waitForLoadState('networkidle');
+    await dismissBlockingOverlays(page);
 
     // Click weight log tab "Kilo Takibi"
     await page.click('button:has-text("Kilo Takibi")');

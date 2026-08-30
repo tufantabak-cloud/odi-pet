@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { dismissBlockingOverlays } from './helpers/dismiss-modals';
+import { dismissBlockingOverlays, safeClick } from './helpers/dismiss-modals';
 
 // Supabase URL'den canonical storage key türet — local Supabase için sb-127-auth-token
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -355,7 +355,7 @@ test.describe('P0 Final Runtime Retest Gate Suite', () => {
         const tabBtn = page.locator(tab.selector).first();
         if (await tabBtn.isVisible()) {
           const startTime = Date.now();
-          await tabBtn.click();
+          await safeClick(page, tabBtn);
           await page.waitForTimeout(200);
           const duration = Date.now() - startTime;
           console.log(`[P0-003] Tab switched to ${tab.name} in ${duration}ms (Smooth transition, no long task)`);
@@ -366,7 +366,7 @@ test.describe('P0 Final Runtime Retest Gate Suite', () => {
       const healthTabBtn = page.locator('button:has-text("Sağlık"), [data-tab="health"]').first();
       if (await healthTabBtn.isVisible()) {
         const requestsBeforeHealth = networkRequests.length;
-        await healthTabBtn.click();
+        await safeClick(page, healthTabBtn);
         await page.waitForTimeout(500);
         const requestsAfterHealth = networkRequests.slice(requestsBeforeHealth);
 
