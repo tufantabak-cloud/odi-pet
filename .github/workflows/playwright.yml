@@ -27,6 +27,15 @@ jobs:
         echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY" >> $GITHUB_ENV
         echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY" >> $GITHUB_ENV
         echo "DATABASE_URL=$DB_URL" >> $GITHUB_ENV
+        echo "TEST_EMAIL=uzman11@odipet.test" >> $GITHUB_ENV
+        echo "TEST_PASSWORD=Test4444" >> $GITHUB_ENV
+        echo "TEST_ADMIN_EMAIL=uzman11@odipet.test" >> $GITHUB_ENV
+        echo "TEST_ADMIN_PASSWORD=Test4444" >> $GITHUB_ENV
+    - name: Seed local E2E fixtures
+      run: node scripts/seed-local-e2e-fixtures.mjs
+      env:
+        NEXT_PUBLIC_SUPABASE_URL: ${{ env.NEXT_PUBLIC_SUPABASE_URL }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ env.SUPABASE_SERVICE_ROLE_KEY }}
     - name: Run unit tests
       run: npm run test:unit
       env:
@@ -59,6 +68,10 @@ jobs:
         NEXT_PUBLIC_APP_URL: http://127.0.0.1:3100
         NEXT_DIST_DIR: .next-e2e
         TEST_BASE_URL: http://127.0.0.1:3100
+        TEST_EMAIL: uzman11@odipet.test
+        TEST_PASSWORD: Test4444
+        TEST_ADMIN_EMAIL: uzman11@odipet.test
+        TEST_ADMIN_PASSWORD: Test4444
     - uses: actions/upload-artifact@v4
       if: always()
       with:

@@ -100,6 +100,50 @@ export async function seedLocalE2EFixtures({ apiUrl, serviceRoleKey }) {
     role: 'owner',
   })
 
+  const uzmanUser = await ensureLocalUser(admin, {
+    email: 'uzman11@odipet.test',
+    password: 'Test4444',
+    firstName: 'Uzman',
+    role: 'admin',
+  })
+
+  await admin
+    .from('user_subscriptions')
+    .upsert(
+      {
+        profile_id: uzmanUser.id,
+        plan: 'premium',
+        status: 'active',
+        stripe_customer_id: null,
+        stripe_subscription_id: null,
+        current_period_end: null,
+      },
+      { onConflict: 'profile_id' }
+    )
+
+  await admin.from('pets').upsert({
+    id: '00000000-0000-4000-8000-000000000011',
+    owner_id: uzmanUser.id,
+    name: 'Uzman Pet',
+    species: 'dog',
+    breed: 'Golden Retriever',
+    birth_date: '2022-05-10',
+    gender: 'male',
+    is_neutered: true,
+    city: 'İstanbul',
+    district: 'Kadıköy',
+    is_demo: false,
+  })
+
+  await admin.from('pet_owners').upsert(
+    {
+      pet_id: '00000000-0000-4000-8000-000000000011',
+      profile_id: uzmanUser.id,
+      role: 'owner',
+    },
+    { onConflict: 'pet_id,profile_id' }
+  )
+
   const { error: subscriptionError } = await admin
     .from('user_subscriptions')
     .upsert(
