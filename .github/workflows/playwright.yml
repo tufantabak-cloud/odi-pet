@@ -19,17 +19,74 @@ jobs:
       run: npm ci
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
+    - name: Start local Supabase
+      run: |
+        npx supabase start
+        npx supabase status -o env | grep -E '^(API_URL|ANON_KEY|SERVICE_ROLE_KEY|DB_URL)=' > /tmp/supabase.env
+        source /tmp/supabase.env
+        echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL" >> $GITHUB_ENV
+        echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY" >> $GITHUB_ENV
+        echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY" >> $GITHUB_ENV
+        echo "DATABASE_URL=$DB_URL" >> $GITHUB_ENV
+        node -e "
+          const fs = require('fs');
+          let email = 'e2e-owner@odipet.local';
+          let password = 'OdiPetLocalE2E-2026!';
+          let adminEmail = 'e2e-admin@odipet.local';
+          let adminPassword = 'OdiPetLocalAdminE2E-2026!';
+          if (fs.existsSync('scripts/e2e-fixtures.json')) {
+            const f = JSON.parse(fs.readFileSync('scripts/e2e-fixtures.json', 'utf8'));
+            email = f.owner.email;
+            password = f.owner.password;
+            adminEmail = f.admin.email;
+            adminPassword = f.admin.password;
+          }
+          fs.appendFileSync(process.env.GITHUB_ENV, 'TEST_EMAIL=' + email + '\n');
+          fs.appendFileSync(process.env.GITHUB_ENV, 'TEST_PASSWORD=' + password + '\n');
+          fs.appendFileSync(process.env.GITHUB_ENV, 'TEST_ADMIN_EMAIL=' + adminEmail + '\n');
+          fs.appendFileSync(process.env.GITHUB_ENV, 'TEST_ADMIN_PASSWORD=' + adminPassword + '\n');
+        "
+    - name: Seed local E2E fixtures
+      run: node scripts/seed-local-e2e-fixtures.mjs
+      env:
+        NEXT_PUBLIC_SUPABASE_URL: ${{ env.NEXT_PUBLIC_SUPABASE_URL }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ env.SUPABASE_SERVICE_ROLE_KEY }}
+    - name: Run unit tests
+      run: npm run test:unit
+      env:
+        NEXT_PUBLIC_SUPABASE_URL: ${{ env.NEXT_PUBLIC_SUPABASE_URL }}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ env.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ env.SUPABASE_SERVICE_ROLE_KEY }}
+        DATABASE_URL: ${{ env.DATABASE_URL }}
     - name: Build application
       run: npm run build
       env:
-        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        PLAYWRIGHT_TEST: 'true'
+        NEXT_PUBLIC_SUPABASE_URL: ${{ env.NEXT_PUBLIC_SUPABASE_URL }}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ env.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ env.SUPABASE_SERVICE_ROLE_KEY }}
+        DATABASE_URL: ${{ env.DATABASE_URL }}
+        CRON_SECRET: test-cron-secret-12345
+        NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3100
+        NEXT_PUBLIC_APP_URL: http://127.0.0.1:3100
+        NEXT_DIST_DIR: .next-e2e
     - name: Run Playwright tests
-      run: npx playwright test
+      run: npx playwright test --project=chromium
       env:
-        # Define necessary environment variables for the test here
-        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        PLAYWRIGHT_TEST: 'true'
+        NEXT_PUBLIC_SUPABASE_URL: ${{ env.NEXT_PUBLIC_SUPABASE_URL }}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ env.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ env.SUPABASE_SERVICE_ROLE_KEY }}
+        DATABASE_URL: ${{ env.DATABASE_URL }}
+        CRON_SECRET: test-cron-secret-12345
+        NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3100
+        NEXT_PUBLIC_APP_URL: http://127.0.0.1:3100
+        NEXT_DIST_DIR: .next-e2e
+        TEST_BASE_URL: http://127.0.0.1:3100
+        TEST_EMAIL: ${{ env.TEST_EMAIL }}
+        TEST_PASSWORD: ${{ env.TEST_PASSWORD }}
+        TEST_ADMIN_EMAIL: ${{ env.TEST_ADMIN_EMAIL }}
+        TEST_ADMIN_PASSWORD: ${{ env.TEST_ADMIN_PASSWORD }}
     - uses: actions/upload-artifact@v4
       if: always()
       with:
