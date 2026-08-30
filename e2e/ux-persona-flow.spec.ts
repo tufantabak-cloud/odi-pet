@@ -59,24 +59,18 @@ async function runModuleVisit(
   await m.screenshot('arrived')
 }
 
-// ─── TAM AKIŞ (persona, project adından çözülür) ─────────────────
+// ─── TAM AKIŞ ─────────────────
 
-test('persona tam akış testi', async ({ page }, testInfo) => {
-  test.setTimeout(15 * 60 * 1000) // 10 modül × takılma payı
+for (const persona of PERSONAS) {
+  test.describe(`Persona Akışı: ${persona.name}`, () => {
+    test.use({ ...persona.device });
 
-  const personaId = testInfo.project.name.replace('persona-', '')
-  const persona = PERSONAS.find((p) => p.id === personaId)
+    test(`persona tam akış testi - ${persona.id}`, async ({ page }) => {
+      test.setTimeout(15 * 60 * 1000) // 10 modül × takılma payı
 
-  if (!persona) {
-    throw new Error(
-      `Project adı "${testInfo.project.name}" hiçbir personaya eşleşmedi. ` +
-        `playwright.config.ts içindeki projects tanımını kontrol edin.`
-    )
-  }
+      const recorder = new UxRecorder(persona, page, BASE_URL, OUTPUT_DIR)
 
-  const recorder = new UxRecorder(persona, page, BASE_URL, OUTPUT_DIR)
-
-  await page.goto(BASE_URL)
+      await page.goto(BASE_URL)
 
   await recorder.tryModule('registration', 180, (m) =>
     runRegistration(m, persona, recorder)
@@ -119,5 +113,7 @@ test('persona tam akış testi', async ({ page }, testInfo) => {
 
   // Test kendisi "fail" olmasın — sonuç JSON'da; ama tamamen boş
   // rapor üretimini engellemek için en az 1 modül denenmiş olmalı
-  expect(recorder.buildReport().results.length).toBeGreaterThan(0)
-})
+    expect(recorder.buildReport().results.length).toBeGreaterThan(0)
+    })
+  })
+}

@@ -1,7 +1,9 @@
 import { expect, test, type Page } from '@playwright/test'
 
-const email = process.env.TEST_EMAIL
-const password = process.env.TEST_PASSWORD
+import { LOCAL_E2E_EMAIL, LOCAL_E2E_PASSWORD } from '../scripts/seed-local-e2e-fixtures.mjs'
+
+const email = process.env.TEST_OWNER_EMAIL || LOCAL_E2E_EMAIL
+const password = process.env.TEST_OWNER_PASSWORD || LOCAL_E2E_PASSWORD
 
 async function login(page: Page) {
   if (!email || !password) {
