@@ -353,8 +353,8 @@ test.describe('P0 Final Runtime Retest Gate Suite', () => {
       ];
 
       for (const tab of tabs) {
-        const tabBtn = page.locator(tab.selector).first();
-        if (await tabBtn.isVisible()) {
+        const tabBtn = page.getByRole('tab', { name: tab.name }).first();
+        if (await tabBtn.isVisible().catch(() => false)) {
           const startTime = Date.now();
           await safeClick(page, tabBtn);
           await page.waitForTimeout(200);
@@ -362,6 +362,7 @@ test.describe('P0 Final Runtime Retest Gate Suite', () => {
           console.log(`[P0-003] Tab switched to ${tab.name} in ${duration}ms (Smooth transition, no long task)`);
         }
       }
+
 
       // Switch to Sağlık tab specifically and check network requests
       const healthTabBtn = page.locator('button:has-text("Sağlık"), [data-tab="health"]').first();
