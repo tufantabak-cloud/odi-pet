@@ -1,4 +1,4 @@
-﻿import { expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { test } from './fixtures';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -31,23 +31,34 @@ test('Mobile UX Audit - Dashboard', async ({ page }) => {
     smallTouchTargets: [] as any[],
   };
 
-  console.log('Logging in with Canonical SSOT...');
+  console.log('Registering a new user...');
+  await page.goto('/register');
+  await waitForSplash(page);
+  
+  await page.fill('#name', 'E2E Audit User');
+  await page.fill('#reg-email', email);
+  await page.click('button:has-text("İleri")');
+  
+  await page.waitForSelector('#password', { state: 'visible', timeout: 8000 });
+  await page.fill('#password', password);
+  await page.fill('#confirmPassword', password);
+  await page.check('#terms');
+  
+  await page.click('button[type="submit"]:has-text("Kayıt Ol ve Başla")');
+  await expect(page.locator('text=Aramıza Hoş Geldiniz!')).toBeVisible({ timeout: 15000 });
+
+  // Clear cookies and login
+  console.log('Logging in...');
+  await page.context().clearCookies();
   await page.goto('/login');
   await waitForSplash(page);
   
-  await page.getByTestId('login-email-input').fill(process.env.TEST_EMAIL || 'e2e-owner@odipet.local');
-  await page.getByTestId('login-password-input').fill(process.env.TEST_PASSWORD || 'OdiPetLocalE2E-2026!');
-  await page.getByRole('button', { name: 'GiriÅŸ Yap', exact: true }).click();
+  await page.fill('input[name="email"]', email);
+  await page.fill('input[name="password"]', password);
+  await page.click('button[type="submit"]');
 
-  // Canonical Overlay Dismissal handled here for determinism
-  await page.waitForLoadState('networkidle');
-  const overlayDismiss = page.locator('button:has-text("Kapat"), button[aria-label="Kapat"], [data-testid="onboarding-dismiss"]');
-  if (await overlayDismiss.first().isVisible({ timeout: 2000 }).catch(() => false)) {
-      await overlayDismiss.first().click({ force: true });
-  }
-
-  // Wait for dashboard
-  await page.waitForURL(url => url.pathname.includes('/owner/dashboard'), { timeout: 30000 });
+  // Wait for dashboard or pets/add
+  await page.waitForURL(url => url.pathname.includes('/owner/dashboard') || url.pathname.includes('/owner/pets/add'), { timeout: 30000 });
   console.log('Logged in, current URL:', page.url());
   
   // Handle spotlight tour if present
@@ -59,7 +70,7 @@ test('Mobile UX Audit - Dashboard', async ({ page }) => {
       await page.waitForTimeout(600);
       await page.click('button:has-text("Devam Et")');
       await page.waitForTimeout(600);
-      await page.click('button:has-text("BaÅŸla ğŸ¾")');
+      await page.click('button:has-text("Başla 🐾")');
     } else {
       console.log('Spotlight tour not visible.');
     }
@@ -78,16 +89,15 @@ test('Mobile UX Audit - Dashboard', async ({ page }) => {
 
   await expect(page.locator('#name')).toBeVisible();
   await page.fill('#name', petName);
-  await page.getByTestId('pet-breed-select').fill('British Shorthair');
-  await page.getByRole('button', { name: 'British Shorthair', exact: true }).click();
-  await page.click('label:has-text("â™‚ Erkek")');
+  await page.selectOption('#breed', 'British Shorthair');
+  await page.click('label:has-text("♂ Erkek")');
   await page.fill('input[type="date"]', '2025-01-01');
-  await page.click('button:has-text("Devam Et â†’")');
+  await page.click('button:has-text("Devam Et →")');
   await page.waitForTimeout(1000);
 
-  await page.click('button:has-text("Profili OluÅŸtur")');
+  await page.click('button:has-text("Profili Oluştur")');
   await page.waitForTimeout(1000);
-  await page.click('button:has-text("Atla â†’")');
+  await page.click('button:has-text("Atla →")');
 
   await expect(page).toHaveURL(/\/owner\/pets\/add\/success/, { timeout: 15000 });
   console.log('Pet successfully created!');
@@ -187,4 +197,3 @@ test('Mobile UX Audit - Dashboard', async ({ page }) => {
   fs.writeFileSync(resultsPath, JSON.stringify(results, null, 2), 'utf-8');
   console.log(`Results saved to ${resultsPath}`);
 });
-

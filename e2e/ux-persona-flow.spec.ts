@@ -1,14 +1,13 @@
-﻿import { expect } from '@playwright/test';
-import { test } from './fixtures';
+import { test, expect } from '@playwright/test'
 import { PERSONAS, TEST_PASSWORD, type Persona } from './personas'
 import { UxRecorder, type ModuleRecorder } from './helpers/ux-recorder'
 
 const BASE_URL = process.env.ODIPET_BASE_URL ?? 'http://127.0.0.1:3100'
 const OUTPUT_DIR = 'test-results'
 
-// â”€â”€â”€ GÃœVENLÄ°K KAPISI KALDIRILDI (ODIPET_BASE_URL ile manuel test yapÄ±labilir) â”€â”€â”€
+// ─── GÜVENLİK KAPISI KALDIRILDI (ODIPET_BASE_URL ile manuel test yapılabilir) ───
 
-// â”€â”€â”€ MODÃœL AKIÅLARI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── MODÜL AKIŞLARI ──────────────────────────────────────────────
 
 async function runRegistration(m: ModuleRecorder, persona: Persona, recorder: UxRecorder) {
   await m.clickTestId('register-link', 'login')
@@ -22,7 +21,7 @@ async function runRegistration(m: ModuleRecorder, persona: Persona, recorder: Ux
   await m.clickTestId('register-terms-checkbox', 'register')
   await recorder.humanPause()
   await m.clickTestId('register-submit-button', 'register')
-  // KayÄ±t sonrasÄ± ana ekrana ulaÅŸÄ±ldÄ±ÄŸÄ±nÄ± doÄŸrula
+  // Kayıt sonrası ana ekrana ulaşıldığını doğrula
   await m.waitForTestId('add-first-pet-button', 'home_after_register')
 }
 
@@ -31,12 +30,12 @@ async function runPetRegistration(m: ModuleRecorder, persona: Persona, recorder:
   await recorder.readingPause()
   await m.fillTestId('pet-name-input', `${persona.name}Pet`, 'pet_form')
   await recorder.humanPause()
-  // Persona yaÅŸÄ±na gÃ¶re tÃ¼r seÃ§imi Ã§eÅŸitlendir (kedi/kÃ¶pek dengesi)
+  // Persona yaşına göre tür seçimi çeşitlendir (kedi/köpek dengesi)
   const speciesButton = persona.age % 2 === 0 ? 'pet-species-dog-button' : 'pet-species-cat-button'
   await m.clickTestId(speciesButton, 'pet_form')
   await recorder.humanPause()
   await m.clickTestId('pet-breed-select', 'pet_form')
-  // Ä°lk seÃ§eneÄŸi seÃ§ â€” Ä±rk listesi navigasyonu ayrÄ±ca manuel test konusu
+  // İlk seçeneği seç — ırk listesi navigasyonu ayrıca manuel test konusu
   await recorder.humanPause()
   await m.fillTestId('pet-birthdate-input', '2022-05-15', 'pet_form')
   await m.clickTestId('pet-save-button', 'pet_form')
@@ -60,14 +59,14 @@ async function runModuleVisit(
   await m.screenshot('arrived')
 }
 
-// â”€â”€â”€ TAM AKIÅ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── TAM AKIŞ ─────────────────
 
 for (const persona of PERSONAS) {
-  test.describe(`Persona AkÄ±ÅŸÄ±: ${persona.name}`, () => {
+  test.describe(`Persona Akışı: ${persona.name}`, () => {
     test.use({ ...persona.device });
 
-    test(`persona tam akÄ±ÅŸ testi - ${persona.id}`, async ({ page }) => {
-      test.setTimeout(15 * 60 * 1000) // 10 modÃ¼l Ã— takÄ±lma payÄ±
+    test(`persona tam akış testi - ${persona.id}`, async ({ page }) => {
+      test.setTimeout(15 * 60 * 1000) // 10 modül × takılma payı
 
       const recorder = new UxRecorder(persona, page, BASE_URL, OUTPUT_DIR)
 
@@ -110,12 +109,11 @@ for (const persona of PERSONAS) {
   )
 
   const reportPath = recorder.saveReport()
-  console.log(`Rapor yazÄ±ldÄ±: ${reportPath}`)
+  console.log(`Rapor yazıldı: ${reportPath}`)
 
-  // Test kendisi "fail" olmasÄ±n â€” sonuÃ§ JSON'da; ama tamamen boÅŸ
-  // rapor Ã¼retimini engellemek iÃ§in en az 1 modÃ¼l denenmiÅŸ olmalÄ±
+  // Test kendisi "fail" olmasın — sonuç JSON'da; ama tamamen boş
+  // rapor üretimini engellemek için en az 1 modül denenmiş olmalı
     expect(recorder.buildReport().results.length).toBeGreaterThan(0)
     })
   })
 }
-

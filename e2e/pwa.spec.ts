@@ -1,5 +1,4 @@
-﻿import { expect } from '@playwright/test';
-import { test } from './fixtures';
+import { expect, test } from '@playwright/test'
 
 const SENSITIVE_PATH_PREFIXES = [
   '/api/',
@@ -26,8 +25,8 @@ function extractPrecacheUrls(serviceWorkerSource: string): string[] {
   )
 }
 
-test.describe('PWA Ã¼retim doÄŸrulamasÄ±', () => {
-  test('servis iÅŸÃ§isini etkinleÅŸtirir, Ã¶zel veriyi Ã¶nbelleklemez ve Ã§evrimdÄ±ÅŸÄ± sayfaya dÃ¼ÅŸer', async ({
+test.describe('PWA üretim doğrulaması', () => {
+  test('servis işçisini etkinleştirir, özel veriyi önbelleklemez ve çevrimdışı sayfaya düşer', async ({
     context,
     page,
   }) => {
@@ -261,11 +260,10 @@ test.describe('PWA Ã¼retim doÄŸrulamasÄ±', () => {
         waitUntil: 'domcontentloaded',
       })
       await expect(
-        page.getByRole('heading', { name: 'Ä°nternet baÄŸlantÄ±sÄ± yok' }),
+        page.getByRole('heading', { name: 'İnternet bağlantısı yok' }),
       ).toBeVisible()
     } finally {
       await context.setOffline(false)
     }
   })
 })
-

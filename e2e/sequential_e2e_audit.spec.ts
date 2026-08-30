@@ -1,5 +1,4 @@
-﻿import { expect, Page } from '@playwright/test';
-import { test } from './fixtures';;
+import { test, expect, Page } from '@playwright/test';
 
 const EMAIL = process.env.TEST_EMAIL;
 const PASSWORD = process.env.TEST_PASSWORD;
@@ -117,7 +116,7 @@ test.describe('E2E Audit of Odi.Pet Pages', () => {
         if (statusCode >= 400) {
           status = 'ERROR';
           errorDetails = `HTTP error status ${statusCode}`;
-        } else if (lowerContent.includes('something went wrong') || lowerContent.includes('bir hata oluÅŸtu') || lowerContent.includes('not found') || lowerContent.includes('bulunamadÄ±')) {
+        } else if (lowerContent.includes('something went wrong') || lowerContent.includes('bir hata oluştu') || lowerContent.includes('not found') || lowerContent.includes('bulunamadı')) {
           status = 'ERROR';
           errorDetails = `Page content contains error indicators.`;
         } else if (pageErrors.length > 0) {
@@ -145,4 +144,3 @@ test.describe('E2E Audit of Odi.Pet Pages', () => {
   });
 
 });
-

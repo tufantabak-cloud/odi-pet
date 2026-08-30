@@ -1,4 +1,4 @@
-﻿import { expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { test } from './fixtures';
 
 test.describe('Feature Registry & Admin Certification E2E', () => {
@@ -8,7 +8,6 @@ test.describe('Feature Registry & Admin Certification E2E', () => {
 
     // Verify middleware redirects unauthenticated request to login page
     await expect(page).toHaveURL(/.*login/);
-    await expect(page.locator('body')).toContainText(/GiriÅŸ|login/i);
+    await expect(page.locator('body')).toContainText(/Giriş|login/i);
   });
 });
-

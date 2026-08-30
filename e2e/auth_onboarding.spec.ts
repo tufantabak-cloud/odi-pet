@@ -1,4 +1,4 @@
-﻿import { expect, type Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 import { test } from './fixtures';
 
 test.use({
@@ -10,7 +10,7 @@ test.use({
 
 async function waitForSplash(page: Page) {
   try {
-    const splash = page.locator('[aria-label="AÃ§Ä±lÄ±ÅŸ ekranÄ±nÄ± geÃ§"]');
+    const splash = page.locator('[aria-label="Açılış ekranını geç"]');
     for (let i = 0; i < 30; i++) {
       if (await splash.count() > 0) {
         await splash.click({ force: true }).catch(() => {});
@@ -22,10 +22,12 @@ async function waitForSplash(page: Page) {
   } catch (e) {}
 }
 
-import { setCanonicalState } from './helpers/e2e-utils';
-
 test.beforeEach(async ({ page }) => {
-  await setCanonicalState(page);
+  await page.addInitScript(() => {
+    try {
+      sessionStorage.setItem("odi_splash_seen", "true");
+    } catch (e) {}
+  });
 });
 
 test('Odi.Pet Auth & Onboarding Flow - Full Lifecycle', async ({ page }) => {
@@ -37,7 +39,7 @@ test('Odi.Pet Auth & Onboarding Flow - Full Lifecycle', async ({ page }) => {
   const password = 'StrongPassword123!';
   const petName = `Pati_${Date.now().toString().slice(-4)}`;
 
-  // 1. KayÄ±t Olma (Register)
+  // 1. Kayıt Olma (Register)
   console.log('Starting Register Flow...');
   await page.goto('/register?nosplash=true');
   await waitForSplash(page);
@@ -53,13 +55,13 @@ test('Odi.Pet Auth & Onboarding Flow - Full Lifecycle', async ({ page }) => {
   await page.fill('#confirmPassword', password);
   await page.locator('#terms').check({ force: true });
   await page.getByTestId('register-submit-button').click({ force: true });
-  await expect(page.locator('text=AramÄ±za HoÅŸ Geldiniz!')).toBeVisible({ timeout: 10000 });
+  await expect(page.locator('text=Aramıza Hoş Geldiniz!')).toBeVisible({ timeout: 10000 });
 
-  // KayÄ±t sonrasÄ± otomatik oturumu simÃ¼le etmek iÃ§in Ã§erezleri temizleyip sÄ±fÄ±rdan login olalÄ±m
+  // Kayıt sonrası otomatik oturumu simüle etmek için çerezleri temizleyip sıfırdan login olalım
   console.log('Clearing cookies to test clean Login Flow...');
   await page.context().clearCookies();
 
-  // 2. GiriÅŸ Yapma (Login)
+  // 2. Giriş Yapma (Login)
   console.log('Starting Login Flow...');
   await page.goto('/login?nosplash=true');
   await waitForSplash(page);
@@ -68,22 +70,22 @@ test('Odi.Pet Auth & Onboarding Flow - Full Lifecycle', async ({ page }) => {
   await page.fill('input[name="password"]', password);
   await page.click('button[type="submit"]', { force: true });
   
-  // Ä°lk defa giriÅŸ yaptÄ±ÄŸÄ± iÃ§in dashboard'a yÃ¶nlendirilmeli
+  // İlk defa giriş yaptığı için dashboard'a yönlendirilmeli
   await expect(page).toHaveURL(/\/owner\/dashboard/, { timeout: 15000 });
-  await expect(page.locator('h2:has-text("HoÅŸ Geldiniz!"), h2:has-text("Ajanda"), h2:has-text("Petlerim"), a:has-text("Ä°lk Dostumu Ekle")').first()).toBeVisible({ timeout: 10000 });
+  await expect(page.locator('h2:has-text("Hoş Geldiniz!"), h2:has-text("Ajanda"), h2:has-text("Petlerim"), a:has-text("İlk Dostumu Ekle")').first()).toBeVisible({ timeout: 10000 });
 
-  // Onboarding Wizard / Ä°lk Dostumu Ekle adÄ±mÄ±na tÄ±kla
-  await page.click('a:has-text("Ä°lk Dostumu Ekle"), button:has-text("BaÅŸla ğŸ¾"), button:has-text("Devam Et")');
+  // Onboarding Wizard / İlk Dostumu Ekle adımına tıkla
+  await page.click('a:has-text("İlk Dostumu Ekle"), button:has-text("Başla 🐾"), button:has-text("Devam Et")');
   
-  // 3. Ä°lk Evcil Hayvan Ekleme (Onboarding - HÄ±zlÄ± KayÄ±t)
+  // 3. İlk Evcil Hayvan Ekleme (Onboarding - Hızlı Kayıt)
   console.log('Starting Pet Onboarding...');
   await expect(page).toHaveURL(/\/owner\/pets\/add/, { timeout: 15000 });
 
-  // AdÄ±m 1: TÃ¼r SeÃ§imi (Kedi)
+  // Adım 1: Tür Seçimi (Kedi)
   await page.click('button:has-text("Kedi"), button[aria-label*="Kedi"]', { force: true });
   await page.waitForTimeout(1000);
 
-  // AdÄ±m 2: Temel Bilgiler Formu
+  // Adım 2: Temel Bilgiler Formu
   await expect(page.locator('#name')).toBeVisible();
   await page.fill('#name', petName);
   await page.click('button:has-text("British Shorthair")', { force: true });
@@ -92,12 +94,12 @@ test('Odi.Pet Auth & Onboarding Flow - Full Lifecycle', async ({ page }) => {
   await page.locator('[data-testid="pet-birthdate-input"]').dispatchEvent('change').catch(() => {});
   await page.click('button:has-text("4")', { force: true }).catch(() => {});
 
-  // Devam et (AdÄ±m 2 -> AdÄ±m 3)
+  // Devam et (Adım 2 -> Adım 3)
   await expect(page.getByTestId('pet-save-button')).toBeEnabled({ timeout: 5000 });
   await page.getByTestId('pet-save-button').click();
   await page.waitForTimeout(1000);
 
-  // AdÄ±m 3: Profil FotoÄŸrafÄ± Ekle (Zorunlu)
+  // Adım 3: Profil Fotoğrafı Ekle (Zorunlu)
   const fileInput = page.getByTestId('pet-photo-input');
   await fileInput.setInputFiles({
     name: 'test-pet.jpg',
@@ -105,25 +107,25 @@ test('Odi.Pet Auth & Onboarding Flow - Full Lifecycle', async ({ page }) => {
     buffer: Buffer.from('fake-image-bytes')
   });
   await page.waitForTimeout(500);
-  await page.click('button[data-testid="pet-profile-create-button"], button:has-text("Profili OluÅŸtur")', { force: true });
+  await page.click('button[data-testid="pet-profile-create-button"], button:has-text("Profili Oluştur")', { force: true });
   await page.waitForTimeout(1000);
 
-  // AdÄ±m 4: Acil Durum AÄŸÄ± (Atla)
+  // Adım 4: Acil Durum Ağı (Atla)
   const skipBtn = page.locator('[data-testid="emergency-contact-skip-button"], button:has-text("Daha Sonra Ekle"), a:has-text("Daha Sonra Ekle"), button:has-text("Atla")').first();
   await expect(skipBtn).toBeVisible({ timeout: 10000 });
   await skipBtn.click({ force: true });
 
-  // BaÅŸarÄ±yla eklenip baÅŸarÄ± ekranÄ±na veya dashboard'a yÃ¶nlendirildi mi?
+  // Başarıyla eklenip başarı ekranına veya dashboard'a yönlendirildi mi?
   await expect(page).toHaveURL(/\/owner\/pets\/add\/success|\/owner\/dashboard/, { timeout: 15000 });
 
-  // 4. Ã‡Ä±kÄ±ÅŸ Yapma (Logout)
+  // 4. Çıkış Yapma (Logout)
   console.log('Starting Logout Flow...');
   await page.goto('/owner/profile?nosplash=true');
   await waitForSplash(page);
-  const logoutBtn = page.locator('button:has-text("Hesaptan Ã‡Ä±kÄ±ÅŸ Yap")');
+  const logoutBtn = page.locator('button:has-text("Hesaptan Çıkış Yap")');
   await expect(logoutBtn).toBeVisible({ timeout: 10000 });
   await page.evaluate(() => {
-    const btn = Array.from(document.querySelectorAll('button')).find(b => b.textContent?.includes('Hesaptan Ã‡Ä±kÄ±ÅŸ Yap'));
+    const btn = Array.from(document.querySelectorAll('button')).find(b => b.textContent?.includes('Hesaptan Çıkış Yap'));
     if (btn && btn.form) {
       btn.form.requestSubmit();
     } else if (btn) {
@@ -132,14 +134,14 @@ test('Odi.Pet Auth & Onboarding Flow - Full Lifecycle', async ({ page }) => {
   });
   await expect(page).toHaveURL(/\/login/, { timeout: 15000 });
 
-  // 5. Åifremi Unuttum (Forgot Password)
+  // 5. Şifremi Unuttum (Forgot Password)
   console.log('Starting Password Reset Request...');
   await page.goto('/reset-password?nosplash=true');
   await waitForSplash(page);
   await page.fill('#email', email);
   await page.click('button[type="submit"]');
   try {
-    await expect(page.locator('text=SÄ±fÄ±rlama baÄŸlantÄ±sÄ± gÃ¶nderildi')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=Sıfırlama bağlantısı gönderildi')).toBeVisible({ timeout: 10000 });
     console.log('Password reset request successful!');
   } catch (e) {
     const errorText = await page.locator('[role="alert"]').innerText().catch(() => 'No alert found');
@@ -149,4 +151,3 @@ test('Odi.Pet Auth & Onboarding Flow - Full Lifecycle', async ({ page }) => {
     throw e;
   }
 });
-

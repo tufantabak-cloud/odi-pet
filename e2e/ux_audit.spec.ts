@@ -1,4 +1,4 @@
-﻿import { expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { test } from './fixtures';
 import * as path from 'path';
 
@@ -25,30 +25,30 @@ test('UX Audit - Progressive Profiling and Dashboard Smart Cards', async ({ page
   }
   console.log('Logged in successfully!');
 
-  // 1. Onboarding Pets Add SayfasÄ± Denetimi
+  // 1. Onboarding Pets Add Sayfası Denetimi
   console.log('Navigating to /owner/pets/add...');
   await page.goto('/owner/pets/add');
   await page.waitForLoadState('networkidle');
 
-  // AdÄ±m 1: TÃ¼r SeÃ§imi screenshot
+  // Adım 1: Tür Seçimi screenshot
   await page.screenshot({ path: path.join(ARTIFACT_DIR, 'pets_add_step1_species.png') });
   console.log('Step 1 Species Selector screenshot taken.');
 
-  // Kedi seÃ§elim
+  // Kedi seçelim
   console.log('Selecting "Kedi" to proceed to Step 2...');
   const catBtn = page.locator('button:has-text("Kedi")');
   await catBtn.click();
-  await page.waitForTimeout(1000); // fade-in animasyonu iÃ§in bekle
+  await page.waitForTimeout(1000); // fade-in animasyonu için bekle
 
-  // AdÄ±m 2: Bilgiler Formunun render edilmesini bekleyelim
-  await expect(page.locator('label:has-text("KÄ±sÄ±rlaÅŸtÄ±rÄ±lma Durumu")')).toBeVisible({ timeout: 5000 });
+  // Adım 2: Bilgiler Formunun render edilmesini bekleyelim
+  await expect(page.locator('label:has-text("Kısırlaştırılma Durumu")')).toBeVisible({ timeout: 5000 });
 
-  // AÅŸamalÄ± Veri Toplama alanlarÄ±nÄ±n durumunu inceleyelim
-  const isNeuteredVisible = await page.locator('label:has-text("KÄ±sÄ±rlaÅŸtÄ±rÄ±lma Durumu")').isVisible();
+  // Aşamalı Veri Toplama alanlarının durumunu inceleyelim
+  const isNeuteredVisible = await page.locator('label:has-text("Kısırlaştırılma Durumu")').isVisible();
   const weightVisible = await page.locator('label:has-text("Kilo")').isVisible();
   console.log(`is_neutered visible: ${isNeuteredVisible}, weight visible: ${weightVisible}`);
 
-  // AdÄ±m 2 Bilgiler screenshot
+  // Adım 2 Bilgiler screenshot
   await page.screenshot({ path: path.join(ARTIFACT_DIR, 'pets_add_step2_details.png') });
   console.log('Step 2 Details Form screenshot taken.');
 
@@ -61,18 +61,17 @@ test('UX Audit - Progressive Profiling and Dashboard Smart Cards', async ({ page
   await page.screenshot({ path: path.join(ARTIFACT_DIR, 'dashboard_page.png') });
   console.log('Dashboard page screenshot taken.');
 
-  // SmartCardBanner / DashboardSmartCards varlÄ±ÄŸÄ±nÄ± kontrol edelim
-  const smartCardContainer = page.locator('div:has-text("DÄ±ÅŸ Parazit UygulamasÄ±"), div:has-text("AÅŸÄ± SonrasÄ± Takip"), div:has-text("Pet Dostu Mekanlar")').first();
+  // SmartCardBanner / DashboardSmartCards varlığını kontrol edelim
+  const smartCardContainer = page.locator('div:has-text("Dış Parazit Uygulaması"), div:has-text("Aşı Sonrası Takip"), div:has-text("Pet Dostu Mekanlar")').first();
   const hasSmartCard = await smartCardContainer.count() > 0;
   console.log(`Has active Smart Card: ${hasSmartCard}`);
 
   if (hasSmartCard) {
     const smartCardText = await smartCardContainer.innerText();
     console.log(`Active Smart Card Text:\n${smartCardText}`);
-    // Smart card'Ä±n ekran gÃ¶rÃ¼ntÃ¼sÃ¼nÃ¼ Ã¶zel olarak alalÄ±m
+    // Smart card'ın ekran görüntüsünü özel olarak alalım
     await smartCardContainer.screenshot({ path: path.join(ARTIFACT_DIR, 'dashboard_smartcard_element.png') });
   } else {
     console.log('No active Smart Card found on dashboard.');
   }
 });
-

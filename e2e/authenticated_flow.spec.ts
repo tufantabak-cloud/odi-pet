@@ -1,4 +1,4 @@
-﻿import { expect, type Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 import { test } from './fixtures';
 
 const EMAIL = process.env.TEST_EMAIL;
@@ -34,8 +34,8 @@ test.describe('SOS & Treatments Authenticated Flow', () => {
       fd.append('gender', 'male');
       fd.append('is_neutered', 'false');
       fd.append('weight', '15');
-      fd.append('city', 'Ä°zmir');
-      fd.append('district', 'KarÅŸÄ±yaka');
+      fd.append('city', 'İzmir');
+      fd.append('district', 'Karşıyaka');
 
       const res = await fetch('/api/pets', {
         method: 'POST',
@@ -55,7 +55,7 @@ test.describe('SOS & Treatments Authenticated Flow', () => {
     await page.waitForLoadState('networkidle');
 
     // Section header should be visible
-    await expect(page.locator('h2:has-text("Acil Durum AÄŸÄ±")').first()).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('text=4. Acil Durum Ağı').first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('Can fill and save an SOS contact', async ({ page }) => {
@@ -63,17 +63,17 @@ test.describe('SOS & Treatments Authenticated Flow', () => {
     await page.goto(`/owner/pets/${petId}/edit`);
     await page.waitForLoadState('networkidle');
 
-    const nameInput = page.locator('input[placeholder*="Ä°sim"], input[placeholder*="isim"], input[placeholder*="Ali YÄ±lmaz"]').first();
+    const nameInput = page.locator('input[placeholder*="İsim"], input[placeholder*="isim"], input[placeholder*="Ali Yılmaz"]').first();
     if (await nameInput.isVisible()) {
-      await nameInput.fill('E2E Test KiÅŸisi');
+      await nameInput.fill('E2E Test Kişisi');
       const phoneInput = page.locator('input[placeholder*="Telefon"], input[type="tel"]').first();
       if (await phoneInput.isVisible()) {
         await phoneInput.fill('05559998877');
       }
-      const saveBtn = page.getByRole('button', { name: 'DeÄŸiÅŸiklikleri Kaydet', exact: false });
+      const saveBtn = page.locator('button:has-text("Acil Durum Ağı"), button:has-text("Kaydet"), button:has-text("SOS")').first();
       if (await saveBtn.isVisible()) {
         await saveBtn.click();
-        await expect(page.locator('text=Bilgiler baÅŸarÄ±yla gÃ¼ncellendi').first()).toBeVisible({ timeout: 10_000 });
+        await expect(page.locator('text=Acil durum ağı güncellendi').first()).toBeVisible({ timeout: 10_000 });
       }
     }
   });
@@ -84,7 +84,7 @@ test.describe('SOS & Treatments Authenticated Flow', () => {
     await page.goto(`/owner/pets/${petId}/treatments`);
     await page.waitForLoadState('networkidle');
 
-    await expect(page.locator('h1:has-text("SaÄŸlÄ±k Takip ModÃ¼lÃ¼")').first()).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('h1:has-text("Sağlık Takip Modülü")').first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('"Plan Yap" redirection from treatments page works', async ({ page }) => {
@@ -92,7 +92,7 @@ test.describe('SOS & Treatments Authenticated Flow', () => {
     await page.goto(`/owner/pets/${petId}/treatments`);
     await page.waitForLoadState('networkidle');
 
-    const planBtn = page.locator('button:has-text("Plan Yap"), button:has-text("Yeni SaÄŸlÄ±k PlanÄ± Ekle")').first();
+    const planBtn = page.locator('button:has-text("Plan Yap"), button:has-text("Yeni Sağlık Planı Ekle")').first();
     if (await planBtn.isVisible()) {
       await planBtn.click();
       await expect(page).toHaveURL(new RegExp(`/owner/plan-yap/saglik`), { timeout: 10_000 });
@@ -107,10 +107,9 @@ test.describe('SOS & Treatments Authenticated Flow', () => {
     if (await petRow.isVisible()) {
       await petRow.locator('button:has(svg)').first().click();
       await page.waitForTimeout(500);
-      await page.click('button:has-text("Profili KalÄ±cÄ± Olarak Sil")');
+      await page.click('button:has-text("Profili Kalıcı Olarak Sil")');
       await page.click('button:has-text("Evet, Sil")');
       await expect(page).toHaveURL(/\/owner\/dashboard/, { timeout: 15000 });
     }
   });
 });
-

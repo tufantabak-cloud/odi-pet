@@ -1,5 +1,4 @@
-﻿import { expect } from '@playwright/test';
-import { test } from './fixtures';
+import { test, expect } from '@playwright/test'
 
 test.describe('Lost Pet RLS and Authorization Edge Cases', () => {
   const MOCK_PET_ID_B = 'b94e8251-512c-4972-8f19-b1d5c2e91234' // Pet belonging to User B
@@ -22,4 +21,3 @@ test.describe('Lost Pet RLS and Authorization Edge Cases', () => {
     expect([401, 403, 404]).toContain(response.status())
   })
 })
-

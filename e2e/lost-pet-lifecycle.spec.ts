@@ -1,4 +1,4 @@
-﻿import { expect, type Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 import { test } from './fixtures';
 
 const EMAIL = process.env.TEST_EMAIL;
@@ -36,8 +36,8 @@ test.describe('Lost Pet E2E Lifecycle Flow', () => {
       fd.append('gender', 'male');
       fd.append('is_neutered', 'false');
       fd.append('weight', '15');
-      fd.append('city', 'Ä°zmir');
-      fd.append('district', 'KarÅŸÄ±yaka');
+      fd.append('city', 'İzmir');
+      fd.append('district', 'Karşıyaka');
 
       const res = await fetch('/api/pets', {
         method: 'POST',
@@ -58,7 +58,7 @@ test.describe('Lost Pet E2E Lifecycle Flow', () => {
     await expect(sosButton).toBeVisible();
     await sosButton.click();
 
-    const lostReportBtn = page.locator('button:has-text("KayÄ±p Ä°lanÄ± Ver")');
+    const lostReportBtn = page.locator('button:has-text("Kayıp İlanı Ver")');
     await expect(lostReportBtn).toBeVisible();
     await lostReportBtn.click();
 
@@ -72,21 +72,21 @@ test.describe('Lost Pet E2E Lifecycle Flow', () => {
 
     // Step 2 of Wizard: Location Details
     // Select city/district and add description
-    await page.selectOption('select:near(label:has-text("Ä°l"))', { label: 'Ä°zmir' });
-    await page.selectOption('select:near(label:has-text("Ä°lÃ§e"))', { label: 'KarÅŸÄ±yaka' });
+    await page.selectOption('select:near(label:has-text("İl"))', { label: 'İzmir' });
+    await page.selectOption('select:near(label:has-text("İlçe"))', { label: 'Karşıyaka' });
 
     const addrTextarea = page.locator('textarea[placeholder*="Mahalle, sokak"]');
-    await addrTextarea.fill('BostanlÄ± Sahil YakÄ±nlarÄ±');
+    await addrTextarea.fill('Bostanlı Sahil Yakınları');
 
-    const submitBtn = page.locator('button:has-text("Ä°lanÄ± YayÄ±nla")');
+    const submitBtn = page.locator('button:has-text("İlanı Yayınla")');
     await submitBtn.click();
 
     // Verify lost report is created by opening SOS modal again and seeing the active banner
     await page.goto(`/owner/pets/${petId}`);
     await expect(sosButton).toBeVisible();
     await sosButton.click();
-    await expect(page.locator('text=KAYIP Ä°LANI AKTÄ°F')).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('text=BostanlÄ± Sahil YakÄ±nlarÄ±')).toBeVisible();
+    await expect(page.locator('text=KAYIP İLANI AKTİF')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=Bostanlı Sahil Yakınları')).toBeVisible();
     
     // Close SOS Modal
     await page.getByRole('button', { name: 'Kapat', exact: true }).click();
@@ -94,13 +94,13 @@ test.describe('Lost Pet E2E Lifecycle Flow', () => {
     // 5. Navigate to Dashboard to verify the FloatingLostPets card is active and shows the new report
     await page.goto('/owner/dashboard');
     
-    const floatingBtn = page.locator('button[aria-label="KayÄ±p Ä°lanlarÄ±"]');
+    const floatingBtn = page.locator('button[aria-label="Kayıp İlanları"]');
     await expect(floatingBtn).toBeVisible();
     await floatingBtn.click();
 
     // Verify pet name and location are visible inside the modal
     await expect(page.locator(`p.text-text-primary:has-text("${tempPetName}")`)).toBeVisible();
-    await expect(page.locator('text=BostanlÄ± Sahil YakÄ±nlarÄ±').first()).toBeVisible();
+    await expect(page.locator('text=Bostanlı Sahil Yakınları').first()).toBeVisible();
     
     // Close the floating lost pet list
     await page.getByRole('button', { name: 'Kapat', exact: true }).click();
@@ -110,7 +110,7 @@ test.describe('Lost Pet E2E Lifecycle Flow', () => {
     await expect(sosButton).toBeVisible();
     await sosButton.click();
 
-    const foundButton = page.locator('button:has-text("Bulundu Ä°ÅŸaretle")');
+    const foundButton = page.locator('button:has-text("Bulundu İşaretle")');
     await expect(foundButton).toBeVisible();
     
     // Mock the browser confirm dialog to automatically click OK
@@ -125,7 +125,7 @@ test.describe('Lost Pet E2E Lifecycle Flow', () => {
     await page.goto(`/owner/pets/${petId}`);
     await expect(sosButton).toBeVisible();
     await sosButton.click();
-    await expect(page.locator('text=KAYIP Ä°LANI AKTÄ°F')).not.toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=KAYIP İLANI AKTİF')).not.toBeVisible({ timeout: 10000 });
     
     // Close SOS Modal
     await page.getByRole('button', { name: 'Kapat', exact: true }).click();
@@ -136,4 +136,3 @@ test.describe('Lost Pet E2E Lifecycle Flow', () => {
     }, petId);
   });
 });
-

@@ -1,5 +1,4 @@
-﻿import { expect } from '@playwright/test';
-import { test } from './fixtures';
+import { test, expect } from '@playwright/test'
 
 test.describe('Lost Pet Location Validation Edge Cases', () => {
   const MOCK_PET_ID = 'e83d2947-794e-4fb8-a8c6-629cd122ab57' // Must be a valid UUID format
@@ -22,7 +21,7 @@ test.describe('Lost Pet Location Validation Edge Cases', () => {
   test('POST /api/pets/[id]/lost should return 400 when contact_phone is invalid', async ({ request }) => {
     const responseBadPhone = await request.post(`/api/pets/${MOCK_PET_ID}/lost`, {
       data: {
-        last_seen_location: 'GeÃ§erli Konum Bilgisi',
+        last_seen_location: 'Geçerli Konum Bilgisi',
         contact_phone: 'asdfasdf'
       }
     })
@@ -30,7 +29,7 @@ test.describe('Lost Pet Location Validation Edge Cases', () => {
     expect([400, 401, 403]).toContain(responseBadPhone.status())
     if (responseBadPhone.status() === 400) {
       const body = await responseBadPhone.json()
-      expect(body.error).toContain('geÃ§erli bir iletiÅŸim numarasÄ±')
+      expect(body.error).toContain('geçerli bir iletişim numarası')
     }
   })
 
@@ -40,7 +39,7 @@ test.describe('Lost Pet Location Validation Edge Cases', () => {
 
     const responseFuture = await request.post(`/api/pets/${MOCK_PET_ID}/lost`, {
       data: {
-        last_seen_location: 'GeÃ§erli Konum Bilgisi',
+        last_seen_location: 'Geçerli Konum Bilgisi',
         contact_phone: '05554443322',
         last_seen_at: futureDate.toISOString()
       }
@@ -53,4 +52,3 @@ test.describe('Lost Pet Location Validation Edge Cases', () => {
     }
   })
 })
-

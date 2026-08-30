@@ -1,4 +1,4 @@
-﻿import { expect, type Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 import { test } from './fixtures';
 
 const EMAIL = process.env.TEST_EMAIL;
@@ -76,7 +76,6 @@ test.describe('Lost Pet Duplicate Prevention API Test', () => {
     expect(result.body1.success).toBe(true);
     
     expect(result.status2).toBe(400);
-    expect(result.body2.error).toBe('Bu pet iÃ§in zaten aktif bir kayÄ±p ilanÄ± var');
+    expect(result.body2.error).toBe('Bu pet için zaten aktif bir kayıp ilanı var');
   });
 });
-

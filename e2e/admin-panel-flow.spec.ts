@@ -1,4 +1,4 @@
-﻿import { expect, type Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 import { test } from './fixtures';
 
 const EMAIL = process.env.TEST_ADMIN_EMAIL;
@@ -43,8 +43,8 @@ test.describe('Dynamic Admin Panel E2E flow', () => {
       fd.append('gender', 'female');
       fd.append('is_neutered', 'true');
       fd.append('weight', '4.2');
-      fd.append('city', 'Ä°stanbul');
-      fd.append('district', 'KadÄ±kÃ¶y');
+      fd.append('city', 'İstanbul');
+      fd.append('district', 'Kadıköy');
 
       const res = await fetch('/api/pets', {
         method: 'POST',
@@ -84,8 +84,8 @@ test.describe('Dynamic Admin Panel E2E flow', () => {
     await page.goto(`/admin/users/${searchRes}`);
     
     // Check that user detail cards (Subscription, Events, Role) are rendered
-    await expect(page.locator('text=KullanÄ±cÄ±lar').first()).toBeVisible();
-    await expect(page.locator('text=ğŸ”‘ Rol DeÄŸiÅŸtir')).toBeVisible();
+    await expect(page.locator('text=Kullanıcılar').first()).toBeVisible();
+    await expect(page.locator('text=🔑 Rol Değiştir')).toBeVisible();
 
     // Verify option components exist in the Role Selector Form
     await expect(page.locator('label[for="role-option-owner"]')).toBeVisible();
@@ -98,7 +98,7 @@ test.describe('Dynamic Admin Panel E2E flow', () => {
     await page.goto('/admin');
     
     // Trigger logout form submit button
-    const logoutBtn = page.locator('button:has-text("Ã‡Ä±kÄ±ÅŸ Yap")').first();
+    const logoutBtn = page.locator('button:has-text("Çıkış Yap")').first();
     await expect(logoutBtn).toBeVisible();
     await logoutBtn.click();
 
@@ -107,4 +107,3 @@ test.describe('Dynamic Admin Panel E2E flow', () => {
   });
 
 });
-

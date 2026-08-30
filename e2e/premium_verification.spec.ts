@@ -1,4 +1,4 @@
-﻿import { expect, type Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 import { test } from './fixtures';
 
 const EMAIL = process.env.TEST_ADMIN_EMAIL || 'tufan.tabak@gmail.com';
@@ -38,13 +38,13 @@ test.describe('Premium & Feature Entitlement Production Readiness Suite', () => 
     await page.goto('/admin/memberships');
 
     // Verify main tabs are present
-    await expect(page.locator('button:has-text("Promosyon & Davet KampanyalarÄ±")')).toBeVisible();
-    await expect(page.locator('button:has-text("KullanÄ±cÄ± Detay & Aksiyon Merkezi")')).toBeVisible();
-    await expect(page.locator('button:has-text("Plan YÃ¶netimi (Phase 18D)")')).toBeVisible();
+    await expect(page.locator('button:has-text("Promosyon & Davet Kampanyaları")')).toBeVisible();
+    await expect(page.locator('button:has-text("Kullanıcı Detay & Aksiyon Merkezi")')).toBeVisible();
+    await expect(page.locator('button:has-text("Plan Yönetimi (Phase 18D)")')).toBeVisible();
 
     // Click on Plans tab
-    await page.click('button:has-text("Plan YÃ¶netimi (Phase 18D)")');
-    await expect(page.locator('text=Platform PlanlarÄ±')).toBeVisible();
+    await page.click('button:has-text("Plan Yönetimi (Phase 18D)")');
+    await expect(page.locator('text=Platform Planları')).toBeVisible();
   });
 
   test('3. Admin Preview Cookie Mode: Previewing Pro/AI+ applies correctly', async ({ page, context }) => {
@@ -52,7 +52,7 @@ test.describe('Premium & Feature Entitlement Production Readiness Suite', () => 
     await page.goto('/admin/memberships');
 
     // Ensure page loaded
-    await expect(page.locator('h1:has-text("Ãœyelik Ä°zleme")')).toBeVisible();
+    await expect(page.locator('h1:has-text("Üyelik İzleme")')).toBeVisible();
     // Set preview cookie programmatically
     await context.addCookies([{
       name: 'odi_premium_preview',
@@ -89,4 +89,3 @@ test.describe('Premium & Feature Entitlement Production Readiness Suite', () => 
   });
 
 });
-

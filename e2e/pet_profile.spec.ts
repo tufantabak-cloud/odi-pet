@@ -1,4 +1,4 @@
-﻿import { expect, type Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 import { test } from './fixtures';
 
 const EMAIL = process.env.TEST_EMAIL;
@@ -27,8 +27,8 @@ test.describe('Odi.Pet Pet Profile Page Verification', () => {
   test('Full Pet Profile Lifecycle (Create, View, Calculate Size, SOS, Edit, Purge, Delete)', async ({ page }) => {
     await login(page);
 
-    // Bu senaryo kayÄ±t sihirbazÄ±nÄ± deÄŸil profil yaÅŸam dÃ¶ngÃ¼sÃ¼nÃ¼ sÄ±nar.
-    // Test petini kararlÄ± API sÃ¶zleÅŸmesi Ã¼zerinden oluÅŸtur.
+    // Bu senaryo kayıt sihirbazını değil profil yaşam döngüsünü sınar.
+    // Test petini kararlı API sözleşmesi üzerinden oluştur.
     console.log('Creating a temporary pet...');
     const petResponse = await page.evaluate(async (name) => {
       const form = new FormData();
@@ -52,56 +52,55 @@ test.describe('Odi.Pet Pet Profile Page Verification', () => {
     await page.goto(`/owner/pets/${petId}`);
     await page.waitForLoadState('networkidle');
 
-    // 2. Temel Kart GÃ¶rÃ¼nÃ¼mÃ¼ (Basic Card View Checks)
+    // 2. Temel Kart Görünümü (Basic Card View Checks)
     console.log('Verifying Basic Card View...');
     await expect(page.locator(`h1:has-text("${petName}")`)).toBeVisible({ timeout: 10000 });
     await expect(page.locator('text=British Shorthair').first()).toBeVisible();
     await expect(page.getByText('4.5 Kilo', { exact: false }).first()).toBeVisible();
 
-    // 3. Boyut Hesaplama & DÃ¼zenleme ModÃ¼lÃ¼ (Size Calculation & Edit Module)
+    // 3. Boyut Hesaplama & Düzenleme Modülü (Size Calculation & Edit Module)
     console.log('Navigating to Edit Page for Size Calculation Checks...');
     await page.goto(`/owner/pets/${petId}/edit`);
     await page.waitForLoadState('networkidle');
 
-    // Kilo deÄŸiÅŸtiÄŸinde boyut skalasÄ± gÃ¼ncelleniyor mu?
-    await page.getByRole('button', { name: '2.5 kg', exact: true }).click(); // 2.5 kg should trigger 'small' size
+    // Kilo değiştiğinde boyut skalası güncelleniyor mu?
+    const weightInput = page.locator('#weight');
+    await weightInput.fill('2.5'); // 2.5 kg should trigger 'small' size
     await page.waitForTimeout(300);
-    // Kedi boyut skalasÄ± (kilo bazlÄ±) olmalÄ± ve 'KÃ¼Ã§Ã¼k' gÃ¶sterilmeli
-    await expect(page.locator('text=Kedi Boyut SkalasÄ±')).toBeVisible();
-    await expect(page.locator('span:has-text("KÃ¼Ã§Ã¼k")')).toBeVisible();
+    // Kedi boyut skalası (kilo bazlı) olmalı ve 'Küçük' gösterilmeli
+    await expect(page.locator('text=Kedi Boyut Skalası')).toBeVisible();
+    await expect(page.locator('span:has-text("Küçük")')).toBeVisible();
 
-    await page.locator('text=2.5').first().click(); // Open editing mode on RulerPicker
-    await page.locator('input[type="number"]').fill('7.5'); // 7.5 kg should trigger 'large' size
-    await page.locator('input[type="number"]').press('Enter');
+    await weightInput.fill('7.5'); // 7.5 kg should trigger 'large' size
     await page.waitForTimeout(300);
-    await expect(page.locator('span:has-text("BÃ¼yÃ¼k")')).toBeVisible();
+    await expect(page.locator('span:has-text("Büyük")')).toBeVisible();
 
     // Pet details edit submit
     await page.fill('#name', `${petName}_Edited`);
-    await page.click('button[type="submit"]:has-text("DeÄŸiÅŸiklikleri Kaydet")');
-    await expect(page.locator('text=Bilgiler baÅŸarÄ±yla gÃ¼ncellendi')).toBeVisible({ timeout: 10000 });
+    await page.click('button[type="submit"]:has-text("Değişiklikleri Kaydet")');
+    await expect(page.locator('text=Bilgiler başarıyla güncellendi')).toBeVisible({ timeout: 10000 });
     
     // Go back to detail page and check updated name
     await page.goto(`/owner/pets/${petId}`);
     await page.waitForLoadState('networkidle');
     await expect(page.locator(`h1:has-text("${petName}_Edited")`)).toBeVisible({ timeout: 10000 });
 
-    // 4. SOS Emergency Contacts Add/Edit (Acil Durum AÄŸÄ±)
+    // 4. SOS Emergency Contacts Add/Edit (Acil Durum Ağı)
     console.log('Updating SOS contacts...');
     await page.goto(`/owner/pets/${petId}/edit`);
     await page.waitForLoadState('networkidle');
 
     // Fill Person 1 & 2
-    await page.locator('input[placeholder="Ã–rn: Ali YÄ±lmaz"]').first().fill('Ahmet YÄ±lmaz');
+    await page.locator('input[placeholder="Örn: Ali Yılmaz"]').first().fill('Ahmet Yılmaz');
     await page.locator('input[placeholder="05XX XXX XX XX"]').first().fill('05554443322');
-    await page.locator('#sos-section select').first().selectOption('Aile Ãœyesi');
+    await page.locator('#sos-section select').first().selectOption('Aile Üyesi');
 
-    await page.locator('input[placeholder="Ã–rn: Ali YÄ±lmaz"]').nth(1).fill('Zeynep Can');
+    await page.locator('input[placeholder="Örn: Ali Yılmaz"]').nth(1).fill('Zeynep Can');
     await page.locator('input[placeholder="05XX XXX XX XX"]').nth(1).fill('05553332211');
-    await page.locator('#sos-section select').nth(1).selectOption('KomÅŸu');
+    await page.locator('#sos-section select').nth(1).selectOption('Komşu');
 
-    await page.getByRole('button', { name: 'DeÄŸiÅŸiklikleri Kaydet', exact: false }).click();
-    await expect(page.locator('text=Bilgiler baÅŸarÄ±yla gÃ¼ncellendi')).toBeVisible({ timeout: 10000 });
+    await page.click('button:has-text("Acil Durum")'); // clicks 'Acil Durum Ağını Kaydet'
+    await expect(page.locator('text=Acil durum ağı güncellendi')).toBeVisible({ timeout: 10000 });
 
     // 5. Data Purge (Veri Temizleme)
     console.log('Purging health records...');
@@ -113,16 +112,16 @@ test.describe('Odi.Pet Pet Profile Page Verification', () => {
     await petRow.locator('button:has(svg)').first().click(); // opens three dots menu
     await page.waitForTimeout(500);
     
-    await page.click('button:has-text("SaÄŸlÄ±k Verilerini Temizle")');
+    await page.click('button:has-text("Sağlık Verilerini Temizle")');
     await page.click('button:has-text("Evet, Temizle")'); // confirm modal
-    await expect(page.locator('text=SaÄŸlÄ±k verileri baÅŸarÄ±yla temizlendi')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=Sağlık verileri başarıyla temizlendi')).toBeVisible({ timeout: 10000 });
 
     // 6. Delete Pet (Pet Silme)
     console.log('Deleting pet profile...');
     await petRow.locator('button:has(svg)').first().click(); // opens three dots menu again
     await page.waitForTimeout(500);
 
-    await page.click('button:has-text("Profili KalÄ±cÄ± Olarak Sil")');
+    await page.click('button:has-text("Profili Kalıcı Olarak Sil")');
     await page.click('button:has-text("Evet, Sil")'); // confirm modal
 
     // Verify redirected back to dashboard and temporary pet is gone
@@ -132,4 +131,3 @@ test.describe('Odi.Pet Pet Profile Page Verification', () => {
     console.log('Pet profile successfully deleted and verified!');
   });
 });
-

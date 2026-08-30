@@ -1,5 +1,4 @@
-﻿import { expect } from '@playwright/test';
-import { test } from './fixtures';
+import { expect, test } from '@playwright/test'
 const LOCAL_E2E_EMAIL = 'admin@odi.pet'
 const LOCAL_E2E_PASSWORD = 'password123'
 
@@ -102,5 +101,3 @@ test.describe('Odi Pet - Permissions Architecture v2', () => {
     await expect(card).toBeHidden({ timeout: 5000 })
   })
 })
-
-

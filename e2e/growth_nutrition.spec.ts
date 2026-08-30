@@ -1,4 +1,4 @@
-﻿import { expect, type Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 import { test } from './fixtures';
 
 const EMAIL = process.env.TEST_EMAIL;
@@ -23,19 +23,19 @@ async function login(page: Page) {
   }
 }
 
-test.describe('Odi.Pet Growth and Nutrition (GeliÅŸim ve Beslenme) Verification', () => {
+test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification', () => {
   test('Lifecycle Verification of Weight Logging, Chart Drawing, and Nutrition Plan Syncing', async ({ page }) => {
     test.setTimeout(120000);
     await login(page);
 
-    // Bu senaryo kayÄ±t sihirbazÄ±nÄ± deÄŸil geliÅŸim/beslenme modÃ¼lÃ¼nÃ¼ sÄ±nar.
-    // Test petini kararlÄ± API sÃ¶zleÅŸmesi Ã¼zerinden oluÅŸtur.
+    // Bu senaryo kayıt sihirbazını değil gelişim/beslenme modülünü sınar.
+    // Test petini kararlı API sözleşmesi üzerinden oluştur.
     console.log('Creating a temporary dog...');
     const petResponse = await page.evaluate(async (name) => {
       const form = new FormData();
       form.append('name', name);
       form.append('species', 'dog');
-      form.append('breed', 'Poodle (KaniÅŸ)');
+      form.append('breed', 'Poodle (Kaniş)');
       form.append('birth_date', '2026-01-01');
       form.append('gender', 'male');
       form.append('is_neutered', 'false');
@@ -63,18 +63,16 @@ test.describe('Odi.Pet Growth and Nutrition (GeliÅŸim ve Beslenme) Verificatio
     await page.locator('#nutrition-weight-ruler span.text-\\[32px\\]').click();
     await page.fill('#nutrition-weight-ruler input[type="number"]', '5.2');
     await page.press('#nutrition-weight-ruler input[type="number"]', 'Enter');
-    
-    // Add the record
     await page.click('button[type="submit"]:has-text("Ekle")');
     await page.waitForTimeout(1000);
 
     // Go back to pet profile to verify weight rendered
     await page.goto(`/owner/pets/${petId}`);
     await page.waitForLoadState('networkidle');
-    await page.getByRole('tab', { name: 'SaÄŸlÄ±k' }).click();
+    await page.getByRole('tab', { name: 'Sağlık' }).click();
 
     // Check if the latest weight (5.2 kg) is displayed in the new widget
-    await expect(page.locator('h1:has-text("Kilo & GeliÅŸim Analizi"), h2:has-text("Kilo & GeliÅŸim Analizi")').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('h1:has-text("Kilo & Gelişim Analizi"), h2:has-text("Kilo & Gelişim Analizi")').first()).toBeVisible({ timeout: 10000 });
     await expect(page.locator('span:has-text("5.2")').first()).toBeVisible({ timeout: 10000 });
 
     // 4. Set Nutrition Plan
@@ -113,10 +111,9 @@ test.describe('Odi.Pet Growth and Nutrition (GeliÅŸim ve Beslenme) Verificatio
     await petRow.locator('button:has(svg)').first().click(); // opens three dots menu
     await page.waitForTimeout(500);
 
-    await page.click('button:has-text("Profili KalÄ±cÄ± Olarak Sil")');
+    await page.click('button:has-text("Profili Kalıcı Olarak Sil")');
     await page.click('button:has-text("Evet, Sil")'); // confirm modal
     await expect(page).toHaveURL(/\/owner\/dashboard/, { timeout: 15000 });
     console.log('Pet profile successfully deleted and verified!');
   });
 });
-

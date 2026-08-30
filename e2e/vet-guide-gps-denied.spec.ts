@@ -1,5 +1,4 @@
-﻿import { expect } from '@playwright/test';
-import { test } from './fixtures';
+import { test, expect } from '@playwright/test'
 
 test.describe('Veterinary Guide GPS and Edge Cases', () => {
   test('Should show GPS denied fallback card when location is blocked', async ({ page, context }) => {
@@ -30,7 +29,7 @@ test.describe('Veterinary Guide GPS and Edge Cases', () => {
       await locationBtn.click()
 
       // It should display the GPS Denied Smart Card
-      const deniedCard = page.getByText('konum izninize ihtiyacÄ±mÄ±z var')
+      const deniedCard = page.getByText('konum izninize ihtiyacımız var')
       await expect(deniedCard).toBeVisible()
     }
   })
@@ -41,9 +40,8 @@ test.describe('Veterinary Guide GPS and Edge Cases', () => {
     // Simulate offline mode
     await context.setOffline(true)
     
-    // The exact text is "Ä°nternet BaÄŸlantÄ±sÄ± Yok"
-    const offlineMsg = page.getByText('Ä°nternet BaÄŸlantÄ±sÄ± Yok')
+    // The exact text is "İnternet Bağlantısı Yok"
+    const offlineMsg = page.getByText('İnternet Bağlantısı Yok')
     await expect(offlineMsg).toBeVisible()
   })
 })
-
