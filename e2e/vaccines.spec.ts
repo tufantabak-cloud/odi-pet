@@ -52,18 +52,20 @@ test.describe('Vaccine OS Module', () => {
     petId = petResponse.pet.id;
 
     await page.goto(`/owner/pets/${petId}/vaccines`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await expect(page.locator('div[role="tablist"], button[role="tab"]').first()).toBeVisible({ timeout: 15_000 });
     await dismissBlockingOverlays(page);
 
     // Birleşik pet profilinde Takvim ve Sağlık sekmelerinin varlığını doğrula
-    await expect(page.locator('text=Takvim').first()).toBeVisible({ timeout: 10_000 });
-    await expect(page.locator('text=Sağlık, text=Kayıtlar').first()).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('button:has-text("Takvim")').first()).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('button:has-text("Sağlık"), button:has-text("Kayıtlar")').first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('Manuel İşlem modal opens and closes', async ({ page }) => {
     await login(page);
     await page.goto(`/owner/pets/${petId}/vaccines`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await expect(page.locator('div[role="tablist"], button[role="tab"]').first()).toBeVisible({ timeout: 15_000 });
     await dismissBlockingOverlays(page);
 
     // Click "Manuel İşlem Ekle" button
@@ -87,14 +89,14 @@ test.describe('Vaccine OS Module', () => {
   test('Takvim görünümü görev takibini gösterir ve test petini temizler', async ({ page }) => {
     await login(page);
     await page.goto(`/owner/pets/${petId}/vaccines`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await expect(page.locator('div[role="tablist"], button[role="tab"]').first()).toBeVisible({ timeout: 15_000 });
     await dismissBlockingOverlays(page);
 
     // Birleşik pet profilindeki Takvim sekmesine kanonik safeClick ile geç
     const takvimTab = page.getByRole('tab', { name: 'Takvim' });
-    if (await takvimTab.isVisible()) {
-      await safeClick(page, takvimTab);
-    }
+    await expect(takvimTab).toBeVisible({ timeout: 15_000 });
+    await safeClick(page, takvimTab);
 
     // Güncel birleşik pet profilinde Takvim sekmesi, aşıları da içeren
     // merkezi görev takip görünümünü açar.

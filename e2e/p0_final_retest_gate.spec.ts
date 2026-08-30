@@ -337,7 +337,8 @@ test.describe('P0 Final Runtime Retest Gate Suite', () => {
       // 1. Initial Render of Pet Detail Page
       console.log('[P0-003] Loading pet detail page...');
       await page.goto(`/owner/pets/${testPetId}`);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
+      await expect(page.locator('div[role="tablist"], button[role="tab"]').first()).toBeVisible({ timeout: 15_000 });
       await dismissBlockingOverlays(page);
 
       // 2. Tab Navigation: Özet -> Takvim -> Sağlık -> Bakım -> Beslenme -> Veteriner -> Ekstra

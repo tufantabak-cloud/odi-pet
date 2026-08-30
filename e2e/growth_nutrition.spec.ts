@@ -53,13 +53,18 @@ test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification'
     // 2. Go to Pet Profile & Log Weights (floating point/decimals)
     console.log('Logging weight...');
     await page.goto(`/owner/pets/${petId}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await expect(page.locator('div[role="tablist"], button[role="tab"]').first()).toBeVisible({ timeout: 15_000 });
     await dismissBlockingOverlays(page);
 
     // Gelişim grafiği güncel birleşik profilde Sağlık sekmesindedir.
-    await safeClick(page, page.getByRole('tab', { name: 'Sağlık' }));
+    const saglikTab = page.getByRole('tab', { name: 'Sağlık' });
+    await expect(saglikTab).toBeVisible({ timeout: 10_000 });
+    await safeClick(page, saglikTab);
     // Add first weight record from Pet Profile page using MinimalGrowthChart (add record button)
-    await safeClick(page, page.locator('button[title="Kilo veya Boy Ekle"]').first());
+    const addWeightBtn = page.locator('button[title="Kilo veya Boy Ekle"]').first();
+    await expect(addWeightBtn).toBeVisible({ timeout: 10_000 });
+    await safeClick(page, addWeightBtn);
     await page.waitForTimeout(500);
 
     // Fill decimal weight e.g. 4.8
@@ -71,7 +76,7 @@ test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification'
     // 3. Navigate to Nutrition and Weight Tracking tab to verify decimals & add another weight for curve scaling
     console.log('Going to nutrition page to log another weight...');
     await page.goto(`/owner/pets/${petId}/nutrition`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await dismissBlockingOverlays(page);
 
     // Click weight log tab "Kilo Takibi"
