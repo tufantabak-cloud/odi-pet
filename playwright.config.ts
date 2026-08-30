@@ -71,6 +71,11 @@ export default defineConfig({
     timeout: 120 * 1000,
     env: {
       ...process.env,
+      PLAYWRIGHT_TEST: 'true',
+      TEST_BASE_URL: process.env.TEST_BASE_URL || 'http://127.0.0.1:3100',
+      NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'http://127.0.0.1:3100',
+      NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://127.0.0.1:3100',
+      CRON_SECRET: process.env.CRON_SECRET || 'test-cron-secret-12345',
       NEXT_DIST_DIR: process.env.NEXT_DIST_DIR || '.next-e2e',
       PORT: '3100',
     },
