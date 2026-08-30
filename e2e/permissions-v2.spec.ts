@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
-const LOCAL_E2E_EMAIL = 'admin@odi.pet'
-const LOCAL_E2E_PASSWORD = 'password123'
+// CI'da seed-local-e2e-fixtures.mjs tarafından oluşturulan kullanıcı kullanılır.
+const LOCAL_E2E_EMAIL = process.env.TEST_EMAIL || 'e2e-owner@odipet.local'
+const LOCAL_E2E_PASSWORD = process.env.TEST_PASSWORD || 'OdiPetLocalE2E-2026!'
 
 test.describe('Odi Pet - Permissions Architecture v2', () => {
 

@@ -12,7 +12,15 @@ async function doLogin(page: Page) {
   await page.fill('input[name="email"]', EMAIL || '');
   await page.fill('input[name="password"]', PASSWORD || '');
   await page.click('button[type="submit"]');
-  await expect(page).toHaveURL(/\/owner\/dashboard/, { timeout: 15000 });
+  await expect(page).toHaveURL(
+    /\/admin|\/(owner|clinic|sitter|trainer|groomer|hotel)\//,
+    { timeout: 15000 }
+  );
+  // Admin kullanıcısı /admin'e yönlenirse, owner dashboard'una geç
+  if (page.url().includes('/admin')) {
+    await page.goto('/owner/dashboard');
+    await page.waitForLoadState('networkidle');
+  }
 }
 
 test.describe('E2E Audit of Odi.Pet Pages', () => {

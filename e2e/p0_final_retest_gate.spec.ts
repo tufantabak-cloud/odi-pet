@@ -1,14 +1,33 @@
 import { test, expect, type Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://soautcxgiqhxiaxrubxv.supabase.co';
+// Supabase URL'den canonical storage key türet — local Supabase için sb-127-auth-token
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const adminClient = createClient(supabaseUrl, serviceRoleKey, {
   auth: { autoRefreshToken: false, persistSession: false }
 });
 
+// Local Supabase'de host 127.0.0.1 — bu durumda SSR sb-127-auth-token key'ini kullanır.
+// Bulut Supabase'de host projectRef.supabase.co — sb-{projectRef}-auth-token kullanılır.
+function getStorageKey(url: string): string {
+  if (!url) return 'sb-127-auth-token';
+  try {
+    const hostname = new URL(url).hostname;
+    if (hostname === '127.0.0.1' || hostname === 'localhost') {
+      return 'sb-127-auth-token';
+    }
+    const projectRef = hostname.split('.')[0];
+    return `sb-${projectRef}-auth-token`;
+  } catch {
+    return 'sb-127-auth-token';
+  }
+}
+
+const STORAGE_KEY = getStorageKey(supabaseUrl);
+
 async function authenticateSession(page: Page, context: any, email = 'e2e-owner@odipet.local', firstName = 'Tufan') {
-  // Ensure user exists
+  // Kullanıcının var olduğunu doğrula / yoksa oluştur
   const { data: usersData } = await adminClient.auth.admin.listUsers();
   let user = usersData?.users?.find(u => u.email === email);
 
@@ -29,7 +48,7 @@ async function authenticateSession(page: Page, context: any, email = 'e2e-owner@
     });
   }
 
-  // Ensure profile is up to date
+  // Profili güncelle
   await adminClient.from('profiles').upsert({
     id: user.id,
     email,
@@ -37,7 +56,11 @@ async function authenticateSession(page: Page, context: any, email = 'e2e-owner@
     role: 'owner'
   });
 
-  const anonClient = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_ypojkLLZ3o4WUI1COXAXdw_mb2kXNJP');
+  // Gerçek signIn ile token al (cookie injection yerine form login'e benzer, SSR uyumlu)
+  const anonClient = createClient(
+    supabaseUrl,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  );
   const { data: authSession, error: authError } = await anonClient.auth.signInWithPassword({
     email,
     password: 'OdiPetLocalE2E-2026!'
@@ -66,9 +89,9 @@ async function authenticateSession(page: Page, context: any, email = 'e2e-owner@
     chunks.push(cookieValue.slice(i, i + chunkSize));
   }
 
-  const projectRef = 'soautcxgiqhxiaxrubxv';
+  // Canonical cookie key — STORAGE_KEY, Supabase SSR'ın okuduğu key ile birebir eşleşir
   const cookiesToSet = chunks.map((chunk, index) => ({
-    name: chunks.length === 1 ? `sb-${projectRef}-auth-token` : `sb-${projectRef}-auth-token.${index}`,
+    name: chunks.length === 1 ? STORAGE_KEY : `${STORAGE_KEY}.${index}`,
     value: chunk,
     domain: '127.0.0.1',
     path: '/',
@@ -82,7 +105,6 @@ async function authenticateSession(page: Page, context: any, email = 'e2e-owner@
   await page.addInitScript((session) => {
     try {
       sessionStorage.setItem('odi_splash_seen', 'true');
-      localStorage.setItem('sb-soautcxgiqhxiaxrubxv-auth-token', JSON.stringify(session));
     } catch (e) {}
   }, sessionObj);
 

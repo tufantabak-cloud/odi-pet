@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-const CRON_SECRET = 'odi-pet-local-e2e-cron-secret'
+const CRON_SECRET = process.env.CRON_SECRET || 'test-cron-secret-12345'
 
 test.describe('Cron güvenlik ve Edge Function zinciri', () => {
   test('dispatch rotası yetkisiz çağrıları reddeder ve doğru secret ile Edge Functiona ulaşır', async ({

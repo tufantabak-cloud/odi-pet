@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 
 const EMAIL = process.env.TEST_EMAIL || 'e2e-owner@odipet.local';
-const PASSWORD = process.env.TEST_PASSWORD || 'Password123!';
+const PASSWORD = process.env.TEST_PASSWORD || 'OdiPetLocalE2E-2026!';
 
 async function loginAndGetDashboard(page: Page) {
   if (!EMAIL || !PASSWORD) {
