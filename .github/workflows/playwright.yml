@@ -1,6 +1,11 @@
 name: Playwright Tests
 on:
   workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref to test'
+        required: true
+        default: 'playwright_forensic_fix_406'
   push:
     branches: [ main, master ]
   pull_request:
@@ -12,6 +17,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.ref }}
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
