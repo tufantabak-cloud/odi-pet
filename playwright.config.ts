@@ -8,15 +8,19 @@ import { defineConfig, devices } from '@playwright/test';
 // import path from 'path';
 // dotenv.config({ path: path.resolve(__dirname, '.env') });
 
+import fs from 'node:fs';
+import path from 'node:path';
+
 /**
  * SSOT E2E Environment Contract
  */
-import { 
-  LOCAL_E2E_EMAIL, 
-  LOCAL_E2E_PASSWORD, 
-  LOCAL_E2E_ADMIN_EMAIL, 
-  LOCAL_E2E_ADMIN_PASSWORD 
-} from './scripts/seed-local-e2e-fixtures.mjs';
+const e2eFixturesPath = path.resolve(__dirname, 'scripts', 'e2e-fixtures.json');
+const e2eFixtures = JSON.parse(fs.readFileSync(e2eFixturesPath, 'utf8'));
+
+const LOCAL_E2E_EMAIL = e2eFixtures.owner.email;
+const LOCAL_E2E_PASSWORD = e2eFixtures.owner.password;
+const LOCAL_E2E_ADMIN_EMAIL = e2eFixtures.admin.email;
+const LOCAL_E2E_ADMIN_PASSWORD = e2eFixtures.admin.password;
 
 process.env.TEST_BASE_URL = 'http://127.0.0.1:3100';
 process.env.PLAYWRIGHT_TEST = 'true';

@@ -1,10 +1,8 @@
 import { expect, type Page, type APIRequestContext } from '@playwright/test';
 import { test } from './fixtures';
 
-import { LOCAL_E2E_EMAIL, LOCAL_E2E_PASSWORD } from '../scripts/seed-local-e2e-fixtures.mjs'
-
-const email = process.env.TEST_OWNER_EMAIL || LOCAL_E2E_EMAIL
-const password = process.env.TEST_OWNER_PASSWORD || LOCAL_E2E_PASSWORD
+const email = process.env.TEST_OWNER_EMAIL || process.env.TEST_EMAIL || 'e2e-owner@odipet.local'
+const password = process.env.TEST_OWNER_PASSWORD || process.env.TEST_PASSWORD || 'OdiPetLocalE2E-2026!'
 
 async function login(page: Page) {
   if (!email || !password) {

@@ -1,0 +1,15 @@
+{
+  "owner": {
+    "email": "e2e-owner@odipet.local",
+    "password": "OdiPetLocalE2E-2026!"
+  },
+  "admin": {
+    "email": "e2e-admin@odipet.local",
+    "password": "OdiPetLocalAdminE2E-2026!"
+  },
+  "caregiver": {
+    "email": "e2e-caregiver@odipet.local",
+    "password": "OdiPetLocalCaregiverE2E-2026!"
+  },
+  "petId": "00000000-0000-4000-8000-000000000042"
+}

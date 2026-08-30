@@ -63,7 +63,8 @@ async function runModuleVisit(
 
 for (const persona of PERSONAS) {
   test.describe(`Persona Akışı: ${persona.name}`, () => {
-    test.use({ ...persona.device });
+    const { defaultBrowserType: _dbt, ...deviceOptions } = (persona.device as any) || {};
+    test.use({ ...deviceOptions });
 
     test(`persona tam akış testi - ${persona.id}`, async ({ page }) => {
       test.setTimeout(15 * 60 * 1000) // 10 modül × takılma payı
