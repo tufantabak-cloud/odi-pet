@@ -32,13 +32,17 @@ export async function dismissBlockingOverlays(page: Page): Promise<void> {
  * Hedef elemente tıklamadan önce asenkron bir overlay engeli olup olmadığını
  * denetler, varsa kanonik şekilde kapatır ve ardından hedef tıklamayı normal
  * kullanıcı gibi gerçekleştirir.
+ * 
+ * Playwright'ın pointer-interception durumunda 30 saniye kilitlenmesini önlemek için
+ * ilk tıklamayı 2 saniyelik timeout ile dener; eğer overlay araya girmişse hemen yakalayıp
+ * modalı ("Şimdi Değil" / "Turu Atla") kapatır ve tıklamayı tamamlar.
  */
 export async function safeClick(page: Page, target: Locator): Promise<void> {
   await dismissBlockingOverlays(page);
   try {
-    await target.click();
+    await target.click({ timeout: 2000 });
   } catch (err: any) {
-    if (err.message && err.message.includes('intercepts pointer events')) {
+    if (err.message && (err.message.includes('intercepts pointer events') || err.message.includes('Timeout'))) {
       // Arka planda gecikmeli açılan modal/overlay'i kanonik butonuna basarak kapat
       await dismissBlockingOverlays(page);
       // Overlay kalktıktan sonra normal kullanıcı tıklamasını gerçekleştir
@@ -48,4 +52,5 @@ export async function safeClick(page: Page, target: Locator): Promise<void> {
     }
   }
 }
+
 
