@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, type Page, type APIRequestContext } from '@playwright/test';
+import { test } from './fixtures';
 
 import { LOCAL_E2E_EMAIL, LOCAL_E2E_PASSWORD } from '../scripts/seed-local-e2e-fixtures.mjs'
 

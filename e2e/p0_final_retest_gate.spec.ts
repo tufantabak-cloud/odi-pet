@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type Page, type APIRequestContext } from '@playwright/test';
 import { test } from './fixtures';
 import { createClient } from '@supabase/supabase-js';
 

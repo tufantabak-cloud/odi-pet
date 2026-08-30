@@ -1,4 +1,4 @@
-import { expect } from '@playwright/test';
+import { expect, type Page, type APIRequestContext } from '@playwright/test';
 import { test } from './fixtures';
 
 test('has title', async ({ page }) => {
