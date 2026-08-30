@@ -28,10 +28,24 @@ jobs:
         echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY" >> $GITHUB_ENV
         echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY" >> $GITHUB_ENV
         echo "DATABASE_URL=$DB_URL" >> $GITHUB_ENV
-        echo "TEST_EMAIL=uzman11@odipet.test" >> $GITHUB_ENV
-        echo "TEST_PASSWORD=Test4444" >> $GITHUB_ENV
-        echo "TEST_ADMIN_EMAIL=uzman11@odipet.test" >> $GITHUB_ENV
-        echo "TEST_ADMIN_PASSWORD=Test4444" >> $GITHUB_ENV
+        node -e "
+          const fs = require('fs');
+          let email = 'e2e-owner@odipet.local';
+          let password = 'OdiPetLocalE2E-2026!';
+          let adminEmail = 'e2e-admin@odipet.local';
+          let adminPassword = 'OdiPetLocalAdminE2E-2026!';
+          if (fs.existsSync('scripts/e2e-fixtures.json')) {
+            const f = JSON.parse(fs.readFileSync('scripts/e2e-fixtures.json', 'utf8'));
+            email = f.owner.email;
+            password = f.owner.password;
+            adminEmail = f.admin.email;
+            adminPassword = f.admin.password;
+          }
+          fs.appendFileSync(process.env.GITHUB_ENV, 'TEST_EMAIL=' + email + '\n');
+          fs.appendFileSync(process.env.GITHUB_ENV, 'TEST_PASSWORD=' + password + '\n');
+          fs.appendFileSync(process.env.GITHUB_ENV, 'TEST_ADMIN_EMAIL=' + adminEmail + '\n');
+          fs.appendFileSync(process.env.GITHUB_ENV, 'TEST_ADMIN_PASSWORD=' + adminPassword + '\n');
+        "
     - name: Seed local E2E fixtures
       run: node scripts/seed-local-e2e-fixtures.mjs
       env:
@@ -69,10 +83,10 @@ jobs:
         NEXT_PUBLIC_APP_URL: http://127.0.0.1:3100
         NEXT_DIST_DIR: .next-e2e
         TEST_BASE_URL: http://127.0.0.1:3100
-        TEST_EMAIL: uzman11@odipet.test
-        TEST_PASSWORD: Test4444
-        TEST_ADMIN_EMAIL: uzman11@odipet.test
-        TEST_ADMIN_PASSWORD: Test4444
+        TEST_EMAIL: ${{ env.TEST_EMAIL }}
+        TEST_PASSWORD: ${{ env.TEST_PASSWORD }}
+        TEST_ADMIN_EMAIL: ${{ env.TEST_ADMIN_EMAIL }}
+        TEST_ADMIN_PASSWORD: ${{ env.TEST_ADMIN_PASSWORD }}
     - uses: actions/upload-artifact@v4
       if: always()
       with:
