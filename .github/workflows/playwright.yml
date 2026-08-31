@@ -1,6 +1,11 @@
 name: Playwright Tests
 on:
   workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref to test'
+        required: true
+        default: 'playwright_forensic_fix_406'
   push:
     branches: [ main, master ]
   pull_request:
@@ -9,9 +14,15 @@ jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.ref }}
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
@@ -71,7 +82,7 @@ jobs:
         NEXT_PUBLIC_APP_URL: http://127.0.0.1:3100
         NEXT_DIST_DIR: .next-e2e
     - name: Run Playwright tests
-      run: npx playwright test --project=chromium
+      run: npx playwright test --project=chromium --shard=${{ matrix.shard }}/4
       env:
         PLAYWRIGHT_TEST: 'true'
         NEXT_PUBLIC_SUPABASE_URL: ${{ env.NEXT_PUBLIC_SUPABASE_URL }}
@@ -90,6 +101,6 @@ jobs:
     - uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: playwright-report
+        name: playwright-report-shard-${{ matrix.shard }}
         path: playwright-report/
         retention-days: 30
