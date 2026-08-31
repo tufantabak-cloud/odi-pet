@@ -43,6 +43,11 @@ if (!process.env.TEST_EMAIL) {
 process.env.TEST_ADMIN_EMAIL = LOCAL_E2E_ADMIN_EMAIL;
 process.env.TEST_ADMIN_PASSWORD = LOCAL_E2E_ADMIN_PASSWORD;
 
+// Expose canonical cron secret for test & webServer
+if (!process.env.CRON_SECRET) {
+  process.env.CRON_SECRET = 'test-cron-secret-12345';
+}
+
 /**
  * See https://playwright.dev/docs/test-configuration.
  */

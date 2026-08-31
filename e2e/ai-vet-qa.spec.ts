@@ -95,19 +95,28 @@ test.describe('AI Vet Functional QA', () => {
       console.log(`SCENARIO: ${scenario.name}`);
       console.log(`INPUT -> ${scenario.input.message}`);
 
-      const response = await apiContext.post('/api/ai-vet', {
-        data: payload
-      });
+      const { status, ok, data: responseData } = await sharedPage.evaluate(async (payload) => {
+        const res = await fetch('/api/ai-vet', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+        return {
+          status: res.status,
+          ok: res.ok,
+          data: await res.json()
+        };
+      }, payload);
 
-      console.log(`STATUS -> ${response.status()}`);
-      
-      const responseData = await response.json();
+      console.log(`STATUS -> ${status}`);
       console.log(`ACTUAL -> `, JSON.stringify(responseData, null, 2));
 
-      expect(response.status()).toBe(200);
+      expect(status).toBe(200);
 
       // Verify basic expectations
-      if (response.ok() && responseData.response) {
+      if (ok && responseData?.response) {
         for (const [key, value] of Object.entries(scenario.expected)) {
           if (value === null) {
             expect(responseData.response[key]).toBeNull();
