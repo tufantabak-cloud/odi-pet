@@ -18,11 +18,12 @@ async function login(page: Page) {
   await expect(page).toHaveURL(/\/admin|\/owner\//, { timeout: 15_000 });
 }
 
-test.describe('SOS & Treatments Authenticated Flow', () => {
+test.describe.serial('SOS & Treatments Authenticated Flow', () => {
   let petId: string;
   const tempPetName = `AuthFl_${Math.floor(Math.random() * 9000) + 1000}`;
 
-  test('Create dynamic pet for authenticated flow tests', async ({ page }) => {
+  test.beforeAll(async ({ browser }) => {
+    const page = await browser.newPage();
     await login(page);
 
     const petResponse = await page.evaluate(async (name) => {
@@ -46,6 +47,7 @@ test.describe('SOS & Treatments Authenticated Flow', () => {
 
     expect(petResponse.success).toBe(true);
     petId = petResponse.pet.id;
+    await page.close();
   });
 
   // SOS Module
@@ -55,7 +57,7 @@ test.describe('SOS & Treatments Authenticated Flow', () => {
     await page.waitForLoadState('networkidle');
 
     // Section header should be visible
-    await expect(page.locator('text=4. Acil Durum Ağı').first()).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('text=Acil Durum Ağı').first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('Can fill and save an SOS contact', async ({ page }) => {

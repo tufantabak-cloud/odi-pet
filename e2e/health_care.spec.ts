@@ -75,11 +75,10 @@ test.describe('Odi.Pet Health and Care Module Verification', () => {
 
     // Step: Recurrence
     console.log('Verifying recurrence options...');
-    await expect(
-      page.getByRole('button', { name: 'Tek Seferlik', exact: true })
-    ).toBeVisible({ timeout: 10_000 });
-    // Select "Tek Sefer" to verify single event frequency labelling
-    await page.getByRole('button', { name: 'Tek Seferlik', exact: true }).click();
+    const singleRecurrenceBtn = page.locator('button:has-text("Tek Seferlik"), button:has-text("Sadece bu kayıt")').first();
+    await expect(singleRecurrenceBtn).toBeVisible({ timeout: 10_000 });
+    // Select "Tek Seferlik" / "Sadece bu kayıt" to verify single event frequency labelling
+    await singleRecurrenceBtn.click();
     await page.getByRole('button', { name: 'Devam et', exact: true }).click();
 
     // Step: Notification & Save

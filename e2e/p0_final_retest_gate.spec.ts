@@ -297,7 +297,8 @@ test.describe('P0 Final Runtime Retest Gate Suite', () => {
       species: 'dog',
       breed: 'Golden Retriever',
       gender: 'male',
-      birth_date: '2022-05-10'
+      birth_date: '2022-05-10',
+      health_history_status: 'completed'
     }).select().single();
     if (pErr) throw pErr;
     const testPetId = tempPet.id;

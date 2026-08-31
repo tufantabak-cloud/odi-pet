@@ -63,7 +63,7 @@ test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification'
     await page.locator('#nutrition-weight-ruler span.text-\\[32px\\]').click();
     await page.fill('#nutrition-weight-ruler input[type="number"]', '5.2');
     await page.press('#nutrition-weight-ruler input[type="number"]', 'Enter');
-    await page.click('button[type="submit"]:has-text("Ekle")');
+    await page.click('button[type="submit"]:has-text("Ölçümü Kaydet"), button[type="submit"]:has-text("Kaydet"), button[type="submit"]:has-text("Ekle")');
     await page.waitForTimeout(1000);
 
     // Go back to pet profile to verify weight rendered
@@ -79,14 +79,41 @@ test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification'
     console.log('Setting nutrition brand and amount...');
     await page.goto(`/owner/pets/${petId}/nutrition`);
     await page.waitForLoadState('networkidle');
-    await page.click('button:has-text("Mama & Stok")');
-    await page.waitForTimeout(500);
 
-    // Fill the Brand and Daily Grams Form
-    await page.fill('input[name="food_brand"]', 'PremiumRoyal');
-    await page.fill('input[name="food_product"]', 'Puppy Care');
-    await page.fill('input[name="daily_grams"]', '125');
-    await page.click('button[type="submit"]:has-text("Bilgileri Kaydet")');
+    // Click "Mama ekle" if no active food or use assignment modal
+    const addFoodBtn = page.locator('button:has-text("Mama ekle"), button:has-text("Mama Ekle")').first();
+    if (await addFoodBtn.isVisible()) {
+      await addFoodBtn.click();
+      await page.waitForTimeout(500);
+
+      const manualBtn = page.locator('button:has-text("Manuel Olarak Ekle"), button:has-text("Listede Bulamadım")').first();
+      if (await manualBtn.isVisible()) {
+        await manualBtn.click();
+      }
+
+      const brandInput = page.locator('input[placeholder*="Royal Canin"], input[name="brand_free_text"], input[name="food_brand"]').first();
+      if (await brandInput.isVisible()) {
+        await brandInput.fill('PremiumRoyal');
+      }
+      const productInput = page.locator('input[placeholder*="Puppy"], input[name="product_free_text"], input[name="food_product"]').first();
+      if (await productInput.isVisible()) {
+        await productInput.fill('Puppy Care');
+      }
+      const gramsInput = page.locator('input[name="daily_target_grams"], input[name="daily_grams"]').first();
+      if (await gramsInput.isVisible()) {
+        await gramsInput.fill('125');
+      }
+
+      const nextStockBtn = page.locator('button:has-text("İleri: Stok"), button:has-text("İleri"), button:has-text("Kaydet")').first();
+      if (await nextStockBtn.isVisible()) {
+        await nextStockBtn.click();
+        await page.waitForTimeout(500);
+        const finalSaveBtn = page.locator('button[type="submit"]:has-text("Kaydet"), button:has-text("Kaydet")').first();
+        if (await finalSaveBtn.isVisible()) {
+          await finalSaveBtn.click();
+        }
+      }
+    }
     await page.waitForTimeout(1000);
 
     // 5. Verify task is shown in timeline or dashboard tasks

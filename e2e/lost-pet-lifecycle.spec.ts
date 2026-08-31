@@ -67,7 +67,7 @@ test.describe('Lost Pet E2E Lifecycle Flow', () => {
     await expect(phoneInput).toBeVisible();
     await phoneInput.fill('05554443322');
 
-    const nextBtn = page.locator('button:has-text("Devam Et")');
+    const nextBtn = page.locator('.rounded-modal button:has-text("Devam Et"), .fixed.z-\\[9999\\] button:has-text("Devam Et"), button:has-text("Devam Et")').first();
     await nextBtn.click();
 
     // Step 2 of Wizard: Location Details

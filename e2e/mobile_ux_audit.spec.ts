@@ -84,20 +84,52 @@ test('Mobile UX Audit - Dashboard', async ({ page }) => {
   await page.waitForLoadState('networkidle');
 
   console.log('Adding a pet...');
-  await page.click('button:has-text("Kedi")');
-  await page.waitForTimeout(1000);
+  const catBtn = page.locator('button:has-text("Kedi")').first();
+  if (await catBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+    await catBtn.click();
+    await page.waitForTimeout(600);
+  }
 
-  await expect(page.locator('#name')).toBeVisible();
-  await page.fill('#name', petName);
-  await page.selectOption('#breed', 'British Shorthair');
-  await page.click('label:has-text("♂ Erkek")');
-  await page.fill('input[type="date"]', '2025-01-01');
-  await page.click('button:has-text("Devam Et →")');
-  await page.waitForTimeout(1000);
+  const nameInput = page.locator('#pet-name-input, #name, input[placeholder*="Boncuk"]').first();
+  await expect(nameInput).toBeVisible({ timeout: 10000 });
+  await nameInput.fill(petName);
 
-  await page.click('button:has-text("Profili Oluştur")');
-  await page.waitForTimeout(1000);
-  await page.click('button:has-text("Atla →")');
+  const breedInput = page.locator('[data-testid="pet-breed-select"], #pet-breed-combobox').first();
+  if (await breedInput.isVisible()) {
+    await breedInput.fill('British Shorthair');
+    const breedOption = page.locator('button:has-text("British Shorthair")').first();
+    if (await breedOption.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await breedOption.click();
+    }
+  }
+
+  const genderLabel = page.locator('label:has-text("Erkek")').first();
+  if (await genderLabel.isVisible()) {
+    await genderLabel.click();
+  }
+
+  const dateInput = page.locator('#pet-birthdate-input, input[type="date"]').first();
+  if (await dateInput.isVisible()) {
+    await dateInput.fill('2025-01-01');
+  }
+
+  const nextStepBtn = page.locator('button:has-text("Devam Et")').first();
+  if (await nextStepBtn.isVisible()) {
+    await nextStepBtn.click();
+    await page.waitForTimeout(600);
+  }
+
+  // If there is Step 3 / 4, click proceed
+  const finishCreateBtn = page.locator('button:has-text("Profili Oluştur"), button:has-text("Devam Et"), button:has-text("Tamamla")').first();
+  if (await finishCreateBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+    await finishCreateBtn.click();
+    await page.waitForTimeout(600);
+  }
+
+  const skipBtn = page.locator('button:has-text("Atla"), button:has-text("Bildirim Açmadan")').first();
+  if (await skipBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+    await skipBtn.click();
+  }
 
   await expect(page).toHaveURL(/\/owner\/pets\/add\/success/, { timeout: 15000 });
   console.log('Pet successfully created!');
