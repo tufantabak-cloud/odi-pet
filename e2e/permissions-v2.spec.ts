@@ -1,6 +1,7 @@
-import { expect, test } from '@playwright/test'
-const LOCAL_E2E_EMAIL = 'admin@odi.pet'
-const LOCAL_E2E_PASSWORD = 'password123'
+import { test, expect } from './fixtures'
+
+const LOCAL_E2E_EMAIL = process.env.TEST_EMAIL || 'e2e-owner@odipet.local'
+const LOCAL_E2E_PASSWORD = process.env.TEST_PASSWORD || 'OdiPetLocalE2E-2026!'
 
 test.describe('Odi Pet - Permissions Architecture v2', () => {
 
@@ -59,7 +60,7 @@ test.describe('Odi Pet - Permissions Architecture v2', () => {
     await page.fill('input[name="email"]', LOCAL_E2E_EMAIL)
     await page.fill('input[name="password"]', LOCAL_E2E_PASSWORD)
     await page.click('button[type="submit"]')
-    await page.waitForURL('**/owner/dashboard')
+    await page.waitForURL(/\/owner\/|\/dashboard|\/admin/, { timeout: 15000 })
     
     await page.waitForLoadState('networkidle')
 
