@@ -7,6 +7,17 @@ describe('consume_feature_usage RPC Integration', () => {
   const testFeatureKey = 'test_feature_rpc';
 
   beforeAll(async () => {
+    // Ensure auth user exists to satisfy profiles_id_fkey foreign key
+    const { data: existingUser } = await supabase.auth.admin.getUserById(testProfileId);
+    if (!existingUser?.user) {
+      await supabase.auth.admin.createUser({
+        id: testProfileId,
+        email: 'rpc-test@odi.pet',
+        password: 'RpcTestPassword123!',
+        email_confirm: true,
+      });
+    }
+
     // Ensure test profile exists
     const { error: profileError } = await supabase.from('profiles').upsert({
       id: testProfileId,
@@ -62,6 +73,7 @@ describe('consume_feature_usage RPC Integration', () => {
     await supabase.from('app_features').delete().eq('key', testFeatureKey);
     await supabase.from('user_subscriptions').delete().eq('profile_id', testProfileId);
     await supabase.from('profiles').delete().eq('id', testProfileId);
+    await supabase.auth.admin.deleteUser(testProfileId).catch(() => {});
   });
 
   it('should enforce free tier limits', async () => {
