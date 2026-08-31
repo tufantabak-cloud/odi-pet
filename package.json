@@ -9,7 +9,7 @@
     "prebuild": "node scripts/generate-features-index.mjs",
     "build": "next build && serwist build serwist.config.mjs --no-update-notifier",
     "start": "next start",
-    "lint": "eslint src --max-warnings 220",
+    "lint": "eslint src --max-warnings 210",
     "lint:pets": "eslint src/app/owner/pets --max-warnings 207",
     "test": "npm run test:unit",
     "check:architecture": "node scripts/check-architecture-guards.mjs",
