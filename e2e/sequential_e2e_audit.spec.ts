@@ -106,8 +106,11 @@ test.describe('E2E Audit of Odi.Pet Pages', () => {
         await page.waitForTimeout(2000); // Allow react hydration and fetch to complete
         
         // Take a screenshot of each page for proof
-        const screenshotPath = `C:/Users/Tufan TABAK/.gemini/antigravity/brain/93a96f38-9430-46bb-af3e-5b398f65b798/${target.name.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
-        await page.screenshot({ path: screenshotPath });
+        const artifactDir = process.env.ARTIFACT_DIR || 'test-results';
+        const screenshotPath = `${artifactDir}/${target.name.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
+        try {
+          await page.screenshot({ path: screenshotPath });
+        } catch (e) {}
 
         // Basic check for error page indicator, empty screen, or crash
         const content = await page.content();

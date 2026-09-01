@@ -219,13 +219,18 @@ test('Mobile UX Audit - Dashboard', async ({ page }) => {
     return smallTargets;
   });
 
-  // Take screenshot
-  const screenshotPath = path.join('C:/Users/Tufan TABAK/.gemini/antigravity/brain/b5c138b2-f8cd-4061-a245-58874928482e', 'mobile_dashboard.png');
-  await page.screenshot({ path: screenshotPath, fullPage: true });
-  console.log(`Screenshot saved to ${screenshotPath}`);
+  // Take screenshot & write results
+  const artifactDir = process.env.ARTIFACT_DIR || 'test-results';
+  try {
+    if (!fs.existsSync(artifactDir)) fs.mkdirSync(artifactDir, { recursive: true });
+    const screenshotPath = path.join(artifactDir, 'mobile_dashboard.png');
+    await page.screenshot({ path: screenshotPath, fullPage: true });
+    console.log(`Screenshot saved to ${screenshotPath}`);
 
-  // Write results to JSON file
-  const resultsPath = path.join('C:/Users/Tufan TABAK/.gemini/antigravity/brain/b5c138b2-f8cd-4061-a245-58874928482e', 'mobile_ux_results.json');
-  fs.writeFileSync(resultsPath, JSON.stringify(results, null, 2), 'utf-8');
-  console.log(`Results saved to ${resultsPath}`);
+    const resultsPath = path.join(artifactDir, 'mobile_ux_results.json');
+    fs.writeFileSync(resultsPath, JSON.stringify(results, null, 2), 'utf-8');
+    console.log(`Results saved to ${resultsPath}`);
+  } catch (e) {
+    console.log('[mobile_ux_audit] artifact write skipped:', e);
+  }
 });

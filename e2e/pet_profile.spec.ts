@@ -97,7 +97,7 @@ test.describe('Odi.Pet Pet Profile Page Verification', () => {
     // Pet details edit submit
     await page.fill('#name', `${petName}_Edited`);
     await page.click('button[type="submit"]:has-text("Kaydet"), button[type="submit"]:has-text("Değişiklikleri Kaydet")');
-    await expect(page.locator('text=güncellendi, text=başarıyla').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=güncellendi').or(page.locator('text=başarıyla')).first()).toBeVisible({ timeout: 10000 });
     
     // Go back to detail page and check updated name
     await page.goto(`/owner/pets/${petId}`);
@@ -120,7 +120,7 @@ test.describe('Odi.Pet Pet Profile Page Verification', () => {
         await phoneInputs.nth(1).fill('05553332211');
       }
       await page.click('button[type="submit"]:has-text("Kaydet")');
-      await expect(page.locator('text=güncellendi, text=başarıyla').first()).toBeVisible({ timeout: 10000 });
+      await expect(page.locator('text=güncellendi').or(page.locator('text=başarıyla')).first()).toBeVisible({ timeout: 10000 });
     }
 
     // 5. Data Purge (Veri Temizleme)
