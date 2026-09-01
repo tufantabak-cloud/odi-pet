@@ -10,13 +10,18 @@ let petId: string | null = null;
 test.beforeAll(async ({ browser }) => {
   const context = await browser.newContext();
   sharedPage = await context.newPage();
+  await sharedPage.addInitScript(() => {
+    try {
+      sessionStorage.setItem('odi_splash_seen', 'true');
+    } catch (e) {}
+  });
   
   // Login
   await sharedPage.goto('/login');
   await sharedPage.fill('input[name="email"]', EMAIL);
   await sharedPage.fill('input[name="password"]', PASSWORD);
   await sharedPage.click('button[type="submit"]');
-  await sharedPage.waitForURL(/\/dashboard|\/admin/, { timeout: 15_000 });
+  await sharedPage.waitForURL(/\/owner\/|\/admin|\/dashboard/, { timeout: 15_000 });
   
   apiContext = sharedPage.request;
 
