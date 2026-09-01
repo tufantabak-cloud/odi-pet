@@ -1,13 +1,9 @@
-import { test, expect } from '@playwright/test'
-import { PERSONAS, TEST_PASSWORD, type Persona } from './personas'
-import { UxRecorder, type ModuleRecorder } from './helpers/ux-recorder'
+import { expect, type Page } from '@playwright/test'
+import { TEST_PASSWORD, type Persona } from '../personas'
+import { UxRecorder, type ModuleRecorder } from './ux-recorder'
 
-const BASE_URL = process.env.ODIPET_BASE_URL ?? 'http://127.0.0.1:3100'
+const BASE_URL = process.env.ODIPET_BASE_URL ?? process.env.TEST_BASE_URL ?? 'http://127.0.0.1:3100'
 const OUTPUT_DIR = 'test-results'
-
-// ─── GÜVENLİK KAPISI KALDIRILDI (ODIPET_BASE_URL ile manuel test yapılabilir) ───
-
-// ─── MODÜL AKIŞLARI ──────────────────────────────────────────────
 
 async function runRegistration(m: ModuleRecorder, persona: Persona, recorder: UxRecorder) {
   await m.clickTestId('register-link', 'login')
@@ -59,19 +55,10 @@ async function runModuleVisit(
   await m.screenshot('arrived')
 }
 
-// ─── TAM AKIŞ ─────────────────
+export async function runPersonaFlow(page: Page, persona: Persona) {
+  const recorder = new UxRecorder(persona, page, BASE_URL, OUTPUT_DIR)
 
-for (const persona of PERSONAS) {
-  test.describe(`Persona Akışı: ${persona.name}`, () => {
-    const { defaultBrowserType: _dbt, ...deviceOptions } = (persona.device as any) || {};
-    test.use({ ...deviceOptions });
-
-    test(`persona tam akış testi - ${persona.id}`, async ({ page }) => {
-      test.setTimeout(15 * 60 * 1000) // 10 modül × takılma payı
-
-      const recorder = new UxRecorder(persona, page, BASE_URL, OUTPUT_DIR)
-
-      await page.goto(BASE_URL)
+  await page.goto(BASE_URL)
 
   await recorder.tryModule('registration', 180, (m) =>
     runRegistration(m, persona, recorder)
@@ -112,9 +99,5 @@ for (const persona of PERSONAS) {
   const reportPath = recorder.saveReport()
   console.log(`Rapor yazıldı: ${reportPath}`)
 
-  // Test kendisi "fail" olmasın — sonuç JSON'da; ama tamamen boş
-  // rapor üretimini engellemek için en az 1 modül denenmiş olmalı
-    expect(recorder.buildReport().results.length).toBeGreaterThan(0)
-    })
-  })
+  expect(recorder.buildReport().results.length).toBeGreaterThan(0)
 }
