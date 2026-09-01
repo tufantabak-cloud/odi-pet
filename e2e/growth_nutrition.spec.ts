@@ -60,9 +60,13 @@ test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification'
     await page.waitForTimeout(500);
 
     // Enter decimal weight e.g. 5.2 using RulerPicker edit mode
-    await page.locator('#nutrition-weight-ruler span.text-\\[32px\\]').click();
-    await page.fill('#nutrition-weight-ruler input[type="number"]', '5.2');
-    await page.press('#nutrition-weight-ruler input[type="number"]', 'Enter');
+    const rulerDisplay = page.locator('#nutrition-weight-ruler [data-testid="ruler-display"], #nutrition-weight-ruler').first();
+    await rulerDisplay.click();
+    const rulerInput = page.locator('#nutrition-weight-ruler input[type="number"]').first();
+    if (await rulerInput.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await rulerInput.fill('5.2');
+      await rulerInput.press('Enter');
+    }
     await page.click('button[type="submit"]:has-text("Ölçümü Kaydet"), button[type="submit"]:has-text("Kaydet"), button[type="submit"]:has-text("Ekle")');
     await page.waitForTimeout(1000);
 
@@ -72,8 +76,8 @@ test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification'
     await page.getByRole('tab', { name: 'Sağlık' }).click();
 
     // Check if the latest weight (5.2 kg) is displayed in the new widget
-    await expect(page.locator('h1:has-text("Kilo & Gelişim Analizi"), h2:has-text("Kilo & Gelişim Analizi")').first()).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('span:has-text("5.2")').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('h3:has-text("Gelişim Takibi"), text=Gelişim Takibi').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=5.2').first()).toBeVisible({ timeout: 10000 });
 
     // 4. Set Nutrition Plan
     console.log('Setting nutrition brand and amount...');

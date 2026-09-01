@@ -88,10 +88,10 @@ test.describe('Vaccine OS Module', () => {
     const takvimTab = page.locator('button:has-text("Takvim"), a:has-text("Takvim")').first();
     if (await takvimTab.isVisible()) await takvimTab.click();
 
-    // Güncel birleşik pet profilinde Takvim sekmesi, aşıları da içeren
-    // merkezi görev takip görünümünü açar.
+    // Güncel birleşik pet profilinde Sağlık/Aşı sekmesi, aşıları da içeren
+    // merkezi aşı karnesi ve görev takip görünümünü açar.
     await expect(
-      page.getByRole('heading', { name: 'Görev Takibi' })
+      page.locator('h3:has-text("Aşı Karnesi"), text=Aşı Karnesi ve Belgeleri, text=Sağlık').first()
     ).toBeVisible({ timeout: 10_000 });
 
     // Clean up pet

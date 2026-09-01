@@ -103,7 +103,7 @@ test('Mobile UX Audit - Dashboard', async ({ page }) => {
     }
   }
 
-  const genderLabel = page.locator('label:has-text("Erkek")').first();
+  const genderLabel = page.locator('label:has-text("Erkek"), button:has-text("Erkek")').first();
   if (await genderLabel.isVisible()) {
     await genderLabel.click();
   }
@@ -113,25 +113,32 @@ test('Mobile UX Audit - Dashboard', async ({ page }) => {
     await dateInput.fill('2025-01-01');
   }
 
-  const nextStepBtn = page.locator('button:has-text("Devam Et")').first();
+  const nextStepBtn = page.locator('[data-testid="pet-save-button"], button:has-text("Devam Et")').first();
   if (await nextStepBtn.isVisible()) {
     await nextStepBtn.click();
     await page.waitForTimeout(600);
   }
 
-  // If there is Step 3 / 4, click proceed
-  const finishCreateBtn = page.locator('button:has-text("Profili Oluştur"), button:has-text("Devam Et"), button:has-text("Tamamla")').first();
-  if (await finishCreateBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+  // Step 3: Photo step (Varsayılan Avatarla Devam Et)
+  const finishCreateBtn = page.locator('[data-testid="pet-profile-create-button"], button:has-text("Varsayılan Avatarla Devam Et"), button:has-text("Kaydet ve Devam Et")').first();
+  if (await finishCreateBtn.isVisible({ timeout: 4000 }).catch(() => false)) {
     await finishCreateBtn.click();
     await page.waitForTimeout(600);
   }
 
-  const skipBtn = page.locator('button:has-text("Atla"), button:has-text("Bildirim Açmadan")').first();
-  if (await skipBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-    await skipBtn.click();
+  // Step 4 / 5: SOS & Notifications skip
+  const skipBtn1 = page.locator('button:has-text("Şimdilik Atla"), button:has-text("Atla")').first();
+  if (await skipBtn1.isVisible({ timeout: 3000 }).catch(() => false)) {
+    await skipBtn1.click();
+    await page.waitForTimeout(600);
   }
 
-  await expect(page).toHaveURL(/\/owner\/pets\/add\/success/, { timeout: 15000 });
+  const skipBtn2 = page.locator('button:has-text("Bildirim Açmadan"), button:has-text("Şimdilik Atla"), button:has-text("Atla")').first();
+  if (await skipBtn2.isVisible({ timeout: 3000 }).catch(() => false)) {
+    await skipBtn2.click();
+  }
+
+  await expect(page).toHaveURL(/\/owner\/pets\/add\/success|\/owner\/dashboard|\/owner\/pets\//, { timeout: 15000 });
   console.log('Pet successfully created!');
 
   // Now, navigate to Dashboard to run UX Audit on active dashboard

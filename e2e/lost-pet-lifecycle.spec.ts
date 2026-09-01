@@ -89,7 +89,7 @@ test.describe('Lost Pet E2E Lifecycle Flow', () => {
     await expect(page.locator('text=Bostanlı Sahil Yakınları')).toBeVisible();
     
     // Close SOS Modal
-    await page.getByRole('button', { name: 'Kapat', exact: true }).click();
+    await page.locator('[data-testid="sos-modal-close"], .rounded-modal button:has-text("Kapat")').first().click();
 
     // 5. Navigate to Dashboard to verify the FloatingLostPets card is active and shows the new report
     await page.goto('/owner/dashboard');
@@ -103,7 +103,7 @@ test.describe('Lost Pet E2E Lifecycle Flow', () => {
     await expect(page.locator('text=Bostanlı Sahil Yakınları').first()).toBeVisible();
     
     // Close the floating lost pet list
-    await page.getByRole('button', { name: 'Kapat', exact: true }).click();
+    await page.locator('[data-testid="floating-lost-pets-close"], .rounded-sheet button:has-text("Kapat")').first().click();
 
     // 6. Go back to Pet Detail page and mark as Found via SOS Modal
     await page.goto(`/owner/pets/${petId}`);

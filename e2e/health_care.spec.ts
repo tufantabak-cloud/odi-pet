@@ -64,17 +64,17 @@ test.describe('Odi.Pet Health and Care Module Verification', () => {
     // Step: Vaccine Selection
     console.log('Selecting a vaccine template...');
     await expect(page.locator('text=Aşı Seçimi').first()).toBeVisible({ timeout: 10000 });
-    // Click first core vaccine in the list
+    // Click first core vaccine in the list (automatically transitions to next step)
     await page.locator('button h4').first().click();
-    await page.getByRole('button', { name: 'Devam et', exact: true }).click();
 
     // Step: Date & Time
     console.log('Setting date and time...');
-    await expect(page.locator('text=Tarih & Saat').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=Tarih & Saat, text=Ne Zaman Yapıldı?').first()).toBeVisible({ timeout: 10000 });
     await page.getByRole('button', { name: 'Devam et', exact: true }).click();
 
     // Step: Recurrence
     console.log('Verifying recurrence options...');
+    await expect(page.locator('text=Tekrar Sıklığı, text=Tekrarlanacak mı?').first()).toBeVisible({ timeout: 10000 });
     const singleRecurrenceBtn = page.locator('button:has-text("Tek Seferlik"), button:has-text("Sadece bu kayıt")').first();
     await expect(singleRecurrenceBtn).toBeVisible({ timeout: 10_000 });
     // Select "Tek Seferlik" / "Sadece bu kayıt" to verify single event frequency labelling
@@ -83,7 +83,7 @@ test.describe('Odi.Pet Health and Care Module Verification', () => {
 
     // Step: Notification & Save
     console.log('Saving the plan...');
-    await expect(page.locator('text=Hatırlatıcı').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=Hatırlatıcı, text=Bildirim, text=Onay & Not').first()).toBeVisible({ timeout: 10000 });
     await page.getByRole('button', { name: 'Planı Kaydet', exact: true }).click();
 
     // Verify Success Screen
