@@ -99,7 +99,7 @@ test.describe('Lost Pet E2E Lifecycle Flow', () => {
     await floatingBtn.click();
 
     // Verify pet name and location are visible inside the modal
-    await expect(page.locator(`p.text-text-primary:has-text("${tempPetName}")`)).toBeVisible();
+    await expect(page.locator(`p.text-text-primary:has-text("${tempPetName}")`).first()).toBeVisible();
     await expect(page.locator('text=Bostanlı Sahil Yakınları').first()).toBeVisible();
     
     // Close the floating lost pet list
@@ -128,7 +128,7 @@ test.describe('Lost Pet E2E Lifecycle Flow', () => {
     await expect(page.locator('text=KAYIP İLANI AKTİF')).not.toBeVisible({ timeout: 10000 });
     
     // Close SOS Modal
-    await page.getByRole('button', { name: 'Kapat', exact: true }).click();
+    await page.getByRole('button', { name: 'Kapat', exact: true }).first().click();
 
     // Cleanup: Delete the temp pet
     await page.evaluate(async (id) => {

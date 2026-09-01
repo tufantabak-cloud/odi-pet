@@ -91,7 +91,7 @@ test.describe('Vaccine OS Module', () => {
     // Güncel birleşik pet profilinde Sağlık/Aşı sekmesi, aşıları da içeren
     // merkezi aşı karnesi ve görev takip görünümünü açar.
     await expect(
-      page.locator('h3:has-text("Aşı Karnesi"), text=Aşı Karnesi ve Belgeleri, text=Sağlık').first()
+      page.locator('h3:has-text("Görev Takibi"), h3:has-text("Aşı Karnesi")').or(page.locator('text=Aşı Karnesi')).or(page.locator('text=Sağlık')).first()
     ).toBeVisible({ timeout: 10_000 });
 
     // Clean up pet

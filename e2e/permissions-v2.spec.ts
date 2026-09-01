@@ -36,9 +36,9 @@ test.describe('Odi Pet - Permissions Architecture v2', () => {
     // Explicitly mock PushManager to avoid native browser dependencies breaking the test on headless
     await context.grantPermissions(['notifications'])
     await page.addInitScript(() => {
-      // Mock ServiceWorkerRegistration and PushManager
-      Object.defineProperty(navigator, 'serviceWorker', {
-        value: {
+      try {
+        sessionStorage.setItem('odi_splash_seen', 'true');
+        const mockSw = {
           register: () => Promise.resolve({}),
           ready: Promise.resolve({
             pushManager: {
@@ -52,18 +52,17 @@ test.describe('Odi Pet - Permissions Architecture v2', () => {
               })
             }
           })
+        };
+        try {
+          Object.defineProperty(navigator, 'serviceWorker', {
+            get: () => mockSw,
+            configurable: true
+          });
+        } catch (e) {
+          (navigator as any).serviceWorker = mockSw;
         }
-      })
+      } catch (err) {}
     })
-
-    await context.clearCookies()
-    await page.goto('/login')
-    await page.locator('[data-testid="login-email-input"], input#email, input[name="email"]').first().fill(LOCAL_E2E_EMAIL)
-    await page.locator('[data-testid="login-password-input"], input#password, input[name="password"]').first().fill(LOCAL_E2E_PASSWORD)
-    await page.click('button[type="submit"]')
-    await page.waitForURL(/\/owner\/|\/dashboard|\/admin/, { timeout: 15000 })
-    
-    await page.waitForLoadState('networkidle')
 
     await page.goto('/owner/notifications')
     await page.waitForLoadState('networkidle')

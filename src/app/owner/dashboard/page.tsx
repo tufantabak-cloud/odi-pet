@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic'
 
-import { getSessionUser } from '@/lib/auth/get-current-profile'
+import { getSessionUser, getCurrentProfile } from '@/lib/auth/get-current-profile'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import DashboardOnboardingWrapper from './DashboardOnboardingWrapper'
@@ -23,8 +23,14 @@ export default async function OwnerDashboard() {
   const user = await getSessionUser()
   if (!user) redirect('/login')
 
-  const { profile, pets, upcomingSchedules, completedSchedules, allFeedingLogs, allWeightLogs, plans, activeQuestion, activeInsight } =
-    await getCachedDashboardData(user.id)
+  const [currentProfile, cachedData] = await Promise.all([
+    getCurrentProfile(),
+    getCachedDashboardData(user.id)
+  ])
+
+  const { pets, upcomingSchedules, completedSchedules, allFeedingLogs, allWeightLogs, plans, activeQuestion, activeInsight } =
+    cachedData
+  const profile = currentProfile || cachedData.profile
 
   const supabase = await createServerSupabaseClient()
 

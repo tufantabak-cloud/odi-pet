@@ -470,7 +470,8 @@ export default async function ProfileMenuPage({
           {pets?.map(pet => (
             <div
               key={pet.id}
-              className="bg-white rounded-3xl p-4 flex items-center gap-4 border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] hover:border-primary/30 transition-all"
+              data-testid={`pet-card-${pet.id}`}
+              className="card-base bg-white rounded-3xl p-4 flex items-center gap-4 border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] hover:border-primary/30 transition-all"
             >
               <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center text-primary font-black text-xl shrink-0">
                 {pet.name.charAt(0)}

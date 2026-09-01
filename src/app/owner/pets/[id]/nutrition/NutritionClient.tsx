@@ -2078,6 +2078,8 @@ export default function NutritionClient({
                     {portionMode === 'daily' ? 'Günlük Gramaj *' : 'Öğün Başı Gram *'}
                   </label>
                   <input
+                    name="daily_target_grams"
+                    data-testid="daily-target-grams-input"
                     type="number"
                     min="1"
                     value={gramsInput}

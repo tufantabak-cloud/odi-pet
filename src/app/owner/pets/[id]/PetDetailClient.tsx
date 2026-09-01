@@ -1584,6 +1584,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                 ] as const).map(tab => (
                   <button
                     key={tab.id}
+                    data-tab={tab.id}
                     type="button"
                     role="tab"
                     aria-selected={activeTab === tab.id}

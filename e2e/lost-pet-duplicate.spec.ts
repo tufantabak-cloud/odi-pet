@@ -24,9 +24,33 @@ test.describe('Lost Pet Duplicate Prevention API Test', () => {
     // Login via browser to establish session cookies
     await login(page);
 
-    if (!PET_ID) {
-      test.skip(true, 'TEST_PET_ID not set.');
-      return;
+    // If PET_ID is not explicitly provided in environment, create a temporary pet dynamically
+    let targetPetId = PET_ID;
+    let createdDynamicPet = false;
+    if (!targetPetId) {
+      const petResponse = await page.evaluate(async (name) => {
+        const fd = new FormData();
+        fd.append('name', name);
+        fd.append('species', 'dog');
+        fd.append('breed', 'Golden Retriever');
+        fd.append('birth_date', '2023-01-01');
+        fd.append('gender', 'male');
+        fd.append('is_neutered', 'false');
+        fd.append('weight', '12.0');
+        fd.append('city', 'İzmir');
+        fd.append('district', 'Karşıyaka');
+        const res = await fetch('/api/pets', { method: 'POST', body: fd });
+        return res.json();
+      }, `TempDup_${Date.now().toString().slice(-4)}`);
+
+      if (petResponse.success && petResponse.pet?.id) {
+        targetPetId = petResponse.pet.id;
+        createdDynamicPet = true;
+      }
+    }
+
+    if (!targetPetId) {
+      throw new Error('Target pet could not be determined for duplicate test.');
     }
 
     // Run the API requests directly in the browser using fetch
@@ -70,12 +94,18 @@ test.describe('Lost Pet Duplicate Prevention API Test', () => {
       });
 
       return { status1, body1, status2, body2 };
-    }, PET_ID);
+    }, targetPetId);
 
     expect(result.status1).toBe(200);
     expect(result.body1.success).toBe(true);
     
     expect(result.status2).toBe(400);
     expect(result.body2.error).toBe('Bu pet için zaten aktif bir kayıp ilanı var');
+
+    if (createdDynamicPet && targetPetId) {
+      await page.evaluate(async (petId) => {
+        await fetch(`/api/pets/${petId}`, { method: 'DELETE' });
+      }, targetPetId);
+    }
   });
 });

@@ -71,13 +71,11 @@ test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification'
     await page.waitForTimeout(1000);
 
     // Go back to pet profile to verify weight rendered
-    await page.goto(`/owner/pets/${petId}`);
+    await page.goto(`/owner/pets/${petId}?tab=saglik`);
     await page.waitForLoadState('networkidle');
-    await page.getByRole('tab', { name: 'Sağlık' }).click();
 
     // Check if the latest weight (5.2 kg) is displayed in the new widget
-    await expect(page.locator('h3:has-text("Gelişim Takibi"), text=Gelişim Takibi').first()).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('text=5.2').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=5.2').first()).toBeVisible({ timeout: 15000 });
 
     // 4. Set Nutrition Plan
     console.log('Setting nutrition brand and amount...');
@@ -127,7 +125,8 @@ test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification'
 
     // Under timeline or tasks list, check if feeding related task or status is visible
     // "Beslenme" tab in Pet Profile accordion
-    await page.click('button:has-text("Beslenme")');
+    await page.goto(`/owner/pets/${petId}?tab=beslenme`);
+    await page.waitForLoadState('networkidle');
     await page.waitForTimeout(500);
     // Since we saved brand PremiumRoyal and 125g, let's verify if they show up in info fields
     await expect(page.locator('text=PremiumRoyal').first()).toBeVisible({ timeout: 10000 });

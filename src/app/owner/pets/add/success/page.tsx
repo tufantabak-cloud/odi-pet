@@ -239,39 +239,13 @@ function SuccessContent() {
                 )}
               </button>
 
-              {!showSkipWarning ? (
-                <button
-                  type="button"
-                  onClick={() => setShowSkipWarning(true)}
-                  className="text-xs font-bold text-text-secondary hover:text-text-primary py-2 hover:underline transition-colors text-center cursor-pointer"
-                >
-                  Bildirim Açmadan 6. Adıma Geç
-                </button>
-              ) : (
-                <div className="p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-2xl text-center space-y-2 animate-fadeIn">
-                  <p className="text-xs text-rose-700 font-bold flex items-center justify-center gap-1.5">
-                    <AlertTriangle size={14} className="w-3.5 h-3.5 text-rose-600 shrink-0" aria-hidden="true" />
-                    <span>Bildirimleri açmazsanız aşı zamanlarını kaçırabilirsiniz. Yine de devam etmek istiyor musunuz?</span>
-                  </p>
-                  <div className="flex items-center justify-center gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={handleSubscribe}
-                      disabled={isLoading}
-                      className="px-3.5 py-2 bg-primary text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer active:scale-[0.97] disabled:opacity-70"
-                    >
-                      Vazgeç, Bildirim Aç
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleSkipToStep6}
-                      className="px-3.5 py-2 bg-surface-2 text-text-secondary hover:text-text-primary text-xs font-bold rounded-xl border border-border cursor-pointer active:scale-[0.97]"
-                    >
-                      Yine de 6. Adıma Geç
-                    </button>
-                  </div>
-                </div>
-              )}
+              <button
+                type="button"
+                onClick={handleSkipToStep6}
+                className="text-xs font-bold text-text-secondary hover:text-text-primary py-2 hover:underline transition-colors text-center cursor-pointer"
+              >
+                Bildirim Açmadan 6. Adıma Geç
+              </button>
             </div>
           )}
         </div>

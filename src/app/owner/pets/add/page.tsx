@@ -271,31 +271,26 @@ function PetForm({
 
     if (!petName.trim()) {
       document.getElementById('name')?.focus()
-      onSubmit(e)
       return
     }
     if (!selectedBreed) {
       document.getElementById('pet-breed-combobox')?.focus()
-      onSubmit(e)
       return
     }
     if (!gender) {
       const genderEl = document.getElementById('gender-group')
       genderEl?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       genderEl?.focus()
-      onSubmit(e)
       return
     }
     if (!birthDate) {
       if (birthDateMode === 'exact') {
         document.getElementById('pet-birthdate-input')?.focus()
       }
-      onSubmit(e)
       return
     }
     if (!weight) {
       document.getElementById('pet-weight-ruler')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      onSubmit(e)
       return
     }
 
