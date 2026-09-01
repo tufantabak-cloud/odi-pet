@@ -60,40 +60,73 @@ export async function runPersonaFlow(page: Page, persona: Persona) {
 
   await page.goto(BASE_URL)
 
+  // 1. Kayıt Modülü (Onboarding State Üretici)
   await recorder.tryModule('registration', 180, (m) =>
     runRegistration(m, persona, recorder)
   )
 
-  await recorder.tryModule('pet_registration', 180, (m) =>
-    runPetRegistration(m, persona, recorder)
+  // 2. İlk Pet Kaydı (Onboarding State Üretici)
+  await recorder.tryModule(
+    'pet_registration',
+    180,
+    (m) => runPetRegistration(m, persona, recorder),
+    { requiresOnboardingState: true }
   )
 
-  await recorder.tryModule('next_step', 60, (m) =>
-    runNextStep(m, persona, recorder)
+  // 3. Akıllı Sonraki Adım (Onboarding State Üretici)
+  await recorder.tryModule(
+    'next_step',
+    60,
+    (m) => runNextStep(m, persona, recorder),
+    { requiresOnboardingState: true }
   )
 
-  await recorder.tryModule('vaccine', 120, (m) =>
-    runModuleVisit(m, recorder, 'vaccine-module-button', 'vaccine')
+  // 4. Aşı Modülü Denetimi
+  await recorder.tryModule(
+    'vaccine',
+    120,
+    (m) => runModuleVisit(m, recorder, 'vaccine-module-button', 'vaccine'),
+    { requiresOnboardingState: true }
   )
 
-  await recorder.tryModule('parasite', 120, (m) =>
-    runModuleVisit(m, recorder, 'parasite-module-button', 'parasite')
+  // 5. Parazit Modülü Denetimi
+  await recorder.tryModule(
+    'parasite',
+    120,
+    (m) => runModuleVisit(m, recorder, 'parasite-module-button', 'parasite'),
+    { requiresOnboardingState: true }
   )
 
-  await recorder.tryModule('nutrition', 120, (m) =>
-    runModuleVisit(m, recorder, 'nutrition-module-button', 'nutrition')
+  // 6. Beslenme Modülü Denetimi
+  await recorder.tryModule(
+    'nutrition',
+    120,
+    (m) => runModuleVisit(m, recorder, 'nutrition-module-button', 'nutrition'),
+    { requiresOnboardingState: true }
   )
 
-  await recorder.tryModule('budget', 45, (m) =>
-    runModuleVisit(m, recorder, 'budget-module-button', 'budget')
+  // 7. Bütçe Modülü Denetimi
+  await recorder.tryModule(
+    'budget',
+    45,
+    (m) => runModuleVisit(m, recorder, 'budget-module-button', 'budget'),
+    { requiresOnboardingState: true }
   )
 
-  await recorder.tryModule('health_card', 90, (m) =>
-    runModuleVisit(m, recorder, 'health-card-button', 'health_card')
+  // 8. Sağlık Karnesi Modülü Denetimi
+  await recorder.tryModule(
+    'health_card',
+    90,
+    (m) => runModuleVisit(m, recorder, 'health-card-button', 'health_card'),
+    { requiresOnboardingState: true }
   )
 
-  await recorder.tryModule('services', 60, (m) =>
-    runModuleVisit(m, recorder, 'services-module-button', 'services')
+  // 9. Hizmetler Modülü Denetimi
+  await recorder.tryModule(
+    'services',
+    60,
+    (m) => runModuleVisit(m, recorder, 'services-module-button', 'services'),
+    { requiresOnboardingState: true }
   )
 
   const reportPath = recorder.saveReport()
