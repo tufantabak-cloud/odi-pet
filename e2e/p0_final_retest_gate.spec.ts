@@ -67,25 +67,45 @@ async function authenticateSession(page: Page, context: any, email = 'e2e-owner@
     chunks.push(cookieValue.slice(i, i + chunkSize));
   }
 
-  const projectRef = 'soautcxgiqhxiaxrubxv';
-  const cookiesToSet = chunks.map((chunk, index) => ({
-    name: chunks.length === 1 ? `sb-${projectRef}-auth-token` : `sb-${projectRef}-auth-token.${index}`,
-    value: chunk,
-    domain: '127.0.0.1',
-    path: '/',
-    expires: Math.floor(Date.now() / 1000) + 7200,
-    secure: false,
-    sameSite: 'Lax' as const
-  }));
+  const urlObj = new URL(supabaseUrl);
+  const projectRef = urlObj.hostname.includes('supabase')
+    ? urlObj.hostname.split('.')[0]
+    : `${urlObj.hostname.replace(/\./g, '-')}-${urlObj.port || '80'}`;
+
+  const cookiesToSet = chunks.flatMap((chunk, index) => {
+    const primaryName = chunks.length === 1 ? `sb-${projectRef}-auth-token` : `sb-${projectRef}-auth-token.${index}`;
+    const fallbackName = chunks.length === 1 ? `sb-soautcxgiqhxiaxrubxv-auth-token` : `sb-soautcxgiqhxiaxrubxv-auth-token.${index}`;
+    return [
+      {
+        name: primaryName,
+        value: chunk,
+        domain: '127.0.0.1',
+        path: '/',
+        expires: Math.floor(Date.now() / 1000) + 7200,
+        secure: false,
+        sameSite: 'Lax' as const
+      },
+      {
+        name: fallbackName,
+        value: chunk,
+        domain: '127.0.0.1',
+        path: '/',
+        expires: Math.floor(Date.now() / 1000) + 7200,
+        secure: false,
+        sameSite: 'Lax' as const
+      }
+    ];
+  });
 
   await context.addCookies(cookiesToSet);
 
-  await page.addInitScript((session) => {
+  await page.addInitScript(({ session, pRef }) => {
     try {
       sessionStorage.setItem('odi_splash_seen', 'true');
+      localStorage.setItem(`sb-${pRef}-auth-token`, JSON.stringify(session));
       localStorage.setItem('sb-soautcxgiqhxiaxrubxv-auth-token', JSON.stringify(session));
     } catch (e) {}
-  }, sessionObj);
+  }, { session: sessionObj, pRef: projectRef });
 
   return { session: authSession.session, user, adminClient };
 }

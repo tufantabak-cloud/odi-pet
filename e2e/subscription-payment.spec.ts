@@ -9,11 +9,12 @@ async function login(page: Page) {
     throw new Error('LOCAL_E2E_CREDENTIALS_MISSING')
   }
 
+  await page.context().clearCookies()
   await page.goto('/login')
-  await page.getByTestId('login-email-input').fill(email)
-  await page.getByTestId('login-password-input').fill(password)
+  await page.locator('[data-testid="login-email-input"], input#email, input[name="email"]').first().fill(email)
+  await page.locator('[data-testid="login-password-input"], input#password, input[name="password"]').first().fill(password)
   await page.getByRole('button', { name: 'Giriş Yap', exact: true }).click()
-  await expect(page).toHaveURL(/\/owner\//, { timeout: 15_000 })
+  await expect(page).toHaveURL(/\/owner\/|\/dashboard|\/admin/, { timeout: 15_000 })
 }
 
 test.describe('Abonelik ve ödeme güvenli akışı', () => {

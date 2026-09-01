@@ -56,9 +56,10 @@ test.describe('Odi Pet - Permissions Architecture v2', () => {
       })
     })
 
+    await context.clearCookies()
     await page.goto('/login')
-    await page.fill('input[name="email"]', LOCAL_E2E_EMAIL)
-    await page.fill('input[name="password"]', LOCAL_E2E_PASSWORD)
+    await page.locator('[data-testid="login-email-input"], input#email, input[name="email"]').first().fill(LOCAL_E2E_EMAIL)
+    await page.locator('[data-testid="login-password-input"], input#password, input[name="password"]').first().fill(LOCAL_E2E_PASSWORD)
     await page.click('button[type="submit"]')
     await page.waitForURL(/\/owner\/|\/dashboard|\/admin/, { timeout: 15000 })
     

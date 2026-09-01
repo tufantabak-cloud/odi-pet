@@ -64,27 +64,32 @@ test.describe('Odi.Pet Pet Profile Page Verification', () => {
     await page.waitForLoadState('networkidle');
 
     // Kilo değiştiğinde boyut skalası güncelleniyor mu?
-    const weightRulerNumber = page.locator('#edit-pet-weight-ruler span.text-\\[32px\\]');
-    if (await weightRulerNumber.isVisible()) {
-      await weightRulerNumber.click();
-      await page.fill('#edit-pet-weight-ruler input[type="number"]', '2.5');
-      await page.press('#edit-pet-weight-ruler input[type="number"]', 'Enter');
+    const presetBtn25 = page.locator('button:has-text("2.5 kg")').first();
+    if (await presetBtn25.isVisible().catch(() => false)) {
+      await presetBtn25.scrollIntoViewIfNeeded();
+      await presetBtn25.click();
     } else {
-      const presetBtn = page.locator('button:has-text("2.5 kg")').first();
-      if (await presetBtn.isVisible()) await presetBtn.click();
+      const weightInput = page.locator('input[type="number"]').first();
+      if (await weightInput.isVisible().catch(() => false)) {
+        await weightInput.fill('2.5');
+        await weightInput.dispatchEvent('change');
+      }
     }
     await page.waitForTimeout(300);
     // Kedi boyut skalası (kilo bazlı) olmalı ve 'Küçük' gösterilmeli
     await expect(page.locator('text=Kedi Boyut Skalası')).toBeVisible();
     await expect(page.locator('span:has-text("Küçük")')).toBeVisible();
 
-    if (await weightRulerNumber.isVisible()) {
-      await weightRulerNumber.click();
-      await page.fill('#edit-pet-weight-ruler input[type="number"]', '7.5');
-      await page.press('#edit-pet-weight-ruler input[type="number"]', 'Enter');
+    const presetBtn7 = page.locator('button:has-text("7.0 kg"), button:has-text("7.5 kg")').first();
+    if (await presetBtn7.isVisible().catch(() => false)) {
+      await presetBtn7.scrollIntoViewIfNeeded();
+      await presetBtn7.click();
     } else {
-      const presetBtn7 = page.locator('button:has-text("7.5 kg")').first();
-      if (await presetBtn7.isVisible()) await presetBtn7.click();
+      const weightInput = page.locator('input[type="number"]').first();
+      if (await weightInput.isVisible().catch(() => false)) {
+        await weightInput.fill('7.5');
+        await weightInput.dispatchEvent('change');
+      }
     }
     await page.waitForTimeout(300);
     await expect(page.locator('span:has-text("Büyük")')).toBeVisible();
