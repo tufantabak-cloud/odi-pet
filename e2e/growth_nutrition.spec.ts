@@ -59,7 +59,7 @@ test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification'
     await page.waitForTimeout(500);
 
     // Enter decimal weight e.g. 5.2 using RulerPicker edit mode
-    const rulerDisplay = page.locator('#nutrition-weight-ruler [data-testid="ruler-display"], #nutrition-weight-ruler').first();
+    const rulerDisplay = page.locator('#nutrition-weight-ruler').getByTestId('ruler-display').first();
     await rulerDisplay.click();
     const rulerInput = page.locator('#nutrition-weight-ruler input[type="number"]').first();
     if (await rulerInput.isVisible({ timeout: 2000 }).catch(() => false)) {

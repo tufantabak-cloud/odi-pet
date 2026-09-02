@@ -38,6 +38,10 @@ test.describe('Odi Pet - Permissions Architecture v2', () => {
     await page.addInitScript(() => {
       try {
         sessionStorage.setItem('odi_splash_seen', 'true');
+        Object.defineProperty(window, 'PushManager', {
+          value: function() {},
+          configurable: true
+        });
         const mockSw = {
           register: () => Promise.resolve({}),
           ready: Promise.resolve({
