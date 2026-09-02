@@ -74,7 +74,7 @@ test.describe('Dashboard', () => {
     await page.waitForLoadState('networkidle')
 
     await expect(page.getByText('Petlerim', { exact: true })).toBeVisible()
-    await expect(page.getByText('Moka E2E', { exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Moka E2E' })).toBeVisible()
   })
 })
 
@@ -88,6 +88,6 @@ test.describe('Pets Module', () => {
   }) => {
     await page.goto('/owner/pets?nosplash=true')
     await expect(page).toHaveURL('/owner/dashboard')
-    await expect(page.getByText('Moka E2E', { exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Moka E2E' })).toBeVisible()
   })
 })
