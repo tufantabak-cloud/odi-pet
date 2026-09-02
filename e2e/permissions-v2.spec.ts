@@ -5,60 +5,10 @@ const LOCAL_E2E_PASSWORD = process.env.TEST_PASSWORD || 'OdiPetLocalE2E-2026!'
 
 test.describe('Odi Pet - Permissions Architecture v2', () => {
 
-  test('Test 1: Unauthenticated User - No 401 Auto-Sync Error', async ({ page }) => {
-    const apiErrors: any[] = []
-    
-    page.on('response', (response) => {
-      if (response.url().includes('/api/notifications/subscribe')) {
-        if (response.status() === 401) {
-          apiErrors.push(response.url())
-        }
-      }
-    })
-
-    const consoleErrors: string[] = []
-    page.on('console', (msg) => {
-      if (msg.type() === 'error' && msg.text().includes('PUSH_SYNC_FAILED:401')) {
-        consoleErrors.push(msg.text())
-      }
-    })
-
-    await page.goto('/login')
-    
-    await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(1000)
-
-    expect(apiErrors).toHaveLength(0)
-    expect(consoleErrors).toHaveLength(0)
-  })
-
-  test('Test 3 & 4: Notification Idempotency and Auto-Sync (Authenticated)', async ({ page, context }) => {
-    // Grant notification permission via Chromium CDP
-    await context.grantPermissions(['notifications'])
-    
-    // ── CRITICAL FIX ──
-    // Set up route interception BEFORE navigating so we catch all API calls
-    let routeCallCount = 0
-    await page.route('**/api/notifications/subscribe', async (route) => {
-      routeCallCount++
-      if (routeCallCount === 1) {
-        await route.fulfill({
-          status: 500,
-          json: { error: 'INTERNAL_SERVER_ERROR' }
-        })
-      } else {
-        await route.fulfill({
-          status: 200,
-          json: { success: true }
-        })
-      }
-    })
-
-    // ── CRITICAL FIX ──  
-    // Mock PushManager, Notification, and ServiceWorker BEFORE navigating.
-    // The mock SW registration object must look like a real ServiceWorkerRegistration
-    // with pushManager that has getSubscription() and subscribe() methods.
-    // navigator.serviceWorker.ready must be a Promise that resolves to this registration.
+  // Apply bulletproof ServiceWorker/PushManager mock to ALL tests in this file.
+  // This prevents headless Chromium from hanging on real navigator.serviceWorker.register calls
+  // and guarantees determinism across Test 1 and Test 3 & 4.
+  test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
       try {
         sessionStorage.setItem('odi_splash_seen', 'true');
@@ -67,7 +17,6 @@ test.describe('Odi Pet - Permissions Architecture v2', () => {
         (window as any).PushManager = function() {};
         
         // Mock Notification with 'granted' permission
-        // Use Object.defineProperty to handle both getter and static property access
         const NotificationMock: any = function() {};
         NotificationMock.permission = 'granted';
         NotificationMock.requestPermission = () => Promise.resolve('granted');
@@ -144,6 +93,55 @@ test.describe('Odi Pet - Permissions Architecture v2', () => {
       } catch (err) {
         console.error('[test-mock] Mock injection failed:', err);
       }
+    });
+  });
+
+  test('Test 1: Unauthenticated User - No 401 Auto-Sync Error', async ({ page }) => {
+    const apiErrors: any[] = []
+    
+    page.on('response', (response) => {
+      if (response.url().includes('/api/notifications/subscribe')) {
+        if (response.status() === 401) {
+          apiErrors.push(response.url())
+        }
+      }
+    })
+
+    const consoleErrors: string[] = []
+    page.on('console', (msg) => {
+      if (msg.type() === 'error' && msg.text().includes('PUSH_SYNC_FAILED:401')) {
+        consoleErrors.push(msg.text())
+      }
+    })
+
+    await page.goto('/login')
+    
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(1000)
+
+    expect(apiErrors).toHaveLength(0)
+    expect(consoleErrors).toHaveLength(0)
+  })
+
+  test('Test 3 & 4: Notification Idempotency and Auto-Sync (Authenticated)', async ({ page, context }) => {
+    // Grant notification permission via Chromium CDP
+    await context.grantPermissions(['notifications'])
+    
+    // Set up route interception BEFORE navigating so we catch all API calls
+    let routeCallCount = 0
+    await page.route('**/api/notifications/subscribe', async (route) => {
+      routeCallCount++
+      if (routeCallCount === 1) {
+        await route.fulfill({
+          status: 500,
+          json: { error: 'INTERNAL_SERVER_ERROR' }
+        })
+      } else {
+        await route.fulfill({
+          status: 200,
+          json: { success: true }
+        })
+      }
     })
 
     // Now navigate - the mocks are in place, routes are intercepting
@@ -151,8 +149,6 @@ test.describe('Odi Pet - Permissions Architecture v2', () => {
     await page.waitForLoadState('networkidle')
 
     // Wait for the push permission card to appear
-    // With our mocks: isWebPushSupported() = true, Notification.permission = 'granted',
-    // getSubscription() = null → state = 'sync_required' → card renders
     const card = page.locator('#push-permission-card')
     const enableBtn = page.locator('#push-enable-btn')
     

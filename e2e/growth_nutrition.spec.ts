@@ -1,4 +1,4 @@
-﻿import { expect, type Page, type APIRequestContext } from '@playwright/test';
+import { expect, type Page, type APIRequestContext } from '@playwright/test';
 import { test } from './fixtures';
 
 const EMAIL = process.env.TEST_EMAIL;
@@ -84,10 +84,13 @@ test.describe('Odi.Pet Growth and Nutrition (GeliÅŸim ve Beslenme) Verificatio
     await page.goto(`/owner/pets/${petId}?tab=saglik`);
     await page.waitForLoadState('networkidle');
 
-    // Check if the weight (5 or 5.0) is displayed
-    // Use a broad locator since the display format may vary
-    const weightText = page.locator('text=/5\\.?0?\\s*kg/i').first();
-    await expect(weightText).toBeVisible({ timeout: 15000 });
+    // Check if the weight is displayed on the health tab.
+    // NOTE: In PetDetailClient.tsx, the weight value ("5.0") and unit ("kg") are rendered
+    // in separate sibling <span> elements, so a single text= regex across them won't work.
+    // Instead we look for the parent container that holds both spans.
+    // currentWeightVal.toFixed(1) renders "5.0" in a span with text-2xl font-black.
+    const weightDisplay = page.locator('span.text-2xl:has-text("5.0"), span:has-text("5.0")').first();
+    await expect(weightDisplay).toBeVisible({ timeout: 15000 });
 
     // 4. Set Nutrition Plan
     console.log('Setting nutrition brand and amount...');
