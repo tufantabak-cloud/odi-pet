@@ -36,36 +36,50 @@ test.describe('Odi Pet - Permissions Architecture v2', () => {
     // Explicitly mock PushManager to avoid native browser dependencies breaking the test on headless
     await context.grantPermissions(['notifications'])
     await page.addInitScript(() => {
-      try {
-        sessionStorage.setItem('odi_splash_seen', 'true');
-        Object.defineProperty(window, 'PushManager', {
-          value: function() {},
-          configurable: true
-        });
-        const mockSw = {
-          register: () => Promise.resolve({}),
-          ready: Promise.resolve({
-            pushManager: {
-              getSubscription: () => Promise.resolve(null),
-              subscribe: () => Promise.resolve({
-                endpoint: 'https://mock.push.endpoint',
-                toJSON: () => ({
-                  endpoint: 'https://mock.push.endpoint',
-                  keys: { p256dh: 'mock-key', auth: 'mock-auth' }
-                })
-              })
-            }
-          })
-        };
         try {
+          sessionStorage.setItem('odi_splash_seen', 'true');
+          
+          // Bulletproof mock for PushManager and Notification
+          Object.defineProperty(window, 'PushManager', { value: function() {}, configurable: true });
+          if (!window.Notification) {
+            Object.defineProperty(window, 'Notification', { 
+              value: { permission: 'granted', requestPermission: () => Promise.resolve('granted') },
+              configurable: true 
+            });
+          }
+
+          const mockSw = {
+            register: () => Promise.resolve({}),
+            ready: Promise.resolve({
+              pushManager: {
+                getSubscription: () => Promise.resolve(null),
+                subscribe: () => Promise.resolve({
+                  endpoint: 'https://mock.push.endpoint',
+                  toJSON: () => ({
+                    endpoint: 'https://mock.push.endpoint',
+                    keys: { p256dh: 'mock-key', auth: 'mock-auth' }
+                  })
+                })
+              }
+            })
+          };
+          
+          // Bulletproof mock for navigator.serviceWorker
           Object.defineProperty(navigator, 'serviceWorker', {
-            get: () => mockSw,
+            value: mockSw,
             configurable: true
           });
-        } catch (e) {
-          (navigator as any).serviceWorker = mockSw;
+          
+          // Also try prototyping if navigator is sealed
+          if (navigator.serviceWorker !== mockSw) {
+            Object.defineProperty(Object.getPrototypeOf(navigator), 'serviceWorker', {
+              value: mockSw,
+              configurable: true
+            });
+          }
+        } catch (err) {
+          console.error('Mock injection failed', err);
         }
-      } catch (err) {}
     })
 
     await page.goto('/owner/notifications')
