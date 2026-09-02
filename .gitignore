@@ -96,3 +96,15 @@ node_modules/
 
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Android Packaging & Keystore Security
+*.keystore
+*.jks
+*.p12
+*.key
+android/keystore/
+android/signing/
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
