@@ -102,34 +102,36 @@ test.describe('Odi.Pet Growth and Nutrition (GeliÅŸim ve Beslenme) Verificatio
       await addFoodBtn.click();
       await page.waitForTimeout(500);
 
-      const manualBtn = page.locator('button:has-text("Manuel Olarak Ekle"), button:has-text("Listede BulamadÄ±m")').first();
+      // Switch to manual entry tab ("Listede Yok / Elle")
+      const manualBtn = page.locator('button:has-text("Listede Yok / Elle"), button:has-text("Elle")').first();
       await manualBtn.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
       if (await manualBtn.isVisible()) {
         await manualBtn.click();
+        await page.waitForTimeout(300);
       }
 
-      const brandInput = page.locator('input[placeholder*="Royal Canin"], input[name="brand_free_text"], input[name="food_brand"]').first();
+      const brandInput = page.locator('input[placeholder*="Pro Plan"], input[placeholder*="Royal Canin"], input[placeholder*="Ev Yapımı"]').first();
       await brandInput.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
       if (await brandInput.isVisible()) {
         await brandInput.fill('PremiumRoyal');
       }
-      const productInput = page.locator('input[placeholder*="Puppy"], input[name="product_free_text"], input[name="food_product"]').first();
+      const productInput = page.locator('input[placeholder*="Puppy Medium"], input[placeholder*="Optistart"], input[placeholder*="Tavuklu"]').first();
       await productInput.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
       if (await productInput.isVisible()) {
         await productInput.fill('Puppy Care');
       }
-      const gramsInput = page.locator('input[name="daily_target_grams"], input[name="daily_grams"]').first();
+      const gramsInput = page.locator('input[data-testid="daily-target-grams-input"], input[name="daily_target_grams"]').first();
       await gramsInput.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
       if (await gramsInput.isVisible()) {
         await gramsInput.fill('125');
       }
 
-      const nextStockBtn = page.locator('button:has-text("Ä°leri: Stok"), button:has-text("Ä°leri"), button:has-text("Kaydet")').first();
+      const nextStockBtn = page.locator('button[type="submit"]:has-text("İleri: Stok Durumu"), button[type="submit"]:has-text("İleri")').first();
       await nextStockBtn.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
       if (await nextStockBtn.isVisible()) {
         await nextStockBtn.click();
         await page.waitForTimeout(500);
-        const finalSaveBtn = page.locator('button[type="submit"]:has-text("Kaydet"), button:has-text("Kaydet")').first();
+        const finalSaveBtn = page.locator('form button[type="submit"]:has-text("Kaydet")').first();
         await finalSaveBtn.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
         if (await finalSaveBtn.isVisible()) {
           await finalSaveBtn.click();
@@ -158,7 +160,7 @@ test.describe('Odi.Pet Growth and Nutrition (GeliÅŸim ve Beslenme) Verificatio
     await petRow.locator('button:has(svg)').first().click();
     await page.waitForTimeout(500);
 
-    await page.click('button:has-text("Profili KalÄ±cÄ± Olarak Sil")');
+    await page.click('button:has-text("Profili Kalıcı Olarak Sil"), button:has-text("Profili Sil")');
     await page.click('button:has-text("Evet, Sil")');
     await expect(page).toHaveURL(/\/owner\/dashboard/, { timeout: 15000 });
     console.log('Pet profile successfully deleted and verified!');
