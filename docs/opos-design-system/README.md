@@ -2,7 +2,7 @@
 
 > **Status:** GOVERNANCE LOCKED / OFFICIAL SINGLE SOURCE OF TRUTH  
 > **Authority Level:** MAXIMUM  
-> **Product:** Odi.Pet — Evcil Dostunuzun Akıllı Sağlık & Bakım Asistanı  
+> **Product:** Odi Pet — Can Dostunun Yaşam Platformu | "Sevgiyle Bak Sağlıkla Büyüt"  
 
 ---
 

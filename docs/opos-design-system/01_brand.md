@@ -37,9 +37,24 @@ The brand identity is immutable. Placeholder names (`PETPAL`, `FurEver`, `PawCar
 
 ## Brand Architecture & Asset Inventory
 
-### Official Slogan
-- **Turkish:** *"Evcil Dostunuzun Akıllı Sağlık & Bakım Asistanı"*
-- **English:** *"Smart Health & Care Assistant for Your Companion"*
+### Official Brand Attributes
+- **Brand Display Name:** Odi Pet
+- **Canonical Website:** `https://odi.pet`
+- **Social Handle Standard:** `@odipetapp`
+- **Official Slogan:** *"Sevgiyle Bak Sağlıkla Büyüt"*
+- **Product Positioning:** *"Can Dostunun Yaşam Platformu"*
+
+### Canonical Web & Social Identity Registry
+| Platform | Handle / URL | Channel Name | Status | Launch Content Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **Website** | `https://odi.pet` | Odi Pet Web | ACTIVE | Live Canonical Domain |
+| **Instagram** | `@odipetapp` | Odi Pet | ACTIVE | First launch post: PUBLISHED |
+| **Threads** | `@odipetapp` | Odi Pet | ACTIVE | First launch post: PUBLISHED |
+| **TikTok** | `@odipetapp` | Odi Pet | ACTIVE | First launch post: NOT YET PUBLISHED (Launch content: planned) |
+| **YouTube** | `@odipetapp` | Odi Pet | ACTIVE | First video: NOT YET PUBLISHED |
+| **Facebook** | — | — | NOT YET CREATED | — |
+
+> ⚠️ **Canonical Brand Rule:** Social links and canonical references must NEVER use legacy staging domains (e.g. `odi-petcare.vercel.app`).
 
 ### Authorized Asset Directory Structure
 All brand assets are frozen inside `/public/brand/`:
