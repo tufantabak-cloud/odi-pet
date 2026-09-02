@@ -144,6 +144,15 @@ test.describe('Odi Pet - Permissions Architecture v2', () => {
       }
     })
 
+    // Log in before navigating to the protected route
+    await context.clearCookies()
+    await page.goto('/login')
+    await page.locator('[data-testid="login-email-input"], input#email, input[name="email"]').first().fill(LOCAL_E2E_EMAIL)
+    await page.locator('[data-testid="login-password-input"], input#password, input[name="password"]').first().fill(LOCAL_E2E_PASSWORD)
+    await page.click('button[type="submit"]')
+    await page.waitForURL(/\/owner\/|\/dashboard|\/admin/, { timeout: 15000 })
+    await page.waitForLoadState('networkidle')
+
     // Now navigate - the mocks are in place, routes are intercepting
     await page.goto('/owner/notifications')
     await page.waitForLoadState('networkidle')

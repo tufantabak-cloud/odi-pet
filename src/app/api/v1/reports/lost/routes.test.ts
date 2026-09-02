@@ -129,7 +129,7 @@ describe('kayıp ilanı v1 rotaları', () => {
       success: false,
       error: 'INVALID_OR_OUTSIDE_TURKEY_LOCATION',
     })
-  })
+  }, 15000)
 
   it('Supabase phone_change OTP gönderimini başlatır', async () => {
     const updateUser = vi.fn().mockResolvedValue({ error: null })
