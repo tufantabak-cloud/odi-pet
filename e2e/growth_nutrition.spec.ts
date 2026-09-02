@@ -62,12 +62,11 @@ test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification'
     const rulerDisplay = page.locator('#nutrition-weight-ruler').getByTestId('ruler-display').first();
     await rulerDisplay.click();
     const rulerInput = page.locator('#nutrition-weight-ruler input[type="number"]').first();
-    if (await rulerInput.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await rulerInput.fill('5.2');
-      await rulerInput.press('Enter');
-      // Wait for React to commit the state update so the new weight is ready to be saved
-      await expect(rulerDisplay).toContainText('5.2', { timeout: 5000 });
-    }
+    await rulerInput.waitFor({ state: 'visible', timeout: 5000 });
+    await rulerInput.fill('5.2');
+    await rulerInput.press('Enter');
+    // Wait for React to commit the state update so the new weight is ready to be saved
+    await expect(rulerDisplay).toContainText('5.2', { timeout: 5000 });
     await page.click('button[type="submit"]:has-text("Ölçümü Kaydet"), button[type="submit"]:has-text("Kaydet"), button[type="submit"]:has-text("Ekle")');
     await page.waitForTimeout(1000);
 
@@ -83,35 +82,42 @@ test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification'
     await page.goto(`/owner/pets/${petId}/nutrition`);
     await page.waitForLoadState('networkidle');
 
-    // Click "Mama ekle" if no active food or use assignment modal
     const addFoodBtn = page.locator('button:has-text("Mama ekle"), button:has-text("Mama Ekle")').first();
+    // Use waitFor instead of isVisible so it doesn't fail due to React render lag
+    await addFoodBtn.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
     if (await addFoodBtn.isVisible()) {
       await addFoodBtn.click();
       await page.waitForTimeout(500);
 
       const manualBtn = page.locator('button:has-text("Manuel Olarak Ekle"), button:has-text("Listede Bulamadım")').first();
+      await manualBtn.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
       if (await manualBtn.isVisible()) {
         await manualBtn.click();
       }
 
       const brandInput = page.locator('input[placeholder*="Royal Canin"], input[name="brand_free_text"], input[name="food_brand"]').first();
+      await brandInput.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
       if (await brandInput.isVisible()) {
         await brandInput.fill('PremiumRoyal');
       }
       const productInput = page.locator('input[placeholder*="Puppy"], input[name="product_free_text"], input[name="food_product"]').first();
+      await productInput.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
       if (await productInput.isVisible()) {
         await productInput.fill('Puppy Care');
       }
       const gramsInput = page.locator('input[name="daily_target_grams"], input[name="daily_grams"]').first();
+      await gramsInput.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
       if (await gramsInput.isVisible()) {
         await gramsInput.fill('125');
       }
 
       const nextStockBtn = page.locator('button:has-text("İleri: Stok"), button:has-text("İleri"), button:has-text("Kaydet")').first();
+      await nextStockBtn.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
       if (await nextStockBtn.isVisible()) {
         await nextStockBtn.click();
         await page.waitForTimeout(500);
         const finalSaveBtn = page.locator('button[type="submit"]:has-text("Kaydet"), button:has-text("Kaydet")').first();
+        await finalSaveBtn.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
         if (await finalSaveBtn.isVisible()) {
           await finalSaveBtn.click();
         }
