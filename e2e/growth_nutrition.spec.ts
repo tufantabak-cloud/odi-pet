@@ -80,20 +80,15 @@ test.describe('Odi.Pet Growth and Nutrition (GeliÅŸim ve Beslenme) Verificatio
       page.click('button[type="submit"]:has-text("Kaydet"), button[type="submit"]:has-text("Ekle")')
     ]);
 
-    // Go back to pet profile to verify weight rendered
+    // Go back to pet profile to verify weight rendered on the Özet tab
     // Wrap in a polling block with page reloads to definitively defeat any Next.js caching or DB replica delays.
-    // NOTE: We click the "Sağlık" tab explicitly because `useSearchParams()` hydration can sometimes fail to activate the tab via URL.
     await expect(async () => {
       await page.goto(`/owner/pets/${petId}`);
       await page.waitForLoadState('networkidle');
-      
-      const saglikTab = page.locator('button', { hasText: 'Sağlık' }).first();
-      await expect(saglikTab).toBeVisible({ timeout: 5000 });
-      await saglikTab.click();
 
-      // Look for the span that holds the "5.0" value
+      // On the default "Özet" tab, the "Kilo & Gelişim Analizi" card renders the latest weight (5.0 kg)
       const weightDisplay = page.locator('span.text-2xl', { hasText: '5.0' }).first();
-      await expect(weightDisplay).toBeVisible({ timeout: 3000 });
+      await expect(weightDisplay).toBeVisible({ timeout: 5000 });
     }).toPass({ timeout: 20000, intervals: [2000, 3000, 5000] });
 
     // 4. Set Nutrition Plan
