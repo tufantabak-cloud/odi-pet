@@ -65,6 +65,8 @@ test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification'
     if (await rulerInput.isVisible({ timeout: 2000 }).catch(() => false)) {
       await rulerInput.fill('5.2');
       await rulerInput.press('Enter');
+      // Wait for React to commit the state update so the new weight is ready to be saved
+      await expect(rulerDisplay).toContainText('5.2', { timeout: 5000 });
     }
     await page.click('button[type="submit"]:has-text("Ölçümü Kaydet"), button[type="submit"]:has-text("Kaydet"), button[type="submit"]:has-text("Ekle")');
     await page.waitForTimeout(1000);
