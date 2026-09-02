@@ -102,36 +102,39 @@ test.describe('Odi.Pet Growth and Nutrition (GeliÅŸim ve Beslenme) Verificatio
       await addFoodBtn.click();
       await page.waitForTimeout(500);
 
+      const modal = page.locator('.fixed.inset-0.z-\\[9999\\]');
+      await modal.waitFor({ state: 'visible', timeout: 5000 });
+
       // Switch to manual entry tab ("Listede Yok / Elle")
-      const manualBtn = page.locator('button:has-text("Listede Yok / Elle"), button:has-text("Elle")').first();
+      const manualBtn = modal.locator('button:has-text("Listede Yok / Elle"), button:has-text("Elle")').first();
       await manualBtn.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
       if (await manualBtn.isVisible()) {
         await manualBtn.click();
         await page.waitForTimeout(300);
       }
 
-      const brandInput = page.locator('input[placeholder*="Pro Plan"], input[placeholder*="Royal Canin"], input[placeholder*="Ev Yapımı"]').first();
+      const brandInput = modal.locator('input[placeholder*="Pro Plan"], input[placeholder*="Royal Canin"], input[placeholder*="Ev Yapımı"]').first();
       await brandInput.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
       if (await brandInput.isVisible()) {
         await brandInput.fill('PremiumRoyal');
       }
-      const productInput = page.locator('input[placeholder*="Puppy Medium"], input[placeholder*="Optistart"], input[placeholder*="Tavuklu"]').first();
+      const productInput = modal.locator('input[placeholder*="Puppy Medium"], input[placeholder*="Optistart"], input[placeholder*="Tavuklu"]').first();
       await productInput.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
       if (await productInput.isVisible()) {
         await productInput.fill('Puppy Care');
       }
-      const gramsInput = page.locator('input[data-testid="daily-target-grams-input"], input[name="daily_target_grams"]').first();
+      const gramsInput = modal.locator('input[data-testid="daily-target-grams-input"], input[name="daily_target_grams"]').first();
       await gramsInput.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
       if (await gramsInput.isVisible()) {
         await gramsInput.fill('125');
       }
 
-      const nextStockBtn = page.locator('button[type="submit"]:has-text("İleri: Stok Durumu"), button[type="submit"]:has-text("İleri")').first();
+      const nextStockBtn = modal.locator('button[type="submit"]:has-text("İleri: Stok Durumu"), button[type="submit"]:has-text("İleri")').first();
       await nextStockBtn.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
       if (await nextStockBtn.isVisible()) {
         await nextStockBtn.click();
         await page.waitForTimeout(500);
-        const finalSaveBtn = page.locator('form button[type="submit"]:has-text("Kaydet")').first();
+        const finalSaveBtn = modal.locator('button[type="submit"]:has-text("Kaydet")').first();
         await finalSaveBtn.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
         if (await finalSaveBtn.isVisible()) {
           await finalSaveBtn.click();
