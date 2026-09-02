@@ -1,4 +1,4 @@
-import { expect, type Page, type APIRequestContext } from '@playwright/test';
+﻿import { expect, type Page, type APIRequestContext } from '@playwright/test';
 import { test } from './fixtures';
 
 const EMAIL = process.env.TEST_EMAIL;
@@ -23,7 +23,7 @@ async function login(page: Page) {
   }
 }
 
-test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification', () => {
+test.describe('Odi.Pet Growth and Nutrition (GeliÅŸim ve Beslenme) Verification', () => {
   test('Lifecycle Verification of Weight Logging, Chart Drawing, and Nutrition Plan Syncing', async ({ page }) => {
     test.setTimeout(120000);
     await login(page);
@@ -34,7 +34,7 @@ test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification'
       const form = new FormData();
       form.append('name', name);
       form.append('species', 'dog');
-      form.append('breed', 'Poodle (Kaniş)');
+      form.append('breed', 'Poodle (KaniÅŸ)');
       form.append('birth_date', '2026-01-01');
       form.append('gender', 'male');
       form.append('is_neutered', 'false');
@@ -56,7 +56,7 @@ test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification'
     await page.click('button:has-text("Kilo Takibi")');
     await page.waitForTimeout(500);
 
-    // ── CRITICAL FIX ──
+    // â”€â”€ CRITICAL FIX â”€â”€
     // Instead of using the RulerPicker input (which has a scroll-based race condition
     // where handleScroll overrides onChange after scrollToValue's isSelfScrolling expires),
     // we click a preset button "5.0 kg" which calls onChange directly without scroll animation.
@@ -74,9 +74,11 @@ test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification'
     const hiddenWeight = page.locator('input[name="weight_kg"]');
     await expect(hiddenWeight).toHaveValue('5', { timeout: 3000 });
 
-    // Submit the weight measurement
-    await page.click('button[type="submit"]:has-text("Ölçümü Kaydet"), button[type="submit"]:has-text("Kaydet"), button[type="submit"]:has-text("Ekle")');
-    await page.waitForTimeout(1000);
+    // Submit the weight measurement and wait for the API to confirm the save
+    await Promise.all([
+      page.waitForResponse(res => res.url().includes('/nutrition/weight') && res.status() >= 200 && res.status() < 300, { timeout: 15000 }),
+      page.click('button[type="submit"]:has-text("Kaydet"), button[type="submit"]:has-text("Ekle")')
+    ]);
 
     // Go back to pet profile to verify weight rendered
     await page.goto(`/owner/pets/${petId}?tab=saglik`);
@@ -98,7 +100,7 @@ test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification'
       await addFoodBtn.click();
       await page.waitForTimeout(500);
 
-      const manualBtn = page.locator('button:has-text("Manuel Olarak Ekle"), button:has-text("Listede Bulamadım")').first();
+      const manualBtn = page.locator('button:has-text("Manuel Olarak Ekle"), button:has-text("Listede BulamadÄ±m")').first();
       await manualBtn.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
       if (await manualBtn.isVisible()) {
         await manualBtn.click();
@@ -120,7 +122,7 @@ test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification'
         await gramsInput.fill('125');
       }
 
-      const nextStockBtn = page.locator('button:has-text("İleri: Stok"), button:has-text("İleri"), button:has-text("Kaydet")').first();
+      const nextStockBtn = page.locator('button:has-text("Ä°leri: Stok"), button:has-text("Ä°leri"), button:has-text("Kaydet")').first();
       await nextStockBtn.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
       if (await nextStockBtn.isVisible()) {
         await nextStockBtn.click();
@@ -154,7 +156,7 @@ test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification'
     await petRow.locator('button:has(svg)').first().click();
     await page.waitForTimeout(500);
 
-    await page.click('button:has-text("Profili Kalıcı Olarak Sil")');
+    await page.click('button:has-text("Profili KalÄ±cÄ± Olarak Sil")');
     await page.click('button:has-text("Evet, Sil")');
     await expect(page).toHaveURL(/\/owner\/dashboard/, { timeout: 15000 });
     console.log('Pet profile successfully deleted and verified!');
