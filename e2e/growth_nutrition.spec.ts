@@ -81,16 +81,15 @@ test.describe('Odi.Pet Growth and Nutrition (GeliÅŸim ve Beslenme) Verificatio
     ]);
 
     // Go back to pet profile to verify weight rendered
-    await page.goto(`/owner/pets/${petId}?tab=saglik`);
-    await page.waitForLoadState('networkidle');
-
-    // Check if the weight is displayed on the health tab.
-    // NOTE: In PetDetailClient.tsx, the weight value ("5.0") and unit ("kg") are rendered
-    // in separate sibling <span> elements, so a single text= regex across them won't work.
-    // Instead we look for the parent container that holds both spans.
-    // currentWeightVal.toFixed(1) renders "5.0" in a span with text-2xl font-black.
-    const weightDisplay = page.locator('span.text-2xl:has-text("5.0"), span:has-text("5.0")').first();
-    await expect(weightDisplay).toBeVisible({ timeout: 15000 });
+    // Wrap in a polling block with page reloads to definitively defeat any Next.js caching or DB replica delays.
+    await expect(async () => {
+      await page.goto(`/owner/pets/${petId}?tab=saglik`);
+      await page.waitForLoadState('networkidle');
+      
+      // Look for the span that holds the "5.0" value
+      const weightDisplay = page.locator('span.text-2xl', { hasText: '5.0' }).first();
+      await expect(weightDisplay).toBeVisible({ timeout: 3000 });
+    }).toPass({ timeout: 20000, intervals: [2000, 3000, 5000] });
 
     // 4. Set Nutrition Plan
     console.log('Setting nutrition brand and amount...');
