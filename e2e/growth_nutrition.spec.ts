@@ -39,7 +39,6 @@ test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification'
       form.append('birth_date', '2026-01-01');
       form.append('gender', 'male');
       form.append('is_neutered', 'false');
-      form.append('weight', '4.5');
       const response = await fetch('/api/pets', { method: 'POST', body: form });
       return { status: response.status, body: await response.json() };
     }, petName);

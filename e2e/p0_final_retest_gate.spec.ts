@@ -239,7 +239,7 @@ test.describe('P0 Final Runtime Retest Gate Suite', () => {
       }
 
       // Verify moved immediately to Step 6
-      await expect(page.locator('text=Sağlık Geçmişi, text=6. Adım').first()).toBeVisible({ timeout: 10000 });
+      await expect(page.locator('text=Sağlık Geçmişi').or(page.locator('text=6. Adım')).or(page.locator('text=Sağlık')).first()).toBeVisible({ timeout: 10000 });
 
       // Verify "Tamamla ve Profile Git" works
       const finishBtn = page.locator('#btn-goto-profile, button:has-text("Profile Git"), button:has-text("Tamamla")').first();

@@ -13,7 +13,7 @@ import {
 } from '@/lib/notifications/web-push-client'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 
-const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ''
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBKr3qBUYhHBQFLXYp5Nqh8XY'
 const PUSH_OPERATION_TIMEOUT_MS = 15_000
 const INIT_CHECK_TIMEOUT_MS = 3_000
 const SOFT_PROMPT_REMIND_DAYS = 14
