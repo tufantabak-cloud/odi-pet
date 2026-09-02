@@ -76,16 +76,21 @@ test.describe('Odi.Pet Growth and Nutrition (GeliÅŸim ve Beslenme) Verificatio
 
     // Submit the weight measurement and wait for the API to confirm the save
     await Promise.all([
-      page.waitForResponse(res => res.url().includes('/nutrition/weight') && res.status() >= 200 && res.status() < 300, { timeout: 15000 }),
+      page.waitForResponse(res => res.url().includes('/nutrition/weight') && res.request().method() === 'POST' && res.status() >= 200 && res.status() < 300, { timeout: 15000 }),
       page.click('button[type="submit"]:has-text("Kaydet"), button[type="submit"]:has-text("Ekle")')
     ]);
 
     // Go back to pet profile to verify weight rendered
     // Wrap in a polling block with page reloads to definitively defeat any Next.js caching or DB replica delays.
+    // NOTE: We click the "Sağlık" tab explicitly because `useSearchParams()` hydration can sometimes fail to activate the tab via URL.
     await expect(async () => {
-      await page.goto(`/owner/pets/${petId}?tab=saglik`);
+      await page.goto(`/owner/pets/${petId}`);
       await page.waitForLoadState('networkidle');
       
+      const saglikTab = page.locator('button', { hasText: 'Sağlık' }).first();
+      await expect(saglikTab).toBeVisible({ timeout: 5000 });
+      await saglikTab.click();
+
       // Look for the span that holds the "5.0" value
       const weightDisplay = page.locator('span.text-2xl', { hasText: '5.0' }).first();
       await expect(weightDisplay).toBeVisible({ timeout: 3000 });
