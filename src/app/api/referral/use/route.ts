@@ -10,10 +10,10 @@ export async function POST(req: NextRequest) {
   const { referralCode } = await req.json()
   if (!referralCode) return NextResponse.json({ error: 'referralCode gerekli' }, { status: 400 })
 
-  const supabase = await createServerSupabaseClient()
+  const adminSupabase = createAdminSupabaseClient()
 
-  // Kodu sahibini bul
-  const { data: referrer } = await supabase
+  // Kodu sahibini bul (RLS kısıtlamasına takılmamak için admin client kullanılır)
+  const { data: referrer } = await adminSupabase
     .from('profiles')
     .select('id')
     .eq('referral_code', referralCode.toUpperCase())
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   if (referrer.id === user.id) return NextResponse.json({ error: 'Kendi kodunu kullanamazsın' }, { status: 400 })
 
   // Referral kaydı oluştur (zaten varsa upsert ile hata engelle)
-  const { data: referralRecord, error } = await supabase.from('referrals').upsert({
+  const { data: referralRecord, error } = await adminSupabase.from('referrals').upsert({
     referrer_id: referrer.id,
     referred_id: user.id,
     referral_code: referralCode.toUpperCase(),
@@ -32,8 +32,7 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Service role client ile rozet güncellemelerini güvenli şekilde yap (RLS engeline takılmasın)
-  const adminSupabase = createAdminSupabaseClient()
+  // Service role client ile rozet güncellemelerini güvenli şekilde yap
   const { count } = await adminSupabase
     .from('referrals')
     .select('*', { count: 'exact', head: true })

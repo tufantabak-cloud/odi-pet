@@ -97,7 +97,7 @@ if (skipBuild && !existsSync('.next-e2e/BUILD_ID')) {
 if (!skipBuild) {
   const buildResult = spawnSync(
     process.execPath,
-    ['node_modules/next/dist/bin/next', 'build'],
+    ['node_modules/next/dist/bin/next', 'build', '--webpack'],
     {
       env: testEnv,
       stdio: 'inherit',

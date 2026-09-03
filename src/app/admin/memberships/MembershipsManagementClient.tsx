@@ -248,7 +248,8 @@ export default function MembershipsManagementClient({
     setLoadingDetails(true);
     setSelectedDetailUser(user);
     try {
-      const data = await getUserMembershipDetailsAction(user.id);
+      const profileId = user.profile_id || user.id;
+      const data = await getUserMembershipDetailsAction(profileId);
       setUserDetails(data);
     } catch (err) {
       console.error(err);
@@ -1219,6 +1220,7 @@ export default function MembershipsManagementClient({
                     return (
                       <tr 
                         key={sub.profile_id} 
+                        data-testid={`user-row-${sub.profile_id}`}
                         onClick={() => fetchUserDetails(sub)}
                         className={`transition-colors cursor-pointer ${isSelected ? 'bg-primary/5' : 'hover:bg-slate-50/50'}`}
                       >
@@ -1253,12 +1255,13 @@ export default function MembershipsManagementClient({
                           <div className="font-bold text-amber-600">+{sub.totalGrantedDays || 0} Gün</div>
                           <div className="text-2xs text-slate-400">{sub.totalCreditsCount || 0} İşlem</div>
                         </td>
-                        <td className="p-3 text-xs">
+                        <td className="p-3 text-xs" data-testid={`user-invites-${sub.profile_id}`}>
                           <div className="font-bold text-blue-600">{sub.qualifiedInvites || 0} / {sub.totalInvites || 0}</div>
                         </td>
                         <td className="p-3 text-right sticky right-0 bg-white shadow-xs z-10">
                           <button
                             type="button"
+                            data-testid={`select-user-btn-${sub.profile_id}`}
                             onClick={(e) => { e.stopPropagation(); fetchUserDetails(sub); }}
                             className="px-3 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 text-2xs font-bold rounded-lg transition-all"
                           >
@@ -1456,15 +1459,15 @@ export default function MembershipsManagementClient({
                       <div className="grid grid-cols-3 gap-4 mb-4">
                         <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-center">
                           <span className="text-2xs font-bold text-slate-500 block">Toplam</span>
-                          <span className="text-lg font-black text-slate-800">{userDetails.referrals?.length || 0}</span>
+                          <span data-testid="admin-referrals-total" className="text-lg font-black text-slate-800">{userDetails.referrals?.length || 0}</span>
                         </div>
                         <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-center">
                           <span className="text-2xs font-bold text-slate-500 block">Kabul Edilen</span>
-                          <span className="text-lg font-black text-emerald-600">{userDetails.referrals?.filter((r: any) => r.status === 'qualified').length || 0}</span>
+                          <span data-testid="admin-referrals-qualified" className="text-lg font-black text-emerald-600">{userDetails.referrals?.filter((r: any) => r.status === 'qualified').length || 0}</span>
                         </div>
                         <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-center">
                           <span className="text-2xs font-bold text-slate-500 block">Bekleyen</span>
-                          <span className="text-lg font-black text-amber-500">{userDetails.referrals?.filter((r: any) => r.status === 'pending').length || 0}</span>
+                          <span data-testid="admin-referrals-pending" className="text-lg font-black text-amber-500">{userDetails.referrals?.filter((r: any) => r.status === 'pending').length || 0}</span>
                         </div>
                       </div>
                       
@@ -1476,13 +1479,13 @@ export default function MembershipsManagementClient({
                              const refUser = ref.referred || {};
                              const fullName = [refUser.first_name, refUser.last_name].filter(Boolean).join(' ') || 'İsimsiz';
                              return (
-                               <div key={idx} className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-white">
+                               <div data-testid="admin-referral-item" key={idx} className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-white">
                                   <div>
                                     <div className="text-sm font-bold text-slate-900">{fullName}</div>
                                     <div className="text-2xs text-slate-400">{refUser.email || 'E-posta gizli'}</div>
                                   </div>
                                   <div className="text-right">
-                                    <div className={`text-xs font-bold uppercase ${ref.status === 'qualified' ? 'text-emerald-600' : 'text-amber-500'}`}>
+                                    <div data-testid="admin-referral-item-status" className={`text-xs font-bold uppercase ${ref.status === 'qualified' ? 'text-emerald-600' : 'text-amber-500'}`}>
                                       {ref.status === 'qualified' ? 'Kabul Edildi' : 'Bekliyor'}
                                     </div>
                                     <div className="text-2xs text-slate-400">{new Date(ref.created_at).toLocaleDateString('tr-TR')}</div>

@@ -271,7 +271,7 @@ export default function ReferralClient({
             Davet Kodun
           </span>
           <div className="px-6 py-2.5 rounded-2xl bg-primary-soft border border-primary/20">
-            <span className="text-2xl font-black text-primary tracking-widest">
+            <span data-testid="referral-code" className="text-2xl font-black text-primary tracking-widest">
               {referralCode}
             </span>
           </div>
@@ -325,15 +325,15 @@ export default function ReferralClient({
         {/* 8. Stats Card (Toplam Davet, Nitelikli Davet, Kazanılan Süre) */}
         <div className="grid grid-cols-3 gap-2.5">
           <div className="card-base p-4 rounded-3xl bg-white border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] text-center">
-            <span className="text-xl sm:text-2xl font-black text-primary">{referralCount}</span>
+            <span data-testid="referral-total-count" className="text-xl sm:text-2xl font-black text-primary">{referralCount}</span>
             <p className="text-2xs sm:text-2xs font-bold text-text-secondary uppercase tracking-wider mt-1">Toplam Davet</p>
           </div>
           <div className="card-base p-4 rounded-3xl bg-white border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] text-center">
-            <span className="text-xl sm:text-2xl font-black text-emerald-600">{qualifiedCount}</span>
+            <span data-testid="referral-qualified-count" className="text-xl sm:text-2xl font-black text-emerald-600">{qualifiedCount}</span>
             <p className="text-2xs sm:text-2xs font-bold text-text-secondary uppercase tracking-wider mt-1">Nitelikli Davet</p>
           </div>
           <div className="card-base p-4 rounded-3xl bg-white border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] text-center">
-            <span className="text-xl sm:text-2xl font-black text-amber-500">+{earnedDays} Gün</span>
+            <span data-testid="referral-earned-days" className="text-xl sm:text-2xl font-black text-amber-500">+{earnedDays} Gün</span>
             <p className="text-2xs sm:text-2xs font-bold text-text-secondary uppercase tracking-wider mt-1">Kazanılan Süre</p>
           </div>
         </div>
@@ -346,7 +346,7 @@ export default function ReferralClient({
             </h3>
             <div className="bg-white rounded-3xl border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] divide-y divide-border-main overflow-hidden">
               {invitesList.map((item) => (
-                <div key={item.id} className="p-4 flex justify-between items-center">
+                <div data-testid="referral-invite-item" key={item.id} className="p-4 flex justify-between items-center">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-bg-main flex items-center justify-center text-text-secondary">
                       <Users className="w-4 h-4" />
@@ -362,15 +362,15 @@ export default function ReferralClient({
                   </div>
                   <div>
                     {item.status === 'qualified' ? (
-                      <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-2xs font-bold border border-emerald-200">
+                      <span data-testid="referral-invite-status" className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-2xs font-bold border border-emerald-200">
                         Ödüllendirildi ✓
                       </span>
                     ) : item.status === 'pending' ? (
-                      <span className="px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-2xs font-bold border border-amber-200 flex items-center gap-1">
+                      <span data-testid="referral-invite-status" className="px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-2xs font-bold border border-amber-200 flex items-center gap-1">
                         <Clock className="w-3 h-3" /> Bekliyor
                       </span>
                     ) : (
-                      <span className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-2xs font-bold border border-slate-200">
+                      <span data-testid="referral-invite-status" className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-2xs font-bold border border-slate-200">
                         Geçersiz
                       </span>
                     )}

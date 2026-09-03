@@ -78,7 +78,7 @@ export async function qualifyReferral(referralId: string): Promise<QualifyCheckR
 
     const [{ count: vaccineCount }, { count: weightCount }, { count: parasiteCount }] = await Promise.all([
       adminSupabase.from('vaccine_records_v2').select('id', { count: 'exact', head: true }).in('pet_id', petIds).lte('created_at', deadlineISO),
-      adminSupabase.from('weight_logs').select('id', { count: 'exact', head: true }).in('pet_id', petIds).lte('created_at', deadlineISO),
+      adminSupabase.from('weight_logs').select('id', { count: 'exact', head: true }).in('pet_id', petIds).lte('measured_at', deadlineISO),
       adminSupabase.from('parasite_records').select('id', { count: 'exact', head: true }).in('pet_id', petIds).lte('created_at', deadlineISO),
     ])
 
@@ -95,18 +95,39 @@ export async function qualifyReferral(referralId: string): Promise<QualifyCheckR
   const isQualified = accountCreated && emailVerified && hasPet && hasHealthRecordWithin14Days
 
   if (isQualified) {
-    // 5. Kanonik referral kredi servisini tetikle
-    await grantReferralCredit(referral.id)
-
-    // Referans durumunu qualified olarak güncelle
-    await adminSupabase
+    // 1. Önce referans durumunu qualified olarak güncelle ve qualified_at yaz
+    const qualifiedAt = new Date().toISOString()
+    const { error: updateError } = await adminSupabase
       .from('referrals')
       .update({
         status: 'qualified',
-        qualified_at: new Date().toISOString(),
+        qualified_at: qualifiedAt,
         rejection_reason: null,
       })
       .eq('id', referral.id)
+
+    if (updateError) {
+      throw new Error(`Referral status update failed: ${updateError.message}`)
+    }
+
+    // 2. Kanonik referral kredi servisini tetikle (status artık qualified olduğu için güvenlik kontrolünü geçer)
+    try {
+      const creditRes = await grantReferralCredit(referral.id)
+      if (creditRes && !creditRes.success) {
+        console.warn(`[qualifyReferral] grantReferralCredit returned unsuccessful: ${creditRes.reason}`)
+      }
+    } catch (creditError: any) {
+      console.error(`[qualifyReferral] grantReferralCredit failed, reverting status:`, creditError)
+      await adminSupabase
+        .from('referrals')
+        .update({
+          status: 'pending',
+          qualified_at: null,
+          rejection_reason: `Credit grant failed: ${creditError?.message || 'Unknown error'}`
+        })
+        .eq('id', referral.id)
+      throw creditError
+    }
   }
 
   return {

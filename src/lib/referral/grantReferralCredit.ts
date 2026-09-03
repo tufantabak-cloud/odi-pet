@@ -1,5 +1,5 @@
 import { createAdminSupabaseClient } from '@/lib/supabase/server'
-import { DEFAULT_SETTINGS } from '@/app/api/admin/memberships/settings/route'
+import { DEFAULT_SETTINGS } from '@/lib/referral/constants'
 import { membershipService } from '@/lib/membership'
 
 export async function grantReferralCredit(referralId: string) {
@@ -75,7 +75,8 @@ export async function grantReferralCredit(referralId: string) {
     .eq('referrer_id', referrerId)
     .eq('status', 'qualified')
 
-  const inviteIndex = (totalQualifiedCount ?? 0) + 1 // 1-indexed
+  // referrals.status = 'qualified' zaten yazıldığı için totalQualifiedCount bu daveti içerir
+  const inviteIndex = Math.max(1, totalQualifiedCount ?? 1) // 1-indexed
 
   let referrerCreditDays = Math.max(referralRewardDays, settings.referral_tier_1_days)
 

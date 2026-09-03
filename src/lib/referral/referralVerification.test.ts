@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { DEFAULT_SETTINGS, MembershipSettings } from '@/app/api/admin/memberships/settings/route'
+import { DEFAULT_SETTINGS, type MembershipSettings } from '@/lib/referral/constants'
 
 describe('Referral System End-to-End Functionality Verification', () => {
   it('DEFAULT_SETTINGS contains all dynamic referral tier days', () => {
