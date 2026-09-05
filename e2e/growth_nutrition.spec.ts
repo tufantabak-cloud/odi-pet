@@ -1,5 +1,6 @@
 import { expect, type Page, type APIRequestContext } from '@playwright/test';
 import { test } from './fixtures';
+import { dismissBlockingOverlays, safeClick } from './helpers/dismiss-modals';
 
 const EMAIL = process.env.TEST_EMAIL;
 const PASSWORD = process.env.TEST_PASSWORD;
