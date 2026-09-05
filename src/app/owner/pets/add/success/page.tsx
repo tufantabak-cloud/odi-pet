@@ -25,13 +25,11 @@ function SuccessContent() {
     isSubscribed,
     isInitializing,
     isLoading,
-    error: pushError,
     subscribe,
   } = useWebPush()
   const [errorMsg, setErrorMsg] = useState('')
   // Adım 5: Bildirim Onayı, Adım 6: Sağlık Geçmişi
   const [activeStep, setActiveStep] = useState<5 | 6>(5)
-  const [showSkipWarning, setShowSkipWarning] = useState(false)
 
   const [pet, setPet] = useState<any>(null)
   const supabase = createBrowserSupabaseClient()

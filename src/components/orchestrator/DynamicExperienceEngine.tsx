@@ -84,7 +84,6 @@ export default function DynamicExperienceEngine({
     }
 
     evaluateRules()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [triggerEvent])
 
   if (loading || !evaluation?.prompt || !open) return null

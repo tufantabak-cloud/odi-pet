@@ -101,7 +101,6 @@ export default function HealthTab({ petId, petName, onMarkDone, onPostpone, onEd
     if (!initialVaccines) loadVaccines();
     if (!initialParasites) loadParasites();
     if (!initialVetRecords) loadVetRecords();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadHealthRecords]);
 
   // Action Save Handlers
