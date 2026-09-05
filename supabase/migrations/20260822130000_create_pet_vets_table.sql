@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS pet_vets (
 -- RLS policies
 ALTER TABLE pet_vets ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view their pet's vets" ON pet_vets;
 CREATE POLICY "Users can view their pet's vets"
   ON pet_vets FOR SELECT
   USING (
@@ -30,6 +31,7 @@ CREATE POLICY "Users can view their pet's vets"
     )
   );
 
+DROP POLICY IF EXISTS "Users can insert their pet's vets" ON pet_vets;
 CREATE POLICY "Users can insert their pet's vets"
   ON pet_vets FOR INSERT
   WITH CHECK (
@@ -42,6 +44,7 @@ CREATE POLICY "Users can insert their pet's vets"
     )
   );
 
+DROP POLICY IF EXISTS "Users can update their pet's vets" ON pet_vets;
 CREATE POLICY "Users can update their pet's vets"
   ON pet_vets FOR UPDATE
   USING (
@@ -54,6 +57,7 @@ CREATE POLICY "Users can update their pet's vets"
     )
   );
 
+DROP POLICY IF EXISTS "Users can delete their pet's vets" ON pet_vets;
 CREATE POLICY "Users can delete their pet's vets"
   ON pet_vets FOR DELETE
   USING (
@@ -79,8 +83,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS tr_ensure_single_primary_pet_vet ON pet_vets;
 CREATE TRIGGER tr_ensure_single_primary_pet_vet
 BEFORE INSERT OR UPDATE OF is_primary ON pet_vets
 FOR EACH ROW
 WHEN (NEW.is_primary = true)
 EXECUTE FUNCTION ensure_single_primary_pet_vet();
+
