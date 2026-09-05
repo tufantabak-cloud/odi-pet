@@ -32,6 +32,7 @@ function SuccessContent() {
   const [activeStep, setActiveStep] = useState<5 | 6>(5)
 
   const [pet, setPet] = useState<any>(null)
+
   const supabase = createBrowserSupabaseClient()
 
   const petId = params.get('id') ?? ''
