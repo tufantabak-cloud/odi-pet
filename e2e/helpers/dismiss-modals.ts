@@ -32,7 +32,22 @@ export async function dismissBlockingOverlays(page: Page): Promise<void> {
       await page.locator('.driver-overlay').first().waitFor({ state: 'detached', timeout: 3000 }).catch(() => {});
     }
   } catch {}
+
+  // 3. Akıllı Deneyim ve Büyüme Prompt Modalları (SmartMonthlyGrowthPrompt, QuickUpdateModal - z-[60] modalları)
+  try {
+    const modalZ60 = page.locator('.fixed.inset-0.z-\\[60\\]').first();
+    if (await modalZ60.isVisible({ timeout: 500 }).catch(() => false)) {
+      const closeBtn = modalZ60.locator('button:has-text("İptal"), button:has-text("Vazgeç"), button:has-text("Şimdi Değil"), button:has(svg)').first();
+      if (await closeBtn.isVisible({ timeout: 500 }).catch(() => false)) {
+        await closeBtn.click();
+      } else {
+        await modalZ60.click({ position: { x: 10, y: 10 } }).catch(() => {});
+      }
+      await modalZ60.waitFor({ state: 'hidden', timeout: 2000 }).catch(() => {});
+    }
+  } catch {}
 }
+
 
 /**
  * Hedef elemente tıklamadan önce asenkron bir overlay engeli olup olmadığını
