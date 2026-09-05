@@ -171,7 +171,7 @@ export const RulerPicker: React.FC<RulerPickerProps> = ({
   }
 
   return (
-    <div className={`flex flex-col gap-3 w-full ${className}`}>
+    <div id={id} data-testid={id || 'ruler-picker'} className={`flex flex-col gap-3 w-full ${className}`}>
       {/* Etiket ve Opsiyonel Bilgisi */}
       {label && (
         <div className="flex items-center justify-between">
@@ -199,7 +199,7 @@ export const RulerPicker: React.FC<RulerPickerProps> = ({
           </button>
 
           {/* Sayısal Gösterge (Tıklanıp Düzenlenebilir) */}
-          <div className="flex flex-col items-center justify-center cursor-pointer group" onClick={() => setIsEditing(true)}>
+          <div data-testid="ruler-display" className="flex flex-col items-center justify-center cursor-pointer group" onClick={() => setIsEditing(true)}>
             {isEditing ? (
               <div className="flex items-center gap-1">
                 <input

@@ -131,6 +131,7 @@ export default function DashboardClient({
           <div className="flex items-center justify-between px-[var(--space-4)]">
             <h2 className="text-xs font-bold text-text-primary uppercase tracking-wider">Petlerim</h2>
             <Link
+              id="onb-pet-add"
               href="/owner/pets/add"
               data-testid="add-first-pet-button"
               className="text-xs font-semibold text-primary min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-3 py-1.5 rounded-xl hover:bg-primary/5 active:scale-[0.98] transition-all"
@@ -312,7 +313,7 @@ export default function DashboardClient({
             </Link>
 
             {/* Akıllı Tarama */}
-            <Link href="/owner/scanner" prefetch={false}
+            <Link id="onb-scanner-capture" href="/owner/scanner" prefetch={false}
               className="flex flex-col items-center justify-center gap-2.5 p-4 rounded-[24px] min-h-[96px] cursor-pointer bg-white border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.08)] hover:border-slate-200 hover:scale-[1.02] transition-all duration-200 active:scale-[0.98]">
               <div className="w-11 h-11 rounded-2xl bg-violet-100 flex items-center justify-center text-violet-600">
                 <Scan className="w-5 h-5 stroke-[2]" />
@@ -336,7 +337,7 @@ export default function DashboardClient({
             </Link>
 
             {/* Rutin Planla */}
-            <Link href="/owner/plan-yap" prefetch={false}
+            <Link id="onb-plan-add" href="/owner/plan-yap" prefetch={false}
               className="flex flex-col items-center justify-center gap-2.5 p-4 rounded-[24px] min-h-[96px] cursor-pointer bg-white border border-slate-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.08)] hover:border-slate-200 hover:scale-[1.02] transition-all duration-200 active:scale-[0.98]">
               <div className="w-11 h-11 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-600">
                 <Calendar className="w-5 h-5 stroke-[2]" />

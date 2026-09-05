@@ -1,14 +1,19 @@
-import { pathToFileURL } from 'node:url'
+import { readFileSync } from 'node:fs'
+import { URL, pathToFileURL } from 'node:url'
 
 import { createClient } from '@supabase/supabase-js'
 
-export const LOCAL_E2E_EMAIL = 'e2e-owner@odipet.local'
-export const LOCAL_E2E_PASSWORD = 'OdiPetLocalE2E-2026!'
-export const LOCAL_E2E_PET_ID = '00000000-0000-4000-8000-000000000042'
-export const LOCAL_E2E_ADMIN_EMAIL = 'e2e-admin@odipet.local'
-export const LOCAL_E2E_ADMIN_PASSWORD = 'OdiPetLocalAdminE2E-2026!'
-export const LOCAL_E2E_CAREGIVER_EMAIL = 'e2e-caregiver@odipet.local'
-export const LOCAL_E2E_CAREGIVER_PASSWORD = 'OdiPetLocalCaregiverE2E-2026!'
+const fixtures = JSON.parse(
+  readFileSync(new URL('./e2e-fixtures.json', import.meta.url), 'utf8')
+)
+
+export const LOCAL_E2E_EMAIL = fixtures.owner.email
+export const LOCAL_E2E_PASSWORD = fixtures.owner.password
+export const LOCAL_E2E_PET_ID = fixtures.petId
+export const LOCAL_E2E_ADMIN_EMAIL = fixtures.admin.email
+export const LOCAL_E2E_ADMIN_PASSWORD = fixtures.admin.password
+export const LOCAL_E2E_CAREGIVER_EMAIL = fixtures.caregiver.email
+export const LOCAL_E2E_CAREGIVER_PASSWORD = fixtures.caregiver.password
 
 function assertLocalSupabase(apiUrl) {
   const url = new URL(apiUrl)

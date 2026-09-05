@@ -1,13 +1,9 @@
-import { test, expect } from '@playwright/test'
-import { PERSONAS, TEST_PASSWORD, type Persona } from './personas'
-import { UxRecorder, type ModuleRecorder } from './helpers/ux-recorder'
+import { expect, type Page } from '@playwright/test'
+import { TEST_PASSWORD, type Persona } from '../personas'
+import { UxRecorder, type ModuleRecorder } from './ux-recorder'
 
-const BASE_URL = process.env.ODIPET_BASE_URL ?? 'http://127.0.0.1:3100'
+const BASE_URL = process.env.ODIPET_BASE_URL ?? process.env.TEST_BASE_URL ?? 'http://127.0.0.1:3100'
 const OUTPUT_DIR = 'test-results'
-
-// ─── GÜVENLİK KAPISI KALDIRILDI (ODIPET_BASE_URL ile manuel test yapılabilir) ───
-
-// ─── MODÜL AKIŞLARI ──────────────────────────────────────────────
 
 async function runRegistration(m: ModuleRecorder, persona: Persona, recorder: UxRecorder) {
   await m.clickTestId('register-link', 'login')
@@ -59,65 +55,82 @@ async function runModuleVisit(
   await m.screenshot('arrived')
 }
 
-// ─── TAM AKIŞ (persona, project adından çözülür) ─────────────────
-
-test('persona tam akış testi', async ({ page }, testInfo) => {
-  test.setTimeout(15 * 60 * 1000) // 10 modül × takılma payı
-
-  const personaId = testInfo.project.name.replace('persona-', '')
-  const persona = PERSONAS.find((p) => p.id === personaId)
-
-  if (!persona) {
-    throw new Error(
-      `Project adı "${testInfo.project.name}" hiçbir personaya eşleşmedi. ` +
-        `playwright.config.ts içindeki projects tanımını kontrol edin.`
-    )
-  }
-
+export async function runPersonaFlow(page: Page, persona: Persona) {
   const recorder = new UxRecorder(persona, page, BASE_URL, OUTPUT_DIR)
 
   await page.goto(BASE_URL)
 
+  // 1. Kayıt Modülü (Onboarding State Üretici)
   await recorder.tryModule('registration', 180, (m) =>
     runRegistration(m, persona, recorder)
   )
 
-  await recorder.tryModule('pet_registration', 180, (m) =>
-    runPetRegistration(m, persona, recorder)
+  // 2. İlk Pet Kaydı (Onboarding State Üretici)
+  await recorder.tryModule(
+    'pet_registration',
+    180,
+    (m) => runPetRegistration(m, persona, recorder),
+    { requiresOnboardingState: true }
   )
 
-  await recorder.tryModule('next_step', 60, (m) =>
-    runNextStep(m, persona, recorder)
+  // 3. Akıllı Sonraki Adım (Onboarding State Üretici)
+  await recorder.tryModule(
+    'next_step',
+    60,
+    (m) => runNextStep(m, persona, recorder),
+    { requiresOnboardingState: true }
   )
 
-  await recorder.tryModule('vaccine', 120, (m) =>
-    runModuleVisit(m, recorder, 'vaccine-module-button', 'vaccine')
+  // 4. Aşı Modülü Denetimi
+  await recorder.tryModule(
+    'vaccine',
+    120,
+    (m) => runModuleVisit(m, recorder, 'vaccine-module-button', 'vaccine'),
+    { requiresOnboardingState: true }
   )
 
-  await recorder.tryModule('parasite', 120, (m) =>
-    runModuleVisit(m, recorder, 'parasite-module-button', 'parasite')
+  // 5. Parazit Modülü Denetimi
+  await recorder.tryModule(
+    'parasite',
+    120,
+    (m) => runModuleVisit(m, recorder, 'parasite-module-button', 'parasite'),
+    { requiresOnboardingState: true }
   )
 
-  await recorder.tryModule('nutrition', 120, (m) =>
-    runModuleVisit(m, recorder, 'nutrition-module-button', 'nutrition')
+  // 6. Beslenme Modülü Denetimi
+  await recorder.tryModule(
+    'nutrition',
+    120,
+    (m) => runModuleVisit(m, recorder, 'nutrition-module-button', 'nutrition'),
+    { requiresOnboardingState: true }
   )
 
-  await recorder.tryModule('budget', 45, (m) =>
-    runModuleVisit(m, recorder, 'budget-module-button', 'budget')
+  // 7. Bütçe Modülü Denetimi
+  await recorder.tryModule(
+    'budget',
+    45,
+    (m) => runModuleVisit(m, recorder, 'budget-module-button', 'budget'),
+    { requiresOnboardingState: true }
   )
 
-  await recorder.tryModule('health_card', 90, (m) =>
-    runModuleVisit(m, recorder, 'health-card-button', 'health_card')
+  // 8. Sağlık Karnesi Modülü Denetimi
+  await recorder.tryModule(
+    'health_card',
+    90,
+    (m) => runModuleVisit(m, recorder, 'health-card-button', 'health_card'),
+    { requiresOnboardingState: true }
   )
 
-  await recorder.tryModule('services', 60, (m) =>
-    runModuleVisit(m, recorder, 'services-module-button', 'services')
+  // 9. Hizmetler Modülü Denetimi
+  await recorder.tryModule(
+    'services',
+    60,
+    (m) => runModuleVisit(m, recorder, 'services-module-button', 'services'),
+    { requiresOnboardingState: true }
   )
 
   const reportPath = recorder.saveReport()
   console.log(`Rapor yazıldı: ${reportPath}`)
 
-  // Test kendisi "fail" olmasın — sonuç JSON'da; ama tamamen boş
-  // rapor üretimini engellemek için en az 1 modül denenmiş olmalı
   expect(recorder.buildReport().results.length).toBeGreaterThan(0)
-})
+}

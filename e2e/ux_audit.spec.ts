@@ -1,11 +1,16 @@
-import { test, expect } from '@playwright/test';
+import { expect, type Page, type APIRequestContext } from '@playwright/test';
+import { test } from './fixtures';
+import * as fs from 'fs';
 import * as path from 'path';
 
 const EMAIL = process.env.TEST_EMAIL;
 const PASSWORD = process.env.TEST_PASSWORD;
 
 // Artifacts dizini
-const ARTIFACT_DIR = 'C:/Users/Tufan TABAK/.gemini/antigravity/brain/af4da51b-2629-4a4a-9298-74106ffc3997';
+const ARTIFACT_DIR = process.env.ARTIFACT_DIR || 'test-results';
+if (!fs.existsSync(ARTIFACT_DIR)) {
+  try { fs.mkdirSync(ARTIFACT_DIR, { recursive: true }); } catch (e) {}
+}
 
 test('UX Audit - Progressive Profiling and Dashboard Smart Cards', async ({ page }) => {
   if (!EMAIL || !PASSWORD) {

@@ -8,6 +8,46 @@ import { defineConfig, devices } from '@playwright/test';
 // import path from 'path';
 // dotenv.config({ path: path.resolve(__dirname, '.env') });
 
+import fs from 'node:fs';
+import path from 'node:path';
+
+/**
+ * SSOT E2E Environment Contract
+ */
+const e2eFixturesPath = path.resolve(__dirname, 'scripts', 'e2e-fixtures.json');
+const e2eFixtures = JSON.parse(fs.readFileSync(e2eFixturesPath, 'utf8'));
+
+const LOCAL_E2E_EMAIL = e2eFixtures.owner.email;
+const LOCAL_E2E_PASSWORD = e2eFixtures.owner.password;
+const LOCAL_E2E_ADMIN_EMAIL = e2eFixtures.admin.email;
+const LOCAL_E2E_ADMIN_PASSWORD = e2eFixtures.admin.password;
+
+process.env.TEST_BASE_URL = 'http://127.0.0.1:3100';
+process.env.PLAYWRIGHT_TEST = 'true';
+process.env.NEXT_PUBLIC_APP_URL = process.env.TEST_BASE_URL;
+process.env.NEXT_PUBLIC_SITE_URL = process.env.TEST_BASE_URL;
+
+// Ensure local supabase matches CI
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://127.0.0.1:54321';
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRlZmF1bHQiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTY5ODE4NTQ3NSwiZXhwIjoyMDEzNzYxNDc1fQ.v_Y7R-n9B-...';
+}
+
+// Ensure default tests use canonical owner
+if (!process.env.TEST_EMAIL) {
+  process.env.TEST_EMAIL = LOCAL_E2E_EMAIL;
+  process.env.TEST_PASSWORD = LOCAL_E2E_PASSWORD;
+}
+
+// Expose admin variables 
+process.env.TEST_ADMIN_EMAIL = LOCAL_E2E_ADMIN_EMAIL;
+process.env.TEST_ADMIN_PASSWORD = LOCAL_E2E_ADMIN_PASSWORD;
+
+// Expose canonical cron secret for test & webServer
+if (!process.env.CRON_SECRET) {
+  process.env.CRON_SECRET = 'test-cron-secret-12345';
+}
+
 /**
  * See https://playwright.dev/docs/test-configuration.
  */

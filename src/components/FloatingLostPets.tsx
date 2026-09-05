@@ -131,7 +131,7 @@ export default function FloatingLostPets({ userCities }: { userCities: string[] 
           ))}
         </div>
 
-        <button onClick={() => setOpen(false)} className="btn-secondary w-full mt-4 py-3 text-sm">
+        <button data-testid="floating-lost-pets-close" onClick={() => setOpen(false)} className="btn-secondary w-full mt-4 py-3 text-sm">
           Kapat
         </button>
       </div>

@@ -3,20 +3,20 @@ import { createAdminSupabaseClient } from '@/lib/supabase/server';
 
 describe('consume_feature_usage RPC Integration', () => {
   const supabase = createAdminSupabaseClient();
-  let testProfileId = '00000000-0000-0000-0000-000000000001';
+  const testProfileId = '00000000-0000-0000-0000-000000000001'; // Mock or test profile UUID
   const testFeatureKey = 'test_feature_rpc';
 
   beforeAll(async () => {
-    // Create test auth user to satisfy profiles_id_fkey foreign key constraint
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email: `rpc-test-${Date.now()}@odi.pet`,
-      password: 'TestPassword123!',
-      email_confirm: true
-    });
-    if (authError || !authData?.user) {
-      throw new Error(`Failed to create test auth user: ${authError?.message}`);
+    // Ensure auth user exists to satisfy profiles_id_fkey foreign key
+    const { data: existingUser } = await supabase.auth.admin.getUserById(testProfileId);
+    if (!existingUser?.user) {
+      await supabase.auth.admin.createUser({
+        id: testProfileId,
+        email: 'rpc-test@odi.pet',
+        password: 'RpcTestPassword123!',
+        email_confirm: true,
+      });
     }
-    testProfileId = authData.user.id;
 
     // Ensure test profile exists
     const { error: profileError } = await supabase.from('profiles').upsert({
@@ -73,9 +73,7 @@ describe('consume_feature_usage RPC Integration', () => {
     await supabase.from('app_features').delete().eq('key', testFeatureKey);
     await supabase.from('user_subscriptions').delete().eq('profile_id', testProfileId);
     await supabase.from('profiles').delete().eq('id', testProfileId);
-    if (testProfileId && testProfileId !== '00000000-0000-0000-0000-000000000001') {
-      await supabase.auth.admin.deleteUser(testProfileId);
-    }
+    await supabase.auth.admin.deleteUser(testProfileId).catch(() => {});
   });
 
   it('should enforce free tier limits', async () => {

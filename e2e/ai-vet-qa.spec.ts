@@ -1,36 +1,38 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page, type APIRequestContext } from '@playwright/test';
 
 const EMAIL = process.env.TEST_ADMIN_EMAIL || 'tufan.tabak@gmail.com';
 const PASSWORD = process.env.TEST_ADMIN_PASSWORD || 'OdiPetTest123!';
 
+let apiContext: APIRequestContext;
 let sharedPage: Page;
 let petId: string | null = null;
 
 test.beforeAll(async ({ browser }) => {
   const context = await browser.newContext();
   sharedPage = await context.newPage();
+  await sharedPage.addInitScript(() => {
+    try {
+      sessionStorage.setItem('odi_splash_seen', 'true');
+    } catch (e) {}
+  });
   
-  // Splash bypass ile login sayfasına git
-  await sharedPage.goto('/login?nosplash=true');
-  await sharedPage.waitForSelector('input[name="email"]', { timeout: 10000 });
+  // Login
+  await sharedPage.goto('/login');
   await sharedPage.fill('input[name="email"]', EMAIL);
   await sharedPage.fill('input[name="password"]', PASSWORD);
   await sharedPage.click('button[type="submit"]');
-  await sharedPage.waitForURL(/\/dashboard|\/admin|\/owner\//, { timeout: 15_000 });
+  await sharedPage.waitForURL(/\/owner\/|\/admin|\/dashboard/, { timeout: 15_000 });
+  
+  apiContext = sharedPage.request;
 
-  // Test için varsa mevcut pet ID'sini kanonik browser fetch üzerinden al
-  const petsData = await sharedPage.evaluate(async () => {
-    try {
-      const res = await fetch('/api/owner/pets');
-      if (res.ok) {
-        return await res.json();
-      }
-    } catch {}
-    return null;
-  });
-
-  if (petsData && Array.isArray(petsData) && petsData.length > 0) {
-    petId = petsData[0].id;
+  // Try to find a pet to use for testing
+  // In a real e2e, we would create one if it doesn't exist, but let's see if we have one.
+  const petsResponse = await apiContext.get('/api/owner/pets');
+  if (petsResponse.ok()) {
+    const petsData = await petsResponse.json();
+    if (petsData && petsData.length > 0) {
+      petId = petsData[0].id;
+    }
   }
 });
 
@@ -98,35 +100,33 @@ test.describe('AI Vet Functional QA', () => {
       console.log(`SCENARIO: ${scenario.name}`);
       console.log(`INPUT -> ${scenario.input.message}`);
 
-      // Gerçek tarayıcı sayfası üzerinden canonical Same-Origin fetch çağrısı (CSRF doğrulaması tam sağlanır)
-      const result = await sharedPage.evaluate(async (body) => {
+      const { status, ok, data: responseData } = await sharedPage.evaluate(async (payload) => {
         const res = await fetch('/api/ai-vet', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(body)
+          body: JSON.stringify(payload)
         });
-        const data = await res.json();
         return {
           status: res.status,
           ok: res.ok,
-          data
+          data: await res.json()
         };
       }, payload);
 
-      console.log(`STATUS -> ${result.status}`);
-      console.log(`ACTUAL -> `, JSON.stringify(result.data, null, 2));
+      console.log(`STATUS -> ${status}`);
+      console.log(`ACTUAL -> `, JSON.stringify(responseData, null, 2));
 
-      expect(result.status).toBe(200);
+      expect(status).toBe(200);
 
       // Verify basic expectations
-      if (result.ok && result.data.response) {
+      if (ok && responseData?.response) {
         for (const [key, value] of Object.entries(scenario.expected)) {
           if (value === null) {
-            expect(result.data.response[key]).toBeNull();
+            expect(responseData.response[key]).toBeNull();
           } else {
-            expect(result.data.response[key]).toBe(value);
+            expect(responseData.response[key]).toBe(value);
           }
         }
       }
@@ -136,4 +136,3 @@ test.describe('AI Vet Functional QA', () => {
   }
 
 });
-

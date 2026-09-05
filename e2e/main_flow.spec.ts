@@ -1,9 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 
-// TEST_EMAIL set edilmişse (CI seed kullanıcısı) o kullanılır,
-// yoksa canonical local E2E kullanıcısına fallback yapılır.
 const EMAIL = process.env.TEST_EMAIL || 'e2e-owner@odipet.local'
-const PASSWORD = process.env.TEST_PASSWORD || 'OdiPetLocalE2E-2026!'
+const PASSWORD = process.env.TEST_PASSWORD || 'Password123!'
 
 async function waitForSplash(page: Page) {
   try {
@@ -30,11 +28,6 @@ async function login(page: Page) {
     /\/admin|\/(owner|clinic|sitter|trainer|groomer|hotel)\//,
     { timeout: 20_000 },
   )
-  // Admin kullanıcısı /admin'e yönlenirse, owner dashboard'una geç
-  if (page.url().includes('/admin')) {
-    await page.goto('/owner/dashboard?nosplash=true')
-    await page.waitForLoadState('networkidle')
-  }
 }
 
 test.describe('Auth Flow', () => {
@@ -81,9 +74,7 @@ test.describe('Dashboard', () => {
     await page.waitForLoadState('networkidle')
 
     await expect(page.getByText('Petlerim', { exact: true })).toBeVisible()
-    // Seed kullanıcısına göre en az bir pet kartı göründüğünü doğrula
-    const petCards = page.locator('[data-testid="pet-card"]')
-    await expect(petCards.first()).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByRole('heading', { name: 'Moka E2E' })).toBeVisible()
   })
 })
 
@@ -97,8 +88,6 @@ test.describe('Pets Module', () => {
   }) => {
     await page.goto('/owner/pets?nosplash=true')
     await expect(page).toHaveURL('/owner/dashboard')
-    // Seed kullanıcısına göre en az bir pet kartı göründüğünü doğrula
-    const petCards = page.locator('[data-testid="pet-card"]')
-    await expect(petCards.first()).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByRole('heading', { name: 'Moka E2E' })).toBeVisible()
   })
 })

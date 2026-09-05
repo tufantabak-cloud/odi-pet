@@ -282,7 +282,7 @@ export default function FloatingSOS({
           </div>
         )}
 
-        <button onClick={() => setOpen(false)} className="btn-secondary w-full py-3 text-[14px] mt-1">
+        <button data-testid="sos-modal-close" onClick={() => setOpen(false)} className="btn-secondary w-full py-3 text-[14px] mt-1">
           Kapat
         </button>
       </div>

@@ -1,8 +1,8 @@
-import { test, expect, type Page } from '@playwright/test';
-import { dismissBlockingOverlays, safeClick } from './helpers/dismiss-modals';
+import { expect, type Page, type APIRequestContext } from '@playwright/test';
+import { test } from './fixtures';
 
 const EMAIL = process.env.TEST_EMAIL || 'e2e-owner@odipet.local';
-const PASSWORD = process.env.TEST_PASSWORD || 'OdiPetLocalE2E-2026!';
+const PASSWORD = process.env.TEST_PASSWORD || 'Password123!';
 
 async function loginAndGetDashboard(page: Page) {
   if (!EMAIL || !PASSWORD) {
@@ -18,12 +18,11 @@ async function loginAndGetDashboard(page: Page) {
   await page.waitForSelector('input[name="email"]', { timeout: 10000 });
   await page.fill('input[name="email"]', EMAIL);
   await page.fill('input[name="password"]', PASSWORD);
-  await page.click('button[type="submit"]');
+  await page.click('button[type="submit"]', { force: true });
   await expect(page).toHaveURL(/\/admin|\/owner\//, { timeout: 15_000 });
   if (page.url().includes('/admin')) {
     await page.goto('/owner/dashboard?nosplash=true');
   }
-  await dismissBlockingOverlays(page);
 }
 
 test.describe('Odi.Pet Dashboard Verification', () => {
@@ -43,8 +42,8 @@ test.describe('Odi.Pet Dashboard Verification', () => {
     const smartCardCount = await smartCardBanner.count();
     console.log(`Smart cards count: ${smartCardCount}`);
 
-    // Hızlı geçiş kontrolü: Asenkron modal/overlay kontrolü ile kanonik tıklama
-    await safeClick(page, petCards.first());
+    // Hızlı geçiş kontrolü: Pet switcher kartına tıklayıp aktif pet seçimini kontrol et
+    await petCards.first().click();
     await expect(page).toHaveURL(/\/owner\//, { timeout: 10000 });
   });
 
@@ -62,12 +61,10 @@ test.describe('Odi.Pet Dashboard Verification', () => {
 
     await loginAndGetDashboard(page);
 
-    // Mobile nav veya scanner bağlantısını doğrula ve kanonik safeClick ile geç
+    // Mobile nav veya scanner bağlantısını doğrula ve geç
     const scannerLink = page.locator('a[href="/owner/scanner"]').first();
-    if (await scannerLink.isVisible({ timeout: 5000 })) {
-      await safeClick(page, scannerLink);
-      await expect(page).toHaveURL(/\/owner\/scanner/, { timeout: 10000 });
-    }
+    await expect(scannerLink).toBeVisible({ timeout: 10000 });
+    await scannerLink.click({ force: true });
+    await expect(page).toHaveURL(/\/owner\/scanner/, { timeout: 10000 });
   });
 });
-

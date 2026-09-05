@@ -131,6 +131,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     body: JSON.stringify({ event: 'weight_logged', payload: { pet_id: id, weight_kg: body.weight_kg } }),
   }).catch(() => {})
 
-  revalidatePath(`/owner/pets/${id}/nutrition`)
+  revalidatePath(`/owner/pets/${id}`, 'page');
+  revalidatePath(`/owner/pets/${id}/nutrition`, 'page');
   return NextResponse.json({ log: data })
 }

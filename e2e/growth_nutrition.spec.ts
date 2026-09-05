@@ -1,5 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
-import { dismissBlockingOverlays, safeClick } from './helpers/dismiss-modals';
+import { expect, type Page, type APIRequestContext } from '@playwright/test';
+import { test } from './fixtures';
 
 const EMAIL = process.env.TEST_EMAIL;
 const PASSWORD = process.env.TEST_PASSWORD;
@@ -21,26 +21,23 @@ async function login(page: Page) {
   if (page.url().includes('/admin')) {
     await page.goto('/owner/dashboard');
   }
-  await dismissBlockingOverlays(page);
 }
 
-test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification', () => {
+test.describe('Odi.Pet Growth and Nutrition (GeliÅŸim ve Beslenme) Verification', () => {
   test('Lifecycle Verification of Weight Logging, Chart Drawing, and Nutrition Plan Syncing', async ({ page }) => {
     test.setTimeout(120000);
     await login(page);
 
-    // Bu senaryo kayıt sihirbazını değil gelişim/beslenme modülünü sınar.
-    // Test petini kararlı API sözleşmesi üzerinden oluştur.
+    // Create test pet via API
     console.log('Creating a temporary dog...');
     const petResponse = await page.evaluate(async (name) => {
       const form = new FormData();
       form.append('name', name);
       form.append('species', 'dog');
-      form.append('breed', 'Poodle (Kaniş)');
+      form.append('breed', 'Poodle (KaniÅŸ)');
       form.append('birth_date', '2026-01-01');
       form.append('gender', 'male');
       form.append('is_neutered', 'false');
-      form.append('weight', '4.5');
       const response = await fetch('/api/pets', { method: 'POST', body: form });
       return { status: response.status, body: await response.json() };
     }, petName);
@@ -50,126 +47,125 @@ test.describe('Odi.Pet Growth and Nutrition (Gelişim ve Beslenme) Verification'
     console.log(`Created pet with ID: ${petId}`);
     expect(petId).not.toBe('');
 
-    // 2. Go to Pet Profile & Log Weights (floating point/decimals)
-    console.log('Logging weight...');
-    await page.goto(`/owner/pets/${petId}`);
-    await page.waitForLoadState('domcontentloaded');
-    await expect(page.locator('div[role="tablist"], button[role="tab"]').first()).toBeVisible({ timeout: 15_000 });
-    await dismissBlockingOverlays(page);
+    // Navigate to Nutrition page and log weight
+    console.log('Going to nutrition page to log weight...');
+    await page.goto(`/owner/pets/${petId}/nutrition`);
+    await page.waitForLoadState('networkidle');
 
-    // Gelişim grafiği güncel birleşik profilde Sağlık sekmesindedir.
-    const saglikTab = page.getByRole('tab', { name: 'Sağlık' });
-    await expect(saglikTab).toBeVisible({ timeout: 10_000 });
-    await safeClick(page, saglikTab);
-
-    // Kilo & Gelişim Takibi Beslenme modülü linkine tıkla
-    const kiloLink = page.locator(`a[href*="/owner/pets/${petId}/nutrition"]`).first();
-    if (await kiloLink.isVisible({ timeout: 5000 })) {
-      await safeClick(page, kiloLink);
-    } else {
-      await page.goto(`/owner/pets/${petId}/nutrition?tab=kilo`);
-    }
-    await page.waitForLoadState('domcontentloaded');
-    await dismissBlockingOverlays(page);
-
-    // Click weight log tab "Kilo Takibi" if not already selected
-    const kiloTab = page.locator('button:has-text("Kilo Takibi")').first();
-    if (await kiloTab.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await safeClick(page, kiloTab);
-      await page.waitForTimeout(500);
-    }
-
-    // RulerPicker üzerinden kilo değerini belirle (preset butonu veya sayısal giriş)
-    const presetBtn = page.locator('button:has-text("5.5 kg"), button:has-text("5.0 kg"), button:has-text("5 kg"), button:has-text("4.0 kg")').first();
-    if (await presetBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await safeClick(page, presetBtn);
-    } else {
-      const displayVal = page.locator('div.cursor-pointer:has-text("kg")').first();
-      if (await displayVal.isVisible().catch(() => false)) {
-        await safeClick(page, displayVal);
-        const numberInput = page.locator('input[type="number"]').first();
-        if (await numberInput.isVisible().catch(() => false)) {
-          await numberInput.fill('5.2');
-          await numberInput.blur();
-        }
-      }
-    }
+    // Click weight log tab "Kilo Takibi"
+    await page.click('button:has-text("Kilo Takibi")');
     await page.waitForTimeout(500);
 
-    // Formu kaydet
-    const saveWeightBtn = page.locator('button[type="submit"]:has-text("Kaydet"), button[type="submit"]:has-text("Ekle")').first();
-    if (await saveWeightBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await safeClick(page, saveWeightBtn);
-      await page.waitForTimeout(1000);
-    }
+    // â”€â”€ CRITICAL FIX â”€â”€
+    // Instead of using the RulerPicker input (which has a scroll-based race condition
+    // where handleScroll overrides onChange after scrollToValue's isSelfScrolling expires),
+    // we click a preset button "5.0 kg" which calls onChange directly without scroll animation.
+    // Then we verify the hidden form field has the correct value before submitting.
+    const presetBtn = page.locator('#nutrition-weight-ruler button:has-text("5")').first();
+    await presetBtn.waitFor({ state: 'visible', timeout: 5000 });
+    await presetBtn.click();
+    await page.waitForTimeout(500);
 
-    // Go back to pet profile to verify MinimalGrowthChart rendered weight & custom curve
-    await page.goto(`/owner/pets/${petId}`);
-    await page.waitForLoadState('domcontentloaded');
-    await dismissBlockingOverlays(page);
-    const saglikTab2 = page.getByRole('tab', { name: 'Sağlık' });
-    if (await saglikTab2.isVisible()) {
-      await safeClick(page, saglikTab2);
-    }
+    // Verify the ruler display shows the selected value
+    const rulerDisplay = page.locator('#nutrition-weight-ruler').getByTestId('ruler-display').first();
+    await expect(rulerDisplay).toContainText('5', { timeout: 5000 });
+
+    // Verify hidden input has value before submitting
+    const hiddenWeight = page.locator('input[name="weight_kg"]');
+    await expect(hiddenWeight).toHaveValue('5', { timeout: 3000 });
+
+    // Submit the weight measurement and wait for the API to confirm the save
+    await Promise.all([
+      page.waitForResponse(res => res.url().includes('/nutrition/weight') && res.request().method() === 'POST' && res.status() >= 200 && res.status() < 300, { timeout: 15000 }),
+      page.click('button[type="submit"]:has-text("Kaydet"), button[type="submit"]:has-text("Ekle")')
+    ]);
+
+    // Go back to pet profile to verify weight rendered on the Özet tab
+    // Wrap in a polling block with page reloads to definitively defeat any Next.js caching or DB replica delays.
+    await expect(async () => {
+      await page.goto(`/owner/pets/${petId}`);
+      await page.waitForLoadState('networkidle');
+
+      // On the default "Özet" tab, the "Kilo & Gelişim Analizi" card renders the latest weight (5.0 kg)
+      const weightDisplay = page.locator('span.text-2xl', { hasText: '5.0' }).first();
+      await expect(weightDisplay).toBeVisible({ timeout: 5000 });
+    }).toPass({ timeout: 20000, intervals: [2000, 3000, 5000] });
 
     // 4. Set Nutrition Plan
     console.log('Setting nutrition brand and amount...');
     await page.goto(`/owner/pets/${petId}/nutrition`);
-    await page.waitForLoadState('domcontentloaded');
-    await dismissBlockingOverlays(page);
-    const mamaTab = page.locator('button:has-text("Mama & Stok")').first();
-    if (await mamaTab.isVisible()) {
-      await safeClick(page, mamaTab);
+    await page.waitForLoadState('networkidle');
+
+    const addFoodBtn = page.locator('button:has-text("Mama ekle"), button:has-text("Mama Ekle")').first();
+    await addFoodBtn.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
+    if (await addFoodBtn.isVisible()) {
+      await addFoodBtn.click();
       await page.waitForTimeout(500);
-    }
 
-    // Fill the Brand and Daily Grams Form if present
-    const brandInput = page.locator('input[name="food_brand"]');
-    if (await brandInput.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await brandInput.fill('PremiumRoyal');
-      await page.fill('input[name="food_product"]', 'Puppy Care');
-      await page.fill('input[name="daily_grams"]', '125');
-      await safeClick(page, page.locator('button[type="submit"]:has-text("Bilgileri Kaydet"), button[type="submit"]:has-text("Kaydet")').first());
-      await page.waitForTimeout(1000);
-    }
+      const modal = page.locator('.fixed.inset-0.z-\\[9999\\]');
+      await modal.waitFor({ state: 'visible', timeout: 5000 });
 
-    // 5. Verify task is shown in timeline or dashboard tasks
+      // Switch to manual entry tab ("Listede Yok / Elle")
+      const manualBtn = modal.locator('button:has-text("Listede Yok / Elle"), button:has-text("Elle")').first();
+      await manualBtn.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
+      if (await manualBtn.isVisible()) {
+        await manualBtn.click();
+        await page.waitForTimeout(300);
+      }
+
+      const brandInput = modal.locator('input[placeholder*="Pro Plan"], input[placeholder*="Royal Canin"], input[placeholder*="Ev Yapımı"]').first();
+      await brandInput.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
+      if (await brandInput.isVisible()) {
+        await brandInput.fill('PremiumRoyal');
+      }
+      const productInput = modal.locator('input[placeholder*="Puppy Medium"], input[placeholder*="Optistart"], input[placeholder*="Tavuklu"]').first();
+      await productInput.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
+      if (await productInput.isVisible()) {
+        await productInput.fill('Puppy Care');
+      }
+      const gramsInput = modal.locator('input[data-testid="daily-target-grams-input"], input[name="daily_target_grams"]').first();
+      await gramsInput.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
+      if (await gramsInput.isVisible()) {
+        await gramsInput.fill('125');
+      }
+
+      const nextStockBtn = modal.locator('button[type="submit"]:has-text("İleri: Stok Durumu"), button[type="submit"]:has-text("İleri")').first();
+      await nextStockBtn.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
+      if (await nextStockBtn.isVisible()) {
+        await nextStockBtn.click();
+        await page.waitForTimeout(500);
+        const finalSaveBtn = modal.locator('button[type="submit"]:has-text("Kaydet")').first();
+        await finalSaveBtn.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
+        if (await finalSaveBtn.isVisible()) {
+          await finalSaveBtn.click();
+        }
+      }
+    }
+    await page.waitForTimeout(1000);
+
+    // 5. Verify food schedule is reflected
     console.log('Checking if food schedule is reflected...');
     await page.goto(`/owner/pets/${petId}`);
-    await page.waitForLoadState('domcontentloaded');
-    await dismissBlockingOverlays(page);
+    await page.waitForLoadState('networkidle');
 
-    // Under timeline or tasks list, check if feeding related task or status is visible
-    // "Beslenme" tab in Pet Profile accordion
-    const beslenmeTab = page.getByRole('tab', { name: 'Beslenme' });
-    if (await beslenmeTab.isVisible().catch(() => false)) {
-      await safeClick(page, beslenmeTab);
-      await page.waitForTimeout(500);
-    }
-
-    // Beslenme sekmesinde modülün yüklendiğini doğrula
-    await expect(page.locator('button:has-text("Mama & Stok"), button:has-text("Kilo Takibi"), h3:has-text("Mama bilgilerini ekle"), text=Beslenme').first()).toBeVisible({ timeout: 10000 });
+    await page.goto(`/owner/pets/${petId}?tab=beslenme`);
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(500);
+    await expect(page.locator('text=PremiumRoyal').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=125 g').first()).toBeVisible({ timeout: 10000 });
 
     // 6. Delete Pet Profile
     console.log('Cleaning up: deleting pet profile...');
     await page.goto('/owner/profile');
-    await page.waitForLoadState('domcontentloaded');
-    await dismissBlockingOverlays(page);
+    await page.waitForLoadState('networkidle');
 
     const petRow = page.locator(`.card-base:has-text("${petName}")`);
-    if (await petRow.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await safeClick(page, petRow.locator('button:has(svg)').first());
-      await page.waitForTimeout(500);
-      const deleteBtn = page.locator('button:has-text("Profili Kalıcı Olarak Sil"), button:has-text("Sil")').first();
-      if (await deleteBtn.isVisible()) {
-        await safeClick(page, deleteBtn);
-        const confirmBtn = page.locator('button:has-text("Evet, Sil"), button:has-text("Sil")').first();
-        if (await confirmBtn.isVisible()) {
-          await safeClick(page, confirmBtn);
-        }
-      }
-    }
-    console.log('Pet profile cleanup finished!');
+    await petRow.locator('button:has(svg)').first().click();
+    await page.waitForTimeout(500);
+
+    await page.click('button:has-text("Profili Kalıcı Olarak Sil"), button:has-text("Profili Sil")');
+    await page.click('button:has-text("Evet, Sil")');
+    await expect(page).toHaveURL(/\/owner\/dashboard/, { timeout: 15000 });
+    console.log('Pet profile successfully deleted and verified!');
   });
 });
-

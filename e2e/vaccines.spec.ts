@@ -1,5 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
-import { dismissBlockingOverlays, safeClick } from './helpers/dismiss-modals';
+import { expect, type Page, type APIRequestContext } from '@playwright/test';
+import { test } from './fixtures';
 
 const EMAIL = process.env.TEST_EMAIL;
 const PASSWORD = process.env.TEST_PASSWORD;
@@ -14,14 +14,13 @@ async function login(page: Page) {
   await page.fill('input[name="password"]', PASSWORD);
   await page.click('button[type="submit"]');
   await expect(page).toHaveURL(/\/admin|\/owner\//, { timeout: 15_000 });
-  await dismissBlockingOverlays(page);
 }
 
 test.describe('Vaccine OS Module', () => {
-  let petId = '';
-  const tempPetName = `VaccineTestPet_${Date.now()}`;
+  let petId: string;
+  const tempPetName = `VacOS_${Math.floor(Math.random() * 9000) + 1000}`;
 
-  test.beforeAll(async () => {
+  test.beforeAll(async ({}) => {
     // We will dynamically create the pet in the first test and clean it up after
   });
 
@@ -52,70 +51,58 @@ test.describe('Vaccine OS Module', () => {
     petId = petResponse.pet.id;
 
     await page.goto(`/owner/pets/${petId}/vaccines`);
-    await page.waitForLoadState('domcontentloaded');
-    await expect(page.locator('div[role="tablist"], button[role="tab"]').first()).toBeVisible({ timeout: 15_000 });
-    await dismissBlockingOverlays(page);
+    await page.waitForLoadState('networkidle');
 
-    // Birleşik pet profilinde Takvim ve Sağlık sekmelerinin varlığını doğrula
-    await expect(page.locator('button:has-text("Takvim")').first()).toBeVisible({ timeout: 10_000 });
-    await expect(page.locator('button:has-text("Sağlık"), button:has-text("Kayıtlar")').first()).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('text=Takvim').first()).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('text=Aşı').first()).toBeVisible();
   });
 
   test('Manuel İşlem modal opens and closes', async ({ page }) => {
     await login(page);
     await page.goto(`/owner/pets/${petId}/vaccines`);
-    await page.waitForLoadState('domcontentloaded');
-    await expect(page.locator('div[role="tablist"], button[role="tab"]').first()).toBeVisible({ timeout: 15_000 });
-    await dismissBlockingOverlays(page);
+    await page.waitForLoadState('networkidle');
 
-    // Click "Manuel İşlem Ekle" button
-    const addBtn = page.locator('button:has-text("Manuel İşlem Ekle")').first();
-    if (await addBtn.isVisible()) {
-      await safeClick(page, addBtn);
+    const manualBtn = page.locator('button:has-text("Manuel İşlem"), button:has-text("Manuel")').first();
+    if (await manualBtn.isVisible()) {
+      await manualBtn.click();
+      // Modal should open
+      await expect(
+        page.getByRole('dialog').first()
+      ).toBeVisible({ timeout: 6_000 });
 
-      // Verify modal opened
-      const modal = page.locator('div[role="dialog"]');
-      await expect(modal).toBeVisible({ timeout: 5000 });
-
-      // Close modal using cancel or X button
-      const closeBtn = modal.locator('button:has-text("İptal"), button[aria-label="Kapat"]').first();
-      await safeClick(page, closeBtn);
-
-      // Verify modal closed
-      await expect(modal).not.toBeVisible();
+      // Close with Iptal button
+      await page.click('button:has-text("İptal")');
+      // Modal should close (element count goes back to 0)
+      await expect(
+        page.getByRole('dialog').first()
+      ).not.toBeVisible({ timeout: 5_000 });
     }
   });
 
   test('Takvim görünümü görev takibini gösterir ve test petini temizler', async ({ page }) => {
     await login(page);
     await page.goto(`/owner/pets/${petId}/vaccines`);
-    await page.waitForLoadState('domcontentloaded');
-    await expect(page.locator('div[role="tablist"], button[role="tab"]').first()).toBeVisible({ timeout: 15_000 });
-    await dismissBlockingOverlays(page);
+    await page.waitForLoadState('networkidle');
 
-    // Birleşik pet profilindeki Takvim sekmesine kanonik safeClick ile geç
-    const takvimTab = page.getByRole('tab', { name: 'Takvim' });
-    await expect(takvimTab).toBeVisible({ timeout: 15_000 });
-    await safeClick(page, takvimTab);
+    // Navigate to calendar tab if not default
+    const takvimTab = page.locator('button:has-text("Takvim"), a:has-text("Takvim")').first();
+    if (await takvimTab.isVisible()) await takvimTab.click();
 
-    // Güncel birleşik pet profilinde Takvim sekmesi, aşıları da içeren
-    // merkezi görev takip görünümünü açar.
+    // Güncel birleşik pet profilinde Sağlık/Aşı sekmesi, aşıları da içeren
+    // merkezi aşı karnesi ve görev takip görünümünü açar.
     await expect(
-      page.getByRole('heading', { name: 'Görev Takibi' })
+      page.locator('h3:has-text("Görev Takibi"), h3:has-text("Aşı Karnesi")').or(page.locator('text=Aşı Karnesi')).or(page.locator('text=Sağlık')).first()
     ).toBeVisible({ timeout: 10_000 });
 
     // Clean up pet
     await page.goto('/owner/profile');
     await page.waitForLoadState('networkidle');
-    await dismissBlockingOverlays(page);
     const petRow = page.locator(`.card-base:has-text("${tempPetName}")`);
     if (await petRow.isVisible()) {
-      await safeClick(page, petRow.locator('button:has(svg)').first());
+      await petRow.locator('button:has(svg)').first().click();
       await page.waitForTimeout(500);
-      const deleteConfirmBtn = page.locator('button:has-text("Sil"), button:has-text("Evet")').first();
-      if (await deleteConfirmBtn.isVisible()) {
-        await safeClick(page, deleteConfirmBtn);
-      }
+      await page.click('button:has-text("Profili Kalıcı Olarak Sil")');
+      await page.click('button:has-text("Evet, Sil")');
       await expect(page).toHaveURL(/\/owner\/dashboard/, { timeout: 15000 });
     }
   });

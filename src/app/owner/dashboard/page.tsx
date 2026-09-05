@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic'
 
-import { getSessionUser } from '@/lib/auth/get-current-profile'
+import { getSessionUser, getCurrentProfile } from '@/lib/auth/get-current-profile'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import DashboardOnboardingWrapper from './DashboardOnboardingWrapper'
@@ -23,8 +23,14 @@ export default async function OwnerDashboard() {
   const user = await getSessionUser()
   if (!user) redirect('/login')
 
-  const { profile, pets, upcomingSchedules, completedSchedules, allFeedingLogs, allWeightLogs, plans, activeQuestion, activeInsight } =
-    await getCachedDashboardData(user.id)
+  const [currentProfile, cachedData] = await Promise.all([
+    getCurrentProfile(),
+    getCachedDashboardData(user.id)
+  ])
+
+  const { pets, upcomingSchedules, completedSchedules, allFeedingLogs, allWeightLogs, plans, activeQuestion, activeInsight } =
+    cachedData
+  const profile = currentProfile || cachedData.profile
 
   const supabase = await createServerSupabaseClient()
 
@@ -167,7 +173,7 @@ export default async function OwnerDashboard() {
               <p className="text-[13px] text-[var(--color-text-secondary)] mb-6 max-w-[250px] mx-auto leading-relaxed">
                 Başlamak için ilk dostunuzu ekleyin ve Odi dünyasını keşfedin.
               </p>
-              <Link href="/owner/pets/add" data-testid="add-first-pet-button" className="h-12 w-full max-w-[200px] flex items-center justify-center bg-[var(--color-primary)] text-white rounded-[18px] font-800 text-[14px] hover:scale-[1.02] active:scale-[0.98] transition-transform shadow-md shadow-primary/20">
+              <Link id="onb-pet-add" href="/owner/pets/add" data-testid="add-first-pet-button" className="h-12 w-full max-w-[200px] flex items-center justify-center bg-[var(--color-primary)] text-white rounded-[18px] font-800 text-[14px] hover:scale-[1.02] active:scale-[0.98] transition-transform shadow-md shadow-primary/20">
                 İlk Dostumu Ekle 🐾
               </Link>
             </GlassCard>

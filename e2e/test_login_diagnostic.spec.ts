@@ -1,4 +1,5 @@
-import { test, expect } from '@playwright/test';
+import { expect, type Page, type APIRequestContext } from '@playwright/test';
+import { test } from './fixtures';
 
 test('Diagnostic Login', async ({ page }) => {
   const EMAIL = process.env.TEST_EMAIL;

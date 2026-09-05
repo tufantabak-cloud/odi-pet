@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+import { expect, type Page, type APIRequestContext } from '@playwright/test';
+import { test } from './fixtures';
 
 const EMAIL = process.env.TEST_EMAIL;
 const PASSWORD = process.env.TEST_PASSWORD;
@@ -66,7 +67,7 @@ test.describe('Lost Pet E2E Lifecycle Flow', () => {
     await expect(phoneInput).toBeVisible();
     await phoneInput.fill('05554443322');
 
-    const nextBtn = page.locator('button:has-text("Devam Et")');
+    const nextBtn = page.locator('.rounded-modal button:has-text("Devam Et"), .fixed.z-\\[9999\\] button:has-text("Devam Et"), button:has-text("Devam Et")').first();
     await nextBtn.click();
 
     // Step 2 of Wizard: Location Details
@@ -88,7 +89,7 @@ test.describe('Lost Pet E2E Lifecycle Flow', () => {
     await expect(page.locator('text=Bostanlı Sahil Yakınları')).toBeVisible();
     
     // Close SOS Modal
-    await page.getByRole('button', { name: 'Kapat', exact: true }).click();
+    await page.locator('[data-testid="sos-modal-close"], .rounded-modal button:has-text("Kapat")').first().click();
 
     // 5. Navigate to Dashboard to verify the FloatingLostPets card is active and shows the new report
     await page.goto('/owner/dashboard');
@@ -98,11 +99,11 @@ test.describe('Lost Pet E2E Lifecycle Flow', () => {
     await floatingBtn.click();
 
     // Verify pet name and location are visible inside the modal
-    await expect(page.locator(`p.text-text-primary:has-text("${tempPetName}")`)).toBeVisible();
+    await expect(page.locator(`p.text-text-primary:has-text("${tempPetName}")`).first()).toBeVisible();
     await expect(page.locator('text=Bostanlı Sahil Yakınları').first()).toBeVisible();
     
     // Close the floating lost pet list
-    await page.getByRole('button', { name: 'Kapat', exact: true }).click();
+    await page.locator('[data-testid="floating-lost-pets-close"], .rounded-sheet button:has-text("Kapat")').first().click();
 
     // 6. Go back to Pet Detail page and mark as Found via SOS Modal
     await page.goto(`/owner/pets/${petId}`);
@@ -127,7 +128,7 @@ test.describe('Lost Pet E2E Lifecycle Flow', () => {
     await expect(page.locator('text=KAYIP İLANI AKTİF')).not.toBeVisible({ timeout: 10000 });
     
     // Close SOS Modal
-    await page.getByRole('button', { name: 'Kapat', exact: true }).click();
+    await page.getByRole('button', { name: 'Kapat', exact: true }).first().click();
 
     // Cleanup: Delete the temp pet
     await page.evaluate(async (id) => {
