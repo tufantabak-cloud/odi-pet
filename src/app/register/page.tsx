@@ -147,24 +147,54 @@ export default function RegisterPage() {
     setGoogleLoading(true); setError('')
     try {
       const supabase = createBrowserSupabaseClient()
-      const { error } = await supabase.auth.signInWithOAuth({
+      const callbackUrl = new URL('/api/auth/callback', window.location.origin)
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/api/auth/callback` },
+        options: { redirectTo: callbackUrl.toString(), skipBrowserRedirect: true },
       })
-      if (error) throw error
-    } catch { setError('Google ile kayıt yapılamadı.'); setGoogleLoading(false) }
+      if (error) {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[Register Google OAuth] error:', error.message)
+        }
+        throw error
+      }
+      if (data?.url) {
+        window.location.assign(data.url)
+      } else {
+        throw new Error('OAuth URL alınamadı')
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV === 'development') console.error('[Register Google OAuth]', err)
+      setError('Google ile kayıt yapılamadı.')
+      setGoogleLoading(false)
+    }
   }
 
   const handleAppleLogin = async () => {
     setAppleLoading(true); setError('')
     try {
       const supabase = createBrowserSupabaseClient()
-      const { error } = await supabase.auth.signInWithOAuth({
+      const callbackUrl = new URL('/api/auth/callback', window.location.origin)
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
-        options: { redirectTo: `${window.location.origin}/api/auth/callback` },
+        options: { redirectTo: callbackUrl.toString(), skipBrowserRedirect: true },
       })
-      if (error) throw error
-    } catch { setError('Apple ile kayıt yapılamadı.'); setAppleLoading(false) }
+      if (error) {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[Register Apple OAuth] error:', error.message)
+        }
+        throw error
+      }
+      if (data?.url) {
+        window.location.assign(data.url)
+      } else {
+        throw new Error('OAuth URL alınamadı')
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV === 'development') console.error('[Register Apple OAuth]', err)
+      setError('Apple ile kayıt yapılamadı.')
+      setAppleLoading(false)
+    }
   }
 
   const onSubmit = async (data: RegisterInput) => {

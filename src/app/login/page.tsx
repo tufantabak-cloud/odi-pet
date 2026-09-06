@@ -107,13 +107,16 @@ function LoginForm() {
     setError('')
     try {
       const supabase = createBrowserSupabaseClient()
-      const redirectTo =
-        process.env.NEXT_PUBLIC_SITE_URL
-          ? `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/callback`
-          : `${window.location.origin}/api/auth/callback`
+      // PKCE güvenliği: code_verifier çerezi window.location.origin'e yazılır,
+      // bu yüzden redirectTo da aynı origin'i kullanmalıdır.
+      const callbackUrl = new URL('/api/auth/callback', window.location.origin)
+      const redirectParam = searchParams.get('redirect') || searchParams.get('next')
+      if (redirectParam && redirectParam.startsWith('/')) {
+        callbackUrl.searchParams.set('next', redirectParam)
+      }
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo, skipBrowserRedirect: true },
+        options: { redirectTo: callbackUrl.toString(), skipBrowserRedirect: true },
       })
       if (error) {
         if (process.env.NODE_ENV === 'development') {
@@ -143,13 +146,14 @@ function LoginForm() {
     setError('')
     try {
       const supabase = createBrowserSupabaseClient()
-      const redirectTo =
-        process.env.NEXT_PUBLIC_SITE_URL
-          ? `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/callback`
-          : `${window.location.origin}/api/auth/callback`
+      const callbackUrl = new URL('/api/auth/callback', window.location.origin)
+      const redirectParam = searchParams.get('redirect') || searchParams.get('next')
+      if (redirectParam && redirectParam.startsWith('/')) {
+        callbackUrl.searchParams.set('next', redirectParam)
+      }
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
-        options: { redirectTo, skipBrowserRedirect: true },
+        options: { redirectTo: callbackUrl.toString(), skipBrowserRedirect: true },
       })
       if (error) {
         if (process.env.NODE_ENV === 'development') {
