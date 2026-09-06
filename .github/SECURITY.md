@@ -15,21 +15,19 @@ Odi.Pet actively maintains and provides security updates for the current product
 
 We take the security of Odi.Pet and our users' data with utmost seriousness. If you discover a potential security vulnerability, please report it responsibly.
 
-### Primary Channel: GitHub Private Vulnerability Reporting
+### Reporting Channels
 
-The preferred and most secure way to submit a vulnerability report is through GitHub's built-in **Private Vulnerability Reporting** mechanism:
+1. **GitHub Private Vulnerability Reporting (Preferred when enabled)**:
+   - If Private Vulnerability Reporting is active on this repository, navigate to the repository's **[Security](https://github.com/tufantabak-cloud/odi-pet/security)** tab.
+   - If visible under **Vulnerabilities**, click **"Report a vulnerability"** to submit a private draft advisory directly to the maintainers.
 
-1. Navigate to the repository's **[Security](https://github.com/tufantabak-cloud/odi-pet/security)** tab.
-2. Under **Vulnerabilities**, click **"Report a vulnerability"** to open a private draft advisory.
-3. Provide the details of the issue following the guidelines below.
+2. **Official Support Channel (Direct Email Fallback)**:
+   - If Private Vulnerability Reporting is not currently enabled, unavailable, or not visible in your GitHub view, please send your report directly to our official support email:
+   - **Contact Email**: `destek@odi.pet`
+   - **Subject Line**: Please include `[SECURITY VULNERABILITY]` in the subject line to ensure proper routing and prioritization.
 
 > **Warning**  
-> **Do NOT file a public issue or create a public discussion for suspected security vulnerabilities.** All reports must remain confidential until triage and remediation are completed.
-
-### Alternative Channel
-
-If you are unable to use GitHub Private Vulnerability Reporting, you can reach out via our official support channel:
-- **Support Email**: `destek@odi.pet` *(Please specify `[SECURITY VULNERABILITY]` in the subject line)*
+> **Do NOT file a public issue or create a public discussion for suspected security vulnerabilities.** All reports must remain confidential until triage, validation, and remediation are completed.
 
 ---
 
@@ -53,30 +51,35 @@ To help us investigate and triage your report efficiently, please include as muc
 
 Our security and engineering team is committed to addressing reported issues in a timely and structured manner:
 
-- **Initial Acknowledgment**: We strive to review and acknowledge all legitimate reports within a reasonable timeframe (typically within 48 to 72 business hours).
+- **Initial Acknowledgment**: We strive to review and acknowledge legitimate reports within a reasonable timeframe (typically within 48 to 72 business hours).
 - **Triage & Validation**: We will assess the severity, verify the proof of concept, and keep you informed of our findings.
 - **Remediation & Patching**: Once validated, we will develop, test, and deploy a fix to the production environment.
-- **Coordinated Disclosure**: We will collaborate with the reporter to agree upon a coordinated disclosure date after the fix has been successfully deployed and verified.
+- **Coordinated Disclosure**: We will collaborate with the reporter to agree upon a coordinated disclosure timeline after the fix has been successfully deployed and verified.
 
 ---
 
 ## Responsible Disclosure & Research Guidelines
 
-To ensure the safety of our users and the stability of the platform, we ask security researchers to adhere to the following rules:
+To ensure the safety of our users and the stability of the platform, security researchers must adhere to the following rules:
 
 1. **Do not access, modify, or delete user data**: Only perform tests on accounts you own or synthetic test data created specifically for testing.
 2. **Do not disrupt availability**: Refrain from executing attacks that could degrade service performance or cause outages for other users.
 3. **Maintain confidentiality**: Give us a reasonable amount of time to remediate the vulnerability before sharing details publicly or with third parties.
-4. **Comply with applicable laws**: Always act in good faith and avoid violating relevant data protection and privacy regulations.
+4. **Comply with applicable laws**: Always act in good faith and comply with all applicable local and international laws.
 
 ---
 
 ## Safe Harbor
 
-We consider security research conducted in accordance with this policy to be authorized and beneficial to our community. If you make a good-faith effort to comply with this policy during your security research:
+We support security research conducted in good faith and in full compliance with this policy. 
 
-- We will not pursue legal action against you regarding your discovery and research.
-- We will work with you collaboratively to understand, validate, and resolve the reported issue.
+If your research satisfies all of the following conditions:
+- It is strictly conducted in good faith and solely for the purpose of identifying and reporting vulnerabilities;
+- It strictly adheres to the rules set out in this Security Policy (including avoiding privacy violations, destruction of data, and service disruption);
+- It does not access, modify, exfiltrate, or retain any user or sensitive data;
+- It complies with applicable laws and does not target third-party systems or infrastructure;
+
+Then Odi.Pet will consider your research authorized, will not initiate civil litigation against you for your research activities, and will work collaboratively with you to resolve the reported issue. This policy does not grant blanket immunity or authorize activities outside the scope of good-faith vulnerability research.
 
 ---
 
