@@ -23,7 +23,7 @@ interface LostReport {
   pets: PetDetails;
 }
 
-export default function FloatingLostPets({ userCities }: { userCities: string[] }) {
+export default function FloatingLostPets({ userCities, currentUserId }: { userCities: string[], currentUserId?: string }) {
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [lostReports, setLostReports] = useState<LostReport[]>([])
@@ -42,30 +42,27 @@ export default function FloatingLostPets({ userCities }: { userCities: string[] 
 
     const supabase = createBrowserSupabaseClient()
 
-    Promise.all([
-      supabase.auth.getUser(),
-      supabase
+    async function fetchReports() {
+      const { data, error } = await supabase
         .from('lost_reports')
         .select('*, pets!inner(name, avatar_url, species, breed, city, owner_id)')
         .eq('status', 'active')
         .in('pets.city', userCities)
         .order('created_at', { ascending: false })
         .limit(10)
-    ]).then(([userRes, reportsRes]) => {
-      const currentUser = userRes.data?.user
-      const data = reportsRes.data
-      const error = reportsRes.error
 
       if (!error && data) {
         setLostReports(data as any)
-        if (currentUser) {
-          const hasOwn = data.some((r: any) => r.pets?.owner_id === currentUser.id && r.status === 'active')
+        if (currentUserId) {
+          const hasOwn = (data as any[]).some((r: any) => r.pets?.owner_id === currentUserId && r.status === 'active')
           setHasMyActiveReport(hasOwn)
         }
       }
       setLoaded(true)
-    })
-  }, [userCities])
+    }
+
+    fetchReports()
+  }, [userCities, currentUserId])
 
   if (!loaded || lostReports.length === 0) return null
 

@@ -18,6 +18,7 @@ export function BiometricSettingsRow({ initialHasPasskey }: { initialHasPasskey:
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {
           auth: {
+            lock: async (_, __, fn) => fn(), // Bypass navigator.locks completely
             // @ts-expect-error - Passkey is an experimental Supabase features
             experimental: {
               passkey: true,

@@ -177,7 +177,7 @@ export default function DashboardClient({
             )}
           </div>
           <Link
-            href="/owner/calendar"
+            href="/owner/takvim"
             className="text-xs font-semibold text-primary inline-flex items-center gap-0.5 hover:underline py-1 px-2 rounded-lg hover:bg-primary/5 transition-all"
           >
             <span>Takvime Git</span>
@@ -199,7 +199,7 @@ export default function DashboardClient({
               return (
                 <Link
                   key={`event-${event.id}`}
-                  href={petId ? `/owner/pets/${petId}?tab=health` : '/owner/calendar'}
+                  href={petId ? `/owner/pets/${petId}?tab=health` : '/owner/takvim'}
                   className={`flex items-center justify-between p-4 rounded-[24px] border bg-white shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.08)] hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 ${
                     isSelectedPet ? 'border-primary/30 ring-1 ring-primary/10' : 'border-slate-100'
                   }`}
@@ -243,7 +243,7 @@ export default function DashboardClient({
               return (
                 <Link
                   key={`plan-${plan.id}`}
-                  href={petId ? `/owner/pets/${petId}?tab=health` : '/owner/calendar'}
+                  href={petId ? `/owner/pets/${petId}?tab=health` : '/owner/takvim'}
                   className={`flex items-center justify-between p-4 rounded-[24px] border bg-white shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.08)] hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 ${
                     isSelectedPet ? 'border-primary/30 ring-1 ring-primary/10' : 'border-slate-100'
                   }`}

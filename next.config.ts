@@ -35,6 +35,11 @@ const nextConfig: NextConfig = {
         destination: '/legal/kvkk',
         permanent: false,
       },
+      {
+        source: '/owner/calendar',
+        destination: '/owner/takvim',
+        permanent: true,
+      },
     ];
   },
   async headers() {

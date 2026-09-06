@@ -133,56 +133,67 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
           .select('*')
           .eq('pet_id', petId)
           .gte('due_date', pastThreeYearsStr)
-          .lte('due_date', future365Str),
+          .lte('due_date', future365Str)
+          .catch(() => ({ data: [], error: null })),
         supabase
           .from('plans')
           .select('*')
           .eq('pet_id', petId)
           .gte('scheduled_at', pastThreeYearsStr)
-          .lte('scheduled_at', future365Str),
+          .lte('scheduled_at', future365Str)
+          .catch(() => ({ data: [], error: null })),
         supabase
           .from('parasite_records')
           .select('*')
           .eq('pet_id', petId)
           .gte('administered_at', pastThreeYearsStr)
-          .lte('administered_at', future365Str),
+          .lte('administered_at', future365Str)
+          .catch(() => ({ data: [], error: null })),
         supabase
           .from('vaccine_records_v2')
           .select('*')
           .eq('pet_id', petId)
           .gte('administered_at', pastThreeYearsStr)
-          .lte('administered_at', future365Str),
+          .lte('administered_at', future365Str)
+          .catch(() => ({ data: [], error: null })),
         supabase
           .from('growth_records')
           .select('*')
-          .eq('pet_id', petId),
+          .eq('pet_id', petId)
+          .catch(() => ({ data: [], error: null })),
         supabase
           .from('weight_logs')
           .select('*')
           .eq('pet_id', petId)
-          .or('is_archived.is.null,is_archived.eq.false'),
+          .or('is_archived.is.null,is_archived.eq.false')
+          .catch(() => ({ data: [], error: null })),
         supabase
           .from('appointments')
           .select('*')
-          .eq('pet_id', petId),
+          .eq('pet_id', petId)
+          .catch(() => ({ data: [], error: null })),
         supabase
           .from('health_medications')
           .select('*')
-          .eq('pet_id', petId),
+          .eq('pet_id', petId)
+          .catch(() => ({ data: [], error: null })),
         supabase
           .from('nutrition_logs')
           .select('*')
-          .eq('pet_id', petId),
+          .eq('pet_id', petId)
+          .catch(() => ({ data: [], error: null })),
         supabase
           .from('pets')
           .select('id, name, species, gender, is_neutered')
           .eq('id', petId)
-          .single(),
+          .single()
+          .catch(() => ({ data: null, error: null })),
         supabase
           .from('food_inventory')
           .select('*')
           .eq('pet_id', petId)
           .maybeSingle()
+          .catch(() => ({ data: null, error: null }))
       ]);
 
 

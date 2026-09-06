@@ -6,14 +6,24 @@ export function createBrowserSupabaseClient() {
   if (typeof window === 'undefined') {
     return createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-project.supabase.co',
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key'
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key',
+      {
+        auth: {
+          lock: async (_, __, fn) => fn(), // Bypass navigator.locks completely in SSR middleware environment
+        },
+      }
     )
   }
 
   if (!client) {
     client = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-project.supabase.co',
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key'
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key',
+      {
+        auth: {
+          lock: async (_, __, fn) => fn(), // Bypass navigator.locks completely
+        },
+      }
     )
   }
 
