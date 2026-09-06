@@ -96,12 +96,32 @@ function LoginForm() {
     setError('')
     try {
       const supabase = createBrowserSupabaseClient()
-      const { error } = await supabase.auth.signInWithOAuth({
+      const redirectTo =
+        process.env.NEXT_PUBLIC_SITE_URL
+          ? `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/callback`
+          : `${window.location.origin}/api/auth/callback`
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/api/auth/callback` },
+        options: { redirectTo, skipBrowserRedirect: true },
       })
-      if (error) throw error
-    } catch {
+      if (error) {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[Google OAuth] signInWithOAuth error:', {
+            message: error.message,
+            status: (error as { status?: number }).status,
+          })
+        }
+        throw error
+      }
+      if (data?.url) {
+        window.location.assign(data.url)
+      } else {
+        throw new Error('OAuth URL alınamadı')
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[Google OAuth] Hata:', err)
+      }
       setError('Google ile giriş yapılamadı. Lütfen tekrar deneyin.')
       setGoogleLoading(false)
     }
@@ -112,12 +132,32 @@ function LoginForm() {
     setError('')
     try {
       const supabase = createBrowserSupabaseClient()
-      const { error } = await supabase.auth.signInWithOAuth({
+      const redirectTo =
+        process.env.NEXT_PUBLIC_SITE_URL
+          ? `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/callback`
+          : `${window.location.origin}/api/auth/callback`
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
-        options: { redirectTo: `${window.location.origin}/api/auth/callback` },
+        options: { redirectTo, skipBrowserRedirect: true },
       })
-      if (error) throw error
-    } catch {
+      if (error) {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[Apple OAuth] signInWithOAuth error:', {
+            message: error.message,
+            status: (error as { status?: number }).status,
+          })
+        }
+        throw error
+      }
+      if (data?.url) {
+        window.location.assign(data.url)
+      } else {
+        throw new Error('OAuth URL alınamadı')
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[Apple OAuth] Hata:', err)
+      }
       setError('Apple ile giriş yapılamadı. Lütfen tekrar deneyin.')
       setAppleLoading(false)
     }
