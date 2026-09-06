@@ -105,7 +105,7 @@ export default function SplashScreen() {
       >
         <Image
           src="/brand/logos/splash/odi-splash-logo.svg"
-          alt="Odi — Can Dostunun Yaşam Platformu"
+          alt="Odi.Pet — Kedi ve Köpek Sağlık & Yaşam Platformu"
           fill
           sizes="100vw"
           className="object-contain object-center"

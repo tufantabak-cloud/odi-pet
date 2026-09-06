@@ -103,7 +103,7 @@ export default function UpdatePasswordPage() {
         <div className="text-center mb-10">
           <div className="flex flex-col items-center mb-6">
               <Image src="/brand/app-icons/odi-icon-512.png" alt="Odi Logo" width={72} height={72} className="mb-2" priority />
-              <p className="text-[11px] text-text-muted font-medium">Can Dost Yaşam Platformu</p>
+              <p className="text-[11px] text-text-muted font-medium">Kedi ve Köpek Yaşam Platformu</p>
             </div>
           {/* docs/opos-design-system/03_typography.md → text-h1 (24px/700/-0.02em/1.2) — "text-h1" utility globals.css'te tanımlı değil (frozen), kanonik ham değerler kullanıldı */}
           <h1 className="text-[24px] font-bold tracking-[-0.02em] leading-[1.2] text-text-primary">Yeni Şifre Belirle</h1>
