@@ -1,7 +1,7 @@
 {
   "name": "Odi.Pet",
   "short_name": "Odi.Pet",
-  "description": "Can Dostunun Yaşam Platformu",
+  "description": "Kedi ve köpekler için akıllı sağlık, aşı ve yaşam takip platformu",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

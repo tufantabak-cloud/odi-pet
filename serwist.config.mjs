@@ -15,6 +15,8 @@ export default serwist(
       "public/**/*.json",
       "public/**/source.svg",
       "public/**/README*",
+      "public/**/export/**",
+      "public/**/preview.png",
       "**/*.map",
     ],
     manifestTransforms: [
@@ -31,6 +33,30 @@ export default serwist(
             normalizedUrl.endsWith(".json") ||
             normalizedUrl.endsWith(".map") ||
             normalizedUrl.endsWith("source.svg")
+          ) {
+            return false;
+          }
+
+          // Route handler chunks, admin chunks, and dynamic/authenticated app pages must NEVER be precached.
+          // They are dynamic, may return 404 if deleted/split, and are loaded on-demand by Next.js at runtime.
+          if (
+            normalizedUrl.includes("/chunks/app/api/") ||
+            normalizedUrl.includes("/chunks/app/admin/") ||
+            normalizedUrl.includes("/chunks/app/clinic/") ||
+            normalizedUrl.includes("/chunks/app/owner/") ||
+            normalizedUrl.includes("/chunks/app/caregiver/") ||
+            normalizedUrl.includes("/chunks/app/hotel/") ||
+            normalizedUrl.includes("/chunks/app/groomer/") ||
+            normalizedUrl.includes("/chunks/app/trainer/") ||
+            normalizedUrl.includes("/chunks/app/sitter/") ||
+            normalizedUrl.includes("/chunks/app/sos/") ||
+            normalizedUrl.includes("/chunks/app/invite/") ||
+            normalizedUrl.includes("/chunks/app/register/") ||
+            normalizedUrl.includes("/chunks/app/login/") ||
+            normalizedUrl.includes("/chunks/app/reset-password/") ||
+            normalizedUrl.includes("/chunks/app/update-password/") ||
+            normalizedUrl.includes("/chunks/app/legal/") ||
+            normalizedUrl.includes("/chunks/app/plan-yap/")
           ) {
             return false;
           }

@@ -91,7 +91,7 @@ export default function ReferralClient({
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
-          title: 'Odi — Can Dostunun Yaşam Platformu',
+          title: 'Odi.Pet — Kedi ve Köpek Sağlık & Yaşam Platformu',
           text: 'Tüylü dostun için her şey bir arada! 🐾 Benimle Odi\'yi dene ve +30 gün Odi Pro kazan:',
           url: referralUrl,
         })

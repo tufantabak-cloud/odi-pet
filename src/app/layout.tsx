@@ -18,8 +18,20 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://odi.pet'),
-  title: 'Odi — Can Dostunun Yaşam Platformu',
-  description: 'Can Dostunun Yaşam Platformu',
+  title: 'Odi.Pet — Kedi ve Köpek Sağlık & Yaşam Platformu',
+  description: 'Kedi ve köpekleriniz için dijital aşı takvimi, parazit takibi, kilo ve beslenme yönetimi ile yapay zeka destekli sağlık asistanı. Can dostunuzun tüm bakım ve sağlık takibi tek platformda.',
+  keywords: [
+    'kedi aşı takvimi',
+    'köpek aşı takvimi',
+    'kedi sağlık karnesi',
+    'köpek sağlık takibi',
+    'kedi beslenme planı',
+    'kedi parazit takibi',
+    'köpek parazit takibi',
+    'veteriner asistanı',
+    'odi pet',
+    'evcil hayvan uygulaması',
+  ],
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -36,9 +48,9 @@ export const metadata: Metadata = {
     apple: '/brand/app-icons/odi-icon-180.png',
   },
   openGraph: {
-    title: 'Odi — Can Dostunun Yaşam Platformu',
-    description: 'Can Dostunun Yaşam Platformu',
-    siteName: 'Odi',
+    title: 'Odi.Pet — Kedi ve Köpek Sağlık & Yaşam Platformu',
+    description: 'Kedi ve köpekleriniz için dijital aşı takvimi, parazit takibi, kilo ve beslenme yönetimi ile yapay zeka destekli sağlık asistanı. Can dostunuzun tüm bakım ve sağlık takibi tek platformda.',
+    siteName: 'Odi.Pet',
     locale: 'tr_TR',
     type: 'website',
     images: [
@@ -46,14 +58,14 @@ export const metadata: Metadata = {
         url: '/generated/odi-og-image-1200x630.jpg',
         width: 1200,
         height: 630,
-        alt: 'Odi — Can Dostunun Yaşam Platformu',
+        alt: 'Odi.Pet — Kedi ve Köpek Sağlık & Yaşam Platformu',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Odi — Can Dostunun Yaşam Platformu',
-    description: 'Can Dostunun Yaşam Platformu',
+    title: 'Odi.Pet — Kedi ve Köpek Sağlık & Yaşam Platformu',
+    description: 'Kedi ve köpekleriniz için dijital aşı takvimi, parazit takibi, kilo ve beslenme yönetimi ile yapay zeka destekli sağlık asistanı. Can dostunuzun tüm bakım ve sağlık takibi tek platformda.',
     images: ['/generated/odi-og-image-1200x630.jpg'],
   },
 };

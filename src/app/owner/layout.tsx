@@ -101,7 +101,7 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
             </div>
             <span className="text-[18px] font-black text-text-primary tracking-tighter">Odi</span>
             <span className="text-[12px] font-bold text-[var(--color-primary)] tracking-tight">
-              Can Dost Yaşam Platformu
+              Kedi ve Köpek Yaşam Platformu
             </span>
           </Link>
 

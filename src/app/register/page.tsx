@@ -258,7 +258,7 @@ export default function RegisterPage() {
             {step === 1 && (
               <div className="flex flex-col items-center mb-6">
               <Image src="/brand/app-icons/odi-icon-512.png" alt="Odi Logo" width={72} height={72} className="mb-2" priority />
-              <p className="text-[11px] text-text-muted font-medium">Can Dost Yaşam Platformu</p>
+              <p className="text-[11px] text-text-muted font-medium">Kedi ve Köpek Yaşam Platformu</p>
             </div>
             )}
 
