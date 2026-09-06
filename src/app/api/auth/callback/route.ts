@@ -27,10 +27,15 @@ function isValidEmailOtpType(value: string): value is EmailOtpType {
 function getLocalizedAuthError(errorMessage: string): string {
   const msg = errorMessage.toLowerCase()
 
-  if (msg.includes('pkce') || msg.includes('code verifier not found')) {
+  if (
+    msg.includes('pkce') ||
+    msg.includes('code verifier') ||
+    msg.includes('verifier') ||
+    msg.includes('code challenge')
+  ) {
     return 'Doğrulama bağlantısı farklı bir cihaz veya tarayıcıda açıldı. Lütfen kayıt olduğunuz tarayıcıyı kullanın veya hesabınıza doğrudan giriş yapmayı deneyin.'
   }
-  if (msg.includes('flow_state_already_used') || msg.includes('already used')) {
+  if (msg.includes('flow_state') || msg.includes('already used')) {
     return 'Bu doğrulama bağlantısı zaten kullanılmış. Lütfen giriş yapmayı deneyin veya yeni bir doğrulama e-postası isteyin.'
   }
   if (msg.includes('expired') || msg.includes('otp_expired')) {
@@ -154,12 +159,12 @@ export async function GET(req: NextRequest) {
     const rawMessage = authError instanceof Error ? authError.message : String(authError)
     console.error('[auth/callback] Doğrulama hatası:', rawMessage)
     const localizedMessage = getLocalizedAuthError(rawMessage)
-    return NextResponse.redirect(
-      new URL(
-        `/login?message=${encodeURIComponent(localizedMessage)}`,
-        req.url
-      )
-    )
+    const errorUrl = new URL('/login', req.url)
+    errorUrl.searchParams.set('message', localizedMessage)
+    if (rawMessage && rawMessage !== localizedMessage) {
+      errorUrl.searchParams.set('error_detail', rawMessage)
+    }
+    return NextResponse.redirect(errorUrl)
   }
 
   // ── Mevcut Yeni Kullanıcı Lifecycle Başlatma (AI+ 60 gün → PRO 60 gün → FREE) ──

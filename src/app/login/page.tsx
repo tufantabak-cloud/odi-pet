@@ -22,6 +22,7 @@ function LoginForm() {
   const urlMessage = searchParams.get('message') ?? ''
   const reason = searchParams.get('reason') ?? ''
   const errorParam = searchParams.get('error') ?? ''
+  const errorDetail = searchParams.get('error_detail') ?? ''
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [appleLoading, setAppleLoading] = useState(false)
@@ -63,6 +64,16 @@ function LoginForm() {
 
   useEffect(() => {
     setHydrated(true)
+
+    // URL'deki ?message= parametresini temizle ki kullanıcı sayfayı F5 ile yenilediğinde eski hata ekranda takılı kalmasın
+    if (typeof window !== 'undefined' && (window.location.search.includes('message=') || window.location.search.includes('error_detail='))) {
+      const cleanUrl = new URL(window.location.href)
+      cleanUrl.searchParams.delete('message')
+      cleanUrl.searchParams.delete('error_detail')
+      cleanUrl.searchParams.delete('error')
+      window.history.replaceState({}, '', cleanUrl.pathname + (cleanUrl.searchParams.toString() ? `?${cleanUrl.searchParams.toString()}` : ''))
+    }
+
     const checkSession = async () => {
       try {
         const supabase = createBrowserSupabaseClient()
@@ -178,14 +189,18 @@ function LoginForm() {
 
             {hasError && (
               <div role="alert" aria-live="assertive"
-                className="mb-5 p-3.5 rounded-2xl bg-danger/10 border border-danger/20 text-danger text-caption font-bold text-center animate-in fade-in slide-in-from-top-2 duration-300 flex items-center justify-center gap-2">
-                {/* Not: orijinal SVG kırmızı gradient + drop-shadow kullanıyordu — OPOS'ta bu efekt için
-                    dokümante edilmiş bir gradient/shadow token yok, bu yüzden tek renkli danger token'ına
-                    indirgendi (icat edilmiş bir görsel yerine mevcut token kullanıldı). */}
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="shrink-0">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="var(--color-danger)" />
-                </svg>
-                {error || urlMessage || errorParam}
+                className="mb-5 p-3.5 rounded-2xl bg-danger/10 border border-danger/20 text-danger text-caption font-bold text-center animate-in fade-in slide-in-from-top-2 duration-300 flex flex-col items-center justify-center gap-1">
+                <div className="flex items-center justify-center gap-2">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="shrink-0">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="var(--color-danger)" />
+                  </svg>
+                  <span>{error || urlMessage || errorParam}</span>
+                </div>
+                {errorDetail && (
+                  <p className="text-[12px] font-normal text-danger/80 break-words max-w-full mt-1 px-2">
+                    {errorDetail}
+                  </p>
+                )}
               </div>
             )}
 
