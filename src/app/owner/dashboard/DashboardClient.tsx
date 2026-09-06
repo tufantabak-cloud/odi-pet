@@ -146,7 +146,7 @@ export default function DashboardClient({
       {/* 3. Bugünkü Odak / Smart Cards */}
       {pets && pets.length > 0 && (
         <div className="px-[var(--space-4)] pt-2 flex flex-col gap-2">
-          {activePet && <WeatherPawAlert activePet={activePet} />}
+          {activePet && <WeatherPawAlert key={activePetId} activePet={activePet} />}
           {activePet && (
             <OdiNoticedWeightCard
               activePet={activePet}
