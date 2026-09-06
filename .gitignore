@@ -6,6 +6,9 @@
 .pnp.*
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# Serwist PWA build output — generated at build time, must NOT be committed
+/public/sw.js
+
 # dependencies
 /node_modules
 /.pnp
