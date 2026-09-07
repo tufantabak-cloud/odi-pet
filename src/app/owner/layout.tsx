@@ -107,7 +107,7 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
 
           <div className="flex items-center gap-3">
 
-            <FloatingLostPets userCities={userCities} currentUserId={profile.id} />
+            <FloatingLostPets userCities={userCities} />
 
             {/* Arkadaşını Davet Et — sade hediye ikonu (alarm rozetsiz, zille yarışmaz) */}
             <Link
@@ -152,7 +152,7 @@ export default async function OwnerLayout({ children }: { children: ReactNode })
         )}
 
         <SpotlightTour />
-        <DashboardPendingReferral currentUserId={profile.id} />
+        <DashboardPendingReferral />
       </div>
     </GeolocationProvider>
   )
