@@ -28,6 +28,11 @@ export function buildPetAgendaEvents(
 
   rawVaccines.forEach(v => { if (v.plan_id) linkedPlanIds.add(v.plan_id); });
   rawParasites.forEach(p => { if (p.plan_id) linkedPlanIds.add(p.plan_id); });
+  rawAppointments.forEach(a => { if (a.plan_id) linkedPlanIds.add(a.plan_id); });
+
+  const actualVaccineIds = new Set(rawVaccines.map(v => v.id).filter(Boolean));
+  const actualParasiteIds = new Set(rawParasites.map(p => p.id).filter(Boolean));
+  const actualAppointmentIds = new Set(rawAppointments.map(a => a.id).filter(Boolean));
 
   const context: AgendaNormalizationContext = {
     todayStr,
@@ -73,13 +78,41 @@ export function buildPetAgendaEvents(
     events.push(handler.normalizeActualRecord(m, context));
   });
 
+  // Track completed actual records for semantic compound deduplication:
+  // pet_id + dateKey + stableIdentity
+  const completedActualSemanticKeys = new Set<string>();
+  events.forEach(e => {
+    if (e.displayStatus === 'completed') {
+      const petId = e.displayMetadata?.extraData?.pet_id || (e as any).pet_id || '';
+      if (petId) {
+        completedActualSemanticKeys.add(`${petId}__${e.dateKey}__${e.stableIdentity}`);
+      }
+      completedActualSemanticKeys.add(`${e.dateKey}__${e.stableIdentity}`);
+    }
+  });
+
   // 7. Plans Table
   rawPlans.forEach(p => {
     // Filter cancelled plans
     if (p.status === 'cancelled') return;
 
-    // Filter plans linked to medical records
-    if (linkedPlanIds.has(p.id) && p.status === 'completed') return;
+    // Filter plans explicitly linked to medical records
+    if (p.status === 'completed') {
+      if (linkedPlanIds.has(p.id)) return;
+      if (p.extra_data?.appointment_id && actualAppointmentIds.has(p.extra_data.appointment_id)) return;
+      if (p.extra_data?.vaccine_record_id && actualVaccineIds.has(p.extra_data.vaccine_record_id)) return;
+      if (p.extra_data?.parasite_record_id && actualParasiteIds.has(p.extra_data.parasite_record_id)) return;
+
+      // Semantic duplicate check: pet_id + date + category/identity
+      const pDateKey = deriveDateKey(p.scheduled_at, timeZone);
+      const pIdentity = buildStableIdentity(p.category, p.sub_type, p.extra_data);
+      if (
+        (p.pet_id && completedActualSemanticKeys.has(`${p.pet_id}__${pDateKey}__${pIdentity}`)) ||
+        completedActualSemanticKeys.has(`${pDateKey}__${pIdentity}`)
+      ) {
+        return;
+      }
+    }
 
     const handler = agendaReadRegistry.getHandlerForRecord('plans', p.category, p.sub_type, p.extra_data);
     events.push(handler.normalizePlan(p, context));

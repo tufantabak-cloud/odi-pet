@@ -14,6 +14,7 @@ interface HealthTrackerProps {
   onMarkDone?: (task: any) => void;
   onPostpone?: (task: any) => void;
   refreshTrigger?: number;
+  trackerState?: ReturnType<typeof useHealthTracker>;
 }
 
 /** Tarih kolonlarının ortak genişliği — her satırın kendi grid'i aynı ölçüyü kullanır */
@@ -88,11 +89,12 @@ function useDragScroll(ref: React.RefObject<HTMLDivElement | null>) {
   }, [ref]);
 }
 
-export function HealthTracker({ petId, onEditTask, onMarkDone, onPostpone, refreshTrigger }: HealthTrackerProps) {
+export function HealthTracker({ petId, onEditTask, onMarkDone, onPostpone, refreshTrigger, trackerState }: HealthTrackerProps) {
+  const internalTracker = useHealthTracker(petId, trackerState ? undefined : refreshTrigger);
   const {
     categoryGroups, loading, markEventStatus, postponeEvent, deleteEvent,
     visibleDates,
-  } = useHealthTracker(petId, refreshTrigger);
+  } = trackerState || internalTracker;
   const [onlyShowMissed, setOnlyShowMissed] = useState(false);
   // Artırıldığında tüm satırlar bağımsız olarak "bugün"e geri kayar
   const [resetToken, setResetToken] = useState(0);

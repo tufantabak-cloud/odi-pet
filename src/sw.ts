@@ -31,7 +31,7 @@ const customRuntimeCaching = [
   ...defaultCache,
 ];
 
-// PWA Cache Buster: v3.2 Enterprise Notification Certified
+// PWA Cache Buster: v3.3 Timeline & Health Tracker Certified
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
   skipWaiting: true,

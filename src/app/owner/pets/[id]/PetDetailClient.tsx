@@ -24,6 +24,7 @@ const LostPetWizard = dynamic(() => import('@/components/pets/LostPetWizard'), {
 const MinimalGrowthChart = dynamic(() => import('@/components/pets/MinimalGrowthChart'));
 const SmartScanner = dynamic(() => import('@/components/ui/SmartScanner').then(mod => mod.SmartScanner), { ssr: false })
 const HealthTracker = dynamic(() => import('@/components/health-tracker/HealthTracker').then(mod => mod.HealthTracker), { loading: () => <div className='animate-pulse bg-gray-100 rounded-2xl w-full h-12' /> })
+import { useHealthTracker } from '@/components/health-tracker/useHealthTracker'
 const EstrusTracker = dynamic(() => import('@/components/estrus-tracker/EstrusTracker').then(mod => mod.EstrusTracker))
 const SmartCardBanner = dynamic(() => import('@/components/ui/SmartCardBanner'));
 import PetHeroCard from './PetHeroCard'
@@ -479,6 +480,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   const [medicationNote, setMedicationNote] = useState('')
   const [showNoteInput, setShowNoteInput] = useState(false)
   const [trackerRefreshKey, setTrackerRefreshKey] = useState(0)
+  const healthTracker = useHealthTracker(pet.id, trackerRefreshKey)
   const coverInputRef = useRef<HTMLInputElement>(null)
   const avatarInputRef = useRef<HTMLInputElement>(null)
 
@@ -2156,14 +2158,14 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         <h3 className="text-base font-bold text-text-primary mb-3">
           Görev Takibi
         </h3>
-        <HealthTracker refreshTrigger={trackerRefreshKey} petId={pet.id} onEditTask={(t) => setActiveTimelineTask(t)} onMarkDone={(t) => handleMarkDone(t)} onPostpone={(t) => handlePostpone(t)} />
+        <HealthTracker trackerState={healthTracker} refreshTrigger={trackerRefreshKey} petId={pet.id} onEditTask={(t) => setActiveTimelineTask(t)} onMarkDone={(t) => handleMarkDone(t)} onPostpone={(t) => handlePostpone(t)} />
       </div>
 
       {pet.gender === 'female' && !pet.is_neutered && (
         <EstrusTracker petId={pet.id} petSpecies={pet.species} />
       )}
 
-      <HealthTimeline schedules={localSchedules} />
+      <HealthTimeline events={healthTracker.agendaEvents} schedules={localSchedules} loading={healthTracker.loading} />
 
       </div>
       )}

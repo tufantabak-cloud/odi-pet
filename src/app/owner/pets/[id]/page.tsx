@@ -165,14 +165,93 @@ export default async function PetDetailPage(props: PageProps) {
       .map((s: any) => `${s.sub_category}__${s.due_date}`)
   )
 
+  const linkedPlanIdsInMedicalRecords = new Set<string>()
+  ;(initialVaccines ?? []).forEach((v: any) => { if (v.plan_id) linkedPlanIdsInMedicalRecords.add(v.plan_id) })
+  ;(initialParasites ?? []).forEach((p: any) => { if (p.plan_id) linkedPlanIdsInMedicalRecords.add(p.plan_id) })
+  ;(appointments ?? []).forEach((a: any) => { if (a.plan_id) linkedPlanIdsInMedicalRecords.add(a.plan_id) })
+
   const uniquePlansAsSchedules = plansAsSchedules.filter((plan: any) => {
     if (existingPlanIds.has(plan._plan_id)) return false
+    if (linkedPlanIdsInMedicalRecords.has(plan._plan_id) && plan.status === 'done') return false
     const compositeKey = `${plan.sub_category}__${plan.due_date}`
     if (plan.sub_category && plan.due_date && existingSubCategoryDateKeys.has(compositeKey)) return false
     return true
   })
 
-  const allSchedules = [...(schedules ?? []), ...uniquePlansAsSchedules]
+  const vaccineSchedules = (initialVaccines ?? []).map((v: any) => ({
+    id: `vaccine_${v.id}`,
+    _plan_id: v.plan_id || v.id,
+    _source: 'vaccine_records_v2',
+    _plan_category: 'asi',
+    pet_id: v.pet_id,
+    title: v.vaccine_name || 'Aşı',
+    due_date: v.administered_at ? v.administered_at.split('T')[0] : '',
+    due_time: '12:00:00',
+    status: 'done',
+    category: 'Asi',
+    sub_category: v.vaccine_name || 'Aşı',
+    plan_type: 'once',
+    notes: v.notes,
+    vaccines: { name: v.vaccine_name },
+    repeat_rule: null,
+    extra_data: null,
+    created_at: v.created_at,
+    updated_at: v.updated_at || v.created_at,
+  }))
+
+  const parasiteSchedules = (initialParasites ?? []).map((p: any) => {
+    const typeLabel = p.parasite_type === 'internal' ? 'İç Parazit' : p.parasite_type === 'external' ? 'Dış Parazit' : p.parasite_type === 'collar' ? 'Parazit Tasması' : 'Karma Parazit'
+    const productName = p.product_free_text || p.brand_free_text || typeLabel
+    return {
+      id: `parasite_${p.id}`,
+      _plan_id: p.plan_id || p.id,
+      _source: 'parasite_records',
+      _plan_category: 'parazit',
+      pet_id: p.pet_id,
+      title: productName,
+      due_date: p.administered_at ? p.administered_at.split('T')[0] : '',
+      due_time: '12:00:00',
+      status: 'done',
+      category: 'Parazit',
+      sub_category: typeLabel,
+      plan_type: 'once',
+      notes: p.notes,
+      vaccines: null,
+      repeat_rule: null,
+      extra_data: null,
+      created_at: p.created_at,
+      updated_at: p.created_at,
+    }
+  })
+
+  const appointmentSchedules = (appointments ?? []).map((a: any) => ({
+    id: `appointment_${a.id}`,
+    _plan_id: a.id,
+    _source: 'appointments',
+    _plan_category: 'veteriner',
+    pet_id: a.pet_id,
+    title: a.title || (a.clinics?.name ? `Klinik Randevusu: ${a.clinics.name}` : 'Veteriner Randevusu'),
+    due_date: a.scheduled_at ? a.scheduled_at.split('T')[0] : '',
+    due_time: a.scheduled_at && a.scheduled_at.includes('T') ? a.scheduled_at.split('T')[1].substring(0, 8) : '12:00:00',
+    status: a.status === 'completed' ? 'done' : 'upcoming',
+    category: 'Veteriner',
+    sub_category: a.reason || 'Muayene',
+    plan_type: 'once',
+    notes: a.notes,
+    vaccines: null,
+    repeat_rule: null,
+    extra_data: null,
+    created_at: a.created_at,
+    updated_at: a.updated_at || a.created_at,
+  }))
+
+  const allSchedules = [
+    ...(schedules ?? []),
+    ...uniquePlansAsSchedules,
+    ...vaccineSchedules,
+    ...parasiteSchedules,
+    ...appointmentSchedules,
+  ]
 
   const medicationPlans = (plans ?? [])
     .filter((p: any) => p.extra_data?.record_type === 'medication' && p.extra_data?.medication)

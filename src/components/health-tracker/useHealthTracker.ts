@@ -125,82 +125,135 @@ export function useHealthTracker(petId: string, refreshTrigger?: number) {
 
       const usePlansOnly = process.env.NEXT_PUBLIC_USE_PLANS_ONLY === 'true';
 
+      // Safe query execution helper: executes Supabase queries, captures errors with descriptive logging,
+      // and ensures individual query failures don't crash Promise.all or the health tracker.
+      const safeQuery = async (
+        promise: PromiseLike<{ data: any; error: any }>,
+        tableName: string,
+        fallbackData: any = []
+      ): Promise<{ data: any; error: any }> => {
+        try {
+          const res = await promise;
+          if (res.error) {
+            console.error(`[useHealthTracker] Query error for ${tableName}:`, res.error);
+            return { data: fallbackData, error: res.error };
+          }
+          return { data: res.data ?? fallbackData, error: null };
+        } catch (err: any) {
+          console.error(`[useHealthTracker] Unexpected exception querying ${tableName}:`, err);
+          return { data: fallbackData, error: err };
+        }
+      };
+
       // vaccines join: is_core + code (template eşleştirme için)
       // vaccines tablosunda alan adı: code (vaccine_code değil)
-      const [schedulesRes, plansRes, parasiteRes, vaccinesRes, growthRes, weightLogsRes, appointmentsRes, medicationsRes, nutritionRes, petRes, foodInventoryRes] = await Promise.all([
-        usePlansOnly ? Promise.resolve({ data: [], error: null }) : supabase
-          .from('health_schedules')
-          .select('*')
-          .eq('pet_id', petId)
-          .gte('due_date', pastThreeYearsStr)
-          .lte('due_date', future365Str)
-          .catch(() => ({ data: [], error: null })),
-        supabase
-          .from('plans')
-          .select('*')
-          .eq('pet_id', petId)
-          .gte('scheduled_at', pastThreeYearsStr)
-          .lte('scheduled_at', future365Str)
-          .catch(() => ({ data: [], error: null })),
-        supabase
-          .from('parasite_records')
-          .select('*')
-          .eq('pet_id', petId)
-          .gte('administered_at', pastThreeYearsStr)
-          .lte('administered_at', future365Str)
-          .catch(() => ({ data: [], error: null })),
-        supabase
-          .from('vaccine_records_v2')
-          .select('*')
-          .eq('pet_id', petId)
-          .gte('administered_at', pastThreeYearsStr)
-          .lte('administered_at', future365Str)
-          .catch(() => ({ data: [], error: null })),
-        supabase
-          .from('growth_records')
-          .select('*')
-          .eq('pet_id', petId)
-          .catch(() => ({ data: [], error: null })),
-        supabase
-          .from('weight_logs')
-          .select('*')
-          .eq('pet_id', petId)
-          .or('is_archived.is.null,is_archived.eq.false')
-          .catch(() => ({ data: [], error: null })),
-        supabase
-          .from('appointments')
-          .select('*')
-          .eq('pet_id', petId)
-          .catch(() => ({ data: [], error: null })),
-        supabase
-          .from('health_medications')
-          .select('*')
-          .eq('pet_id', petId)
-          .catch(() => ({ data: [], error: null })),
-        supabase
-          .from('nutrition_logs')
-          .select('*')
-          .eq('pet_id', petId)
-          .catch(() => ({ data: [], error: null })),
-        supabase
-          .from('pets')
-          .select('id, name, species, gender, is_neutered')
-          .eq('id', petId)
-          .single()
-          .catch(() => ({ data: null, error: null })),
-        supabase
-          .from('food_inventory')
-          .select('*')
-          .eq('pet_id', petId)
-          .maybeSingle()
-          .catch(() => ({ data: null, error: null }))
+      const [
+        schedulesRes,
+        plansRes,
+        parasiteRes,
+        vaccinesRes,
+        growthRes,
+        weightLogsRes,
+        appointmentsRes,
+        medicationsRes,
+        nutritionRes,
+        petRes,
+        foodInventoryRes,
+      ] = await Promise.all([
+        usePlansOnly
+          ? Promise.resolve({ data: [], error: null })
+          : safeQuery(
+              supabase
+                .from('health_schedules')
+                .select('*')
+                .eq('pet_id', petId)
+                .gte('due_date', pastThreeYearsStr)
+                .lte('due_date', future365Str),
+              'health_schedules'
+            ),
+        safeQuery(
+          supabase
+            .from('plans')
+            .select('*')
+            .eq('pet_id', petId)
+            .gte('scheduled_at', pastThreeYearsStr)
+            .lte('scheduled_at', future365Str),
+          'plans'
+        ),
+        safeQuery(
+          supabase
+            .from('parasite_records')
+            .select('*')
+            .eq('pet_id', petId)
+            .gte('administered_at', pastThreeYearsStr)
+            .lte('administered_at', future365Str),
+          'parasite_records'
+        ),
+        safeQuery(
+          supabase
+            .from('vaccine_records_v2')
+            .select('*')
+            .eq('pet_id', petId)
+            .gte('administered_at', pastThreeYearsStr)
+            .lte('administered_at', future365Str),
+          'vaccine_records_v2'
+        ),
+        safeQuery(
+          supabase
+            .from('growth_records')
+            .select('*')
+            .eq('pet_id', petId),
+          'growth_records'
+        ),
+        safeQuery(
+          supabase
+            .from('weight_logs')
+            .select('*')
+            .eq('pet_id', petId)
+            .or('is_archived.is.null,is_archived.eq.false'),
+          'weight_logs'
+        ),
+        safeQuery(
+          supabase
+            .from('appointments')
+            .select('*')
+            .eq('pet_id', petId),
+          'appointments'
+        ),
+        safeQuery(
+          supabase
+            .from('health_medications')
+            .select('*')
+            .eq('pet_id', petId),
+          'health_medications'
+        ),
+        safeQuery(
+          supabase
+            .from('nutrition_logs')
+            .select('*')
+            .eq('pet_id', petId),
+          'nutrition_logs'
+        ),
+        safeQuery(
+          supabase
+            .from('pets')
+            .select('id, name, species, gender, is_neutered')
+            .eq('id', petId)
+            .single(),
+          'pets',
+          null
+        ),
+        safeQuery(
+          supabase
+            .from('food_inventory')
+            .select('*')
+            .eq('pet_id', petId)
+            .maybeSingle(),
+          'food_inventory',
+          null
+        ),
       ]);
 
-
-      if (schedulesRes.error) throw schedulesRes.error;
-      if (plansRes.error) throw plansRes.error;
-      if (parasiteRes.error) throw parasiteRes.error;
-      
       const PLAN_CAT_MAP: Record<string, string> = {
         saglik: 'Saglik', asi: 'Asi', parazit: 'Parazit',
         bakim: 'Bakım', beslenme: 'Beslenme', hijyen: 'Hijyen', aktivite: 'Aktivite'
