@@ -4,14 +4,17 @@ import React, { useState, useEffect } from 'react'
 import { useGeolocation } from '@/contexts/GeolocationContext'
 import { useWebPush } from '@/hooks/useWebPush'
 import { GlassCard } from '@/components/ui/primitives'
-import { MapPin, Bell, X, Check, Loader2, AlertCircle, ShieldAlert } from 'lucide-react'
+import { MapPin, Bell, X, Check, Loader2, AlertCircle, ShieldAlert, Smartphone } from 'lucide-react'
+import { detectPlatformAndBrowser } from '@/lib/notifications/web-push-client'
+import IosPermissionGuideModal from './IosPermissionGuideModal'
 
 const ONBOARDING_KEY = 'odi_permission_onboarding_completed'
 
 export default function PermissionOnboarding() {
   const [show, setShow] = useState(false)
+  const [showIosGuide, setShowIosGuide] = useState(false)
   const { requestLocation, status: geoStatus, coords } = useGeolocation()
-  const { subscribe, permission: pushPermission, isSubscribed } = useWebPush()
+  const { subscribe, permission: pushPermission, isSubscribed, state: pushState } = useWebPush()
 
   const [isLocLoading, setIsLocLoading] = useState(false)
   const [isNotifLoading, setIsNotifLoading] = useState(false)
@@ -96,6 +99,12 @@ export default function PermissionOnboarding() {
   const handleNotification = async () => {
     if (notifSuccess) return
 
+    const { isIos, isStandalone } = detectPlatformAndBrowser()
+    if (isIos && !isStandalone && !showIosGuide) {
+      setShowIosGuide(true)
+      return
+    }
+
     // Secure context check
     if (typeof window !== 'undefined' && !window.isSecureContext) {
       showToast('Bildirim izni için HTTPS (güvenli bağlantı) gereklidir.', 'warning')
@@ -119,6 +128,8 @@ export default function PermissionOnboarding() {
               : 'Bildirim izni tarayıcı ayarlarınızda engellenmiş. Lütfen kilit (🔒) ikonuna basıp bildirimlere izin verin.',
             'warning'
           )
+        } else if (isIos && !isStandalone) {
+          setShowIosGuide(true)
         } else {
           showToast(res.error, 'error')
         }
@@ -130,7 +141,7 @@ export default function PermissionOnboarding() {
     }
   }
 
-  if (!show) return null
+  if (!show && !showIosGuide) return null
 
   const isAllGranted = locSuccess && notifSuccess
 
@@ -263,7 +274,7 @@ export default function PermissionOnboarding() {
 
         </div>
 
-        <div className="p-4 bg-bg-main border-t border-border-main/50">
+        <div className="p-4 bg-bg-main border-t border-border-main/50 flex flex-col gap-2.5">
           <button 
             onClick={handleDismiss}
             className={`h-11 w-full rounded-xl font-extrabold text-[14px] active:scale-[0.98] transition-all shadow-md ${
@@ -274,9 +285,30 @@ export default function PermissionOnboarding() {
           >
             {isAllGranted ? 'Harika, Devam Et!' : 'Şimdi Değil'}
           </button>
+
+          {/* Test & iOS Manual Guide Trigger */}
+          <button
+            type="button"
+            onClick={() => setShowIosGuide(true)}
+            className="text-[12px] font-bold text-primary hover:text-primary/80 transition-colors flex items-center justify-center gap-1.5 py-1 text-center"
+          >
+            <Smartphone className="w-3.5 h-3.5" />
+            <span>iPhone Kurulum & İzin Kılavuzu (Test)</span>
+          </button>
         </div>
 
       </GlassCard>
+
+      {/* iOS Step-by-Step Installation & Permission Guide Modal */}
+      <IosPermissionGuideModal
+        isOpen={showIosGuide}
+        onClose={() => setShowIosGuide(false)}
+        onContinue={async () => {
+          setShowIosGuide(false)
+          await handleNotification()
+        }}
+        isSubmitting={isNotifLoading}
+      />
     </div>
   )
 }

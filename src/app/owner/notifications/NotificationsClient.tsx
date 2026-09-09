@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useWebPush } from '@/hooks/useWebPush'
 import { getTurkishGenitiveSuffix } from '@/lib/pets/utils'
 import { Illustration } from '@/components/ui/Illustration'
+import { Smartphone } from 'lucide-react'
+import IosPermissionGuideModal from '@/components/permissions/IosPermissionGuideModal'
 
 type Notification = {
   id: string
@@ -50,6 +52,7 @@ function PushPermissionCard({
 
   const [result, setResult] = useState<'idle' | 'success' | 'error'>('idle')
   const [testSending, setTestSending] = useState(false)
+  const [showIosGuide, setShowIosGuide] = useState(false)
 
   const firstPet = pets && pets.length > 0 ? pets[0] : null
   const displayName = firstPet
@@ -80,17 +83,37 @@ function PushPermissionCard({
 
   if (state === 'ios_pwa_required') {
     return (
-      <div className="p-5 bg-gradient-to-br from-purple-900/10 to-primary/10 border border-primary/20 rounded-2xl flex gap-4 items-start animate-in slide-in-from-top-2">
-        <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center text-[24px] shrink-0">
-          📱
+      <>
+        <div className="p-5 bg-gradient-to-br from-purple-900/10 to-primary/10 border border-primary/20 rounded-2xl flex gap-4 items-start animate-in slide-in-from-top-2">
+          <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center text-[24px] shrink-0">
+            📱
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-extrabold text-base text-text-primary">iOS Bildirimleri İçin Yükleme Gerekli</p>
+            <p className="text-[13px] text-text-secondary mt-1 leading-relaxed">
+              iPhone cihazınızda aşı ve sağlık bildirimleri alabilmek için Safari alt menüsündeki <strong>Paylaş (Share)</strong> ikonuna dokunup <strong>"Ana Ekrana Ekle"</strong> butonuna basarak uygulamayı yükleyin.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowIosGuide(true)}
+              className="btn-primary mt-3 text-[13px] py-2 px-4 flex items-center gap-2 cursor-pointer active:scale-95"
+            >
+              <Smartphone className="w-4 h-4" />
+              Kurulum Adımlarını Gör (Kılavuz)
+            </button>
+          </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-extrabold text-base text-text-primary">iOS Bildirimleri İçin Yükleme Gerekli</p>
-          <p className="text-[13px] text-text-secondary mt-1 leading-relaxed">
-            iPhone cihazınızda aşı ve sağlık bildirimleri alabilmek için Safari alt menüsündeki <strong>Paylaş (Share)</strong> ikonuna dokunup <strong>"Ana Ekrana Ekle"</strong> butonuna basarak uygulamayı yükleyin.
-          </p>
-        </div>
-      </div>
+        <IosPermissionGuideModal
+          isOpen={showIosGuide}
+          onClose={() => setShowIosGuide(false)}
+          onContinue={async () => {
+            setShowIosGuide(false)
+            const res = await subscribe()
+            setResult(res.success ? 'success' : 'error')
+          }}
+          isSubmitting={isLoading}
+        />
+      </>
     )
   }
 
