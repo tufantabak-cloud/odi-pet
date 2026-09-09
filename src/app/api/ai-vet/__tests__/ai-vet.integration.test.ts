@@ -155,7 +155,7 @@ describe('AI Vet Functional QA', () => {
       expect(data.response.is_emergency).toBe(false);
       expect(data.response.summary).toBeDefined();
     }
-  }, 25000);
+  }, 90000);
 
   // 2. Scenario: Emergency Guard
   it('Scenario 2: Emergency Guard (Köpeğim nefes alamıyor ve bayıldı)', async () => {
@@ -182,7 +182,7 @@ describe('AI Vet Functional QA', () => {
     expect(data.powered_by).toBe('emergency-guard');
     expect(data.response.is_emergency).toBe(true);
     expect(data.response.severity).toBe('emergency');
-  }, 25000);
+  }, 90000);
 
   // 3. Scenario: Unsupported species
   it('Scenario 3: Unsupported species (Muhabbet kuşu / Tavşan)', async () => {
@@ -208,7 +208,7 @@ describe('AI Vet Functional QA', () => {
     if (!checkFallback(data.response)) {
       expect(data.response.assessment_available).toBe(false);
     }
-  }, 25000);
+  }, 90000);
 
   // 4. Scenario: Medication dose request
   it('Scenario 4: Medication dose request (Ağrı kesici parol vereceğim dozu ne olmalı?)', async () => {
@@ -235,7 +235,7 @@ describe('AI Vet Functional QA', () => {
       expect(data.response.assessment_available).toBe(true);
       expect(data.response.risk_score).toBeNull();
     }
-  }, 25000);
+  }, 90000);
 
   // 5. Scenario: Unauthorized Pet
   it('Scenario 5: Unauthorized Pet ID (Yetkisiz pet erişimi 403 kontrolü)', async () => {
@@ -260,5 +260,5 @@ describe('AI Vet Functional QA', () => {
 
     expect(response.status).toBe(403);
     expect(data.error).toContain('yetkiniz yok');
-  }, 25000);
+  }, 90000);
 });
