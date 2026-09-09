@@ -2256,30 +2256,6 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
           <h2 className="text-base font-semibold text-text-primary px-1">
             {activeTab === 'saglik' ? 'Sağlık ve Bakım' : 'Bakım'}
           </h2>
-          {activeTab === 'saglik' && (
-            <Link
-              href={`/owner/pets/${pet.id}/nutrition?tab=kilo`}
-              className="card-base p-4 bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-white border border-amber-200/80 rounded-2xl flex items-center justify-between gap-3 group hover:border-amber-400/80 transition-all shadow-sm"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-sm shrink-0">
-                  <Scale size={20} className="w-5 h-5 text-white" aria-hidden="true" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-semibold text-text-primary group-hover:text-amber-700 transition-colors flex items-center gap-1.5">
-                    Kilo & Gelişim Takibi
-                    <span className="text-2xs font-extrabold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Beslenme Modülünde</span>
-                  </h4>
-                  <p className="text-xs text-text-secondary font-medium mt-0.5">
-                    Kilo değişimi (gr), gram farkları, ideal kilo hedefi ve geçmiş ölçümler Beslenme modülünde takip edilmektedir.
-                  </p>
-                </div>
-              </div>
-              <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-sm group-hover:translate-x-1 transition-transform shrink-0">
-                →
-              </div>
-            </Link>
-          )}
 
           {activeTab === 'bakim' && (
             <div className="flex flex-col gap-6 py-2">
