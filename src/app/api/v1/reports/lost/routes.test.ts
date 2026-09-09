@@ -96,6 +96,10 @@ describe('kayıp ilanı v1 rotaları', () => {
 
   it('Türkiye içindeki koordinatı doğrular', async () => {
     mocks.getSessionUser.mockResolvedValue({ id: 'owner-user' })
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ address: { province: 'İstanbul', district: 'Kadıköy' } })
+    }) as any;
     const { POST } = await import('./location/route')
 
     const response = await POST(
@@ -110,10 +114,14 @@ describe('kayıp ilanı v1 rotaları', () => {
     await expect(response.json()).resolves.toMatchObject({
       success: true,
     })
-  }, 15000)
+  })
 
   it('Türkiye dışındaki koordinatı reddeder', async () => {
     mocks.getSessionUser.mockResolvedValue({ id: 'owner-user' })
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ address: { province: 'London', district: 'City' } })
+    }) as any;
     const { POST } = await import('./location/route')
 
     const response = await POST(
@@ -129,7 +137,7 @@ describe('kayıp ilanı v1 rotaları', () => {
       success: false,
       error: 'INVALID_OR_OUTSIDE_TURKEY_LOCATION',
     })
-  }, 15000)
+  })
 
   it('Supabase phone_change OTP gönderimini başlatır', async () => {
     const updateUser = vi.fn().mockResolvedValue({ error: null })
