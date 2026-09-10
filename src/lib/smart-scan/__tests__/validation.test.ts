@@ -2,11 +2,20 @@ import { describe, it, expect } from 'vitest'
 import { validateCrossPage } from '../validation'
 
 describe('Smart Scan Validation & Cross-Page Consistency', () => {
-  it('produces MATCH status when all pages are consistent and valid', () => {
+  it('produces MATCH status when all pages are consistent and valid, populating pet, owner and vet data', () => {
     const res = validateCrossPage({
       cover: {
         passport_no: 'TR-34-987654',
         microchip_no: '900123456789012',
+      },
+      page_4: {
+        owner_first_name: 'Tufan',
+        owner_last_name: 'Tabak',
+        owner_phone: '+905321112233',
+        owner_city: 'İstanbul',
+        owner_district: 'Kadıköy',
+        owner_address: 'Moda Cad. No: 12',
+        owner_postal_code: '34710',
       },
       page_5: {
         name: 'Duman',
@@ -18,12 +27,17 @@ describe('Smart Scan Validation & Cross-Page Consistency', () => {
       },
       page_6: {
         microchip_no: '900123456789012',
+        tattoo_no: 'TAT-9988',
         implant_date: '2023-08-10',
         implant_location: 'Sol boyun',
       },
       page_7: {
-        vaccination_name: 'Karma Aşı',
-        vaccination_date: '2023-09-01',
+        veterinarian_name: 'Dr. Ahmet Yılmaz',
+        clinic_name: 'Kadıköy Veteriner Kliniği',
+        vet_phone: '+902161234567',
+        vet_email: 'vet@kadikoyvet.com',
+        registration_city: 'İstanbul',
+        registration_district: 'Kadıköy',
       },
     })
 
@@ -31,9 +45,35 @@ describe('Smart Scan Validation & Cross-Page Consistency', () => {
     expect(res.isValid).toBe(true)
     expect(res.canCommit).toBe(true)
     expect(res.conflicts).toHaveLength(0)
+
+    // Pet Data
     expect(res.unifiedData.name).toBe('Duman')
+    expect(res.unifiedData.species).toBe('cat')
+    expect(res.unifiedData.breed).toBe('British Shorthair')
+    expect(res.unifiedData.gender).toBe('male')
+    expect(res.unifiedData.birth_date).toBe('2023-05-15')
+    expect(res.unifiedData.color).toBe('Gri')
     expect(res.unifiedData.microchip_no).toBe('900123456789012')
     expect(res.unifiedData.passport_no).toBe('TR-34-987654')
+    expect(res.unifiedData.tattoo_no).toBe('TAT-9988')
+    expect(res.unifiedData.implant_date).toBe('2023-08-10')
+
+    // Owner Data (Page 4)
+    expect(res.unifiedData.owner_first_name).toBe('Tufan')
+    expect(res.unifiedData.owner_last_name).toBe('Tabak')
+    expect(res.unifiedData.owner_phone).toBe('+905321112233')
+    expect(res.unifiedData.owner_city).toBe('İstanbul')
+    expect(res.unifiedData.owner_district).toBe('Kadıköy')
+    expect(res.unifiedData.owner_neighborhood).toBe('Moda Cad. No: 12')
+    expect(res.unifiedData.owner_postal_code).toBe('34710')
+
+    // Vet Data (Page 7)
+    expect(res.unifiedData.vet_name).toBe('Dr. Ahmet Yılmaz')
+    expect(res.unifiedData.vet_company).toBe('Kadıköy Veteriner Kliniği')
+    expect(res.unifiedData.vet_phone).toBe('+902161234567')
+    expect(res.unifiedData.vet_email).toBe('vet@kadikoyvet.com')
+    expect(res.unifiedData.registration_city).toBe('İstanbul')
+    expect(res.unifiedData.registration_district).toBe('Kadıköy')
   })
 
   it('detects CONFLICT when microchip differs between cover and page 6', () => {

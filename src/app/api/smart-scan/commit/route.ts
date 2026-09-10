@@ -16,12 +16,28 @@ const commitRequestSchema = z.object({
     color: z.string().optional().nullable(),
     microchip_no: z.string().optional().nullable(),
     passport_no: z.string().optional().nullable(),
+    tattoo_no: z.string().optional().nullable(),
+    vet_name: z.string().optional().nullable(),
+    vet_company: z.string().optional().nullable(),
+    vet_phone: z.string().optional().nullable(),
+    vet_email: z.string().optional().nullable(),
+    registration_city: z.string().optional().nullable(),
+    registration_district: z.string().optional().nullable(),
     avatar_url: z.string().optional().nullable(),
     cover_url: z.string().optional().nullable(),
     lifestyle: z.string().optional().nullable(),
     size: z.string().optional().nullable(),
     is_neutered: z.boolean().optional().nullable(),
   }),
+  ownerPayload: z.object({
+    first_name: z.string().optional().nullable(),
+    last_name: z.string().optional().nullable(),
+    phone: z.string().optional().nullable(),
+    city: z.string().optional().nullable(),
+    district: z.string().optional().nullable(),
+    neighborhood: z.string().optional().nullable(),
+    postal_code: z.string().optional().nullable(),
+  }).optional().default({}),
 })
 
 export async function POST(req: NextRequest) {
@@ -46,20 +62,21 @@ export async function POST(req: NextRequest) {
     if (!parseResult.success) {
       return NextResponse.json(
         {
-          error: 'Geçersiz evcil hayvan bilgileri.',
+          error: 'Geçersiz evcil hayvan veya sahip bilgileri.',
           details: parseResult.error.flatten().fieldErrors,
         },
         { status: 400 }
       )
     }
 
-    const { sessionId, idempotencyKey, petPayload } = parseResult.data
+    const { sessionId, idempotencyKey, petPayload, ownerPayload } = parseResult.data
 
     // 3. Try primary atomic & idempotent Smart Scan RPC
     const rpcResult = await (supabase as any).rpc('create_pet_from_smart_scan', {
       p_session_id: sessionId,
       p_idempotency_key: idempotencyKey,
       p_pet_payload: petPayload,
+      p_owner_payload: ownerPayload || {},
     })
 
     if (!rpcResult.error && rpcResult.data?.success) {

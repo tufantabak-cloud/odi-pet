@@ -8,18 +8,19 @@ import {
   AlertTriangle,
   AlertCircle,
   HelpCircle,
-  ArrowRight,
   ArrowLeft,
   RefreshCw,
-  Edit3,
   Sparkles,
   QrCode,
   FileText,
   ShieldCheck,
   ChevronRight,
   Loader2,
+  User,
+  Stethoscope,
+  Info,
 } from 'lucide-react'
-import { analyzeImageQuality, PreCheckResult } from '@/lib/smart-scan/pre-check'
+import { analyzeImageQuality } from '@/lib/smart-scan/pre-check'
 import { scanBarcodeFromImage, BarcodeScanResult } from '@/lib/smart-scan/barcode-scanner'
 import { validateCrossPage, CrossPageValidationResult } from '@/lib/smart-scan/validation'
 import { PassportPageType } from '@/lib/smart-scan/vision-gateway'
@@ -30,6 +31,8 @@ interface PageConfig {
   subtitle: string
   targetFields: string[]
   pageNumber: number
+  passportPageDisplay: string
+  sectionName: string
 }
 
 const PAGES_FLOW: PageConfig[] = [
@@ -39,27 +42,44 @@ const PAGES_FLOW: PageConfig[] = [
     subtitle: 'Pasaportun ön kapağını veya ilk kimlik barkodunu çerçeveye hizalayın.',
     targetFields: ['Pasaport Numarası', 'Barkod / Çip Etiketi'],
     pageNumber: 1,
+    passportPageDisplay: '1/32',
+    sectionName: 'Pasaport Kapağı',
+  },
+  {
+    type: 'page_4',
+    title: 'Bölüm I — Sahibine Ait Bilgiler',
+    subtitle: 'Ad, soyad, telefon ve ikamet adresi bilgilerinin yer aldığı sayfayı hizalayın.',
+    targetFields: ['Adı & Soyadı', 'Telefon', 'İl / İlçe', 'Açık Adres', 'Posta Kodu'],
+    pageNumber: 2,
+    passportPageDisplay: '4/32',
+    sectionName: 'Bölüm I — Sahibine Ait Bilgiler',
   },
   {
     type: 'page_5',
-    title: 'Sayfa 5 — Kimlik Bilgileri',
-    subtitle: 'Can dostunuzun adı, türü, ırkı ve doğum tarihini içeren sayfayı çekin.',
-    targetFields: ['İsim', 'Tür (Kedi/Köpek)', 'Irk', 'Cinsiyet', 'Doğum Tarihi'],
-    pageNumber: 2,
+    title: 'Bölüm II — Hayvana Ait Bilgiler',
+    subtitle: 'Can dostunuzun adı, türü, ırkı, cinsiyeti ve doğum tarihini içeren sayfayı çekin.',
+    targetFields: ['İsim', 'Tür (Kedi/Köpek)', 'Irk', 'Cinsiyet', 'Doğum Tarihi', 'Renk'],
+    pageNumber: 3,
+    passportPageDisplay: '5/32',
+    sectionName: 'Bölüm II — Hayvana Ait Bilgiler',
   },
   {
     type: 'page_6',
-    title: 'Sayfa 6 — Mikroçip Bilgisi',
-    subtitle: '15 haneli mikroçip barkod veya numarasının bulunduğu sayfayı hizalayın.',
-    targetFields: ['Mikroçip Numarası', 'Uygulama Tarihi'],
-    pageNumber: 3,
+    title: 'Bölüm III — Hayvanın Kimlik Bilgileri',
+    subtitle: '15 haneli mikroçip numarası, dövme no ve uygulama tarihini içeren sayfayı hizalayın.',
+    targetFields: ['Mikroçip Numarası', 'Dövme No', 'Uygulama Tarihi'],
+    pageNumber: 4,
+    passportPageDisplay: '6/32',
+    sectionName: 'Bölüm III — Hayvanın Kimlik Bilgileri',
   },
   {
     type: 'page_7',
-    title: 'Sayfa 7 — Aşı Kayıtları',
-    subtitle: 'Aşı etiketleri ve veteriner hekim onayının bulunduğu sayfayı çekin.',
-    targetFields: ['Aşı Adı', 'Uygulama Tarihi', 'Hekim Bilgisi'],
-    pageNumber: 4,
+    title: 'Bölüm IV — Pasaportu Düzenleyen Yetkili',
+    subtitle: 'Pasaportu tanzim eden yetkili veteriner hekim ve klinik bilgilerinin yer aldığı sayfayı çekin.',
+    targetFields: ['Veteriner Hekim', 'Klinik / Kurum', 'Telefon / E-posta', 'Kayıt Yeri (İl/İlçe)'],
+    pageNumber: 5,
+    passportPageDisplay: '7/32',
+    sectionName: 'Bölüm IV — Pasaportu Düzenleyen Yetkili',
   },
 ]
 
@@ -81,6 +101,7 @@ export function PassportScanner() {
   // Captured data per page
   const [pagesData, setPagesData] = useState<{
     cover?: any
+    page_4?: any
     page_5?: any
     page_6?: any
     page_7?: any
@@ -102,6 +123,7 @@ export function PassportScanner() {
 
     const result = validateCrossPage({
       cover: pagesData.cover,
+      page_4: pagesData.page_4,
       page_5: pagesData.page_5,
       page_6: pagesData.page_6,
       page_7: pagesData.page_7,
@@ -221,6 +243,7 @@ export function PassportScanner() {
     setErrorMsg(null)
 
     try {
+      const u = validationResult.unifiedData
       const idempotencyKey = `smart_scan_${sessionId}`
       const res = await fetch('/api/smart-scan/commit', {
         method: 'POST',
@@ -229,14 +252,30 @@ export function PassportScanner() {
           sessionId,
           idempotencyKey,
           petPayload: {
-            name: validationResult.unifiedData.name,
-            species: validationResult.unifiedData.species,
-            breed: validationResult.unifiedData.breed,
-            gender: validationResult.unifiedData.gender,
-            birth_date: validationResult.unifiedData.birth_date,
-            color: validationResult.unifiedData.color,
-            microchip_no: validationResult.unifiedData.microchip_no,
-            passport_no: validationResult.unifiedData.passport_no,
+            name: u.name,
+            species: u.species,
+            breed: u.breed,
+            gender: u.gender || null,
+            birth_date: u.birth_date && /^\d{4}-\d{2}-\d{2}$/.test(u.birth_date) ? u.birth_date : null,
+            color: u.color || null,
+            microchip_no: u.microchip_no || null,
+            passport_no: u.passport_no || null,
+            tattoo_no: u.tattoo_no || null,
+            vet_name: u.vet_name || null,
+            vet_company: u.vet_company || null,
+            vet_phone: u.vet_phone || null,
+            vet_email: u.vet_email || null,
+            registration_city: u.registration_city || null,
+            registration_district: u.registration_district || null,
+          },
+          ownerPayload: {
+            first_name: u.owner_first_name || null,
+            last_name: u.owner_last_name || null,
+            phone: u.owner_phone || null,
+            city: u.owner_city || null,
+            district: u.owner_district || null,
+            neighborhood: u.owner_neighborhood || null,
+            postal_code: u.owner_postal_code || null,
           },
         }),
       })
@@ -247,7 +286,7 @@ export function PassportScanner() {
         return
       }
 
-      // Success -> navigate to pet details or success screen
+      // Success -> navigate to pet details
       router.push(`/owner/pets/${data.petId}`)
     } catch (err) {
       console.error('[PassportScanner] Commit error:', err)
@@ -296,7 +335,7 @@ export function PassportScanner() {
           </button>
         </div>
 
-        {/* Step Progress */}
+        {/* Step Progress Bar */}
         <div className="flex gap-1.5 w-full mt-1">
           {PAGES_FLOW.map((p, idx) => (
             <div
@@ -319,15 +358,24 @@ export function PassportScanner() {
           <div className="flex flex-col items-center text-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-1">
               {currentPage.type === 'cover' && <FileText size={32} />}
+              {currentPage.type === 'page_4' && <User size={32} />}
               {currentPage.type === 'page_5' && <ShieldCheck size={32} />}
               {currentPage.type === 'page_6' && <QrCode size={32} />}
-              {currentPage.type === 'page_7' && <FileText size={32} />}
+              {currentPage.type === 'page_7' && <Stethoscope size={32} />}
             </div>
 
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-primary">
-                Adım {currentPage.pageNumber} / {PAGES_FLOW.length}
-              </span>
+              <div className="flex items-center gap-2 justify-center mb-1">
+                <span className="text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-full">
+                  Sayfa {currentPage.passportPageDisplay}
+                </span>
+                <span className="text-xs font-medium text-text-secondary">
+                  Adım {currentPage.pageNumber} / {PAGES_FLOW.length}
+                </span>
+                <span className="text-xs text-text-muted">
+                  • Kalan: {PAGES_FLOW.length - currentPage.pageNumber} sayfa
+                </span>
+              </div>
               <h2 className="text-xl font-bold text-text-primary mt-1">{currentPage.title}</h2>
               <p className="text-sm text-text-secondary mt-1 px-4">{currentPage.subtitle}</p>
             </div>
@@ -379,7 +427,7 @@ export function PassportScanner() {
               <div className="w-full bg-emerald-500/5 border border-emerald-500/20 p-4 rounded-xl text-left mt-2 animate-fadeIn">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                    <CheckCircle2 size={14} /> Sayfa Başarıyla Okundu
+                    <CheckCircle2 size={14} /> Sayfa {currentPage.passportPageDisplay} Başarıyla Okundu
                   </span>
                   <button
                     type="button"
@@ -394,7 +442,7 @@ export function PassportScanner() {
                     .filter(([k]) => k !== 'confidence')
                     .map(([key, val]) => (
                       <div key={key} className="flex justify-between border-b border-border-main/30 py-1">
-                        <span className="font-medium capitalize">{key.replace('_', ' ')}:</span>
+                        <span className="font-medium capitalize">{key.replace(/_/g, ' ')}:</span>
                         <span className="text-text-primary font-semibold">{String(val || '—')}</span>
                       </div>
                     ))}
@@ -403,12 +451,12 @@ export function PassportScanner() {
             )}
           </div>
         ) : (
-          /* Summary View */
+          /* Summary View with 3 Sections */
           <div className="flex flex-col gap-4 text-left animate-fadeIn">
-            <div className="text-center mb-2">
+            <div className="text-center mb-1">
               <h2 className="text-xl font-bold text-text-primary">Bilgileri Teyit Edin</h2>
               <p className="text-xs text-text-secondary mt-1">
-                Pasaporttan otomatik aktarılan bilgileri inceleyin.
+                Pasaporttan otomatik aktarılan bilgileri kontrol ederek onaylayın.
               </p>
             </div>
 
@@ -447,18 +495,32 @@ export function PassportScanner() {
                     ))}
                   </ul>
                 )}
+                {validationResult?.warnings && validationResult.warnings.length > 0 && (
+                  <ul className="list-disc pl-4 mt-1 space-y-0.5 text-text-secondary">
+                    {validationResult.warnings.map((w, i) => (
+                      <li key={i}>{w}</li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </div>
 
-            {/* Unified Data Summary Table */}
-            <div className="bg-surface-muted p-4 rounded-xl border border-border-main text-xs space-y-2">
-              <div className="flex justify-between py-1 border-b border-border-main">
-                <span className="text-text-secondary">Can Dostun Adı:</span>
+            {/* SECTION 1: PET BİLGİLERİ */}
+            <div className="bg-surface-muted/60 p-4 rounded-2xl border border-border-main text-xs space-y-2">
+              <div className="flex items-center justify-between pb-1.5 border-b border-border-main">
+                <span className="font-bold text-text-primary flex items-center gap-1.5">
+                  <ShieldCheck size={16} className="text-primary" />
+                  Can Dostumun Bilgileri
+                </span>
+                <span className="text-[10px] text-text-muted">Bölüm II & III</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-border-main/40">
+                <span className="text-text-secondary">Adı:</span>
                 <span className="font-bold text-text-primary">
                   {validationResult?.unifiedData.name || '—'}
                 </span>
               </div>
-              <div className="flex justify-between py-1 border-b border-border-main">
+              <div className="flex justify-between py-1 border-b border-border-main/40">
                 <span className="text-text-secondary">Tür:</span>
                 <span className="font-bold text-text-primary capitalize">
                   {validationResult?.unifiedData.species === 'cat'
@@ -468,28 +530,144 @@ export function PassportScanner() {
                     : '—'}
                 </span>
               </div>
-              <div className="flex justify-between py-1 border-b border-border-main">
+              <div className="flex justify-between py-1 border-b border-border-main/40">
                 <span className="text-text-secondary">Irk:</span>
                 <span className="font-bold text-text-primary">
                   {validationResult?.unifiedData.breed || '—'}
                 </span>
               </div>
-              <div className="flex justify-between py-1 border-b border-border-main">
+              <div className="flex justify-between py-1 border-b border-border-main/40">
+                <span className="text-text-secondary">Cinsiyet:</span>
+                <span className="font-bold text-text-primary">
+                  {validationResult?.unifiedData.gender === 'male'
+                    ? 'Erkek'
+                    : validationResult?.unifiedData.gender === 'female'
+                    ? 'Dişi'
+                    : '—'}
+                </span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-border-main/40">
+                <span className="text-text-secondary">Doğum Tarihi:</span>
+                <span className="font-bold text-text-primary">
+                  {validationResult?.unifiedData.birth_date || '—'}
+                </span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-border-main/40">
+                <span className="text-text-secondary">Renk / Görünüm:</span>
+                <span className="font-bold text-text-primary">
+                  {validationResult?.unifiedData.color || '—'}
+                </span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-border-main/40">
                 <span className="text-text-secondary">Mikroçip No:</span>
                 <span className="font-bold text-text-primary font-mono">
                   {validationResult?.unifiedData.microchip_no || '—'}
                 </span>
               </div>
-              <div className="flex justify-between py-1 border-b border-border-main">
+              <div className="flex justify-between py-1 border-b border-border-main/40">
+                <span className="text-text-secondary">Dövme No:</span>
+                <span className="font-bold text-text-primary font-mono">
+                  {validationResult?.unifiedData.tattoo_no || '—'}
+                </span>
+              </div>
+              <div className="flex justify-between py-1">
                 <span className="text-text-secondary">Pasaport No:</span>
                 <span className="font-bold text-text-primary font-mono">
                   {validationResult?.unifiedData.passport_no || '—'}
                 </span>
               </div>
-              <div className="flex justify-between py-1">
-                <span className="text-text-secondary">Doğum Tarihi:</span>
+            </div>
+
+            {/* SECTION 2: SAHİP BİLGİLERİ (Bölüm I — Profil Tamamla) */}
+            <div className="bg-surface-muted/60 p-4 rounded-2xl border border-border-main text-xs space-y-2">
+              <div className="flex items-center justify-between pb-1.5 border-b border-border-main">
+                <span className="font-bold text-text-primary flex items-center gap-1.5">
+                  <User size={16} className="text-primary" />
+                  Sahip Bilgileri
+                </span>
+                <span className="text-[10px] text-primary bg-primary/10 px-2 py-0.5 rounded-full font-medium">
+                  Profil Tamamla
+                </span>
+              </div>
+              <p className="text-[11px] text-text-muted flex items-start gap-1 pb-1">
+                <Info size={12} className="shrink-0 mt-0.5 text-primary" />
+                Mevcut profil bilgileriniz korunur, sadece boş alanlar doldurulur.
+              </p>
+              <div className="flex justify-between py-1 border-b border-border-main/40">
+                <span className="text-text-secondary">Adı & Soyadı:</span>
                 <span className="font-bold text-text-primary">
-                  {validationResult?.unifiedData.birth_date || '—'}
+                  {[validationResult?.unifiedData.owner_first_name, validationResult?.unifiedData.owner_last_name]
+                    .filter(Boolean)
+                    .join(' ') || '—'}
+                </span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-border-main/40">
+                <span className="text-text-secondary">Telefon:</span>
+                <span className="font-bold text-text-primary">
+                  {validationResult?.unifiedData.owner_phone || '—'}
+                </span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-border-main/40">
+                <span className="text-text-secondary">İl / İlçe:</span>
+                <span className="font-bold text-text-primary">
+                  {[validationResult?.unifiedData.owner_city, validationResult?.unifiedData.owner_district]
+                    .filter(Boolean)
+                    .join(' / ') || '—'}
+                </span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-border-main/40">
+                <span className="text-text-secondary">Açık Adres:</span>
+                <span className="font-bold text-text-primary text-right max-w-[200px] truncate">
+                  {validationResult?.unifiedData.owner_neighborhood || '—'}
+                </span>
+              </div>
+              <div className="flex justify-between py-1">
+                <span className="text-text-secondary">Posta Kodu:</span>
+                <span className="font-bold text-text-primary font-mono">
+                  {validationResult?.unifiedData.owner_postal_code || '—'}
+                </span>
+              </div>
+            </div>
+
+            {/* SECTION 3: VETERİNER BİLGİLERİ (Bölüm IV) */}
+            <div className="bg-surface-muted/60 p-4 rounded-2xl border border-border-main text-xs space-y-2">
+              <div className="flex items-center justify-between pb-1.5 border-b border-border-main">
+                <span className="font-bold text-text-primary flex items-center gap-1.5">
+                  <Stethoscope size={16} className="text-primary" />
+                  Veteriner & Düzenleyen Yetkili
+                </span>
+                <span className="text-[10px] text-text-muted">Bölüm IV</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-border-main/40">
+                <span className="text-text-secondary">Veteriner Hekim:</span>
+                <span className="font-bold text-text-primary">
+                  {validationResult?.unifiedData.vet_name || '—'}
+                </span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-border-main/40">
+                <span className="text-text-secondary">Klinik / Kurum:</span>
+                <span className="font-bold text-text-primary">
+                  {validationResult?.unifiedData.vet_company || '—'}
+                </span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-border-main/40">
+                <span className="text-text-secondary">Telefon:</span>
+                <span className="font-bold text-text-primary">
+                  {validationResult?.unifiedData.vet_phone || '—'}
+                </span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-border-main/40">
+                <span className="text-text-secondary">E-posta:</span>
+                <span className="font-bold text-text-primary">
+                  {validationResult?.unifiedData.vet_email || '—'}
+                </span>
+              </div>
+              <div className="flex justify-between py-1">
+                <span className="text-text-secondary">Kayıt Şehri / İlçesi:</span>
+                <span className="font-bold text-text-primary">
+                  {[validationResult?.unifiedData.registration_city, validationResult?.unifiedData.registration_district]
+                    .filter(Boolean)
+                    .join(' / ') || '—'}
                 </span>
               </div>
             </div>
@@ -526,7 +704,7 @@ export function PassportScanner() {
                 ) : (
                   <>
                     <Camera size={18} />
-                    <span>{currentPage.title} Fotoğrafını Çek</span>
+                    <span>Sayfa {currentPage.passportPageDisplay} Fotoğrafını Çek</span>
                   </>
                 )}
               </button>
@@ -540,10 +718,21 @@ export function PassportScanner() {
                     setIsSummaryView(true)
                   }
                 }}
-                className="w-full py-3.5 px-4 rounded-xl bg-primary text-white font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-[0.98] cursor-pointer shadow-sm"
+                className="w-full py-3.5 px-4 rounded-xl bg-primary text-white font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-[0.98] cursor-pointer shadow-sm text-sm"
               >
-                <span>Sonraki Sayfaya Geç</span>
-                <ChevronRight size={18} />
+                {currentPageIndex < PAGES_FLOW.length - 1 ? (
+                  <>
+                    <span className="truncate">
+                      Sonraki: Sayfa {PAGES_FLOW[currentPageIndex + 1].passportPageDisplay} ({PAGES_FLOW[currentPageIndex + 1].title})
+                    </span>
+                    <ChevronRight size={18} className="shrink-0" />
+                  </>
+                ) : (
+                  <>
+                    <span>Özeti İncele ve Teyit Et</span>
+                    <ChevronRight size={18} className="shrink-0" />
+                  </>
+                )}
               </button>
             )}
 
@@ -558,7 +747,7 @@ export function PassportScanner() {
               }}
               className="text-xs text-text-secondary hover:text-text-primary text-center py-1.5 transition-colors"
             >
-              Bu sayfayı atla
+              {currentPageIndex < PAGES_FLOW.length - 1 ? 'Bu sayfayı atla' : 'Özeti Gör'}
             </button>
           </>
         ) : (

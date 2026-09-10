@@ -6,7 +6,7 @@ import { extractPassportPage, PassportPageType } from '@/lib/smart-scan/vision-g
 
 const extractRequestSchema = z.object({
   sessionId: z.string().uuid('Geçersiz oturum kimliği'),
-  pageType: z.enum(['cover', 'page_5', 'page_6', 'page_7'] as const),
+  pageType: z.enum(['cover', 'page_4', 'page_5', 'page_6', 'page_7'] as const),
   imageBase64: z.string().min(20, 'Görsel verisi eksik veya çok kısa'),
   mimeType: z.string().optional().default('image/jpeg'),
 })
