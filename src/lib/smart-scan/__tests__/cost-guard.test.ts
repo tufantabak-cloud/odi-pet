@@ -26,10 +26,12 @@ describe('Smart Scan Cost Guard', () => {
     expect(res.reservationId).toBeDefined()
   })
 
-  it('strictly enforces session limit of max 4 vision calls', async () => {
+  it('strictly enforces session limit of max 6 vision calls', async () => {
     const testId = Date.now().toString()
     const userId = `user-limit-${testId}`
     const sessionId = `sess-limit-${testId}`
+
+    expect(MAX_SESSION_VISION_CALLS).toBe(6)
 
     for (let i = 1; i <= MAX_SESSION_VISION_CALLS; i++) {
       const res = await reserveVisionCall({ userId, sessionId })
@@ -37,36 +39,32 @@ describe('Smart Scan Cost Guard', () => {
       expect(res.sessionCount).toBe(i)
     }
 
-    // 5th attempt must be blocked
-    const fifth = await reserveVisionCall({ userId, sessionId })
-    expect(fifth.allowed).toBe(false)
-    expect(fifth.reason).toBe('SESSION_LIMIT_EXCEEDED')
-    expect(fifth.sessionCount).toBe(4)
+    // 7th attempt must be blocked
+    const seventh = await reserveVisionCall({ userId, sessionId })
+    expect(seventh.allowed).toBe(false)
+    expect(seventh.reason).toBe('SESSION_LIMIT_EXCEEDED')
+    expect(seventh.sessionCount).toBe(6)
   })
 
   it('strictly enforces user rolling 24h limit of max 10 vision calls across multiple sessions', async () => {
     const testId = Date.now().toString()
     const userId = `user-daily-limit-${testId}`
 
-    // Consume 4 in session 1
-    for (let i = 0; i < 4; i++) {
+    expect(MAX_USER_DAILY_VISION_CALLS).toBe(10)
+
+    // Consume 6 in session 1
+    for (let i = 0; i < 6; i++) {
       const res = await reserveVisionCall({ userId, sessionId: `sess-1-${testId}` })
       expect(res.allowed).toBe(true)
     }
 
-    // Consume 4 in session 2
+    // Consume 4 in session 2 -> total reaches 10
     for (let i = 0; i < 4; i++) {
       const res = await reserveVisionCall({ userId, sessionId: `sess-2-${testId}` })
       expect(res.allowed).toBe(true)
     }
 
-    // Consume 2 in session 3 -> total reaches 10
-    for (let i = 0; i < 2; i++) {
-      const res = await reserveVisionCall({ userId, sessionId: `sess-3-${testId}` })
-      expect(res.allowed).toBe(true)
-    }
-
-    // 11th call in session 3 must be blocked by user daily limit, even though session has only 2 calls!
+    // 11th call in session 3 must be blocked by user daily limit
     const eleventh = await reserveVisionCall({ userId, sessionId: `sess-3-${testId}` })
     expect(eleventh.allowed).toBe(false)
     expect(eleventh.reason).toBe('USER_DAILY_LIMIT_EXCEEDED')
@@ -106,8 +104,8 @@ describe('Smart Scan Cost Guard', () => {
     const userId = `user-concurrent-${testId}`
     const sessionId = `sess-concurrent-${testId}`
 
-    // Attempt 8 concurrent reservations for a session with cap = 4
-    const promises = Array.from({ length: 8 }).map(() =>
+    // Attempt 10 concurrent reservations for a session with cap = 6
+    const promises = Array.from({ length: 10 }).map(() =>
       reserveVisionCall({ userId, sessionId })
     )
 
@@ -115,7 +113,7 @@ describe('Smart Scan Cost Guard', () => {
     const successful = results.filter(r => r.allowed)
     const rejected = results.filter(r => !r.allowed)
 
-    expect(successful.length).toBe(4)
+    expect(successful.length).toBe(6)
     expect(rejected.length).toBe(4)
     rejected.forEach(r => {
       expect(r.reason).toBe('SESSION_LIMIT_EXCEEDED')

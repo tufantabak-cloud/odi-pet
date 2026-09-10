@@ -1,7 +1,7 @@
 import { redis } from '@/lib/security/redis'
 import crypto from 'crypto'
 
-export const MAX_SESSION_VISION_CALLS = 4
+export const MAX_SESSION_VISION_CALLS = 6
 export const MAX_USER_DAILY_VISION_CALLS = 10
 export const ROLLING_WINDOW_MS = 24 * 60 * 60 * 1000 // 24 hours
 

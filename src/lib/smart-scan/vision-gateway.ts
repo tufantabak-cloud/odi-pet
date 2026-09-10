@@ -4,11 +4,21 @@ export const EXACT_VISION_MODEL = 'gemini-3.8-flash'
 export const EXACT_API_VERSION = 'v1beta'
 export const MAX_OUTPUT_TOKENS = 512
 
-export type PassportPageType = 'cover' | 'page_5' | 'page_6' | 'page_7'
+export type PassportPageType = 'cover' | 'page_4' | 'page_5' | 'page_6' | 'page_7'
 
 export interface CoverExtraction {
   passport_no?: string | null
   microchip_no?: string | null
+}
+
+export interface Page4Extraction {
+  owner_first_name?: string | null
+  owner_last_name?: string | null
+  owner_phone?: string | null
+  owner_city?: string | null
+  owner_district?: string | null
+  owner_address?: string | null
+  owner_postal_code?: string | null
 }
 
 export interface Page5Extraction {
@@ -24,13 +34,16 @@ export interface Page6Extraction {
   microchip_no?: string | null
   implant_date?: string | null
   implant_location?: string | null
+  tattoo_no?: string | null
 }
 
 export interface Page7Extraction {
-  vaccination_name?: string | null
-  vaccination_date?: string | null
-  valid_until?: string | null
   veterinarian_name?: string | null
+  clinic_name?: string | null
+  vet_phone?: string | null
+  vet_email?: string | null
+  registration_city?: string | null
+  registration_district?: string | null
 }
 
 export interface VisionExtractionResult<T> {
@@ -47,6 +60,21 @@ export const COVER_SCHEMA: Schema = {
     passport_no: { type: Type.STRING, description: 'T.C. Pasaport Numarası (örn. TR-06-123456 veya benzeri)' },
     microchip_no: { type: Type.STRING, description: '15 haneli mikroçip numarası' },
     confidence: { type: Type.NUMBER, description: '0.0 ile 1.0 arasında genel güven skoru' },
+  },
+  required: ['confidence'],
+}
+
+export const PAGE4_SCHEMA: Schema = {
+  type: Type.OBJECT,
+  properties: {
+    owner_first_name: { type: Type.STRING, description: 'Evcil hayvan sahibinin adı' },
+    owner_last_name: { type: Type.STRING, description: 'Evcil hayvan sahibinin soyadı' },
+    owner_phone: { type: Type.STRING, description: 'Sahibinin telefon numarası' },
+    owner_city: { type: Type.STRING, description: 'İl / Şehir' },
+    owner_district: { type: Type.STRING, description: 'İlçe' },
+    owner_address: { type: Type.STRING, description: 'Açık adres / Mahalle / Cadde / Sokak' },
+    owner_postal_code: { type: Type.STRING, description: 'Posta kodu' },
+    confidence: { type: Type.NUMBER, description: '0.0 ile 1.0 arasında güven skoru' },
   },
   required: ['confidence'],
 }
@@ -71,6 +99,7 @@ export const PAGE6_SCHEMA: Schema = {
     microchip_no: { type: Type.STRING, description: '15 haneli mikroçip numarası' },
     implant_date: { type: Type.STRING, description: 'Mikroçip uygulama tarihi (YYYY-MM-DD)' },
     implant_location: { type: Type.STRING, description: 'Mikroçipin uygulandığı vücut bölgesi' },
+    tattoo_no: { type: Type.STRING, description: 'Varsa dövme numarası' },
     confidence: { type: Type.NUMBER, description: '0.0 ile 1.0 arasında güven skoru' },
   },
   required: ['confidence'],
@@ -79,10 +108,12 @@ export const PAGE6_SCHEMA: Schema = {
 export const PAGE7_SCHEMA: Schema = {
   type: Type.OBJECT,
   properties: {
-    vaccination_name: { type: Type.STRING, description: 'Uygulanan aşı adı (örn. Kuduz / Rabies, Karma)' },
-    vaccination_date: { type: Type.STRING, description: 'Aşı uygulama tarihi (YYYY-MM-DD)' },
-    valid_until: { type: Type.STRING, description: 'Aşının geçerlilik bitiş tarihi (YYYY-MM-DD)' },
-    veterinarian_name: { type: Type.STRING, description: 'Uygulayan veteriner hekim adı/kaşesi' },
+    veterinarian_name: { type: Type.STRING, description: 'Yetkili veteriner hekimin adı ve soyadı' },
+    clinic_name: { type: Type.STRING, description: 'Veteriner kliniği veya kurum adı' },
+    vet_phone: { type: Type.STRING, description: 'Veteriner hekim veya klinik telefon numarası' },
+    vet_email: { type: Type.STRING, description: 'Veteriner hekim veya klinik e-posta adresi' },
+    registration_city: { type: Type.STRING, description: 'Pasaportun düzenlendiği il' },
+    registration_district: { type: Type.STRING, description: 'Pasaportun düzenlendiği ilçe' },
     confidence: { type: Type.NUMBER, description: '0.0 ile 1.0 arasında güven skoru' },
   },
   required: ['confidence'],
@@ -90,13 +121,15 @@ export const PAGE7_SCHEMA: Schema = {
 
 const PAGE_SYSTEM_INSTRUCTIONS: Record<PassportPageType, string> = {
   cover: 'Sen T.C. Evcil Hayvan Pasaportu kapak sayfasını okuyan bir uzmansın. Pasaport numarasını ve varsa mikroçip etiket numarasını çıkar. Yalnızca istenen JSON şemasına uy.',
-  page_5: 'Sen T.C. Evcil Hayvan Pasaportu Sayfa 5 (Kimlik Bilgileri) sayfasını okuyan bir uzmansın. Hayvanın adını, türünü (cat/dog), ırkını, cinsiyetini (male/female), doğum tarihini (YYYY-MM-DD) ve rengini çıkar. Yalnızca istenen JSON şemasına uy.',
-  page_6: 'Sen T.C. Evcil Hayvan Pasaportu Sayfa 6 (Mikroçip & Dövme) sayfasını okuyan bir uzmansın. 15 haneli mikroçip numarasını, uygulama tarihini ve bölgesini çıkar. Yalnızca istenen JSON şemasına uy.',
-  page_7: 'Sen T.C. Evcil Hayvan Pasaportu Sayfa 7 (Aşı ve Sağlık Kayıtları) sayfasını okuyan bir uzmansın. Aşı adını, uygulama tarihini, geçerlilik tarihini ve hekim adını çıkar. Yalnızca istenen JSON şemasına uy.',
+  page_4: 'Sen T.C. Evcil Hayvan Pasaportu Sayfa 4 (Bölüm I: Sahibine Ait Bilgiler) sayfasını okuyan bir uzmansın. Sahibinin adını, soyadını, telefonunu, adresini, il ve ilçesini, posta kodunu çıkar. Yalnızca istenen JSON şemasına uy.',
+  page_5: 'Sen T.C. Evcil Hayvan Pasaportu Sayfa 5 (Bölüm II: Hayvana Ait Bilgiler) sayfasını okuyan bir uzmansın. Hayvanın adını, türünü (cat/dog), ırkını, cinsiyetini (male/female), doğum tarihini (YYYY-MM-DD) ve rengini çıkar. Yalnızca istenen JSON şemasına uy.',
+  page_6: 'Sen T.C. Evcil Hayvan Pasaportu Sayfa 6 (Bölüm III: Hayvanın Kimlik Bilgileri) sayfasını okuyan bir uzmansın. 15 haneli mikroçip numarasını, uygulama tarihini ve varsa dövme numarasını çıkar. Yalnızca istenen JSON şemasına uy.',
+  page_7: 'Sen T.C. Evcil Hayvan Pasaportu Sayfa 7 (Bölüm IV: Pasaportu Düzenleyen Yetkili Veteriner) sayfasını okuyan bir uzmansın. Yetkili veteriner hekimin adını, klinik adını, telefonunu, e-postasını ve düzenlendiği ili/ilçeyi çıkar. Yalnızca istenen JSON şemasına uy.',
 }
 
 const PAGE_SCHEMAS: Record<PassportPageType, Schema> = {
   cover: COVER_SCHEMA,
+  page_4: PAGE4_SCHEMA,
   page_5: PAGE5_SCHEMA,
   page_6: PAGE6_SCHEMA,
   page_7: PAGE7_SCHEMA,

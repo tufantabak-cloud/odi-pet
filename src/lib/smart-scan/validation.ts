@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { isValidMicrochipNo, isValidPassportNo, BarcodeScanResult } from './barcode-scanner'
 import {
   CoverExtraction,
+  Page4Extraction,
   Page5Extraction,
   Page6Extraction,
   Page7Extraction,
@@ -32,12 +33,22 @@ export interface CrossPageValidationResult {
     color?: string
     microchip_no?: string
     passport_no?: string
+    tattoo_no?: string
     implant_date?: string
     implant_location?: string
-    vaccination_name?: string
-    vaccination_date?: string
-    valid_until?: string
     vet_name?: string
+    vet_company?: string
+    vet_phone?: string
+    vet_email?: string
+    registration_city?: string
+    registration_district?: string
+    owner_first_name?: string
+    owner_last_name?: string
+    owner_phone?: string
+    owner_city?: string
+    owner_district?: string
+    owner_neighborhood?: string
+    owner_postal_code?: string
   }
 }
 
@@ -45,6 +56,16 @@ export interface CrossPageValidationResult {
 export const PassportCoverSchema = z.object({
   passport_no: z.string().optional().nullable(),
   microchip_no: z.string().optional().nullable(),
+})
+
+export const Page4Schema = z.object({
+  owner_first_name: z.string().optional().nullable(),
+  owner_last_name: z.string().optional().nullable(),
+  owner_phone: z.string().optional().nullable(),
+  owner_city: z.string().optional().nullable(),
+  owner_district: z.string().optional().nullable(),
+  owner_address: z.string().optional().nullable(),
+  owner_postal_code: z.string().optional().nullable(),
 })
 
 export const Page5Schema = z.object({
@@ -62,13 +83,16 @@ export const Page6Schema = z.object({
   microchip_no: z.string().regex(/^\d{15}$/, 'Mikroçip numarası 15 haneli sayı olmalıdır').optional().nullable(),
   implant_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
   implant_location: z.string().optional().nullable(),
+  tattoo_no: z.string().optional().nullable(),
 })
 
 export const Page7Schema = z.object({
-  vaccination_name: z.string().optional().nullable(),
-  vaccination_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
-  valid_until: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
   veterinarian_name: z.string().optional().nullable(),
+  clinic_name: z.string().optional().nullable(),
+  vet_phone: z.string().optional().nullable(),
+  vet_email: z.string().optional().nullable(),
+  registration_city: z.string().optional().nullable(),
+  registration_district: z.string().optional().nullable(),
 })
 
 /**
@@ -81,13 +105,14 @@ export const Page7Schema = z.object({
  */
 export function validateCrossPage(params: {
   cover?: CoverExtraction | null
+  page_4?: Page4Extraction | null
   page_5?: Page5Extraction | null
   page_6?: Page6Extraction | null
   page_7?: Page7Extraction | null
   barcode?: BarcodeScanResult | null
   confidence?: number | null
 }): CrossPageValidationResult {
-  const { cover, page_5, page_6, page_7, barcode, confidence } = params
+  const { cover, page_4, page_5, page_6, page_7, barcode, confidence } = params
   const conflicts: string[] = []
   const warnings: string[] = []
 
@@ -192,16 +217,6 @@ export function validateCrossPage(params: {
     }
   }
 
-  const vaccineDateStr = page_7?.vaccination_date?.trim()
-  if (vaccineDateStr && birthDate) {
-    const vDate = new Date(vaccineDateStr)
-    if (!isNaN(vDate.getTime())) {
-      if (vDate < birthDate) {
-        conflicts.push('Aşı tarihi evcil hayvanın doğum tarihinden önce olamaz.')
-      }
-    }
-  }
-
   // 5. Final Decision Calculation
   let status: OCRDecisionStatus = 'UNKNOWN'
   if (conflicts.length > 0) {
@@ -232,12 +247,22 @@ export function validateCrossPage(params: {
       color: color || undefined,
       microchip_no: unifiedMicrochip,
       passport_no: unifiedPassportNo,
+      tattoo_no: page_6?.tattoo_no?.trim() || undefined,
       implant_date: implantDateStr || undefined,
       implant_location: page_6?.implant_location?.trim() || undefined,
-      vaccination_name: page_7?.vaccination_name?.trim() || undefined,
-      vaccination_date: vaccineDateStr || undefined,
-      valid_until: page_7?.valid_until?.trim() || undefined,
       vet_name: page_7?.veterinarian_name?.trim() || undefined,
+      vet_company: page_7?.clinic_name?.trim() || undefined,
+      vet_phone: page_7?.vet_phone?.trim() || undefined,
+      vet_email: page_7?.vet_email?.trim() || undefined,
+      registration_city: page_7?.registration_city?.trim() || undefined,
+      registration_district: page_7?.registration_district?.trim() || undefined,
+      owner_first_name: page_4?.owner_first_name?.trim() || undefined,
+      owner_last_name: page_4?.owner_last_name?.trim() || undefined,
+      owner_phone: page_4?.owner_phone?.trim() || undefined,
+      owner_city: page_4?.owner_city?.trim() || undefined,
+      owner_district: page_4?.owner_district?.trim() || undefined,
+      owner_neighborhood: page_4?.owner_address?.trim() || undefined,
+      owner_postal_code: page_4?.owner_postal_code?.trim() || undefined,
     },
   }
 }

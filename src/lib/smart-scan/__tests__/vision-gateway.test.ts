@@ -4,6 +4,7 @@ import {
   EXACT_API_VERSION,
   MAX_OUTPUT_TOKENS,
   COVER_SCHEMA,
+  PAGE4_SCHEMA,
   PAGE5_SCHEMA,
   PAGE6_SCHEMA,
   PAGE7_SCHEMA,
@@ -46,12 +47,36 @@ describe('Smart Scan Vision Gateway Configuration', () => {
     expect(MAX_OUTPUT_TOKENS).toBe(512)
   })
 
-  it('provides structured JSON schemas for Cover, Page 5, Page 6, and Page 7', () => {
+  it('provides structured JSON schemas for Cover, Page 4, Page 5, Page 6, and Page 7', () => {
+    // Cover
     expect(COVER_SCHEMA.properties?.passport_no).toBeDefined()
+    expect(COVER_SCHEMA.properties?.microchip_no).toBeDefined()
+
+    // Page 4 (Owner)
+    expect(PAGE4_SCHEMA.properties?.owner_first_name).toBeDefined()
+    expect(PAGE4_SCHEMA.properties?.owner_last_name).toBeDefined()
+    expect(PAGE4_SCHEMA.properties?.owner_phone).toBeDefined()
+    expect(PAGE4_SCHEMA.properties?.owner_city).toBeDefined()
+    expect(PAGE4_SCHEMA.properties?.owner_district).toBeDefined()
+    expect(PAGE4_SCHEMA.properties?.owner_address).toBeDefined()
+    expect(PAGE4_SCHEMA.properties?.owner_postal_code).toBeDefined()
+
+    // Page 5 (Pet Identity)
     expect(PAGE5_SCHEMA.properties?.name).toBeDefined()
     expect(PAGE5_SCHEMA.properties?.species).toBeDefined()
+    expect(PAGE5_SCHEMA.properties?.breed).toBeDefined()
+
+    // Page 6 (Pet Microchip & Tattoo)
     expect(PAGE6_SCHEMA.properties?.microchip_no).toBeDefined()
-    expect(PAGE7_SCHEMA.properties?.vaccination_name).toBeDefined()
+    expect(PAGE6_SCHEMA.properties?.tattoo_no).toBeDefined()
+
+    // Page 7 (Veterinarian)
+    expect(PAGE7_SCHEMA.properties?.veterinarian_name).toBeDefined()
+    expect(PAGE7_SCHEMA.properties?.clinic_name).toBeDefined()
+    expect(PAGE7_SCHEMA.properties?.vet_phone).toBeDefined()
+    expect(PAGE7_SCHEMA.properties?.vet_email).toBeDefined()
+    expect(PAGE7_SCHEMA.properties?.registration_city).toBeDefined()
+    expect(PAGE7_SCHEMA.properties?.registration_district).toBeDefined()
   })
 
   it('calls generateContent with thinkingLevel: low, maxOutputTokens: 512 and exact model', async () => {
@@ -85,6 +110,34 @@ describe('Smart Scan Vision Gateway Configuration', () => {
       confidence: 0.95,
     })
     expect(result.modelUsed).toBe('gemini-3.8-flash')
+  })
+
+  it('extracts page_4 owner data properly via Vision API', async () => {
+    mockGenerateContent.mockResolvedValueOnce({
+      text: JSON.stringify({
+        owner_first_name: 'Ahmet',
+        owner_last_name: 'Yılmaz',
+        owner_phone: '+905321112233',
+        owner_city: 'İstanbul',
+        owner_district: 'Kadıköy',
+        confidence: 0.96,
+      }),
+    })
+
+    const result = await extractPassportPage({
+      pageType: 'page_4',
+      imageBase64: 'data:image/jpeg;base64,dGVzdA==',
+      apiKey: 'test-key',
+    })
+
+    expect(result.data).toEqual({
+      owner_first_name: 'Ahmet',
+      owner_last_name: 'Yılmaz',
+      owner_phone: '+905321112233',
+      owner_city: 'İstanbul',
+      owner_district: 'Kadıköy',
+      confidence: 0.96,
+    })
   })
 
   it('propagates error without second LLM retry on provider failure', async () => {
