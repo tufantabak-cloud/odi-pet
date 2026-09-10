@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { calcAge } from '@/lib/pets/utils'
 import { DefaultCatAvatar, DefaultDogAvatar, RulerIcon } from '@/components/icons/PetIcons'
@@ -98,6 +99,36 @@ function SpeciesSelector({
         <p className="text-text-secondary mt-2 text-sm sm:text-base">
           Kişiselleştirilmiş sağlık ve bakım takvimi için önce tür seçin
         </p>
+      </div>
+
+      {/* Akıllı Pasaport Taraması Banner */}
+      <div className="w-full max-w-lg">
+        <Link
+          href="/owner/pets/scan"
+          className="w-full p-4 rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-surface border border-primary/20 flex items-center justify-between text-left hover:border-primary/40 hover:shadow-xs transition-all group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center shrink-0 shadow-xs">
+              <Camera size={20} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-sm text-text-primary">Akıllı Pasaport Taraması</span>
+                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-primary/15 text-primary">Önerilen</span>
+              </div>
+              <p className="text-xs text-text-secondary mt-0.5">
+                Kameranızı açın; ad, tür, aşı ve çip bilgilerini saniyeler içinde aktaralım.
+              </p>
+            </div>
+          </div>
+          <ChevronRight size={18} className="text-text-secondary group-hover:text-primary transition-colors shrink-0" />
+        </Link>
+      </div>
+
+      <div className="w-full max-w-lg flex items-center gap-3 -my-2">
+        <div className="flex-1 h-px bg-border-main" />
+        <span className="text-2xs font-bold uppercase tracking-wider text-text-secondary">veya manuel seçin</span>
+        <div className="flex-1 h-px bg-border-main" />
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:gap-6 w-full max-w-lg">
@@ -1677,19 +1708,39 @@ const WIZARD_TOTAL_STEPS = WIZARD_STEPS.length
 
 export default function AddPetPage() {
   const router = useRouter()
-  const [step, setStep] = useState(1)
+
+  // Safely read temporary smart scan draft if redirected from scanner
+  const [initialDraft] = useState(() => {
+    if (typeof window === 'undefined') return null
+    try {
+      const raw = sessionStorage.getItem('smart_scan_draft')
+      if (raw) {
+        sessionStorage.removeItem('smart_scan_draft')
+        return JSON.parse(raw)
+      }
+    } catch {
+      // ignore
+    }
+    return null
+  })
+
+  const [step, setStep] = useState(initialDraft?.species ? 2 : 1)
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' as any })
   }, [step])
 
-  const [selectedSpecies, setSelectedSpecies] = useState<Species | null>(null)
+  const [selectedSpecies, setSelectedSpecies] = useState<Species | null>(
+    (initialDraft?.species === 'cat' || initialDraft?.species === 'dog') ? initialDraft.species : null
+  )
 
-  const [petName, setPetName] = useState('')
-  const [selectedBreed, setSelectedBreed] = useState('')
-  const [gender, setGender] = useState<'male' | 'female' | ''>('')
+  const [petName, setPetName] = useState(initialDraft?.name?.trim() || '')
+  const [selectedBreed, setSelectedBreed] = useState(initialDraft?.breed?.trim() || '')
+  const [gender, setGender] = useState<'male' | 'female' | ''>(
+    (initialDraft?.gender === 'male' || initialDraft?.gender === 'female') ? initialDraft.gender : ''
+  )
   const [birthDateMode, setBirthDateMode] = useState<'exact' | 'approximate'>('exact')
-  const [birthDate, setBirthDate] = useState('')
+  const [birthDate, setBirthDate] = useState(initialDraft?.birth_date?.trim() || '')
   const [approxYears, setApproxYears] = useState('')
   const [approxMonths, setApproxMonths] = useState('')
   const [photoPreview, setPhotoPreview] = useState('')
