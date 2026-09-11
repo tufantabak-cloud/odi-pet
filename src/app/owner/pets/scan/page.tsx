@@ -14,7 +14,7 @@ export default async function SmartPassportScanPage() {
   }
 
   return (
-    <main className="min-h-screen bg-surface-muted/30 py-6 px-4 flex flex-col items-center justify-center">
+    <main className="min-h-screen bg-surface-muted/30 pt-6 px-4 pb-28 sm:pb-8 flex flex-col items-center justify-center">
       <div className="w-full max-w-md mb-4 text-center">
         <h1 className="text-2xl font-black text-text-primary tracking-tight">
           Akıllı Pasaport Taraması

@@ -95,6 +95,108 @@ export const PAGES_FLOW: PageConfig[] = [
   },
 ]
 
+export const QUICK_COLORS = [
+  'Beyaz',
+  'Siyah',
+  'Sarı / Sarman',
+  'Kahverengi',
+  'Tekir',
+  'Alacalı',
+  'Gri',
+] as const
+
+/**
+ * Downscales camera image client-side to max 1600px and converts to 0.8 JPEG.
+ * Reduces 12MP-48MP mobile camera photos (~5MB-15MB base64) to ~250-350KB,
+ * speeding up mobile upload by >90% and staying well under API / serverless limits.
+ */
+export async function optimizeImageForOcr(
+  file: File,
+  maxDimension = 1600,
+  quality = 0.8
+): Promise<{ base64: string; imageData?: ImageData }> {
+  if (typeof window === 'undefined') {
+    const base64 = await readFileAsDataUrl(file)
+    return { base64 }
+  }
+
+  try {
+    let sourceWidth = 0
+    let sourceHeight = 0
+    let imageSource: CanvasImageSource | null = null
+
+    if (typeof createImageBitmap === 'function') {
+      const bitmap = await createImageBitmap(file)
+      sourceWidth = bitmap.width
+      sourceHeight = bitmap.height
+      imageSource = bitmap
+    } else if (typeof Image !== 'undefined') {
+      const img = new Image()
+      const url = URL.createObjectURL(file)
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve()
+        img.onerror = reject
+        img.src = url
+      })
+      URL.revokeObjectURL(url)
+      sourceWidth = img.naturalWidth || img.width
+      sourceHeight = img.naturalHeight || img.height
+      imageSource = img
+    }
+
+    if (!imageSource || !sourceWidth || !sourceHeight) {
+      const base64 = await readFileAsDataUrl(file)
+      return { base64 }
+    }
+
+    let targetWidth = sourceWidth
+    let targetHeight = sourceHeight
+
+    if (targetWidth > maxDimension || targetHeight > maxDimension) {
+      if (targetWidth > targetHeight) {
+        targetHeight = Math.round((targetHeight * maxDimension) / targetWidth)
+        targetWidth = maxDimension
+      } else {
+        targetWidth = Math.round((targetWidth * maxDimension) / targetHeight)
+        targetHeight = maxDimension
+      }
+    }
+
+    const canvas = document.createElement('canvas')
+    canvas.width = targetWidth
+    canvas.height = targetHeight
+    const ctx = canvas.getContext('2d')
+    if (!ctx) {
+      const base64 = await readFileAsDataUrl(file)
+      return { base64 }
+    }
+
+    ctx.drawImage(imageSource, 0, 0, targetWidth, targetHeight)
+    const base64 = canvas.toDataURL('image/jpeg', quality)
+    let imageData: ImageData | undefined
+    try {
+      imageData = ctx.getImageData(0, 0, targetWidth, targetHeight)
+    } catch {
+      // ignore
+    }
+
+    return { base64, imageData }
+  } catch (err) {
+    console.warn('[PassportScanner] Image optimization fallback:', err)
+    const base64 = await readFileAsDataUrl(file)
+    return { base64 }
+  }
+}
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
 export function PassportScanner() {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -104,6 +206,7 @@ export function PassportScanner() {
   const [currentPageIndex, setCurrentPageIndex] = useState<number>(0)
   const [isSummaryView, setIsSummaryView] = useState<boolean>(false)
   const [isManualEntry, setIsManualEntry] = useState<boolean>(false)
+  const [returnToSummary, setReturnToSummary] = useState<boolean>(false)
 
   // Scan & extraction states
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
@@ -135,9 +238,23 @@ export function PassportScanner() {
   // Sync manual form data with current captured page whenever opening manual form or switching page
   useEffect(() => {
     if (isManualEntry) {
-      setManualFormData(pagesData[currentPage.type] || {})
+      const currentData = { ...(pagesData[currentPage.type] || {}) }
+
+      // Prefill Page 6 (Identity & Chip) with microchip from Page 1 (cover) / barcode / unifiedData
+      if (currentPage.type === 'page_6' && !currentData.microchip_no) {
+        const prefilledChip =
+          pagesData.cover?.microchip_no ||
+          barcodes[0]?.text ||
+          validationResult?.unifiedData?.microchip_no ||
+          ''
+        if (prefilledChip) {
+          currentData.microchip_no = prefilledChip
+        }
+      }
+
+      setManualFormData(currentData)
     }
-  }, [isManualEntry, currentPageIndex, currentPage.type, pagesData])
+  }, [isManualEntry, currentPageIndex, currentPage.type, pagesData, barcodes, validationResult])
 
   // Re-calculate validation whenever pagesData updates
   useEffect(() => {
@@ -164,42 +281,31 @@ export function PassportScanner() {
     setErrorMsg(null)
     setPreCheckWarning(null)
     setIsProcessing(true)
-    setProcessingMessage('Görüntü kalitesi kontrol ediliyor...')
+    setProcessingMessage('Görüntü optimize ediliyor...')
 
     try {
-      // 1. Client-side Image Pre-Check (Blur, Glare, Resolution)
-      const imageBitmap = await createImageBitmap(file)
-      const canvas = document.createElement('canvas')
-      canvas.width = imageBitmap.width
-      canvas.height = imageBitmap.height
-      const ctx = canvas.getContext('2d')
-      if (ctx) {
-        ctx.drawImage(imageBitmap, 0, 0)
-        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-        const quality = analyzeImageQuality(imgData)
+      // 1. Client-side Image Optimization (Downscale to max 1600px, 0.8 JPEG)
+      const { base64, imageData } = await optimizeImageForOcr(file)
 
+      // Fast image pre-check (blur, glare, resolution)
+      if (imageData) {
+        const quality = analyzeImageQuality(imageData)
         if (!quality.isPassable && quality.warnings.length > 0) {
           setPreCheckWarning(quality.warnings.join(' '))
         }
       }
 
-      // 2. Client-side Barcode Detection
-      setProcessingMessage('Barkod taranıyor...')
-      const detectedBarcode = await scanBarcodeFromImage(file)
-      if (detectedBarcode) {
-        setBarcodes(prev => [...prev, detectedBarcode])
+      // 2. Client-side Barcode Detection (Restricted to cover and page 6)
+      if (currentPage.type === 'cover' || currentPage.type === 'page_6') {
+        setProcessingMessage('Barkod taranıyor...')
+        const detectedBarcode = await scanBarcodeFromImage(file)
+        if (detectedBarcode) {
+          setBarcodes(prev => [...prev, detectedBarcode])
+        }
       }
 
-      // 3. Convert to base64 for Vision API
+      // 3. Send to Server Extract Endpoint (Protected by Redis Cost Guard)
       setProcessingMessage('Akıllı metin okuma yapılıyor...')
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => resolve(reader.result as string)
-        reader.onerror = reject
-        reader.readAsDataURL(file)
-      })
-
-      // 4. Send to Server Extract Endpoint (Protected by Redis Cost Guard)
       const response = await fetch('/api/smart-scan/extract', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -254,6 +360,18 @@ export function PassportScanner() {
     }))
   }
 
+  // Jump to specific step from Summary view for direct editing
+  const handleEditFromSummary = (targetPageType: PassportPageType) => {
+    const targetIdx = PAGES_FLOW.findIndex(p => p.type === targetPageType)
+    if (targetIdx !== -1) {
+      setCurrentPageIndex(targetIdx)
+      setReturnToSummary(true)
+      setIsSummaryView(false)
+      setIsManualEntry(true)
+      setErrorMsg(null)
+    }
+  }
+
   // Submit in-place manual form and advance to next page or summary
   const handleSaveManualEntry = (e?: React.FormEvent) => {
     if (e) e.preventDefault()
@@ -275,6 +393,13 @@ export function PassportScanner() {
 
     setIsManualEntry(false)
     setErrorMsg(null)
+
+    // If returning from direct summary edit, route directly back to summary
+    if (returnToSummary) {
+      setReturnToSummary(false)
+      setIsSummaryView(true)
+      return
+    }
 
     // Advance to next step or summary view
     if (currentPageIndex < PAGES_FLOW.length - 1) {
@@ -687,6 +812,42 @@ export function PassportScanner() {
                       />
                     </div>
                   </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-text-secondary block mb-1.5">
+                      Hızlı Renk Seçimi
+                    </label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {QUICK_COLORS.map(c => {
+                        const testIdSlug = c
+                          .toLowerCase()
+                          .replace(/ç/g, 'c')
+                          .replace(/ğ/g, 'g')
+                          .replace(/ı/g, 'i')
+                          .replace(/ö/g, 'o')
+                          .replace(/ş/g, 's')
+                          .replace(/ü/g, 'u')
+                          .replace(/[^a-z0-9]/g, '-')
+                          .replace(/-+/g, '-')
+                          .replace(/^-|-$/g, '')
+                        return (
+                          <button
+                            key={c}
+                            type="button"
+                            data-testid={`color-chip-${testIdSlug}`}
+                            onClick={() => handleManualFieldChange('color', c)}
+                            className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all active:scale-[0.98] cursor-pointer border ${
+                              manualFormData.color === c
+                                ? 'bg-primary/10 border-primary text-primary font-bold shadow-xs'
+                                : 'bg-surface border-border-main text-text-secondary hover:border-primary/40'
+                            }`}
+                          >
+                            {c}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
                 </>
               )}
 
@@ -833,7 +994,12 @@ export function PassportScanner() {
                 onClick={handleSaveManualEntry}
                 className="w-full py-3.5 px-4 rounded-xl bg-primary text-white font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-[0.98] cursor-pointer shadow-sm text-sm"
               >
-                {currentPageIndex < PAGES_FLOW.length - 1 ? (
+                {returnToSummary ? (
+                  <>
+                    <span>Değişiklikleri Kaydet ve Özete Dön</span>
+                    <ChevronRight size={18} className="shrink-0" />
+                  </>
+                ) : currentPageIndex < PAGES_FLOW.length - 1 ? (
                   <>
                     <span className="truncate">
                       Sonraki: Sayfa {PAGES_FLOW[currentPageIndex + 1].passportPageDisplay} ({PAGES_FLOW[currentPageIndex + 1].title})
@@ -851,10 +1017,16 @@ export function PassportScanner() {
               <button
                 type="button"
                 data-testid="cancel-manual-entry-btn"
-                onClick={() => setIsManualEntry(false)}
+                onClick={() => {
+                  setIsManualEntry(false)
+                  if (returnToSummary) {
+                    setReturnToSummary(false)
+                    setIsSummaryView(true)
+                  }
+                }}
                 className="text-xs text-text-secondary hover:text-text-primary text-center py-1.5 transition-colors cursor-pointer"
               >
-                Fotoğraf Çekmeye Geri Dön
+                {returnToSummary ? 'Özete Geri Dön' : 'Fotoğraf Çekmeye Geri Dön'}
               </button>
             </div>
           </form>
@@ -1049,7 +1221,17 @@ export function PassportScanner() {
                   <ShieldCheck size={16} className="text-primary" />
                   Can Dostumun Bilgileri
                 </span>
-                <span className="text-[10px] text-text-muted">Bölüm II & III</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-text-muted">Bölüm II & III</span>
+                  <button
+                    type="button"
+                    data-testid="edit-pet-summary-btn"
+                    onClick={() => handleEditFromSummary('page_5')}
+                    className="text-xs text-primary font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <FileEdit size={12} /> Düzenle
+                  </button>
+                </div>
               </div>
               <div className="flex justify-between py-1 border-b border-border-main/40">
                 <span className="text-text-secondary">Adı:</span>
@@ -1122,9 +1304,19 @@ export function PassportScanner() {
                   <User size={16} className="text-primary" />
                   Sahip Bilgileri
                 </span>
-                <span className="text-[10px] text-primary bg-primary/10 px-2 py-0.5 rounded-full font-medium">
-                  Profil Tamamla
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-primary bg-primary/10 px-2 py-0.5 rounded-full font-medium">
+                    Profil Tamamla
+                  </span>
+                  <button
+                    type="button"
+                    data-testid="edit-owner-summary-btn"
+                    onClick={() => handleEditFromSummary('page_4')}
+                    className="text-xs text-primary font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <FileEdit size={12} /> Düzenle
+                  </button>
+                </div>
               </div>
               <p className="text-[11px] text-text-muted flex items-start gap-1 pb-1">
                 <Info size={12} className="shrink-0 mt-0.5 text-primary" />
@@ -1173,7 +1365,17 @@ export function PassportScanner() {
                   <Stethoscope size={16} className="text-primary" />
                   Veteriner & Düzenleyen Yetkili
                 </span>
-                <span className="text-[10px] text-text-muted">Bölüm IV</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-text-muted">Bölüm IV</span>
+                  <button
+                    type="button"
+                    data-testid="edit-vet-summary-btn"
+                    onClick={() => handleEditFromSummary('page_7')}
+                    className="text-xs text-primary font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <FileEdit size={12} /> Düzenle
+                  </button>
+                </div>
               </div>
               <div className="flex justify-between py-1 border-b border-border-main/40">
                 <span className="text-text-secondary">Veteriner Hekim:</span>
@@ -1307,7 +1509,7 @@ export function PassportScanner() {
               ) : (
                 <>
                   <CheckCircle2 size={18} />
-                  <span>Can Dostumu Kaydet</span>
+                  <span>Bilgileri Onayla ve Devam Et →</span>
                 </>
               )}
             </button>

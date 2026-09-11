@@ -139,7 +139,7 @@ const PAGE_SCHEMAS: Record<PassportPageType, Schema> = {
  * Executes a single, strictly-pinned Gemini 3.8 Flash vision extraction.
  * Invariants:
  * - exact model: gemini-3.8-flash
- * - thinkingLevel: low
+ * - thinkingBudget: 0 (disabled for fast OCR extraction)
  * - maxOutputTokens: 512
  * - responseMimeType: application/json
  * - NO fallback LLM (on error, throws so caller can trigger manual input fallback)
@@ -189,7 +189,7 @@ export async function extractPassportPage<T>(params: {
         responseMimeType: 'application/json',
         responseSchema,
         thinkingConfig: {
-          thinkingLevel: 'low' as any,
+          thinkingBudget: 0,
         },
       },
     })

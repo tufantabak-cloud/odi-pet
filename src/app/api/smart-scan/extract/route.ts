@@ -4,6 +4,8 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { reserveVisionCall } from '@/lib/smart-scan/cost-guard'
 import { extractPassportPage, PassportPageType } from '@/lib/smart-scan/vision-gateway'
 
+export const maxDuration = 60
+
 const extractRequestSchema = z.object({
   sessionId: z.string().uuid('Geçersiz oturum kimliği'),
   pageType: z.enum(['cover', 'page_4', 'page_5', 'page_6', 'page_7'] as const),
@@ -60,13 +62,42 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // 4. Invoke strictly pinned Gemini 3.8 Flash Vision Model
+    // 4. Invoke strictly pinned Gemini 3.8 Flash Vision Model (with max 1 transient retry)
+    const isTransient = (err: any): boolean => {
+      const status = err?.status || err?.code || err?.statusCode
+      if (status === 503 || status === 502 || status === 504 || status === 429) return true
+      const msg = String(err?.message || '').toLowerCase()
+      return (
+        msg.includes('503') ||
+        msg.includes('unavailable') ||
+        msg.includes('high demand') ||
+        msg.includes('etimedout') ||
+        msg.includes('econnreset') ||
+        msg.includes('fetch failed')
+      )
+    }
+
     try {
-      const visionResult = await extractPassportPage({
-        pageType: pageType as PassportPageType,
-        imageBase64,
-        mimeType,
-      })
+      let visionResult
+      try {
+        visionResult = await extractPassportPage({
+          pageType: pageType as PassportPageType,
+          imageBase64,
+          mimeType,
+        })
+      } catch (firstErr) {
+        if (isTransient(firstErr)) {
+          console.warn('[api/smart-scan/extract] Transient AI failure encountered, retrying once:', firstErr)
+          await new Promise(resolve => setTimeout(resolve, 500))
+          visionResult = await extractPassportPage({
+            pageType: pageType as PassportPageType,
+            imageBase64,
+            mimeType,
+          })
+        } else {
+          throw firstErr
+        }
+      }
 
       return NextResponse.json({
         success: true,

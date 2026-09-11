@@ -1,7 +1,7 @@
 import React, { act } from 'react'
 import { createRoot, Root } from 'react-dom/client'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { PassportScanner, PAGES_FLOW } from '../PassportScanner'
+import { PassportScanner, PAGES_FLOW, QUICK_COLORS, optimizeImageForOcr } from '../PassportScanner'
 import { PassportPageReference } from '../PassportPageReference'
 
 // Configure React act environment
@@ -490,5 +490,169 @@ describe('Smart Passport Scan — UI & In-Place Manual Fallback Suite', () => {
     expect(container.querySelector('[data-testid="manual-form-page_7"]')).not.toBeNull()
     expect(container.textContent).not.toContain('Can Dostun Kim?')
     expect(mockPush).not.toHaveBeenCalledWith('/owner/pets/add')
+  })
+
+  // P1. Microchip Prefill Test
+  it('P1. Microchip Prefill: prefills Page 6 manual form with microchip from Page 1 cover', () => {
+    act(() => {
+      root.render(<PassportScanner />)
+    })
+
+    // Step 1: Open manual form for cover
+    act(() => {
+      ;(container.querySelector('[data-testid="header-manual-btn"]') as HTMLButtonElement).click()
+    })
+
+    const coverMicrochipInput = container.querySelector('[data-testid="input-cover-microchip"]') as HTMLInputElement
+    act(() => {
+      changeInput(coverMicrochipInput, '900123456789012')
+    })
+
+    // Save Step 1 -> advances to Step 2 (Page 4)
+    act(() => {
+      ;(container.querySelector('[data-testid="save-manual-entry-btn"]') as HTMLButtonElement).click()
+    })
+
+    // Skip Step 2 -> advances to Step 3 (Page 5)
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+
+    // Skip Step 3 -> advances to Step 4 (Page 6)
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+
+    expect(container.textContent).toContain('Bölüm III — Hayvanın Kimlik Bilgileri')
+
+    // Open manual form for Page 6
+    act(() => {
+      ;(container.querySelector('[data-testid="header-manual-btn"]') as HTMLButtonElement).click()
+    })
+
+    const chipInput = container.querySelector('[data-testid="input-chip-microchip"]') as HTMLInputElement
+    expect(chipInput).not.toBeNull()
+    expect(chipInput.value).toBe('900123456789012')
+  })
+
+  // P1. Color Quick-Select Chips Test
+  it('P1. Color Quick-Select: renders 7 color chips and updates color input on click', () => {
+    act(() => {
+      root.render(<PassportScanner />)
+    })
+
+    // Advance to Step 3 (Page 5 - Pet)
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+
+    // Open Page 5 manual form
+    act(() => {
+      ;(container.querySelector('[data-testid="header-manual-btn"]') as HTMLButtonElement).click()
+    })
+
+    // Verify all 7 chips exist
+    expect(QUICK_COLORS).toHaveLength(7)
+    const chipSari = container.querySelector('[data-testid="color-chip-sari-sarman"]') as HTMLButtonElement
+    const chipBeyaz = container.querySelector('[data-testid="color-chip-beyaz"]') as HTMLButtonElement
+    const chipTekir = container.querySelector('[data-testid="color-chip-tekir"]') as HTMLButtonElement
+    expect(chipSari).not.toBeNull()
+    expect(chipBeyaz).not.toBeNull()
+    expect(chipTekir).not.toBeNull()
+
+    const colorInput = container.querySelector('[data-testid="input-pet-color"]') as HTMLInputElement
+    expect(colorInput.value).toBe('')
+
+    // Click Sarman chip
+    act(() => {
+      chipSari.click()
+    })
+    expect(colorInput.value).toBe('Sarı / Sarman')
+
+    // Click Tekir chip
+    act(() => {
+      chipTekir.click()
+    })
+    expect(colorInput.value).toBe('Tekir')
+  })
+
+  // P1. Summary Direct Edit Navigation Test
+  it('P1. Summary Direct Edit: allows editing Pet, Owner, and Vet directly from summary view and returns immediately', () => {
+    act(() => {
+      root.render(<PassportScanner />)
+    })
+
+    // Skip all 5 steps to reach Summary View
+    for (let i = 0; i < 5; i++) {
+      act(() => {
+        ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+      })
+    }
+
+    expect(container.querySelector('[data-testid="smart-scan-summary-view"]')).not.toBeNull()
+
+    // Verify commit CTA label
+    const commitBtn = container.querySelector('[data-testid="commit-btn"]') as HTMLButtonElement
+    expect(commitBtn).not.toBeNull()
+    expect(commitBtn.textContent).toContain('Bilgileri Onayla ve Devam Et →')
+
+    // Verify all 3 direct edit buttons exist
+    const editPetBtn = container.querySelector('[data-testid="edit-pet-summary-btn"]') as HTMLButtonElement
+    const editOwnerBtn = container.querySelector('[data-testid="edit-owner-summary-btn"]') as HTMLButtonElement
+    const editVetBtn = container.querySelector('[data-testid="edit-vet-summary-btn"]') as HTMLButtonElement
+    expect(editPetBtn).not.toBeNull()
+    expect(editOwnerBtn).not.toBeNull()
+    expect(editVetBtn).not.toBeNull()
+
+    // 1. Direct Edit Pet -> jumps to Page 5
+    act(() => {
+      editPetBtn.click()
+    })
+    expect(container.querySelector('[data-testid="manual-form-page_5"]')).not.toBeNull()
+    expect(container.textContent).toContain('Değişiklikleri Kaydet ve Özete Dön')
+
+    // Save -> returns immediately to Summary View
+    act(() => {
+      ;(container.querySelector('[data-testid="save-manual-entry-btn"]') as HTMLButtonElement).click()
+    })
+    expect(container.querySelector('[data-testid="smart-scan-summary-view"]')).not.toBeNull()
+
+    // 2. Direct Edit Owner -> jumps to Page 4 and Cancel returns to Summary
+    act(() => {
+      ;(container.querySelector('[data-testid="edit-owner-summary-btn"]') as HTMLButtonElement).click()
+    })
+    expect(container.querySelector('[data-testid="manual-form-page_4"]')).not.toBeNull()
+    expect(container.textContent).toContain('Özete Geri Dön')
+
+    act(() => {
+      ;(container.querySelector('[data-testid="cancel-manual-entry-btn"]') as HTMLButtonElement).click()
+    })
+    expect(container.querySelector('[data-testid="smart-scan-summary-view"]')).not.toBeNull()
+  })
+
+  // P0. Image Optimization Safety Test
+  it('P0. Image Optimization: optimizeImageForOcr handles fallback safely in non-browser/test environments', async () => {
+    const origFileReader = global.FileReader
+    global.FileReader = class {
+      result: string = 'data:image/jpeg;base64,optimizedfallback'
+      onload: any = null
+      onerror: any = null
+      readAsDataURL() {
+        if (this.onload) {
+          this.onload({ target: this })
+        }
+      }
+    } as any
+
+    const testFile = new File(['test-bytes'], 'passport.jpg', { type: 'image/jpeg' })
+    const res = await optimizeImageForOcr(testFile)
+
+    expect(res).toBeDefined()
+    expect(res.base64).toContain('data:image/jpeg;base64')
+
+    global.FileReader = origFileReader
   })
 })
