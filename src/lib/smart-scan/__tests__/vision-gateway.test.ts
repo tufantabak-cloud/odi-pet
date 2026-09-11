@@ -79,7 +79,7 @@ describe('Smart Scan Vision Gateway Configuration', () => {
     expect(PAGE7_SCHEMA.properties?.registration_district).toBeDefined()
   })
 
-  it('calls generateContent with thinkingLevel: low, maxOutputTokens: 512 and exact model', async () => {
+  it('calls generateContent with thinkingBudget: 0, maxOutputTokens: 512 and exact model', async () => {
     mockGenerateContent.mockResolvedValueOnce({
       text: JSON.stringify({
         name: 'Pamuk',
@@ -101,7 +101,7 @@ describe('Smart Scan Vision Gateway Configuration', () => {
     expect(callArg.model).toBe('gemini-3.8-flash')
     expect(callArg.config.maxOutputTokens).toBe(512)
     expect(callArg.config.responseMimeType).toBe('application/json')
-    expect(callArg.config.thinkingConfig).toEqual({ thinkingLevel: 'low' })
+    expect(callArg.config.thinkingConfig).toEqual({ thinkingBudget: 0 })
 
     expect(result.data).toEqual({
       name: 'Pamuk',
