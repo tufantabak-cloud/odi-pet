@@ -11,21 +11,21 @@ import {
   ArrowLeft,
   RefreshCw,
   Sparkles,
-  QrCode,
-  FileText,
   ShieldCheck,
   ChevronRight,
   Loader2,
   User,
   Stethoscope,
   Info,
+  FileEdit,
 } from 'lucide-react'
 import { analyzeImageQuality } from '@/lib/smart-scan/pre-check'
 import { scanBarcodeFromImage, BarcodeScanResult } from '@/lib/smart-scan/barcode-scanner'
 import { validateCrossPage, CrossPageValidationResult } from '@/lib/smart-scan/validation'
 import { PassportPageType } from '@/lib/smart-scan/vision-gateway'
+import { PassportPageReference } from './PassportPageReference'
 
-interface PageConfig {
+export interface PageConfig {
   type: PassportPageType
   title: string
   subtitle: string
@@ -33,9 +33,11 @@ interface PageConfig {
   pageNumber: number
   passportPageDisplay: string
   sectionName: string
+  photoCta: string
+  manualTitle: string
 }
 
-const PAGES_FLOW: PageConfig[] = [
+export const PAGES_FLOW: PageConfig[] = [
   {
     type: 'cover',
     title: 'Pasaport Kapağı',
@@ -44,6 +46,8 @@ const PAGES_FLOW: PageConfig[] = [
     pageNumber: 1,
     passportPageDisplay: '1/32',
     sectionName: 'Pasaport Kapağı',
+    photoCta: 'Pasaport Kapağını Fotoğraflayın →',
+    manualTitle: 'Pasaport Kapağı — Bilgileri Manuel Girin',
   },
   {
     type: 'page_4',
@@ -53,6 +57,8 @@ const PAGES_FLOW: PageConfig[] = [
     pageNumber: 2,
     passportPageDisplay: '4/32',
     sectionName: 'Bölüm I — Sahibine Ait Bilgiler',
+    photoCta: 'Sahip Bilgilerini Fotoğraflayın →',
+    manualTitle: 'Sayfa 4/32 — Sahibine Ait Bilgileri Manuel Girin',
   },
   {
     type: 'page_5',
@@ -62,6 +68,8 @@ const PAGES_FLOW: PageConfig[] = [
     pageNumber: 3,
     passportPageDisplay: '5/32',
     sectionName: 'Bölüm II — Hayvana Ait Bilgiler',
+    photoCta: 'Hayvan Bilgilerini Fotoğraflayın →',
+    manualTitle: 'Sayfa 5/32 — Hayvana Ait Bilgileri Manuel Girin',
   },
   {
     type: 'page_6',
@@ -71,6 +79,8 @@ const PAGES_FLOW: PageConfig[] = [
     pageNumber: 4,
     passportPageDisplay: '6/32',
     sectionName: 'Bölüm III — Hayvanın Kimlik Bilgileri',
+    photoCta: 'Kimlik & Çip Sayfasını Fotoğraflayın →',
+    manualTitle: 'Sayfa 6/32 — Kimlik ve Çip Bilgilerini Manuel Girin',
   },
   {
     type: 'page_7',
@@ -80,6 +90,8 @@ const PAGES_FLOW: PageConfig[] = [
     pageNumber: 5,
     passportPageDisplay: '7/32',
     sectionName: 'Bölüm IV — Pasaportu Düzenleyen Yetkili',
+    photoCta: 'Yetkili Veteriner Sayfasını Fotoğraflayın →',
+    manualTitle: 'Sayfa 7/32 — Yetkili Veteriner Bilgilerini Manuel Girin',
   },
 ]
 
@@ -91,6 +103,7 @@ export function PassportScanner() {
   const [sessionId] = useState<string>(() => crypto.randomUUID())
   const [currentPageIndex, setCurrentPageIndex] = useState<number>(0)
   const [isSummaryView, setIsSummaryView] = useState<boolean>(false)
+  const [isManualEntry, setIsManualEntry] = useState<boolean>(false)
 
   // Scan & extraction states
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
@@ -109,12 +122,22 @@ export function PassportScanner() {
   const [barcodes, setBarcodes] = useState<BarcodeScanResult[]>([])
   const [pageConfidences, setPageConfidences] = useState<Record<string, number>>({})
 
+  // Local draft state for active manual form
+  const [manualFormData, setManualFormData] = useState<Record<string, any>>({})
+
   // Final validation and commit
   const [validationResult, setValidationResult] = useState<CrossPageValidationResult | null>(null)
   const [isCommitting, setIsCommitting] = useState<boolean>(false)
 
   const currentPage = PAGES_FLOW[currentPageIndex]
   const currentCaptured = pagesData[currentPage.type]
+
+  // Sync manual form data with current captured page whenever opening manual form or switching page
+  useEffect(() => {
+    if (isManualEntry) {
+      setManualFormData(pagesData[currentPage.type] || {})
+    }
+  }, [isManualEntry, currentPageIndex, currentPage.type, pagesData])
 
   // Re-calculate validation whenever pagesData updates
   useEffect(() => {
@@ -190,7 +213,6 @@ export function PassportScanner() {
       const data = await response.json()
 
       if (!response.ok) {
-        // Safe user-friendly message
         setErrorMsg(data.error || 'Belgenizi otomatik okuyamadık. Bilgileri manuel girerek kaydı tamamlayabilirsiniz.')
         return
       }
@@ -218,24 +240,54 @@ export function PassportScanner() {
     }
   }
 
-  // Redirect to manual entry wizard with prepopulated values securely via sessionStorage
-  const handleManualFallback = () => {
-    if (typeof window !== 'undefined' && validationResult?.unifiedData) {
-      try {
-        sessionStorage.setItem('smart_scan_draft', JSON.stringify(validationResult.unifiedData))
-      } catch (e) {
-        console.warn('[PassportScanner] Failed to write draft to sessionStorage:', e)
-      }
-    }
+  // Open in-place manual form without navigating away from the Smart Scan page
+  const handleOpenManualEntry = () => {
+    setIsManualEntry(true)
+    setErrorMsg(null)
+  }
 
-    // Clean URL navigation without exposing PII / identifiers in query parameters
-    router.push('/owner/pets/add')
+  // Handle field change in manual form
+  const handleManualFieldChange = (field: string, value: any) => {
+    setManualFormData(prev => ({
+      ...prev,
+      [field]: value,
+    }))
+  }
+
+  // Submit in-place manual form and advance to next page or summary
+  const handleSaveManualEntry = (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
+
+    // Save entered data to pagesData
+    setPagesData(prev => ({
+      ...prev,
+      [currentPage.type]: {
+        ...(prev[currentPage.type] || {}),
+        ...manualFormData,
+      },
+    }))
+
+    // Mark high confidence for manually verified/entered data
+    setPageConfidences(prev => ({
+      ...prev,
+      [currentPage.type]: 1.0,
+    }))
+
+    setIsManualEntry(false)
+    setErrorMsg(null)
+
+    // Advance to next step or summary view
+    if (currentPageIndex < PAGES_FLOW.length - 1) {
+      setCurrentPageIndex(p => p + 1)
+    } else {
+      setIsSummaryView(true)
+    }
   }
 
   // Final commit via atomic RPC
   const handleCommit = async () => {
     if (!validationResult || !validationResult.canCommit) {
-      setErrorMsg('Lütfen zorunlu alanların (Ad, Tür, Irk) doğru okunduğundan emin olun.')
+      setErrorMsg('Lütfen zorunlu alanların (Ad, Tür, Irk) doğru girildiğinden emin olun.')
       return
     }
 
@@ -296,7 +348,6 @@ export function PassportScanner() {
     }
   }
 
-  // Hidden temp anchor for html5-qrcode
   return (
     <div className="w-full max-w-md mx-auto min-h-[600px] flex flex-col justify-between p-4 bg-surface rounded-2xl border border-border-main shadow-sm animate-fadeIn">
       <div id="qr-reader-temp-anchor" style={{ display: 'none' }} />
@@ -306,8 +357,11 @@ export function PassportScanner() {
         <div className="flex items-center justify-between">
           <button
             type="button"
+            data-testid="back-button"
             onClick={() => {
-              if (isSummaryView) {
+              if (isManualEntry) {
+                setIsManualEntry(false)
+              } else if (isSummaryView) {
                 setIsSummaryView(false)
               } else if (currentPageIndex > 0) {
                 setCurrentPageIndex(p => p - 1)
@@ -315,7 +369,7 @@ export function PassportScanner() {
                 router.back()
               }
             }}
-            className="p-2 rounded-full hover:bg-surface-hover text-text-secondary transition-colors"
+            className="p-2 rounded-full hover:bg-surface-hover text-text-secondary transition-colors cursor-pointer"
             aria-label="Geri"
           >
             <ArrowLeft size={20} />
@@ -326,13 +380,29 @@ export function PassportScanner() {
             <span>Akıllı Pasaport Taraması</span>
           </div>
 
-          <button
-            type="button"
-            onClick={handleManualFallback}
-            className="text-xs font-medium text-text-secondary hover:text-primary transition-colors underline"
-          >
-            Manuel Giriş
-          </button>
+          {!isSummaryView && !isManualEntry && (
+            <button
+              type="button"
+              data-testid="header-manual-btn"
+              onClick={handleOpenManualEntry}
+              className="text-xs font-medium text-text-secondary hover:text-primary transition-colors underline cursor-pointer"
+            >
+              Manuel Giriş
+            </button>
+          )}
+
+          {isManualEntry && (
+            <button
+              type="button"
+              data-testid="header-camera-return-btn"
+              onClick={() => setIsManualEntry(false)}
+              className="text-xs font-medium text-text-secondary hover:text-primary transition-colors underline cursor-pointer"
+            >
+              Fotoğrafa Dön
+            </button>
+          )}
+
+          {isSummaryView && <div className="w-16" />}
         </div>
 
         {/* Step Progress Bar */}
@@ -353,17 +423,447 @@ export function PassportScanner() {
       </div>
 
       {/* Main Content Area */}
-      <div className="my-6 flex-1 flex flex-col justify-center">
-        {!isSummaryView ? (
-          <div className="flex flex-col items-center text-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-1">
-              {currentPage.type === 'cover' && <FileText size={32} />}
-              {currentPage.type === 'page_4' && <User size={32} />}
-              {currentPage.type === 'page_5' && <ShieldCheck size={32} />}
-              {currentPage.type === 'page_6' && <QrCode size={32} />}
-              {currentPage.type === 'page_7' && <Stethoscope size={32} />}
+      <div className="my-5 flex-1 flex flex-col justify-center">
+        {/* VIEW 1: IN-PLACE MANUAL ENTRY FORM */}
+        {isManualEntry && !isSummaryView && (
+          <form
+            data-testid={`manual-form-${currentPage.type}`}
+            onSubmit={handleSaveManualEntry}
+            className="flex flex-col gap-4 text-left animate-fadeIn"
+          >
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-full">
+                  Sayfa {currentPage.passportPageDisplay}
+                </span>
+                <span className="text-xs font-medium text-text-secondary">
+                  Adım {currentPage.pageNumber} / {PAGES_FLOW.length}
+                </span>
+              </div>
+              <h2 className="text-lg font-bold text-text-primary mt-1">{currentPage.manualTitle}</h2>
+              <p className="text-xs text-text-secondary mt-0.5">
+                Bu sayfadaki alanları elle doldurarak akışa kesintisiz devam edebilirsiniz.
+              </p>
             </div>
 
+            <div className="bg-surface-muted/50 p-4 rounded-2xl border border-border-main/70 space-y-3">
+              {/* Cover Fields */}
+              {currentPage.type === 'cover' && (
+                <>
+                  <div>
+                    <label className="text-xs font-bold text-text-primary block mb-1">
+                      Pasaport Numarası
+                    </label>
+                    <input
+                      type="text"
+                      data-testid="input-passport-no"
+                      value={manualFormData.passport_no || ''}
+                      onChange={e => handleManualFieldChange('passport_no', e.target.value.toUpperCase())}
+                      placeholder="Örn: TR-06-123456"
+                      className="w-full text-xs font-mono font-semibold p-2.5 rounded-xl border border-border-main bg-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-text-primary block mb-1">
+                      Mikroçip Numarası (Kapak Barkod Etiketi)
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={15}
+                      data-testid="input-cover-microchip"
+                      value={manualFormData.microchip_no || ''}
+                      onChange={e => handleManualFieldChange('microchip_no', e.target.value.replace(/\D/g, ''))}
+                      placeholder="15 haneli sayı"
+                      className="w-full text-xs font-mono font-semibold p-2.5 rounded-xl border border-border-main bg-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Page 4 Fields: Owner */}
+              {currentPage.type === 'page_4' && (
+                <>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">Sahip Adı</label>
+                      <input
+                        type="text"
+                        data-testid="input-owner-first-name"
+                        value={manualFormData.owner_first_name || ''}
+                        onChange={e => handleManualFieldChange('owner_first_name', e.target.value)}
+                        placeholder="Örn: Tufan"
+                        className="w-full text-xs font-medium p-2.5 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">Sahip Soyadı</label>
+                      <input
+                        type="text"
+                        data-testid="input-owner-last-name"
+                        value={manualFormData.owner_last_name || ''}
+                        onChange={e => handleManualFieldChange('owner_last_name', e.target.value)}
+                        placeholder="Örn: Tabak"
+                        className="w-full text-xs font-medium p-2.5 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-text-primary block mb-1">Telefon Numarası</label>
+                    <input
+                      type="tel"
+                      data-testid="input-owner-phone"
+                      value={manualFormData.owner_phone || ''}
+                      onChange={e => handleManualFieldChange('owner_phone', e.target.value)}
+                      placeholder="Örn: +90 532 111 22 33"
+                      className="w-full text-xs font-medium p-2.5 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">İl</label>
+                      <input
+                        type="text"
+                        data-testid="input-owner-city"
+                        value={manualFormData.owner_city || ''}
+                        onChange={e => handleManualFieldChange('owner_city', e.target.value)}
+                        placeholder="Örn: İstanbul"
+                        className="w-full text-xs font-medium p-2.5 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">İlçe</label>
+                      <input
+                        type="text"
+                        data-testid="input-owner-district"
+                        value={manualFormData.owner_district || ''}
+                        onChange={e => handleManualFieldChange('owner_district', e.target.value)}
+                        placeholder="Örn: Kadıköy"
+                        className="w-full text-xs font-medium p-2.5 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-text-primary block mb-1">Açık Adres (Mahalle / Sokak)</label>
+                    <input
+                      type="text"
+                      data-testid="input-owner-address"
+                      value={manualFormData.owner_address || ''}
+                      onChange={e => handleManualFieldChange('owner_address', e.target.value)}
+                      placeholder="Örn: Moda Cad. No: 12 D: 4"
+                      className="w-full text-xs font-medium p-2.5 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-text-primary block mb-1">Posta Kodu</label>
+                    <input
+                      type="text"
+                      maxLength={5}
+                      data-testid="input-owner-postal-code"
+                      value={manualFormData.owner_postal_code || ''}
+                      onChange={e => handleManualFieldChange('owner_postal_code', e.target.value.replace(/\D/g, ''))}
+                      placeholder="Örn: 34710"
+                      className="w-full text-xs font-mono font-medium p-2.5 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Page 5 Fields: Pet */}
+              {currentPage.type === 'page_5' && (
+                <>
+                  <div>
+                    <label className="text-xs font-bold text-text-primary block mb-1">
+                      Can Dostunun Adı <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      data-testid="input-pet-name"
+                      value={manualFormData.name || ''}
+                      onChange={e => handleManualFieldChange('name', e.target.value)}
+                      placeholder="Örn: Boncuk, Duman, Karamel"
+                      className="w-full text-xs font-semibold p-2.5 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-text-primary block mb-1">
+                      Türü <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        data-testid="species-toggle-cat"
+                        onClick={() => handleManualFieldChange('species', 'cat')}
+                        className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                          manualFormData.species === 'cat'
+                            ? 'bg-primary text-white border-primary shadow-sm'
+                            : 'bg-surface border-border-main text-text-secondary hover:bg-surface-hover'
+                        }`}
+                      >
+                        🐱 Kedi
+                      </button>
+                      <button
+                        type="button"
+                        data-testid="species-toggle-dog"
+                        onClick={() => handleManualFieldChange('species', 'dog')}
+                        className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                          manualFormData.species === 'dog'
+                            ? 'bg-primary text-white border-primary shadow-sm'
+                            : 'bg-surface border-border-main text-text-secondary hover:bg-surface-hover'
+                        }`}
+                      >
+                        🐶 Köpek
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">
+                        Irkı <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        data-testid="input-pet-breed"
+                        value={manualFormData.breed || ''}
+                        onChange={e => handleManualFieldChange('breed', e.target.value)}
+                        placeholder="Örn: Tekir, Golden"
+                        className="w-full text-xs font-semibold p-2.5 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">Cinsiyeti</label>
+                      <div className="grid grid-cols-2 gap-1">
+                        <button
+                          type="button"
+                          data-testid="gender-toggle-male"
+                          onClick={() => handleManualFieldChange('gender', 'male')}
+                          className={`py-2 px-1 rounded-xl border text-[11px] font-bold transition-all cursor-pointer ${
+                            manualFormData.gender === 'male'
+                              ? 'bg-primary/10 border-primary text-primary'
+                              : 'bg-surface border-border-main text-text-secondary'
+                          }`}
+                        >
+                          Erkek
+                        </button>
+                        <button
+                          type="button"
+                          data-testid="gender-toggle-female"
+                          onClick={() => handleManualFieldChange('gender', 'female')}
+                          className={`py-2 px-1 rounded-xl border text-[11px] font-bold transition-all cursor-pointer ${
+                            manualFormData.gender === 'female'
+                              ? 'bg-primary/10 border-primary text-primary'
+                              : 'bg-surface border-border-main text-text-secondary'
+                          }`}
+                        >
+                          Dişi
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">Doğum Tarihi</label>
+                      <input
+                        type="date"
+                        data-testid="input-pet-birth-date"
+                        value={manualFormData.birth_date || ''}
+                        onChange={e => handleManualFieldChange('birth_date', e.target.value)}
+                        className="w-full text-xs font-medium p-2 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">Renk / Görünüm</label>
+                      <input
+                        type="text"
+                        data-testid="input-pet-color"
+                        value={manualFormData.color || ''}
+                        onChange={e => handleManualFieldChange('color', e.target.value)}
+                        placeholder="Örn: Sarı, Beyaz"
+                        className="w-full text-xs font-medium p-2.5 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Page 6 Fields: Identity & Chip */}
+              {currentPage.type === 'page_6' && (
+                <>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">
+                        Mikroçip Numarası
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={15}
+                        data-testid="input-chip-microchip"
+                        value={manualFormData.microchip_no || ''}
+                        onChange={e => handleManualFieldChange('microchip_no', e.target.value.replace(/\D/g, ''))}
+                        placeholder="15 haneli sayı"
+                        className="w-full text-xs font-mono font-semibold p-2.5 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">Dövme No</label>
+                      <input
+                        type="text"
+                        data-testid="input-chip-tattoo"
+                        value={manualFormData.tattoo_no || ''}
+                        onChange={e => handleManualFieldChange('tattoo_no', e.target.value)}
+                        placeholder="Örn: TAT-9988"
+                        className="w-full text-xs font-mono font-medium p-2.5 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">Uygulama Tarihi</label>
+                      <input
+                        type="date"
+                        data-testid="input-chip-implant-date"
+                        value={manualFormData.implant_date || ''}
+                        onChange={e => handleManualFieldChange('implant_date', e.target.value)}
+                        className="w-full text-xs font-medium p-2 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">Uygulama Yeri</label>
+                      <input
+                        type="text"
+                        data-testid="input-chip-implant-location"
+                        value={manualFormData.implant_location || ''}
+                        onChange={e => handleManualFieldChange('implant_location', e.target.value)}
+                        placeholder="Örn: Sol boyun"
+                        className="w-full text-xs font-medium p-2.5 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Page 7 Fields: Veterinarian */}
+              {currentPage.type === 'page_7' && (
+                <>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">Yetkili Hekim Adı</label>
+                      <input
+                        type="text"
+                        data-testid="input-vet-name"
+                        value={manualFormData.veterinarian_name || ''}
+                        onChange={e => handleManualFieldChange('veterinarian_name', e.target.value)}
+                        placeholder="Dr. Ahmet Yılmaz"
+                        className="w-full text-xs font-medium p-2.5 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">Klinik / Kurum</label>
+                      <input
+                        type="text"
+                        data-testid="input-vet-clinic"
+                        value={manualFormData.clinic_name || ''}
+                        onChange={e => handleManualFieldChange('clinic_name', e.target.value)}
+                        placeholder="Kadıköy Veteriner Kliniği"
+                        className="w-full text-xs font-medium p-2.5 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">Klinik Telefonu</label>
+                      <input
+                        type="tel"
+                        data-testid="input-vet-phone"
+                        value={manualFormData.vet_phone || ''}
+                        onChange={e => handleManualFieldChange('vet_phone', e.target.value)}
+                        placeholder="+90 216 123 45 67"
+                        className="w-full text-xs font-medium p-2.5 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">Klinik E-posta</label>
+                      <input
+                        type="email"
+                        data-testid="input-vet-email"
+                        value={manualFormData.vet_email || ''}
+                        onChange={e => handleManualFieldChange('vet_email', e.target.value)}
+                        placeholder="vet@kadikoyvet.com"
+                        className="w-full text-xs font-medium p-2.5 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">Kayıt Şehri</label>
+                      <input
+                        type="text"
+                        data-testid="input-vet-city"
+                        value={manualFormData.registration_city || ''}
+                        onChange={e => handleManualFieldChange('registration_city', e.target.value)}
+                        placeholder="İstanbul"
+                        className="w-full text-xs font-medium p-2.5 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">Kayıt İlçesi</label>
+                      <input
+                        type="text"
+                        data-testid="input-vet-district"
+                        value={manualFormData.registration_district || ''}
+                        onChange={e => handleManualFieldChange('registration_district', e.target.value)}
+                        placeholder="Kadıköy"
+                        className="w-full text-xs font-medium p-2.5 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Form Actions */}
+            <div className="pt-2 flex flex-col gap-2">
+              <button
+                type="button"
+                data-testid="save-manual-entry-btn"
+                onClick={handleSaveManualEntry}
+                className="w-full py-3.5 px-4 rounded-xl bg-primary text-white font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-[0.98] cursor-pointer shadow-sm text-sm"
+              >
+                {currentPageIndex < PAGES_FLOW.length - 1 ? (
+                  <>
+                    <span className="truncate">
+                      Sonraki: Sayfa {PAGES_FLOW[currentPageIndex + 1].passportPageDisplay} ({PAGES_FLOW[currentPageIndex + 1].title})
+                    </span>
+                    <ChevronRight size={18} className="shrink-0" />
+                  </>
+                ) : (
+                  <>
+                    <span>Özeti İncele ve Teyit Et</span>
+                    <ChevronRight size={18} className="shrink-0" />
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                data-testid="cancel-manual-entry-btn"
+                onClick={() => setIsManualEntry(false)}
+                className="text-xs text-text-secondary hover:text-text-primary text-center py-1.5 transition-colors cursor-pointer"
+              >
+                Fotoğraf Çekmeye Geri Dön
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* VIEW 2: CAMERA CAPTURE VIEW */}
+        {!isSummaryView && !isManualEntry && (
+          <div className="flex flex-col items-center text-center gap-3">
+            {/* Top Page Badge */}
             <div>
               <div className="flex items-center gap-2 justify-center mb-1">
                 <span className="text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-full">
@@ -377,13 +877,16 @@ export function PassportScanner() {
                 </span>
               </div>
               <h2 className="text-xl font-bold text-text-primary mt-1">{currentPage.title}</h2>
-              <p className="text-sm text-text-secondary mt-1 px-4">{currentPage.subtitle}</p>
+              <p className="text-xs text-text-secondary mt-1 px-4">{currentPage.subtitle}</p>
             </div>
 
+            {/* PII-Free Passport Page Reference Visual */}
+            <PassportPageReference pageType={currentPage.type} />
+
             {/* Target Fields Preview */}
-            <div className="w-full bg-surface-muted/60 p-3 rounded-xl border border-border-main/50 text-left mt-2">
+            <div className="w-full bg-surface-muted/60 p-3 rounded-xl border border-border-main/50 text-left mt-1">
               <span className="text-xs font-semibold text-text-secondary block mb-1.5">
-                Okunacak Alanlar:
+                Bu sayfadaki bilgiler otomatik okunacaktır:
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {currentPage.targetFields.map(f => (
@@ -405,18 +908,38 @@ export function PassportScanner() {
               </div>
             )}
 
-            {/* Error Notification */}
+            {/* OCR Failure Box with In-Place Action Buttons */}
             {errorMsg && (
-              <div className="w-full bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-300 p-3 rounded-xl flex items-start gap-2 text-xs text-left">
-                <AlertCircle size={16} className="shrink-0 mt-0.5 text-red-500" />
-                <div className="flex-1">
-                  <span>{errorMsg}</span>
+              <div
+                data-testid="smart-scan-error-card"
+                className="w-full bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-300 p-3.5 rounded-2xl flex flex-col gap-2.5 text-xs text-left"
+              >
+                <div className="flex items-start gap-2">
+                  <AlertCircle size={16} className="shrink-0 mt-0.5 text-red-500" />
+                  <div className="flex-1 font-medium">
+                    <span className="block font-bold mb-0.5">Bu sayfadaki bilgiler otomatik okunamadı.</span>
+                    <span className="opacity-90">{errorMsg}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-1 border-t border-red-500/20">
                   <button
                     type="button"
-                    onClick={handleManualFallback}
-                    className="block font-semibold mt-1 text-primary underline"
+                    data-testid="retry-photo-btn"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex-1 py-2 px-3 rounded-xl bg-surface border border-border-main text-text-primary font-semibold flex items-center justify-center gap-1.5 hover:bg-surface-hover transition-all active:scale-[0.98] cursor-pointer"
                   >
-                    Formu Manuel Doldur
+                    <RefreshCw size={14} />
+                    <span>Tekrar Fotoğrafla</span>
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="manual-fallback-btn"
+                    onClick={handleOpenManualEntry}
+                    className="flex-1 py-2 px-3 rounded-xl bg-primary text-white font-semibold flex items-center justify-center gap-1.5 hover:bg-primary/90 transition-all active:scale-[0.98] cursor-pointer shadow-sm"
+                  >
+                    <FileEdit size={14} />
+                    <span>Manuel Devam Et</span>
                   </button>
                 </div>
               </div>
@@ -424,18 +947,30 @@ export function PassportScanner() {
 
             {/* Instant Confirmation Card for Current Page */}
             {currentCaptured && (
-              <div className="w-full bg-emerald-500/5 border border-emerald-500/20 p-4 rounded-xl text-left mt-2 animate-fadeIn">
+              <div
+                data-testid={`instant-confirmation-${currentPage.type}`}
+                className="w-full bg-emerald-500/5 border border-emerald-500/20 p-3.5 rounded-xl text-left mt-1 animate-fadeIn"
+              >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                    <CheckCircle2 size={14} /> Sayfa {currentPage.passportPageDisplay} Başarıyla Okundu
+                    <CheckCircle2 size={14} /> Sayfa {currentPage.passportPageDisplay} Bilgileri Kaydedildi
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="text-xs text-text-secondary hover:text-primary flex items-center gap-1"
-                  >
-                    <RefreshCw size={12} /> Yeniden Çek
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleOpenManualEntry}
+                      className="text-xs text-text-secondary hover:text-primary flex items-center gap-1 cursor-pointer"
+                    >
+                      <FileEdit size={12} /> Düzenle
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="text-xs text-text-secondary hover:text-primary flex items-center gap-1 cursor-pointer"
+                    >
+                      <RefreshCw size={12} /> Yeniden Çek
+                    </button>
+                  </div>
                 </div>
                 <div className="text-xs text-text-secondary space-y-1">
                   {Object.entries(currentCaptured)
@@ -450,13 +985,15 @@ export function PassportScanner() {
               </div>
             )}
           </div>
-        ) : (
-          /* Summary View with 3 Sections */
-          <div className="flex flex-col gap-4 text-left animate-fadeIn">
+        )}
+
+        {/* VIEW 3: SUMMARY VIEW WITH 3 CANONICAL SECTIONS */}
+        {isSummaryView && (
+          <div data-testid="smart-scan-summary-view" className="flex flex-col gap-4 text-left animate-fadeIn">
             <div className="text-center mb-1">
               <h2 className="text-xl font-bold text-text-primary">Bilgileri Teyit Edin</h2>
               <p className="text-xs text-text-secondary mt-1">
-                Pasaporttan otomatik aktarılan bilgileri kontrol ederek onaylayın.
+                Pasaporttan aktarılan bilgileri kontrol ederek onaylayın.
               </p>
             </div>
 
@@ -686,31 +1223,62 @@ export function PassportScanner() {
       />
 
       {/* Actions & Navigation Footer */}
-      <div className="flex flex-col gap-2 pt-2 border-t border-border-main">
-        {!isSummaryView ? (
-          <>
-            {!currentCaptured ? (
+      {!isManualEntry && (
+        <div className="flex flex-col gap-2 pt-2 border-t border-border-main">
+          {!isSummaryView ? (
+            <>
+              {!currentCaptured ? (
+                <button
+                  type="button"
+                  data-testid="photo-cta-btn"
+                  disabled={isProcessing}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full py-3.5 px-4 rounded-xl bg-primary text-white font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer shadow-sm"
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      <span>{processingMessage}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Camera size={18} />
+                      <span>{currentPage.photoCta}</span>
+                    </>
+                  )}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  data-testid="next-step-btn"
+                  onClick={() => {
+                    if (currentPageIndex < PAGES_FLOW.length - 1) {
+                      setCurrentPageIndex(p => p + 1)
+                    } else {
+                      setIsSummaryView(true)
+                    }
+                  }}
+                  className="w-full py-3.5 px-4 rounded-xl bg-primary text-white font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-[0.98] cursor-pointer shadow-sm text-sm"
+                >
+                  {currentPageIndex < PAGES_FLOW.length - 1 ? (
+                    <>
+                      <span className="truncate">
+                        Sonraki: Sayfa {PAGES_FLOW[currentPageIndex + 1].passportPageDisplay} ({PAGES_FLOW[currentPageIndex + 1].title})
+                      </span>
+                      <ChevronRight size={18} className="shrink-0" />
+                    </>
+                  ) : (
+                    <>
+                      <span>Özeti İncele ve Teyit Et</span>
+                      <ChevronRight size={18} className="shrink-0" />
+                    </>
+                  )}
+                </button>
+              )}
+
               <button
                 type="button"
-                disabled={isProcessing}
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full py-3.5 px-4 rounded-xl bg-primary text-white font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer shadow-sm"
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 size={18} className="animate-spin" />
-                    <span>{processingMessage}</span>
-                  </>
-                ) : (
-                  <>
-                    <Camera size={18} />
-                    <span>Sayfa {currentPage.passportPageDisplay} Fotoğrafını Çek</span>
-                  </>
-                )}
-              </button>
-            ) : (
-              <button
-                type="button"
+                data-testid="skip-page-btn"
                 onClick={() => {
                   if (currentPageIndex < PAGES_FLOW.length - 1) {
                     setCurrentPageIndex(p => p + 1)
@@ -718,59 +1286,34 @@ export function PassportScanner() {
                     setIsSummaryView(true)
                   }
                 }}
-                className="w-full py-3.5 px-4 rounded-xl bg-primary text-white font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-[0.98] cursor-pointer shadow-sm text-sm"
+                className="text-xs text-text-secondary hover:text-text-primary text-center py-1.5 transition-colors cursor-pointer"
               >
-                {currentPageIndex < PAGES_FLOW.length - 1 ? (
-                  <>
-                    <span className="truncate">
-                      Sonraki: Sayfa {PAGES_FLOW[currentPageIndex + 1].passportPageDisplay} ({PAGES_FLOW[currentPageIndex + 1].title})
-                    </span>
-                    <ChevronRight size={18} className="shrink-0" />
-                  </>
-                ) : (
-                  <>
-                    <span>Özeti İncele ve Teyit Et</span>
-                    <ChevronRight size={18} className="shrink-0" />
-                  </>
-                )}
+                {currentPageIndex < PAGES_FLOW.length - 1 ? 'Bu sayfayı atla' : 'Özeti Gör'}
               </button>
-            )}
-
+            </>
+          ) : (
             <button
               type="button"
-              onClick={() => {
-                if (currentPageIndex < PAGES_FLOW.length - 1) {
-                  setCurrentPageIndex(p => p + 1)
-                } else {
-                  setIsSummaryView(true)
-                }
-              }}
-              className="text-xs text-text-secondary hover:text-text-primary text-center py-1.5 transition-colors"
+              data-testid="commit-btn"
+              disabled={isCommitting || !validationResult?.canCommit}
+              onClick={handleCommit}
+              className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 text-white font-semibold flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer shadow-sm"
             >
-              {currentPageIndex < PAGES_FLOW.length - 1 ? 'Bu sayfayı atla' : 'Özeti Gör'}
+              {isCommitting ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  <span>Kaydediliyor...</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 size={18} />
+                  <span>Can Dostumu Kaydet</span>
+                </>
+              )}
             </button>
-          </>
-        ) : (
-          <button
-            type="button"
-            disabled={isCommitting || !validationResult?.canCommit}
-            onClick={handleCommit}
-            className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 text-white font-semibold flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer shadow-sm"
-          >
-            {isCommitting ? (
-              <>
-                <Loader2 size={18} className="animate-spin" />
-                <span>Kaydediliyor...</span>
-              </>
-            ) : (
-              <>
-                <CheckCircle2 size={18} />
-                <span>Can Dostumu Kaydet</span>
-              </>
-            )}
-          </button>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
