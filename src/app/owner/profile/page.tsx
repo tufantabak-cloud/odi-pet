@@ -2,7 +2,7 @@ import { getCurrentProfile, getSessionUser } from '@/lib/auth/get-current-profil
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { MembershipCalculator } from '@/lib/membership/MembershipCalculator'
 import { defaultRepository } from '@/lib/features/entitlement/repository'
-import { logout } from '@/features/auth/actions'
+import LogoutButton from './LogoutButton'
 import Link from 'next/link'
 import PetCardActions from './PetCardActions'
 import NotificationSettings from './NotificationSettings'
@@ -655,15 +655,7 @@ export default async function ProfileMenuPage({
 
       {/* Logout & Legal */}
       <div className="flex flex-col items-center gap-5 mt-2">
-        <form action={logout} className="w-full">
-          <button
-            type="submit"
-            className="w-full bg-white rounded-3xl p-4 text-center text-sm font-bold text-error hover:bg-rose-50/50 transition-all border border-rose-100 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] flex items-center justify-center gap-2 active:scale-[0.98]"
-          >
-            <LogOut className="w-4 h-4 text-error" />
-            Hesaptan Çıkış Yap
-          </button>
-        </form>
+        <LogoutButton />
 
         <div className="flex items-center gap-4 text-xs font-semibold text-text-secondary tracking-wider">
           <Link href="/legal/terms" className="hover:text-primary transition-colors">
