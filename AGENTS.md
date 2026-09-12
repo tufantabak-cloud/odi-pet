@@ -38,7 +38,7 @@ Kullanıcı herhangi bir sohbette aşağıdaki komutu kullandığında, bir **Ta
 ## Antigravity Otonom Görevi (Self-Task): Sürekli Denetim
 **BİRİNCİL KURAL:** Kullanıcının özel bir talebi olmasa bile, kritik bir modülde (örneğin Sağlık, Aşılar, Beslenme vb.) yeni bir özellik geliştirilmesi tamamlandığında veya mimari bir değişiklik yapıldığında:
 1. **Otonom olarak inisiyatif al** ve tarayıcı ajanını (browser_subagent) çalıştırarak ilgili modülün uçtan uca (e2e) çalışıp çalışmadığını, "Ideal Kurgu" ve "Premium MVP" şartlarını sağlayıp sağlamadığını test et.
-2. Bu işlemi kendine daimi bir **görev** (duty) olarak kabul et. Test sonucunda kırılan bir mantık veya UX sorunu bulursan, kullanıcıya haber vermeden veya haber vererek doğrudan düzeltme aşamasına geç.
+2. Bu işlemi kendine daimi bir **görev** (duty) olarak kabul et. Test sonucunda kırılan bir mantık veya UX sorunu bulursan; sorunu tespit et, analiz et, kullanıcıya detaylı olarak raporla ve çözüm planı sun. Kullanıcının açık ve yazılı onayı alınmadan doğrudan kod değişikliğine geçme. Read-only inceleme ve teşhis serbesttir; ancak mutasyon ve kod yazımı kesinlikle onay kapısına tabidir.
 
 ## Odi.Pet Temel Ürün Felsefesi (Core UX/UI Rule)
 **BİRİNCİL KURAL:** Uygulamanın kabul görmesi, başarılı olması ve kullanıcı tarafından benimsenmesi için **"kullanıcının kolay ve anlaşılır hissetmesi"** en önemli konudur. 

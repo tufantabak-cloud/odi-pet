@@ -38,7 +38,7 @@ test('Live Vercel Smoke Test for Sprint 4.2', async ({ page, context }) => {
   const cookiesToSet = chunks.map((chunk, index) => ({
     name: `sb-soautcxgiqhxiaxrubxv-auth-token.${index}`,
     value: chunk,
-    domain: 'odi-petcare.vercel.app',
+    domain: 'odi.pet',
     path: '/',
     expires: expiry,
     secure: true,
@@ -49,7 +49,7 @@ test('Live Vercel Smoke Test for Sprint 4.2', async ({ page, context }) => {
 
   // Navigate to login page first to establish origin before writing localStorage
   try {
-    await page.goto('https://odi-petcare.vercel.app/login', { waitUntil: 'commit' });
+    await page.goto('https://odi.pet/login', { waitUntil: 'commit' });
   } catch (e: any) {
     if (!e.message.includes('ERR_ABORTED')) throw e;
   }
@@ -101,7 +101,7 @@ test('Live Vercel Smoke Test for Sprint 4.2', async ({ page, context }) => {
 
   try {
     console.log("3. Checking Pet Detail page first (No cache)...");
-    await page.goto(`https://odi-petcare.vercel.app/owner/pets/${petId}`);
+    await page.goto(`https://odi.pet/owner/pets/${petId}`);
     await page.waitForLoadState('networkidle');
 
     const detailMicroTaskCard = page.locator('text=yaş bilgisini tamamlayalım').first();
@@ -132,7 +132,7 @@ test('Live Vercel Smoke Test for Sprint 4.2', async ({ page, context }) => {
 
     console.log("6. Navigating to Dashboard to verify card...");
     try {
-      await page.goto('https://odi-petcare.vercel.app/owner/dashboard', { waitUntil: 'load', timeout: 30000 });
+      await page.goto('https://odi.pet/owner/dashboard', { waitUntil: 'load', timeout: 30000 });
     } catch (e: any) {
       if (!e.message.includes('ERR_ABORTED')) throw e;
     }
