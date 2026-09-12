@@ -35,6 +35,8 @@ const parasiteRecordCreateSchema = z.object({
   protection_duration_days: z.number().int().positive().max(1095).nullable().optional(),
   notes: z.string().max(1000).nullable().optional(),
   document_storage_path: z.string().max(1024).nullable().optional(),
+  plan_id: z.string().uuid().nullable().optional(),
+  idempotency_key: z.string().uuid().nullable().optional(),
 }).strict();
 
 export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {
@@ -205,31 +207,59 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
       }
     }
 
-    const { data: newRecord, error: insertError } = await adminClient
+    const { processRecordCreation } = await import('@/lib/agenda/write-handlers/write-service');
+
+    const context = {
+      supabase: adminClient,
+      rpcSupabase: adminClient,
+      petId,
+      userId: user.id,
+      timeZone: 'Europe/Istanbul',
+      idempotencyKey: data.idempotency_key || crypto.randomUUID(),
+    };
+
+    const parasiteInput = {
+      pet_id: petId,
+      parasite_type: protocol.parasite_type,
+      parasite_code: protocol.parasite_code,
+      administered_at: data.administered_at,
+      protection_duration_days: protectionDuration,
+      application_method: data.application_method,
+      brand_free_text: normalizeText(data.brand_free_text) ?? product?.brand ?? undefined,
+      product_free_text: normalizeText(data.product_free_text) ?? product?.name ?? undefined,
+      notes: normalizeText(data.notes) ?? undefined,
+    };
+
+    const { result } = await processRecordCreation(
+      'parazit',
+      parasiteInput,
+      context,
+      data.plan_id || undefined
+    );
+
+    // Apply any additional metadata validated on the route
+    const metadataUpdates: Record<string, any> = {
+      parasite_protocol_id: protocol.id,
+    };
+    if (product) {
+      metadataUpdates.parasite_product_id = product.id;
+    }
+    if (data.document_storage_path) {
+      metadataUpdates.document_storage_path = data.document_storage_path;
+    }
+
+    await adminClient
       .from('parasite_records')
-      .insert({
-        pet_id: petId,
-        parasite_protocol_id: protocol.id,
-        parasite_code: protocol.parasite_code,
-        parasite_type: protocol.parasite_type,
-        administered_at: data.administered_at,
-        application_method: data.application_method,
-        protection_duration_days: protectionDuration,
-        brand_free_text: normalizeText(data.brand_free_text) ?? product?.brand ?? null,
-        product_free_text: normalizeText(data.product_free_text) ?? product?.name ?? null,
-        notes: normalizeText(data.notes),
-        document_storage_path: data.document_storage_path || null,
-        source: 'user_manual',
-        created_by: user.id,
-        plan_id: null,
-        // Alan yalnızca ürün seçildiğinde gönderilir; Migration B canlıya
-        // uygulanana kadar ürünsüz kayıt akışı aynen çalışmaya devam eder.
-        ...(product ? { parasite_product_id: product.id } : {})
-      })
-      .select()
+      .update(metadataUpdates)
+      .eq('id', result.recordId);
+
+    const { data: newRecord, error: fetchErr } = await adminClient
+      .from('parasite_records')
+      .select('*')
+      .eq('id', result.recordId)
       .single();
 
-    if (insertError || !newRecord) {
+    if (fetchErr || !newRecord) {
       return NextResponse.json({ error: 'PARASITE_RECORD_CREATE_FAILED' }, { status: 500 });
     }
 

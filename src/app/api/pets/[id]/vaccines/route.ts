@@ -57,30 +57,66 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     }
 
     const body = await request.json()
-    const { vaccine_name, administered_at, next_due_at, notes, administered_by, confidence_level } = body
+    const { vaccine_name, administered_at, next_due_at, notes, confidence_level } = body
 
     if (!vaccine_name) {
       return NextResponse.json({ error: 'Aşı adı zorunludur' }, { status: 400 })
     }
 
-    const { data: newRecord, error } = await supabase
+    const { processRecordCreation } = await import('@/lib/agenda/write-handlers/write-service')
+    const adminSupabase = createAdminSupabaseClient()
+
+    const context = {
+      supabase,
+      rpcSupabase: adminSupabase,
+      petId: id,
+      userId: profile.id,
+      timeZone: 'Europe/Istanbul',
+      idempotencyKey: body.idempotency_key || crypto.randomUUID(),
+    }
+
+    const adminDate = administered_at
+      ? (administered_at.includes('T') ? administered_at.split('T')[0] : administered_at)
+      : new Date().toISOString().split('T')[0]
+
+    const vaccineInput = {
+      pet_id: id,
+      vaccine_name,
+      vaccine_code: body.vaccine_code || 'CUSTOM',
+      dose_number: body.dose_number ? Number(body.dose_number) : 1,
+      administered_at: adminDate,
+      next_due_date: next_due_at || undefined,
+      notes: notes || undefined,
+      brand_id: body.brand_id || undefined,
+      brand_name: body.brand_name || undefined,
+    }
+
+    const { result } = await processRecordCreation(
+      'asi',
+      vaccineInput,
+      context,
+      body.plan_id || undefined
+    )
+
+    // Optional: update confidence_level if custom provided
+    if (confidence_level) {
+      await adminSupabase
+        .from('vaccine_records_v2')
+        .update({
+          confidence_level: normalizeConfidenceLevel(confidence_level)
+        })
+        .eq('id', result.recordId)
+    }
+
+    const { data: newRecord, error: fetchError } = await adminSupabase
       .from('vaccine_records_v2')
-      .insert({
-        pet_id: id,
-        vaccine_name,
-        administered_at: administered_at || null,
-        next_due_at: next_due_at || null,
-        notes: notes || null,
-        administered_by: administered_by || null,
-        status: 'done',
-        confidence_level: normalizeConfidenceLevel(confidence_level),
-        source: 'manual',
-        vaccine_code: 'CUSTOM'
-      })
-      .select()
+      .select('*')
+      .eq('id', result.recordId)
       .single()
 
-    if (error) throw error
+    if (fetchError || !newRecord) {
+      return NextResponse.json({ error: 'Aşı kaydı oluşturulamadı' }, { status: 500 })
+    }
 
     return NextResponse.json({ data: newRecord })
   } catch (error: any) {

@@ -23,11 +23,29 @@ export async function login(formData: FormData) {
   redirect('/') // Middleware ve layout'lar doğru sayfaya (/owner veya /clinic) yollayacak.
 }
 
-export async function logout() {
+export async function logout(formData?: FormData) {
   const supabase = await createServerSupabaseClient()
 
-  await supabase.auth.signOut()
-  
-  revalidatePath('/', 'layout')
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    const deviceId = formData?.get('device_id') as string | null
+
+    if (user && deviceId) {
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      if (uuidRegex.test(deviceId)) {
+        await supabase
+          .from('push_subscriptions')
+          .delete()
+          .eq('profile_id', user.id)
+          .eq('device_id', deviceId)
+      }
+    }
+  } catch (err) {
+    console.warn('[logout] push subscription cleanup failed, proceeding with signOut:', err)
+  } finally {
+    await supabase.auth.signOut()
+    revalidatePath('/', 'layout')
+  }
+
   redirect('/login')
 }
