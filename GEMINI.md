@@ -1,12 +1,12 @@
 # Odi.Pet — Global Agent Rules
 
 ## Stack
-Next.js 14 (App Router), Supabase, Tailwind CSS, Vercel
+Next.js 16 (App Router), React 19, Supabase, Tailwind CSS, Vercel
 
 ## File Ownership (conflict prevention)
-- Frontend agent: /app/(app)/**, /components/**
-- Backend agent: /app/api/**, /lib/**, /supabase/**
-- DevOps agent: vercel.json, next.config.js, .env.example
+- Frontend agent: /src/app/**, /src/components/**
+- Backend agent: /src/app/api/**, /src/lib/**, /supabase/**
+- DevOps agent: vercel.json, next.config.ts, .env.example
 
 ## Non-negotiables
 - All user-facing strings: Turkish
