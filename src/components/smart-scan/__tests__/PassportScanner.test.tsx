@@ -49,12 +49,31 @@ function changeInput(input: HTMLInputElement, value: string) {
 describe('Smart Passport Scan — UI & In-Place Manual Fallback Suite', () => {
   let container: HTMLDivElement
   let root: Root
+  let origFileReader: any
 
   beforeEach(() => {
     vi.clearAllMocks()
     container = document.createElement('div')
     document.body.appendChild(container)
     root = createRoot(container)
+
+    global.createImageBitmap = vi.fn().mockResolvedValue({
+      width: 800,
+      height: 600,
+      close: vi.fn(),
+    }) as any
+
+    origFileReader = global.FileReader
+    global.FileReader = class {
+      result: string = 'data:image/jpeg;base64,mockbase64'
+      onload: any = null
+      onerror: any = null
+      readAsDataURL() {
+        if (this.onload) {
+          this.onload({ target: this })
+        }
+      }
+    } as any
   })
 
   afterEach(() => {
@@ -62,6 +81,9 @@ describe('Smart Passport Scan — UI & In-Place Manual Fallback Suite', () => {
       root.unmount()
     })
     container.remove()
+    if (origFileReader) {
+      global.FileReader = origFileReader
+    }
   })
 
   // A. Page sequence test
@@ -654,5 +676,905 @@ describe('Smart Passport Scan — UI & In-Place Manual Fallback Suite', () => {
     expect(res.base64).toContain('data:image/jpeg;base64')
 
     global.FileReader = origFileReader
+  })
+})
+
+describe('Smart Passport Scan — Confirmation Step P0/P1 Suite', () => {
+  let container: HTMLDivElement
+  let root: Root
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    container = document.createElement('div')
+    document.body.appendChild(container)
+    root = createRoot(container)
+  })
+
+  afterEach(() => {
+    act(() => {
+      root.unmount()
+    })
+    container.remove()
+  })
+
+  // Helper: skip 5 pages to open Summary View directly
+  const goToSummary = () => {
+    for (let i = 0; i < 5; i++) {
+      act(() => {
+        ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+      })
+    }
+  }
+
+  // 1. Confirmation opens
+  it('1. Confirmation opens: renders 3 canonical sections and status banner without layout shifts', () => {
+    act(() => {
+      root.render(<PassportScanner />)
+    })
+    goToSummary()
+
+    const summaryView = container.querySelector('[data-testid="smart-scan-summary-view"]')
+    expect(summaryView).not.toBeNull()
+
+    expect(container.textContent).toContain('Bilgileri Teyit Edin')
+    expect(container.textContent).toContain('Can Dostumun Bilgileri')
+    expect(container.textContent).toContain('Sahip Bilgileri')
+    expect(container.textContent).toContain('Veteriner & Düzenleyen Yetkili')
+
+    // Status banner exists and does NOT contain misleading "Tüm Bilgiler Uyumlu"
+    const statusBanner = container.querySelector('[data-testid="summary-status-banner"]')
+    expect(statusBanner).not.toBeNull()
+    expect(container.textContent).not.toContain('Tüm Bilgiler Uyumlu')
+  })
+
+  // 2. Edit pet data
+  it('2. Edit pet data: opens inline edit only for Pet card while other cards remain in view state', () => {
+    act(() => {
+      root.render(<PassportScanner />)
+    })
+    goToSummary()
+
+    const editPetBtn = container.querySelector('[data-testid="edit-pet-summary-btn"]') as HTMLButtonElement
+    act(() => {
+      editPetBtn.click()
+    })
+
+    // Pet card is in edit mode
+    expect(container.querySelector('[data-testid="manual-form-page_5"]')).not.toBeNull()
+    expect(container.querySelector('[data-testid="input-pet-name"]')).not.toBeNull()
+    expect(container.querySelector('[data-testid="input-pet-breed"]')).not.toBeNull()
+
+    // Other cards remain in view state (no edit forms for owner or vet)
+    expect(container.querySelector('[data-testid="manual-form-page_4"]')).toBeNull()
+    expect(container.querySelector('[data-testid="manual-form-page_7"]')).toBeNull()
+  })
+
+  // 3. Save pet data
+  it('3. Save pet data: persists changes into finalData and returns to view state', () => {
+    act(() => {
+      root.render(<PassportScanner />)
+    })
+    goToSummary()
+
+    act(() => {
+      ;(container.querySelector('[data-testid="edit-pet-summary-btn"]') as HTMLButtonElement).click()
+    })
+
+    const nameInput = container.querySelector('[data-testid="input-pet-name"]') as HTMLInputElement
+    const breedInput = container.querySelector('[data-testid="input-pet-breed"]') as HTMLInputElement
+    const catToggle = container.querySelector('[data-testid="species-toggle-cat"]') as HTMLButtonElement
+
+    act(() => {
+      changeInput(nameInput, 'Pamuk')
+      catToggle.click()
+      changeInput(breedInput, 'Van Kedisi')
+    })
+
+    act(() => {
+      ;(container.querySelector('[data-testid="save-manual-entry-btn"]') as HTMLButtonElement).click()
+    })
+
+    // Returned to view state
+    expect(container.querySelector('[data-testid="manual-form-page_5"]')).toBeNull()
+    expect(container.textContent).toContain('Pamuk')
+    expect(container.textContent).toContain('Van Kedisi')
+    expect(container.textContent).toContain('Kedi')
+  })
+
+  // 4. Cancel pet edit
+  it('4. Cancel pet edit: discards temporary changes and restores previous values', () => {
+    act(() => {
+      root.render(<PassportScanner />)
+    })
+    goToSummary()
+
+    // 1st save: name = 'Boncuk'
+    act(() => {
+      ;(container.querySelector('[data-testid="edit-pet-summary-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      changeInput(container.querySelector('[data-testid="input-pet-name"]') as HTMLInputElement, 'Boncuk')
+      ;(container.querySelector('[data-testid="species-toggle-cat"]') as HTMLButtonElement).click()
+      changeInput(container.querySelector('[data-testid="input-pet-breed"]') as HTMLInputElement, 'Tekir')
+      ;(container.querySelector('[data-testid="save-manual-entry-btn"]') as HTMLButtonElement).click()
+    })
+    expect(container.textContent).toContain('Boncuk')
+
+    // 2nd edit: change name to 'WrongName' but cancel
+    act(() => {
+      ;(container.querySelector('[data-testid="edit-pet-summary-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      changeInput(container.querySelector('[data-testid="input-pet-name"]') as HTMLInputElement, 'WrongName')
+      ;(container.querySelector('[data-testid="cancel-manual-entry-btn"]') as HTMLButtonElement).click()
+    })
+
+    // WrongName discarded, Boncuk preserved
+    expect(container.textContent).not.toContain('WrongName')
+    expect(container.textContent).toContain('Boncuk')
+  })
+
+  // 5. Edit owner data
+  it('5. Edit owner data: inline edits owner fields and displays saved info', () => {
+    act(() => {
+      root.render(<PassportScanner />)
+    })
+    goToSummary()
+
+    act(() => {
+      ;(container.querySelector('[data-testid="edit-owner-summary-btn"]') as HTMLButtonElement).click()
+    })
+
+    expect(container.querySelector('[data-testid="manual-form-page_4"]')).not.toBeNull()
+
+    const firstInput = container.querySelector('[data-testid="input-owner-first-name"]') as HTMLInputElement
+    const lastInput = container.querySelector('[data-testid="input-owner-last-name"]') as HTMLInputElement
+    const cityInput = container.querySelector('[data-testid="input-owner-city"]') as HTMLInputElement
+    const districtInput = container.querySelector('[data-testid="input-owner-district"]') as HTMLInputElement
+
+    act(() => {
+      changeInput(firstInput, 'Ali')
+      changeInput(lastInput, 'Yılmaz')
+      changeInput(cityInput, 'Ankara')
+      changeInput(districtInput, 'Çankaya')
+    })
+
+    act(() => {
+      ;(container.querySelector('[data-testid="save-manual-entry-btn"]') as HTMLButtonElement).click()
+    })
+
+    expect(container.querySelector('[data-testid="manual-form-page_4"]')).toBeNull()
+    expect(container.textContent).toContain('Ali Yılmaz')
+    expect(container.textContent).toContain('Ankara / Çankaya')
+  })
+
+  // 6. Edit veterinarian data
+  it('6. Edit veterinarian data: inline edits vet fields and displays saved info', () => {
+    act(() => {
+      root.render(<PassportScanner />)
+    })
+    goToSummary()
+
+    act(() => {
+      ;(container.querySelector('[data-testid="edit-vet-summary-btn"]') as HTMLButtonElement).click()
+    })
+
+    expect(container.querySelector('[data-testid="manual-form-page_7"]')).not.toBeNull()
+
+    const vetNameInput = container.querySelector('[data-testid="input-vet-name"]') as HTMLInputElement
+    const clinicInput = container.querySelector('[data-testid="input-vet-clinic"]') as HTMLInputElement
+
+    act(() => {
+      changeInput(vetNameInput, 'Dr. Selin Demir')
+      changeInput(clinicInput, 'Başkent Vet Kliniği')
+    })
+
+    act(() => {
+      ;(container.querySelector('[data-testid="save-manual-entry-btn"]') as HTMLButtonElement).click()
+    })
+
+    expect(container.querySelector('[data-testid="manual-form-page_7"]')).toBeNull()
+    expect(container.textContent).toContain('Dr. Selin Demir')
+    expect(container.textContent).toContain('Başkent Vet Kliniği')
+  })
+
+  // 7. Edited data reaches final payload
+  it('7. Edited data reaches final payload: verifies final commit payload contains user edits from all sections', async () => {
+    let commitBody: any = null
+    global.fetch = vi.fn().mockImplementation((url, opts) => {
+      if (url === '/api/smart-scan/commit') {
+        commitBody = JSON.parse(opts.body)
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, petId: 'pet-new-777' }),
+        })
+      }
+      return Promise.reject(new Error('Unknown url'))
+    }) as any
+
+    act(() => {
+      root.render(<PassportScanner />)
+    })
+    goToSummary()
+
+    // Edit Pet
+    act(() => {
+      ;(container.querySelector('[data-testid="edit-pet-summary-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      changeInput(container.querySelector('[data-testid="input-pet-name"]') as HTMLInputElement, 'Luna')
+      ;(container.querySelector('[data-testid="species-toggle-dog"]') as HTMLButtonElement).click()
+      changeInput(container.querySelector('[data-testid="input-pet-breed"]') as HTMLInputElement, 'Golden Retriever')
+      changeInput(container.querySelector('[data-testid="input-cover-microchip"]') as HTMLInputElement, '985141001234567')
+      ;(container.querySelector('[data-testid="save-manual-entry-btn"]') as HTMLButtonElement).click()
+    })
+
+    // Edit Owner
+    act(() => {
+      ;(container.querySelector('[data-testid="edit-owner-summary-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      changeInput(container.querySelector('[data-testid="input-owner-first-name"]') as HTMLInputElement, 'Cem')
+      changeInput(container.querySelector('[data-testid="input-owner-last-name"]') as HTMLInputElement, 'Aydın')
+      ;(container.querySelector('[data-testid="save-manual-entry-btn"]') as HTMLButtonElement).click()
+    })
+
+    // Edit Vet
+    act(() => {
+      ;(container.querySelector('[data-testid="edit-vet-summary-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      changeInput(container.querySelector('[data-testid="input-vet-name"]') as HTMLInputElement, 'Dr. Ece')
+      changeInput(container.querySelector('[data-testid="input-vet-clinic"]') as HTMLInputElement, 'Alsancak Vet')
+      ;(container.querySelector('[data-testid="save-manual-entry-btn"]') as HTMLButtonElement).click()
+    })
+
+    // Click Confirm
+    const commitBtn = container.querySelector('[data-testid="commit-btn"]') as HTMLButtonElement
+    await act(async () => {
+      commitBtn.click()
+    })
+
+    expect(commitBody).not.toBeNull()
+    expect(commitBody.petPayload.name).toBe('Luna')
+    expect(commitBody.petPayload.species).toBe('dog')
+    expect(commitBody.petPayload.breed).toBe('Golden Retriever')
+    expect(commitBody.petPayload.microchip_no).toBe('985141001234567')
+    expect(commitBody.ownerPayload.first_name).toBe('Cem')
+    expect(commitBody.ownerPayload.last_name).toBe('Aydın')
+    expect(commitBody.petPayload.vet_name).toBe('Dr. Ece')
+    expect(commitBody.petPayload.vet_company).toBe('Alsancak Vet')
+    expect(mockPush).toHaveBeenCalledWith('/owner/pets/pet-new-777')
+  })
+
+  // 8. Confirm without edits
+  it('8. Confirm without edits: commits prefilled/extracted data when valid', async () => {
+    let commitBody: any = null
+    global.fetch = vi.fn().mockImplementation((url, opts) => {
+      if (url === '/api/smart-scan/commit') {
+        commitBody = JSON.parse(opts.body)
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, petId: 'pet-no-edit-111' }),
+        })
+      }
+      return Promise.reject(new Error('Unknown url'))
+    }) as any
+
+    act(() => {
+      root.render(<PassportScanner />)
+    })
+
+    // Step 3: Enter required Pet data in Step 3 manual form
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      ;(container.querySelector('[data-testid="header-manual-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      changeInput(container.querySelector('[data-testid="input-pet-name"]') as HTMLInputElement, 'Mırmır')
+      ;(container.querySelector('[data-testid="species-toggle-cat"]') as HTMLButtonElement).click()
+      changeInput(container.querySelector('[data-testid="input-pet-breed"]') as HTMLInputElement, 'Siyam')
+      ;(container.querySelector('[data-testid="save-manual-entry-btn"]') as HTMLButtonElement).click()
+    })
+
+    // Skip remaining steps to reach summary
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+
+    expect(container.querySelector('[data-testid="smart-scan-summary-view"]')).not.toBeNull()
+
+    // Confirm without any edits
+    const commitBtn = container.querySelector('[data-testid="commit-btn"]') as HTMLButtonElement
+    await act(async () => {
+      commitBtn.click()
+    })
+
+    expect(commitBody).not.toBeNull()
+    expect(commitBody.petPayload.name).toBe('Mırmır')
+    expect(commitBody.petPayload.species).toBe('cat')
+    expect(commitBody.petPayload.breed).toBe('Siyam')
+    expect(mockPush).toHaveBeenCalledWith('/owner/pets/pet-no-edit-111')
+  })
+
+  // 9. Required-field validation
+  it('9. Required-field validation: displays visible error card and prevents commit when required fields are missing', async () => {
+    let commitCalled = false
+    global.fetch = vi.fn().mockImplementation((url) => {
+      if (url === '/api/smart-scan/commit') {
+        commitCalled = true
+        return Promise.resolve({ ok: true, json: async () => ({ success: true }) })
+      }
+      return Promise.reject(new Error('Unknown url'))
+    }) as any
+
+    act(() => {
+      root.render(<PassportScanner />)
+    })
+    goToSummary()
+
+    // Name and breed are missing
+    const commitBtn = container.querySelector('[data-testid="commit-btn"]') as HTMLButtonElement
+    await act(async () => {
+      commitBtn.click()
+    })
+
+    // Never submitted
+    expect(commitCalled).toBe(false)
+
+    // Visible error displayed in confirmation view
+    const errorCard = container.querySelector('[data-testid="confirmation-error-card"]')
+    expect(errorCard).not.toBeNull()
+    expect(errorCard?.textContent).toContain('zorunludur')
+  })
+
+  // 10. API error handling
+  it('10. API error handling: renders visible error card with retry button when server returns an error', async () => {
+    global.fetch = vi.fn().mockImplementation((url) => {
+      if (url === '/api/smart-scan/commit') {
+        return Promise.resolve({
+          ok: false,
+          json: async () => ({ error: 'Kayıt sırasında veritabanı hatası oluştu.' }),
+        })
+      }
+      return Promise.reject(new Error('Unknown url'))
+    }) as any
+
+    act(() => {
+      root.render(<PassportScanner />)
+    })
+    goToSummary()
+
+    // Provide required pet data
+    act(() => {
+      ;(container.querySelector('[data-testid="edit-pet-summary-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      changeInput(container.querySelector('[data-testid="input-pet-name"]') as HTMLInputElement, 'Zeytin')
+      ;(container.querySelector('[data-testid="species-toggle-cat"]') as HTMLButtonElement).click()
+      changeInput(container.querySelector('[data-testid="input-pet-breed"]') as HTMLInputElement, 'Bombey')
+      ;(container.querySelector('[data-testid="save-manual-entry-btn"]') as HTMLButtonElement).click()
+    })
+
+    const commitBtn = container.querySelector('[data-testid="commit-btn"]') as HTMLButtonElement
+    await act(async () => {
+      commitBtn.click()
+    })
+
+    // Confirmation error card rendered with retry button
+    const errorCard = container.querySelector('[data-testid="confirmation-error-card"]')
+    expect(errorCard).not.toBeNull()
+    expect(errorCard?.textContent).toContain('Kayıt sırasında veritabanı hatası oluştu.')
+
+    const retryBtn = container.querySelector('[data-testid="retry-commit-btn"]')
+    expect(retryBtn).not.toBeNull()
+  })
+
+  // 11. Double-submit prevention
+  it('11. Double-submit prevention: disables button and ignores re-entrant clicks while submitting', async () => {
+    let callCount = 0
+    let resolvePromise: any
+    global.fetch = vi.fn().mockImplementation((url) => {
+      if (url === '/api/smart-scan/commit') {
+        callCount++
+        return new Promise((resolve) => {
+          resolvePromise = () => resolve({ ok: true, json: async () => ({ success: true, petId: 'p-1' }) })
+        })
+      }
+      return Promise.reject(new Error('Unknown url'))
+    }) as any
+
+    act(() => {
+      root.render(<PassportScanner />)
+    })
+    goToSummary()
+
+    // Add pet data
+    act(() => {
+      ;(container.querySelector('[data-testid="edit-pet-summary-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      changeInput(container.querySelector('[data-testid="input-pet-name"]') as HTMLInputElement, 'Leo')
+      ;(container.querySelector('[data-testid="species-toggle-dog"]') as HTMLButtonElement).click()
+      changeInput(container.querySelector('[data-testid="input-pet-breed"]') as HTMLInputElement, 'Terrier')
+      ;(container.querySelector('[data-testid="save-manual-entry-btn"]') as HTMLButtonElement).click()
+    })
+
+    const commitBtn = container.querySelector('[data-testid="commit-btn"]') as HTMLButtonElement
+
+    // 1st click
+    act(() => {
+      commitBtn.click()
+    })
+    expect(callCount).toBe(1)
+    expect(commitBtn.textContent).toContain('Bilgiler kaydediliyor...')
+
+    // 2nd click while in-flight -> ignored
+    act(() => {
+      commitBtn.click()
+    })
+    expect(callCount).toBe(1)
+
+    // Complete commit
+    await act(async () => {
+      resolvePromise()
+    })
+
+    expect(mockPush).toHaveBeenCalledWith('/owner/pets/p-1')
+  })
+
+  // 12. Human-in-the-loop: Low confidence warning + human confirmation enables commit
+  it('12. Human-in-the-loop: low confidence score displays warning banner but enables commit once human verifies', async () => {
+    // OCR returned confidence 0.55 on page 5
+    global.fetch = vi.fn().mockImplementation((url) => {
+      if (url === '/api/smart-scan/extract') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            confidence: 0.55,
+            data: { name: 'Maviş', species: 'cat', breed: 'British' },
+          }),
+        })
+      }
+      if (url === '/api/smart-scan/commit') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, petId: 'p-mavis' }),
+        })
+      }
+      return Promise.reject(new Error('Unknown url: ' + url))
+    }) as any
+
+    act(() => {
+      root.render(<PassportScanner />)
+    })
+
+    // Advance to step 3 (page 5)
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+
+    // Simulate file scan on page 5
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
+    const file = new File(['fake-bits'], 'p5.jpg', { type: 'image/jpeg' })
+    await act(async () => {
+      Object.defineProperty(fileInput, 'files', { value: [file], writable: true })
+      fileInput.dispatchEvent(new Event('change', { bubbles: true }))
+      await new Promise(resolve => setTimeout(resolve, 50))
+    })
+
+    // Advance to summary
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+
+    // Status banner displays warning about low confidence
+    const statusBanner = container.querySelector('[data-testid="summary-status-banner"]')
+    expect(statusBanner?.textContent).toContain('Bazı bilgiler kontrol gerektiriyor')
+
+    // But button is NOT permanently disabled: human confirmation allows proceeding!
+    const commitBtn = container.querySelector('[data-testid="commit-btn"]') as HTMLButtonElement
+    expect(commitBtn.disabled).toBe(false)
+
+    await act(async () => {
+      commitBtn.click()
+    })
+
+    expect(mockPush).toHaveBeenCalledWith('/owner/pets/p-mavis')
+  })
+
+  // CRITICAL E2E
+  it('CRITICAL E2E: OCR -> Confirmation -> Edit breed -> Save -> Confirm -> next step -> verify final payload contains edited breed', async () => {
+    let commitPayload: any = null
+    global.fetch = vi.fn().mockImplementation((url, opts) => {
+      if (url === '/api/smart-scan/extract') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            confidence: 0.85,
+            data: { name: 'Karamel', species: 'dog', breed: 'Sokak Köpeği' },
+          }),
+        })
+      }
+      if (url === '/api/smart-scan/commit') {
+        commitPayload = JSON.parse(opts.body)
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, petId: 'pet-karamel-123' }),
+        })
+      }
+      return Promise.reject(new Error('Unknown url'))
+    }) as any
+
+    act(() => {
+      root.render(<PassportScanner />)
+    })
+
+    // 1. OCR on Page 5
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
+    await act(async () => {
+      Object.defineProperty(fileInput, 'files', { value: [new File([''], 'p.jpg', { type: 'image/jpeg' })], writable: true })
+      fileInput.dispatchEvent(new Event('change', { bubbles: true }))
+      await new Promise(resolve => setTimeout(resolve, 50))
+    })
+
+    // 2. Advance to confirmation screen
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+
+    expect(container.querySelector('[data-testid="smart-scan-summary-view"]')).not.toBeNull()
+    expect(container.textContent).toContain('Sokak Köpeği')
+
+    // 3. Edit breed inline
+    act(() => {
+      ;(container.querySelector('[data-testid="edit-pet-summary-btn"]') as HTMLButtonElement).click()
+    })
+
+    const breedInput = container.querySelector('[data-testid="input-pet-breed"]') as HTMLInputElement
+    expect(breedInput.value).toBe('Sokak Köpeği')
+
+    act(() => {
+      changeInput(breedInput, 'Labrador')
+    })
+
+    // 4. Save inline edit
+    act(() => {
+      ;(container.querySelector('[data-testid="save-manual-entry-btn"]') as HTMLButtonElement).click()
+    })
+
+    expect(container.textContent).toContain('Labrador')
+    expect(container.textContent).not.toContain('Sokak Köpeği')
+
+    // 5. Confirm
+    const commitBtn = container.querySelector('[data-testid="commit-btn"]') as HTMLButtonElement
+    await act(async () => {
+      commitBtn.click()
+    })
+
+    // 6. Next step & verify payload contains edited breed
+    expect(commitPayload).not.toBeNull()
+    expect(commitPayload.petPayload.name).toBe('Karamel')
+    expect(commitPayload.petPayload.species).toBe('dog')
+    expect(commitPayload.petPayload.breed).toBe('Labrador')
+    expect(mockPush).toHaveBeenCalledWith('/owner/pets/pet-karamel-123')
+  })
+
+  // 14. Conflict recomputation: OCR conflict -> user correction -> conflict resolves
+  it('14. Conflict recomputation: OCR conflict is dynamically resolved after user correction', async () => {
+    // OCR produced a future birth_date conflict
+    global.fetch = vi.fn().mockImplementation((url) => {
+      if (url === '/api/smart-scan/extract') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            confidence: 0.9,
+            data: {
+              name: 'Pamuk',
+              species: 'cat',
+              breed: 'Van Kedisi',
+              birth_date: '2099-01-01', // FUTURE DATE CONFLICT!
+            },
+          }),
+        })
+      }
+      if (url === '/api/smart-scan/commit') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, petId: 'pet-pamuk-1' }),
+        })
+      }
+      return Promise.reject(new Error('Unknown url'))
+    }) as any
+
+    act(() => {
+      root.render(<PassportScanner />)
+    })
+
+    // Advance to Page 5
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
+    await act(async () => {
+      Object.defineProperty(fileInput, 'files', { value: [new File([''], 'p.jpg', { type: 'image/jpeg' })], writable: true })
+      fileInput.dispatchEvent(new Event('change', { bubbles: true }))
+      await new Promise(resolve => setTimeout(resolve, 50))
+    })
+
+    // Advance to confirmation screen
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+
+    // Status banner shows conflict about future date
+    const banner = container.querySelector('[data-testid="summary-status-banner"]')
+    expect(banner?.textContent).toContain('Doğum tarihi bugünden ileri bir tarih olamaz')
+
+    // Now user corrects the birth date inline
+    act(() => {
+      ;(container.querySelector('[data-testid="edit-pet-summary-btn"]') as HTMLButtonElement).click()
+    })
+
+    const birthInput = container.querySelector('[data-testid="input-pet-birth-date"]') as HTMLInputElement
+    act(() => {
+      changeInput(birthInput, '2022-04-10')
+    })
+
+    // Save correction
+    act(() => {
+      ;(container.querySelector('[data-testid="save-manual-entry-btn"]') as HTMLButtonElement).click()
+    })
+
+    // Conflict MUST BE GONE! Banner should now show valid or no future date conflict
+    const updatedBanner = container.querySelector('[data-testid="summary-status-banner"]')
+    expect(updatedBanner?.textContent).not.toContain('Doğum tarihi bugünden ileri bir tarih olamaz')
+    expect(container.textContent).toContain('2022-04-10')
+  })
+
+  // 15. Edited-field coverage: breed, microchip, passport_no, owner phone, owner address, vet email
+  it('15. Edited-field coverage: verifies breed, microchip, passport_no, owner phone, owner address, vet email in commit payload', async () => {
+    let commitBody: any = null
+    global.fetch = vi.fn().mockImplementation((url, opts) => {
+      if (url === '/api/smart-scan/commit') {
+        commitBody = JSON.parse(opts.body)
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, petId: 'pet-fields-ok' }),
+        })
+      }
+      return Promise.reject(new Error('Unknown url'))
+    }) as any
+
+    act(() => {
+      root.render(<PassportScanner />)
+    })
+
+    // Fast-forward to summary view
+    for (let i = 0; i < 5; i++) {
+      act(() => {
+        ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement)?.click()
+      })
+    }
+
+    // A. Edit Pet: breed, microchip_no, passport_no
+    act(() => {
+      ;(container.querySelector('[data-testid="edit-pet-summary-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      changeInput(container.querySelector('[data-testid="input-pet-name"]') as HTMLInputElement, 'Fındık')
+      ;(container.querySelector('[data-testid="species-toggle-dog"]') as HTMLButtonElement).click()
+      changeInput(container.querySelector('[data-testid="input-pet-breed"]') as HTMLInputElement, 'Labrador')
+      changeInput(container.querySelector('[data-testid="input-cover-microchip"]') as HTMLInputElement, '985141009988776')
+      changeInput(container.querySelector('[data-testid="input-passport-no"]') as HTMLInputElement, 'TR-06-998877')
+      ;(container.querySelector('[data-testid="save-manual-entry-btn"]') as HTMLButtonElement).click()
+    })
+
+    // B. Edit Owner: phone, address
+    act(() => {
+      ;(container.querySelector('[data-testid="edit-owner-summary-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      changeInput(container.querySelector('[data-testid="input-owner-phone"]') as HTMLInputElement, '+90 532 111 22 33')
+      changeInput(container.querySelector('[data-testid="input-owner-address"]') as HTMLInputElement, 'Atatürk Cad. No: 10')
+      ;(container.querySelector('[data-testid="save-manual-entry-btn"]') as HTMLButtonElement).click()
+    })
+
+    // C. Edit Vet: email
+    act(() => {
+      ;(container.querySelector('[data-testid="edit-vet-summary-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      changeInput(container.querySelector('[data-testid="input-vet-email"]') as HTMLInputElement, 'vet@alsancak.com')
+      ;(container.querySelector('[data-testid="save-manual-entry-btn"]') as HTMLButtonElement).click()
+    })
+
+    // Click Confirm
+    const commitBtn = container.querySelector('[data-testid="commit-btn"]') as HTMLButtonElement
+    await act(async () => {
+      commitBtn.click()
+    })
+
+    expect(commitBody).not.toBeNull()
+    expect(commitBody.petPayload.breed).toBe('Labrador')
+    expect(commitBody.petPayload.microchip_no).toBe('985141009988776')
+    expect(commitBody.petPayload.passport_no).toBe('TR-06-998877')
+    expect(commitBody.ownerPayload.phone).toBe('+90 532 111 22 33')
+    expect(commitBody.ownerPayload.neighborhood).toBe('Atatürk Cad. No: 10')
+    expect(commitBody.petPayload.vet_email).toBe('vet@alsancak.com')
+  })
+
+  // 16. Low-confidence + no-edit + human-confirmation
+  it('16. Human-in-the-loop: low-confidence with NO-EDIT allows immediate commit once human confirms', async () => {
+    let commitBody: any = null
+    global.fetch = vi.fn().mockImplementation((url, opts) => {
+      if (url === '/api/smart-scan/extract') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            confidence: 0.55, // low confidence
+            data: {
+              name: 'Boncuk',
+              species: 'cat',
+              breed: 'Van Kedisi',
+              birth_date: '2023-05-10',
+            },
+          }),
+        })
+      }
+      if (url === '/api/smart-scan/commit') {
+        commitBody = JSON.parse(opts.body)
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, petId: 'pet-lowconf-committed' }),
+        })
+      }
+      return Promise.reject(new Error('Unknown url'))
+    }) as any
+
+    act(() => {
+      root.render(<PassportScanner />)
+    })
+
+    // Advance to Page 5 (Pet info)
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+
+    // Trigger low-confidence extraction
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
+    await act(async () => {
+      Object.defineProperty(fileInput, 'files', { value: [new File([''], 'p5.jpg', { type: 'image/jpeg' })], writable: true })
+      fileInput.dispatchEvent(new Event('change', { bubbles: true }))
+      await new Promise(resolve => setTimeout(resolve, 50))
+    })
+
+    // Advance to summary
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+
+    // Banner indicates low confidence warning
+    const banner = container.querySelector('[data-testid="summary-status-banner"]')
+    expect(banner?.textContent).toContain('kontrol gerektiriyor')
+    expect(banner?.textContent).toContain('düşük güvenle okundu')
+
+    // Human performs NO EDIT and clicks confirm
+    const commitBtn = container.querySelector('[data-testid="commit-btn"]') as HTMLButtonElement
+    expect(commitBtn.disabled).toBe(false)
+
+    await act(async () => {
+      commitBtn.click()
+    })
+
+    expect(commitBody).not.toBeNull()
+    expect(commitBody.petPayload.name).toBe('Boncuk')
+    expect(commitBody.petPayload.breed).toBe('Van Kedisi')
+    expect(mockPush).toHaveBeenCalledWith('/owner/pets/pet-lowconf-committed')
+  })
+
+  // 17. WARNING vs CONFLICT differentiation
+  it('17. Status Banner differentiation: explicitly differentiates low-confidence warning from cross-page conflict', async () => {
+    // A: Low-confidence WARNING state (no conflict)
+    global.fetch = vi.fn().mockImplementation((url) => {
+      if (url === '/api/smart-scan/extract') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            confidence: 0.60,
+            data: {
+              name: 'Duman',
+              species: 'cat',
+              breed: 'British Shorthair',
+            },
+          }),
+        })
+      }
+      return Promise.reject(new Error('Unknown url'))
+    }) as any
+
+    act(() => {
+      root.render(<PassportScanner />)
+    })
+
+    // Go to Page 5
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
+    await act(async () => {
+      Object.defineProperty(fileInput, 'files', { value: [new File([''], 'p.jpg', { type: 'image/jpeg' })], writable: true })
+      fileInput.dispatchEvent(new Event('change', { bubbles: true }))
+      await new Promise(resolve => setTimeout(resolve, 50))
+    })
+
+    // Skip to summary
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+
+    const warningBanner = container.querySelector('[data-testid="summary-status-banner"]')
+    expect(warningBanner?.textContent).toContain('kontrol gerektiriyor')
+    expect(warningBanner?.textContent).toContain('düşük güvenle okundu')
+    expect(warningBanner?.textContent).not.toContain('Çelişkili Bilgiler Tespit Edildi')
   })
 })

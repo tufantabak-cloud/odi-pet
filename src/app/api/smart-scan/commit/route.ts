@@ -12,9 +12,23 @@ const commitRequestSchema = z.object({
     }),
     breed: z.string().min(1, 'Irk bilgisi zorunludur'),
     gender: z.enum(['male', 'female']).optional().nullable(),
-    birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
+    birth_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Doğum tarihi YYYY-MM-DD formatında olmalıdır')
+      .refine(val => {
+        const d = new Date(val)
+        return !isNaN(d.getTime()) && d <= new Date()
+      }, { message: 'Doğum tarihi bugünden ileri bir tarih olamaz' })
+      .optional()
+      .nullable(),
     color: z.string().optional().nullable(),
-    microchip_no: z.string().optional().nullable(),
+    microchip_no: z
+      .string()
+      .refine(val => !val || /^\d{15}$/.test(val), {
+        message: 'Mikroçip numarası 15 haneli sayı olmalıdır',
+      })
+      .optional()
+      .nullable(),
     passport_no: z.string().optional().nullable(),
     tattoo_no: z.string().optional().nullable(),
     vet_name: z.string().optional().nullable(),
@@ -36,7 +50,13 @@ const commitRequestSchema = z.object({
     city: z.string().optional().nullable(),
     district: z.string().optional().nullable(),
     neighborhood: z.string().optional().nullable(),
-    postal_code: z.string().optional().nullable(),
+    postal_code: z
+      .string()
+      .refine(val => !val || /^\d{5}$/.test(val), {
+        message: 'Posta kodu 5 haneli sayı olmalıdır',
+      })
+      .optional()
+      .nullable(),
   }).optional().default({}),
 })
 

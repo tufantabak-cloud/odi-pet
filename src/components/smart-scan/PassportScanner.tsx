@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Camera,
@@ -104,6 +104,33 @@ export const QUICK_COLORS = [
   'Alacalı',
   'Gri',
 ] as const
+
+export interface ConfirmationData {
+  name: string
+  species: 'cat' | 'dog' | ''
+  breed: string
+  gender: 'male' | 'female' | ''
+  birth_date: string
+  color: string
+  microchip_no: string
+  tattoo_no: string
+  passport_no: string
+
+  owner_first_name: string
+  owner_last_name: string
+  owner_phone: string
+  owner_city: string
+  owner_district: string
+  owner_address: string
+  owner_postal_code: string
+
+  vet_name: string
+  vet_company: string
+  vet_phone: string
+  vet_email: string
+  registration_city: string
+  registration_district: string
+}
 
 /**
  * Downscales camera image client-side to max 1600px and converts to 0.8 JPEG.
@@ -232,6 +259,58 @@ export function PassportScanner() {
   const [validationResult, setValidationResult] = useState<CrossPageValidationResult | null>(null)
   const [isCommitting, setIsCommitting] = useState<boolean>(false)
 
+  // Confirmation normalized model states
+  const [userEdits, setUserEdits] = useState<Partial<ConfirmationData>>({})
+  const [activeEditSection, setActiveEditSection] = useState<'pet' | 'owner' | 'vet' | null>(null)
+  const [sectionDraft, setSectionDraft] = useState<Partial<ConfirmationData>>({})
+  const [confirmationError, setConfirmationError] = useState<string | null>(null)
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'submitting' | 'success'>('idle')
+  const isSubmittingRef = useRef<boolean>(false)
+
+  // Base extracted data derived from OCR pages + barcode + validation unified data
+  const extractedData: ConfirmationData = useMemo(() => {
+    const u = validationResult?.unifiedData || {}
+    return {
+      name: u.name || pagesData.page_5?.name || '',
+      species: (u.species || pagesData.page_5?.species || '') as any,
+      breed: u.breed || pagesData.page_5?.breed || '',
+      gender: (u.gender || pagesData.page_5?.gender || '') as any,
+      birth_date: u.birth_date || pagesData.page_5?.birth_date || '',
+      color: u.color || pagesData.page_5?.color || '',
+      microchip_no:
+        u.microchip_no ||
+        pagesData.page_6?.microchip_no ||
+        pagesData.cover?.microchip_no ||
+        barcodes[0]?.text ||
+        '',
+      tattoo_no: u.tattoo_no || pagesData.page_6?.tattoo_no || '',
+      passport_no: u.passport_no || pagesData.cover?.passport_no || '',
+
+      owner_first_name: u.owner_first_name || pagesData.page_4?.owner_first_name || '',
+      owner_last_name: u.owner_last_name || pagesData.page_4?.owner_last_name || '',
+      owner_phone: u.owner_phone || pagesData.page_4?.owner_phone || '',
+      owner_city: u.owner_city || pagesData.page_4?.owner_city || '',
+      owner_district: u.owner_district || pagesData.page_4?.owner_district || '',
+      owner_address: u.owner_neighborhood || pagesData.page_4?.owner_address || '',
+      owner_postal_code: u.owner_postal_code || pagesData.page_4?.owner_postal_code || '',
+
+      vet_name: u.vet_name || pagesData.page_7?.veterinarian_name || '',
+      vet_company: u.vet_company || pagesData.page_7?.clinic_name || '',
+      vet_phone: u.vet_phone || pagesData.page_7?.vet_phone || '',
+      vet_email: u.vet_email || pagesData.page_7?.vet_email || '',
+      registration_city: u.registration_city || pagesData.page_7?.registration_city || '',
+      registration_district: u.registration_district || pagesData.page_7?.registration_district || '',
+    }
+  }, [validationResult, pagesData, barcodes])
+
+  // Final confirmed data: extracted data + user edits
+  const finalData: ConfirmationData = useMemo(() => {
+    return {
+      ...extractedData,
+      ...userEdits,
+    }
+  }, [extractedData, userEdits])
+
   const currentPage = PAGES_FLOW[currentPageIndex]
   const currentCaptured = pagesData[currentPage.type]
 
@@ -256,22 +335,60 @@ export function PassportScanner() {
     }
   }, [isManualEntry, currentPageIndex, currentPage.type, pagesData, barcodes, validationResult])
 
-  // Re-calculate validation whenever pagesData updates
+  // Re-calculate validation whenever pagesData, userEdits, or barcodes update
   useEffect(() => {
     const confValues = Object.values(pageConfidences)
     const minConfidence = confValues.length > 0 ? Math.min(...confValues) : null
 
+    // Effective user corrections
+    const effectiveMicrochip = userEdits.microchip_no !== undefined ? userEdits.microchip_no : undefined
+    const effectivePassport = userEdits.passport_no !== undefined ? userEdits.passport_no : undefined
+
     const result = validateCrossPage({
-      cover: pagesData.cover,
-      page_4: pagesData.page_4,
-      page_5: pagesData.page_5,
-      page_6: pagesData.page_6,
-      page_7: pagesData.page_7,
-      barcode: barcodes[0] || null,
+      cover: {
+        ...(pagesData.cover || {}),
+        ...(effectivePassport !== undefined ? { passport_no: effectivePassport } : {}),
+        ...(effectiveMicrochip !== undefined ? { microchip_no: effectiveMicrochip } : {}),
+      },
+      page_4: {
+        ...(pagesData.page_4 || {}),
+        ...(userEdits.owner_first_name !== undefined ? { owner_first_name: userEdits.owner_first_name } : {}),
+        ...(userEdits.owner_last_name !== undefined ? { owner_last_name: userEdits.owner_last_name } : {}),
+        ...(userEdits.owner_phone !== undefined ? { owner_phone: userEdits.owner_phone } : {}),
+        ...(userEdits.owner_city !== undefined ? { owner_city: userEdits.owner_city } : {}),
+        ...(userEdits.owner_district !== undefined ? { owner_district: userEdits.owner_district } : {}),
+        ...(userEdits.owner_address !== undefined ? { owner_address: userEdits.owner_address } : {}),
+        ...(userEdits.owner_postal_code !== undefined ? { owner_postal_code: userEdits.owner_postal_code } : {}),
+      },
+      page_5: {
+        ...(pagesData.page_5 || {}),
+        ...(userEdits.name !== undefined ? { name: userEdits.name } : {}),
+        ...(userEdits.species !== undefined ? { species: userEdits.species } : {}),
+        ...(userEdits.breed !== undefined ? { breed: userEdits.breed } : {}),
+        ...(userEdits.gender !== undefined ? { gender: userEdits.gender } : {}),
+        ...(userEdits.birth_date !== undefined ? { birth_date: userEdits.birth_date } : {}),
+        ...(userEdits.color !== undefined ? { color: userEdits.color } : {}),
+      },
+      page_6: {
+        ...(pagesData.page_6 || {}),
+        ...(effectiveMicrochip !== undefined ? { microchip_no: effectiveMicrochip } : {}),
+        ...(userEdits.tattoo_no !== undefined ? { tattoo_no: userEdits.tattoo_no } : {}),
+      },
+      page_7: {
+        ...(pagesData.page_7 || {}),
+        ...(userEdits.vet_name !== undefined ? { veterinarian_name: userEdits.vet_name } : {}),
+        ...(userEdits.vet_company !== undefined ? { clinic_name: userEdits.vet_company } : {}),
+        ...(userEdits.vet_phone !== undefined ? { vet_phone: userEdits.vet_phone } : {}),
+        ...(userEdits.vet_email !== undefined ? { vet_email: userEdits.vet_email } : {}),
+        ...(userEdits.registration_city !== undefined ? { registration_city: userEdits.registration_city } : {}),
+        ...(userEdits.registration_district !== undefined ? { registration_district: userEdits.registration_district } : {}),
+      },
+      // If user explicitly provided a valid microchip or passport, suppress barcode conflict
+      barcode: (effectiveMicrochip || effectivePassport) ? null : (barcodes[0] || null),
       confidence: minConfidence,
     })
     setValidationResult(result)
-  }, [pagesData, barcodes, pageConfidences])
+  }, [pagesData, barcodes, pageConfidences, userEdits])
 
   // Handle image capture
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -360,15 +477,92 @@ export function PassportScanner() {
     }))
   }
 
-  // Jump to specific step from Summary view for direct editing
+  // Start inline section edit on confirmation screen
+  const handleStartEdit = (section: 'pet' | 'owner' | 'vet') => {
+    setActiveEditSection(section)
+    setSectionDraft({ ...finalData })
+    setConfirmationError(null)
+  }
+
+  // Cancel inline section edit and discard temporary changes
+  const handleCancelEdit = () => {
+    setActiveEditSection(null)
+    setSectionDraft({})
+    setConfirmationError(null)
+  }
+
+  // Update field in active section draft
+  const handleDraftChange = (field: keyof ConfirmationData, value: any) => {
+    setSectionDraft(prev => ({
+      ...prev,
+      [field]: value,
+    }))
+  }
+
+  // Save section draft into userEdits and return to view state
+  const handleSaveEdit = (section: 'pet' | 'owner' | 'vet') => {
+    if (section === 'pet') {
+      if (!sectionDraft.name?.trim()) {
+        setConfirmationError('Can dostunuzun adı zorunludur.')
+        return
+      }
+      if (!sectionDraft.species || (sectionDraft.species !== 'cat' && sectionDraft.species !== 'dog')) {
+        setConfirmationError('Lütfen tür seçiniz (Kedi veya Köpek).')
+        return
+      }
+      if (!sectionDraft.breed?.trim()) {
+        setConfirmationError('Irk bilgisi zorunludur.')
+        return
+      }
+      if (sectionDraft.birth_date) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(sectionDraft.birth_date)) {
+          setConfirmationError('Doğum tarihi formatı YYYY-MM-DD olmalıdır.')
+          return
+        }
+        const bDate = new Date(sectionDraft.birth_date)
+        if (isNaN(bDate.getTime()) || bDate > new Date()) {
+          setConfirmationError('Doğum tarihi bugünden ileri bir tarih olamaz.')
+          return
+        }
+      }
+      if (sectionDraft.microchip_no) {
+        const cleanChip = sectionDraft.microchip_no.replace(/\D/g, '')
+        if (cleanChip && cleanChip.length !== 15) {
+          setConfirmationError('Mikroçip numarası 15 haneli sayı olmalıdır.')
+          return
+        }
+      }
+    }
+
+    if (section === 'owner') {
+      if (sectionDraft.owner_postal_code) {
+        const cleanPost = sectionDraft.owner_postal_code.replace(/\D/g, '')
+        if (cleanPost && cleanPost.length !== 5) {
+          setConfirmationError('Posta kodu 5 haneli sayı olmalıdır.')
+          return
+        }
+      }
+    }
+
+    // Persist verified edits to userEdits state
+    setUserEdits(prev => ({
+      ...prev,
+      ...sectionDraft,
+    }))
+
+    setActiveEditSection(null)
+    setSectionDraft({})
+    setConfirmationError(null)
+  }
+
+  // Jump to specific step from Summary view or open inline edit
   const handleEditFromSummary = (targetPageType: PassportPageType) => {
-    const targetIdx = PAGES_FLOW.findIndex(p => p.type === targetPageType)
-    if (targetIdx !== -1) {
-      setCurrentPageIndex(targetIdx)
-      setReturnToSummary(true)
-      setIsSummaryView(false)
-      setIsManualEntry(true)
-      setErrorMsg(null)
+    if (targetPageType === 'page_5' || targetPageType === 'cover' || targetPageType === 'page_6') {
+      handleStartEdit('pet')
+    } else if (targetPageType === 'page_4') {
+      handleStartEdit('owner')
+    } else if (targetPageType === 'page_7') {
+      handleStartEdit('vet')
     }
   }
 
@@ -409,18 +603,62 @@ export function PassportScanner() {
     }
   }
 
-  // Final commit via atomic RPC
+  // Final commit via atomic RPC with full finalData validation and double-submit protection
   const handleCommit = async () => {
-    if (!validationResult || !validationResult.canCommit) {
-      setErrorMsg('Lütfen zorunlu alanların (Ad, Tür, Irk) doğru girildiğinden emin olun.')
+    if (isSubmittingRef.current || isCommitting) return
+
+    setConfirmationError(null)
+
+    // Ensure any open section edit is saved or dismissed
+    if (activeEditSection !== null) {
+      setConfirmationError('Lütfen açık olan düzenleme formunu kaydedin veya vazgeçin.')
       return
     }
 
+    // Client-side validation of finalData
+    if (!finalData.name?.trim()) {
+      setConfirmationError('Can dostunuzun adı zorunludur. Lütfen "Can Dostumun Bilgileri" bölümünü düzenleyin.')
+      return
+    }
+    if (!finalData.species || (finalData.species !== 'cat' && finalData.species !== 'dog')) {
+      setConfirmationError('Tür seçimi (Kedi veya Köpek) zorunludur.')
+      return
+    }
+    if (!finalData.breed?.trim()) {
+      setConfirmationError('Irk bilgisi zorunludur. Lütfen "Can Dostumun Bilgileri" bölümünü düzenleyin.')
+      return
+    }
+    if (finalData.birth_date) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(finalData.birth_date)) {
+        setConfirmationError('Doğum tarihi formatı YYYY-MM-DD olmalıdır.')
+        return
+      }
+      const bDate = new Date(finalData.birth_date)
+      if (isNaN(bDate.getTime()) || bDate > new Date()) {
+        setConfirmationError('Doğum tarihi bugünden ileri bir tarih olamaz.')
+        return
+      }
+    }
+    if (finalData.microchip_no) {
+      const cleanChip = finalData.microchip_no.replace(/\D/g, '')
+      if (cleanChip && cleanChip.length !== 15) {
+        setConfirmationError('Mikroçip numarası 15 haneli sayı olmalıdır.')
+        return
+      }
+    }
+    if (finalData.owner_postal_code) {
+      const cleanPostal = finalData.owner_postal_code.replace(/\D/g, '')
+      if (cleanPostal && cleanPostal.length !== 5) {
+        setConfirmationError('Posta kodu 5 haneli sayı olmalıdır.')
+        return
+      }
+    }
+
+    isSubmittingRef.current = true
     setIsCommitting(true)
-    setErrorMsg(null)
+    setSubmitStatus('submitting')
 
     try {
-      const u = validationResult.unifiedData
       const idempotencyKey = `smart_scan_${sessionId}`
       const res = await fetch('/api/smart-scan/commit', {
         method: 'POST',
@@ -429,52 +667,56 @@ export function PassportScanner() {
           sessionId,
           idempotencyKey,
           petPayload: {
-            name: u.name,
-            species: u.species,
-            breed: u.breed,
-            gender: u.gender || null,
-            birth_date: u.birth_date && /^\d{4}-\d{2}-\d{2}$/.test(u.birth_date) ? u.birth_date : null,
-            color: u.color || null,
-            microchip_no: u.microchip_no || null,
-            passport_no: u.passport_no || null,
-            tattoo_no: u.tattoo_no || null,
-            vet_name: u.vet_name || null,
-            vet_company: u.vet_company || null,
-            vet_phone: u.vet_phone || null,
-            vet_email: u.vet_email || null,
-            registration_city: u.registration_city || null,
-            registration_district: u.registration_district || null,
+            name: finalData.name.trim(),
+            species: finalData.species,
+            breed: finalData.breed.trim(),
+            gender: finalData.gender || null,
+            birth_date: finalData.birth_date && /^\d{4}-\d{2}-\d{2}$/.test(finalData.birth_date) ? finalData.birth_date : null,
+            color: finalData.color || null,
+            microchip_no: finalData.microchip_no ? finalData.microchip_no.replace(/\D/g, '') : null,
+            passport_no: finalData.passport_no ? finalData.passport_no.trim() : null,
+            tattoo_no: finalData.tattoo_no ? finalData.tattoo_no.trim() : null,
+            vet_name: finalData.vet_name ? finalData.vet_name.trim() : null,
+            vet_company: finalData.vet_company ? finalData.vet_company.trim() : null,
+            vet_phone: finalData.vet_phone ? finalData.vet_phone.trim() : null,
+            vet_email: finalData.vet_email ? finalData.vet_email.trim() : null,
+            registration_city: finalData.registration_city ? finalData.registration_city.trim() : null,
+            registration_district: finalData.registration_district ? finalData.registration_district.trim() : null,
           },
           ownerPayload: {
-            first_name: u.owner_first_name || null,
-            last_name: u.owner_last_name || null,
-            phone: u.owner_phone || null,
-            city: u.owner_city || null,
-            district: u.owner_district || null,
-            neighborhood: u.owner_neighborhood || null,
-            postal_code: u.owner_postal_code || null,
+            first_name: finalData.owner_first_name ? finalData.owner_first_name.trim() : null,
+            last_name: finalData.owner_last_name ? finalData.owner_last_name.trim() : null,
+            phone: finalData.owner_phone ? finalData.owner_phone.trim() : null,
+            city: finalData.owner_city ? finalData.owner_city.trim() : null,
+            district: finalData.owner_district ? finalData.owner_district.trim() : null,
+            neighborhood: finalData.owner_address ? finalData.owner_address.trim() : null,
+            postal_code: finalData.owner_postal_code ? finalData.owner_postal_code.replace(/\D/g, '') : null,
           },
         }),
       })
 
       const data = await res.json()
       if (!res.ok || !data.success) {
-        setErrorMsg(data.error || 'Kaydetme sırasında bir hata oluştu.')
+        setConfirmationError(data.error || 'Bilgiler kaydedilemedi. Lütfen tekrar deneyin.')
+        setSubmitStatus('idle')
+        setIsCommitting(false)
+        isSubmittingRef.current = false
         return
       }
 
-      // Success -> navigate to pet details
+      setSubmitStatus('success')
       router.push(`/owner/pets/${data.petId}`)
     } catch (err) {
       console.error('[PassportScanner] Commit error:', err)
-      setErrorMsg('Bağlantı hatası oluştu. Lütfen tekrar deneyiniz.')
-    } finally {
+      setConfirmationError('Bağlantı hatası oluştu. Lütfen tekrar deneyiniz.')
+      setSubmitStatus('idle')
       setIsCommitting(false)
+      isSubmittingRef.current = false
     }
   }
 
   return (
-    <div className="w-full max-w-md mx-auto min-h-[600px] flex flex-col justify-between p-4 bg-surface rounded-2xl border border-border-main shadow-sm animate-fadeIn">
+    <div className="w-full max-w-md mx-auto flex flex-col p-4 bg-surface rounded-2xl border border-border-main shadow-sm animate-fadeIn">
       <div id="qr-reader-temp-anchor" style={{ display: 'none' }} />
 
       {/* Header & Stepper */}
@@ -487,7 +729,12 @@ export function PassportScanner() {
               if (isManualEntry) {
                 setIsManualEntry(false)
               } else if (isSummaryView) {
-                setIsSummaryView(false)
+                if (activeEditSection) {
+                  setActiveEditSection(null)
+                  setSectionDraft({})
+                } else {
+                  setIsSummaryView(false)
+                }
               } else if (currentPageIndex > 0) {
                 setCurrentPageIndex(p => p - 1)
               } else {
@@ -548,7 +795,7 @@ export function PassportScanner() {
       </div>
 
       {/* Main Content Area */}
-      <div className="my-5 flex-1 flex flex-col justify-center">
+      <div className={`w-full flex-1 flex flex-col ${isSummaryView ? 'my-2 gap-3' : 'my-5 justify-center'}`}>
         {/* VIEW 1: IN-PLACE MANUAL ENTRY FORM */}
         {isManualEntry && !isSummaryView && (
           <form
@@ -1159,256 +1406,699 @@ export function PassportScanner() {
           </div>
         )}
 
-        {/* VIEW 3: SUMMARY VIEW WITH 3 CANONICAL SECTIONS */}
+        {/* VIEW 3: SUMMARY VIEW WITH 3 CANONICAL SECTIONS & INLINE EDIT */}
         {isSummaryView && (
-          <div data-testid="smart-scan-summary-view" className="flex flex-col gap-4 text-left animate-fadeIn">
-            <div className="text-center mb-1">
+          <div data-testid="smart-scan-summary-view" className="flex flex-col gap-3 text-left animate-fadeIn">
+            <div className="text-center mb-0.5">
               <h2 className="text-xl font-bold text-text-primary">Bilgileri Teyit Edin</h2>
-              <p className="text-xs text-text-secondary mt-1">
+              <p className="text-xs text-text-secondary mt-0.5">
                 Pasaporttan aktarılan bilgileri kontrol ederek onaylayın.
               </p>
             </div>
 
-            {/* Validation Decision Badge */}
-            <div
-              className={`p-3 rounded-xl border text-xs flex items-start gap-2.5 ${
-                validationResult?.status === 'MATCH'
-                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
-                  : validationResult?.status === 'CONFLICT'
-                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300'
-                  : 'bg-surface-muted border-border-main text-text-secondary'
-              }`}
-            >
-              {validationResult?.status === 'MATCH' && (
-                <CheckCircle2 size={18} className="text-emerald-500 shrink-0 mt-0.5" />
-              )}
-              {validationResult?.status === 'CONFLICT' && (
-                <AlertTriangle size={18} className="text-amber-500 shrink-0 mt-0.5" />
-              )}
-              {validationResult?.status === 'UNKNOWN' && (
-                <HelpCircle size={18} className="text-text-secondary shrink-0 mt-0.5" />
-              )}
+            {/* Validation & Low-Confidence Decision Banner */}
+            {(() => {
+              const minConfidence = Object.values(pageConfidences).length > 0
+                ? Math.min(...Object.values(pageConfidences))
+                : null
+              const isLowConf = minConfidence !== null && minConfidence < 0.70
+              const hasConflicts = validationResult?.conflicts && validationResult.conflicts.length > 0
 
-              <div>
-                <span className="font-bold block">
-                  {validationResult?.status === 'MATCH'
-                    ? 'Tüm Bilgiler Uyumlu'
-                    : validationResult?.status === 'CONFLICT'
-                    ? 'Çelişkili Bilgiler Tespit Edildi'
-                    : 'Eksik Alanlar Mevcut'}
-                </span>
-                {validationResult?.conflicts && validationResult.conflicts.length > 0 && (
-                  <ul className="list-disc pl-4 mt-1 space-y-0.5">
-                    {validationResult.conflicts.map((c, i) => (
-                      <li key={i}>{c}</li>
-                    ))}
-                  </ul>
-                )}
-                {validationResult?.warnings && validationResult.warnings.length > 0 && (
-                  <ul className="list-disc pl-4 mt-1 space-y-0.5 text-text-secondary">
-                    {validationResult.warnings.map((w, i) => (
-                      <li key={i}>{w}</li>
-                    ))}
-                  </ul>
-                )}
+              if (hasConflicts || isLowConf) {
+                return (
+                  <div
+                    data-testid="summary-status-banner"
+                    className="p-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-200 text-xs flex items-start gap-2.5"
+                  >
+                    <AlertTriangle size={18} className="text-amber-500 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold block">
+                        {hasConflicts
+                          ? 'Çelişkili Bilgiler Tespit Edildi'
+                          : 'Bazı bilgiler kontrol gerektiriyor'}
+                      </span>
+                      <p className="mt-0.5 text-text-secondary">
+                        {isLowConf
+                          ? 'Bazı bilgiler düşük güvenle okundu. Lütfen alanları kontrol edip gerekiyorsa düzenleyin.'
+                          : 'Lütfen pasaporttan aktarılan bilgileri kontrol edin.'}
+                      </p>
+                      {hasConflicts && (
+                        <ul className="list-disc pl-4 mt-1 space-y-0.5">
+                          {validationResult!.conflicts.map((c, i) => (
+                            <li key={i}>{c}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                )
+              }
+
+              return (
+                <div
+                  data-testid="summary-status-banner"
+                  className="p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-text-primary text-xs flex items-start gap-2.5"
+                >
+                  <CheckCircle2 size={18} className="text-emerald-500 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold block text-text-primary">Bilgileri kontrol edin</span>
+                    <p className="mt-0.5 text-text-secondary">
+                      Pasaporttan aktarılan bilgileri kontrol ederek onaylayabilirsiniz.
+                    </p>
+                  </div>
+                </div>
+              )
+            })()}
+
+            {/* Visible Confirmation Error Box with Retry */}
+            {confirmationError && (
+              <div
+                data-testid="confirmation-error-card"
+                className="w-full bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-300 p-3.5 rounded-2xl flex flex-col gap-2 text-xs text-left"
+              >
+                <div className="flex items-start gap-2">
+                  <AlertCircle size={16} className="shrink-0 mt-0.5 text-red-500" />
+                  <div className="flex-1 font-medium">
+                    <span className="block font-bold">⚠ Bilgiler kaydedilemedi</span>
+                    <span className="opacity-90">{confirmationError}</span>
+                  </div>
+                </div>
+                <div className="pt-1 border-t border-red-500/20 flex justify-end">
+                  <button
+                    type="button"
+                    data-testid="retry-commit-btn"
+                    onClick={handleCommit}
+                    className="px-3 py-1.5 rounded-xl bg-red-600 text-white font-semibold text-xs hover:bg-red-700 transition-colors cursor-pointer"
+                  >
+                    Tekrar Dene
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* SECTION 1: PET BİLGİLERİ */}
-            <div className="bg-surface-muted/60 p-4 rounded-2xl border border-border-main text-xs space-y-2">
+            <div data-testid="summary-card-pet" className="bg-surface-muted/50 p-3.5 rounded-2xl border border-border-main text-xs space-y-2">
               <div className="flex items-center justify-between pb-1.5 border-b border-border-main">
                 <span className="font-bold text-text-primary flex items-center gap-1.5">
                   <ShieldCheck size={16} className="text-primary" />
                   Can Dostumun Bilgileri
                 </span>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-text-muted">Bölüm II & III</span>
+                {activeEditSection !== 'pet' && (
                   <button
                     type="button"
                     data-testid="edit-pet-summary-btn"
-                    onClick={() => handleEditFromSummary('page_5')}
+                    onClick={() => handleStartEdit('pet')}
                     className="text-xs text-primary font-semibold hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     <FileEdit size={12} /> Düzenle
                   </button>
+                )}
+              </div>
+
+              {activeEditSection === 'pet' ? (
+                /* INLINE EDIT FORM FOR PET */
+                <div
+                  data-testid="manual-form-page_5"
+                  className="flex flex-col gap-3 pt-1 text-left animate-fadeIn"
+                >
+                  <div>
+                    <label className="text-xs font-bold text-text-primary block mb-1">
+                      Can Dostunun Adı <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      data-testid="input-pet-name"
+                      value={sectionDraft.name || ''}
+                      onChange={e => handleDraftChange('name', e.target.value)}
+                      placeholder="Örn: Boncuk, Duman"
+                      className="w-full text-xs font-semibold p-2 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-text-primary block mb-1">
+                      Türü <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        data-testid="species-toggle-cat"
+                        onClick={() => handleDraftChange('species', 'cat')}
+                        className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                          sectionDraft.species === 'cat'
+                            ? 'bg-primary text-white border-primary shadow-sm'
+                            : 'bg-surface border-border-main text-text-secondary hover:bg-surface-hover'
+                        }`}
+                      >
+                        🐱 Kedi
+                      </button>
+                      <button
+                        type="button"
+                        data-testid="species-toggle-dog"
+                        onClick={() => handleDraftChange('species', 'dog')}
+                        className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                          sectionDraft.species === 'dog'
+                            ? 'bg-primary text-white border-primary shadow-sm'
+                            : 'bg-surface border-border-main text-text-secondary hover:bg-surface-hover'
+                        }`}
+                      >
+                        🐶 Köpek
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">
+                        Irkı <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        data-testid="input-pet-breed"
+                        value={sectionDraft.breed || ''}
+                        onChange={e => handleDraftChange('breed', e.target.value)}
+                        placeholder="Örn: Tekir, Golden"
+                        className="w-full text-xs font-semibold p-2 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">Cinsiyeti</label>
+                      <div className="grid grid-cols-2 gap-1">
+                        <button
+                          type="button"
+                          data-testid="gender-toggle-male"
+                          onClick={() => handleDraftChange('gender', 'male')}
+                          className={`py-2 px-1 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                            sectionDraft.gender === 'male'
+                              ? 'bg-primary/10 border-primary text-primary'
+                              : 'bg-surface border-border-main text-text-secondary'
+                          }`}
+                        >
+                          Erkek
+                        </button>
+                        <button
+                          type="button"
+                          data-testid="gender-toggle-female"
+                          onClick={() => handleDraftChange('gender', 'female')}
+                          className={`py-2 px-1 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                            sectionDraft.gender === 'female'
+                              ? 'bg-primary/10 border-primary text-primary'
+                              : 'bg-surface border-border-main text-text-secondary'
+                          }`}
+                        >
+                          Dişi
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">Doğum Tarihi</label>
+                      <input
+                        type="date"
+                        data-testid="input-pet-birth-date"
+                        value={sectionDraft.birth_date || ''}
+                        onChange={e => handleDraftChange('birth_date', e.target.value)}
+                        className="w-full text-xs font-medium p-2 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">Renk / Görünüm</label>
+                      <input
+                        type="text"
+                        data-testid="input-pet-color"
+                        value={sectionDraft.color || ''}
+                        onChange={e => handleDraftChange('color', e.target.value)}
+                        placeholder="Örn: Gri, Beyaz"
+                        className="w-full text-xs font-medium p-2 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Quick Color Chips */}
+                  <div>
+                    <label className="text-[11px] font-semibold text-text-secondary block mb-1">
+                      Hızlı Renk Seçimi
+                    </label>
+                    <div className="flex flex-wrap gap-1">
+                      {QUICK_COLORS.map(c => {
+                        const testIdSlug = c
+                          .toLowerCase()
+                          .replace(/ç/g, 'c')
+                          .replace(/ğ/g, 'g')
+                          .replace(/ı/g, 'i')
+                          .replace(/ö/g, 'o')
+                          .replace(/ş/g, 's')
+                          .replace(/ü/g, 'u')
+                          .replace(/[^a-z0-9]/g, '-')
+                          .replace(/-+/g, '-')
+                          .replace(/^-|-$/g, '')
+                        return (
+                          <button
+                            key={c}
+                            type="button"
+                            data-testid={`color-chip-${testIdSlug}`}
+                            onClick={() => handleDraftChange('color', c)}
+                            className={`px-2 py-0.5 rounded-lg text-xs font-medium transition-all active:scale-[0.98] cursor-pointer border ${
+                              sectionDraft.color === c
+                                ? 'bg-primary/10 border-primary text-primary font-bold'
+                                : 'bg-surface border-border-main text-text-secondary hover:border-primary/40'
+                            }`}
+                          >
+                            {c}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">
+                        Mikroçip Numarası
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={15}
+                        data-testid="input-cover-microchip"
+                        value={sectionDraft.microchip_no || ''}
+                        onChange={e => handleDraftChange('microchip_no', e.target.value.replace(/\D/g, ''))}
+                        placeholder="15 haneli sayı"
+                        className="w-full text-xs font-mono font-semibold p-2 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">Dövme No</label>
+                      <input
+                        type="text"
+                        data-testid="input-chip-tattoo"
+                        value={sectionDraft.tattoo_no || ''}
+                        onChange={e => handleDraftChange('tattoo_no', e.target.value)}
+                        placeholder="Örn: TAT-9988"
+                        className="w-full text-xs font-mono font-medium p-2 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-text-primary block mb-1">Pasaport No</label>
+                    <input
+                      type="text"
+                      data-testid="input-passport-no"
+                      value={sectionDraft.passport_no || ''}
+                      onChange={e => handleDraftChange('passport_no', e.target.value.toUpperCase())}
+                      placeholder="Örn: TR-06-123456"
+                      className="w-full text-xs font-mono font-semibold p-2 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-2 border-t border-border-main">
+                    <button
+                      type="button"
+                      data-testid="cancel-manual-entry-btn"
+                      onClick={handleCancelEdit}
+                      className="flex-1 py-2 px-3 rounded-xl border border-border-main text-text-secondary hover:text-text-primary text-xs font-semibold text-center transition-colors cursor-pointer"
+                    >
+                      Özete Geri Dön
+                    </button>
+                    <button
+                      type="button"
+                      data-testid="save-manual-entry-btn"
+                      onClick={() => handleSaveEdit('pet')}
+                      className="flex-1 py-2 px-3 rounded-xl bg-primary text-white text-xs font-semibold flex items-center justify-center gap-1 hover:bg-primary/90 transition-all active:scale-[0.98] cursor-pointer shadow-sm"
+                    >
+                      <span>Değişiklikleri Kaydet ve Özete Dön</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div className="flex justify-between py-1 border-b border-border-main/40">
-                <span className="text-text-secondary">Adı:</span>
-                <span className="font-bold text-text-primary">
-                  {validationResult?.unifiedData.name || '—'}
-                </span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-border-main/40">
-                <span className="text-text-secondary">Tür:</span>
-                <span className="font-bold text-text-primary capitalize">
-                  {validationResult?.unifiedData.species === 'cat'
-                    ? 'Kedi'
-                    : validationResult?.unifiedData.species === 'dog'
-                    ? 'Köpek'
-                    : '—'}
-                </span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-border-main/40">
-                <span className="text-text-secondary">Irk:</span>
-                <span className="font-bold text-text-primary">
-                  {validationResult?.unifiedData.breed || '—'}
-                </span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-border-main/40">
-                <span className="text-text-secondary">Cinsiyet:</span>
-                <span className="font-bold text-text-primary">
-                  {validationResult?.unifiedData.gender === 'male'
-                    ? 'Erkek'
-                    : validationResult?.unifiedData.gender === 'female'
-                    ? 'Dişi'
-                    : '—'}
-                </span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-border-main/40">
-                <span className="text-text-secondary">Doğum Tarihi:</span>
-                <span className="font-bold text-text-primary">
-                  {validationResult?.unifiedData.birth_date || '—'}
-                </span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-border-main/40">
-                <span className="text-text-secondary">Renk / Görünüm:</span>
-                <span className="font-bold text-text-primary">
-                  {validationResult?.unifiedData.color || '—'}
-                </span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-border-main/40">
-                <span className="text-text-secondary">Mikroçip No:</span>
-                <span className="font-bold text-text-primary font-mono">
-                  {validationResult?.unifiedData.microchip_no || '—'}
-                </span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-border-main/40">
-                <span className="text-text-secondary">Dövme No:</span>
-                <span className="font-bold text-text-primary font-mono">
-                  {validationResult?.unifiedData.tattoo_no || '—'}
-                </span>
-              </div>
-              <div className="flex justify-between py-1">
-                <span className="text-text-secondary">Pasaport No:</span>
-                <span className="font-bold text-text-primary font-mono">
-                  {validationResult?.unifiedData.passport_no || '—'}
-                </span>
-              </div>
+              ) : (
+                /* VIEW STATE FOR PET */
+                <>
+                  <div className="flex justify-between py-1 border-b border-border-main/30">
+                    <span className="text-text-secondary">Adı:</span>
+                    <span className="font-bold text-text-primary">{finalData.name || '—'}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-border-main/30">
+                    <span className="text-text-secondary">Tür:</span>
+                    <span className="font-bold text-text-primary capitalize">
+                      {finalData.species === 'cat'
+                        ? 'Kedi'
+                        : finalData.species === 'dog'
+                        ? 'Köpek'
+                        : '—'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-border-main/30">
+                    <span className="text-text-secondary">Irk:</span>
+                    <span className="font-bold text-text-primary">{finalData.breed || '—'}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-border-main/30">
+                    <span className="text-text-secondary">Cinsiyet:</span>
+                    <span className="font-bold text-text-primary">
+                      {finalData.gender === 'male'
+                        ? 'Erkek'
+                        : finalData.gender === 'female'
+                        ? 'Dişi'
+                        : '—'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-border-main/30">
+                    <span className="text-text-secondary">Doğum Tarihi:</span>
+                    <span className="font-bold text-text-primary">{finalData.birth_date || '—'}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-border-main/30">
+                    <span className="text-text-secondary">Renk / Görünüm:</span>
+                    <span className="font-bold text-text-primary">{finalData.color || '—'}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-border-main/30">
+                    <span className="text-text-secondary">Mikroçip No:</span>
+                    <span className="font-bold text-text-primary font-mono">{finalData.microchip_no || '—'}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-border-main/30">
+                    <span className="text-text-secondary">Dövme No:</span>
+                    <span className="font-bold text-text-primary font-mono">{finalData.tattoo_no || '—'}</span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span className="text-text-secondary">Pasaport No:</span>
+                    <span className="font-bold text-text-primary font-mono">{finalData.passport_no || '—'}</span>
+                  </div>
+                </>
+              )}
             </div>
 
-            {/* SECTION 2: SAHİP BİLGİLERİ (Bölüm I — Profil Tamamla) */}
-            <div className="bg-surface-muted/60 p-4 rounded-2xl border border-border-main text-xs space-y-2">
+            {/* SECTION 2: SAHİP BİLGİLERİ */}
+            <div data-testid="summary-card-owner" className="bg-surface-muted/50 p-3.5 rounded-2xl border border-border-main text-xs space-y-2">
               <div className="flex items-center justify-between pb-1.5 border-b border-border-main">
                 <span className="font-bold text-text-primary flex items-center gap-1.5">
                   <User size={16} className="text-primary" />
                   Sahip Bilgileri
                 </span>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-primary bg-primary/10 px-2 py-0.5 rounded-full font-medium">
-                    Profil Tamamla
-                  </span>
+                {activeEditSection !== 'owner' && (
                   <button
                     type="button"
                     data-testid="edit-owner-summary-btn"
-                    onClick={() => handleEditFromSummary('page_4')}
+                    onClick={() => handleStartEdit('owner')}
                     className="text-xs text-primary font-semibold hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     <FileEdit size={12} /> Düzenle
                   </button>
+                )}
+              </div>
+
+              {activeEditSection === 'owner' ? (
+                /* INLINE EDIT FORM FOR OWNER */
+                <div
+                  data-testid="manual-form-page_4"
+                  className="flex flex-col gap-2.5 pt-1 text-left animate-fadeIn"
+                >
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">Sahip Adı</label>
+                      <input
+                        type="text"
+                        data-testid="input-owner-first-name"
+                        value={sectionDraft.owner_first_name || ''}
+                        onChange={e => handleDraftChange('owner_first_name', e.target.value)}
+                        placeholder="Örn: Tufan"
+                        className="w-full text-xs font-medium p-2 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">Sahip Soyadı</label>
+                      <input
+                        type="text"
+                        data-testid="input-owner-last-name"
+                        value={sectionDraft.owner_last_name || ''}
+                        onChange={e => handleDraftChange('owner_last_name', e.target.value)}
+                        placeholder="Örn: Tabak"
+                        className="w-full text-xs font-medium p-2 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-text-primary block mb-1">Telefon Numarası</label>
+                    <input
+                      type="tel"
+                      data-testid="input-owner-phone"
+                      value={sectionDraft.owner_phone || ''}
+                      onChange={e => handleDraftChange('owner_phone', e.target.value)}
+                      placeholder="Örn: +90 532 111 22 33"
+                      className="w-full text-xs font-medium p-2 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">İl</label>
+                      <input
+                        type="text"
+                        data-testid="input-owner-city"
+                        value={sectionDraft.owner_city || ''}
+                        onChange={e => handleDraftChange('owner_city', e.target.value)}
+                        placeholder="Örn: İstanbul"
+                        className="w-full text-xs font-medium p-2 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">İlçe</label>
+                      <input
+                        type="text"
+                        data-testid="input-owner-district"
+                        value={sectionDraft.owner_district || ''}
+                        onChange={e => handleDraftChange('owner_district', e.target.value)}
+                        placeholder="Örn: Kadıköy"
+                        className="w-full text-xs font-medium p-2 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-text-primary block mb-1">Açık Adres (Mahalle / Sokak)</label>
+                    <input
+                      type="text"
+                      data-testid="input-owner-address"
+                      value={sectionDraft.owner_address || ''}
+                      onChange={e => handleDraftChange('owner_address', e.target.value)}
+                      placeholder="Örn: Moda Cad. No: 12 D: 4"
+                      className="w-full text-xs font-medium p-2 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-text-primary block mb-1">Posta Kodu</label>
+                    <input
+                      type="text"
+                      maxLength={5}
+                      data-testid="input-owner-postal-code"
+                      value={sectionDraft.owner_postal_code || ''}
+                      onChange={e => handleDraftChange('owner_postal_code', e.target.value.replace(/\D/g, ''))}
+                      placeholder="Örn: 34710"
+                      className="w-full text-xs font-mono font-medium p-2 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-2 border-t border-border-main">
+                    <button
+                      type="button"
+                      data-testid="cancel-manual-entry-btn"
+                      onClick={handleCancelEdit}
+                      className="flex-1 py-2 px-3 rounded-xl border border-border-main text-text-secondary hover:text-text-primary text-xs font-semibold text-center transition-colors cursor-pointer"
+                    >
+                      Özete Geri Dön
+                    </button>
+                    <button
+                      type="button"
+                      data-testid="save-manual-entry-btn"
+                      onClick={() => handleSaveEdit('owner')}
+                      className="flex-1 py-2 px-3 rounded-xl bg-primary text-white text-xs font-semibold flex items-center justify-center gap-1 hover:bg-primary/90 transition-all active:scale-[0.98] cursor-pointer shadow-sm"
+                    >
+                      <span>Değişiklikleri Kaydet ve Özete Dön</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <p className="text-[11px] text-text-muted flex items-start gap-1 pb-1">
-                <Info size={12} className="shrink-0 mt-0.5 text-primary" />
-                Mevcut profil bilgileriniz korunur, sadece boş alanlar doldurulur.
-              </p>
-              <div className="flex justify-between py-1 border-b border-border-main/40">
-                <span className="text-text-secondary">Adı & Soyadı:</span>
-                <span className="font-bold text-text-primary">
-                  {[validationResult?.unifiedData.owner_first_name, validationResult?.unifiedData.owner_last_name]
-                    .filter(Boolean)
-                    .join(' ') || '—'}
-                </span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-border-main/40">
-                <span className="text-text-secondary">Telefon:</span>
-                <span className="font-bold text-text-primary">
-                  {validationResult?.unifiedData.owner_phone || '—'}
-                </span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-border-main/40">
-                <span className="text-text-secondary">İl / İlçe:</span>
-                <span className="font-bold text-text-primary">
-                  {[validationResult?.unifiedData.owner_city, validationResult?.unifiedData.owner_district]
-                    .filter(Boolean)
-                    .join(' / ') || '—'}
-                </span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-border-main/40">
-                <span className="text-text-secondary">Açık Adres:</span>
-                <span className="font-bold text-text-primary text-right max-w-[200px] truncate">
-                  {validationResult?.unifiedData.owner_neighborhood || '—'}
-                </span>
-              </div>
-              <div className="flex justify-between py-1">
-                <span className="text-text-secondary">Posta Kodu:</span>
-                <span className="font-bold text-text-primary font-mono">
-                  {validationResult?.unifiedData.owner_postal_code || '—'}
-                </span>
-              </div>
+              ) : (
+                /* VIEW STATE FOR OWNER */
+                <>
+                  <div className="flex justify-between py-1 border-b border-border-main/30">
+                    <span className="text-text-secondary">Adı & Soyadı:</span>
+                    <span className="font-bold text-text-primary">
+                      {[finalData.owner_first_name, finalData.owner_last_name].filter(Boolean).join(' ') || '—'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-border-main/30">
+                    <span className="text-text-secondary">Telefon:</span>
+                    <span className="font-bold text-text-primary">{finalData.owner_phone || '—'}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-border-main/30">
+                    <span className="text-text-secondary">İl / İlçe:</span>
+                    <span className="font-bold text-text-primary">
+                      {[finalData.owner_city, finalData.owner_district].filter(Boolean).join(' / ') || '—'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-border-main/30">
+                    <span className="text-text-secondary">Açık Adres:</span>
+                    <span className="font-bold text-text-primary text-right max-w-[200px] truncate">
+                      {finalData.owner_address || '—'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span className="text-text-secondary">Posta Kodu:</span>
+                    <span className="font-bold text-text-primary font-mono">{finalData.owner_postal_code || '—'}</span>
+                  </div>
+                </>
+              )}
             </div>
 
-            {/* SECTION 3: VETERİNER BİLGİLERİ (Bölüm IV) */}
-            <div className="bg-surface-muted/60 p-4 rounded-2xl border border-border-main text-xs space-y-2">
+            {/* SECTION 3: VETERİNER BİLGİLERİ */}
+            <div data-testid="summary-card-vet" className="bg-surface-muted/50 p-3.5 rounded-2xl border border-border-main text-xs space-y-2">
               <div className="flex items-center justify-between pb-1.5 border-b border-border-main">
                 <span className="font-bold text-text-primary flex items-center gap-1.5">
                   <Stethoscope size={16} className="text-primary" />
                   Veteriner & Düzenleyen Yetkili
                 </span>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-text-muted">Bölüm IV</span>
+                {activeEditSection !== 'vet' && (
                   <button
                     type="button"
                     data-testid="edit-vet-summary-btn"
-                    onClick={() => handleEditFromSummary('page_7')}
+                    onClick={() => handleStartEdit('vet')}
                     className="text-xs text-primary font-semibold hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     <FileEdit size={12} /> Düzenle
                   </button>
+                )}
+              </div>
+
+              {activeEditSection === 'vet' ? (
+                /* INLINE EDIT FORM FOR VETERINARIAN */
+                <div
+                  data-testid="manual-form-page_7"
+                  className="flex flex-col gap-2.5 pt-1 text-left animate-fadeIn"
+                >
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">Yetkili Hekim Adı</label>
+                      <input
+                        type="text"
+                        data-testid="input-vet-name"
+                        value={sectionDraft.vet_name || ''}
+                        onChange={e => handleDraftChange('vet_name', e.target.value)}
+                        placeholder="Dr. Ahmet Yılmaz"
+                        className="w-full text-xs font-medium p-2 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">Klinik / Kurum</label>
+                      <input
+                        type="text"
+                        data-testid="input-vet-clinic"
+                        value={sectionDraft.vet_company || ''}
+                        onChange={e => handleDraftChange('vet_company', e.target.value)}
+                        placeholder="Kadıköy Veteriner Kliniği"
+                        className="w-full text-xs font-medium p-2 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">Klinik Telefonu</label>
+                      <input
+                        type="tel"
+                        data-testid="input-vet-phone"
+                        value={sectionDraft.vet_phone || ''}
+                        onChange={e => handleDraftChange('vet_phone', e.target.value)}
+                        placeholder="+90 216 123 45 67"
+                        className="w-full text-xs font-medium p-2 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">Klinik E-posta</label>
+                      <input
+                        type="email"
+                        data-testid="input-vet-email"
+                        value={sectionDraft.vet_email || ''}
+                        onChange={e => handleDraftChange('vet_email', e.target.value)}
+                        placeholder="vet@kadikoyvet.com"
+                        className="w-full text-xs font-medium p-2 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">Kayıt Şehri</label>
+                      <input
+                        type="text"
+                        data-testid="input-vet-city"
+                        value={sectionDraft.registration_city || ''}
+                        onChange={e => handleDraftChange('registration_city', e.target.value)}
+                        placeholder="İstanbul"
+                        className="w-full text-xs font-medium p-2 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-text-primary block mb-1">Kayıt İlçesi</label>
+                      <input
+                        type="text"
+                        data-testid="input-vet-district"
+                        value={sectionDraft.registration_district || ''}
+                        onChange={e => handleDraftChange('registration_district', e.target.value)}
+                        placeholder="Kadıköy"
+                        className="w-full text-xs font-medium p-2 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-2 border-t border-border-main">
+                    <button
+                      type="button"
+                      data-testid="cancel-manual-entry-btn"
+                      onClick={handleCancelEdit}
+                      className="flex-1 py-2 px-3 rounded-xl border border-border-main text-text-secondary hover:text-text-primary text-xs font-semibold text-center transition-colors cursor-pointer"
+                    >
+                      Özete Geri Dön
+                    </button>
+                    <button
+                      type="button"
+                      data-testid="save-manual-entry-btn"
+                      onClick={() => handleSaveEdit('vet')}
+                      className="flex-1 py-2 px-3 rounded-xl bg-primary text-white text-xs font-semibold flex items-center justify-center gap-1 hover:bg-primary/90 transition-all active:scale-[0.98] cursor-pointer shadow-sm"
+                    >
+                      <span>Değişiklikleri Kaydet ve Özete Dön</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div className="flex justify-between py-1 border-b border-border-main/40">
-                <span className="text-text-secondary">Veteriner Hekim:</span>
-                <span className="font-bold text-text-primary">
-                  {validationResult?.unifiedData.vet_name || '—'}
-                </span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-border-main/40">
-                <span className="text-text-secondary">Klinik / Kurum:</span>
-                <span className="font-bold text-text-primary">
-                  {validationResult?.unifiedData.vet_company || '—'}
-                </span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-border-main/40">
-                <span className="text-text-secondary">Telefon:</span>
-                <span className="font-bold text-text-primary">
-                  {validationResult?.unifiedData.vet_phone || '—'}
-                </span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-border-main/40">
-                <span className="text-text-secondary">E-posta:</span>
-                <span className="font-bold text-text-primary">
-                  {validationResult?.unifiedData.vet_email || '—'}
-                </span>
-              </div>
-              <div className="flex justify-between py-1">
-                <span className="text-text-secondary">Kayıt Şehri / İlçesi:</span>
-                <span className="font-bold text-text-primary">
-                  {[validationResult?.unifiedData.registration_city, validationResult?.unifiedData.registration_district]
-                    .filter(Boolean)
-                    .join(' / ') || '—'}
-                </span>
-              </div>
+              ) : (
+                /* VIEW STATE FOR VETERINARIAN */
+                <>
+                  <div className="flex justify-between py-1 border-b border-border-main/30">
+                    <span className="text-text-secondary">Veteriner Hekim:</span>
+                    <span className="font-bold text-text-primary">{finalData.vet_name || '—'}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-border-main/30">
+                    <span className="text-text-secondary">Klinik / Kurum:</span>
+                    <span className="font-bold text-text-primary">{finalData.vet_company || '—'}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-border-main/30">
+                    <span className="text-text-secondary">Telefon:</span>
+                    <span className="font-bold text-text-primary">{finalData.vet_phone || '—'}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-border-main/30">
+                    <span className="text-text-secondary">E-posta:</span>
+                    <span className="font-bold text-text-primary">{finalData.vet_email || '—'}</span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span className="text-text-secondary">Kayıt Şehri / İlçesi:</span>
+                    <span className="font-bold text-text-primary">
+                      {[finalData.registration_city, finalData.registration_district].filter(Boolean).join(' / ') || '—'}
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}
@@ -1497,14 +2187,19 @@ export function PassportScanner() {
             <button
               type="button"
               data-testid="commit-btn"
-              disabled={isCommitting || !validationResult?.canCommit}
+              disabled={isCommitting || submitStatus === 'submitting'}
               onClick={handleCommit}
-              className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 text-white font-semibold flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer shadow-sm"
+              className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 text-white font-semibold flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all active:scale-[0.98] disabled:opacity-60 cursor-pointer shadow-sm text-sm"
             >
-              {isCommitting ? (
+              {submitStatus === 'submitting' ? (
                 <>
                   <Loader2 size={18} className="animate-spin" />
-                  <span>Kaydediliyor...</span>
+                  <span>Bilgiler kaydediliyor...</span>
+                </>
+              ) : submitStatus === 'success' ? (
+                <>
+                  <CheckCircle2 size={18} />
+                  <span>✓ Pet profiline geçiliyor...</span>
                 </>
               ) : (
                 <>

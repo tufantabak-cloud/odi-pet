@@ -219,9 +219,10 @@ export function validateCrossPage(params: {
 
   // 5. Final Decision Calculation
   let status: OCRDecisionStatus = 'UNKNOWN'
+  const isLowConfidence = confidence !== undefined && confidence !== null && confidence < CONFIDENCE_THRESHOLD
   if (conflicts.length > 0) {
     status = 'CONFLICT'
-  } else if (confidence !== undefined && confidence !== null && confidence < CONFIDENCE_THRESHOLD) {
+  } else if (isLowConfidence) {
     status = 'UNKNOWN'
     warnings.push(`AI okuma güven skoru (%${Math.round(confidence * 100)}) teyit eşiğinin altında kaldı. Lütfen bilgileri gözden geçiriniz.`)
   } else if (name && species && breed) {
@@ -230,7 +231,8 @@ export function validateCrossPage(params: {
     status = 'UNKNOWN'
   }
 
-  const canCommit = status === 'MATCH' && conflicts.length === 0
+  // Human-in-the-loop: low confidence is a warning, but user confirmation + valid required fields enables commit
+  const canCommit = Boolean(name && species && breed) && conflicts.length === 0
 
   return {
     status,
