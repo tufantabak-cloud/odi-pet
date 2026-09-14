@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
       // Invariant: Friendly Turkish error without leaking internal technical counters
       return NextResponse.json(
         {
-          error: 'Belgenizi otomatik okuyamadık. Bilgileri manuel girerek kaydı tamamlayabilirsiniz.',
+          error: 'Günlük otomatik okuma limitinize ulaştınız. Bilgilerinizi aşağıdaki form ile manuel olarak tamamlayabilirsiniz.',
           limitReached: true,
           fallbackToManual: true,
         },

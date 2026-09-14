@@ -240,6 +240,7 @@ export function PassportScanner() {
   const [processingMessage, setProcessingMessage] = useState<string>('')
   const [preCheckWarning, setPreCheckWarning] = useState<string | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [isLimitReached, setIsLimitReached] = useState(false)
 
   // Captured data per page
   const [pagesData, setPagesData] = useState<{
@@ -436,7 +437,13 @@ export function PassportScanner() {
       const data = await response.json()
 
       if (!response.ok) {
-        setErrorMsg(data.error || 'Belgenizi otomatik okuyamadık. Bilgileri manuel girerek kaydı tamamlayabilirsiniz.')
+        if (response.status === 429) {
+          setIsLimitReached(true)
+          setErrorMsg(data.error || 'Günlük otomatik okuma limitinize ulaştınız. Bilgilerinizi aşağıdaki form ile manuel olarak tamamlayabilirsiniz.')
+        } else {
+          setIsLimitReached(false)
+          setErrorMsg(data.error || 'Belgenizi otomatik okuyamadık. Bilgileri manuel girerek kaydı tamamlayabilirsiniz.')
+        }
         return
       }
 
@@ -467,6 +474,7 @@ export function PassportScanner() {
   const handleOpenManualEntry = () => {
     setIsManualEntry(true)
     setErrorMsg(null)
+    setIsLimitReached(false)
   }
 
   // Handle field change in manual form
@@ -1327,41 +1335,72 @@ export function PassportScanner() {
               </div>
             )}
 
-            {/* OCR Failure Box with In-Place Action Buttons */}
+            {/* OCR Failure / 429 Limit Reached Box with In-Place Action Buttons */}
             {errorMsg && (
-              <div
-                data-testid="smart-scan-error-card"
-                className="w-full bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-300 p-3.5 rounded-2xl flex flex-col gap-2.5 text-xs text-left"
-              >
-                <div className="flex items-start gap-2">
-                  <AlertCircle size={16} className="shrink-0 mt-0.5 text-red-500" />
-                  <div className="flex-1 font-medium">
-                    <span className="block font-bold mb-0.5">Bu sayfadaki bilgiler otomatik okunamadı.</span>
-                    <span className="opacity-90">{errorMsg}</span>
+              isLimitReached ? (
+                <div
+                  data-testid="smart-scan-limit-card"
+                  className="w-full bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-200 p-4 rounded-2xl flex flex-col gap-3 text-xs text-left animate-fadeIn"
+                >
+                  <div className="flex items-start gap-2.5">
+                    <AlertCircle size={18} className="shrink-0 mt-0.5 text-amber-500" />
+                    <div className="flex-1 font-medium">
+                      <span className="block font-bold text-sm text-text-primary mb-1">
+                        Günlük Okuma Limiti
+                      </span>
+                      <p className="text-text-secondary leading-relaxed">
+                        {errorMsg}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-1 border-t border-amber-500/20">
+                    <button
+                      type="button"
+                      data-testid="limit-manual-fallback-btn"
+                      onClick={handleOpenManualEntry}
+                      className="w-full py-2.5 px-3 rounded-xl bg-primary text-white font-semibold flex items-center justify-center gap-1.5 hover:bg-primary/90 transition-all active:scale-[0.98] cursor-pointer shadow-sm text-xs min-h-[44px]"
+                    >
+                      <FileEdit size={14} />
+                      <span>Bilgileri Kendim Dolduracağım</span>
+                    </button>
                   </div>
                 </div>
+              ) : (
+                <div
+                  data-testid="smart-scan-error-card"
+                  className="w-full bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-300 p-3.5 rounded-2xl flex flex-col gap-2.5 text-xs text-left animate-fadeIn"
+                >
+                  <div className="flex items-start gap-2">
+                    <AlertCircle size={16} className="shrink-0 mt-0.5 text-red-500" />
+                    <div className="flex-1 font-medium">
+                      <span className="block font-bold mb-0.5">Bu sayfadaki bilgiler otomatik okunamadı.</span>
+                      <span className="opacity-90">{errorMsg}</span>
+                    </div>
+                  </div>
 
-                <div className="flex items-center gap-2 pt-1 border-t border-red-500/20">
-                  <button
-                    type="button"
-                    data-testid="retry-photo-btn"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex-1 py-2 px-3 rounded-xl bg-surface border border-border-main text-text-primary font-semibold flex items-center justify-center gap-1.5 hover:bg-surface-hover transition-all active:scale-[0.98] cursor-pointer"
-                  >
-                    <RefreshCw size={14} />
-                    <span>Tekrar Fotoğrafla</span>
-                  </button>
-                  <button
-                    type="button"
-                    data-testid="manual-fallback-btn"
-                    onClick={handleOpenManualEntry}
-                    className="flex-1 py-2 px-3 rounded-xl bg-primary text-white font-semibold flex items-center justify-center gap-1.5 hover:bg-primary/90 transition-all active:scale-[0.98] cursor-pointer shadow-sm"
-                  >
-                    <FileEdit size={14} />
-                    <span>Manuel Devam Et</span>
-                  </button>
+                  <div className="flex items-center gap-2 pt-1 border-t border-red-500/20">
+                    <button
+                      type="button"
+                      data-testid="retry-photo-btn"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex-1 py-2 px-3 rounded-xl bg-surface border border-border-main text-text-primary font-semibold flex items-center justify-center gap-1.5 hover:bg-surface-hover transition-all active:scale-[0.98] cursor-pointer min-h-[44px]"
+                    >
+                      <RefreshCw size={14} />
+                      <span>Tekrar Fotoğrafla</span>
+                    </button>
+                    <button
+                      type="button"
+                      data-testid="manual-fallback-btn"
+                      onClick={handleOpenManualEntry}
+                      className="flex-1 py-2 px-3 rounded-xl bg-primary text-white font-semibold flex items-center justify-center gap-1.5 hover:bg-primary/90 transition-all active:scale-[0.98] cursor-pointer shadow-sm min-h-[44px]"
+                    >
+                      <FileEdit size={14} />
+                      <span>Manuel Devam Et</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )
             )}
 
             {/* Instant Confirmation Card for Current Page */}
