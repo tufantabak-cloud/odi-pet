@@ -51,6 +51,7 @@ export interface PetAgendaEvent {
   eventId: string;
   source: 'plans' | 'vaccine_records_v2' | 'parasite_records' | 'health_medications' | 'growth_records' | 'nutrition_logs' | 'appointments' | 'health_schedules';
   sourceRecordId: string;
+  petId?: string | null;                 // Direct canonical Pet ID reference
   category?: string | null;
   subCategory?: string | null;
   stableIdentity: string;
