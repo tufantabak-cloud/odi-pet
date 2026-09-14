@@ -1577,4 +1577,74 @@ describe('Smart Passport Scan — Confirmation Step P0/P1 Suite', () => {
     expect(warningBanner?.textContent).toContain('düşük güvenle okundu')
     expect(warningBanner?.textContent).not.toContain('Çelişkili Bilgiler Tespit Edildi')
   })
+
+  // 18. HTTP 429 Limit UX Test
+  it('18. HTTP 429 Rate Limit: renders distinct daily limit card with manual fallback CTA instead of camera error', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      status: 429,
+      ok: false,
+      json: async () => ({
+        error: 'Günlük otomatik okuma limitinize ulaştınız. Bilgilerinizi aşağıdaki form ile manuel olarak tamamlayabilirsiniz.',
+      }),
+    }) as any
+
+    global.createImageBitmap = vi.fn().mockResolvedValue({
+      width: 800,
+      height: 600,
+      close: vi.fn(),
+    }) as any
+
+    const origFileReader = global.FileReader
+    global.FileReader = class {
+      result: string = 'data:image/jpeg;base64,mock429image'
+      onload: any = null
+      onerror: any = null
+      readAsDataURL() {
+        if (this.onload) {
+          this.onload({ target: this })
+        }
+      }
+    } as any
+
+    act(() => {
+      root.render(<PassportScanner />)
+    })
+
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
+    expect(fileInput).not.toBeNull()
+
+    const file = new File(['fake-image-bits'], 'cover.jpg', { type: 'image/jpeg' })
+    await act(async () => {
+      Object.defineProperty(fileInput, 'files', {
+        value: [file],
+        writable: true,
+      })
+      fileInput.dispatchEvent(new Event('change', { bubbles: true }))
+    })
+
+    // Verify 429 limit card is rendered, NOT generic error card
+    const limitCard = container.querySelector('[data-testid="smart-scan-limit-card"]')
+    expect(limitCard).not.toBeNull()
+    expect(limitCard?.textContent).toContain('Günlük Okuma Limiti')
+    expect(limitCard?.textContent).toContain('Günlük otomatik okuma limitinize ulaştınız')
+
+    const genericErrorCard = container.querySelector('[data-testid="smart-scan-error-card"]')
+    expect(genericErrorCard).toBeNull()
+
+    // Verify manual fallback CTA
+    const manualBtn = container.querySelector('[data-testid="limit-manual-fallback-btn"]') as HTMLButtonElement
+    expect(manualBtn).not.toBeNull()
+    expect(manualBtn.textContent).toContain('Bilgileri Kendim Dolduracağım')
+
+    // Click manual fallback CTA -> enters in-place manual entry form for cover
+    act(() => {
+      manualBtn.click()
+    })
+
+    expect(container.querySelector('[data-testid="manual-form-cover"]')).not.toBeNull()
+    expect(container.querySelector('[data-testid="smart-scan-limit-card"]')).toBeNull()
+
+    global.FileReader = origFileReader
+  })
+
 })

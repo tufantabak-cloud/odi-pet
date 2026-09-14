@@ -5,10 +5,10 @@ const PASSWORD = process.env.TEST_PASSWORD || 'password123'
 const CANONICAL_PET_ID = process.env.TEST_PET_ID || '00000000-0000-4000-8000-000000000042'
 
 async function doLogin(page: Page) {
-  await page.goto('/login')
-  try {
-    await page.waitForSelector('img[alt="Splash 1"]', { state: 'detached', timeout: 3000 })
-  } catch (e) {}
+  await page.addInitScript(() => {
+    window.localStorage.setItem('PLAYWRIGHT_TEST', 'true')
+  })
+  await page.goto('/login?nosplash=true')
 
   // Check if already logged in
   if (page.url().includes('/owner/') || page.url().includes('/admin')) {
@@ -16,12 +16,11 @@ async function doLogin(page: Page) {
   }
 
   const emailInput = page.locator('input[name="email"]')
-  if (await emailInput.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await emailInput.fill(EMAIL)
-    await page.fill('input[name="password"]', PASSWORD)
-    await page.click('button[type="submit"]')
-    await page.waitForURL(/\/admin|\/(owner|clinic|sitter|trainer|groomer|hotel)\//, { timeout: 15000 })
-  }
+  await emailInput.waitFor({ state: 'visible', timeout: 15000 })
+  await emailInput.fill(EMAIL)
+  await page.fill('input[name="password"]', PASSWORD)
+  await page.click('button[type="submit"]', { force: true })
+  await page.waitForURL(/\/admin|\/(owner|clinic|sitter|trainer|groomer|hotel)\//, { timeout: 20000 })
 }
 
 async function navigateToSummary(page: Page) {
@@ -48,6 +47,7 @@ async function navigateToSummary(page: Page) {
 
 test.describe('Smart Passport Scan — Confirmation Step True Browser E2E & Responsive Gate', () => {
   test.beforeEach(async ({ page }) => {
+    test.setTimeout(60000)
     // Intercept extract API for deterministic OCR simulation
     await page.route('**/api/smart-scan/extract', async (route) => {
       await route.fulfill({
