@@ -237,9 +237,6 @@ ALTER TABLE _p2ref_plans ADD CONSTRAINT _p2ref_invariant_check
     (status IN ('completed', 'cancelled', 'deleted') AND is_active = FALSE)
   );
 
-ALTER TABLE _p2ref_plans ADD CONSTRAINT _p2ref_plans_assigned_fk
-  FOREIGN KEY (assigned_to) REFERENCES public.profiles(id) ON DELETE SET NULL NOT VALID;
-
 ALTER TABLE _p2ref_po ADD CONSTRAINT _p2ref_record_table_check
   CHECK (
     record_table IS NULL OR record_table IN (
@@ -247,9 +244,6 @@ ALTER TABLE _p2ref_po ADD CONSTRAINT _p2ref_record_table_check
       'health_medication_courses', 'nutrition_logs', 'appointments'
     )
   );
-
-ALTER TABLE _p2ref_po ADD CONSTRAINT _p2ref_po_assigned_fk
-  FOREIGN KEY (assigned_to) REFERENCES public.profiles(id) ON DELETE SET NULL NOT VALID;
 
 -- 7.3 Add canonical RLS policies to reference tables
 ALTER TABLE _p2ref_plans ENABLE ROW LEVEL SECURITY;
@@ -304,6 +298,15 @@ DECLARE
   v_existing   TEXT;
   v_canonical  TEXT;
   v_legacy     TEXT;
+  -- FK catalog variables
+  v_fkey_found      BOOLEAN;
+  v_fkey_canonical  BOOLEAN;
+  v_fkey_validated  BOOLEAN;
+  v_actual_target   TEXT;
+  v_actual_deltype  "char";
+  v_actual_updtype  "char";
+  v_actual_local    TEXT;
+  v_actual_ref      TEXT;
   -- policy variables
   v_cmd        "char";
   v_perm       BOOLEAN;
@@ -321,54 +324,118 @@ BEGIN
   -- A. CONSTRAINT & FK VALIDATION
   -- ======================================================================
 
-  -- A1. plans_assigned_to_fkey
-  SELECT pg_get_constraintdef(c.oid) INTO v_canonical
-  FROM pg_constraint c WHERE c.conname = '_p2ref_plans_assigned_fk';
+  -- A1. plans_assigned_to_fkey (Catalog-level semantic identity)
+  v_fkey_found := NULL;
+  v_fkey_canonical := NULL;
+  v_fkey_validated := NULL;
+  v_actual_target := NULL;
+  v_actual_deltype := NULL;
+  v_actual_updtype := NULL;
+  v_actual_local := NULL;
+  v_actual_ref := NULL;
 
-  v_type := NULL; v_validated := NULL; v_existing := NULL;
-  SELECT c.contype, c.convalidated, pg_get_constraintdef(c.oid)
-  INTO   v_type, v_validated, v_existing
+  SELECT
+    TRUE,
+    c.convalidated,
+    (
+      c.contype = 'f'
+      AND c.confrelid = 'public.profiles'::regclass
+      AND c.confdeltype = 'n'
+      AND c.confupdtype = 'a'
+      AND cardinality(c.conkey) = 1
+      AND cardinality(c.confkey) = 1
+      AND (SELECT attname FROM pg_attribute WHERE attrelid = c.conrelid AND attnum = c.conkey[1]) = 'assigned_to'
+      AND (SELECT attname FROM pg_attribute WHERE attrelid = c.confrelid AND attnum = c.confkey[1]) = 'id'
+    ),
+    c.confrelid::regclass::text,
+    c.confdeltype,
+    c.confupdtype,
+    (SELECT attname FROM pg_attribute WHERE attrelid = c.conrelid AND attnum = c.conkey[1]),
+    (SELECT attname FROM pg_attribute WHERE attrelid = c.confrelid AND attnum = c.confkey[1])
+  INTO
+    v_fkey_found,
+    v_fkey_validated,
+    v_fkey_canonical,
+    v_actual_target,
+    v_actual_deltype,
+    v_actual_updtype,
+    v_actual_local,
+    v_actual_ref
   FROM pg_constraint c
   JOIN pg_class t ON c.conrelid = t.oid
   JOIN pg_namespace n ON t.relnamespace = n.oid
-  WHERE n.nspname = 'public' AND t.relname = 'plans'
+  WHERE n.nspname = 'public'
+    AND t.relname = 'plans'
     AND c.conname = 'plans_assigned_to_fkey';
 
-  IF v_existing IS NULL THEN
+  IF v_fkey_found IS NULL THEN
     EXECUTE 'ALTER TABLE public.plans ADD CONSTRAINT plans_assigned_to_fkey
              FOREIGN KEY (assigned_to) REFERENCES public.profiles(id) ON DELETE SET NULL NOT VALID';
     EXECUTE 'ALTER TABLE public.plans VALIDATE CONSTRAINT plans_assigned_to_fkey';
-  ELSIF pg_temp._expr_eq(v_existing, v_canonical) AND v_validated = TRUE THEN
+  ELSIF v_fkey_canonical AND v_fkey_validated = TRUE THEN
     NULL; -- Case B: canonical + validated -> NO-OP
-  ELSIF pg_temp._expr_eq(v_existing, v_canonical) AND v_validated = FALSE THEN
+  ELSIF v_fkey_canonical AND v_fkey_validated = FALSE THEN
     EXECUTE 'ALTER TABLE public.plans VALIDATE CONSTRAINT plans_assigned_to_fkey';
   ELSE
-    RAISE EXCEPTION 'FAIL_FAST: plans_assigned_to_fkey semantic mismatch. canonical=[ % ], actual=[ % ]', v_canonical, v_existing;
+    RAISE EXCEPTION 'FAIL_FAST: plans_assigned_to_fkey semantic mismatch. expected=[ FOREIGN KEY (assigned_to) REFERENCES public.profiles(id) ON DELETE SET NULL ], actual=[ target=%, deltype=%, updtype=%, local_col=%, ref_col=% ]',
+      v_actual_target, v_actual_deltype, v_actual_updtype, v_actual_local, v_actual_ref;
   END IF;
 
-  -- A2. plan_occurrences_assigned_to_fkey
-  SELECT pg_get_constraintdef(c.oid) INTO v_canonical
-  FROM pg_constraint c WHERE c.conname = '_p2ref_po_assigned_fk';
+  -- A2. plan_occurrences_assigned_to_fkey (Catalog-level semantic identity)
+  v_fkey_found := NULL;
+  v_fkey_canonical := NULL;
+  v_fkey_validated := NULL;
+  v_actual_target := NULL;
+  v_actual_deltype := NULL;
+  v_actual_updtype := NULL;
+  v_actual_local := NULL;
+  v_actual_ref := NULL;
 
-  v_type := NULL; v_validated := NULL; v_existing := NULL;
-  SELECT c.contype, c.convalidated, pg_get_constraintdef(c.oid)
-  INTO   v_type, v_validated, v_existing
+  SELECT
+    TRUE,
+    c.convalidated,
+    (
+      c.contype = 'f'
+      AND c.confrelid = 'public.profiles'::regclass
+      AND c.confdeltype = 'n'
+      AND c.confupdtype = 'a'
+      AND cardinality(c.conkey) = 1
+      AND cardinality(c.confkey) = 1
+      AND (SELECT attname FROM pg_attribute WHERE attrelid = c.conrelid AND attnum = c.conkey[1]) = 'assigned_to'
+      AND (SELECT attname FROM pg_attribute WHERE attrelid = c.confrelid AND attnum = c.confkey[1]) = 'id'
+    ),
+    c.confrelid::regclass::text,
+    c.confdeltype,
+    c.confupdtype,
+    (SELECT attname FROM pg_attribute WHERE attrelid = c.conrelid AND attnum = c.conkey[1]),
+    (SELECT attname FROM pg_attribute WHERE attrelid = c.confrelid AND attnum = c.confkey[1])
+  INTO
+    v_fkey_found,
+    v_fkey_validated,
+    v_fkey_canonical,
+    v_actual_target,
+    v_actual_deltype,
+    v_actual_updtype,
+    v_actual_local,
+    v_actual_ref
   FROM pg_constraint c
   JOIN pg_class t ON c.conrelid = t.oid
   JOIN pg_namespace n ON t.relnamespace = n.oid
-  WHERE n.nspname = 'public' AND t.relname = 'plan_occurrences'
+  WHERE n.nspname = 'public'
+    AND t.relname = 'plan_occurrences'
     AND c.conname = 'plan_occurrences_assigned_to_fkey';
 
-  IF v_existing IS NULL THEN
+  IF v_fkey_found IS NULL THEN
     EXECUTE 'ALTER TABLE public.plan_occurrences ADD CONSTRAINT plan_occurrences_assigned_to_fkey
              FOREIGN KEY (assigned_to) REFERENCES public.profiles(id) ON DELETE SET NULL NOT VALID';
     EXECUTE 'ALTER TABLE public.plan_occurrences VALIDATE CONSTRAINT plan_occurrences_assigned_to_fkey';
-  ELSIF pg_temp._expr_eq(v_existing, v_canonical) AND v_validated = TRUE THEN
-    NULL;
-  ELSIF pg_temp._expr_eq(v_existing, v_canonical) AND v_validated = FALSE THEN
+  ELSIF v_fkey_canonical AND v_fkey_validated = TRUE THEN
+    NULL; -- Case B: canonical + validated -> NO-OP
+  ELSIF v_fkey_canonical AND v_fkey_validated = FALSE THEN
     EXECUTE 'ALTER TABLE public.plan_occurrences VALIDATE CONSTRAINT plan_occurrences_assigned_to_fkey';
   ELSE
-    RAISE EXCEPTION 'FAIL_FAST: plan_occurrences_assigned_to_fkey semantic mismatch. canonical=[ % ], actual=[ % ]', v_canonical, v_existing;
+    RAISE EXCEPTION 'FAIL_FAST: plan_occurrences_assigned_to_fkey semantic mismatch. expected=[ FOREIGN KEY (assigned_to) REFERENCES public.profiles(id) ON DELETE SET NULL ], actual=[ target=%, deltype=%, updtype=%, local_col=%, ref_col=% ]',
+      v_actual_target, v_actual_deltype, v_actual_updtype, v_actual_local, v_actual_ref;
   END IF;
 
   -- A3. plans_status_check (with legacy upgrade path)
