@@ -91,7 +91,29 @@ export async function POST(req: NextRequest) {
 
     const { sessionId, idempotencyKey, petPayload, ownerPayload } = parseResult.data
 
-    // 3. Try primary atomic & idempotent Smart Scan RPC
+    // 3. Verify session exists in DB and belongs to authenticated user
+    const { data: sessionRecord, error: sessionCheckError } = await (supabase as any)
+      .from('smart_scan_sessions')
+      .select('id, user_id, status')
+      .eq('id', sessionId)
+      .maybeSingle()
+
+    if (sessionCheckError || !sessionRecord || sessionRecord.user_id !== user.id) {
+      console.warn('[api/smart-scan/commit] Session not found or unauthorized:', {
+        sessionId,
+        userId: user.id,
+        sessionFound: Boolean(sessionRecord),
+      })
+      return NextResponse.json(
+        {
+          error: 'Tarama oturumu bulunamadı veya süresi dolmuş. Lütfen taramayı baştan başlatınız.',
+          sessionNotFound: true,
+        },
+        { status: 404 }
+      )
+    }
+
+    // 4. Try primary atomic & idempotent Smart Scan RPC
     const rpcResult = await (supabase as any).rpc('create_pet_from_smart_scan', {
       p_session_id: sessionId,
       p_idempotency_key: idempotencyKey,
@@ -108,7 +130,7 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    // 4. Fail-closed safety: Never execute unmanaged legacy pet creation fallback
+    // 5. Fail-closed safety: Never execute unmanaged legacy pet creation fallback
     const isRpcMissing = rpcResult.error?.code === 'PGRST202'
       || rpcResult.error?.message?.includes('create_pet_from_smart_scan')
 
@@ -123,7 +145,18 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // 5. Entitlement limit exceeded check
+    // 6. Session not found error from RPC
+    if (rpcResult.error?.code === 'P0002' || rpcResult.error?.message?.includes('SESSION_NOT_FOUND')) {
+      return NextResponse.json(
+        {
+          error: 'Tarama oturumu bulunamadı veya süresi dolmuş. Lütfen taramayı baştan başlatınız.',
+          sessionNotFound: true,
+        },
+        { status: 404 }
+      )
+    }
+
+    // 7. Entitlement limit exceeded check
     if (rpcResult.error?.message?.includes('ENTITLEMENT_LIMIT_EXCEEDED') || rpcResult.error?.code === 'P0003') {
       return NextResponse.json(
         {
