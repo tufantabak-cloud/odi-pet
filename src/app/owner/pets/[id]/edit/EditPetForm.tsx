@@ -37,8 +37,8 @@ import { useGeolocation } from '@/contexts/GeolocationContext'
 const CAT_BREEDS = CAT_BREED_NAMES
 const DOG_BREEDS = DOG_BREEDS_NAMES
 
-const CAT_COLORS = ['Siyah', 'Beyaz', 'Gri', 'Turuncu', 'Karamel', 'Tekir', 'Calico', 'Beyaz-Siyah', 'Diğer']
-const DOG_COLORS = ['Siyah', 'Beyaz', 'Kahverengi', 'Altın Sarısı', 'Krem', 'Gri', 'Siyah-Beyaz', 'Üç Renkli', 'Diğer']
+export const CAT_COLORS = ['Siyah', 'Beyaz', 'Gri', 'Turuncu', 'Karamel', 'Tekir', 'Calico', 'Beyaz-Siyah', 'Diğer']
+export const DOG_COLORS = ['Siyah', 'Beyaz', 'Kahverengi', 'Altın Sarısı', 'Krem', 'Gri', 'Siyah-Beyaz', 'Üç Renkli', 'Diğer']
 
 const AGE_PRESETS = [
   { label: '1 yaş altı', years: 0, months: 6 },

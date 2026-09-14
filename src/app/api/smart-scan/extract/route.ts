@@ -44,6 +44,30 @@ export async function POST(req: NextRequest) {
 
     const { sessionId, pageType, imageBase64, mimeType } = parseResult.data
 
+    // 2b. Verify active smart scan session exists in DB and belongs to authenticated user
+    const { data: sessionRecord, error: sessionCheckError } = await (supabase as any)
+      .from('smart_scan_sessions')
+      .select('id, user_id, status')
+      .eq('id', sessionId)
+      .maybeSingle()
+
+    if (sessionCheckError || !sessionRecord || sessionRecord.user_id !== user.id || sessionRecord.status !== 'active') {
+      console.warn('[api/smart-scan/extract] Session not found or unauthorized:', {
+        sessionId,
+        userId: user.id,
+        sessionFound: Boolean(sessionRecord),
+        sessionStatus: sessionRecord?.status,
+      })
+      return NextResponse.json(
+        {
+          error: 'Geçersiz veya süresi dolmuş tarama oturumu. Lütfen taramayı yeniden başlatın.',
+          sessionNotFound: true,
+          fallbackToManual: true,
+        },
+        { status: 404 }
+      )
+    }
+
     // 3. Atomically reserve Vision budget BEFORE sending HTTP request to AI provider
     const reservation = await reserveVisionCall({
       userId: user.id,

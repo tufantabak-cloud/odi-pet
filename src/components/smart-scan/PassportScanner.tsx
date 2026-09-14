@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect, useMemo } from 'react'
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Camera,
@@ -95,15 +95,17 @@ export const PAGES_FLOW: PageConfig[] = [
   },
 ]
 
-export const QUICK_COLORS = [
-  'Beyaz',
-  'Siyah',
-  'Sarı / Sarman',
-  'Kahverengi',
-  'Tekir',
-  'Alacalı',
-  'Gri',
-] as const
+import { CAT_COLORS, DOG_COLORS } from '@/app/owner/pets/[id]/edit/EditPetForm'
+
+// Canonical Odi.Pet pet colors sourced from EditPetForm (SSOT)
+export { CAT_COLORS, DOG_COLORS }
+export const ALL_CANONICAL_COLORS = Array.from(new Set([...CAT_COLORS, ...DOG_COLORS]))
+
+export function getCanonicalColors(species?: string): readonly string[] {
+  if (species === 'dog') return DOG_COLORS
+  if (species === 'cat') return CAT_COLORS
+  return ALL_CANONICAL_COLORS
+}
 
 export interface ConfirmationData {
   name: string
@@ -234,6 +236,34 @@ export function PassportScanner() {
   const [isSummaryView, setIsSummaryView] = useState<boolean>(false)
   const [isManualEntry, setIsManualEntry] = useState<boolean>(false)
   const [returnToSummary, setReturnToSummary] = useState<boolean>(false)
+
+  // Session initialization state (Enforces session must be active before OCR can run)
+  const [isSessionReady, setIsSessionReady] = useState<boolean>(false)
+  const [sessionInitError, setSessionInitError] = useState<string | null>(null)
+
+  const initSession = useCallback(async () => {
+    setSessionInitError(null)
+    try {
+      const res = await fetch('/api/smart-scan/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId }),
+      })
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.error || 'Tarama oturumu başlatılamadı.')
+      }
+      setIsSessionReady(true)
+    } catch (err: any) {
+      console.error('[PassportScanner] Session initialization error:', err)
+      setSessionInitError(err.message || 'Tarama oturumu başlatılamadı. Lütfen internet bağlantınızı kontrol edin.')
+      setIsSessionReady(false)
+    }
+  }, [sessionId])
+
+  useEffect(() => {
+    initSession()
+  }, [initSession])
 
   // Scan & extraction states
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
@@ -398,6 +428,12 @@ export function PassportScanner() {
 
     setErrorMsg(null)
     setPreCheckWarning(null)
+
+    if (!isSessionReady) {
+      setErrorMsg('Tarama oturumu henüz hazır değil. Lütfen biraz bekleyiniz.')
+      return
+    }
+
     setIsProcessing(true)
     setProcessingMessage('Görüntü optimize ediliyor...')
 
@@ -1057,50 +1093,26 @@ export function PassportScanner() {
                     </div>
                     <div>
                       <label className="text-xs font-bold text-text-primary block mb-1">Renk / Görünüm</label>
-                      <input
-                        type="text"
-                        data-testid="input-pet-color"
-                        value={manualFormData.color || ''}
-                        onChange={e => handleManualFieldChange('color', e.target.value)}
-                        placeholder="Örn: Sarı, Beyaz"
-                        className="w-full text-xs font-medium p-2.5 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] font-semibold text-text-secondary block mb-1.5">
-                      Hızlı Renk Seçimi
-                    </label>
-                    <div className="flex flex-wrap gap-1.5">
-                      {QUICK_COLORS.map(c => {
-                        const testIdSlug = c
-                          .toLowerCase()
-                          .replace(/ç/g, 'c')
-                          .replace(/ğ/g, 'g')
-                          .replace(/ı/g, 'i')
-                          .replace(/ö/g, 'o')
-                          .replace(/ş/g, 's')
-                          .replace(/ü/g, 'u')
-                          .replace(/[^a-z0-9]/g, '-')
-                          .replace(/-+/g, '-')
-                          .replace(/^-|-$/g, '')
+                      {(() => {
+                        const availableColors = getCanonicalColors(manualFormData.species || finalData.species)
+                        const currentColor = manualFormData.color || ''
                         return (
-                          <button
-                            key={c}
-                            type="button"
-                            data-testid={`color-chip-${testIdSlug}`}
-                            onClick={() => handleManualFieldChange('color', c)}
-                            className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all active:scale-[0.98] cursor-pointer border ${
-                              manualFormData.color === c
-                                ? 'bg-primary/10 border-primary text-primary font-bold shadow-xs'
-                                : 'bg-surface border-border-main text-text-secondary hover:border-primary/40'
-                            }`}
+                          <select
+                            data-testid="input-pet-color"
+                            value={currentColor}
+                            onChange={e => handleManualFieldChange('color', e.target.value)}
+                            className="w-full text-xs font-medium p-2.5 rounded-xl border border-border-main bg-surface focus:border-primary outline-none min-h-[44px] cursor-pointer"
                           >
-                            {c}
-                          </button>
+                            <option value="">Renk / Görünüm Seçiniz</option>
+                            {currentColor && !availableColors.includes(currentColor as any) && (
+                              <option value={currentColor}>{currentColor}</option>
+                            )}
+                            {availableColors.map(c => (
+                              <option key={c} value={c}>{c}</option>
+                            ))}
+                          </select>
                         )
-                      })}
+                      })()}
                     </div>
                   </div>
                 </>
@@ -1666,51 +1678,26 @@ export function PassportScanner() {
                     </div>
                     <div>
                       <label className="text-xs font-bold text-text-primary block mb-1">Renk / Görünüm</label>
-                      <input
-                        type="text"
-                        data-testid="input-pet-color"
-                        value={sectionDraft.color || ''}
-                        onChange={e => handleDraftChange('color', e.target.value)}
-                        placeholder="Örn: Gri, Beyaz"
-                        className="w-full text-xs font-medium p-2 rounded-xl border border-border-main bg-surface focus:border-primary outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Quick Color Chips */}
-                  <div>
-                    <label className="text-[11px] font-semibold text-text-secondary block mb-1">
-                      Hızlı Renk Seçimi
-                    </label>
-                    <div className="flex flex-wrap gap-1">
-                      {QUICK_COLORS.map(c => {
-                        const testIdSlug = c
-                          .toLowerCase()
-                          .replace(/ç/g, 'c')
-                          .replace(/ğ/g, 'g')
-                          .replace(/ı/g, 'i')
-                          .replace(/ö/g, 'o')
-                          .replace(/ş/g, 's')
-                          .replace(/ü/g, 'u')
-                          .replace(/[^a-z0-9]/g, '-')
-                          .replace(/-+/g, '-')
-                          .replace(/^-|-$/g, '')
+                      {(() => {
+                        const availableColors = getCanonicalColors(sectionDraft.species || finalData.species)
+                        const currentColor = sectionDraft.color || ''
                         return (
-                          <button
-                            key={c}
-                            type="button"
-                            data-testid={`color-chip-${testIdSlug}`}
-                            onClick={() => handleDraftChange('color', c)}
-                            className={`px-2 py-0.5 rounded-lg text-xs font-medium transition-all active:scale-[0.98] cursor-pointer border ${
-                              sectionDraft.color === c
-                                ? 'bg-primary/10 border-primary text-primary font-bold'
-                                : 'bg-surface border-border-main text-text-secondary hover:border-primary/40'
-                            }`}
+                          <select
+                            data-testid="input-pet-color"
+                            value={currentColor}
+                            onChange={e => handleDraftChange('color', e.target.value)}
+                            className="w-full text-xs font-medium p-2 rounded-xl border border-border-main bg-surface focus:border-primary outline-none min-h-[44px] cursor-pointer"
                           >
-                            {c}
-                          </button>
+                            <option value="">Renk / Görünüm Seçiniz</option>
+                            {currentColor && !availableColors.includes(currentColor as any) && (
+                              <option value={currentColor}>{currentColor}</option>
+                            )}
+                            {availableColors.map(c => (
+                              <option key={c} value={c}>{c}</option>
+                            ))}
+                          </select>
                         )
-                      })}
+                      })()}
                     </div>
                   </div>
 
@@ -2156,17 +2143,43 @@ export function PassportScanner() {
       {/* Actions & Navigation Footer */}
       {!isManualEntry && (
         <div className="flex flex-col gap-2 pt-2 border-t border-border-main">
+          {sessionInitError && !isSummaryView && (
+            <div
+              data-testid="session-init-error-card"
+              className="w-full bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-300 p-3 rounded-xl flex items-start gap-2.5 text-xs text-left"
+            >
+              <AlertCircle size={16} className="text-red-500 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <span className="font-bold block">Tarama Oturumu Başlatılamadı</span>
+                <p className="mt-0.5 text-text-secondary">{sessionInitError}</p>
+                <button
+                  type="button"
+                  data-testid="retry-session-btn"
+                  onClick={initSession}
+                  className="mt-2 px-3 py-1.5 rounded-lg bg-primary text-white font-semibold text-xs hover:bg-primary/90 transition-all cursor-pointer"
+                >
+                  Tekrar Dene
+                </button>
+              </div>
+            </div>
+          )}
+
           {!isSummaryView ? (
             <>
               {!currentCaptured ? (
                 <button
                   type="button"
                   data-testid="photo-cta-btn"
-                  disabled={isProcessing}
+                  disabled={isProcessing || !isSessionReady}
                   onClick={() => fileInputRef.current?.click()}
                   className="w-full py-3.5 px-4 rounded-xl bg-primary text-white font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer shadow-sm"
                 >
-                  {isProcessing ? (
+                  {!isSessionReady ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      <span>Tarama oturumu hazırlanıyor...</span>
+                    </>
+                  ) : isProcessing ? (
                     <>
                       <Loader2 size={18} className="animate-spin" />
                       <span>{processingMessage}</span>

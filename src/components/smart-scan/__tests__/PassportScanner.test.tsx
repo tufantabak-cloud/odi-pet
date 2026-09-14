@@ -1,7 +1,7 @@
 import React, { act } from 'react'
 import { createRoot, Root } from 'react-dom/client'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { PassportScanner, PAGES_FLOW, QUICK_COLORS, optimizeImageForOcr } from '../PassportScanner'
+import { PassportScanner, PAGES_FLOW, getCanonicalColors, CAT_COLORS, DOG_COLORS, optimizeImageForOcr } from '../PassportScanner'
 import { PassportPageReference } from '../PassportPageReference'
 
 // Configure React act environment
@@ -32,9 +32,12 @@ vi.mock('@/lib/smart-scan/pre-check', () => ({
 }))
 
 // Helper to trigger controlled input changes in React
-function changeInput(input: HTMLInputElement, value: string) {
+function changeInput(input: HTMLInputElement | HTMLSelectElement, value: string) {
+  const prototype = typeof HTMLSelectElement !== 'undefined' && input instanceof HTMLSelectElement
+    ? window.HTMLSelectElement.prototype
+    : window.HTMLInputElement.prototype
   const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-    window.HTMLInputElement.prototype,
+    prototype,
     'value'
   )?.set
   if (nativeInputValueSetter) {
@@ -61,6 +64,19 @@ describe('Smart Passport Scan — UI & In-Place Manual Fallback Suite', () => {
       width: 800,
       height: 600,
       close: vi.fn(),
+    }) as any
+
+    global.fetch = vi.fn().mockImplementation((url: string) => {
+      if (url === '/api/smart-scan/session') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, sessionId: 'mock-session-id' }),
+        })
+      }
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({ success: true }),
+      })
     }) as any
 
     origFileReader = global.FileReader
@@ -366,6 +382,12 @@ describe('Smart Passport Scan — UI & In-Place Manual Fallback Suite', () => {
     // ── VERIFY COMMIT PAYLOAD ──
     let commitPayload: any = null
     global.fetch = vi.fn().mockImplementation((url, opts) => {
+      if (url === '/api/smart-scan/session') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true }),
+        })
+      }
       if (url === '/api/smart-scan/commit') {
         commitPayload = JSON.parse(opts.body)
         return Promise.resolve({
@@ -557,8 +579,8 @@ describe('Smart Passport Scan — UI & In-Place Manual Fallback Suite', () => {
     expect(chipInput.value).toBe('900123456789012')
   })
 
-  // P1. Color Quick-Select Chips Test
-  it('P1. Color Quick-Select: renders 7 color chips and updates color input on click', () => {
+  // P1. Canonical Color Dropdown Test
+  it('P1. Canonical Color Dropdown: renders canonical options and updates color on selection', () => {
     act(() => {
       root.render(<PassportScanner />)
     })
@@ -576,29 +598,28 @@ describe('Smart Passport Scan — UI & In-Place Manual Fallback Suite', () => {
       ;(container.querySelector('[data-testid="header-manual-btn"]') as HTMLButtonElement).click()
     })
 
-    // Verify all 7 chips exist
-    expect(QUICK_COLORS).toHaveLength(7)
-    const chipSari = container.querySelector('[data-testid="color-chip-sari-sarman"]') as HTMLButtonElement
-    const chipBeyaz = container.querySelector('[data-testid="color-chip-beyaz"]') as HTMLButtonElement
-    const chipTekir = container.querySelector('[data-testid="color-chip-tekir"]') as HTMLButtonElement
-    expect(chipSari).not.toBeNull()
-    expect(chipBeyaz).not.toBeNull()
-    expect(chipTekir).not.toBeNull()
+    const colorSelect = container.querySelector('[data-testid="input-pet-color"]') as HTMLSelectElement
+    expect(colorSelect).not.toBeNull()
+    expect(colorSelect.tagName).toBe('SELECT')
+    expect(colorSelect.value).toBe('')
 
-    const colorInput = container.querySelector('[data-testid="input-pet-color"]') as HTMLInputElement
-    expect(colorInput.value).toBe('')
+    // Verify canonical colors are available in dropdown
+    const options = Array.from(colorSelect.querySelectorAll('option')).map(o => o.value)
+    expect(options).toContain('Tekir')
+    expect(options).toContain('Siyah')
+    expect(options).toContain('Beyaz')
 
-    // Click Sarman chip
+    // Select 'Tekir'
     act(() => {
-      chipSari.click()
+      changeInput(colorSelect, 'Tekir')
     })
-    expect(colorInput.value).toBe('Sarı / Sarman')
+    expect(colorSelect.value).toBe('Tekir')
 
-    // Click Tekir chip
+    // Select 'Siyah'
     act(() => {
-      chipTekir.click()
+      changeInput(colorSelect, 'Siyah')
     })
-    expect(colorInput.value).toBe('Tekir')
+    expect(colorSelect.value).toBe('Siyah')
   })
 
   // P1. Summary Direct Edit Navigation Test
@@ -688,6 +709,23 @@ describe('Smart Passport Scan — Confirmation Step P0/P1 Suite', () => {
     container = document.createElement('div')
     document.body.appendChild(container)
     root = createRoot(container)
+
+    global.createImageBitmap = vi.fn().mockResolvedValue({
+      width: 800,
+      height: 600,
+      close: vi.fn(),
+    }) as any
+
+    global.FileReader = class {
+      result: string = 'data:image/jpeg;base64,mockbase64'
+      onload: any = null
+      onerror: any = null
+      readAsDataURL() {
+        if (this.onload) {
+          this.onload({ target: this })
+        }
+      }
+    } as any
   })
 
   afterEach(() => {
@@ -882,6 +920,12 @@ describe('Smart Passport Scan — Confirmation Step P0/P1 Suite', () => {
   it('7. Edited data reaches final payload: verifies final commit payload contains user edits from all sections', async () => {
     let commitBody: any = null
     global.fetch = vi.fn().mockImplementation((url, opts) => {
+      if (url === '/api/smart-scan/session') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true }),
+        })
+      }
       if (url === '/api/smart-scan/commit') {
         commitBody = JSON.parse(opts.body)
         return Promise.resolve({
@@ -951,6 +995,12 @@ describe('Smart Passport Scan — Confirmation Step P0/P1 Suite', () => {
   it('8. Confirm without edits: commits prefilled/extracted data when valid', async () => {
     let commitBody: any = null
     global.fetch = vi.fn().mockImplementation((url, opts) => {
+      if (url === '/api/smart-scan/session') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true }),
+        })
+      }
       if (url === '/api/smart-scan/commit') {
         commitBody = JSON.parse(opts.body)
         return Promise.resolve({
@@ -1009,6 +1059,9 @@ describe('Smart Passport Scan — Confirmation Step P0/P1 Suite', () => {
   it('9. Required-field validation: displays visible error card and prevents commit when required fields are missing', async () => {
     let commitCalled = false
     global.fetch = vi.fn().mockImplementation((url) => {
+      if (url === '/api/smart-scan/session') {
+        return Promise.resolve({ ok: true, json: async () => ({ success: true }) })
+      }
       if (url === '/api/smart-scan/commit') {
         commitCalled = true
         return Promise.resolve({ ok: true, json: async () => ({ success: true }) })
@@ -1039,6 +1092,9 @@ describe('Smart Passport Scan — Confirmation Step P0/P1 Suite', () => {
   // 10. API error handling
   it('10. API error handling: renders visible error card with retry button when server returns an error', async () => {
     global.fetch = vi.fn().mockImplementation((url) => {
+      if (url === '/api/smart-scan/session') {
+        return Promise.resolve({ ok: true, json: async () => ({ success: true }) })
+      }
       if (url === '/api/smart-scan/commit') {
         return Promise.resolve({
           ok: false,
@@ -1083,6 +1139,9 @@ describe('Smart Passport Scan — Confirmation Step P0/P1 Suite', () => {
     let callCount = 0
     let resolvePromise: any
     global.fetch = vi.fn().mockImplementation((url) => {
+      if (url === '/api/smart-scan/session') {
+        return Promise.resolve({ ok: true, json: async () => ({ success: true }) })
+      }
       if (url === '/api/smart-scan/commit') {
         callCount++
         return new Promise((resolve) => {
@@ -1135,6 +1194,9 @@ describe('Smart Passport Scan — Confirmation Step P0/P1 Suite', () => {
   it('12. Human-in-the-loop: low confidence score displays warning banner but enables commit once human verifies', async () => {
     // OCR returned confidence 0.55 on page 5
     global.fetch = vi.fn().mockImplementation((url) => {
+      if (url === '/api/smart-scan/session') {
+        return Promise.resolve({ ok: true, json: async () => ({ success: true }) })
+      }
       if (url === '/api/smart-scan/extract') {
         return Promise.resolve({
           ok: true,
@@ -1153,8 +1215,9 @@ describe('Smart Passport Scan — Confirmation Step P0/P1 Suite', () => {
       return Promise.reject(new Error('Unknown url: ' + url))
     }) as any
 
-    act(() => {
+    await act(async () => {
       root.render(<PassportScanner />)
+      await new Promise(resolve => setTimeout(resolve, 10))
     })
 
     // Advance to step 3 (page 5)
@@ -1204,6 +1267,12 @@ describe('Smart Passport Scan — Confirmation Step P0/P1 Suite', () => {
   it('CRITICAL E2E: OCR -> Confirmation -> Edit breed -> Save -> Confirm -> next step -> verify final payload contains edited breed', async () => {
     let commitPayload: any = null
     global.fetch = vi.fn().mockImplementation((url, opts) => {
+      if (url === '/api/smart-scan/session') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true }),
+        })
+      }
       if (url === '/api/smart-scan/extract') {
         return Promise.resolve({
           ok: true,
@@ -1223,8 +1292,9 @@ describe('Smart Passport Scan — Confirmation Step P0/P1 Suite', () => {
       return Promise.reject(new Error('Unknown url'))
     }) as any
 
-    act(() => {
+    await act(async () => {
       root.render(<PassportScanner />)
+      await new Promise(resolve => setTimeout(resolve, 10))
     })
 
     // 1. OCR on Page 5
@@ -1294,6 +1364,12 @@ describe('Smart Passport Scan — Confirmation Step P0/P1 Suite', () => {
   it('14. Conflict recomputation: OCR conflict is dynamically resolved after user correction', async () => {
     // OCR produced a future birth_date conflict
     global.fetch = vi.fn().mockImplementation((url) => {
+      if (url === '/api/smart-scan/session') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true }),
+        })
+      }
       if (url === '/api/smart-scan/extract') {
         return Promise.resolve({
           ok: true,
@@ -1317,8 +1393,9 @@ describe('Smart Passport Scan — Confirmation Step P0/P1 Suite', () => {
       return Promise.reject(new Error('Unknown url'))
     }) as any
 
-    act(() => {
+    await act(async () => {
       root.render(<PassportScanner />)
+      await new Promise(resolve => setTimeout(resolve, 10))
     })
 
     // Advance to Page 5
@@ -1376,6 +1453,12 @@ describe('Smart Passport Scan — Confirmation Step P0/P1 Suite', () => {
   it('15. Edited-field coverage: verifies breed, microchip, passport_no, owner phone, owner address, vet email in commit payload', async () => {
     let commitBody: any = null
     global.fetch = vi.fn().mockImplementation((url, opts) => {
+      if (url === '/api/smart-scan/session') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true }),
+        })
+      }
       if (url === '/api/smart-scan/commit') {
         commitBody = JSON.parse(opts.body)
         return Promise.resolve({
@@ -1448,6 +1531,12 @@ describe('Smart Passport Scan — Confirmation Step P0/P1 Suite', () => {
   it('16. Human-in-the-loop: low-confidence with NO-EDIT allows immediate commit once human confirms', async () => {
     let commitBody: any = null
     global.fetch = vi.fn().mockImplementation((url, opts) => {
+      if (url === '/api/smart-scan/session') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true }),
+        })
+      }
       if (url === '/api/smart-scan/extract') {
         return Promise.resolve({
           ok: true,
@@ -1472,8 +1561,9 @@ describe('Smart Passport Scan — Confirmation Step P0/P1 Suite', () => {
       return Promise.reject(new Error('Unknown url'))
     }) as any
 
-    act(() => {
+    await act(async () => {
       root.render(<PassportScanner />)
+      await new Promise(resolve => setTimeout(resolve, 10))
     })
 
     // Advance to Page 5 (Pet info)
@@ -1526,6 +1616,12 @@ describe('Smart Passport Scan — Confirmation Step P0/P1 Suite', () => {
   it('17. Status Banner differentiation: explicitly differentiates low-confidence warning from cross-page conflict', async () => {
     // A: Low-confidence WARNING state (no conflict)
     global.fetch = vi.fn().mockImplementation((url) => {
+      if (url === '/api/smart-scan/session') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true }),
+        })
+      }
       if (url === '/api/smart-scan/extract') {
         return Promise.resolve({
           ok: true,
@@ -1542,8 +1638,9 @@ describe('Smart Passport Scan — Confirmation Step P0/P1 Suite', () => {
       return Promise.reject(new Error('Unknown url'))
     }) as any
 
-    act(() => {
+    await act(async () => {
       root.render(<PassportScanner />)
+      await new Promise(resolve => setTimeout(resolve, 10))
     })
 
     // Go to Page 5
@@ -1580,12 +1677,17 @@ describe('Smart Passport Scan — Confirmation Step P0/P1 Suite', () => {
 
   // 18. HTTP 429 Limit UX Test
   it('18. HTTP 429 Rate Limit: renders distinct daily limit card with manual fallback CTA instead of camera error', async () => {
-    global.fetch = vi.fn().mockResolvedValue({
-      status: 429,
-      ok: false,
-      json: async () => ({
-        error: 'Günlük otomatik okuma limitinize ulaştınız. Bilgilerinizi aşağıdaki form ile manuel olarak tamamlayabilirsiniz.',
-      }),
+    global.fetch = vi.fn().mockImplementation((url) => {
+      if (url === '/api/smart-scan/session') {
+        return Promise.resolve({ ok: true, json: async () => ({ success: true }) })
+      }
+      return Promise.resolve({
+        status: 429,
+        ok: false,
+        json: async () => ({
+          error: 'Günlük otomatik okuma limitinize ulaştınız. Bilgilerinizi aşağıdaki form ile manuel olarak tamamlayabilirsiniz.',
+        }),
+      })
     }) as any
 
     global.createImageBitmap = vi.fn().mockResolvedValue({
@@ -1606,8 +1708,9 @@ describe('Smart Passport Scan — Confirmation Step P0/P1 Suite', () => {
       }
     } as any
 
-    act(() => {
+    await act(async () => {
       root.render(<PassportScanner />)
+      await new Promise(resolve => setTimeout(resolve, 10))
     })
 
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
@@ -1645,6 +1748,216 @@ describe('Smart Passport Scan — Confirmation Step P0/P1 Suite', () => {
     expect(container.querySelector('[data-testid="smart-scan-limit-card"]')).toBeNull()
 
     global.FileReader = origFileReader
+  })
+
+  // 19. Session Lifecycle: initializes smart scan session on mount with /api/smart-scan/session
+  it('19. Session Lifecycle: initializes smart scan session on mount with /api/smart-scan/session', async () => {
+    let sessionInitCalled = false
+    let sessionInitPayload: any = null
+
+    global.fetch = vi.fn().mockImplementation((url, opts) => {
+      if (url === '/api/smart-scan/session') {
+        sessionInitCalled = true
+        sessionInitPayload = JSON.parse(opts.body)
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, sessionId: sessionInitPayload.sessionId }),
+        })
+      }
+      return Promise.resolve({ ok: true, json: async () => ({ success: true }) })
+    }) as any
+
+    act(() => {
+      root.render(<PassportScanner />)
+    })
+
+    expect(sessionInitCalled).toBe(true)
+    expect(sessionInitPayload).not.toBeNull()
+    expect(sessionInitPayload.sessionId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
+  })
+
+  // 20. Confirmation Color Dropdown: user selected color overrides OCR color in final commit payload
+  it('20. Confirmation Color Dropdown: user selected color overrides OCR color in final commit payload', async () => {
+    let commitPayload: any = null
+
+    global.fetch = vi.fn().mockImplementation((url, opts) => {
+      if (url === '/api/smart-scan/session') {
+        return Promise.resolve({ ok: true, json: async () => ({ success: true }) })
+      }
+      if (url === '/api/smart-scan/extract') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            confidence: 0.88,
+            data: {
+              name: 'Duman',
+              species: 'cat',
+              breed: 'British Shorthair',
+              color: 'Gri', // OCR read 'Gri'
+            },
+          }),
+        })
+      }
+      if (url === '/api/smart-scan/commit') {
+        commitPayload = JSON.parse(opts.body)
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, petId: 'pet-color-override-999' }),
+        })
+      }
+      return Promise.reject(new Error('Unknown url: ' + url))
+    }) as any
+
+    await act(async () => {
+      root.render(<PassportScanner />)
+      await new Promise(resolve => setTimeout(resolve, 10))
+    })
+
+    // Advance to Step 3 (Page 5 - Pet)
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+
+    // Simulate file scan on page 5
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
+    const file = new File(['fake-bits'], 'p5.jpg', { type: 'image/jpeg' })
+    await act(async () => {
+      Object.defineProperty(fileInput, 'files', { value: [file], writable: true })
+      fileInput.dispatchEvent(new Event('change', { bubbles: true }))
+      await new Promise(resolve => setTimeout(resolve, 50))
+    })
+
+    // Advance remaining pages to summary
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+    act(() => {
+      ;(container.querySelector('[data-testid="skip-page-btn"]') as HTMLButtonElement).click()
+    })
+
+    // Verify initial OCR color is displayed in summary
+    expect(container.textContent).toContain('Gri')
+
+    // Open inline edit for Pet
+    act(() => {
+      ;(container.querySelector('[data-testid="edit-pet-summary-btn"]') as HTMLButtonElement).click()
+    })
+
+    const colorSelect = container.querySelector('[data-testid="input-pet-color"]') as HTMLSelectElement
+    expect(colorSelect).not.toBeNull()
+    expect(colorSelect.value).toBe('Gri') // OCR value preselected
+
+    // User overrides color to 'Beyaz'
+    act(() => {
+      changeInput(colorSelect, 'Beyaz')
+    })
+    expect(colorSelect.value).toBe('Beyaz')
+
+    // Save section
+    act(() => {
+      ;(container.querySelector('[data-testid="save-manual-entry-btn"]') as HTMLButtonElement).click()
+    })
+
+    // Verify summary reflects user's edited color, NOT OCR
+    expect(container.textContent).toContain('Beyaz')
+
+    // Commit
+    const commitBtn = container.querySelector('[data-testid="commit-btn"]') as HTMLButtonElement
+    await act(async () => {
+      commitBtn.click()
+    })
+
+    expect(commitPayload).not.toBeNull()
+    expect(commitPayload.petPayload.color).toBe('Beyaz') // user override wins!
+    expect(mockPush).toHaveBeenCalledWith('/owner/pets/pet-color-override-999')
+  })
+
+  // 21. Session readiness: photo CTA is disabled until session initializes
+  it('21. Session readiness: photo CTA is disabled with loading message until session initializes', async () => {
+    let resolveSessionPromise: any
+    const sessionPromise = new Promise((resolve) => {
+      resolveSessionPromise = resolve
+    })
+
+    global.fetch = vi.fn().mockImplementation((url) => {
+      if (url === '/api/smart-scan/session') {
+        return sessionPromise
+      }
+      return Promise.resolve({ ok: true, json: async () => ({}) })
+    }) as any
+
+    act(() => {
+      root.render(<PassportScanner />)
+    })
+
+    const photoBtn = container.querySelector('[data-testid="photo-cta-btn"]') as HTMLButtonElement
+    expect(photoBtn).not.toBeNull()
+    expect(photoBtn.disabled).toBe(true)
+    expect(photoBtn.textContent).toContain('Tarama oturumu hazırlanıyor...')
+
+    // Now resolve session
+    await act(async () => {
+      resolveSessionPromise({
+        ok: true,
+        json: async () => ({ success: true, sessionId: 'session-ready-123' }),
+      })
+      await new Promise(r => setTimeout(r, 10))
+    })
+
+    expect(photoBtn.disabled).toBe(false)
+    expect(photoBtn.textContent).not.toContain('Tarama oturumu hazırlanıyor...')
+    expect(photoBtn.textContent).toContain('Pasaport Kapağını Fotoğraflayın')
+  })
+
+  // 22. Session error: renders error card and allows retry
+  it('22. Session error: renders session-init-error-card on failure and allows retry', async () => {
+    let attempt = 0
+    global.fetch = vi.fn().mockImplementation((url) => {
+      if (url === '/api/smart-scan/session') {
+        attempt++
+        if (attempt === 1) {
+          return Promise.resolve({
+            ok: false,
+            json: async () => ({ error: 'Oturum sunucusu geçici olarak yanıt vermedi.' }),
+          })
+        }
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, sessionId: 'session-recovered' }),
+        })
+      }
+      return Promise.resolve({ ok: true, json: async () => ({}) })
+    }) as any
+
+    await act(async () => {
+      root.render(<PassportScanner />)
+      await new Promise(r => setTimeout(r, 10))
+    })
+
+    const errorCard = container.querySelector('[data-testid="session-init-error-card"]')
+    expect(errorCard).not.toBeNull()
+    expect(errorCard?.textContent).toContain('Tarama Oturumu Başlatılamadı')
+    expect(errorCard?.textContent).toContain('Oturum sunucusu geçici olarak yanıt vermedi.')
+
+    const retryBtn = container.querySelector('[data-testid="retry-session-btn"]') as HTMLButtonElement
+    expect(retryBtn).not.toBeNull()
+
+    // Click retry
+    await act(async () => {
+      retryBtn.click()
+      await new Promise(r => setTimeout(r, 10))
+    })
+
+    expect(attempt).toBe(2)
+    expect(container.querySelector('[data-testid="session-init-error-card"]')).toBeNull()
+    const photoBtn = container.querySelector('[data-testid="photo-cta-btn"]') as HTMLButtonElement
+    expect(photoBtn.disabled).toBe(false)
   })
 
 })
