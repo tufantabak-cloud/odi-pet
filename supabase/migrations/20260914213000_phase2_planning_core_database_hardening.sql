@@ -184,13 +184,13 @@ ALTER TABLE public.plan_occurrences ALTER COLUMN extra_data SET NOT NULL;
 
 -- 7.0 Normalization helper: collapse whitespace for cosmetic-only diffs
 -- Note: We DO NOT use lower() to preserve string literal and identifier case sensitivity
-CREATE FUNCTION pg_temp._norm(p_text TEXT)
+CREATE OR REPLACE FUNCTION pg_temp._norm(p_text TEXT)
 RETURNS TEXT LANGUAGE sql IMMUTABLE AS $$
   SELECT regexp_replace(trim(COALESCE(p_text, '')), '\s+', ' ', 'g');
 $$;
 
 -- NULL-safe expression match: both NULL → true, one NULL → false, else normalized eq
-CREATE FUNCTION pg_temp._expr_eq(a TEXT, b TEXT)
+CREATE OR REPLACE FUNCTION pg_temp._expr_eq(a TEXT, b TEXT)
 RETURNS BOOLEAN LANGUAGE sql IMMUTABLE AS $$
   SELECT CASE
     WHEN a IS NULL AND b IS NULL THEN TRUE
@@ -840,6 +840,8 @@ END $$;
 DROP TABLE IF EXISTS _p2ref_nj   CASCADE;
 DROP TABLE IF EXISTS _p2ref_po   CASCADE;
 DROP TABLE IF EXISTS _p2ref_plans CASCADE;
+DROP FUNCTION IF EXISTS pg_temp._expr_eq(TEXT, TEXT);
+DROP FUNCTION IF EXISTS pg_temp._norm(TEXT);
 
 -- ============================================================================
 -- 8. EVIDENCE-BASED INDEXES
