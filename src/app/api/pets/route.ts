@@ -217,6 +217,8 @@ export async function POST(req: NextRequest) {
           category: t.category,
           sub_type: t.sub_type,
           scheduled_at: t.scheduled_at,
+          source: 'protocol',
+          policy: 'recommended',
           extra_data: t.extra_data
         }))
 
@@ -253,6 +255,8 @@ export async function POST(req: NextRequest) {
       sub_type: 'Kilo & Boy Ölçümü',
       scheduled_at: nextMonth.toISOString(),
       status: 'active',
+      source: 'system',
+      policy: 'required',
       extra_data: { source: 'system', auto_generated: true }
     });
   

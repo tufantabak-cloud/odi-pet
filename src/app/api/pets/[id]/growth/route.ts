@@ -90,6 +90,8 @@ export async function POST(req: NextRequest, context: RouteContext) {
       sub_type: 'Kilo & Boy Ölçümü',
       scheduled_at: logDate.toISOString(),
       status: 'active',
+      source: 'system',
+      policy: 'required',
       extra_data: { source: 'system', auto_generated: true }
     });
 

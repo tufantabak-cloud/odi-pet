@@ -319,7 +319,12 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
 
     // Görevleri plans tablosuna yaz
     if (tasks.length > 0) {
-      const tasksWithUserId = tasks.map(t => ({ ...t, user_id: profile.id }))
+      const tasksWithUserId = tasks.map(t => ({
+        ...t,
+        user_id: profile.id,
+        source: (t as any).source || ((t as any).category === 'saglik' && (t as any).sub_type === 'Hatırlatma' ? 'user' : 'protocol'),
+        policy: (t as any).policy || 'recommended',
+      }))
       const { error: insertError } = await supabase.from('plans').insert(tasksWithUserId)
       if (insertError) throw insertError
     }

@@ -261,6 +261,7 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
           pet_id: input.pet_id,
           category: input.category,
           sub_type: input.sub_type,
+          title: input.title || null,
           scheduled_at: nextScheduledAtStr,
           repeat_rule: input.repeat_rule || null,
           ends_at: input.ends_at || null,
@@ -269,6 +270,9 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
           note: input.note || null,
           extra_data: { ...(input.extra_data || {}), is_past_done: false },
           status: 'active',
+          source: input.source || 'user',
+          policy: input.policy || 'optional',
+          assigned_to: input.assigned_to || null,
         })
         .select()
         .single();
@@ -338,6 +342,7 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
       pet_id: input.pet_id,
       category: input.category,
       sub_type: input.sub_type,
+      title: input.title || null,
       scheduled_at: scheduledAt,
       occurrence_scheduled_at: input.occurrence_scheduled_at || null,
       repeat_rule: input.repeat_rule || null,
@@ -347,6 +352,9 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
       note: input.note || null,
       extra_data: input.extra_data || {},
       status: initialStatus,
+      source: input.source || 'user',
+      policy: input.policy || 'optional',
+      assigned_to: input.assigned_to || null,
     })
     .select()
     .single();
