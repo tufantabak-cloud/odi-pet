@@ -414,6 +414,8 @@ export async function scheduleNextParasiteDose(
     sub_type: subType,
     scheduled_at: new Date(next.nextDueDate).toISOString(),
     status: 'active',
+    source: 'protocol',
+    policy: 'recommended',
     extra_data: {
       protocol_name: proto.protocol_name,
       parasite_protocol_id: proto.id,

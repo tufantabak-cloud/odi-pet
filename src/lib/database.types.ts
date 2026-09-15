@@ -5798,62 +5798,77 @@ export type Database = {
       }
       plans: {
         Row: {
+          assigned_to: string | null
           category: string
           completed_at: string | null
           created_at: string | null
           ends_at: string | null
           extra_data: Json | null
           id: string
+          is_active: boolean
           note: string | null
           notif_before: number | null
           notif_unit: string | null
           occurrence_scheduled_at: string | null
           parent_plan_id: string | null
           pet_id: string
+          policy: string
           repeat_rule: string | null
           scheduled_at: string
+          source: string
           status: string | null
           sub_type: string
+          title: string | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          assigned_to?: string | null
           category: string
           completed_at?: string | null
           created_at?: string | null
           ends_at?: string | null
           extra_data?: Json | null
           id?: string
+          is_active?: boolean
           note?: string | null
           notif_before?: number | null
           notif_unit?: string | null
           occurrence_scheduled_at?: string | null
           parent_plan_id?: string | null
           pet_id: string
+          policy?: string
           repeat_rule?: string | null
           scheduled_at: string
+          source?: string
           status?: string | null
           sub_type: string
+          title?: string | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          assigned_to?: string | null
           category?: string
           completed_at?: string | null
           created_at?: string | null
           ends_at?: string | null
           extra_data?: Json | null
           id?: string
+          is_active?: boolean
           note?: string | null
           notif_before?: number | null
           notif_unit?: string | null
           occurrence_scheduled_at?: string | null
           parent_plan_id?: string | null
           pet_id?: string
+          policy?: string
           repeat_rule?: string | null
           scheduled_at?: string
+          source?: string
           status?: string | null
           sub_type?: string
+          title?: string | null
           updated_at?: string | null
           user_id?: string
         }
