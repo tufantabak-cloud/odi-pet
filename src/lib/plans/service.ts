@@ -251,8 +251,6 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
         input.extra_data
       ) || input.scheduled_at; // Safe fallback if no next date
 
-      const fireAt = calculateFireAt(nextScheduledAtStr, input.notif_before, input.notif_unit);
-
       // 2. Create the main recurring plan FIRST (status: 'active')
       const { data: mainPlan, error: mainPlanErr } = await supabase
         .from('plans')
@@ -299,13 +297,6 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
 
       await supabase.from('plans').insert(completedPlanData);
 
-      if (fireAt) {
-        await supabase.from('notification_jobs').insert({
-          plan_id: mainPlan.id,
-          fire_at: fireAt,
-        });
-      }
-
       if (input.category === 'saglik' && input.sub_type === 'İlaç') {
         const startDate = input.scheduled_at.split('T')[0];
         await supabase.from('health_medication_courses').insert({
@@ -333,8 +324,6 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
     }
   }
   
-  const fireAt = calculateFireAt(scheduledAt, input.notif_before, input.notif_unit);
-
   const { data: plan, error: planError } = await supabase
     .from('plans')
     .insert({
@@ -360,17 +349,6 @@ export async function createPlan(userId: string, input: CreatePlanInput) {
     .single();
 
   if (planError) throw new Error(planError.message);
-
-  if (fireAt && initialStatus !== 'completed') {
-    const { error: notifError } = await supabase
-      .from('notification_jobs')
-      .insert({
-        plan_id: plan.id,
-        fire_at: fireAt,
-      });
-      
-    if (notifError) throw new Error(notifError.message);
-  }
 
   if (input.category === 'saglik' && input.sub_type === 'İlaç') {
     const startDate = input.scheduled_at.split('T')[0];
@@ -476,35 +454,6 @@ export async function updatePlan(userId: string, planId: string, input: UpdatePl
         .eq('plan_id', planId)
         .eq('is_read', false);
 
-      // Update notification job for the next occurrence
-      const newNotifBefore = updatedMainPlan.notif_before;
-      const newNotifUnit = updatedMainPlan.notif_unit;
-      const newFireAt = calculateFireAt(updatedMainPlan.scheduled_at, newNotifBefore, newNotifUnit);
-
-      if (newFireAt !== null) {
-        const { data: updatedJobs } = await supabase
-          .from('notification_jobs')
-          .update({ fire_at: newFireAt })
-          .eq('plan_id', planId)
-          .eq('sent', false)
-          .select();
-
-        if (!updatedJobs || updatedJobs.length === 0) {
-          await supabase
-            .from('notification_jobs')
-            .insert({
-              plan_id: planId,
-              fire_at: newFireAt,
-            });
-        }
-      } else {
-        await supabase
-          .from('notification_jobs')
-          .delete()
-          .eq('plan_id', planId)
-          .eq('sent', false);
-      }
-
       return updatedMainPlan;
     }
   }
@@ -530,45 +479,6 @@ export async function updatePlan(userId: string, planId: string, input: UpdatePl
       .update({ is_read: true, opened_at: new Date().toISOString() })
       .eq('plan_id', planId)
       .eq('is_read', false);
-  }
-
-  // If schedule or notification settings changed, update notification_jobs
-  if (input.scheduled_at || input.notif_before !== undefined || input.notif_unit) {
-    const newScheduledAt = input.scheduled_at || plan.scheduled_at;
-    const newNotifBefore = input.notif_before !== undefined ? input.notif_before : plan.notif_before;
-    const newNotifUnit = input.notif_unit || plan.notif_unit;
-    
-    const newFireAt = calculateFireAt(newScheduledAt, newNotifBefore, newNotifUnit);
-    
-    if (newFireAt === null) {
-      await supabase
-        .from('notification_jobs')
-        .delete()
-        .eq('plan_id', planId)
-        .eq('sent', false);
-    } else {
-      // Attempt to update existing pending job
-      const { data: updatedJobs, error: updateNotifError } = await supabase
-        .from('notification_jobs')
-        .update({ fire_at: newFireAt })
-        .eq('plan_id', planId)
-        .eq('sent', false)
-        .select();
-        
-      if (!updateNotifError && (!updatedJobs || updatedJobs.length === 0)) {
-        // Insert a new job if it didn't exist (e.g. transitioning from no notifications)
-        await supabase
-          .from('notification_jobs')
-          .insert({
-            plan_id: planId,
-            fire_at: newFireAt,
-          });
-      }
-        
-      if (updateNotifError) {
-        console.error('Bildirim güncellenirken hata oluştu:', updateNotifError.message);
-      }
-    }
   }
 
   return plan;
