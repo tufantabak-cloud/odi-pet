@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 interface ParasitePlanCompletionModalProps {
   planId: string;
   petId: string;
+  sourceTable?: string;
   onClose: () => void;
   onSuccess: (notes?: string) => void;
 }
@@ -53,6 +54,7 @@ function emptyToNull(value: string): string | null {
 export default function ParasitePlanCompletionModal({
   planId,
   petId,
+  sourceTable,
   onClose,
   onSuccess,
 }: ParasitePlanCompletionModalProps) {
@@ -198,7 +200,11 @@ export default function ParasitePlanCompletionModal({
         document_storage_path: uploadedPath ?? null,
       };
 
-      const res = await fetch(`/api/plans/${planId}`, {
+      const endpoint = sourceTable === 'health_schedules'
+        ? `/api/pets/${petId}/schedules/${planId}`
+        : `/api/plans/${planId}`;
+
+      const res = await fetch(endpoint, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

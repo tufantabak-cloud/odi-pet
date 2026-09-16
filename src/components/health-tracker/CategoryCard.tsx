@@ -1,16 +1,13 @@
 'use client';
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { FlowEvent } from './types';
-import { ActionSheet } from './ActionSheet';
 import { CategoryKey } from '@/lib/categoryThemes';
 
 interface CategoryCardProps {
   event: FlowEvent;
   categoryKey: CategoryKey;
-  onMarkDone: (id: string) => void;
-  onPostpone: (id: string) => void;
   onEdit: (event: FlowEvent) => void;
-  onDelete: (id: string, event?: FlowEvent) => void;
+  onSelectTask?: (event: FlowEvent) => void;
 }
 
 /** UI kategori etiketini (DB_CATEGORY_TO_UI çıktısı) CategoryKey'e çevirir */
@@ -87,8 +84,7 @@ function coverageLabel(coverage: NonNullable<FlowEvent['coverage']>): string {
 }
 
 /** Tarih-grid akış kartı — açık zemin, durum ikonu + etiketi, esnek yükseklik */
-export function CategoryCard({ event, categoryKey, onMarkDone, onPostpone, onEdit, onDelete }: CategoryCardProps) {
-  const [showMenu, setShowMenu] = useState(false);
+export function CategoryCard({ event, categoryKey, onEdit, onSelectTask }: CategoryCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { computedStatus } = event;
 
@@ -154,7 +150,7 @@ export function CategoryCard({ event, categoryKey, onMarkDone, onPostpone, onEdi
   return (
     <div className="relative shrink-0" ref={containerRef}>
       <button
-        onClick={() => setShowMenu(!showMenu)}
+        onClick={() => onSelectTask?.(event)}
         data-status={computedStatus}
         aria-label={`${title}, ${theme.label}, ${dateText}`}
         className={`
@@ -191,17 +187,7 @@ export function CategoryCard({ event, categoryKey, onMarkDone, onPostpone, onEdi
         )}
       </button>
 
-      {showMenu && (
-        <ActionSheet
-          event={event}
-          anchorRef={containerRef}
-          onClose={() => setShowMenu(false)}
-          onMarkDone={onMarkDone}
-          onPostpone={onPostpone}
-          onEdit={(e) => onEdit(e as FlowEvent)}
-          onDelete={onDelete}
-        />
-      )}
+      
     </div>
   );
 }

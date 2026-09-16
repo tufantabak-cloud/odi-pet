@@ -19,6 +19,7 @@ export async function PATCH(
     updates.completed_at = body.status === 'completed' || body.status === 'done' ? new Date().toISOString() : null;
   }
   if (body.due_date !== undefined) updates.due_date = body.due_date;
+  if (body.scheduled_at !== undefined) updates.due_date = body.scheduled_at;
   if (body.title !== undefined) updates.title = body.title;
   if (body.metadata !== undefined) updates.metadata = body.metadata;
 

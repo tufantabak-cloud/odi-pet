@@ -1,7 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { Syringe, Bug, Scale, Utensils, Stethoscope, Activity, Sparkles, AlertCircle, CheckCircle2, Clock } from 'lucide-react'
+import { CanonicalPlanActionModal } from '@/components/pets/common/CanonicalPlanActionModal'
+import type { CanonicalPlanContext } from '@/lib/plans/canonicalActionResolver'
 
 export interface HealthTimelineProps {
   schedules: any[]
@@ -20,6 +23,8 @@ function getCategoryIcon(category: string, title: string = '') {
 }
 
 export default function HealthTimeline({ schedules }: HealthTimelineProps) {
+  const router = useRouter()
+  const [selectedPlan, setSelectedPlan] = useState<CanonicalPlanContext | null>(null)
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming')
 
   const healthSchedules = schedules.filter(s => 
@@ -94,7 +99,21 @@ export default function HealthTimeline({ schedules }: HealthTimelineProps) {
             }
 
             return (
-              <div key={item.id || idx} className="relative pl-12 py-4 bg-surface z-10 group hover:bg-slate-50 transition-colors duration-200 rounded-2xl -ml-4 pr-4 cursor-pointer">
+              <div 
+                key={item.id || idx} 
+                onClick={() => {
+                  setSelectedPlan({
+                    planId: item.id || item.plan_id,
+                    petId: item.pet_id,
+                    title: item.title,
+                    category: item.category,
+                    status: item.status,
+                    scheduledAt: item.scheduled_at || item.due_date,
+                    plan: item
+                  })
+                }}
+                className="relative pl-12 py-4 bg-surface z-10 group hover:bg-slate-50 active:scale-[0.99] transition-all duration-200 rounded-2xl -ml-4 pr-4 cursor-pointer"
+              >
                 {/* Timeline Dot */}
                 <div className={`absolute left-[24px] top-[26px] w-2 h-2 rounded-full border-2 ${dotColor} z-10 flex items-center justify-center shadow-sm`} />
                 
@@ -125,6 +144,16 @@ export default function HealthTimeline({ schedules }: HealthTimelineProps) {
           })
         )}
       </div>
+
+      <CanonicalPlanActionModal
+        context={selectedPlan}
+        isOpen={!!selectedPlan}
+        onClose={() => setSelectedPlan(null)}
+        onSuccess={() => {
+          setSelectedPlan(null)
+          router.refresh()
+        }}
+      />
     </div>
   )
 }

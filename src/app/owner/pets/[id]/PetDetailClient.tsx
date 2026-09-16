@@ -8,6 +8,7 @@ import { Share2, Phone, Camera, ImageIcon, FileImage, Wallet, Home, FileText, Al
 const DynamicExperienceEngine = dynamic(() => import('@/components/orchestrator/DynamicExperienceEngine'), { ssr: false })
 const FamilyTab = dynamic(() => import('./FamilyTab'), { loading: () => <div className='animate-pulse bg-gray-100 rounded-2xl w-full h-12' /> });
 const HealthTab = dynamic(() => import('@/components/pets/tabs/HealthTab'), { loading: () => <div className='animate-pulse bg-gray-100 rounded-2xl w-full h-12' /> });
+import { CanonicalPlanActionModal } from '@/components/pets/common/CanonicalPlanActionModal';
 const VeterinerTab = dynamic(() => import('@/components/pets/tabs/VeterinerTab'), { loading: () => <div className='animate-pulse bg-gray-100 rounded-2xl w-full h-12' /> });
 
 
@@ -362,6 +363,16 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         ? tabParam
         : 'ozet'
 
+  const [canonicalActionPlan, setCanonicalActionPlan] = useState<any>(null);
+  const petCanonicalContext: any = canonicalActionPlan ? {
+    planId: canonicalActionPlan._plan_id || canonicalActionPlan.id,
+    plan: canonicalActionPlan,
+    title: canonicalActionPlan.title || canonicalActionPlan.vaccines?.name || 'Görev',
+    category: canonicalActionPlan._plan_category || canonicalActionPlan.category || ((canonicalActionPlan.title || '').toLowerCase().includes('aşı') ? 'asi' : 'saglik'),
+    scheduledAt: canonicalActionPlan.due_date || canonicalActionPlan.scheduled_at,
+    status: canonicalActionPlan.status,
+    petId: canonicalActionPlan.pet_id
+  } : null;
   const [activeTab, setActiveTab] = useState<'ozet'|'saglik'|'bakim'|'takvim'|'beslenme'|'veteriner'|'ekstra'>(initialTab)
   const [isSmartScannerOpen, setIsSmartScannerOpen] = useState(false)
   const { filterVisibleTasks, dismissTask } = useDismissedMicroTasks()
@@ -472,12 +483,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   const [activeTaskModal, setActiveTaskModal] = useState<TaskModalType>(null)
   const [parasiteCompletionTask, setParasiteCompletionTask] = useState<any>(null)
   const [enrichOpen, setEnrichOpen] = useState(false)
-  const [taskToComplete, setTaskToComplete] = useState<any>(null)
-  const [taskToPostpone, setTaskToPostpone] = useState<any>(null)
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
-  const [medicationActionTask, setMedicationActionTask] = useState<any>(null)
-  const [medicationNote, setMedicationNote] = useState('')
-  const [showNoteInput, setShowNoteInput] = useState(false)
   const [trackerRefreshKey, setTrackerRefreshKey] = useState(0)
   const coverInputRef = useRef<HTMLInputElement>(null)
   const avatarInputRef = useRef<HTMLInputElement>(null)
@@ -734,179 +740,9 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     }
   }
 
-  const handleMarkDone = (item: any) => {
-    setTaskToComplete(item);
-  }
 
-  const handlePostpone = (item: any) => {
-    setTaskToPostpone(item);
-  }
 
-  const confirmCompleteTask = async (details: any) => {
-    if (!taskToComplete) return;
-    setIsDeletingPlanProcessing(true); // Re-use loading state if any, or just await
-    try {
-      const realId = taskToComplete.id.toString().startsWith('plan_') ? taskToComplete.id.replace('plan_', '') : taskToComplete.id;
-      const res = await fetch(`/api/plans/${realId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'completed' })
-      });
-      if (!res.ok) throw new Error('Güncelleme başarısız');
-      setTaskToComplete(null);
-      router.refresh();
-      setTrackerRefreshKey(prev => prev + 1);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsDeletingPlanProcessing(false);
-    }
-  }
-
-  const confirmPostponeTask = async (newDate: string, note?: string) => {
-    if (!taskToPostpone) return;
-    setIsDeletingPlanProcessing(true);
-    try {
-      const realId = taskToPostpone.id.toString().startsWith('plan_') ? taskToPostpone.id.replace('plan_', '') : taskToPostpone.id;
-      const res = await fetch(`/api/plans/${realId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scheduled_at: newDate }) // Notu eklemek istenirse extra_data güncellenebilir
-      });
-      if (!res.ok) throw new Error('Güncelleme başarısız');
-      setTaskToPostpone(null);
-      router.refresh();
-      setTrackerRefreshKey(prev => prev + 1);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsDeletingPlanProcessing(false);
-    }
-  }
-
-  const handleTaskClick = (item: any) => {
-    if (item.extra_data?.record_type === 'medication' && item.status !== 'done') {
-      setMedicationActionTask(item);
-      setMedicationNote('');
-      setShowNoteInput(false);
-      return;
-    }
-    const realPlanId = resolveRealPlanId(item);
-    if (realPlanId) {
-      router.push(`/owner/plan-yap/edit/${realPlanId}`);
-    } else {
-      
-    }
-  }
-
-  const handleMedicationConfirm = async (task: any, noteText: string) => {
-    const previous = localSchedules
-    setLocalSchedules(prev => prev.map(s => s.id === task.id ? { ...s, status: 'done', notes: noteText || s.notes } : s));
-    if (!task.id.toString().startsWith('mock-')) {
-      try {
-        const planId = getRealPlanId(task.id);
-        let payload: any = { status: 'completed' };
-        if (noteText) payload.note = noteText;
-        
-        if (task.extra_data?.record_type === 'medication' && task.extra_data?.medication) {
-          const currentStock = task.extra_data.medication.stock ?? 0;
-          const nextStock = Math.max(0, currentStock - 1);
-          payload.extra_data = {
-            ...task.extra_data,
-            medication: {
-              ...task.extra_data.medication,
-              stock: nextStock
-            }
-          };
-        }
-
-        const res = await fetch(`/api/plans/${planId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        if (!res.ok) throw new Error('İlaç kaydı güncellenemedi')
-      } catch (err: any) {
-        setLocalSchedules(previous)
-        setGeneralError('İlaç kaydı güncellenemedi. Lütfen tekrar deneyin.')
-        setTimeout(() => setGeneralError(null), 4000)
-        console.error('[PetDetailClient] handleMedicationConfirm:', err)
-        setMedicationActionTask(null);
-        return
-      }
-    }
-    setMedicationActionTask(null);
-    setMedicationNote('');
-    setShowNoteInput(false);
-    setTrackerRefreshKey(prev => prev + 1);
-    router.refresh();
-  };
-
-  const handleMedicationSnooze = async (task: any) => {
-    setLocalSchedules(prev => prev.map(s => {
-      if (s.id !== task.id) return s;
-      const d = getTaskDateTime(s);
-      d.setMinutes(d.getMinutes() + 30);
-      
-      const dueDate = d.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' });
-      const dueTime = d.toLocaleTimeString('tr-TR', { 
-        timeZone: 'Europe/Istanbul', 
-        hour: '2-digit', 
-        minute: '2-digit', 
-        second: '2-digit',
-        hour12: false 
-      });
-      return { ...s, due_date: dueDate, due_time: dueTime };
-    }));
-    
-    if (!task.id.toString().startsWith('mock-')) {
-      const d = getTaskDateTime(task);
-      d.setMinutes(d.getMinutes() + 30);
-      try {
-        const planId = getRealPlanId(task.id);
-        await fetch(`/api/plans/${planId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ scheduled_at: d.toISOString() })
-        });
-      } catch (err) {
-        console.error('[handleMedicationSnooze] Error:', err);
-      }
-    }
-    setMedicationActionTask(null);
-    setMedicationNote('');
-    setShowNoteInput(false);
-    setTrackerRefreshKey(prev => prev + 1);
-    router.refresh();
-  };
-
-  const handleMedicationSkip = async (task: any) => {
-    const previous = localSchedules
-    setLocalSchedules(prev => prev.map(s => s.id === task.id ? { ...s, status: 'done' } : s));
-    if (!task.id.toString().startsWith('mock-')) {
-      try {
-        const planId = getRealPlanId(task.id);
-        const res = await fetch(`/api/plans/${planId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'cancelled' })
-        });
-        if (!res.ok) throw new Error('İlaç görevi atlanamadı')
-      } catch (err: any) {
-        setLocalSchedules(previous)
-        setGeneralError('İşlem kaydedilemedi. Lütfen tekrar deneyin.')
-        setTimeout(() => setGeneralError(null), 4000)
-        console.error('[PetDetailClient] handleMedicationSkip:', err)
-        setMedicationActionTask(null);
-        return
-      }
-    }
-    setMedicationActionTask(null);
-    setMedicationNote('');
-    setShowNoteInput(false);
-    setTrackerRefreshKey(prev => prev + 1);
-    router.refresh();
-  };
+  const handleTaskClick = (item: any) => { setCanonicalActionPlan(item); };
 
   const handlePlanla = (tabName: string) => {
     if (tabName === 'Beslenme') {
@@ -1217,8 +1053,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                 </button>
                 {activeMenuId === item.id && (
                   <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-md shadow-xl border border-border-main/50 py-2 z-[200]">
-                    <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); handleMarkDone(item); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-success hover:bg-success/5 flex items-center gap-2 cursor-pointer"><Check size={16} className="w-4 h-4 text-success" aria-hidden="true" /> Tamamlandı İşaretle</button>
-                    <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); handlePostpone(item); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary-soft flex items-center gap-2 cursor-pointer"><Calendar size={16} className="w-4 h-4 text-primary" aria-hidden="true" /> Ertele</button>
+                    <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); setCanonicalActionPlan(item); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-success hover:bg-success/5 flex items-center gap-2 cursor-pointer"><Check size={16} className="w-4 h-4 text-success" aria-hidden="true" /> Tamamlandı İşaretle</button>
+                    <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); setCanonicalActionPlan(item); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary-soft flex items-center gap-2 cursor-pointer"><Calendar size={16} className="w-4 h-4 text-primary" aria-hidden="true" /> Ertele</button>
                     <div className="border-t border-border-main/30 mx-2 my-1"/>
                     <button onClick={(e) => { e.stopPropagation(); handleEditTask(item); setActiveMenuId(null); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer"><Pencil size={16} className="w-4 h-4 text-primary" aria-hidden="true" /> Düzenle</button>
                     <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); setDeletingPlan({ id: item.id, title: item.title || (item as any).vaccines?.name, category: getPlanDisplayCategory(item.category, item.sub_category) }); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer"><X size={16} className="w-4 h-4 text-error" aria-hidden="true" /> Sil</button>
@@ -1702,11 +1538,11 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                                 </button>
                                 {isActionsOpen && (
                                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 px-4 pb-3 pt-1 animate-in fade-in slide-in-from-top-1">
-                                    <button type="button" onClick={() => { setActiveMenuId(null); handleMarkDone(plan); }}
+                                    <button type="button" onClick={() => { setActiveMenuId(null); setCanonicalActionPlan(plan); }}
                                       className="min-h-[44px] px-2 py-2 text-xs font-bold text-success bg-success/10 hover:bg-success/20 rounded-xl transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-1 cursor-pointer pointer-events-auto">
                                       <Check size={14} className="w-3.5 h-3.5 text-success" aria-hidden="true" /> Tamamlandı
                                     </button>
-                                    <button type="button" onClick={() => { setActiveMenuId(null); handlePostpone(plan); }}
+                                    <button type="button" onClick={() => { setActiveMenuId(null); setCanonicalActionPlan(plan); }}
                                       className="min-h-[44px] px-2 py-2 text-xs font-bold text-text-secondary bg-text-secondary/10 hover:bg-text-secondary/20 rounded-xl transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-1 cursor-pointer pointer-events-auto">
                                       <Calendar size={14} className="w-3.5 h-3.5 text-text-secondary" aria-hidden="true" /> Ertele
                                     </button>
@@ -2156,7 +1992,12 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         <h3 className="text-base font-bold text-text-primary mb-3">
           Görev Takibi
         </h3>
-        <HealthTracker refreshTrigger={trackerRefreshKey} petId={pet.id} onEditTask={(t) => setActiveTimelineTask(t)} onMarkDone={(t) => handleMarkDone(t)} onPostpone={(t) => handlePostpone(t)} />
+        <HealthTracker
+          refreshTrigger={trackerRefreshKey}
+          petId={pet.id}
+          onEditTask={(t) => setActiveTimelineTask(t)}
+          onSelectTask={(t) => setCanonicalActionPlan(t)}
+        />
       </div>
 
       {pet.gender === 'female' && !pet.is_neutered && (
@@ -2362,8 +2203,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
             <HealthTab 
               petId={pet.id} 
               petName={pet.name}
-              onMarkDone={handleMarkDone}
-              onPostpone={handlePostpone}
+              onMarkDone={setCanonicalActionPlan}
+              onPostpone={setCanonicalActionPlan}
               onEdit={handleEditTask}
               initialVaccines={initialVaccines}
               initialParasites={initialParasites}
@@ -2543,7 +2384,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                     <button
                       onClick={() => {
                         setActiveTimelineTask(null);
-                        handleMarkDone(activeTimelineTask);
+                        setCanonicalActionPlan(activeTimelineTask);
                       }}
                       className="w-full py-3.5 px-4 rounded-xl bg-success/10 hover:bg-success/20 border border-success/20 text-sm font-bold text-success flex items-center justify-between transition-colors active:scale-[0.98]">
                       <div className="flex items-center gap-3">
@@ -2557,7 +2398,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                     <button
                       onClick={() => {
                         setActiveTimelineTask(null);
-                        handlePostpone(activeTimelineTask);
+                        setCanonicalActionPlan(activeTimelineTask);
                       }}
                       className="w-full py-3.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-sm font-bold text-text-primary flex items-center justify-between transition-colors active:scale-[0.98]">
                       <div className="flex items-center gap-3">
@@ -2963,102 +2804,17 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         </div>
       )}
 
-      {taskToComplete && (
-        <CompletionDetailsModal
-          isOpen={true}
-          taskTitle={taskToComplete.title || (taskToComplete as any).vaccines?.name || 'Görev'}
-          category={taskToComplete.category?.toLowerCase() as any || 'saglik'}
-          onClose={() => setTaskToComplete(null)}
-          onComplete={confirmCompleteTask}
-        />
-      )}
 
-      {taskToPostpone && (
-        <PostponeModal
-          isOpen={true}
-          taskTitle={taskToPostpone.title || (taskToPostpone as any).vaccines?.name || 'Görev'}
-          currentDate={taskToPostpone.due_date || new Date().toISOString().split('T')[0]}
-          onClose={() => setTaskToPostpone(null)}
-          onPostpone={confirmPostponeTask}
-        />
-      )}
-
-      {medicationActionTask && (
-        <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex justify-center items-end" onClick={() => setMedicationActionTask(null)}>
-          <div className="bg-[#FAF6F2] w-full max-w-md rounded-t-[32px] p-6 shadow-2xl animate-fade-in relative flex flex-col gap-6" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between">
-              <button onClick={() => setMedicationActionTask(null)} className="w-8 h-8 rounded-full bg-slate-200/50 hover:bg-slate-200/80 flex items-center justify-center text-slate-700 transition-colors">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-              <h3 className="text-lg font-semibold text-slate-800">İlaç</h3>
-              <div className="w-8" />
-            </div>
-
-            <div className="flex flex-col items-center gap-4 text-center mt-2">
-              {medicationActionTask.extra_data?.medication?.stock_enabled && (
-                <div className="text-xs font-bold text-slate-500 bg-slate-200/40 px-3 py-1 rounded-full">
-                  {medicationActionTask.extra_data.medication.stock} {medicationActionTask.extra_data.medication.unit} kaldı
-                </div>
-              )}
-              
-              <div className="w-16 h-16 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center shadow-inner animate-pulse">
-                <PillIcon className="w-8 h-8 text-indigo-600" />
-              </div>
-
-              <div>
-                <h4 className="text-xl font-semibold text-slate-800">{medicationActionTask.title}</h4>
-                <div className="flex items-center justify-center gap-2 mt-2">
-                  <span className="text-sm font-extrabold px-3 py-1 bg-white border border-slate-200 text-slate-700 rounded-full shadow-sm">
-                     {medicationActionTask.extra_data?.medication?.dosage_string || medicationActionTask.extra_data?.medication?.dose || '1 Doz'}
-                  </span>
-                  <button 
-                    onClick={() => setShowNoteInput(prev => !prev)}
-                    className="text-sm font-extrabold px-3 py-1 bg-white border border-slate-200 border-dashed text-slate-600 rounded-full hover:bg-slate-50 transition-all flex items-center gap-1"
-                  >
-                    <span>+ Not</span>
-                  </button>
-                </div>
-              </div>
-
-              {showNoteInput && (
-                <input
-                  type="text"
-                  placeholder="Görevin notu..."
-                  value={medicationNote}
-                  onChange={e => setMedicationNote(e.target.value)}
-                  className="w-full mt-2 p-3 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400"
-                />
-              )}
-
-              <div className="w-full flex justify-between items-center bg-white/50 border border-slate-200/50 rounded-2xl p-4 mt-2">
-                <span className="text-sm font-bold text-slate-600">Saat</span>
-                <span className="text-base font-bold text-slate-800">{medicationActionTask.due_time?.slice(0, 5) || '12:00'}</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3 mt-4">
-              <button
-                onClick={() => handleMedicationSkip(medicationActionTask)}
-                className="py-3.5 bg-red-50 hover:bg-red-100 text-red-700 font-extrabold text-sm rounded-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
-              >
-                <X size={16} className="w-4 h-4 text-red-700" aria-hidden="true" /> <span>Atla</span>
-              </button>
-              <button
-                onClick={() => handleMedicationSnooze(medicationActionTask)}
-                className="py-3.5 bg-[#FAF1E6] hover:bg-[#F3E5D4] text-[#8C6239] font-extrabold text-sm rounded-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
-              >
-                <Bell size={16} className="w-4 h-4 text-[#8C6239]" aria-hidden="true" /> <span>Ertele</span>
-              </button>
-              <button
-                onClick={() => handleMedicationConfirm(medicationActionTask, medicationNote)}
-                className="py-3.5 bg-[#10B981] hover:bg-[#059669] text-white font-extrabold text-sm rounded-2xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
-              >
-                <Check size={16} className="w-4 h-4 text-white" aria-hidden="true" /> <span>Onayla</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CanonicalPlanActionModal
+        isOpen={!!canonicalActionPlan}
+        onClose={() => setCanonicalActionPlan(null)}
+        context={petCanonicalContext}
+        onSuccess={() => {
+          setCanonicalActionPlan(null);
+          router.refresh();
+          setTrackerRefreshKey(prev => prev + 1);
+        }}
+      />
 
       {lostWizardOpen && (
         <LostPetWizard

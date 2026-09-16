@@ -19,6 +19,8 @@ import { assessWeight } from '@/lib/vetStandards/weightStandards'
 import { ScaleIcon, UtensilsIcon, BowlIcon, RulerIcon } from '@/components/icons/PetIcons'
 import { Pencil, AlertTriangle, Plus, Package, Trash2, Camera, Check, Clock, Scale, Search, QrCode, Edit3, Tag, ArrowRight, CheckCircle2 } from 'lucide-react'
 import StockTimeline from '@/components/nutrition/StockTimeline'
+import { CanonicalPlanActionModal } from '@/components/pets/common/CanonicalPlanActionModal'
+import type { CanonicalPlanContext } from '@/lib/plans/canonicalActionResolver'
 
 // Tabs
 const TABS = ['Mama & Stok', 'Öğünler & Hatırlatıcı', 'Kilo Takibi'] as const
@@ -157,18 +159,18 @@ export default function NutritionClient({
     }
   }
 
-  async function handleCompleteReminder(planId: string) {
-    try {
-      const res = await fetch(`/api/plans/${planId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'completed' })
-      })
-      if (!res.ok) throw new Error('Hatırlatıcı tamamlanamadı')
-      router.refresh()
-    } catch (err: any) {
-      showApiError(err.message || 'Bir hata oluştu')
-    }
+  const [canonicalActionPlan, setCanonicalActionPlan] = useState<CanonicalPlanContext | null>(null)
+
+  function openCanonicalModal(plan: any) {
+    setCanonicalActionPlan({
+      planId: plan.id,
+      petId: plan.pet_id,
+      title: plan.title,
+      category: plan.category,
+      status: plan.status,
+      scheduledAt: plan.scheduled_at || plan.due_date,
+      plan: plan
+    })
   }
 
   // OPOS Cilt 3: native confirm() yerine ConfirmModal.
@@ -1334,7 +1336,7 @@ export default function NutritionClient({
                         {!isDone && (
                           <button
                             type="button"
-                            onClick={() => handleCompleteReminder(plan.id)}
+                            onClick={() => openCanonicalModal(plan)}
                             className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors flex items-center gap-1"
                           >
                             <Check size={14} className="w-3.5 h-3.5 text-emerald-700" aria-hidden="true" /> Tamamla
@@ -1642,7 +1644,7 @@ export default function NutritionClient({
                 </div>
                 <button
                   type="button"
-                  onClick={() => handleCompleteReminder(upcomingWeightTask.id)}
+                  onClick={() => openCanonicalModal(upcomingWeightTask)}
                   className="px-3.5 py-1.5 rounded-xl text-[11px] font-bold bg-amber-600 text-white hover:bg-amber-700 transition-colors shadow-sm shrink-0 flex items-center gap-1"
                 >
                   <Check size={14} className="w-3.5 h-3.5 text-white" aria-hidden="true" /> Tamamla
@@ -2508,6 +2510,16 @@ export default function NutritionClient({
           </div>
         </div>
       </Modal>
+      
+      <CanonicalPlanActionModal
+        context={canonicalActionPlan}
+        isOpen={!!canonicalActionPlan}
+        onClose={() => setCanonicalActionPlan(null)}
+        onSuccess={() => {
+          setCanonicalActionPlan(null)
+          router.refresh()
+        }}
+      />
     </div>
   )
 }
