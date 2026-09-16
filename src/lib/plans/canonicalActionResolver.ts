@@ -6,6 +6,7 @@ export interface CanonicalPlanActionConfig {
   icon: string;
   variant?: 'primary' | 'secondary' | 'danger';
   disabled?: boolean;
+  disabledReason?: string;
 }
 
 export type CompletionMode = 'parasite_protocol' | 'completion_details' | 'simple';
@@ -99,39 +100,36 @@ export function resolvePlanActions(context: CanonicalPlanContext): ResolvedPlanA
   const isSystemRequired = context.isSystemRequired ?? plan.is_system_required ?? false;
 
   // Actions availability
-  const canComplete = !isCompleted && !isCancelled;
-  const canPostpone = !isCompleted && !isCancelled;
-  const canEdit = !isCompleted;
+  const canComplete = !isCancelled;
+  const canPostpone = !isCancelled;
+  const canEdit = true;
   const canDelete = !isSystemRequired;
 
   const actions: CanonicalPlanActionConfig[] = [];
 
-  if (canComplete) {
-    actions.push({
-      id: 'complete',
-      label: 'Tamamlandı',
-      icon: 'CheckCircle2',
-      variant: 'primary',
-    });
-  }
+  actions.push({
+    id: 'complete',
+    label: isCompleted ? 'Tamamlandı' : 'Tamamlandı İşaretle',
+    icon: 'CheckCircle2',
+    variant: 'primary',
+    disabled: isCompleted,
+    disabledReason: isCompleted ? 'Bu görev zaten tamamlanmış' : undefined,
+  });
 
-  if (canPostpone) {
-    actions.push({
-      id: 'postpone',
-      label: 'Ertele',
-      icon: 'Clock',
-      variant: 'secondary',
-    });
-  }
+  actions.push({
+    id: 'postpone',
+    label: 'Ertele',
+    icon: 'Clock',
+    variant: 'secondary',
+    disabled: isCompleted,
+  });
 
-  if (canEdit) {
-    actions.push({
-      id: 'edit',
-      label: 'Düzenle',
-      icon: 'Pencil',
-      variant: 'secondary',
-    });
-  }
+  actions.push({
+    id: 'edit',
+    label: 'Düzenle',
+    icon: 'Pencil',
+    variant: 'secondary',
+  });
 
   if (canDelete) {
     actions.push({

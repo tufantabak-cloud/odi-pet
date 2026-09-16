@@ -291,37 +291,6 @@ export function getTaskCardStyle(isOverdue: boolean, isCompleted: boolean) {
   };
 }
 
-/**
- * Belirli bir timeline event'inin tipini kategorize eder.
- * @returns 'stock_status' | 'completed_record' | 'active_plan'
- */
-function getEventType(event: any): 'stock_status' | 'completed_record' | 'active_plan' {
-  if (!event) return 'active_plan';
-
-  // 1. Stok / Envanter (Sanal Event)
-  if (event._is_virtual && event._source === 'food_inventory') {
-    return 'stock_status';
-  }
-
-  // 2. Tamamlanmış Kayıt (Geçmiş Tıbbi Veri veya Tamamlanmış Plan)
-  if (
-    event._source === 'vaccine_records_v2' ||
-    event._source === 'parasite_records' ||
-    event._source === 'growth_records' ||
-    event._source === 'weight_logs' ||
-    event.status === 'done' ||
-    event.status === 'completed' ||
-    event.is_completed === true ||
-    event.computedStatus === 'done' ||
-    !!event.administered_at
-  ) {
-    return 'completed_record';
-  }
-
-  // 3. Aktif Plan/Görev (Varsayılan)
-  return 'active_plan';
-}
-
 export default function PetDetailClient({ pet, age, score, overdue, schedules, diseases, allergies, medications, growthRecords, appointments, nutritionLogs, inventory, feedingLogs, weightLogs, assignments, payments, subscription, activeLostReport, hasPasskey = false, isAdminView = false, lastVaccineRecord, initialVaccines, initialParasites, initialVets }: PetDetailProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -367,11 +336,11 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   const petCanonicalContext: any = canonicalActionPlan ? {
     planId: canonicalActionPlan._plan_id || canonicalActionPlan.id,
     plan: canonicalActionPlan,
-    title: canonicalActionPlan.title || canonicalActionPlan.vaccines?.name || 'Görev',
-    category: canonicalActionPlan._plan_category || canonicalActionPlan.category || ((canonicalActionPlan.title || '').toLowerCase().includes('aşı') ? 'asi' : 'saglik'),
+    title: canonicalActionPlan.taskTitle || canonicalActionPlan.title || canonicalActionPlan.pet_care_tasks?.title || canonicalActionPlan.vaccines?.name || 'Görev',
+    category: canonicalActionPlan._plan_category || canonicalActionPlan.category || ((canonicalActionPlan.title || canonicalActionPlan.taskTitle || '').toLowerCase().includes('aşı') ? 'asi' : 'saglik'),
     scheduledAt: canonicalActionPlan.due_date || canonicalActionPlan.scheduled_at,
     status: canonicalActionPlan.status,
-    petId: canonicalActionPlan.pet_id
+    petId: canonicalActionPlan.pet_id || pet.id
   } : null;
   const [activeTab, setActiveTab] = useState<'ozet'|'saglik'|'bakim'|'takvim'|'beslenme'|'veteriner'|'ekstra'>(initialTab)
   const [isSmartScannerOpen, setIsSmartScannerOpen] = useState(false)
@@ -483,13 +452,11 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   const [activeTaskModal, setActiveTaskModal] = useState<TaskModalType>(null)
   const [parasiteCompletionTask, setParasiteCompletionTask] = useState<any>(null)
   const [enrichOpen, setEnrichOpen] = useState(false)
-  const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
   const [trackerRefreshKey, setTrackerRefreshKey] = useState(0)
   const coverInputRef = useRef<HTMLInputElement>(null)
   const avatarInputRef = useRef<HTMLInputElement>(null)
 
   const [showPetMenuSheet, setShowPetMenuSheet] = useState(false)
-  const [activeTimelineTask, setActiveTimelineTask] = useState<any>(null)
   const [coverUploading, setCoverUploading] = useState(false)
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [coverAdjustingUrl, setCoverAdjustingUrl] = useState<string | null>(null)
@@ -927,7 +894,6 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
   const handleDeleteTask = async (id: string) => {
     const previous = localSchedules
     setLocalSchedules(prev => prev.filter(s => s.id !== id))
-    setActiveMenuId(null)
     if (!id.toString().startsWith('mock-')) {
       try {
         if (isPlanSource(id)) {
@@ -1045,21 +1011,19 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                 <div className={`text-xs font-semibold mt-1.5 ${cardStyle.textDate}`}>{formatTaskDate(item.due_date, item.due_time, isCompleted)}</div>
               </div>
               <div className="relative shrink-0">
-                <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(prev => prev === item.id ? null : item.id) }}
-                  className={`${cardStyle.textDots} p-2 transition-colors focus:outline-none cursor-pointer`}>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCanonicalActionPlan(item);
+                  }}
+                  className={`${cardStyle.textDots} p-2 transition-colors focus:outline-none cursor-pointer rounded-lg hover:bg-black/5 active:scale-95`}
+                  aria-label="İşlem Menüsü"
+                >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
                   </svg>
                 </button>
-                {activeMenuId === item.id && (
-                  <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-md shadow-xl border border-border-main/50 py-2 z-[200]">
-                    <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); setCanonicalActionPlan(item); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-success hover:bg-success/5 flex items-center gap-2 cursor-pointer"><Check size={16} className="w-4 h-4 text-success" aria-hidden="true" /> Tamamlandı İşaretle</button>
-                    <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); setCanonicalActionPlan(item); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary-soft flex items-center gap-2 cursor-pointer"><Calendar size={16} className="w-4 h-4 text-primary" aria-hidden="true" /> Ertele</button>
-                    <div className="border-t border-border-main/30 mx-2 my-1"/>
-                    <button onClick={(e) => { e.stopPropagation(); handleEditTask(item); setActiveMenuId(null); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary/5 flex items-center gap-2 cursor-pointer"><Pencil size={16} className="w-4 h-4 text-primary" aria-hidden="true" /> Düzenle</button>
-                    <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); setDeletingPlan({ id: item.id, title: item.title || (item as any).vaccines?.name, category: getPlanDisplayCategory(item.category, item.sub_category) }); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-error hover:bg-error/5 flex items-center gap-2 cursor-pointer"><X size={16} className="w-4 h-4 text-error" aria-hidden="true" /> Sil</button>
-                  </div>
-                )}
               </div>
             </div>
           );
@@ -1517,12 +1481,11 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                               dotColor = 'var(--color-primary)'; badgeBg = 'var(--color-primary-soft)'; badgeColor = 'var(--color-primary)'
                             }
 
-                            const isActionsOpen = activeMenuId === plan.id;
                             return (
                               <div key={plan.id}>
                                 <button type="button"
-                                  onClick={() => setActiveMenuId(prev => prev === plan.id ? null : plan.id)}
-                                  className="w-full text-left flex items-center gap-3 px-[var(--space-4)] py-3 hover:bg-[var(--color-surface-secondary)] transition-colors group">
+                                  onClick={() => setCanonicalActionPlan(plan)}
+                                  className="w-full text-left flex items-center gap-3 px-[var(--space-4)] py-3 hover:bg-[var(--color-surface-secondary)] transition-colors group cursor-pointer">
                                   <span className="text-xs font-700 text-[var(--color-text-muted)] w-10 shrink-0 tabular-nums">{timeStr || '-'}</span>
                                   <div className="w-2 h-2 rounded-full shrink-0" style={{ background: dotColor }} />
                                   <div className="flex-1 min-w-0">
@@ -1536,26 +1499,6 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
                                     {badge}
                                   </span>
                                 </button>
-                                {isActionsOpen && (
-                                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 px-4 pb-3 pt-1 animate-in fade-in slide-in-from-top-1">
-                                    <button type="button" onClick={() => { setActiveMenuId(null); setCanonicalActionPlan(plan); }}
-                                      className="min-h-[44px] px-2 py-2 text-xs font-bold text-success bg-success/10 hover:bg-success/20 rounded-xl transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-1 cursor-pointer pointer-events-auto">
-                                      <Check size={14} className="w-3.5 h-3.5 text-success" aria-hidden="true" /> Tamamlandı
-                                    </button>
-                                    <button type="button" onClick={() => { setActiveMenuId(null); setCanonicalActionPlan(plan); }}
-                                      className="min-h-[44px] px-2 py-2 text-xs font-bold text-text-secondary bg-text-secondary/10 hover:bg-text-secondary/20 rounded-xl transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-1 cursor-pointer pointer-events-auto">
-                                      <Calendar size={14} className="w-3.5 h-3.5 text-text-secondary" aria-hidden="true" /> Ertele
-                                    </button>
-                                    <button type="button" onClick={() => { setActiveMenuId(null); handleEditTask(plan); }}
-                                      className="min-h-[44px] px-2 py-2 text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 rounded-xl transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-1 cursor-pointer pointer-events-auto">
-                                      <Pencil size={14} className="w-3.5 h-3.5 text-primary" aria-hidden="true" /> Düzenle
-                                    </button>
-                                    <button type="button" onClick={() => { setActiveMenuId(null); setDeletingPlan({ id: plan.id, title: plan.title || (plan as any).vaccines?.name, category: getPlanDisplayCategory(plan.category, plan.sub_category) }); }}
-                                      className="min-h-[44px] px-2 py-2 text-xs font-bold text-error bg-error/10 hover:bg-error/20 rounded-xl transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-1 cursor-pointer pointer-events-auto">
-                                      <X size={14} className="w-3.5 h-3.5 text-error" aria-hidden="true" /> Sil
-                                    </button>
-                                  </div>
-                                )}
                               </div>
                             );
                           });
@@ -1995,7 +1938,7 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         <HealthTracker
           refreshTrigger={trackerRefreshKey}
           petId={pet.id}
-          onEditTask={(t) => setActiveTimelineTask(t)}
+          onEditTask={(t) => setCanonicalActionPlan(t)}
           onSelectTask={(t) => setCanonicalActionPlan(t)}
         />
       </div>
@@ -2361,171 +2304,6 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         className="hidden"
         onChange={handleAvatarUpload}
       />
-
-      {/* TIMELINE TASK ACTION SHEET */}
-      {activeTimelineTask && (() => {
-        const eventType = getEventType(activeTimelineTask);
-
-        return (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999] flex items-end animate-fade-in"
-            onClick={() => setActiveTimelineTask(null)}>
-            <div className="bg-surface w-full rounded-t-[28px] p-6 pb-[calc(24px+env(safe-area-inset-bottom,0px))] shadow-2xl border-t border-border"
-              onClick={e => e.stopPropagation()}>
-              <div className="w-12 h-1.5 bg-border rounded-full mx-auto mb-4" />
-              <p className="text-base font-semibold text-text-primary mb-5 text-center flex items-center justify-center gap-2">
-                <CalendarClockIcon className="w-5 h-5 text-primary shrink-0" /> {activeTimelineTask.title || activeTimelineTask.vaccine_name || 'Görev Aksiyonları'}
-              </p>
-
-              <div className="flex flex-col gap-2.5">
-                
-                {/* 1. AKTİF PLAN AKSİYONLARI */}
-                {eventType === 'active_plan' && (
-                  <>
-                    <button
-                      onClick={() => {
-                        setActiveTimelineTask(null);
-                        setCanonicalActionPlan(activeTimelineTask);
-                      }}
-                      className="w-full py-3.5 px-4 rounded-xl bg-success/10 hover:bg-success/20 border border-success/20 text-sm font-bold text-success flex items-center justify-between transition-colors active:scale-[0.98]">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-success/20 text-success flex items-center justify-center">
-                          <Check size={18} />
-                        </div>
-                        <span>Tamamlandı Olarak İşaretle</span>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setActiveTimelineTask(null);
-                        setCanonicalActionPlan(activeTimelineTask);
-                      }}
-                      className="w-full py-3.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-sm font-bold text-text-primary flex items-center justify-between transition-colors active:scale-[0.98]">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-slate-200 text-text-secondary flex items-center justify-center">
-                          <Calendar size={18} />
-                        </div>
-                        <span>Tarihi Ertele</span>
-                      </div>
-                    </button>
-                    
-                    <button
-                      onClick={() => {
-                        setActiveTimelineTask(null);
-                        handleEditTask(activeTimelineTask);
-                      }}
-                      className="w-full py-3.5 px-4 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/20 text-sm font-bold text-primary flex items-center justify-between transition-colors active:scale-[0.98]">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-primary/20 text-primary flex items-center justify-center">
-                          <Pencil size={18} />
-                        </div>
-                        <span>Düzenle (Tam Görünüm)</span>
-                      </div>
-                    </button>
-                  </>
-                )}
-
-                {/* 2. TAMAMLANMIŞ / KORUMA / TAKİP AKSİYONLARI */}
-                {eventType === 'completed_record' && (
-                  <>
-                    {/* Eğer kaçırılmış bir koruma periyoduysa, Yeni Doz planlamaya yönlendir */}
-                    {activeTimelineTask._source === 'vaccine_records_v2' && (
-                      <button
-                        onClick={() => {
-                          setActiveTimelineTask(null);
-                          router.push(`/owner/plan-yap/asi?pet_id=${pet.id}`);
-                        }}
-                        className="w-full py-3.5 px-4 rounded-xl bg-success/10 hover:bg-success/20 border border-success/20 text-sm font-bold text-success flex items-center justify-between transition-colors active:scale-[0.98]">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-success/20 text-success flex items-center justify-center">
-                            <Plus size={18} />
-                          </div>
-                          <span>Yeni Doz Planla</span>
-                        </div>
-                      </button>
-                    )}
-                    {activeTimelineTask._source === 'parasite_records' && (
-                      <button
-                        onClick={() => {
-                          setActiveTimelineTask(null);
-                          router.push(`/owner/plan-yap/parazit?pet_id=${pet.id}`);
-                        }}
-                        className="w-full py-3.5 px-4 rounded-xl bg-success/10 hover:bg-success/20 border border-success/20 text-sm font-bold text-success flex items-center justify-between transition-colors active:scale-[0.98]">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-success/20 text-success flex items-center justify-center">
-                            <Plus size={18} />
-                          </div>
-                          <span>Yeni Doz Planla</span>
-                        </div>
-                      </button>
-                    )}
-                    {(activeTimelineTask._source === 'growth_records' || activeTimelineTask._source === 'weight_logs') && (
-                      <button
-                        onClick={() => {
-                          setActiveTimelineTask(null);
-                          router.push(`/owner/pets/${pet.id}/nutrition?tab=kilo`);
-                        }}
-                        className="w-full py-3.5 px-4 rounded-xl bg-success/10 hover:bg-success/20 border border-success/20 text-sm font-bold text-success flex items-center justify-between transition-colors active:scale-[0.98]">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-success/20 text-success flex items-center justify-center">
-                            <Plus size={18} />
-                          </div>
-                          <span>Yeni Ölçüm Ekle</span>
-                        </div>
-                      </button>
-                    )}
-                    <button
-                      onClick={() => {
-                        setActiveTimelineTask(null);
-                        handleEditTask(activeTimelineTask);
-                      }}
-                      className="w-full py-3.5 px-4 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/20 text-sm font-bold text-primary flex items-center justify-between transition-colors active:scale-[0.98]">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-primary/20 text-primary flex items-center justify-center">
-                          <Eye size={18} />
-                        </div>
-                        <span>Kaydı Görüntüle / Düzenle</span>
-                      </div>
-                    </button>
-                  </>
-                )}
-
-                {/* 3. STOK DURUMU AKSİYONLARI */}
-                {eventType === 'stock_status' && (
-                  <>
-                    <button
-                      onClick={() => {
-                        setActiveTimelineTask(null);
-                        router.push(`/owner/pets/${pet.id}/nutrition?tab=stok`);
-                      }}
-                      className="w-full py-3.5 px-4 rounded-xl bg-success/10 hover:bg-success/20 border border-success/20 text-sm font-bold text-success flex items-center justify-between transition-colors active:scale-[0.98]">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-success/20 text-success flex items-center justify-center">
-                          <Plus size={18} />
-                        </div>
-                        <span>Stok Yenile / Dolum Ekle</span>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setActiveTimelineTask(null);
-                        router.push(`/owner/pets/${pet.id}/nutrition`);
-                      }}
-                      className="w-full py-3.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-sm font-bold text-text-primary flex items-center justify-between transition-colors active:scale-[0.98]">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-slate-200 text-text-secondary flex items-center justify-center">
-                          <Eye size={18} />
-                        </div>
-                        <span>Stok Detayını Görüntüle</span>
-                      </div>
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-      })()}
 
       {/* TEK ÜÇ NOKTA (...) MENÜ MODALI */}
       {showPetMenuSheet && (
