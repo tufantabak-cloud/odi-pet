@@ -194,6 +194,27 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     }
 
     const { id } = await params;
+
+    const { createAdminSupabaseClient } = await import('@/lib/supabase/server');
+    const adminClient = createAdminSupabaseClient();
+    
+    const { data: plan } = await adminClient
+      .from('plans')
+      .select('pet_id')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (plan?.pet_id) {
+      const { data: petOwner } = await adminClient
+        .from('pet_owners')
+        .select('id')
+        .eq('pet_id', plan.pet_id)
+        .eq('profile_id', user.id)
+        .maybeSingle();
+      if (!petOwner) {
+        return NextResponse.json({ error: 'FORBIDDEN' }, { status: 403 });
+      }
+    }
     
     await deletePlan(id);
     

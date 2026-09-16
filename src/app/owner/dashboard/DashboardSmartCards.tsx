@@ -9,8 +9,9 @@ import QuickJournalWidget from '@/components/dashboard/QuickJournalWidget'
 import { buildPetMicroTasks } from '@/lib/microTasks/petMicroTasks'
 import { PetMicroTaskCard } from '@/components/micro-tasks/PetMicroTaskCard'
 import { useDismissedMicroTasks } from '@/hooks/useDismissedMicroTasks'
-import ParasitePlanCompletionModal from '@/components/pets/ParasitePlanCompletionModal'
 import { PetTaskModals, TaskModalType } from '@/components/pets/PetTaskModals'
+import { CanonicalPlanActionModal } from '@/components/pets/common/CanonicalPlanActionModal'
+import type { CanonicalPlanContext } from '@/lib/plans/canonicalActionResolver'
 
 
 
@@ -81,14 +82,23 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
   const { alerts, dismissAlert } = useSixMonthAssessments(supabase, petIds)
 
   const [quickUpdateConfig, setQuickUpdateConfig] = useState<any>(null)
-  const [parasiteCompletionTask, setParasiteCompletionTask] = useState<any>(null)
-  const [parasiteCompletionCardId, setParasiteCompletionCardId] = useState<string | null>(null)
   const [dismissedCards, setDismissedCards] = useState<string[]>([])
   const [expanded, setExpanded] = useState(false)
   const { filterVisibleTasks, dismissTask } = useDismissedMicroTasks()
   const [nutritionProfile, setNutritionProfile] = useState<any>(null)
   const [foodAssignments, setFoodAssignments] = useState<any[]>([])
   const [activeTaskModal, setActiveTaskModal] = useState<TaskModalType>(null)
+  const [selectedCardPlan, setSelectedCardPlan] = useState<any | null>(null)
+
+  const cardCanonicalContext: CanonicalPlanContext | null = selectedCardPlan ? {
+    planId: selectedCardPlan._plan_id || selectedCardPlan.id,
+    plan: selectedCardPlan,
+    title: selectedCardPlan.title || selectedCardPlan.vaccines?.name || 'Aşı/Sağlık Görevi',
+    category: selectedCardPlan._plan_category || selectedCardPlan.category || ((selectedCardPlan.title || '').toLowerCase().includes('aşı') ? 'asi' : 'saglik'),
+    scheduledAt: selectedCardPlan.due_date || selectedCardPlan.scheduled_at,
+    status: selectedCardPlan.status,
+    petId: selectedCardPlan.pet_id,
+  } : null
 
   useEffect(() => {
     if (!activePetId) return
@@ -158,81 +168,10 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
     })
   }
 
-  const saveParasiteFrequency = (petId: string, frequencyInMonths: number, taskId?: string) => {
-    localStorage.setItem(`parasite-frequency-${petId}`, frequencyInMonths.toString())
-    
-    // Calculate next application date
-    const nextDate = new Date()
-    nextDate.setMonth(nextDate.getMonth() + Number(frequencyInMonths))
-    localStorage.setItem(`parasite-next-date-${petId}`, nextDate.toISOString())
 
-    if (taskId) {
-      markTaskCompleteInDB(taskId)
-    }
-  }
-
-  const markTaskCompleteInDB = async (taskId: string) => {
-    if (taskId.startsWith('virtual_')) {
-      console.warn('Sanal takvim olayı değiştirilemez.');
-      return;
-    }
-    try {
-      const task = upcomingSchedules?.find((s: any) => s.id === taskId);
-      if (task && task._source === 'plans' && task._plan_category === 'parazit') {
-        setParasiteCompletionTask(task);
-        setParasiteCompletionCardId(`parasite-task-${task.id}`);
-        return;
-      }
-
-      if (taskId.startsWith('plan_')) {
-        const realId = taskId.replace('plan_', '')
-        await fetch(`/api/plans/${realId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'completed' })
-        })
-      } else {
-        await fetch(`/api/pets/${activePetId}/schedules/${taskId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'completed' })
-        })
-      }
-      router.refresh()
-    } catch (err) {
-      console.error('Error updating task status:', err)
-    }
-  }
 
   const handleMarkParasiteDone = (petId: string, parasiteTask: any, cardId: string) => {
-    const savedFrequency = localStorage.getItem(`parasite-frequency-${petId}`)
-
-    if (!savedFrequency) {
-      setQuickUpdateConfig({
-        petId: petId,
-        title: 'Uygulama Sıklığı',
-        desc: 'Evcil hayvanınızın sağlığını korumak için dış parazit uygulamasının sıklığını belirtin.',
-        fields: [{
-          name: 'frequency',
-          label: 'Uygulama Sıklığı',
-          type: 'select',
-          required: true,
-          options: [
-            { value: '1', label: 'Her Ay (Önerilen)' },
-            { value: '2', label: '2 Ayda Bir' },
-            { value: '3', label: '3 Ayda Bir' },
-            { value: '6', label: '6 Ayda Bir' }
-          ]
-        }],
-        onSaveLocal: async (value: string) => {
-          saveParasiteFrequency(petId, Number(value), parasiteTask?.id)
-          dismissCard(cardId)
-        }
-      })
-    } else {
-      saveParasiteFrequency(petId, Number(savedFrequency), parasiteTask?.id)
-      dismissCard(cardId)
-    }
+    setSelectedCardPlan(parasiteTask);
   }
 
   // Collect active cards based on conditions in priority order for activePetId ONLY
@@ -264,9 +203,20 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
               title: 'Aşı Uygulaması',
               subtitle: `Bugün ${pet.name}'nın aşı/medikal işlemi var. Takvimden kontrol edebilirsiniz.`,
               dateInfo: 'Bugün',
-              ctaLabel: 'Takvime Git',
+              ctaLabel: 'Görüntüle',
               action: () => {
-                router.push(`/owner/plan-yap/asi?pet_id=${pet.id}`)
+                const existingTask = upcomingSchedules?.find((s: any) => s.pet_id === pet.id && ((s.title || '').toLowerCase().includes('aşı') || s.vaccines));
+                if (existingTask) {
+                  setSelectedCardPlan(existingTask);
+                } else {
+                  setSelectedCardPlan({
+                    id: highlight.replace('vaccine-', ''),
+                    pet_id: pet.id,
+                    title: 'Aşı Uygulaması',
+                    category: 'asi',
+                    status: 'active'
+                  });
+                }
               }
             }
           } else {
@@ -330,9 +280,9 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
           title: overdueVaccine.title || overdueVaccine.vaccines?.name || 'Aşı Uygulaması',
           subtitle: `${pet.name}'nın ${overdueVaccine.title || overdueVaccine.vaccines?.name || 'aşı/medikal'} işlemi var. Takvimden kontrol edebilirsiniz.`,
           dateInfo: isOverdue ? 'Gecikti' : 'Bugün',
-          ctaLabel: 'Takvime Git',
+          ctaLabel: 'Görüntüle',
           action: () => {
-            router.push(`/owner/plan-yap/asi?pet_id=${pet.id}`)
+            setSelectedCardPlan(overdueVaccine);
           }
         })
       }
@@ -1015,24 +965,17 @@ export default function DashboardSmartCards({ pets, activePetId, upcomingSchedul
         />
       ) : null}
 
-      {parasiteCompletionTask && (
-        <ParasitePlanCompletionModal
-          planId={parasiteCompletionTask._plan_id}
-          petId={parasiteCompletionTask.pet_id}
-          onClose={() => {
-            setParasiteCompletionTask(null);
-            setParasiteCompletionCardId(null);
-          }}
-          onSuccess={() => {
-            if (parasiteCompletionCardId) {
-              dismissCard(parasiteCompletionCardId);
-            }
-            router.refresh();
-            setParasiteCompletionTask(null);
-            setParasiteCompletionCardId(null);
-          }}
-        />
-      )}
+
+
+      <CanonicalPlanActionModal
+        isOpen={!!selectedCardPlan}
+        onClose={() => setSelectedCardPlan(null)}
+        context={cardCanonicalContext}
+        onSuccess={() => {
+          setSelectedCardPlan(null);
+          router.refresh();
+        }}
+      />
     </div>
   )
 }

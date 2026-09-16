@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import SocialShortcuts from '@/components/dashboard/SocialShortcuts'
 import { PetSlider } from '@/components/dashboard/PetSlider'
 import DashboardSmartCards from './DashboardSmartCards'
@@ -10,6 +11,8 @@ import SmartInsightCard from '@/components/profiling/SmartInsightCard'
 import { getPlanDisplayTitle } from '@/lib/plans/utils'
 import OnboardingProgressCard from '@/components/OnboardingProgressCard'
 import PermissionOnboarding from '@/components/permissions/PermissionOnboarding'
+import { CanonicalPlanActionModal } from '@/components/pets/common/CanonicalPlanActionModal'
+import type { CanonicalPlanContext } from '@/lib/plans/canonicalActionResolver'
 
 import PetRecommendationsCard from '@/components/dashboard/PetRecommendationsCard'
 import PendingInviteModal from '@/components/pets/family/PendingInviteModal'
@@ -66,8 +69,23 @@ export default function DashboardClient({
   journalEntries,
   pendingUserInvites,
 }: any) {
+  const router = useRouter()
   const [activePetId, setActivePetId] = useState(pets[0]?.id)
+  const [selectedAgendaPlan, setSelectedAgendaPlan] = useState<any | null>(null)
   const activePet = petsWithStats?.find((p: any) => p.id === activePetId) || pets?.find((p: any) => p.id === activePetId) || pets?.[0]
+
+  const agendaCanonicalContext: CanonicalPlanContext | null = useMemo(() => {
+    if (!selectedAgendaPlan) return null
+    return {
+      planId: selectedAgendaPlan.id,
+      plan: selectedAgendaPlan,
+      title: selectedAgendaPlan.title || selectedAgendaPlan.vaccines?.name || getPlanDisplayTitle(selectedAgendaPlan),
+      category: selectedAgendaPlan.category || selectedAgendaPlan.sub_category || selectedAgendaPlan.sub_type,
+      scheduledAt: selectedAgendaPlan.scheduled_at || selectedAgendaPlan.due_date || selectedAgendaPlan.next_run,
+      status: selectedAgendaPlan.status,
+      petId: selectedAgendaPlan.pet_id || selectedAgendaPlan.pets?.id,
+    }
+  }, [selectedAgendaPlan])
 
   // ── ADIM C: Koordinasyon Katmanı & Tekilleştirme ──────────────
   // 1. Sağlık Geçmişi Sihirbazı Koşulu (Sadece activePetId için)
@@ -197,10 +215,11 @@ export default function DashboardClient({
               const isSelectedPet = activePetId && petId === activePetId
 
               return (
-                <Link
+                <button
                   key={`event-${event.id}`}
-                  href={petId ? `/owner/pets/${petId}?tab=health` : '/owner/calendar'}
-                  className={`flex items-center justify-between p-4 rounded-[24px] border bg-white shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.08)] hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 ${
+                  type="button"
+                  onClick={() => setSelectedAgendaPlan(event)}
+                  className={`w-full text-left flex items-center justify-between p-4 rounded-[24px] border bg-white shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.08)] hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer ${
                     isSelectedPet ? 'border-primary/30 ring-1 ring-primary/10' : 'border-slate-100'
                   }`}
                 >
@@ -226,7 +245,7 @@ export default function DashboardClient({
                       <p className="text-2xs text-emerald-600 font-semibold mt-0.5">Yaklaşıyor</p>
                     )}
                   </div>
-                </Link>
+                </button>
               )
             })}
 
@@ -241,10 +260,11 @@ export default function DashboardClient({
               const isSelectedPet = activePetId && petId === activePetId
 
               return (
-                <Link
+                <button
                   key={`plan-${plan.id}`}
-                  href={petId ? `/owner/pets/${petId}?tab=health` : '/owner/calendar'}
-                  className={`flex items-center justify-between p-4 rounded-[24px] border bg-white shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.08)] hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 ${
+                  type="button"
+                  onClick={() => setSelectedAgendaPlan(plan)}
+                  className={`w-full text-left flex items-center justify-between p-4 rounded-[24px] border bg-white shadow-[0_4px_20px_-2px_rgba(15,23,42,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.08)] hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer ${
                     isSelectedPet ? 'border-primary/30 ring-1 ring-primary/10' : 'border-slate-100'
                   }`}
                 >
@@ -266,7 +286,7 @@ export default function DashboardClient({
                     <span className="text-xs font-semibold text-text-primary">{planDate}</span>
                     <p className="text-2xs text-primary font-semibold mt-0.5">Sıradaki Rutin</p>
                   </div>
-                </Link>
+                </button>
               )
             })}
           </div>
@@ -409,6 +429,16 @@ export default function DashboardClient({
           </Link>
         </div>
       )}
+
+      <CanonicalPlanActionModal
+        isOpen={!!selectedAgendaPlan}
+        onClose={() => setSelectedAgendaPlan(null)}
+        context={agendaCanonicalContext}
+        onSuccess={() => {
+          setSelectedAgendaPlan(null)
+          router.refresh()
+        }}
+      />
     </>
   )
 }

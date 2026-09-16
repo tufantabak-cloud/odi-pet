@@ -13,6 +13,7 @@ interface HealthTrackerProps {
   onEditTask?: (task: any) => void;
   onMarkDone?: (task: any) => void;
   onPostpone?: (task: any) => void;
+  onSelectTask?: (task: any) => void;
   refreshTrigger?: number;
 }
 
@@ -88,7 +89,7 @@ function useDragScroll(ref: React.RefObject<HTMLDivElement | null>) {
   }, [ref]);
 }
 
-export function HealthTracker({ petId, onEditTask, onMarkDone, onPostpone, refreshTrigger }: HealthTrackerProps) {
+export function HealthTracker({ petId, onEditTask, onMarkDone, onPostpone, onSelectTask, refreshTrigger }: HealthTrackerProps) {
   const {
     categoryGroups, loading, markEventStatus, postponeEvent, deleteEvent,
     visibleDates,
@@ -131,6 +132,7 @@ export function HealthTracker({ petId, onEditTask, onMarkDone, onPostpone, refre
     onMarkDone: onMarkDone || ((id: string) => markEventStatus(id, 'done')),
     onPostpone: onPostpone || ((id: string) => postponeEvent(id, 1)),
     onEdit: onEditTask || (() => {}),
+    onSelectTask: onSelectTask || undefined,
     onDelete: (id: string, event?: FlowEvent) => {
       // KURAL 3: Plan ayrımı için öncelikli olarak event._source === 'plans' veya 'health_schedules' kullanılır.
       // Belirsiz kaynak veya gerçekleşmiş tıbbi kayıtlar (vaccine_records_v2, parasite_records, growth_records, weight_logs vb.)
@@ -409,7 +411,7 @@ function findCoveringMissedInterval(key: string, intervals: MissedInterval[]): M
  */
 function TimelineRow({
   visibleKeys, todayKey, resetToken, eventsByDate, categoryKey, coverageIntervals, missedIntervals, getCreateHref, isStockTracker, isWeightTracker,
-  onMarkDone, onPostpone, onEdit, onDelete,
+  onMarkDone, onPostpone, onEdit, onDelete, onSelectTask,
 }: {
   visibleKeys: string[];
   todayKey: string;
@@ -428,6 +430,7 @@ function TimelineRow({
   onPostpone: (id: string) => void;
   onEdit: (event: FlowEvent) => void;
   onDelete: (id: string, event?: FlowEvent) => void;
+  onSelectTask?: (event: FlowEvent) => void;
 }) {
   const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -607,10 +610,11 @@ function TimelineRow({
                     key={event.id}
                     event={event}
                     categoryKey={categoryKey}
-                    onMarkDone={onMarkDone}
-                    onPostpone={onPostpone}
+                    
+                    
                     onEdit={onEdit}
-                    onDelete={onDelete}
+                    
+                    onSelectTask={onSelectTask}
                   />
                 ))}
               </div>

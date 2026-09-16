@@ -3,10 +3,13 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { getSpeciesEmoji } from '@/lib/species'
 import { getPlanTargetUrl, getPlanActionLabel, type TakvimCategoryKey } from '@/lib/agenda/takvim-navigation'
 import { VaccineIcon, ParasiteIcon, ShampooIcon, BowlIcon, VetIcon, BoneIcon } from '@/components/icons/PetIcons'
 import { CalendarPlus, LayoutGrid, Plus, AlertTriangle, CheckCircle2, CalendarCheck } from 'lucide-react'
+import { CanonicalPlanActionModal } from '@/components/pets/common/CanonicalPlanActionModal'
+import type { CanonicalPlanContext } from '@/lib/plans/canonicalActionResolver'
 
 type Pet = {
   id: string
@@ -101,9 +104,11 @@ const UPCOMING_BUCKET_KEYS: BucketKey[] = ['geciken', 'bugun', 'buHafta', 'sonra
 const COMPLETED_BUCKET_KEYS: BucketKey[] = ['sonYapilanlar']
 
 export default function TakvimClient({ pets, initialEvents = [] }: { pets: Pet[]; initialEvents?: CalendarEvent[] }) {
+  const router = useRouter()
   const [activePetId, setActivePetId] = useState<string | null>(null)
   const [activeFilter, setActiveFilter] = useState<'tumu' | CategoryKey>('tumu')
   const [activeView, setActiveView] = useState<'yaklasan' | 'sonYapilanlar'>('yaklasan')
+  const [selectedEventForAction, setSelectedEventForAction] = useState<CalendarEvent | null>(null)
 
   const multiPet = pets.length > 1
   const effectivePetId = activePetId || (pets.length === 1 ? pets[0].id : null)
@@ -114,6 +119,18 @@ export default function TakvimClient({ pets, initialEvents = [] }: { pets: Pet[]
     if (!activePetId) return initialEvents
     return initialEvents.filter(ev => ev.pet_id === activePetId)
   }, [initialEvents, activePetId])
+
+  const canonicalContext: CanonicalPlanContext | null = useMemo(() => {
+    if (!selectedEventForAction) return null
+    return {
+      planId: selectedEventForAction.id,
+      title: selectedEventForAction.title,
+      category: toCategory(selectedEventForAction),
+      status: selectedEventForAction.status || undefined,
+      scheduledAt: selectedEventForAction.date,
+      petId: selectedEventForAction.pet_id || undefined,
+    }
+  }, [selectedEventForAction])
 
   const visibleEvents = useMemo(() => {
     const list = activeFilter === 'tumu'
@@ -383,7 +400,12 @@ export default function TakvimClient({ pets, initialEvents = [] }: { pets: Pet[]
                 </h2>
                 <div className="flex flex-col gap-2">
                   {list.map(ev => (
-                    <EventRow key={`${ev.type}-${ev.id}`} event={ev} showPet={!activePetId} />
+                    <EventRow
+                      key={`${ev.type}-${ev.id}`}
+                      event={ev}
+                      showPet={!activePetId}
+                      onSelect={setSelectedEventForAction}
+                    />
                   ))}
                 </div>
               </section>
@@ -391,11 +413,29 @@ export default function TakvimClient({ pets, initialEvents = [] }: { pets: Pet[]
           })}
         </div>
       )}
+
+      <CanonicalPlanActionModal
+        isOpen={!!selectedEventForAction}
+        onClose={() => setSelectedEventForAction(null)}
+        context={canonicalContext}
+        onSuccess={() => {
+          setSelectedEventForAction(null)
+          router.refresh()
+        }}
+      />
     </div>
   )
 }
 
-function EventRow({ event, showPet }: { event: CalendarEvent; showPet: boolean }) {
+function EventRow({
+  event,
+  showPet,
+  onSelect
+}: {
+  event: CalendarEvent;
+  showPet: boolean;
+  onSelect?: (ev: CalendarEvent) => void;
+}) {
   const cat = toCategory(event)
   const style = CATEGORY_STYLE[cat]
   const diff = dayDiff(event.date)
@@ -417,11 +457,8 @@ function EventRow({ event, showPet }: { event: CalendarEvent; showPet: boolean }
     badge = { text: 'Planlı', cls: 'bg-surface-secondary text-text-secondary' }
   }
 
-  return (
-    <Link
-      href={href}
-      className="relative overflow-hidden min-h-11 rounded-card bg-surface/90 backdrop-blur-xl border border-white shadow-soft hover:shadow-medium hover:border-primary/10 transition-all duration-300 active:scale-[0.98] flex items-center gap-3 p-3"
-    >
+  const innerContent = (
+    <>
       <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: style.fg }} aria-hidden="true" />
 
       <span
@@ -432,7 +469,7 @@ function EventRow({ event, showPet }: { event: CalendarEvent; showPet: boolean }
         <CategoryIcon category={cat} size={16} />
       </span>
 
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 text-left">
         <p className="text-sm font-semibold text-text-primary truncate leading-tight">{event.title}</p>
         <p className="text-xs text-text-secondary font-medium truncate mt-0.5">
           {showPet && event.pet_name ? `${event.pet_name} · ` : ''}
@@ -444,6 +481,29 @@ function EventRow({ event, showPet }: { event: CalendarEvent; showPet: boolean }
       <span className={`shrink-0 rounded-full px-2 py-1 text-xs font-semibold ${badge.cls}`}>
         {badge.text}
       </span>
+    </>
+  )
+
+  const cardCls = "w-full relative overflow-hidden min-h-11 rounded-card bg-surface/90 backdrop-blur-xl border border-white shadow-soft hover:shadow-medium hover:border-primary/10 transition-all duration-300 active:scale-[0.98] flex items-center gap-3 p-3 cursor-pointer text-left"
+
+  if (onSelect) {
+    return (
+      <button
+        type="button"
+        onClick={() => onSelect(event)}
+        className={cardCls}
+      >
+        {innerContent}
+      </button>
+    )
+  }
+
+  return (
+    <Link
+      href={href}
+      className={cardCls}
+    >
+      {innerContent}
     </Link>
   )
 }
