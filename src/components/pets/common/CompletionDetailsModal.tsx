@@ -15,6 +15,10 @@ interface CompletionDetailsModalProps {
   onComplete: (details: ApplicationDetails | null) => void;
   petId?: string;
   onNavigateAway?: () => void;
+  initialDetails?: ApplicationDetails | null;
+  planId?: string;
+  plan?: any;
+  sourceTab?: string;
 }
 
 export function CompletionDetailsModal({
@@ -25,9 +29,19 @@ export function CompletionDetailsModal({
   onComplete,
   petId,
   onNavigateAway,
+  initialDetails,
+  planId,
+  plan,
+  sourceTab,
 }: CompletionDetailsModalProps) {
-  const [applicationDetails, setApplicationDetails] = useState<ApplicationDetails | null>(null);
+  const [applicationDetails, setApplicationDetails] = useState<ApplicationDetails | null>(initialDetails || null);
   const [showScanner, setShowScanner] = useState(false);
+
+  React.useEffect(() => {
+    if (initialDetails) {
+      setApplicationDetails(initialDetails);
+    }
+  }, [initialDetails]);
 
   const handleSubmit = () => {
     onComplete(applicationDetails);
@@ -75,6 +89,9 @@ export function CompletionDetailsModal({
             onScan={() => setShowScanner(true)}
             petId={petId}
             onNavigateAway={onNavigateAway || onClose}
+            planId={planId}
+            plan={plan}
+            sourceTab={sourceTab}
           />
 
           {showScanner && (

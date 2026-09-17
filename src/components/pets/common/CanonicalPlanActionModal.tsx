@@ -36,6 +36,9 @@ export interface CanonicalPlanActionModalProps {
   context: CanonicalPlanContext | null;
   onSuccess?: () => void;
   petId?: string;
+  initialAction?: CanonicalPlanActionType | 'complete_details';
+  initialApplicationDetails?: ApplicationDetails | null;
+  sourceTab?: string;
 }
 
 export function CanonicalPlanActionModal({
@@ -44,6 +47,9 @@ export function CanonicalPlanActionModal({
   context,
   onSuccess,
   petId: propsPetId,
+  initialAction,
+  initialApplicationDetails,
+  sourceTab,
 }: CanonicalPlanActionModalProps) {
   const router = useRouter();
 
@@ -58,6 +64,12 @@ export function CanonicalPlanActionModal({
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (isOpen && initialAction === 'complete_details') {
+      setShowDetailsModal(true);
+    }
+  }, [isOpen, initialAction]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -442,13 +454,20 @@ export function CanonicalPlanActionModal({
           isOpen={true}
           taskTitle={resolved.displayTitle}
           category={resolved.category as any}
-          onClose={() => setShowDetailsModal(false)}
+          onClose={() => {
+            setShowDetailsModal(false);
+            onClose();
+          }}
           onNavigateAway={() => {
             setShowDetailsModal(false);
             onClose();
           }}
           onComplete={handleCompleteWithDetails}
           petId={petId}
+          initialDetails={initialApplicationDetails}
+          planId={realPlanId}
+          plan={context.plan}
+          sourceTab={sourceTab}
         />
       )}
 
