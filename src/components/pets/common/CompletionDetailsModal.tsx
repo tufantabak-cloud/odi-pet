@@ -13,17 +13,35 @@ interface CompletionDetailsModalProps {
   taskTitle: string;
   category?: 'asi' | 'parazit' | 'beslenme' | 'bakim' | 'aktivite' | 'kilo' | 'ilac' | 'saglik' | 'kontrol' | 'hijyen';
   onComplete: (details: ApplicationDetails | null) => void;
+  petId?: string;
+  onNavigateAway?: () => void;
+  initialDetails?: ApplicationDetails | null;
+  planId?: string;
+  plan?: any;
+  sourceTab?: string;
 }
 
-export function CompletionDetailsModal({ isOpen, onClose, taskTitle, category = 'saglik', onComplete }: CompletionDetailsModalProps) {
-  const [applicationDetails, setApplicationDetails] = useState<ApplicationDetails | null>(null);
+export function CompletionDetailsModal({
+  isOpen,
+  onClose,
+  taskTitle,
+  category = 'saglik',
+  onComplete,
+  petId,
+  onNavigateAway,
+  initialDetails,
+  planId,
+  plan,
+  sourceTab,
+}: CompletionDetailsModalProps) {
+  const [applicationDetails, setApplicationDetails] = useState<ApplicationDetails | null>(initialDetails || null);
   const [showScanner, setShowScanner] = useState(false);
 
-  const isVaccine = 
-    category === 'asi' || 
-    category === 'vaccine' || 
-    Boolean(typeof taskTitle === 'string' && /aşı|asi|vaccine|kuduz|karma|lösemi|leukemia|bronchine|nobivac|versican|felocell|rabies/i.test(taskTitle));
-  const effectiveCategory = isVaccine ? 'asi' : category;
+  React.useEffect(() => {
+    if (initialDetails) {
+      setApplicationDetails(initialDetails);
+    }
+  }, [initialDetails]);
 
   const handleSubmit = () => {
     onComplete(applicationDetails);
@@ -65,38 +83,26 @@ export function CompletionDetailsModal({ isOpen, onClose, taskTitle, category = 
           </div>
 
           <OptionalApplicationDetails
-            category={effectiveCategory}
+            category={category}
             value={applicationDetails}
             onChange={(nextValue) => setApplicationDetails(nextValue)}
             onScan={() => setShowScanner(true)}
+            petId={petId}
+            onNavigateAway={onNavigateAway || onClose}
+            planId={planId}
+            plan={plan}
+            sourceTab={sourceTab}
           />
 
           {showScanner && (
             <SmartScanner
-              category={effectiveCategory}
-              cropMode={isVaccine ? 'vaccine_row' : 'standard'}
               onResult={(res) => {
                 const nextDetails = { ...applicationDetails } as ApplicationDetails;
-                if (res.title || res.vaccine_name) {
-                  nextDetails.product_name = String(res.title || res.vaccine_name || nextDetails.product_name || '');
+                if (res.productName || res.brand) {
+                  nextDetails.product_name = String(res.productName || res.brand);
                 }
-                if (res.productName || res.product_name || res.brand || res.vaccine_brand) {
-                  nextDetails.brand = String(res.brand || res.vaccine_brand || nextDetails.brand || '');
-                  if (!nextDetails.product_name) {
-                    nextDetails.product_name = String(res.productName || res.product_name || res.brand || '');
-                  }
-                }
-                if (res.batchNumber || res.lotNumber || res.lot_number) {
-                  nextDetails.lot_number = String(res.batchNumber || res.lotNumber || res.lot_number);
-                }
-                if (res.product_expiry_at || res.expiration_date || res.expiry_date) {
-                  nextDetails.product_expiry_at = String(res.product_expiry_at || res.expiration_date || res.expiry_date || '') || null;
-                }
-                if (res.vet_name) {
-                  nextDetails.provider_name = String(res.vet_name);
-                }
-                if (res.vet_company) {
-                  nextDetails.institution_name = String(res.vet_company);
+                if (res.batchNumber || res.lotNumber) {
+                  nextDetails.lot_number = String(res.batchNumber || res.lotNumber);
                 }
                 setApplicationDetails(nextDetails);
                 setShowScanner(false);

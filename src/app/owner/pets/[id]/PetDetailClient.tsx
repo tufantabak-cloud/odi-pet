@@ -333,6 +333,8 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
         : 'ozet'
 
   const [canonicalActionPlan, setCanonicalActionPlan] = useState<any>(null);
+  const [initialModalDetails, setInitialModalDetails] = useState<any>(null);
+  const [initialModalAction, setInitialModalAction] = useState<any>(null);
   const petCanonicalContext: any = canonicalActionPlan ? {
     planId: canonicalActionPlan._plan_id || canonicalActionPlan.id,
     plan: canonicalActionPlan,
@@ -931,6 +933,63 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
     }
     setTrackerRefreshKey(prev => prev + 1)
   }
+
+  // Akış Geri Dönüşü: Yeni veteriner eklendikten sonra "İşlem Tamamlandı" sürecine geri dönme
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const sp = new URLSearchParams(window.location.search);
+    const completePlanId = sp.get('complete_plan_id');
+    const newVetId = sp.get('new_vet_id');
+
+    let pendingDraft: any = null;
+    try {
+      const stored = sessionStorage.getItem('pending_plan_completion');
+      if (stored) {
+        pendingDraft = JSON.parse(stored);
+      }
+    } catch (e) {
+      console.warn('Failed to parse pending_plan_completion', e);
+    }
+
+    const targetPlanId = completePlanId || pendingDraft?.planId;
+
+    if (targetPlanId && localSchedules && localSchedules.length > 0) {
+      const matchingSchedule = localSchedules.find((s: any) => {
+        const rId = resolveRealPlanId(s) || s.id;
+        return rId === targetPlanId || s.id === targetPlanId || s._plan_id === targetPlanId;
+      });
+
+      const planToUse = matchingSchedule || pendingDraft?.plan;
+
+      if (planToUse) {
+        let details = pendingDraft?.applicationDetails || {};
+        if (newVetId) {
+          details = {
+            ...details,
+            selected_vet_id: newVetId,
+            administration_place: 'veterinary_clinic',
+          };
+        }
+        setInitialModalDetails(details);
+        setInitialModalAction('complete_details');
+        setCanonicalActionPlan(planToUse);
+
+        try {
+          sessionStorage.removeItem('pending_plan_completion');
+        } catch {}
+
+        const cleanParams = new URLSearchParams(window.location.search);
+        cleanParams.delete('complete_plan_id');
+        cleanParams.delete('new_vet_id');
+        cleanParams.delete('return_tab');
+        cleanParams.delete('return_plan_id');
+        cleanParams.delete('action');
+        const newRelativePathQuery = window.location.pathname + (cleanParams.toString() ? `?${cleanParams.toString()}` : '');
+        window.history.replaceState(null, '', newRelativePathQuery);
+      }
+    }
+  }, [localSchedules, searchParams]);
 
 
 
@@ -2601,11 +2660,20 @@ export default function PetDetailClient({ pet, age, score, overdue, schedules, d
 
       <CanonicalPlanActionModal
         isOpen={!!canonicalActionPlan}
-        onClose={() => setCanonicalActionPlan(null)}
+        onClose={() => {
+          setCanonicalActionPlan(null);
+          setInitialModalAction(null);
+          setInitialModalDetails(null);
+        }}
         context={petCanonicalContext}
         petId={pet.id}
+        initialAction={initialModalAction}
+        initialApplicationDetails={initialModalDetails}
+        sourceTab={activeTab}
         onSuccess={() => {
           setCanonicalActionPlan(null);
+          setInitialModalAction(null);
+          setInitialModalDetails(null);
           router.refresh();
           setTrackerRefreshKey(prev => prev + 1);
         }}

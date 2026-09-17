@@ -15,6 +15,9 @@ interface OptionalApplicationDetailsProps {
   onScan: () => void
   petId?: string
   onNavigateAway?: () => void
+  planId?: string
+  plan?: any
+  sourceTab?: string
 }
 
 const INPUT_CLASS =
@@ -29,6 +32,9 @@ export function OptionalApplicationDetails({
   onScan,
   petId,
   onNavigateAway,
+  planId,
+  plan,
+  sourceTab,
 }: OptionalApplicationDetailsProps) {
   const router = useRouter()
   const [mode, setMode] = useState<'choice' | 'form'>('form')
@@ -40,6 +46,37 @@ export function OptionalApplicationDetails({
     administered_at: today,
     ...(isVaccine ? { administration_place: 'veterinary_clinic' } : {}),
     ...(value ?? {}),
+  }
+
+  const handleAddNewVetRedirect = () => {
+    const targetPetId =
+      petId ||
+      (typeof window !== 'undefined'
+        ? window.location.pathname.split('/')[
+            window.location.pathname.split('/').indexOf('pets') + 1
+          ]
+        : '')
+    if (targetPetId && typeof window !== 'undefined') {
+      const currentUrlParams = new URLSearchParams(window.location.search)
+      const currentTab = sourceTab || currentUrlParams.get('tab') || 'saglik'
+
+      const draftPayload = {
+        petId: targetPetId,
+        planId: planId || currentUrlParams.get('plan_id') || '',
+        plan: plan || null,
+        sourceTab: currentTab,
+        applicationDetails: details,
+      }
+      try {
+        sessionStorage.setItem('pending_plan_completion', JSON.stringify(draftPayload))
+      } catch (e) {
+        console.warn('Could not save completion draft to sessionStorage', e)
+      }
+
+      onNavigateAway?.()
+      const returnPlanParam = planId ? `&return_plan_id=${encodeURIComponent(planId)}` : ''
+      window.location.href = `/owner/pets/${targetPetId}?tab=veteriner&action=add_vet&return_tab=${encodeURIComponent(currentTab)}${returnPlanParam}`
+    }
   }
 
   const { data: fetchedVets } = useSWR(
@@ -281,17 +318,7 @@ export function OptionalApplicationDetails({
                 onChange={(e) => {
                   const val = e.target.value
                   if (val === 'new') {
-                    const targetPetId =
-                      petId ||
-                      (typeof window !== 'undefined'
-                        ? window.location.pathname.split('/')[
-                            window.location.pathname.split('/').indexOf('pets') + 1
-                          ]
-                        : '')
-                    if (targetPetId) {
-                      onNavigateAway?.()
-                      window.location.href = `/owner/pets/${targetPetId}?tab=veteriner&action=add_vet`
-                    }
+                    handleAddNewVetRedirect()
                     return
                   }
                   const nextDetails = { ...details, selected_vet_id: val }
@@ -322,17 +349,7 @@ export function OptionalApplicationDetails({
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
-                  const targetPetId =
-                    petId ||
-                    (typeof window !== 'undefined'
-                      ? window.location.pathname.split('/')[
-                          window.location.pathname.split('/').indexOf('pets') + 1
-                        ]
-                      : '')
-                  if (targetPetId) {
-                    onNavigateAway?.()
-                    window.location.href = `/owner/pets/${targetPetId}?tab=veteriner&action=add_vet`
-                  }
+                  handleAddNewVetRedirect()
                 }}
                 className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:text-emerald-700 transition active:scale-95 self-start pt-0.5 cursor-pointer"
               >
