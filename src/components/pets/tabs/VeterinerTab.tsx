@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import useSWR from 'swr';
 import toast from 'react-hot-toast';
 import { 
@@ -226,9 +227,46 @@ export default function VeterinerTab({
   const [surgeries] = useState<SurgeryRecord[]>([]);
   const visits: VisitRecord[] = [];
 
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
   // Modallar
-  const [showAddVetModal, setShowAddVetModal] = useState(false);
+  const [showAddVetModal, setShowAddVetModal] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const sp = new URLSearchParams(window.location.search);
+      return sp.get('action') === 'add_vet' || sp.get('openAddVet') === 'true';
+    }
+    return false;
+  });
   const [showAddProcessModal, setShowAddProcessModal] = useState(false);
+
+  const cleanupAddVetParam = () => {
+    if (typeof window !== 'undefined') {
+      const sp = new URLSearchParams(window.location.search);
+      if (sp.get('action') === 'add_vet' || sp.get('openAddVet') === 'true') {
+        router.replace(`/owner/pets/${petId}?tab=veteriner`, { scroll: false });
+      }
+    }
+  };
+
+  useEffect(() => {
+    const isAddVet =
+      searchParams?.get('action') === 'add_vet' ||
+      searchParams?.get('openAddVet') === 'true' ||
+      (typeof window !== 'undefined' &&
+        (new URLSearchParams(window.location.search).get('action') === 'add_vet' ||
+          new URLSearchParams(window.location.search).get('openAddVet') === 'true'));
+    if (isAddVet) {
+      resetVetForm();
+      setShowAddVetModal(true);
+    }
+  }, [searchParams]);
+
+  const handleCloseAddVetModal = () => {
+    setShowAddVetModal(false);
+    resetVetForm();
+    cleanupAddVetParam();
+  };
 
   // Form State - Yeni Veteriner
   const [newVetName, setNewVetName] = useState('');
@@ -364,6 +402,7 @@ export default function VeterinerTab({
         mutateVets();
         setShowAddVetModal(false);
         resetVetForm();
+        cleanupAddVetParam();
         return;
       }
 
@@ -395,6 +434,7 @@ export default function VeterinerTab({
         mutateVets();
         setShowAddVetModal(false);
         resetVetForm();
+        cleanupAddVetParam();
       }
     } catch (error) {
       toast.error('Bir hata oluştu');
@@ -1474,6 +1514,7 @@ export default function VeterinerTab({
                       setShowOldVetConflictModal(false);
                       setPendingNewVet(null);
                       resetVetForm();
+                      cleanupAddVetParam();
                     } catch (error) {
                       toast.error('İşlem sırasında hata oluştu');
                     }
@@ -1504,6 +1545,7 @@ export default function VeterinerTab({
                       setShowOldVetConflictModal(false);
                       setPendingNewVet(null);
                       resetVetForm();
+                      cleanupAddVetParam();
                     } catch (error) {
                       toast.error('Hata oluştu');
                     }
@@ -1526,10 +1568,7 @@ export default function VeterinerTab({
                 {editingVet ? 'Veterineri Düzenle' : 'Yeni Veteriner Ekle'}
               </h3>
               <button 
-                onClick={() => {
-                  setShowAddVetModal(false);
-                  resetVetForm();
-                }} 
+                onClick={handleCloseAddVetModal} 
                 className="p-1 rounded-full text-slate-400 hover:bg-slate-100 cursor-pointer"
               >
                 <X size={18} />
@@ -1597,10 +1636,7 @@ export default function VeterinerTab({
               <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowAddVetModal(false);
-                    resetVetForm();
-                  }}
+                  onClick={handleCloseAddVetModal}
                   className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 cursor-pointer"
                 >
                   İptal

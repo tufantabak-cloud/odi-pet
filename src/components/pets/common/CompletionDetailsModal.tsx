@@ -13,9 +13,19 @@ interface CompletionDetailsModalProps {
   taskTitle: string;
   category?: 'asi' | 'parazit' | 'beslenme' | 'bakim' | 'aktivite' | 'kilo' | 'ilac' | 'saglik' | 'kontrol' | 'hijyen';
   onComplete: (details: ApplicationDetails | null) => void;
+  petId?: string;
+  onNavigateAway?: () => void;
 }
 
-export function CompletionDetailsModal({ isOpen, onClose, taskTitle, category = 'saglik', onComplete }: CompletionDetailsModalProps) {
+export function CompletionDetailsModal({
+  isOpen,
+  onClose,
+  taskTitle,
+  category = 'saglik',
+  onComplete,
+  petId,
+  onNavigateAway,
+}: CompletionDetailsModalProps) {
   const [applicationDetails, setApplicationDetails] = useState<ApplicationDetails | null>(null);
   const [showScanner, setShowScanner] = useState(false);
 
@@ -63,6 +73,8 @@ export function CompletionDetailsModal({ isOpen, onClose, taskTitle, category = 
             value={applicationDetails}
             onChange={(nextValue) => setApplicationDetails(nextValue)}
             onScan={() => setShowScanner(true)}
+            petId={petId}
+            onNavigateAway={onNavigateAway || onClose}
           />
 
           {showScanner && (

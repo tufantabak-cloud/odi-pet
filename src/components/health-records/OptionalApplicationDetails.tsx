@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Camera, ChevronDown, FilePenLine, ScanLine, Syringe } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import useSWR from 'swr'
+import { Camera, ChevronDown, FilePenLine, Plus, ScanLine, Syringe } from 'lucide-react'
 import type { ApplicationDetails } from '@/lib/health-records/application-details'
 
 type HealthCategory = 'asi' | 'parazit' | 'beslenme' | 'bakim' | 'aktivite' | 'kilo' | 'ilac' | 'saglik' | 'kontrol' | 'hijyen'
@@ -11,21 +13,40 @@ interface OptionalApplicationDetailsProps {
   value?: ApplicationDetails | null
   onChange: (value: ApplicationDetails) => void
   onScan: () => void
+  petId?: string
+  onNavigateAway?: () => void
 }
 
 const INPUT_CLASS =
   'w-full min-h-11 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[13px] text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100'
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export function OptionalApplicationDetails({
   category,
   value,
   onChange,
   onScan,
+  petId,
+  onNavigateAway,
 }: OptionalApplicationDetailsProps) {
+  const router = useRouter()
   const [mode, setMode] = useState<'choice' | 'form'>('form')
   const [advancedOpen, setAdvancedOpen] = useState(false)
-  const details: ApplicationDetails = { currency: 'TRY', ...(value ?? {}) }
   const isVaccine = category === 'asi'
+  const today = new Date().toISOString().split('T')[0]
+  const details: ApplicationDetails = {
+    currency: 'TRY',
+    administered_at: today,
+    ...(isVaccine ? { administration_place: 'veterinary_clinic' } : {}),
+    ...(value ?? {}),
+  }
+
+  const { data: fetchedVets } = useSWR(
+    petId ? `/api/pets/${petId}/vets` : null,
+    fetcher
+  )
+  const activeVets = (fetchedVets || []).filter((v: any) => !v.is_past)
 
   useEffect(() => {
     if (value && Object.keys(value).some((key) => key !== 'currency')) {
@@ -117,6 +138,15 @@ export function OptionalApplicationDetails({
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Field label="Uygulama Tarihi">
+          <input
+            type="date"
+            value={details.administered_at ?? today}
+            onChange={(event) => update('administered_at', event.target.value || null)}
+            className={INPUT_CLASS}
+          />
+        </Field>
+
         <Field label={isVaccine ? 'Aşı Markası' : 'Marka'}>
           <input
             value={details.brand ?? ''}
@@ -221,12 +251,17 @@ export function OptionalApplicationDetails({
         <Field label="Nerede Uygulandı?">
           <select
             value={details.administration_place ?? ''}
-            onChange={(event) =>
-              update(
-                'administration_place',
-                (event.target.value || null) as ApplicationDetails['administration_place']
-              )
-            }
+            onChange={(event) => {
+              const val = event.target.value || null
+              const nextDetails = {
+                ...details,
+                administration_place: val as ApplicationDetails['administration_place'],
+              }
+              if (val !== 'veterinary_clinic') {
+                nextDetails.selected_vet_id = undefined
+              }
+              onChange(nextDetails)
+            }}
             className={INPUT_CLASS}
           >
             <option value="">Belirtilmedi</option>
@@ -239,12 +274,79 @@ export function OptionalApplicationDetails({
         </Field>
 
         <Field label="Veteriner / Uygulayan">
-          <input
-            value={details.provider_name ?? ''}
-            onChange={(event) => update('provider_name', event.target.value)}
-            placeholder="İsim"
-            className={INPUT_CLASS}
-          />
+          {details.administration_place === 'veterinary_clinic' ? (
+            <div className="flex flex-col gap-1.5">
+              <select
+                value={details.selected_vet_id ?? ''}
+                onChange={(e) => {
+                  const val = e.target.value
+                  if (val === 'new') {
+                    const targetPetId =
+                      petId ||
+                      (typeof window !== 'undefined'
+                        ? window.location.pathname.split('/')[
+                            window.location.pathname.split('/').indexOf('pets') + 1
+                          ]
+                        : '')
+                    if (targetPetId) {
+                      onNavigateAway?.()
+                      window.location.href = `/owner/pets/${targetPetId}?tab=veteriner&action=add_vet`
+                    }
+                    return
+                  }
+                  const nextDetails = { ...details, selected_vet_id: val }
+                  if (val) {
+                    const vet = activeVets.find((v: any) => v.id === val)
+                    if (vet) {
+                      nextDetails.institution_name = vet.clinic_name || ''
+                      nextDetails.provider_name = vet.doctor_name || ''
+                    }
+                  } else {
+                    nextDetails.institution_name = ''
+                    nextDetails.provider_name = ''
+                  }
+                  onChange(nextDetails)
+                }}
+                className={INPUT_CLASS}
+              >
+                <option value="">Seçiniz...</option>
+                {activeVets.map((vet: any) => (
+                  <option key={vet.id} value={vet.id}>
+                    {vet.clinic_name} {vet.doctor_name ? `(${vet.doctor_name})` : ''}
+                  </option>
+                ))}
+                <option value="new">+ Yeni Veteriner Ekle</option>
+              </select>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  const targetPetId =
+                    petId ||
+                    (typeof window !== 'undefined'
+                      ? window.location.pathname.split('/')[
+                          window.location.pathname.split('/').indexOf('pets') + 1
+                        ]
+                      : '')
+                  if (targetPetId) {
+                    onNavigateAway?.()
+                    window.location.href = `/owner/pets/${targetPetId}?tab=veteriner&action=add_vet`
+                  }
+                }}
+                className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:text-emerald-700 transition active:scale-95 self-start pt-0.5 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" /> Yeni veteriner ekle
+              </button>
+            </div>
+          ) : (
+            <input
+              value={details.provider_name ?? ''}
+              onChange={(event) => update('provider_name', event.target.value)}
+              placeholder="İsim"
+              className={INPUT_CLASS}
+            />
+          )}
         </Field>
 
         <Field label="Tutar">
@@ -335,10 +437,10 @@ export function OptionalApplicationDetails({
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="block">
+    <div className="block">
       <span className="mb-1.5 block text-[12px] font-bold text-slate-700">{label}</span>
       {children}
-    </label>
+    </div>
   )
 }
 
